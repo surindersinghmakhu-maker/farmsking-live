@@ -3,3 +3,6 @@ node_modules
 .env
 
 /generated/prisma
+
+# User-uploaded files (served statically, not part of the repo)
+/uploads

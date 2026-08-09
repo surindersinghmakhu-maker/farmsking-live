@@ -1,8 +1,10 @@
-import { createContext, useContext, useMemo, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 import { CropUnit, HarvestType, IrrigationType } from '@/constants/cropCategoriesData';
 import { CropFormValues } from '@/components/CropCategorySelectorModal';
+import * as AppStorage from '@/src/lib/storage';
 
 export type CropStage = 'SOWING' | 'GROWTH' | 'HARVESTING' | 'COMPLETED';
+export type CropStatus = 'ACTIVE' | 'INACTIVE';
 
 export const STAGE_ORDER: Record<CropStage, number> = {
   SOWING: 1,
@@ -25,6 +27,7 @@ export interface RegisteredCropField {
   unit: CropUnit;
   pricePerUnit: string;
   stage: CropStage;
+  status: CropStatus; // 'ACTIVE' for SOWING/GROWTH/HARVESTING, 'INACTIVE' for COMPLETED
   harvestType?: HarvestType;
   irrigationType?: IrrigationType;
 }
@@ -65,11 +68,11 @@ interface CropsContextValue {
   salesRecords: CropSaleRecord[];
   addCrop: (values: CropFormValues) => void;
   removeCrop: (id: string) => void;
-  /** Change a crop's stage. Moving to COMPLETED removes it from the active list into history. */
+  /** Change a crop's stage. Moving to COMPLETED sets status to INACTIVE and removes it from the active list into history. */
   updateCropStage: (id: string, targetStage: CropStage) => void;
   /**
    * Logs a sale for an active crop. One-time-harvest crops complete automatically
-   * as part of their one and only sale, moving straight into history.
+   * as part of their one and only sale, moving straight into history with status INACTIVE.
    */
   recordSale: (cropId: string, payload: SalePayload) => void;
 }
@@ -91,6 +94,7 @@ const INITIAL_CROPS: RegisteredCropField[] = [
     unit: 'Bunch',
     pricePerUnit: '40',
     stage: 'HARVESTING',
+    status: 'ACTIVE',
     harvestType: 'CONTINUOUS',
     irrigationType: 'Drip Irrigation (ड्रिप)',
   },
@@ -108,6 +112,7 @@ const INITIAL_CROPS: RegisteredCropField[] = [
     unit: 'Quintal',
     pricePerUnit: '2275',
     stage: 'HARVESTING',
+    status: 'ACTIVE',
     harvestType: 'ONE_TIME',
     irrigationType: 'Canal (नहर)',
   },
@@ -125,6 +130,7 @@ const INITIAL_CROPS: RegisteredCropField[] = [
     unit: 'KG',
     pricePerUnit: '',
     stage: 'GROWTH',
+    status: 'ACTIVE',
     harvestType: 'CONTINUOUS',
     irrigationType: 'Tube Well / Borewell',
   },
@@ -145,10 +151,46 @@ const INITIAL_SALES: CropSaleRecord[] = [
   },
 ];
 
+const STORAGE_KEY = 'farmsking_crops_state_v1';
+
+interface PersistedCropsState {
+  cropFields: RegisteredCropField[];
+  cropHistory: CropHistoryEntry[];
+  salesRecords: CropSaleRecord[];
+}
+
 export function CropsProvider({ children }: { children: ReactNode }) {
   const [cropFields, setCropFields] = useState<RegisteredCropField[]>(INITIAL_CROPS);
   const [cropHistory, setCropHistory] = useState<CropHistoryEntry[]>([]);
   const [salesRecords, setSalesRecords] = useState<CropSaleRecord[]>(INITIAL_SALES);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load persisted state once on mount so completed/history crops survive a refresh.
+  useEffect(() => {
+    (async () => {
+      try {
+        const raw = await AppStorage.getItemAsync(STORAGE_KEY);
+        if (raw) {
+          const parsed: PersistedCropsState = JSON.parse(raw);
+          setCropFields(parsed.cropFields ?? INITIAL_CROPS);
+          setCropHistory(parsed.cropHistory ?? []);
+          setSalesRecords(parsed.salesRecords ?? INITIAL_SALES);
+        }
+      } catch {
+        // ignore corrupt/missing storage, fall back to initial mock data
+      } finally {
+        setIsLoaded(true);
+      }
+    })();
+  }, []);
+
+  // Persist on every change, once the initial load has completed (avoids overwriting
+  // stored data with the initial mock defaults before the load finishes).
+  useEffect(() => {
+    if (!isLoaded) return;
+    const state: PersistedCropsState = { cropFields, cropHistory, salesRecords };
+    AppStorage.setItemAsync(STORAGE_KEY, JSON.stringify(state));
+  }, [isLoaded, cropFields, cropHistory, salesRecords]);
 
   const addCrop = (values: CropFormValues) => {
     const newField: RegisteredCropField = {
@@ -165,6 +207,7 @@ export function CropsProvider({ children }: { children: ReactNode }) {
       unit: values.unit,
       pricePerUnit: values.pricePerUnit,
       stage: values.stage,
+      status: 'ACTIVE',
       harvestType: values.harvestType,
       irrigationType: values.irrigationType,
     };
@@ -181,7 +224,12 @@ export function CropsProvider({ children }: { children: ReactNode }) {
         const completedCrop = prev.find((item) => item.id === id);
         if (completedCrop) {
           setCropHistory((history) => [
-            { ...completedCrop, stage: 'COMPLETED', completedDate: new Date().toISOString().slice(0, 10) },
+            {
+              ...completedCrop,
+              stage: 'COMPLETED',
+              status: 'INACTIVE',
+              completedDate: new Date().toISOString().slice(0, 10),
+            },
             ...history,
           ]);
         }
@@ -189,7 +237,13 @@ export function CropsProvider({ children }: { children: ReactNode }) {
       });
       return;
     }
-    setCropFields((prev) => prev.map((item) => (item.id === id ? { ...item, stage: targetStage } : item)));
+    setCropFields((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? { ...item, stage: targetStage, status: 'ACTIVE' }
+          : item
+      )
+    );
   };
 
   const recordSale = (cropId: string, payload: SalePayload) => {
@@ -223,6 +277,7 @@ export function CropsProvider({ children }: { children: ReactNode }) {
         {
           ...crop,
           stage: 'COMPLETED',
+          status: 'INACTIVE',
           soldQuantity: payload.quantity.trim(),
           soldRate: payload.rate.trim(),
           buyerName,

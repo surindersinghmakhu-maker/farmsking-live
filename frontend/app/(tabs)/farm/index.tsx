@@ -16,7 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/src/store/auth-context';
-import { useCrops, CropStage, RegisteredCropField, STAGE_ORDER } from '@/src/store/crops-context';
+import { useCrops, CropStage, CropHistoryEntry, RegisteredCropField, STAGE_ORDER } from '@/src/store/crops-context';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { CropCategorySelectorModal, CropFormValues } from '@/components/CropCategorySelectorModal';
@@ -57,6 +57,16 @@ export default function FarmListScreen() {
     targetStage: CropStage;
     cropName: string;
   } | null>(null);
+
+  // Completed Crop Full Details Modal state
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [selectedHistoryCrop, setSelectedHistoryCrop] = useState<CropHistoryEntry | null>(null);
+
+  const openHistoryDetail = (hItem: CropHistoryEntry) => {
+    tap();
+    setSelectedHistoryCrop(hItem);
+    setDetailModalVisible(true);
+  };
 
   const handleSaveCropForm = (values: CropFormValues) => {
     tap();
@@ -164,7 +174,7 @@ export default function FarmListScreen() {
   };
 
   const activeCropFields = useMemo(
-    () => cropFields.filter((crop) => crop.stage !== 'COMPLETED'),
+    () => cropFields.filter((crop) => crop.status === 'ACTIVE' && crop.stage !== 'COMPLETED'),
     [cropFields]
   );
 
@@ -215,9 +225,12 @@ export default function FarmListScreen() {
               </View>
 
               <View style={styles.cardBody}>
-                {/* Top Header: Plot Name + Crop Name Tag */}
+                {/* Top Header: Plot Name + Crop Name Tag + Status Badge */}
                 <View style={styles.titleRow}>
                   <Text style={styles.cardTitle}>📍 {item.fieldName}</Text>
+                  <View style={[styles.categoryBadge, { backgroundColor: '#dcfce7', borderColor: '#bbf7d0', borderWidth: 1 }]}>
+                    <Text style={[styles.categoryBadgeText, { color: '#16a34a' }]}>🟢 ACTIVE</Text>
+                  </View>
                   <View style={[styles.cropBadge, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1 }]}>
                     <Text style={styles.cropBadgeText}>🌾 {item.cropName}</Text>
                   </View>
@@ -341,7 +354,12 @@ export default function FarmListScreen() {
 
             {cropHistory.length > 0 ? (
               cropHistory.map((hItem) => (
-                <View key={hItem.id} style={[styles.historyCard, premiumShadow('#000000', 'sm')]}>
+                <TouchableOpacity
+                  key={hItem.id}
+                  style={[styles.historyCard, premiumShadow('#000000', 'sm')]}
+                  activeOpacity={0.8}
+                  onPress={() => openHistoryDetail(hItem)}
+                >
                   <View style={styles.historyCardHeader}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                       <Text style={styles.historyCropName}>📍 {hItem.fieldName}</Text>
@@ -364,7 +382,12 @@ export default function FarmListScreen() {
                   ) : (
                     <Text style={styles.historyMetaText}>Completed Crop Harvest</Text>
                   )}
-                </View>
+
+                  <View style={styles.historyViewMoreRow}>
+                    <Ionicons name="eye-outline" size={13} color="#0284c7" />
+                    <Text style={styles.historyViewMoreText}>Tap to view full details (पूरी जानकारी देखें)</Text>
+                  </View>
+                </TouchableOpacity>
               ))
             ) : (
               <View style={styles.historyEmptyBox}>
@@ -518,6 +541,86 @@ export default function FarmListScreen() {
                   </TouchableOpacity>
                 </View>
               </>
+            ) : null}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Completed Crop Full Details Modal */}
+      <Modal visible={detailModalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.saleModalCard}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalHeaderTitle}>
+                {selectedHistoryCrop ? `${selectedHistoryCrop.cropName} · Full Details` : 'Crop Details'}
+              </Text>
+              <TouchableOpacity onPress={() => setDetailModalVisible(false)}>
+                <Ionicons name="close" size={20} color="#475569" />
+              </TouchableOpacity>
+            </View>
+
+            {selectedHistoryCrop ? (
+              <View style={styles.detailListWrap}>
+                <View style={styles.completedBadge}>
+                  <Text style={styles.completedBadgeText}>🏁 COMPLETED · {selectedHistoryCrop.completedDate}</Text>
+                </View>
+
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>📍 Field</Text>
+                  <Text style={styles.detailValue}>{selectedHistoryCrop.fieldName}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>🌾 Crop</Text>
+                  <Text style={styles.detailValue}>{selectedHistoryCrop.cropName}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>🗂 Category</Text>
+                  <Text style={styles.detailValue}>{selectedHistoryCrop.categoryName}</Text>
+                </View>
+                {selectedHistoryCrop.variety ? (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>🌱 Variety</Text>
+                    <Text style={styles.detailValue}>{selectedHistoryCrop.variety}</Text>
+                  </View>
+                ) : null}
+                {selectedHistoryCrop.season ? (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>🗓 Season</Text>
+                    <Text style={styles.detailValue}>{selectedHistoryCrop.season}</Text>
+                  </View>
+                ) : null}
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>📏 Area</Text>
+                  <Text style={styles.detailValue}>{selectedHistoryCrop.area}</Text>
+                </View>
+                {selectedHistoryCrop.sowingDate ? (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>📅 Sown On</Text>
+                    <Text style={styles.detailValue}>{selectedHistoryCrop.sowingDate}</Text>
+                  </View>
+                ) : null}
+                {selectedHistoryCrop.irrigationType ? (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>💧 Irrigation</Text>
+                    <Text style={styles.detailValue}>{selectedHistoryCrop.irrigationType}</Text>
+                  </View>
+                ) : null}
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>🔄 Harvest Type</Text>
+                  <Text style={styles.detailValue}>
+                    {(selectedHistoryCrop.harvestType || 'CONTINUOUS') === 'CONTINUOUS' ? 'Daily / Continuous' : 'One-Time'}
+                  </Text>
+                </View>
+
+                {selectedHistoryCrop.soldQuantity ? (
+                  <View style={styles.historyRevenueBox}>
+                    <Ionicons name="cash" size={15} color="#16a34a" />
+                    <Text style={styles.historyRevenueText}>
+                      Sold: {selectedHistoryCrop.soldQuantity} {selectedHistoryCrop.unit} @ ₹{selectedHistoryCrop.soldRate} / {selectedHistoryCrop.unit} = ₹{(selectedHistoryCrop.totalRevenue ?? 0).toLocaleString('en-IN')} ({selectedHistoryCrop.buyerName})
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
             ) : null}
           </View>
         </View>
@@ -757,6 +860,39 @@ const styles = StyleSheet.create({
     fontFamily: FONT.medium,
     color: '#64748b',
     marginTop: 4,
+  },
+  historyViewMoreRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 8,
+  },
+  historyViewMoreText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#0284c7',
+  },
+  detailListWrap: { gap: 2, marginTop: 4 },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  detailLabel: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  detailValue: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+    textAlign: 'right',
+    flexShrink: 1,
+    marginLeft: 12,
   },
   historyEmptyBox: {
     alignItems: 'center',

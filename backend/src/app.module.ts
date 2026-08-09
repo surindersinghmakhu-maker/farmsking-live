@@ -12,6 +12,11 @@ import { CropsModule } from './modules/crops/crops.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { MarketRatesModule } from './modules/market-rates/market-rates.module';
 import { ExpensesModule } from './modules/expenses/expenses.module';
+import { UploadsModule } from './modules/uploads/uploads.module';
+import { AdvisorAssignmentModule } from './modules/advisor-assignment/advisor-assignment.module';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
+import { CropActivitySchedulesModule } from './modules/crop-activity-schedules/crop-activity-schedules.module';
+import { CropProblemsModule } from './modules/crop-problems/crop-problems.module';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 
 @Module({
@@ -26,6 +31,11 @@ import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter'
     DashboardModule,
     MarketRatesModule,
     ExpensesModule,
+    UploadsModule,
+    AdvisorAssignmentModule,
+    SubscriptionsModule,
+    CropActivitySchedulesModule,
+    CropProblemsModule,
   ],
   controllers: [AppController],
   providers: [

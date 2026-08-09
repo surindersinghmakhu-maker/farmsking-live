@@ -132,6 +132,30 @@ enum NotificationType {
   SYSTEM
 }
 
+enum SubscriptionPlanStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+  CANCELLED
+  EXPIRED
+}
+
+enum ActivityType {
+  IRRIGATION
+  FERTILIZER
+  SPRAY
+  MONITORING
+  HARVEST
+  OTHER
+}
+
+enum ActivityStatus {
+  PENDING
+  COMPLETED
+  SKIPPED
+  OVERDUE
+}
+
 // ─── Phase 1: Users, Farms, Plots, Crops ────────────────────────────────
 
 model User {
@@ -172,6 +196,11 @@ model User {
   gardens                       Garden[]
   customerOrders                CustomerOrder[]
   partnerReferrals              PartnerReferral[]
+  advisorSubscriptionsAsFarmer  AdvisorSubscription[]  @relation("SubscriptionFarmer")
+  advisorSubscriptionsApproved  AdvisorSubscription[]  @relation("SubscriptionApprovedBy")
+  activitySchedulesCreated      CropActivitySchedule[] @relation("ActivityCreatedByAdvisor")
+  activitySchedulesCompleted    CropActivitySchedule[] @relation("ActivityCompletedBy")
+  uploads                       Upload[]
 
   @@map("users")
 }
@@ -261,6 +290,7 @@ model CropCycle {
   harvests              Harvest[]
   irrigationRecords     IrrigationRecord[]
   inventoryTransactions InventoryTransaction[]
+  activitySchedules     CropActivitySchedule[]
 
   @@index([plotId])
   @@map("crop_cycles")
@@ -719,24 +749,108 @@ model IrrigationRecord {
 // ─── Phase 4: Advisor assignment (schema only) ──────────────────────────
 
 model AdvisorAssignment {
-  id           String                  @id @default(uuid())
-  advisorId    String
-  advisor      User                    @relation("AdvisorAssignmentAdvisor", fields: [advisorId], references: [id])
-  farmerId     String
-  farmer       User                    @relation("AdvisorAssignmentFarmer", fields: [farmerId], references: [id])
-  status       AdvisorAssignmentStatus @default(PENDING)
-  assignedById String?
-  assignedBy   User?                   @relation("AdvisorAssignmentAssignedBy", fields: [assignedById], references: [id], onDelete: SetNull)
-  startDate    DateTime
-  endDate      DateTime?
-  notes        String?
-  createdAt    DateTime                @default(now())
-  updatedAt    DateTime                @updatedAt
-  deletedAt    DateTime?
+  id             String                  @id @default(uuid())
+  advisorId      String
+  advisor        User                    @relation("AdvisorAssignmentAdvisor", fields: [advisorId], references: [id])
+  farmerId       String
+  farmer         User                    @relation("AdvisorAssignmentFarmer", fields: [farmerId], references: [id])
+  status         AdvisorAssignmentStatus @default(PENDING)
+  assignedById   String?
+  assignedBy     User?                   @relation("AdvisorAssignmentAssignedBy", fields: [assignedById], references: [id], onDelete: SetNull)
+  subscriptionId String?                 @unique
+  subscription   AdvisorSubscription?    @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  startDate      DateTime
+  endDate        DateTime?
+  notes          String?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  deletedAt      DateTime?
 
   @@index([advisorId])
   @@index([farmerId])
   @@map("advisor_assignments")
+}
+
+// ─── Phase 7: Farmer Advisor Plan (Subscription, Schedule, Uploads) ─────
+
+model AdvisorPlan {
+  id           String   @id @default(uuid())
+  name         String
+  description  String?
+  price        Decimal  @db.Decimal(12, 2)
+  billingCycle String   @default("MONTHLY")
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  subscriptions AdvisorSubscription[]
+
+  @@map("advisor_plans")
+}
+
+model AdvisorSubscription {
+  id           String                 @id @default(uuid())
+  farmerId     String
+  farmer       User                   @relation("SubscriptionFarmer", fields: [farmerId], references: [id], onDelete: Cascade)
+  planId       String
+  plan         AdvisorPlan            @relation(fields: [planId], references: [id])
+  status       SubscriptionPlanStatus @default(PENDING)
+  requestedAt  DateTime               @default(now())
+  approvedAt   DateTime?
+  approvedById String?
+  approvedBy   User?                  @relation("SubscriptionApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  startDate    DateTime?
+  endDate      DateTime?
+  cancelledAt  DateTime?
+  notes        String?
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  deletedAt    DateTime?
+
+  advisorAssignment AdvisorAssignment?
+
+  @@index([farmerId])
+  @@index([planId])
+  @@map("advisor_subscriptions")
+}
+
+model CropActivitySchedule {
+  id                 String         @id @default(uuid())
+  cropCycleId        String
+  cropCycle          CropCycle      @relation(fields: [cropCycleId], references: [id], onDelete: Cascade)
+  activityType       ActivityType
+  title              String
+  description        String?
+  scheduledDate      DateTime
+  status             ActivityStatus @default(PENDING)
+  completedAt        DateTime?
+  completedById      String?
+  completedBy        User?          @relation("ActivityCompletedBy", fields: [completedById], references: [id], onDelete: SetNull)
+  createdByAdvisorId String
+  createdByAdvisor   User           @relation("ActivityCreatedByAdvisor", fields: [createdByAdvisorId], references: [id])
+  notes              String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  deletedAt          DateTime?
+
+  @@index([cropCycleId])
+  @@index([createdByAdvisorId])
+  @@index([scheduledDate])
+  @@map("crop_activity_schedules")
+}
+
+model Upload {
+  id           String   @id @default(uuid())
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  fileUrl      String
+  mimeType     String
+  originalName String
+  sizeBytes    Int
+  createdAt    DateTime @default(now())
+
+  @@index([uploadedById])
+  @@map("uploads")
 }
 
 // ─── Phase 5: Market rates, Notifications ───────────────────────────────

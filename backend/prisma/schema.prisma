@@ -1,0 +1,866 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────
+
+enum Role {
+  FARMER
+  ADVISOR
+  GARDENER
+  CUSTOMER
+  BUSINESS_PARTNER
+  ADMIN
+}
+
+enum AreaUnit {
+  ACRE
+  HECTARE
+  BIGHA
+  GUNTA
+}
+
+enum CropStatus {
+  PLANNED
+  ACTIVE
+  HARVESTING
+  COMPLETED
+  FAILED
+}
+
+enum CropCategory {
+  FLOWERS
+  VEGETABLES
+  FRUITS
+  GRAINS
+  PULSES
+  SPICES
+  CASH_CROP
+  OTHER
+}
+
+enum PaymentMode {
+  CASH
+  UPI
+  BANK_TRANSFER
+  CHEQUE
+  CARD
+  OTHER
+}
+
+enum LabourWageType {
+  DAILY
+  CONTRACT
+  PIECE_RATE
+}
+
+enum FertilizerType {
+  ORGANIC
+  CHEMICAL
+  BIO
+}
+
+enum SprayType {
+  PESTICIDE
+  FUNGICIDE
+  HERBICIDE
+  INSECTICIDE
+  GROWTH_REGULATOR
+  OTHER
+}
+
+enum SprayScheduleStatus {
+  PENDING
+  COMPLETED
+  SKIPPED
+  OVERDUE
+}
+
+enum CropProblemSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum CropProblemStatus {
+  REPORTED
+  UNDER_REVIEW
+  ADVISOR_RESPONDED
+  RESOLVED
+  CLOSED
+}
+
+enum InventoryItemType {
+  SEED
+  FERTILIZER
+  PESTICIDE
+  PRODUCE
+  EQUIPMENT_PART
+  OTHER
+}
+
+enum InventoryTransactionType {
+  STOCK_IN
+  STOCK_OUT
+  ADJUSTMENT
+  WASTAGE
+}
+
+enum MachineryOwnership {
+  OWNED
+  RENTED
+}
+
+enum AdvisorAssignmentStatus {
+  PENDING
+  ACTIVE
+  REVOKED
+}
+
+enum NotificationType {
+  SPRAY_REMINDER
+  PAYMENT_DUE
+  ADVISOR_MESSAGE
+  CROP_PROBLEM_UPDATE
+  MARKET_RATE_ALERT
+  SYSTEM
+}
+
+// ─── Phase 1: Users, Farms, Plots, Crops ────────────────────────────────
+
+model User {
+  id                String    @id @default(uuid())
+  mobile            String    @unique
+  passwordHash      String
+  role              Role      @default(FARMER)
+  name              String
+  email             String?
+  village           String?
+  district          String?
+  state             String?
+  preferredLanguage String    @default("en")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
+
+  farms Farm[]
+
+  customers                     Customer[]
+  expensesRecorded              Expense[]
+  salesRecorded                 Sale[]
+  paymentsRecorded              Payment[]
+  labourEntriesRecorded         LabourEntry[]
+  fertilizersAdded              Fertilizer[]
+  fertilizerUsagesRecorded      FertilizerUsage[]
+  spraysRecorded                Spray[]
+  spraySchedulesCreated         SpraySchedule[]
+  cropProblemsReported          CropProblem[]          @relation("CropProblemReporter")
+  cropProblemsAssigned          CropProblem[]          @relation("CropProblemAdvisor")
+  harvestsRecorded              Harvest[]
+  inventoryTransactionsRecorded InventoryTransaction[]
+  irrigationRecordsRecorded     IrrigationRecord[]
+  advisorAssignmentsAsAdvisor   AdvisorAssignment[]    @relation("AdvisorAssignmentAdvisor")
+  advisorAssignmentsAsFarmer    AdvisorAssignment[]    @relation("AdvisorAssignmentFarmer")
+  advisorAssignmentsCreated     AdvisorAssignment[]    @relation("AdvisorAssignmentAssignedBy")
+  notifications                 Notification[]
+  gardens                       Garden[]
+  customerOrders                CustomerOrder[]
+  partnerReferrals              PartnerReferral[]
+
+  @@map("users")
+}
+
+model Farm {
+  id               String    @id @default(uuid())
+  ownerId          String
+  owner            User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name             String
+  village          String?
+  district         String?
+  state            String?
+  totalArea        Float
+  areaUnit         AreaUnit  @default(ACRE)
+  soilType         String?
+  irrigationSource String?
+  notes            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  plots Plot[]
+
+  expenses       Expense[]
+  sales          Sale[]
+  labourWorkers  LabourWorker[]
+  labourEntries  LabourEntry[]
+  inventoryItems InventoryItem[]
+  machinery      Machinery[]
+
+  @@index([ownerId])
+  @@map("farms")
+}
+
+model Plot {
+  id             String    @id @default(uuid())
+  farmId         String
+  farm           Farm      @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  name           String
+  area           Float
+  areaUnit       AreaUnit  @default(ACRE)
+  soilType       String?
+  irrigationType String?
+  waterSource    String?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  cropCycles CropCycle[]
+
+  expenses          Expense[]
+  sales             Sale[]
+  labourEntries     LabourEntry[]
+  irrigationRecords IrrigationRecord[]
+
+  @@index([farmId])
+  @@map("plots")
+}
+
+model CropCycle {
+  id                  String        @id @default(uuid())
+  plotId              String
+  plot                Plot          @relation(fields: [plotId], references: [id], onDelete: Cascade)
+  category            CropCategory?
+  cropName            String
+  variety             String?
+  area                Float?
+  plantCount          Int?
+  sowingDate          DateTime?
+  transplantDate      DateTime?
+  expectedHarvestDate DateTime?
+  actualHarvestDate   DateTime?
+  status              CropStatus    @default(PLANNED)
+  notes               String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  deletedAt           DateTime?
+
+  expenses              Expense[]
+  sales                 Sale[]
+  labourEntries         LabourEntry[]
+  fertilizerUsages      FertilizerUsage[]
+  sprays                Spray[]
+  spraySchedules        SpraySchedule[]
+  cropProblems          CropProblem[]
+  harvests              Harvest[]
+  irrigationRecords     IrrigationRecord[]
+  inventoryTransactions InventoryTransaction[]
+
+  @@index([plotId])
+  @@map("crop_cycles")
+}
+
+// ─── Phase 2: Expenses, Sales, Customers, Payments ──────────────────────
+
+model ExpenseCategory {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  labelEn   String
+  labelHi   String
+  icon      String?
+  isSystem  Boolean  @default(true)
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  expenses Expense[]
+
+  @@map("expense_categories")
+}
+
+model Expense {
+  id              String          @id @default(uuid())
+  farmId          String
+  farm            Farm            @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  plotId          String?
+  plot            Plot?           @relation(fields: [plotId], references: [id], onDelete: SetNull)
+  cropCycleId     String?
+  cropCycle       CropCycle?      @relation(fields: [cropCycleId], references: [id], onDelete: SetNull)
+  categoryId      String
+  category        ExpenseCategory @relation(fields: [categoryId], references: [id])
+  machineryId     String?
+  machinery       Machinery?      @relation(fields: [machineryId], references: [id], onDelete: SetNull)
+  amount          Decimal         @db.Decimal(12, 2)
+  expenseDate     DateTime
+  paymentMode     PaymentMode?
+  vendorName      String?
+  description     String?
+  quantity        Float?
+  unit            String?
+  receiptPhotoUrl String?
+  recordedById    String
+  recordedBy      User            @relation(fields: [recordedById], references: [id])
+  notes           String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  deletedAt       DateTime?
+
+  fertilizerUsages      FertilizerUsage[]
+  sprays                Spray[]
+  irrigationRecords     IrrigationRecord[]
+  inventoryTransactions InventoryTransaction[]
+
+  @@index([farmId])
+  @@index([plotId])
+  @@index([cropCycleId])
+  @@index([categoryId])
+  @@index([machineryId])
+  @@map("expenses")
+}
+
+model Customer {
+  id        String    @id @default(uuid())
+  farmerId  String
+  farmer    User      @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  name      String
+  mobile    String?
+  village   String?
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  sales    Sale[]
+  payments Payment[]
+
+  @@index([farmerId])
+  @@map("customers")
+}
+
+model Sale {
+  id           String       @id @default(uuid())
+  farmId       String
+  farm         Farm         @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  plotId       String?
+  plot         Plot?        @relation(fields: [plotId], references: [id], onDelete: SetNull)
+  cropCycleId  String?
+  cropCycle    CropCycle?   @relation(fields: [cropCycleId], references: [id], onDelete: SetNull)
+  customerId   String
+  customer     Customer     @relation(fields: [customerId], references: [id])
+  saleDate     DateTime
+  totalAmount  Decimal      @default(0) @db.Decimal(12, 2)
+  paymentMode  PaymentMode?
+  notes        String?
+  recordedById String
+  recordedBy   User         @relation(fields: [recordedById], references: [id])
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deletedAt    DateTime?
+
+  items    SaleItem[]
+  payments Payment[]
+
+  @@index([farmId])
+  @@index([plotId])
+  @@index([cropCycleId])
+  @@index([customerId])
+  @@map("sales")
+}
+
+model SaleItem {
+  id           String   @id @default(uuid())
+  saleId       String
+  sale         Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productName  String
+  quantity     Float
+  unit         String
+  pricePerUnit Decimal  @db.Decimal(12, 2)
+  amount       Decimal  @db.Decimal(12, 2)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([saleId])
+  @@map("sale_items")
+}
+
+model Payment {
+  id           String       @id @default(uuid())
+  customerId   String
+  customer     Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  saleId       String?
+  sale         Sale?        @relation(fields: [saleId], references: [id], onDelete: SetNull)
+  amount       Decimal      @db.Decimal(12, 2)
+  paymentDate  DateTime
+  paymentMode  PaymentMode?
+  notes        String?
+  recordedById String
+  recordedBy   User         @relation(fields: [recordedById], references: [id])
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deletedAt    DateTime?
+
+  @@index([customerId])
+  @@index([saleId])
+  @@map("payments")
+}
+
+// ─── Phase 3: Labour, Fertilizer, Spray, Harvest, Inventory, Machinery, Irrigation ──
+
+model LabourWorker {
+  id               String    @id @default(uuid())
+  farmId           String
+  farm             Farm      @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  name             String
+  mobile           String?
+  defaultDailyWage Decimal?  @db.Decimal(12, 2)
+  notes            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  labourEntries   LabourEntry[]
+  spraysPerformed Spray[]
+
+  @@index([farmId])
+  @@map("labour_workers")
+}
+
+model LabourEntry {
+  id           String         @id @default(uuid())
+  farmId       String
+  farm         Farm           @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  plotId       String?
+  plot         Plot?          @relation(fields: [plotId], references: [id], onDelete: SetNull)
+  cropCycleId  String?
+  cropCycle    CropCycle?     @relation(fields: [cropCycleId], references: [id], onDelete: SetNull)
+  workerId     String?
+  worker       LabourWorker?  @relation(fields: [workerId], references: [id], onDelete: SetNull)
+  workerCount  Int            @default(1)
+  workType     String
+  workDate     DateTime
+  wageType     LabourWageType
+  wageAmount   Decimal        @db.Decimal(12, 2)
+  paid         Boolean        @default(false)
+  notes        String?
+  recordedById String
+  recordedBy   User           @relation(fields: [recordedById], references: [id])
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  deletedAt    DateTime?
+
+  @@index([farmId])
+  @@index([plotId])
+  @@index([cropCycleId])
+  @@index([workerId])
+  @@map("labour_entries")
+}
+
+model Fertilizer {
+  id          String          @id @default(uuid())
+  name        String
+  type        FertilizerType?
+  defaultUnit String
+  isSystem    Boolean         @default(true)
+  addedById   String?
+  addedBy     User?           @relation(fields: [addedById], references: [id], onDelete: SetNull)
+  notes       String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  deletedAt   DateTime?
+
+  usages FertilizerUsage[]
+
+  @@map("fertilizers")
+}
+
+model FertilizerUsage {
+  id                String     @id @default(uuid())
+  cropCycleId       String
+  cropCycle         CropCycle  @relation(fields: [cropCycleId], references: [id], onDelete: Cascade)
+  fertilizerId      String
+  fertilizer        Fertilizer @relation(fields: [fertilizerId], references: [id])
+  quantity          Float
+  unit              String
+  applicationDate   DateTime
+  applicationMethod String?
+  expenseId         String?
+  expense           Expense?   @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+  notes             String?
+  recordedById      String
+  recordedBy        User       @relation(fields: [recordedById], references: [id])
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  deletedAt         DateTime?
+
+  @@index([cropCycleId])
+  @@index([fertilizerId])
+  @@index([expenseId])
+  @@map("fertilizer_usage")
+}
+
+model Spray {
+  id           String        @id @default(uuid())
+  cropCycleId  String
+  cropCycle    CropCycle     @relation(fields: [cropCycleId], references: [id], onDelete: Cascade)
+  sprayType    SprayType
+  productName  String
+  quantity     Float?
+  unit         String?
+  sprayDate    DateTime
+  doneById     String?
+  doneBy       LabourWorker? @relation(fields: [doneById], references: [id], onDelete: SetNull)
+  expenseId    String?
+  expense      Expense?      @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+  result       String?
+  notes        String?
+  recordedById String
+  recordedBy   User          @relation(fields: [recordedById], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+
+  schedule SpraySchedule?
+
+  @@index([cropCycleId])
+  @@index([expenseId])
+  @@map("sprays")
+}
+
+model SpraySchedule {
+  id                 String              @id @default(uuid())
+  cropCycleId        String
+  cropCycle          CropCycle           @relation(fields: [cropCycleId], references: [id], onDelete: Cascade)
+  scheduledDate      DateTime
+  sprayType          SprayType?
+  recommendedProduct String?
+  dosageInstructions String?
+  alternativeOption  String?
+  createdByAdvisorId String
+  createdByAdvisor   User                @relation(fields: [createdByAdvisorId], references: [id])
+  status             SprayScheduleStatus @default(PENDING)
+  completedSprayId   String?             @unique
+  completedSpray     Spray?              @relation(fields: [completedSprayId], references: [id], onDelete: SetNull)
+  notes              String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  deletedAt          DateTime?
+
+  @@index([cropCycleId])
+  @@index([createdByAdvisorId])
+  @@map("spray_schedules")
+}
+
+model CropProblem {
+  id                 String               @id @default(uuid())
+  cropCycleId        String
+  cropCycle          CropCycle            @relation(fields: [cropCycleId], references: [id], onDelete: Cascade)
+  reportedById       String
+  reportedBy         User                 @relation("CropProblemReporter", fields: [reportedById], references: [id])
+  title              String
+  description        String
+  severity           CropProblemSeverity?
+  status             CropProblemStatus    @default(REPORTED)
+  assignedAdvisorId  String?
+  assignedAdvisor    User?                @relation("CropProblemAdvisor", fields: [assignedAdvisorId], references: [id], onDelete: SetNull)
+  advisorResponse    String?
+  recommendedProduct String?
+  followUpDate       DateTime?
+  resolvedAt         DateTime?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  deletedAt          DateTime?
+
+  photos CropProblemPhoto[]
+
+  @@index([cropCycleId])
+  @@index([assignedAdvisorId])
+  @@map("crop_problems")
+}
+
+model CropProblemPhoto {
+  id            String      @id @default(uuid())
+  cropProblemId String
+  cropProblem   CropProblem @relation(fields: [cropProblemId], references: [id], onDelete: Cascade)
+  photoUrl      String
+  caption       String?
+  uploadedAt    DateTime    @default(now())
+
+  @@index([cropProblemId])
+  @@map("crop_problem_photos")
+}
+
+model Harvest {
+  id            String    @id @default(uuid())
+  cropCycleId   String
+  cropCycle     CropCycle @relation(fields: [cropCycleId], references: [id], onDelete: Cascade)
+  harvestDate   DateTime
+  totalQuantity Float     @default(0)
+  unit          String
+  wasteQuantity Float?
+  notes         String?
+  recordedById  String
+  recordedBy    User      @relation(fields: [recordedById], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  gradeBreakdowns HarvestGradeBreakdown[]
+
+  @@index([cropCycleId])
+  @@map("harvests")
+}
+
+model HarvestGradeBreakdown {
+  id           String   @id @default(uuid())
+  harvestId    String
+  harvest      Harvest  @relation(fields: [harvestId], references: [id], onDelete: Cascade)
+  grade        String
+  quantity     Float
+  unit         String
+  pricePerUnit Decimal? @db.Decimal(12, 2)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([harvestId])
+  @@map("harvest_grade_breakdowns")
+}
+
+model InventoryItem {
+  id                String            @id @default(uuid())
+  farmId            String
+  farm              Farm              @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  name              String
+  itemType          InventoryItemType
+  unit              String
+  currentQuantity   Float             @default(0)
+  lowStockThreshold Float?
+  notes             String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  deletedAt         DateTime?
+
+  transactions InventoryTransaction[]
+
+  @@index([farmId])
+  @@map("inventory_items")
+}
+
+model InventoryTransaction {
+  id                 String                   @id @default(uuid())
+  inventoryItemId    String
+  inventoryItem      InventoryItem            @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  transactionType    InventoryTransactionType
+  quantity           Float
+  transactionDate    DateTime
+  relatedCropCycleId String?
+  relatedCropCycle   CropCycle?               @relation(fields: [relatedCropCycleId], references: [id], onDelete: SetNull)
+  relatedExpenseId   String?
+  relatedExpense     Expense?                 @relation(fields: [relatedExpenseId], references: [id], onDelete: SetNull)
+  notes              String?
+  recordedById       String
+  recordedBy         User                     @relation(fields: [recordedById], references: [id])
+  createdAt          DateTime                 @default(now())
+
+  @@index([inventoryItemId])
+  @@index([relatedCropCycleId])
+  @@index([relatedExpenseId])
+  @@map("inventory_transactions")
+}
+
+model Machinery {
+  id        String             @id @default(uuid())
+  farmId    String
+  farm      Farm               @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  name      String
+  ownership MachineryOwnership
+  notes     String?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  deletedAt DateTime?
+
+  expenses Expense[]
+
+  @@index([farmId])
+  @@map("machinery")
+}
+
+model IrrigationRecord {
+  id              String     @id @default(uuid())
+  plotId          String
+  plot            Plot       @relation(fields: [plotId], references: [id], onDelete: Cascade)
+  cropCycleId     String?
+  cropCycle       CropCycle? @relation(fields: [cropCycleId], references: [id], onDelete: SetNull)
+  irrigationDate  DateTime
+  method          String?
+  durationMinutes Int?
+  waterSource     String?
+  expenseId       String?
+  expense         Expense?   @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+  notes           String?
+  recordedById    String
+  recordedBy      User       @relation(fields: [recordedById], references: [id])
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  deletedAt       DateTime?
+
+  @@index([plotId])
+  @@index([cropCycleId])
+  @@index([expenseId])
+  @@map("irrigation_records")
+}
+
+// ─── Phase 4: Advisor assignment (schema only) ──────────────────────────
+
+model AdvisorAssignment {
+  id           String                  @id @default(uuid())
+  advisorId    String
+  advisor      User                    @relation("AdvisorAssignmentAdvisor", fields: [advisorId], references: [id])
+  farmerId     String
+  farmer       User                    @relation("AdvisorAssignmentFarmer", fields: [farmerId], references: [id])
+  status       AdvisorAssignmentStatus @default(PENDING)
+  assignedById String?
+  assignedBy   User?                   @relation("AdvisorAssignmentAssignedBy", fields: [assignedById], references: [id], onDelete: SetNull)
+  startDate    DateTime
+  endDate      DateTime?
+  notes        String?
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+  deletedAt    DateTime?
+
+  @@index([advisorId])
+  @@index([farmerId])
+  @@map("advisor_assignments")
+}
+
+// ─── Phase 5: Market rates, Notifications ───────────────────────────────
+
+model MarketRate {
+  id         String   @id @default(uuid())
+  cropName   String
+  variety    String?
+  market     String
+  state      String?
+  district   String?
+  minPrice   Decimal? @db.Decimal(12, 2)
+  maxPrice   Decimal? @db.Decimal(12, 2)
+  modalPrice Decimal? @db.Decimal(12, 2)
+  unit       String   @default("quintal")
+  rateDate   DateTime
+  source     String   @default("manual")
+  createdAt  DateTime @default(now())
+
+  @@index([cropName, rateDate])
+  @@map("market_rates")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String
+  data      Json?
+  isRead    Boolean          @default(false)
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+// ─── Phase 6: Gardener, Customer, Business Partner Dashboards ────────────
+
+model Garden {
+  id          String   @id @default(uuid())
+  gardenerId  String
+  gardener    User     @relation(fields: [gardenerId], references: [id], onDelete: Cascade)
+  name        String
+  location    String?
+  area        Float?
+  healthScore Int      @default(85)
+  status      String   @default("Active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  visits GardenVisit[]
+
+  @@index([gardenerId])
+  @@map("gardens")
+}
+
+model GardenVisit {
+  id            String   @id @default(uuid())
+  gardenId      String
+  garden        Garden   @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+  visitTitle    String
+  scheduledTime DateTime
+  status        String   @default("Scheduled")
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  @@index([gardenId])
+  @@map("garden_visits")
+}
+
+model CustomerProduct {
+  id          String   @id @default(uuid())
+  name        String
+  category    String
+  price       Decimal  @db.Decimal(12, 2)
+  rating      Float    @default(4.5)
+  unit        String
+  imageUrl    String?
+  isTopSeller Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@map("customer_products")
+}
+
+model CustomerOrder {
+  id           String    @id @default(uuid())
+  customerId   String
+  customer     User      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  orderNumber  String    @unique
+  totalAmount  Decimal   @db.Decimal(12, 2)
+  status       String    @default("In Transit")
+  orderDate    DateTime  @default(now())
+  deliveryDate DateTime?
+
+  items CustomerOrderItem[]
+
+  @@index([customerId])
+  @@map("customer_orders")
+}
+
+model CustomerOrderItem {
+  id          String        @id @default(uuid())
+  orderId     String
+  order       CustomerOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productName String
+  quantity    Int
+  price       Decimal       @db.Decimal(12, 2)
+
+  @@index([orderId])
+  @@map("customer_order_items")
+}
+
+model PartnerReferral {
+  id           String   @id @default(uuid())
+  partnerId    String
+  partner      User     @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  referredName String
+  joinDate     DateTime @default(now())
+  commission   Decimal  @default(750) @db.Decimal(12, 2)
+  status       String   @default("Active")
+
+  @@index([partnerId])
+  @@map("partner_referrals")
+}

@@ -30,19 +30,19 @@ export class SubscriptionsController {
     return this.subscriptionsService.findMine(user);
   }
 
-  @Roles(Role.FARMER, Role.ADMIN)
+  @Roles(Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN)
   @Post(':id/cancel')
   cancel(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.subscriptionsService.cancel(user, id);
   }
 
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Post(':id/approve')
   approve(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.subscriptionsService.approve(user, id);
   }
 
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Post(':id/reject')
   reject(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.subscriptionsService.reject(user, id);

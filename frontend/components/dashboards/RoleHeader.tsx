@@ -1,16 +1,21 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { RoleThemes, UserRole } from '@/constants/Colors';
 import { FONT, RADIUS } from '@/constants/theme';
+import { useUnreadNotificationCount } from '@/src/hooks/useNotifications';
+import { Avatar } from '@/src/components/Avatar';
+import { useCart } from '@/src/store/cart-context';
 
 interface RoleHeaderProps {
   currentRole: UserRole;
   profileName: string;
   subtitle?: string;
   avatarUrl?: string;
+  /** Optional badge to render below the subtitle (e.g. plan name pill) */
+  planBadge?: React.ReactNode;
 }
 
 function getTimeBasedGreeting(): string {
@@ -26,23 +31,20 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
   profileName,
   subtitle,
   avatarUrl,
+  planBadge,
 }) => {
   const theme = RoleThemes[currentRole];
   const router = useRouter();
   const showShopShortcut = currentRole !== 'CUSTOMER' && currentRole !== 'ADMIN';
   const greeting = getTimeBasedGreeting();
+  const { data: unreadData } = useUnreadNotificationCount();
+  const unreadCount = unreadData?.count ?? 0;
+  const { itemCount: cartItemCount } = useCart();
 
   return (
     <LinearGradient colors={theme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.headerContainer}>
-      {/* Top Banner Row: Logo + Role Selector + Bell */}
-      <View style={styles.topRow}>
-        <View style={styles.brandContainer}>
-          <View style={styles.brandIconBadge}>
-            <Ionicons name="leaf" size={16} color={theme.primary} />
-          </View>
-          <Text style={styles.brandText}>FarmsKing</Text>
-        </View>
-
+      {/* Top Banner Row: Bell */}
+      <View style={[styles.topRow, styles.topRowEnd]}>
         <View style={styles.actionsRight}>
           {showShopShortcut && (
             <TouchableOpacity
@@ -51,12 +53,25 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
               onPress={() => router.push('/(tabs)/categories')}
             >
               <Ionicons name="cart-outline" size={19} color="#fff" />
+              {cartItemCount > 0 ? (
+                <View style={styles.notifDot}>
+                  {cartItemCount <= 9 ? <Text style={styles.notifDotText}>{cartItemCount}</Text> : null}
+                </View>
+              ) : null}
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity style={styles.iconButton} activeOpacity={0.75}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            activeOpacity={0.75}
+            onPress={() => router.push('/notifications' as never)}
+          >
             <Ionicons name="notifications-outline" size={19} color="#fff" />
-            <View style={styles.notifDot} />
+            {unreadCount > 0 ? (
+              <View style={styles.notifDot}>
+                {unreadCount <= 9 ? <Text style={styles.notifDotText}>{unreadCount}</Text> : null}
+              </View>
+            ) : null}
           </TouchableOpacity>
         </View>
       </View>
@@ -67,15 +82,16 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
           <Text style={styles.greetingText}>{greeting}</Text>
           <Text style={styles.nameText}>{profileName}</Text>
           {subtitle ? <Text style={styles.subtitleText}>{subtitle}</Text> : null}
+          {planBadge ?? null}
         </View>
 
-        <TouchableOpacity style={styles.avatarRing} activeOpacity={0.8} onPress={() => router.push('/profile')}>
-          <Image
-            source={{
-              uri: avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-            }}
-            style={styles.avatar}
-          />
+        <TouchableOpacity
+          style={styles.avatarRing}
+          activeOpacity={currentRole === 'ADMIN' ? 1 : 0.8}
+          disabled={currentRole === 'ADMIN'}
+          onPress={() => router.push('/profile')}
+        >
+          <Avatar uri={avatarUrl} size={47} />
         </TouchableOpacity>
       </View>
     </LinearGradient>
@@ -84,9 +100,9 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
 
 const styles = StyleSheet.create({
   headerContainer: {
-    paddingTop: Platform.OS === 'web' ? 22 : 40,
+    paddingTop: Platform.OS === 'web' ? 6 : 4,
     paddingHorizontal: 20,
-    paddingBottom: 22,
+    paddingBottom: 6,
     borderBottomLeftRadius: RADIUS.lg,
     borderBottomRightRadius: RADIUS.lg,
     overflow: 'hidden',
@@ -96,26 +112,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 22,
+    marginTop: 0,
+    marginBottom: 0,
   },
-  brandContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  brandIconBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 9,
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  brandText: {
-    color: '#ffffff',
-    fontSize: 19,
-    fontFamily: FONT.extraBold,
-    letterSpacing: 0.2,
+  topRowEnd: {
+    justifyContent: 'flex-end',
   },
   actionsRight: {
     flexDirection: 'row',
@@ -134,19 +135,28 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   notifDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    minWidth: 15,
+    height: 15,
+    borderRadius: 8,
+    paddingHorizontal: 2,
     backgroundColor: '#fb7185',
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.9)',
     position: 'absolute',
-    top: 5,
-    right: 5,
+    top: 2,
+    right: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notifDotText: {
+    color: '#ffffff',
+    fontSize: 9,
+    fontFamily: FONT.bold,
+    lineHeight: 11,
   },
   userRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
   },
   userInfoLeft: {
@@ -159,21 +169,21 @@ const styles = StyleSheet.create({
   },
   nameText: {
     color: '#ffffff',
-    fontSize: 23,
+    fontSize: 21,
     fontFamily: FONT.extraBold,
-    marginTop: 2,
+    marginTop: 0,
     letterSpacing: -0.3,
   },
   subtitleText: {
     color: 'rgba(255,255,255,0.85)',
-    fontSize: 13,
+    fontSize: 12.5,
     fontFamily: FONT.medium,
-    marginTop: 3,
+    marginTop: 1,
   },
   avatarRing: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     padding: 2.5,
     backgroundColor: 'rgba(255,255,255,0.9)',
     alignItems: 'center',

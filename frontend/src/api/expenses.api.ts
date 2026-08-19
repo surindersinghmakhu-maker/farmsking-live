@@ -9,6 +9,7 @@ export interface CreateExpensePayload {
   amount: number;
   expenseDate: string;
   paymentMode?: PaymentMode;
+  partyId?: string;
   vendorName?: string;
   description?: string;
   quantity?: number;

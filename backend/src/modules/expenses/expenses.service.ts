@@ -1,9 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { Role } from '@prisma/client';
+import { PaymentMode, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { FarmsService } from '../farms/farms.service';
 import { PlotsService } from '../plots/plots.service';
 import { CropsService } from '../crops/crops.service';
+import { PartiesService } from '../parties/parties.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
@@ -15,6 +16,7 @@ export class ExpensesService {
     private readonly farmsService: FarmsService,
     private readonly plotsService: PlotsService,
     private readonly cropsService: CropsService,
+    private readonly partiesService: PartiesService,
   ) {}
 
   private async assertRelationsBelongToFarm(user: AuthUser, farmId: string, plotId?: string, cropCycleId?: string) {
@@ -48,17 +50,28 @@ export class ExpensesService {
     await this.assertRelationsBelongToFarm(user, dto.farmId, dto.plotId, dto.cropCycleId);
 
     const { expenseDate, ...rest } = dto;
-    return this.prisma.expense.create({
+    const expense = await this.prisma.expense.create({
       data: { ...rest, expenseDate: new Date(expenseDate), recordedById: user.id },
-      include: { category: true },
+      include: { category: true, cropCycle: { select: { id: true, cropName: true } } },
     });
+
+    if (dto.paymentMode === PaymentMode.CREDIT && dto.partyId) {
+      await this.partiesService.recordExpenseCredit(
+        dto.partyId,
+        expense.id,
+        Number(expense.amount),
+        dto.notes?.trim() || dto.vendorName?.trim() || expense.category.labelEn,
+      );
+    }
+
+    return expense;
   }
 
   findAllForFarm(user: AuthUser, farmId: string) {
     return this.farmsService.findOneOrThrow(user, farmId).then(() =>
       this.prisma.expense.findMany({
         where: { farmId, deletedAt: null },
-        include: { category: true },
+        include: { category: true, cropCycle: { select: { id: true, cropName: true } } },
         orderBy: { expenseDate: 'desc' },
       }),
     );
@@ -67,10 +80,10 @@ export class ExpensesService {
   async findOneOrThrow(user: AuthUser, id: string) {
     const expense = await this.prisma.expense.findFirst({
       where: { id, deletedAt: null },
-      include: { category: true, farm: true },
+      include: { category: true, farm: true, cropCycle: { select: { id: true, cropName: true } } },
     });
 
-    if (!expense || (user.role !== Role.ADMIN && expense.farm.ownerId !== user.id)) {
+    if (!expense || (user.role !== Role.ADMIN && user.role !== Role.SUPER_ADMIN && expense.farm.ownerId !== user.id)) {
       throw new NotFoundException('Expense not found.');
     }
 
@@ -90,7 +103,7 @@ export class ExpensesService {
     return this.prisma.expense.update({
       where: { id },
       data: { ...rest, ...(expenseDate ? { expenseDate: new Date(expenseDate) } : {}) },
-      include: { category: true },
+      include: { category: true, cropCycle: { select: { id: true, cropName: true } } },
     });
   }
 

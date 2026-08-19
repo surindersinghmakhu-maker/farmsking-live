@@ -8,6 +8,7 @@ import {
   TextInput,
   Modal,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -19,6 +20,7 @@ import {
   CropCategory,
   CropItem,
 } from '@/constants/cropCategoriesData';
+import { useCreateProduct, useProducts, useRemoveProduct } from '@/src/hooks/useProducts';
 
 const theme = RoleThemes.ADMIN;
 
@@ -26,15 +28,45 @@ const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 };
 
-const INITIAL_PRODUCTS = [
-  { id: '1', name: 'Bio Organic Fertilizer', price: '₹450', stock: 'In Stock' },
-  { id: '2', name: 'Neem Oil Insecticide', price: '₹220', stock: 'In Stock' },
-  { id: '3', name: 'Vermi Compost 50kg', price: '₹280', stock: 'In Stock' },
-  { id: '4', name: 'Hybrid Wheat Seed Pack', price: '₹850', stock: 'Low Stock' },
-];
-
 export default function AdminProductsScreen() {
   const [activeTab, setActiveTab] = useState<'PRODUCTS' | 'CROPS'>('CROPS');
+
+  // Real shop products
+  const { data: products, isLoading: isLoadingProducts } = useProducts(true);
+  const createProduct = useCreateProduct();
+  const removeProduct = useRemoveProduct();
+  const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
+  const [newProductName, setNewProductName] = useState('');
+  const [newProductCategory, setNewProductCategory] = useState('');
+  const [newProductUnit, setNewProductUnit] = useState('piece');
+  const [newProductPrice, setNewProductPrice] = useState('');
+  const [newProductStock, setNewProductStock] = useState('0');
+  const [productError, setProductError] = useState<string | null>(null);
+
+  const handleAddProduct = async () => {
+    if (!newProductName.trim() || !newProductPrice) {
+      setProductError('Enter a product name and price.');
+      return;
+    }
+    try {
+      await createProduct.mutateAsync({
+        name: newProductName.trim(),
+        category: newProductCategory.trim() || undefined,
+        unit: newProductUnit.trim() || 'piece',
+        price: Number(newProductPrice),
+        stockQty: Number(newProductStock) || 0,
+      });
+      setNewProductName('');
+      setNewProductCategory('');
+      setNewProductUnit('piece');
+      setNewProductPrice('');
+      setNewProductStock('0');
+      setProductError(null);
+      setIsAddProductModalOpen(false);
+    } catch (err: any) {
+      setProductError(err?.response?.data?.message ?? 'Could not create product.');
+    }
+  };
 
   // Crops management state
   const [cropsList, setCropsList] = useState<CropItem[]>(INITIAL_CROPS_LIST);
@@ -96,6 +128,7 @@ export default function AdminProductsScreen() {
             onPress={() => {
               tap();
               if (activeTab === 'CROPS') setIsAddCropModalOpen(true);
+              else setIsAddProductModalOpen(true);
             }}
           >
             <Ionicons name="add" size={16} color="#fff" />
@@ -213,7 +246,7 @@ export default function AdminProductsScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.cropNameText}>{crop.name}</Text>
                   {crop.variety ? (
-                    <Text style={styles.cropVarietyText}>Variety: {crop.variety}</Text>
+                    <Text style={styles.cropVarietyText}>🌱 {crop.variety}</Text>
                   ) : null}
                   <View style={styles.metaRow}>
                     {crop.season ? (
@@ -235,32 +268,53 @@ export default function AdminProductsScreen() {
         ) : (
           /* Products Tab */
           <View style={{ gap: 10 }}>
-            {INITIAL_PRODUCTS.map((p) => (
-              <View key={p.id} style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
-                <View style={styles.iconBg}>
-                  <Ionicons name="cube-outline" size={18} color={theme.primary} />
-                </View>
-                <View style={styles.info}>
-                  <Text style={styles.name}>{p.name}</Text>
-                  <Text style={styles.price}>{p.price}</Text>
-                </View>
-                <View
-                  style={[
-                    styles.badge,
-                    { backgroundColor: p.stock === 'In Stock' ? '#dcfce7' : '#fef3c7' },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.badgeText,
-                      { color: p.stock === 'In Stock' ? theme.primary : '#b45309' },
-                    ]}
-                  >
-                    {p.stock}
-                  </Text>
-                </View>
-              </View>
-            ))}
+            {isLoadingProducts ? (
+              <ActivityIndicator color={theme.primary} style={{ marginTop: 20 }} />
+            ) : !products || products.length === 0 ? (
+              <Text style={styles.sectionHeaderTitle}>No products yet — tap "Add Product" to create one.</Text>
+            ) : (
+              products.map((p) => {
+                const isLowStock = p.stockQty > 0 && p.stockQty <= 5;
+                const isOutOfStock = p.stockQty <= 0;
+                return (
+                  <View key={p.id} style={[styles.card, premiumShadow('#0f172a', 'sm'), !p.isActive && { opacity: 0.5 }]}>
+                    <View style={styles.iconBg}>
+                      <Ionicons name="cube-outline" size={18} color={theme.primary} />
+                    </View>
+                    <View style={styles.info}>
+                      <Text style={styles.name}>{p.name}</Text>
+                      <Text style={styles.price}>₹{p.price} / {p.unit} · Stock: {p.stockQty}</Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.badge,
+                        { backgroundColor: isOutOfStock ? '#fee2e2' : isLowStock ? '#fef3c7' : '#dcfce7' },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.badgeText,
+                          { color: isOutOfStock ? '#dc2626' : isLowStock ? '#b45309' : theme.primary },
+                        ]}
+                      >
+                        {isOutOfStock ? 'Out of Stock' : isLowStock ? 'Low Stock' : 'In Stock'}
+                      </Text>
+                    </View>
+                    {p.isActive ? (
+                      <TouchableOpacity
+                        style={{ marginLeft: 8 }}
+                        onPress={() => {
+                          tap();
+                          removeProduct.mutate(p.id);
+                        }}
+                      >
+                        <Ionicons name="trash-outline" size={18} color="#dc2626" />
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                );
+              })
+            )}
           </View>
         )}
       </ScrollView>
@@ -335,6 +389,76 @@ export default function AdminProductsScreen() {
               onPress={handleAddCrop}
             >
               <Text style={styles.modalSubmitText}>+ Save & Add Crop to Category</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* Add New Product Modal */}
+      {isAddProductModalOpen && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add Shop Product</Text>
+              <TouchableOpacity onPress={() => setIsAddProductModalOpen(false)}>
+                <Ionicons name="close-circle" size={24} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.inputLabel}>Product Name</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="e.g. Bio Organic Fertilizer"
+              value={newProductName}
+              onChangeText={setNewProductName}
+            />
+
+            <Text style={styles.inputLabel}>Category (Optional)</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="e.g. Fertilizers"
+              value={newProductCategory}
+              onChangeText={setNewProductCategory}
+            />
+
+            <Text style={styles.inputLabel}>Unit</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="e.g. kg, litre, piece, bag"
+              value={newProductUnit}
+              onChangeText={setNewProductUnit}
+            />
+
+            <Text style={styles.inputLabel}>Price (₹)</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="e.g. 450"
+              keyboardType="numeric"
+              value={newProductPrice}
+              onChangeText={setNewProductPrice}
+            />
+
+            <Text style={styles.inputLabel}>Stock Quantity</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="e.g. 50"
+              keyboardType="numeric"
+              value={newProductStock}
+              onChangeText={setNewProductStock}
+            />
+
+            {productError ? <Text style={[styles.noticeText, { color: '#dc2626' }]}>{productError}</Text> : null}
+
+            <TouchableOpacity
+              style={[styles.modalSubmitBtn, { backgroundColor: theme.primary }]}
+              disabled={createProduct.isPending}
+              onPress={handleAddProduct}
+            >
+              {createProduct.isPending ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <Text style={styles.modalSubmitText}>+ Save Product</Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>

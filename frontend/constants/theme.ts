@@ -1,6 +1,7 @@
 import { Platform, ViewStyle } from 'react-native';
 
 export const RADIUS = {
+  xs: 6,
   sm: 12,
   md: 16,
   lg: 20,

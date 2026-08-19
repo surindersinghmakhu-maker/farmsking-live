@@ -16,6 +16,19 @@ enum Role {
   CUSTOMER
   BUSINESS_PARTNER
   ADMIN
+  SUPER_ADMIN
+  OPERATOR
+}
+
+/// Fixed, read-only capabilities an Admin/Super Admin can grant to a specific Operator account.
+/// An Operator sees nothing beyond whichever of these they've been granted — no per-capability
+/// customization beyond this list.
+enum OperatorPermission {
+  VIEW_ORDERS
+  VIEW_COUPONS
+  VIEW_USERS
+  VIEW_WALLETS
+  VIEW_FARMER_PLANS
 }
 
 enum AreaUnit {
@@ -50,6 +63,7 @@ enum PaymentMode {
   BANK_TRANSFER
   CHEQUE
   CARD
+  CREDIT
   OTHER
 }
 
@@ -140,6 +154,13 @@ enum SubscriptionPlanStatus {
   EXPIRED
 }
 
+enum PlanPaymentStatus {
+  PENDING
+  SUBMITTED
+  CONFIRMED
+  REJECTED
+}
+
 enum ActivityType {
   IRRIGATION
   FERTILIZER
@@ -156,22 +177,182 @@ enum ActivityStatus {
   OVERDUE
 }
 
+enum AdvisorType {
+  FARM
+  GARDEN
+}
+
+enum WalletTransactionType {
+  CREDIT
+  DEBIT
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum DiscountValueType {
+  PERCENTAGE
+  FIXED
+}
+
+enum CouponKind {
+  GENERIC
+  PERSONAL_INVITE
+  PARTNER_REFERRAL
+  REFERRAL_WELCOME
+}
+
+enum FarmerPlanType {
+  RECORD_ONLY
+  WITH_ADVISOR
+}
+
+enum FarmerSubscriptionPlan {
+  FREE
+  BASIC
+  STANDARD
+  PREMIUM
+}
+
+enum GardenerSubscriptionPlan {
+  FREE
+  PREMIUM
+}
+
+enum PartnerAssignmentStatus {
+  ACTIVE
+  REVOKED
+}
+
+enum CropAdvisorReviewStatus {
+  NONE
+  PENDING
+  ACCEPTED
+}
+
+enum CropHarvestType {
+  ONE_TIME
+  CONTINUOUS
+}
+
+enum CropCycleStage {
+  PLANTATION
+  VEGETATIVE
+  FLOWERING
+  HARVESTING
+  COMPLETED
+}
+
+enum WeatherTipTrigger {
+  HIGH_TEMPERATURE
+  RAIN
+  COLD
+}
+
+enum OrderStatus {
+  PLACED
+  CONFIRMED
+  PACKING
+  PACKED
+  DISPATCHED
+  DELIVERED
+  CANCELLED
+}
+
+enum OrderPaymentMode {
+  COD
+  ONLINE
+}
+
+enum OrderPaymentStatus {
+  UNPAID
+  PENDING
+  PAID
+  FAILED
+}
+
+enum SoilType {
+  ALLUVIAL
+  BLACK
+  RED
+  LATERITE
+  SANDY
+  CLAY
+  LOAMY
+  SALINE_ALKALINE
+}
+
+enum WaterType {
+  BOREWELL_TUBEWELL
+  CANAL
+  RIVER
+  POND_LAKE
+  RAINFED
+  TAP_MUNICIPAL
+}
+
 // ─── Phase 1: Users, Farms, Plots, Crops ────────────────────────────────
 
 model User {
-  id                String    @id @default(uuid())
-  mobile            String    @unique
-  passwordHash      String
-  role              Role      @default(FARMER)
-  name              String
-  email             String?
-  village           String?
-  district          String?
-  state             String?
-  preferredLanguage String    @default("en")
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  deletedAt         DateTime?
+  id                   String               @id @default(uuid())
+  kingId               String?              @unique
+  mobile               String               @unique
+  passwordHash         String
+  role                 Role                 @default(FARMER)
+  /// Every role this account has ever been granted (e.g. a Customer who became a Farmer and was also
+  /// made a Business Partner holds both) — `role` above stays the "current/primary" dashboard.
+  roles                Role[]               @default([])
+  /// Roles an Admin has deactivated — stays in `roles` for history (never deleted), just excluded
+  /// from what RolesGuard treats as active until an Admin reactivates it.
+  deactivatedRoles     Role[]               @default([])
+  name                 String
+  email                String?
+  village              String?
+  district             String?
+  state                String?
+  pincode              String?
+  postOffice           String?
+  securityQuestion     String?
+  securityAnswerHash   String?
+  preferredLanguage    String               @default("en")
+  notificationsEnabled Boolean              @default(true)
+  /// Self-service weather-alert thresholds (any role). Null threshold = that side of the check is off;
+  /// a set value both enables and defines it. Advisors additionally use these to flag farmers whose
+  /// current temperature/rain falls outside the configured range.
+  weatherAlertMinTempC   Float?
+  weatherAlertMaxTempC   Float?
+  weatherAlertRainEnabled Boolean            @default(false)
+  photoUrl             String?
+  sprayTankSizeL       Int?
+  soilType             SoilType?
+  waterType            WaterType?
+  specialization       String?
+  bio                  String?
+  yearsExperience      Int?
+  advisorType          AdvisorType?
+  /// Advisor-only display profile — required (alongside the payout fields below) before an Advisor's wallet can be withdrawn from.
+  qualification             String?
+  profileTitle              String?
+  /// Business Partner / Advisor payout profile — all required before their wallet can be withdrawn from (see WithdrawalsService.create).
+  upiId                     String?
+  panNumber                 String?
+  alternativeMobile         String?
+  bankAccountNumber         String?
+  bankIfsc                  String?
+  bankAccountHolderName     String?
+  operatorPermissions  OperatorPermission[] @default([])
+  /// Who referred this account in — set once at signup (referral code) or by a Super Admin afterwards, never changed again.
+  referredById              String?
+  referredBy                User?                @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals                 User[]               @relation("UserReferrals")
+  /// Denormalized for quick display to the referred customer — the code of their auto-issued REFERRAL_WELCOME coupon.
+  referralWelcomeCouponCode String?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  deletedAt            DateTime?
 
   farms Farm[]
 
@@ -184,6 +365,7 @@ model User {
   fertilizerUsagesRecorded      FertilizerUsage[]
   spraysRecorded                Spray[]
   spraySchedulesCreated         SpraySchedule[]
+  sprayItemTemplates            SprayItemTemplate[]
   cropProblemsReported          CropProblem[]          @relation("CropProblemReporter")
   cropProblemsAssigned          CropProblem[]          @relation("CropProblemAdvisor")
   harvestsRecorded              Harvest[]
@@ -192,15 +374,63 @@ model User {
   advisorAssignmentsAsAdvisor   AdvisorAssignment[]    @relation("AdvisorAssignmentAdvisor")
   advisorAssignmentsAsFarmer    AdvisorAssignment[]    @relation("AdvisorAssignmentFarmer")
   advisorAssignmentsCreated     AdvisorAssignment[]    @relation("AdvisorAssignmentAssignedBy")
+  callRequestsAsFarmer          CallRequest[]          @relation("CallRequestsFarmer")
+  callRequestsAsAdvisor         CallRequest[]          @relation("CallRequestsAdvisor")
+  partnerAssignmentsAsPartner   PartnerAssignment[]    @relation("PartnerAssignmentPartner")
+  partnerAssignmentAsCustomer   PartnerAssignment?     @relation("PartnerAssignmentCustomer")
   notifications                 Notification[]
   gardens                       Garden[]
   customerOrders                CustomerOrder[]
   partnerReferrals              PartnerReferral[]
   advisorSubscriptionsAsFarmer  AdvisorSubscription[]  @relation("SubscriptionFarmer")
   advisorSubscriptionsApproved  AdvisorSubscription[]  @relation("SubscriptionApprovedBy")
+  planPaymentRequestsAsFarmer   PlanPaymentRequest[]   @relation("PlanPaymentFarmer")
+  planPaymentRequestsConfirmed  PlanPaymentRequest[]   @relation("PlanPaymentConfirmedBy")
+  farmerPlanPaymentRequestsAsFarmer  FarmerPlanPaymentRequest[] @relation("FarmerPlanPaymentFarmer")
+  farmerPlanPaymentRequestsConfirmed FarmerPlanPaymentRequest[] @relation("FarmerPlanPaymentConfirmedBy")
   activitySchedulesCreated      CropActivitySchedule[] @relation("ActivityCreatedByAdvisor")
   activitySchedulesCompleted    CropActivitySchedule[] @relation("ActivityCompletedBy")
   uploads                       Upload[]
+
+  couponsAsBusinessPartner            Coupon[]             @relation("BusinessPartnerCoupons")
+  couponsCreatedByAdmin               Coupon[]             @relation("CouponsCreatedByAdmin")
+  couponRedemptionsAsCustomer         CouponRedemption[]   @relation("CouponRedemptionsCustomer")
+  walletTransactions                  WalletTransaction[]  @relation("WalletTransactions")
+  walletTransactionsRelated           WalletTransaction[]  @relation("WalletTransactionsRelatedUser")
+  auditLogs                           AuditLog[]           @relation("AuditLogsActor")
+  parties                             Party[]
+  saleBills                           SaleBill[]
+  paymentReceipts                     PaymentReceipt[]
+  withdrawalRequestsAsPartner         WithdrawalRequest[]  @relation("WithdrawalRequestsPartner")
+  withdrawalRequestsProcessed         WithdrawalRequest[]  @relation("WithdrawalRequestsProcessedBy")
+  planRenewalCouponsCreated           PlanRenewalCoupon[]  @relation("PlanRenewalCouponsCreatedBy")
+  planRenewalCouponsAssigned          PlanRenewalCoupon[]  @relation("PlanRenewalCouponsAssignedFarmer")
+  planRenewalCouponsAssignedAsAdvisor PlanRenewalCoupon[]  @relation("PlanRenewalCouponsAssignedAdvisor")
+  basicPlanCouponsCreated             BasicPlanCoupon[]    @relation("BasicPlanCouponsCreatedBy")
+  basicPlanCouponsPurchased           BasicPlanCoupon[]    @relation("BasicPlanCouponsPurchasedBy")
+  basicPlanCouponsUsed                BasicPlanCoupon[]    @relation("BasicPlanCouponsUsedByFarmer")
+  appSettingsUpdated                  AppSetting[]         @relation("AppSettingUpdatedBy")
+  couponSystemSettingsUpdated         CouponSystemSetting[] @relation("CouponSystemSettingUpdatedBy")
+  customerAddresses                   CustomerAddress[]
+  messagesSent                        Message[]            @relation("MessagesSent")
+  messagesReceived                    Message[]            @relation("MessagesReceived")
+  weatherTipTemplatesCreated          WeatherTipTemplate[] @relation("WeatherTipTemplatesCreatedBy")
+  productsCreated                     Product[]            @relation("ProductsCreatedBy")
+  ordersPacked                        CustomerOrder[]      @relation("OrdersPackedBy")
+  ordersDispatched                    CustomerOrder[]      @relation("OrdersDispatchedBy")
+
+  // Farmer Plan (3-tier)
+  farmerPlan                                 FarmerPlan?
+  farmerPlanCouponsCreated                   FarmerPlanCoupon[]   @relation("FarmerPlanCouponsCreatedBy")
+  farmerPlanCouponsAssigned                  FarmerPlanCoupon[]   @relation("FarmerPlanCouponsAssignedFarmer")
+  farmerPlanCouponsAssignedAsAdvisor         FarmerPlanCoupon[]   @relation("FarmerPlanCouponsAssignedAdvisor")
+  farmerPlanCouponsAssignedAsBusinessPartner FarmerPlanCoupon[]   @relation("FarmerPlanCouponsAssignedBusinessPartner")
+  farmerPlanPricingUpdated                   FarmerPlanPricing[]  @relation("FarmerPlanPricingUpdatedBy")
+  farmerPlanCouponsUsed                      FarmerPlanCoupon[]   @relation("FarmerPlanCouponsUsedBy")
+  gardenerPlan                               GardenerPlan?
+  gardenerPlanCouponsCreated                 GardenerPlanCoupon[] @relation("GardenerPlanCouponsCreatedBy")
+  gardenerPlanCouponsAssigned                GardenerPlanCoupon[] @relation("GardenerPlanCouponsAssignedGardener")
+  gardenerPlanCouponsUsed                    GardenerPlanCoupon[] @relation("GardenerPlanCouponsUsedBy")
 
   @@map("users")
 }
@@ -262,23 +492,32 @@ model Plot {
 }
 
 model CropCycle {
-  id                  String        @id @default(uuid())
-  plotId              String
-  plot                Plot          @relation(fields: [plotId], references: [id], onDelete: Cascade)
-  category            CropCategory?
-  cropName            String
-  variety             String?
-  area                Float?
-  plantCount          Int?
-  sowingDate          DateTime?
-  transplantDate      DateTime?
-  expectedHarvestDate DateTime?
-  actualHarvestDate   DateTime?
-  status              CropStatus    @default(PLANNED)
-  notes               String?
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
-  deletedAt           DateTime?
+  id                   String                  @id @default(uuid())
+  cropId               String?                 @unique
+  plotId               String
+  plot                 Plot                    @relation(fields: [plotId], references: [id], onDelete: Cascade)
+  category             CropCategory?
+  cropName             String
+  variety              String?
+  area                 Float?
+  plantCount           Int?
+  sowingDate           DateTime?
+  transplantDate       DateTime?
+  expectedHarvestDate  DateTime?
+  actualHarvestDate    DateTime?
+  status               CropStatus              @default(PLANNED)
+  stage                CropCycleStage          @default(PLANTATION)
+  unit                 String?
+  pricePerUnit         Decimal?                @db.Decimal(10, 2)
+  harvestType          CropHarvestType         @default(CONTINUOUS)
+  notes                String?
+  assignedSchedule     String?                 @db.Text
+  advisorReviewStatus  CropAdvisorReviewStatus @default(NONE)
+  submittedToAdvisorAt DateTime?
+  advisorAcceptedAt    DateTime?
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+  deletedAt            DateTime?
 
   expenses              Expense[]
   sales                 Sale[]
@@ -327,6 +566,8 @@ model Expense {
   category        ExpenseCategory @relation(fields: [categoryId], references: [id])
   machineryId     String?
   machinery       Machinery?      @relation(fields: [machineryId], references: [id], onDelete: SetNull)
+  partyId         String?
+  party           Party?          @relation(fields: [partyId], references: [id], onDelete: SetNull)
   amount          Decimal         @db.Decimal(12, 2)
   expenseDate     DateTime
   paymentMode     PaymentMode?
@@ -346,13 +587,102 @@ model Expense {
   sprays                Spray[]
   irrigationRecords     IrrigationRecord[]
   inventoryTransactions InventoryTransaction[]
+  ledgerEntries         PartyLedgerEntry[]
 
   @@index([farmId])
   @@index([plotId])
   @@index([cropCycleId])
   @@index([categoryId])
   @@index([machineryId])
+  @@index([partyId])
   @@map("expenses")
+}
+
+model Party {
+  id        String    @id @default(uuid())
+  ownerId   String
+  owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name      String
+  address   String?
+  mobile    String?
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  ledgerEntries PartyLedgerEntry[]
+  expenses      Expense[]
+
+  @@index([ownerId])
+  @@map("parties")
+}
+
+enum PartyLedgerEntryType {
+  SALE_CREDIT
+  SALE_PAYMENT
+  EXPENSE_CREDIT
+  EXPENSE_PAYMENT
+}
+
+model PartyLedgerEntry {
+  id               String               @id @default(uuid())
+  partyId          String
+  party            Party                @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  type             PartyLedgerEntryType
+  amount           Decimal              @db.Decimal(12, 2)
+  reason           String
+  expenseId        String?
+  expense          Expense?             @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+  saleBillId       String?
+  saleBill         SaleBill?            @relation(fields: [saleBillId], references: [id], onDelete: SetNull)
+  paymentReceiptId String?
+  paymentReceipt   PaymentReceipt?      @relation(fields: [paymentReceiptId], references: [id], onDelete: SetNull)
+  createdAt        DateTime             @default(now())
+
+  @@index([partyId])
+  @@map("party_ledger_entries")
+}
+
+model PaymentReceipt {
+  id              String   @id @default(uuid())
+  farmerId        String
+  farmer          User     @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  receiptNo       String
+  partyId         String
+  partyName       String
+  isReceived      Boolean
+  previousBalance Decimal  @db.Decimal(12, 2)
+  paymentAmount   Decimal  @db.Decimal(12, 2)
+  netBalance      Decimal  @db.Decimal(12, 2)
+  createdAt       DateTime @default(now())
+
+  ledgerEntries PartyLedgerEntry[]
+
+  @@index([farmerId])
+  @@map("payment_receipts")
+}
+
+model SaleBill {
+  id              String   @id @default(uuid())
+  farmerId        String
+  farmer          User     @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  billNo          String
+  farmerName      String
+  partyId         String?
+  partyName       String
+  partyMobile     String?
+  isCash          Boolean
+  items           Json
+  totalItems      Int
+  totalAmount     Decimal  @db.Decimal(12, 2)
+  amountReceived  Decimal  @db.Decimal(12, 2)
+  thisSaleBalance Decimal  @db.Decimal(12, 2)
+  previousBalance Decimal  @db.Decimal(12, 2)
+  netReceivable   Decimal  @db.Decimal(12, 2)
+  createdAt       DateTime @default(now())
+
+  ledgerEntries PartyLedgerEntry[]
+
+  @@index([farmerId])
+  @@map("sale_bills")
 }
 
 model Customer {
@@ -572,6 +902,7 @@ model SpraySchedule {
   recommendedProduct String?
   dosageInstructions String?
   alternativeOption  String?
+  alternativeOption2 String?
   createdByAdvisorId String
   createdByAdvisor   User                @relation(fields: [createdByAdvisorId], references: [id])
   status             SprayScheduleStatus @default(PENDING)
@@ -585,6 +916,35 @@ model SpraySchedule {
   @@index([cropCycleId])
   @@index([createdByAdvisorId])
   @@map("spray_schedules")
+}
+
+/** Searchable product name list for the spray-schedule item/alternative autocomplete — grows organically as advisors type new names. */
+model SprayProductCatalog {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  sprayType SprayType?
+  createdAt DateTime   @default(now())
+  deletedAt DateTime?
+
+  @@map("spray_product_catalog")
+}
+
+/** An advisor's reusable item/dose/alternatives row, picked to quick-fill new spray schedule entries. Advisor-owned; Super Admin can view all. */
+model SprayItemTemplate {
+  id            String    @id @default(uuid())
+  advisorId     String
+  advisor       User      @relation(fields: [advisorId], references: [id], onDelete: Cascade)
+  sprayType     SprayType?
+  item          String
+  dose          String?
+  alternative1  String?
+  alternative2  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  @@index([advisorId])
+  @@map("spray_item_templates")
 }
 
 model CropProblem {
@@ -771,17 +1131,59 @@ model AdvisorAssignment {
   @@map("advisor_assignments")
 }
 
+enum CallRequestStatus {
+  PENDING
+  RESOLVED
+}
+
+/// Farmer taps "Request Call" on their advisor's profile — shows as a pending alert on the advisor's
+/// dashboard until the advisor resolves it with a comment, then it moves to history.
+model CallRequest {
+  id              String            @id @default(uuid())
+  farmerId        String
+  farmer          User              @relation("CallRequestsFarmer", fields: [farmerId], references: [id], onDelete: Cascade)
+  advisorId       String
+  advisor         User              @relation("CallRequestsAdvisor", fields: [advisorId], references: [id], onDelete: Cascade)
+  status          CallRequestStatus @default(PENDING)
+  resolvedComment String?
+  resolvedAt      DateTime?
+  createdAt       DateTime          @default(now())
+
+  @@index([advisorId])
+  @@index([farmerId])
+  @@map("call_requests")
+}
+
+/// Links a CUSTOMER to the BUSINESS_PARTNER whose coupon they first redeemed.
+model PartnerAssignment {
+  id                String                  @id @default(uuid())
+  businessPartnerId String
+  businessPartner   User                    @relation("PartnerAssignmentPartner", fields: [businessPartnerId], references: [id])
+  customerId        String                  @unique
+  customer          User                    @relation("PartnerAssignmentCustomer", fields: [customerId], references: [id])
+  status            PartnerAssignmentStatus @default(ACTIVE)
+  startDate         DateTime                @default(now())
+  endDate           DateTime?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  @@index([businessPartnerId])
+  @@map("partner_assignments")
+}
+
 // ─── Phase 7: Farmer Advisor Plan (Subscription, Schedule, Uploads) ─────
 
 model AdvisorPlan {
-  id           String   @id @default(uuid())
+  id           String         @id @default(uuid())
   name         String
   description  String?
-  price        Decimal  @db.Decimal(12, 2)
-  billingCycle String   @default("MONTHLY")
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  price        Decimal        @db.Decimal(12, 2)
+  billingCycle String         @default("MONTHLY")
+  planType     FarmerPlanType @default(WITH_ADVISOR)
+  maxFarms     Int            @default(10)
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 
   subscriptions AdvisorSubscription[]
 
@@ -808,10 +1210,62 @@ model AdvisorSubscription {
   deletedAt    DateTime?
 
   advisorAssignment AdvisorAssignment?
+  paymentRequests   PlanPaymentRequest[]
 
   @@index([farmerId])
   @@index([planId])
   @@map("advisor_subscriptions")
+}
+
+/**
+ * A UPI payment claim for a plan — farmer initiates with a fixed QR/link, marks it paid, and an admin verifies + confirms before the plan is extended.
+ */
+model PlanPaymentRequest {
+  id              String              @id @default(uuid())
+  farmerId        String
+  farmer          User                @relation("PlanPaymentFarmer", fields: [farmerId], references: [id], onDelete: Cascade)
+  subscriptionId  String
+  subscription    AdvisorSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  amount          Decimal             @db.Decimal(12, 2)
+  daysGranted     Int
+  status          PlanPaymentStatus   @default(PENDING)
+  utr             String?
+  requestedAt     DateTime            @default(now())
+  submittedAt     DateTime?
+  confirmedAt     DateTime?
+  confirmedById   String?
+  confirmedBy     User?               @relation("PlanPaymentConfirmedBy", fields: [confirmedById], references: [id], onDelete: SetNull)
+  rejectedAt      DateTime?
+  rejectionReason String?
+
+  @@index([farmerId])
+  @@index([subscriptionId])
+  @@index([status])
+  @@map("plan_payment_requests")
+}
+
+/// A farmer paying via UPI to self-upgrade/renew their FarmerPlan tier (BASIC/STANDARD/PREMIUM) directly —
+/// separate from the AdvisorSubscription payment flow above and from coupon-code redemption.
+model FarmerPlanPaymentRequest {
+  id              String                 @id @default(uuid())
+  farmerId        String
+  farmer          User                   @relation("FarmerPlanPaymentFarmer", fields: [farmerId], references: [id], onDelete: Cascade)
+  targetPlan      FarmerSubscriptionPlan
+  amount          Decimal                @db.Decimal(12, 2)
+  daysGranted     Int
+  status          PlanPaymentStatus      @default(PENDING)
+  utr             String?
+  requestedAt     DateTime               @default(now())
+  submittedAt     DateTime?
+  confirmedAt     DateTime?
+  confirmedById   String?
+  confirmedBy     User?                  @relation("FarmerPlanPaymentConfirmedBy", fields: [confirmedById], references: [id], onDelete: SetNull)
+  rejectedAt      DateTime?
+  rejectionReason String?
+
+  @@index([farmerId])
+  @@index([status])
+  @@map("farmer_plan_payment_requests")
 }
 
 model CropActivitySchedule {
@@ -905,9 +1359,26 @@ model Garden {
   updatedAt   DateTime @updatedAt
 
   visits GardenVisit[]
+  plants Plant[]
 
   @@index([gardenerId])
   @@map("gardens")
+}
+
+model Plant {
+  id          String    @id @default(uuid())
+  gardenId    String
+  garden      Garden    @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+  name        String
+  species     String?
+  plantedDate DateTime?
+  healthNotes String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@index([gardenId])
+  @@map("plants")
 }
 
 model GardenVisit {
@@ -938,19 +1409,59 @@ model CustomerProduct {
   @@map("customer_products")
 }
 
-model CustomerOrder {
-  id           String    @id @default(uuid())
-  customerId   String
-  customer     User      @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  orderNumber  String    @unique
-  totalAmount  Decimal   @db.Decimal(12, 2)
-  status       String    @default("In Transit")
-  orderDate    DateTime  @default(now())
-  deliveryDate DateTime?
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  category    String?
+  unit        String   @default("piece")
+  price       Decimal  @db.Decimal(12, 2)
+  imageUrl    String?
+  stockQty    Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdById String
+  createdBy   User     @relation("ProductsCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  items CustomerOrderItem[]
+  orderItems CustomerOrderItem[]
+
+  @@map("products")
+}
+
+model CustomerOrder {
+  id              String      @id @default(uuid())
+  customerId      String
+  customer        User        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  orderNumber     String      @unique
+  totalAmount     Decimal     @db.Decimal(12, 2)
+  status          OrderStatus @default(PLACED)
+  deliveryAddress String?
+  orderDate       DateTime    @default(now())
+  deliveryDate    DateTime?
+  packedById      String?
+  packedBy        User?       @relation("OrdersPackedBy", fields: [packedById], references: [id], onDelete: SetNull)
+  packedAt        DateTime?
+  dispatchedById  String?
+  dispatchedBy    User?       @relation("OrdersDispatchedBy", fields: [dispatchedById], references: [id], onDelete: SetNull)
+  dispatchedAt    DateTime?
+  courierName     String?
+  trackingId      String?
+  cancelledAt     DateTime?
+  couponId        String?
+  coupon          Coupon?     @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  discountAmount  Decimal?    @db.Decimal(12, 2)
+
+  paymentMode            OrderPaymentMode   @default(COD)
+  paymentStatus          OrderPaymentStatus @default(UNPAID)
+  phonepeMerchantOrderId String?            @unique
+  phonepePaymentState    String?
+
+  items       CustomerOrderItem[]
+  redemptions CouponRedemption[]
 
   @@index([customerId])
+  @@index([couponId])
   @@map("customer_orders")
 }
 
@@ -958,6 +1469,8 @@ model CustomerOrderItem {
   id          String        @id @default(uuid())
   orderId     String
   order       CustomerOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
   productName String
   quantity    Int
   price       Decimal       @db.Decimal(12, 2)
@@ -977,4 +1490,365 @@ model PartnerReferral {
 
   @@index([partnerId])
   @@map("partner_referrals")
+}
+
+// ─── Business Partner coupons, wallet & withdrawals ─────────────────────
+
+model Coupon {
+  id                String            @id @default(uuid())
+  code              String            @unique
+  businessPartnerId String
+  businessPartner   User              @relation("BusinessPartnerCoupons", fields: [businessPartnerId], references: [id], onDelete: Cascade)
+  commissionType    DiscountValueType
+  commissionValue   Decimal           @db.Decimal(10, 2)
+  commissionMaxCap  Decimal?          @db.Decimal(10, 2)
+  discountType      DiscountValueType
+  discountValue     Decimal           @db.Decimal(10, 2)
+  discountMaxCap    Decimal?          @db.Decimal(10, 2)
+  minOrderAmount    Decimal?          @db.Decimal(10, 2)
+  kind              CouponKind        @default(GENERIC)
+  expiresAt         DateTime
+  usageLimit        Int
+  usedCount         Int               @default(0)
+  isActive          Boolean           @default(true)
+  createdAt         DateTime          @default(now())
+  createdById       String
+  createdBy         User              @relation("CouponsCreatedByAdmin", fields: [createdById], references: [id])
+
+  redemptions   CouponRedemption[]
+  CustomerOrder CustomerOrder[]
+
+  @@index([businessPartnerId])
+  @@map("coupons")
+}
+
+model CouponRedemption {
+  id               String         @id @default(uuid())
+  couponId         String
+  coupon           Coupon         @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  customerId       String?
+  customer         User?          @relation("CouponRedemptionsCustomer", fields: [customerId], references: [id], onDelete: SetNull)
+  orderId          String?
+  order            CustomerOrder? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  orderAmount      Decimal        @db.Decimal(10, 2)
+  discountAmount   Decimal        @db.Decimal(10, 2)
+  commissionAmount Decimal        @db.Decimal(10, 2)
+  creditedAt       DateTime?
+  redeemedAt       DateTime       @default(now())
+
+  @@index([couponId])
+  @@index([orderId])
+  @@map("coupon_redemptions")
+}
+
+model WalletTransaction {
+  id                  String                @id @default(uuid())
+  userId              String
+  user                User                  @relation("WalletTransactions", fields: [userId], references: [id], onDelete: Cascade)
+  type                WalletTransactionType
+  amount              Decimal               @db.Decimal(10, 2)
+  reason              String
+  couponRedemptionId  String?
+  withdrawalRequestId String?
+  /**
+   * The farmer whose coupon redemption (or other action) triggered this transaction, when applicable — lets the wallet owner see "which farmer's ID this happened on" in Full Details.
+   */
+  relatedUserId       String?
+  relatedUser         User?                 @relation("WalletTransactionsRelatedUser", fields: [relatedUserId], references: [id], onDelete: SetNull)
+  createdAt           DateTime              @default(now())
+
+  @@index([userId])
+  @@index([relatedUserId])
+  @@map("wallet_transactions")
+}
+
+/// Platform-wide activity/audit trail — one row per mutating API request (POST/PATCH/PUT/DELETE).
+/// Written by a global interceptor, never blocks the actual request if logging itself fails.
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  actor      User?    @relation("AuditLogsActor", fields: [actorId], references: [id], onDelete: SetNull)
+  actorRole  Role?
+  method     String
+  path       String
+  action     String
+  targetId   String?
+  statusCode Int
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+/// A saved delivery address for the shopping/orders flow — one account can have several (Home/Farm/Work),
+/// picked at checkout. Unrelated to the farmer-side `Customer` model above (that's a farmer's own buyer).
+model CustomerAddress {
+  id         String   @id @default(uuid())
+  ownerId    String
+  owner      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  tag        String
+  line       String
+  mobile     String?
+  postOffice String
+  district   String
+  state      String
+  pincode    String
+  createdAt  DateTime @default(now())
+
+  @@index([ownerId])
+  @@map("customer_addresses")
+}
+
+/// Singleton row of app-wide, Super-Admin-editable settings — currently just the UPI ID that receives
+/// order/plan payments. Always exactly one row, id fixed to "default".
+model AppSetting {
+  id          String   @id @default("default")
+  appName     String   @default("FarmsKing")
+  logoUrl     String?
+  tagline     String?
+  upiId       String?
+  upiPayeeName String?
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+  updatedBy   User?    @relation("AppSettingUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("app_settings")
+}
+
+/// Single unified home for every coupon-kind's default rates/validity — Referral, Commission-Based, and
+/// Special (personal invite). Farmer/Advisor Plan pricing lives separately in FarmerPlanPricing (one row
+/// per plan tier, a different shape), but both are reachable from the same Coupon Setting screen.
+model CouponSystemSetting {
+  id                                 String   @id @default("default")
+  partnerCouponDiscountPercent       Decimal  @default(10) @db.Decimal(5, 2)
+  partnerCouponCommissionPercent     Decimal  @default(5) @db.Decimal(5, 2)
+  partnerCouponMinOrderAmount        Decimal  @default(500) @db.Decimal(10, 2)
+  partnerCouponMaxDiscountCap        Decimal  @default(100) @db.Decimal(10, 2)
+  partnerCouponValidityDays          Int      @default(365)
+  referralCommissionPercent          Decimal  @default(5) @db.Decimal(5, 2)
+  referralDiscountPercent            Decimal  @default(10) @db.Decimal(5, 2)
+  referralMaxDiscountCap             Decimal  @default(100) @db.Decimal(10, 2)
+  referralOrderLimit                 Int      @default(5)
+  referralCouponValidityDays         Int      @default(365)
+  /// Defaults for admin-issued "Commission Based" (GENERIC kind) partner coupons — prefill only, each coupon can still override every field.
+  commissionCouponDiscountPercent    Decimal  @default(10) @db.Decimal(5, 2)
+  commissionCouponCommissionPercent  Decimal  @default(5) @db.Decimal(5, 2)
+  commissionCouponMinOrderAmount     Decimal  @default(0) @db.Decimal(10, 2)
+  commissionCouponMaxDiscountCap     Decimal  @default(100) @db.Decimal(10, 2)
+  commissionCouponValidityDays       Int      @default(30)
+  /// Defaults for the auto-issued "Special" (PERSONAL_INVITE kind) coupon every user gets.
+  inviteCouponDiscountPercent        Decimal  @default(5) @db.Decimal(5, 2)
+  inviteCouponCommissionPercent      Decimal  @default(5) @db.Decimal(5, 2)
+  inviteCouponValidityDays           Int      @default(3650)
+  inviteCouponUsageLimit             Int      @default(100000)
+  updatedAt                          DateTime @updatedAt
+  updatedById                        String?
+  updatedBy                          User?    @relation("CouponSystemSettingUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("coupon_system_settings")
+}
+
+model WithdrawalRequest {
+  id                String           @id @default(uuid())
+  businessPartnerId String
+  businessPartner   User             @relation("WithdrawalRequestsPartner", fields: [businessPartnerId], references: [id], onDelete: Cascade)
+  requestedAmount   Decimal          @db.Decimal(10, 2)
+  approvedAmount    Decimal?         @db.Decimal(10, 2)
+  status            WithdrawalStatus @default(PENDING)
+  requestedAt       DateTime         @default(now())
+  processedAt       DateTime?
+  processedById     String?
+  processedBy       User?            @relation("WithdrawalRequestsProcessedBy", fields: [processedById], references: [id], onDelete: SetNull)
+  notes             String?
+
+  @@index([businessPartnerId])
+  @@map("withdrawal_requests")
+}
+
+model WeatherTipTemplate {
+  id          String            @id @default(uuid())
+  title       String
+  message     String
+  triggerType WeatherTipTrigger
+  thresholdC  Int?
+  isActive    Boolean           @default(true)
+  createdById String
+  createdBy   User              @relation("WeatherTipTemplatesCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@map("weather_tip_templates")
+}
+
+model Message {
+  id         String    @id @default(uuid())
+  senderId   String
+  sender     User      @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User      @relation("MessagesReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+  content    String
+  isRead     Boolean   @default(false)
+  readAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([senderId, receiverId])
+  @@index([receiverId, senderId])
+  @@map("messages")
+}
+
+model PlanRenewalCoupon {
+  id                String    @id @default(uuid())
+  code              String    @unique
+  daysGranted       Int
+  createdById       String
+  createdBy         User      @relation("PlanRenewalCouponsCreatedBy", fields: [createdById], references: [id])
+  assignedFarmerId  String?
+  assignedFarmer    User?     @relation("PlanRenewalCouponsAssignedFarmer", fields: [assignedFarmerId], references: [id], onDelete: SetNull)
+  assignedAdvisorId String?
+  assignedAdvisor   User?     @relation("PlanRenewalCouponsAssignedAdvisor", fields: [assignedAdvisorId], references: [id], onDelete: SetNull)
+  isUsed            Boolean   @default(false)
+  usedAt            DateTime?
+  bonusDayApplied   Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+
+  @@map("plan_renewal_coupons")
+}
+
+/// A farmer's BASIC-plan-days coupon. Admin/Super Admin generates it at a flat ₹2/day list price;
+/// a Business Partner may then buy it at a 10% discount (debited from their wallet) before handing
+/// the code to a farmer, who redeems it for BASIC-plan days. Redemption does not require a purchase —
+/// an admin-gifted code can be redeemed directly too.
+model BasicPlanCoupon {
+  id             String    @id @default(uuid())
+  code           String    @unique
+  daysGranted    Int
+  listPrice      Decimal   @db.Decimal(10, 2)
+  createdById    String
+  createdBy      User      @relation("BasicPlanCouponsCreatedBy", fields: [createdById], references: [id])
+  purchasedById  String?
+  purchasedBy    User?     @relation("BasicPlanCouponsPurchasedBy", fields: [purchasedById], references: [id], onDelete: SetNull)
+  purchasePrice  Decimal?  @db.Decimal(10, 2)
+  purchasedAt    DateTime?
+  isUsed         Boolean   @default(false)
+  usedByFarmerId String?
+  usedByFarmer   User?     @relation("BasicPlanCouponsUsedByFarmer", fields: [usedByFarmerId], references: [id], onDelete: SetNull)
+  usedAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@map("basic_plan_coupons")
+}
+
+// ─── Farmer 3-Tier Plan System ───────────────────────────────────────────
+
+/// Farmer ki current active plan record. Har farmer ka ek hi row hoga (unique on farmerId).
+model FarmerPlan {
+  id        String                 @id @default(uuid())
+  farmerId  String                 @unique
+  farmer    User                   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  plan      FarmerSubscriptionPlan @default(FREE)
+  startDate DateTime               @default(now())
+  endDate   DateTime? // null = FREE plan (no expiry)
+  expiredAt DateTime? // when this plan actually lapsed — drives the 2-day grace / 3-month renew-history window
+  couponId  String? // which coupon activated this plan
+  coupon    FarmerPlanCoupon?      @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+
+  @@map("farmer_plans")
+}
+
+/// Super admin creates these coupons to give farmers BASIC or PREMIUM plans.
+model FarmerPlanCoupon {
+  id                        String                 @id @default(uuid())
+  code                      String                 @unique
+  plan                      FarmerSubscriptionPlan // BASIC or PREMIUM
+  daysGranted               Int // how many days to activate
+  assignedFarmerId          String? // optional: lock to a specific farmer
+  assignedFarmer            User?                  @relation("FarmerPlanCouponsAssignedFarmer", fields: [assignedFarmerId], references: [id], onDelete: SetNull)
+  assignedAdvisorId         String? // optional: issue to an advisor instead, who can apply it to any of their farmers
+  assignedAdvisor           User?                  @relation("FarmerPlanCouponsAssignedAdvisor", fields: [assignedAdvisorId], references: [id], onDelete: SetNull)
+  assignedBusinessPartnerId String? // optional: issue to a business partner instead, who earns a commission when it's redeemed
+  assignedBusinessPartner   User?                  @relation("FarmerPlanCouponsAssignedBusinessPartner", fields: [assignedBusinessPartnerId], references: [id], onDelete: SetNull)
+  isUsed                    Boolean                @default(false)
+  usedAt                    DateTime?
+  usedByFarmerId            String? // which farmer actually redeemed
+  usedByFarmer              User?                  @relation("FarmerPlanCouponsUsedBy", fields: [usedByFarmerId], references: [id], onDelete: SetNull)
+  expiresAt                 DateTime? // coupon validity (optional)
+  generationCostAmount      Decimal?               @db.Decimal(10, 2) // snapshot of what was debited from the assignee's wallet at creation time, if any
+  createdById               String
+  createdBy                 User                   @relation("FarmerPlanCouponsCreatedBy", fields: [createdById], references: [id])
+  createdAt                 DateTime               @default(now())
+
+  farmerPlans FarmerPlan[]
+
+  @@index([assignedFarmerId])
+  @@index([assignedBusinessPartnerId])
+  @@index([createdById])
+  @@map("farmer_plan_coupons")
+}
+
+/// Super-admin-editable price + commission-split config, one row per paid Farmer plan tier.
+/// Redeeming a coupon prorates these shares by daysGranted / billingPeriodDays and credits the
+/// business partner's/advisor's wallet accordingly — the remainder is the platform's (admin) share.
+model FarmerPlanPricing {
+  id                           String                 @id @default(uuid())
+  plan                         FarmerSubscriptionPlan @unique
+  price                        Decimal                @db.Decimal(10, 2)
+  billingPeriodDays            Int // e.g. 365 for a yearly plan, 30 for a monthly one
+  partnerShareType             DiscountValueType // PERCENTAGE (e.g. BASIC's 10%) or FIXED (e.g. STANDARD/PREMIUM's flat ₹ cut)
+  partnerShareValue            Decimal                @db.Decimal(10, 2)
+  advisorShareValue            Decimal?               @db.Decimal(10, 2) // null when the plan has no advisor (e.g. BASIC)
+  adminShareValue              Decimal?               @db.Decimal(10, 2) // informational — platform's own cut, for display only
+  partnerGenerationCostPercent Decimal?               @db.Decimal(5, 2) // % of price debited from a Business Partner's wallet the moment they're issued a coupon for this plan
+  advisorGenerationCostPercent Decimal?               @db.Decimal(5, 2) // % of price debited from an Advisor's wallet the moment they're issued a coupon for this plan
+  updatedAt                    DateTime               @updatedAt
+  updatedById                  String?
+  updatedBy                    User?                  @relation("FarmerPlanPricingUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("farmer_plan_pricing")
+}
+
+// ─── Gardener 2-Tier Plan System ─────────────────────────────────────────
+
+/// Gardener ki current active plan record. Har gardener ka ek hi row hoga (unique on gardenerId).
+model GardenerPlan {
+  id         String                   @id @default(uuid())
+  gardenerId String                   @unique
+  gardener   User                     @relation(fields: [gardenerId], references: [id], onDelete: Cascade)
+  plan       GardenerSubscriptionPlan @default(FREE)
+  startDate  DateTime                 @default(now())
+  endDate    DateTime? // null = FREE plan (no expiry)
+  expiredAt  DateTime? // when this plan actually lapsed — drives the 2-day grace / 3-month renew-history window
+  couponId   String?
+  coupon     GardenerPlanCoupon?      @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  createdAt  DateTime                 @default(now())
+  updatedAt  DateTime                 @updatedAt
+
+  @@map("gardener_plans")
+}
+
+/// Admin creates these coupons to give gardeners PREMIUM (paid-only, no BASIC tier for gardeners).
+model GardenerPlanCoupon {
+  id                 String                   @id @default(uuid())
+  code               String                   @unique
+  plan               GardenerSubscriptionPlan // always PREMIUM
+  daysGranted        Int
+  assignedGardenerId String?
+  assignedGardener   User?                    @relation("GardenerPlanCouponsAssignedGardener", fields: [assignedGardenerId], references: [id], onDelete: SetNull)
+  isUsed             Boolean                  @default(false)
+  usedAt             DateTime?
+  usedByGardenerId   String?
+  usedByGardener     User?                    @relation("GardenerPlanCouponsUsedBy", fields: [usedByGardenerId], references: [id], onDelete: SetNull)
+  expiresAt          DateTime?
+  createdById        String
+  createdBy          User                     @relation("GardenerPlanCouponsCreatedBy", fields: [createdById], references: [id])
+  createdAt          DateTime                 @default(now())
+
+  gardenerPlans GardenerPlan[]
+
+  @@index([assignedGardenerId])
+  @@index([createdById])
+  @@map("gardener_plan_coupons")
 }

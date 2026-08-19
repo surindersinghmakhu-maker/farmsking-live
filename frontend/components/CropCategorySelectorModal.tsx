@@ -25,6 +25,7 @@ import {
   IrrigationType,
 } from '@/constants/cropCategoriesData';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
+import { CalendarDatePickerModal } from './CalendarDatePickerModal';
 
 export interface CropFormValues {
   crop: CropItem;
@@ -35,7 +36,7 @@ export interface CropFormValues {
   sowingDate: string;
   unit: CropUnit;
   pricePerUnit: string;
-  stage: 'HARVESTING' | 'SOWING' | 'GROWTH';
+  stage: 'PLANTATION' | 'VEGETATIVE' | 'FLOWERING' | 'HARVESTING' | 'COMPLETED' | 'SOWING' | 'GROWTH';
   harvestType: HarvestType;
   irrigationType: IrrigationType;
 }
@@ -70,8 +71,10 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
   const [area, setArea] = useState('4');
   const [selectedAreaUnit, setSelectedAreaUnit] = useState<LandAreaUnit>('Killa (Acre)');
   const [selectedIrrigation, setSelectedIrrigation] = useState<IrrigationType>('Tube Well / Borewell');
-  const [cropStage, setCropStage] = useState<'HARVESTING' | 'SOWING' | 'GROWTH'>('HARVESTING');
+  const [cropStage, setCropStage] = useState<'PLANTATION' | 'VEGETATIVE' | 'FLOWERING' | 'HARVESTING' | 'COMPLETED' | 'SOWING' | 'GROWTH'>('PLANTATION');
   const [sowingDate, setSowingDate] = useState('15 Oct 2026');
+  const [selectedSeason, setSelectedSeason] = useState<string>('Rabi (Winter)');
+  const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
   const [selectedUnit, setSelectedUnit] = useState<CropUnit>('KG');
   const [pricePerUnit, setPricePerUnit] = useState('50');
   const [errorNotice, setErrorNotice] = useState<string | null>(null);
@@ -124,7 +127,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
   const handleSelectCropItem = (crop: CropItem) => {
     tap();
     setSelectedCrop(crop);
-    setFieldName(`${crop.hindiName || crop.name} Plot 1`);
+    setFieldName(`${crop.name} Plot 1`);
     setSelectedUnit(crop.defaultUnit || 'KG');
     setPricePerUnit(crop.defaultPrice ? String(crop.defaultPrice) : '50');
     setStep('FORM');
@@ -132,18 +135,19 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
 
   const handleFormSubmit = () => {
     if (!fieldName.trim() || !area.trim()) {
-      setErrorNotice('⚠️ Kripya Field Name aur Land Area Size bharein.');
+      setErrorNotice('⚠️ Please enter Field Name and Land Area Size.');
       return;
     }
     tap();
     if (selectedCrop) {
+      const formattedSowing = selectedSeason ? `${sowingDate} (${selectedSeason})` : sowingDate;
       onSaveCropForm({
         crop: selectedCrop,
         category: currentCategory,
         fieldName: fieldName.trim(),
         area: area.trim(),
         areaUnit: selectedAreaUnit,
-        sowingDate,
+        sowingDate: formattedSowing,
         unit: selectedUnit,
         pricePerUnit: pricePerUnit.trim(),
         stage: cropStage,
@@ -185,7 +189,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
               </Text>
               <Text style={styles.modalSub}>
                 {step === 'LIST'
-                  ? 'Select category & crop name from intuitive categories below'
+                  ? 'Select category & crop name from categories below'
                   : `Fill land area, water source & stage for ${selectedCrop?.name}`}
               </Text>
             </View>
@@ -212,7 +216,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Text style={[styles.dropdownSelectedText, { color: currentCategory.color }]} numberOfLines={1}>
-                      {currentCategory.name} ({currentCategory.hindiName})
+                      {currentCategory.name}
                     </Text>
                   </View>
                   {currentCategory.examples ? (
@@ -246,7 +250,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                           isSelected ? { color: '#ffffff', fontFamily: FONT.bold } : { color: cat.color },
                         ]}
                       >
-                        {cat.hindiName || cat.name}
+                        {cat.name}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -276,23 +280,23 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                 /* OTHER CROPS: no preset list — farmer types their own crop name */
                 <View style={styles.customCropBox}>
                   <Text style={styles.customCropHint}>
-                    Ye category kisi bhi listed crop me na aane wali fasal ke liye hai. Apni fasal ka naam khud likhein.
+                    This category is for crops not listed in standard categories. Enter your custom crop name below.
                   </Text>
 
-                  <Text style={styles.inputLabel}>Crop Name (फसल का नाम) *</Text>
+                  <Text style={styles.inputLabel}>Crop Name *</Text>
                   <TextInput
                     style={styles.formInput}
-                    placeholder="e.g. Dragon Fruit / अपनी फसल का नाम"
+                    placeholder="e.g. Dragon Fruit / Passion Fruit"
                     placeholderTextColor="#94a3b8"
                     value={customCropName}
                     onChangeText={setCustomCropName}
                   />
 
-                  <Text style={styles.inputLabel}>Harvest Type (कटाई का प्रकार) *</Text>
+                  <Text style={styles.inputLabel}>Harvest Type *</Text>
                   <View style={styles.unitGrid}>
                     {[
-                      { key: 'CONTINUOUS' as HarvestType, label: '🔄 Daily / Continuous' },
-                      { key: 'ONE_TIME' as HarvestType, label: '🌾 One-Time Seasonal' },
+                      { key: 'CONTINUOUS' as HarvestType, label: '🔄 Daily / Continuous Harvest' },
+                      { key: 'ONE_TIME' as HarvestType, label: '🌾 One-Time Seasonal Harvest' },
                     ].map((h) => {
                       const isSelected = h.key === customHarvestType;
                       return (
@@ -353,7 +357,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                             <View style={{ flex: 1 }}>
                               <Text style={styles.cropName}>{crop.name}</Text>
                               {crop.variety ? (
-                                <Text style={styles.cropDesc}>Variety: {crop.variety}</Text>
+                                <Text style={styles.cropDesc}>🌱 {crop.variety}</Text>
                               ) : null}
                               <View style={styles.badgeRow}>
                                 <View style={[styles.miniBadge, isCont ? { backgroundColor: '#e0f2fe' } : { backgroundColor: '#fef3c7' }]}>
@@ -422,8 +426,8 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                     ]}
                   >
                     {isContinuousHarvest
-                      ? '🔄 Daily / Continuous Harvest Crop (दैनिक/निरंतर कटाई)'
-                      : '🌾 One-Time Seasonal Harvest Crop (एक बार की कटाई)'}
+                      ? '🔄 Daily / Continuous Harvest Crop'
+                      : '🌾 One-Time Seasonal Harvest Crop'}
                   </Text>
                   <Ionicons name="lock-closed-outline" size={13} color="#64748b" />
                 </View>
@@ -434,13 +438,13 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                   ]}
                 >
                   {isContinuousHarvest
-                    ? 'ℹ️ Read-Only Note: Is crop ki continuous harvesting hoti hai, isliye iska daily Mandi market price reflect kiya jayega!'
-                    : 'ℹ️ Read-Only Note: Is crop ki ek hi baar seasonal harvest hoti hai, isliye iska daily rate na dikhakar single seasonal harvest price apply hoga.'}
+                    ? 'ℹ️ Read-Only Note: This crop undergoes continuous harvesting, so daily Mandi market rates will be reflected.'
+                    : 'ℹ️ Read-Only Note: This crop is harvested once per season, so a single seasonal harvest price applies.'}
                 </Text>
               </View>
 
               {/* SOURCE OF WATER / IRRIGATION TYPE SELECTOR */}
-              <Text style={styles.inputLabel}>Source of Water / Irrigation Type (सिंचाई का स्रोत) *</Text>
+              <Text style={styles.inputLabel}>Source of Water / Irrigation Type *</Text>
               <View style={styles.unitGrid}>
                 {IRRIGATION_TYPES.map((irr) => {
                   const isSelected = irr.type === selectedIrrigation;
@@ -469,7 +473,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                           isSelected ? { color: '#ffffff', fontFamily: FONT.bold } : { color: '#334155' },
                         ]}
                       >
-                        {irr.hindiLabel}
+                        {irr.label}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -477,12 +481,13 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
               </View>
 
               {/* Crop Growth Stage Selector */}
-              <Text style={styles.inputLabel}>Current Crop Stage (फसल की स्थिति) *</Text>
+              <Text style={styles.inputLabel}>Current Crop Stage *</Text>
               <View style={styles.unitGrid}>
                 {[
-                  { key: 'HARVESTING', label: '🌾 Harvesting Ready (कटाई योग्य)', color: '#16a34a', bg: '#dcfce7' },
-                  { key: 'GROWTH', label: '🌿 Vegetative Growth (बढ़वार)', color: '#0284c7', bg: '#e0f2fe' },
-                  { key: 'SOWING', label: '🌱 Sowing / Germination (बुवाई)', color: '#d97706', bg: '#fef3c7' },
+                  { key: 'PLANTATION', label: '🌱 Plantation / Sowing', color: '#d97706', bg: '#fef3c7' },
+                  { key: 'VEGETATIVE', label: '🌿 Vegetative Growth', color: '#0284c7', bg: '#e0f2fe' },
+                  { key: 'FLOWERING', label: '🌸 Flowering & Podding', color: '#e11d48', bg: '#ffe4e6' },
+                  { key: 'HARVESTING', label: '🌾 Harvesting Ready', color: '#16a34a', bg: '#dcfce7' },
                 ].map((st) => {
                   const isSelected = st.key === cropStage;
                   return (
@@ -522,7 +527,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
               />
 
               {/* Land Area Value & Unit Selector */}
-              <Text style={styles.inputLabel}>Land Area Unit (क्षेत्रफल की इकाई) *</Text>
+              <Text style={styles.inputLabel}>Land Area Unit *</Text>
               <View style={styles.unitGrid}>
                 {LAND_AREA_UNITS.map((u) => {
                   const isSelected = u.unit === selectedAreaUnit;
@@ -552,7 +557,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                           isSelected && { color: '#ffffff', fontFamily: FONT.bold },
                         ]}
                       >
-                        {u.hindiLabel}
+                        {u.label}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -570,7 +575,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
               />
 
               {/* Crop Measurement Unit Selector */}
-              <Text style={styles.inputLabel}>Crop Measurement Unit (फसल माप इकाई) *</Text>
+              <Text style={styles.inputLabel}>Crop Measurement Unit *</Text>
               <View style={styles.unitGrid}>
                 {CROP_UNITS.map((u) => {
                   const isSelected = u.unit === selectedUnit;
@@ -609,7 +614,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
 
               {/* Price / Rate per Unit */}
               <Text style={styles.inputLabel}>
-                Previous Sale Price per {selectedUnit} (₹) *
+                Estimated Sale Price per {selectedUnit} (₹) *
               </Text>
               <View style={styles.priceWrap}>
                 <Text style={styles.currencySymbol}>₹</Text>
@@ -624,14 +629,25 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                 <Text style={styles.unitSuffix}>/ {selectedUnit}</Text>
               </View>
 
-              <Text style={styles.inputLabel}>Sowing Date / Season</Text>
-              <TextInput
-                style={styles.formInput}
-                placeholder="e.g. 15 Oct 2026"
-                placeholderTextColor="#94a3b8"
-                value={sowingDate}
-                onChangeText={setSowingDate}
-              />
+              {/* Interactive Calendar Control for Sowing Date */}
+              <Text style={styles.inputLabel}>Sowing Date / Season *</Text>
+              <TouchableOpacity
+                style={styles.calendarSelector}
+                activeOpacity={0.8}
+                onPress={() => {
+                  tap();
+                  setIsCalendarOpen(true);
+                }}
+              >
+                <Ionicons name="calendar" size={20} color="#16a34a" />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.calendarSelectorDate}>{sowingDate || 'Tap to select Sowing Date'}</Text>
+                  {selectedSeason ? (
+                    <Text style={styles.calendarSelectorSeason}>🌾 Season: {selectedSeason}</Text>
+                  ) : null}
+                </View>
+                <Ionicons name="calendar-outline" size={18} color="#16a34a" />
+              </TouchableOpacity>
 
               {errorNotice ? <Text style={styles.errorText}>{errorNotice}</Text> : null}
 
@@ -684,7 +700,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                       <View style={{ flex: 1 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                           <Text style={[styles.catOptionTitle, isSelected && { color: cat.color, fontFamily: FONT.bold }]}>
-                            {cat.name} ({cat.hindiName})
+                            {cat.name}
                           </Text>
                           <View style={[styles.countBadge, { backgroundColor: cat.bg }]}>
                             <Text style={[styles.countBadgeText, { color: cat.color }]}>{count} Crops</Text>
@@ -712,6 +728,17 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
             </View>
           </View>
         </Modal>
+
+        {/* CALENDAR DATE PICKER MODAL */}
+        <CalendarDatePickerModal
+          visible={isCalendarOpen}
+          onClose={() => setIsCalendarOpen(false)}
+          onSelectDate={(formattedDate, season) => {
+            setSowingDate(formattedDate);
+            setSelectedSeason(season);
+          }}
+          initialDate={sowingDate}
+        />
       </View>
     </Modal>
   );
@@ -1032,6 +1059,29 @@ const styles = StyleSheet.create({
     color: '#0f172a',
     backgroundColor: '#f8fafc',
     fontFamily: FONT.medium,
+  },
+  calendarSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1.5,
+    borderColor: '#bbf7d0',
+    backgroundColor: '#f0fdf4',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginVertical: 4,
+  },
+  calendarSelectorDate: {
+    fontSize: 14,
+    fontFamily: FONT.bold,
+    color: '#15803d',
+  },
+  calendarSelectorSeason: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#16a34a',
+    marginTop: 2,
   },
   unitGrid: {
     flexDirection: 'row',

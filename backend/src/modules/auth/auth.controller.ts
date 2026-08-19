@@ -3,6 +3,8 @@ import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { ForgotPasswordStartDto } from './dto/forgot-password-start.dto';
+import { ForgotPasswordVerifyDto } from './dto/forgot-password-verify.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -19,5 +21,19 @@ export class AuthController {
   @Post('login')
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post('forgot-password/start')
+  forgotPasswordStart(@Body() dto: ForgotPasswordStartDto) {
+    return this.authService.forgotPasswordStart(dto);
+  }
+
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post('forgot-password/verify')
+  forgotPasswordVerify(@Body() dto: ForgotPasswordVerifyDto) {
+    return this.authService.forgotPasswordVerify(dto);
   }
 }

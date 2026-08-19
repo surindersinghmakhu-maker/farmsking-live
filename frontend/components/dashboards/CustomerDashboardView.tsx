@@ -1,138 +1,126 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { RoleHeader } from './RoleHeader';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
+import { useAuth } from '@/src/store/auth-context';
+import { useProducts } from '@/src/hooks/useProducts';
+import { formatInr } from '@/src/utils/formatInr';
+
+type SortMode = 'RECENT' | 'CATEGORY' | 'PRICE_LOW' | 'PRICE_HIGH';
+
+const SORT_OPTIONS: { key: SortMode; label: string }[] = [
+  { key: 'RECENT', label: 'Recently Added' },
+  { key: 'CATEGORY', label: 'Category' },
+  { key: 'PRICE_LOW', label: 'Price: Low to High' },
+  { key: 'PRICE_HIGH', label: 'Price: High to Low' },
+];
+
+const PAGE_SIZE = 30;
 
 export const CustomerDashboardView: React.FC = () => {
   const theme = RoleThemes.CUSTOMER;
   const router = useRouter();
+  const { user } = useAuth();
+  const { data: products } = useProducts();
+  const [sortMode, setSortMode] = useState<SortMode>('RECENT');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  const activeProducts = useMemo(() => (products ?? []).filter((p) => p.isActive), [products]);
+
+  const sortedProducts = useMemo(() => {
+    const list = [...activeProducts];
+    switch (sortMode) {
+      case 'CATEGORY':
+        return list.sort((a, b) => (a.category ?? '').localeCompare(b.category ?? '') || a.name.localeCompare(b.name));
+      case 'PRICE_LOW':
+        return list.sort((a, b) => Number(a.price) - Number(b.price));
+      case 'PRICE_HIGH':
+        return list.sort((a, b) => Number(b.price) - Number(a.price));
+      case 'RECENT':
+      default:
+        // Products already arrive newest-first from the API.
+        return list;
+    }
+  }, [activeProducts, sortMode]);
+
+  const visibleProducts = sortedProducts.slice(0, visibleCount);
+  const hasMore = visibleCount < sortedProducts.length;
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.bg }]} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <RoleHeader
         currentRole="CUSTOMER"
-        profileName="Aman Verma"
+        profileName={user?.name || 'Customer'}
         subtitle="Happy Customer"
-        avatarUrl="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150"
+        avatarUrl={user?.photoUrl || 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150'}
       />
 
       <View style={styles.content}>
-        {/* My Orders Card */}
-        <LinearGradient colors={theme.heroGradient} style={[styles.ordersCard, premiumShadow(theme.primary, 'md')]}>
-          <View style={styles.cardColLeft}>
-            <Text style={styles.cardLabelText}>My Orders</Text>
-            <Text style={styles.ordersCount}>3</Text>
-            <Text style={[styles.ordersStatus, { color: theme.primary }]}>In Progress</Text>
-          </View>
-          <LinearGradient colors={theme.gradient} style={[styles.cartIconCircle, premiumShadow(theme.primary, 'sm')]}>
-            <Ionicons name="cart-outline" size={28} color="#ffffff" />
-          </LinearGradient>
-        </LinearGradient>
-
-        {/* Top Categories */}
+        {/* Products */}
         <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm')]}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Top Categories</Text>
-            <TouchableOpacity activeOpacity={0.7}><Text style={[styles.viewAllText, { color: theme.primary }]}>View All</Text></TouchableOpacity>
+            <Text style={styles.sectionTitle}>All Products</Text>
+            <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/(tabs)/categories')}>
+              <Text style={[styles.viewAllText, { color: theme.primary }]}>Open Shop</Text>
+            </TouchableOpacity>
           </View>
 
-          <View style={styles.categoriesGrid}>
-            {[
-              { name: 'Seeds', icon: 'leaf-outline', bg: '#f0fdf4', color: '#166534' },
-              { name: 'Fertilizers', icon: 'flask-outline', bg: theme.primaryLight, color: theme.primary },
-              { name: 'Pesticides', icon: 'shield-outline', bg: '#fefce8', color: '#ca8a04' },
-              { name: 'Tools', icon: 'build-outline', bg: '#fcf4ff', color: '#9333ea' },
-              { name: 'More', icon: 'grid-outline', bg: '#f1f5f9', color: '#64748b' },
-            ].map((cat, idx) => (
-              <TouchableOpacity key={idx} style={styles.categoryItem} activeOpacity={0.7}>
-                <View style={[styles.categoryIconBg, { backgroundColor: cat.bg }]}>
-                  <Ionicons name={cat.icon as any} size={19} color={cat.color} />
-                </View>
-                <Text style={styles.categoryName}>{cat.name}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+          {activeProducts.length === 0 ? (
+            <Text style={styles.emptyText}>No products available yet.</Text>
+          ) : (
+            <>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.sortRow}>
+                {SORT_OPTIONS.map((opt) => {
+                  const isActive = sortMode === opt.key;
+                  return (
+                    <TouchableOpacity
+                      key={opt.key}
+                      style={[styles.sortChip, isActive && { backgroundColor: theme.primary, borderColor: theme.primary }]}
+                      activeOpacity={0.8}
+                      onPress={() => {
+                        setSortMode(opt.key);
+                        setVisibleCount(PAGE_SIZE);
+                      }}
+                    >
+                      <Text style={[styles.sortChipText, isActive && { color: '#ffffff' }]}>{opt.label}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
 
-        {/* My Orders Track List */}
-        <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm')]}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>My Orders</Text>
-            <TouchableOpacity activeOpacity={0.7}><Text style={[styles.viewAllText, { color: theme.primary }]}>View All</Text></TouchableOpacity>
-          </View>
-
-          {[
-            { num: 'Order #ORD1234', desc: 'Marigold Seeds - 1kg', price: '₹450', status: 'In Transit', bg: '#dbeafe', color: '#1d4ed8' },
-            { num: 'Order #ORD1235', desc: 'Organic Compost - 5kg', price: '₹350', status: 'Processing', bg: '#ffedd5', color: '#c2410c' },
-            { num: 'Order #ORD1236', desc: 'Neem Oil - 1L', price: '₹280', status: 'Confirmed', bg: '#d1fae5', color: '#047857', last: true },
-          ].map((ord, idx) => (
-            <View key={idx} style={[styles.orderTrackItem, ord.last && { borderBottomWidth: 0 }]}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.orderNum}>{ord.num}</Text>
-                <Text style={styles.orderDesc}>{ord.desc}</Text>
+              <View style={styles.productGrid}>
+                {visibleProducts.map((p) => (
+                  <TouchableOpacity key={p.id} style={styles.productCard} activeOpacity={0.8} onPress={() => router.push('/(tabs)/categories')}>
+                    {p.imageUrl ? (
+                      <Image source={{ uri: p.imageUrl }} style={styles.productImg} />
+                    ) : (
+                      <View style={[styles.productImg, styles.productImgFallback]}>
+                        <Ionicons name="leaf-outline" size={26} color="#94a3b8" />
+                      </View>
+                    )}
+                    <Text style={styles.productName} numberOfLines={1}>{p.name}</Text>
+                    {p.category ? <Text style={styles.productCategory} numberOfLines={1}>{p.category}</Text> : null}
+                    <Text style={[styles.productPrice, { color: theme.primary }]}>{formatInr(Number(p.price))}</Text>
+                  </TouchableOpacity>
+                ))}
               </View>
-              <Text style={styles.orderPrice}>{ord.price}</Text>
-              <View style={[styles.statusBadge, { backgroundColor: ord.bg }]}>
-                <Text style={[styles.statusText, { color: ord.color }]}>{ord.status}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
 
-        {/* Recent Products Carousel */}
-        <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm')]}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent Products</Text>
-            <TouchableOpacity activeOpacity={0.7}><Text style={[styles.viewAllText, { color: theme.primary }]}>View All</Text></TouchableOpacity>
-          </View>
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.prodScroll}>
-            {[
-              { name: 'Marigold Seeds', price: '₹450', rating: '4.5', img: 'https://images.unsplash.com/photo-1597848212624-a19eb35e2651?w=200' },
-              { name: 'Organic Compost', price: '₹350', rating: '4.4', img: 'https://images.unsplash.com/photo-1615811361523-6bd03d7748e7?w=200' },
-              { name: 'Neem Oil', price: '₹280', rating: '4.4', img: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=200' },
-            ].map((p, idx) => (
-              <View key={idx} style={styles.productCard}>
-                <Image source={{ uri: p.img }} style={styles.productImg} />
-                <Text style={styles.productName}>{p.name}</Text>
-                <View style={styles.prodPriceRow}>
-                  <Text style={[styles.productPrice, { color: theme.primary }]}>{p.price}</Text>
-                  <View style={styles.ratingRow}>
-                    <Ionicons name="star" size={12} color="#f59e0b" />
-                    <Text style={styles.ratingText}>{p.rating}</Text>
-                  </View>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Support Grid */}
-        <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm')]}>
-          <Text style={[styles.sectionTitle, { marginBottom: 14 }]}>Support</Text>
-          <View style={styles.supportGrid}>
-            {[
-              { label: 'Track Order', icon: 'map-outline', href: '/(tabs)/orders' },
-              { label: 'My Addresses', icon: 'location-outline', href: '/profile' },
-              { label: 'Contact Us', icon: 'chatbubbles-outline' },
-              { label: 'Help Center', icon: 'help-circle-outline' },
-            ].map((s, idx) => (
-              <TouchableOpacity
-                key={idx}
-                style={styles.supportBtn}
-                activeOpacity={0.7}
-                onPress={() => 'href' in s && s.href && router.push(s.href as any)}
-              >
-                <Ionicons name={s.icon as any} size={20} color={theme.primary} />
-                <Text style={styles.supportLabel}>{s.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+              {hasMore ? (
+                <TouchableOpacity
+                  style={[styles.showMoreBtn, { borderColor: theme.primary }]}
+                  activeOpacity={0.8}
+                  onPress={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                >
+                  <Text style={[styles.showMoreText, { color: theme.primary }]}>Show More</Text>
+                  <Ionicons name="chevron-down" size={15} color={theme.primary} />
+                </TouchableOpacity>
+              ) : null}
+            </>
+          )}
         </View>
       </View>
     </ScrollView>
@@ -142,35 +130,21 @@ export const CustomerDashboardView: React.FC = () => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: SPACING.lg, gap: SPACING.lg, paddingBottom: SPACING.xxl },
-  ordersCard: { borderRadius: RADIUS.xl, padding: SPACING.xl, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  cardColLeft: { flex: 1 },
-  cardLabelText: { fontSize: 13.5, color: '#64748b', fontFamily: FONT.semiBold },
-  ordersCount: { fontSize: 36, fontFamily: FONT.extraBold, color: '#0f172a', marginVertical: 2, letterSpacing: -0.6 },
-  ordersStatus: { fontSize: 13, fontFamily: FONT.bold },
-  cartIconCircle: { width: 68, height: 68, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   sectionCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.lg },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   sectionTitle: { fontSize: 15.5, fontFamily: FONT.bold, color: '#0f172a', letterSpacing: -0.1 },
   viewAllText: { fontSize: 12.5, fontFamily: FONT.bold },
-  categoriesGrid: { flexDirection: 'row', justifyContent: 'space-between' },
-  categoryItem: { alignItems: 'center', gap: 6 },
-  categoryIconBg: { width: 44, height: 44, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  categoryName: { fontSize: 10.5, fontFamily: FONT.bold, color: '#334155' },
-  orderTrackItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', gap: 8 },
-  orderNum: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
-  orderDesc: { fontSize: 11.5, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
-  orderPrice: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
-  statusBadge: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: RADIUS.pill },
-  statusText: { fontSize: 10.5, fontFamily: FONT.bold },
-  prodScroll: { gap: 12 },
-  productCard: { width: 124, backgroundColor: '#f8fafc', borderRadius: RADIUS.md, padding: 8 },
-  productImg: { width: '100%', height: 80, borderRadius: 10 },
-  productName: { fontSize: 12, fontFamily: FONT.bold, color: '#0f172a', marginTop: 7 },
-  prodPriceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
-  productPrice: { fontSize: 12, fontFamily: FONT.bold },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  ratingText: { fontSize: 10, color: '#64748b', fontFamily: FONT.medium },
-  supportGrid: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
-  supportBtn: { flex: 1, backgroundColor: '#f8fafc', borderRadius: RADIUS.md, paddingVertical: 13, alignItems: 'center', justifyContent: 'center', gap: 6 },
-  supportLabel: { fontSize: 10.5, fontFamily: FONT.bold, color: '#334155' },
+  emptyText: { fontSize: 12.5, fontFamily: FONT.medium, color: '#94a3b8' },
+  sortRow: { gap: 8, paddingBottom: 12 },
+  sortChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: '#e2e8f0', backgroundColor: '#f8fafc' },
+  sortChipText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#334155' },
+  productGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  productCard: { width: '31%', backgroundColor: '#f8fafc', borderRadius: RADIUS.md, padding: 8, gap: 3 },
+  productImg: { width: '100%', height: 74, borderRadius: RADIUS.sm },
+  productImgFallback: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#f1f5f9' },
+  productName: { fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' },
+  productCategory: { fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8' },
+  productPrice: { fontSize: 12, fontFamily: FONT.extraBold },
+  showMoreBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, borderWidth: 1.5, borderRadius: RADIUS.md, paddingVertical: 10, marginTop: 14 },
+  showMoreText: { fontSize: 12.5, fontFamily: FONT.bold },
 });

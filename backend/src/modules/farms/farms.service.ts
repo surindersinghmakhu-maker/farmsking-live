@@ -19,7 +19,7 @@ export class FarmsService {
     return this.prisma.farm.findMany({
       where: {
         deletedAt: null,
-        ...(user.role === Role.ADMIN ? {} : { ownerId: user.id }),
+        ...(user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN ? {} : { ownerId: user.id }),
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -30,7 +30,7 @@ export class FarmsService {
       where: { id, deletedAt: null },
     });
 
-    if (!farm || (user.role !== Role.ADMIN && farm.ownerId !== user.id)) {
+    if (!farm || (user.role !== Role.ADMIN && user.role !== Role.SUPER_ADMIN && farm.ownerId !== user.id)) {
       throw new NotFoundException('Farm not found.');
     }
 

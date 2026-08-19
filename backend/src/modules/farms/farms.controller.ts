@@ -10,7 +10,7 @@ import { CreateFarmDto } from './dto/create-farm.dto';
 import { UpdateFarmDto } from './dto/update-farm.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.FARMER, Role.ADMIN)
+@Roles(Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN)
 @Controller('farms')
 export class FarmsController {
   constructor(private readonly farmsService: FarmsService) {}

@@ -1,4 +1,4 @@
-import { CropCategory, CropStatus } from '@prisma/client';
+import { CropCategory, CropCycleStage, CropHarvestType, CropStatus } from '@prisma/client';
 import { IsDateString, IsEnum, IsInt, IsNumber, IsOptional, IsPositive, IsString, IsUUID, MinLength } from 'class-validator';
 
 export class CreateCropDto {
@@ -46,6 +46,23 @@ export class CreateCropDto {
   @IsOptional()
   @IsEnum(CropStatus)
   status?: CropStatus;
+
+  @IsOptional()
+  @IsEnum(CropCycleStage)
+  stage?: CropCycleStage;
+
+  @IsOptional()
+  @IsString()
+  unit?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @IsPositive()
+  pricePerUnit?: number;
+
+  @IsOptional()
+  @IsEnum(CropHarvestType)
+  harvestType?: CropHarvestType;
 
   @IsOptional()
   @IsString()

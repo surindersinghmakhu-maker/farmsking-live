@@ -10,7 +10,8 @@ import { GardenerDashboardView } from '@/components/dashboards/GardenerDashboard
 import { CustomerDashboardView } from '@/components/dashboards/CustomerDashboardView';
 import { PartnerDashboardView } from '@/components/dashboards/PartnerDashboardView';
 import { AdminDashboardView } from '@/components/dashboards/AdminDashboardView';
-import { DashboardRoleTabs } from '@/components/dashboards/DashboardRoleTabs';
+import { SuperAdminDashboardView } from '@/components/dashboards/SuperAdminDashboardView';
+import { OperatorDashboardView } from '@/components/dashboards/OperatorDashboardView';
 
 export default function HomeScreen() {
   const { role: currentRole } = useRole();
@@ -33,6 +34,10 @@ export default function HomeScreen() {
         return <PartnerDashboardView />;
       case 'ADMIN':
         return <AdminDashboardView />;
+      case 'SUPER_ADMIN':
+        return <SuperAdminDashboardView />;
+      case 'OPERATOR':
+        return <OperatorDashboardView />;
       default:
         return <CustomerDashboardView />;
     }
@@ -43,7 +48,6 @@ export default function HomeScreen() {
       <StatusBar barStyle="light-content" backgroundColor={theme.headerBg} />
       <View style={styles.webOuterWrapper}>
         <View style={[styles.container, { backgroundColor: theme.bg }]}>
-          <DashboardRoleTabs />
           {renderDashboardView()}
         </View>
       </View>

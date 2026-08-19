@@ -5,10 +5,16 @@ export interface RegisterPayload {
   mobile: string;
   password: string;
   name: string;
+  pincode: string;
+  accountType?: 'CUSTOMER' | 'FARMER' | 'GARDENER';
+  postOffice?: string;
   village?: string;
   district?: string;
   state?: string;
   preferredLanguage?: string;
+  securityQuestion?: string;
+  securityAnswer?: string;
+  referralCode?: string;
 }
 
 export interface LoginPayload {
@@ -23,5 +29,15 @@ export async function registerFarmer(payload: RegisterPayload): Promise<AuthResp
 
 export async function login(payload: LoginPayload): Promise<AuthResponse> {
   const { data } = await apiClient.post<AuthResponse>('/auth/login', payload);
+  return data;
+}
+
+export async function forgotPasswordStart(payload: { mobile: string; pincode: string }): Promise<{ securityQuestion: string }> {
+  const { data } = await apiClient.post('/auth/forgot-password/start', payload);
+  return data;
+}
+
+export async function forgotPasswordVerify(payload: { mobile: string; pincode: string; securityAnswer: string }): Promise<{ message: string }> {
+  const { data } = await apiClient.post('/auth/forgot-password/verify', payload);
   return data;
 }

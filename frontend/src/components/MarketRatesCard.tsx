@@ -1,4 +1,5 @@
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+// Updated MarketRatesCard component with fixed syntax and inline unit layout
 import { Ionicons } from '@expo/vector-icons';
 import { useMyCropRates } from '../hooks/useMarketRates';
 import { useAuth } from '../store/auth-context';
@@ -11,7 +12,7 @@ const theme = RoleThemes.FARMER;
 export interface HarvestingCropRateItem {
   cropName: string;
   categoryName: string;
-  stage: 'HARVESTING' | 'SOWING' | 'GROWTH';
+  stage: 'PLANTATION' | 'VEGETATIVE' | 'FLOWERING' | 'HARVESTING' | 'COMPLETED' | 'SOWING' | 'GROWTH';
   unit: string;
   localAvgRate: number;
   nationalAvgRate: number;
@@ -67,17 +68,62 @@ const DEFAULT_HARVESTING_CROPS_RATES: HarvestingCropRateItem[] = [
   },
 ];
 
+import { useCrops } from '../store/crops-context';
+
 export function MarketRatesCard() {
   const { user } = useAuth();
   const { data, isLoading, isError } = useMyCropRates();
+  const { cropFields } = useCrops();
 
   const userState = user?.state || data?.state || 'Punjab';
 
-  // One-time-harvest crops and the "Other Crops" category don't have a stable
-  // live mandi rate, so they're kept off this homepage price feed.
-  const liveRates = DEFAULT_HARVESTING_CROPS_RATES.filter(
-    (rate) => rate.harvestType === 'CONTINUOUS' && rate.categoryName !== 'Other Crops'
+  // Filter user's active cropFields that are in "HARVESTING" stage and are continuous (daily-based)
+  const userHarvestingCrops = cropFields.filter(
+    (c) => c.status === 'ACTIVE' && c.stage === 'HARVESTING' && c.harvestType === 'CONTINUOUS'
   );
+
+  // Map user's crops to their live/default rates
+  const liveRates = userHarvestingCrops.map((userCrop) => {
+    const userCropEng = userCrop.cropName.split('(')[0].trim().toLowerCase();
+
+    // Find matching rate from backend API data
+    const apiRate = data?.rates?.find((r) => {
+      const rEng = r.cropName.split('(')[0].trim().toLowerCase();
+      return rEng === userCropEng || userCropEng.includes(rEng) || rEng.includes(userCropEng);
+    });
+
+    // Find matching default mock rate
+    const defaultRate = DEFAULT_HARVESTING_CROPS_RATES.find((r) => {
+      const rEng = r.cropName.split('(')[0].trim().toLowerCase();
+      return rEng === userCropEng || userCropEng.includes(rEng) || rEng.includes(userCropEng);
+    });
+
+    // Determine unit
+    const unit = apiRate?.unit || defaultRate?.unit || userCrop.unit || 'KG';
+
+    // Determine local avg price (prioritize backend API rate)
+    const localAvgRate =
+      apiRate?.localAvgRate != null
+        ? apiRate.localAvgRate
+        : defaultRate?.localAvgRate != null
+        ? defaultRate.localAvgRate
+        : Number(userCrop.pricePerUnit) || 0;
+
+    // Determine national avg price (prioritize backend API rate)
+    const nationalAvgRate =
+      apiRate?.nationalAvgRate != null
+        ? apiRate.nationalAvgRate
+        : defaultRate?.nationalAvgRate != null
+        ? defaultRate.nationalAvgRate
+        : Math.round(localAvgRate * 0.9);
+
+    return {
+      cropName: userCrop.cropName,
+      unit,
+      localAvgRate,
+      nationalAvgRate,
+    };
+  });
 
   return (
     <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
@@ -109,39 +155,45 @@ export function MarketRatesCard() {
         <>
           {/* Table Header */}
           <View style={styles.columnHeaderRow}>
-            <Text style={[styles.columnHeader, styles.cropColumn]}>Harvesting Crop</Text>
+            <Text style={[styles.columnHeader, styles.cropColumn]}>Crop</Text>
             <Text style={[styles.columnHeader, styles.rateColumn]}>Local Mandi</Text>
             <Text style={[styles.columnHeader, styles.rateColumn]}>National Avg</Text>
           </View>
 
           {/* Harvesting Stage Crops List */}
-          {liveRates.map((rate) => {
-            return (
-              <View key={rate.cropName} style={styles.row}>
-                <View style={styles.cropColumn}>
-                  <Text style={styles.cropName} numberOfLines={1}>
-                    {rate.cropName}
-                  </Text>
-                </View>
+          {liveRates.length === 0 ? (
+            <Text style={[styles.emptyText, { textAlign: 'center', marginTop: 12 }]}>
+              No active crops in harvesting stage to show prices.
+            </Text>
+          ) : (
+            liveRates.map((rate) => {
+              return (
+                <View key={rate.cropName} style={styles.row}>
+                  <View style={styles.cropColumn}>
+                    <Text style={styles.cropName} numberOfLines={1}>
+                      {rate.cropName}
+                    </Text>
+                  </View>
 
-                {/* Local Mandi Rate */}
-                <View style={styles.rateColumn}>
-                  <Text style={styles.rateValue}>
-                    {formatInr(rate.localAvgRate)}
-                  </Text>
-                  <Text style={styles.rateUnit}>/{rate.unit}</Text>
-                </View>
+                  {/* Local Mandi Rate (Single Inline Row) */}
+                  <View style={[styles.rateColumn, { flexDirection: 'row', alignItems: 'baseline', gap: 3 }]}>
+                    <Text style={styles.rateValue}>
+                      {formatInr(rate.localAvgRate)}
+                    </Text>
+                    <Text style={styles.rateUnit}>/{rate.unit}</Text>
+                  </View>
 
-                {/* National Avg Rate */}
-                <View style={styles.rateColumn}>
-                  <Text style={[styles.rateValue, { color: '#475569' }]}>
-                    {formatInr(rate.nationalAvgRate)}
-                  </Text>
-                  <Text style={styles.rateUnit}>/{rate.unit}</Text>
+                  {/* National Avg Rate (Single Inline Row) */}
+                  <View style={[styles.rateColumn, { flexDirection: 'row', alignItems: 'baseline', gap: 3 }]}>
+                    <Text style={[styles.rateValue, { color: '#475569' }]}>
+                      {formatInr(rate.nationalAvgRate)}
+                    </Text>
+                    <Text style={styles.rateUnit}>/{rate.unit}</Text>
+                  </View>
                 </View>
-              </View>
-            );
-          })}
+              );
+            })
+          )}
         </>
       )}
     </View>
@@ -181,8 +233,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: RADIUS.pill,
-    borderWidth: 1,
-    borderColor: '#fca5a5',
   },
   redDot: {
     width: 6,
@@ -191,10 +241,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#dc2626',
   },
   liveText: {
-    fontSize: 9.5,
-    fontFamily: FONT.extraBold,
+    fontSize: 10,
+    fontFamily: FONT.bold,
     color: '#dc2626',
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   subtitle: {
     fontSize: 11,

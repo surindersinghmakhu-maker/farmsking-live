@@ -5,17 +5,19 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { RoleHeader } from './RoleHeader';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
+import { useAuth } from '@/src/store/auth-context';
 
 export const AdminDashboardView: React.FC = () => {
   const theme = RoleThemes.ADMIN;
+  const { user } = useAuth();
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.bg }]} showsVerticalScrollIndicator={false}>
       <RoleHeader
         currentRole="ADMIN"
-        profileName="Admin"
+        profileName={user?.name || 'Admin'}
         subtitle="Platform Overview"
-        avatarUrl="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150"
+        avatarUrl={user?.photoUrl || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150'}
       />
 
       <View style={styles.content}>

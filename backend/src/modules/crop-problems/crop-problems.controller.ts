@@ -33,7 +33,7 @@ export class CropProblemsController {
     return this.cropProblemsService.findAllForAdvisor(user);
   }
 
-  @Roles(Role.FARMER, Role.ADVISOR, Role.ADMIN)
+  @Roles(Role.FARMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
   @Get(':id')
   findOne(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.cropProblemsService.findOneOrThrow(user, id);

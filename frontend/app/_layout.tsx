@@ -18,6 +18,8 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { AuthProvider, useAuth } from '@/src/store/auth-context';
 import { RoleProvider } from '@/src/store/role-context';
 import { CropsProvider } from '@/src/store/crops-context';
+import { CartProvider } from '@/src/store/cart-context';
+import { LanguageProvider } from '@/src/store/language-context';
 import { SplashView } from '@/components/SplashView';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -79,18 +81,22 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <RoleProvider>
-          <CropsProvider>
-            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-              <MobileAppShell>
-                <RootNavigation />
-                <StatusBar style="auto" />
-              </MobileAppShell>
-            </ThemeProvider>
-          </CropsProvider>
-        </RoleProvider>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <RoleProvider>
+            <CropsProvider>
+              <CartProvider>
+                <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                  <MobileAppShell>
+                    <RootNavigation />
+                    <StatusBar style="auto" />
+                  </MobileAppShell>
+                </ThemeProvider>
+              </CartProvider>
+            </CropsProvider>
+          </RoleProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

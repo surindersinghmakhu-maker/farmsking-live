@@ -26,12 +26,21 @@ export class MarketRatesService {
     const cropCycles = await this.prisma.cropCycle.findMany({
       where: {
         deletedAt: null,
+        status: 'HARVESTING',
         plot: { deletedAt: null, farm: { deletedAt: null, ownerId: user.id } },
       },
       select: { cropName: true },
     });
 
-    const distinctCropNames = [...new Map(cropCycles.map((c) => [c.cropName.trim().toLowerCase(), c.cropName.trim()])).values()];
+    const distinctCropNames = [
+      ...new Map(
+        cropCycles.map((c) => {
+          // Extract English name part: e.g. "Rose (गुलाब)" -> "Rose"
+          const englishName = c.cropName.split('(')[0].trim();
+          return [englishName.toLowerCase(), englishName];
+        })
+      ).values(),
+    ];
 
     const since = new Date(Date.now() - ONE_DAY_MS);
 

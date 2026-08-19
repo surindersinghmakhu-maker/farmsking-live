@@ -13,31 +13,34 @@ import {
 import { Link, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/src/store/auth-context';
-import { useRole } from '@/src/store/role-context';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING } from '@/constants/theme';
+import { ServerConfigModal } from '@/components/ServerConfigModal';
 
 const theme = RoleThemes.FARMER;
 
 export default function LoginScreen() {
   const { login } = useAuth();
-  const { setRole } = useRole();
   const router = useRouter();
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showServerModal, setShowServerModal] = useState(false);
 
   const onSubmit = async () => {
     setError(null);
     setIsSubmitting(true);
     try {
       await login({ mobile, password });
-      setRole('CUSTOMER');
       router.replace('/(tabs)');
     } catch (err: any) {
-      console.log('Login error:', err);
-      setError(err?.response?.data?.message ?? err?.message ?? 'Login failed. Please try again.');
+      const isNetworkErr = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
+      if (isNetworkErr) {
+        setError('Network error! Could not connect to backend server. Tap "Configure Server IP" below to set your PC IP.');
+      } else {
+        setError(err?.response?.data?.message ?? err?.message ?? 'Login failed. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -46,6 +49,13 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <View style={styles.topHeader}>
+          <TouchableOpacity style={styles.serverPill} onPress={() => setShowServerModal(true)}>
+            <Ionicons name="hardware-chip-outline" size={15} color="#16a34a" />
+            <Text style={styles.serverPillText}>Server IP</Text>
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.brandBadge}>
           <Ionicons name="leaf" size={28} color="#ffffff" />
         </View>
@@ -81,14 +91,20 @@ export default function LoginScreen() {
           />
         </View>
 
-        <TouchableOpacity style={styles.forgotLink} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.forgotLink} activeOpacity={0.7} onPress={() => router.push('/(auth)/forgot-password')}>
           <Text style={styles.forgotText}>Forgot Password?</Text>
         </TouchableOpacity>
 
         {error ? (
           <View style={styles.errorBox}>
-            <Ionicons name="alert-circle" size={15} color="#dc2626" />
-            <Text style={styles.error}>{error}</Text>
+            <Ionicons name="alert-circle" size={18} color="#dc2626" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.error}>{error}</Text>
+              <TouchableOpacity style={styles.configErrorBtn} onPress={() => setShowServerModal(true)}>
+                <Ionicons name="settings-outline" size={13} color="#16a34a" />
+                <Text style={styles.configErrorBtnText}>⚙️ Configure Server IP</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         ) : null}
 
@@ -106,8 +122,8 @@ export default function LoginScreen() {
           style={styles.secondaryButton}
           activeOpacity={0.75}
           onPress={() => {
-            setMobile('9876543210');
-            setPassword('123456');
+            setMobile('9999900005');
+            setPassword('farmer123');
           }}
         >
           <Text style={styles.secondaryButtonText}>⚡ Fill Demo Credentials</Text>
@@ -120,13 +136,41 @@ export default function LoginScreen() {
           </Link>
         </View>
       </ScrollView>
+
+      <ServerConfigModal
+        visible={showServerModal}
+        onClose={() => setShowServerModal(false)}
+        onSaved={() => setError(null)}
+      />
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
-  scroll: { padding: SPACING.xxl, paddingTop: Platform.OS === 'web' ? 56 : 80, alignItems: 'center' },
+  scroll: { padding: SPACING.xxl, paddingTop: Platform.OS === 'web' ? 40 : 60, alignItems: 'center' },
+  topHeader: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: 10,
+  },
+  serverPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIUS.lg,
+  },
+  serverPillText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#15803d',
+  },
   brandBadge: {
     width: 64, height: 64, borderRadius: RADIUS.md, backgroundColor: theme.primary,
     alignItems: 'center', justifyContent: 'center', marginBottom: 12,
@@ -145,8 +189,31 @@ const styles = StyleSheet.create({
   input: { flex: 1, paddingVertical: 13, fontSize: 15.5, fontFamily: FONT.medium, color: '#0f172a' },
   forgotLink: { alignSelf: 'flex-end', marginTop: 10 },
   forgotText: { color: theme.primary, fontSize: 12.5, fontFamily: FONT.bold },
-  errorBox: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 14, alignSelf: 'flex-start' },
-  error: { color: '#dc2626', fontFamily: FONT.semiBold, fontSize: 13 },
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    marginTop: 14,
+    width: '100%',
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    padding: 10,
+    borderRadius: RADIUS.md,
+  },
+  error: { color: '#dc2626', fontFamily: FONT.medium, fontSize: 12.5, lineHeight: 17 },
+  configErrorBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+    alignSelf: 'flex-start',
+  },
+  configErrorBtnText: {
+    color: '#15803d',
+    fontFamily: FONT.bold,
+    fontSize: 12,
+  },
   button: {
     width: '100%',
     backgroundColor: theme.primary,

@@ -1,0 +1,5 @@
+backend
+docs
+.agents
+.claude
+node_modules

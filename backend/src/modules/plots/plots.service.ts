@@ -35,7 +35,7 @@ export class PlotsService {
       include: { farm: true },
     });
 
-    if (!plot || (user.role !== Role.ADMIN && plot.farm.ownerId !== user.id)) {
+    if (!plot || (user.role !== Role.ADMIN && user.role !== Role.SUPER_ADMIN && plot.farm.ownerId !== user.id)) {
       throw new NotFoundException('Plot not found.');
     }
 

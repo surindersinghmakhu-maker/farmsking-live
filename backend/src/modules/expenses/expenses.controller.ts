@@ -10,7 +10,7 @@ import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.FARMER, Role.ADMIN)
+@Roles(Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN)
 @Controller('expenses')
 export class ExpensesController {
   constructor(private readonly expensesService: ExpensesService) {}

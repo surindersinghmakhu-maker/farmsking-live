@@ -20,7 +20,13 @@ export class RolesGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest();
     const user: AuthUser | undefined = request.user;
+    if (!user) return false;
 
-    return !!user && requiredRoles.includes(user.role);
+    // Primary role covers the common case; `roles` lets an account with more than one granted role
+    // (e.g. a Farmer who was also made a Business Partner) reach every dashboard it holds — minus
+    // whatever an Admin has deactivated (still kept in `roles` for history, just not usable).
+    const isPrimaryUsable = !user.deactivatedRoles?.includes(user.role);
+    const activeRoles = (user.roles ?? []).filter((r) => !user.deactivatedRoles?.includes(r));
+    return (requiredRoles.includes(user.role) && isPrimaryUsable) || requiredRoles.some((r) => activeRoles.includes(r));
   }
 }

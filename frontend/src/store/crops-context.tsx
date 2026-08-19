@@ -1,16 +1,27 @@
 import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
-import { CropUnit, HarvestType, IrrigationType } from '@/constants/cropCategoriesData';
+import { useQueryClient } from '@tanstack/react-query';
+import { CropUnit, HarvestType, IrrigationType, LandAreaUnit } from '@/constants/cropCategoriesData';
 import { CropFormValues } from '@/components/CropCategorySelectorModal';
 import * as AppStorage from '@/src/lib/storage';
+import { useAuth } from '@/src/store/auth-context';
+import { useMyCrops } from '@/src/hooks/useCrops';
+import * as farmsApi from '@/src/api/farms.api';
+import * as plotsApi from '@/src/api/plots.api';
+import * as cropsApi from '@/src/api/crops.api';
+import { AreaUnit as RealAreaUnit, CropCategory as RealCropCategory, MyCropCycle } from '@/src/types/api';
 
-export type CropStage = 'SOWING' | 'GROWTH' | 'HARVESTING' | 'COMPLETED';
+export type CropStage = 'PLANTATION' | 'VEGETATIVE' | 'FLOWERING' | 'HARVESTING' | 'COMPLETED' | 'SOWING' | 'GROWTH';
 export type CropStatus = 'ACTIVE' | 'INACTIVE';
+export type AdvisorShareStatus = 'NONE' | 'PENDING' | 'ACCEPTED';
 
 export const STAGE_ORDER: Record<CropStage, number> = {
+  PLANTATION: 1,
   SOWING: 1,
+  VEGETATIVE: 2,
   GROWTH: 2,
-  HARVESTING: 3,
-  COMPLETED: 4,
+  FLOWERING: 3,
+  HARVESTING: 4,
+  COMPLETED: 5,
 };
 
 export interface RegisteredCropField {
@@ -28,6 +39,11 @@ export interface RegisteredCropField {
   pricePerUnit: string;
   stage: CropStage;
   status: CropStatus; // 'ACTIVE' for SOWING/GROWTH/HARVESTING, 'INACTIVE' for COMPLETED
+  advisorStatus?: AdvisorShareStatus; // 'NONE' | 'PENDING' | 'ACCEPTED'
+  assignedSchedule?: string;
+  farmerName?: string;
+  farmerPhone?: string;
+  location?: string;
   harvestType?: HarvestType;
   irrigationType?: IrrigationType;
 }
@@ -51,203 +67,303 @@ export interface CropSaleRecord {
   totalAmount: number;
   buyerName: string;
   saleDate: string;
+  billId?: string;
 }
+
+export interface SpecialTreatmentTemplate {
+  id: string;
+  problemTitle: string;
+  cropCategory?: string;
+  remedyTasks: { id: string; dayNumber: number; treatmentName: string }[];
+}
+
+export const INITIAL_SPECIAL_TREATMENTS: SpecialTreatmentTemplate[] = [
+  {
+    id: 'st1',
+    problemTitle: 'Yellow Rust / Pila Rata Fungus Attack (पीला रतुआ)',
+    cropCategory: 'Wheat & Cereals',
+    remedyTasks: [
+      { id: 'stt1', dayNumber: 1, treatmentName: 'Propiconazole 25% EC (200ml/Acre) Spray' },
+      { id: 'stt2', dayNumber: 3, treatmentName: 'Water Drenching & Soil Aeration Audit' },
+      { id: 'stt3', dayNumber: 7, treatmentName: 'Second Spray: Mancozeb 75% WP (600g/Acre)' },
+    ],
+  },
+  {
+    id: 'st2',
+    problemTitle: 'Thrips & Leaf Curl Insect Attack (पत्ती मरोड़ / कीड़ा)',
+    cropCategory: 'Rose & Vegetables',
+    remedyTasks: [
+      { id: 'stt4', dayNumber: 1, treatmentName: 'Imidacloprid 17.8% SL (50ml/100L) Foliar Spray' },
+      { id: 'stt5', dayNumber: 4, treatmentName: 'Sticky Traps Installation (Yellow/Blue)' },
+      { id: 'stt6', dayNumber: 8, treatmentName: 'Neem Oil 10000 PPM (2ml/L) Preventive Spray' },
+    ],
+  },
+  {
+    id: 'st3',
+    problemTitle: 'Root Rot & Wilt Disease (जड़ सड़न / उकठा बीमारी)',
+    cropCategory: 'All Crops',
+    remedyTasks: [
+      { id: 'stt7', dayNumber: 1, treatmentName: 'Trichoderma Viride Bio-Fungicide Drenching' },
+      { id: 'stt8', dayNumber: 5, treatmentName: 'Microbial Root Activator & Humic Acid' },
+      { id: 'stt9', dayNumber: 10, treatmentName: 'Root Zone Inspection & Moisture Balance' },
+    ],
+  },
+];
 
 interface SalePayload {
   quantity: string;
   rate: string;
   buyerName: string;
+  billId?: string;
 }
 
 interface CropsContextValue {
-  /** Crops still active in the farmer's fields. */
   cropFields: RegisteredCropField[];
-  /** Crops that reached the Completed stage — no longer active. */
   cropHistory: CropHistoryEntry[];
-  /** Every sale logged against a currently-active crop. */
   salesRecords: CropSaleRecord[];
-  addCrop: (values: CropFormValues) => void;
-  removeCrop: (id: string) => void;
-  /** Change a crop's stage. Moving to COMPLETED sets status to INACTIVE and removes it from the active list into history. */
-  updateCropStage: (id: string, targetStage: CropStage) => void;
-  /**
-   * Logs a sale for an active crop. One-time-harvest crops complete automatically
-   * as part of their one and only sale, moving straight into history with status INACTIVE.
-   */
-  recordSale: (cropId: string, payload: SalePayload) => void;
+  specialTreatments: SpecialTreatmentTemplate[];
+  isLoading: boolean;
+  addCrop: (values: CropFormValues) => Promise<void>;
+  removeCrop: (id: string) => Promise<void>;
+  updateCropStage: (id: string, targetStage: CropStage) => Promise<void>;
+  recordSale: (cropId: string, payload: SalePayload) => Promise<void>;
+  shareCropWithAdvisor: (cropId: string) => void;
+  acceptFarmRequest: (cropId: string, assignedSchedule?: string) => Promise<void>;
+  addSpecialTreatment: (treatment: SpecialTreatmentTemplate) => void;
+  applySpecialTreatmentToCrop: (cropId: string, treatmentId: string) => Promise<void>;
 }
 
 const CropsContext = createContext<CropsContextValue | undefined>(undefined);
 
-const INITIAL_CROPS: RegisteredCropField[] = [
-  {
-    id: '1',
-    cropName: 'Rose (गुलाब)',
-    categoryName: 'Flowers & Floriculture',
-    categoryColor: '#e11d48',
-    categoryBg: '#ffe4e6',
-    fieldName: 'Flower Garden - Plot A',
-    area: '2.0 Killa (Acre)',
-    sowingDate: '15 Nov 2025',
-    variety: 'Dutch Red Rose',
-    season: 'All Seasons',
-    unit: 'Bunch',
-    pricePerUnit: '40',
-    stage: 'HARVESTING',
-    status: 'ACTIVE',
-    harvestType: 'CONTINUOUS',
-    irrigationType: 'Drip Irrigation (ड्रिप)',
-  },
-  {
-    id: '2',
-    cropName: 'Wheat (गेहूँ)',
-    categoryName: 'Cereals & Grains',
-    categoryColor: '#15803d',
-    categoryBg: '#f0fdf4',
-    fieldName: 'North Field - Plot 1',
-    area: '5.0 Killa (Acre)',
-    sowingDate: '15 Nov 2025',
-    variety: 'HD-2967',
-    season: 'Rabi',
-    unit: 'Quintal',
-    pricePerUnit: '2275',
-    stage: 'HARVESTING',
-    status: 'ACTIVE',
-    harvestType: 'ONE_TIME',
-    irrigationType: 'Canal (नहर)',
-  },
-  {
-    id: '3',
-    cropName: 'Tomato (टमाटर)',
-    categoryName: 'Vegetables',
-    categoryColor: '#047857',
-    categoryBg: '#ecfdf5',
-    fieldName: 'Polyhouse 2',
-    area: '1.5 Killa (Acre)',
-    sowingDate: '01 Oct 2025',
-    variety: 'Abhilash',
-    season: 'All Seasons',
-    unit: 'KG',
-    pricePerUnit: '',
-    stage: 'GROWTH',
-    status: 'ACTIVE',
-    harvestType: 'CONTINUOUS',
-    irrigationType: 'Tube Well / Borewell',
-  },
-];
+/** Real CropCategory enum has fewer buckets than the mock's category list — collapse the extras into OTHER. */
+const CATEGORY_ID_TO_REAL: Record<string, RealCropCategory> = {
+  flowers: 'FLOWERS',
+  vegetables: 'VEGETABLES',
+  fruits: 'FRUITS',
+  medicinal: 'OTHER',
+  spices: 'SPICES',
+  cereals: 'GRAINS',
+  pulses: 'PULSES',
+  oilseeds: 'OTHER',
+  commercial: 'CASH_CROP',
+  fodder: 'OTHER',
+  plantation: 'OTHER',
+  other: 'OTHER',
+};
 
-const INITIAL_SALES: CropSaleRecord[] = [
-  {
-    id: 's1',
-    cropId: '1',
-    cropName: 'Rose (गुलाब)',
-    fieldName: 'Flower Garden - Plot A',
-    quantity: '50',
-    unit: 'Bunch',
-    pricePerUnit: '40',
-    totalAmount: 2000,
-    buyerName: 'Bathinda Wholesale Dealer',
-    saleDate: '2026-08-09',
-  },
-];
+const REAL_CATEGORY_DISPLAY: Record<RealCropCategory, { name: string; color: string; bg: string }> = {
+  FLOWERS: { name: 'Flowers & Floriculture', color: '#e11d48', bg: '#ffe4e6' },
+  VEGETABLES: { name: 'Vegetables', color: '#047857', bg: '#ecfdf5' },
+  FRUITS: { name: 'Fruits & Orchards', color: '#c2410c', bg: '#fff7ed' },
+  GRAINS: { name: 'Cereals & Grains', color: '#15803d', bg: '#f0fdf4' },
+  PULSES: { name: 'Pulses & Legumes', color: '#b45309', bg: '#fffbeb' },
+  SPICES: { name: 'Spices & Condiments', color: '#ea580c', bg: '#ffedd5' },
+  CASH_CROP: { name: 'Commercial & Cash Crops', color: '#7c3aed', bg: '#f5f3ff' },
+  OTHER: { name: 'Other Crops', color: '#64748b', bg: '#f1f5f9' },
+};
 
-const STORAGE_KEY = 'farmsking_crops_state_v1';
+/** Real AreaUnit enum (ACRE/HECTARE/BIGHA/GUNTA) is coarser than the mock's LandAreaUnit list — nearest-fit mapping. */
+const LAND_UNIT_TO_REAL: Record<LandAreaUnit, RealAreaUnit> = {
+  'Killa (Acre)': 'ACRE',
+  Kanal: 'GUNTA',
+  Marla: 'GUNTA',
+  Bigha: 'BIGHA',
+  Biswa: 'GUNTA',
+  Hectare: 'HECTARE',
+  'Sq Ft / Gaj': 'GUNTA',
+};
 
-interface PersistedCropsState {
-  cropFields: RegisteredCropField[];
-  cropHistory: CropHistoryEntry[];
+const REAL_AREA_UNIT_LABEL: Record<RealAreaUnit, string> = {
+  ACRE: 'Killa (Acre)',
+  HECTARE: 'Hectare',
+  BIGHA: 'Bigha',
+  GUNTA: 'Gunta',
+};
+
+function normalizeStage(stage: CropStage): 'PLANTATION' | 'VEGETATIVE' | 'FLOWERING' | 'HARVESTING' | 'COMPLETED' {
+  if (stage === 'SOWING') return 'PLANTATION';
+  if (stage === 'GROWTH') return 'VEGETATIVE';
+  return stage;
+}
+
+/** The mock's sowingDate is a free-text display string (optionally with a season suffix) — best-effort parse to ISO for the real date column. */
+function parseSowingDateToISO(display: string): string | undefined {
+  const datePart = display.split(' (')[0].trim();
+  if (!datePart) return undefined;
+  const parsed = new Date(datePart);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
+}
+
+function formatDateDisplay(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+interface PersistedLocalState {
   salesRecords: CropSaleRecord[];
+  specialTreatments?: SpecialTreatmentTemplate[];
+}
+
+const STORAGE_KEY = 'farmsking_crops_local_state_v1';
+
+function toRegisteredCropField(
+  crop: MyCropCycle,
+  farmerName: string | undefined,
+  farmerPhone: string | undefined,
+  location: string | undefined
+): RegisteredCropField {
+  const realCategory = crop.category ?? 'OTHER';
+  const catInfo = REAL_CATEGORY_DISPLAY[realCategory];
+  const areaUnit = crop.plot.areaUnit ?? 'ACRE';
+  const areaText = crop.plot.area != null ? `${crop.plot.area} ${REAL_AREA_UNIT_LABEL[areaUnit]}` : '';
+  const sowingDateDisplay = crop.notes || (crop.sowingDate ? formatDateDisplay(crop.sowingDate) : '');
+
+  return {
+    id: crop.id,
+    cropName: crop.cropName,
+    categoryName: catInfo.name,
+    categoryColor: catInfo.color,
+    categoryBg: catInfo.bg,
+    fieldName: crop.plot.name,
+    area: areaText,
+    sowingDate: sowingDateDisplay,
+    variety: crop.variety ?? undefined,
+    unit: (crop.unit as CropUnit) ?? 'KG',
+    pricePerUnit: crop.pricePerUnit ?? '',
+    stage: crop.stage,
+    status: crop.stage === 'COMPLETED' ? 'INACTIVE' : 'ACTIVE',
+    advisorStatus: crop.advisorReviewStatus ?? 'NONE',
+    assignedSchedule: crop.assignedSchedule ?? undefined,
+    farmerName,
+    farmerPhone,
+    location,
+    harvestType: crop.harvestType,
+    irrigationType: (crop.plot.irrigationType as IrrigationType | null) ?? undefined,
+  };
 }
 
 export function CropsProvider({ children }: { children: ReactNode }) {
-  const [cropFields, setCropFields] = useState<RegisteredCropField[]>(INITIAL_CROPS);
-  const [cropHistory, setCropHistory] = useState<CropHistoryEntry[]>([]);
-  const [salesRecords, setSalesRecords] = useState<CropSaleRecord[]>(INITIAL_SALES);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { data: myCropsRaw, isLoading } = useMyCrops();
+  const myCrops = useMemo(() => myCropsRaw ?? [], [myCropsRaw]);
 
-  // Load persisted state once on mount so completed/history crops survive a refresh.
+  const [salesRecords, setSalesRecords] = useState<CropSaleRecord[]>([]);
+  const [specialTreatments, setSpecialTreatments] = useState<SpecialTreatmentTemplate[]>(INITIAL_SPECIAL_TREATMENTS);
+  const [isPersistLoaded, setIsPersistLoaded] = useState(false);
+
   useEffect(() => {
     (async () => {
       try {
         const raw = await AppStorage.getItemAsync(STORAGE_KEY);
         if (raw) {
-          const parsed: PersistedCropsState = JSON.parse(raw);
-          setCropFields(parsed.cropFields ?? INITIAL_CROPS);
-          setCropHistory(parsed.cropHistory ?? []);
-          setSalesRecords(parsed.salesRecords ?? INITIAL_SALES);
+          const parsed: PersistedLocalState = JSON.parse(raw);
+          setSalesRecords(parsed.salesRecords ?? []);
+          setSpecialTreatments(parsed.specialTreatments ?? INITIAL_SPECIAL_TREATMENTS);
         }
       } catch {
-        // ignore corrupt/missing storage, fall back to initial mock data
+        // ignore, fallback to defaults
       } finally {
-        setIsLoaded(true);
+        setIsPersistLoaded(true);
       }
     })();
   }, []);
 
-  // Persist on every change, once the initial load has completed (avoids overwriting
-  // stored data with the initial mock defaults before the load finishes).
   useEffect(() => {
-    if (!isLoaded) return;
-    const state: PersistedCropsState = { cropFields, cropHistory, salesRecords };
-    AppStorage.setItemAsync(STORAGE_KEY, JSON.stringify(state));
-  }, [isLoaded, cropFields, cropHistory, salesRecords]);
+    if (!isPersistLoaded) return;
+    AppStorage.setItemAsync(STORAGE_KEY, JSON.stringify({ salesRecords, specialTreatments }));
+  }, [salesRecords, specialTreatments, isPersistLoaded]);
 
-  const addCrop = (values: CropFormValues) => {
-    const newField: RegisteredCropField = {
-      id: Date.now().toString(),
-      cropName: values.crop.name,
-      categoryName: values.category.name,
-      categoryColor: values.category.color,
-      categoryBg: values.category.bg,
-      fieldName: values.fieldName,
-      area: `${values.area} ${values.areaUnit}`,
-      sowingDate: values.sowingDate,
-      variety: values.crop.variety,
-      season: values.crop.season,
-      unit: values.unit,
-      pricePerUnit: values.pricePerUnit,
-      stage: values.stage,
-      status: 'ACTIVE',
-      harvestType: values.harvestType,
-      irrigationType: values.irrigationType,
-    };
-    setCropFields((prev) => [newField, ...prev]);
-  };
+  const farmerName = user?.name;
+  const farmerPhone = user?.mobile;
+  const location = useMemo(() => [user?.village, user?.district, user?.state].filter(Boolean).join(', '), [user?.village, user?.district, user?.state]);
 
-  const removeCrop = (id: string) => {
-    setCropFields((prev) => prev.filter((c) => c.id !== id));
-  };
+  const activeCrops = useMemo(() => myCrops.filter((c) => c.status !== 'COMPLETED' && c.status !== 'FAILED'), [myCrops]);
+  const completedCrops = useMemo(() => myCrops.filter((c) => c.status === 'COMPLETED'), [myCrops]);
 
-  const updateCropStage = (id: string, targetStage: CropStage) => {
-    if (targetStage === 'COMPLETED') {
-      setCropFields((prev) => {
-        const completedCrop = prev.find((item) => item.id === id);
-        if (completedCrop) {
-          setCropHistory((history) => [
-            {
-              ...completedCrop,
-              stage: 'COMPLETED',
-              status: 'INACTIVE',
-              completedDate: new Date().toISOString().slice(0, 10),
-            },
-            ...history,
-          ]);
-        }
-        return prev.filter((item) => item.id !== id);
+  const cropFields = useMemo(
+    () => activeCrops.map((c) => toRegisteredCropField(c, farmerName, farmerPhone, location)),
+    [activeCrops, farmerName, farmerPhone, location]
+  );
+
+  const cropHistory = useMemo(
+    () =>
+      completedCrops.map((c) => {
+        const base = toRegisteredCropField(c, farmerName, farmerPhone, location);
+        const sale = salesRecords.find((s) => s.cropId === c.id);
+        return {
+          ...base,
+          completedDate: sale?.saleDate ?? (c.actualHarvestDate ? formatDateDisplay(c.actualHarvestDate) : formatDateDisplay(c.updatedAt)),
+          soldQuantity: sale?.quantity,
+          soldRate: sale?.pricePerUnit,
+          buyerName: sale?.buyerName,
+          totalRevenue: sale?.totalAmount,
+        };
+      }),
+    [completedCrops, salesRecords, farmerName, farmerPhone, location]
+  );
+
+  const invalidateCrops = () => queryClient.invalidateQueries({ queryKey: ['crops', 'mine'] });
+
+  const ensureFarmAndPlot = async (
+    fieldName: string,
+    areaValue: number,
+    areaUnit: LandAreaUnit,
+    irrigationType: IrrigationType
+  ) => {
+    const farms = await farmsApi.listFarms();
+    let farm = farms[0];
+    if (!farm) {
+      farm = await farmsApi.createFarm({
+        name: `${farmerName || 'My'} Farm`,
+        totalArea: areaValue || 1,
+        areaUnit: LAND_UNIT_TO_REAL[areaUnit] ?? 'ACRE',
       });
-      return;
     }
-    setCropFields((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, stage: targetStage, status: 'ACTIVE' }
-          : item
-      )
-    );
+
+    const plots = await plotsApi.listPlotsForFarm(farm.id);
+    const existingPlot = plots.find((p) => p.name === fieldName);
+    if (existingPlot) return existingPlot;
+
+    return plotsApi.createPlot({
+      farmId: farm.id,
+      name: fieldName,
+      area: areaValue || 1,
+      areaUnit: LAND_UNIT_TO_REAL[areaUnit] ?? 'ACRE',
+      irrigationType,
+    });
   };
 
-  const recordSale = (cropId: string, payload: SalePayload) => {
-    const crop = cropFields.find((c) => c.id === cropId);
+  const addCrop = async (values: CropFormValues) => {
+    const plot = await ensureFarmAndPlot(values.fieldName.trim(), Number(values.area) || 1, values.areaUnit, values.irrigationType);
+
+    await cropsApi.createCrop({
+      plotId: plot.id,
+      category: CATEGORY_ID_TO_REAL[values.category.id] ?? 'OTHER',
+      cropName: values.crop.name.trim(),
+      variety: values.crop.variety,
+      sowingDate: parseSowingDateToISO(values.sowingDate),
+      unit: values.unit,
+      pricePerUnit: values.pricePerUnit.trim() ? Number(values.pricePerUnit) : undefined,
+      stage: normalizeStage(values.stage),
+      harvestType: values.harvestType,
+      notes: values.sowingDate,
+    });
+
+    await invalidateCrops();
+  };
+
+  const removeCrop = async (id: string) => {
+    await cropsApi.deleteCrop(id);
+    await invalidateCrops();
+  };
+
+  const updateCropStage = async (id: string, targetStage: CropStage) => {
+    await cropsApi.updateCrop(id, { stage: normalizeStage(targetStage) });
+    await invalidateCrops();
+  };
+
+  const recordSale = async (cropId: string, payload: SalePayload) => {
+    const crop = myCrops.find((c) => c.id === cropId);
     if (!crop) return;
 
     const quantity = Number(payload.quantity);
@@ -261,38 +377,72 @@ export function CropsProvider({ children }: { children: ReactNode }) {
         id: Date.now().toString(),
         cropId,
         cropName: crop.cropName,
-        fieldName: crop.fieldName,
+        fieldName: crop.plot.name,
         quantity: payload.quantity.trim(),
-        unit: crop.unit,
+        unit: crop.unit ?? '',
         pricePerUnit: payload.rate.trim(),
         totalAmount,
         buyerName,
         saleDate,
+        billId: payload.billId,
       },
       ...prev,
     ]);
 
     if (crop.harvestType === 'ONE_TIME') {
-      setCropHistory((prev) => [
-        {
-          ...crop,
-          stage: 'COMPLETED',
-          status: 'INACTIVE',
-          soldQuantity: payload.quantity.trim(),
-          soldRate: payload.rate.trim(),
-          buyerName,
-          completedDate: saleDate,
-          totalRevenue: totalAmount,
-        },
-        ...prev,
-      ]);
-      setCropFields((prev) => prev.filter((item) => item.id !== cropId));
+      await cropsApi.updateCrop(cropId, { stage: 'COMPLETED' });
+      await invalidateCrops();
     }
   };
 
+  /** Legacy no-op — real crop-share requests now go through submitCropToAdvisor/cancelCropSubmission directly. Kept only so existing destructures don't break. */
+  const shareCropWithAdvisor = (_cropId: string) => {};
+
+  const acceptFarmRequest = async (cropId: string, assignedSchedule?: string) => {
+    await cropsApi.updateCropSchedule(cropId, assignedSchedule || 'Weekly Inspection & Pest Advisory Visit');
+    await invalidateCrops();
+  };
+
+  const addSpecialTreatment = (treatment: SpecialTreatmentTemplate) => {
+    setSpecialTreatments((prev) => [treatment, ...prev]);
+  };
+
+  const applySpecialTreatmentToCrop = async (cropId: string, treatmentId: string) => {
+    const treatment = specialTreatments.find((t) => t.id === treatmentId);
+    if (!treatment) return;
+
+    const existingSchedule = myCrops.find((c) => c.id === cropId)?.assignedSchedule ?? undefined;
+    const dateFormatted = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const treatmentHeader = `\n🚨 Special Remedy Applied (${treatment.problemTitle} - ${dateFormatted}):`;
+    const taskLines = treatment.remedyTasks.map((task) => {
+      const taskDate = new Date();
+      taskDate.setDate(taskDate.getDate() + (task.dayNumber - 1));
+      const taskDateStr = taskDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      return `[Day ${task.dayNumber} · ${taskDateStr}]: ${task.treatmentName}`;
+    });
+    const updatedSchedule = (existingSchedule ? `${existingSchedule}\n` : '') + treatmentHeader + '\n' + taskLines.join('\n');
+
+    await cropsApi.updateCropSchedule(cropId, updatedSchedule);
+    await invalidateCrops();
+  };
+
   const value = useMemo(
-    () => ({ cropFields, cropHistory, salesRecords, addCrop, removeCrop, updateCropStage, recordSale }),
-    [cropFields, cropHistory, salesRecords]
+    () => ({
+      cropFields,
+      cropHistory,
+      salesRecords,
+      specialTreatments,
+      isLoading,
+      addCrop,
+      removeCrop,
+      updateCropStage,
+      recordSale,
+      shareCropWithAdvisor,
+      acceptFarmRequest,
+      addSpecialTreatment,
+      applySpecialTreatmentToCrop,
+    }),
+    [cropFields, cropHistory, salesRecords, specialTreatments, isLoading]
   );
 
   return <CropsContext.Provider value={value}>{children}</CropsContext.Provider>;

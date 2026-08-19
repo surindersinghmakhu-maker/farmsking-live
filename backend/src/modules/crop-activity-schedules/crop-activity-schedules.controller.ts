@@ -34,7 +34,25 @@ export class CropActivitySchedulesController {
     return this.cropActivitySchedulesService.findTodayForFarmer(user);
   }
 
-  @Roles(Role.FARMER, Role.ADVISOR, Role.ADMIN)
+  @Roles(Role.ADVISOR)
+  @Get('advisor/today')
+  findTodayForAdvisor(@CurrentUser() user: AuthUser) {
+    return this.cropActivitySchedulesService.findTodayForAdvisor(user);
+  }
+
+  @Roles(Role.ADVISOR)
+  @Get('advisor/upcoming')
+  findUpcomingForAdvisor(@CurrentUser() user: AuthUser) {
+    return this.cropActivitySchedulesService.findUpcomingForAdvisor(user);
+  }
+
+  @Roles(Role.ADVISOR)
+  @Get('advisor/delayed')
+  findDelayedForAdvisor(@CurrentUser() user: AuthUser) {
+    return this.cropActivitySchedulesService.findDelayedForAdvisor(user);
+  }
+
+  @Roles(Role.FARMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
   @Get('crop/:cropCycleId')
   findAllForCropCycle(@CurrentUser() user: AuthUser, @Param('cropCycleId') cropCycleId: string) {
     return this.cropActivitySchedulesService.findAllForCropCycle(user, cropCycleId);
@@ -56,5 +74,11 @@ export class CropActivitySchedulesController {
   @Delete(':id')
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.cropActivitySchedulesService.remove(user, id);
+  }
+
+  @Roles(Role.ADVISOR)
+  @Post(':id/remind')
+  remind(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.cropActivitySchedulesService.remind(user, id);
   }
 }

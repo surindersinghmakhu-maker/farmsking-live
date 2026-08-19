@@ -1,5 +1,7 @@
 {
     "recommendations": [
-        "anthropic.claude-code"
+        "anthropic.claude-code",
+        "philau2512.cursor-ai-activity-timer",
+        "hexmos.freedevtools"
     ]
 }

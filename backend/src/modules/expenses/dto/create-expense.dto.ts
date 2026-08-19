@@ -28,6 +28,10 @@ export class CreateExpenseDto {
   paymentMode?: PaymentMode;
 
   @IsOptional()
+  @IsUUID()
+  partyId?: string;
+
+  @IsOptional()
   @IsString()
   vendorName?: string;
 

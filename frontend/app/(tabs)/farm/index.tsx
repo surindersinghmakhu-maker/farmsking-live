@@ -15,8 +15,15 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import ViewShot from 'react-native-view-shot';
 import { useAuth } from '@/src/store/auth-context';
-import { useCrops, CropStage, CropHistoryEntry, RegisteredCropField, STAGE_ORDER } from '@/src/store/crops-context';
+import { useCrops, CropStage, CropHistoryEntry, RegisteredCropField, CropSaleRecord, STAGE_ORDER } from '@/src/store/crops-context';
+import { useFarmerPlan } from '@/src/hooks/useFarmerPlan';
+import { useFetchSaleBill, useMySaleBillCount } from '@/src/hooks/useSaleBills';
+import { BillPreview, useShareBillAsJpg, type SavedSaleInvoice } from '@/src/components/SaleBillPreview';
+import { PartyPicker } from '@/src/components/PartyPicker';
+import { useParties, useCreateParty } from '@/src/hooks/useParties';
+import { Party } from '@/src/types/api';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { CropCategorySelectorModal, CropFormValues } from '@/components/CropCategorySelectorModal';
@@ -28,18 +35,121 @@ const tap = () => {
 };
 
 const STAGE_LABELS: Record<CropStage, string> = {
-  SOWING: '🌱 Sowing (बुवाई)',
-  GROWTH: '🌿 Growth (बढ़वार)',
-  HARVESTING: '🌾 Harvesting Ready (कटाई योग्य)',
-  COMPLETED: '🏁 Completed (पूर्ण)',
+  PLANTATION: '🌱 Plantation',
+  SOWING: '🌱 Plantation / Sowing',
+  VEGETATIVE: '🌿 Vegetative',
+  GROWTH: '🌿 Vegetative Growth',
+  FLOWERING: '🌸 Flowering',
+  HARVESTING: '🌾 Harvesting',
+  COMPLETED: '🏁 Completed',
+};
+
+const STAGE_PICKER_OPTIONS: { key: CropStage; label: string; color: string }[] = [
+  { key: 'PLANTATION', label: '🌱 Plantation', color: '#d97706' },
+  { key: 'VEGETATIVE', label: '🌿 Vegetative', color: '#0284c7' },
+  { key: 'FLOWERING', label: '🌸 Flowering', color: '#e11d48' },
+  { key: 'HARVESTING', label: '🌾 Harvesting', color: '#16a34a' },
+  { key: 'COMPLETED', label: '🏁 Completed', color: '#475569' },
+];
+
+const STAGE_META: Record<CropStage, { label: string; color: string }> = {
+  PLANTATION: { label: '🌱 Plantation', color: '#d97706' },
+  SOWING: { label: '🌱 Plantation', color: '#d97706' },
+  VEGETATIVE: { label: '🌿 Vegetative', color: '#0284c7' },
+  GROWTH: { label: '🌿 Vegetative', color: '#0284c7' },
+  FLOWERING: { label: '🌸 Flowering', color: '#e11d48' },
+  HARVESTING: { label: '🌾 Harvesting', color: '#16a34a' },
+  COMPLETED: { label: '🏁 Completed', color: '#475569' },
 };
 
 export default function FarmListScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { cropFields, cropHistory, salesRecords, addCrop, removeCrop, updateCropStage, recordSale } = useCrops();
+  const { plan } = useFarmerPlan();
+  const isPaid = plan !== 'FREE';
 
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+  const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
+
+  // Share Bill preview for individual sale entries
+  const fetchSaleBill = useFetchSaleBill();
+  const { billShotRef, isSharingBill, shareInvoiceAsJpg: shareInvoiceAsJpgRaw } = useShareBillAsJpg();
+  const [billPreviewInvoice, setBillPreviewInvoice] = useState<SavedSaleInvoice | null>(null);
+  const [billPreviewVisible, setBillPreviewVisible] = useState(false);
+  const [isLoadingBillPreview, setIsLoadingBillPreview] = useState(false);
+
+  // FREE plan share limit — 50 bills, then prompt to upgrade.
+  const FREE_SHARE_LIMIT = 50;
+  const { data: billCountData } = useMySaleBillCount();
+  const shareInvoiceAsJpg = async (fileName: string | undefined) => {
+    if (!isPaid && (billCountData?.count ?? 0) >= FREE_SHARE_LIMIT) {
+      const message = `Free plan par sirf ${FREE_SHARE_LIMIT} sale bill share ho sakde han. Zyada share karan layi apna plan upgrade karo.`;
+      if (Platform.OS === 'web') {
+        alert(`🔒 Upgrade Your Plan\n\n${message}`);
+      } else {
+        Alert.alert('🔒 Upgrade Your Plan', message);
+      }
+      return;
+    }
+    await shareInvoiceAsJpgRaw(fileName);
+  };
+
+  const openBillPreviewForSale = async (sale: CropSaleRecord) => {
+    tap();
+    if (sale.billId) {
+      setIsLoadingBillPreview(true);
+      try {
+        const bill = await fetchSaleBill.mutateAsync(sale.billId);
+        setBillPreviewInvoice({
+          billNo: bill.billNo,
+          farmerName: bill.farmerName,
+          partyId: bill.partyId,
+          partyName: bill.partyName,
+          partyMobile: bill.partyMobile,
+          isCash: bill.isCash,
+          items: bill.items.map((i, idx) => ({ id: String(idx), ...i })),
+          totalItems: bill.totalItems,
+          totalAmount: bill.totalAmount,
+          amountReceived: bill.amountReceived,
+          thisSaleBalance: bill.thisSaleBalance,
+          previousBalance: bill.previousBalance,
+          netReceivable: bill.netReceivable,
+          date: new Date(bill.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+          time: new Date(bill.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+        });
+        setBillPreviewVisible(true);
+      } catch {
+        if (Platform.OS === 'web') {
+          alert('Could not load the saved bill for this sale.');
+        } else {
+          Alert.alert('Bill Not Found', 'Could not load the saved bill for this sale.');
+        }
+      } finally {
+        setIsLoadingBillPreview(false);
+      }
+      return;
+    }
+
+    // Legacy sale with no linked bill — reconstruct a minimal single-item preview.
+    const isCash = !sale.buyerName || sale.buyerName === 'Local Mandi Trader' || sale.buyerName === 'Cash Sale';
+    setBillPreviewInvoice({
+      billNo: `FK-${sale.saleDate.replace(/-/g, '')}`,
+      farmerName: user?.name || 'Farmer',
+      partyName: isCash ? 'Cash' : sale.buyerName,
+      isCash,
+      items: [{ id: '0', cropId: sale.cropId, cropName: sale.cropName, unit: sale.unit, qty: Number(sale.quantity), rate: Number(sale.pricePerUnit), amount: sale.totalAmount }],
+      totalItems: 1,
+      totalAmount: sale.totalAmount,
+      amountReceived: sale.totalAmount,
+      thisSaleBalance: 0,
+      previousBalance: 0,
+      netReceivable: 0,
+      date: sale.saleDate,
+      time: '',
+    });
+    setBillPreviewVisible(true);
+  };
 
   // Quick Sale Modal state
   const [saleModalVisible, setSaleModalVisible] = useState(false);
@@ -47,6 +157,9 @@ export default function FarmListScreen() {
   const [saleQty, setSaleQty] = useState('');
   const [saleRate, setSaleRate] = useState('');
   const [buyerName, setBuyerName] = useState('');
+  const [selectedSaleParty, setSelectedSaleParty] = useState<Party | null>(null);
+  const { data: saleParties = [] } = useParties();
+  const createParty = useCreateParty();
   const [saleNotice, setSaleNotice] = useState<string | null>(null);
   const [isCompletingWithSale, setIsCompletingWithSale] = useState(false);
 
@@ -58,19 +171,47 @@ export default function FarmListScreen() {
     cropName: string;
   } | null>(null);
 
+  // Update Stage picker modal state
+  const [stagePickerVisible, setStagePickerVisible] = useState(false);
+  const [stagePickerCrop, setStagePickerCrop] = useState<RegisteredCropField | null>(null);
+
   // Completed Crop Full Details Modal state
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedHistoryCrop, setSelectedHistoryCrop] = useState<CropHistoryEntry | null>(null);
 
   const openHistoryDetail = (hItem: CropHistoryEntry) => {
+    if (!isPaid) {
+      tap();
+      if (Platform.OS === 'web') {
+        alert(
+          '🔒 Paid User Exclusive Feature\n\nFull crop audit breakdown & itemized sale transaction records are available exclusively for Subscribed / Paid Farmers.'
+        );
+      } else {
+        Alert.alert(
+          '🔒 Paid User Exclusive Feature',
+          'Full crop audit breakdown & itemized sale transaction records are available exclusively for Subscribed / Paid Farmers.'
+        );
+      }
+      return;
+    }
+
     tap();
     setSelectedHistoryCrop(hItem);
     setDetailModalVisible(true);
   };
 
-  const handleSaveCropForm = (values: CropFormValues) => {
+  const handleSaveCropForm = async (values: CropFormValues) => {
     tap();
-    addCrop(values);
+    try {
+      await addCrop(values);
+    } catch (err: any) {
+      const message = err?.response?.data?.message ?? 'Could not add this crop. Please try again.';
+      if (Platform.OS === 'web') {
+        alert(message);
+      } else {
+        Alert.alert('Could Not Add Crop', message);
+      }
+    }
   };
 
   const requestCropStageChange = (
@@ -108,10 +249,19 @@ export default function FarmListScreen() {
     setStageConfirmModalVisible(true);
   };
 
-  const confirmCropStageChange = () => {
+  const confirmCropStageChange = async () => {
     if (!pendingStageUpdate) return;
     tap();
-    updateCropStage(pendingStageUpdate.id, pendingStageUpdate.targetStage);
+    try {
+      await updateCropStage(pendingStageUpdate.id, pendingStageUpdate.targetStage);
+    } catch (err: any) {
+      const message = err?.response?.data?.message ?? 'Could not update crop stage. Please try again.';
+      if (Platform.OS === 'web') {
+        alert(message);
+      } else {
+        Alert.alert('Could Not Update Stage', message);
+      }
+    }
     setStageConfirmModalVisible(false);
     setPendingStageUpdate(null);
   };
@@ -123,7 +273,7 @@ export default function FarmListScreen() {
       } else {
         Alert.alert(
           'Sale Locked 🔒',
-          `${crop.cropName} is not in Harvesting Stage! Kripya pehle crop ka status "Harvesting Ready 🌾" karein.`
+          `${crop.cropName} is not in Harvesting Stage! Change crop stage to "Harvesting Ready 🌾" first.`
         );
       }
       return;
@@ -135,42 +285,66 @@ export default function FarmListScreen() {
     setSaleRate(crop.pricePerUnit || '');
     setBuyerName('');
     setIsCompletingWithSale(isFinalCompletion);
-    setSaleNotice(
-      isFinalCompletion
-        ? '⚠️ Crop ko complete karke History me bhejne ke liye pehle sale entry (बिक्री रिकॉर्ड) darj karna zaroori hai.'
-        : null
-    );
+    setSaleNotice(null);
     setSaleModalVisible(true);
   };
 
   const handleCompleteCropRequest = (crop: RegisteredCropField) => {
-    const hasExistingSale = salesRecords.some((s) => s.cropId === crop.id);
-
-    // Mandate sale entry before completing harvest
-    if (crop.harvestType === 'ONE_TIME' || !hasExistingSale) {
-      openSaleModal(crop, true);
-    } else {
-      tap();
-      updateCropStage(crop.id, 'COMPLETED');
+    // For ONE_TIME crops without prior sale, mandate a sale entry before final completion
+    if (crop.harvestType === 'ONE_TIME') {
+      const hasExistingSale = salesRecords.some((s) => s.cropId === crop.id);
+      if (!hasExistingSale) {
+        openSaleModal(crop, true);
+        return;
+      }
     }
+
+    // For CONTINUOUS (daily) crops, sale entry is NOT mandatory to complete
+    tap();
+    setPendingStageUpdate({ id: crop.id, targetStage: 'COMPLETED', cropName: crop.cropName });
+    setStageConfirmModalVisible(true);
   };
 
-  const submitQuickSale = () => {
+  const submitQuickSale = async () => {
     if (!saleQty.trim() || Number(saleQty) <= 0 || !saleRate.trim() || Number(saleRate) <= 0) {
-      setSaleNotice('⚠️ Kripya valid sale quantity aur rate enter karein.');
+      setSaleNotice('⚠️ Please enter valid sale quantity and rate.');
       return;
     }
     if (!selectedCropForSale) return;
 
     tap();
-    recordSale(selectedCropForSale.id, { quantity: saleQty, rate: saleRate, buyerName });
+    try {
+      // recordSale auto-completes ONE_TIME crops; CONTINUOUS (daily) crops remain ACTIVE for ongoing daily sales.
+      await recordSale(selectedCropForSale.id, { quantity: saleQty, rate: saleRate, buyerName });
+      setSaleModalVisible(false);
+      setIsCompletingWithSale(false);
+    } catch (err: any) {
+      const message = err?.response?.data?.message ?? 'Could not record this sale. Please try again.';
+      setSaleNotice(`⚠️ ${message}`);
+    }
+  };
 
-    if (isCompletingWithSale || selectedCropForSale.harvestType === 'ONE_TIME') {
-      updateCropStage(selectedCropForSale.id, 'COMPLETED');
+  const getCompletedCropSummary = (cropId: string, hItem: CropHistoryEntry) => {
+    const cropSales = salesRecords.filter((s) => s.cropId === cropId);
+
+    let totalWeight = 0;
+    let totalAmount = 0;
+
+    if (cropSales.length > 0) {
+      totalWeight = cropSales.reduce((sum, s) => sum + (Number(s.quantity) || 0), 0);
+      totalAmount = cropSales.reduce((sum, s) => sum + (s.totalAmount || 0), 0);
+    } else if (hItem.soldQuantity) {
+      totalWeight = Number(hItem.soldQuantity) || 0;
+      totalAmount = hItem.totalRevenue || 0;
     }
 
-    setSaleModalVisible(false);
-    setIsCompletingWithSale(false);
+    const count = cropSales.length || (hItem.soldQuantity ? 1 : 0);
+
+    return {
+      totalWeight: `${totalWeight.toLocaleString('en-IN')} ${hItem.unit}`,
+      totalAmount: `₹${totalAmount.toLocaleString('en-IN')}`,
+      count,
+    };
   };
 
   const activeCropFields = useMemo(
@@ -186,7 +360,6 @@ export default function FarmListScreen() {
         <View style={styles.heroTopRow}>
           <View>
             <Text style={styles.heroGreeting}>My Crops & Fields</Text>
-            <Text style={styles.heroSubtitle}>{user?.name} · Managed Crops & Sequential Growth Lifecycle</Text>
           </View>
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <TouchableOpacity style={styles.logoutButton} onPress={() => logout()} activeOpacity={0.75}>
@@ -203,7 +376,7 @@ export default function FarmListScreen() {
         contentContainerStyle={styles.list}
         ListHeaderComponent={
           <View style={styles.marketCardWrap}>
-            <Text style={styles.sectionTitle}>Active Crop Plots ({activeCropFields.length})</Text>
+            <Text style={styles.sectionTitle}>Active Crops ({activeCropFields.length})</Text>
           </View>
         }
         ListEmptyComponent={
@@ -214,129 +387,73 @@ export default function FarmListScreen() {
           </View>
         }
         renderItem={({ item }) => {
-          const isCont = (item.harvestType || 'CONTINUOUS') === 'CONTINUOUS';
           const isHarvestingReady = item.stage === 'HARVESTING';
-          const currentLevel = STAGE_ORDER[item.stage];
 
           return (
             <View style={[styles.card, premiumShadow('#000000', 'sm')]}>
-              <View style={[styles.cardIconWrap, { backgroundColor: item.categoryBg }]}>
-                <Ionicons name="leaf" size={20} color={item.categoryColor} />
-              </View>
-
-              <View style={styles.cardBody}>
-                {/* Top Header: Plot Name + Crop Name Tag + Status Badge */}
-                <View style={styles.titleRow}>
-                  <Text style={styles.cardTitle}>📍 {item.fieldName}</Text>
-                  <View style={[styles.categoryBadge, { backgroundColor: '#dcfce7', borderColor: '#bbf7d0', borderWidth: 1 }]}>
-                    <Text style={[styles.categoryBadgeText, { color: '#16a34a' }]}>🟢 ACTIVE</Text>
-                  </View>
-                  <View style={[styles.cropBadge, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1 }]}>
+              <View style={styles.cardHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', flex: 1 }}>
+                  <Text style={styles.cardTitle} numberOfLines={1}>📍 {item.fieldName}</Text>
+                  <View style={styles.cropBadge}>
                     <Text style={styles.cropBadgeText}>🌾 {item.cropName}</Text>
                   </View>
-                  <View style={[styles.categoryBadge, { backgroundColor: item.categoryBg }]}>
-                    <Text style={[styles.categoryBadgeText, { color: item.categoryColor }]}>
-                      {item.categoryName}
-                    </Text>
-                  </View>
-                  <View style={[styles.categoryBadge, isCont ? { backgroundColor: '#e0f2fe' } : { backgroundColor: '#fef3c7' }]}>
-                    <Text style={[styles.categoryBadgeText, isCont ? { color: '#0369a1' } : { color: '#b45309' }]}>
-                      {isCont ? '🔄 Daily' : '🌾 One-Time'}
-                    </Text>
-                  </View>
                 </View>
-
-                {/* Rate & Unit Badge */}
-                <View style={styles.rateBadgeWrap}>
-                  <Ionicons name="pricetag" size={13} color="#16a34a" />
-                  <Text style={styles.rateBadgeText}>
-                    Previous Sale Price: {item.pricePerUnit && item.pricePerUnit.trim() !== '' ? `₹${item.pricePerUnit} / ${item.unit}` : '-'}
-                  </Text>
-                </View>
-
-                <View style={styles.metaRow}>
-                  <Text style={styles.metaText}>📏 {item.area}</Text>
-                  {item.irrigationType ? (
-                    <Text style={styles.metaText}>💧 Water: {item.irrigationType}</Text>
-                  ) : null}
-                  {item.sowingDate ? <Text style={styles.metaText}>📅 Sown: {item.sowingDate}</Text> : null}
-                </View>
-
-                {item.variety ? <Text style={styles.varietyText}>Variety: {item.variety}</Text> : null}
-
-                {/* Step-by-Step One-Way Sequential Stage Progression */}
-                <View style={styles.stageProgressWrap}>
-                  <Text style={styles.stageControlLabel}>
-                    Crop Growth Stage (Step-by-Step Progress):
-                  </Text>
-                  <View style={styles.stageToggleRow}>
-                    {[
-                      { key: 'SOWING', label: '🌱 Sowing', color: '#d97706', bg: '#fef3c7', level: 1 },
-                      { key: 'GROWTH', label: '🌿 Growth', color: '#0284c7', bg: '#e0f2fe', level: 2 },
-                      { key: 'HARVESTING', label: '🌾 Harvesting', color: '#16a34a', bg: '#dcfce7', level: 3 },
-                      { key: 'COMPLETED', label: '🏁 Completed', color: '#475569', bg: '#f1f5f9', level: 4 },
-                    ].map((st) => {
-                      const isCurrent = item.stage === st.key;
-                      const isPast = st.level < currentLevel;
-                      const isFuture = st.level > currentLevel;
-
-                      return (
-                        <TouchableOpacity
-                          key={st.key}
-                          style={[
-                            styles.stageChip,
-                            isCurrent && { backgroundColor: st.color, borderColor: st.color },
-                            isPast && { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1', opacity: 0.8 },
-                            isFuture && { backgroundColor: '#ffffff', borderColor: st.color },
-                          ]}
-                          activeOpacity={0.8}
-                          onPress={() => requestCropStageChange(item, item.stage, st.key as CropStage)}
-                        >
-                          <Text
-                            style={[
-                              styles.stageChipText,
-                              isCurrent && { color: '#ffffff', fontFamily: FONT.bold },
-                              isPast && { color: '#64748b', fontFamily: FONT.medium },
-                              isFuture && { color: st.color, fontFamily: FONT.bold },
-                            ]}
-                          >
-                            {isPast ? `✔️ ${st.label}` : isFuture ? `⏩ ${st.label}` : st.label}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                </View>
-
-                {/* ACTION BUTTONS (Enabled ONLY in Harvesting Stage) */}
-                <TouchableOpacity
-                  style={[
-                    styles.saleCropCardBtn,
-                    isHarvestingReady
-                      ? { backgroundColor: '#16a34a', borderColor: '#15803d' }
-                      : { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' },
-                  ]}
-                  activeOpacity={0.8}
-                  onPress={() => openSaleModal(item, false)}
-                >
-                  <Ionicons
-                    name={isHarvestingReady ? 'cart' : 'lock-closed'}
-                    size={15}
-                    color={isHarvestingReady ? '#ffffff' : '#64748b'}
-                  />
-                  <Text
-                    style={[
-                      styles.saleCropCardBtnText,
-                      isHarvestingReady ? { color: '#ffffff', fontFamily: FONT.bold } : { color: '#64748b' },
-                    ]}
-                  >
-                    {isHarvestingReady ? `💰 Sell ${item.cropName}` : `🔒 Sell ${item.cropName}`}
-                  </Text>
-                </TouchableOpacity>
               </View>
 
-              <TouchableOpacity style={styles.deleteBtn} onPress={() => removeCrop(item.id)}>
-                <Ionicons name="trash-outline" size={17} color="#dc2626" />
+              <Text style={styles.cardMetaText}>
+                📏 {item.area}{item.sowingDate ? ` · 📅 ${item.sowingDate}` : ''}{item.variety ? ` · 🌱 ${item.variety}` : ''}
+              </Text>
+
+              <View style={styles.stageInlineRow}>
+                {(() => {
+                  const st = STAGE_META[item.stage];
+                  return (
+                    <View style={[styles.stageChip, { backgroundColor: st.color, borderColor: st.color }]}>
+                      <Text style={[styles.stageChipText, { color: '#ffffff', fontFamily: FONT.bold }]}>
+                        {st.label}
+                      </Text>
+                    </View>
+                  );
+                })()}
+                {item.stage !== 'COMPLETED' && (
+                  <TouchableOpacity
+                    style={styles.updateStageBtn}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      tap();
+                      setStagePickerCrop(item);
+                      setStagePickerVisible(true);
+                    }}
+                  >
+                    <Ionicons name="repeat" size={12} color={theme.primary} />
+                    <Text style={styles.updateStageBtnText}>Update Stage</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.saleCropCardBtn,
+                  isHarvestingReady
+                    ? { backgroundColor: '#16a34a', borderColor: '#15803d' }
+                    : { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' },
+                ]}
+                activeOpacity={0.8}
+                onPress={() => openSaleModal(item, false)}
+              >
+                <Ionicons
+                  name={isHarvestingReady ? 'cart' : 'lock-closed'}
+                  size={14}
+                  color={isHarvestingReady ? '#ffffff' : '#64748b'}
+                />
+                <Text
+                  style={[
+                    styles.saleCropCardBtnText,
+                    isHarvestingReady ? { color: '#ffffff', fontFamily: FONT.bold } : { color: '#64748b' },
+                  ]}
+                >
+                  {isHarvestingReady ? `💰 Sell ${item.cropName}` : `🔒 Sell ${item.cropName}`}
+                </Text>
               </TouchableOpacity>
             </View>
           );
@@ -345,56 +462,80 @@ export default function FarmListScreen() {
         /* COMPLETED CROPS HISTORY SECTION AT THE BOTTOM */
         ListFooterComponent={
           <View style={styles.historySectionContainer}>
-            <View style={styles.historySectionHeader}>
+            <TouchableOpacity
+              style={styles.historySectionHeader}
+              activeOpacity={0.75}
+              onPress={() => {
+                tap();
+                setIsHistoryExpanded((v) => !v);
+              }}
+            >
               <Ionicons name="time" size={18} color="#475569" />
-              <Text style={styles.historySectionTitle}>
-                Completed Crops History (पूर्ण फसलों का इतिहास) ({cropHistory.length})
+              <Text style={[styles.historySectionTitle, { flex: 1 }]}>
+                Completed Crops History ({cropHistory.length})
               </Text>
-            </View>
+              <Ionicons name={isHistoryExpanded ? 'chevron-up' : 'chevron-down'} size={16} color="#94a3b8" />
+            </TouchableOpacity>
 
-            {cropHistory.length > 0 ? (
-              cropHistory.map((hItem) => (
-                <TouchableOpacity
-                  key={hItem.id}
-                  style={[styles.historyCard, premiumShadow('#000000', 'sm')]}
-                  activeOpacity={0.8}
-                  onPress={() => openHistoryDetail(hItem)}
-                >
-                  <View style={styles.historyCardHeader}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                      <Text style={styles.historyCropName}>📍 {hItem.fieldName}</Text>
-                      <View style={styles.completedBadge}>
-                        <Text style={styles.completedBadgeText}>🏁 COMPLETED</Text>
+            {!isHistoryExpanded ? null : cropHistory.length > 0 ? (
+              cropHistory.map((hItem) => {
+                const summary = getCompletedCropSummary(hItem.id, hItem);
+                return (
+                  <TouchableOpacity
+                    key={hItem.id}
+                    style={[styles.historyCard, premiumShadow('#000000', 'sm')]}
+                    activeOpacity={0.8}
+                    onPress={() => openHistoryDetail(hItem)}
+                  >
+                    <View style={styles.historyCardHeader}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <Text style={styles.historyCropName}>📍 {hItem.fieldName}</Text>
+                        <View style={styles.completedBadge}>
+                          <Text style={styles.completedBadgeText}>🏁 COMPLETED</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.historyDate}>{hItem.completedDate}</Text>
+                    </View>
+
+                    <Text style={styles.historyCropSub}>🌾 {hItem.cropName} · {hItem.categoryName}</Text>
+
+                    <View style={styles.historyRevenueBox}>
+                      <Ionicons name="cash" size={16} color="#16a34a" />
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.historyRevenueText}>
+                          Total Sale Weight: <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>{summary.totalWeight}</Text>
+                        </Text>
+                        <Text style={styles.historyRevenueText}>
+                          Total Sale Amount: <Text style={{ fontFamily: FONT.bold, color: '#16a34a' }}>{summary.totalAmount}</Text>
+                          {summary.count > 0 ? ` (${summary.count} sales logged)` : ''}
+                        </Text>
                       </View>
                     </View>
-                    <Text style={styles.historyDate}>{hItem.completedDate}</Text>
-                  </View>
 
-                  <Text style={styles.historyCropSub}>🌾 {hItem.cropName} · {hItem.categoryName}</Text>
-
-                  {hItem.soldQuantity ? (
-                    <View style={styles.historyRevenueBox}>
-                      <Ionicons name="cash" size={15} color="#16a34a" />
-                      <Text style={styles.historyRevenueText}>
-                        Sold: {hItem.soldQuantity} {hItem.unit} @ ₹{hItem.soldRate} / {hItem.unit} = ₹{(hItem.totalRevenue ?? 0).toLocaleString('en-IN')} ({hItem.buyerName})
-                      </Text>
-                    </View>
-                  ) : (
-                    <Text style={styles.historyMetaText}>Completed Crop Harvest</Text>
-                  )}
-
-                  <View style={styles.historyViewMoreRow}>
-                    <Ionicons name="eye-outline" size={13} color="#0284c7" />
-                    <Text style={styles.historyViewMoreText}>Tap to view full details (पूरी जानकारी देखें)</Text>
-                  </View>
-                </TouchableOpacity>
-              ))
+                    {isPaid ? (
+                      <View style={styles.historyViewMoreRow}>
+                        <Ionicons name="sparkles" size={13} color="#16a34a" />
+                        <Text style={[styles.historyViewMoreText, { color: '#16a34a', fontFamily: FONT.bold }]}>
+                          ✨ Tap to view full sales audit details
+                        </Text>
+                      </View>
+                    ) : (
+                      <View style={[styles.historyViewMoreRow, { backgroundColor: '#fff7ed', borderColor: '#ffedd5', borderWidth: 1, paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.xs }]}>
+                        <Ionicons name="lock-closed" size={13} color="#d97706" />
+                        <Text style={[styles.historyViewMoreText, { color: '#b45309', fontFamily: FONT.bold }]}>
+                          🔒 Full Details (Paid Users Only)
+                        </Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })
             ) : (
               <View style={styles.historyEmptyBox}>
                 <Ionicons name="checkmark-done-circle-outline" size={32} color="#cbd5e1" />
-                <Text style={styles.historyEmptyText}>Abhi koi crop complete nahi hui hai.</Text>
+                <Text style={styles.historyEmptyText}>No completed crops yet.</Text>
                 <Text style={styles.historyEmptySub}>
-                  Harvesting ready hone par sale darj karke complete karne par crop yahan history me chali jayegi.
+                  Completed crops will appear here with total sale weight and revenue summary.
                 </Text>
               </View>
             )}
@@ -446,6 +587,45 @@ export default function FarmListScreen() {
                 <Text style={styles.confirmSaleText}>Haan, Stage Badlein</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* UPDATE STAGE PICKER MODAL */}
+      <Modal visible={stagePickerVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.warningModalCard}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalHeaderTitle}>Update Stage — {stagePickerCrop?.cropName}</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setStagePickerVisible(false);
+                  setStagePickerCrop(null);
+                }}
+              >
+                <Ionicons name="close" size={20} color="#475569" />
+              </TouchableOpacity>
+            </View>
+
+            {stagePickerCrop &&
+              STAGE_PICKER_OPTIONS.filter((st) => STAGE_ORDER[st.key] > STAGE_ORDER[stagePickerCrop.stage]).map((st) => (
+                <TouchableOpacity
+                  key={st.key}
+                  style={styles.stagePickerRow}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    setStagePickerVisible(false);
+                    if (stagePickerCrop) {
+                      requestCropStageChange(stagePickerCrop, stagePickerCrop.stage, st.key);
+                    }
+                    setStagePickerCrop(null);
+                  }}
+                >
+                  <View style={[styles.stagePickerDot, { backgroundColor: st.color }]} />
+                  <Text style={styles.stagePickerLabel}>{st.label}</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
+                </TouchableOpacity>
+              ))}
           </View>
         </View>
       </Modal>
@@ -505,23 +685,35 @@ export default function FarmListScreen() {
                   </View>
                 ) : null}
 
-                <Text style={styles.modalLabel}>Buyer / Mandi Trader Name</Text>
-                <TextInput
-                  style={styles.modalInput}
+                <PartyPicker
+                  parties={saleParties}
+                  selectedParty={selectedSaleParty}
+                  onSelect={(party) => {
+                    setSelectedSaleParty(party);
+                    setBuyerName(party?.name ?? '');
+                  }}
+                  onTextChange={setBuyerName}
+                  onCreate={async (payload) => createParty.mutateAsync(payload)}
+                  accentColor={theme.primary}
+                  label="Buyer / Mandi Trader Name"
                   placeholder="e.g. Bathinda Mandi Merchant"
-                  placeholderTextColor="#94a3b8"
-                  value={buyerName}
-                  onChangeText={setBuyerName}
                 />
 
-                {(selectedCropForSale.harvestType === 'ONE_TIME' || isCompletingWithSale) ? (
+                {selectedCropForSale.harvestType === 'CONTINUOUS' ? (
+                  <View style={[styles.warningHighlightBox, { backgroundColor: '#e0f2fe', borderColor: '#bae6fd' }]}>
+                    <Ionicons name="information-circle" size={16} color="#0284c7" />
+                    <Text style={[styles.warningHighlightText, { color: '#0369a1' }]}>
+                      ℹ️ Daily Sale Log: Logging this sale records daily revenue for {selectedCropForSale.cropName}. The crop stays active for future sales.
+                    </Text>
+                  </View>
+                ) : (
                   <View style={styles.warningHighlightBox}>
                     <Ionicons name="alert-circle" size={16} color="#b45309" />
                     <Text style={styles.warningHighlightText}>
-                      ⚠️ Mandatory Sale Entry: Sale confirm karte hi ye crop "🏁 Completed" ho jayegi aur Active Crops se hat kar Completed Crops History me shamil ho jayegi.
+                      ⚠️ Seasonal One-Time Sale: Confirming this sale completes the crop cycle and moves it to Completed History.
                     </Text>
                   </View>
-                ) : null}
+                )}
 
                 {saleNotice ? <Text style={styles.errorNoticeText}>{saleNotice}</Text> : null}
 
@@ -612,16 +804,117 @@ export default function FarmListScreen() {
                   </Text>
                 </View>
 
-                {selectedHistoryCrop.soldQuantity ? (
-                  <View style={styles.historyRevenueBox}>
-                    <Ionicons name="cash" size={15} color="#16a34a" />
-                    <Text style={styles.historyRevenueText}>
-                      Sold: {selectedHistoryCrop.soldQuantity} {selectedHistoryCrop.unit} @ ₹{selectedHistoryCrop.soldRate} / {selectedHistoryCrop.unit} = ₹{(selectedHistoryCrop.totalRevenue ?? 0).toLocaleString('en-IN')} ({selectedHistoryCrop.buyerName})
-                    </Text>
-                  </View>
-                ) : null}
+                {(() => {
+                  const summary = getCompletedCropSummary(selectedHistoryCrop.id, selectedHistoryCrop);
+                  const cropSales = salesRecords.filter((s) => s.cropId === selectedHistoryCrop.id);
+
+                  return (
+                    <View style={{ marginTop: 12 }}>
+                      <View style={styles.historyRevenueBox}>
+                        <Ionicons name="cash" size={18} color="#16a34a" />
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.historyRevenueText}>
+                            Total Sale Weight: <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>{summary.totalWeight}</Text>
+                          </Text>
+                          <Text style={styles.historyRevenueText}>
+                            Total Sale Amount: <Text style={{ fontFamily: FONT.bold, color: '#16a34a' }}>{summary.totalAmount}</Text>
+                            {summary.count > 0 ? ` (${summary.count} sales logged)` : ''}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* Itemized Sale Audit Logs Breakdown for Subscribed Paid Farmers */}
+                      <View style={styles.salesBreakdownWrap}>
+                        <View style={styles.salesBreakdownHeaderRow}>
+                          <Text style={styles.salesBreakdownTitle}>
+                            📋 Recorded Sale Audit Log ({cropSales.length})
+                          </Text>
+                          <View style={styles.paidBadge}>
+                            <Ionicons name="star" size={11} color="#b45309" />
+                            <Text style={styles.paidBadgeText}>PAID USER</Text>
+                          </View>
+                        </View>
+
+                        {cropSales.length > 0 ? (
+                          cropSales.map((entry, idx) => (
+                            <View key={entry.id || idx} style={styles.saleEntryCard}>
+                              <View style={styles.saleEntryTopRow}>
+                                <Text style={styles.saleEntryDate}>📅 {entry.saleDate}</Text>
+                                <Text style={styles.saleEntryAmount}>₹{entry.totalAmount.toLocaleString('en-IN')}</Text>
+                              </View>
+                              <View style={styles.saleEntryMetaRow}>
+                                <Text style={styles.saleEntryDetail}>
+                                  📦 {entry.quantity} {entry.unit} @ ₹{entry.pricePerUnit} / {entry.unit}
+                                </Text>
+                                <Text style={styles.saleEntryBuyer}>👤 {entry.buyerName || 'Local Trader'}</Text>
+                              </View>
+                              <TouchableOpacity style={styles.shareBillBtn} activeOpacity={0.8} onPress={() => openBillPreviewForSale(entry)}>
+                                <Ionicons name="share-social-outline" size={13} color="#16a34a" />
+                                <Text style={styles.shareBillBtnText}>Share Bill</Text>
+                              </TouchableOpacity>
+                            </View>
+                          ))
+                        ) : (
+                          <View style={{ padding: 10, backgroundColor: '#f8fafc', borderRadius: 8, marginTop: 4 }}>
+                            <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#64748b' }}>
+                              No detailed individual sales entries logged for this crop.
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  );
+                })()}
               </View>
             ) : null}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Bill Preview Modal — share an individual sale entry's bill as JPG */}
+      <Modal
+        visible={billPreviewVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          setBillPreviewVisible(false);
+          setBillPreviewInvoice(null);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.saleModalCard}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalHeaderTitle}>Bill Preview</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setBillPreviewVisible(false);
+                  setBillPreviewInvoice(null);
+                }}
+              >
+                <Ionicons name="close" size={20} color="#475569" />
+              </TouchableOpacity>
+            </View>
+            {isLoadingBillPreview ? (
+              <View style={{ paddingVertical: 24, alignItems: 'center' }}>
+                <Ionicons name="hourglass-outline" size={22} color="#94a3b8" />
+              </View>
+            ) : (
+              billPreviewInvoice && (
+                <View style={{ alignItems: 'center', paddingVertical: 6 }}>
+                  <ViewShot ref={billShotRef} options={{ format: 'jpg', quality: 0.95 }}>
+                    <BillPreview inv={billPreviewInvoice} />
+                  </ViewShot>
+                  <TouchableOpacity
+                    style={[styles.confirmSaleBtn, { marginTop: 14, width: '100%' }]}
+                    onPress={() => shareInvoiceAsJpg(`Bill-${billPreviewInvoice.billNo}`)}
+                    disabled={isSharingBill}
+                  >
+                    <Ionicons name="share-social-outline" size={16} color="#ffffff" />
+                    <Text style={styles.confirmSaleText}>{isSharingBill ? 'Preparing...' : 'Share Bill (JPG)'}</Text>
+                  </TouchableOpacity>
+                </View>
+              )
+            )}
           </View>
         </View>
       </Modal>
@@ -647,6 +940,7 @@ export default function FarmListScreen() {
         onClose={() => setIsCropModalOpen(false)}
         onSaveCropForm={handleSaveCropForm}
       />
+
     </View>
   );
 }
@@ -675,29 +969,19 @@ const styles = StyleSheet.create({
   emptyText: { color: theme.text, fontSize: 15, fontFamily: FONT.bold, textAlign: 'center' },
   emptySub: { color: theme.textMuted, fontSize: 12.5, fontFamily: FONT.medium, textAlign: 'center' },
   card: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
     backgroundColor: '#ffffff',
     borderRadius: RADIUS.lg,
-    padding: SPACING.md,
-    marginBottom: 10,
+    padding: 12,
+    marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
   },
-  cardIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 2,
-  },
-  cardBody: { flex: 1 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
-  cardTitle: { fontSize: 15, fontFamily: FONT.bold, color: '#0f172a' },
-  cropBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: RADIUS.xs },
-  cropBadgeText: { fontSize: 12, fontFamily: FONT.bold, color: '#15803d' },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
+  cardTitle: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
+  cardMetaText: { fontSize: 12, fontFamily: FONT.medium, color: '#475569', marginTop: 3 },
+  stageInlineRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 6 },
+  cropBadge: { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1, paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.xs },
+  cropBadgeText: { fontSize: 11, fontFamily: FONT.bold, color: '#15803d' },
   categoryBadge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.xs },
   categoryBadgeText: { fontSize: 10, fontFamily: FONT.bold },
   rateBadgeWrap: {
@@ -721,34 +1005,50 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 5 },
   metaText: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b' },
   varietyText: { fontSize: 11, fontFamily: FONT.medium, color: '#16a34a', marginTop: 3 },
-  stageProgressWrap: {
-    marginTop: 8,
-    marginBottom: 4,
-    backgroundColor: '#f8fafc',
-    padding: 8,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
-  },
-  stageControlLabel: {
-    fontSize: 11,
-    fontFamily: FONT.bold,
-    color: '#334155',
-    marginBottom: 4,
-  },
-  stageToggleRow: {
-    flexDirection: 'row',
-    gap: 6,
-    flexWrap: 'wrap',
-  },
   stageChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
     borderRadius: RADIUS.xs,
     borderWidth: 1,
   },
   stageChipText: {
-    fontSize: 10.5,
+    fontSize: 10,
+  },
+  updateStageBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: RADIUS.xs,
+    borderWidth: 1,
+    borderColor: '#16a34a',
+    backgroundColor: '#f0fdf4',
+  },
+  updateStageBtnText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#16a34a',
+  },
+  stagePickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  stagePickerDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  stagePickerLabel: {
+    flex: 1,
+    fontSize: 13.5,
+    fontFamily: FONT.semiBold,
+    color: '#0f172a',
   },
   saleCropCardBtn: {
     flexDirection: 'row',
@@ -759,6 +1059,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: RADIUS.md,
     borderWidth: 1,
+    marginTop: 8,
   },
   saleCropCardBtnText: {
     fontSize: 12,
@@ -1093,4 +1394,94 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   fabText: { color: '#fff', fontSize: 15, fontFamily: FONT.bold },
+  salesBreakdownWrap: {
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+  },
+  salesBreakdownHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  salesBreakdownTitle: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  paidBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#fef3c7',
+    borderColor: '#fde68a',
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+  },
+  paidBadgeText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#b45309',
+  },
+  saleEntryCard: {
+    backgroundColor: '#f8fafc',
+    borderRadius: RADIUS.md,
+    padding: 10,
+    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  saleEntryTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  saleEntryDate: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#475569',
+  },
+  saleEntryAmount: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#16a34a',
+  },
+  saleEntryMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  saleEntryDetail: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    color: '#0f172a',
+  },
+  saleEntryBuyer: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  shareBillBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-start',
+    marginTop: 8,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+  },
+  shareBillBtnText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#16a34a',
+  },
 });

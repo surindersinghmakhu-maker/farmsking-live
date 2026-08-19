@@ -8,7 +8,7 @@ import type { AuthUser } from '../../common/types/auth-user.type';
 import { MarketRatesService } from './market-rates.service';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.FARMER, Role.ADMIN)
+@Roles(Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN)
 @Controller('market-rates')
 export class MarketRatesController {
   constructor(private readonly marketRatesService: MarketRatesService) {}

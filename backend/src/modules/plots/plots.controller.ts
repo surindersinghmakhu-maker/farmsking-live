@@ -10,7 +10,7 @@ import { CreatePlotDto } from './dto/create-plot.dto';
 import { UpdatePlotDto } from './dto/update-plot.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.FARMER, Role.ADMIN)
+@Roles(Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN)
 @Controller('plots')
 export class PlotsController {
   constructor(private readonly plotsService: PlotsService) {}

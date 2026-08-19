@@ -34,3 +34,7 @@ yarn-error.log*
 Thumbs.db
 .vscode/*
 !.vscode/extensions.json
+
+# Stray backup/scratch files that shouldn't live in the repo
+*.zip
+*_token.txt

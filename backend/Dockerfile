@@ -8,7 +8,7 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # Install dependencies & generate Prisma client
-RUN npm install
+RUN npm install --legacy-peer-deps
 RUN npx prisma generate
 
 # Copy full application code

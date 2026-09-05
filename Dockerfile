@@ -8,7 +8,7 @@ COPY backend/package*.json ./
 COPY backend/prisma ./prisma/
 
 # Install dependencies & generate Prisma client
-RUN npm install
+RUN npm install --legacy-peer-deps
 RUN npx prisma generate
 
 # Copy full application code

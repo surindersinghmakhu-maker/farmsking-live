@@ -1,6 +1,6 @@
 services:
-  - type: web
-    name: farmsking-backend
+  - name: farmsking-backend
+    type: web
     runtime: node
     plan: free
     rootDir: backend

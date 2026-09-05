@@ -7,8 +7,8 @@ WORKDIR /app
 COPY backend/package*.json ./
 COPY backend/prisma ./prisma/
 
-# Install all dependencies (including devDependencies for building)
-RUN npm ci
+# Install all dependencies
+RUN npm install
 
 # Copy full application code
 COPY backend/ .
@@ -28,8 +28,8 @@ ENV NODE_ENV=production
 COPY backend/package*.json ./
 COPY backend/prisma ./prisma/
 
-# Install production dependencies only
-RUN npm ci --only=production
+# Install production dependencies
+RUN npm install --omit=dev
 RUN npx prisma generate
 
 # Copy built application dist from builder

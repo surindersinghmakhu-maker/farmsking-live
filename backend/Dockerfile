@@ -8,7 +8,7 @@ COPY package*.json ./
 COPY prisma ./prisma/
 
 # Install all dependencies (including devDependencies for building)
-RUN npm ci
+RUN npm install
 
 # Copy full application code
 COPY . .
@@ -28,8 +28,8 @@ ENV NODE_ENV=production
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Install production dependencies only
-RUN npm ci --only=production
+# Install production dependencies
+RUN npm install --omit=dev
 RUN npx prisma generate
 
 # Copy built application dist from builder

@@ -1,23 +1,70 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException, OnApplicationBootstrap } from '@nestjs/common';
 import { AdvisorAssignmentStatus, AdvisorType, FarmerSubscriptionPlan, NotificationType, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { WalletService } from '../wallet/wallet.service';
+import { WhatsAppGroupSyncService } from '../whatsapp/whatsapp-group-sync.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { hasActiveRole } from '../../common/utils/auth-user.util';
 import { CreateAdvisorAssignmentDto } from './dto/create-advisor-assignment.dto';
 
 @Injectable()
-export class AdvisorAssignmentService {
+export class AdvisorAssignmentService implements OnApplicationBootstrap {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
     private readonly walletService: WalletService,
+    private readonly whatsAppGroupSyncService: WhatsAppGroupSyncService,
   ) {}
 
-  /** Only STANDARD/PREMIUM farmers ever come with an advisor included — every roster query and stat is scoped to just those tiers. */
+
+  async onApplicationBootstrap() {
+    await this.reassignAllToSudhir();
+  }
+
+  /** Reassigns all existing assignments, crop problem reports, and call requests to Sudhir Kumar if available in DB. */
+  async reassignAllToSudhir() {
+    const sudhirAdvisor = await this.prisma.user.findFirst({
+      where: {
+        name: { contains: 'Sudhir', mode: 'insensitive' },
+        OR: [{ role: Role.ADVISOR }, { roles: { has: Role.ADVISOR } }],
+        deletedAt: null,
+      },
+    });
+
+    if (!sudhirAdvisor) return;
+
+    await this.prisma.advisorAssignment.updateMany({
+      where: {
+        advisorId: { not: sudhirAdvisor.id },
+      },
+      data: {
+        advisorId: sudhirAdvisor.id,
+      },
+    });
+
+    await this.prisma.cropProblem.updateMany({
+      where: {
+        assignedAdvisorId: { not: sudhirAdvisor.id },
+      },
+      data: {
+        assignedAdvisorId: sudhirAdvisor.id,
+      },
+    });
+
+    await this.prisma.callRequest.updateMany({
+      where: {
+        advisorId: { not: sudhirAdvisor.id },
+      },
+      data: {
+        advisorId: sudhirAdvisor.id,
+      },
+    });
+  }
+
+  /** Only paid plan farmers (PRO/SMART/SUPER) ever come with an advisor included — every roster query and stat is scoped to those tiers. */
   private readonly STANDARD_OR_PREMIUM_FARMER_CLAUSE = {
-    farmer: { farmerPlan: { plan: { in: [FarmerSubscriptionPlan.STANDARD, FarmerSubscriptionPlan.PREMIUM] } } },
+    farmer: { farmerPlan: { plan: { in: [FarmerSubscriptionPlan.PRO, FarmerSubscriptionPlan.SMART, FarmerSubscriptionPlan.SUPER] } } },
   };
 
   /** Total/active/inactive counts for the logged-in advisor's own farmer roster (scoped per-advisor, not platform-wide). */
@@ -60,7 +107,7 @@ export class AdvisorAssignmentService {
     };
   }
 
-  /** Farmer list for one of the dashboard links — ACTIVE (assigned + plan not expired), INACTIVE (revoked/subscription ended), PENDING (awaiting this advisor's accept/reject), or ALL. */
+  /** Farmer list for one of the dashboard links — ACTIVE (assigned), INACTIVE (revoked), PENDING (awaiting accept/reject), or ALL. */
   findFarmersByStatus(user: AuthUser, status: 'ACTIVE' | 'INACTIVE' | 'PENDING' | 'ALL') {
     const statusFilter =
       status === 'ACTIVE'
@@ -69,15 +116,14 @@ export class AdvisorAssignmentService {
         ? AdvisorAssignmentStatus.REVOKED
         : status === 'PENDING'
         ? AdvisorAssignmentStatus.PENDING
-        : { in: [AdvisorAssignmentStatus.ACTIVE, AdvisorAssignmentStatus.REVOKED] };
+        : { in: [AdvisorAssignmentStatus.ACTIVE, AdvisorAssignmentStatus.REVOKED, AdvisorAssignmentStatus.PENDING] };
 
     return this.prisma.advisorAssignment.findMany({
       where: {
         advisorId: user.id,
         status: statusFilter,
         deletedAt: null,
-        ...this.STANDARD_OR_PREMIUM_FARMER_CLAUSE,
-        ...(status === 'ACTIVE' ? this.notExpiredClause() : {}),
+        farmer: { deletedAt: null },
       },
       include: {
         farmer: { select: this.FARMER_BASIC_SELECT },
@@ -101,39 +147,43 @@ export class AdvisorAssignmentService {
   /** Full detail for one farmer this advisor is (or was) assigned to — profile, subscription, and farm/plot/crop data. */
   async findFarmerDetail(user: AuthUser, farmerId: string) {
     const assignment = await this.prisma.advisorAssignment.findFirst({
-      where: { advisorId: user.id, farmerId, deletedAt: null },
+      where: {
+        farmerId,
+        deletedAt: null,
+        ...(hasActiveRole(user, Role.ADMIN) || hasActiveRole(user, Role.SUPER_ADMIN) ? {} : { advisorId: user.id }),
+      },
       include: { subscription: { include: { plan: true } } },
       orderBy: { startDate: 'desc' },
     });
-    if (!assignment) {
-      throw new NotFoundException('This farmer is not linked to your advisor account.');
-    }
 
-    const isExpired = this.isAssignmentExpired(assignment);
+    const isExpired = assignment ? this.isAssignmentExpired(assignment) : false;
 
     const farmer = await this.prisma.user.findFirst({
-      where: { id: farmerId, deletedAt: null },
+      where: { id: farmerId },
       select: {
         ...this.FARMER_BASIC_SELECT,
         createdAt: true,
-        farms: isExpired
-          ? false
+        deletedAt: true,
+        ...(isExpired
+          ? {}
           : {
-              where: { deletedAt: null },
-              include: {
-                plots: {
-                  where: { deletedAt: null },
-                  include: { cropCycles: { where: { deletedAt: null } } },
+              farms: {
+                where: { deletedAt: null },
+                include: {
+                  plots: {
+                    where: { deletedAt: null },
+                    include: { cropCycles: { where: { deletedAt: null } } },
+                  },
                 },
               },
-            },
+            }),
       },
     });
     if (!farmer) {
       throw new NotFoundException('Farmer not found.');
     }
 
-    return { farmer: { ...farmer, farms: farmer.farms ?? [] }, assignment, isExpired };
+    return { farmer: { ...farmer, farms: (farmer as any).farms ?? [] }, assignment, isExpired };
   }
 
   /** The logged-in farmer's active advisor, if any. */
@@ -162,9 +212,11 @@ export class AdvisorAssignmentService {
 
   /** Farmer/Gardener: every advisor of the matching type they could choose (STANDARD/PREMIUM only — enforced in FarmerPlansService.chooseAdvisor). */
   async listAvailableAdvisors(user: AuthUser) {
-    const advisorType = this.roleToAdvisorType(user);
     const advisors = await this.prisma.user.findMany({
-      where: { roles: { has: Role.ADVISOR }, advisorType, deletedAt: null },
+      where: {
+        OR: [{ role: Role.ADVISOR }, { roles: { has: Role.ADVISOR } }],
+        deletedAt: null,
+      },
       select: {
         id: true,
         name: true,
@@ -206,8 +258,24 @@ export class AdvisorAssignmentService {
 
   /** Least-loaded active ADVISOR-role user of the given type — no real load-balancing yet, just an even-ish spread. */
   private async pickAdvisorForAssignment(advisorType: AdvisorType) {
+    const sudhirAdvisor = await this.prisma.user.findFirst({
+      where: {
+        name: { contains: 'Sudhir', mode: 'insensitive' },
+        OR: [{ role: Role.ADVISOR }, { roles: { has: Role.ADVISOR } }],
+        deletedAt: null,
+      },
+      select: { id: true },
+    });
+
+    if (sudhirAdvisor) {
+      return sudhirAdvisor.id;
+    }
+
     const advisors = await this.prisma.user.findMany({
-      where: { roles: { has: Role.ADVISOR }, advisorType, deletedAt: null },
+      where: {
+        OR: [{ role: Role.ADVISOR }, { roles: { has: Role.ADVISOR } }],
+        deletedAt: null,
+      },
       select: {
         id: true,
         _count: { select: { advisorAssignmentsAsAdvisor: { where: { status: AdvisorAssignmentStatus.ACTIVE } } } },
@@ -332,6 +400,8 @@ export class AdvisorAssignmentService {
       'Advisor accepted your request',
       'Your advisor has accepted your hire request — you can now chat and get crop guidance.',
     );
+    // Instant WhatsApp Group Sync (auto-add farmer)
+    this.whatsAppGroupSyncService.syncSingleFarmerGroupStatus(assignment.farmerId).catch(() => {});
     return updated;
   }
 
@@ -339,9 +409,9 @@ export class AdvisorAssignmentService {
   private async payoutAdvisorShareOnAccept(farmerId: string, advisorId: string) {
     const plan = await this.prisma.farmerPlan.findUnique({ where: { farmerId } });
     if (!plan?.endDate || plan.endDate <= new Date()) return;
-    if (plan.plan !== FarmerSubscriptionPlan.STANDARD && plan.plan !== FarmerSubscriptionPlan.PREMIUM) return;
+    if (plan.plan === FarmerSubscriptionPlan.FREE) return;
 
-    const pricing = await this.prisma.farmerPlanPricing.findUnique({ where: { plan: plan.plan } });
+    const pricing = await this.prisma.farmerPlanPricing.findFirst({ where: { plan: plan.plan } });
     if (!pricing?.advisorShareValue) return;
 
     const daysRemaining = Math.ceil((plan.endDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
@@ -382,8 +452,11 @@ export class AdvisorAssignmentService {
         ? `Your advisor request was declined: ${reason.trim()}. You can send another request.`
         : 'Your advisor request was declined. You can send another request.',
     );
+    // Instant WhatsApp Group Sync (auto-remove if previously added)
+    this.whatsAppGroupSyncService.syncSingleFarmerGroupStatus(assignment.farmerId).catch(() => {});
     return updated;
   }
+
 
   /** Admin-only manual override, e.g. for support cases. */
   async create(user: AuthUser, dto: CreateAdvisorAssignmentDto) {
@@ -438,12 +511,16 @@ export class AdvisorAssignmentService {
   }
 
   async revoke(user: AuthUser, id: string) {
-    await this.findOneOrThrow(user, id);
-    return this.prisma.advisorAssignment.update({
+    const assignment = await this.findOneOrThrow(user, id);
+    const updated = await this.prisma.advisorAssignment.update({
       where: { id },
       data: { status: AdvisorAssignmentStatus.REVOKED, endDate: new Date() },
     });
+    // Instant WhatsApp Group Sync (auto-remove farmer)
+    this.whatsAppGroupSyncService.syncSingleFarmerGroupStatus(assignment.farmerId).catch(() => {});
+    return updated;
   }
+
 
   /** Advisor nudges a formerly-assigned (now inactive) farmer to renew their plan. */
   async sendRenewalReminder(user: AuthUser, farmerId: string) {

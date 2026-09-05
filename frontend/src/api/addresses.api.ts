@@ -33,6 +33,14 @@ export async function listMyAddresses(): Promise<CustomerAddress[]> {
   return data;
 }
 
+export async function updateAddress(
+  id: string,
+  payload: Partial<CreateAddressPayload>
+): Promise<CustomerAddress> {
+  const { data } = await apiClient.patch<CustomerAddress>(`/addresses/${id}`, payload);
+  return data;
+}
+
 export async function deleteAddress(id: string): Promise<void> {
   await apiClient.delete(`/addresses/${id}`);
 }

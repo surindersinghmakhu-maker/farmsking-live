@@ -1,9 +1,14 @@
 import { IsEnum, IsInt, IsISO8601, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
-import { FarmerSubscriptionPlan } from '@prisma/client';
+import { FarmerSubscriptionPlan, PlanCouponCategory } from '@prisma/client';
 
 export class CreateFarmerPlanCouponDto {
   @IsEnum(FarmerSubscriptionPlan)
   plan: FarmerSubscriptionPlan;
+
+  /** Optional: FARMER_PLAN or ADVISOR_PLAN (defaults to FARMER_PLAN) */
+  @IsOptional()
+  @IsEnum(PlanCouponCategory)
+  category?: PlanCouponCategory;
 
   @IsInt()
   @Min(1)

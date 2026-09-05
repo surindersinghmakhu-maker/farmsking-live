@@ -25,6 +25,25 @@ export async function listExpenseCategories(): Promise<ExpenseCategory[]> {
   return data;
 }
 
+export async function listAllExpenseCategoriesForAdmin(): Promise<ExpenseCategory[]> {
+  const { data } = await apiClient.get<ExpenseCategory[]>('/expenses/categories/all');
+  return data;
+}
+
+export async function createAdminExpenseCategory(payload: { key: string; labelEn: string; labelHi?: string; sortOrder?: number }): Promise<ExpenseCategory> {
+  const { data } = await apiClient.post<ExpenseCategory>('/expenses/categories', payload);
+  return data;
+}
+
+export async function updateAdminExpenseCategory(id: string, payload: { labelEn?: string; labelHi?: string; sortOrder?: number; isActive?: boolean }): Promise<ExpenseCategory> {
+  const { data } = await apiClient.patch<ExpenseCategory>(`/expenses/categories/${id}`, payload);
+  return data;
+}
+
+export async function deleteAdminExpenseCategory(id: string): Promise<void> {
+  await apiClient.delete(`/expenses/categories/${id}`);
+}
+
 export async function listExpensesForFarm(farmId: string): Promise<Expense[]> {
   const { data } = await apiClient.get<Expense[]>(`/expenses/farm/${farmId}`);
   return data;

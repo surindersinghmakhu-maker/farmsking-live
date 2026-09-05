@@ -1,0 +1,10 @@
+node_modules
+dist
+.env
+.env.local
+npm-debug.log
+uploads/*
+!uploads/.gitkeep
+whatsapp_auth_session
+.git
+.gitignore

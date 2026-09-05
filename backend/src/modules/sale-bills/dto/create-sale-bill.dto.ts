@@ -36,6 +36,10 @@ export class CreateSaleBillDto {
   @IsString()
   partyMobile?: string;
 
+  @IsOptional()
+  @IsString()
+  partyAddress?: string;
+
   @IsBoolean()
   isCash: boolean;
 
@@ -45,8 +49,8 @@ export class CreateSaleBillDto {
   @Type(() => SaleBillItemDto)
   items: SaleBillItemDto[];
 
-  @IsInt()
-  @Min(1)
+  @IsNumber()
+  @Min(0)
   totalItems: number;
 
   @IsNumber()

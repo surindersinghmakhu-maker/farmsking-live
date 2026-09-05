@@ -56,7 +56,7 @@ export function normalizeApiUrl(rawInput: string): string {
     let path = match[4] || '';
 
     const isHttps = /^https:\/\//i.test(protocol);
-    const effectivePort = port ? port : isHttps ? '' : '4100';
+    const effectivePort = port ? port : isHttps ? '' : '3000';
 
     if (!path || path === '/') {
       path = '/api/v1';
@@ -78,20 +78,20 @@ export function getDefaultApiUrl(): string {
 
   // If running on Expo Go / physical device and autoHostIp found, use it!
   if (autoHostIp) {
-    return `http://${autoHostIp}:4100/api/v1`;
+    return `http://${autoHostIp}:3000/api/v1`;
   }
 
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
   if (envUrl) {
     // If env contains localhost but we are on mobile device, replace localhost with PC Wi-Fi IP
     if (Platform.OS !== 'web' && (envUrl.includes('localhost') || envUrl.includes('127.0.0.1'))) {
-      return envUrl.replace(/localhost|127\.0\.0\.1/g, '192.168.1.84');
+      return envUrl.replace(/localhost|127\.0\.0\.1/g, '192.168.1.79');
     }
     return envUrl;
   }
 
-  const DEV_HOST = Platform.OS === 'web' ? 'localhost' : '192.168.1.84';
-  return `http://${DEV_HOST}:4100/api/v1`;
+  const DEV_HOST = Platform.OS === 'web' ? 'localhost' : '192.168.1.79';
+  return `http://${DEV_HOST}:3000/api/v1`;
 }
 
 // Initial default API URL

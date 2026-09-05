@@ -39,4 +39,12 @@ export class UpdateFarmerProfileDto {
   @IsOptional()
   @IsEnum(WaterType)
   waterType?: WaterType;
+
+  @IsOptional()
+  @IsString()
+  upiId?: string;
+
+  @IsOptional()
+  @IsString()
+  billPrintingAddress?: string;
 }

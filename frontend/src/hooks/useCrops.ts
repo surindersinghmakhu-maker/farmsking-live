@@ -135,6 +135,9 @@ export function useUpdateCropSchedule() {
       cropsApi.updateCropSchedule(id, assignedSchedule),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['crops', 'advisor', 'accepted'] });
+      queryClient.invalidateQueries({ queryKey: ['crops', 'mine'] });
+      queryClient.invalidateQueries({ queryKey: ['spray-schedules'] });
+      queryClient.invalidateQueries({ queryKey: ['crop-activity-schedules'] });
     },
   });
 }

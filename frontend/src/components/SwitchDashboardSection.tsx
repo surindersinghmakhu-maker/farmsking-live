@@ -8,6 +8,8 @@ import { useRole } from '../store/role-context';
 import { useAuth } from '../store/auth-context';
 import { useBecomeFarmer, useBecomeGardener } from '../hooks/useBecomeRole';
 
+import { BecomeFarmerModal } from './BecomeFarmerModal';
+
 const ROLE_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   CUSTOMER: 'cart',
   FARMER: 'leaf',
@@ -37,18 +39,31 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
   const becomeFarmer = useBecomeFarmer();
   const becomeGardener = useBecomeGardener();
   const [pending, setPending] = useState<'FARMER' | 'GARDENER' | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isFarmerModalOpen, setIsFarmerModalOpen] = useState(false);
 
   const isCustomerOnly = user?.role === 'CUSTOMER' && assignedRoles.length <= 1;
 
+  const handleFarmerSuccess = async (updatedUser: any) => {
+    setIsFarmerModalOpen(false);
+    await updateUser(updatedUser);
+    setRole('FARMER');
+  };
+
   const grantRole = async (target: 'FARMER' | 'GARDENER') => {
     tap();
+    if (target === 'FARMER') {
+      setIsFarmerModalOpen(true);
+      return;
+    }
+
     setPending(target);
     try {
-      const updated = target === 'FARMER' ? await becomeFarmer.mutateAsync() : await becomeGardener.mutateAsync();
+      const updated = await becomeGardener.mutateAsync();
       await updateUser(updated);
       setRole(target);
     } catch (err: any) {
-      const message = err?.response?.data?.message ?? `Could not activate the ${target === 'FARMER' ? 'Farmer' : 'Gardener'} dashboard.`;
+      const message = err?.response?.data?.message ?? `Could not activate the Gardener dashboard.`;
       if (Platform.OS === 'web') {
         alert(message);
       } else {
@@ -95,6 +110,12 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
             {pending === 'GARDENER' ? <ActivityIndicator color={RoleThemes.GARDENER.primary} size="small" /> : <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />}
           </TouchableOpacity>
         </View>
+
+        <BecomeFarmerModal
+          visible={isFarmerModalOpen}
+          onClose={() => setIsFarmerModalOpen(false)}
+          onSuccess={handleFarmerSuccess}
+        />
       </View>
     );
   }
@@ -104,66 +125,85 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
   const roleLabels = assignedRoles.map((r) => RoleThemes[r].name).join(', ');
   const rowCount = assignedRoles.length + (extraRows?.length ?? 0);
 
+  const activeTheme = RoleThemes[role];
+
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Switch Dashboard</Text>
-      {user?.name && assignedRoles.length > 1 ? (
-        <Text style={styles.userRolesText}>
-          {user.name} <Text style={styles.userRolesBracket}>({roleLabels})</Text>
-        </Text>
-      ) : null}
-      <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
-        {assignedRoles.length > 1
-          ? assignedRoles.map((r, idx) => {
-              const theme = RoleThemes[r];
-              const isActive = r === role;
-              return (
-                <TouchableOpacity
-                  key={r}
-                  style={[styles.row, idx < rowCount - 1 && styles.rowDivider]}
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    if (isActive) return;
-                    tap();
-                    setRole(r);
-                  }}
-                >
-                  <View style={[styles.iconBg, { backgroundColor: theme.primaryLight }]}>
-                    <Ionicons name={ROLE_ICONS[r]} size={17} color={theme.primary} />
+      <Text style={styles.sectionTitle}>SWITCH DASHBOARD</Text>
+
+      {/* Dropdown Trigger Button */}
+      <TouchableOpacity
+        style={[styles.dropdownTrigger, { borderColor: activeTheme.primary }]}
+        activeOpacity={0.85}
+        onPress={() => {
+          tap();
+          setIsDropdownOpen(!isDropdownOpen);
+        }}
+      >
+        <View style={[styles.iconBg, { backgroundColor: activeTheme.primaryLight }]}>
+          <Ionicons name={ROLE_ICONS[role] || 'leaf'} size={17} color={activeTheme.primary} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.rowLabel}>{activeTheme.name}</Text>
+          <Text style={[styles.activeTagText, { color: activeTheme.primary }]}>Active Dashboard</Text>
+        </View>
+        <Ionicons name={isDropdownOpen ? 'chevron-up' : 'chevron-down'} size={18} color="#64748b" />
+      </TouchableOpacity>
+
+      {/* Dropdown Options List */}
+      {isDropdownOpen ? (
+        <View style={styles.dropdownMenu}>
+          {assignedRoles.map((r) => {
+            const theme = RoleThemes[r];
+            const isActive = r === role;
+            return (
+              <TouchableOpacity
+                key={r}
+                style={[
+                  styles.dropdownMenuItem,
+                  isActive && { backgroundColor: theme.primaryLight ?? '#f0fdf4' },
+                ]}
+                onPress={() => {
+                  tap();
+                  if (!isActive) setRole(r);
+                  setIsDropdownOpen(false);
+                }}
+              >
+                <View style={[styles.iconBg, { backgroundColor: theme.primaryLight }]}>
+                  <Ionicons name={ROLE_ICONS[r]} size={16} color={theme.primary} />
+                </View>
+                <Text style={[styles.rowLabel, isActive && { color: theme.primary, fontFamily: FONT.bold }]}>
+                  {theme.name}
+                </Text>
+                {isActive ? (
+                  <View style={styles.activeBadge}>
+                    <Text style={styles.activeBadgeText}>Active</Text>
                   </View>
-                  <Text style={styles.rowLabel}>{theme.name}</Text>
-                  {isActive ? (
-                    <View style={styles.activeBadge}>
-                      <Text style={styles.activeBadgeText}>Active</Text>
-                    </View>
-                  ) : (
-                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                  )}
-                </TouchableOpacity>
-              );
-            })
-          : null}
-        {(extraRows ?? []).map((item, idx) => {
-          const activeTheme = RoleThemes[role];
-          return (
+                ) : (
+                  <Ionicons name="checkmark-circle-outline" size={16} color="#cbd5e1" />
+                )}
+              </TouchableOpacity>
+            );
+          })}
+          {(extraRows ?? []).map((item) => (
             <TouchableOpacity
               key={item.key}
-              style={[styles.row, assignedRoles.length + idx < rowCount - 1 && styles.rowDivider]}
-              activeOpacity={0.7}
+              style={styles.dropdownMenuItem}
               onPress={() => {
                 tap();
+                setIsDropdownOpen(false);
                 item.onPress();
               }}
             >
               <View style={[styles.iconBg, { backgroundColor: activeTheme.primaryLight }]}>
-                <Ionicons name={item.icon} size={17} color={activeTheme.primary} />
+                <Ionicons name={item.icon} size={16} color={activeTheme.primary} />
               </View>
               <Text style={styles.rowLabel}>{item.label}</Text>
-              <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+              <Ionicons name="chevron-forward" size={16} color="#cbd5e1" />
             </TouchableOpacity>
-          );
-        })}
-      </View>
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -173,6 +213,39 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 12.5, fontFamily: FONT.bold, color: '#64748b', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.3 },
   userRolesText: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a', marginTop: -4, marginBottom: 8 },
   userRolesBracket: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
+  dropdownTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: SPACING.md,
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    borderWidth: 1.5,
+    ...premiumShadow('#0f172a', 'sm'),
+  },
+  activeTagText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    marginTop: 1,
+  },
+  dropdownMenu: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    marginTop: 6,
+    overflow: 'hidden',
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    ...premiumShadow('#0f172a', 'sm'),
+  },
+  dropdownMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
   card: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, overflow: 'hidden' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 13, paddingHorizontal: SPACING.md },
   rowDivider: { borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },

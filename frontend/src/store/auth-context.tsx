@@ -16,6 +16,7 @@ interface AuthContextValue {
   logout: () => Promise<void>;
   /** Merges fresh fields (e.g. after a profile-update API call) into the cached session user and persists them. */
   updateUser: (patch: Partial<User>) => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -114,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await SecureStore.setItemAsync(USER_KEY, JSON.stringify(merged));
         setUser(merged);
       },
+      refreshUser,
     }),
     [user, isLoading, queryClient],
   );

@@ -24,8 +24,25 @@ export const STAGE_ORDER: Record<CropStage, number> = {
   COMPLETED: 5,
 };
 
+export interface CornerCoord {
+  label: string; // 'C1', 'C2', 'C3', 'C4'
+  lat: number;
+  lng: number;
+}
+
+export interface CropGpsData {
+  centerLat: number;
+  centerLng: number;
+  corners: CornerCoord[];
+  areaAcres: number;
+  locationText: string;
+  isLocked: boolean;
+  updatedAt: string;
+}
+
 export interface RegisteredCropField {
   id: string;
+  cropId?: string;
   cropName: string;
   categoryName: string;
   categoryColor: string;
@@ -37,6 +54,8 @@ export interface RegisteredCropField {
   season?: string;
   unit: CropUnit;
   pricePerUnit: string;
+  minPricePerUnit?: string;
+  maxPricePerUnit?: string;
   stage: CropStage;
   status: CropStatus; // 'ACTIVE' for SOWING/GROWTH/HARVESTING, 'INACTIVE' for COMPLETED
   advisorStatus?: AdvisorShareStatus; // 'NONE' | 'PENDING' | 'ACCEPTED'
@@ -44,8 +63,10 @@ export interface RegisteredCropField {
   farmerName?: string;
   farmerPhone?: string;
   location?: string;
+  gpsData?: CropGpsData;
   harvestType?: HarvestType;
   irrigationType?: IrrigationType;
+  plantCount?: number;
 }
 
 export interface CropHistoryEntry extends RegisteredCropField {
@@ -66,8 +87,12 @@ export interface CropSaleRecord {
   pricePerUnit: string;
   totalAmount: number;
   buyerName: string;
+  partyId?: string;
+  partyMobile?: string;
+  notes?: string;
   saleDate: string;
   billId?: string;
+  billNo?: string;
 }
 
 export interface SpecialTreatmentTemplate {
@@ -80,7 +105,7 @@ export interface SpecialTreatmentTemplate {
 export const INITIAL_SPECIAL_TREATMENTS: SpecialTreatmentTemplate[] = [
   {
     id: 'st1',
-    problemTitle: 'Yellow Rust / Pila Rata Fungus Attack (पीला रतुआ)',
+    problemTitle: 'Yellow Rust / Pila Rata Fungus Attack',
     cropCategory: 'Wheat & Cereals',
     remedyTasks: [
       { id: 'stt1', dayNumber: 1, treatmentName: 'Propiconazole 25% EC (200ml/Acre) Spray' },
@@ -90,7 +115,7 @@ export const INITIAL_SPECIAL_TREATMENTS: SpecialTreatmentTemplate[] = [
   },
   {
     id: 'st2',
-    problemTitle: 'Thrips & Leaf Curl Insect Attack (पत्ती मरोड़ / कीड़ा)',
+    problemTitle: 'Thrips & Leaf Curl Insect Attack',
     cropCategory: 'Rose & Vegetables',
     remedyTasks: [
       { id: 'stt4', dayNumber: 1, treatmentName: 'Imidacloprid 17.8% SL (50ml/100L) Foliar Spray' },
@@ -100,7 +125,7 @@ export const INITIAL_SPECIAL_TREATMENTS: SpecialTreatmentTemplate[] = [
   },
   {
     id: 'st3',
-    problemTitle: 'Root Rot & Wilt Disease (जड़ सड़न / उकठा बीमारी)',
+    problemTitle: 'Root Rot & Wilt Disease',
     cropCategory: 'All Crops',
     remedyTasks: [
       { id: 'stt7', dayNumber: 1, treatmentName: 'Trichoderma Viride Bio-Fungicide Drenching' },
@@ -117,20 +142,46 @@ interface SalePayload {
   billId?: string;
 }
 
+export interface GpsUnlockRequest {
+  id: string;
+  cropId: string;
+  farmerName: string;
+  farmerPhone: string;
+  cropName: string;
+  plotName: string;
+  location: string;
+  comment: string;
+  status: 'PENDING' | 'APPROVED' | 'DECLINED';
+  requestedAt: string;
+}
+
 interface CropsContextValue {
   cropFields: RegisteredCropField[];
   cropHistory: CropHistoryEntry[];
   salesRecords: CropSaleRecord[];
   specialTreatments: SpecialTreatmentTemplate[];
+  unlockedCropIds: Record<string, boolean>;
+  cropGpsDataMap: Record<string, CropGpsData>;
+  gpsUnlockRequests: GpsUnlockRequest[];
   isLoading: boolean;
   addCrop: (values: CropFormValues) => Promise<void>;
+  editCrop: (cropId: string, values: CropFormValues) => Promise<void>;
   removeCrop: (id: string) => Promise<void>;
   updateCropStage: (id: string, targetStage: CropStage) => Promise<void>;
   recordSale: (cropId: string, payload: SalePayload) => Promise<void>;
+  updateSale: (saleId: string, payload: Partial<CropSaleRecord>) => Promise<void>;
+  deleteSale: (saleId: string) => Promise<void>;
   shareCropWithAdvisor: (cropId: string) => void;
   acceptFarmRequest: (cropId: string, assignedSchedule?: string) => Promise<void>;
   addSpecialTreatment: (treatment: SpecialTreatmentTemplate) => void;
   applySpecialTreatmentToCrop: (cropId: string, treatmentId: string) => Promise<void>;
+  requestCropGpsUnlock: (cropId: string, comment: string, farmerName?: string, farmerPhone?: string, cropName?: string, plotName?: string, location?: string) => void;
+  acceptGpsUnlockRequest: (requestId: string) => void;
+  declineGpsUnlockRequest: (requestId: string) => void;
+  unlockCropDirectly: (cropId: string) => void;
+  lockCropGps: (cropId: string) => void;
+  updateCropLocation: (cropId: string, newLocationText: string) => void;
+  saveCropGpsData: (cropId: string, gpsData: CropGpsData) => void;
 }
 
 const CropsContext = createContext<CropsContextValue | undefined>(undefined);
@@ -195,12 +246,21 @@ function parseSowingDateToISO(display: string): string | undefined {
 }
 
 function formatDateDisplay(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
 }
 
 interface PersistedLocalState {
   salesRecords: CropSaleRecord[];
   specialTreatments?: SpecialTreatmentTemplate[];
+  customCropLocations?: Record<string, string>;
+  cropGpsDataMap?: Record<string, CropGpsData>;
+  unlockedCropIds?: Record<string, boolean>;
 }
 
 const STORAGE_KEY = 'farmsking_crops_local_state_v1';
@@ -214,12 +274,20 @@ function toRegisteredCropField(
   const realCategory = crop.category ?? 'OTHER';
   const catInfo = REAL_CATEGORY_DISPLAY[realCategory];
   const areaUnit = crop.plot.areaUnit ?? 'ACRE';
-  const areaText = crop.plot.area != null ? `${crop.plot.area} ${REAL_AREA_UNIT_LABEL[areaUnit]}` : '';
-  const sowingDateDisplay = crop.notes || (crop.sowingDate ? formatDateDisplay(crop.sowingDate) : '');
+  let displayUnit = REAL_AREA_UNIT_LABEL[areaUnit];
+  if (crop.notes && crop.notes.includes('[UNIT:')) {
+    const match = crop.notes.match(/\[UNIT:(.*?)\]/);
+    if (match && match[1]) {
+      displayUnit = match[1];
+    }
+  }
+  const areaText = crop.plot.area != null ? `${crop.plot.area} ${displayUnit}` : '';
+  const sowingDateDisplay = (crop.notes ? crop.notes.replace(/\s*\[UNIT:.*?\]/g, '').replace(/\s*\([^)]*\)/g, '').trim() : '') || (crop.sowingDate ? formatDateDisplay(crop.sowingDate) : '');
 
   return {
     id: crop.id,
-    cropName: crop.cropName,
+    cropId: crop.cropId || crop.id,
+    cropName: crop.variety ? `${crop.cropName} (${crop.variety})` : crop.cropName,
     categoryName: catInfo.name,
     categoryColor: catInfo.color,
     categoryBg: catInfo.bg,
@@ -227,6 +295,8 @@ function toRegisteredCropField(
     area: areaText,
     sowingDate: sowingDateDisplay,
     variety: crop.variety ?? undefined,
+    minPricePerUnit: (crop as any).minPrice ? String((crop as any).minPrice) : undefined,
+    maxPricePerUnit: (crop as any).maxPrice ? String((crop as any).maxPrice) : undefined,
     unit: (crop.unit as CropUnit) ?? 'KG',
     pricePerUnit: crop.pricePerUnit ?? '',
     stage: crop.stage,
@@ -238,6 +308,7 @@ function toRegisteredCropField(
     location,
     harvestType: crop.harvestType,
     irrigationType: (crop.plot.irrigationType as IrrigationType | null) ?? undefined,
+    plantCount: crop.plantCount ?? undefined,
   };
 }
 
@@ -249,6 +320,10 @@ export function CropsProvider({ children }: { children: ReactNode }) {
 
   const [salesRecords, setSalesRecords] = useState<CropSaleRecord[]>([]);
   const [specialTreatments, setSpecialTreatments] = useState<SpecialTreatmentTemplate[]>(INITIAL_SPECIAL_TREATMENTS);
+  const [unlockedCropIds, setUnlockedCropIds] = useState<Record<string, boolean>>({});
+  const [customCropLocations, setCustomCropLocations] = useState<Record<string, string>>({});
+  const [cropGpsDataMap, setCropGpsDataMap] = useState<Record<string, CropGpsData>>({});
+  const [gpsUnlockRequests, setGpsUnlockRequests] = useState<GpsUnlockRequest[]>([]);
   const [isPersistLoaded, setIsPersistLoaded] = useState(false);
 
   useEffect(() => {
@@ -259,6 +334,9 @@ export function CropsProvider({ children }: { children: ReactNode }) {
           const parsed: PersistedLocalState = JSON.parse(raw);
           setSalesRecords(parsed.salesRecords ?? []);
           setSpecialTreatments(parsed.specialTreatments ?? INITIAL_SPECIAL_TREATMENTS);
+          setCustomCropLocations(parsed.customCropLocations ?? {});
+          setCropGpsDataMap(parsed.cropGpsDataMap ?? {});
+          setUnlockedCropIds(parsed.unlockedCropIds ?? {});
         }
       } catch {
         // ignore, fallback to defaults
@@ -270,8 +348,17 @@ export function CropsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isPersistLoaded) return;
-    AppStorage.setItemAsync(STORAGE_KEY, JSON.stringify({ salesRecords, specialTreatments }));
-  }, [salesRecords, specialTreatments, isPersistLoaded]);
+    AppStorage.setItemAsync(
+      STORAGE_KEY,
+      JSON.stringify({
+        salesRecords,
+        specialTreatments,
+        customCropLocations,
+        cropGpsDataMap,
+        unlockedCropIds,
+      })
+    );
+  }, [salesRecords, specialTreatments, customCropLocations, cropGpsDataMap, unlockedCropIds, isPersistLoaded]);
 
   const farmerName = user?.name;
   const farmerPhone = user?.mobile;
@@ -281,8 +368,18 @@ export function CropsProvider({ children }: { children: ReactNode }) {
   const completedCrops = useMemo(() => myCrops.filter((c) => c.status === 'COMPLETED'), [myCrops]);
 
   const cropFields = useMemo(
-    () => activeCrops.map((c) => toRegisteredCropField(c, farmerName, farmerPhone, location)),
-    [activeCrops, farmerName, farmerPhone, location]
+    () =>
+      activeCrops.map((c) => {
+        const base = toRegisteredCropField(c, farmerName, farmerPhone, location);
+        const customLoc = (c.id ? customCropLocations[c.id] : undefined) || (base.cropId ? customCropLocations[base.cropId] : undefined);
+        const gpsData = (c.id ? cropGpsDataMap[c.id] : undefined) || (base.cropId ? cropGpsDataMap[base.cropId] : undefined);
+        return {
+          ...base,
+          location: customLoc || base.location,
+          gpsData,
+        };
+      }),
+    [activeCrops, farmerName, farmerPhone, location, customCropLocations, cropGpsDataMap]
   );
 
   const cropHistory = useMemo(
@@ -346,7 +443,27 @@ export function CropsProvider({ children }: { children: ReactNode }) {
       pricePerUnit: values.pricePerUnit.trim() ? Number(values.pricePerUnit) : undefined,
       stage: normalizeStage(values.stage),
       harvestType: values.harvestType,
-      notes: values.sowingDate,
+      plantCount: values.plantCount ? Number(values.plantCount) : undefined,
+      notes: `${values.sowingDate} [UNIT:${values.areaUnit}]`,
+    });
+
+    await invalidateCrops();
+  };
+
+  const editCrop = async (cropId: string, values: CropFormValues) => {
+    await ensureFarmAndPlot(values.fieldName.trim(), Number(values.area) || 1, values.areaUnit, values.irrigationType);
+
+    await cropsApi.updateCrop(cropId, {
+      category: CATEGORY_ID_TO_REAL[values.category.id] ?? 'OTHER',
+      cropName: values.crop.name.trim(),
+      variety: values.crop.variety,
+      sowingDate: parseSowingDateToISO(values.sowingDate),
+      unit: values.unit,
+      pricePerUnit: values.pricePerUnit.trim() ? Number(values.pricePerUnit) : undefined,
+      stage: normalizeStage(values.stage),
+      harvestType: values.harvestType,
+      plantCount: values.plantCount ? Number(values.plantCount) : undefined,
+      notes: `${values.sowingDate} [UNIT:${values.areaUnit}]`,
     });
 
     await invalidateCrops();
@@ -395,6 +512,26 @@ export function CropsProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateSale = async (saleId: string, payload: Partial<CropSaleRecord>) => {
+    setSalesRecords((prev) =>
+      prev.map((s) => {
+        if (s.id !== saleId) return s;
+        const updatedQty = payload.quantity !== undefined ? payload.quantity : s.quantity;
+        const updatedRate = payload.pricePerUnit !== undefined ? payload.pricePerUnit : s.pricePerUnit;
+        const totalAmount = Number(updatedQty) * Number(updatedRate);
+        return {
+          ...s,
+          ...payload,
+          totalAmount: isNaN(totalAmount) ? s.totalAmount : totalAmount,
+        };
+      })
+    );
+  };
+
+  const deleteSale = async (saleId: string) => {
+    setSalesRecords((prev) => prev.filter((s) => s.id !== saleId));
+  };
+
   /** Legacy no-op — real crop-share requests now go through submitCropToAdvisor/cancelCropSubmission directly. Kept only so existing destructures don't break. */
   const shareCropWithAdvisor = (_cropId: string) => {};
 
@@ -426,23 +563,119 @@ export function CropsProvider({ children }: { children: ReactNode }) {
     await invalidateCrops();
   };
 
+  const requestCropGpsUnlock = (
+    cropId: string,
+    comment: string,
+    farmerNameArg?: string,
+    farmerPhoneArg?: string,
+    cropNameArg?: string,
+    plotNameArg?: string,
+    locationArg?: string
+  ) => {
+    const targetCrop = cropFields.find((c) => c.id === cropId || c.cropId === cropId);
+    const newReq: GpsUnlockRequest = {
+      id: 'req-gps-' + Date.now(),
+      cropId: targetCrop?.id || cropId,
+      farmerName: farmerNameArg || targetCrop?.farmerName || user?.name || 'Farmer',
+      farmerPhone: farmerPhoneArg || targetCrop?.farmerPhone || user?.mobile || '+91 98765 43210',
+      cropName: cropNameArg || targetCrop?.cropName || 'Registered Crop',
+      plotName: plotNameArg || targetCrop?.fieldName || 'Field Plot',
+      location: locationArg || targetCrop?.location || '30.9085° N, 75.8610° E',
+      comment: comment || 'Need boundary location re-mapping.',
+      status: 'PENDING',
+      requestedAt: new Date().toISOString(),
+    };
+    setGpsUnlockRequests((prev) => [newReq, ...prev]);
+  };
+
+  const acceptGpsUnlockRequest = (requestId: string) => {
+    const targetReq = gpsUnlockRequests.find((r) => r.id === requestId);
+    setGpsUnlockRequests((prev) =>
+      prev.map((r) => (r.id === requestId ? { ...r, status: 'APPROVED' } : r))
+    );
+    if (targetReq?.cropId) {
+      setUnlockedCropIds((prev) => ({ ...prev, [targetReq.cropId]: true }));
+      setCustomCropLocations((prev) => ({
+        ...prev,
+        [targetReq.cropId]: '📍 Location Reset by Admin (Set New GPS)',
+      }));
+    } else {
+      setUnlockedCropIds((prev) => {
+        const updated = { ...prev };
+        cropFields.forEach((c) => {
+          updated[c.id] = true;
+        });
+        return updated;
+      });
+    }
+  };
+
+  const declineGpsUnlockRequest = (requestId: string) => {
+    setGpsUnlockRequests((prev) =>
+      prev.map((r) => (r.id === requestId ? { ...r, status: 'DECLINED' } : r))
+    );
+  };
+
+  const unlockCropDirectly = (cropId: string) => {
+    setUnlockedCropIds((prev) => ({ ...prev, [cropId]: true }));
+  };
+
+  const lockCropGps = (cropId: string) => {
+    setUnlockedCropIds((prev) => ({ ...prev, [cropId]: false }));
+  };
+
+  const updateCropLocation = (cropId: string, newLocationText: string) => {
+    setCustomCropLocations((prev) => ({
+      ...prev,
+      [cropId]: newLocationText,
+    }));
+  };
+
+  const saveCropGpsData = (cropId: string, data: CropGpsData) => {
+    setCropGpsDataMap((prev) => ({
+      ...prev,
+      [cropId]: data,
+    }));
+    setCustomCropLocations((prev) => ({
+      ...prev,
+      [cropId]: data.locationText,
+    }));
+    setUnlockedCropIds((prev) => ({
+      ...prev,
+      [cropId]: false,
+    }));
+  };
+
   const value = useMemo(
     () => ({
       cropFields,
       cropHistory,
       salesRecords,
       specialTreatments,
+      unlockedCropIds,
+      cropGpsDataMap,
+      gpsUnlockRequests,
       isLoading,
       addCrop,
+      editCrop,
       removeCrop,
       updateCropStage,
       recordSale,
+      updateSale,
+      deleteSale,
       shareCropWithAdvisor,
       acceptFarmRequest,
       addSpecialTreatment,
       applySpecialTreatmentToCrop,
+      requestCropGpsUnlock,
+      acceptGpsUnlockRequest,
+      declineGpsUnlockRequest,
+      unlockCropDirectly,
+      lockCropGps,
+      updateCropLocation,
+      saveCropGpsData,
     }),
-    [cropFields, cropHistory, salesRecords, specialTreatments, isLoading]
+    [cropFields, cropHistory, salesRecords, specialTreatments, unlockedCropIds, cropGpsDataMap, gpsUnlockRequests, isLoading]
   );
 
   return <CropsContext.Provider value={value}>{children}</CropsContext.Provider>;

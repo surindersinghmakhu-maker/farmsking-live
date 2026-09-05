@@ -7,7 +7,8 @@ export type UserRole =
   | 'BUSINESS_PARTNER'
   | 'ADMIN'
   | 'SUPER_ADMIN'
-  | 'OPERATOR';
+  | 'OPERATOR'
+  | 'LABOUR';
 
 /**
  * Shared, role-agnostic surface tokens — every role's theme spreads this
@@ -41,7 +42,7 @@ export const RoleThemes: Record<UserRole, {
 }> = {
   FARMER: {
     ...SURFACE,
-    name: 'My Farms',
+    name: 'Farmer Dashboard',
     badge: 'Manage your farms & profits',
     headerBg: '#15803d',
     gradient: ['#15803d', '#16a34a'],
@@ -52,7 +53,7 @@ export const RoleThemes: Record<UserRole, {
   },
   FARM_ADVISOR: {
     ...SURFACE,
-    name: 'My Farmers',
+    name: 'Advisor Dashboard',
     badge: 'Guide, monitor & support farmers',
     headerBg: '#1d4ed8',
     gradient: ['#1d4ed8', '#2563eb'],
@@ -63,7 +64,7 @@ export const RoleThemes: Record<UserRole, {
   },
   GARDEN_ADVISOR: {
     ...SURFACE,
-    name: 'My Gardeners',
+    name: 'Advisor Dashboard',
     badge: 'Guide, monitor & support gardeners',
     headerBg: '#0e7490',
     gradient: ['#0e7490', '#0891b2'],
@@ -74,7 +75,7 @@ export const RoleThemes: Record<UserRole, {
   },
   GARDENER: {
     ...SURFACE,
-    name: 'My Garden',
+    name: 'Gardener Dashboard',
     badge: 'Manage gardens & maintenance',
     headerBg: '#be185d',
     gradient: ['#be185d', '#db2777'],
@@ -137,6 +138,17 @@ export const RoleThemes: Record<UserRole, {
     primary: '#475569',
     primaryLight: '#e2e8f0',
     accent: '#64748b',
+  },
+  LABOUR: {
+    ...SURFACE,
+    name: 'Labour Dashboard',
+    badge: 'View your earnings, payments & balance',
+    headerBg: '#c2410c',
+    gradient: ['#c2410c', '#ea580c'],
+    heroGradient: ['#ffffff', '#fff7ed'],
+    primary: '#ea580c',
+    primaryLight: '#ffedd5',
+    accent: '#f97316',
   },
 };
 

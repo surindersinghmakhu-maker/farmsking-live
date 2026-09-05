@@ -50,3 +50,8 @@ export async function listAvailableAdvisors(): Promise<AvailableAdvisor[]> {
   const { data } = await apiClient.get<AvailableAdvisor[]>('/advisor-assignments/available');
   return data;
 }
+
+export async function chooseAdvisor(advisorId: string): Promise<AdvisorAssignment> {
+  const { data } = await apiClient.post<AdvisorAssignment>(`/advisor-assignments/choose-advisor/${advisorId}`);
+  return data;
+}

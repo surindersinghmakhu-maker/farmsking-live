@@ -13,6 +13,8 @@ let isBaseUrlInitialized = false;
 
 // Request interceptor to attach Auth token and dynamically sync baseURL on startup
 apiClient.interceptors.request.use(async (config) => {
+  config.headers['Bypass-Tunnel-Reminder'] = 'true';
+
   if (!isBaseUrlInitialized) {
     try {
       const activeUrl = await getActiveApiUrl();
@@ -40,13 +42,39 @@ export function setApiBaseUrl(newBaseUrl: string) {
   isBaseUrlInitialized = true;
 }
 
-/** Resolves a server-relative path (e.g. an uploaded photo's `/uploads/xxx.jpg`) against the API host, so <Image> can load it. Absolute URLs pass through unchanged. */
+/** Resolves a server-relative path (e.g. an uploaded photo's `/uploads/xxx.jpg`) or localhost URL against the active API host, so <Image> can load it on mobile devices. Supports base64 data URIs. */
 export function resolveMediaUrl(path?: string | null): string | undefined {
   if (!path) return undefined;
-  if (/^(https?:|data:|blob:|file:)/i.test(path)) return path;
+  let url = path.trim().replace(/[\r\n]/g, '');
+
+  // Fix raw base64 strings starting with UklGR (webp), /9j/ (jpeg), or iVBORw0KGgo (png)
+  if (!url.startsWith('data:') && !url.startsWith('http:') && !url.startsWith('https:') && !url.startsWith('file:') && !url.startsWith('content:') && !url.startsWith('ph:')) {
+    if (url.startsWith('UklGR')) {
+      url = `data:image/webp;base64,${url}`;
+    } else if (url.startsWith('/9j/')) {
+      url = `data:image/jpeg;base64,${url}`;
+    } else if (url.startsWith('iVBORw0KGgo')) {
+      url = `data:image/png;base64,${url}`;
+    }
+  }
+
+  if (url.startsWith('data:')) {
+    return url;
+  }
+
   const base = apiClient.defaults.baseURL || API_BASE_URL;
   const origin = base.replace(/\/api\/v1\/?$/, '');
-  return `${origin}${path.startsWith('/') ? '' : '/'}${path}`;
+
+  // Replace localhost or 127.0.0.1 with active origin so mobile devices can reach backend images
+  if (url.includes('localhost:3000') || url.includes('127.0.0.1:3000')) {
+    url = url.replace(/^http:\/\/(localhost|127\.0\.0\.1):3000/, origin);
+  }
+
+  if (/^(https?:|blob:|file:|content:|ph:)/i.test(url)) {
+    return url;
+  }
+
+  return `${origin}${url.startsWith('/') ? '' : '/'}${url}`;
 }
 
 /**
@@ -56,8 +84,10 @@ export async function testServerConnection(customBaseUrl?: string): Promise<{ su
   const targetUrl = customBaseUrl || apiClient.defaults.baseURL || API_BASE_URL;
   try {
     const response = await axios.get(`${targetUrl.replace(/\/+$/, '')}/health`, {
+      headers: { 'Bypass-Tunnel-Reminder': 'true' },
       timeout: 5000,
     });
+
     if (response.status === 200 && response.data?.status === 'ok') {
       return { success: true, message: 'Server connected successfully!', url: targetUrl };
     }

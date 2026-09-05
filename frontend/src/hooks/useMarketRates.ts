@@ -5,6 +5,8 @@ export function useMyCropRates() {
   return useQuery({
     queryKey: ['market-rates', 'my-crops'],
     queryFn: getMyCropRates,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
   });
 }

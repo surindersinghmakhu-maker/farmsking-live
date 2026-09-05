@@ -7,19 +7,128 @@ import { CreateSaleBillDto } from './dto/create-sale-bill.dto';
 export class SaleBillsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private nextBillNo(): string {
-    return `FK-${Date.now().toString().slice(-8)}`;
+  private async nextBillNo(): Promise<string> {
+    const now = new Date();
+    const fullYear = now.getFullYear();
+    const yy = String(fullYear).slice(-2); // e.g. "26" for 2026
+    const prefix = `FK-${yy}`;
+
+    // Query latest bill for the current year prefix across all farmers
+    const latestBill = await this.prisma.saleBill.findFirst({
+      where: {
+        billNo: {
+          startsWith: prefix,
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: {
+        billNo: true,
+      },
+    });
+
+    let nextSeq = 1;
+    if (latestBill && latestBill.billNo) {
+      const seqPart = latestBill.billNo.slice(prefix.length);
+      const parsed = parseInt(seqPart, 10);
+      if (!isNaN(parsed) && parsed >= 1) {
+        nextSeq = parsed + 1;
+      } else {
+        const startOfYear = new Date(fullYear, 0, 1);
+        const count = await this.prisma.saleBill.count({
+          where: {
+            createdAt: {
+              gte: startOfYear,
+            },
+          },
+        });
+        nextSeq = count + 1;
+      }
+    }
+
+    let paddedSeq = String(nextSeq).padStart(2, '0');
+    let candidate = `${prefix}${paddedSeq}`;
+
+    // Guarantee 100% Unique Bill Number across concurrent requests
+    let exists = await this.prisma.saleBill.findFirst({ where: { billNo: candidate } });
+    while (exists) {
+      nextSeq++;
+      paddedSeq = String(nextSeq).padStart(2, '0');
+      candidate = `${prefix}${paddedSeq}`;
+      exists = await this.prisma.saleBill.findFirst({ where: { billNo: candidate } });
+    }
+
+    return candidate;
   }
 
   async create(user: AuthUser, dto: CreateSaleBillDto) {
-    return this.prisma.saleBill.create({
+    const billNo = await this.nextBillNo();
+    const bill = await this.prisma.saleBill.create({
       data: {
         farmerId: user.id,
-        billNo: this.nextBillNo(),
+        billNo,
         farmerName: dto.farmerName,
         partyId: dto.partyId,
         partyName: dto.partyName,
         partyMobile: dto.partyMobile,
+        partyAddress: dto.partyAddress,
+        isCash: dto.isCash,
+        items: dto.items as unknown as object,
+        totalItems: dto.totalItems,
+        totalAmount: dto.totalAmount,
+        amountReceived: dto.amountReceived,
+        thisSaleBalance: dto.thisSaleBalance,
+        previousBalance: dto.previousBalance,
+        netReceivable: dto.netReceivable,
+      },
+    });
+
+    try {
+      const userProfile = await this.prisma.user.findUnique({
+        where: { id: user.id },
+        select: { state: true, district: true },
+      });
+      const items = dto.items as any[];
+      if (Array.isArray(items)) {
+        for (const item of items) {
+          if (item.cropName && Number(item.rate) > 0) {
+            const cleanName = item.cropName.split('(')[0].trim();
+            await this.prisma.marketRate.create({
+              data: {
+                cropName: cleanName,
+                variety: 'Farmer Sale',
+                market: userProfile?.district ? `${userProfile.district} Mandi` : 'Local Mandi',
+                state: userProfile?.state || 'Punjab',
+                district: userProfile?.district || null,
+                modalPrice: Number(item.rate),
+                minPrice: Number(item.rate),
+                maxPrice: Number(item.rate),
+                unit: item.unit || 'KG',
+                rateDate: new Date(),
+                source: 'farmer_sale_bill',
+              },
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Could not record market rate from sale bill:', err);
+    }
+
+    return bill;
+  }
+
+  async update(user: AuthUser, id: string, dto: CreateSaleBillDto) {
+    const existing = await this.findOneOrThrow(user, id);
+    return this.prisma.saleBill.update({
+      where: { id: existing.id },
+      data: {
+        farmerName: dto.farmerName,
+        partyId: dto.partyId,
+        partyName: dto.partyName,
+        partyMobile: dto.partyMobile,
+        partyAddress: dto.partyAddress,
         isCash: dto.isCash,
         items: dto.items as unknown as object,
         totalItems: dto.totalItems,

@@ -1,4 +1,4 @@
-import { IsOptional, IsString, MinLength } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class CreatePartyDto {
   @IsString()
@@ -12,4 +12,16 @@ export class CreatePartyDto {
   @IsOptional()
   @IsString()
   mobile?: string;
+
+  @IsOptional()
+  @IsString()
+  partyType?: string;
+
+  @IsOptional()
+  @IsString()
+  kingId?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isVerified?: boolean;
 }

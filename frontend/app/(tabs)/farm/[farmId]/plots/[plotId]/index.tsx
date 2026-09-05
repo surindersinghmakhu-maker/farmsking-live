@@ -22,6 +22,8 @@ import { usePlot } from '@/src/hooks/usePlots';
 import { useCreateCrop, useCropsForPlot, useSubmitCropToAdvisor } from '@/src/hooks/useCrops';
 import { useCreateCropProblem } from '@/src/hooks/useCropProblems';
 import { uploadPhoto } from '@/src/api/uploads.api';
+import { useFarmerPlan } from '@/src/hooks/useFarmerPlan';
+import { FarmerPlanUpgradeModal } from '@/src/components/FarmerPlanUpgradeModal';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { CROP_CATEGORIES } from '@/src/constants/cropCategories';
@@ -49,6 +51,52 @@ export default function PlotDetailScreen() {
   const { data: crops, isLoading, refetch, isRefetching } = useCropsForPlot(plotId);
   const createCrop = useCreateCrop();
   const submitToAdvisor = useSubmitCropToAdvisor();
+  const { plan, limits } = useFarmerPlan();
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+
+  const handleOpenAddCropForm = () => {
+    const maxTotalCrops = limits?.maxTotalCrops;
+    const maxActiveCrops = limits?.maxActiveCrops;
+    const totalCropsCount = crops?.length ?? 0;
+
+    const planDisplayName =
+      plan === 'PRO' ? 'Lite Plan' : plan === 'SMART' ? 'Pro Plan' : plan === 'SUPER' ? 'Smart Plan' : 'Free Plan';
+
+    if (maxTotalCrops != null && maxTotalCrops > 0 && totalCropsCount >= maxTotalCrops) {
+      const message = `Your current plan (${planDisplayName}) allows adding a maximum of ${maxTotalCrops} crop(s). Please upgrade your plan to add more crops.`;
+      if (Platform.OS === 'web') {
+        if (confirm(`🔒 Upgrade Your Plan\n\n${message}\n\nWould you like to view plan comparison table & upgrade now?`)) {
+          setIsUpgradeModalOpen(true);
+        }
+      } else {
+        Alert.alert('🔒 Upgrade Your Plan', message, [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Upgrade Plan 👑', onPress: () => setIsUpgradeModalOpen(true) },
+        ]);
+      }
+      return;
+    }
+
+    if (maxActiveCrops != null && maxActiveCrops > 0) {
+      const activeCropsCount = (crops ?? []).filter((c: any) => c.status === 'ACTIVE' || c.status === 'PLANNED' || c.status === 'HARVESTING').length;
+      if (activeCropsCount >= maxActiveCrops) {
+        const message = `Your current plan (${planDisplayName}) allows a maximum of ${maxActiveCrops} active crop(s) at a time. Please upgrade your plan to add more active crops.`;
+        if (Platform.OS === 'web') {
+          if (confirm(`🔒 Upgrade Your Plan\n\n${message}\n\nWould you like to view plan comparison table & upgrade now?`)) {
+            setIsUpgradeModalOpen(true);
+          }
+        } else {
+          Alert.alert('🔒 Upgrade Your Plan', message, [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Upgrade Plan 👑', onPress: () => setIsUpgradeModalOpen(true) },
+          ]);
+        }
+        return;
+      }
+    }
+
+    setShowForm(true);
+  };
 
   const [problemCrop, setProblemCrop] = useState<CropCycle | null>(null);
 
@@ -265,7 +313,28 @@ export default function PlotDetailScreen() {
               multiline
             />
 
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            {error ? (
+              <View style={{ gap: 6, marginBottom: 8, alignItems: 'center' }}>
+                <Text style={styles.errorText}>{error}</Text>
+                {error.toLowerCase().includes('upgrade') ? (
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: '#16a34a',
+                      paddingHorizontal: 14,
+                      paddingVertical: 8,
+                      borderRadius: RADIUS.md,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                    onPress={() => router.push('/(tabs)/wallet')}
+                  >
+                    <Ionicons name="sparkles" size={15} color="#ffffff" />
+                    <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 }}>Upgrade Plan Now 👑</Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            ) : null}
 
             <View style={styles.formActions}>
               <TouchableOpacity
@@ -293,7 +362,7 @@ export default function PlotDetailScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       ) : (
-        <TouchableOpacity style={styles.fabWrap} onPress={() => setShowForm(true)} activeOpacity={0.85}>
+        <TouchableOpacity style={styles.fabWrap} onPress={handleOpenAddCropForm} activeOpacity={0.85}>
           <LinearGradient colors={theme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.fab}>
             <Ionicons name="add" size={20} color="#fff" />
             <Text style={styles.fabText}>Add Crop</Text>
@@ -302,6 +371,7 @@ export default function PlotDetailScreen() {
       )}
 
       <ReportProblemModal crop={problemCrop} onClose={() => setProblemCrop(null)} />
+      <FarmerPlanUpgradeModal visible={isUpgradeModalOpen} onClose={() => setIsUpgradeModalOpen(false)} />
     </View>
   );
 }
@@ -318,8 +388,8 @@ function ReportProblemModal({ crop, onClose }: { crop: CropCycle | null; onClose
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [severity, setSeverity] = useState<CropProblemSeverity>('MEDIUM');
-  const [localPhotoUri, setLocalPhotoUri] = useState<string | null>(null);
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [localPhotoUris, setLocalPhotoUris] = useState<string[]>([]);
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -327,12 +397,16 @@ function ReportProblemModal({ crop, onClose }: { crop: CropCycle | null; onClose
     setTitle('');
     setDescription('');
     setSeverity('MEDIUM');
-    setLocalPhotoUri(null);
-    setPhotoUrl(null);
+    setLocalPhotoUris([]);
+    setPhotoUrls([]);
     setError(null);
   };
 
   const pickPhoto = async () => {
+    if (photoUrls.length >= 3) {
+      Alert.alert('Limit Reached', 'Maximum 3 photos allowed.');
+      return;
+    }
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       Alert.alert('Permission needed', 'Please allow photo access to attach a picture.');
@@ -346,17 +420,21 @@ function ReportProblemModal({ crop, onClose }: { crop: CropCycle | null; onClose
     if (result.canceled || !result.assets[0]) return;
 
     const uri = result.assets[0].uri;
-    setLocalPhotoUri(uri);
     setIsUploadingPhoto(true);
     try {
       const uploaded = await uploadPhoto(uri);
-      setPhotoUrl(uploaded.fileUrl);
+      setLocalPhotoUris((prev) => [...prev, uri]);
+      setPhotoUrls((prev) => [...prev, uploaded.fileUrl]);
     } catch {
-      Alert.alert('Upload failed', 'Could not upload the photo. You can still submit without it.');
-      setLocalPhotoUri(null);
+      Alert.alert('Upload failed', 'Could not upload the photo.');
     } finally {
       setIsUploadingPhoto(false);
     }
+  };
+
+  const removePhoto = (index: number) => {
+    setLocalPhotoUris((prev) => prev.filter((_, i) => i !== index));
+    setPhotoUrls((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
@@ -371,7 +449,7 @@ function ReportProblemModal({ crop, onClose }: { crop: CropCycle | null; onClose
         title: title.trim(),
         description: description.trim(),
         severity,
-        photoUrls: photoUrl ? [photoUrl] : undefined,
+        photoUrls: photoUrls.length > 0 ? photoUrls : undefined,
       });
       reset();
       onClose();
@@ -416,11 +494,12 @@ function ReportProblemModal({ crop, onClose }: { crop: CropCycle | null; onClose
               })}
             </View>
 
-            <Text style={modalStyles.label}>Problem Title</Text>
+            <Text style={modalStyles.label}>Problem Heading (Max 20 Characters)</Text>
             <TextInput
               style={modalStyles.input}
-              placeholder="e.g. Yellow spots on leaves"
+              placeholder="e.g. Yellow spots (Max 20 chars)"
               placeholderTextColor="#94a3b8"
+              maxLength={20}
               value={title}
               onChangeText={setTitle}
             />
@@ -435,19 +514,41 @@ function ReportProblemModal({ crop, onClose }: { crop: CropCycle | null; onClose
               multiline
             />
 
-            <Text style={modalStyles.label}>Photo (optional)</Text>
-            <TouchableOpacity style={modalStyles.photoPicker} onPress={pickPhoto} activeOpacity={0.85}>
-              {localPhotoUri ? (
-                <Image source={{ uri: localPhotoUri }} style={modalStyles.photoPreview} />
-              ) : (
-                <View style={modalStyles.photoPlaceholder}>
-                  <Ionicons name="camera" size={20} color={theme.primary} />
+            <Text style={modalStyles.label}>Photos (1 to 3 photos allowed)</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginVertical: 4 }}>
+              {localPhotoUris.map((uri, idx) => (
+                <View key={idx} style={{ position: 'relative' }}>
+                  <Image source={{ uri }} style={modalStyles.photoPreview} />
+                  <TouchableOpacity
+                    style={{
+                      position: 'absolute',
+                      top: -6,
+                      right: -6,
+                      backgroundColor: '#dc2626',
+                      width: 18,
+                      height: 18,
+                      borderRadius: 9,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                    onPress={() => removePhoto(idx)}
+                  >
+                    <Ionicons name="close" size={12} color="#ffffff" />
+                  </TouchableOpacity>
                 </View>
+              ))}
+
+              {photoUrls.length < 3 && (
+                <TouchableOpacity style={modalStyles.photoPicker} onPress={pickPhoto} activeOpacity={0.85} disabled={isUploadingPhoto}>
+                  <View style={modalStyles.photoPlaceholder}>
+                    <Ionicons name="camera" size={20} color={theme.primary} />
+                  </View>
+                  <Text style={modalStyles.photoPickerText}>
+                    {isUploadingPhoto ? 'Uploading...' : `+ Add Photo (${photoUrls.length}/3)`}
+                  </Text>
+                </TouchableOpacity>
               )}
-              <Text style={modalStyles.photoPickerText}>
-                {isUploadingPhoto ? 'Uploading...' : localPhotoUri ? 'Change photo' : 'Attach a photo'}
-              </Text>
-            </TouchableOpacity>
+            </View>
 
             {error ? <Text style={modalStyles.errorText}>{error}</Text> : null}
 

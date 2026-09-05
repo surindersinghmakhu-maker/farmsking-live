@@ -65,6 +65,16 @@ export function useAcceptAssignment() {
   });
 }
 
+export function useChooseAdvisor() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (advisorId: string) => advisorAssignmentsApi.chooseAdvisor(advisorId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['advisor-assignments'] });
+    },
+  });
+}
+
 export function useRejectAssignment() {
   const queryClient = useQueryClient();
   return useMutation({

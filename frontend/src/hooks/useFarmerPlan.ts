@@ -14,41 +14,48 @@ import {
   generateOwnFarmerPlanCoupon,
   GenerateAdvisorCouponPayload,
   grantFarmerPlanDays,
+  GrantFarmerPlanDaysPayload,
+  applyCouponToFarmerDirectly,
+  getCouponFinancialSummary,
   getFarmerPlanPricing,
   updateFarmerPlanPricing,
   UpdateFarmerPlanPricingPayload,
+  deleteFarmerPlanPricing,
   chooseAdvisor,
+  getAdminDocsList,
+  downloadAdminDocContent,
 } from '../api/farmerPlans.api';
+
 
 /** Plan display config */
 export const PLAN_META: Record<FarmerPlanType, { label: string; emoji: string; color: string; bg: string; borderColor: string }> = {
   FREE: {
-    label: 'Free User',
+    label: 'Free',
     emoji: '🌱',
     color: '#166534',
     bg: '#ffffff',
     borderColor: '#86efac',
   },
-  BASIC: {
-    label: 'Basic User',
-    emoji: '⭐',
-    color: '#92400e',
-    bg: '#fef3c7',
-    borderColor: '#fcd34d',
+  PRO: {
+    label: 'Lite',
+    emoji: '👑',
+    color: '#4c1d95',
+    bg: '#ede9fe',
+    borderColor: '#c4b5fd',
   },
-  STANDARD: {
-    label: 'Standard User',
+  SMART: {
+    label: 'Pro',
     emoji: '🚀',
     color: '#1d4ed8',
     bg: '#eff6ff',
     borderColor: '#bfdbfe',
   },
-  PREMIUM: {
-    label: 'Premium User',
-    emoji: '👑',
-    color: '#4c1d95',
-    bg: '#ede9fe',
-    borderColor: '#c4b5fd',
+  SUPER: {
+    label: 'Super Advisor',
+    emoji: '⭐',
+    color: '#b45309',
+    bg: '#fef3c7',
+    borderColor: '#fde68a',
   },
 };
 
@@ -63,10 +70,15 @@ export function useFarmerPlan() {
   const plan = query.data?.plan ?? 'FREE';
   const meta = PLAN_META[plan];
 
+  const hasActiveSoftwarePlan = plan !== 'FREE' && !(query.data?.isExpired ?? false);
+  const canHireAdvisor = hasActiveSoftwarePlan;
+
   return {
     ...query,
     plan,
     meta,
+    hasActiveSoftwarePlan,
+    canHireAdvisor,
     startDate: query.data?.startDate ?? null,
     endDate: query.data?.endDate ?? null,
     isExpired: query.data?.isExpired ?? false,
@@ -89,9 +101,10 @@ export function useRedeemFarmerPlanCoupon() {
     mutationFn: ({ code, farmerId, advisorId }: { code: string; farmerId?: string; advisorId?: string }) =>
       redeemFarmerPlanCoupon(code, farmerId, advisorId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['farmerPlan', 'mine'] });
+      queryClient.invalidateQueries({ queryKey: ['farmerPlan'] });
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
       queryClient.invalidateQueries({ queryKey: ['advisor-assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['farmer-plan-coupons'] });
     },
   });
 }
@@ -134,10 +147,24 @@ export function useGenerateOwnFarmerPlanCoupon() {
 export function useGrantFarmerPlanDays() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ farmerId, daysGranted }: { farmerId: string; daysGranted: number }) => grantFarmerPlanDays(farmerId, daysGranted),
+    mutationFn: (payload: GrantFarmerPlanDaysPayload) => grantFarmerPlanDays(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['farmerPlan'] });
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      queryClient.invalidateQueries({ queryKey: ['wallet'] });
+    },
+  });
+}
+
+export function useApplyCouponToFarmerDirectly() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ code, farmerId }: { code: string; farmerId: string }) => applyCouponToFarmerDirectly(code, farmerId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['farmerPlan'] });
+      queryClient.invalidateQueries({ queryKey: ['farmer-plan-coupons'] });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      queryClient.invalidateQueries({ queryKey: ['wallet'] });
     },
   });
 }
@@ -159,6 +186,14 @@ export function useUpdateFarmerPlanPricing() {
   });
 }
 
+export function useDeleteFarmerPlanPricing() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteFarmerPlanPricing(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['farmer-plan-pricing'] }),
+  });
+}
+
 /** Farmer on STANDARD/PREMIUM: pick a specific Farm Advisor instead of the auto-assigned one. */
 export function useChooseAdvisor() {
   const queryClient = useQueryClient();
@@ -171,3 +206,20 @@ export function useChooseAdvisor() {
     },
   });
 }
+
+export function useCouponFinancialSummary() {
+  return useQuery({ queryKey: ['farmer-plan-coupons', 'financial-summary'], queryFn: getCouponFinancialSummary });
+}
+
+export function useAdminDocsList() {
+  return useQuery({ queryKey: ['admin-docs-list'], queryFn: getAdminDocsList });
+}
+
+export function useDownloadAdminDoc() {
+  return useMutation({
+    mutationFn: ({ docKey, lang }: { docKey: string; lang?: string }) => downloadAdminDocContent(docKey, lang || 'pa'),
+  });
+}
+
+
+

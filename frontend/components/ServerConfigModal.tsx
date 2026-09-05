@@ -130,8 +130,12 @@ export function ServerConfigModal({ visible, onClose, onSaved }: ServerConfigMod
               </TouchableOpacity>
             ) : null}
 
+            <TouchableOpacity style={[styles.presetChip, { backgroundColor: '#e0e7ff', borderColor: '#a5b4fc' }]} onPress={() => applyPreset('https://farmsking-api.onrender.com/api/v1')}>
+              <Text style={[styles.presetChipText, { color: '#4338ca', fontFamily: FONT.bold }]}>☁️ Cloud API (Render)</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.presetChip} onPress={() => applyPreset('http://10.0.2.2:4100/api/v1')}>
-              <Text style={styles.presetChipText}>Android Emulator (10.0.2.2)</Text>
+              <Text style={styles.presetChipText}>Android Emulator</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.presetChip} onPress={() => applyPreset('http://localhost:4100/api/v1')}>

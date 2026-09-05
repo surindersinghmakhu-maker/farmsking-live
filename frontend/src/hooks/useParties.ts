@@ -18,6 +18,18 @@ export function useCreateParty() {
   });
 }
 
+export function useUpdateParty() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: partiesApi.UpdatePartyPayload }) =>
+      partiesApi.updateParty(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['parties'] });
+      queryClient.invalidateQueries({ queryKey: ['unified-parties'] });
+    },
+  });
+}
+
 export function usePartyStatement(id: string | undefined) {
   return useQuery({
     queryKey: ['parties', id, 'statement'],
@@ -63,3 +75,53 @@ export function useRecordPaymentMade() {
     },
   });
 }
+
+// ─── Unified Party System & Arhtiya Hooks ──────────────────────────────────
+
+export function useUnifiedParties(role?: partiesApi.PartyRole) {
+  return useQuery({
+    queryKey: ['unified-parties', role],
+    queryFn: () => partiesApi.listUnifiedParties(role),
+  });
+}
+
+export function useCreateUnifiedParty() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: partiesApi.createUnifiedParty,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['unified-parties'] });
+    },
+  });
+}
+
+export function useRecordArhtiyaAdvance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: partiesApi.recordArhtiyaAdvance,
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['arhtiya-hisab', variables.partyId] });
+      queryClient.invalidateQueries({ queryKey: ['unified-parties'] });
+    },
+  });
+}
+
+export function useRecordArhtiyaCropSale() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: partiesApi.recordArhtiyaCropSale,
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['arhtiya-hisab', variables.partyId] });
+      queryClient.invalidateQueries({ queryKey: ['unified-parties'] });
+    },
+  });
+}
+
+export function useArhtiyaHisab(partyId: string | undefined) {
+  return useQuery({
+    queryKey: ['arhtiya-hisab', partyId],
+    queryFn: () => partiesApi.getArhtiyaLedgerHisab(partyId as string),
+    enabled: !!partyId,
+  });
+}
+

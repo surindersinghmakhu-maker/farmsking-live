@@ -16,6 +16,7 @@ import { AreaUnit } from '@/src/types/api';
 import { useCreateFarm } from '@/src/hooks/useFarms';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING } from '@/constants/theme';
+import { BrandLogo } from '@/src/components/BrandLogo';
 
 const theme = RoleThemes.FARMER;
 const AREA_UNITS: AreaUnit[] = ['ACRE', 'HECTARE', 'BIGHA', 'GUNTA'];
@@ -55,7 +56,7 @@ export default function OnboardingScreen() {
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.brandBadge}>
-          <Ionicons name="leaf" size={24} color="#ffffff" />
+          <BrandLogo size={24} iconColor="#ffffff" fallbackIconName="leaf" />
         </View>
         <Text style={styles.brandName}>FarmsKing</Text>
 

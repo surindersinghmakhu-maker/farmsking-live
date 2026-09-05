@@ -14,15 +14,26 @@ import {
   useFarmerPlanPricing,
   useGrantFarmerPlanDays,
   useUpdateFarmerPlanPricing,
+  useDeleteFarmerPlanPricing,
+  useCouponFinancialSummary,
+  useAdminDocsList,
+  useDownloadAdminDoc,
 } from '@/src/hooks/useFarmerPlan';
+
+import { LANGUAGE_OPTIONS } from '@/src/constants/translations';
 import { useCouponSettings, useUpdateCouponSettings } from '@/src/hooks/useCouponSettings';
+
 import type { CouponSettings } from '@/src/api/couponSettings.api';
 import { useUsersList } from '@/src/hooks/useUsersAdmin';
 import { Coupon, DiscountValueType } from '@/src/types/api';
 import type { FarmerPlanPricing, FarmerPlanType } from '@/src/api/farmerPlans.api';
 import { CopyButton } from '@/src/components/CopyButton';
+import { PlanPricingSection } from './super-settings';
 import { RedeemForFarmerModal } from '@/src/components/RedeemForFarmerModal';
 import { CouponCardPreview, FarmerPlanCouponCardPreview, useShareCouponAsJpg } from '@/src/components/CouponCardPreview';
+import { usePendingFarmerPlanPayments } from '@/src/hooks/useFarmerPlanPayments';
+import { FarmerPlanPaymentCard, FarmerPlanPaymentReviewModal } from './super-accounts';
+import type { FarmerPlanPaymentRequest } from '@/src/api/farmerPlanPayments.api';
 
 const theme = RoleThemes.SUPER_ADMIN;
 
@@ -77,7 +88,7 @@ function ShareFarmerPlanCouponModal({
   visible,
   onClose,
 }: {
-  coupon: { code: string; plan: string; daysGranted: number } | null;
+  coupon: { code: string; plan: string; daysGranted: number; expiresAt?: string | Date | null; mrp?: number | string | null } | null;
   visible: boolean;
   onClose: () => void;
 }) {
@@ -158,18 +169,79 @@ function CategoryCollapse({
   );
 }
 
-type CouponsTab = 'GENERATE' | 'COUPONS' | 'PLAN';
+type CouponsTab = 'GENERATE' | 'COUPONS' | 'PRICING' | 'FEATURES' | 'REFERRAL_SETTINGS' | 'REQUESTS';
 
-const TABS: { value: CouponsTab; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { value: 'GENERATE', label: 'Generate', icon: 'add-circle-outline' },
-  { value: 'COUPONS', label: 'All Coupons', icon: 'pricetags-outline' },
-  { value: 'PLAN', label: 'Settings', icon: 'options-outline' },
+const MAIN_SUB_TABS: {
+  value: CouponsTab;
+  title: string;
+  sub: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  activeIcon: keyof typeof Ionicons.glyphMap;
+  color: string;
+  softBg: string;
+}[] = [
+  {
+    value: 'REQUESTS',
+    title: 'Payment Requests',
+    sub: 'Approve Claims & Issue Coupons',
+    icon: 'paper-plane-outline',
+    activeIcon: 'paper-plane',
+    color: '#8b5cf6',
+    softBg: '#f3e8ff',
+  },
+  {
+    value: 'GENERATE',
+    title: 'Generate',
+    sub: 'Create & Issue Codes',
+    icon: 'add-circle-outline',
+    activeIcon: 'add-circle',
+    color: '#10b981',
+    softBg: '#ecfdf5',
+  },
+  {
+    value: 'COUPONS',
+    title: 'All Coupons',
+    sub: 'Browse Codes & History',
+    icon: 'pricetag-outline',
+    activeIcon: 'pricetag',
+    color: '#0284c7',
+    softBg: '#e0f2fe',
+  },
+  {
+    value: 'PRICING',
+    title: 'Plan Pricing & Splits',
+    sub: 'Prices & Commission Cuts',
+    icon: 'cash-outline',
+    activeIcon: 'cash',
+    color: '#d97706',
+    softBg: '#fffbe6',
+  },
+  {
+    value: 'FEATURES',
+    title: 'Plan Features',
+    sub: 'Limits & Advisory Toggles',
+    icon: 'options-outline',
+    activeIcon: 'options',
+    color: '#6d28d9',
+    softBg: '#f3e8ff',
+  },
+  {
+    value: 'REFERRAL_SETTINGS',
+    title: 'Partner Referral Coupon',
+    sub: 'Referral Discount & Rates',
+    icon: 'people-outline',
+    activeIcon: 'people',
+    color: '#e11d48',
+    softBg: '#fff1f2',
+  },
 ];
 
 export default function SuperCouponsScreen() {
   const { data: coupons, isLoading } = useAllCoupons();
   const { data: farmerPlanCoupons } = useAllFarmerPlanCoupons();
-  const [activeTab, setActiveTab] = useState<CouponsTab>('GENERATE');
+  const { data: pendingPayments = [], isLoading: isLoadingPendingPayments } = usePendingFarmerPlanPayments();
+  const [activeFarmerPlanPayment, setActiveFarmerPlanPayment] = useState<FarmerPlanPaymentRequest | null>(null);
+  const [activeTab, setActiveTab] = useState<CouponsTab | null>(null);
 
   const allCoupons = coupons ?? [];
   const allPlanCoupons = farmerPlanCoupons ?? [];
@@ -179,230 +251,260 @@ export default function SuperCouponsScreen() {
   const totalActive = activeGenericCount + activePlanCount;
   const totalRedeemed = allCoupons.reduce((sum, c) => sum + c.usedCount, 0) + allPlanCoupons.filter((c) => c.isUsed).length;
 
+  const activeMeta = MAIN_SUB_TABS.find((t) => t.value === activeTab);
+
   return (
     <View style={styles.container}>
       <LinearGradient colors={theme.gradient} style={styles.hero}>
         <Text style={styles.heroTitle}>Coupons & Plans</Text>
         <Text style={styles.heroSubtitle}>Generate codes, track redemptions & manage pricing</Text>
 
-        <View style={styles.statRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Active Codes</Text>
-            <Text style={styles.statValue}>{isLoading ? '—' : totalActive}</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Redeemed</Text>
-            <Text style={styles.statValue}>{isLoading ? '—' : totalRedeemed}</Text>
-          </View>
-        </View>
-
-        <View style={styles.tabRow}>
-          {TABS.map((t) => {
-            const active = activeTab === t.value;
-            return (
-              <TouchableOpacity
-                key={t.value}
-                style={[styles.tabChip, active && styles.tabChipActive]}
-                activeOpacity={0.85}
-                onPress={() => {
-                  tap();
-                  setActiveTab(t.value);
-                }}
-              >
-                <Ionicons name={t.icon} size={13} color={active ? theme.primary : '#fff'} />
-                <Text style={[styles.tabChipText, active && styles.tabChipTextActive]}>{t.label}</Text>
-              </TouchableOpacity>
-            );
-          })}
+        <View style={styles.inlineStatBadge}>
+          <Ionicons name="pricetag-outline" size={12} color="rgba(255,255,255,0.9)" />
+          <Text style={styles.inlineStatText}>
+            Active Codes: <Text style={styles.inlineStatValue}>{isLoading ? '—' : totalActive}</Text>
+          </Text>
+          <Text style={styles.inlineStatDot}>•</Text>
+          <Ionicons name="checkmark-done-circle-outline" size={13} color="rgba(255,255,255,0.9)" />
+          <Text style={styles.inlineStatText}>
+            Redeemed: <Text style={styles.inlineStatValue}>{isLoading ? '—' : totalRedeemed}</Text>
+          </Text>
         </View>
       </LinearGradient>
 
-      {activeTab === 'GENERATE' ? (
-        <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
-          <GenerateCouponSection />
-        </ScrollView>
-      ) : activeTab === 'COUPONS' ? (
-        <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
-          <CategoryCollapse title="Referral" icon="people-outline">
-            <CouponKindListSection
-              coupons={coupons}
-              isLoading={isLoading}
-              kind="PARTNER_REFERRAL"
-              title="Referral Coupons"
-              helperText="Every Business Partner referral code, with its rate, business partner share, customer discount, and admin margin."
-              emptyText="No referral coupons issued yet."
-              usedOnly
-            />
-          </CategoryCollapse>
-          <CategoryCollapse title="Commission Based" icon="cash-outline">
-            <CouponKindListSection
-              coupons={coupons}
-              isLoading={isLoading}
-              kind="GENERIC"
-              title="Commission-Based Coupons"
-              helperText="Custom coupons with your own discount and commission for one partner."
-              emptyText="No commission-based coupons issued yet."
-            />
-          </CategoryCollapse>
-          <CategoryCollapse title="Special" icon="sparkles-outline">
-            <CouponKindListSection
-              coupons={coupons}
-              isLoading={isLoading}
-              kind="PERSONAL_INVITE"
-              title="Special (Personal Invite) Coupons"
-              helperText="Personal invite codes, issued automatically on referral signup."
-              emptyText="No personal invite coupons yet."
-            />
-          </CategoryCollapse>
-          <CategoryCollapse title="Farmer Plan" icon="leaf-outline">
-            <FarmerPlanCouponBrowseSection
-              title="Farmer Plan Coupons"
-              plans={['BASIC']}
-              emptyText="No Farmer Plan coupons generated yet."
-            />
-          </CategoryCollapse>
-          <CategoryCollapse title="Advisor Plan" icon="school-outline">
-            <FarmerPlanCouponBrowseSection
-              title="Advisor Plan Coupons"
-              plans={['STANDARD', 'PREMIUM']}
-              emptyText="No Advisor Plan coupons generated yet."
-            />
-          </CategoryCollapse>
-        </ScrollView>
-      ) : (
-        <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
-          <CategoryCollapse title="Farmer Plan" icon="leaf-outline" defaultExpanded>
-            <PlanRatesSection only={['BASIC']} bare />
-          </CategoryCollapse>
+      <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+        {/* If no section is open, show ONLY the Colorful Icon Cards Menu */}
+        {activeTab === null ? (
+          <View style={{ gap: 16 }}>
+            <View style={styles.iconTabGrid}>
+              {MAIN_SUB_TABS.map((t) => (
+                <TouchableOpacity
+                  key={t.value}
+                  style={[
+                    styles.iconTabCard,
+                    premiumShadow(t.color, 'sm'),
+                  ]}
+                  activeOpacity={0.88}
+                  onPress={() => {
+                    tap();
+                    setActiveTab(t.value);
+                  }}
+                >
+                  <View style={[styles.iconCircleBadge, { backgroundColor: t.softBg }]}>
+                    <Ionicons name={t.activeIcon} size={24} color={t.color} />
+                  </View>
+                  <Text style={styles.iconTabTitle}>{t.title}</Text>
+                  <Text style={styles.iconTabSub}>{t.sub}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
-          <CategoryCollapse title="Advisor Plan" icon="school-outline">
-            <PlanRatesSection only={['STANDARD', 'PREMIUM']} bare />
-          </CategoryCollapse>
+            <View style={[styles.selectPromptCard, premiumShadow('#0f172a', 'sm')]}>
+              <Ionicons name="hand-left-outline" size={20} color={theme.primary} />
+              <Text style={styles.selectPromptText}>Tap any icon card above to open section</Text>
+            </View>
+          </View>
+        ) : (
+          <View style={{ gap: 12 }}>
+            {/* Header bar inside opened card view with BACK BUTTON */}
+            <View style={[styles.openedCardHeader, { borderColor: `${activeMeta?.color}35` }]}>
+              <TouchableOpacity
+                style={[styles.backToTabsBtn, { backgroundColor: activeMeta?.softBg, borderColor: `${activeMeta?.color}40` }]}
+                activeOpacity={0.8}
+                onPress={() => {
+                  tap();
+                  setActiveTab(null);
+                }}
+              >
+                <Ionicons name="arrow-back" size={16} color={activeMeta?.color} />
+                <Text style={[styles.backToTabsText, { color: activeMeta?.color }]}>← Back</Text>
+              </TouchableOpacity>
 
-          <CategoryCollapse title="Referral" icon="people-outline">
-            <ReferralRateSettingSection bare />
-          </CategoryCollapse>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <View style={[styles.headerCircleBadge, { backgroundColor: activeMeta?.color }]}>
+                  <Ionicons name={activeMeta?.activeIcon} size={14} color="#ffffff" />
+                </View>
+                <Text style={[styles.openedCardTitle, { color: activeMeta?.color }]}>{activeMeta?.title}</Text>
+              </View>
+            </View>
 
-          <CategoryCollapse title="Commission Based" icon="cash-outline">
-            <CommissionCouponSettingSection bare />
-          </CategoryCollapse>
+            {activeTab === 'REQUESTS' ? (
+              <View style={{ gap: 12 }}>
+                <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#475569' }}>
+                  Pending Payment Claims ({pendingPayments.length}):
+                </Text>
 
-          <CategoryCollapse title="Special" icon="sparkles-outline">
-            <SpecialCouponSettingSection bare />
-          </CategoryCollapse>
-        </ScrollView>
-      )}
+                {isLoadingPendingPayments ? (
+                  <ActivityIndicator color={theme.primary} />
+                ) : pendingPayments.length === 0 ? (
+                  <View style={[styles.categoryCard, { padding: 20, alignItems: 'center', gap: 6 }]}>
+                    <Ionicons name="checkmark-done-circle-outline" size={32} color="#16a34a" />
+                    <Text style={{ fontSize: 13, fontFamily: FONT.medium, color: '#64748b' }}>
+                      No pending payment claims to verify. All payment requests are resolved!
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={{ gap: 8 }}>
+                    {pendingPayments.map((p) => (
+                      <FarmerPlanPaymentCard key={p.id} request={p} onReview={() => setActiveFarmerPlanPayment(p)} />
+                    ))}
+                  </View>
+                )}
+              </View>
+            ) : activeTab === 'GENERATE' ? (
+              <GenerateCouponSection />
+            ) : activeTab === 'COUPONS' ? (
+              <View style={{ gap: 12 }}>
+                <CategoryCollapse title="Referral" icon="people-outline">
+                  <CouponKindListSection
+                    coupons={coupons}
+                    isLoading={isLoading}
+                    kind="PARTNER_REFERRAL"
+                    title="Referral Coupons"
+                    helperText="Every Business Partner referral code, with its rate, business partner share, customer discount, and admin margin."
+                    emptyText="No referral coupons issued yet."
+                    usedOnly
+                  />
+                </CategoryCollapse>
+                <CategoryCollapse title="Commission Based" icon="cash-outline">
+                  <CouponKindListSection
+                    coupons={coupons}
+                    isLoading={isLoading}
+                    kind="GENERIC"
+                    title="Commission-Based Coupons"
+                    helperText="Custom coupons with your own discount and commission for one partner."
+                    emptyText="No commission-based coupons issued yet."
+                  />
+                </CategoryCollapse>
+                <CategoryCollapse title="Special" icon="sparkles-outline">
+                  <CouponKindListSection
+                    coupons={coupons}
+                    isLoading={isLoading}
+                    kind="PERSONAL_INVITE"
+                    title="Special (Personal Invite) Coupons"
+                    helperText="Personal invite codes, issued automatically on referral signup."
+                    emptyText="No personal invite coupons yet."
+                  />
+                </CategoryCollapse>
+                <CategoryCollapse title="Farmer Plan" icon="leaf-outline">
+                  <FarmerPlanCouponBrowseSection
+                    title="Farmer Plan Coupons"
+                    plans={['PRO', 'SMART']}
+                    emptyText="No Farmer Plan coupons generated yet."
+                  />
+                </CategoryCollapse>
+                <CategoryCollapse title="Advisor Plan" icon="school-outline">
+                  <FarmerPlanCouponBrowseSection
+                    title="Advisor Plan Coupons"
+                    plans={['SMART', 'SUPER']}
+                    emptyText="No Advisor Plan coupons generated yet."
+                  />
+                </CategoryCollapse>
+              </View>
+            ) : activeTab === 'PRICING' ? (
+              <PlanPricingSection />
+            ) : activeTab === 'FEATURES' ? (
+              <View style={{ gap: 12 }}>
+                <View style={[styles.couponCard, premiumShadow('#0f172a', 'sm')]}>
+                  <Text style={styles.sectionTitle}>🌾 Farmer Plan Features</Text>
+                  <PlanFeaturesSection category="FARMER" only={['PRO', 'SMART']} />
+                </View>
+
+                <View style={[styles.couponCard, premiumShadow('#0f172a', 'sm')]}>
+                  <Text style={styles.sectionTitle}>🎓 Advisor Plan Features</Text>
+                  <PlanFeaturesSection category="ADVISOR" only={['SMART', 'SUPER']} />
+                </View>
+              </View>
+            ) : activeTab === 'REFERRAL_SETTINGS' ? (
+              <ReferralRateSettingSection />
+            ) : null}
+          </View>
+        )}
+      </ScrollView>
+
+      <FarmerPlanPaymentReviewModal request={activeFarmerPlanPayment} onClose={() => setActiveFarmerPlanPayment(null)} />
     </View>
   );
 }
 
-/** Rate, admin/advisor/partner cost breakdown for each Farmer Plan tier — same data super-settings edits, surfaced here for quick reference while generating coupons.
- * `only`, when given, restricts which plan tiers this instance shows (e.g. just BASIC, standalone under the Farmer Plan category). */
-function PlanRatesSection({
-  title = 'Plan Setting',
-  only,
-  bare,
-}: {
-  title?: string;
-  only?: FarmerPlanType[];
-  /** Skip the outer card/title and the nested "Plans" collapse — just the rate cards, for embedding directly inside another CategoryCollapse. */
-  bare?: boolean;
-}) {
+/** Plan Features & Benefits Section — feature toggles per plan tier */
+function PlanFeaturesSection({ category, only }: { category?: 'FARMER' | 'ADVISOR'; only?: FarmerPlanType[] }) {
   const { data: allPricing, isLoading } = useFarmerPlanPricing();
   const pricing = only ? allPricing?.filter((p) => only.includes(p.plan)) : allPricing;
-  const [editing, setEditing] = useState<FarmerPlanPricing | null>(null);
+  const [editingFeature, setEditingFeature] = useState<FarmerPlanPricing | null>(null);
 
-  const rateCards = (pricing ?? []).map((p) => (
-    <TouchableOpacity key={p.id} style={styles.rateCard} activeOpacity={0.85} onPress={() => setEditing(p)}>
-      <View style={styles.rateCardHeaderRow}>
-        <Text style={styles.rateCardTitle}>{p.plan}</Text>
-        <Ionicons name="create-outline" size={16} color={theme.primary} />
-      </View>
-      <Text style={styles.rateCardPrice}>₹{p.price} / {p.billingPeriodDays === 365 ? 'year' : `${p.billingPeriodDays}d`}</Text>
-      <View style={styles.rateCardGrid}>
-        <View style={styles.rateCardItem}>
-          <Text style={styles.rateCardItemLabel}>Partner Commission</Text>
-          <Text style={styles.rateCardItemValue}>
-            {p.partnerShareType === 'PERCENTAGE' ? `${p.partnerShareValue}%` : `₹${p.partnerShareValue}`}
-          </Text>
-        </View>
-        <View style={styles.rateCardItem}>
-          <Text style={styles.rateCardItemLabel}>Advisor Fee</Text>
-          <Text style={styles.rateCardItemValue}>{p.advisorShareValue ? `₹${p.advisorShareValue}` : '—'}</Text>
-        </View>
-        <View style={styles.rateCardItem}>
-          <Text style={styles.rateCardItemLabel}>Admin Share</Text>
-          <Text style={styles.rateCardItemValue}>{p.adminShareValue ? `₹${p.adminShareValue}` : '—'}</Text>
-        </View>
-        <View style={styles.rateCardItem}>
-          <Text style={styles.rateCardItemLabel}>Partner Gen. Cost</Text>
-          <Text style={styles.rateCardItemValue}>{p.partnerGenerationCostPercent ? `${p.partnerGenerationCostPercent}%` : '—'}</Text>
-        </View>
-        <View style={styles.rateCardItem}>
-          <Text style={styles.rateCardItemLabel}>Advisor Gen. Cost</Text>
-          <Text style={styles.rateCardItemValue}>{p.advisorGenerationCostPercent ? `${p.advisorGenerationCostPercent}%` : '—'}</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  ));
-
-  if (bare) {
-    return (
-      <>
-        {isLoading ? (
-          <ActivityIndicator color={theme.primary} style={{ marginVertical: 16 }} />
-        ) : !pricing || pricing.length === 0 ? (
-          <Text style={styles.emptyText}>No pricing configured yet.</Text>
-        ) : (
-          rateCards
-        )}
-        <EditPlanRatesModal pricing={editing} onClose={() => setEditing(null)} />
-      </>
-    );
-  }
+  // Group by unique plan tier
+  const uniquePlans = Array.from(new Set((pricing ?? []).map((p) => p.plan)));
 
   return (
-    <View style={[styles.couponCard, premiumShadow('#0f172a', 'sm')]}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-
+    <View style={{ gap: 10 }}>
       {isLoading ? (
-        <ActivityIndicator color={theme.primary} style={{ marginVertical: 16 }} />
-      ) : !pricing || pricing.length === 0 ? (
-        <Text style={styles.emptyText}>No pricing configured yet.</Text>
+        <ActivityIndicator color={theme.primary} style={{ marginVertical: 12 }} />
+      ) : uniquePlans.length === 0 ? (
+        <Text style={styles.emptyText}>No plan features configured.</Text>
       ) : (
-        <CollapsibleGroup title="Plans" count={pricing.length} defaultExpanded={false} accentColor={theme.primary}>
-          {rateCards}
-        </CollapsibleGroup>
-      )}
+        uniquePlans.map((planKey) => {
+          const sample = pricing?.find((p) => p.plan === planKey);
+          if (!sample) return null;
+          const displayTitle =
+            category === 'FARMER'
+              ? (planKey === 'PRO' ? 'Lite Plan' : 'Pro Plan')
+              : (planKey === 'SMART' ? 'Smart Plan' : 'Super Plan');
 
-      <EditPlanRatesModal pricing={editing} onClose={() => setEditing(null)} />
+          return (
+            <TouchableOpacity key={planKey} style={styles.rateCard} activeOpacity={0.85} onPress={() => setEditingFeature(sample)}>
+              <View style={styles.rateCardHeaderRow}>
+                <Text style={styles.rateCardTitle}>⚙️ {displayTitle} Features</Text>
+                <Ionicons name="create-outline" size={16} color={theme.primary} />
+              </View>
+              <View style={styles.rateCardGrid}>
+                <View style={styles.rateCardItem}>
+                  <Text style={styles.rateCardItemLabel}>Advisor Status</Text>
+                  <Text style={styles.rateCardItemValue}>{sample.advisorIncluded ? '✓ Included' : '✕ None'}</Text>
+                </View>
+                <View style={styles.rateCardItem}>
+                  <Text style={styles.rateCardItemLabel}>Total Crops Allowed</Text>
+                  <Text style={styles.rateCardItemValue}>{sample.maxTotalCrops != null ? `${sample.maxTotalCrops} Crops` : 'Unlimited'}</Text>
+                </View>
+                <View style={styles.rateCardItem}>
+                  <Text style={styles.rateCardItemLabel}>Active Crops Allowed</Text>
+                  <Text style={styles.rateCardItemValue}>{sample.maxActiveCrops != null ? `${sample.maxActiveCrops} Active` : 'Unlimited'}</Text>
+                </View>
+                <View style={styles.rateCardItem}>
+                  <Text style={styles.rateCardItemLabel}>Advisor Chat</Text>
+                  <Text style={styles.rateCardItemValue}>{sample.chatEnabled ? '✓ Enabled' : '✕ Disabled'}</Text>
+                </View>
+                <View style={styles.rateCardItem}>
+                  <Text style={styles.rateCardItemLabel}>Weather Advisory</Text>
+                  <Text style={styles.rateCardItemValue}>{sample.weatherEnabled ? '✓ Enabled' : '✕ Disabled'}</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          );
+        })
+      )}
+      <EditPlanFeaturesModal pricing={editingFeature} onClose={() => setEditingFeature(null)} />
     </View>
   );
 }
 
-function EditPlanRatesModal({ pricing, onClose }: { pricing: FarmerPlanPricing | null; onClose: () => void }) {
+/** 1. Compact Edit Modal for Plan Features & Benefits */
+function EditPlanFeaturesModal({ pricing, onClose }: { pricing: FarmerPlanPricing | null; onClose: () => void }) {
   const update = useUpdateFarmerPlanPricing();
-  const [price, setPrice] = useState('');
-  const [billingPeriodDays, setBillingPeriodDays] = useState('');
-  const [partnerShareType, setPartnerShareType] = useState<'PERCENTAGE' | 'FIXED'>('FIXED');
-  const [partnerShareValue, setPartnerShareValue] = useState('');
-  const [advisorShareValue, setAdvisorShareValue] = useState('');
-  const [adminShareValue, setAdminShareValue] = useState('');
-  const [partnerGenerationCostPercent, setPartnerGenerationCostPercent] = useState('');
-  const [advisorGenerationCostPercent, setAdvisorGenerationCostPercent] = useState('');
+  const [maxTotalCrops, setMaxTotalCrops] = useState('');
+  const [maxActiveCrops, setMaxActiveCrops] = useState('');
+  const [advisorIncluded, setAdvisorIncluded] = useState(true);
+  const [chatEnabled, setChatEnabled] = useState(true);
+  const [weatherEnabled, setWeatherEnabled] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (pricing) {
-      setPrice(pricing.price);
-      setBillingPeriodDays(String(pricing.billingPeriodDays));
-      setPartnerShareType(pricing.partnerShareType);
-      setPartnerShareValue(pricing.partnerShareValue);
-      setAdvisorShareValue(pricing.advisorShareValue ?? '');
-      setAdminShareValue(pricing.adminShareValue ?? '');
-      setPartnerGenerationCostPercent(pricing.partnerGenerationCostPercent ?? '');
-      setAdvisorGenerationCostPercent(pricing.advisorGenerationCostPercent ?? '');
+      setMaxTotalCrops(pricing.maxTotalCrops != null ? String(pricing.maxTotalCrops) : '');
+      setMaxActiveCrops(pricing.maxActiveCrops != null ? String(pricing.maxActiveCrops) : '');
+      setAdvisorIncluded(pricing.advisorIncluded ?? true);
+      setChatEnabled(pricing.chatEnabled ?? true);
+      setWeatherEnabled(pricing.weatherEnabled ?? true);
       setError(null);
     }
   }, [pricing]);
@@ -414,19 +516,17 @@ function EditPlanRatesModal({ pricing, onClose }: { pricing: FarmerPlanPricing |
       await update.mutateAsync({
         plan: pricing.plan,
         payload: {
-          price: Number(price),
-          billingPeriodDays: Number(billingPeriodDays),
-          partnerShareType,
-          partnerShareValue: Number(partnerShareValue),
-          advisorShareValue: advisorShareValue ? Number(advisorShareValue) : undefined,
-          adminShareValue: adminShareValue ? Number(adminShareValue) : undefined,
-          partnerGenerationCostPercent: partnerGenerationCostPercent ? Number(partnerGenerationCostPercent) : undefined,
-          advisorGenerationCostPercent: advisorGenerationCostPercent ? Number(advisorGenerationCostPercent) : undefined,
+          billingPeriodDays: pricing.billingPeriodDays,
+          maxTotalCrops: maxTotalCrops ? Number(maxTotalCrops) : undefined,
+          maxActiveCrops: maxActiveCrops ? Number(maxActiveCrops) : undefined,
+          advisorIncluded,
+          chatEnabled,
+          weatherEnabled,
         },
       });
       onClose();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Could not save pricing.');
+      setError(err?.response?.data?.message ?? 'Could not save plan features.');
     }
   };
 
@@ -435,53 +535,477 @@ function EditPlanRatesModal({ pricing, onClose }: { pricing: FarmerPlanPricing |
       <View style={styles.modalOverlay}>
         <View style={styles.modalCard}>
           <View style={styles.modalHeaderRow}>
-            <Text style={styles.modalTitle}>{pricing.plan} Plan Rates</Text>
+            <Text style={styles.modalTitle}>⚙️ {pricing.plan === 'PRO' ? 'Lite' : pricing.plan === 'SMART' ? 'Pro / Smart' : 'Super'} Plan Features</Text>
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close-circle" size={24} color="#64748b" />
             </TouchableOpacity>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-            <Text style={styles.label}>Price (₹)</Text>
-            <TextInput style={styles.input} keyboardType="numeric" value={price} onChangeText={setPrice} />
-
-            <Text style={styles.label}>Billing Period (days)</Text>
-            <TextInput style={styles.input} keyboardType="numeric" value={billingPeriodDays} onChangeText={setBillingPeriodDays} />
-
-            <Text style={styles.label}>Business Partner Commission Type</Text>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+            <Text style={styles.label}>Farm Advisor Included</Text>
             <View style={styles.chipRow}>
-              {(['FIXED', 'PERCENTAGE'] as const).map((t) => (
+              {[true, false].map((val) => (
                 <TouchableOpacity
-                  key={t}
-                  style={[styles.partnerChip, partnerShareType === t && { backgroundColor: theme.primary, borderColor: theme.primary }]}
-                  onPress={() => setPartnerShareType(t)}
+                  key={String(val)}
+                  style={[styles.partnerChip, advisorIncluded === val && { backgroundColor: theme.primary, borderColor: theme.primary }]}
+                  onPress={() => setAdvisorIncluded(val)}
                 >
-                  <Text style={[styles.partnerChipText, partnerShareType === t && { color: '#ffffff' }]}>
-                    {t === 'FIXED' ? 'Fixed ₹' : 'Percentage %'}
+                  <Text style={[styles.partnerChipText, advisorIncluded === val && { color: '#ffffff' }]}>
+                    {val ? '✓ Advisor Included' : '✕ No Advisor'}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={styles.label}>Business Partner Share ({partnerShareType === 'FIXED' ? '₹' : '%'})</Text>
-            <TextInput style={styles.input} keyboardType="numeric" value={partnerShareValue} onChangeText={setPartnerShareValue} />
+            <Text style={styles.label}>Advisor Chat Option</Text>
+            <View style={styles.chipRow}>
+              {[true, false].map((val) => (
+                <TouchableOpacity
+                  key={String(val)}
+                  style={[styles.partnerChip, chatEnabled === val && { backgroundColor: theme.primary, borderColor: theme.primary }]}
+                  onPress={() => setChatEnabled(val)}
+                >
+                  <Text style={[styles.partnerChipText, chatEnabled === val && { color: '#ffffff' }]}>
+                    {val ? '✓ Chat Enabled' : '✕ Chat Disabled'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
-            <Text style={styles.label}>Advisor Fee (₹, optional — leave blank if plan has no advisor)</Text>
-            <TextInput style={styles.input} keyboardType="numeric" value={advisorShareValue} onChangeText={setAdvisorShareValue} />
+            <Text style={styles.label}>Weather Advisory Option</Text>
+            <View style={styles.chipRow}>
+              {[true, false].map((val) => (
+                <TouchableOpacity
+                  key={String(val)}
+                  style={[styles.partnerChip, weatherEnabled === val && { backgroundColor: theme.primary, borderColor: theme.primary }]}
+                  onPress={() => setWeatherEnabled(val)}
+                >
+                  <Text style={[styles.partnerChipText, weatherEnabled === val && { color: '#ffffff' }]}>
+                    {val ? '✓ Weather Advisory' : '✕ Disabled'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
-            <Text style={styles.label}>Platform/Admin Share (₹, informational only)</Text>
-            <TextInput style={styles.input} keyboardType="numeric" value={adminShareValue} onChangeText={setAdminShareValue} />
+            <Text style={styles.label}>1. Total Crops Allowed (Cumulative Limit)</Text>
+            <TextInput style={styles.input} keyboardType="numeric" placeholder="e.g. 10 or leave blank for Unlimited" placeholderTextColor="#94a3b8" value={maxTotalCrops} onChangeText={setMaxTotalCrops} />
 
-            <Text style={styles.label}>Business Partner Generation Cost (%, debited from their wallet the moment a coupon is issued to them)</Text>
-            <TextInput style={styles.input} keyboardType="numeric" value={partnerGenerationCostPercent} onChangeText={setPartnerGenerationCostPercent} />
-
-            <Text style={styles.label}>Advisor Generation Cost (%, debited from their wallet the moment a coupon is issued to them)</Text>
-            <TextInput style={styles.input} keyboardType="numeric" value={advisorGenerationCostPercent} onChangeText={setAdvisorGenerationCostPercent} />
+            <Text style={styles.label}>2. Active Crops Allowed (Concurrent Limit)</Text>
+            <TextInput style={styles.input} keyboardType="numeric" placeholder="e.g. 5 or leave blank for Unlimited" placeholderTextColor="#94a3b8" value={maxActiveCrops} onChangeText={setMaxActiveCrops} />
 
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
             <TouchableOpacity style={styles.submitBtn} disabled={update.isPending} onPress={handleSave}>
-              {update.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Save Rates</Text>}
+              {update.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Save Features</Text>}
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+/** Plan Duration Rates & Pricing Section — single consolidated card per plan tier with all-in-one duration pricing modal */
+function PlanDurationRatesSection({ only }: { only?: FarmerPlanType[] }) {
+  const { data: allPricing, isLoading } = useFarmerPlanPricing();
+  const pricing = only ? allPricing?.filter((p) => only.includes(p.plan)) : allPricing;
+  const [editingPlanKey, setEditingPlanKey] = useState<FarmerPlanType | null>(null);
+
+  const uniquePlans = Array.from(new Set((pricing ?? []).map((p) => p.plan)));
+
+  return (
+    <View style={{ gap: 10 }}>
+      {isLoading ? (
+        <ActivityIndicator color={theme.primary} style={{ marginVertical: 12 }} />
+      ) : uniquePlans.length === 0 ? (
+        <Text style={styles.emptyText}>No pricing rates configured.</Text>
+      ) : (
+        uniquePlans.map((planKey) => {
+          const planVariants = (pricing ?? []).filter((p) => p.plan === planKey);
+          const displayTitle =
+            planKey === 'PRO' ? 'Lite Plan' : planKey === 'SMART' ? 'Pro / Smart Plan' : 'Super Plan';
+
+          return (
+            <TouchableOpacity key={planKey} style={styles.rateCard} activeOpacity={0.85} onPress={() => setEditingPlanKey(planKey)}>
+              <View style={styles.rateCardHeaderRow}>
+                <Text style={styles.rateCardTitle}>💵 {displayTitle} Duration Rates</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: theme.primary }}>Edit All Durations</Text>
+                  <Ionicons name="create-outline" size={16} color={theme.primary} />
+                </View>
+              </View>
+
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                {planVariants.map((v) => {
+                  const d = Number(v.billingPeriodDays);
+                  const isEnabled = v.isActive !== false;
+                  return (
+                    <View
+                      key={v.id}
+                      style={{
+                        backgroundColor: isEnabled ? '#f0fdf4' : '#fef2f2',
+                        borderWidth: 1,
+                        borderColor: isEnabled ? '#bbf7d0' : '#fecaca',
+                        borderRadius: RADIUS.md,
+                        paddingHorizontal: 10,
+                        paddingVertical: 6,
+                        minWidth: '47%',
+                      }}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b', textTransform: 'uppercase' }}>
+                          {d} Days ({d >= 365 ? `${Math.round(d / 365)} Yr` : `${Math.round(d / 30)} Mo`})
+                        </Text>
+                        <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: isEnabled ? '#15803d' : '#dc2626' }}>
+                          {isEnabled ? '🟢 Active' : '🔴 Disabled'}
+                        </Text>
+                      </View>
+                      <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: isEnabled ? '#166534' : '#991b1b', marginTop: 2 }}>
+                        ₹{v.price}
+                      </Text>
+                    </View>
+                  );
+                })}
+                {planVariants.length === 0 ? <Text style={styles.emptyText}>No duration rates added yet. Click to add.</Text> : null}
+              </View>
+            </TouchableOpacity>
+          );
+        })
+      )}
+      <EditPlanMultiDurationPricingModal
+        planKey={editingPlanKey}
+        pricingList={pricing ?? []}
+        isAdvisorPlan={only?.includes('SUPER') || (only?.includes('SMART') && !only.includes('PRO'))}
+        onClose={() => setEditingPlanKey(null)}
+      />
+    </View>
+  );
+}
+
+interface DurationRateRow {
+  id?: string;
+  days: number;
+  price: string;
+  adminShareValue: string;
+  partnerShareValue: string;
+  advisorShareValue: string;
+  isActive: boolean;
+}
+
+/** 2. Full Multi-Duration Rate Edit Modal: Add, Remove, and Enable & Disable Options */
+function EditPlanMultiDurationPricingModal({
+  planKey,
+  pricingList,
+  isAdvisorPlan,
+  onClose,
+}: {
+  planKey: FarmerPlanType | null;
+  pricingList: FarmerPlanPricing[];
+  isAdvisorPlan?: boolean;
+  onClose: () => void;
+}) {
+  const update = useUpdateFarmerPlanPricing();
+  const deletePricing = useDeleteFarmerPlanPricing();
+
+  const [rateRows, setRateRows] = useState<DurationRateRow[]>([]);
+  const [partnerShareType, setPartnerShareType] = useState<'PERCENTAGE' | 'FIXED'>('FIXED');
+  const [error, setError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (planKey) {
+      const planVariants = pricingList.filter((p) => p.plan === planKey);
+      if (planVariants.length > 0) {
+        const rows: DurationRateRow[] = planVariants.map((v) => ({
+          id: v.id,
+          days: Number(v.billingPeriodDays),
+          price: String(v.price ?? ''),
+          adminShareValue: String(v.adminShareValue ?? ''),
+          partnerShareValue: String(v.partnerShareValue ?? '10'),
+          advisorShareValue: String(v.advisorShareValue ?? ''),
+          isActive: v.isActive !== false,
+        }));
+        setRateRows(rows.sort((a, b) => a.days - b.days));
+        setPartnerShareType(planVariants[0].partnerShareType ?? 'FIXED');
+      } else {
+        const defaultDays = !isAdvisorPlan && planKey !== 'SUPER' ? [180, 365] : [30, 90, 180, 365];
+        setRateRows(
+          defaultDays.map((days) => ({
+            days,
+            price: '',
+            adminShareValue: '',
+            partnerShareValue: '10',
+            advisorShareValue: '',
+            isActive: true,
+          }))
+        );
+      }
+      setError(null);
+    }
+  }, [planKey, pricingList]);
+
+  if (!planKey) return null;
+
+  const isAdvisorType = isAdvisorPlan || planKey === 'SUPER';
+  const displayTitle =
+    planKey === 'PRO' ? 'Lite Plan' : planKey === 'SMART' ? (isAdvisorType ? 'Smart Plan (Advisor)' : 'Pro Plan (Farmer)') : 'Super Plan (Advisor)';
+
+  const handleSaveAll = async () => {
+    setError(null);
+    try {
+      const tasks: Promise<any>[] = [];
+      for (const row of rateRows) {
+        if (row.price && Number(row.price) > 0) {
+          tasks.push(
+            update.mutateAsync({
+              plan: planKey,
+              payload: {
+                billingPeriodDays: row.days,
+                price: Number(row.price),
+                adminShareValue: Number(row.adminShareValue || 0),
+                partnerShareType: isAdvisorType ? 'FIXED' : partnerShareType,
+                partnerShareValue: isAdvisorType ? 0 : Number(row.partnerShareValue || 0),
+                advisorShareValue: isAdvisorType ? (row.advisorShareValue ? Number(row.advisorShareValue) : 0) : undefined,
+                isActive: row.isActive,
+              },
+            })
+          );
+        }
+      }
+
+      if (tasks.length === 0) {
+        setError('Please enter a price for at least one duration rate.');
+        return;
+      }
+
+      await Promise.all(tasks);
+      onClose();
+    } catch (err: any) {
+      setError(err?.response?.data?.message ?? 'Could not save pricing rates.');
+    }
+  };
+
+  const handleRemoveRate = async (index: number) => {
+    const row = rateRows[index];
+    if (row.id) {
+      try {
+        await deletePricing.mutateAsync(row.id);
+      } catch (err: any) {
+        setError(err?.response?.data?.message ?? 'Could not delete duration rate.');
+        return;
+      }
+    }
+    setRateRows((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddRate = () => {
+    const existingDays = rateRows.map((r) => r.days);
+    const nextDays = [30, 60, 90, 180, 365, 730].find((d) => !existingDays.includes(d)) || 30;
+    setRateRows((prev) => [...prev, { days: nextDays, price: '', adminShareValue: '', partnerShareValue: '10', advisorShareValue: '', isActive: true }]);
+  };
+
+  return (
+    <Modal visible={!!planKey} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalCard}>
+          <View style={styles.modalHeaderRow}>
+            <Text style={styles.modalTitle}>💵 {displayTitle} Duration Pricing</Text>
+            <TouchableOpacity onPress={onClose}>
+              <Ionicons name="close-circle" size={24} color="#64748b" />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+            {!isAdvisorType ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text style={styles.label}>Partner Commission Type</Text>
+                <View style={styles.chipRow}>
+                  {(['FIXED', 'PERCENTAGE'] as const).map((t) => (
+                    <TouchableOpacity
+                      key={t}
+                      style={[styles.partnerChip, partnerShareType === t && { backgroundColor: theme.primary, borderColor: theme.primary }]}
+                      onPress={() => setPartnerShareType(t)}
+                    >
+                      <Text style={[styles.partnerChipText, partnerShareType === t && { color: '#ffffff' }]}>
+                        {t === 'FIXED' ? 'Fixed ₹' : 'Percentage %'}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            ) : null}
+
+            {rateRows.map((row, idx) => (
+              <View
+                key={row.id || `row-${idx}`}
+                style={{
+                  backgroundColor: row.isActive ? '#f8fafc' : '#fef2f2',
+                  padding: 10,
+                  borderRadius: RADIUS.md,
+                  borderWidth: 1,
+                  borderColor: row.isActive ? '#e2e8f0' : '#fecaca',
+                  gap: 8,
+                }}
+              >
+                {/* Header Row: Duration Days + Enable/Disable Toggle + Delete Button */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569' }}>Days:</Text>
+                    <TextInput
+                      style={[styles.input, { height: 32, width: 70, paddingVertical: 2, textAlign: 'center' }]}
+                      keyboardType="numeric"
+                      value={String(row.days)}
+                      onChangeText={(v) => {
+                        const val = Number(v) || 0;
+                        setRateRows((prev) => prev.map((r, i) => (i === idx ? { ...r, days: val } : r)));
+                      }}
+                    />
+                  </View>
+
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    {/* Enable & Disable Toggle Switch */}
+                    <TouchableOpacity
+                      style={{
+                        paddingHorizontal: 8,
+                        paddingVertical: 3,
+                        borderRadius: RADIUS.pill,
+                        backgroundColor: row.isActive ? '#dcfce7' : '#fee2e2',
+                        borderWidth: 1,
+                        borderColor: row.isActive ? '#86efac' : '#fca5a5',
+                      }}
+                      onPress={() => setRateRows((prev) => prev.map((r, i) => (i === idx ? { ...r, isActive: !r.isActive } : r)))}
+                    >
+                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: row.isActive ? '#15803d' : '#dc2626' }}>
+                        {row.isActive ? '🟢 Enabled' : '🔴 Disabled'}
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Delete Option */}
+                    <TouchableOpacity
+                      style={{ padding: 4 }}
+                      disabled={deletePricing.isPending}
+                      onPress={() => handleRemoveRate(idx)}
+                    >
+                      <Ionicons name="trash-outline" size={18} color="#ef4444" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Inputs Row: Price + Platform Fee (Admin Cut) + Partner/Advisor Cut (Auto-Calculated) */}
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 9.5, fontFamily: FONT.semiBold, color: '#64748b' }}>Plan Price (₹)</Text>
+                    <TextInput
+                      style={[styles.input, { height: 38, paddingVertical: 4, paddingHorizontal: 6 }]}
+                      keyboardType="numeric"
+                      placeholder="Price ₹"
+                      placeholderTextColor="#94a3b8"
+                      value={row.price}
+                      onChangeText={(v) => {
+                        const priceNum = Number(v) || 0;
+                        const feeNum = Number(row.adminShareValue) || 0;
+                        const autoRemaining = String(Math.max(0, priceNum - feeNum));
+                        setRateRows((prev) =>
+                          prev.map((r, i) =>
+                            i === idx
+                              ? {
+                                ...r,
+                                price: v,
+                                ...(isAdvisorType ? { advisorShareValue: autoRemaining } : { partnerShareValue: autoRemaining }),
+                              }
+                              : r
+                          )
+                        );
+                      }}
+                    />
+                  </View>
+
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 9.5, fontFamily: FONT.semiBold, color: '#64748b' }}>Platform Fee (₹)</Text>
+                    <TextInput
+                      style={[styles.input, { height: 38, paddingVertical: 4, paddingHorizontal: 6 }]}
+                      keyboardType="numeric"
+                      placeholder="Fee ₹"
+                      placeholderTextColor="#94a3b8"
+                      value={row.adminShareValue}
+                      onChangeText={(v) => {
+                        const priceNum = Number(row.price) || 0;
+                        const feeNum = Number(v) || 0;
+                        const autoRemaining = String(Math.max(0, priceNum - feeNum));
+                        setRateRows((prev) =>
+                          prev.map((r, i) =>
+                            i === idx
+                              ? {
+                                ...r,
+                                adminShareValue: v,
+                                ...(isAdvisorType ? { advisorShareValue: autoRemaining } : { partnerShareValue: autoRemaining }),
+                              }
+                              : r
+                          )
+                        );
+                      }}
+                    />
+                  </View>
+
+                  {!isAdvisorType ? (
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 9.5, fontFamily: FONT.semiBold, color: '#64748b' }}>
+                        Business Partner Share ({partnerShareType === 'FIXED' ? '₹' : '%'})
+                      </Text>
+                      <TextInput
+                        style={[styles.input, { height: 38, paddingVertical: 4, paddingHorizontal: 6 }]}
+                        keyboardType="numeric"
+                        placeholder="BP Share"
+                        placeholderTextColor="#94a3b8"
+                        value={row.partnerShareValue}
+                        onChangeText={(v) => setRateRows((prev) => prev.map((r, i) => (i === idx ? { ...r, partnerShareValue: v } : r)))}
+                      />
+                    </View>
+                  ) : (
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 9.5, fontFamily: FONT.semiBold, color: '#64748b' }}>Advisor Share (₹)</Text>
+                      <TextInput
+                        style={[styles.input, { height: 38, paddingVertical: 4, paddingHorizontal: 6 }]}
+                        keyboardType="numeric"
+                        placeholder="Advisor Share"
+                        placeholderTextColor="#94a3b8"
+                        value={row.advisorShareValue}
+                        onChangeText={(v) => setRateRows((prev) => prev.map((r, i) => (i === idx ? { ...r, advisorShareValue: v } : r)))}
+                      />
+                    </View>
+                  )}
+                </View>
+              </View>
+            ))}
+
+            {/* Add Plan Option Button */}
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                paddingVertical: 10,
+                borderWidth: 1.5,
+                borderColor: theme.primary,
+                borderStyle: 'dashed',
+                borderRadius: RADIUS.md,
+                backgroundColor: '#f8fafc',
+                marginTop: 4,
+              }}
+              onPress={handleAddRate}
+            >
+              <Ionicons name="add-circle-outline" size={18} color={theme.primary} />
+              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: theme.primary }}>+ Add New Duration Rate</Text>
+            </TouchableOpacity>
+
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+            <TouchableOpacity style={styles.submitBtn} disabled={update.isPending || deletePricing.isPending} onPress={handleSaveAll}>
+              {update.isPending || deletePricing.isPending ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <Text style={styles.submitBtnText}>Save All Pricing Rates</Text>
+              )}
             </TouchableOpacity>
           </ScrollView>
         </View>
@@ -1148,40 +1672,84 @@ function CreateCouponModal({ visible, onClose }: { visible: boolean; onClose: ()
   );
 }
 
-type GenerateKind = 'PLAN' | 'COMMISSION' | 'SPECIAL';
+type GenerateKind = 'FARMER_PLAN' | 'ADVISOR_PLAN' | 'COMMISSION' | 'SPECIAL';
 
 const GENERATE_KIND_LABELS: Record<GenerateKind, string> = {
-  PLAN: 'Farmer / Advisor Plan',
+  FARMER_PLAN: 'Farmer Plan',
+  ADVISOR_PLAN: 'Advisor Plan',
   COMMISSION: 'Commission Based',
   SPECIAL: 'Special',
 };
 
-/** Single entry point to generate any manually-issued coupon — pick a type, form below switches accordingly.
- * Referral coupons aren't here: they auto-generate off the partner's own profile/kind id, no manual step needed. */
+/** Single entry point to generate any manually-issued coupon — sleek consolidated category architecture */
 function GenerateCouponSection() {
-  const [kind, setKind] = useState<GenerateKind>('PLAN');
+  const [kind, setKind] = useState<GenerateKind>('FARMER_PLAN');
+
+  const CATEGORIES: {
+    key: GenerateKind;
+    title: string;
+    icon: keyof typeof Ionicons.glyphMap;
+    emoji: string;
+    sub: string;
+    badge: string;
+    color: string;
+  }[] = [
+      { key: 'FARMER_PLAN', title: 'Farmer Plan Coupon', icon: 'leaf', emoji: '🌾', sub: 'Lite & Pro Bookkeeping Plans (365 Days)', badge: 'Yearly Plan', color: '#16a34a' },
+      { key: 'ADVISOR_PLAN', title: 'Advisor Plan Coupon', icon: 'school', emoji: '🎓', sub: 'Smart & Super Advisory Plans (30 Days)', badge: 'Advisor Support', color: '#0284c7' },
+      { key: 'COMMISSION', title: 'Commission-Based Coupon', icon: 'briefcase', emoji: '💼', sub: 'Custom discount & commission per partner', badge: 'Custom Rate', color: '#7c3aed' },
+      { key: 'SPECIAL', title: 'Special Invite Coupon', icon: 'star', emoji: '⭐', sub: 'Personal invite code auto-issued on signup', badge: 'Personal', color: '#b45309' },
+    ];
 
   return (
     <View style={{ gap: 12 }}>
-      <View style={[styles.couponCard, premiumShadow('#0f172a', 'sm')]}>
-        <View style={styles.chipRow}>
-          {(['PLAN', 'COMMISSION', 'SPECIAL'] as GenerateKind[]).map((k) => (
+      <View style={{ gap: 10 }}>
+        {CATEGORIES.map((cat) => {
+          const isActive = kind === cat.key;
+          return (
             <TouchableOpacity
-              key={k}
-              style={[styles.partnerChip, kind === k && { backgroundColor: theme.primary, borderColor: theme.primary }]}
-              activeOpacity={0.85}
+              key={cat.key}
+              style={[
+                styles.categoryCard,
+                isActive && { borderColor: theme.primary, borderWidth: 1.5, backgroundColor: '#f8fafc' },
+                premiumShadow('#0f172a', 'sm'),
+              ]}
+              activeOpacity={0.88}
               onPress={() => {
                 tap();
-                setKind(k);
+                setKind(cat.key);
               }}
             >
-              <Text style={[styles.partnerChipText, kind === k && { color: '#ffffff' }]}>{GENERATE_KIND_LABELS[k]}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: `${cat.color}15`, alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name={cat.icon} size={18} color={cat.color} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={[styles.categoryTitle, { fontSize: 13.5 }]}>{cat.title}</Text>
+                      <View style={{ backgroundColor: `${cat.color}15`, paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.pill }}>
+                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: cat.color }}>{cat.badge}</Text>
+                      </View>
+                    </View>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 }}>{cat.sub}</Text>
+                  </View>
+                </View>
+                <Ionicons name={isActive ? 'radio-button-on' : 'radio-button-off'} size={18} color={isActive ? theme.primary : '#94a3b8'} />
+              </View>
             </TouchableOpacity>
-          ))}
-        </View>
+          );
+        })}
       </View>
 
-      {kind === 'PLAN' ? <FarmerBasicPremiumCouponSection /> : kind === 'COMMISSION' ? <CommissionCouponGenerateSection /> : <SpecialCouponGenerateSection />}
+      {kind === 'FARMER_PLAN' ? (
+        <FarmerBasicPremiumCouponSection initialCategory="FARMER" />
+      ) : kind === 'ADVISOR_PLAN' ? (
+        <FarmerBasicPremiumCouponSection initialCategory="ADVISOR" />
+      ) : kind === 'COMMISSION' ? (
+        <CommissionCouponGenerateSection />
+      ) : (
+        <SpecialCouponGenerateSection />
+      )}
     </View>
   );
 }
@@ -1516,7 +2084,7 @@ function FarmerPlanCouponBrowseSection({
   const { data: coupons, isLoading } = useAllFarmerPlanCoupons();
   const { data: pricing = [] } = useFarmerPlanPricing();
   const [statusTab, setStatusTab] = useState<'UNUSED' | 'USED' | 'EXPIRED'>('UNUSED');
-  const [shareCoupon, setShareCoupon] = useState<{ code: string; plan: string; daysGranted: number } | null>(null);
+  const [shareCoupon, setShareCoupon] = useState<{ code: string; plan: string; daysGranted: number; expiresAt?: string | Date | null; mrp?: number | string | null } | null>(null);
 
   const filtered = (coupons ?? []).filter((c) => plans.includes(c.plan));
 
@@ -1577,7 +2145,7 @@ function FarmerPlanCouponBrowseSection({
                             <Text style={styles.couponCode}>{c.code}</Text>
                             <CopyButton value={c.code} color={theme.primary} />
                             <TouchableOpacity
-                              onPress={() => setShareCoupon({ code: c.code, plan: c.plan, daysGranted: c.daysGranted })}
+                              onPress={() => setShareCoupon({ code: c.code, plan: c.plan, daysGranted: c.daysGranted, expiresAt: c.expiresAt, mrp: couponPlanAmount(pricing, c.plan, c.daysGranted) })}
                               style={{ padding: 4 }}
                             >
                               <Ionicons name="share-social-outline" size={16} color={theme.primary} />
@@ -1718,9 +2286,10 @@ function couponPlanAmount(pricing: FarmerPlanPricing[], plan: FarmerPlanType, da
   return amount > 0 ? amount : null;
 }
 
-function FarmerBasicPremiumCouponSection() {
+function FarmerBasicPremiumCouponSection({ initialCategory }: { initialCategory?: 'FARMER' | 'ADVISOR' }) {
   const { data: coupons, isLoading } = useAllFarmerPlanCoupons();
   const { data: pricing = [] } = useFarmerPlanPricing();
+  const { data: finSummary } = useCouponFinancialSummary();
   const deactivateCoupon = useDeactivateFarmerPlanCoupon();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isRedeemForFarmerOpen, setIsRedeemForFarmerOpen] = useState(false);
@@ -1741,6 +2310,33 @@ function FarmerBasicPremiumCouponSection() {
 
   return (
     <View style={[styles.couponCard, premiumShadow('#0f172a', 'sm')]}>
+      {finSummary ? (
+        <View style={styles.finSummaryCard}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Ionicons name="cash-outline" size={16} color="#15803d" />
+            <Text style={styles.finSummaryTitle}>Coupon Accounting & Direct Income Summary</Text>
+          </View>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 6 }}>
+            <View style={styles.finSummaryItem}>
+              <Text style={styles.finSummaryLabel}>Grand Total Income</Text>
+              <Text style={[styles.finSummaryValue, { color: '#16a34a' }]}>₹{finSummary.totalCouponIncome.toLocaleString('en-IN')}</Text>
+            </View>
+            <View style={styles.finSummaryItem}>
+              <Text style={styles.finSummaryLabel}>Admin Direct (100%)</Text>
+              <Text style={styles.finSummaryValue}>₹{finSummary.directAdminIncome.toLocaleString('en-IN')}</Text>
+            </View>
+            <View style={styles.finSummaryItem}>
+              <Text style={styles.finSummaryLabel}>Partner Payments</Text>
+              <Text style={styles.finSummaryValue}>₹{finSummary.partnerDebitsCollected.toLocaleString('en-IN')}</Text>
+            </View>
+            <View style={styles.finSummaryItem}>
+              <Text style={styles.finSummaryLabel}>Advisor Platform Fees</Text>
+              <Text style={styles.finSummaryValue}>₹{finSummary.advisorPlatformFeesCollected.toLocaleString('en-IN')}</Text>
+            </View>
+          </View>
+        </View>
+      ) : null}
+
       <View style={{ flexDirection: 'row', gap: 6 }}>
         <TouchableOpacity
           style={[styles.createBtn, { backgroundColor: '#1d4ed8', flex: 1 }]}
@@ -1789,10 +2385,10 @@ function FarmerBasicPremiumCouponSection() {
                   {c.assignedFarmer
                     ? `· For ${c.assignedFarmer.name}`
                     : c.assignedAdvisor
-                    ? `· For advisor ${c.assignedAdvisor.name}`
-                    : c.assignedBusinessPartner
-                    ? `· For partner ${c.assignedBusinessPartner.name}`
-                    : '· Open code'}
+                      ? `· For advisor ${c.assignedAdvisor.name}`
+                      : c.assignedBusinessPartner
+                        ? `· For partner ${c.assignedBusinessPartner.name}`
+                        : '· Open code'}
                 </Text>
               </View>
               <CopyButton value={c.code} color={theme.primary} />
@@ -1824,14 +2420,22 @@ function FarmerBasicPremiumCouponSection() {
         })()
       )}
 
-      <CreateFarmerPlanCouponModal visible={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
+      <CreateFarmerPlanCouponModal visible={isCreateOpen} onClose={() => setIsCreateOpen(false)} initialCategory={initialCategory} />
       <RedeemForFarmerModal visible={isRedeemForFarmerOpen} onClose={() => setIsRedeemForFarmerOpen(false)} theme={theme} />
       <ShareFarmerPlanCouponModal coupon={shareCoupon} visible={!!shareCoupon} onClose={() => setShareCoupon(null)} />
     </View>
   );
 }
 
-function CreateFarmerPlanCouponModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+function CreateFarmerPlanCouponModal({
+  visible,
+  onClose,
+  initialCategory = 'FARMER',
+}: {
+  visible: boolean;
+  onClose: () => void;
+  initialCategory?: 'FARMER' | 'ADVISOR';
+}) {
   const createCoupon = useCreateFarmerPlanCoupon();
   const { data: advisorsData } = useUsersList({ role: 'ADVISOR', limit: 200 });
   const advisors = advisorsData?.items ?? [];
@@ -1840,7 +2444,8 @@ function CreateFarmerPlanCouponModal({ visible, onClose }: { visible: boolean; o
 
   const { data: pricing = [] } = useFarmerPlanPricing();
 
-  const [plan, setPlan] = useState<FarmerPlanType>('BASIC');
+  const [planCategory, setPlanCategory] = useState<'FARMER' | 'ADVISOR'>(initialCategory);
+  const [plan, setPlan] = useState<FarmerPlanType>('PRO');
   const [daysGranted, setDaysGranted] = useState('30');
   const [quantity, setQuantity] = useState('1');
   const [lockMode, setLockMode] = useState<CouponLockMode>('OPEN');
@@ -1851,9 +2456,16 @@ function CreateFarmerPlanCouponModal({ visible, onClose }: { visible: boolean; o
   const [error, setError] = useState<string | null>(null);
   const [successCodes, setSuccessCodes] = useState<string[] | null>(null);
 
+  React.useEffect(() => {
+    if (visible) {
+      setPlanCategory(initialCategory);
+      setPlan('PRO');
+    }
+  }, [visible, initialCategory]);
+
   const availableLockModes: CouponLockMode[] = ['OPEN', 'ADVISOR', 'PARTNER'];
 
-  const planPricing = pricing.find((p) => p.plan === plan);
+  const planPricing = pricing.find((p) => p.plan === plan && Number(p.billingPeriodDays) === Number(daysGranted)) || pricing.find((p) => p.plan === plan);
   const planAmount = (() => {
     const days = Number(daysGranted);
     if (!planPricing || !days) return null;
@@ -1861,29 +2473,32 @@ function CreateFarmerPlanCouponModal({ visible, onClose }: { visible: boolean; o
     const amount = Math.round(Number(planPricing.price) * ratio * 100) / 100;
     return amount > 0 ? amount : null;
   })();
-  // For a Partner on STANDARD/PREMIUM, the advisor keeps their fee out of the price — the partner covers whatever's left.
+  const qty = Math.max(1, parseInt(quantity, 10) || 1);
   const debitPreview = (() => {
     const days = Number(daysGranted);
     if (!planPricing || !days) return null;
     const ratio = days / planPricing.billingPeriodDays;
-    const price = Number(planPricing.price);
-    if (lockMode === 'ADVISOR') {
-      const percent = Number(planPricing.advisorGenerationCostPercent ?? 0);
-      const amount = Math.round(price * (percent / 100) * ratio * 100) / 100;
-      return amount > 0 ? amount : null;
-    }
+    const basePrice = Math.round(Number(planPricing.price) * ratio * 100) / 100;
+    
+    let commission = 0;
     if (lockMode === 'PARTNER') {
-      const amount =
-        plan === 'BASIC'
-          ? Math.round(price * (Number(planPricing.partnerGenerationCostPercent ?? 0) / 100) * ratio * 100) / 100
-          : Math.round(price * (1 - Number(planPricing.advisorGenerationCostPercent ?? 0) / 100) * ratio * 100) / 100;
-      return amount > 0 ? amount : null;
+      commission = planPricing.partnerShareType === 'PERCENTAGE'
+        ? (basePrice * Number(planPricing.partnerShareValue)) / 100
+        : Number(planPricing.partnerShareValue || 0) * ratio;
+    } else if (lockMode === 'ADVISOR') {
+      commission = Number(planPricing.advisorShareValue || 0) * ratio;
+    } else {
+      return null;
     }
-    return null;
+
+    const netPricePerCoupon = Math.max(0, Math.round((basePrice - commission) * 100) / 100);
+    const totalDebit = netPricePerCoupon * qty;
+    return { basePrice, commission, netPricePerCoupon, totalDebit };
   })();
 
   const reset = () => {
-    setPlan('BASIC');
+    setPlanCategory(initialCategory);
+    setPlan('PRO');
     setDaysGranted('30');
     setQuantity('1');
     setLockMode('OPEN');
@@ -1915,7 +2530,7 @@ function CreateFarmerPlanCouponModal({ visible, onClose }: { visible: boolean; o
     const qty = Number(quantity) || 1;
     try {
       const coupons = await createCoupon.mutateAsync({
-        plan: plan as 'BASIC' | 'STANDARD' | 'PREMIUM',
+        plan,
         daysGranted: days,
         quantity: qty,
         assignedAdvisorId: lockMode === 'ADVISOR' ? assignedAdvisorId : undefined,
@@ -1937,7 +2552,7 @@ function CreateFarmerPlanCouponModal({ visible, onClose }: { visible: boolean; o
       <View style={styles.modalOverlay}>
         <View style={styles.modalCard}>
           <View style={styles.modalHeaderRow}>
-            <Text style={styles.modalTitle}>Generate Plan Coupon</Text>
+            <Text style={styles.modalTitle}>Generate {planCategory === 'FARMER' ? 'Farmer' : 'Advisor'} Plan Coupon</Text>
             <TouchableOpacity onPress={() => { reset(); onClose(); }}>
               <Ionicons name="close-circle" size={24} color="#64748b" />
             </TouchableOpacity>
@@ -1959,31 +2574,63 @@ function CreateFarmerPlanCouponModal({ visible, onClose }: { visible: boolean; o
             </View>
           ) : (
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-              <Text style={styles.label}>Plan</Text>
+              <Text style={styles.label}>Plan Category</Text>
               <View style={styles.chipRow}>
-                {(['BASIC', 'STANDARD', 'PREMIUM'] as const).map((p) => (
+                {(['FARMER', 'ADVISOR'] as const).map((cat) => (
                   <TouchableOpacity
-                    key={p}
-                    style={[styles.partnerChip, plan === p && { backgroundColor: theme.primary, borderColor: theme.primary }]}
-                    onPress={() => setPlan(p)}
+                    key={cat}
+                    style={[styles.partnerChip, planCategory === cat && { backgroundColor: theme.primary, borderColor: theme.primary }]}
+                    onPress={() => {
+                      setPlanCategory(cat);
+                      setPlan(cat === 'FARMER' ? 'PRO' : 'SMART');
+                      setDaysGranted(cat === 'FARMER' ? '365' : '30');
+                    }}
                   >
-                    <Text style={[styles.partnerChipText, plan === p && { color: '#ffffff' }]}>
-                      {p === 'BASIC' ? 'Basic (B-code)' : p === 'STANDARD' ? 'Standard (S-code)' : 'Premium (P-code)'}
+                    <Text style={[styles.partnerChipText, planCategory === cat && { color: '#ffffff' }]}>
+                      {cat === 'FARMER' ? '🌾 Farmer Plan' : '🎓 Advisor Plan'}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
+
+              <Text style={styles.label}>Plan Option</Text>
+              <View style={styles.chipRow}>
+                {(planCategory === 'FARMER' ? (['PRO', 'SMART'] as const) : (['SMART', 'SUPER'] as const)).map((p) => {
+                  const label = planCategory === 'FARMER' ? (p === 'PRO' ? 'Lite Plan' : 'Pro Plan') : (p === 'SMART' ? 'Smart Plan' : 'Super Plan');
+                  return (
+                    <TouchableOpacity
+                      key={p}
+                      style={[styles.partnerChip, plan === p && { backgroundColor: theme.primary, borderColor: theme.primary }]}
+                      onPress={() => setPlan(p)}
+                    >
+                      <Text style={[styles.partnerChipText, plan === p && { color: '#ffffff' }]}>
+                        {label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
               <Text style={styles.label}>Days to Grant</Text>
               <View style={styles.chipRow}>
-                {(['30', '90', '180', '365'] as const).map((d) => (
-                  <TouchableOpacity
-                    key={d}
-                    style={[styles.partnerChip, daysGranted === d && { backgroundColor: theme.primary, borderColor: theme.primary }]}
-                    onPress={() => setDaysGranted(d)}
-                  >
-                    <Text style={[styles.partnerChipText, daysGranted === d && { color: '#ffffff' }]}>{d} days</Text>
-                  </TouchableOpacity>
-                ))}
+                {(() => {
+                  const activeDbVariants = pricing
+                    .filter((it) => it.plan === plan && it.isActive !== false)
+                    .sort((a, b) => Number(a.billingPeriodDays) - Number(b.billingPeriodDays))
+                    .map((it) => String(it.billingPeriodDays));
+                  const daysList = activeDbVariants.length > 0
+                    ? activeDbVariants
+                    : (planCategory === 'FARMER' ? ['180', '365'] : ['30', '90', '180']);
+
+                  return daysList.map((d) => (
+                    <TouchableOpacity
+                      key={d}
+                      style={[styles.partnerChip, daysGranted === d && { backgroundColor: theme.primary, borderColor: theme.primary }]}
+                      onPress={() => setDaysGranted(d)}
+                    >
+                      <Text style={[styles.partnerChipText, daysGranted === d && { color: '#ffffff' }]}>{d} days</Text>
+                    </TouchableOpacity>
+                  ));
+                })()}
               </View>
               {planAmount != null ? (
                 <Text style={styles.helperText}>Coupon amount: ₹{planAmount.toLocaleString('en-IN')} for {daysGranted} days</Text>
@@ -2011,8 +2658,7 @@ function CreateFarmerPlanCouponModal({ visible, onClose }: { visible: boolean; o
                 <View style={styles.debitPreviewBox}>
                   <Ionicons name="wallet-outline" size={14} color="#b45309" />
                   <Text style={styles.debitPreviewText}>
-                    This will debit ₹{debitPreview.toLocaleString('en-IN')} × {Number(quantity) || 1} coupon(s) from the{' '}
-                    {lockMode === 'ADVISOR' ? 'advisor' : 'partner'}'s wallet on issue.
+                    MRP ₹{debitPreview.basePrice} - Comm ₹{debitPreview.commission} = Net ₹{debitPreview.netPricePerCoupon}/code. Total wallet debit ₹{debitPreview.totalDebit.toLocaleString('en-IN')} ({qty}x) from {lockMode === 'ADVISOR' ? 'advisor' : 'partner'}'s wallet on issue (allows negative balance).
                   </Text>
                 </View>
               ) : null}
@@ -2098,14 +2744,20 @@ function FarmerPlanAddDaysSection() {
   const grantDays = useGrantFarmerPlanDays();
   const { data: farmersData } = useUsersList({ role: 'FARMER', limit: 200 });
   const farmers = farmersData?.items ?? [];
+  const { data: advisorsData } = useUsersList({ role: 'ADVISOR', limit: 200 });
+  const advisors = advisorsData?.items ?? [];
 
   const [farmerSearch, setFarmerSearch] = useState('');
   const [farmerId, setFarmerId] = useState<string | undefined>(undefined);
+  const [selectedPlan, setSelectedPlan] = useState<FarmerPlanType>('PRO');
+  const [advisorSearch, setAdvisorSearch] = useState('');
+  const [advisorId, setAdvisorId] = useState<string | undefined>(undefined);
   const [days, setDays] = useState('30');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<Awaited<ReturnType<typeof grantDays.mutateAsync>> | null>(null);
 
   const filteredFarmers = farmers.filter((f) => f.name.toLowerCase().includes(farmerSearch.toLowerCase()));
+  const filteredAdvisors = advisors.filter((a) => a.name.toLowerCase().includes(advisorSearch.toLowerCase()));
 
   const handleSubmit = async () => {
     setError(null);
@@ -2120,17 +2772,17 @@ function FarmerPlanAddDaysSection() {
       return;
     }
     try {
-      const res = await grantDays.mutateAsync({ farmerId, daysGranted: daysValue });
+      const res = await grantDays.mutateAsync({ farmerId, daysGranted: daysValue, plan: selectedPlan, advisorId });
       setSuccess(res);
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Could not add days.');
+      setError(err?.response?.data?.message ?? 'Could not activate plan.');
     }
   };
 
   return (
     <View style={[styles.couponCard, premiumShadow('#0f172a', 'sm')]}>
-      <Text style={styles.sectionTitle}>Add Days Directly (No Coupon)</Text>
-      <Text style={styles.helperText}>Extends a farmer's existing paid plan immediately, at whatever tier they're already on. They need a paid tier already — use a coupon to set it first.</Text>
+      <Text style={styles.sectionTitle}>Direct Plan Activation & Grant Days</Text>
+      <Text style={styles.helperText}>Activates or extends a farmer's plan directly. Selecting an Advisor will link them and automatically credit the Advisor Share into their active wallet.</Text>
 
       <Text style={styles.label}>Farmer</Text>
       <TextInput
@@ -2153,9 +2805,51 @@ function FarmerPlanAddDaysSection() {
           ))}
         </View>
       ) : null}
-      {farmerId ? <Text style={styles.helperText}>Selected: {farmers.find((f) => f.id === farmerId)?.name}</Text> : null}
+      {farmerId ? <Text style={styles.helperText}>Selected Farmer: {farmers.find((f) => f.id === farmerId)?.name}</Text> : null}
 
-      <Text style={styles.label}>Days to Add</Text>
+      <Text style={styles.label}>Plan Tier</Text>
+      <View style={styles.chipRow}>
+        {(['PRO', 'SMART', 'SUPER'] as const).map((p) => (
+          <TouchableOpacity
+            key={p}
+            style={[styles.partnerChip, selectedPlan === p && { backgroundColor: theme.primary, borderColor: theme.primary }]}
+            onPress={() => setSelectedPlan(p)}
+          >
+            <Text style={[styles.partnerChipText, selectedPlan === p && { color: '#ffffff' }]}>
+              {p === 'PRO' ? 'Lite (PRO)' : p === 'SMART' ? 'Pro (SMART)' : 'Super (SUPER)'}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <Text style={styles.label}>Select Advisor (Optional)</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Search advisor by name to link & credit share..."
+        placeholderTextColor="#94a3b8"
+        value={advisorSearch}
+        onChangeText={setAdvisorSearch}
+      />
+      {advisorSearch ? (
+        <View style={styles.chipRow}>
+          {filteredAdvisors.slice(0, 8).map((a) => (
+            <TouchableOpacity
+              key={a.id}
+              style={[styles.partnerChip, advisorId === a.id && { backgroundColor: theme.primary, borderColor: theme.primary }]}
+              onPress={() => setAdvisorId(a.id)}
+            >
+              <Text style={[styles.partnerChipText, advisorId === a.id && { color: '#ffffff' }]}>{a.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      ) : null}
+      {advisorId ? (
+        <Text style={styles.helperText}>
+          Selected Advisor: {advisors.find((a) => a.id === advisorId)?.name} — Advisor Share will be credited to their wallet.
+        </Text>
+      ) : null}
+
+      <Text style={styles.label}>Days to Grant</Text>
       <TextInput style={styles.input} keyboardType="numeric" value={days} onChangeText={setDays} />
 
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -2163,17 +2857,18 @@ function FarmerPlanAddDaysSection() {
         <View style={styles.successBox}>
           <Ionicons name="checkmark-circle" size={20} color="#16a34a" />
           <Text style={styles.successText}>
-            +{success.daysAdded} day(s) added. New expiry: {new Date(success.newEndDate).toLocaleDateString('en-IN')}
+            Plan activated successfully! +{success.daysAdded} day(s) added. Expiry: {new Date(success.newEndDate).toLocaleDateString('en-IN')}
           </Text>
         </View>
       ) : null}
 
       <TouchableOpacity style={[styles.submitBtn, { marginTop: 10 }]} disabled={grantDays.isPending} onPress={handleSubmit}>
-        {grantDays.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Add Days</Text>}
+        {grantDays.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Activate / Grant Days</Text>}
       </TouchableOpacity>
     </View>
   );
 }
+
 
 function ToggleType({ value, onChange }: { value: DiscountValueType; onChange: (v: DiscountValueType) => void }) {
   return (
@@ -2199,21 +2894,35 @@ const styles = StyleSheet.create({
   hero: { paddingTop: 20, paddingBottom: 16, paddingHorizontal: SPACING.xxl },
   heroTitle: { color: '#fff', fontSize: 20, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
   heroSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 12, fontFamily: FONT.medium, marginTop: 2 },
-  statRow: {
+  inlineStatBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: RADIUS.lg,
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255, 255, 255, 0.16)',
+    borderRadius: RADIUS.pill,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
-    paddingVertical: 11,
-    marginTop: 14,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    marginTop: 8,
+    gap: 6,
   },
-  statCard: { flex: 1, alignItems: 'center', gap: 3 },
-  statDivider: { width: 1, height: 28, backgroundColor: 'rgba(255,255,255,0.2)' },
-  statLabel: { color: 'rgba(255,255,255,0.75)', fontSize: 10.5, fontFamily: FONT.bold, textTransform: 'uppercase', letterSpacing: 0.3 },
-  statValue: { color: '#fff', fontSize: 18, fontFamily: FONT.extraBold, letterSpacing: -0.3 },
-  tabRow: { flexDirection: 'row', gap: 8, marginTop: 14 },
+  inlineStatText: {
+    color: 'rgba(255, 255, 255, 0.85)',
+    fontSize: 11,
+    fontFamily: FONT.semiBold,
+  },
+  inlineStatValue: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontFamily: FONT.extraBold,
+  },
+  inlineStatDot: {
+    color: 'rgba(255, 255, 255, 0.4)',
+    fontSize: 11,
+    marginHorizontal: 2,
+  },
+  tabRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
   tabChip: {
     flex: 1,
     flexDirection: 'row',
@@ -2259,6 +2968,132 @@ const styles = StyleSheet.create({
   rateCardPrice: { fontSize: 13, fontFamily: FONT.extraBold, color: theme.primary },
   rateCardGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 2, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#eef1f5' },
   rateCardItem: { minWidth: '28%' },
+  winFolderGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  winFolderTile: {
+    width: '48.5%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    padding: 10,
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    gap: 10,
+  },
+  winFolderTileActive: {
+    backgroundColor: '#e0f2fe',
+    borderColor: '#0284c7',
+  },
+  winFolderTitle: {
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+  },
+  winFolderTitleActive: {
+    color: '#0369a1',
+  },
+  winFolderSub: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    marginTop: 1,
+  },
+  iconTabGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 12,
+  },
+  iconTabCard: {
+    width: '48.5%',
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    paddingVertical: 18,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#f1f5f9',
+  },
+  iconCircleBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  iconTabTitle: {
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+    color: '#1e293b',
+    textAlign: 'center',
+  },
+  iconTabSub: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    marginTop: 2,
+    textAlign: 'center',
+  },
+  openedCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1.5,
+    marginBottom: 8,
+  },
+  backToTabsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+  },
+  backToTabsText: {
+    fontSize: 12,
+    fontFamily: FONT.extraBold,
+  },
+  headerCircleBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  openedCardTitle: {
+    fontSize: 13.5,
+    fontFamily: FONT.extraBold,
+  },
+  selectPromptCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    marginTop: 4,
+  },
+  selectPromptText: {
+    fontSize: 12.5,
+    fontFamily: FONT.semiBold,
+    color: '#64748b',
+  },
   rateCardItemLabel: { fontSize: 9.5, fontFamily: FONT.bold, color: '#94a3b8', letterSpacing: 0.2, textTransform: 'uppercase' },
   rateCardItemValue: { fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a', marginTop: 2 },
   couponHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
@@ -2301,4 +3136,177 @@ const styles = StyleSheet.create({
   successText: { flex: 1, fontSize: 12.5, fontFamily: FONT.medium, color: '#15803d' },
   debitPreviewBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fffbeb', borderRadius: RADIUS.md, padding: 10, borderWidth: 1, borderColor: '#fde68a' },
   debitPreviewText: { flex: 1, fontSize: 11.5, fontFamily: FONT.medium, color: '#92400e' },
+  finSummaryCard: { backgroundColor: '#f0fdf4', borderRadius: RADIUS.md, padding: 12, borderWidth: 1, borderColor: '#bbf7d0', marginBottom: 8 },
+  finSummaryTitle: { fontSize: 13, fontFamily: FONT.extraBold, color: '#166534' },
+  finSummaryItem: { minWidth: '45%', flex: 1, backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#dcfce7' },
+  mainFolderGrid: {
+    flexDirection: 'row',
+    gap: 8,
+    marginVertical: 4,
+  },
+  mainFolderCard: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.xl,
+    paddingVertical: 12,
+    paddingHorizontal: 6,
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+    gap: 3,
+    position: 'relative',
+  },
+  mainFolderIconBox: {
+    width: 48,
+    height: 44,
+    borderRadius: RADIUS.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    marginBottom: 2,
+  },
+  mainFolderEmoji: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    fontSize: 10,
+  },
+  mainFolderCheckmark: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+  },
+  mainFolderTitle: {
+    fontSize: 12,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+    textAlign: 'center',
+  },
+  mainFolderSub: {
+    fontSize: 9.5,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    textAlign: 'center',
+  },
+  finSummaryLabel: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+  },
+  finSummaryValue: {
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+    marginTop: 2,
+  },
 });
+
+/** Super Admin User Guides & Documentation Books Download Section */
+function AdminUserGuidesSection() {
+  const { data: docsList = [], isLoading } = useAdminDocsList();
+  const downloadDoc = useDownloadAdminDoc();
+
+  const [selectedLang, setSelectedLang] = useState<'pa' | 'en' | 'hi'>('pa');
+  const [selectedDoc, setSelectedDoc] = useState<{ title: string; fileName: string; content: string } | null>(null);
+
+  const handleDownloadPdf = async (docKey: string) => {
+    tap();
+    try {
+      const result = await downloadDoc.mutateAsync({ docKey, lang: selectedLang });
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          printWindow.document.write(result.htmlPdfContent || result.content);
+          printWindow.document.close();
+          printWindow.focus();
+          setTimeout(() => {
+            printWindow.print();
+          }, 300);
+        }
+      } else {
+        setSelectedDoc(result);
+      }
+    } catch {
+      alert('Could not generate PDF download.');
+    }
+  };
+
+
+  if (isLoading) return <ActivityIndicator color={theme.primary} style={{ marginVertical: 15 }} />;
+
+  return (
+    <View style={{ gap: 10, paddingVertical: 4 }}>
+      {/* Multi-Language Selector Bar */}
+      <View style={{ backgroundColor: '#f8fafc', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
+        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569', marginBottom: 6 }}>
+          🌐 Choose Guide Language for PDF Generation:
+        </Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+          {LANGUAGE_OPTIONS.map((lang) => (
+            <TouchableOpacity
+              key={lang.code}
+              style={[
+                styles.partnerChip,
+                { paddingHorizontal: 10, paddingVertical: 6 },
+                selectedLang === lang.code && { backgroundColor: theme.primary, borderColor: theme.primary },
+              ]}
+              onPress={() => setSelectedLang(lang.code as any)}
+            >
+              <Text style={[styles.partnerChipText, selectedLang === lang.code && { color: '#ffffff' }]}>
+                {lang.icon} {lang.nativeName} ({lang.englishName})
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+
+      {/* Docs List */}
+      {docsList.map((doc: any) => (
+        <View key={doc.key} style={[styles.couponCard, premiumShadow('#0f172a', 'sm'), { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12 }]}>
+          <View style={{ flex: 1, paddingRight: 8 }}>
+            <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: '#0f172a' }}>{doc.title}</Text>
+            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 }}>{doc.description}</Text>
+            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: theme.primary, marginTop: 4 }}>📄 {doc.fileName.replace('.md', `_${selectedLang.toUpperCase()}.pdf`)}</Text>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.partnerChip, { backgroundColor: '#15803d', borderColor: '#15803d' }]}
+            activeOpacity={0.8}
+            onPress={() => handleDownloadPdf(doc.key)}
+            disabled={downloadDoc.isPending}
+          >
+            <Text style={[styles.partnerChipText, { color: '#ffffff', fontSize: 11 }]}>📄 Download PDF</Text>
+          </TouchableOpacity>
+        </View>
+      ))}
+
+      {/* Mobile Text Viewer Modal */}
+      <Modal visible={!!selectedDoc} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { maxHeight: '85%' }]}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalTitle}>{selectedDoc?.title}</Text>
+              <TouchableOpacity onPress={() => setSelectedDoc(null)}>
+                <Ionicons name="close" size={22} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={{ flex: 1 }}>
+              <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#334155', lineHeight: 18 }}>{selectedDoc?.content}</Text>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+
+

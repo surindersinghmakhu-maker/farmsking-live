@@ -53,6 +53,5 @@ export async function provisionReferralWelcomeCoupon(
     },
   });
 
-  await prisma.user.update({ where: { id: customerId }, data: { referralWelcomeCouponCode: code } });
   return code;
 }

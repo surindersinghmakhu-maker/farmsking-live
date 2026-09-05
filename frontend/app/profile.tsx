@@ -13,17 +13,17 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/src/store/auth-context';
 import { useUpdateMyAddress } from '@/src/hooks/useAdvisorProfile';
-import { useMyAddresses, useCreateAddress, useDeleteAddress } from '@/src/hooks/useAddresses';
+import { useMyAddresses, useCreateAddress, useUpdateAddress, useDeleteAddress } from '@/src/hooks/useAddresses';
+import type { CustomerAddress } from '@/src/api/addresses.api';
 import { lookupPincode, PincodeOffice } from '@/src/api/pincode.api';
 import { uploadPhoto } from '@/src/api/uploads.api';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
-import { AVATAR_PRESETS } from '@/src/constants/avatarPresets';
 import { Avatar } from '@/src/components/Avatar';
 
 const tap = () => {
@@ -32,20 +32,31 @@ const tap = () => {
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ tab?: string }>();
   const { user } = useAuth();
   const updateAddress = useUpdateMyAddress();
   const theme = RoleThemes[user?.role === 'ADVISOR' ? 'FARM_ADVISOR' : 'FARMER'] ?? RoleThemes.FARMER;
 
-  const [activeTab, setActiveTab] = useState<'PROFILE' | 'ADDRESSES'>('PROFILE');
+  const [activeTab, setActiveTab] = useState<'PROFILE' | 'ADDRESSES'>(
+    params.tab === 'ADDRESSES' ? 'ADDRESSES' : 'PROFILE'
+  );
+
+  React.useEffect(() => {
+    if (params.tab === 'ADDRESSES') {
+      setActiveTab('ADDRESSES');
+    } else if (params.tab === 'PROFILE') {
+      setActiveTab('PROFILE');
+    }
+  }, [params.tab]);
 
   // This screen is the single canonical profile for the account — one per mobile number, shared across
   // every role the account holds. Name/email/photo/address all write to the same User row on save.
   const [name, setName] = useState(user?.name ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
+  const [billPrintingAddress, setBillPrintingAddress] = useState(user?.billPrintingAddress ?? '');
   const [photoUrl, setPhotoUrl] = useState<string | null>(user?.photoUrl ?? null);
 
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
-  const [customPhotoInput, setCustomPhotoInput] = useState('');
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   const [pincode, setPincode] = useState(user?.pincode ?? '');
@@ -53,6 +64,8 @@ export default function ProfileScreen() {
   const [district, setDistrict] = useState(user?.district ?? '');
   const [state, setState] = useState(user?.state ?? '');
   const [officeOptions, setOfficeOptions] = useState<PincodeOffice[]>([]);
+  const [isPostOfficeExpanded, setIsPostOfficeExpanded] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [isPincodeLoading, setIsPincodeLoading] = useState(false);
   const [pincodeStatus, setPincodeStatus] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -76,6 +89,7 @@ export default function ProfileScreen() {
     try {
       const uploaded = await uploadPhoto(result.assets[0].uri);
       setPhotoUrl(uploaded.fileUrl);
+      setIsPhotoModalOpen(false);
     } catch {
       Alert.alert('Upload failed', 'Could not upload your photo. Please try again.');
     } finally {
@@ -97,6 +111,7 @@ export default function ProfileScreen() {
       setPostOffice(result.postOffice);
       setDistrict(result.district);
       setState(result.state);
+      setIsPostOfficeExpanded(true);
       setPincodeStatus(`✨ Address Fetched: ${result.postOffice}, ${result.district}, ${result.state}`);
     } catch (err: any) {
       setPincodeStatus(`❌ ${err?.message ?? 'Could not fetch PIN details'}`);
@@ -122,6 +137,7 @@ export default function ProfileScreen() {
         postOffice: postOffice.trim() || undefined,
         district: district.trim() || undefined,
         state: state.trim() || undefined,
+        billPrintingAddress: billPrintingAddress.trim() || undefined,
       });
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2500);
@@ -132,28 +148,30 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
       <LinearGradient colors={theme.gradient} style={styles.headerBar}>
         <TouchableOpacity style={styles.backBtn} activeOpacity={0.75} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color="#ffffff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Profile</Text>
+        <Text style={styles.headerTitle}>
+          {user?.role === 'ADVISOR' ? 'Advisor Account Profile' : 'Farmer Account Profile'}
+        </Text>
         <View style={{ width: 36 }} />
       </LinearGradient>
-
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tabBtn, activeTab === 'PROFILE' && styles.activeTabBtn]}
           onPress={() => { tap(); setActiveTab('PROFILE'); }}
         >
           <Ionicons name="person-outline" size={17} color={activeTab === 'PROFILE' ? theme.primary : '#64748b'} />
-          <Text style={[styles.tabText, activeTab === 'PROFILE' && { color: theme.primary }]}>My Profile</Text>
+          <Text style={[styles.tabText, activeTab === 'PROFILE' && { color: theme.primary }]}>My Details</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tabBtn, activeTab === 'ADDRESSES' && styles.activeTabBtn]}
           onPress={() => { tap(); setActiveTab('ADDRESSES'); }}
         >
           <Ionicons name="location-outline" size={17} color={activeTab === 'ADDRESSES' ? theme.primary : '#64748b'} />
-          <Text style={[styles.tabText, activeTab === 'ADDRESSES' && { color: theme.primary }]}>My Addresses</Text>
+          <Text style={[styles.tabText, activeTab === 'ADDRESSES' && { color: theme.primary }]}>Addresses</Text>
         </TouchableOpacity>
       </View>
 
@@ -164,42 +182,49 @@ export default function ProfileScreen() {
         <View style={styles.card}>
           <View style={styles.avatarSection}>
             <TouchableOpacity style={styles.avatarRingBig} activeOpacity={0.85} onPress={() => setIsPhotoModalOpen(true)}>
-              <Avatar uri={photoUrl} size={60} />
+              <Avatar uri={photoUrl} size={50} />
               <View style={styles.cameraBadge}>
-                <Ionicons name="camera" size={14} color="#ffffff" />
+                <Ionicons name="camera" size={12} color="#ffffff" />
               </View>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setIsPhotoModalOpen(true)}>
-              <Text style={styles.changePhotoText}>📷 Change Profile Photo</Text>
+              <Text style={styles.changePhotoText}>📷 Update Profile Photo</Text>
             </TouchableOpacity>
-            {user?.kingId ? (
-              <View style={styles.kingIdBadge}>
-                <Ionicons name="key-outline" size={12} color={theme.primary} />
-                <Text style={[styles.kingIdText, { color: theme.primary }]}>King ID: {user.kingId}</Text>
-              </View>
-            ) : null}
+
+            <View style={styles.singleMetaRow}>
+              <Text style={styles.metaNameText}>{user?.name || name || 'Farmer'}</Text>
+              <Text style={styles.metaDot}>·</Text>
+              <Ionicons name="key-outline" size={12} color={theme.primary} />
+              <Text style={[styles.metaKingIdText, { color: theme.primary }]}>King ID: {user?.kingId || '—'}</Text>
+              {user?.mobile ? (
+                <>
+                  <Text style={styles.metaDot}>·</Text>
+                  <Ionicons name="call-outline" size={12} color="#475569" />
+                  <Text style={styles.metaMobileText}>{user.mobile}</Text>
+                </>
+              ) : null}
+            </View>
           </View>
 
-          <Text style={styles.inputLabel}>Full Name</Text>
-          <View style={styles.inputWrap}>
-            <Ionicons name="person-outline" size={16} color="#94a3b8" />
-            <TextInput style={styles.input} value={name} onChangeText={setName} />
-          </View>
-
-          <Text style={styles.inputLabel}>Mobile Number</Text>
-          <View style={[styles.inputWrap, styles.readOnlySelector]}>
-            <Ionicons name="call-outline" size={16} color="#94a3b8" />
-            <Text style={styles.readOnlyText}>{user?.mobile}</Text>
-            <Ionicons name="lock-closed-outline" size={13} color="#94a3b8" />
-          </View>
-
-          <Text style={styles.inputLabel}>Email Address</Text>
+          <Text style={styles.inputLabel}>Email Address (Optional)</Text>
           <View style={styles.inputWrap}>
             <Ionicons name="mail-outline" size={16} color="#94a3b8" />
             <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="you@example.com" placeholderTextColor="#94a3b8" />
           </View>
 
-          <Text style={styles.inputLabel}>PIN Code</Text>
+          <Text style={styles.inputLabel}>Bill Printing Address (ਬਿੱਲ 'ਤੇ ਪ੍ਰਿੰਟ ਹੋਣ ਵਾਲਾ ਪਤਾ)</Text>
+          <View style={styles.inputWrap}>
+            <Ionicons name="document-text-outline" size={16} color="#94a3b8" />
+            <TextInput
+              style={styles.input}
+              value={billPrintingAddress}
+              onChangeText={setBillPrintingAddress}
+              placeholder="e.g. Grain Market, Shop No. 12, Phul"
+              placeholderTextColor="#94a3b8"
+            />
+          </View>
+
+          <Text style={styles.inputLabel}>Postal PIN Code</Text>
           <View style={styles.pincodeRow}>
             <View style={[styles.inputWrap, { flex: 1 }]}>
               <Ionicons name="navigate-outline" size={16} color={theme.primary} />
@@ -236,28 +261,62 @@ export default function ProfileScreen() {
             <Text style={[styles.pincodeStatusText, pincodeStatus.includes('❌') && { color: '#dc2626' }]}>{pincodeStatus}</Text>
           ) : null}
 
-          <Text style={styles.inputLabel}>Post Office / Locality</Text>
-          {officeOptions.length > 1 ? (
-            <View style={styles.officeChipRow}>
-              {officeOptions.map((office) => (
-                <TouchableOpacity
-                  key={office.name}
-                  style={[styles.officeChip, postOffice === office.name && { backgroundColor: theme.primary, borderColor: theme.primary }]}
-                  onPress={() => {
-                    tap();
-                    setPostOffice(office.name);
-                    setDistrict(office.district);
-                    setState(office.state);
-                  }}
-                >
-                  <Text style={[styles.officeChipText, postOffice === office.name && { color: '#ffffff' }]}>{office.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+          <Text style={styles.inputLabel}>Post Office / Regional Locality</Text>
+          {officeOptions.length > 0 ? (
+            postOffice && !isPostOfficeExpanded ? (
+              <TouchableOpacity
+                style={[styles.selectedOfficeCard, { borderColor: theme.primary, backgroundColor: theme.primaryLight ?? '#f0fdf4' }]}
+                activeOpacity={0.85}
+                onPress={() => {
+                  tap();
+                  setIsPostOfficeExpanded(true);
+                }}
+              >
+                <Ionicons name="checkmark-circle" size={18} color={theme.primary} />
+                <Text style={[styles.selectedOfficeText, { color: theme.primary }]} numberOfLines={1}>
+                  {postOffice} ({district})
+                </Text>
+                <View style={[styles.changePill, { borderColor: theme.primary }]}>
+                  <Text style={[styles.changePillText, { color: theme.primary }]}>Change</Text>
+                  <Ionicons name="chevron-down" size={12} color={theme.primary} />
+                </View>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.expandedOfficeList}>
+                {officeOptions.map((office) => {
+                  const isSelected = postOffice === office.name;
+                  return (
+                    <TouchableOpacity
+                      key={office.name}
+                      style={[
+                        styles.expandedOfficeCard,
+                        isSelected && { backgroundColor: theme.primaryLight ?? '#f0fdf4', borderColor: theme.primary },
+                      ]}
+                      onPress={() => {
+                        tap();
+                        setPostOffice(office.name);
+                        setDistrict(office.district);
+                        setState(office.state);
+                        setIsPostOfficeExpanded(false);
+                      }}
+                    >
+                      <Ionicons
+                        name={isSelected ? 'radio-button-on' : 'radio-button-off'}
+                        size={16}
+                        color={isSelected ? theme.primary : '#94a3b8'}
+                      />
+                      <Text style={[styles.expandedOfficeText, isSelected && { color: theme.primary, fontFamily: FONT.bold }]}>
+                        {office.name} ({office.district})
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )
           ) : (
             <View style={styles.inputWrap}>
               <Ionicons name="home-outline" size={16} color="#94a3b8" />
-              <TextInput style={styles.input} value={postOffice} onChangeText={setPostOffice} placeholder="Auto-filled from PIN" placeholderTextColor="#94a3b8" />
+              <TextInput style={styles.input} value={postOffice} onChangeText={setPostOffice} placeholder="Enter or auto-fill Post Office" placeholderTextColor="#94a3b8" />
             </View>
           )}
 
@@ -278,26 +337,11 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          <TouchableOpacity
-            style={styles.notificationRow}
-            activeOpacity={0.75}
-            onPress={() => { tap(); router.push('/notification-settings' as never); }}
-          >
-            <View style={[styles.rowIconBg, { backgroundColor: theme.primaryLight ?? '#f0fdf4' }]}>
-              <Ionicons name="notifications-outline" size={16} color={theme.primary} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.rowLabel}>Notification & Weather Settings</Text>
-              <Text style={styles.rowSubLabel}>Push alerts, rain & temperature setup</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
-          </TouchableOpacity>
-
           {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
           {isSaved && (
             <View style={styles.savedNotice}>
               <Ionicons name="checkmark-circle" size={15} color="#16a34a" />
-              <Text style={styles.savedNoticeText}>Profile Details Saved Successfully!</Text>
+              <Text style={styles.savedNoticeText}>Profile Information Updated Successfully!</Text>
             </View>
           )}
 
@@ -309,7 +353,7 @@ export default function ProfileScreen() {
             {updateAddress.isPending ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
-              <Text style={styles.saveBtnText}>Save Profile Changes</Text>
+              <Text style={styles.saveBtnText}>Save Profile Settings</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -337,49 +381,9 @@ export default function ProfileScreen() {
               ) : (
                 <>
                   <Ionicons name="image-outline" size={17} color={theme.primary} />
-                  <Text style={[styles.browsePhotoBtnText, { color: theme.primary }]}>Browse from Device</Text>
+                  <Text style={[styles.browsePhotoBtnText, { color: theme.primary }]}>Choose Photo from Device</Text>
                 </>
               )}
-            </TouchableOpacity>
-
-            <Text style={styles.inputLabel}>Choose Avatar Preset</Text>
-            <View style={styles.presetGrid}>
-              {AVATAR_PRESETS.map((preset) => (
-                <TouchableOpacity
-                  key={preset.url}
-                  style={styles.presetItemWrap}
-                  onPress={() => {
-                    tap();
-                    setPhotoUrl(preset.url);
-                  }}
-                >
-                  <View style={[styles.presetItem, photoUrl === preset.url && { borderColor: theme.primary, borderWidth: 3 }]}>
-                    <Avatar uri={preset.url} size={54} />
-                  </View>
-                  <Text style={styles.presetLabel}>{preset.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <Text style={styles.inputLabel}>Or Enter Image URL</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="https://example.com/my-photo.jpg"
-              value={customPhotoInput}
-              onChangeText={setCustomPhotoInput}
-            />
-
-            <TouchableOpacity
-              style={[styles.modalSubmitBtn, { backgroundColor: theme.primary }]}
-              onPress={() => {
-                tap();
-                if (customPhotoInput.trim()) {
-                  setPhotoUrl(customPhotoInput.trim());
-                }
-                setIsPhotoModalOpen(false);
-              }}
-            >
-              <Text style={styles.modalSubmitText}>Use Photo</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -392,6 +396,7 @@ function AddressesTab({ theme }: { theme: (typeof RoleThemes)['FARMER'] }) {
   const { data: addresses = [], isLoading } = useMyAddresses();
   const deleteAddress = useDeleteAddress();
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<CustomerAddress | null>(null);
 
   const removeAddress = (id: string) => {
     tap();
@@ -404,16 +409,16 @@ function AddressesTab({ theme }: { theme: (typeof RoleThemes)['FARMER'] }) {
         <TouchableOpacity
           style={[styles.addAddressCta, { borderColor: theme.primary }]}
           activeOpacity={0.85}
-          onPress={() => { tap(); setIsAddOpen(true); }}
+          onPress={() => { tap(); setEditingAddress(null); setIsAddOpen(true); }}
         >
           <Ionicons name="add-circle" size={20} color={theme.primary} />
-          <Text style={[styles.addAddressCtaText, { color: theme.primary }]}>Add New Address</Text>
+          <Text style={[styles.addAddressCtaText, { color: theme.primary }]}>Add New Registered Address</Text>
         </TouchableOpacity>
 
         {isLoading ? (
           <ActivityIndicator color={theme.primary} style={{ marginTop: 20 }} />
         ) : addresses.length === 0 ? (
-          <Text style={styles.addressEmptyText}>No saved addresses yet. Add one to use it at checkout.</Text>
+          <Text style={styles.addressEmptyText}>No registered addresses found. Add an address to proceed with orders.</Text>
         ) : (
           addresses.map((addr) => (
             <View key={addr.id} style={[styles.addressCard, premiumShadow('#0f172a', 'sm')]}>
@@ -421,9 +426,14 @@ function AddressesTab({ theme }: { theme: (typeof RoleThemes)['FARMER'] }) {
                 <View style={styles.addressTagBadge}>
                   <Text style={styles.addressTagText}>{addr.tag}</Text>
                 </View>
-                <TouchableOpacity onPress={() => removeAddress(addr.id)}>
-                  <Ionicons name="trash-outline" size={16} color="#dc2626" />
-                </TouchableOpacity>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <TouchableOpacity onPress={() => { tap(); setEditingAddress(addr); setIsAddOpen(true); }}>
+                    <Ionicons name="pencil" size={15} color={theme.primary} />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => removeAddress(addr.id)}>
+                    <Ionicons name="trash-outline" size={16} color="#dc2626" />
+                  </TouchableOpacity>
+                </View>
               </View>
               <Text style={styles.addressLine}>{addr.line}</Text>
               <Text style={styles.addressMeta}>{addr.postOffice}, {addr.district}, {addr.state} - {addr.pincode}</Text>
@@ -433,7 +443,12 @@ function AddressesTab({ theme }: { theme: (typeof RoleThemes)['FARMER'] }) {
         )}
       </View>
 
-      <AddAddressModal theme={theme} visible={isAddOpen} onClose={() => setIsAddOpen(false)} />
+      <AddAddressModal
+        theme={theme}
+        visible={isAddOpen}
+        editingAddress={editingAddress}
+        onClose={() => { setIsAddOpen(false); setEditingAddress(null); }}
+      />
     </ScrollView>
   );
 }
@@ -441,28 +456,52 @@ function AddressesTab({ theme }: { theme: (typeof RoleThemes)['FARMER'] }) {
 function AddAddressModal({
   theme,
   visible,
+  editingAddress,
   onClose,
 }: {
   theme: (typeof RoleThemes)['FARMER'];
   visible: boolean;
+  editingAddress?: CustomerAddress | null;
   onClose: () => void;
 }) {
+  const { user } = useAuth();
   const createAddress = useCreateAddress();
+  const updateAddress = useUpdateAddress();
   const [tag, setTag] = useState<'HOME' | 'FARM' | 'WORK'>('HOME');
+  const [fullName, setFullName] = useState(user?.name ?? '');
   const [line, setLine] = useState('');
-  const [mobile, setMobile] = useState('');
+  const [locality, setLocality] = useState('');
+  const [mobile, setMobile] = useState(user?.mobile ?? '');
   const [pincode, setPincode] = useState('');
   const [postOffice, setPostOffice] = useState('');
   const [district, setDistrict] = useState('');
   const [state, setState] = useState('');
   const [officeOptions, setOfficeOptions] = useState<PincodeOffice[]>([]);
+  const [isPostOfficeExpanded, setIsPostOfficeExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
+  React.useEffect(() => {
+    if (editingAddress) {
+      setTag(editingAddress.tag);
+      setFullName(user?.name || '');
+      setLine(editingAddress.line);
+      setMobile(editingAddress.mobile || user?.mobile || '');
+      setPincode(editingAddress.pincode);
+      setPostOffice(editingAddress.postOffice);
+      setDistrict(editingAddress.district);
+      setState(editingAddress.state);
+    } else {
+      reset();
+    }
+  }, [editingAddress, visible]);
+
   const reset = () => {
     setTag('HOME');
+    setFullName(user?.name ?? '');
     setLine('');
-    setMobile('');
+    setLocality('');
+    setMobile(user?.mobile ?? '');
     setPincode('');
     setPostOffice('');
     setDistrict('');
@@ -480,6 +519,7 @@ function AddAddressModal({
       setPostOffice(result.postOffice);
       setDistrict(result.district);
       setState(result.state);
+      setIsPostOfficeExpanded(true);
     } catch (err: any) {
       setStatus(`❌ ${err?.message ?? 'Could not fetch PIN details'}`);
     } finally {
@@ -488,10 +528,6 @@ function AddAddressModal({
   };
 
   const handleSave = async () => {
-    if (pincode.length !== 6) {
-      setStatus('❌ Enter a valid 6-digit PIN code.');
-      return;
-    }
     if (!line.trim()) {
       setStatus('❌ Enter the address line (house/street/farm plot).');
       return;
@@ -502,7 +538,17 @@ function AddAddressModal({
     }
     tap();
     try {
-      await createAddress.mutateAsync({ tag, line: line.trim(), mobile: mobile.trim() || undefined, postOffice, district, state, pincode });
+      const addressText = locality.trim() ? `${line.trim()}, ${locality.trim()}` : line.trim();
+      const fullAddressLine = fullName.trim() ? `${fullName.trim()} - ${addressText}` : addressText;
+
+      if (editingAddress) {
+        await updateAddress.mutateAsync({
+          id: editingAddress.id,
+          payload: { tag, line: fullAddressLine, mobile: mobile.trim() || undefined, postOffice, district, state, pincode },
+        });
+      } else {
+        await createAddress.mutateAsync({ tag, line: fullAddressLine, mobile: mobile.trim() || undefined, postOffice, district, state, pincode });
+      }
       reset();
       onClose();
     } catch (err: any) {
@@ -510,12 +556,14 @@ function AddAddressModal({
     }
   };
 
+  const isPending = createAddress.isPending || updateAddress.isPending;
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={() => { reset(); onClose(); }}>
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Add Address</Text>
+            <Text style={styles.modalTitle}>{editingAddress ? 'Edit Registered Address' : 'Add Registered Address'}</Text>
             <TouchableOpacity onPress={() => { reset(); onClose(); }}>
               <Ionicons name="close-circle" size={24} color="#64748b" />
             </TouchableOpacity>
@@ -533,7 +581,16 @@ function AddAddressModal({
             ))}
           </View>
 
-          <Text style={styles.inputLabel}>Address Line</Text>
+          <Text style={styles.inputLabel}>Full Name / Contact Person</Text>
+          <TextInput
+            style={styles.modalInput}
+            placeholder="Recipient full name *"
+            placeholderTextColor="#94a3b8"
+            value={fullName}
+            onChangeText={setFullName}
+          />
+
+          <Text style={[styles.inputLabel, { marginTop: 10 }]}>Address Line *</Text>
           <TextInput
             style={styles.modalInput}
             placeholder="House no, street / farm plot"
@@ -542,10 +599,19 @@ function AddAddressModal({
             onChangeText={setLine}
           />
 
-          <Text style={[styles.inputLabel, { marginTop: 10 }]}>Mobile Number (Optional)</Text>
+          <Text style={[styles.inputLabel, { marginTop: 10 }]}>Locality / Area / Landmark (Optional)</Text>
           <TextInput
             style={styles.modalInput}
-            placeholder="10-digit mobile number for this address"
+            placeholder="e.g. Near Water Tank / Main Road / Colony Name"
+            placeholderTextColor="#94a3b8"
+            value={locality}
+            onChangeText={setLocality}
+          />
+
+          <Text style={[styles.inputLabel, { marginTop: 10 }]}>Delivery Mobile Number</Text>
+          <TextInput
+            style={styles.modalInput}
+            placeholder="10-digit mobile number for delivery *"
             placeholderTextColor="#94a3b8"
             keyboardType="phone-pad"
             maxLength={10}
@@ -577,23 +643,57 @@ function AddAddressModal({
           </View>
 
           <Text style={styles.inputLabel}>Post Office / Locality</Text>
-          {officeOptions.length > 1 ? (
-            <View style={styles.officeChipRow}>
-              {officeOptions.map((office) => (
-                <TouchableOpacity
-                  key={office.name}
-                  style={[styles.officeChip, postOffice === office.name && { backgroundColor: theme.primary, borderColor: theme.primary }]}
-                  onPress={() => {
-                    tap();
-                    setPostOffice(office.name);
-                    setDistrict(office.district);
-                    setState(office.state);
-                  }}
-                >
-                  <Text style={[styles.officeChipText, postOffice === office.name && { color: '#ffffff' }]}>{office.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+          {officeOptions.length > 0 ? (
+            postOffice && !isPostOfficeExpanded ? (
+              <TouchableOpacity
+                style={[styles.selectedOfficeCard, { borderColor: theme.primary, backgroundColor: theme.primaryLight ?? '#f0fdf4' }]}
+                activeOpacity={0.85}
+                onPress={() => {
+                  tap();
+                  setIsPostOfficeExpanded(true);
+                }}
+              >
+                <Ionicons name="checkmark-circle" size={18} color={theme.primary} />
+                <Text style={[styles.selectedOfficeText, { color: theme.primary }]} numberOfLines={1}>
+                  {postOffice} ({district})
+                </Text>
+                <View style={[styles.changePill, { borderColor: theme.primary }]}>
+                  <Text style={[styles.changePillText, { color: theme.primary }]}>Change</Text>
+                  <Ionicons name="chevron-down" size={12} color={theme.primary} />
+                </View>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.expandedOfficeList}>
+                {officeOptions.map((office) => {
+                  const isSelected = postOffice === office.name;
+                  return (
+                    <TouchableOpacity
+                      key={office.name}
+                      style={[
+                        styles.expandedOfficeCard,
+                        isSelected && { backgroundColor: theme.primaryLight ?? '#f0fdf4', borderColor: theme.primary },
+                      ]}
+                      onPress={() => {
+                        tap();
+                        setPostOffice(office.name);
+                        setDistrict(office.district);
+                        setState(office.state);
+                        setIsPostOfficeExpanded(false);
+                      }}
+                    >
+                      <Ionicons
+                        name={isSelected ? 'radio-button-on' : 'radio-button-off'}
+                        size={16}
+                        color={isSelected ? theme.primary : '#94a3b8'}
+                      />
+                      <Text style={[styles.expandedOfficeText, isSelected && { color: theme.primary, fontFamily: FONT.bold }]}>
+                        {office.name} ({office.district})
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )
           ) : (
             <TextInput style={styles.modalInput} value={postOffice} onChangeText={setPostOffice} placeholder="Auto-filled from PIN" placeholderTextColor="#94a3b8" />
           )}
@@ -601,7 +701,11 @@ function AddAddressModal({
           <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
             <View style={{ flex: 1 }}>
               <Text style={styles.inputLabel}>District</Text>
-              <TextInput style={styles.modalInput} value={district} onChangeText={setDistrict} />
+              <View style={styles.readOnlySelector}>
+                <Ionicons name="location-outline" size={16} color="#64748b" />
+                <Text style={styles.readOnlyText} numberOfLines={1}>{district || '—'}</Text>
+                <Ionicons name="lock-closed-outline" size={13} color="#94a3b8" />
+              </View>
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.inputLabel}>State</Text>
@@ -614,8 +718,8 @@ function AddAddressModal({
 
           {status ? <Text style={styles.errorText}>{status}</Text> : null}
 
-          <TouchableOpacity style={[styles.modalSubmitBtn, { backgroundColor: theme.primary }]} onPress={handleSave} disabled={createAddress.isPending}>
-            {createAddress.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.modalSubmitText}>Save Address</Text>}
+          <TouchableOpacity style={[styles.modalSubmitBtn, { backgroundColor: theme.primary }]} onPress={handleSave} disabled={isPending}>
+            {isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.modalSubmitText}>{editingAddress ? 'Update Address' : 'Save Address'}</Text>}
           </TouchableOpacity>
         </View>
       </View>
@@ -652,12 +756,44 @@ const styles = StyleSheet.create({
   tagChipText: { fontSize: 11, fontFamily: FONT.bold, color: '#64748b' },
   scrollContent: { padding: SPACING.md, paddingBottom: 32, alignItems: 'center' },
   card: { width: '100%', maxWidth: 460, backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.lg, ...premiumShadow('#0f172a', 'sm') },
-  avatarSection: { alignItems: 'center', marginBottom: 14 },
-  kingIdBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
-  kingIdText: { fontSize: 11.5, fontFamily: FONT.bold, letterSpacing: 0.3 },
-  avatarRingBig: { width: 68, height: 68, borderRadius: 34, borderWidth: 2, borderColor: '#16a34a', padding: 2, position: 'relative', marginBottom: 6 },
-  cameraBadge: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#16a34a', position: 'absolute', bottom: 0, right: 0, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#ffffff' },
-  changePhotoText: { fontSize: 12, fontFamily: FONT.bold, color: '#16a34a' },
+  avatarSection: { alignItems: 'center', marginBottom: 8 },
+  singleMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    marginTop: 6,
+    flexWrap: 'wrap',
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  metaNameText: {
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+  },
+  metaKingIdText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+  },
+  metaMobileText: {
+    fontSize: 12,
+    fontFamily: FONT.semiBold,
+    color: '#475569',
+  },
+  metaDot: {
+    fontSize: 12,
+    color: '#94a3b8',
+    fontFamily: FONT.bold,
+    marginHorizontal: 1,
+  },
+  avatarRingBig: { width: 56, height: 56, borderRadius: 28, borderWidth: 2, borderColor: '#16a34a', padding: 2, position: 'relative', marginBottom: 4 },
+  cameraBadge: { width: 18, height: 18, borderRadius: 9, backgroundColor: '#16a34a', position: 'absolute', bottom: 0, right: 0, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#ffffff' },
+  changePhotoText: { fontSize: 11, fontFamily: FONT.bold, color: '#16a34a' },
   browsePhotoBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -669,6 +805,57 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   browsePhotoBtnText: { fontSize: 13, fontFamily: FONT.bold },
+  expandedOfficeList: {
+    gap: 6,
+    marginVertical: 4,
+  },
+  expandedOfficeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    backgroundColor: '#f8fafc',
+  },
+  expandedOfficeText: {
+    fontSize: 13,
+    fontFamily: FONT.medium,
+    color: '#334155',
+  },
+  selectedOfficeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: '#bbf7d0',
+    backgroundColor: '#f0fdf4',
+  },
+  selectedOfficeText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#15803d',
+  },
+  changePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+  },
+  changePillText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+  },
   officeChipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   officeChip: { paddingHorizontal: 10, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: '#e2e8f0', backgroundColor: '#f8fafc' },
   officeChipText: { fontSize: 11.5, fontFamily: FONT.semiBold, color: '#334155' },

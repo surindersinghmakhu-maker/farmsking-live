@@ -1,7 +1,13 @@
-import { IsIn } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, Min } from 'class-validator';
 import { FarmerSubscriptionPlan } from '@prisma/client';
 
 export class InitiateFarmerPlanPaymentDto {
-  @IsIn(['BASIC', 'STANDARD', 'PREMIUM'])
+  @IsEnum(FarmerSubscriptionPlan)
   targetPlan: FarmerSubscriptionPlan;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  billingPeriodDays?: number;
 }
+

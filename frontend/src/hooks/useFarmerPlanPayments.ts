@@ -12,15 +12,16 @@ export function usePendingFarmerPlanPayments() {
 
 export function useInitiateFarmerPlanPayment() {
   return useMutation({
-    mutationFn: ({ targetPlan, farmerId }: { targetPlan: FarmerPlanType; farmerId?: string }) =>
-      api.initiateFarmerPlanPayment(targetPlan, farmerId),
+    mutationFn: ({ targetPlan, billingPeriodDays, farmerId }: { targetPlan: FarmerPlanType; billingPeriodDays?: number; farmerId?: string }) =>
+      api.initiateFarmerPlanPayment(targetPlan, billingPeriodDays, farmerId),
   });
 }
 
 export function useSubmitFarmerPlanPayment() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, utr }: { id: string; utr?: string }) => api.submitFarmerPlanPayment(id, utr),
+    mutationFn: ({ id, utr, screenshotUrl }: { id: string; utr?: string; screenshotUrl?: string }) =>
+      api.submitFarmerPlanPayment(id, utr, screenshotUrl),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['farmer-plan-payments'] }),
   });
 }

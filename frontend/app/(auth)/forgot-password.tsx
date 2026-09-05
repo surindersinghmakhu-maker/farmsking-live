@@ -14,21 +14,26 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING } from '@/constants/theme';
-import { forgotPasswordStart, forgotPasswordVerify } from '@/src/api/auth.api';
+import { forgotPasswordStart, forgotPasswordVerify, forgotPasswordReset } from '@/src/api/auth.api';
 
 const theme = RoleThemes.FARMER;
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
-  const [step, setStep] = useState<'lookup' | 'answer' | 'done'>('lookup');
+  const [step, setStep] = useState<'lookup' | 'otp' | 'new-password' | 'done'>('lookup');
   const [mobile, setMobile] = useState('');
   const [pincode, setPincode] = useState('');
-  const [securityQuestion, setSecurityQuestion] = useState<string | null>(null);
-  const [securityAnswer, setSecurityAnswer] = useState('');
+  const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // Step 1: Lookup Mobile + PIN & send WhatsApp OTP
   const onLookup = async () => {
     setError(null);
     if (mobile.trim().length !== 10) {
@@ -42,28 +47,57 @@ export default function ForgotPasswordScreen() {
     setIsSubmitting(true);
     try {
       const result = await forgotPasswordStart({ mobile: mobile.trim(), pincode: pincode.trim() });
-      setSecurityQuestion(result.securityQuestion);
-      setStep('answer');
+      if (result.devOtp) {
+        setDevOtpHint(result.devOtp);
+      }
+      setStep('otp');
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Could not find an account with this mobile number and PIN code.');
+      setError(err?.response?.data?.message ?? 'Could not find an account matching this mobile number and PIN code.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const onVerify = async () => {
+  // Step 2: Verify WhatsApp OTP
+  const onVerifyOtp = async () => {
     setError(null);
-    if (!securityAnswer.trim()) {
-      setError('Enter your security answer.');
+    if (!otp.trim() || otp.trim().length < 4) {
+      setError('Enter the 4-digit OTP code received on WhatsApp.');
       return;
     }
     setIsSubmitting(true);
     try {
-      const result = await forgotPasswordVerify({ mobile: mobile.trim(), pincode: pincode.trim(), securityAnswer: securityAnswer.trim() });
+      await forgotPasswordVerify({ mobile: mobile.trim(), otp: otp.trim() });
+      setStep('new-password');
+    } catch (err: any) {
+      setError(err?.response?.data?.message ?? 'Invalid or expired OTP code.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Step 3: Update Password
+  const onResetPassword = async () => {
+    setError(null);
+    if (newPassword.length < 6) {
+      setError('New password must be at least 6 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match. Please re-type your password.');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const result = await forgotPasswordReset({
+        mobile: mobile.trim(),
+        otp: otp.trim(),
+        newPassword,
+      });
       setSuccessMessage(result.message);
       setStep('done');
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Security answer did not match.');
+      setError(err?.response?.data?.message ?? 'Could not update password. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -72,17 +106,19 @@ export default function ForgotPasswordScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => (step === 'lookup' ? router.back() : setStep('lookup'))}>
           <Ionicons name="arrow-back" size={20} color="#0f172a" />
         </TouchableOpacity>
 
         <Text style={styles.title}>Forgot Password</Text>
         <Text style={styles.subtitle}>
-          {step === 'lookup' && 'Enter your mobile number and PIN code to continue.'}
-          {step === 'answer' && 'Answer your security question to reset your password.'}
-          {step === 'done' && 'Your password has been reset.'}
+          {step === 'lookup' && 'Enter your 10-digit mobile number and 6-digit PIN code to receive a WhatsApp OTP.'}
+          {step === 'otp' && `Enter the 4-digit OTP sent to your WhatsApp number (+91 ${mobile}).`}
+          {step === 'new-password' && 'Enter and confirm your new account password.'}
+          {step === 'done' && 'Your password has been updated successfully!'}
         </Text>
 
+        {/* STEP 1: LOOKUP */}
         {step === 'lookup' && (
           <>
             <Text style={styles.label}>Mobile Number</Text>
@@ -116,41 +152,96 @@ export default function ForgotPasswordScreen() {
             {error ? <Text style={styles.error}>{error}</Text> : null}
 
             <TouchableOpacity onPress={onLookup} disabled={isSubmitting} activeOpacity={0.85} style={styles.button}>
-              {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Continue</Text>}
+              {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Send WhatsApp OTP</Text>}
             </TouchableOpacity>
           </>
         )}
 
-        {step === 'answer' && (
+        {/* STEP 2: OTP VERIFICATION */}
+        {step === 'otp' && (
           <>
-            <View style={styles.questionBox}>
-              <Text style={styles.questionText}>{securityQuestion}</Text>
+            <View style={styles.otpBox}>
+              <Ionicons name="logo-whatsapp" size={24} color="#25D366" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.otpBoxTitle}>WhatsApp OTP Sent!</Text>
+                <Text style={styles.otpBoxSubtitle}>
+                  Check your WhatsApp messages for the 4-digit code.
+                  {devOtpHint ? ` (Demo Code: ${devOtpHint})` : ''}
+                </Text>
+              </View>
             </View>
 
-            <Text style={styles.label}>Your Answer</Text>
+            <Text style={styles.label}>Enter 4-Digit OTP</Text>
             <View style={styles.inputWrap}>
-              <Ionicons name="help-circle-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
+              <Ionicons name="key-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
               <TextInput
-                style={styles.input}
-                placeholder="Your answer"
+                style={[styles.input, { letterSpacing: 6, fontSize: 18, fontFamily: FONT.extraBold }]}
+                keyboardType="numeric"
+                maxLength={6}
+                placeholder="• • • •"
                 placeholderTextColor="#94a3b8"
-                value={securityAnswer}
-                onChangeText={setSecurityAnswer}
+                value={otp}
+                onChangeText={setOtp}
               />
             </View>
 
             {error ? <Text style={styles.error}>{error}</Text> : null}
 
-            <TouchableOpacity onPress={onVerify} disabled={isSubmitting} activeOpacity={0.85} style={styles.button}>
-              {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Reset Password</Text>}
+            <TouchableOpacity onPress={onVerifyOtp} disabled={isSubmitting} activeOpacity={0.85} style={styles.button}>
+              {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Verify OTP</Text>}
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={onLookup} style={{ marginTop: 16, alignItems: 'center' }}>
+              <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: theme.primary }}>Didn't receive OTP? Resend via WhatsApp</Text>
             </TouchableOpacity>
           </>
         )}
 
+        {/* STEP 3: CREATE NEW PASSWORD */}
+        {step === 'new-password' && (
+          <>
+            <Text style={styles.label}>New Password</Text>
+            <View style={styles.inputWrap}>
+              <Ionicons name="lock-closed-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                secureTextEntry={!showPassword}
+                placeholder="Min 6 characters"
+                placeholderTextColor="#94a3b8"
+                value={newPassword}
+                onChangeText={setNewPassword}
+              />
+              <TouchableOpacity onPress={() => setShowPassword((s) => !s)}>
+                <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color="#94a3b8" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.label}>Confirm New Password</Text>
+            <View style={styles.inputWrap}>
+              <Ionicons name="lock-closed-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                secureTextEntry={!showPassword}
+                placeholder="Re-type new password"
+                placeholderTextColor="#94a3b8"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+              />
+            </View>
+
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+
+            <TouchableOpacity onPress={onResetPassword} disabled={isSubmitting} activeOpacity={0.85} style={styles.button}>
+              {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Update Password</Text>}
+            </TouchableOpacity>
+          </>
+        )}
+
+        {/* STEP 4: SUCCESS / DONE */}
         {step === 'done' && (
           <>
             <View style={styles.successBox}>
-              <Ionicons name="checkmark-circle" size={22} color="#16a34a" />
+              <Ionicons name="checkmark-circle" size={24} color="#16a34a" />
               <Text style={styles.successText}>{successMessage}</Text>
             </View>
             <TouchableOpacity onPress={() => router.replace('/(auth)/login')} activeOpacity={0.85} style={styles.button}>
@@ -189,25 +280,29 @@ const styles = StyleSheet.create({
     marginTop: 22,
   },
   buttonText: { color: '#fff', fontSize: 16, fontFamily: FONT.bold },
-  questionBox: {
+  otpBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
     backgroundColor: '#f0fdf4',
     borderWidth: 1,
     borderColor: '#bbf7d0',
     borderRadius: RADIUS.md,
     padding: 14,
-    marginTop: 6,
+    marginBottom: 6,
   },
-  questionText: { fontSize: 14.5, fontFamily: FONT.bold, color: '#0f172a' },
+  otpBoxTitle: { fontSize: 14, fontFamily: FONT.extraBold, color: '#166534' },
+  otpBoxSubtitle: { fontSize: 12.5, fontFamily: FONT.medium, color: '#15803d', marginTop: 1 },
   successBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
+    gap: 10,
     backgroundColor: '#f0fdf4',
     borderWidth: 1,
     borderColor: '#bbf7d0',
     borderRadius: RADIUS.md,
-    padding: 14,
+    padding: 16,
     marginTop: 6,
   },
-  successText: { flex: 1, fontSize: 13.5, fontFamily: FONT.medium, color: '#166534', lineHeight: 19 },
+  successText: { flex: 1, fontSize: 14, fontFamily: FONT.medium, color: '#166534', lineHeight: 20 },
 });

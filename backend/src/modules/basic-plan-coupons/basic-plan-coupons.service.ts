@@ -116,8 +116,8 @@ export class BasicPlanCouponsService {
     const [plan] = await this.prisma.$transaction([
       this.prisma.farmerPlan.upsert({
         where: { farmerId: farmer.id },
-        create: { farmerId: farmer.id, plan: FarmerSubscriptionPlan.BASIC, endDate: newEndDate },
-        update: { plan: FarmerSubscriptionPlan.BASIC, endDate: newEndDate, expiredAt: null },
+        create: { farmerId: farmer.id, plan: FarmerSubscriptionPlan.PRO, endDate: newEndDate },
+        update: { plan: FarmerSubscriptionPlan.PRO, endDate: newEndDate, expiredAt: null },
       }),
       this.prisma.basicPlanCoupon.update({
         where: { id: coupon.id },

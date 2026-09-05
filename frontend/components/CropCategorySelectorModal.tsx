@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
 import {
   INITIAL_CROP_CATEGORIES,
   INITIAL_CROPS_LIST,
@@ -36,16 +37,23 @@ export interface CropFormValues {
   sowingDate: string;
   unit: CropUnit;
   pricePerUnit: string;
+  minPricePerUnit?: string;
+  maxPricePerUnit?: string;
   stage: 'PLANTATION' | 'VEGETATIVE' | 'FLOWERING' | 'HARVESTING' | 'COMPLETED' | 'SOWING' | 'GROWTH';
   harvestType: HarvestType;
   irrigationType: IrrigationType;
+  plantCount?: string;
 }
+
+import { RegisteredCropField } from '@/src/store/crops-context';
 
 interface CropCategorySelectorModalProps {
   visible: boolean;
   onClose: () => void;
   onSaveCropForm: (values: CropFormValues) => void;
   customCrops?: CropItem[];
+  editingCrop?: RegisteredCropField | null;
+  onOpenUpgradeModal?: () => void;
 }
 
 const tap = () => {
@@ -57,31 +65,97 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
   onClose,
   onSaveCropForm,
   customCrops,
+  editingCrop,
+  onOpenUpgradeModal,
 }) => {
+  const router = useRouter();
   const [selectedCatId, setSelectedCatId] = useState<string>('flowers');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState<boolean>(false);
 
-  // Step 1: Crop List Selection -> Step 2: Attached Details Form
-  const [step, setStep] = useState<'LIST' | 'FORM'>('LIST');
+  // Single Unified Form Modal
   const [selectedCrop, setSelectedCrop] = useState<CropItem | null>(null);
+  const [isCropPickerOpen, setIsCropPickerOpen] = useState<boolean>(false);
+  const [isAreaUnitPickerOpen, setIsAreaUnitPickerOpen] = useState<boolean>(false);
 
   // Form Fields
   const [fieldName, setFieldName] = useState('');
-  const [area, setArea] = useState('4');
+  const [area, setArea] = useState('1');
+  const [plantCount, setPlantCount] = useState('');
   const [selectedAreaUnit, setSelectedAreaUnit] = useState<LandAreaUnit>('Killa (Acre)');
   const [selectedIrrigation, setSelectedIrrigation] = useState<IrrigationType>('Tube Well / Borewell');
   const [cropStage, setCropStage] = useState<'PLANTATION' | 'VEGETATIVE' | 'FLOWERING' | 'HARVESTING' | 'COMPLETED' | 'SOWING' | 'GROWTH'>('PLANTATION');
-  const [sowingDate, setSowingDate] = useState('15 Oct 2026');
+  const [sowingDate, setSowingDate] = useState(() =>
+    new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+  );
   const [selectedSeason, setSelectedSeason] = useState<string>('Rabi (Winter)');
   const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
   const [selectedUnit, setSelectedUnit] = useState<CropUnit>('KG');
-  const [pricePerUnit, setPricePerUnit] = useState('50');
+  const [minPricePerUnit, setMinPricePerUnit] = useState('40');
+  const [maxPricePerUnit, setMaxPricePerUnit] = useState('60');
   const [errorNotice, setErrorNotice] = useState<string | null>(null);
 
-  // "Other Crops" has no preset list — the farmer types their own crop name.
   const [customCropName, setCustomCropName] = useState('');
+  const [varietyName, setVarietyName] = useState('');
   const [customHarvestType, setCustomHarvestType] = useState<HarvestType>('CONTINUOUS');
+
+  useEffect(() => {
+    if (visible && editingCrop) {
+      setFieldName(editingCrop.fieldName || '');
+
+      // Parse area & land area unit accurately
+      if (editingCrop.area) {
+        const parts = editingCrop.area.trim().split(' ');
+        const numericVal = parts[0];
+        setArea(numericVal || '1');
+
+        const restUnitText = parts.slice(1).join(' ').trim();
+        const foundUnit = LAND_AREA_UNITS.find(
+          (u) => u.unit.toLowerCase() === restUnitText.toLowerCase() || u.label.toLowerCase() === restUnitText.toLowerCase()
+        );
+        if (foundUnit) {
+          setSelectedAreaUnit(foundUnit.unit);
+        }
+      } else {
+        setArea('1');
+      }
+
+      setVarietyName(editingCrop.variety || '');
+      setPlantCount(editingCrop.plantCount ? String(editingCrop.plantCount) : '');
+      if (editingCrop.sowingDate) setSowingDate(editingCrop.sowingDate);
+      if (editingCrop.unit) setSelectedUnit(editingCrop.unit);
+      if (editingCrop.minPricePerUnit) setMinPricePerUnit(editingCrop.minPricePerUnit);
+      if (editingCrop.maxPricePerUnit) setMaxPricePerUnit(editingCrop.maxPricePerUnit);
+      else if (editingCrop.pricePerUnit) setMaxPricePerUnit(editingCrop.pricePerUnit);
+      if (editingCrop.stage) setCropStage(editingCrop.stage);
+      if (editingCrop.irrigationType) setSelectedIrrigation(editingCrop.irrigationType);
+      if (editingCrop.harvestType) setCustomHarvestType(editingCrop.harvestType);
+
+      const matchedCat = INITIAL_CROP_CATEGORIES.find((c) => c.name === editingCrop.categoryName) || INITIAL_CROP_CATEGORIES[0];
+      setSelectedCatId(matchedCat.id);
+
+      const baseName = editingCrop.cropName.replace(/\s*\([^)]*\)/g, '').trim();
+      setSelectedCrop({
+        id: editingCrop.id,
+        categoryId: matchedCat.id,
+        name: baseName,
+        hindiName: baseName,
+        variety: editingCrop.variety,
+        defaultUnit: editingCrop.unit,
+        harvestType: editingCrop.harvestType,
+      });
+    } else if (visible && !editingCrop) {
+      // Reset form defaults when adding a new crop
+      setFieldName('');
+      setArea('1');
+      setVarietyName('');
+      setPlantCount('');
+      setSelectedIrrigation('Tube Well / Borewell');
+      setCustomHarvestType('CONTINUOUS');
+      setSowingDate(new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }));
+      setSelectedCrop(null);
+    }
+  }, [visible, editingCrop]);
 
   const allCrops = customCrops || INITIAL_CROPS_LIST;
 
@@ -127,39 +201,57 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
   const handleSelectCropItem = (crop: CropItem) => {
     tap();
     setSelectedCrop(crop);
-    setFieldName(`${crop.name} Plot 1`);
+    if (!fieldName.trim()) {
+      setFieldName(`${crop.name} Plot 1`);
+    }
     setSelectedUnit(crop.defaultUnit || 'KG');
-    setPricePerUnit(crop.defaultPrice ? String(crop.defaultPrice) : '50');
-    setStep('FORM');
+    setVarietyName(crop.variety || '');
+    const defPrice = crop.defaultPrice || 50;
+    setMaxPricePerUnit(String(Math.round(defPrice)));
+    setMinPricePerUnit(String(Math.round(defPrice)));
   };
 
   const handleFormSubmit = () => {
-    if (!fieldName.trim() || !area.trim()) {
-      setErrorNotice('⚠️ Please enter Field Name and Land Area Size.');
+    const maxP = parseFloat(maxPricePerUnit) || 0;
+    if (maxP <= 0) {
+      setErrorNotice('⚠️ Please enter a valid Estimated max price.');
       return;
     }
     tap();
-    if (selectedCrop) {
-      const formattedSowing = selectedSeason ? `${sowingDate} (${selectedSeason})` : sowingDate;
-      onSaveCropForm({
-        crop: selectedCrop,
-        category: currentCategory,
-        fieldName: fieldName.trim(),
-        area: area.trim(),
-        areaUnit: selectedAreaUnit,
-        sowingDate: formattedSowing,
-        unit: selectedUnit,
-        pricePerUnit: pricePerUnit.trim(),
-        stage: cropStage,
-        harvestType: selectedCrop.harvestType || 'CONTINUOUS',
-        irrigationType: selectedIrrigation,
-      });
-    }
+    const baseCrop = selectedCrop || filteredCrops[0] || {
+      id: `custom-${Date.now()}`,
+      categoryId: selectedCatId,
+      name: customCropName || 'Crop',
+      hindiName: customCropName || 'Crop',
+      harvestType: 'CONTINUOUS',
+    };
+    const cropToSave: CropItem = {
+      ...baseCrop,
+      variety: varietyName.trim() || undefined,
+    };
+    onSaveCropForm({
+      crop: cropToSave,
+      category: currentCategory,
+      fieldName: fieldName.trim(),
+      area: area.trim(),
+      areaUnit: selectedAreaUnit,
+      sowingDate: sowingDate,
+      unit: selectedUnit,
+      pricePerUnit: String(maxP),
+      minPricePerUnit: String(maxP),
+      maxPricePerUnit: String(maxP),
+      stage: cropStage,
+      harvestType: cropToSave.harvestType || 'CONTINUOUS',
+      irrigationType: selectedIrrigation,
+      plantCount: plantCount.trim() || undefined,
+    });
     // Reset state & close
-    setStep('LIST');
     setSelectedCrop(null);
     setFieldName('');
-    setArea('');
+    setArea('1');
+    setVarietyName('');
+    setPlantCount('');
+    setSowingDate(new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }));
     setErrorNotice(null);
     onClose();
   };
@@ -172,305 +264,229 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
         <View style={styles.modalCard}>
           {/* Header */}
           <View style={styles.headerRow}>
-            {step === 'FORM' ? (
-              <TouchableOpacity
-                style={styles.backBtn}
-                onPress={() => {
-                  tap();
-                  setStep('LIST');
-                }}
-              >
-                <Ionicons name="arrow-back" size={18} color="#0f172a" />
-              </TouchableOpacity>
-            ) : null}
             <View style={{ flex: 1 }}>
-              <Text style={styles.modalTitle}>
-                {step === 'LIST' ? 'Add New Crop to My Farm' : 'Crop Details Form'}
-              </Text>
-              <Text style={styles.modalSub}>
-                {step === 'LIST'
-                  ? 'Select category & crop name from categories below'
-                  : `Fill land area, water source & stage for ${selectedCrop?.name}`}
-              </Text>
+              <Text style={styles.modalTitle}>{editingCrop ? "✏️ Edit Crop Details" : "Add Crop Form"}</Text>
+              <Text style={styles.modalSub}>{editingCrop ? "Update crop specifications & field details below" : "Fill crop details & field specifications below"}</Text>
             </View>
             <TouchableOpacity style={styles.closeBtn} activeOpacity={0.7} onPress={onClose}>
               <Ionicons name="close" size={20} color="#475569" />
             </TouchableOpacity>
           </View>
 
-          {step === 'LIST' ? (
-            <>
-              {/* Category Dropdown Selector Field */}
-              <Text style={styles.dropdownLabel}>Selected Crop Category (Tap to change category)</Text>
-              <TouchableOpacity
-                style={[styles.dropdownSelector, { borderColor: currentCategory.color, backgroundColor: currentCategory.bg }]}
-                activeOpacity={0.8}
-                onPress={() => {
-                  tap();
-                  setIsCategoryPickerOpen(true);
-                }}
-              >
-                <View style={[styles.catIconWrap, { backgroundColor: '#ffffff' }]}>
-                  <Ionicons name={currentCategory.icon as any} size={20} color={currentCategory.color} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={[styles.dropdownSelectedText, { color: currentCategory.color }]} numberOfLines={1}>
-                      {currentCategory.name}
-                    </Text>
-                  </View>
-                  {currentCategory.examples ? (
-                    <Text style={styles.dropdownSubText} numberOfLines={1}>
-                      Includes: {currentCategory.examples}
-                    </Text>
-                  ) : null}
-                </View>
-                <Ionicons name="chevron-down-circle" size={22} color={currentCategory.color} />
-              </TouchableOpacity>
-
-              {/* Horizontal Scrollable Category Quick Bar */}
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catQuickBar}>
-                {INITIAL_CROP_CATEGORIES.map((cat) => {
-                  const isSelected = cat.id === selectedCatId;
-                  return (
-                    <TouchableOpacity
-                      key={cat.id}
+          <ScrollView style={{ maxHeight: 520 }} showsVerticalScrollIndicator={false}>
+            {/* 1. Category Horizontal Pill Bar */}
+            <Text style={styles.inputLabelCompact}>Select Crop Category *</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 4 }}>
+              {INITIAL_CROP_CATEGORIES.map((cat) => {
+                const isSelected = cat.id === selectedCatId;
+                return (
+                  <TouchableOpacity
+                    key={cat.id}
+                    style={[
+                      styles.compactCategoryChip,
+                      isSelected
+                        ? { backgroundColor: cat.color, borderColor: cat.color }
+                        : { backgroundColor: cat.bg, borderColor: '#cbd5e1' },
+                    ]}
+                    onPress={() => handleSelectCategory(cat.id)}
+                  >
+                    <Ionicons name={cat.icon as any} size={13} color={isSelected ? '#ffffff' : cat.color} />
+                    <Text
                       style={[
-                        styles.catQuickPill,
-                        isSelected
-                          ? { backgroundColor: cat.color, borderColor: cat.color }
-                          : { backgroundColor: cat.bg, borderColor: 'transparent' },
+                        styles.compactCategoryText,
+                        isSelected ? { color: '#ffffff', fontFamily: FONT.bold } : { color: cat.color },
                       ]}
-                      onPress={() => handleSelectCategory(cat.id)}
                     >
-                      <Ionicons name={cat.icon as any} size={14} color={isSelected ? '#ffffff' : cat.color} />
-                      <Text
-                        style={[
-                          styles.catQuickText,
-                          isSelected ? { color: '#ffffff', fontFamily: FONT.bold } : { color: cat.color },
-                        ]}
-                      >
-                        {cat.name}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
+                      {cat.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
 
-              {/* Search bar inside category */}
-              {selectedCatId !== 'other' ? (
-                <View style={styles.searchBar}>
-                  <Ionicons name="search" size={17} color="#94a3b8" />
+            {/* 2. Select Crop & Variety Name Side-by-Side Row */}
+            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', marginTop: 4 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.inputLabelCompact} numberOfLines={1}>Select Crop *</Text>
+                {selectedCatId !== 'other' ? (
+                  <TouchableOpacity
+                    style={[
+                      styles.cropSelectBtnLarge,
+                      { borderColor: currentCategory.color, backgroundColor: currentCategory.bg, height: 40, marginBottom: 0 },
+                    ]}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      tap();
+                      setIsCropPickerOpen(true);
+                    }}
+                  >
+                    <Ionicons name="leaf" size={15} color={currentCategory.color} />
+                    <Text style={[styles.cropSelectTextLarge, { color: currentCategory.color }]} numberOfLines={1}>
+                      {selectedCrop ? selectedCrop.name : `Choose Crop (${filteredCrops.length})`}
+                    </Text>
+                    <Ionicons name="chevron-down" size={13} color={currentCategory.color} />
+                  </TouchableOpacity>
+                ) : (
                   <TextInput
-                    style={styles.searchInput}
-                    placeholder={`Search crop name in ${currentCategory.name}...`}
-                    placeholderTextColor="#94a3b8"
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                  />
-                  {searchQuery ? (
-                    <TouchableOpacity onPress={() => setSearchQuery('')}>
-                      <Ionicons name="close-circle" size={16} color="#94a3b8" />
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
-              ) : null}
-
-              {selectedCatId === 'other' ? (
-                /* OTHER CROPS: no preset list — farmer types their own crop name */
-                <View style={styles.customCropBox}>
-                  <Text style={styles.customCropHint}>
-                    This category is for crops not listed in standard categories. Enter your custom crop name below.
-                  </Text>
-
-                  <Text style={styles.inputLabel}>Crop Name *</Text>
-                  <TextInput
-                    style={styles.formInput}
-                    placeholder="e.g. Dragon Fruit / Passion Fruit"
+                    style={styles.compactFormInput}
+                    placeholder="Custom Crop Name"
                     placeholderTextColor="#94a3b8"
                     value={customCropName}
-                    onChangeText={setCustomCropName}
+                    onChangeText={(text) => {
+                      setCustomCropName(text);
+                      setFieldName(text.trim() ? `${text.trim()} Plot 1` : '');
+                    }}
                   />
-
-                  <Text style={styles.inputLabel}>Harvest Type *</Text>
-                  <View style={styles.unitGrid}>
-                    {[
-                      { key: 'CONTINUOUS' as HarvestType, label: '🔄 Daily / Continuous Harvest' },
-                      { key: 'ONE_TIME' as HarvestType, label: '🌾 One-Time Seasonal Harvest' },
-                    ].map((h) => {
-                      const isSelected = h.key === customHarvestType;
-                      return (
-                        <TouchableOpacity
-                          key={h.key}
-                          style={[
-                            styles.unitChip,
-                            isSelected && { backgroundColor: currentCategory.color, borderColor: currentCategory.color },
-                          ]}
-                          onPress={() => {
-                            tap();
-                            setCustomHarvestType(h.key);
-                          }}
-                        >
-                          <Text style={[styles.unitChipText, isSelected && { color: '#ffffff', fontFamily: FONT.bold }]}>
-                            {h.label}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-
-                  <TouchableOpacity
-                    style={[styles.submitFormBtn, { backgroundColor: currentCategory.color, opacity: customCropName.trim() ? 1 : 0.5 }]}
-                    activeOpacity={0.85}
-                    onPress={handleAddCustomCrop}
-                    disabled={!customCropName.trim()}
-                  >
-                    <Ionicons name="add-circle" size={18} color="#ffffff" />
-                    <Text style={styles.submitFormText}>Continue with This Crop</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <>
-                  {/* List Header */}
-                  <View style={styles.listHeader}>
-                    <Text style={styles.listHeaderTitle}>
-                      Available Crop Names in {currentCategory.name} ({filteredCrops.length})
-                    </Text>
-                  </View>
-
-                  {/* Crop List */}
-                  <ScrollView style={styles.cropListScroll} showsVerticalScrollIndicator={false}>
-                    {filteredCrops.length > 0 ? (
-                      filteredCrops.map((crop) => {
-                        const isCont = (crop.harvestType || 'CONTINUOUS') === 'CONTINUOUS';
-                        return (
-                          <TouchableOpacity
-                            key={crop.id}
-                            style={[styles.cropRow, premiumShadow('#0f172a', 'sm')]}
-                            activeOpacity={0.8}
-                            onPress={() => handleSelectCropItem(crop)}
-                          >
-                            <View style={[styles.cropIconBg, { backgroundColor: currentCategory.bg }]}>
-                              <Ionicons name="leaf" size={20} color={currentCategory.color} />
-                            </View>
-
-                            <View style={{ flex: 1 }}>
-                              <Text style={styles.cropName}>{crop.name}</Text>
-                              {crop.variety ? (
-                                <Text style={styles.cropDesc}>🌱 {crop.variety}</Text>
-                              ) : null}
-                              <View style={styles.badgeRow}>
-                                <View style={[styles.miniBadge, isCont ? { backgroundColor: '#e0f2fe' } : { backgroundColor: '#fef3c7' }]}>
-                                  <Text style={[styles.miniBadgeText, isCont ? { color: '#0369a1' } : { color: '#b45309' }]}>
-                                    {isCont ? '🔄 Daily Harvest' : '🌾 One-Time Harvest'}
-                                  </Text>
-                                </View>
-                                {crop.season ? (
-                                  <View style={styles.miniBadge}>
-                                    <Text style={styles.miniBadgeText}>{crop.season}</Text>
-                                  </View>
-                                ) : null}
-                              </View>
-                            </View>
-
-                            <Ionicons name="add-circle" size={24} color={currentCategory.color} />
-                          </TouchableOpacity>
-                        );
-                      })
-                    ) : (
-                      <View style={styles.emptyWrap}>
-                        <Ionicons name="leaf-outline" size={32} color="#cbd5e1" />
-                        <Text style={styles.emptyText}>No crops found in this category.</Text>
-                        <Text style={styles.emptySub}>Admin can add new crop names from Admin Panel.</Text>
-                      </View>
-                    )}
-                  </ScrollView>
-                </>
-              )}
-            </>
-          ) : (
-            /* STEP 2: ATTACHED CROP DETAILS FORM */
-            <ScrollView style={{ maxHeight: 480 }} showsVerticalScrollIndicator={false}>
-              {/* Selected Crop Banner */}
-              <View style={[styles.selectedBanner, { backgroundColor: currentCategory.bg }]}>
-                <Ionicons name="leaf" size={24} color={currentCategory.color} />
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.selectedCropTitle, { color: currentCategory.color }]}>
-                    {selectedCrop?.name}
-                  </Text>
-                  <Text style={styles.selectedCropSub}>
-                    Category: {currentCategory.name} {selectedCrop?.variety ? `· ${selectedCrop.variety}` : ''}
-                  </Text>
-                </View>
+                )}
               </View>
 
-              {/* READ ONLY HARVEST TYPE INFORMATIONAL NOTICE */}
-              <View
-                style={[
-                  styles.readOnlyNoticeBox,
-                  isContinuousHarvest
-                    ? { backgroundColor: '#e0f2fe', borderColor: '#bae6fd' }
-                    : { backgroundColor: '#fef3c7', borderColor: '#fde68a' },
-                ]}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Ionicons
-                    name={isContinuousHarvest ? 'sync-circle' : 'leaf'}
-                    size={18}
-                    color={isContinuousHarvest ? '#0284c7' : '#b45309'}
-                  />
-                  <Text
-                    style={[
-                      styles.readOnlyNoticeTitle,
-                      isContinuousHarvest ? { color: '#0369a1' } : { color: '#92400e' },
-                    ]}
-                  >
-                    {isContinuousHarvest
-                      ? '🔄 Daily / Continuous Harvest Crop'
-                      : '🌾 One-Time Seasonal Harvest Crop'}
-                  </Text>
-                  <Ionicons name="lock-closed-outline" size={13} color="#64748b" />
-                </View>
-                <Text
-                  style={[
-                    styles.readOnlyNoticeSub,
-                    isContinuousHarvest ? { color: '#075985' } : { color: '#78350f' },
-                  ]}
+              <View style={{ flex: 1 }}>
+                <Text style={styles.inputLabelCompact} numberOfLines={1}>Variety (Optional)</Text>
+                <TextInput
+                  style={styles.compactFormInput}
+                  placeholder="e.g. Desi / Pusa Ruby"
+                  placeholderTextColor="#94a3b8"
+                  value={varietyName}
+                  onChangeText={setVarietyName}
+                />
+              </View>
+            </View>
+
+            {/* 3. Side-by-Side Row: Field Name (Left) + Sowing Date (Right) */}
+            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', marginTop: 4 }}>
+              <View style={{ flex: 1.2 }}>
+                <Text style={styles.inputLabelCompact}>Farm / Field Name *</Text>
+                <TextInput
+                  style={styles.compactFormInput}
+                  placeholder="e.g. Plot 1 / Field"
+                  placeholderTextColor="#94a3b8"
+                  value={fieldName}
+                  onChangeText={setFieldName}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.inputLabelCompact}>Sowing Date *</Text>
+                <TouchableOpacity
+                  style={styles.calendarSelector}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    tap();
+                    setIsCalendarOpen(true);
+                  }}
                 >
-                  {isContinuousHarvest
-                    ? 'ℹ️ Read-Only Note: This crop undergoes continuous harvesting, so daily Mandi market rates will be reflected.'
-                    : 'ℹ️ Read-Only Note: This crop is harvested once per season, so a single seasonal harvest price applies.'}
-                </Text>
+                  <Ionicons name="calendar" size={15} color="#16a34a" />
+                  <Text style={styles.calendarSelectorDate} numberOfLines={1}>
+                    {sowingDate}
+                  </Text>
+                </TouchableOpacity>
               </View>
+            </View>
 
-              {/* SOURCE OF WATER / IRRIGATION TYPE SELECTOR */}
-              <Text style={styles.inputLabel}>Source of Water / Irrigation Type *</Text>
-              <View style={styles.unitGrid}>
+            {/* 4. Current Crop Stage */}
+            <Text style={styles.inputLabelCompact}>Current Crop Stage *</Text>
+            <View style={styles.compactStageGrid}>
+              {[
+                { key: 'PLANTATION', label: '🌱 Plantation', color: '#d97706', bg: '#fef3c7' },
+                { key: 'VEGETATIVE', label: '🌿 Vegetative', color: '#0284c7', bg: '#e0f2fe' },
+                { key: 'FLOWERING', label: '🌸 Flowering', color: '#e11d48', bg: '#ffe4e6' },
+                { key: 'HARVESTING', label: '🌾 Harvesting', color: '#16a34a', bg: '#dcfce7' },
+              ].map((st) => {
+                const isSelected = st.key === cropStage;
+                return (
+                  <TouchableOpacity
+                    key={st.key}
+                    style={[
+                      styles.compactStageChip,
+                      isSelected
+                        ? { backgroundColor: st.color, borderColor: st.color }
+                        : { backgroundColor: st.bg, borderColor: 'transparent' },
+                    ]}
+                    onPress={() => {
+                      tap();
+                      setCropStage(st.key as any);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.compactStageText,
+                        isSelected ? { color: '#ffffff', fontFamily: FONT.bold } : { color: st.color },
+                      ]}
+                    >
+                      {st.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* 5. 3-Column Row: Total Area Size + Land Area Unit + No. of Plants (Optional) */}
+            <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start', marginTop: 4 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.inputLabelCompact} numberOfLines={1}>Area Size *</Text>
+                <TextInput
+                  style={styles.compactFormInput}
+                  placeholder="e.g. 1"
+                  placeholderTextColor="#94a3b8"
+                  keyboardType="numeric"
+                  value={area}
+                  onChangeText={setArea}
+                />
+              </View>
+              <View style={{ flex: 1.1 }}>
+                <Text style={styles.inputLabelCompact} numberOfLines={1}>Land Unit *</Text>
+                <TouchableOpacity
+                  style={styles.dropdownUnitSelectorBtn}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    tap();
+                    setIsAreaUnitPickerOpen(true);
+                  }}
+                >
+                  <Ionicons name="map-outline" size={14} color="#16a34a" />
+                  <Text style={styles.dropdownUnitSelectorText} numberOfLines={1}>
+                    {selectedAreaUnit}
+                  </Text>
+                  <Ionicons name="chevron-down" size={12} color="#64748b" />
+                </TouchableOpacity>
+              </View>
+              <View style={{ flex: 1.1 }}>
+                <Text style={styles.inputLabelCompact} numberOfLines={1}>No. of Plants (Opt.)</Text>
+                <TextInput
+                  style={styles.compactFormInput}
+                  placeholder="e.g. 500"
+                  placeholderTextColor="#94a3b8"
+                  keyboardType="numeric"
+                  value={plantCount}
+                  onChangeText={setPlantCount}
+                />
+              </View>
+            </View>
+
+            {/* 6. Irrigation Type & Harvest Pattern Row */}
+            <View style={{ marginTop: 6, gap: 6 }}>
+              <Text style={styles.inputLabelCompact}>Irrigation System *</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 5 }}>
                 {IRRIGATION_TYPES.map((irr) => {
                   const isSelected = irr.type === selectedIrrigation;
                   return (
                     <TouchableOpacity
                       key={irr.type}
                       style={[
-                        styles.unitChip,
+                        styles.compactMiniChip,
                         isSelected
                           ? { backgroundColor: '#0284c7', borderColor: '#0284c7' }
-                          : { backgroundColor: '#f8fafc' },
+                          : { backgroundColor: '#e0f2fe', borderColor: '#cbd5e1' },
                       ]}
                       onPress={() => {
                         tap();
                         setSelectedIrrigation(irr.type);
                       }}
                     >
-                      <Ionicons
-                        name={irr.icon as any}
-                        size={13}
-                        color={isSelected ? '#ffffff' : '#0369a1'}
-                      />
+                      <Ionicons name={irr.icon as any} size={12} color={isSelected ? '#ffffff' : '#0284c7'} />
                       <Text
                         style={[
-                          styles.unitChipText,
-                          isSelected ? { color: '#ffffff', fontFamily: FONT.bold } : { color: '#334155' },
+                          styles.compactMiniText,
+                          isSelected ? { color: '#ffffff', fontFamily: FONT.bold } : { color: '#0369a1' },
                         ]}
                       >
                         {irr.label}
@@ -478,131 +494,96 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                     </TouchableOpacity>
                   );
                 })}
+              </ScrollView>
+
+              <Text style={[styles.inputLabelCompact, { marginTop: 4 }]}>Harvest Pattern *</Text>
+              <View style={{ flexDirection: 'row', gap: 6 }}>
+                <TouchableOpacity
+                  style={[
+                    styles.compactMiniChip,
+                    { flex: 1, justifyContent: 'center', height: 34 },
+                    customHarvestType === 'CONTINUOUS'
+                      ? { backgroundColor: '#16a34a', borderColor: '#16a34a' }
+                      : { backgroundColor: '#f0fdf4', borderColor: '#cbd5e1' },
+                  ]}
+                  onPress={() => {
+                    tap();
+                    setCustomHarvestType('CONTINUOUS');
+                  }}
+                >
+                  <Text style={[styles.compactMiniText, customHarvestType === 'CONTINUOUS' ? { color: '#fff', fontFamily: FONT.bold } : { color: '#16a34a' }]}>
+                     Daily Harvest (ਸੁਭਾ/ਸ਼ਾਮ)
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.compactMiniChip,
+                    { flex: 1, justifyContent: 'center', height: 34 },
+                    customHarvestType === 'ONE_TIME'
+                      ? { backgroundColor: '#d97706', borderColor: '#d97706' }
+                      : { backgroundColor: '#fef3c7', borderColor: '#cbd5e1' },
+                  ]}
+                  onPress={() => {
+                    tap();
+                    setCustomHarvestType('ONE_TIME');
+                  }}
+                >
+                  <Text style={[styles.compactMiniText, customHarvestType === 'ONE_TIME' ? { color: '#fff', fontFamily: FONT.bold } : { color: '#d97706' }]}>
+                    🌾 1-Time Harvest (ਇੱਕ ਵਾਰ)
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* 7. Dedicated Sale / Market Information Card */}
+            <View style={styles.saleInfoCard}>
+              <View style={styles.saleCardHeader}>
+                <Ionicons name="pricetag" size={14} color="#16a34a" />
+                <Text style={styles.saleCardTitle}>Sale / Market Information (Estimated Max Price)</Text>
               </View>
 
-              {/* Crop Growth Stage Selector */}
-              <Text style={styles.inputLabel}>Current Crop Stage *</Text>
-              <View style={styles.unitGrid}>
-                {[
-                  { key: 'PLANTATION', label: '🌱 Plantation / Sowing', color: '#d97706', bg: '#fef3c7' },
-                  { key: 'VEGETATIVE', label: '🌿 Vegetative Growth', color: '#0284c7', bg: '#e0f2fe' },
-                  { key: 'FLOWERING', label: '🌸 Flowering & Podding', color: '#e11d48', bg: '#ffe4e6' },
-                  { key: 'HARVESTING', label: '🌾 Harvesting Ready', color: '#16a34a', bg: '#dcfce7' },
-                ].map((st) => {
-                  const isSelected = st.key === cropStage;
-                  return (
-                    <TouchableOpacity
-                      key={st.key}
-                      style={[
-                        styles.unitChip,
-                        isSelected
-                          ? { backgroundColor: st.color, borderColor: st.color }
-                          : { backgroundColor: '#f8fafc' },
-                      ]}
-                      onPress={() => {
-                        tap();
-                        setCropStage(st.key as any);
-                      }}
-                    >
-                      <Text
-                        style={[
-                          styles.unitChipText,
-                          isSelected ? { color: '#ffffff', fontFamily: FONT.bold } : { color: '#334155' },
-                        ]}
-                      >
-                        {st.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
+              {/* Estimated max price per Unit */}
+              <View style={{ marginBottom: 4 }}>
+                <Text style={styles.inputLabelCompact}>Estimated max price / {selectedUnit} (₹) *</Text>
+                <View style={styles.priceWrap}>
+                  <Text style={styles.currencySymbol}>₹</Text>
+                  <TextInput
+                    style={styles.priceInput}
+                    placeholder="Estimated max price ₹"
+                    placeholderTextColor="#94a3b8"
+                    keyboardType="numeric"
+                    value={maxPricePerUnit}
+                    onChangeText={(val) => {
+                      setMaxPricePerUnit(val);
+                      setMinPricePerUnit(val);
+                    }}
+                  />
+                </View>
               </View>
-
-              <Text style={styles.inputLabel}>Farm / Field Name *</Text>
-              <TextInput
-                style={styles.formInput}
-                placeholder="e.g. Plot 1 / Canal Field"
-                placeholderTextColor="#94a3b8"
-                value={fieldName}
-                onChangeText={setFieldName}
-              />
-
-              {/* Land Area Value & Unit Selector */}
-              <Text style={styles.inputLabel}>Land Area Unit *</Text>
-              <View style={styles.unitGrid}>
-                {LAND_AREA_UNITS.map((u) => {
-                  const isSelected = u.unit === selectedAreaUnit;
-                  return (
-                    <TouchableOpacity
-                      key={u.unit}
-                      style={[
-                        styles.unitChip,
-                        isSelected && {
-                          backgroundColor: '#16a34a',
-                          borderColor: '#16a34a',
-                        },
-                      ]}
-                      onPress={() => {
-                        tap();
-                        setSelectedAreaUnit(u.unit);
-                      }}
-                    >
-                      <Ionicons
-                        name="map-outline"
-                        size={13}
-                        color={isSelected ? '#ffffff' : '#475569'}
-                      />
-                      <Text
-                        style={[
-                          styles.unitChipText,
-                          isSelected && { color: '#ffffff', fontFamily: FONT.bold },
-                        ]}
-                      >
-                        {u.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              <Text style={styles.inputLabel}>Total Area Size (in {selectedAreaUnit}) *</Text>
-              <TextInput
-                style={styles.formInput}
-                placeholder={`e.g. 4 ${selectedAreaUnit}`}
-                placeholderTextColor="#94a3b8"
-                keyboardType="numeric"
-                value={area}
-                onChangeText={setArea}
-              />
 
               {/* Crop Measurement Unit Selector */}
-              <Text style={styles.inputLabel}>Crop Measurement Unit *</Text>
-              <View style={styles.unitGrid}>
+              <Text style={[styles.inputLabelCompact, { marginTop: 6 }]}>Crop Unit *</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 2 }}>
                 {CROP_UNITS.map((u) => {
                   const isSelected = u.unit === selectedUnit;
                   return (
                     <TouchableOpacity
                       key={u.unit}
                       style={[
-                        styles.unitChip,
-                        isSelected && {
-                          backgroundColor: currentCategory.color,
-                          borderColor: currentCategory.color,
-                        },
+                        styles.compactMiniChip,
+                        isSelected
+                          ? { backgroundColor: '#16a34a', borderColor: '#16a34a' }
+                          : { backgroundColor: '#f0fdf4', borderColor: '#cbd5e1' },
                       ]}
                       onPress={() => {
                         tap();
                         setSelectedUnit(u.unit);
                       }}
                     >
-                      <Ionicons
-                        name={u.icon as any}
-                        size={13}
-                        color={isSelected ? '#ffffff' : '#475569'}
-                      />
                       <Text
                         style={[
-                          styles.unitChipText,
-                          isSelected && { color: '#ffffff', fontFamily: FONT.bold },
+                          styles.compactMiniText,
+                          isSelected ? { color: '#ffffff', fontFamily: FONT.bold } : { color: '#15803d' },
                         ]}
                       >
                         {u.unit}
@@ -611,73 +592,64 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                   );
                 })}
               </View>
+            </View>
 
-              {/* Price / Rate per Unit */}
-              <Text style={styles.inputLabel}>
-                Estimated Sale Price per {selectedUnit} (₹) *
-              </Text>
-              <View style={styles.priceWrap}>
-                <Text style={styles.currencySymbol}>₹</Text>
-                <TextInput
-                  style={styles.priceInput}
-                  placeholder={`Rate per ${selectedUnit}`}
-                  placeholderTextColor="#94a3b8"
-                  keyboardType="numeric"
-                  value={pricePerUnit}
-                  onChangeText={setPricePerUnit}
-                />
-                <Text style={styles.unitSuffix}>/ {selectedUnit}</Text>
+            {errorNotice ? (
+              <View style={{ gap: 6, marginVertical: 6, alignItems: 'center' }}>
+                <Text style={styles.errorText}>{errorNotice}</Text>
+                {errorNotice.toLowerCase().includes('upgrade') ? (
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: '#16a34a',
+                      paddingHorizontal: 14,
+                      paddingVertical: 8,
+                      borderRadius: RADIUS.md,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                    onPress={() => {
+                      onClose();
+                      if (onOpenUpgradeModal) {
+                        onOpenUpgradeModal();
+                      } else {
+                        router.push('/(tabs)/wallet');
+                      }
+                    }}
+                  >
+                    <Ionicons name="sparkles" size={15} color="#ffffff" />
+                    <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 }}>Upgrade Plan Now 👑</Text>
+                  </TouchableOpacity>
+                ) : null}
               </View>
+            ) : null}
 
-              {/* Interactive Calendar Control for Sowing Date */}
-              <Text style={styles.inputLabel}>Sowing Date / Season *</Text>
-              <TouchableOpacity
-                style={styles.calendarSelector}
-                activeOpacity={0.8}
-                onPress={() => {
-                  tap();
-                  setIsCalendarOpen(true);
-                }}
-              >
-                <Ionicons name="calendar" size={20} color="#16a34a" />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.calendarSelectorDate}>{sowingDate || 'Tap to select Sowing Date'}</Text>
-                  {selectedSeason ? (
-                    <Text style={styles.calendarSelectorSeason}>🌾 Season: {selectedSeason}</Text>
-                  ) : null}
-                </View>
-                <Ionicons name="calendar-outline" size={18} color="#16a34a" />
-              </TouchableOpacity>
-
-              {errorNotice ? <Text style={styles.errorText}>{errorNotice}</Text> : null}
-
-              <TouchableOpacity
-                style={[styles.submitFormBtn, { backgroundColor: currentCategory.color }]}
-                activeOpacity={0.85}
-                onPress={handleFormSubmit}
-              >
-                <Ionicons name="checkmark-circle" size={18} color="#ffffff" />
-                <Text style={styles.submitFormText}>Save Crop & Field Details</Text>
-              </TouchableOpacity>
-            </ScrollView>
-          )}
+            <TouchableOpacity
+              style={[styles.submitFormBtn, { backgroundColor: currentCategory.color, marginTop: 12 }]}
+              activeOpacity={0.85}
+              onPress={handleFormSubmit}
+            >
+              <Ionicons name="checkmark-circle" size={18} color="#ffffff" />
+              <Text style={styles.submitFormText}>{editingCrop ? "✏️ Update Crop Details" : "Save Crop & Field Details"}</Text>
+            </TouchableOpacity>
+          </ScrollView>
         </View>
 
-        {/* INTUITIVE CATEGORY DROPDOWN PICKER MODAL */}
+        {/* COMPACT CATEGORY PICKER MODAL */}
         <Modal visible={isCategoryPickerOpen} transparent animationType="slide">
           <View style={styles.overlay}>
             <View style={styles.pickerModalCard}>
               <View style={styles.headerRow}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.modalTitle}>All Agricultural Crop Categories ({INITIAL_CROP_CATEGORIES.length})</Text>
-                  <Text style={styles.modalSub}>Tap any category to view & select crop names</Text>
+                  <Text style={styles.modalTitle}>Select Crop Category</Text>
+                  <Text style={styles.modalSub}>Tap any category to filter crop list</Text>
                 </View>
                 <TouchableOpacity style={styles.closeBtn} onPress={() => setIsCategoryPickerOpen(false)}>
                   <Ionicons name="close" size={20} color="#475569" />
                 </TouchableOpacity>
               </View>
 
-              <ScrollView style={{ maxHeight: 440 }} showsVerticalScrollIndicator={false}>
+              <View style={styles.categoryGridContainer}>
                 {INITIAL_CROP_CATEGORIES.map((cat) => {
                   const isSelected = cat.id === selectedCatId;
                   const count = allCrops.filter((c) => c.categoryId === cat.id).length;
@@ -685,45 +657,83 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                     <TouchableOpacity
                       key={cat.id}
                       style={[
-                        styles.categoryOptionRow,
+                        styles.compactGridTile,
                         isSelected
-                          ? { backgroundColor: cat.bg, borderColor: cat.color }
-                          : { backgroundColor: '#ffffff', borderColor: '#f1f5f9' },
-                        premiumShadow('#000000', 'sm'),
+                          ? { backgroundColor: cat.color, borderColor: cat.color }
+                          : { backgroundColor: cat.bg, borderColor: 'transparent' },
                       ]}
-                      activeOpacity={0.85}
+                      activeOpacity={0.8}
                       onPress={() => handleSelectCategory(cat.id)}
                     >
-                      <View style={[styles.catOptionIconBg, { backgroundColor: cat.bg }]}>
-                        <Ionicons name={cat.icon as any} size={22} color={cat.color} />
+                      <Ionicons name={cat.icon as any} size={15} color={isSelected ? '#ffffff' : cat.color} />
+                      <Text style={[styles.compactTileTitle, { color: isSelected ? '#ffffff' : cat.color }]} numberOfLines={1}>
+                        {cat.name}
+                      </Text>
+                      <View style={[styles.compactTileBadge, { backgroundColor: isSelected ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.7)' }]}>
+                        <Text style={[styles.compactTileBadgeText, { color: isSelected ? '#ffffff' : cat.color }]}>
+                          {count}
+                        </Text>
                       </View>
-                      <View style={{ flex: 1 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <Text style={[styles.catOptionTitle, isSelected && { color: cat.color, fontFamily: FONT.bold }]}>
-                            {cat.name}
-                          </Text>
-                          <View style={[styles.countBadge, { backgroundColor: cat.bg }]}>
-                            <Text style={[styles.countBadgeText, { color: cat.color }]}>{count} Crops</Text>
-                          </View>
-                        </View>
-
-                        {/* REPRESENTATIVE CROP EXAMPLES BOX */}
-                        {cat.examples ? (
-                          <View style={styles.examplesTagBox}>
-                            <Text style={styles.examplesTagText} numberOfLines={2}>
-                              💡 Includes: {cat.examples}
-                            </Text>
-                          </View>
-                        ) : null}
-                      </View>
-                      {isSelected ? (
-                        <Ionicons name="checkmark-circle" size={22} color={cat.color} />
-                      ) : (
-                        <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                      )}
                     </TouchableOpacity>
                   );
                 })}
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* COMPACT CROP ITEMS PICKER MODAL */}
+        <Modal visible={isCropPickerOpen} transparent animationType="slide">
+          <View style={styles.overlay}>
+            <View style={styles.pickerModalCard}>
+              <View style={styles.headerRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.modalTitle}>Available Crops ({filteredCrops.length})</Text>
+                  <Text style={styles.modalSub}>Category: {currentCategory.name}</Text>
+                </View>
+                <TouchableOpacity style={styles.closeBtn} onPress={() => setIsCropPickerOpen(false)}>
+                  <Ionicons name="close" size={20} color="#475569" />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView style={{ maxHeight: 380 }} showsVerticalScrollIndicator={false}>
+                <View style={styles.categoryGridContainer}>
+                  {filteredCrops.length > 0 ? (
+                    filteredCrops.map((crop) => {
+                      const isCont = (crop.harvestType || 'CONTINUOUS') === 'CONTINUOUS';
+                      return (
+                        <TouchableOpacity
+                          key={crop.id}
+                          style={[
+                            styles.compactGridTile,
+                            { backgroundColor: currentCategory.bg, borderColor: currentCategory.color + '60' },
+                          ]}
+                          activeOpacity={0.8}
+                          onPress={() => {
+                            tap();
+                            setIsCropPickerOpen(false);
+                            handleSelectCropItem(crop);
+                          }}
+                        >
+                          <Ionicons name="leaf" size={14} color={currentCategory.color} />
+                          <Text style={[styles.compactTileTitle, { color: currentCategory.color }]} numberOfLines={1}>
+                            {crop.name}{crop.variety ? ` · ${crop.variety}` : ''}
+                          </Text>
+                          <View style={[styles.compactTileBadge, isCont ? { backgroundColor: '#e0f2fe' } : { backgroundColor: '#fef3c7' }]}>
+                            <Text style={[styles.compactTileBadgeText, isCont ? { color: '#0369a1' } : { color: '#b45309' }]}>
+                              {isCont ? 'Daily' : '1-Time'}
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
+                      );
+                    })
+                  ) : (
+                    <View style={styles.emptyWrap}>
+                      <Ionicons name="leaf-outline" size={28} color="#cbd5e1" />
+                      <Text style={styles.emptyText}>No crops found in this category.</Text>
+                    </View>
+                  )}
+                </View>
               </ScrollView>
             </View>
           </View>
@@ -739,6 +749,48 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
           }}
           initialDate={sowingDate}
         />
+        {/* COMPACT LAND AREA UNIT PICKER MODAL */}
+        <Modal visible={isAreaUnitPickerOpen} transparent animationType="slide">
+          <View style={styles.overlay}>
+            <View style={styles.pickerModalCard}>
+              <View style={styles.headerRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.modalTitle}>Select Land Area Unit</Text>
+                  <Text style={styles.modalSub}>Tap your preferred unit of land measurement</Text>
+                </View>
+                <TouchableOpacity style={styles.closeBtn} onPress={() => setIsAreaUnitPickerOpen(false)}>
+                  <Ionicons name="close" size={20} color="#475569" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={{ gap: 8, paddingVertical: 8 }}>
+                {LAND_AREA_UNITS.map((u) => {
+                  const isSelected = u.unit === selectedAreaUnit;
+                  return (
+                    <TouchableOpacity
+                      key={u.unit}
+                      style={[
+                        styles.unitOptionRow,
+                        isSelected && { backgroundColor: '#f0fdf4', borderColor: '#16a34a' },
+                      ]}
+                      onPress={() => {
+                        tap();
+                        setSelectedAreaUnit(u.unit);
+                        setIsAreaUnitPickerOpen(false);
+                      }}
+                    >
+                      <Ionicons name="map-outline" size={16} color={isSelected ? '#16a34a' : '#64748b'} />
+                      <Text style={[styles.unitOptionText, isSelected && { color: '#16a34a', fontFamily: FONT.bold }]}>
+                        {u.label}
+                      </Text>
+                      {isSelected ? <Ionicons name="checkmark-circle" size={18} color="#16a34a" /> : null}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
     </Modal>
   );
@@ -806,55 +858,153 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dropdownLabel: {
+  filterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  categorySelectBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 1.5,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    maxWidth: '48%',
+  },
+  categorySelectText: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    flexShrink: 1,
+  },
+  compactSearchBar: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    backgroundColor: '#f8fafc',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  compactSearchInput: {
+    flex: 1,
+    fontSize: 12.5,
+    fontFamily: FONT.medium,
+    color: '#0f172a',
+    padding: 0,
+  },
+  inputLabelCompact: {
     fontSize: 12,
     fontFamily: FONT.bold,
     color: '#334155',
-    marginBottom: 4,
+    marginBottom: 6,
+    marginTop: 4,
   },
-  dropdownSelector: {
+  compactStageGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 10,
+  },
+  compactStageChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    flexGrow: 1,
+  },
+  compactStageText: {
+    fontSize: 11.5,
+    fontFamily: FONT.semiBold,
+  },
+  compactFormInput: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1.5,
+    borderColor: '#cbd5e1',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 10,
+    height: 40,
+    fontSize: 13,
+    fontFamily: FONT.medium,
+    color: '#0f172a',
+  },
+  selectPromptCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     borderWidth: 1.5,
     borderRadius: RADIUS.lg,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    padding: 12,
+    marginTop: 4,
     marginBottom: 8,
   },
-  catIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dropdownSelectedText: {
-    fontSize: 13.5,
+  selectPromptTitle: {
+    fontSize: 13,
     fontFamily: FONT.bold,
   },
-  dropdownSubText: {
+  selectPromptSub: {
     fontSize: 11,
     fontFamily: FONT.medium,
     color: '#64748b',
     marginTop: 2,
   },
-  catQuickBar: {
-    marginBottom: 10,
-  },
-  catQuickPill: {
+  cropDropdownSelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 8,
+    borderWidth: 1.5,
+    borderRadius: RADIUS.md,
     paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: RADIUS.pill,
-    borderWidth: 1,
-    marginRight: 6,
+    paddingVertical: 8,
+    marginBottom: 8,
   },
-  catQuickText: {
-    fontSize: 11.5,
-    fontFamily: FONT.semiBold,
+  cropDropdownTitle: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+  },
+  cropDropdownSub: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    marginTop: 1,
+  },
+  categoryGridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    paddingVertical: 6,
+  },
+  compactGridTile: {
+    width: '48.5%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    paddingHorizontal: 9,
+    paddingVertical: 8,
+  },
+  compactTileTitle: {
+    flex: 1,
+    fontSize: 12,
+    fontFamily: FONT.bold,
+  },
+  compactTileBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+  },
+  compactTileBadgeText: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
   },
   categoryOptionRow: {
     flexDirection: 'row',
@@ -929,7 +1079,40 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   cropListScroll: {
-    maxHeight: 340,
+    maxHeight: 380,
+  },
+  compactCropRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.md,
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+    marginBottom: 6,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  compactCropIcon: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  compactCropName: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  miniHarvestBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: RADIUS.xs,
+  },
+  miniHarvestBadgeText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
   },
   cropRow: {
     flexDirection: 'row',
@@ -1063,14 +1246,13 @@ const styles = StyleSheet.create({
   calendarSelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
     borderWidth: 1.5,
-    borderColor: '#bbf7d0',
-    backgroundColor: '#f0fdf4',
+    borderColor: '#cbd5e1',
+    backgroundColor: '#ffffff',
     borderRadius: RADIUS.md,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginVertical: 4,
+    paddingHorizontal: 10,
+    height: 40,
   },
   calendarSelectorDate: {
     fontSize: 14,
@@ -1109,10 +1291,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: '#e2e8f0',
+    borderColor: '#cbd5e1',
     borderRadius: RADIUS.md,
-    backgroundColor: '#f8fafc',
-    paddingHorizontal: 12,
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 10,
+    height: 38,
     gap: 6,
   },
   currencySymbol: {
@@ -1151,5 +1334,95 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontFamily: FONT.bold,
     fontSize: 14.5,
+  },
+  compactMiniChip: {
+    paddingHorizontal: 7,
+    paddingVertical: 5,
+    borderRadius: RADIUS.xs,
+    borderWidth: 1,
+  },
+  compactMiniText: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+  },
+  compactCategoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+  },
+  compactCategoryText: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+  },
+  cropSelectBtnLarge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    marginBottom: 6,
+  },
+  cropSelectTextLarge: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: FONT.bold,
+  },
+  dropdownUnitSelectorBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 1.5,
+    borderColor: '#cbd5e1',
+    borderRadius: RADIUS.md,
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 10,
+    height: 40,
+  },
+  dropdownUnitSelectorText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  unitOptionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 12,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    backgroundColor: '#ffffff',
+  },
+  unitOptionText: {
+    flex: 1,
+    fontSize: 13.5,
+    fontFamily: FONT.medium,
+    color: '#0f172a',
+  },
+  saleInfoCard: {
+    backgroundColor: '#f8fafc',
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    padding: 10,
+    marginTop: 8,
+  },
+  saleCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  saleCardTitle: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
   },
 });

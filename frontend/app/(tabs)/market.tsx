@@ -12,18 +12,20 @@ import { SOIL_TYPE_OPTIONS, WATER_TYPE_OPTIONS, SPRAY_TANK_SIZE_OPTIONS } from '
 import { useSubscriptionStatus } from '@/src/hooks/useSubscriptionStatus';
 import { useMyAdvisor, useAvailableAdvisors, useMyPendingRequest } from '@/src/hooks/useAdvisorAssignments';
 import { useMyCrops, useSubmitCropToAdvisor, useCancelCropSubmission } from '@/src/hooks/useCrops';
-import { useCreateCropProblem, useMyCropProblems } from '@/src/hooks/useCropProblems';
+import { useCreateCropProblem, useMyCropProblems, useRateCropProblem } from '@/src/hooks/useCropProblems';
 import { uploadPhoto } from '@/src/api/uploads.api';
 import { RenewModal } from '@/src/components/RenewPlanCard';
 import { useFarmerPlan, useChooseAdvisor } from '@/src/hooks/useFarmerPlan';
 import { FarmerPlanUpgradeModal } from '@/src/components/FarmerPlanUpgradeModal';
 import { resolveMediaUrl } from '@/src/api/client';
-import { AvailableAdvisor, SprayScheduleItem } from '@/src/types/api';
+import { AvailableAdvisor, CropProblem, SprayScheduleItem } from '@/src/types/api';
 import { useChatUnreadCount } from '@/src/hooks/useChat';
 import { SprayScheduleCards } from '@/src/components/SprayScheduleCards';
 import { SprayDetailCard } from '@/src/components/SprayDetailCard';
 import { useCreateCallRequest, useMyPendingCallRequest } from '@/src/hooks/useCallRequests';
 import { useAuth } from '@/src/store/auth-context';
+
+
 
 const theme = RoleThemes.FARMER;
 
@@ -210,7 +212,7 @@ export default function MarketScreen() {
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
   const { plan } = useFarmerPlan();
-  const advisorIncluded = plan === 'STANDARD' || plan === 'PREMIUM';
+  const advisorIncluded = plan === 'PRO' || plan === 'SMART';
 
   // A real AdvisorAssignment (myAdvisor) is the source of truth for "hired". A still-open request awaiting
   // the advisor's accept/reject shows a distinct "waiting" state. Falls back to the legacy pending-subscription
@@ -218,10 +220,10 @@ export default function MarketScreen() {
   const hireStatus: HireStatus = myAdvisor
     ? 'ACTIVE'
     : myPendingRequest
-    ? 'AWAITING_ADVISOR'
-    : subscription?.status === 'PENDING'
-    ? 'PENDING'
-    : 'NONE';
+      ? 'AWAITING_ADVISOR'
+      : subscription?.status === 'PENDING'
+        ? 'PENDING'
+        : 'NONE';
 
   const { cropFields, shareCropWithAdvisor, acceptFarmRequest } = useCrops();
 
@@ -274,8 +276,10 @@ export default function MarketScreen() {
     const digits = advisorMobile.replace(/\D/g, '');
     const withCountryCode = digits.length === 10 ? `91${digits}` : digits;
     const greeting = `Hello Sir, I am ${user?.name ?? 'a farmer'}${user?.kingId ? ` (King ID: ${user.kingId})` : ''}.`;
-    Linking.openURL(`https://wa.me/${withCountryCode}?text=${encodeURIComponent(greeting)}`).catch(() => {});
+    Linking.openURL(`https://wa.me/${withCountryCode}?text=${encodeURIComponent(greeting)}`).catch(() => { });
   };
+
+
 
   // Mandatory Advisor Profile Setup State
   const [farmPhotoUri, setFarmPhotoUri] = useState<string | null>(
@@ -299,9 +303,10 @@ export default function MarketScreen() {
   // Farmer Crop Problem State
   const [isProblemTreatmentModalOpen, setIsProblemTreatmentModalOpen] = useState(false);
   const [selectedCropForProblem, setSelectedCropForProblem] = useState<string>('');
+  const [problemHeading, setProblemHeading] = useState('');
   const [problemDescription, setProblemDescription] = useState('');
-  const [problemPhotoUri, setProblemPhotoUri] = useState<string | null>(null);
-  const [problemPhotoUrl, setProblemPhotoUrl] = useState<string | null>(null);
+  const [problemPhotoUris, setProblemPhotoUris] = useState<string[]>([]);
+  const [problemPhotoUrls, setProblemPhotoUrls] = useState<string[]>([]);
   const [isUploadingProblemPhoto, setIsUploadingProblemPhoto] = useState(false);
   const [selectedRealCropId, setSelectedRealCropId] = useState<string>('');
 
@@ -309,13 +314,38 @@ export default function MarketScreen() {
   const { data: myCrops } = useMyCrops();
   const createCropProblem = useCreateCropProblem();
   const { data: myCropProblems } = useMyCropProblems();
-  // A crop cycle "has an active problem" only while it's still waiting on the advisor to respond —
-  // once the advisor responds (or it's resolved/closed), the chip reverts to "Problem Report" so a
-  // new problem can be submitted for that crop.
+  const rateCropProblem = useRateCropProblem();
+  const [viewingProblem, setViewingProblem] = useState<CropProblem | null>(null);
+  const [viewingProblemPhoto, setViewingProblemPhoto] = useState<string | null>(null);
+  const [farmerRatingVal, setFarmerRatingVal] = useState<number>(5);
+  const [farmerFeedbackVal, setFarmerFeedbackVal] = useState<string>('');
+
+  // Active problem waiting for advisor response
   const activeProblemByCropId = useMemo(() => {
-    const map = new Map<string, boolean>();
+    const map = new Map<string, CropProblem>();
     (myCropProblems ?? []).forEach((p) => {
-      if (p.status === 'REPORTED' || p.status === 'UNDER_REVIEW') map.set(p.cropCycleId, true);
+      if (p.status === 'REPORTED' || p.status === 'UNDER_REVIEW') map.set(p.cropCycleId, p);
+    });
+    return map;
+  }, [myCropProblems]);
+
+  // Advisor has responded / resolved problem, but farmer hasn't submitted rating/feedback yet
+  const unratedSolvedProblemByCropId = useMemo(() => {
+    const map = new Map<string, CropProblem>();
+    (myCropProblems ?? []).forEach((p) => {
+      if ((p.status === 'ADVISOR_RESPONDED' || p.status === 'RESOLVED') && !p.farmerRating) {
+        if (!map.has(p.cropCycleId)) map.set(p.cropCycleId, p);
+      }
+    });
+    return map;
+  }, [myCropProblems]);
+
+  const latestProblemByCropId = useMemo(() => {
+    const map = new Map<string, CropProblem>();
+    (myCropProblems ?? []).forEach((p) => {
+      if (!map.has(p.cropCycleId) || p.status === 'REPORTED' || p.status === 'UNDER_REVIEW') {
+        map.set(p.cropCycleId, p);
+      }
     });
     return map;
   }, [myCropProblems]);
@@ -325,7 +355,7 @@ export default function MarketScreen() {
   const [cancellingCropId, setCancellingCropId] = useState<string | null>(null);
 
   const shareableCrops = useMemo(
-    () => (myCrops ?? []).filter((c) => c.status === 'ACTIVE' && c.advisorReviewStatus !== 'ACCEPTED'),
+    () => (myCrops ?? []).filter((c) => c.status !== 'COMPLETED' && c.status !== 'FAILED' && c.advisorReviewStatus !== 'ACCEPTED'),
     [myCrops],
   );
 
@@ -334,6 +364,11 @@ export default function MarketScreen() {
 
   const handleRequestAdvisorReview = async (cropId: string, label: string) => {
     tap();
+    if (hireStatus !== 'ACTIVE') {
+      const message = 'You must have an active Advisor Plan and assigned Advisor to submit crops for advisor review.';
+      Platform.OS === 'web' ? alert(message) : Alert.alert('Advisor Required', message);
+      return;
+    }
     setSubmittingCropId(cropId);
     try {
       await submitCropToAdvisor.mutateAsync(cropId);
@@ -393,6 +428,11 @@ export default function MarketScreen() {
   };
 
   const pickProblemPhoto = async () => {
+    if (problemPhotoUrls.length >= 3) {
+      const msg = 'Maximum 3 photos allowed.';
+      Platform.OS === 'web' ? alert(msg) : Alert.alert('Limit Reached', msg);
+      return;
+    }
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       Alert.alert('Permission needed', 'Please allow photo access to attach a picture.');
@@ -406,38 +446,43 @@ export default function MarketScreen() {
     if (result.canceled || !result.assets[0]) return;
 
     const uri = result.assets[0].uri;
-    setProblemPhotoUri(uri);
     setIsUploadingProblemPhoto(true);
     try {
       const uploaded = await uploadPhoto(uri);
-      setProblemPhotoUrl(uploaded.fileUrl);
+      setProblemPhotoUris((prev) => [...prev, uri]);
+      setProblemPhotoUrls((prev) => [...prev, uploaded.fileUrl]);
     } catch {
       const message = 'Could not upload the photo. Please try again.';
       Platform.OS === 'web' ? alert(message) : Alert.alert('Upload failed', message);
-      setProblemPhotoUri(null);
     } finally {
       setIsUploadingProblemPhoto(false);
     }
   };
 
+  const removeProblemPhoto = (index: number) => {
+    tap();
+    setProblemPhotoUris((prev) => prev.filter((_, i) => i !== index));
+    setProblemPhotoUrls((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleApplyProblemRemedy = async () => {
-    if (!problemPhotoUrl) {
+    if (problemPhotoUrls.length === 0) {
       if (Platform.OS === 'web') {
-        alert('📸 Photo Upload Mandatory!\nKripya samasya-grast fasal ki photo upload karein.');
+        alert('📸 Photo Upload Mandatory!\nPlease upload at least 1 photo of the affected crop.');
       } else {
-        Alert.alert('Photo Mandatory 📸', 'Kripya samasya-grast fasal ki photo upload karein.');
+        Alert.alert('Photo Mandatory 📸', 'Please upload at least 1 photo of the affected crop.');
       }
       return;
     }
 
     if (!selectedRealCropId) {
-      const message = 'Kripya pehle koi crop farm/plot me register karein — tabhi advisor ko alert bheja ja sakta hai.';
+      const message = 'Please register a crop in your farm/plot first — only then can an alert be sent to your advisor.';
       Platform.OS === 'web' ? alert(message) : Alert.alert('No Crop Found', message);
       return;
     }
 
-    if (problemDescription.trim().length < 50) {
-      const message = 'Kripya apni samasya ka kam se kam 50 characters ka vivaran likhein.';
+    if (problemDescription.trim().length < 30) {
+      const message = 'Please write a description of your problem with at least 30 characters.';
       Platform.OS === 'web' ? alert(message) : Alert.alert('Description Too Short', message);
       return;
     }
@@ -446,11 +491,14 @@ export default function MarketScreen() {
     try {
       await createCropProblem.mutateAsync({
         cropCycleId: selectedRealCropId,
-        title: problemDescription.trim().slice(0, 80),
+        title: problemHeading.trim().slice(0, 20) || problemDescription.trim().slice(0, 20) || 'Crop Disease Problem',
         description: problemDescription.trim(),
         severity: 'MEDIUM',
-        photoUrls: [problemPhotoUrl],
+        photoUrls: problemPhotoUrls,
       });
+      setProblemHeading('');
+      setProblemPhotoUris([]);
+      setProblemPhotoUrls([]);
     } catch (err: any) {
       const message = err?.response?.data?.message ?? 'Could not send the problem request. Please try again.';
       Platform.OS === 'web' ? alert(message) : Alert.alert('Error', message);
@@ -519,7 +567,7 @@ export default function MarketScreen() {
           {advisorIncluded ? (
             <View style={styles.planBadge}>
               <Ionicons name="ribbon-outline" size={12} color="#ffffff" />
-              <Text style={styles.planBadgeText}>{plan === 'PREMIUM' ? 'Premium' : 'Standard'}</Text>
+              <Text style={styles.planBadgeText}>Pro</Text>
             </View>
           ) : null}
         </View>
@@ -537,17 +585,25 @@ export default function MarketScreen() {
           <View style={styles.iconCircle}>
             <Ionicons name="school-outline" size={40} color={theme.primary} />
           </View>
-          <Text style={styles.title}>You Don't Have an Advisor Plan</Text>
+          <Text style={styles.title}>PRO Software Plan Required</Text>
           <Text style={styles.description}>
-            Upgrade to Standard or Premium to hire an expert Farm Advisor — an advisor is included with those plans.
+            Step 1: Activate the PRO Software Plan to unlock Expert Advisor hiring and personalized consultations.
           </Text>
 
-          <TouchableOpacity style={styles.hireBtnWrap} activeOpacity={0.85} onPress={handleHire}>
-            <LinearGradient colors={theme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.hireBtn}>
-              <Ionicons name="person-add" size={18} color="#fff" />
-              <Text style={styles.hireBtnText}>Hire an Advisor</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+            <TouchableOpacity style={[styles.hireBtnWrap, { flex: 1 }]} activeOpacity={0.85} onPress={handleHire}>
+              <LinearGradient colors={theme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.hireBtn}>
+                <Ionicons name="person-add" size={18} color="#fff" />
+                <Text style={styles.hireBtnText}>Upgrade to PRO</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.hireBtnWrap, { flex: 1 }]} activeOpacity={0.85} onPress={() => setIsUpgradeModalOpen(true)}>
+              <View style={[styles.hireBtn, { backgroundColor: '#25D366' }]}>
+                <Ionicons name="qr-code-outline" size={18} color="#fff" />
+                <Text style={styles.hireBtnText}>Get Plan Coupon</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.previewRow}>
             {[
@@ -572,7 +628,7 @@ export default function MarketScreen() {
             </View>
             <Text style={styles.title}>Choose Your Advisor</Text>
             <Text style={styles.description}>
-              Aapka {plan === 'PREMIUM' ? 'Premium' : 'Standard'} plan advisor ke saath aata hai — neeche se koi ek advisor choose karein.
+              Your Pro plan comes with an advisor — choose one from below.
             </Text>
           </View>
 
@@ -580,15 +636,26 @@ export default function MarketScreen() {
             <Ionicons name="hourglass-outline" size={28} color={theme.primary} style={{ alignSelf: 'center', marginTop: 20 }} />
           ) : !availableAdvisors || availableAdvisors.length === 0 ? (
             <Text style={[styles.description, { textAlign: 'center', marginTop: 12 }]}>
-              Abhi koi Farm Advisor available nahi hai. Kripya baad mein try karein.
+              No Farm Advisor is currently available. Please try again later.
             </Text>
           ) : (
             <View style={{ gap: 10, paddingHorizontal: SPACING.lg }}>
               {availableAdvisors.map((advisor) => (
                 <View key={advisor.id} style={[styles.advisorPickCard, premiumShadow(theme.primary, 'sm')]}>
-                  <Image source={{ uri: resolveMediaUrl(advisor.photoUrl) || FALLBACK_ADVISOR.avatarUrl }} style={styles.advisorAvatar} />
+                  <View style={{ position: 'relative' }}>
+                    <Image source={{ uri: resolveMediaUrl(advisor.photoUrl) || FALLBACK_ADVISOR.avatarUrl }} style={styles.advisorAvatar} />
+                    <View style={{ position: 'absolute', bottom: -1, right: -1, backgroundColor: '#ffffff', borderRadius: 8, padding: 1 }}>
+                      <Ionicons name="checkmark-circle" size={15} color="#10b981" />
+                    </View>
+                  </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.advisorName}>{advisor.name}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={styles.advisorName}>{advisor.name}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: '#fef9c3', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 6 }}>
+                        <Ionicons name="star" size={10} color="#ca8a04" />
+                        <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#854d0e' }}>4.9 ★</Text>
+                      </View>
+                    </View>
                     <Text style={styles.advisorSpec} numberOfLines={1}>
                       {advisor.specialization || FALLBACK_ADVISOR.specialization}
                     </Text>
@@ -623,7 +690,7 @@ export default function MarketScreen() {
           </View>
           <Text style={styles.title}>Request Sent to Admin</Text>
           <Text style={styles.description}>
-            Aapki subscription admin approval ke intezaar me hai. Approve hote hi advisor assign ho jayega.
+            Your subscription is awaiting admin approval. An advisor will be assigned once approved.
           </Text>
 
           <View style={styles.pendingChip}>
@@ -640,7 +707,7 @@ export default function MarketScreen() {
           </View>
           <Text style={styles.title}>Waiting for {myPendingRequest?.advisor?.name ?? 'Advisor'}</Text>
           <Text style={styles.description}>
-            Aapki hire request bhej di gayi hai. Advisor accept karega to aap chat aur advisory schedule use kar sakenge.
+            Your hire request has been sent. Once accepted by the advisor, you will be able to chat and use the schedule.
           </Text>
 
           <View style={styles.pendingChip}>
@@ -655,18 +722,33 @@ export default function MarketScreen() {
           {/* Advisor Card — profile + Call/WhatsApp/Chat actions, unified */}
           <View style={[styles.advisorCard, premiumShadow('#0f172a', 'sm')]}>
             <View style={styles.advisorHeaderRow}>
-              <View style={styles.advisorAvatarRing}>
-                <Image source={{ uri: advisorAvatarUrl }} style={styles.advisorAvatar} />
+              <View style={{ position: 'relative' }}>
+                <View style={styles.advisorAvatarRing}>
+                  <Image source={{ uri: advisorAvatarUrl }} style={styles.advisorAvatar} />
+                </View>
+                {/* Verified Symbol Icon overlay on Avatar photo */}
+                <View style={{ position: 'absolute', bottom: -1, right: -1, backgroundColor: '#ffffff', borderRadius: 9, padding: 1 }}>
+                  <Ionicons name="checkmark-circle" size={17} color="#10b981" />
+                </View>
               </View>
+
               <View style={{ flex: 1 }}>
                 <View style={styles.advisorNameRow}>
                   <Text style={styles.advisorName} numberOfLines={1}>{advisorName}</Text>
                   {advisorMobile ? <Text style={styles.advisorMobileInline}>· {advisorMobile}</Text> : null}
                   {subMetrics.status === 'ACTIVE' ? <View style={styles.onlineDot} /> : null}
                 </View>
-                <View style={styles.advisorRoleBadge}>
-                  <Ionicons name="school-outline" size={11} color={theme.primary} />
-                  <Text style={styles.advisorRoleBadgeText}>{advisorSpec}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3, flexWrap: 'wrap' }}>
+                  <View style={styles.advisorRoleBadge}>
+                    <Ionicons name="school-outline" size={11} color={theme.primary} />
+                    <Text style={styles.advisorRoleBadgeText}>{advisorSpec}</Text>
+                  </View>
+
+                  {/* 4.9 Rating ⭐ & 52 Reviews Pill */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#fef9c3', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8, borderWidth: 1, borderColor: '#fef08a' }}>
+                    <Ionicons name="star" size={11} color="#ca8a04" />
+                    <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: '#854d0e' }}>4.9 ★ (52)</Text>
+                  </View>
                 </View>
                 {subMetrics.status === 'EXPIRING_SOON' || subMetrics.status === 'EXPIRED' || subMetrics.formattedExpiry ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
@@ -754,7 +836,7 @@ export default function MarketScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Ionicons name="clipboard" size={18} color={theme.primary} />
-                  <Text style={styles.progressTitle}>Mandatory Farm Profile</Text>
+                  <Text style={styles.progressTitle}>Farmer Profile</Text>
                 </View>
                 <View style={{ backgroundColor: '#fef3c7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#fde68a' }}>
                   <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#b45309' }}>
@@ -764,7 +846,7 @@ export default function MarketScreen() {
               </View>
 
               <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', marginBottom: 12 }}>
-                Advisor assign hone par ye 4 details (Farmer Photo, Spray Tank 15/20/25L, Soil & Water Type) bharna zaroori hain:
+                Once an advisor is assigned, filling out these 4 details (Farmer Photo, Spray Tank Size, Soil & Water Type) is mandatory:
               </Text>
 
               <View style={styles.profileSummaryGrid}>
@@ -849,160 +931,186 @@ export default function MarketScreen() {
           )}
 
           {isExpired ? null : (
-          <>
-          {/* ADVISOR ACCEPTED PLOTS & PRESENT SCHEDULE DISPLAY WITH INLINE ACTIONS */}
-          <View style={[styles.progressCard, premiumShadow('#0f172a', 'sm')]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-              <Text style={{ fontSize: 16 }}>🟢</Text>
-              <Text style={styles.progressTitle}>Active Advisory Crops ({acceptedRealCrops.length})</Text>
-            </View>
-
-            {acceptedRealCrops.length > 0 ? (
-              acceptedRealCrops.map((crop) => {
-                const hasActiveProblem = activeProblemByCropId.has(crop.id);
-                return (
-                <View key={crop.id} style={styles.acceptedPlotCard}>
-                  <View style={styles.acceptedPlotHeader}>
-                    <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                        <Text style={styles.acceptedPlotTitle}>📍 {crop.plot.name}</Text>
-                        <View style={styles.cropBadgeMini}>
-                          <Text style={styles.cropBadgeMiniText}>🌾 {crop.cropName}</Text>
-                        </View>
-                      </View>
-                      <Text style={styles.acceptedPlotSub}>
-                        {crop.area ? `📏 ${crop.area}` : ''}{crop.area && crop.sowingDate ? ' · ' : ''}
-                        {crop.sowingDate ? `📅 Sown: ${new Date(crop.sowingDate).toLocaleDateString('en-IN')}` : ''}
-                        {crop.variety ? ` · 🌱 ${crop.variety}` : ''}
-                      </Text>
-                    </View>
-
-                    <TouchableOpacity
-                      style={[styles.problemReportChip, hasActiveProblem && styles.problemReportChipWaiting]}
-                      activeOpacity={0.85}
-                      onPress={() => {
-                        tap();
-                        if (hasActiveProblem) {
-                          const message = 'One problem already submitted to advisor.';
-                          Platform.OS === 'web' ? alert(message) : Alert.alert('Already Submitted', message);
-                          return;
-                        }
-                        setSelectedCropForProblem(crop.id);
-                        setProblemPhotoUri(null);
-                        setProblemPhotoUrl(null);
-                        setProblemDescription('');
-                        setSelectedRealCropId(crop.id);
-                        setIsProblemTreatmentModalOpen(true);
-                      }}
-                    >
-                      <Ionicons
-                        name={hasActiveProblem ? 'checkmark-circle' : 'medical-outline'}
-                        size={12}
-                        color={hasActiveProblem ? '#16a34a' : '#dc2626'}
-                      />
-                      <Text style={[styles.problemReportChipText, hasActiveProblem && styles.problemReportChipTextWaiting]}>
-                        {hasActiveProblem ? 'Waiting Solution' : 'Problem Report'}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <SprayScheduleCards
-                    cropCycleId={crop.id}
-                    accentColor={theme.primary}
-                    onViewDetail={(item) => openSprayItemDetail(item, `${crop.plot.name} (${crop.cropName})`)}
-                  />
+            <>
+              {/* ADVISOR ACCEPTED PLOTS & PRESENT SCHEDULE DISPLAY WITH INLINE ACTIONS */}
+              <View style={[styles.progressCard, premiumShadow('#0f172a', 'sm')]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                  <Text style={{ fontSize: 16 }}>🟢</Text>
+                  <Text style={styles.progressTitle}>Active Advisory Crops ({acceptedRealCrops.length})</Text>
                 </View>
-                );
-              })
-            ) : (
-              <View style={styles.noAcceptedBox}>
-                <Ionicons name="alert-circle-outline" size={24} color="#cbd5e1" />
-                <Text style={styles.noAcceptedText}>No plots currently accepted by advisor.</Text>
-                <Text style={styles.noAcceptedSub}>Crops accepted by your advisor will appear here with active schedules.</Text>
-              </View>
-            )}
-          </View>
 
-          {/* SHARE CROP FARMS WITH ADVISOR FOR SCHEDULE */}
-          <View style={[styles.progressCard, premiumShadow('#0f172a', 'sm')]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-              <Text style={{ fontSize: 16, color: '#dc2626' }}>🔴</Text>
-              <Text style={styles.progressTitle}>No Advisory Crops ({shareableCrops.length})</Text>
-            </View>
-            <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', marginBottom: 12 }}>
-              Share crops with {FALLBACK_ADVISOR.name} to unlock advisory scheduling.
-            </Text>
+                {acceptedRealCrops.length > 0 ? (
+                  acceptedRealCrops.map((crop) => {
+                    const hasActiveProblem = activeProblemByCropId.has(crop.id);
+                    return (
+                      <View key={crop.id} style={styles.acceptedPlotCard}>
+                        <View style={styles.acceptedPlotHeader}>
+                          <View style={{ flex: 1 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                              <Text style={styles.acceptedPlotTitle}>
+                                📍 {crop.plot.name} <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>(ID: {crop.cropId || crop.id})</Text>
+                              </Text>
+                              <View style={styles.cropBadgeMini}>
+                                <Text style={styles.cropBadgeMiniText}>🌾 {crop.cropName}</Text>
+                              </View>
+                            </View>
+                            <Text style={styles.acceptedPlotSub}>
+                              {crop.area ? `📏 ${crop.area}` : ''}{crop.area && crop.sowingDate ? ' · ' : ''}
+                              {crop.sowingDate ? `📅 Sown: ${new Date(crop.sowingDate).toLocaleDateString('en-IN')}` : ''}
+                              {crop.variety ? ` · 🌱 ${crop.variety}` : ''}
+                            </Text>
+                          </View>
 
-            {shareableCrops.length === 0 ? (
-              <View style={{ padding: 12, backgroundColor: '#f0fdf4', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#bbf7d0', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
-                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#15803d', flex: 1 }}>
-                  All registered crop plots have been accepted by your advisor!
-                </Text>
-              </View>
-            ) : (
-              shareableCrops.map((crop) => {
-                const advStatus = crop.advisorReviewStatus || 'NONE';
-                const label = `${crop.plot.name} (${crop.cropName})`;
+                        {(() => {
+                          const activeProb = activeProblemByCropId.get(crop.id);
+                          const unratedSolvedProb = unratedSolvedProblemByCropId.get(crop.id);
 
-                return (
-                  <View key={crop.id} style={styles.cropShareItem}>
-                    <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                        <Text style={styles.cropSharePlot}>📍 {crop.plot.name}</Text>
-                        <Text style={styles.cropShareName}>🌾 {crop.cropName}</Text>
+                          return (
+                            <TouchableOpacity
+                              style={[
+                                styles.problemReportChip,
+                                activeProb && styles.problemReportChipWaiting,
+                                unratedSolvedProb && styles.problemReportChipSolved,
+                              ]}
+                              activeOpacity={0.85}
+                              onPress={() => {
+                                tap();
+                                if (activeProb) {
+                                  setViewingProblem(activeProb);
+                                  return;
+                                }
+                                if (unratedSolvedProb) {
+                                  setViewingProblem(unratedSolvedProb);
+                                  return;
+                                }
+                                // Always open NEW problem report for farmer when old is resolved & rated
+                                setSelectedCropForProblem(crop.id);
+                                setProblemHeading('');
+                                setProblemPhotoUris([]);
+                                setProblemPhotoUrls([]);
+                                setProblemDescription('');
+                                setSelectedRealCropId(crop.id);
+                                setIsProblemTreatmentModalOpen(true);
+                              }}
+                            >
+                              <Ionicons
+                                name={activeProb ? 'time-outline' : unratedSolvedProb ? 'checkmark-circle' : 'medical-outline'}
+                                size={12}
+                                color={activeProb ? '#b45309' : unratedSolvedProb ? '#15803d' : '#dc2626'}
+                              />
+                              <Text
+                                style={[
+                                  styles.problemReportChipText,
+                                  activeProb && styles.problemReportChipTextWaiting,
+                                  unratedSolvedProb && styles.problemReportChipTextSolved,
+                                ]}
+                              >
+                                {activeProb ? 'Waiting Solution' : unratedSolvedProb ? '✅ Solved (Click to Rate)' : 'Problem Report'}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })()}
                       </View>
-                      {crop.area || crop.sowingDate ? (
-                        <Text style={styles.cropShareMeta}>
-                          {crop.area ? `📏 ${crop.area}` : ''}{crop.area && crop.sowingDate ? ' · ' : ''}{crop.sowingDate ? `📅 Sown: ${crop.sowingDate}` : ''}
-                        </Text>
-                      ) : null}
-                    </View>
 
-                    {advStatus === 'NONE' && (
-                      <TouchableOpacity
-                        style={styles.shareBtn}
-                        activeOpacity={0.8}
-                        disabled={submittingCropId === crop.id}
-                        onPress={() => handleRequestAdvisorReview(crop.id, label)}
-                      >
-                        {submittingCropId === crop.id ? (
-                          <ActivityIndicator color="#ffffff" size="small" />
-                        ) : (
-                          <>
-                            <Ionicons name="person-add-outline" size={14} color="#ffffff" />
-                            <Text style={styles.shareBtnText}>Request Advisor</Text>
-                          </>
-                        )}
-                      </TouchableOpacity>
-                    )}
-
-                    {advStatus === 'PENDING' && (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <View style={styles.pendingBadge}>
-                          <Ionicons name="time-outline" size={13} color="#d97706" />
-                          <Text style={styles.pendingBadgeText}>⏳ Pending</Text>
-                        </View>
-                        <TouchableOpacity
-                          style={styles.cancelPendingBtn}
-                          activeOpacity={0.8}
-                          disabled={cancellingCropId === crop.id}
-                          onPress={() => handleCancelAdvisorReview(crop.id)}
-                        >
-                          {cancellingCropId === crop.id ? (
-                            <ActivityIndicator color="#dc2626" size="small" />
-                          ) : (
-                            <Ionicons name="close" size={14} color="#dc2626" />
-                          )}
-                        </TouchableOpacity>
+                        <SprayScheduleCards
+                          cropCycleId={crop.id}
+                          accentColor={theme.primary}
+                          onViewDetail={(item) => openSprayItemDetail(item, `${crop.plot.name} (${crop.cropName})`)}
+                        />
                       </View>
-                    )}
+                    );
+                  })
+                ) : (
+                  <View style={styles.noAcceptedBox}>
+                    <Ionicons name="alert-circle-outline" size={24} color="#cbd5e1" />
+                    <Text style={styles.noAcceptedText}>No plots currently accepted by advisor.</Text>
+                    <Text style={styles.noAcceptedSub}>Crops accepted by your advisor will appear here with active schedules.</Text>
                   </View>
-                );
-              })
-            )}
-          </View>
-          </>
+                )}
+              </View>
+
+              {/* SHARE CROP FARMS WITH ADVISOR FOR SCHEDULE */}
+              <View style={[styles.progressCard, premiumShadow('#0f172a', 'sm')]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                  <Text style={{ fontSize: 16, color: '#dc2626' }}>🔴</Text>
+                  <Text style={styles.progressTitle}>Crops Needing Advisor Review ({shareableCrops.length})</Text>
+                </View>
+                <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', marginBottom: 12 }}>
+                  Share crops with {FALLBACK_ADVISOR.name} to unlock advisory scheduling.
+                </Text>
+
+                {shareableCrops.length === 0 ? (
+                  <View style={{ padding: 12, backgroundColor: '#f0fdf4', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#bbf7d0', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
+                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#15803d', flex: 1 }}>
+                      All registered crop plots have been accepted by your advisor!
+                    </Text>
+                  </View>
+                ) : (
+                  shareableCrops.map((crop) => {
+                    const advStatus = crop.advisorReviewStatus || 'NONE';
+                    const label = `${crop.plot.name} (${crop.cropName})`;
+
+                    return (
+                      <View key={crop.id} style={styles.cropShareItem}>
+                        <View style={{ flex: 1 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            <Text style={styles.cropSharePlot}>
+                              📍 {crop.plot.name} <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>(ID: {crop.cropId || crop.id})</Text>
+                            </Text>
+                            <Text style={styles.cropShareName}>🌾 {crop.cropName}</Text>
+                          </View>
+                          {crop.area || crop.sowingDate ? (
+                            <Text style={styles.cropShareMeta}>
+                              {crop.area ? `📏 ${crop.area}` : ''}{crop.area && crop.sowingDate ? ' · ' : ''}{crop.sowingDate ? `📅 Sown: ${crop.sowingDate.replace(/\s*\([^)]*\)/g, '').trim()}` : ''}
+                            </Text>
+                          ) : null}
+                        </View>
+
+                        {advStatus === 'NONE' && (
+                          <TouchableOpacity
+                            style={styles.shareBtn}
+                            activeOpacity={0.8}
+                            disabled={submittingCropId === crop.id}
+                            onPress={() => handleRequestAdvisorReview(crop.id, label)}
+                          >
+                            {submittingCropId === crop.id ? (
+                              <ActivityIndicator color="#ffffff" size="small" />
+                            ) : (
+                              <>
+                                <Ionicons name="person-add-outline" size={14} color="#ffffff" />
+                                <Text style={styles.shareBtnText}>Request Advisor</Text>
+                              </>
+                            )}
+                          </TouchableOpacity>
+                        )}
+
+                        {advStatus === 'PENDING' && (
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <View style={styles.pendingBadge}>
+                              <Ionicons name="time-outline" size={13} color="#d97706" />
+                              <Text style={styles.pendingBadgeText}>⏳ Pending</Text>
+                            </View>
+                            <TouchableOpacity
+                              style={styles.cancelPendingBtn}
+                              activeOpacity={0.8}
+                              disabled={cancellingCropId === crop.id}
+                              onPress={() => handleCancelAdvisorReview(crop.id)}
+                            >
+                              {cancellingCropId === crop.id ? (
+                                <ActivityIndicator color="#dc2626" size="small" />
+                              ) : (
+                                <Ionicons name="close" size={14} color="#dc2626" />
+                              )}
+                            </TouchableOpacity>
+                          </View>
+                        )}
+                      </View>
+                    );
+                  })
+                )}
+              </View>
+            </>
           )}
 
           <RenewModal visible={isRenewModalOpen} onClose={() => setIsRenewModalOpen(false)} />
@@ -1023,127 +1131,81 @@ export default function MarketScreen() {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 14, paddingVertical: 8 }}>
-              {selectedCropForProblem ? (
+              {/* 1. Crop Selector (if multiple crops) */}
+              {(!selectedCropForProblem && (myCrops?.length ?? 0) > 1) && (
                 <View style={{ gap: 6 }}>
                   <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>
-                    1. Crop & Problem Photo * (Upload Mandatory)
+                    Which Crop? *
                   </Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff1f2', padding: 10, borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: '#fca5a5' }}>
-                    {problemPhotoUri ? (
-                      <Image source={{ uri: problemPhotoUri }} style={{ width: 52, height: 52, borderRadius: RADIUS.sm }} />
-                    ) : (
-                      <View style={{ width: 52, height: 52, borderRadius: RADIUS.sm, backgroundColor: '#fee2e2', alignItems: 'center', justifyContent: 'center' }}>
-                        {isUploadingProblemPhoto ? (
-                          <ActivityIndicator size="small" color="#dc2626" />
-                        ) : (
-                          <Ionicons name="camera-outline" size={22} color="#dc2626" />
-                        )}
-                      </View>
-                    )}
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#dc2626' }} numberOfLines={1}>
-                        📍 {targetPlotForProblem?.plot?.name} · 🌾 {targetPlotForProblem?.cropName}
-                      </Text>
-                      <TouchableOpacity
-                        style={{ backgroundColor: '#dc2626', paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.sm, opacity: isUploadingProblemPhoto ? 0.6 : 1, marginTop: 6, alignSelf: 'flex-start' }}
-                        disabled={isUploadingProblemPhoto}
-                        onPress={pickProblemPhoto}
-                      >
-                        <Text style={{ color: '#fff', fontSize: 11.5, fontFamily: FONT.bold }}>
-                          {isUploadingProblemPhoto ? 'Uploading...' : problemPhotoUrl ? 'Change Photo' : 'Upload Crop Photo *'}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                  {!problemPhotoUrl && (
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#dc2626' }}>
-                      * Crop photo upload is mandatory before submitting request.
-                    </Text>
-                  )}
-                </View>
-              ) : (
-                <>
-                  {(myCrops?.length ?? 0) > 1 && (
-                    <View style={{ gap: 6 }}>
-                      <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>
-                        1. Which Crop? *
-                      </Text>
-                      <View style={{ gap: 6 }}>
-                        {myCrops!.map((crop) => {
-                          const isSelected = selectedRealCropId === crop.id;
-                          return (
-                            <TouchableOpacity
-                              key={crop.id}
-                              style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                padding: 10,
-                                borderRadius: RADIUS.md,
-                                borderWidth: 1.5,
-                                borderColor: isSelected ? '#dc2626' : '#cbd5e1',
-                                backgroundColor: isSelected ? '#fff1f2' : '#ffffff',
-                              }}
-                              activeOpacity={0.85}
-                              onPress={() => {
-                                tap();
-                                setSelectedRealCropId(crop.id);
-                              }}
-                            >
-                              <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: isSelected ? '#dc2626' : '#0f172a', flex: 1 }}>
-                                📍 {crop.plot.name} · 🌾 {crop.cropName}
-                              </Text>
-                              {isSelected && <Ionicons name="checkmark-circle" size={16} color="#dc2626" />}
-                            </TouchableOpacity>
-                          );
-                        })}
-                      </View>
-                    </View>
-                  )}
-
                   <View style={{ gap: 6 }}>
-                    <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>
-                      2. Crop Problem Photo * (Upload Mandatory)
-                    </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff1f2', padding: 10, borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: '#fca5a5' }}>
-                      {problemPhotoUri ? (
-                        <Image source={{ uri: problemPhotoUri }} style={{ width: 56, height: 56, borderRadius: RADIUS.sm }} />
-                      ) : (
-                        <View style={{ width: 56, height: 56, borderRadius: RADIUS.sm, backgroundColor: '#fee2e2', alignItems: 'center', justifyContent: 'center' }}>
-                          {isUploadingProblemPhoto ? (
-                            <ActivityIndicator size="small" color="#dc2626" />
-                          ) : (
-                            <Ionicons name="camera-outline" size={26} color="#dc2626" />
-                          )}
-                        </View>
-                      )}
-                      <TouchableOpacity
-                        style={{ backgroundColor: '#dc2626', paddingHorizontal: 12, paddingVertical: 8, borderRadius: RADIUS.sm, opacity: isUploadingProblemPhoto ? 0.6 : 1 }}
-                        disabled={isUploadingProblemPhoto}
-                        onPress={pickProblemPhoto}
-                      >
-                        <Text style={{ color: '#fff', fontSize: 11.5, fontFamily: FONT.bold }}>
-                          {isUploadingProblemPhoto ? 'Uploading...' : problemPhotoUrl ? 'Change Photo' : 'Upload Crop Photo *'}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                    {!problemPhotoUrl && (
-                      <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#dc2626' }}>
-                        * Crop photo upload is mandatory before submitting request.
-                      </Text>
-                    )}
+                    {myCrops!.map((crop) => {
+                      const isSelected = selectedRealCropId === crop.id;
+                      return (
+                        <TouchableOpacity
+                          key={crop.id}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: 10,
+                            borderRadius: RADIUS.md,
+                            borderWidth: 1.5,
+                            borderColor: isSelected ? '#dc2626' : '#cbd5e1',
+                            backgroundColor: isSelected ? '#fff1f2' : '#ffffff',
+                          }}
+                          activeOpacity={0.85}
+                          onPress={() => {
+                            tap();
+                            setSelectedRealCropId(crop.id);
+                          }}
+                        >
+                          <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: isSelected ? '#dc2626' : '#0f172a', flex: 1 }}>
+                            📍 {crop.plot.name} (ID: {crop.cropId || crop.id}) · 🌾 {crop.cropName}
+                          </Text>
+                          {isSelected && <Ionicons name="checkmark-circle" size={16} color="#dc2626" />}
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
-                </>
+                </View>
               )}
 
+              {/* 2. Problem Heading — TOP FIELD */}
               <View style={{ gap: 6 }}>
                 <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>
-                  3. Describe the Problem *
+                  Problem Heading
                 </Text>
                 <TextInput
                   style={{
                     borderWidth: 1.5,
-                    borderColor: problemDescription.trim().length >= 50 ? '#cbd5e1' : '#fca5a5',
+                    borderColor: '#cbd5e1',
+                    borderRadius: RADIUS.md,
+                    padding: 10,
+                    fontSize: 13,
+                    fontFamily: FONT.medium,
+                    color: '#0f172a',
+                    backgroundColor: '#ffffff',
+                  }}
+                  placeholder="e.g. Yellow leaves (Max 20 letters)"
+                  placeholderTextColor="#94a3b8"
+                  maxLength={20}
+                  value={problemHeading}
+                  onChangeText={setProblemHeading}
+                />
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' }}>
+                  {problemHeading.length}/20 characters max
+                </Text>
+              </View>
+
+              {/* 3. Describe the Problem — MIDDLE FIELD */}
+              <View style={{ gap: 6 }}>
+                <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>
+                  Describe the Problem *
+                </Text>
+                <TextInput
+                  style={{
+                    borderWidth: 1.5,
+                    borderColor: problemDescription.trim().length >= 30 ? '#cbd5e1' : '#fca5a5',
                     borderRadius: RADIUS.md,
                     padding: 12,
                     fontSize: 13,
@@ -1153,15 +1215,69 @@ export default function MarketScreen() {
                     minHeight: 100,
                     textAlignVertical: 'top',
                   }}
-                  placeholder="Apni fasal ki samasya vistaar se batayein — jaise patton ka rang, dhabbe, keede, ya sukhna. Yeh seedha advisor ko jayega."
+                  placeholder="Describe your crop problem in detail - such as leaf color, spots, insects, or wilting. This will be sent directly to your advisor."
                   placeholderTextColor="#94a3b8"
                   value={problemDescription}
                   onChangeText={setProblemDescription}
                   multiline
                 />
-                <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: problemDescription.trim().length >= 50 ? '#16a34a' : '#dc2626' }}>
-                  {problemDescription.trim().length}/50 characters minimum
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: problemDescription.trim().length >= 30 ? '#16a34a' : '#dc2626' }}>
+                  {problemDescription.trim().length}/30 characters minimum
                 </Text>
+              </View>
+
+              {/* 4. Crop & Problem Photos — BOTTOM FIELD */}
+              <View style={{ gap: 6 }}>
+                <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>
+                  Crop & Problem Photos
+                </Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 10, backgroundColor: '#fff1f2', padding: 10, borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: '#fca5a5' }}>
+                  {problemPhotoUris.map((uri, idx) => (
+                    <View key={idx} style={{ position: 'relative' }}>
+                      <Image source={{ uri }} style={{ width: 56, height: 56, borderRadius: RADIUS.sm }} />
+                      <TouchableOpacity
+                        style={{
+                          position: 'absolute',
+                          top: -6,
+                          right: -6,
+                          backgroundColor: '#dc2626',
+                          width: 18,
+                          height: 18,
+                          borderRadius: 9,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                        onPress={() => removeProblemPhoto(idx)}
+                      >
+                        <Ionicons name="close" size={11} color="#ffffff" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+
+                  <View style={{ flex: 1 }}>
+                    {selectedCropForProblem && (
+                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#dc2626' }} numberOfLines={1}>
+                        📍 {targetPlotForProblem?.plot?.name} · 🌾 {targetPlotForProblem?.cropName}
+                      </Text>
+                    )}
+                    {problemPhotoUrls.length < 3 && (
+                      <TouchableOpacity
+                        style={{ backgroundColor: '#dc2626', paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.sm, opacity: isUploadingProblemPhoto ? 0.6 : 1, marginTop: 4, alignSelf: 'flex-start' }}
+                        disabled={isUploadingProblemPhoto}
+                        onPress={pickProblemPhoto}
+                      >
+                        <Text style={{ color: '#fff', fontSize: 11.5, fontFamily: FONT.bold }}>
+                          {isUploadingProblemPhoto ? 'Uploading...' : `+ Add Photo (${problemPhotoUrls.length}/3)`}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+                {problemPhotoUrls.length === 0 && (
+                  <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#dc2626' }}>
+                    * Upload at least 1 photo (up to 3 photos allowed).
+                  </Text>
+                )}
               </View>
             </ScrollView>
 
@@ -1170,7 +1286,7 @@ export default function MarketScreen() {
                 styles.modalSubmitBtn,
                 {
                   backgroundColor:
-                    problemPhotoUrl && problemDescription.trim().length >= 50 && !createCropProblem.isPending
+                    problemPhotoUrls.length > 0 && problemDescription.trim().length >= 30 && !createCropProblem.isPending
                       ? '#dc2626'
                       : '#94a3b8',
                   marginTop: 10,
@@ -1190,6 +1306,279 @@ export default function MarketScreen() {
               </Text>
             </TouchableOpacity>
           </View>
+        </View>
+      </Modal>
+
+      {/* FARMER VIEWING PROBLEM DETAIL MODAL WITH ATTACHED PHOTOS & ADVISOR SOLUTION */}
+      <Modal
+        visible={!!viewingProblem}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setViewingProblem(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { maxHeight: '90%' }]}>
+            <View style={styles.modalHeaderRow}>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <Text style={styles.modalTitle}>⚠️ Crop Disease Details</Text>
+                  {viewingProblem && (
+                    <View
+                      style={{
+                        backgroundColor:
+                          viewingProblem.status === 'REPORTED' || viewingProblem.status === 'UNDER_REVIEW'
+                            ? '#fef3c7'
+                            : '#dcfce7',
+                        paddingHorizontal: 8,
+                        paddingVertical: 3,
+                        borderRadius: RADIUS.pill,
+                        borderWidth: 1,
+                        borderColor:
+                          viewingProblem.status === 'REPORTED' || viewingProblem.status === 'UNDER_REVIEW'
+                            ? '#fde68a'
+                            : '#86efac',
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 10.5,
+                          fontFamily: FONT.bold,
+                          color:
+                            viewingProblem.status === 'REPORTED' || viewingProblem.status === 'UNDER_REVIEW'
+                              ? '#b45309'
+                              : '#15803d',
+                        }}
+                      >
+                        {viewingProblem.status === 'REPORTED' || viewingProblem.status === 'UNDER_REVIEW'
+                          ? '⌛ Waiting Advisor Response'
+                          : '✅ Advisor Responded'}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: theme.primary, marginTop: 2 }}>
+                  🌾 Crop: {viewingProblem?.cropCycle?.cropName || 'Farm Crop'}
+                  {viewingProblem?.createdAt
+                    ? ` · 📅 ${new Date(viewingProblem.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}`
+                    : ''}
+                </Text>
+              </View>
+              <TouchableOpacity style={styles.closeBtn} onPress={() => setViewingProblem(null)}>
+                <Ionicons name="close" size={20} color="#475569" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ height: 1, backgroundColor: '#e2e8f0', marginVertical: 10 }} />
+
+            {viewingProblem ? (
+              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingBottom: 10 }}>
+                {/* Problem Title & Description */}
+                <View style={{ backgroundColor: '#f8fafc', padding: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', gap: 6 }}>
+                  <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' }}>
+                    📌 {viewingProblem.title}
+                  </Text>
+                  <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#334155', lineHeight: 18 }}>
+                    {viewingProblem.description}
+                  </Text>
+                </View>
+
+                {/* Attached Disease Photos Gallery (1 to 3 photos) */}
+                {viewingProblem.photos && viewingProblem.photos.length > 0 ? (
+                  <View style={{ gap: 6 }}>
+                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>
+                      📷 Attached Disease Photos ({viewingProblem.photos.length}):
+                    </Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                      {viewingProblem.photos.map((p: { id?: string; photoUrl: string }, idx: number) => {
+                        const fullUrl = resolveMediaUrl(p.photoUrl);
+                        return (
+                          <TouchableOpacity
+                            key={p.id || idx}
+                            activeOpacity={0.85}
+                            onPress={() => fullUrl && setViewingProblemPhoto(fullUrl)}
+                            style={{ position: 'relative', borderRadius: RADIUS.md, overflow: 'hidden', borderWidth: 1.5, borderColor: '#cbd5e1' }}
+                          >
+                            <Image source={{ uri: fullUrl }} style={{ width: 90, height: 90 }} />
+                            <View style={{ position: 'absolute', bottom: 4, right: 4, backgroundColor: 'rgba(0,0,0,0.65)', paddingHorizontal: 5, paddingVertical: 2, borderRadius: 10, flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                              <Ionicons name="expand" size={11} color="#ffffff" />
+                              <Text style={{ color: '#fff', fontSize: 9, fontFamily: FONT.bold }}>Zoom</Text>
+                            </View>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </ScrollView>
+                  </View>
+                ) : (
+                  <View style={{ backgroundColor: '#fff1f2', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#fca5a5' }}>
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#991b1b' }}>
+                      ⚠️ No photo was attached with this report.
+                    </Text>
+                  </View>
+                )}
+
+                {/* Advisor Solution Section */}
+                {viewingProblem.advisorResponse ? (
+                  <View style={{ backgroundColor: '#f0fdf4', padding: 12, borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: '#86efac', gap: 8 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
+                      <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: '#15803d' }}>
+                        👨‍🌾 Advisor Solution & Prescription:
+                      </Text>
+                    </View>
+                    <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#166534', lineHeight: 18 }}>
+                      {viewingProblem.advisorResponse}
+                    </Text>
+                    {viewingProblem.recommendedProduct ? (
+                      <View style={{ backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: '#bbf7d0', marginTop: 4 }}>
+                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#047857' }}>
+                          🧪 Recommended Product: {viewingProblem.recommendedProduct}
+                        </Text>
+                        <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#15803d', marginTop: 2 }}>
+                          ✓ This spray task has been automatically scheduled in your calendar.
+                        </Text>
+                      </View>
+                    ) : null}
+
+                    {/* Farmer Rating & Feedback Form */}
+                    <View style={{ backgroundColor: '#ffffff', padding: 10, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#cbd5e1', marginTop: 6, gap: 8 }}>
+                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>
+                        ⭐ Rate & Feedback for Advisor (1 to 5 Stars):
+                      </Text>
+
+                      {viewingProblem.farmerRating ? (
+                        <View style={{ gap: 4, backgroundColor: '#fffbeb', padding: 8, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: '#fde68a' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Ionicons
+                                key={star}
+                                name={star <= (viewingProblem.farmerRating || 0) ? 'star' : 'star-outline'}
+                                size={16}
+                                color="#d97706"
+                              />
+                            ))}
+                            <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#b45309', marginLeft: 4 }}>
+                              {viewingProblem.farmerRating}/5 Stars Rated
+                            </Text>
+                          </View>
+                          {viewingProblem.farmerFeedback ? (
+                            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#92400e', fontStyle: 'italic' }}>
+                              "{viewingProblem.farmerFeedback}"
+                            </Text>
+                          ) : null}
+                        </View>
+                      ) : (
+                        <>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <TouchableOpacity
+                                key={star}
+                                activeOpacity={0.8}
+                                onPress={() => setFarmerRatingVal(star)}
+                              >
+                                <Ionicons
+                                  name={star <= farmerRatingVal ? 'star' : 'star-outline'}
+                                  size={26}
+                                  color={star <= farmerRatingVal ? '#eab308' : '#cbd5e1'}
+                                />
+                              </TouchableOpacity>
+                            ))}
+                          </View>
+
+                          <TextInput
+                            style={{
+                              borderWidth: 1,
+                              borderColor: '#cbd5e1',
+                              borderRadius: RADIUS.sm,
+                              padding: 8,
+                              fontSize: 12,
+                              fontFamily: FONT.medium,
+                              backgroundColor: '#f8fafc',
+                              color: '#0f172a',
+                              minHeight: 45,
+                            }}
+                            placeholder="Write your feedback..."
+                            placeholderTextColor="#94a3b8"
+                            value={farmerFeedbackVal}
+                            onChangeText={setFarmerFeedbackVal}
+                            multiline
+                          />
+
+                          <TouchableOpacity
+                            style={{
+                              backgroundColor: '#16a34a',
+                              paddingVertical: 9,
+                              borderRadius: RADIUS.sm,
+                              alignItems: 'center',
+                              flexDirection: 'row',
+                              justifyContent: 'center',
+                              gap: 6,
+                              opacity: rateCropProblem.isPending ? 0.6 : 1,
+                            }}
+                            disabled={rateCropProblem.isPending}
+                            onPress={async () => {
+                              if (!viewingProblem) return;
+                              tap();
+                              try {
+                                const updated = await rateCropProblem.mutateAsync({
+                                  id: viewingProblem.id,
+                                  rating: farmerRatingVal,
+                                  feedback: farmerFeedbackVal,
+                                });
+                                setViewingProblem(null);
+                                setFarmerFeedbackVal('');
+                                setFarmerRatingVal(5);
+                                const msg = '⭐ Rating & Feedback submitted successfully!';
+                                Platform.OS === 'web' ? alert(msg) : Alert.alert('Submitted ⭐', msg);
+                              } catch (err: any) {
+                                const msg = err?.response?.data?.message ?? 'Could not submit rating.';
+                                Platform.OS === 'web' ? alert(msg) : Alert.alert('Error', msg);
+                              }
+                            }}
+                          >
+                            {rateCropProblem.isPending ? (
+                              <ActivityIndicator size="small" color="#ffffff" />
+                            ) : (
+                              <Ionicons name="star" size={14} color="#ffffff" />
+                            )}
+                            <Text style={{ color: '#ffffff', fontSize: 12, fontFamily: FONT.bold }}>
+                              {rateCropProblem.isPending ? 'Submitting...' : 'Submit Rating & Mark Solved ⭐'}
+                            </Text>
+                          </TouchableOpacity>
+                        </>
+                      )}
+                    </View>
+                  </View>
+                ) : (
+                  <View style={{ backgroundColor: '#fffbeb', padding: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#fde68a', flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <Ionicons name="time-outline" size={20} color="#b45309" />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#b45309' }}>
+                        Advisor Notification Sent
+                      </Text>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#92400e', marginTop: 2 }}>
+                        Your advisor has received this problem report and photo(s). They will analyze it and prescribe a solution soon.
+                      </Text>
+                    </View>
+                  </View>
+                )}
+              </ScrollView>
+            ) : null}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Fullscreen Photo Zoom Modal for Viewing Problem Photo */}
+      <Modal visible={!!viewingProblemPhoto} transparent animationType="fade" onRequestClose={() => setViewingProblemPhoto(null)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', justifyContent: 'center', alignItems: 'center', padding: 16 }}>
+          <TouchableOpacity
+            style={{ position: 'absolute', top: 40, right: 20, zIndex: 10, backgroundColor: 'rgba(255,255,255,0.25)', padding: 10, borderRadius: 25 }}
+            onPress={() => setViewingProblemPhoto(null)}
+          >
+            <Ionicons name="close" size={26} color="#ffffff" />
+          </TouchableOpacity>
+          {viewingProblemPhoto ? (
+            <Image source={{ uri: viewingProblemPhoto }} style={{ width: '100%', height: '82%' }} resizeMode="contain" />
+          ) : null}
         </View>
       </Modal>
 
@@ -1227,7 +1616,7 @@ export default function MarketScreen() {
           <View style={[styles.modalCard, { maxHeight: '90%' }]}>
             <View style={styles.modalHeaderRow}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.modalTitle}>📋 Mandatory Farm Details</Text>
+                <Text style={styles.modalTitle}>📋 Farmer Profile Details</Text>
                 <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 }}>
                   Required for {FALLBACK_ADVISOR.name}'s spray & irrigation schedule
                 </Text>
@@ -1239,9 +1628,7 @@ export default function MarketScreen() {
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 14, paddingVertical: 10 }}>
               <View style={{ gap: 6 }}>
-                <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>
-                  1. Farmer's Photograph (किसान की फोटो) *
-                </Text>
+                <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>1. Farmer's Photograph *</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#f8fafc', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#cbd5e1' }}>
                   {farmPhotoUri ? (
                     <Image source={{ uri: farmPhotoUri }} style={{ width: 50, height: 50, borderRadius: 25 }} />
@@ -1255,8 +1642,8 @@ export default function MarketScreen() {
                     onPress={() => {
                       tap();
                       setFarmPhotoUri('https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150');
-                      if (Platform.OS === 'web') alert('📸 Farmer Photo Uploaded Successfully! (किसान की फोटो अपलोड हो गई)');
-                      else Alert.alert('Farmer Photo Uploaded 📸', 'Aapki kisan photo save ho gayi hai.');
+                      if (Platform.OS === 'web') alert('📸 Farmer Photo Uploaded Successfully!');
+                      else Alert.alert('Farmer Photo Uploaded 📸', 'Farmer photo saved successfully.');
                     }}
                   >
                     <Text style={{ color: '#fff', fontSize: 11.5, fontFamily: FONT.bold }}>
@@ -1298,7 +1685,7 @@ export default function MarketScreen() {
 
               <View style={{ gap: 6 }}>
                 <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>
-                  3. Soil Type (मिट्टी का प्रकार) *
+                  3. Soil Type *
                 </Text>
                 <View style={{ gap: 6 }}>
                   {SOIL_TYPE_OPTIONS.map((soil) => (
@@ -1331,7 +1718,7 @@ export default function MarketScreen() {
 
               <View style={{ gap: 6 }}>
                 <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>
-                  4. Water / Irrigation Source (पानी का स्रोत) *
+                  4. Water / Irrigation Source *
                 </Text>
                 <View style={{ gap: 6 }}>
                   {WATER_TYPE_OPTIONS.map((water) => (
@@ -1369,7 +1756,7 @@ export default function MarketScreen() {
               onPress={() => {
                 tap();
                 setIsFarmProfileModalOpen(false);
-                if (Platform.OS === 'web') alert('✅ Mandatory Farm Details Saved!');
+                if (Platform.OS === 'web') alert('✅ Farmer Profile Details Saved!');
                 else Alert.alert('Saved ✅', 'Aapki farm details advisor ke paas save ho gayi hain.');
               }}
             >
@@ -1380,10 +1767,12 @@ export default function MarketScreen() {
         </View>
       </Modal>
 
-      <FarmerPlanUpgradeModal visible={isUpgradeModalOpen} onClose={() => setIsUpgradeModalOpen(false)} tiers={['STANDARD', 'PREMIUM']} />
+      <FarmerPlanUpgradeModal visible={isUpgradeModalOpen} onClose={() => setIsUpgradeModalOpen(false)} tiers={['PRO']} />
     </View>
   );
 }
+
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.bg },
@@ -1634,11 +2023,18 @@ const styles = StyleSheet.create({
     color: '#dc2626',
   },
   problemReportChipWaiting: {
-    backgroundColor: '#f0fdf4',
-    borderColor: '#bbf7d0',
+    backgroundColor: '#fffbeb',
+    borderColor: '#fde68a',
   },
   problemReportChipTextWaiting: {
-    color: '#16a34a',
+    color: '#b45309',
+  },
+  problemReportChipSolved: {
+    backgroundColor: '#dcfce7',
+    borderColor: '#86efac',
+  },
+  problemReportChipTextSolved: {
+    color: '#15803d',
   },
   presentScheduleCard: {
     backgroundColor: '#ffffff',

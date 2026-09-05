@@ -21,6 +21,8 @@ process.on('uncaughtException', (err: NodeJS.ErrnoException) => {
   process.exit(1);
 });
 
+import { json, urlencoded } from 'express';
+
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
@@ -29,8 +31,14 @@ async function bootstrap() {
   const port = configService.get<number>('PORT', 3000);
   const corsOrigins = configService.get<string>('CORS_ORIGINS', '');
 
+  app.use(json({ limit: '50mb' }));
+  app.use(urlencoded({ limit: '50mb', extended: true }));
   app.setGlobalPrefix(apiPrefix);
-  app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads/' });
+  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+    prefix: '/uploads/',
+    maxAge: '7d',
+    etag: true,
+  });
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   app.use(compression());
   app.enableCors({
@@ -42,6 +50,7 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
+      transformOptions: { enableImplicitConversion: true },
     }),
   );
 

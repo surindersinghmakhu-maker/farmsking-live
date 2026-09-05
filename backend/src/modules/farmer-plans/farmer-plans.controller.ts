@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { FarmerSubscriptionPlan, OperatorPermission, Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -14,6 +14,7 @@ import { RedeemFarmerPlanCouponDto } from './dto/redeem-farmer-plan-coupon.dto';
 import { GrantFarmerPlanDaysDto } from './dto/grant-farmer-plan-days.dto';
 import { UpdateFarmerPlanPricingDto } from './dto/update-farmer-plan-pricing.dto';
 import { ChooseAdvisorDto } from './dto/choose-advisor.dto';
+import { ApplyCouponToFarmerDto } from './dto/apply-coupon-to-farmer.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('farmer-plans')
@@ -55,8 +56,8 @@ export class FarmerPlansController {
     return this.farmerPlansService.createCoupon(user, dto);
   }
 
-  /** Advisor: self-service — generate their own plan coupon, debiting the Super-Admin-configured generation cost from their wallet. */
-  @Roles(Role.ADVISOR)
+  /** Advisor / Business Partner: self-service — generate their own plan coupon, debiting the generation cost from their wallet. */
+  @Roles(Role.ADVISOR, Role.BUSINESS_PARTNER)
   @Post('coupons/generate')
   generateOwnCoupon(@CurrentUser() user: AuthUser, @Body() dto: GenerateAdvisorCouponDto) {
     return this.farmerPlansService.generateOwnCoupon(user, dto);
@@ -106,6 +107,13 @@ export class FarmerPlansController {
     return this.farmerPlansService.updatePricing(user, plan, dto);
   }
 
+  /** Super Admin only: delete a specific plan duration rate */
+  @Roles(Role.SUPER_ADMIN)
+  @Delete('pricing/item/:id')
+  deletePricing(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.farmerPlansService.deletePricing(user, id);
+  }
+
   /** Admin/Super Admin (or Operator with VIEW_FARMER_PLANS): list all plan coupons */
   @UseGuards(OperatorPermissionGuard)
   @RequireOperatorPermission(OperatorPermission.VIEW_FARMER_PLANS)
@@ -113,6 +121,13 @@ export class FarmerPlansController {
   @Get('coupons')
   listAllCoupons() {
     return this.farmerPlansService.listAllCoupons();
+  }
+
+  /** Super Admin: Comprehensive financial accounting summary of all plan coupon direct income & wallet debits */
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @Get('financial-summary')
+  getCouponFinancialSummary() {
+    return this.farmerPlansService.getCouponFinancialSummary();
   }
 
   /** Admin/Super Admin (or Operator with VIEW_FARMER_PLANS): list all farmer plan records */
@@ -124,10 +139,51 @@ export class FarmerPlansController {
     return this.farmerPlansService.listAllFarmerPlans();
   }
 
-  /** Admin/Super Admin: extend a farmer's current plan by N days, no coupon involved */
+  /** Advisor/Admin/Business Partner: apply any generated coupon directly to a target farmer without requiring manual entry */
+  @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.BUSINESS_PARTNER)
+  @Post('apply-direct')
+  applyCouponToFarmerDirectly(@CurrentUser() user: AuthUser, @Body() dto: ApplyCouponToFarmerDto) {
+    return this.farmerPlansService.applyCouponToFarmerDirectly(user, dto);
+  }
+
+  /** Admin/Super Admin: activate or extend a farmer's plan directly, optionally selecting an advisor to credit share */
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Post('grant-days')
   grantDaysDirectly(@Body() dto: GrantFarmerPlanDaysDto) {
-    return this.farmerPlansService.grantDaysDirectly(dto.farmerId, dto.daysGranted);
+    return this.farmerPlansService.grantDaysDirectly(dto);
   }
+
+  /** Any authenticated user role: list all available user guide documentation books */
+  @Roles(
+    Role.CUSTOMER,
+    Role.FARMER,
+    Role.GARDENER,
+    Role.ADVISOR,
+    Role.BUSINESS_PARTNER,
+    Role.ADMIN,
+    Role.SUPER_ADMIN,
+    Role.OPERATOR,
+  )
+  @Get('admin/docs/list')
+  getAdminDocsList() {
+    return this.farmerPlansService.getAdminDocsList();
+  }
+
+  /** Any authenticated user role: download or view content of a specific user guide book in PDF/HTML with language selection */
+  @Roles(
+    Role.CUSTOMER,
+    Role.FARMER,
+    Role.GARDENER,
+    Role.ADVISOR,
+    Role.BUSINESS_PARTNER,
+    Role.ADMIN,
+    Role.SUPER_ADMIN,
+    Role.OPERATOR,
+  )
+  @Get('admin/docs/download/:docKey')
+  downloadAdminDocContent(@Param('docKey') docKey: string, @Query('lang') lang?: string) {
+    return this.farmerPlansService.downloadAdminDocContent(docKey, lang || 'pa');
+  }
+
 }
+

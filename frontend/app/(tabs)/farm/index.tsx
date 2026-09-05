@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import ViewShot from 'react-native-view-shot';
 import { useAuth } from '@/src/store/auth-context';
+import { useRole } from '@/src/store/role-context';
 import { useCrops, CropStage, CropHistoryEntry, RegisteredCropField, CropSaleRecord, STAGE_ORDER } from '@/src/store/crops-context';
 import { useFarmerPlan } from '@/src/hooks/useFarmerPlan';
 import { useFetchSaleBill, useMySaleBillCount } from '@/src/hooks/useSaleBills';
@@ -27,6 +28,11 @@ import { Party } from '@/src/types/api';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { CropCategorySelectorModal, CropFormValues } from '@/components/CropCategorySelectorModal';
+import { FarmerPlanUpgradeModal } from '@/src/components/FarmerPlanUpgradeModal';
+import { FarmLocationPickerModal } from '@/components/FarmLocationPickerModal';
+import { CropLocationGuideModal } from '@/components/CropLocationGuideModal';
+import { PaymentVoucherModal, VoucherType } from '@/src/components/PaymentVoucherModal';
+import { useLabourWorkers } from '@/src/hooks/useLabour';
 
 const theme = RoleThemes.FARMER;
 
@@ -64,13 +70,26 @@ const STAGE_META: Record<CropStage, { label: string; color: string }> = {
 
 export default function FarmListScreen() {
   const router = useRouter();
-  const { user, logout } = useAuth();
-  const { cropFields, cropHistory, salesRecords, addCrop, removeCrop, updateCropStage, recordSale } = useCrops();
-  const { plan } = useFarmerPlan();
+  const { user } = useAuth();
+  const { role: currentRole } = useRole();
+  const isAdminOrSuperAdmin = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN';
+  const { cropFields, cropHistory, salesRecords, cropGpsDataMap, unlockedCropIds, lockCropGps, unlockCropDirectly, addCrop, editCrop, removeCrop, updateCropStage, recordSale } = useCrops();
+  const { plan, limits } = useFarmerPlan();
   const isPaid = plan !== 'FREE';
 
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [editingCrop, setEditingCrop] = useState<RegisteredCropField | null>(null);
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showGuideModal, setShowGuideModal] = useState(false);
+  const [selectedCropForGps, setSelectedCropForGps] = useState<RegisteredCropField | null>(null);
+
+  // Quick Payment Voucher Modal State
+  const [showPaymentVoucherModal, setShowPaymentVoucherModal] = useState(false);
+  const [voucherInitialType, setVoucherInitialType] = useState<VoucherType>('RECEIPT_IN');
+  const { data: labourWorkers = [] } = useLabourWorkers();
+  const { data: parties = [] } = useParties();
 
   // Share Bill preview for individual sale entries
   const fetchSaleBill = useFetchSaleBill();
@@ -84,11 +103,16 @@ export default function FarmListScreen() {
   const { data: billCountData } = useMySaleBillCount();
   const shareInvoiceAsJpg = async (fileName: string | undefined) => {
     if (!isPaid && (billCountData?.count ?? 0) >= FREE_SHARE_LIMIT) {
-      const message = `Free plan par sirf ${FREE_SHARE_LIMIT} sale bill share ho sakde han. Zyada share karan layi apna plan upgrade karo.`;
+      const message = `Only ${FREE_SHARE_LIMIT} sale bills can be shared on the Free plan. Upgrade your plan to share more.`;
       if (Platform.OS === 'web') {
-        alert(`🔒 Upgrade Your Plan\n\n${message}`);
+        if (confirm(`🔒 Upgrade Your Plan\n\n${message}\n\nWould you like to view plan comparison table & upgrade now?`)) {
+          setIsUpgradeModalOpen(true);
+        }
       } else {
-        Alert.alert('🔒 Upgrade Your Plan', message);
+        Alert.alert('🔒 Upgrade Your Plan', message, [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Upgrade Plan 👑', onPress: () => setIsUpgradeModalOpen(true) },
+        ]);
       }
       return;
     }
@@ -183,13 +207,17 @@ export default function FarmListScreen() {
     if (!isPaid) {
       tap();
       if (Platform.OS === 'web') {
-        alert(
-          '🔒 Paid User Exclusive Feature\n\nFull crop audit breakdown & itemized sale transaction records are available exclusively for Subscribed / Paid Farmers.'
-        );
+        if (confirm('🔒 Paid User Exclusive Feature\n\nFull crop audit breakdown & itemized sale transaction records are available exclusively for Subscribed / Paid Farmers.\n\nWould you like to view plan comparison table & upgrade now?')) {
+          setIsUpgradeModalOpen(true);
+        }
       } else {
         Alert.alert(
           '🔒 Paid User Exclusive Feature',
-          'Full crop audit breakdown & itemized sale transaction records are available exclusively for Subscribed / Paid Farmers.'
+          'Full crop audit breakdown & itemized sale transaction records are available exclusively for Subscribed / Paid Farmers.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Upgrade Plan 👑', onPress: () => setIsUpgradeModalOpen(true) },
+          ]
         );
       }
       return;
@@ -203,13 +231,31 @@ export default function FarmListScreen() {
   const handleSaveCropForm = async (values: CropFormValues) => {
     tap();
     try {
-      await addCrop(values);
-    } catch (err: any) {
-      const message = err?.response?.data?.message ?? 'Could not add this crop. Please try again.';
-      if (Platform.OS === 'web') {
-        alert(message);
+      if (editingCrop) {
+        await editCrop(editingCrop.id, values);
       } else {
-        Alert.alert('Could Not Add Crop', message);
+        await addCrop(values);
+      }
+      setEditingCrop(null);
+    } catch (err: any) {
+      const message = err?.response?.data?.message ?? 'Could not save this crop. Please try again.';
+      if (message.toLowerCase().includes('upgrade')) {
+        if (Platform.OS === 'web') {
+          if (confirm(`🔒 Upgrade Your Plan\n\n${message}\n\nWould you like to view plan comparison table & upgrade now?`)) {
+            setIsUpgradeModalOpen(true);
+          }
+        } else {
+          Alert.alert('🔒 Upgrade Your Plan', message, [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Upgrade Plan 👑', onPress: () => setIsUpgradeModalOpen(true) },
+          ]);
+        }
+      } else {
+        if (Platform.OS === 'web') {
+          alert(message);
+        } else {
+          Alert.alert('Could Not Save Crop', message);
+        }
       }
     }
   };
@@ -227,11 +273,11 @@ export default function FarmListScreen() {
     // STRICT ONE-WAY PROGRESSION RULE: Cannot go back to a lower stage level
     if (targetLevel < currLevel) {
       if (Platform.OS === 'web') {
-        alert('🔒 Stage Locked! Fasal next stage pe aane ke baad pichli stage par vapas nahi ja sakti.');
+        alert('🔒 Stage Locked! Once moved to the next stage, a crop cannot return to previous stages.');
       } else {
         Alert.alert(
           'Stage Locked 🔒',
-          'Fasal next stage pe aane ke baad pichli stage par vapas nahi ja sakti!'
+          'Once moved to the next stage, a crop cannot return to previous stages!'
         );
       }
       return;
@@ -347,6 +393,52 @@ export default function FarmListScreen() {
     };
   };
 
+  const handleOpenAddCropModal = () => {
+    tap();
+    const maxTotalCrops = limits?.maxTotalCrops;
+    const maxActiveCrops = limits?.maxActiveCrops;
+    const totalCropsCount = cropFields.length;
+
+    const planDisplayName =
+      plan === 'PRO' ? 'Lite Plan' : plan === 'SMART' ? 'Pro Plan' : plan === 'SUPER' ? 'Smart Plan' : 'Free Plan';
+
+    if (maxTotalCrops != null && maxTotalCrops > 0 && totalCropsCount >= maxTotalCrops) {
+      const message = `Your current plan (${planDisplayName}) allows adding a maximum of ${maxTotalCrops} crop(s). Please upgrade your plan to add more crops.`;
+      if (Platform.OS === 'web') {
+        if (confirm(`🔒 Upgrade Your Plan\n\n${message}\n\nWould you like to view plan comparison table & upgrade now?`)) {
+          setIsUpgradeModalOpen(true);
+        }
+      } else {
+        Alert.alert('🔒 Upgrade Your Plan', message, [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Upgrade Plan 👑', onPress: () => setIsUpgradeModalOpen(true) },
+        ]);
+      }
+      return;
+    }
+
+    if (maxActiveCrops != null && maxActiveCrops > 0) {
+      const activeCropsCount = cropFields.filter((c) => c.status === 'ACTIVE').length;
+      if (activeCropsCount >= maxActiveCrops) {
+        const message = `Your current plan (${planDisplayName}) allows a maximum of ${maxActiveCrops} active crop(s) at a time. Please upgrade your plan to add more active crops.`;
+        if (Platform.OS === 'web') {
+          if (confirm(`🔒 Upgrade Your Plan\n\n${message}\n\nWould you like to view plan comparison table & upgrade now?`)) {
+            setIsUpgradeModalOpen(true);
+          }
+        } else {
+          Alert.alert('🔒 Upgrade Your Plan', message, [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Upgrade Plan 👑', onPress: () => setIsUpgradeModalOpen(true) },
+          ]);
+        }
+        return;
+      }
+    }
+
+    setEditingCrop(null);
+    setIsCropModalOpen(true);
+  };
+
   const activeCropFields = useMemo(
     () => cropFields.filter((crop) => crop.status === 'ACTIVE' && crop.stage !== 'COMPLETED'),
     [cropFields]
@@ -358,12 +450,17 @@ export default function FarmListScreen() {
       <LinearGradient colors={theme.gradient} style={styles.hero}>
         <View pointerEvents="none" style={[styles.glow, styles.glowTop]} />
         <View style={styles.heroTopRow}>
-          <View>
+          <View style={{ flex: 1 }}>
             <Text style={styles.heroGreeting}>My Crops & Fields</Text>
           </View>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <TouchableOpacity style={styles.logoutButton} onPress={() => logout()} activeOpacity={0.75}>
-              <Ionicons name="log-out-outline" size={20} color="#fff" />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <TouchableOpacity
+              style={styles.topAddCropBtn}
+              activeOpacity={0.85}
+              onPress={handleOpenAddCropModal}
+            >
+              <Ionicons name="add-circle" size={16} color="#15803d" />
+              <Text style={styles.topAddCropBtnText}>+ Add Crop</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -383,26 +480,154 @@ export default function FarmListScreen() {
           <View style={styles.center}>
             <Ionicons name="leaf-outline" size={36} color="#cbd5e1" />
             <Text style={styles.emptyText}>No active crops right now.</Text>
-            <Text style={styles.emptySub}>Click "+ Add New Crop" to register new crop plots & unit rates.</Text>
+            <Text style={styles.emptySub}>Click "+ Add Crop" at the top to register new crop plots & unit rates.</Text>
           </View>
         }
         renderItem={({ item }) => {
           const isHarvestingReady = item.stage === 'HARVESTING';
+          const isEditableStage = item.stage === 'PLANTATION' || item.stage === 'SOWING' || isAdminOrSuperAdmin;
 
           return (
             <View style={[styles.card, premiumShadow('#000000', 'sm')]}>
               <View style={styles.cardHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', flex: 1 }}>
-                  <Text style={styles.cardTitle} numberOfLines={1}>📍 {item.fieldName}</Text>
+                  <Text style={styles.cardTitle} numberOfLines={1}>
+                    📍 {item.fieldName} <Text style={styles.cropIdSubText}>(ID: {item.cropId || item.id})</Text>
+                  </Text>
                   <View style={styles.cropBadge}>
                     <Text style={styles.cropBadgeText}>🌾 {item.cropName}</Text>
                   </View>
                 </View>
+                {isEditableStage && (
+                  <TouchableOpacity
+                    style={styles.editCropBadgeBtn}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      tap();
+                      setEditingCrop(item);
+                      setIsCropModalOpen(true);
+                    }}
+                  >
+                    <Ionicons name="pencil" size={13} color="#0284c7" />
+                    <Text style={styles.editCropBadgeText}>Edit</Text>
+                  </TouchableOpacity>
+                )}
               </View>
 
               <Text style={styles.cardMetaText}>
-                📏 {item.area}{item.sowingDate ? ` · 📅 ${item.sowingDate}` : ''}{item.variety ? ` · 🌱 ${item.variety}` : ''}
+                📏 {item.area}{item.sowingDate ? ` · 📅 ${item.sowingDate.replace(/\s*\([^)]*\)/g, '').trim()}` : ''}{item.variety ? ` · 🌱 ${item.variety}` : ''}{item.plantCount ? ` · 🪴 ${item.plantCount} Plants` : ''}
               </Text>
+
+              {/* Crop GPS Location & Advisor Remote Sync Section — ALWAYS UNHIDDEN */}
+              <View style={{ marginTop: 6, gap: 6 }}>
+                {/* Row 1: 📍 Set Crop GPS Location + ❓ How Process Works */}
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  <TouchableOpacity
+                    style={{
+                      flex: 1.3,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 4,
+                      backgroundColor: '#16a34a',
+                      paddingVertical: 7,
+                      paddingHorizontal: 8,
+                      borderRadius: 8,
+                    }}
+                    activeOpacity={0.85}
+                    onPress={() => {
+                      tap();
+                      unlockCropDirectly(item.id);
+                      setSelectedCropForGps(item);
+                      setShowLocationModal(true);
+                    }}
+                  >
+                    <Ionicons name="location" size={13} color="#ffffff" />
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>
+                      📍 Set Crop GPS Location
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={{
+                      flex: 1,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 4,
+                      backgroundColor: '#f0fdf4',
+                      borderWidth: 1,
+                      borderColor: '#bbf7d0',
+                      paddingVertical: 7,
+                      paddingHorizontal: 8,
+                      borderRadius: 8,
+                    }}
+                    activeOpacity={0.85}
+                    onPress={() => {
+                      tap();
+                      setShowGuideModal(true);
+                    }}
+                  >
+                    <Ionicons name="help-circle-outline" size={13} color="#166534" />
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#166534' }}>
+                      How Process Works
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Row 2: 🛰️ Satellite Advisor */}
+                {(() => {
+                  const cropGps = cropGpsDataMap[item.id] || item.gpsData;
+                  const isGpsLocked = cropGps?.isLocked || false;
+
+                  return (
+                    <TouchableOpacity
+                      style={{
+                        width: '100%',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 4,
+                        backgroundColor: isGpsLocked ? '#eff6ff' : '#fff7ed',
+                        borderWidth: 1,
+                        borderColor: isGpsLocked ? '#bfdbfe' : '#ffedd5',
+                        paddingVertical: 7,
+                        paddingHorizontal: 8,
+                        borderRadius: 8,
+                      }}
+                      activeOpacity={0.85}
+                      onPress={() => {
+                        tap();
+                        if (!isGpsLocked) {
+                          Alert.alert(
+                            'Location Not Locked 🔒',
+                            'Please tap "📍 Set Crop GPS Location" to mark & lock 4 field corners first before accessing Satellite Advisor.'
+                          );
+                          return;
+                        }
+                        router.push({
+                          pathname: '/(tabs)/satellite-map',
+                          params: {
+                            cropId: item.id,
+                            cropName: item.cropName,
+                            farmerName: item.farmerName || user?.name,
+                            plotName: item.fieldName,
+                            area: item.area,
+                            location: cropGps?.locationText || item.location,
+                            lat: String(cropGps?.centerLat || ''),
+                            lng: String(cropGps?.centerLng || ''),
+                          },
+                        });
+                      }}
+                    >
+                      <Ionicons name={isGpsLocked ? "planet" : "lock-closed"} size={13} color={isGpsLocked ? "#2563eb" : "#d97706"} />
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isGpsLocked ? "#2563eb" : "#b45309" }}>
+                        {isGpsLocked ? "🛰️ Satellite Advisor" : "🔒 Satellite Advisor (Lock Location First)"}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })()}
+              </View>
 
               <View style={styles.stageInlineRow}>
                 {(() => {
@@ -430,31 +655,6 @@ export default function FarmListScreen() {
                   </TouchableOpacity>
                 )}
               </View>
-
-              <TouchableOpacity
-                style={[
-                  styles.saleCropCardBtn,
-                  isHarvestingReady
-                    ? { backgroundColor: '#16a34a', borderColor: '#15803d' }
-                    : { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' },
-                ]}
-                activeOpacity={0.8}
-                onPress={() => openSaleModal(item, false)}
-              >
-                <Ionicons
-                  name={isHarvestingReady ? 'cart' : 'lock-closed'}
-                  size={14}
-                  color={isHarvestingReady ? '#ffffff' : '#64748b'}
-                />
-                <Text
-                  style={[
-                    styles.saleCropCardBtnText,
-                    isHarvestingReady ? { color: '#ffffff', fontFamily: FONT.bold } : { color: '#64748b' },
-                  ]}
-                >
-                  {isHarvestingReady ? `💰 Sell ${item.cropName}` : `🔒 Sell ${item.cropName}`}
-                </Text>
-              </TouchableOpacity>
             </View>
           );
         }}
@@ -489,7 +689,9 @@ export default function FarmListScreen() {
                   >
                     <View style={styles.historyCardHeader}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                        <Text style={styles.historyCropName}>📍 {hItem.fieldName}</Text>
+                        <Text style={styles.historyCropName}>
+                          📍 {hItem.fieldName} <Text style={styles.cropIdSubText}>(ID: {hItem.cropId || hItem.id})</Text>
+                        </Text>
                         <View style={styles.completedBadge}>
                           <Text style={styles.completedBadgeText}>🏁 COMPLETED</Text>
                         </View>
@@ -553,17 +755,16 @@ export default function FarmListScreen() {
 
             <Text style={styles.warningTitle}>Stage Change Warning ⚠️</Text>
             <Text style={styles.warningDesc}>
-              Kya aap <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>{pendingStageUpdate?.cropName}</Text> ki stage badal kar{' '}
+              Are you sure you want to change the stage of <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>{pendingStageUpdate?.cropName}</Text> to{' '}
               <Text style={{ fontFamily: FONT.bold, color: '#16a34a' }}>
                 {pendingStageUpdate ? STAGE_LABELS[pendingStageUpdate.targetStage] : ''}
-              </Text>{' '}
-              karna chahte hain?
+              </Text>?
             </Text>
 
             <View style={styles.warningHighlightBox}>
               <Ionicons name="lock-closed" size={16} color="#b45309" />
               <Text style={styles.warningHighlightText}>
-                ⚠️ Dhyan den: Ek baar next stage par aane ke baad aap pichli stage par vapas NAHI ja sakte!
+                ⚠️ Note: Once advanced to the next stage, you CANNOT revert to previous stages!
               </Text>
             </View>
 
@@ -576,7 +777,7 @@ export default function FarmListScreen() {
                   setPendingStageUpdate(null);
                 }}
               >
-                <Text style={styles.cancelBtnText}>Cancel (रद्द करें)</Text>
+                <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -584,7 +785,7 @@ export default function FarmListScreen() {
                 onPress={confirmCropStageChange}
               >
                 <Ionicons name="arrow-forward-circle" size={18} color="#ffffff" />
-                <Text style={styles.confirmSaleText}>Haan, Stage Badlein</Text>
+                <Text style={styles.confirmSaleText}>Yes, Change Stage</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -650,7 +851,7 @@ export default function FarmListScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.bannerTitle}>{selectedCropForSale.cropName} · 🌾 Ready for Harvest</Text>
                     <Text style={styles.bannerSub}>
-                      Field: {selectedCropForSale.fieldName} · Unit: {selectedCropForSale.unit}
+                      Field: {selectedCropForSale.fieldName} (ID: {selectedCropForSale.cropId || selectedCropForSale.id}) · Unit: {selectedCropForSale.unit}
                     </Text>
                   </View>
                 </View>
@@ -759,7 +960,9 @@ export default function FarmListScreen() {
 
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>📍 Field</Text>
-                  <Text style={styles.detailValue}>{selectedHistoryCrop.fieldName}</Text>
+                  <Text style={styles.detailValue}>
+                    {selectedHistoryCrop.fieldName} <Text style={{ fontSize: 12, color: '#64748b', fontFamily: FONT.medium }}>(ID: {selectedHistoryCrop.cropId || selectedHistoryCrop.id})</Text>
+                  </Text>
                 </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>🌾 Crop</Text>
@@ -849,8 +1052,8 @@ export default function FarmListScreen() {
                                 <Text style={styles.saleEntryBuyer}>👤 {entry.buyerName || 'Local Trader'}</Text>
                               </View>
                               <TouchableOpacity style={styles.shareBillBtn} activeOpacity={0.8} onPress={() => openBillPreviewForSale(entry)}>
-                                <Ionicons name="share-social-outline" size={13} color="#16a34a" />
-                                <Text style={styles.shareBillBtnText}>Share Bill</Text>
+                                <Ionicons name="download-outline" size={13} color="#16a34a" />
+                                <Text style={styles.shareBillBtnText}>Download Bill</Text>
                               </TouchableOpacity>
                             </View>
                           ))
@@ -909,8 +1112,8 @@ export default function FarmListScreen() {
                     onPress={() => shareInvoiceAsJpg(`Bill-${billPreviewInvoice.billNo}`)}
                     disabled={isSharingBill}
                   >
-                    <Ionicons name="share-social-outline" size={16} color="#ffffff" />
-                    <Text style={styles.confirmSaleText}>{isSharingBill ? 'Preparing...' : 'Share Bill (JPG)'}</Text>
+                    <Ionicons name="download-outline" size={16} color="#ffffff" />
+                    <Text style={styles.confirmSaleText}>{isSharingBill ? 'Preparing...' : 'Download Bill (JPG)'}</Text>
                   </TouchableOpacity>
                 </View>
               )
@@ -919,26 +1122,58 @@ export default function FarmListScreen() {
         </View>
       </Modal>
 
-      {/* Bottom CTA to Add Crop */}
-      <TouchableOpacity
-        style={styles.fabWrap}
-        onPress={() => {
-          tap();
-          setIsCropModalOpen(true);
-        }}
-        activeOpacity={0.85}
-      >
-        <LinearGradient colors={theme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.fab}>
-          <Ionicons name="add-circle" size={22} color="#fff" />
-          <Text style={styles.fabText}>+ Add New Crop & Unit Rates</Text>
-        </LinearGradient>
-      </TouchableOpacity>
 
       {/* Crop Category & Name Selector with attached form */}
       <CropCategorySelectorModal
         visible={isCropModalOpen}
-        onClose={() => setIsCropModalOpen(false)}
+        editingCrop={editingCrop}
+        onClose={() => {
+          setIsCropModalOpen(false);
+          setEditingCrop(null);
+        }}
         onSaveCropForm={handleSaveCropForm}
+        onOpenUpgradeModal={() => setIsUpgradeModalOpen(true)}
+      />
+
+      <FarmerPlanUpgradeModal
+        visible={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+      />
+
+      {/* Farm GPS Location Picker Modal */}
+      <FarmLocationPickerModal
+        visible={showLocationModal}
+        initialIsLocked={selectedCropForGps ? !unlockedCropIds[selectedCropForGps.id] : true}
+        cropId={selectedCropForGps?.id}
+        cropName={selectedCropForGps?.cropName}
+        farmerName={user?.name || selectedCropForGps?.farmerName}
+        farmerPhone={user?.mobile || selectedCropForGps?.farmerPhone}
+        plotName={selectedCropForGps?.fieldName}
+        location={selectedCropForGps?.location}
+        existingGpsData={selectedCropForGps?.gpsData}
+        onClose={() => setShowLocationModal(false)}
+        onSaveLocation={() => {
+          if (selectedCropForGps) {
+            lockCropGps(selectedCropForGps.id);
+          }
+          setShowLocationModal(false);
+        }}
+      />
+
+      {/* Crop Location Process Guide Modal */}
+      <CropLocationGuideModal
+        visible={showGuideModal}
+        onClose={() => setShowGuideModal(false)}
+        onOpenGpsPicker={() => setShowLocationModal(true)}
+      />
+
+      {/* Payment Voucher Modal Component for Quick Payments In/Out */}
+      <PaymentVoucherModal
+        visible={showPaymentVoucherModal}
+        initialType={voucherInitialType}
+        parties={parties}
+        labourWorkers={labourWorkers}
+        onClose={() => setShowPaymentVoucherModal(false)}
       />
 
     </View>
@@ -946,6 +1181,96 @@ export default function FarmListScreen() {
 }
 
 const styles = StyleSheet.create({
+  quickAccountsCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    marginBottom: 10,
+    gap: 8,
+  },
+  quickAccountsTitle: {
+    fontSize: 12,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+    letterSpacing: -0.2,
+  },
+  quickAccountsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  quickAccountsBtn: {
+    width: '48.8%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 9,
+    borderRadius: RADIUS.md,
+  },
+  quickAccountsBtnText: {
+    color: '#ffffff',
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+  },
+  cropGpsBox: {
+    backgroundColor: '#f0fdf4',
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    padding: 10,
+    marginVertical: 8,
+    gap: 8,
+  },
+  gpsInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  gpsLocTitle: {
+    fontSize: 12,
+    color: '#166534',
+    flex: 1,
+  },
+  gpsBtnRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  setGpsBtn: {
+    flex: 1.2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    backgroundColor: '#16a34a',
+    paddingVertical: 8,
+    borderRadius: RADIUS.sm,
+  },
+  setGpsBtnText: {
+    color: '#ffffff',
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+  },
+  guideGpsBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    paddingVertical: 8,
+    borderRadius: RADIUS.sm,
+  },
+  guideGpsBtnText: {
+    color: '#166534',
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+  },
+
   container: { flex: 1, backgroundColor: theme.bg },
   hero: { paddingTop: 20, paddingBottom: 20, paddingHorizontal: SPACING.xxl, overflow: 'hidden' },
   glow: { position: 'absolute', width: 200, height: 200, borderRadius: 100, backgroundColor: theme.accent, opacity: 0.18 },
@@ -961,6 +1286,46 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+  },
+  topAddCropBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  topAddCropBtnText: {
+    fontSize: 12.5,
+    fontFamily: FONT.extraBold,
+    color: '#15803d',
+  },
+  headerTitleRowWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: SPACING.xs,
+  },
+  headerSectionAddBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#16a34a',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIUS.pill,
+    elevation: 2,
+  },
+  headerSectionAddBtnText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
   },
   list: { padding: SPACING.lg, paddingBottom: 80, flexGrow: 1 },
   marketCardWrap: { marginBottom: SPACING.xs },
@@ -978,6 +1343,7 @@ const styles = StyleSheet.create({
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
   cardTitle: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
+  cropIdSubText: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b' },
   cardMetaText: { fontSize: 12, fontFamily: FONT.medium, color: '#475569', marginTop: 3 },
   stageInlineRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 6 },
   cropBadge: { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1, paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.xs },
@@ -1480,8 +1846,24 @@ const styles = StyleSheet.create({
     borderColor: '#bbf7d0',
   },
   shareBillBtnText: {
-    fontSize: 10.5,
+    fontSize: 11,
     fontFamily: FONT.bold,
-    color: '#16a34a',
+    color: '#0284c7',
+  },
+  editCropBadgeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#e0f2fe',
+    borderWidth: 1,
+    borderColor: '#bae6fd',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.xs,
+  },
+  editCropBadgeText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#0284c7',
   },
 });

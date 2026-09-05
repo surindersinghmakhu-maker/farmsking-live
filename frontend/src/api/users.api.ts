@@ -165,6 +165,13 @@ export interface UpdateFarmerProfilePayload {
   sprayTankSizeL?: SprayTankSizeL;
   soilType?: SoilType;
   waterType?: WaterType;
+  pincode?: string;
+  postOffice?: string;
+  village?: string;
+  district?: string;
+  state?: string;
+  upiId?: string;
+  billPrintingAddress?: string;
 }
 
 export async function getMyProfileStatus(): Promise<FarmerProfileStatus> {
@@ -207,7 +214,9 @@ export interface UpdateMyAddressPayload {
   village?: string;
   district?: string;
   state?: string;
+  billPrintingAddress?: string;
   notificationsEnabled?: boolean;
+  whatsappGroupEnabled?: boolean;
   /** Null clears the threshold (alert off); a number sets and enables it. */
   weatherAlertMinTempC?: number | null;
   weatherAlertMaxTempC?: number | null;
@@ -220,8 +229,8 @@ export async function updateMyAddress(payload: UpdateMyAddressPayload) {
 }
 
 /** Self-service: a Customer-only account grants itself the FARMER role too — both dashboards become available. */
-export async function becomeFarmer() {
-  const { data } = await apiClient.post('/users/me/become-farmer', {});
+export async function becomeFarmer(payload?: UpdateFarmerProfilePayload) {
+  const { data } = await apiClient.post('/users/me/become-farmer', payload ?? {});
   return data;
 }
 
@@ -261,5 +270,11 @@ export interface BusinessPartnerSearchResult {
 /** Advisor: type-search active Business Partners by name or king id, e.g. to share a self-generated coupon with one. */
 export async function searchBusinessPartners(q: string): Promise<BusinessPartnerSearchResult[]> {
   const { data } = await apiClient.get<BusinessPartnerSearchResult[]>('/users/search/business-partners', { params: { q } });
+  return data;
+}
+
+/** Self-service Account Deletion (Google Play Store Policy Requirement) */
+export async function deleteMyAccount(): Promise<{ success: boolean; message: string }> {
+  const { data } = await apiClient.delete<{ success: boolean; message: string }>('/users/me');
   return data;
 }

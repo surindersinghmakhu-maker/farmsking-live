@@ -23,10 +23,14 @@ export interface InitiateFarmerPlanPaymentResponse extends FarmerPlanPaymentRequ
   upiLink: string;
 }
 
-export async function initiateFarmerPlanPayment(targetPlan: FarmerPlanType, farmerId?: string): Promise<InitiateFarmerPlanPaymentResponse> {
+export async function initiateFarmerPlanPayment(
+  targetPlan: FarmerPlanType,
+  billingPeriodDays?: number,
+  farmerId?: string,
+): Promise<InitiateFarmerPlanPaymentResponse> {
   const { data } = await apiClient.post<InitiateFarmerPlanPaymentResponse>(
     '/farmer-plan-payments',
-    { targetPlan },
+    { targetPlan, billingPeriodDays },
     { params: farmerId ? { farmerId } : {} },
   );
   return data;
@@ -42,8 +46,8 @@ export async function listPendingFarmerPlanPayments(): Promise<FarmerPlanPayment
   return data;
 }
 
-export async function submitFarmerPlanPayment(id: string, utr?: string): Promise<FarmerPlanPaymentRequest> {
-  const { data } = await apiClient.post<FarmerPlanPaymentRequest>(`/farmer-plan-payments/${id}/submit`, { utr });
+export async function submitFarmerPlanPayment(id: string, utr?: string, screenshotUrl?: string): Promise<FarmerPlanPaymentRequest> {
+  const { data } = await apiClient.post<FarmerPlanPaymentRequest>(`/farmer-plan-payments/${id}/submit`, { utr, screenshotUrl });
   return data;
 }
 

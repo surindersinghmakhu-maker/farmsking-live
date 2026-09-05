@@ -25,9 +25,23 @@ export class AppSettingsController {
     return this.appSettingsService.getSupportContact();
   }
 
-  @Roles(Role.SUPER_ADMIN)
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
   @Patch()
   update(@CurrentUser() user: AuthUser, @Body() dto: UpdateAppSettingsDto) {
     return this.appSettingsService.update(user, dto);
   }
+
+  /** Get live category & sub-category feature flags */
+  @Get('feature-flags')
+  getFeatureFlags() {
+    return this.appSettingsService.getFeatureFlags();
+  }
+
+  /** Update feature flags (Super Admin / Admin only) */
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @Patch('feature-flags')
+  updateFeatureFlags(@CurrentUser() user: AuthUser, @Body() flags: any) {
+    return this.appSettingsService.updateFeatureFlags(user, flags);
+  }
 }
+

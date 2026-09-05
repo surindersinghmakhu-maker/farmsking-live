@@ -5,4 +5,8 @@ export class SubmitFarmerPlanPaymentDto {
   @IsString()
   @MaxLength(64)
   utr?: string;
+
+  @IsOptional()
+  @IsString()
+  screenshotUrl?: string;
 }

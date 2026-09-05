@@ -4,6 +4,7 @@ import {
   Alert,
   FlatList,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   StyleSheet,
   Text,
@@ -12,13 +13,16 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 import { RoleThemes } from '@/constants/Colors';
-import { FONT, RADIUS, SPACING } from '@/constants/theme';
+import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
 import { useChatThread, useOnlineStatus } from '@/src/hooks/useChat';
 import { useUserWeather } from '@/src/hooks/useWeather';
 import { ChatMessage } from '@/src/types/api';
+import { Avatar } from '@/src/components/Avatar';
 
 const CONDITION_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
   Clear: 'sunny',
@@ -31,6 +35,10 @@ const CONDITION_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
 };
 
 const theme = RoleThemes.FARMER;
+
+const tap = () => {
+  if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+};
 
 type ThreadRow = { type: 'date'; key: string; label: string } | { type: 'message'; key: string; item: ChatMessage };
 
@@ -60,7 +68,12 @@ function buildThreadRows(messages: ChatMessage[]): ThreadRow[] {
 }
 
 export default function ChatThreadScreen() {
-  const { userId, name } = useLocalSearchParams<{ userId: string; name?: string }>();
+  const { userId, name, mobile, photoUrl } = useLocalSearchParams<{
+    userId: string;
+    name?: string;
+    mobile?: string;
+    photoUrl?: string;
+  }>();
   const router = useRouter();
   const { user } = useAuth();
   const { data: messages, isLoading, sendMessage } = useChatThread(userId);
@@ -82,6 +95,7 @@ export default function ChatThreadScreen() {
 
   const handleSend = async () => {
     if (!draft.trim() || isSending) return;
+    tap();
     const content = draft;
     setDraft('');
     setIsSending(true);
@@ -100,11 +114,22 @@ export default function ChatThreadScreen() {
     }
   };
 
+  const handleCall = () => {
+    tap();
+    if (mobile) {
+      Linking.openURL(`tel:${mobile}`);
+    } else {
+      Alert.alert('Contact Number', 'Mobile number is not available for direct call.');
+    }
+  };
+
   const renderItem = ({ item: row }: { item: ThreadRow }) => {
     if (row.type === 'date') {
       return (
         <View style={styles.dateSeparatorRow}>
-          <Text style={styles.dateSeparatorText}>{row.label}</Text>
+          <View style={styles.dateBadge}>
+            <Text style={styles.dateSeparatorText}>{row.label}</Text>
+          </View>
         </View>
       );
     }
@@ -112,11 +137,27 @@ export default function ChatThreadScreen() {
     const isMine = item.senderId === user?.id;
     return (
       <View style={[styles.bubbleRow, isMine ? styles.bubbleRowMine : styles.bubbleRowTheirs]}>
-        <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs]}>
+        <View
+          style={[
+            styles.bubble,
+            isMine ? styles.bubbleMine : styles.bubbleTheirs,
+            premiumShadow('#0f172a', 'sm'),
+          ]}
+        >
           <Text style={[styles.bubbleText, isMine && { color: '#ffffff' }]}>{item.content}</Text>
-          <Text style={[styles.bubbleTime, isMine && { color: 'rgba(255,255,255,0.7)' }]}>
-            {new Date(item.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-          </Text>
+          <View style={styles.bubbleFooter}>
+            <Text style={[styles.bubbleTime, isMine && { color: 'rgba(255,255,255,0.75)' }]}>
+              {new Date(item.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+            </Text>
+            {isMine && (
+              <Ionicons
+                name={item.isRead ? 'checkmark-done' : 'checkmark'}
+                size={14}
+                color={item.isRead ? '#38bdf8' : 'rgba(255,255,255,0.75)'}
+                style={{ marginLeft: 3 }}
+              />
+            )}
+          </View>
         </View>
       </View>
     );
@@ -124,20 +165,49 @@ export default function ChatThreadScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.75}>
-          <Ionicons name="arrow-back" size={18} color="#0f172a" />
+      {/* Hide Expo Router's default raw route header ("chat-thread/[userId]") */}
+      <Stack.Screen options={{ headerShown: false }} />
+
+      {/* Professional Custom Header Bar */}
+      <View style={styles.headerContainer}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => {
+            tap();
+            router.back();
+          }}
+          activeOpacity={0.75}
+        >
+          <Ionicons name="arrow-back" size={20} color="#0f172a" />
         </TouchableOpacity>
-        <View style={styles.headerTitleWrap}>
-          <Text style={styles.headerTitle} numberOfLines={1}>{name ?? 'Chat'}</Text>
-          <View style={styles.headerStatusRow}>
-            <View style={[styles.headerPresenceDot, { backgroundColor: isPartnerOnline ? '#22c55e' : '#cbd5e1' }]} />
-            <Text style={styles.headerStatusText}>{isPartnerOnline ? 'Online' : 'Offline'}</Text>
+
+        <TouchableOpacity style={styles.headerProfileWrap} activeOpacity={0.85}>
+          <View style={styles.avatarWrapper}>
+            <Avatar uri={photoUrl} size={38} />
+            <View style={[styles.presenceDot, { backgroundColor: isPartnerOnline ? '#22c55e' : '#cbd5e1' }]} />
           </View>
-        </View>
-        <View style={{ width: 34 }} />
+          <View style={styles.headerTextGroup}>
+            <Text style={styles.headerTitle} numberOfLines={1}>
+              {name ?? 'Chat'}
+            </Text>
+            <View style={styles.statusRow}>
+              <Text style={[styles.headerStatusText, isPartnerOnline && { color: '#16a34a', fontFamily: FONT.bold }]}>
+                {isPartnerOnline ? 'Online' : 'Offline'}
+              </Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+
+        {mobile ? (
+          <TouchableOpacity style={styles.callButton} activeOpacity={0.8} onPress={handleCall}>
+            <Ionicons name="call" size={17} color={theme.primary} />
+          </TouchableOpacity>
+        ) : (
+          <View style={{ width: 36 }} />
+        )}
       </View>
 
+      {/* Advisor Weather Strip */}
       {isAdvisorViewer && partnerWeather ? (
         <View style={styles.weatherStrip}>
           <Ionicons name={CONDITION_ICON[partnerWeather.condition] ?? 'partly-sunny'} size={16} color={theme.primary} />
@@ -147,70 +217,134 @@ export default function ChatThreadScreen() {
         </View>
       ) : null}
 
+      {/* Chat Thread Messages */}
       {isLoading ? (
-        <ActivityIndicator color={theme.primary} style={{ marginTop: 30 }} />
+        <ActivityIndicator color={theme.primary} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
           ref={listRef}
           data={threadRows}
           keyExtractor={(row) => row.key}
           renderItem={renderItem}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={styles.listContent}
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
           ListEmptyComponent={
             <View style={styles.emptyCenter}>
-              <Ionicons name="chatbubble-ellipses-outline" size={36} color="#cbd5e1" />
-              <Text style={styles.emptyText}>Say hello 👋</Text>
+              <View style={styles.emptyIconCircle}>
+                <Ionicons name="chatbubbles-outline" size={32} color={theme.primary} />
+              </View>
+              <Text style={styles.emptyTitle}>Start a Conversation</Text>
+              <Text style={styles.emptySub}>Send a message to consult on crops, schedules, or queries 👋</Text>
             </View>
           }
         />
       )}
 
-      <View style={styles.inputRow}>
-        <TextInput
-          style={styles.input}
-          placeholder="Type a message..."
-          placeholderTextColor="#94a3b8"
-          value={draft}
-          onChangeText={setDraft}
-          multiline
-        />
-        <TouchableOpacity style={styles.sendButton} activeOpacity={0.85} onPress={handleSend} disabled={isSending}>
-          {isSending ? <ActivityIndicator color="#ffffff" size="small" /> : <Ionicons name="send" size={18} color="#ffffff" />}
-        </TouchableOpacity>
+      {/* Floating Bottom Input Bar */}
+      <View style={styles.inputContainer}>
+        <View style={styles.inputCard}>
+          <TextInput
+            style={styles.textInput}
+            placeholder="Type a message..."
+            placeholderTextColor="#94a3b8"
+            value={draft}
+            onChangeText={setDraft}
+            multiline
+          />
+          <TouchableOpacity
+            style={[styles.sendButton, !draft.trim() && styles.sendButtonDisabled]}
+            activeOpacity={0.85}
+            onPress={handleSend}
+            disabled={!draft.trim() || isSending}
+          >
+            {isSending ? (
+              <ActivityIndicator color="#ffffff" size="small" />
+            ) : (
+              <Ionicons name="send" size={17} color="#ffffff" style={{ marginLeft: 2 }} />
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  header: {
+  container: {
+    flex: 1,
+    backgroundColor: '#f1f5f9',
+  },
+  headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: SPACING.lg,
-    paddingTop: Platform.OS === 'web' ? 18 : 50,
-    paddingBottom: SPACING.md,
+    paddingHorizontal: SPACING.md,
+    paddingTop: Platform.OS === 'web' ? 14 : 46,
+    paddingBottom: 12,
     backgroundColor: '#ffffff',
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
+    ...premiumShadow('#0f172a', 'sm'),
+    zIndex: 10,
   },
-  backButton: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
-  headerTitleWrap: { flex: 1, alignItems: 'center' },
-  headerTitle: { textAlign: 'center', fontSize: 15, fontFamily: FONT.extraBold, color: '#0f172a' },
-  headerStatusRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
-  headerPresenceDot: { width: 7, height: 7, borderRadius: 3.5 },
-  headerStatusText: { fontSize: 10.5, fontFamily: FONT.semiBold, color: '#94a3b8' },
-  dateSeparatorRow: { alignItems: 'center', marginVertical: 6 },
-  dateSeparatorText: {
-    fontSize: 10.5,
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerProfileWrap: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginHorizontal: 8,
+  },
+  avatarWrapper: {
+    position: 'relative',
+  },
+  presenceDot: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+  },
+  headerTextGroup: {
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 15,
     fontFamily: FONT.bold,
-    color: '#94a3b8',
-    backgroundColor: '#eef2f6',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: RADIUS.pill,
+    color: '#0f172a',
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 1,
+  },
+  headerStatusText: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  callButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   weatherStrip: {
     flexDirection: 'row',
@@ -218,50 +352,143 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: SPACING.lg,
     paddingVertical: 7,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: '#e0f2fe',
     borderBottomWidth: 1,
-    borderBottomColor: '#dcfce7',
+    borderBottomColor: '#bae6fd',
   },
-  weatherText: { fontSize: 11.5, fontFamily: FONT.semiBold, color: '#166534' },
-  list: { padding: SPACING.lg, gap: 8, flexGrow: 1 },
-  emptyCenter: { alignItems: 'center', justifyContent: 'center', padding: 60, gap: 8 },
-  emptyText: { fontSize: 13.5, fontFamily: FONT.medium, color: '#94a3b8' },
-  bubbleRow: { flexDirection: 'row' },
-  bubbleRowMine: { justifyContent: 'flex-end' },
-  bubbleRowTheirs: { justifyContent: 'flex-start' },
-  bubble: { maxWidth: '78%', borderRadius: RADIUS.lg, paddingHorizontal: 12, paddingVertical: 9 },
-  bubbleMine: { backgroundColor: theme.primary, borderBottomRightRadius: 4 },
-  bubbleTheirs: { backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', borderBottomLeftRadius: 4 },
-  bubbleText: { fontSize: 14, fontFamily: FONT.medium, color: '#0f172a' },
-  bubbleTime: { fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 3, textAlign: 'right' },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 8,
+  weatherText: {
+    fontSize: 11.5,
+    fontFamily: FONT.semiBold,
+    color: '#0369a1',
+  },
+  listContent: {
     padding: SPACING.md,
+    paddingBottom: 20,
+    gap: 10,
+    flexGrow: 1,
+  },
+  dateSeparatorRow: {
+    alignItems: 'center',
+    marginVertical: 8,
+  },
+  dateBadge: {
+    backgroundColor: '#e2e8f0',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+  },
+  dateSeparatorText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#475569',
+  },
+  emptyCenter: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: SPACING.xxl,
+    gap: 8,
+  },
+  emptyIconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#f0fdf4',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  emptyTitle: {
+    fontSize: 15,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  emptySub: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    textAlign: 'center',
+  },
+  bubbleRow: {
+    flexDirection: 'row',
+    marginVertical: 2,
+  },
+  bubbleRowMine: {
+    justifyContent: 'flex-end',
+  },
+  bubbleRowTheirs: {
+    justifyContent: 'flex-start',
+  },
+  bubble: {
+    maxWidth: '82%',
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  bubbleMine: {
+    backgroundColor: theme.primary,
+    borderBottomRightRadius: 3,
+  },
+  bubbleTheirs: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderBottomLeftRadius: 3,
+  },
+  bubbleText: {
+    fontSize: 14,
+    fontFamily: FONT.medium,
+    color: '#0f172a',
+    lineHeight: 19,
+  },
+  bubbleFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginTop: 4,
+  },
+  bubbleTime: {
+    fontSize: 9.5,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  inputContainer: {
+    padding: SPACING.sm,
+    paddingHorizontal: SPACING.md,
     backgroundColor: '#ffffff',
     borderTopWidth: 1,
     borderTopColor: '#e2e8f0',
   },
-  input: {
-    flex: 1,
+  inputCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#f8fafc',
+    borderRadius: RADIUS.pill,
     borderWidth: 1.5,
     borderColor: '#e2e8f0',
-    borderRadius: RADIUS.lg,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingLeft: 14,
+    paddingRight: 4,
+    paddingVertical: Platform.OS === 'ios' ? 4 : 2,
+  },
+  textInput: {
+    flex: 1,
     fontSize: 14,
     fontFamily: FONT.medium,
-    backgroundColor: '#f8fafc',
     color: '#0f172a',
-    maxHeight: 100,
+    maxHeight: 90,
+    paddingVertical: 8,
   },
   sendButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: theme.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  sendButtonDisabled: {
+    opacity: 0.4,
+  },
 });
+

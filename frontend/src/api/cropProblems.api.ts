@@ -50,3 +50,13 @@ export async function updateCropProblemStatus(id: string, status: CropProblemSta
   const { data } = await apiClient.patch<CropProblem>(`/crop-problems/${id}/status`, { status });
   return data;
 }
+
+export interface RateCropProblemPayload {
+  rating: number;
+  feedback?: string;
+}
+
+export async function rateCropProblem(id: string, payload: RateCropProblemPayload): Promise<CropProblem> {
+  const { data } = await apiClient.patch<CropProblem>(`/crop-problems/${id}/rate`, payload);
+  return data;
+}

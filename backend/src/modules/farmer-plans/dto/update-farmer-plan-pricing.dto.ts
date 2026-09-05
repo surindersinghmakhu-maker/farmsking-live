@@ -1,4 +1,4 @@
-import { IsEnum, IsNumber, IsOptional, Max, Min } from 'class-validator';
+import { IsBoolean, IsEnum, IsNumber, IsOptional, Max, Min } from 'class-validator';
 import { DiscountValueType } from '@prisma/client';
 
 export class UpdateFarmerPlanPricingDto {
@@ -42,4 +42,32 @@ export class UpdateFarmerPlanPricingDto {
   @Min(0)
   @Max(100)
   advisorGenerationCostPercent?: number;
+
+  @IsOptional()
+  @IsNumber()
+  maxTotalCrops?: number;
+
+  @IsOptional()
+  @IsNumber()
+  maxActiveCrops?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  advisorIncluded?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  chatEnabled?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  weatherEnabled?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  gardenAdvisorIncluded?: boolean;
 }

@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Indian Farmer Festival & Reverse Sowing Alert Engine 🌾</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #047857;
+      --primary-dark: #064e3b;
+      --accent: #10b981;
+      --bg: #0f172a;
+      --card-bg: #ffffff;
+      --text-dark: #0f172a;
+      --text-muted: #64748b;
+      --high-demand: #166534;
+      --high-bg: #f0fdf4;
+      --low-demand: #991b1b;
+      --low-bg: #fef2f2;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-dark);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 580px;
+      background: var(--card-bg);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Header Banner */
+    .header-banner {
+      background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+      padding: 24px;
+      color: #ffffff;
+      position: relative;
+    }
+
+    .top-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .badge-tag {
+      font-size: 11px;
+      font-weight: 800;
+      color: #a7f3d0;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .countdown-pill {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(8px);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .event-title {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.3;
+      margin-bottom: 12px;
+    }
+
+    .badge-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .state-badge {
+      background: rgba(255, 255, 255, 0.18);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #dcfce7;
+    }
+
+    .religion-badge {
+      background: rgba(255, 255, 255, 0.18);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fef3c7;
+    }
+
+    /* Multi-Language Switcher */
+    .lang-container {
+      background: #f8fafc;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .lang-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 8px;
+    }
+
+    .lang-pills {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .lang-pills::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .lang-pills::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    .lang-chip {
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #334155;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .lang-chip.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(4, 120, 87, 0.3);
+    }
+
+    /* Festival Selector Tabs */
+    .event-tabs {
+      display: flex;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .event-tab {
+      flex: 1;
+      text-align: center;
+      padding: 12px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748b;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .event-tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background: #f0fdf4;
+    }
+
+    /* Card Body */
+    .card-body {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Green Highlighted Sowing Alert Box */
+    .sowing-alert-box {
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      border: 2px solid #86efac;
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .sowing-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .sowing-alert-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #15803d;
+    }
+
+    .window-tag {
+      background: #16a34a;
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .crop-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .crop-chip {
+      background: #ffffff;
+      border: 1px solid #bbf7d0;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #166534;
+    }
+
+    .sow-advice {
+      font-size: 12px;
+      font-weight: 600;
+      color: #14532d;
+      line-height: 1.5;
+    }
+
+    /* High vs Low Demand Comparison Grid */
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .comp-box {
+      padding: 14px;
+      border-radius: 12px;
+      border: 1.5px solid;
+    }
+
+    .comp-box.high {
+      background: var(--high-bg);
+      border-color: #86efac;
+    }
+
+    .comp-box.low {
+      background: var(--low-bg);
+      border-color: #fca5a5;
+    }
+
+    .comp-header {
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .comp-header.high { color: var(--high-demand); }
+    .comp-header.low { color: var(--low-demand); }
+
+    .comp-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .comp-item {
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .comp-item.high { color: #166534; }
+    .comp-item.low { color: #991b1b; }
+
+    /* Strategy Tip Box */
+    .strategy-box {
+      background: #fffbe8;
+      border: 1.5px solid #fde68a;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #92400e;
+      line-height: 1.5;
+    }
+
+    /* WhatsApp Share Button */
+    .whatsapp-btn {
+      width: 100%;
+      background: #25d366;
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s ease;
+      box-shadow: 0 4px 14px rgba(37, 211, 102, 0.4);
+    }
+
+    .whatsapp-btn:hover {
+      background: #1eb954;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Header Banner -->
+    <div class="header-banner">
+      <div class="top-meta">
+        <span class="badge-tag">REVERSE SOWING ENGINE</span>
+        <span class="countdown-pill" id="countdownPill">⏳ 66 Days to Event</span>
+      </div>
+      <h1 class="event-title" id="eventTitle">🪔 Grand Diwali & Dhanteras Surge</h1>
+      <div class="badge-row">
+        <span class="state-badge" id="stateBadge">📍 Pan-India / All States</span>
+        <span class="religion-badge" id="religionBadge">⭐ Hindu / Sikh / National</span>
+      </div>
+    </div>
+
+    <!-- 10-Language Multi-Language Switcher Pills -->
+    <div class="lang-container">
+      <div class="lang-title">🌐 Choose Language / ਭਾਸ਼ਾ ਚੁਣੋ / भाषा चुनें:</div>
+      <div class="lang-pills" id="langPills">
+        <!-- Generated by JS -->
+      </div>
+    </div>
+
+    <!-- Festival Tabs -->
+    <div class="event-tabs" id="eventTabs">
+      <div class="event-tab active" onclick="selectEvent(0)">🪔 Diwali Surge</div>
+      <div class="event-tab" onclick="selectEvent(1)">☀️ Chhath Puja</div>
+      <div class="event-tab" onclick="selectEvent(2)">🌾 Baisakhi Harvest</div>
+    </div>
+
+    <!-- Card Body -->
+    <div class="card-body">
+      <!-- Green Highlighted Sowing Alert Box -->
+      <div class="sowing-alert-box">
+        <div class="sowing-header">
+          <span class="sowing-alert-title" id="sowAlertTitle">🌱 SOW TODAY FOR 3X DIWALI PRICE SURGE</span>
+          <span class="window-tag" id="sowWindowTag">⚡ Sow Today: 4 Days Left</span>
+        </div>
+        <div class="crop-grid" id="cropGrid">
+          <!-- Crop Chips -->
+        </div>
+        <p class="sow-advice" id="sowAdvice">Plant Marigold flowers & Early Peas today. Harvest right 3 days before Diwali for 300% market price surge.</p>
+      </div>
+
+      <!-- High vs Low Demand Comparison Grid -->
+      <div class="comparison-grid">
+        <div class="comp-box high">
+          <div class="comp-header high">▲ High Demand (2x-3x Price)</div>
+          <ul class="comp-list" id="highDemandList">
+            <!-- High Demand Items -->
+          </ul>
+        </div>
+        <div class="comp-box low">
+          <div class="comp-header low">▼ Low Demand (Price Slump)</div>
+          <ul class="comp-list" id="lowDemandList">
+            <!-- Low Demand Items -->
+          </ul>
+        </div>
+      </div>
+
+      <!-- Strategy Tip Box -->
+      <div class="strategy-box" id="strategyTip">
+        💡 Expert Tip: Inter-crop Marigold with Cauliflower to prevent pests naturally and double your income on Dhanteras!
+      </div>
+
+      <!-- WhatsApp Share Button -->
+      <button class="whatsapp-btn" onclick="shareWhatsApp()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.299.429 2.502 1.155 3.473l-.759 2.768 2.845-.746c.928.563 2.012.872 3.176.872 3.18 0 5.765-2.586 5.767-5.766.001-3.18-2.585-5.767-5.766-5.767zm0 10.366c-1.026 0-1.986-.3-2.796-.816l-.2-.128-1.666.437.444-1.625-.139-.222a4.577 4.577 0 0 1-.7-2.417c0-2.531 2.06-4.591 4.592-4.591 2.531 0 4.591 2.06 4.591 4.591 0 2.531-2.06 4.591-4.591 4.591z"/>
+        </svg>
+        <span id="shareBtnText">Share Reverse Sowing Alert on WhatsApp</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const LANGUAGES = [
+      { code: 'en', native: 'English' },
+      { code: 'pa', native: 'ਪੰਜਾਬੀ' },
+      { code: 'hi', native: 'हिन्दी' },
+      { code: 'bn', native: 'বাংলা' },
+      { code: 'mr', native: 'मराठी' },
+      { code: 'gu', native: 'ગુજરાતી' },
+      { code: 'ta', native: 'தமிழ்' },
+      { code: 'te', native: 'తెలుగు' },
+      { code: 'kn', native: 'ಕನ್ನಡ' },
+      { code: 'ml', native: 'മലയാളം' }
+    ];
+
+    const FESTIVAL_DATA = [
+      {
+        id: 'diwali',
+        state: 'Pan-India / All States',
+        religion: 'Hindu / Sikh / National',
+        daysToEvent: 66,
+        sowWindowDays: 4,
+        translations: {
+          en: {
+            eventName: '🪔 Grand Diwali & Dhanteras Surge',
+            sowAlertTitle: '🌱 SOW TODAY FOR 3X DIWALI PRICE SURGE',
+            sowCrops: ['Marigold Flowers (Genda)', 'Cauliflower (Gobhi)', 'Green Peas (Matar)', 'Capsicum'],
+            sowAdvice: 'Plant Marigold flowers & Early Peas today. Harvest right 3 days before Diwali for 300% market price surge.',
+            highDemand: ['▲ Marigold Flowers (3x Surge)', '▲ Green Peas & Capsicum', '▲ Fresh Milk & Mawa', '▲ Sweet Vegetables'],
+            lowDemand: ['▼ Stored Onions (Price Slump)', '▼ Coarse Grains', '▼ Non-Festival Leafy Greens'],
+            strategyTip: '💡 Expert Tip: Inter-crop Marigold with Cauliflower to prevent pests naturally and double your income on Dhanteras!',
+            shareBtn: 'Share Reverse Sowing Alert on WhatsApp'
+          },
+          pa: {
+            eventName: '🪔 ਦਿਵਾਲੀ ਅਤੇ ਧਨਤੇਰਸ ਬੰਪਰ ਮੰਗ',
+            sowAlertTitle: '🌱 3 ਗੁਣਾ ਵੱਧ ਰੇਟ ਲਈ ਅੱਜ ਹੀ ਬੀਜੋ',
+            sowCrops: ['ਗੈਂਦੇ ਦੇ ਫੁੱਲ (Marigold)', 'ਫੁੱਲ ਗੋਭੀ', 'ਹਰੇ ਮਟਰ', 'ਸ਼ਿਮਲਾ ਮਿਰਚ'],
+            sowAdvice: 'ਗੈਂਦੇ ਦੇ ਫੁੱਲ ਅਤੇ ਅਗੇਤੇ ਮਟਰ ਅੱਜ ਹੀ ਬੀਜੋ। ਦਿਵਾਲੀ ਤੋਂ 3 ਦਿਨ ਪਹਿਲਾਂ ਵਢਾਈ ਕਰਕੇ ਮੰਡੀ ਵਿੱਚ 3 ਗੁਣਾ ਵੱਧ ਰੇਟ ਲਵੋ।',
+            highDemand: ['▲ ਗੈਂਦੇ ਦੇ ਫੁੱਲ (3 ਗੁਣਾ ਰੇਟ)', '▲ ਹਰੇ ਮਟਰ ਅਤੇ ਸ਼ਿਮਲਾ ਮਿਰਚ', '▲ ਤਾਜ਼ਾ ਦੁੱਧ ਅਤੇ ਮੋਆ', '▲ ਮਿੱਠੀਆਂ ਸਬਜ਼ੀਆਂ'],
+            lowDemand: ['▼ ਪੁਰਾਣਾ ਪਿਆਜ਼ (ਮੰਦਾ)', '▼ ਮੋਟਾ ਅਨਾਜ', '▼ ਆਮ ਪੱਤੇਦਾਰ ਸਬਜ਼ੀਆਂ'],
+            strategyTip: '💡 ਮਾਹਿਰ ਦੀ ਸਲਾਹ: ਗੋਭੀ ਦੇ ਨਾਲ ਗੈਂਦੇ ਦੇ ਫੁੱਲ ਲਗਾਓ, ਇਸ ਨਾਲ ਕੀੜੇ ਵੀ ਨਹੀਂ ਲਗਣਗੇ ਅਤੇ ਧਨਤੇਰਸ ਉੱਤੇ ਦੁੱਗਣਾ ਮੁਨਾਫਾ ਹੋਵੇਗਾ!',
+            shareBtn: 'ਵਾਟਸਐਪ ਉੱਤੇ ਬੀਜਾਈ ਅਲਰਟ ਸ਼ੇਅਰ ਕਰੋ'
+          },
+          hi: {
+            eventName: '🪔 भव्य दिवाली एवं धनतेरस बंपर मांग',
+            sowAlertTitle: '🌱 3 गुना अधिक रेट के लिए आज ही बोएं',
+            sowCrops: ['गेंदा फूल (Marigold)', 'फूलगोभी', 'हरी मटर', 'शिमला मिर्च'],
+            sowAdvice: 'गेंदा फूल और अगेती मटर आज ही बोएं। दिवाली से 3 दिन पहले तुड़ाई करके मंडी में 300% अधिक दाम प्राप्त करें।',
+            highDemand: ['▲ गेंदा फूल (3 गुना दाम)', '▲ हरी मटर व शिमला मिर्च', '▲ ताजा दूध व मावा', '▲ पूजा की हरी सब्जियां'],
+            lowDemand: ['▼ पुराना प्याज (मंदा)', '▼ मोटा अनाज', '▼ बिना त्यौहार वाली सब्जियां'],
+            strategyTip: '💡 विशेषज्ञ सलाह: गोभी के साथ गेंदे की खेती करें, कीटों से सुरक्षा होगी और धनतेरस पर दोगुना लाभ मिलेगा!',
+            shareBtn: 'व्हाट्सएप पर बुवाई अलर्ट शेयर करें'
+          },
+          bn: {
+            eventName: '🪔 দিওয়ালি ও ধানতেরাস বাম্পার চাহিদা',
+            sowAlertTitle: '🌱 ৩ গুণ বেশি দাম পেতে আজই বপন করুন',
+            sowCrops: ['গাঁদা ফুল', 'ফুলকপি', 'সবুজ কড়াইশুঁটি', 'ক্যাপসিকাম'],
+            sowAdvice: 'আজই গাঁদা ফুল ও আগাম কড়াইশুঁটি রোপণ করুন। দিওয়ালির ৩ দিন আগে তুললে ৩ গুণ বাজারে দাম পাবেন।',
+            highDemand: ['▲ গাঁদা ফুল (৩ গুণ দাম)', '▲ সবুজ কড়াইশুঁটি ও ক্যাপসিকাম', '▲ টাটকা দুধ ও ছানা', '▲ মিষ্টি সবজি'],
+            lowDemand: ['▼ পুরনো পেঁয়াজ (দাম কম)', '▼ মোটা দানা শস্য', '▼ সাধারণ শাকসবজি'],
+            strategyTip: '💡 পরামর্শ: ফুলকপির সাথে গাঁদা গাছ লাগান, পোকা কম হবে এবং ধানতেরাসে দ্বিগুণ লাভ হবে!',
+            shareBtn: 'হোয়াটসঅ্যাপে শেয়ার করুন'
+          },
+          mr: {
+            eventName: '🪔 दिवाळी व धनत्रयोदशी बंपर मागणी',
+            sowAlertTitle: '🌱 ३ पट जास्त दरासाठी आजच पेरा',
+            sowCrops: ['झेंडूची फुले (Marigold)', 'फ्लॉवर (Cauliflower)', 'हिरवा मटार', 'शिमला मिरची'],
+            sowAdvice: 'झेंडूची फुले व लवकरात लवकर मटार आजच लावा. दिवाळीच्या ३ दिवस आधी काढणी करून ३००% जास्त भाव मिळवा.',
+            highDemand: ['▲ झेंडूची फुले (३ पट भाव)', '▲ हिरवा मटार व शिमला मिरची', '▲ ताजे दूध व मावा', '▲ पूजेच्या भाज्या'],
+            lowDemand: ['▼ साठवलेला कांदा (मंदी)', '▼ जाडे धान्य', '▼ नेहमीच्या भाज्या'],
+            strategyTip: '💡 तज्ज्ञ सल्ला: फ्लॉवरसोबत झेंडू लावा, किडीपासून संरक्षण होईल आणि धनत्रयोदशीला दुप्पट नफा मिळेल!',
+            shareBtn: 'व्हॉट्सॲपवर शेअर करा'
+          },
+          gu: {
+            eventName: '🪔 દિવાળી અને ધનતેરસ બમ્પર માંગ',
+            sowAlertTitle: '🌱 3 ગણા ભાવ માટે આજે જ વાવણી કરો',
+            sowCrops: ['ગલગોટાના ફૂલ (Marigold)', 'ફ્લાવર', 'લીલા વટાણા', 'કેપ્સિકમ'],
+            sowAdvice: 'ગલગોટા અને વહેલા વટાણા આજે જ વાવો. દિવાળીના 3 દિવસ પહેલાં લણણી કરીને મંડીમાં 3 ગણા ભાવ મેળવો.',
+            highDemand: ['▲ ગલગોટાના ફૂલ (3 ગણો ભાવ)', '▲ લીલા વટાણા અને કેપ્સિકમ', '▲ તાજું દૂધ અને માવો', '▲ પૂજાની શાકભાજી'],
+            lowDemand: ['▼ જૂની ડુંગળી (મંદી)', '▼ મોટું અનાજ', '▼ સામાન્ય શાકભાજી'],
+            strategyTip: '💡 નિષ્ણાત ટિપ: ફ્લાવર સાથે ગલગોટા વાવો, જીવાત નહીં આવે અને ધનતેરસ પર બમણો નફો થશે!',
+            shareBtn: 'વોટ્સએપ પર શેર કરો'
+          },
+          ta: {
+            eventName: '🪔 தீபாவளி & தனத்ரயோதசி அதிக தேவை',
+            sowAlertTitle: '🌱 3 மடங்கு அதிக விலைக்கு இன்றே விதையுங்கள்',
+            sowCrops: ['சாமந்தி பூ (Marigold)', 'காலிபிளவர்', 'பச்சை பட்டாணி', 'குடைமிளகாய்'],
+            sowAdvice: 'சாமந்தி மற்றும் பட்டாணியை இன்றே விதையுங்கள். தீபாவளிக்கு 3 நாட்கள் முன் அறுவடை செய்து 3 மடங்கு விலை பெறுங்கள்.',
+            highDemand: ['▲ சாமந்தி பூ (3x விலை ஏற்றம்)', '▲ பச்சை பட்டாணி & குடைமிளகாய்', '▲ புதிய பால் & பால்கட்டி', '▲ பூஜை காய்கறிகள்'],
+            lowDemand: ['▼ பழைய வெங்காயம் (விலை குறைவு)', '▼ தானியங்கள்', '▼ சாதாரண கீரைகள்'],
+            strategyTip: '💡 நிபுணர் குறிப்பு: காலிபிளவருடன் சாமந்தி பூ பயிரிடுங்கள், பூச்சிகள் வராது, இரட்டிப்பு லாபம் கிடைக்கும்!',
+            shareBtn: 'வாட்ஸ்அப்பில் பகிருங்கள்'
+          },
+          te: {
+            eventName: '🪔 దీపావళి & ధన్తేరస్ అధిక డిమాండ్',
+            sowAlertTitle: '🌱 3 రెట్లు ఎక్కువ ధర కోసం నేడే విత్తండి',
+            sowCrops: ['బంతి పూలు (Marigold)', 'కాలీఫ్లవర్', 'పచ్చి బఠాణీ', 'క్యాప్సికం'],
+            sowAdvice: 'బంతి పూలు మరియు బఠాణీ నేడే నాటండి. దీపావళికి 3 రోజుల ముందు కోసి మార్కెట్‌లో 300% ఎక్కువ ధర పొందండి.',
+            highDemand: ['▲ బంతి పూలు (3 రెట్ల ధర)', '▲ పచ్చి బఠాణీ & క్యాప్సికం', '▲ తాజా పాలు & కోవా', '▲ పూజ కూరగాయలు'],
+            lowDemand: ['▼ నిల్వ ఉల్లిపాయలు (తక్కువ ధర)', '▼ తృణధాన్యాలు', '▼ సాధారణ ఆకుకూరలు'],
+            strategyTip: '💡 నిపుణుల సలహా: కాలీఫ్లవర్‌తో పాటు బంతి పూలు నాటండి, పురుగులు రావు మరియు ధన్తేరస్‌లో రెట్టింపు లాభం!',
+            shareBtn: 'వాట్సాప్‌లో షేర్ చేయండి'
+          },
+          kn: {
+            eventName: '🪔 ದೀಪಾವಳಿ ಮತ್ತು ಧನತ್ರಯೋದಶಿ ಭರ್ಜರಿ ಬೇಡಿಕೆ',
+            sowAlertTitle: '🌱 3 ಪಟ್ಟು ಹೆಚ್ಚು ಬೆಲೆಗೆ ಇಂದೇ ಬಿತ್ತನೆ ಮಾಡಿ',
+            sowCrops: ['ಚಂಡು ಹೂವು (Marigold)', 'ಕೋಸು (Cauliflower)', 'ಹಸಿ ಬಟಾಣಿ', 'ಕ್ಯಾಪ್ಸಿಕಂ'],
+            sowAdvice: 'ಚಂಡು ಹೂವು ಮತ್ತು ಬಟಾಣಿ ಇಂದೇ ಬಿತ್ತಿ. ದೀಪಾವಳಿಗೆ 3 ದಿನ ಮುಂಚಿತವಾಗಿ ಕಟಾವು ಮಾಡಿ ಮಾರುಕಟ್ಟೆಯಲ್ಲಿ 3 ಪಟ್ಟು ಬೆಲೆ ಪಡೆಯಿರಿ.',
+            highDemand: ['▲ ಚಂಡು ಹೂವು (3x ಬೆಲೆ ಏರಿಕೆ)', '▲ ಹಸಿ ಬಟಾಣಿ ಮತ್ತು ಕ್ಯಾಪ್ಸಿಕಂ', '▲ ತಾಜಾ ಹಾಲು ಮತ್ತು ಖೋವಾ', '▲ ಪೂಜಾ ತರಕಾರಿಗಳು'],
+            lowDemand: ['▼ ಹಳೆಯ ಈರುಳ್ಳಿ (ಬೆಲೆ ಕುಸಿತ)', '▼ ದಪ್ಪ ಧಾನ್ಯಗಳು', '▼ ಸಾಮಾನ್ಯ ಸೊಪ್ಪು'],
+            strategyTip: '💡 ತಜ್ಞರ ಸಲಹೆ: ಕೋಸಿನ ಜೊತೆ ಚಂಡು ಹೂವು ಬೆಳೆಯಿರಿ, ಕೀಟಬಾಧೆ ಕಡಿಮೆಯಾಗಿ ಧನತ್ರಯೋದಶಿಯಲ್ಲಿ ದುಪ್ಪಟ್ಟು ಲಾಭ ಸಿಗಲಿದೆ!',
+            shareBtn: 'ವಾಟ್ಸಾಪ್‌ನಲ್ಲಿ ಹಂಚಿಕೊಳ್ಳಿ'
+          },
+          ml: {
+            eventName: '🪔 ദീപാവലി & ധൻതേരസ് വൻ ഡിമാൻഡ്',
+            sowAlertTitle: '🌱 3 ഇരട്ടി വിലയ്ക്ക് ഇന്നേ വിതയ്ക്കൂ',
+            sowCrops: ['ചെണ്ടുമല്ലി (Marigold)', 'കോളിഫ്ലവർ', 'പച്ചപ്പട്ടാണി', 'ക്യാപ്സിക്കം'],
+            sowAdvice: 'ചെണ്ടുമല്ലിയും പട്ടാണിയും ഇന്നേ വിതയ്ക്കൂ. ദീപാവലിക്ക് 3 ദിവസം മുൻപ് വിളവെടുത്ത് 3 ഇരട്ടി ലാഭം നേടൂ.',
+            highDemand: ['▲ ചെണ്ടുമല്ലി പൂക്കൾ (3x വില)', '▲ പച്ചപ്പട്ടാണി & ക്യാപ്സിക്കം', '▲ ഫ്രഷ് പാൽ & പാൽ ഉൽപ്പന്നങ്ങൾ', '▲ പൂജ പച്ചക്കറികൾ'],
+            lowDemand: ['▼ പഴയ ഉള്ളി (വിലക്കുറവ്)', '▼ ധാന്യങ്ങൾ', '▼ സാധാരണ ഇലക്കറികൾ'],
+            strategyTip: '💡 വിദഗ്ദ്ധ നിർദ്ദേശം: കോളിഫ്ലവറിനൊപ്പം ചെണ്ടുമല്ലി നടൂ, കീടങ്ങൾ കുറയും, ധൻതേരസിന് ഇരട്ടി ലാഭം ലഭിക്കും!',
+            shareBtn: 'വാട്ട്‌സ്ആപ്പിൽ ഷെയർ ചെയ്യൂ'
+          }
+        }
+      },
+      {
+        id: 'chhath',
+        state: 'UP, Bihar, Jharkhand & Bengal',
+        religion: 'Hindu / Folk Tradition',
+        daysToEvent: 72,
+        sowWindowDays: 5,
+        translations: {
+          en: {
+            eventName: '☀️ Mahaparv Chhath Puja Special Surge',
+            sowAlertTitle: '🌱 HIGH VALUE SOWING ALERT FOR CHHATH PUJA',
+            sowCrops: ['Red Sugarcane (Ganna)', 'Green Banana Stalks', 'Radish (Mooli)', 'Spinach (Palak)', 'Sweet Potato'],
+            sowAdvice: 'Sow Sugarcane, Sweet Potato & Radish now. Chhath Puja requires raw whole sugarcane stalks with leaves.',
+            highDemand: ['▲ Whole Red Sugarcane (3.5x Price)', '▲ Green Banana Clusters', '▲ Fresh Mooli with Leaves', '▲ Lemon & Ginger Plants'],
+            lowDemand: ['▼ Brinjal / Eggplant (Avoided in fasting)', '▼ Garlic & Onion', '▼ Non-Satvik Veggies'],
+            strategyTip: '💡 Expert Tip: Bundle whole red sugarcane with fresh leafy tops; buyers pay premium ₹150-₹200 per stalk during Arghya!',
+            shareBtn: 'Share Reverse Sowing Alert on WhatsApp'
+          },
+          pa: {
+            eventName: '☀️ ਛੱਠ ਪੂਜਾ ਮਹਾਪੁਰਬ ਵਿਸ਼ੇਸ਼ ਮੰਗ',
+            sowAlertTitle: '🌱 ਛੱਠ ਪੂਜਾ ਲਈ ਉੱਚ ਮੁਨਾਫੇ ਵਾਲੀ ਬੀਜਾਈ',
+            sowCrops: ['ਲਾਲ ਕਮਾਦ/ਗੰਨਾ', 'ਕੱਚਾ ਕੇਲਾ', 'ਮੂਲੀ (ਪੱਤਿਆਂ ਸਮੇਤ)', 'ਪਾਲਕ', 'ਸ਼ਕਰਕੰਦੀ'],
+            sowAdvice: 'ਗੰਨਾ, ਸ਼ਕਰਕੰਦੀ ਅਤੇ ਮੂਲੀ ਅੱਜ ਹੀ ਬੀਜੋ। ਛੱਠ ਪੂਜਾ ਵਿੱਚ ਪੱਤਿਆਂ ਵਾਲਾ ਪੂਰਾ ਗੰਨਾ ਸਭ ਤੋਂ ਮਹਿੰਗਾ ਵਿਕਦਾ ਹੈ।',
+            highDemand: ['▲ ਪੂਰਾ ਲਾਲ ਗੰਨਾ (3.5 ਗੁਣਾ ਰੇਟ)', '▲ ਕੱਚੇ ਕੇਲੇ ਦੇ ਘੜ', '▲ ਪੱਤਿਆਂ ਵਾਲੀ ਤਾਜ਼ਾ ਮੂਲੀ', '▲ ਨਿੰਬੂ ਅਤੇ ਅਦਰਕ'],
+            lowDemand: ['▼ ਬੈਂਗਣ (ਬਰਤ ਵਿੱਚ ਮਨਾਹੀ)', '▼ ਲਸਣ ਅਤੇ ਪਿਆਜ਼', '▼ ਗੈਰ-ਸਾਤਵਿਕ ਸਬਜ਼ੀਆਂ'],
+            strategyTip: '💡 ਮਾਹਿਰ ਦੀ ਸਲਾਹ: ਪੱਤਿਆਂ ਵਾਲੇ ਲਾਲ ਗੰਨੇ ਦੇ ਛੱਤੇ ਬਣਾ ਕੇ ਵੇਚੋ; ਅਰਘ ਵਾਲੇ ਦਿਨ ਗਾਹਕ ₹150-₹200 ਪ੍ਰਤੀ ਗੰਨਾ ਖੁਸ਼ੀ ਨਾਲ dinde han!',
+            shareBtn: 'ਵਾਟਸਐਪ ਉੱਤੇ ਬੀਜਾਈ ਅਲਰਟ ਸ਼ੇਅਰ ਕਰੋ'
+          }
+        }
+      },
+      {
+        id: 'baisakhi',
+        state: 'Punjab, Haryana & North India',
+        religion: 'Sikh / Hindu / Agricultural Harvest',
+        daysToEvent: 85,
+        sowWindowDays: 6,
+        translations: {
+          en: {
+            eventName: '🌾 Baisakhi Harvest & Summer Cash Crop Surge',
+            sowAlertTitle: '🌱 SOW SHORT-DURATION CASH CROPS TODAY',
+            sowCrops: ['Summer Moong Pulse', 'Okra (Bhindi)', 'Bottle Gourd (Lauki)', 'Cucumber (Kheera)', 'Muskmelon'],
+            sowAdvice: 'Sow 60-day Summer Moong & Cucumber immediately post Rabi harvest. Capture high summer vegetable prices.',
+            highDemand: ['▲ Summer Moong Pulse (2.5x Price)', '▲ Fresh Cucumber & Muskmelon', '▲ Okra & Bottle Gourd', '▲ Green Fodder'],
+            lowDemand: ['▼ Heavy Winter Root Veggies', '▼ Stored Potatoes', '▼ Low-Moisture Crops'],
+            strategyTip: '💡 Expert Tip: 60-day Summer Moong yields ₹40,000/acre in just 2 months while fixing nitrogen in your soil for Next Paddy crop!',
+            shareBtn: 'Share Reverse Sowing Alert on WhatsApp'
+          },
+          pa: {
+            eventName: '🌾 ਵਿਸਾਖੀ ਅਤੇ ਗਰਮੂਰਤੀ ਨਕਦੀ ਫਸਲ ਬੰਪਰ ਮੰਗ',
+            sowAlertTitle: '🌱 ਘੱਟ ਸਮੇਂ ਵਾਲੀ ਗਰਮ ਰੁੱਤ ਦੀ ਫਸਲ ਅੱਜ ਹੀ ਬੀਜੋ',
+            sowCrops: ['ਗਰਮੀ ਦੀ ਮੂੰਗੀ (Summer Moong)', 'ਭਿੰਡੀ', 'ਘੀਆ/ਲੌਕੀ', 'ਖੀਰਾ', 'ਖਰਬੂਜ਼ਾ'],
+            sowAdvice: 'ਕਣਕ ਦੀ ਵਢਾਈ ਤੋਂ ਤੁਰੰਤ ਬਾਅਦ 60 ਦਿਨਾਂ ਵਾਲੀ ਮੂੰਗੀ ਅਤੇ ਖੀਰਾ ਬੀਜੋ। ਗਰਮੀਆਂ ਵਿੱਚ ਸਬਜ਼ੀਆਂ ਦੇ 2.5 ਗੁਣਾ ਵੱਧ ਰੇਟ ਲਵੋ।',
+            highDemand: ['▲ 60 ਦਿਨਾਂ ਮੂੰਗੀ (2.5 ਗੁਣਾ ਰੇਟ)', '▲ ਤਾਜ਼ਾ ਖੀਰਾ ਅਤੇ ਖਰਬੂਜ਼ਾ', '▲ ਭਿੰਡੀ ਅਤੇ ਘੀਆ', '▲ ਹਰਾ ਚਾਰਾ'],
+            lowDemand: ['▼ ਸਰਦੀਆਂ ਵਾਲੇ ਆਲੂ', '▼ ਪੁਰਾਣੀਆਂ ਜੜ੍ਹ ਵਾਲੀਆਂ ਸਬਜ਼ੀਆਂ', '▼ ਘੱਟ ਪਾਣੀ ਵਾਲੀਆਂ ਫਸਲਾਂ'],
+            strategyTip: '💡 ਮਾਹਿਰ ਦੀ ਸਲਾਹ: 60 ਦਿਨਾਂ ਦੀ ਮੂੰਗੀ 2 ਮਹੀਨਿਆਂ ਵਿੱਚ ₹40,000/ਏਕੜ ਦੀ ਕਮਾਈ ਦਿੰਦੀ ਹੈ ਅਤੇ ਝੋਨੇ ਲਈ ਜ਼ਮੀਨ ਦੀ ਉਪਜਾਊ ਸ਼ਕਤੀ ਵੀ ਵਧਾਉਂਦੀ ਹੈ!',
+            shareBtn: 'ਵਾਟਸਐਪ ਉੱਤੇ ਬੀਜਾਈ ਅਲਰਟ ਸ਼ੇਅਰ ਕਰੋ'
+          }
+        }
+      }
+    ];
+
+    let currentLang = 'pa';
+    let currentEventIndex = 0;
+
+    function renderLangPills() {
+      const container = document.getElementById('langPills');
+      container.innerHTML = LANGUAGES.map(lang => `
+        <button class="lang-chip ${lang.code === currentLang ? 'active' : ''}" onclick="changeLang('${lang.code}')">
+          ${lang.native} (${lang.code.toUpperCase()})
+        </button>
+      `).join('');
+    }
+
+    function changeLang(langCode) {
+      currentLang = langCode;
+      renderLangPills();
+      updateContent();
+    }
+
+    function selectEvent(idx) {
+      currentEventIndex = idx;
+      document.querySelectorAll('.event-tab').forEach((tab, i) => {
+        tab.classList.toggle('active', i === idx);
+      });
+      updateContent();
+    }
+
+    function updateContent() {
+      const event = FESTIVAL_DATA[currentEventIndex] || FESTIVAL_DATA[0];
+      const t = event.translations[currentLang] || event.translations['en'] || event.translations[Object.keys(event.translations)[0]];
+
+      document.getElementById('countdownPill').innerText = `⏳ ${event.daysToEvent} Days to Event`;
+      document.getElementById('eventTitle').innerText = t.eventName;
+      document.getElementById('stateBadge').innerText = `📍 ${event.state}`;
+      document.getElementById('religionBadge').innerText = `⭐ ${event.religion}`;
+
+      document.getElementById('sowAlertTitle').innerText = t.sowAlertTitle;
+      document.getElementById('sowWindowTag').innerText = `⚡ Sow Today: ${event.sowWindowDays} Days Left`;
+      document.getElementById('sowAdvice').innerText = t.sowAdvice;
+
+      document.getElementById('cropGrid').innerHTML = t.sowCrops.map(c => `<div class="crop-chip">🌱 ${c}</div>`).join('');
+      document.getElementById('highDemandList').innerHTML = t.highDemand.map(h => `<li class="comp-item high">${h}</li>`).join('');
+      document.getElementById('lowDemandList').innerHTML = t.lowDemand.map(l => `<li class="comp-item low">${l}</li>`).join('');
+
+      document.getElementById('strategyTip').innerText = t.strategyTip;
+      document.getElementById('shareBtnText').innerText = t.shareBtn || 'Share Reverse Sowing Alert on WhatsApp';
+    }
+
+    function shareWhatsApp() {
+      const event = FESTIVAL_DATA[currentEventIndex] || FESTIVAL_DATA[0];
+      const t = event.translations[currentLang] || event.translations['en'];
+      const text = `🌾 *FarmsKing Reverse Sowing Alert (${event.state})*\n\n🎉 Event: ${t.eventName}\n⏳ Days to Harvest: ${event.daysToEvent} Days\n\n${t.sowAlertTitle}:\n• ${t.sowCrops.join('\n• ')}\n\n💡 Advice: ${t.sowAdvice}\n\n📲 Download FarmsKing App for Reverse Sowing Alerts!`;
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    // Init
+    renderLangPills();
+    updateContent();
+  </script>
+</body>
+</html>

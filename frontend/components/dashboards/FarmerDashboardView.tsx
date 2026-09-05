@@ -3,29 +3,49 @@ import { ActivityIndicator, View, Text, StyleSheet, ScrollView, TextInput, Touch
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@/src/store/auth-context';
 import { RoleHeader } from './RoleHeader';
 import { MarketRatesCard } from '@/src/components/MarketRatesCard';
-import { WeatherCard } from '@/src/components/WeatherCard';
 import { FarmerPlanUpgradeModal } from '@/src/components/FarmerPlanUpgradeModal';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useFarmerPlan, useFarmerPlanPricing, PLAN_META, usePreviewFarmerPlanCoupon, useRedeemFarmerPlanCoupon } from '@/src/hooks/useFarmerPlan';
 import { formatInr } from '@/src/utils/formatInr';
 import { useReminderAlertOnLoad } from '@/src/hooks/useNotifications';
+import { useGroupVoiceCall } from '@/src/hooks/useGroupVoiceCall';
+import { GroupVoiceCallModal } from '@/src/components/chat/GroupVoiceCallModal';
+import { PaymentVoucherModal, VoucherType } from '@/src/components/PaymentVoucherModal';
+import { useLabourWorkers } from '@/src/hooks/useLabour';
+import { useParties } from '@/src/hooks/useParties';
+import { KisanCropIntelligenceCard } from '@/src/components/KisanCropIntelligenceCard';
+import { CropAdvisoryPromoCard } from '@/src/components/CropAdvisoryPromoCard';
+
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 };
 
-export const FarmerDashboardView: React.FC = () => {
+interface FarmerDashboardViewProps {
+  onOpenAdminChat?: () => void;
+}
+
+export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpenAdminChat }) => {
   const theme = RoleThemes.FARMER;
   const router = useRouter();
   const { user } = useAuth();
   const { plan, meta, startDate, endDate, isExpired, inGrace, daysUntilExpiry } = useFarmerPlan();
   const { data: pricing } = useFarmerPlanPricing();
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const voiceCallHook = useGroupVoiceCall();
+  const [showVoiceCallModal, setShowVoiceCallModal] = useState(false);
   useReminderAlertOnLoad(true);
+
+  // Quick Payment Voucher Modal State
+  const [showPaymentVoucherModal, setShowPaymentVoucherModal] = useState(false);
+  const [voucherInitialType, setVoucherInitialType] = useState<VoucherType>('RECEIPT_IN');
+  const { data: labourWorkers = [] } = useLabourWorkers();
+  const { data: parties = [] } = useParties();
 
   // Formatted apply/expiry dates + full amount for paid plans
   const formattedApplyDate = startDate
@@ -36,223 +56,344 @@ export const FarmerDashboardView: React.FC = () => {
     : null;
   const planPrice = pricing?.find((p) => p.plan === plan)?.price;
 
-  const planActionLabel = 'Upgrade';
+  const planActionLabel = 'Renew/Upgrade';
+
+  const [modalInitialMode, setModalInitialMode] = useState<'GET_COUPON' | 'REDEEM_CODE'>('GET_COUPON');
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.bg }]} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <RoleHeader
         currentRole="FARMER"
-        profileName={user?.name || 'Balwinder Singh'}
-        subtitle="Farmer"
-        avatarUrl={user?.photoUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'}
+        profileName={user?.name || 'Farmer'}
+        subtitle={user?.village ? `🌾 ${user.village}` : 'Farmer Profile'}
+        avatarUrl={user?.photoUrl || undefined}
         planBadge={
-          <View>
-            <View style={styles.planRow}>
-              <View style={styles.planBadge}>
-                <View style={[styles.planDot, { backgroundColor: meta.color }]} />
-                <Text style={styles.planBadgeText} numberOfLines={1}>
-                  {meta.emoji} {meta.label}
-                </Text>
-              </View>
-              <TouchableOpacity
-                style={styles.planActionBtn}
-                activeOpacity={0.85}
-                onPress={() => {
-                  tap();
-                  setIsPlanModalOpen(true);
-                }}
-              >
-                <Text style={styles.planActionBtnText} numberOfLines={1}>{planActionLabel}</Text>
-                <Ionicons name="chevron-forward" size={12} color="#166534" />
-              </TouchableOpacity>
+          <View style={{ alignItems: 'flex-end', gap: 3 }}>
+            <View style={styles.planBadge}>
+              <View style={[styles.planDot, { backgroundColor: meta.color }]} />
+              <Text style={styles.planBadgeText} numberOfLines={1}>
+                Plan: {meta.label}
+              </Text>
             </View>
+
             {plan !== 'FREE' && !isExpired && daysUntilExpiry !== null ? (
-              <Text style={styles.planDaysLeftText}>
-                {daysUntilExpiry} {daysUntilExpiry === 1 ? 'day' : 'days'} left{formattedExpiry ? ` · Till ${formattedExpiry}` : ''}
+              <Text style={[styles.planDaysLeftText, { fontSize: 10, textAlign: 'right' }]}>
+                ⏳ {daysUntilExpiry}d left{formattedExpiry ? ` (Till: ${formattedExpiry})` : ''}
               </Text>
             ) : null}
-            {plan !== 'FREE' && planPrice ? (
-              <Text style={styles.planDaysLeftText}>
-                {formatInr(Number(planPrice))}{formattedApplyDate ? ` · Applied: ${formattedApplyDate}` : ''}
-              </Text>
-            ) : null}
+
+            <TouchableOpacity
+              style={styles.planActionBtn}
+              activeOpacity={0.85}
+              onPress={() => {
+                tap();
+                setModalInitialMode('REDEEM_CODE');
+                setIsPlanModalOpen(true);
+              }}
+            >
+              <Text style={styles.planActionBtnText} numberOfLines={1}>{planActionLabel}</Text>
+              <Ionicons name="chevron-forward" size={10} color="#166534" />
+            </TouchableOpacity>
           </View>
         }
       />
 
-      <FarmerPlanUpgradeModal visible={isPlanModalOpen} onClose={() => setIsPlanModalOpen(false)} tiers={['BASIC']} />
+      <FarmerPlanUpgradeModal
+        visible={isPlanModalOpen}
+        onClose={() => setIsPlanModalOpen(false)}
+        tiers={['PRO', 'SMART', 'SUPER']}
+        initialMode={modalInitialMode}
+      />
 
       <View style={styles.content}>
-        {/* Weather report */}
-        <WeatherCard />
+        {/* Active Group Voice Call Alert Banner for Farmer */}
+        {voiceCallHook.activeCall ? (
+          <TouchableOpacity
+            style={[styles.activeCallBanner, premiumShadow('#16a34a', 'md')]}
+            activeOpacity={0.88}
+            onPress={() => setShowVoiceCallModal(true)}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+              <View style={styles.activeCallLiveBadge}>
+                <Ionicons name="mic" size={18} color="#ffffff" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={styles.activeCallTitle}>🎙️ Live Advisor Group Call</Text>
+                  <View style={styles.livePulseDot} />
+                  <Text style={styles.livePulseText}>LIVE</Text>
+                </View>
+                <Text style={styles.activeCallSub} numberOfLines={1}>
+                  Hosted by {voiceCallHook.activeCall.host?.name || 'Advisor'} (4.9 ★ Verified Advisor) · Tap to join
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.joinCallBtn}>
+              <Ionicons name="call" size={13} color="#ffffff" />
+              <Text style={styles.joinCallBtnText}>Join Call</Text>
+            </View>
+          </TouchableOpacity>
+        ) : null}
+
+        {/* Quick Accounts & Payments Action Grid */}
+        <View style={styles.quickAccountsCard}>
+          <Text style={styles.quickAccountsTitle}>📊 Quick Accounts & Payments</Text>
+          <View style={styles.quickAccountsGrid}>
+            {/* Button 1: + Add Sale */}
+            <TouchableOpacity
+              style={[styles.quickAccountsBtn, { backgroundColor: '#16a34a' }]}
+              activeOpacity={0.85}
+              onPress={() => {
+                tap();
+                router.push({ pathname: '/(tabs)/records', params: { action: 'NEW_SALE', t: Date.now() } });
+              }}
+            >
+              <Ionicons name="add-circle" size={15} color="#ffffff" />
+              <Text style={styles.quickAccountsBtnText}>+ Add Sale</Text>
+            </TouchableOpacity>
+
+            {/* Button 2: + Add Expense */}
+            <TouchableOpacity
+              style={[styles.quickAccountsBtn, { backgroundColor: '#dc2626' }]}
+              activeOpacity={0.85}
+              onPress={() => {
+                tap();
+                router.push({ pathname: '/(tabs)/records', params: { action: 'NEW_EXPENSE', t: Date.now() } });
+              }}
+            >
+              <Ionicons name="remove-circle" size={15} color="#ffffff" />
+              <Text style={styles.quickAccountsBtnText}>+ Add Expense</Text>
+            </TouchableOpacity>
+
+            {/* Button 3: 💰 Payment In (Receipt) */}
+            <TouchableOpacity
+              style={[styles.quickAccountsBtn, { backgroundColor: '#0284c7' }]}
+              activeOpacity={0.85}
+              onPress={() => {
+                tap();
+                setVoucherInitialType('RECEIPT_IN');
+                setShowPaymentVoucherModal(true);
+              }}
+            >
+              <Ionicons name="arrow-down-circle" size={15} color="#ffffff" />
+              <Text style={styles.quickAccountsBtnText}>💰 Payment In</Text>
+            </TouchableOpacity>
+
+            {/* Button 4: 💸 Payment Out (Payment) */}
+            <TouchableOpacity
+              style={[styles.quickAccountsBtn, { backgroundColor: '#ea580c' }]}
+              activeOpacity={0.85}
+              onPress={() => {
+                tap();
+                setVoucherInitialType('PAYMENT_OUT');
+                setShowPaymentVoucherModal(true);
+              }}
+            >
+              <Ionicons name="arrow-up-circle" size={15} color="#ffffff" />
+              <Text style={styles.quickAccountsBtnText}>💸 Payment Out</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
         {/* Your Crop Prices LIVE */}
         <MarketRatesCard />
 
-        {/* Farm Action Grid */}
+        {/* Farm Action Grid — Executive Compact Tool Layout */}
         <View style={styles.actionGrid}>
           <TouchableOpacity
-            style={[styles.actionCard, premiumShadow('#000000', 'sm')]}
+            style={[styles.actionCard, premiumShadow('#0f172a', 'sm')]}
             activeOpacity={0.8}
             onPress={() => {
               tap();
-              router.push('/farm');
+              router.push('/(tabs)/crop-disease-scanner' as any);
             }}
           >
-            <View style={[styles.actionIconBg, { backgroundColor: '#f0fdf4' }]}>
-              <Ionicons name="leaf" size={22} color="#16a34a" />
+            <View style={[styles.actionIconBg, { backgroundColor: '#dcfce7' }]}>
+              <Ionicons name="scan-circle" size={19} color="#15803d" />
             </View>
-            <Text style={styles.actionCardTitle}>My Active Crops</Text>
-            <Text style={styles.actionCardSub}>3 Crop Plots</Text>
+            <View style={styles.actionCardTextGroup}>
+              <Text style={styles.actionCardTitle} numberOfLines={1}>AI Disease Scanner</Text>
+              <Text style={styles.actionCardSub} numberOfLines={1}>Instant Leaf Scan</Text>
+            </View>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.actionCard, premiumShadow('#000000', 'sm')]}
+            style={[styles.actionCard, premiumShadow('#0f172a', 'sm')]}
             activeOpacity={0.8}
             onPress={() => {
               tap();
-              router.push('/records');
+              router.push('/(tabs)/satellite-map' as any);
+            }}
+          >
+            <View style={[styles.actionIconBg, { backgroundColor: '#e0f2fe' }]}>
+              <Ionicons name="planet" size={19} color="#0284c7" />
+            </View>
+            <View style={styles.actionCardTextGroup}>
+              <Text style={styles.actionCardTitle} numberOfLines={1}>Satellite Scanner</Text>
+              <Text style={styles.actionCardSub} numberOfLines={1}>NDVI Heatmap</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionCard, premiumShadow('#0f172a', 'sm')]}
+            activeOpacity={0.8}
+            onPress={() => {
+              tap();
+              router.push('/(tabs)/satellite-map' as any);
             }}
           >
             <View style={[styles.actionIconBg, { backgroundColor: '#fef3c7' }]}>
-              <Ionicons name="document-text" size={22} color="#d97706" />
+              <Ionicons name="location" size={19} color="#b45309" />
             </View>
-            <Text style={styles.actionCardTitle}>Sales & Expenses</Text>
-            <Text style={styles.actionCardSub}>Log Records</Text>
+            <View style={styles.actionCardTextGroup}>
+              <Text style={styles.actionCardTitle} numberOfLines={1}>Farm GPS Location</Text>
+              <Text style={styles.actionCardSub} numberOfLines={1}>1-Tap GPS Lock</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionCard, premiumShadow('#0f172a', 'sm')]}
+            activeOpacity={0.8}
+            onPress={() => {
+              tap();
+              onOpenAdminChat?.();
+            }}
+          >
+            <View style={[styles.actionIconBg, { backgroundColor: '#dcfce7' }]}>
+              <Ionicons name="chatbubbles" size={19} color="#15803d" />
+            </View>
+            <View style={styles.actionCardTextGroup}>
+              <Text style={styles.actionCardTitle} numberOfLines={1}>Admin Support</Text>
+              <Text style={styles.actionCardSub} numberOfLines={1}>Chat Live</Text>
+            </View>
           </TouchableOpacity>
         </View>
 
-        {/* Basic Plan coupon redeem */}
-        <RedeemBasicPlanCouponCard />
+        {/* 📊 Kisan Unified Crop & Sowing Intelligence Engine Launcher Card */}
+        <TouchableOpacity
+          style={[styles.intelligenceLauncherCard, premiumShadow('#0f172a', 'md')]}
+          activeOpacity={0.88}
+          onPress={() => {
+            tap();
+            router.push('/crop-intelligence');
+          }}
+        >
+          <LinearGradient colors={['#0f172a', '#1e293b']} style={styles.launcherBannerHeader}>
+            <View style={styles.launcherHeaderLeft}>
+              <View style={styles.launcherIconBadge}>
+                <Ionicons name="analytics" size={22} color="#38bdf8" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <Text style={styles.launcherTitle}>📈 Crop Engine (Demand & Sowing)</Text>
+                  <View style={styles.livePulsePill}>
+                    <Text style={styles.livePulsePillText}>🔴 LIVE</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </LinearGradient>
+        </TouchableOpacity>
       </View>
+
+      <GroupVoiceCallModal
+        visible={showVoiceCallModal}
+        onClose={() => setShowVoiceCallModal(false)}
+        voiceCallHook={voiceCallHook}
+        currentUserId={user?.id}
+        isHostOrAdmin={false}
+      />
+
+      {/* Payment Voucher Modal Component for Quick Payments In/Out */}
+      <PaymentVoucherModal
+        visible={showPaymentVoucherModal}
+        initialType={voucherInitialType}
+        parties={parties}
+        labourWorkers={labourWorkers}
+        onClose={() => setShowPaymentVoucherModal(false)}
+      />
     </ScrollView>
   );
 };
 
-/** Farmer home only ever self-activates the BASIC (record-keeping) tier — Standard/Premium always go through an advisor. */
-function RedeemBasicPlanCouponCard() {
-  const preview = usePreviewFarmerPlanCoupon();
-  const redeem = useRedeemFarmerPlanCoupon();
-  const [code, setCode] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<Awaited<ReturnType<typeof redeem.mutateAsync>> | null>(null);
-
-  const isPending = preview.isPending || redeem.isPending;
-
-  const handleRedeem = async () => {
-    setError(null);
-    setSuccess(null);
-    if (!code.trim()) {
-      setError('Enter a coupon code.');
-      return;
-    }
-    const trimmedCode = code.trim().toUpperCase();
-    try {
-      const previewResult = await preview.mutateAsync({ code: trimmedCode });
-      if (previewResult.plan !== 'BASIC') {
-        setError('Only Basic Plan coupons can be applied here. Standard/Premium codes go through your advisor.');
-        return;
-      }
-      const res = await redeem.mutateAsync({ code: trimmedCode });
-      setSuccess(res);
-      setCode('');
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Could not redeem this code.');
-    }
-  };
-
-  return (
-    <View style={[couponStyles.card, premiumShadow('#000000', 'sm')]}>
-      <Text style={couponStyles.title}>Have a Basic Plan code?</Text>
-      <Text style={couponStyles.sub}>Redeem it here to activate/extend your BASIC plan days.</Text>
-      <View style={couponStyles.row}>
-        <TextInput
-          style={couponStyles.input}
-          placeholder="e.g. B-XXXXXX"
-          placeholderTextColor="#94a3b8"
-          autoCapitalize="characters"
-          value={code}
-          onChangeText={setCode}
-        />
-        <TouchableOpacity style={couponStyles.btn} disabled={isPending} onPress={handleRedeem}>
-          {isPending ? <ActivityIndicator color="#ffffff" size="small" /> : <Text style={couponStyles.btnText}>Redeem</Text>}
-        </TouchableOpacity>
-      </View>
-      {error ? <Text style={couponStyles.error}>{error}</Text> : null}
-      {success ? (
-        <Text style={couponStyles.successText}>
-          +{success.daysGranted} day(s) added. New expiry: {new Date(success.newEndDate).toLocaleDateString('en-IN')}
-        </Text>
-      ) : null}
-    </View>
-  );
-}
-
-const couponStyles = StyleSheet.create({
-  card: {
-    backgroundColor: '#ffffff',
-    borderRadius: RADIUS.lg,
-    padding: SPACING.md,
-    gap: 6,
-  },
-  title: { fontSize: 14, fontFamily: FONT.bold, color: '#0f172a' },
-  sub: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
-  row: { flexDirection: 'row', gap: 8, marginTop: 6 },
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: RADIUS.md,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 13,
-    fontFamily: FONT.medium,
-    color: '#0f172a',
-  },
-  btn: {
-    backgroundColor: '#16a34a',
-    borderRadius: RADIUS.md,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  btnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 },
-  error: { color: '#dc2626', fontSize: 12, fontFamily: FONT.medium, marginTop: 4 },
-  successText: { color: '#16a34a', fontSize: 12, fontFamily: FONT.semiBold, marginTop: 4 },
-});
-
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: SPACING.lg, paddingTop: 6, gap: SPACING.sm, paddingBottom: 24 },
-  actionGrid: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  actionCard: {
-    flex: 1,
+  quickAccountsCard: {
     backgroundColor: '#ffffff',
     borderRadius: RADIUS.lg,
-    padding: SPACING.md,
-    gap: 4,
+    padding: 10,
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    gap: 8,
+    ...premiumShadow('#0f172a', 'sm'),
   },
-  actionIconBg: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
+  quickAccountsTitle: {
+    fontSize: 12,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+    letterSpacing: -0.2,
+  },
+  quickAccountsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  quickAccountsBtn: {
+    width: '48.8%',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 4,
+    gap: 4,
+    paddingVertical: 9,
+    borderRadius: RADIUS.md,
+  },
+  quickAccountsBtnText: {
+    color: '#ffffff',
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+  },
+  actionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  actionCard: {
+    width: '48.8%',
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+  },
+  actionIconBg: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionCardTextGroup: {
+    flex: 1,
+    justifyContent: 'center',
   },
   actionCardTitle: {
-    fontSize: 14,
+    fontSize: 12,
     fontFamily: FONT.bold,
     color: '#0f172a',
+    letterSpacing: -0.1,
   },
   actionCardSub: {
-    fontSize: 12,
+    fontSize: 10,
     fontFamily: FONT.medium,
     color: '#64748b',
+    marginTop: 0.5,
   },
   // Plan badge styles — frosted-glass pills so they read cleanly against the gradient header, in any theme.
   planRow: {
@@ -284,19 +425,6 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     letterSpacing: 0.2,
   },
-  planExpirySep: {
-    width: 1,
-    height: 10,
-    backgroundColor: 'rgba(255,255,255,0.4)',
-  },
-  planExpiryText: {
-    fontSize: 10.5,
-    fontFamily: FONT.semiBold,
-    color: 'rgba(255,255,255,0.9)',
-  },
-  planExpiryTextExpired: {
-    color: '#fecaca',
-  },
   planDaysLeftText: {
     fontSize: 10.5,
     fontFamily: FONT.semiBold,
@@ -318,5 +446,197 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: FONT.bold,
     color: '#166534',
+  },
+  activeCallBanner: {
+    backgroundColor: '#15803d',
+    borderRadius: RADIUS.lg,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginBottom: 6,
+  },
+  activeCallLiveBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeCallTitle: {
+    fontSize: 13.5,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+  },
+  livePulseDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#ef4444',
+  },
+  livePulseText: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    backgroundColor: '#dc2626',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  activeCallSub: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: 'rgba(255, 255, 255, 0.88)',
+    marginTop: 1,
+  },
+  joinCallBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#166534',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  joinCallBtnText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  intelligenceLauncherCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    overflow: 'hidden',
+    borderWidth: 1.5,
+    borderColor: '#cbd5e1',
+    marginTop: 10,
+    marginBottom: 16,
+  },
+  launcherBannerHeader: {
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  launcherHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  launcherIconBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.3)',
+  },
+  launcherTitle: {
+    fontSize: 13.5,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+  },
+  launcherSub: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+    marginTop: 1,
+  },
+  livePulsePill: {
+    backgroundColor: '#ef4444',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: RADIUS.xs,
+  },
+  livePulsePillText: {
+    fontSize: 8.5,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+  },
+  openBtnPill: {
+    backgroundColor: '#0284c7',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#38bdf8',
+  },
+  openBtnPillText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  launcherBody: {
+    padding: 12,
+    gap: 8,
+    backgroundColor: '#ffffff',
+  },
+  launcherDesc: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#475569',
+    lineHeight: 16,
+  },
+  launcherFeaturesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 2,
+  },
+  featureChipGreen: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#f0fdf4',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+  },
+  featureChipGreenText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#166534',
+  },
+  featureChipAmber: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#fffbe6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#fde68a',
+  },
+  featureChipAmberText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#92400e',
+  },
+  featureChipBlue: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#eff6ff',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+  },
+  featureChipBlueText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#1e40af',
   },
 });

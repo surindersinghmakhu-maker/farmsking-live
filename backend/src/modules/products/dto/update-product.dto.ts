@@ -28,7 +28,7 @@ export class UpdateProductDto {
   imageUrl?: string;
 
   @IsOptional()
-  @IsInt()
+  @IsNumber()
   @Min(0)
   stockQty?: number;
 

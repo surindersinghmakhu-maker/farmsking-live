@@ -1,7 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { FarmerSubscriptionPlan, GardenerSubscriptionPlan, Role, SubscriptionPlanStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AdvisorAssignmentService } from '../advisor-assignment/advisor-assignment.service';
+import { WhatsAppGroupSyncService } from '../whatsapp/whatsapp-group-sync.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 
@@ -12,7 +13,9 @@ export class SubscriptionsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly advisorAssignmentService: AdvisorAssignmentService,
+    private readonly whatsAppGroupSyncService: WhatsAppGroupSyncService,
   ) {}
+
 
   /**
    * Hiring an advisor (subscription going ACTIVE) upgrades the farmer/gardener to their PREMIUM plan tier.
@@ -32,8 +35,8 @@ export class SubscriptionsService {
       const endDate = new Date(baseDate.getTime() + durationDays * DAY_MS);
       await this.prisma.farmerPlan.upsert({
         where: { farmerId: userId },
-        create: { farmerId: userId, plan: FarmerSubscriptionPlan.PREMIUM, endDate },
-        update: { plan: FarmerSubscriptionPlan.PREMIUM, endDate },
+        create: { farmerId: userId, plan: FarmerSubscriptionPlan.PRO, endDate },
+        update: { plan: FarmerSubscriptionPlan.PRO, endDate },
       });
     } else if (user.role === Role.GARDENER) {
       const current = await this.prisma.gardenerPlan.findUnique({ where: { gardenerId: userId } });
@@ -56,6 +59,20 @@ export class SubscriptionsService {
 
   /** Farmer subscribes — payment is simulated, so the subscription (and its advisor assignment) go ACTIVE immediately. */
   async create(user: AuthUser, dto: CreateSubscriptionDto) {
+    if (user.role === Role.FARMER) {
+      const farmerPlan = await this.prisma.farmerPlan.findUnique({ where: { farmerId: user.id } });
+      const now = new Date();
+      const isSoftwarePlanActive = Boolean(
+        farmerPlan &&
+        farmerPlan.plan !== FarmerSubscriptionPlan.FREE &&
+        farmerPlan.endDate &&
+        farmerPlan.endDate > now
+      );
+      if (!isSoftwarePlanActive) {
+        throw new BadRequestException('You must have an active Paid Software Plan before hiring an Advisor.');
+      }
+    }
+
     const existing = await this.prisma.advisorSubscription.findFirst({
       where: { farmerId: user.id, status: SubscriptionPlanStatus.ACTIVE, deletedAt: null },
     });
@@ -83,6 +100,7 @@ export class SubscriptionsService {
     const assignment = await this.advisorAssignmentService.createFromSubscription(subscription.id, user.id);
     await this.upgradePlanForSubscription(user.id, plan.billingCycle);
 
+    this.whatsAppGroupSyncService.syncSingleFarmerGroupStatus(user.id).catch(() => {});
     return { ...subscription, advisorAssignment: assignment };
   }
 
@@ -123,15 +141,19 @@ export class SubscriptionsService {
     const plan = await this.prisma.advisorPlan.findFirst({ where: { id: subscription.planId } });
     await this.upgradePlanForSubscription(subscription.farmerId, plan?.billingCycle ?? 'MONTHLY');
 
+    this.whatsAppGroupSyncService.syncSingleFarmerGroupStatus(subscription.farmerId).catch(() => {});
     return updated;
   }
 
   async reject(user: AuthUser, id: string) {
-    await this.findOneOrThrow(user, id);
-    return this.prisma.advisorSubscription.update({
+    const subscription = await this.findOneOrThrow(user, id);
+    const updated = await this.prisma.advisorSubscription.update({
       where: { id },
       data: { status: SubscriptionPlanStatus.REJECTED },
     });
+
+    this.whatsAppGroupSyncService.syncSingleFarmerGroupStatus(subscription.farmerId).catch(() => {});
+    return updated;
   }
 
   async cancel(user: AuthUser, id: string) {
@@ -148,6 +170,8 @@ export class SubscriptionsService {
       await this.advisorAssignmentService.revoke(user, assignment.id);
     }
 
+    this.whatsAppGroupSyncService.syncSingleFarmerGroupStatus(subscription.farmerId).catch(() => {});
     return updated;
   }
 }
+

@@ -46,6 +46,14 @@ export class AdminUpdateUserDto {
   @IsBoolean()
   notificationsEnabled?: boolean;
 
+  @IsOptional()
+  @IsBoolean()
+  whatsappGroupEnabled?: boolean;
+
+  @IsOptional()
+  @IsString()
+  whatsappGroupJid?: string;
+
   // Advisor-only fields
   @IsOptional()
   @IsString()
@@ -109,4 +117,8 @@ export class AdminUpdateUserDto {
   @IsOptional()
   @IsString()
   bankAccountHolderName?: string;
+
+  @IsOptional()
+  @IsString()
+  billPrintingAddress?: string;
 }

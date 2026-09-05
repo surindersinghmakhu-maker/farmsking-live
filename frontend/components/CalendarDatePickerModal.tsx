@@ -34,11 +34,11 @@ const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export function getAgriSeason(monthIndex: number): string {
   // Month 0 = Jan, 1 = Feb, ..., 11 = Dec
   if (monthIndex >= 5 && monthIndex <= 9) {
-    return 'Kharif (Monsoon)';
+    return 'Kharif';
   } else if (monthIndex >= 10 || monthIndex <= 3) {
-    return 'Rabi (Winter)';
+    return 'Rabi';
   } else {
-    return 'Zaid (Summer)';
+    return 'Zaid';
   }
 }
 

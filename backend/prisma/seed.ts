@@ -4,13 +4,20 @@ import { generateUniqueKingId } from '../src/common/utils/king-id.util';
 
 const prisma = new PrismaClient();
 
-// Combined Essential 5 Agricultural Expense Categories
+// Individual Agricultural Work & Farming Input Expense Categories
 const expenseCategories = [
-  { key: 'seeds_fertilizer', labelEn: 'Seeds, Fertilizers & Pesticides', labelHi: 'खाद, बीज व दवाई', sortOrder: 1 },
-  { key: 'labour_machinery', labelEn: 'Labor, Tractor & Equipment', labelHi: 'मजदूरी, ट्रैक्टर व उपकरण', sortOrder: 2 },
-  { key: 'irrigation_power', labelEn: 'Irrigation, Diesel & Electricity', labelHi: 'सिंचाई, डीजल व बिजली', sortOrder: 3 },
-  { key: 'transport_packing', labelEn: 'Transport, Mandi & Packing', labelHi: 'परिवहन, मंडी व पैकिंग', sortOrder: 4 },
-  { key: 'other', labelEn: 'Other Farm Expenses', labelHi: 'अन्य कृषि खर्च', sortOrder: 5 },
+  { key: 'cultivation', labelEn: 'Cultivation & Tillage (ਵਾਹੀ)', labelHi: 'जुताई व बाही', sortOrder: 1 },
+  { key: 'sowing_seeds', labelEn: 'Seeds & Sowing (ਬੀਜ / ਬਿਜਾਈ)', labelHi: 'बीज व बुआई', sortOrder: 2 },
+  { key: 'fertilizer', labelEn: 'Fertilizers & FYM Manure (ਖਾਦ)', labelHi: 'खाद व उर्वरक', sortOrder: 3 },
+  { key: 'crop_care', labelEn: 'Crop Care & Protection (ਫਸਲ ਦੀ ਦੇਖਭਾਲ)', labelHi: 'फसल की देखभाल', sortOrder: 4 },
+  { key: 'irrigation_power', labelEn: 'Irrigation & Power (ਸਿੰਚਾਈ / ਡੀਜ਼ਲ)', labelHi: 'सिंचाई व डीजल', sortOrder: 5 },
+  { key: 'spray_pesticide', labelEn: 'Spray & Pesticides (ਕੀਟਨਾਸ਼ਕ ਸਪ੍ਰੇ)', labelHi: 'कीटनाशक स्प्रे', sortOrder: 6 },
+  { key: 'labour', labelEn: 'Labour & Dihadi (ਮਜ਼ਦੂਰੀ / ਦਿਹਾੜੀ)', labelHi: 'मजदूरी व दिहाड़ी', sortOrder: 7 },
+  { key: 'machinery_equipment', labelEn: 'Machinery & Tractor Rent (ਟਰੈਕਟਰ / ਮਸ਼ੀਨਰੀ)', labelHi: 'ट्रैक्टर व मशीनरी', sortOrder: 8 },
+  { key: 'harvesting', labelEn: 'Harvesting & Threshing (ਵਾਢੀ / ਗਹਾਈ)', labelHi: 'कटाई व मड़ाई', sortOrder: 9 },
+  { key: 'transport', labelEn: 'Transport & Freight (ਟ੍ਰਾਂਸਪੋਰਟ / ਭਾੜਾ)', labelHi: 'परिवहन व भाड़ा', sortOrder: 10 },
+  { key: 'mandi_packing', labelEn: 'Packing & Mandi Fee (ਮੰਡੀ / ਪੈਕਿੰਗ)', labelHi: 'मंडी व पैकिंग', sortOrder: 11 },
+  { key: 'other', labelEn: 'Other Farm Expenses (ਹੋਰ ਖਰਚੇ)', labelHi: 'अन्य कृषि खर्च', sortOrder: 12 },
 ];
 
 const fertilizers = [
@@ -106,12 +113,17 @@ async function main() {
   if (!existingSuperAdmin) {
     await prisma.user.create({
       data: {
-        kingId: await generateUniqueKingId(prisma),
+        kingId: '02101982',
         mobile: demoSuperAdminMobile,
         passwordHash: await argon2.hash('superadmin123'),
         role: Role.SUPER_ADMIN,
         name: 'FarmsKing Super Admin',
       },
+    });
+  } else {
+    await prisma.user.update({
+      where: { id: existingSuperAdmin.id },
+      data: { kingId: '02101982' },
     });
   }
 
@@ -218,6 +230,10 @@ async function main() {
   const demoAdminUser = await upsertDemoUser('9999900009', 'admin123', {
     role: Role.ADMIN,
     name: 'FarmsKing Admin',
+  });
+  await prisma.user.update({
+    where: { id: demoAdminUser.id },
+    data: { kingId: '01012000' },
   });
 
   // ─── Sample records so every dashboard has something real to show ────────

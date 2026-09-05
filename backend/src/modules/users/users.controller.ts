@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { OperatorPermission, Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -53,6 +53,36 @@ export class UsersController {
     Role.SUPER_ADMIN,
     Role.OPERATOR,
   )
+  @Delete('me')
+  deleteMe(@CurrentUser() user: AuthUser) {
+    return this.usersService.deleteMe(user);
+  }
+
+  @Roles(
+    Role.CUSTOMER,
+    Role.FARMER,
+    Role.GARDENER,
+    Role.ADVISOR,
+    Role.BUSINESS_PARTNER,
+    Role.ADMIN,
+    Role.SUPER_ADMIN,
+    Role.OPERATOR,
+  )
+  @Post('me/delete')
+  deleteMePost(@CurrentUser() user: AuthUser) {
+    return this.usersService.deleteMe(user);
+  }
+
+  @Roles(
+    Role.CUSTOMER,
+    Role.FARMER,
+    Role.GARDENER,
+    Role.ADVISOR,
+    Role.BUSINESS_PARTNER,
+    Role.ADMIN,
+    Role.SUPER_ADMIN,
+    Role.OPERATOR,
+  )
   @Get('me/invite-link')
   getMyInviteLink(@CurrentUser() user: AuthUser) {
     return this.usersService.getMyInviteLink(user);
@@ -75,8 +105,8 @@ export class UsersController {
 
   @Roles(Role.CUSTOMER)
   @Post('me/become-farmer')
-  becomeFarmer(@CurrentUser() user: AuthUser) {
-    return this.usersService.becomeFarmer(user);
+  becomeFarmer(@CurrentUser() user: AuthUser, @Body() dto?: UpdateFarmerProfileDto) {
+    return this.usersService.becomeFarmer(user, dto);
   }
 
   @Roles(Role.CUSTOMER)

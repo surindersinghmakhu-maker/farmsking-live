@@ -21,6 +21,7 @@ export function useUpdateAppSettings() {
     mutationFn: (payload: api.UpdateAppSettingsPayload) => api.updateAppSettings(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['app-settings'] });
+      queryClient.invalidateQueries({ queryKey: ['app-settings', 'support-contact'] });
     },
   });
 }

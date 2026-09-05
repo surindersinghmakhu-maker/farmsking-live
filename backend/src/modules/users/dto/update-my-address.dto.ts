@@ -38,6 +38,10 @@ export class UpdateMyAddressDto {
   @IsBoolean()
   notificationsEnabled?: boolean;
 
+  @IsOptional()
+  @IsBoolean()
+  whatsappGroupEnabled?: boolean;
+
   /** Null clears the threshold (alert off); a number sets and enables it. */
   @IsOptional()
   @IsNumber()
@@ -50,4 +54,8 @@ export class UpdateMyAddressDto {
   @IsOptional()
   @IsBoolean()
   weatherAlertRainEnabled?: boolean;
+
+  @IsOptional()
+  @IsString()
+  billPrintingAddress?: string;
 }

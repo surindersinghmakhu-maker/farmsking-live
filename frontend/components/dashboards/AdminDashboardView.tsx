@@ -1,15 +1,32 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import { RoleHeader } from './RoleHeader';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
+import { useAdminConversations } from '@/src/hooks/useAdminChat';
+import { AdminSupportModal } from '@/src/components/AdminSupportModal';
+import { useCrops } from '@/src/store/crops-context';
 
 export const AdminDashboardView: React.FC = () => {
   const theme = RoleThemes.ADMIN;
+  const router = useRouter();
   const { user } = useAuth();
+  const { gpsUnlockRequests, acceptGpsUnlockRequest, declineGpsUnlockRequest } = useCrops();
+
+  const { data: conversations = [], isLoading: isLoadingConversations } = useAdminConversations();
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+  const [selectedFarmerChat, setSelectedFarmerChat] = useState<{ farmerId?: string; farmerName?: string } | null>(null);
+
+  const totalUnread = conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+
+  const openModalWithFarmer = (farmerId?: string, farmerName?: string) => {
+    setSelectedFarmerChat(farmerId ? { farmerId, farmerName } : null);
+    setIsSupportModalOpen(true);
+  };
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.bg }]} showsVerticalScrollIndicator={false}>
@@ -21,6 +38,150 @@ export const AdminDashboardView: React.FC = () => {
       />
 
       <View style={styles.content}>
+        {/* Real-time Farmer Support Chat Card Banner */}
+        <TouchableOpacity
+          style={[
+            styles.sectionCard,
+            premiumShadow('#0f172a', 'sm'),
+            { backgroundColor: '#ffffff', borderColor: '#16a34a', borderWidth: 1.5 },
+          ]}
+          activeOpacity={0.9}
+          onPress={() => openModalWithFarmer()}
+        >
+          <View style={styles.sectionHeader}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Ionicons name="chatbubbles" size={20} color="#16a34a" />
+              <Text style={[styles.sectionTitle, { color: '#0f172a' }]}>Farmer Support Chat (Real-time)</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              {totalUnread > 0 ? (
+                <View style={{ backgroundColor: '#dc2626', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 10 }}>
+                  <Text style={{ color: '#fff', fontSize: 10, fontFamily: FONT.extraBold }}>{totalUnread} NEW</Text>
+                </View>
+              ) : null}
+              <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill }}>
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#15803d' }}>
+                  🟢 Live Socket
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#64748b', marginBottom: 10 }}>
+            Live farmer messages & support queries. Tap anywhere on this card to open the **Pop-Up Chat Modal**:
+          </Text>
+
+          {isLoadingConversations ? (
+            <ActivityIndicator size="small" color="#16a34a" style={{ paddingVertical: 12 }} />
+          ) : conversations.length === 0 ? (
+            <View style={{ alignItems: 'center', paddingVertical: 12 }}>
+              <Ionicons name="chatbox-outline" size={28} color="#cbd5e1" />
+              <Text style={{ fontSize: 12, color: '#94a3b8', fontFamily: FONT.medium, marginTop: 4 }}>No active farmer messages yet.</Text>
+            </View>
+          ) : (
+            <View style={{ gap: 8 }}>
+              {conversations.slice(0, 3).map((conv) => (
+                <TouchableOpacity
+                  key={conv.farmer?.id || Math.random().toString()}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: '#f8fafc',
+                    borderWidth: 1,
+                    borderColor: '#e2e8f0',
+                    borderRadius: RADIUS.md,
+                    padding: 10,
+                    gap: 10,
+                  }}
+                  activeOpacity={0.8}
+                  onPress={() => openModalWithFarmer(conv.farmer?.id, conv.farmer?.name)}
+                >
+                  <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#dcfce7', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="person" size={18} color="#16a34a" />
+                  </View>
+
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>{conv.farmer?.name || 'Farmer'}</Text>
+                      {conv.unreadCount > 0 ? (
+                        <View style={{ backgroundColor: '#dc2626', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10 }}>
+                          <Text style={{ color: '#fff', fontSize: 10, fontFamily: FONT.bold }}>{conv.unreadCount} New</Text>
+                        </View>
+                      ) : null}
+                    </View>
+                    <Text style={{ fontSize: 11.5, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 }} numberOfLines={1}>
+                      {conv.lastMessage}
+                    </Text>
+                  </View>
+
+                  <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {/* Explicit Open Pop-Up Modal CTA */}
+          <TouchableOpacity
+            style={{
+              marginTop: 10,
+              backgroundColor: '#16a34a',
+              borderRadius: RADIUS.md,
+              paddingVertical: 10,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+            }}
+            onPress={() => openModalWithFarmer()}
+          >
+            <Ionicons name="open-outline" size={16} color="#ffffff" />
+            <Text style={{ color: '#ffffff', fontSize: 12.5, fontFamily: FONT.bold }}>Open Live Support Chat Pop-Up</Text>
+          </TouchableOpacity>
+        </TouchableOpacity>
+
+        {/* Real-Time Pop-Up Modal */}
+        <AdminSupportModal
+          visible={isSupportModalOpen}
+          onClose={() => {
+            setIsSupportModalOpen(false);
+            setSelectedFarmerChat(null);
+          }}
+          initialFarmerId={selectedFarmerChat?.farmerId}
+          initialFarmerName={selectedFarmerChat?.farmerName}
+        />
+        {/* Admin Level Crop Control & Advisor Dashboard Banner */}
+        <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1.5 }]}>
+          <View style={styles.sectionHeader}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Ionicons name="shield-checkmark" size={20} color="#16a34a" />
+              <Text style={[styles.sectionTitle, { color: '#14532d' }]}>Admin Crop Control & Advisor View</Text>
+            </View>
+          </View>
+          <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#166534', marginBottom: 12 }}>
+            Admin Power: Edit ANY crop at ANY stage (Plantation, Vegetative, Flowering, Harvesting, Completed) & manage advisor farmer rosters.
+          </Text>
+
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TouchableOpacity
+              style={[styles.toolBtn, { backgroundColor: '#16a34a', flex: 1, paddingVertical: 10 }]}
+              activeOpacity={0.85}
+              onPress={() => router.push('/(tabs)/super-crop-edit')}
+            >
+              <Ionicons name="pencil" size={16} color="#ffffff" />
+              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' }}>✏️ Admin Crop Editor</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.toolBtn, { backgroundColor: '#ffffff', borderColor: '#16a34a', borderWidth: 1.5, flex: 1, paddingVertical: 10 }]}
+              activeOpacity={0.85}
+              onPress={() => router.push('/(tabs)/farm')}
+            >
+              <Ionicons name="leaf-outline" size={16} color="#16a34a" />
+              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#16a34a' }}>🌾 View All Crops</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* 4 Stat Cards */}
         <View style={styles.statsGrid}>
           {[

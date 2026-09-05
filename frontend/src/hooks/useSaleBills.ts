@@ -17,6 +17,17 @@ export function useFetchSaleBill() {
   });
 }
 
+export function useUpdateSaleBill() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: saleBillsApi.CreateSaleBillPayload }) =>
+      saleBillsApi.updateSaleBill(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sale-bills', 'count', 'mine'] });
+    },
+  });
+}
+
 export function useMySaleBillCount() {
   return useQuery({
     queryKey: ['sale-bills', 'count', 'mine'],

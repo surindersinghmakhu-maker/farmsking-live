@@ -31,7 +31,8 @@ export class CropProblemsService {
     const cropCycle = await this.cropsService.findOneOrThrow(user, dto.cropCycleId);
 
     const activeAssignment = await this.prisma.advisorAssignment.findFirst({
-      where: { farmerId: user.id, status: 'ACTIVE', deletedAt: null },
+      where: { farmerId: user.id, status: { in: ['ACTIVE', 'PENDING'] }, deletedAt: null },
+      orderBy: { startDate: 'desc' },
     });
 
     const { photoUrls, ...rest } = dto;
@@ -71,16 +72,6 @@ export class CropProblemsService {
       where: {
         assignedAdvisorId: user.id,
         deletedAt: null,
-        reportedBy: {
-          advisorAssignmentsAsFarmer: {
-            some: {
-              advisorId: user.id,
-              status: 'ACTIVE',
-              deletedAt: null,
-              OR: [{ subscriptionId: null }, { subscription: { endDate: null } }, { subscription: { endDate: { gt: new Date() } } }],
-            },
-          },
-        },
       },
       include: DETAIL_INCLUDE,
       orderBy: { createdAt: 'desc' },
@@ -194,8 +185,8 @@ export class CropProblemsService {
   }
 
   async updateStatus(user: AuthUser, id: string, dto: UpdateCropProblemStatusDto) {
-    await this.findOneOrThrow(user, id);
-    return this.prisma.cropProblem.update({
+    const problem = await this.findOneOrThrow(user, id);
+    const updated = await this.prisma.cropProblem.update({
       where: { id },
       data: {
         status: dto.status,
@@ -203,5 +194,83 @@ export class CropProblemsService {
       },
       include: DETAIL_INCLUDE,
     });
+
+    const isResolved = dto.status === CropProblemStatus.RESOLVED;
+    const titleText = isResolved ? '✅ Problem Solved' : `Problem Status: ${dto.status}`;
+    const bodyText = isResolved
+      ? `Your reported crop problem "${problem.title}" has been marked as RESOLVED by ${user.name || 'Admin'}.`
+      : `Your reported crop problem "${problem.title}" status is now ${dto.status}.`;
+
+    // 1. Notification
+    await this.notificationsService.create(
+      problem.reportedById,
+      NotificationType.CROP_PROBLEM_UPDATE,
+      titleText,
+      bodyText,
+      { cropProblemId: id, status: dto.status },
+    );
+
+    // 2. Direct Chat message
+    const chatText = isResolved
+      ? `✓ Problem Solved: Your crop problem "${problem.title}" has been resolved.`
+      : `Problem Status Update: "${problem.title}" is now ${dto.status}.`;
+
+    try {
+      const message = await this.chatService.sendMessage(user, problem.reportedById, chatText);
+      this.chatGateway.server.to(userRoom(user.id)).to(userRoom(problem.reportedById)).emit('new_message', message);
+    } catch {}
+
+    // 3. AdminChatMessage fallback if Admin
+    try {
+      const adminMsg = await (this.prisma as any).adminChatMessage.create({
+        data: {
+          farmerId: problem.reportedById,
+          adminId: user.id,
+          senderRole: user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN ? user.role : Role.ADMIN,
+          message: chatText,
+          isReadByFarmer: false,
+          isReadByAdmin: true,
+        },
+      });
+      this.chatGateway.server.to(userRoom(problem.reportedById)).emit('admin_chat_message', adminMsg);
+      this.chatGateway.server.emit('admin_chat_message', adminMsg);
+    } catch {}
+
+    // 4. Socket emit
+    this.chatGateway.server.to(userRoom(problem.reportedById)).emit('crop_problem_updated', { farmerId: problem.reportedById, cropProblemId: id, status: dto.status });
+    this.chatGateway.server.emit('crop_problem_updated', { farmerId: problem.reportedById, cropProblemId: id, status: dto.status });
+
+    return updated;
+  }
+
+  async rate(user: AuthUser, id: string, dto: { rating: number; feedback?: string }) {
+    const problem = await this.findOneOrThrow(user, id);
+    if (problem.reportedById !== user.id) {
+      throw new NotFoundException('Crop problem not found.');
+    }
+
+    const updated = await this.prisma.cropProblem.update({
+      where: { id },
+      data: {
+        farmerRating: dto.rating,
+        farmerFeedback: dto.feedback?.trim() || null,
+        status: CropProblemStatus.RESOLVED,
+        resolvedAt: new Date(),
+      },
+      include: DETAIL_INCLUDE,
+    });
+
+    if (problem.assignedAdvisorId) {
+      await this.notificationsService.create(
+        problem.assignedAdvisorId,
+        NotificationType.CROP_PROBLEM_UPDATE,
+        '⭐ Farmer Feedback & Rating Received',
+        `${user.name} rated your solution ${dto.rating}/5 stars${dto.feedback ? `: "${dto.feedback}"` : ''}.`,
+        { cropProblemId: id, rating: dto.rating },
+      );
+    }
+
+    return updated;
   }
 }
+

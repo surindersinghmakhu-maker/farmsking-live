@@ -50,4 +50,10 @@ export class CropProblemsController {
   updateStatus(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: UpdateCropProblemStatusDto) {
     return this.cropProblemsService.updateStatus(user, id, dto);
   }
+
+  @Roles(Role.FARMER)
+  @Patch(':id/rate')
+  rate(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: { rating: number; feedback?: string }) {
+    return this.cropProblemsService.rate(user, id, dto);
+  }
 }

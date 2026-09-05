@@ -27,7 +27,7 @@ const ACTIVE_STATUSES: CropStatus[] = [
 
 /** Derives the coarse CropStatus from the farmer-facing granular stage, when stage is provided and status isn't explicitly set. */
 function statusForStage(stage: CropCycleStage): CropStatus {
-  if (stage === CropCycleStage.COMPLETED) return CropStatus.COMPLETED;
+  if (stage === CropCycleStage.COMPLETED) return CropStatus.DEACTIVE;
   if (stage === CropCycleStage.HARVESTING) return CropStatus.HARVESTING;
   return CropStatus.ACTIVE;
 }
@@ -73,26 +73,36 @@ export class CropsService {
       await this.assertAdvanceProfileComplete(user.id);
     }
 
-    // ── FREE plan enforcement ──────────────────────────────────────────────
+    // ── Dynamic Farmer Plan crop limit enforcement ──────────────────────────
     if (user.role === Role.FARMER) {
       const { plan } = await this.farmerPlansService.getEffectivePlan(user.id);
 
-      if (plan === FarmerSubscriptionPlan.FREE) {
-        // Count total crops across all plots of this farmer (non-deleted)
+      // Fetch Super Admin configured limits for this plan
+      const planPricing = await this.prisma.farmerPlanPricing.findFirst({
+        where: { plan },
+      });
+
+      const maxTotalCrops = planPricing?.maxTotalCrops ?? (plan === FarmerSubscriptionPlan.FREE ? FREE_PLAN_MAX_CROPS : null);
+      const maxActiveCrops = planPricing?.maxActiveCrops ?? (plan === FarmerSubscriptionPlan.FREE ? FREE_PLAN_MAX_ACTIVE_CROPS : null);
+
+      // 1. Total Crops Allowed Enforcement (maxTotalCrops)
+      if (maxTotalCrops != null && maxTotalCrops > 0) {
         const totalCrops = await this.prisma.cropCycle.count({
           where: {
             deletedAt: null,
             plot: { farm: { ownerId: user.id, deletedAt: null } },
           },
         });
-        if (totalCrops >= FREE_PLAN_MAX_CROPS) {
+        if (totalCrops >= maxTotalCrops) {
+          const planName = plan === FarmerSubscriptionPlan.PRO ? 'Lite Plan' : plan === FarmerSubscriptionPlan.SMART ? 'Pro Plan' : plan === FarmerSubscriptionPlan.SUPER ? 'Smart Plan' : 'Free Plan';
           throw new ForbiddenException(
-            `Free plan mein sirf ${FREE_PLAN_MAX_CROPS} crops add ho sakti hain. ` +
-              `Adhik crops ke liye BASIC ya PREMIUM plan len.`,
+            `Your current plan (${planName}) allows adding a maximum of ${maxTotalCrops} crop(s). Please upgrade your plan to add more crops.`,
           );
         }
+      }
 
-        // Count active (non-completed) crops
+      // 2. Active Crops Allowed Enforcement (maxActiveCrops)
+      if (maxActiveCrops != null && maxActiveCrops > 0) {
         const activeCrops = await this.prisma.cropCycle.count({
           where: {
             deletedAt: null,
@@ -100,15 +110,15 @@ export class CropsService {
             plot: { farm: { ownerId: user.id, deletedAt: null } },
           },
         });
-        if (activeCrops >= FREE_PLAN_MAX_ACTIVE_CROPS) {
+        if (activeCrops >= maxActiveCrops) {
+          const planName = plan === FarmerSubscriptionPlan.PRO ? 'Lite Plan' : plan === FarmerSubscriptionPlan.SMART ? 'Pro Plan' : plan === FarmerSubscriptionPlan.SUPER ? 'Smart Plan' : 'Free Plan';
           throw new ForbiddenException(
-            `Free plan mein ek baar mein sirf ${FREE_PLAN_MAX_ACTIVE_CROPS} active crops ho sakti hain. ` +
-              `Koi crop complete karein ya BASIC/PREMIUM plan len.`,
+            `Your current plan (${planName}) allows a maximum of ${maxActiveCrops} active crop(s) at a time. Please upgrade your plan to add more active crops.`,
           );
         }
       }
     }
-    // ── End FREE plan enforcement ──────────────────────────────────────────
+    // ── End dynamic plan enforcement ───────────────────────────────────────
 
     const { plotId, sowingDate, transplantDate, expectedHarvestDate, actualHarvestDate, ...rest } = dto;
     const cropId = await generateUniqueCropId(this.prisma);
@@ -225,27 +235,25 @@ export class CropsService {
       throw new BadRequestException('You need an assigned advisor before submitting a crop for review.');
     }
 
-    const { plan } = await this.farmerPlansService.getEffectivePlan(user.id);
-    const maxAdvisorCrops =
-      plan === FarmerSubscriptionPlan.STANDARD
-        ? STANDARD_PLAN_MAX_ADVISOR_CROPS
-        : plan === FarmerSubscriptionPlan.PREMIUM
-          ? PREMIUM_PLAN_MAX_ADVISOR_CROPS
-          : null;
-    if (maxAdvisorCrops !== null) {
-      const activeAdvisorCrops = await this.prisma.cropCycle.count({
-        where: {
-          deletedAt: null,
-          status: { notIn: [CropStatus.COMPLETED, CropStatus.FAILED] },
-          advisorReviewStatus: { in: [CropAdvisorReviewStatus.PENDING, CropAdvisorReviewStatus.ACCEPTED] },
-          plot: { farm: { ownerId: user.id } },
-        },
-      });
-      if (activeAdvisorCrops >= maxAdvisorCrops) {
-        throw new ForbiddenException(
-          `The ${plan} plan allows up to ${maxAdvisorCrops} crops under active advisor review at once.`,
-        );
-      }
+    // ── Check Advisor capacity limit (Advisor Lite: 5 crops max, Advisor Plus: 10 crops max) ──
+    const advisorPlanRec = await this.prisma.advisorTierPlan.findUnique({
+      where: { advisorId: assignment.advisorId },
+    });
+    const advisorPlan = advisorPlanRec?.plan ?? 'LITE';
+    const advisorMaxCrops = advisorPlan === 'PLUS' ? 10 : 5;
+
+    const currentAdvisorActiveCrops = await this.prisma.cropCycle.count({
+      where: {
+        deletedAt: null,
+        status: { notIn: [CropStatus.COMPLETED, CropStatus.FAILED] },
+        advisorReviewStatus: { in: [CropAdvisorReviewStatus.PENDING, CropAdvisorReviewStatus.ACCEPTED] },
+      },
+    });
+
+    if (currentAdvisorActiveCrops >= advisorMaxCrops) {
+      throw new ForbiddenException(
+        `ਇਸ ਐਡਵਾਈਜ਼ਰ ਦੇ ਪਲਾਨ (${advisorPlan === 'PLUS' ? 'Advisor Plus' : 'Advisor Lite'}) ਅਨੁਸਾਰ ਇੱਕ ਸਮੇਂ ਸਿਰਫ਼ ${advisorMaxCrops} ਫਸਲਾਂ ਹੀ ਰਿਵਿਊ ਅਧੀਨ ਰੱਖੀਆਂ ਜਾ ਸਕਦੀਆਂ ਹਨ।`,
+      );
     }
 
     const updated = await this.prisma.cropCycle.update({
@@ -322,7 +330,74 @@ export class CropsService {
       throw new NotFoundException('Crop cycle not found.');
     }
 
-    return this.prisma.cropCycle.update({ where: { id }, data: { assignedSchedule } });
+    const updated = await this.prisma.cropCycle.update({ where: { id }, data: { assignedSchedule } });
+
+    await this.syncAssignedScheduleToSprayItems(cropCycle.id, cropCycle.sowingDate, assignedSchedule, user.id);
+
+    await this.notificationsService.create(
+      cropCycle.plot.farm.ownerId,
+      NotificationType.SPRAY_REMINDER,
+      'Advisory schedule updated',
+      `Your advisor published an updated crop schedule for ${cropCycle.cropName}.`,
+      { cropCycleId: cropCycle.id },
+    );
+
+    return updated;
+  }
+
+  private async syncAssignedScheduleToSprayItems(
+    cropCycleId: string,
+    sowingDate: Date | null,
+    assignedScheduleStr: string,
+    advisorId: string,
+  ) {
+    if (!assignedScheduleStr) return;
+
+    const baseDate = sowingDate ? new Date(sowingDate) : new Date();
+    const lines = assignedScheduleStr
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0 && !l.toLowerCase().includes('schedule') && !l.toLowerCase().includes('plan'));
+
+    await this.prisma.spraySchedule.deleteMany({
+      where: { cropCycleId },
+    });
+
+    for (let idx = 0; idx < lines.length; idx += 1) {
+      const line = lines[idx];
+      let scheduledDate = new Date(baseDate);
+
+      const dayMatch = line.match(/(?:\[?Day\s*(\d+).*?\]?:\s*)(.*)/i);
+      let taskName = line;
+      if (dayMatch) {
+        const dayNum = parseInt(dayMatch[1], 10) || (idx + 1);
+        scheduledDate.setDate(baseDate.getDate() + (dayNum - 1));
+        taskName = dayMatch[2].trim();
+      } else {
+        scheduledDate.setDate(baseDate.getDate() + idx * 5);
+      }
+
+      if (taskName) {
+        await this.prisma.spraySchedule.create({
+          data: {
+            cropCycleId,
+            recommendedProduct: taskName,
+            scheduledDate,
+            createdByAdvisorId: advisorId,
+          },
+        }).catch(() => undefined);
+
+        await this.prisma.cropActivitySchedule.create({
+          data: {
+            cropCycleId,
+            title: taskName,
+            activityType: 'SPRAY',
+            scheduledDate,
+            createdByAdvisorId: advisorId,
+          },
+        }).catch(() => undefined);
+      }
+    }
   }
 
   /** Advisor rejects a farmer's submitted crop — reverts it to NONE so the farmer can fix it up and resubmit. */
@@ -372,13 +447,24 @@ export class CropsService {
       },
       include: {
         plot: {
-          include: {
+          select: {
+            id: true,
+            name: true,
+            area: true,
+            areaUnit: true,
+            soilType: true,
+            irrigationType: true,
+            waterSource: true,
             farm: {
               select: {
                 id: true,
                 name: true,
+                totalArea: true,
+                areaUnit: true,
+                soilType: true,
+                irrigationSource: true,
                 ownerId: true,
-                owner: { select: { name: true, mobile: true, village: true, district: true, state: true, sprayTankSizeL: true } },
+                owner: { select: { id: true, name: true, mobile: true, village: true, district: true, state: true, sprayTankSizeL: true, soilType: true, waterType: true } },
               },
             },
           },
@@ -405,13 +491,24 @@ export class CropsService {
       },
       include: {
         plot: {
-          include: {
+          select: {
+            id: true,
+            name: true,
+            area: true,
+            areaUnit: true,
+            soilType: true,
+            irrigationType: true,
+            waterSource: true,
             farm: {
               select: {
                 id: true,
                 name: true,
+                totalArea: true,
+                areaUnit: true,
+                soilType: true,
+                irrigationSource: true,
                 ownerId: true,
-                owner: { select: { name: true, mobile: true, village: true, district: true, state: true, sprayTankSizeL: true } },
+                owner: { select: { id: true, name: true, mobile: true, village: true, district: true, state: true, sprayTankSizeL: true, soilType: true, waterType: true } },
               },
             },
           },

@@ -11,18 +11,35 @@ export function useAllOrders(status?: OrderStatus) {
 }
 
 export function useFulfillmentQueue() {
-  return useQuery({ queryKey: ['orders', 'fulfillment-queue'], queryFn: api.listFulfillmentQueue, refetchInterval: 20_000 });
+  return useQuery({ queryKey: ['orders', 'fulfillment-queue'], queryFn: api.listFulfillmentQueue, refetchInterval: 10_000 });
 }
 
 export function useOrder(id: string | undefined) {
   return useQuery({ queryKey: ['orders', id], queryFn: () => api.getOrder(id as string), enabled: !!id });
 }
 
-function useOrderMutation(mutationFn: (id: string) => Promise<unknown>) {
+function useOrderMutation(mutationFn: (id: string) => Promise<unknown>, targetStatus?: OrderStatus) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['orders'] }),
+    onSuccess: (data: any, id: string) => {
+      // Instantly update query data in cache for instant UI feedback
+      queryClient.setQueriesData({ queryKey: ['orders'] }, (oldData: any) => {
+        if (!oldData) return oldData;
+        if (Array.isArray(oldData)) {
+          return oldData.map((order: any) => {
+            if (order.id === id) {
+              const newStatus = (data as any)?.status || targetStatus || order.status;
+              return { ...order, status: newStatus };
+            }
+            return order;
+          });
+        }
+        return oldData;
+      });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.refetchQueries({ queryKey: ['orders'] });
+    },
   });
 }
 
@@ -44,7 +61,11 @@ export function useCreateOrder() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: api.createOrder,
-    onSuccess: () => {
+    onSuccess: (newOrder) => {
+      queryClient.setQueriesData({ queryKey: ['orders', 'mine'] }, (old: any) => {
+        if (Array.isArray(old)) return [newOrder, ...old];
+        return [newOrder];
+      });
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
     },
@@ -52,23 +73,23 @@ export function useCreateOrder() {
 }
 
 export function useConfirmOrder() {
-  return useOrderMutation(api.confirmOrder);
+  return useOrderMutation(api.confirmOrder, 'CONFIRMED');
 }
 
 export function useCancelOrder() {
-  return useOrderMutation(api.cancelOrder);
+  return useOrderMutation(api.cancelOrder, 'CANCELLED');
 }
 
 export function useStartPackingOrder() {
-  return useOrderMutation(api.startPackingOrder);
+  return useOrderMutation(api.startPackingOrder, 'PACKING');
 }
 
 export function useMarkOrderPacked() {
-  return useOrderMutation(api.markOrderPacked);
+  return useOrderMutation(api.markOrderPacked, 'PACKED');
 }
 
 export function useMarkOrderDelivered() {
-  return useOrderMutation(api.markOrderDelivered);
+  return useOrderMutation(api.markOrderDelivered, 'DELIVERED');
 }
 
 export function useDispatchOrder() {
@@ -76,6 +97,21 @@ export function useDispatchOrder() {
   return useMutation({
     mutationFn: ({ id, courierName, trackingId }: { id: string; courierName: string; trackingId?: string }) =>
       api.dispatchOrder(id, courierName, trackingId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['orders'] }),
+    onSuccess: (data: any, vars: { id: string }) => {
+      queryClient.setQueriesData({ queryKey: ['orders'] }, (oldData: any) => {
+        if (!oldData) return oldData;
+        if (Array.isArray(oldData)) {
+          return oldData.map((order: any) => {
+            if (order.id === vars.id) {
+              return { ...order, status: 'DISPATCHED' };
+            }
+            return order;
+          });
+        }
+        return oldData;
+      });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.refetchQueries({ queryKey: ['orders'] });
+    },
   });
 }

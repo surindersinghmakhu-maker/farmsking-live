@@ -20,7 +20,8 @@ import {
   CropCategory,
   CropItem,
 } from '@/constants/cropCategoriesData';
-import { useCreateProduct, useProducts, useRemoveProduct } from '@/src/hooks/useProducts';
+import { Product } from '@/src/types/api';
+import { useCreateProduct, useProducts, useRemoveProduct, useUpdateProduct } from '@/src/hooks/useProducts';
 
 const theme = RoleThemes.ADMIN;
 
@@ -34,7 +35,9 @@ export default function AdminProductsScreen() {
   // Real shop products
   const { data: products, isLoading: isLoadingProducts } = useProducts(true);
   const createProduct = useCreateProduct();
+  const updateProduct = useUpdateProduct();
   const removeProduct = useRemoveProduct();
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
   const [newProductName, setNewProductName] = useState('');
   const [newProductCategory, setNewProductCategory] = useState('');
@@ -43,19 +46,57 @@ export default function AdminProductsScreen() {
   const [newProductStock, setNewProductStock] = useState('0');
   const [productError, setProductError] = useState<string | null>(null);
 
-  const handleAddProduct = async () => {
+  const openCreateProductModal = () => {
+    tap();
+    setEditingProduct(null);
+    setNewProductName('');
+    setNewProductCategory('');
+    setNewProductUnit('piece');
+    setNewProductPrice('');
+    setNewProductStock('0');
+    setProductError(null);
+    setIsAddProductModalOpen(true);
+  };
+
+  const openEditProductModal = (p: Product) => {
+    tap();
+    setEditingProduct(p);
+    setNewProductName(p.name || '');
+    setNewProductCategory(p.category || '');
+    setNewProductUnit(p.unit || 'piece');
+    setNewProductPrice(p.price != null ? String(p.price) : '');
+    setNewProductStock(p.stockQty != null ? String(p.stockQty) : '0');
+    setProductError(null);
+    setIsAddProductModalOpen(true);
+  };
+
+  const handleSaveProduct = async () => {
     if (!newProductName.trim() || !newProductPrice) {
       setProductError('Enter a product name and price.');
       return;
     }
     try {
-      await createProduct.mutateAsync({
-        name: newProductName.trim(),
-        category: newProductCategory.trim() || undefined,
-        unit: newProductUnit.trim() || 'piece',
-        price: Number(newProductPrice),
-        stockQty: Number(newProductStock) || 0,
-      });
+      if (editingProduct) {
+        await updateProduct.mutateAsync({
+          id: editingProduct.id,
+          payload: {
+            name: newProductName.trim(),
+            category: newProductCategory.trim() || undefined,
+            unit: newProductUnit.trim() || 'piece',
+            price: Number(newProductPrice),
+            stockQty: Number(newProductStock) || 0,
+          },
+        });
+      } else {
+        await createProduct.mutateAsync({
+          name: newProductName.trim(),
+          category: newProductCategory.trim() || undefined,
+          unit: newProductUnit.trim() || 'piece',
+          price: Number(newProductPrice),
+          stockQty: Number(newProductStock) || 0,
+        });
+      }
+      setEditingProduct(null);
       setNewProductName('');
       setNewProductCategory('');
       setNewProductUnit('piece');
@@ -64,51 +105,89 @@ export default function AdminProductsScreen() {
       setProductError(null);
       setIsAddProductModalOpen(false);
     } catch (err: any) {
-      setProductError(err?.response?.data?.message ?? 'Could not create product.');
+      setProductError(err?.response?.data?.message ?? (editingProduct ? 'Could not update product.' : 'Could not create product.'));
     }
   };
 
   // Crops management state
   const [cropsList, setCropsList] = useState<CropItem[]>(INITIAL_CROPS_LIST);
   const [selectedCatId, setSelectedCatId] = useState<string>('cereals');
+  const [editingCrop, setEditingCrop] = useState<CropItem | null>(null);
   const [isAddCropModalOpen, setIsAddCropModalOpen] = useState(false);
 
-  // New Crop Form state
+  // New / Edit Crop Form state
   const [newCropName, setNewCropName] = useState('');
   const [newVariety, setNewVariety] = useState('');
   const [newDuration, setNewDuration] = useState('');
   const [newSeason, setNewSeason] = useState('Kharif');
   const [notice, setNotice] = useState<string | null>(null);
 
+  const openCreateCropModal = () => {
+    tap();
+    setEditingCrop(null);
+    setNewCropName('');
+    setNewVariety('');
+    setNewDuration('');
+    setNewSeason('Kharif');
+    setNotice(null);
+    setIsAddCropModalOpen(true);
+  };
+
+  const openEditCropModal = (crop: CropItem) => {
+    tap();
+    setEditingCrop(crop);
+    setSelectedCatId(crop.categoryId);
+    setNewCropName(crop.name || '');
+    setNewVariety(crop.variety || '');
+    setNewDuration(crop.duration || '');
+    setNewSeason(crop.season || 'Kharif');
+    setNotice(null);
+    setIsAddCropModalOpen(true);
+  };
+
   const selectedCategory =
     INITIAL_CROP_CATEGORIES.find((c) => c.id === selectedCatId) || INITIAL_CROP_CATEGORIES[0];
 
   const filteredCrops = cropsList.filter((c) => c.categoryId === selectedCatId);
 
-  const handleAddCrop = () => {
+  const handleSaveCrop = () => {
     if (!newCropName.trim()) {
       setNotice('⚠️ Kripya Crop Name bharein');
       return;
     }
     tap();
-    const createdItem: CropItem = {
-      id: Date.now().toString(),
-      categoryId: selectedCatId,
-      name: newCropName.trim(),
-      hindiName: newCropName.trim(),
-      variety: newVariety.trim() || undefined,
-      duration: newDuration.trim() || undefined,
-      season: newSeason,
-    };
-    setCropsList([createdItem, ...cropsList]);
+    if (editingCrop) {
+      setCropsList(cropsList.map((c) => (c.id === editingCrop.id ? {
+        ...c,
+        categoryId: selectedCatId,
+        name: newCropName.trim(),
+        hindiName: newCropName.trim(),
+        variety: newVariety.trim() || undefined,
+        duration: newDuration.trim() || undefined,
+        season: newSeason,
+      } : c)));
+      setNotice(`✨ Crop "${newCropName.trim()}" updated successfully!`);
+    } else {
+      const createdItem: CropItem = {
+        id: Date.now().toString(),
+        categoryId: selectedCatId,
+        name: newCropName.trim(),
+        hindiName: newCropName.trim(),
+        variety: newVariety.trim() || undefined,
+        duration: newDuration.trim() || undefined,
+        season: newSeason,
+      };
+      setCropsList([createdItem, ...cropsList]);
+      setNotice(`✨ Crop "${createdItem.name}" added under ${selectedCategory.name}!`);
+    }
+    setEditingCrop(null);
     setNewCropName('');
     setNewVariety('');
     setNewDuration('');
-    setNotice(`✨ Crop "${createdItem.name}" added under ${selectedCategory.name}!`);
     setTimeout(() => {
       setNotice(null);
       setIsAddCropModalOpen(false);
-    }, 1500);
+    }, 1200);
   };
 
   const deleteCrop = (id: string) => {
@@ -126,9 +205,8 @@ export default function AdminProductsScreen() {
             style={styles.addButton}
             activeOpacity={0.85}
             onPress={() => {
-              tap();
-              if (activeTab === 'CROPS') setIsAddCropModalOpen(true);
-              else setIsAddProductModalOpen(true);
+              if (activeTab === 'CROPS') openCreateCropModal();
+              else openCreateProductModal();
             }}
           >
             <Ionicons name="add" size={16} color="#fff" />
@@ -259,9 +337,14 @@ export default function AdminProductsScreen() {
                     ) : null}
                   </View>
                 </View>
-                <TouchableOpacity onPress={() => deleteCrop(crop.id)}>
-                  <Ionicons name="trash-outline" size={18} color="#dc2626" />
-                </TouchableOpacity>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <TouchableOpacity onPress={() => openEditCropModal(crop)}>
+                    <Ionicons name="create-outline" size={18} color="#0284c7" />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => deleteCrop(crop.id)}>
+                    <Ionicons name="trash-outline" size={18} color="#dc2626" />
+                  </TouchableOpacity>
+                </View>
               </View>
             ))}
           </View>
@@ -274,7 +357,7 @@ export default function AdminProductsScreen() {
               <Text style={styles.sectionHeaderTitle}>No products yet — tap "Add Product" to create one.</Text>
             ) : (
               products.map((p) => {
-                const isLowStock = p.stockQty > 0 && p.stockQty <= 5;
+                const isLowStock = p.stockQty > 0 && p.stockQty < 5;
                 const isOutOfStock = p.stockQty <= 0;
                 return (
                   <View key={p.id} style={[styles.card, premiumShadow('#0f172a', 'sm'), !p.isActive && { opacity: 0.5 }]}>
@@ -300,17 +383,21 @@ export default function AdminProductsScreen() {
                         {isOutOfStock ? 'Out of Stock' : isLowStock ? 'Low Stock' : 'In Stock'}
                       </Text>
                     </View>
-                    {p.isActive ? (
-                      <TouchableOpacity
-                        style={{ marginLeft: 8 }}
-                        onPress={() => {
-                          tap();
-                          removeProduct.mutate(p.id);
-                        }}
-                      >
-                        <Ionicons name="trash-outline" size={18} color="#dc2626" />
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginLeft: 8 }}>
+                      <TouchableOpacity onPress={() => openEditProductModal(p)}>
+                        <Ionicons name="create-outline" size={18} color="#0284c7" />
                       </TouchableOpacity>
-                    ) : null}
+                      {p.isActive ? (
+                        <TouchableOpacity
+                          onPress={() => {
+                            tap();
+                            removeProduct.mutate(p.id);
+                          }}
+                        >
+                          <Ionicons name="trash-outline" size={18} color="#dc2626" />
+                        </TouchableOpacity>
+                      ) : null}
+                    </View>
                   </View>
                 );
               })
@@ -319,13 +406,13 @@ export default function AdminProductsScreen() {
         )}
       </ScrollView>
 
-      {/* Add New Crop Name Modal (Admin Only) */}
+      {/* Add / Edit Crop Name Modal (Admin Only) */}
       {isAddCropModalOpen && (
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                Add New Crop under {selectedCategory.name}
+                {editingCrop ? 'Edit Crop Details' : `Add New Crop under ${selectedCategory.name}`}
               </Text>
               <TouchableOpacity onPress={() => setIsAddCropModalOpen(false)}>
                 <Ionicons name="close-circle" size={24} color="#64748b" />
@@ -386,20 +473,24 @@ export default function AdminProductsScreen() {
 
             <TouchableOpacity
               style={[styles.modalSubmitBtn, { backgroundColor: selectedCategory.color }]}
-              onPress={handleAddCrop}
+              onPress={handleSaveCrop}
             >
-              <Text style={styles.modalSubmitText}>+ Save & Add Crop to Category</Text>
+              <Text style={styles.modalSubmitText}>
+                {editingCrop ? 'Update Crop Details' : '+ Save & Add Crop to Category'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
       )}
 
-      {/* Add New Product Modal */}
+      {/* Add / Edit Shop Product Modal */}
       {isAddProductModalOpen && (
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add Shop Product</Text>
+              <Text style={styles.modalTitle}>
+                {editingProduct ? 'Edit Shop Product' : 'Add Shop Product'}
+              </Text>
               <TouchableOpacity onPress={() => setIsAddProductModalOpen(false)}>
                 <Ionicons name="close-circle" size={24} color="#64748b" />
               </TouchableOpacity>
@@ -451,13 +542,15 @@ export default function AdminProductsScreen() {
 
             <TouchableOpacity
               style={[styles.modalSubmitBtn, { backgroundColor: theme.primary }]}
-              disabled={createProduct.isPending}
-              onPress={handleAddProduct}
+              disabled={createProduct.isPending || updateProduct.isPending}
+              onPress={handleSaveProduct}
             >
-              {createProduct.isPending ? (
+              {createProduct.isPending || updateProduct.isPending ? (
                 <ActivityIndicator color="#ffffff" />
               ) : (
-                <Text style={styles.modalSubmitText}>+ Save Product</Text>
+                <Text style={styles.modalSubmitText}>
+                  {editingProduct ? 'Update Product' : '+ Save Product'}
+                </Text>
               )}
             </TouchableOpacity>
           </View>

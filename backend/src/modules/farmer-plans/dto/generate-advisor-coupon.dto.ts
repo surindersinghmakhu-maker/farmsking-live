@@ -18,4 +18,10 @@ export class GenerateAdvisorCouponDto {
   @IsOptional()
   @IsUUID()
   assignedBusinessPartnerId?: string;
+
+  /** How many coupons to generate at once (default 1) */
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  quantity?: number;
 }

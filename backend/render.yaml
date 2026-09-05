@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: farmsking-backend-api
+    env: docker
+    dockerfilePath: Dockerfile
+    plan: free
+    region: singapore
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PORT
+        value: 3000
+      - key: API_PREFIX
+        value: /api/v1

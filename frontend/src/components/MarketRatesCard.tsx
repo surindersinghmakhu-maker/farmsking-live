@@ -23,7 +23,7 @@ export interface HarvestingCropRateItem {
 
 const DEFAULT_HARVESTING_CROPS_RATES: HarvestingCropRateItem[] = [
   {
-    cropName: 'Rose (गुलाब)',
+    cropName: 'Rose',
     categoryName: 'Flowers & Floriculture',
     stage: 'HARVESTING',
     unit: 'Bunch',
@@ -34,7 +34,7 @@ const DEFAULT_HARVESTING_CROPS_RATES: HarvestingCropRateItem[] = [
     harvestType: 'CONTINUOUS',
   },
   {
-    cropName: 'Wheat (गेहूँ)',
+    cropName: 'Wheat',
     categoryName: 'Cereals & Grains',
     stage: 'HARVESTING',
     unit: 'Quintal',
@@ -45,7 +45,7 @@ const DEFAULT_HARVESTING_CROPS_RATES: HarvestingCropRateItem[] = [
     harvestType: 'ONE_TIME',
   },
   {
-    cropName: 'Tomato (टमाटर)',
+    cropName: 'Tomato',
     categoryName: 'Vegetables',
     stage: 'HARVESTING',
     unit: 'KG',
@@ -56,7 +56,7 @@ const DEFAULT_HARVESTING_CROPS_RATES: HarvestingCropRateItem[] = [
     harvestType: 'CONTINUOUS',
   },
   {
-    cropName: 'Marigold (गेंदा)',
+    cropName: 'Marigold',
     categoryName: 'Flowers & Floriculture',
     stage: 'HARVESTING',
     unit: 'KG',
@@ -68,7 +68,59 @@ const DEFAULT_HARVESTING_CROPS_RATES: HarvestingCropRateItem[] = [
   },
 ];
 
+import { useMemo } from 'react';
 import { useCrops } from '../store/crops-context';
+
+/**
+ * Convert base rate between measurement units (e.g. KG, Quintal, 50KG Bag, Grams, Tonne).
+ */
+function convertRateForCropUnit(rawRate: number, sourceUnit: string, targetUnit: string): number {
+  const src = (sourceUnit || 'KG').toUpperCase();
+  const tgt = (targetUnit || 'KG').toUpperCase();
+
+  if (src === tgt) return Math.round(rawRate);
+
+  // Normalize source rate to per-KG rate
+  let perKg = rawRate;
+  if (src.includes('QUINTAL') || src.includes('QTL')) {
+    perKg = rawRate / 100;
+  } else if (src.includes('50') || src.includes('BAG_50')) {
+    perKg = rawRate / 50;
+  } else if (src.includes('35') || src.includes('BAG_35')) {
+    perKg = rawRate / 35;
+  } else if (src.includes('40') || src.includes('MANN')) {
+    perKg = rawRate / 40;
+  } else if (src.includes('TON')) {
+    perKg = rawRate / 1000;
+  } else if (src.includes('GRAM') || src.includes('GM')) {
+    perKg = rawRate * 1000;
+  }
+
+  // Convert per-KG rate to target crop measurement unit
+  if (tgt.includes('QUINTAL') || tgt.includes('QTL')) {
+    return Math.round(perKg * 100);
+  }
+  if (tgt.includes('50') || tgt.includes('BAG_50')) {
+    return Math.round(perKg * 50);
+  }
+  if (tgt.includes('35') || tgt.includes('BAG_35')) {
+    return Math.round(perKg * 35);
+  }
+  if (tgt.includes('40') || tgt.includes('MANN')) {
+    return Math.round(perKg * 40);
+  }
+  if (tgt.includes('TON')) {
+    return Math.round(perKg * 1000);
+  }
+  if (tgt.includes('GRAM') || tgt.includes('GM')) {
+    return Math.round((perKg / 1000) * 100) / 100;
+  }
+  if (tgt.includes('KG')) {
+    return Math.round(perKg);
+  }
+
+  return Math.round(rawRate);
+}
 
 export function MarketRatesCard() {
   const { user } = useAuth();
@@ -77,53 +129,67 @@ export function MarketRatesCard() {
 
   const userState = user?.state || data?.state || 'Punjab';
 
-  // Filter user's active cropFields that are in "HARVESTING" stage and are continuous (daily-based)
-  const userHarvestingCrops = cropFields.filter(
-    (c) => c.status === 'ACTIVE' && c.stage === 'HARVESTING' && c.harvestType === 'CONTINUOUS'
-  );
+  // Filter user's active crops in HARVESTING stage (or active crops fallback).
+  // Show SUBCATEGORY-WISE rates (base crop name) WITHOUT variety, converted per crop's measurement unit!
+  const subcategoryRates = useMemo(() => {
+    let harvestingCrops = cropFields.filter((c) => c.status === 'ACTIVE' && c.stage === 'HARVESTING');
+    if (harvestingCrops.length === 0) {
+      harvestingCrops = cropFields.filter((c) => c.status === 'ACTIVE');
+    }
 
-  // Map user's crops to their live/default rates
-  const liveRates = userHarvestingCrops.map((userCrop) => {
-    const userCropEng = userCrop.cropName.split('(')[0].trim().toLowerCase();
+    const subcategoryMap = new Map<string, (typeof harvestingCrops)[0]>();
 
-    // Find matching rate from backend API data
-    const apiRate = data?.rates?.find((r) => {
-      const rEng = r.cropName.split('(')[0].trim().toLowerCase();
-      return rEng === userCropEng || userCropEng.includes(rEng) || rEng.includes(userCropEng);
+    for (const crop of harvestingCrops) {
+      let baseName = crop.cropName.split('(')[0].trim();
+      if (crop.variety && baseName.toLowerCase().includes(crop.variety.toLowerCase())) {
+        baseName = baseName.replace(new RegExp(crop.variety, 'gi'), '').trim();
+      }
+      const key = baseName.toLowerCase();
+      if (!subcategoryMap.has(key)) {
+        subcategoryMap.set(key, crop);
+      }
+    }
+
+    const uniqueSubcategoryCrops = Array.from(subcategoryMap.values());
+
+    return uniqueSubcategoryCrops.map((userCrop) => {
+      let displayTitle = userCrop.cropName.split('(')[0].trim();
+      if (userCrop.variety && displayTitle.toLowerCase().includes(userCrop.variety.toLowerCase())) {
+        displayTitle = displayTitle.replace(new RegExp(userCrop.variety, 'gi'), '').trim();
+      }
+      const userCropEng = displayTitle.toLowerCase();
+
+      // Find matching rate from backend API data for last 24 hrs
+      const apiRate = data?.rates?.find((r) => {
+        const rName = r.cropName.split('(')[0].trim().toLowerCase();
+        return rName === userCropEng || rName.includes(userCropEng) || userCropEng.includes(rName);
+      });
+
+      const sourceUnit = apiRate?.unit || 'KG';
+      const targetUnit = userCrop.unit || sourceUnit;
+
+      // If no live entry in previous 24 hrs, set raw rate to null
+      const rawLocalRate =
+        apiRate?.localAvgRate != null && apiRate.localAvgRate > 0
+          ? apiRate.localAvgRate
+          : null;
+
+      const rawNationalRate =
+        apiRate?.nationalAvgRate != null && apiRate.nationalAvgRate > 0
+          ? apiRate.nationalAvgRate
+          : null;
+
+      const localAvgRate = rawLocalRate != null ? convertRateForCropUnit(rawLocalRate, sourceUnit, targetUnit) : null;
+      const nationalAvgRate = rawNationalRate != null ? convertRateForCropUnit(rawNationalRate, sourceUnit, targetUnit) : null;
+
+      return {
+        displayTitle,
+        unit: targetUnit,
+        localAvgRate,
+        nationalAvgRate,
+      };
     });
-
-    // Find matching default mock rate
-    const defaultRate = DEFAULT_HARVESTING_CROPS_RATES.find((r) => {
-      const rEng = r.cropName.split('(')[0].trim().toLowerCase();
-      return rEng === userCropEng || userCropEng.includes(rEng) || rEng.includes(userCropEng);
-    });
-
-    // Determine unit
-    const unit = apiRate?.unit || defaultRate?.unit || userCrop.unit || 'KG';
-
-    // Determine local avg price (prioritize backend API rate)
-    const localAvgRate =
-      apiRate?.localAvgRate != null
-        ? apiRate.localAvgRate
-        : defaultRate?.localAvgRate != null
-        ? defaultRate.localAvgRate
-        : Number(userCrop.pricePerUnit) || 0;
-
-    // Determine national avg price (prioritize backend API rate)
-    const nationalAvgRate =
-      apiRate?.nationalAvgRate != null
-        ? apiRate.nationalAvgRate
-        : defaultRate?.nationalAvgRate != null
-        ? defaultRate.nationalAvgRate
-        : Math.round(localAvgRate * 0.9);
-
-    return {
-      cropName: userCrop.cropName,
-      unit,
-      localAvgRate,
-      nationalAvgRate,
-    };
-  });
+  }, [cropFields, data]);
 
   return (
     <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
@@ -138,7 +204,7 @@ export function MarketRatesCard() {
               <Text style={styles.liveText}>LIVE</Text>
             </View>
           </View>
-          <Text style={styles.subtitle}>📍 Mandi Rates: {userState} Mandi</Text>
+          <Text style={styles.subtitle}>📍 Mandi Rates: {userState}</Text>
         </View>
 
         <View style={styles.pill}>
@@ -160,35 +226,47 @@ export function MarketRatesCard() {
             <Text style={[styles.columnHeader, styles.rateColumn]}>National Avg</Text>
           </View>
 
-          {/* Harvesting Stage Crops List */}
-          {liveRates.length === 0 ? (
+          {/* Harvesting Stage Subcategory Rates List */}
+          {subcategoryRates.length === 0 ? (
             <Text style={[styles.emptyText, { textAlign: 'center', marginTop: 12 }]}>
-              No active crops in harvesting stage to show prices.
+              No active crops in harvesting stage to show live prices.
             </Text>
           ) : (
-            liveRates.map((rate) => {
+            subcategoryRates.map((rate) => {
               return (
-                <View key={rate.cropName} style={styles.row}>
+                <View key={rate.displayTitle} style={styles.row}>
                   <View style={styles.cropColumn}>
                     <Text style={styles.cropName} numberOfLines={1}>
-                      {rate.cropName}
+                      {rate.displayTitle}
                     </Text>
                   </View>
 
-                  {/* Local Mandi Rate (Single Inline Row) */}
+                  {/* Local Mandi Rate */}
                   <View style={[styles.rateColumn, { flexDirection: 'row', alignItems: 'baseline', gap: 3 }]}>
-                    <Text style={styles.rateValue}>
-                      {formatInr(rate.localAvgRate)}
-                    </Text>
-                    <Text style={styles.rateUnit}>/{rate.unit}</Text>
+                    {rate.localAvgRate != null && rate.localAvgRate > 0 ? (
+                      <>
+                        <Text style={styles.rateValue}>
+                          {formatInr(rate.localAvgRate)}
+                        </Text>
+                        <Text style={styles.rateUnit}>/{rate.unit}</Text>
+                      </>
+                    ) : (
+                      <Text style={styles.rateValue}>-</Text>
+                    )}
                   </View>
 
-                  {/* National Avg Rate (Single Inline Row) */}
+                  {/* National Avg Rate */}
                   <View style={[styles.rateColumn, { flexDirection: 'row', alignItems: 'baseline', gap: 3 }]}>
-                    <Text style={[styles.rateValue, { color: '#475569' }]}>
-                      {formatInr(rate.nationalAvgRate)}
-                    </Text>
-                    <Text style={styles.rateUnit}>/{rate.unit}</Text>
+                    {rate.nationalAvgRate != null && rate.nationalAvgRate > 0 ? (
+                      <>
+                        <Text style={[styles.rateValue, { color: '#475569' }]}>
+                          {formatInr(rate.nationalAvgRate)}
+                        </Text>
+                        <Text style={styles.rateUnit}>/{rate.unit}</Text>
+                      </>
+                    ) : (
+                      <Text style={[styles.rateValue, { color: '#94a3b8' }]}>-</Text>
+                    )}
                   </View>
                 </View>
               );

@@ -6,9 +6,12 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 
+import { WhatsappBotModule } from '../whatsapp/whatsapp.module';
+
 @Module({
   imports: [
     PassportModule,
+    WhatsappBotModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

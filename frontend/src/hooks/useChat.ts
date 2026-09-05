@@ -90,9 +90,19 @@ export function useGlobalChatUnreadSync(enabled: boolean) {
       const handler = () => {
         queryClient.invalidateQueries({ queryKey: ['chat', 'unread-count'] });
         queryClient.invalidateQueries({ queryKey: ['chat', 'conversations'] });
+        queryClient.invalidateQueries({ queryKey: ['adminChatMessages'] });
+        queryClient.invalidateQueries({ queryKey: ['adminConversations'] });
+        queryClient.invalidateQueries({ queryKey: ['crop-problems'] });
+        queryClient.invalidateQueries({ queryKey: ['notifications'] });
       };
       socket.on('new_message', handler);
-      detach = () => socket.off('new_message', handler);
+      socket.on('admin_chat_message', handler);
+      socket.on('crop_problem_updated', handler);
+      detach = () => {
+        socket.off('new_message', handler);
+        socket.off('admin_chat_message', handler);
+        socket.off('crop_problem_updated', handler);
+      };
     });
 
     return () => {
@@ -101,6 +111,7 @@ export function useGlobalChatUnreadSync(enabled: boolean) {
     };
   }, [enabled, queryClient]);
 }
+
 
 /** Message history for one thread, kept live via the shared chat WebSocket. */
 export function useChatThread(otherUserId: string | undefined) {

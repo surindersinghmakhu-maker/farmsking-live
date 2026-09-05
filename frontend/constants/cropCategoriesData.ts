@@ -102,49 +102,49 @@ export const INITIAL_CROP_CATEGORIES: CropCategory[] = [
 
 export const INITIAL_CROPS_LIST: CropItem[] = [
   // Flowers & Floriculture (Continuous / Daily Harvest)
-  { id: 'fl1', categoryId: 'flowers', name: 'Rose', hindiName: 'Rose', variety: 'Dutch Rose / Desi Rose', duration: 'Perennial', season: 'All Seasons', defaultUnit: 'Bunch', defaultPrice: 40, harvestType: 'CONTINUOUS' },
-  { id: 'fl2', categoryId: 'flowers', name: 'Marigold', hindiName: 'Marigold', variety: 'African Yellow / Pusa Narangi', duration: '90-100 Days', season: 'All Seasons', defaultUnit: 'KG', defaultPrice: 60, harvestType: 'CONTINUOUS' },
-  { id: 'fl3', categoryId: 'flowers', name: 'Jasmine / Mogra', hindiName: 'Jasmine', variety: 'Madurai Malligai', duration: 'Perennial', season: 'Summer', defaultUnit: 'KG', defaultPrice: 180, harvestType: 'CONTINUOUS' },
-  { id: 'fl4', categoryId: 'flowers', name: 'Gladiolus', hindiName: 'Gladiolus', variety: 'American Beauty', duration: '90 Days', season: 'Winter', defaultUnit: 'Pieces', defaultPrice: 15, harvestType: 'CONTINUOUS' },
-  { id: 'fl5', categoryId: 'flowers', name: 'Tuberose / Rajnigandha', hindiName: 'Tuberose', variety: 'Single / Double', duration: 'Perennial', season: 'Kharif', defaultUnit: 'Bunch', defaultPrice: 50, harvestType: 'CONTINUOUS' },
+  { id: 'fl1', categoryId: 'flowers', name: 'Rose', hindiName: 'Rose', duration: 'Perennial', season: 'All Seasons', defaultUnit: 'Bunch', defaultPrice: 40, harvestType: 'CONTINUOUS' },
+  { id: 'fl2', categoryId: 'flowers', name: 'Marigold', hindiName: 'Marigold', duration: '90-100 Days', season: 'All Seasons', defaultUnit: 'KG', defaultPrice: 60, harvestType: 'CONTINUOUS' },
+  { id: 'fl3', categoryId: 'flowers', name: 'Jasmine / Mogra', hindiName: 'Jasmine', duration: 'Perennial', season: 'Summer', defaultUnit: 'KG', defaultPrice: 180, harvestType: 'CONTINUOUS' },
+  { id: 'fl4', categoryId: 'flowers', name: 'Gladiolus', hindiName: 'Gladiolus', duration: '90 Days', season: 'Winter', defaultUnit: 'Pieces', defaultPrice: 15, harvestType: 'CONTINUOUS' },
+  { id: 'fl5', categoryId: 'flowers', name: 'Tuberose / Rajnigandha', hindiName: 'Tuberose', duration: 'Perennial', season: 'Kharif', defaultUnit: 'Bunch', defaultPrice: 50, harvestType: 'CONTINUOUS' },
 
   // Vegetables (Mixed)
-  { id: 'v1', categoryId: 'vegetables', name: 'Tomato', hindiName: 'Tomato', variety: 'Abhilash / Himsohna', duration: '120 Days', season: 'All Seasons', defaultUnit: 'KG', defaultPrice: 30, harvestType: 'CONTINUOUS' },
-  { id: 'v2', categoryId: 'vegetables', name: 'Potato', hindiName: 'Potato', variety: 'Kufri Jyoti / Pukhraj', duration: '90-100 Days', season: 'Rabi', defaultUnit: 'Quintal', defaultPrice: 1800, harvestType: 'ONE_TIME' },
-  { id: 'v3', categoryId: 'vegetables', name: 'Onion', hindiName: 'Onion', variety: 'N-53 / Agri Found Dark Red', duration: '130-150 Days', season: 'Rabi / Kharif', defaultUnit: 'KG', defaultPrice: 35, harvestType: 'ONE_TIME' },
-  { id: 'v4', categoryId: 'vegetables', name: 'Cauliflower', hindiName: 'Cauliflower', variety: 'Pusa Snowball', duration: '85-90 Days', season: 'Rabi', defaultUnit: 'Pieces', defaultPrice: 25, harvestType: 'ONE_TIME' },
-  { id: 'v5', categoryId: 'vegetables', name: 'Coriander Leaves', hindiName: 'Coriander Leaves', variety: 'Green Leaves', duration: '40 Days', season: 'All Seasons', defaultUnit: 'Bunch', defaultPrice: 15, harvestType: 'CONTINUOUS' },
+  { id: 'v1', categoryId: 'vegetables', name: 'Tomato', hindiName: 'Tomato', duration: '120 Days', season: 'All Seasons', defaultUnit: 'KG', defaultPrice: 30, harvestType: 'CONTINUOUS' },
+  { id: 'v2', categoryId: 'vegetables', name: 'Potato', hindiName: 'Potato', duration: '90-100 Days', season: 'Rabi', defaultUnit: 'Quintal', defaultPrice: 1800, harvestType: 'ONE_TIME' },
+  { id: 'v3', categoryId: 'vegetables', name: 'Onion', hindiName: 'Onion', duration: '130-150 Days', season: 'Rabi / Kharif', defaultUnit: 'KG', defaultPrice: 35, harvestType: 'ONE_TIME' },
+  { id: 'v4', categoryId: 'vegetables', name: 'Cauliflower', hindiName: 'Cauliflower', duration: '85-90 Days', season: 'Rabi', defaultUnit: 'Pieces', defaultPrice: 25, harvestType: 'ONE_TIME' },
+  { id: 'v5', categoryId: 'vegetables', name: 'Coriander Leaves', hindiName: 'Coriander Leaves', duration: '40 Days', season: 'All Seasons', defaultUnit: 'Bunch', defaultPrice: 15, harvestType: 'CONTINUOUS' },
 
   // Fruits & Orchards
-  { id: 'f1', categoryId: 'fruits', name: 'Mango', hindiName: 'Mango', variety: 'Dasheri / Langra / Alphonso', duration: 'Perennial', season: 'Summer', defaultUnit: 'Box / Crate', defaultPrice: 850, harvestType: 'ONE_TIME' },
-  { id: 'f2', categoryId: 'fruits', name: 'Kinnow / Orange', hindiName: 'Kinnow', variety: 'Punjab Citrus Kinnow', duration: 'Perennial', season: 'Winter', defaultUnit: 'KG', defaultPrice: 45, harvestType: 'ONE_TIME' },
-  { id: 'f3', categoryId: 'fruits', name: 'Banana', hindiName: 'Banana', variety: 'Grand Naine (G9)', duration: '12 Months', season: 'All Seasons', defaultUnit: 'Dozen', defaultPrice: 50, harvestType: 'CONTINUOUS' },
-  { id: 'f4', categoryId: 'fruits', name: 'Guava', hindiName: 'Guava', variety: 'L-49 / Taiwan Pink', duration: 'Perennial', season: 'Winter / Summer', defaultUnit: 'KG', defaultPrice: 40, harvestType: 'CONTINUOUS' },
-  { id: 'f5', categoryId: 'fruits', name: 'Strawberry', hindiName: 'Strawberry', variety: 'Sweet Charlie', duration: '6 Months', season: 'Winter', defaultUnit: 'Box / Crate', defaultPrice: 250, harvestType: 'CONTINUOUS' },
+  { id: 'f1', categoryId: 'fruits', name: 'Mango', hindiName: 'Mango', duration: 'Perennial', season: 'Summer', defaultUnit: 'Box / Crate', defaultPrice: 850, harvestType: 'ONE_TIME' },
+  { id: 'f2', categoryId: 'fruits', name: 'Kinnow / Orange', hindiName: 'Kinnow', duration: 'Perennial', season: 'Winter', defaultUnit: 'KG', defaultPrice: 45, harvestType: 'ONE_TIME' },
+  { id: 'f3', categoryId: 'fruits', name: 'Banana', hindiName: 'Banana', duration: '12 Months', season: 'All Seasons', defaultUnit: 'Dozen', defaultPrice: 50, harvestType: 'CONTINUOUS' },
+  { id: 'f4', categoryId: 'fruits', name: 'Guava', hindiName: 'Guava', duration: 'Perennial', season: 'Winter / Summer', defaultUnit: 'KG', defaultPrice: 40, harvestType: 'CONTINUOUS' },
+  { id: 'f5', categoryId: 'fruits', name: 'Strawberry', hindiName: 'Strawberry', duration: '6 Months', season: 'Winter', defaultUnit: 'Box / Crate', defaultPrice: 250, harvestType: 'CONTINUOUS' },
 
   // Medicinal & Aromatic Crops
-  { id: 'm1', categoryId: 'medicinal', name: 'Ashwagandha', hindiName: 'Ashwagandha', variety: 'Jawahar 20', duration: '150-180 Days', season: 'Kharif', defaultUnit: 'KG', defaultPrice: 240, harvestType: 'ONE_TIME' },
-  { id: 'm2', categoryId: 'medicinal', name: 'Aloe Vera', hindiName: 'Aloe Vera', variety: 'Barbadensis', duration: 'Perennial', season: 'All Seasons', defaultUnit: 'KG', defaultPrice: 12, harvestType: 'CONTINUOUS' },
-  { id: 'm3', categoryId: 'medicinal', name: 'Mentha / Mint', hindiName: 'Mentha / Mint', variety: 'Kosi', duration: '90-100 Days', season: 'Summer', defaultUnit: 'Bunch', defaultPrice: 20, harvestType: 'CONTINUOUS' },
+  { id: 'm1', categoryId: 'medicinal', name: 'Ashwagandha', hindiName: 'Ashwagandha', duration: '150-180 Days', season: 'Kharif', defaultUnit: 'KG', defaultPrice: 240, harvestType: 'ONE_TIME' },
+  { id: 'm2', categoryId: 'medicinal', name: 'Aloe Vera', hindiName: 'Aloe Vera', duration: 'Perennial', season: 'All Seasons', defaultUnit: 'KG', defaultPrice: 12, harvestType: 'CONTINUOUS' },
+  { id: 'm3', categoryId: 'medicinal', name: 'Mentha / Mint', hindiName: 'Mentha / Mint', duration: '90-100 Days', season: 'Summer', defaultUnit: 'Bunch', defaultPrice: 20, harvestType: 'CONTINUOUS' },
 
   // Spices & Condiments
-  { id: 's1', categoryId: 'spices', name: 'Turmeric', hindiName: 'Turmeric', variety: 'Pratibha', duration: '200-240 Days', season: 'Kharif', defaultUnit: 'Quintal', defaultPrice: 7500, harvestType: 'ONE_TIME' },
-  { id: 's2', categoryId: 'spices', name: 'Ginger', hindiName: 'Ginger', variety: 'Varada', duration: '210-240 Days', season: 'Kharif', defaultUnit: 'KG', defaultPrice: 90, harvestType: 'ONE_TIME' },
+  { id: 's1', categoryId: 'spices', name: 'Turmeric', hindiName: 'Turmeric', duration: '200-240 Days', season: 'Kharif', defaultUnit: 'Quintal', defaultPrice: 7500, harvestType: 'ONE_TIME' },
+  { id: 's2', categoryId: 'spices', name: 'Ginger', hindiName: 'Ginger', duration: '210-240 Days', season: 'Kharif', defaultUnit: 'KG', defaultPrice: 90, harvestType: 'ONE_TIME' },
 
   // Cereals & Grains (One-Time Harvest)
-  { id: 'c1', categoryId: 'cereals', name: 'Wheat', hindiName: 'Wheat', variety: 'HD-2967 / DBW-187', duration: '120-140 Days', season: 'Rabi', defaultUnit: 'Quintal', defaultPrice: 2275, harvestType: 'ONE_TIME' },
-  { id: 'c2', categoryId: 'cereals', name: 'Paddy / Rice', hindiName: 'Paddy / Rice', variety: 'PR-126 / Pusa 44', duration: '110-130 Days', season: 'Kharif', defaultUnit: 'Quintal', defaultPrice: 2183, harvestType: 'ONE_TIME' },
-  { id: 'c3', categoryId: 'cereals', name: 'Basmati Rice', hindiName: 'Basmati Rice', variety: 'Pusa 1121', duration: '140 Days', season: 'Kharif', defaultUnit: 'Quintal', defaultPrice: 4200, harvestType: 'ONE_TIME' },
+  { id: 'c1', categoryId: 'cereals', name: 'Wheat', hindiName: 'Wheat', duration: '120-140 Days', season: 'Rabi', defaultUnit: 'Quintal', defaultPrice: 2275, harvestType: 'ONE_TIME' },
+  { id: 'c2', categoryId: 'cereals', name: 'Paddy / Rice', hindiName: 'Paddy / Rice', duration: '110-130 Days', season: 'Kharif', defaultUnit: 'Quintal', defaultPrice: 2183, harvestType: 'ONE_TIME' },
+  { id: 'c3', categoryId: 'cereals', name: 'Basmati Rice', hindiName: 'Basmati Rice', duration: '140 Days', season: 'Kharif', defaultUnit: 'Quintal', defaultPrice: 4200, harvestType: 'ONE_TIME' },
 
   // Pulses & Legumes (One-Time Harvest)
-  { id: 'p1', categoryId: 'pulses', name: 'Chickpea / Gram', hindiName: 'Chickpea / Gram', variety: 'Desi / Kabuli', duration: '110-120 Days', season: 'Rabi', defaultUnit: 'Quintal', defaultPrice: 5440, harvestType: 'ONE_TIME' },
-  { id: 'p2', categoryId: 'pulses', name: 'Green Gram / Moong', hindiName: 'Green Gram / Moong', variety: 'SML 668', duration: '60-70 Days', season: 'Zaid / Kharif', defaultUnit: 'Quintal', defaultPrice: 8558, harvestType: 'ONE_TIME' },
+  { id: 'p1', categoryId: 'pulses', name: 'Chickpea / Gram', hindiName: 'Chickpea / Gram', duration: '110-120 Days', season: 'Rabi', defaultUnit: 'Quintal', defaultPrice: 5440, harvestType: 'ONE_TIME' },
+  { id: 'p2', categoryId: 'pulses', name: 'Green Gram / Moong', hindiName: 'Green Gram / Moong', duration: '60-70 Days', season: 'Zaid / Kharif', defaultUnit: 'Quintal', defaultPrice: 8558, harvestType: 'ONE_TIME' },
 
   // Oilseeds (One-Time Harvest)
-  { id: 'o1', categoryId: 'oilseeds', name: 'Mustard', hindiName: 'Mustard', variety: 'Pusa Bold / Giriraj', duration: '110-125 Days', season: 'Rabi', defaultUnit: 'Quintal', defaultPrice: 5650, harvestType: 'ONE_TIME' },
-  { id: 'o2', categoryId: 'oilseeds', name: 'Soybean', hindiName: 'Soybean', variety: 'JS 335', duration: '90-100 Days', season: 'Kharif', defaultUnit: 'Quintal', defaultPrice: 4600, harvestType: 'ONE_TIME' },
+  { id: 'o1', categoryId: 'oilseeds', name: 'Mustard', hindiName: 'Mustard', duration: '110-125 Days', season: 'Rabi', defaultUnit: 'Quintal', defaultPrice: 5650, harvestType: 'ONE_TIME' },
+  { id: 'o2', categoryId: 'oilseeds', name: 'Soybean', hindiName: 'Soybean', duration: '90-100 Days', season: 'Kharif', defaultUnit: 'Quintal', defaultPrice: 4600, harvestType: 'ONE_TIME' },
 
   // Commercial Crops (One-Time Harvest)
-  { id: 'cm1', categoryId: 'commercial', name: 'Cotton', hindiName: 'Cotton', variety: 'Bt Cotton', duration: '160-180 Days', season: 'Kharif', defaultUnit: 'Quintal', defaultPrice: 7020, harvestType: 'ONE_TIME' },
-  { id: 'cm2', categoryId: 'commercial', name: 'Sugarcane', hindiName: 'Sugarcane', variety: 'Co 0238', duration: '12-14 Months', season: 'Annual', defaultUnit: 'Quintal', defaultPrice: 380, harvestType: 'ONE_TIME' },
+  { id: 'cm1', categoryId: 'commercial', name: 'Cotton', hindiName: 'Cotton', duration: '160-180 Days', season: 'Kharif', defaultUnit: 'Quintal', defaultPrice: 7020, harvestType: 'ONE_TIME' },
+  { id: 'cm2', categoryId: 'commercial', name: 'Sugarcane', hindiName: 'Sugarcane', duration: '12-14 Months', season: 'Annual', defaultUnit: 'Quintal', defaultPrice: 380, harvestType: 'ONE_TIME' },
 ];

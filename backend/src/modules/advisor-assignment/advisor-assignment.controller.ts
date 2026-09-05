@@ -27,7 +27,7 @@ export class AdvisorAssignmentController {
     return this.advisorAssignmentService.findFarmersByStatus(user, query.status ?? 'ALL');
   }
 
-  @Roles(Role.ADVISOR)
+  @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
   @Get('farmers/:farmerId')
   findFarmerDetail(@CurrentUser() user: AuthUser, @Param('farmerId') farmerId: string) {
     return this.advisorAssignmentService.findFarmerDetail(user, farmerId);
@@ -51,6 +51,12 @@ export class AdvisorAssignmentController {
   @Get('available')
   listAvailableAdvisors(@CurrentUser() user: AuthUser) {
     return this.advisorAssignmentService.listAvailableAdvisors(user);
+  }
+
+  @Roles(Role.FARMER, Role.GARDENER)
+  @Post('choose-advisor/:advisorId')
+  requestSpecificAdvisor(@CurrentUser() user: AuthUser, @Param('advisorId') advisorId: string) {
+    return this.advisorAssignmentService.requestSpecificAdvisor(user.id, advisorId);
   }
 
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)

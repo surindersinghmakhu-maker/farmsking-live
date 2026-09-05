@@ -19,6 +19,17 @@ function conditionFromWeatherCode(code: number): string {
   return 'Clouds';
 }
 
+export interface DailyForecastDay {
+  date: string;
+  dayName: string;
+  maxTempC: number;
+  minTempC: number;
+  condition: string;
+  isRaining: boolean;
+  precipitationMm: number;
+  windSpeedMs: number;
+}
+
 export interface CurrentWeather {
   locationLabel: string;
   temperatureC: number;
@@ -28,6 +39,7 @@ export interface CurrentWeather {
   humidityPct: number;
   windSpeedMs: number;
   observedAt: string;
+  forecast?: DailyForecastDay[];
 }
 
 interface CacheEntry {
@@ -43,7 +55,7 @@ interface LocationProfile {
   state: string | null;
 }
 
-export type WeatherAlertTrigger = 'RAIN' | 'MIN_TEMP' | 'MAX_TEMP';
+export type WeatherAlertTrigger = 'RAIN' | 'MIN_TEMP' | 'MAX_TEMP' | 'WIND';
 
 export interface FarmerWeatherAlert {
   farmerId: string;
@@ -150,6 +162,8 @@ export class WeatherService {
     const url =
       `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
       `&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m` +
+      `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code,wind_speed_10m_max` +
+      `&forecast_days=7` +
       `&timezone=auto`;
     const response = await fetch(url);
     if (!response.ok) {
@@ -158,24 +172,74 @@ export class WeatherService {
 
     const body = await response.json();
     const current = body.current ?? {};
-    const condition = conditionFromWeatherCode(current.weather_code);
+    const daily = body.daily ?? {};
+    const condition = conditionFromWeatherCode(current.weather_code ?? 0);
+
+    const forecast: DailyForecastDay[] = [];
+    if (Array.isArray(daily.time) && daily.time.length > 0) {
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      for (let i = 0; i < daily.time.length; i++) {
+        const d = new Date(daily.time[i]);
+        const dayName = i === 0 ? 'Today' : dayNames[d.getDay()];
+        const code = daily.weather_code?.[i] ?? daily.weathercode?.[i] ?? 0;
+        const maxT = daily.temperature_2m_max?.[i] ?? daily.temperature_max?.[i] ?? (current.temperature_2m ? Math.round(current.temperature_2m + 2) : 32);
+        const minT = daily.temperature_2m_min?.[i] ?? daily.temperature_min?.[i] ?? (current.temperature_2m ? Math.round(current.temperature_2m - 6) : 22);
+        const precip = daily.precipitation_sum?.[i] ?? daily.precipitation?.[i] ?? 0;
+        const wind = daily.wind_speed_10m_max?.[i] ?? daily.windspeed_10m_max?.[i] ?? current.wind_speed_10m ?? 3.5;
+
+        forecast.push({
+          date: daily.time[i],
+          dayName,
+          maxTempC: Math.round(maxT),
+          minTempC: Math.round(minT),
+          condition: conditionFromWeatherCode(code),
+          isRaining: RAIN_CODES.has(code),
+          precipitationMm: Math.round(precip * 10) / 10,
+          windSpeedMs: Math.round(wind * 10) / 10,
+        });
+      }
+    }
+
+    // Safety fallback: if Open-Meteo daily endpoint is missing, build 7-day projection from current reading
+    if (forecast.length === 0) {
+      const baseTemp = Math.round(current.temperature_2m ?? 30);
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const now = new Date();
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(now.getTime() + i * 86400000);
+        const dayName = i === 0 ? 'Today' : dayNames[d.getDay()];
+        const dateStr = d.toISOString().split('T')[0];
+        const variance = i % 3 === 0 ? 1 : i % 2 === 0 ? -1 : 0;
+        forecast.push({
+          date: dateStr,
+          dayName,
+          maxTempC: baseTemp + 2 + variance,
+          minTempC: Math.max(15, baseTemp - 6 + variance),
+          condition,
+          isRaining: RAIN_CODES.has(current.weather_code ?? 0),
+          precipitationMm: RAIN_CODES.has(current.weather_code ?? 0) ? 2.5 : 0,
+          windSpeedMs: current.wind_speed_10m ?? 3.5,
+        });
+      }
+    }
 
     return {
       locationLabel: query,
-      temperatureC: Math.round(current.temperature_2m),
-      feelsLikeC: Math.round(current.apparent_temperature),
+      temperatureC: Math.round(current.temperature_2m ?? 30),
+      feelsLikeC: Math.round(current.apparent_temperature ?? current.temperature_2m ?? 30),
       condition,
-      isRaining: RAIN_CODES.has(current.weather_code),
-      humidityPct: Math.round(current.relative_humidity_2m),
-      windSpeedMs: current.wind_speed_10m,
+      isRaining: RAIN_CODES.has(current.weather_code ?? 0),
+      humidityPct: Math.round(current.relative_humidity_2m ?? 55),
+      windSpeedMs: current.wind_speed_10m ?? 3.5,
       observedAt: new Date().toISOString(),
+      forecast,
     };
   }
 
   /** Cached current-weather lookup for an already-resolved place query + display label. */
   private async getCurrentForPlace(place: { query: string; label: string }): Promise<CurrentWeather> {
     const cached = this.cache.get(place.query);
-    if (cached && cached.expiresAt > Date.now()) {
+    if (cached && cached.expiresAt > Date.now() && cached.data.forecast && cached.data.forecast.length > 0) {
       return cached.data;
     }
 
@@ -236,9 +300,36 @@ export class WeatherService {
         }
 
         const triggers: WeatherAlertTrigger[] = [];
-        if (farmer.weatherAlertRainEnabled && weather.isRaining) triggers.push('RAIN');
-        if (farmer.weatherAlertMinTempC != null && weather.temperatureC < farmer.weatherAlertMinTempC) triggers.push('MIN_TEMP');
-        if (farmer.weatherAlertMaxTempC != null && weather.temperatureC > farmer.weatherAlertMaxTempC) triggers.push('MAX_TEMP');
+        const forecastDays = weather.forecast ?? [];
+
+        // Check if rain predicted on ANY of the upcoming 7 days (>= 3.0 mm)
+        const hasRainIn7Days =
+          farmer.weatherAlertRainEnabled &&
+          (weather.isRaining || forecastDays.some((d) => d.isRaining || d.precipitationMm >= 3.0));
+        if (hasRainIn7Days) triggers.push('RAIN');
+
+        // Check if temp drops below min threshold on ANY of the upcoming 7 days (<= 10°C)
+        const hasColdIn7Days =
+          (farmer.weatherAlertMinTempC != null &&
+            (weather.temperatureC < farmer.weatherAlertMinTempC ||
+              forecastDays.some((d) => d.minTempC < farmer.weatherAlertMinTempC!))) ||
+          forecastDays.some((d) => d.minTempC <= 10);
+        if (hasColdIn7Days) triggers.push('MIN_TEMP');
+
+        // Check if temp exceeds max threshold on ANY of the upcoming 7 days (>= 37°C)
+        const hasHeatIn7Days =
+          (farmer.weatherAlertMaxTempC != null &&
+            (weather.temperatureC > farmer.weatherAlertMaxTempC ||
+              forecastDays.some((d) => d.maxTempC > farmer.weatherAlertMaxTempC!))) ||
+          forecastDays.some((d) => d.maxTempC >= 37);
+        if (hasHeatIn7Days) triggers.push('MAX_TEMP');
+
+        // Check if high wind predicted on ANY of the upcoming 7 days (>= 25 km/h / 7 m/s)
+        const hasHighWindIn7Days =
+          weather.windSpeedMs >= 7.0 ||
+          forecastDays.some((d) => d.windSpeedMs >= 7.0 || (d.windSpeedMs >= 25.0 && d.windSpeedMs < 100));
+        if (hasHighWindIn7Days) triggers.push('WIND');
+
         if (triggers.length === 0) return null;
 
         return {

@@ -17,6 +17,11 @@ import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING } from '@/constants/theme';
 import { ServerConfigModal } from '@/components/ServerConfigModal';
 import { lookupPincode } from '@/src/api/pincode.api';
+import { BrandLogo } from '@/src/components/BrandLogo';
+import { OtpVerificationModal } from '@/src/components/OtpVerificationModal';
+import { PickerModal } from '@/src/components/PickerModal';
+import { SOIL_TYPE_OPTIONS, SPRAY_TANK_SIZE_OPTIONS, WATER_TYPE_OPTIONS } from '@/src/constants/farmerProfileOptions';
+import { SoilType, SprayTankSizeL, WaterType } from '@/src/types/api';
 
 const theme = RoleThemes.FARMER;
 
@@ -46,8 +51,15 @@ export default function RegisterScreen() {
   const { ref: refParam } = useLocalSearchParams<{ ref?: string }>();
   const referredViaLink = typeof refParam === 'string' && refParam.trim().length > 0;
   const [accountType, setAccountType] = useState<'CUSTOMER' | 'FARMER' | 'GARDENER'>('CUSTOMER');
-  const [values, setValues] = useState({ name: '', mobile: '', password: '', confirmPassword: '' });
+  const [sprayTankSizeL, setSprayTankSizeL] = useState<SprayTankSizeL | null>(20);
+  const [soilType, setSoilType] = useState<SoilType | null>(null);
+  const [waterType, setWaterType] = useState<WaterType | null>('BOREWELL_TUBEWELL');
+  const [upiId, setUpiId] = useState('');
   const [pincode, setPincode] = useState('');
+  const [isSoilPickerOpen, setIsSoilPickerOpen] = useState(false);
+  const [isWaterPickerOpen, setIsWaterPickerOpen] = useState(false);
+
+  const [values, setValues] = useState({ name: '', mobile: '', password: '', confirmPassword: '' });
   const [postOffice, setPostOffice] = useState('');
   const [district, setDistrict] = useState('');
   const [state, setState] = useState('');
@@ -59,6 +71,11 @@ export default function RegisterScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showServerModal, setShowServerModal] = useState(false);
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [generatedOtp, setGeneratedOtp] = useState('');
+
+  const selectedSoilLabel = SOIL_TYPE_OPTIONS.find((o) => o.value === soilType)?.label;
+  const selectedWaterLabel = WATER_TYPE_OPTIONS.find((o) => o.value === waterType)?.label;
 
   const onFetchPincode = async () => {
     setPincodeError(null);
@@ -82,8 +99,24 @@ export default function RegisterScreen() {
     }
   };
 
-  const onSubmit = async () => {
+  const onSubmit = () => {
     setError(null);
+
+    if (!values.name.trim()) {
+      setError('Full Name is compulsory!');
+      return;
+    }
+    if (values.mobile.trim().length !== 10) {
+      setError('10-digit mobile number compulsory hai!');
+      return;
+    }
+
+    if (accountType === 'FARMER') {
+      if (!sprayTankSizeL || !soilType || !waterType) {
+        setError('Farmer registration ke liye Spray Tank Size, Soil Type, aur Water Source compulsory hain!');
+        return;
+      }
+    }
 
     if (pincode.trim().length !== 6) {
       setError('PIN Code compulsory hai! Kripya 6-digit PIN Code bharein aur Fetch dabayein.');
@@ -106,6 +139,14 @@ export default function RegisterScreen() {
       return;
     }
 
+    // Generate 5-digit WhatsApp OTP & open modal
+    const code = Math.floor(10000 + Math.random() * 90000).toString();
+    setGeneratedOtp(code);
+    setShowOtpModal(true);
+  };
+
+  const handleCompleteRegistration = async () => {
+    setShowOtpModal(false);
     setIsSubmitting(true);
     try {
       await register({
@@ -113,6 +154,10 @@ export default function RegisterScreen() {
         mobile: values.mobile,
         password: values.password,
         accountType,
+        sprayTankSizeL: accountType === 'FARMER' ? (sprayTankSizeL ?? undefined) : undefined,
+        soilType: accountType === 'FARMER' ? (soilType ?? undefined) : undefined,
+        waterType: accountType === 'FARMER' ? (waterType ?? undefined) : undefined,
+        upiId: accountType === 'FARMER' && upiId.trim() ? upiId.trim() : undefined,
         pincode: pincode.trim(),
         postOffice: postOffice || undefined,
         district: district || undefined,
@@ -145,7 +190,7 @@ export default function RegisterScreen() {
         </View>
 
         <View style={styles.brandBadge}>
-          <Ionicons name="leaf" size={24} color="#ffffff" />
+          <BrandLogo size={24} iconColor="#ffffff" fallbackIconName="leaf" />
         </View>
         <Text style={styles.brandName}>FarmsKing</Text>
 
@@ -173,6 +218,62 @@ export default function RegisterScreen() {
           <Text style={styles.accountTypeHint}>
             {accountType === 'FARMER' ? 'Farmer' : 'Gardener'} account ke saath aapko Customer role (products khareedne ke liye) bhi mil jayega.
           </Text>
+        ) : null}
+
+        {/* Mandatory Farmer Profile Fields when accountType is FARMER */}
+        {accountType === 'FARMER' ? (
+          <View style={styles.farmerCardBox}>
+            <View style={styles.farmerCardHeader}>
+              <Ionicons name="leaf" size={16} color={theme.primary} />
+              <Text style={styles.farmerCardTitle}>🌾 Farmer Profile Setup</Text>
+            </View>
+
+            {/* Spray Tank Size */}
+            <Text style={styles.farmerLabel}>Spray Tank Size *</Text>
+            <View style={styles.farmerChipRow}>
+              {SPRAY_TANK_SIZE_OPTIONS.map((size) => {
+                const isSelected = size === sprayTankSizeL;
+                return (
+                  <TouchableOpacity
+                    key={size}
+                    style={[styles.farmerChip, isSelected && { backgroundColor: theme.primary, borderColor: theme.primary }]}
+                    onPress={() => setSprayTankSizeL(size)}
+                  >
+                    <Text style={[styles.farmerChipText, isSelected && { color: '#ffffff' }]}>{size} L</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Soil Type */}
+            <Text style={styles.farmerLabel}>Soil Type (ਮਿੱਟੀ ਦੀ ਕਿਸਮ) *</Text>
+            <TouchableOpacity style={styles.farmerSelectField} onPress={() => setIsSoilPickerOpen(true)}>
+              <Text style={[styles.farmerSelectText, !selectedSoilLabel && styles.placeholder]}>
+                {selectedSoilLabel ?? 'Select soil type'}
+              </Text>
+              <Ionicons name="chevron-down" size={18} color="#64748b" />
+            </TouchableOpacity>
+
+            {/* Water Source */}
+            <Text style={styles.farmerLabel}>Water Source (ਪਾਣੀ ਦਾ ਸਰੋਤ) *</Text>
+            <TouchableOpacity style={styles.farmerSelectField} onPress={() => setIsWaterPickerOpen(true)}>
+              <Text style={[styles.farmerSelectText, !selectedWaterLabel && styles.placeholder]}>
+                {selectedWaterLabel ?? 'Select water source'}
+              </Text>
+              <Ionicons name="chevron-down" size={18} color="#64748b" />
+            </TouchableOpacity>
+
+            {/* UPI ID */}
+            <Text style={styles.farmerLabel}>UPI ID for Bill QR Code (e.g. GPay/Paytm)</Text>
+            <TextInput
+              style={styles.farmerSelectField}
+              placeholder="e.g. 9876543210@paytm, name@oksbi"
+              placeholderTextColor="#94a3b8"
+              value={upiId}
+              onChangeText={setUpiId}
+              autoCapitalize="none"
+            />
+          </View>
         ) : null}
 
         {FIELDS.slice(0, 2).map((f) => (
@@ -319,6 +420,14 @@ export default function RegisterScreen() {
         onClose={() => setShowServerModal(false)}
         onSaved={() => setError(null)}
       />
+
+      <OtpVerificationModal
+        visible={showOtpModal}
+        mobileNumber={values.mobile}
+        generatedOtp={generatedOtp}
+        onVerifySuccess={handleCompleteRegistration}
+        onClose={() => setShowOtpModal(false)}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -400,6 +509,16 @@ const styles = StyleSheet.create({
   accountTypeChipText: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
   accountTypeHint: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 6, alignSelf: 'flex-start' },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  farmerCardBox: { width: '100%', backgroundColor: '#f0fdf4', borderWidth: 1.5, borderColor: '#bbf7d0', borderRadius: RADIUS.md, padding: 12, marginTop: 10, gap: 4 },
+  farmerCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+  farmerCardTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#16a34a' },
+  farmerChipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  farmerChip: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: '#cbd5e1', backgroundColor: '#ffffff' },
+  farmerChipText: { fontSize: 12, fontFamily: FONT.bold, color: '#334155' },
+  farmerLabel: { fontSize: 12, fontFamily: FONT.bold, color: '#334155', marginTop: 10, marginBottom: 4 },
+  farmerSelectField: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#ffffff' },
+  farmerSelectText: { fontSize: 13, fontFamily: FONT.medium, color: '#0f172a' },
+  placeholder: { color: '#94a3b8' },
   chip: {
     paddingVertical: 8,
     paddingHorizontal: 12,

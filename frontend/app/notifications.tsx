@@ -1,7 +1,7 @@
 import React from 'react';
 import { ActivityIndicator, FlatList, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useMarkAllNotificationsRead, useMarkNotificationRead, useMyNotifications } from '@/src/hooks/useNotifications';
@@ -61,6 +61,7 @@ export default function NotificationsScreen() {
 
   return (
     <View style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.75}>
           <Ionicons name="arrow-back" size={18} color="#0f172a" />

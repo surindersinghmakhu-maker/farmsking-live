@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ActivityIndicator, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/src/store/auth-context';
 import { useUpdateMyAddress } from '@/src/hooks/useAdvisorProfile';
@@ -20,6 +20,7 @@ export default function NotificationSettingsScreen() {
   const theme = RoleThemes[user?.role === 'ADVISOR' ? 'FARM_ADVISOR' : 'FARMER'] ?? RoleThemes.FARMER;
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(user?.notificationsEnabled ?? true);
+  const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState(user?.whatsappGroupEnabled ?? true);
 
   const [rainEnabled, setRainEnabled] = useState(user?.weatherAlertRainEnabled ?? false);
   const [minTempEnabled, setMinTempEnabled] = useState(user?.weatherAlertMinTempC != null);
@@ -66,6 +67,7 @@ export default function NotificationSettingsScreen() {
     try {
       await updateAddress.mutateAsync({
         notificationsEnabled,
+        whatsappGroupEnabled,
         weatherAlertRainEnabled: rainEnabled,
         weatherAlertMinTempC: minTemp,
         weatherAlertMaxTempC: maxTemp,
@@ -79,6 +81,7 @@ export default function NotificationSettingsScreen() {
 
   return (
     <View style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
       <LinearGradient colors={theme.gradient} style={styles.headerBar}>
         <TouchableOpacity style={styles.backBtn} activeOpacity={0.75} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color="#ffffff" />
@@ -101,6 +104,32 @@ export default function NotificationSettingsScreen() {
               value={notificationsEnabled}
               onValueChange={toggleNotifications}
               trackColor={{ false: '#cbd5e1', true: theme.primary }}
+              thumbColor="#ffffff"
+            />
+          </View>
+        </View>
+
+        {/* ── WhatsApp Advisor Group Consent Switch (ON by Default) ── */}
+        <View style={styles.card}>
+          <View style={styles.rowBetween}>
+            <View style={[styles.rowIconBg, { backgroundColor: '#dcfce7' }]}>
+              <Ionicons name="logo-whatsapp" size={16} color="#25d366" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowLabel}>WhatsApp Advisor Group (ਜੋੜੋ / ਸ਼ਾਮਲ ਹੋਵੋ)</Text>
+              <Text style={styles.rowSubLabel}>
+                {whatsappGroupEnabled
+                  ? 'Auto-join official Advisor WhatsApp group for live advice & updates'
+                  : 'Opted out. You will be removed from the WhatsApp group'}
+              </Text>
+            </View>
+            <Switch
+              value={whatsappGroupEnabled}
+              onValueChange={(val) => {
+                tap();
+                setWhatsappGroupEnabled(val);
+              }}
+              trackColor={{ false: '#cbd5e1', true: '#25d366' }}
               thumbColor="#ffffff"
             />
           </View>

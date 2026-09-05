@@ -16,12 +16,12 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { RegisteredCropField } from '@/src/store/crops-context';
 import { useAcceptedCropsForAdvisor, useUpdateCropSchedule } from '@/src/hooks/useCrops';
 import { AdvisorReviewCropCycle } from '@/src/types/api';
-import { useSprayScheduleForCrop, useDeleteSprayScheduleItem } from '@/src/hooks/useSpraySchedules';
 import { ItemTemplatesSection } from '@/src/components/ItemTemplatesSection';
 import { QuickAddDoseItemModal } from '@/src/components/QuickAddDoseItemModal';
 import { useMySprayItemTemplates } from '@/src/hooks/useSprayItemTemplates';
@@ -45,7 +45,7 @@ function toScheduleFarmCard(crop: AdvisorReviewCropCycle): RegisteredCropField {
   const areaUnit = crop.plot.areaUnit ?? 'ACRE';
   const areaText = crop.plot.area != null ? `${crop.plot.area} ${AREA_UNIT_LABEL[areaUnit]}` : '';
   const sowingDateDisplay =
-    crop.notes || (crop.sowingDate ? new Date(crop.sowingDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '');
+    (crop.notes ? crop.notes.replace(/\s*\([^)]*\)/g, '').trim() : '') || (crop.sowingDate ? new Date(crop.sowingDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '');
   const owner = crop.plot.farm.owner;
 
   return {
@@ -135,70 +135,7 @@ const collapseStyles = StyleSheet.create({
   },
 });
 
-/** Per-crop spray schedule list + "Add Spray Item" trigger — a self-contained subcomponent so each card can call its own useSprayScheduleForCrop hook. */
-function SprayScheduleSection({
-  cropCycleId,
-  accentColor,
-  isExpanded,
-  onToggle,
-}: {
-  cropCycleId: string;
-  accentColor: string;
-  isExpanded: boolean;
-  onToggle: () => void;
-}) {
-  const { data: itemsRaw } = useSprayScheduleForCrop(cropCycleId);
-  const items = itemsRaw ?? [];
-  const deleteItem = useDeleteSprayScheduleItem();
 
-  return (
-    <View style={{ marginTop: 8 }}>
-      <CollapsibleSection
-        title="🧪 Spray Schedule"
-        count={items.length}
-        isExpanded={isExpanded}
-        onToggle={onToggle}
-        accentColor={accentColor}
-      >
-        {items.length === 0 ? (
-          <Text style={sprayStyles.emptyText}>No schedule available</Text>
-        ) : (
-          <View style={sprayStyles.table}>
-            <View style={[sprayStyles.tableRow, sprayStyles.tableHeaderRow]}>
-              <Text style={[sprayStyles.tableCell, sprayStyles.tableHeaderText, { flex: 1.4 }]}>Item</Text>
-              <Text style={[sprayStyles.tableCell, sprayStyles.tableHeaderText, { flex: 1.1 }]}>Dose</Text>
-              <Text style={[sprayStyles.tableCell, sprayStyles.tableHeaderText, { flex: 0.9 }]}>Alt. 1</Text>
-              <Text style={[sprayStyles.tableCell, sprayStyles.tableHeaderText, { flex: 0.9 }]}>Alt. 2</Text>
-              <View style={{ width: 22 }} />
-            </View>
-            {items.map((item) => (
-              <View key={item.id} style={sprayStyles.tableRow}>
-                <View style={{ flex: 1.4 }}>
-                  <Text style={sprayStyles.tableCell}>{item.recommendedProduct || '—'}</Text>
-                  <Text style={sprayStyles.tableDateText}>
-                    📅 {new Date(item.scheduledDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                  </Text>
-                </View>
-                <Text style={[sprayStyles.tableCell, { flex: 1.1 }]}>{item.dosageInstructions || '—'}</Text>
-                <Text style={[sprayStyles.tableCell, { flex: 0.9 }]}>{item.alternativeOption || '—'}</Text>
-                <Text style={[sprayStyles.tableCell, { flex: 0.9 }]}>{item.alternativeOption2 || '—'}</Text>
-                <TouchableOpacity
-                  style={{ width: 22, alignItems: 'center' }}
-                  onPress={() => {
-                    tap();
-                    deleteItem.mutate({ id: item.id, cropCycleId });
-                  }}
-                >
-                  <Ionicons name="trash-outline" size={14} color="#dc2626" />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        )}
-      </CollapsibleSection>
-    </View>
-  );
-}
 
 const sprayStyles = StyleSheet.create({
   modalLabel: {
@@ -383,6 +320,7 @@ type ScheduleTab = 'SCHEDULE' | 'TEMPLATES' | 'DOSE_ITEMS';
 export interface TemplateDayTask {
   id: string;
   dayNumber: number;
+  taskType?: string;
   taskTitle: string;
 }
 
@@ -396,14 +334,15 @@ export interface AdvisoryTemplate {
 export interface PlotScheduleItem {
   id: string;
   dayNumber: string;
+  taskType?: string;
   taskTitle: string;
   items: string[];
 }
 
-const INITIAL_TEMPLATES: AdvisoryTemplate[] = [
+const defaultSchedules = [
   {
-    id: 't1',
-    templateName: 'Wheat Master Schedule (गेहूँ)',
+    templateId: 'wheat-schedule',
+    templateName: 'Wheat Master Schedule',
     targetCrop: 'Wheat',
     tasks: [
       { id: 'dt1', dayNumber: 1, taskTitle: 'Sowing & Root Initial Fertigation' },
@@ -416,8 +355,8 @@ const INITIAL_TEMPLATES: AdvisoryTemplate[] = [
     ],
   },
   {
-    id: 't2',
-    templateName: 'Rose Floriculture Plan (गुलाब)',
+    templateId: 'rose-schedule',
+    templateName: 'Rose Floriculture Plan',
     targetCrop: 'Rose',
     tasks: [
       { id: 'rt1', dayNumber: 1, taskTitle: 'Pruning & Plantation Root Treatment' },
@@ -473,6 +412,7 @@ const formatDateStr = (dateObj: Date): string => {
 };
 
 export default function ScheduleScreen() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<ScheduleTab>('SCHEDULE');
 
   const { data: acceptedCropsRaw } = useAcceptedCropsForAdvisor();
@@ -485,7 +425,7 @@ export default function ScheduleScreen() {
     });
     return map;
   }, [acceptedCropsRaw]);
-  const [templates, setTemplates] = useState<AdvisoryTemplate[]>(INITIAL_TEMPLATES);
+  const [templates, setTemplates] = useState<AdvisoryTemplate[]>(defaultSchedules as AdvisoryTemplate[]);
 
   // Track which sections are expanded (by unique key)
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
@@ -509,18 +449,63 @@ export default function ScheduleScreen() {
   // Interactive Daywise Schedule Entries State (Edit, Add, Remove entries)
   const [editingScheduleItems, setEditingScheduleItems] = useState<PlotScheduleItem[]>([]);
 
+  // Task Categories state (Spray, Irrigation, Drenching, Drip, etc. + dynamic custom tasks)
+  const [taskCategories, setTaskCategories] = useState<string[]>([
+    'Spray',
+    'Irrigation',
+    'Drenching',
+    'Drip',
+    'Fertilizer',
+    'Monitoring',
+    'Harvest',
+    'Other',
+  ]);
+  const [activeTaskPickerRow, setActiveTaskPickerRow] = useState<{
+    source: 'SCHEDULE' | 'TEMPLATE';
+    idOrIdx: string | number;
+  } | null>(null);
+  const [isAddCustomTaskOpen, setIsAddCustomTaskOpen] = useState(false);
+  const [customTaskName, setCustomTaskName] = useState('');
+
   // Modal State for Making / Editing Template
   const [isMakeTemplateModalOpen, setIsMakeTemplateModalOpen] = useState(false);
   const [isQuickAddDoseItemOpen, setIsQuickAddDoseItemOpen] = useState(false);
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
   const [newTemplateName, setNewTemplateName] = useState('');
   const [newTemplateCrop, setNewTemplateCrop] = useState('');
-  const [newTemplateTasks, setNewTemplateTasks] = useState<{ dayNumber: string; taskTitle: string; items: string[] }[]>([
-    { dayNumber: '1', taskTitle: 'Plantation / Sowing Check & Root Treatment', items: [] },
-    { dayNumber: '5', taskTitle: 'First Water & DAP Fertigation', items: [] },
-    { dayNumber: '8', taskTitle: 'Micronutrient & Pest Inspection', items: [] },
+  const [newTemplateTasks, setNewTemplateTasks] = useState<{ dayNumber: string; taskType?: string; taskTitle: string; items: string[] }[]>([
+    { dayNumber: '1', taskType: 'Fertilizer', taskTitle: 'Plantation / Sowing Check & Root Treatment', items: [] },
+    { dayNumber: '5', taskType: 'Irrigation', taskTitle: 'First Water & DAP Fertigation', items: [] },
+    { dayNumber: '8', taskType: 'Spray', taskTitle: 'Micronutrient & Pest Inspection', items: [] },
   ]);
   const { data: itemTemplatesForSearch } = useMySprayItemTemplates();
+
+  const handleSelectTaskType = (taskType: string) => {
+    tap();
+    if (!activeTaskPickerRow) return;
+    if (activeTaskPickerRow.source === 'SCHEDULE') {
+      setEditingScheduleItems((prev) =>
+        prev.map((row) => (row.id === activeTaskPickerRow.idOrIdx ? { ...row, taskType } : row))
+      );
+    } else {
+      setNewTemplateTasks((prev) =>
+        prev.map((row, i) => (i === activeTaskPickerRow.idOrIdx ? { ...row, taskType } : row))
+      );
+    }
+    setActiveTaskPickerRow(null);
+  };
+
+  const handleAddCustomTaskType = () => {
+    if (!customTaskName.trim()) return;
+    tap();
+    const newTaskName = customTaskName.trim();
+    if (!taskCategories.includes(newTaskName)) {
+      setTaskCategories((prev) => [...prev, newTaskName]);
+    }
+    handleSelectTaskType(newTaskName);
+    setCustomTaskName('');
+    setIsAddCustomTaskOpen(false);
+  };
 
   const openScheduleModal = (farm: RegisteredCropField) => {
     tap();
@@ -532,18 +517,20 @@ export default function ScheduleScreen() {
       const parsed: PlotScheduleItem[] = [];
 
       lines.forEach((line, idx) => {
-        const match = line.match(/(?:\[?Day\s*(\d+).*?\]?:\s*)(.*)/i);
+        const match = line.match(/(?:\[?Day\s*(\d+).*?\]?:\s*)(?:\[(.*?)\]:\s*)?(.*)/i);
         if (match) {
           parsed.push({
             id: Date.now().toString() + idx,
             dayNumber: match[1],
-            taskTitle: match[2].trim(),
+            taskType: match[2] ? match[2].trim() : 'Spray',
+            taskTitle: match[3] ? match[3].trim() : '',
             items: [],
           });
         } else if (line.trim().length > 0 && !line.includes('Schedule') && !line.includes('Plan')) {
           parsed.push({
             id: Date.now().toString() + idx,
             dayNumber: ((idx + 1) * 3).toString(),
+            taskType: 'Spray',
             taskTitle: line.trim(),
             items: [],
           });
@@ -554,16 +541,16 @@ export default function ScheduleScreen() {
         setEditingScheduleItems(parsed);
       } else {
         setEditingScheduleItems([
-          { id: '1', dayNumber: '1', taskTitle: 'Sowing & Root Initial Fertigation', items: [] },
-          { id: '2', dayNumber: '5', taskTitle: 'First Watering & DAP Application', items: [] },
-          { id: '3', dayNumber: '8', taskTitle: 'Weedicide Spray & Soil Moisture Check', items: [] },
+          { id: '1', dayNumber: '1', taskType: 'Fertilizer', taskTitle: 'Sowing & Root Initial Fertigation', items: [] },
+          { id: '2', dayNumber: '5', taskType: 'Irrigation', taskTitle: 'First Watering & DAP Application', items: [] },
+          { id: '3', dayNumber: '8', taskType: 'Spray', taskTitle: 'Weedicide Spray & Soil Moisture Check', items: [] },
         ]);
       }
     } else {
       setEditingScheduleItems([
-        { id: '1', dayNumber: '1', taskTitle: 'Sowing & Root Initial Fertigation', items: [] },
-        { id: '2', dayNumber: '5', taskTitle: 'First Watering & DAP Application', items: [] },
-        { id: '3', dayNumber: '8', taskTitle: 'Weedicide Spray & Soil Moisture Check', items: [] },
+        { id: '1', dayNumber: '1', taskType: 'Fertilizer', taskTitle: 'Sowing & Root Initial Fertigation', items: [] },
+        { id: '2', dayNumber: '5', taskType: 'Irrigation', taskTitle: 'First Watering & DAP Application', items: [] },
+        { id: '3', dayNumber: '8', taskType: 'Spray', taskTitle: 'Weedicide Spray & Soil Moisture Check', items: [] },
       ]);
     }
 
@@ -577,6 +564,7 @@ export default function ScheduleScreen() {
       tpl.tasks.map((t, idx) => ({
         id: Date.now().toString() + idx,
         dayNumber: t.dayNumber.toString(),
+        taskType: t.taskType || 'Spray',
         taskTitle: t.taskTitle,
         items: [],
       }))
@@ -588,7 +576,7 @@ export default function ScheduleScreen() {
     const nextDayNum = (editingScheduleItems.length * 5 || 1).toString();
     setEditingScheduleItems((prev) => [
       ...prev,
-      { id: Date.now().toString(), dayNumber: nextDayNum, taskTitle: '', items: [] },
+      { id: Date.now().toString(), dayNumber: nextDayNum, taskType: 'Spray', taskTitle: '', items: [] },
     ]);
   };
 
@@ -611,7 +599,7 @@ export default function ScheduleScreen() {
     );
   };
 
-  const handleUpdateScheduleEntryRow = (id: string, field: 'dayNumber' | 'taskTitle', value: string) => {
+  const handleUpdateScheduleEntryRow = (id: string, field: 'dayNumber' | 'taskTitle' | 'taskType', value: string) => {
     setEditingScheduleItems((prev) =>
       prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
     );
@@ -634,8 +622,9 @@ export default function ScheduleScreen() {
     const computedTasks = activeRows.map((item) => {
       const dayNum = parseInt(item.dayNumber, 10) || 1;
       const calendarDate = formatDateStr(calculateTaskDateObj(plantDateObj, dayNum));
+      const typePrefix = item.taskType ? `[${item.taskType}]: ` : '';
       const taskText = [...item.items, item.taskTitle.trim()].filter(Boolean).join(', ');
-      return `[Day ${dayNum} · ${calendarDate}]: ${taskText}`;
+      return `[Day ${dayNum} · ${calendarDate}]: ${typePrefix}${taskText}`;
     });
 
     const prefix = selectedTemplateForAssign
@@ -666,7 +655,7 @@ export default function ScheduleScreen() {
     setNewTemplateName(tpl.templateName);
     setNewTemplateCrop(tpl.targetCrop);
     setNewTemplateTasks(
-      tpl.tasks.map((t) => ({ dayNumber: t.dayNumber.toString(), taskTitle: t.taskTitle, items: [] }))
+      tpl.tasks.map((t) => ({ dayNumber: t.dayNumber.toString(), taskType: t.taskType || 'Spray', taskTitle: t.taskTitle, items: [] }))
     );
     setIsMakeTemplateModalOpen(true);
   };
@@ -699,9 +688,9 @@ export default function ScheduleScreen() {
     setNewTemplateName('');
     setNewTemplateCrop('');
     setNewTemplateTasks([
-      { dayNumber: '1', taskTitle: 'Plantation / Sowing Check & Root Treatment', items: [] },
-      { dayNumber: '5', taskTitle: 'First Water & DAP Fertigation', items: [] },
-      { dayNumber: '8', taskTitle: 'Micronutrient & Pest Inspection', items: [] },
+      { dayNumber: '1', taskType: 'Fertilizer', taskTitle: 'Plantation / Sowing Check & Root Treatment', items: [] },
+      { dayNumber: '5', taskType: 'Irrigation', taskTitle: 'First Water & DAP Fertigation', items: [] },
+      { dayNumber: '8', taskType: 'Spray', taskTitle: 'Micronutrient & Pest Inspection', items: [] },
     ]);
     setIsMakeTemplateModalOpen(true);
   };
@@ -717,6 +706,7 @@ export default function ScheduleScreen() {
       .map((t, idx) => ({
         id: Date.now().toString() + idx,
         dayNumber: parseInt(t.dayNumber, 10) || 1,
+        taskType: t.taskType || 'Spray',
         taskTitle: [...t.items, t.taskTitle.trim()].filter(Boolean).join(', '),
       }))
       .sort((a, b) => a.dayNumber - b.dayNumber);
@@ -770,7 +760,7 @@ export default function ScheduleScreen() {
   const handleAddTaskRow = () => {
     tap();
     const nextDay = (newTemplateTasks.length * 5 || 1).toString();
-    setNewTemplateTasks((prev) => [...prev, { dayNumber: nextDay, taskTitle: '', items: [] }]);
+    setNewTemplateTasks((prev) => [...prev, { dayNumber: nextDay, taskType: 'Spray', taskTitle: '', items: [] }]);
   };
 
 
@@ -924,35 +914,82 @@ export default function ScheduleScreen() {
                 <View key={farm.id} style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
                   <View style={styles.cardHeaderRow}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', flex: 1 }}>
-                      <Text style={styles.plotTitle}>📍 {farm.fieldName}</Text>
+                      <Text style={styles.plotTitle}>
+                        📍 {farm.fieldName} <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>(ID: {farm.cropId || farm.id})</Text>
+                      </Text>
                       <View style={[styles.cropBadge, { backgroundColor: farm.categoryBg || '#f0fdf4' }]}>
                         <Text style={[styles.cropBadgeText, { color: farm.categoryColor || '#16a34a' }]}>
-                          🌾 {farm.cropName}
+                          🌾 {farm.cropName}{farm.variety ? ` · ${farm.variety}` : ''}
                         </Text>
                       </View>
                     </View>
 
-                    {hasSchedule ? (
-                      <View style={styles.scheduledBadge}>
-                        <Ionicons name="checkmark-circle" size={11} color="#16a34a" />
-                        <Text style={styles.scheduledBadgeText}>SCHEDULED</Text>
-                      </View>
-                    ) : (
-                      <View style={styles.noScheduleBadge}>
-                        <Ionicons name="alert-circle" size={11} color="#d97706" />
-                        <Text style={styles.noScheduleBadgeText}>NO SCHEDULE</Text>
-                      </View>
-                    )}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      {hasSchedule ? (
+                        <View style={styles.scheduledBadge}>
+                          <Ionicons name="checkmark-circle" size={11} color="#16a34a" />
+                          <Text style={styles.scheduledBadgeText}>SCHEDULED</Text>
+                        </View>
+                      ) : (
+                        <View style={styles.noScheduleBadge}>
+                          <Ionicons name="alert-circle" size={11} color="#d97706" />
+                          <Text style={styles.noScheduleBadgeText}>NO SCHEDULE</Text>
+                        </View>
+                      )}
+
+                      <TouchableOpacity
+                        style={styles.headerEditBtn}
+                        activeOpacity={0.8}
+                        onPress={() => openScheduleModal(farm)}
+                      >
+                        <Ionicons name="create-outline" size={13} color="#1d4ed8" />
+                        <Text style={styles.headerEditText}>Add / Edit</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
 
-                  <Text style={styles.farmerSub}>
-                    👨‍🌾 {farm.farmerName || 'Balwinder Singh'} · 📍 {farm.location || 'Bathinda, Punjab'}
-                  </Text>
+                  <View style={styles.farmerHighlightBanner}>
+                    <Ionicons name="person-circle" size={16} color="#1d4ed8" />
+                    <Text style={styles.farmerHighlightName}>
+                      {farm.farmerName || 'Farmer'}
+                    </Text>
+                    <Text style={styles.farmerHighlightDot}>•</Text>
+                    <Ionicons name="location-sharp" size={14} color="#0284c7" />
+                    <Text style={styles.farmerHighlightLoc}>
+                      {farm.location || 'Location Not Specified'}
+                    </Text>
+                  </View>
 
                   <View style={styles.metaRow}>
                     <Text style={styles.metaText}>📏 Area: {farm.area}</Text>
-                    <Text style={styles.metaText}>📅 Sown (Day 1): {farm.sowingDate}</Text>
-                    {farm.variety ? <Text style={styles.metaText}>🌱 {farm.variety}</Text> : null}
+                    <Text style={styles.metaText}>📅 Sown: {farm.sowingDate}</Text>
+                    {farm.plantCount ? <Text style={styles.metaText}>🪴 Plants: {farm.plantCount}</Text> : null}
+
+                    {/* Satellite Information Button in Empty Space */}
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 4,
+                        backgroundColor: '#eff6ff',
+                        borderWidth: 1.5,
+                        borderColor: '#bfdbfe',
+                        paddingHorizontal: 8,
+                        paddingVertical: 3,
+                        borderRadius: RADIUS.pill,
+                        marginLeft: 'auto',
+                      }}
+                      activeOpacity={0.85}
+                      onPress={() => {
+                        tap();
+                        router.push('/(tabs)/satellite-map' as any);
+                      }}
+                    >
+                      <Ionicons name="planet" size={12} color="#2563eb" />
+                      <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: '#1d4ed8' }}>
+                        🛰️ Satellite View
+                      </Text>
+                    </TouchableOpacity>
                   </View>
 
                   {/* Assigned Schedule Display or Empty Alert */}
@@ -981,38 +1018,9 @@ export default function ScheduleScreen() {
                     </View>
                   )}
 
-                  <SprayScheduleSection
-                    cropCycleId={farm.id}
-                    accentColor="#0284c7"
-                    isExpanded={!!expandedSections[`spray-${farm.id}`]}
-                    onToggle={() => toggleSection(`spray-${farm.id}`)}
-                  />
 
-                  {/* Action Button: Edit Schedule */}
-                  <View style={{ gap: 8, marginTop: 4 }}>
-                    <TouchableOpacity
-                      style={[
-                        styles.assignBtn,
-                        { backgroundColor: hasSchedule ? '#f1f5f9' : theme.primary },
-                      ]}
-                      activeOpacity={0.85}
-                      onPress={() => openScheduleModal(farm)}
-                    >
-                      <Ionicons
-                        name={hasSchedule ? 'create-outline' : 'add-circle-outline'}
-                        size={15}
-                        color={hasSchedule ? '#0f172a' : '#ffffff'}
-                      />
-                      <Text
-                        style={[
-                          styles.assignBtnText,
-                          { color: hasSchedule ? '#0f172a' : '#ffffff' },
-                        ]}
-                      >
-                        {hasSchedule ? 'Edit / Add / Remove Schedule Entries' : 'Assign / Edit Schedule (Day 1 = Plantation)'}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
+
+
                 </View>
               );
             })
@@ -1092,9 +1100,9 @@ export default function ScheduleScreen() {
 
                 return (
                   <View key={item.id || idx} style={styles.entryRowCard}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <View style={{ width: 75 }}>
-                        <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <View style={{ width: 52 }}>
+                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>
                           Day #
                         </Text>
                         <TextInput
@@ -1105,12 +1113,28 @@ export default function ScheduleScreen() {
                         />
                       </View>
 
+                      <View style={{ width: 110 }}>
+                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>
+                          Task
+                        </Text>
+                        <TouchableOpacity
+                          style={styles.taskPickerBtn}
+                          activeOpacity={0.8}
+                          onPress={() => setActiveTaskPickerRow({ source: 'SCHEDULE', idOrIdx: item.id })}
+                        >
+                          <Text style={styles.taskPickerBtnText} numberOfLines={1}>
+                            {item.taskType || 'Select Task'}
+                          </Text>
+                          <Ionicons name="chevron-down" size={12} color="#475569" />
+                        </TouchableOpacity>
+                      </View>
+
                       <View style={{ flex: 1 }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-                          <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>
-                            Calculated Calendar Date:
+                          <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b' }}>
+                            Activity / Dose Item:
                           </Text>
-                          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#15803d' }}>
+                          <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }}>
                             📅 {calcDateStr}
                           </Text>
                         </View>
@@ -1119,7 +1143,7 @@ export default function ScheduleScreen() {
                           style={styles.singleLineInput}
                           value={item.taskTitle}
                           onChangeText={(val) => handleUpdateScheduleEntryRow(item.id, 'taskTitle', val)}
-                          placeholder="Type to search Dose Items, or write free text"
+                          placeholder="Type to search Dose Items..."
                         />
                       </View>
 
@@ -1235,9 +1259,9 @@ export default function ScheduleScreen() {
                   : [];
                 return (
                   <View key={idx} style={styles.entryRowCard}>
-                    <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-                      <View style={{ width: 75 }}>
-                        <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>
+                    <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                      <View style={{ width: 52 }}>
+                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>
                           Day #
                         </Text>
                         <TextInput
@@ -1252,9 +1276,24 @@ export default function ScheduleScreen() {
                           keyboardType="numeric"
                         />
                       </View>
+                      <View style={{ width: 110 }}>
+                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>
+                          Task
+                        </Text>
+                        <TouchableOpacity
+                          style={styles.taskPickerBtn}
+                          activeOpacity={0.8}
+                          onPress={() => setActiveTaskPickerRow({ source: 'TEMPLATE', idOrIdx: idx })}
+                        >
+                          <Text style={styles.taskPickerBtnText} numberOfLines={1}>
+                            {taskRow.taskType || 'Select Task'}
+                          </Text>
+                          <Ionicons name="chevron-down" size={12} color="#475569" />
+                        </TouchableOpacity>
+                      </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>
-                          Task / Activity
+                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>
+                          Activity / Dose Item
                         </Text>
                         <TextInput
                           style={styles.singleLineInput}
@@ -1264,7 +1303,7 @@ export default function ScheduleScreen() {
                             updated[idx].taskTitle = val;
                             setNewTemplateTasks(updated);
                           }}
-                          placeholder={`Type to search Item Templates, or write free text`}
+                          placeholder={`Type to search Dose Items...`}
                         />
                       </View>
                       <TouchableOpacity
@@ -1343,6 +1382,114 @@ export default function ScheduleScreen() {
         onClose={() => setIsQuickAddDoseItemOpen(false)}
         themeColor={theme.primary}
       />
+
+      {/* TASK TYPE PICKER MODAL */}
+      <Modal
+        visible={activeTaskPickerRow !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setActiveTaskPickerRow(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.taskPickerModalCard}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalTitle}>📋 Select Task Type</Text>
+              <TouchableOpacity style={styles.closeBtn} onPress={() => setActiveTaskPickerRow(null)}>
+                <Ionicons name="close" size={18} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView contentContainerStyle={{ gap: 8, paddingVertical: 8 }} showsVerticalScrollIndicator={false}>
+              {taskCategories.map((cat) => {
+                const isSelected =
+                  activeTaskPickerRow?.source === 'SCHEDULE'
+                    ? editingScheduleItems.find((r) => r.id === activeTaskPickerRow.idOrIdx)?.taskType === cat
+                    : newTemplateTasks[activeTaskPickerRow?.idOrIdx as number]?.taskType === cat;
+
+                return (
+                  <TouchableOpacity
+                    key={cat}
+                    style={[styles.taskOptionRow, isSelected && styles.taskOptionRowSelected]}
+                    onPress={() => handleSelectTaskType(cat)}
+                  >
+                    <Ionicons
+                      name={
+                        cat === 'Spray'
+                          ? 'water-outline'
+                          : cat === 'Irrigation'
+                          ? 'rainy-outline'
+                          : cat === 'Drenching'
+                          ? 'flask-outline'
+                          : cat === 'Drip'
+                          ? 'git-commit-outline'
+                          : cat === 'Fertilizer'
+                          ? 'leaf-outline'
+                          : cat === 'Monitoring'
+                          ? 'eye-outline'
+                          : cat === 'Harvest'
+                          ? 'basket-outline'
+                          : 'ellipse-outline'
+                      }
+                      size={16}
+                      color={isSelected ? theme.primary : '#475569'}
+                    />
+                    <Text style={[styles.taskOptionText, isSelected && { color: theme.primary, fontFamily: FONT.bold }]}>
+                      {cat}
+                    </Text>
+                    {isSelected ? <Ionicons name="checkmark-circle" size={16} color={theme.primary} style={{ marginLeft: 'auto' }} /> : null}
+                  </TouchableOpacity>
+                );
+              })}
+
+              <TouchableOpacity
+                style={styles.addCustomTaskBtn}
+                onPress={() => setIsAddCustomTaskOpen(true)}
+              >
+                <Ionicons name="add-circle" size={16} color={theme.primary} />
+                <Text style={styles.addCustomTaskBtnText}>+ Add New Task Type...</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ADD CUSTOM TASK TYPE MODAL */}
+      <Modal
+        visible={isAddCustomTaskOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setIsAddCustomTaskOpen(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.customTaskModalCard}>
+            <Text style={styles.modalTitle}>➕ Add New Task Type</Text>
+            <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#64748b', marginVertical: 6 }}>
+              Enter custom activity name (e.g. Weedicide, Soil Treatment, Pruning)
+            </Text>
+            <TextInput
+              style={styles.singleLineInput}
+              placeholder="e.g. Weedicide Spray"
+              placeholderTextColor="#94a3b8"
+              value={customTaskName}
+              onChangeText={setCustomTaskName}
+            />
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 14, justifyContent: 'flex-end' }}>
+              <TouchableOpacity
+                style={{ paddingHorizontal: 14, paddingVertical: 9, borderRadius: RADIUS.md, backgroundColor: '#f1f5f9' }}
+                onPress={() => setIsAddCustomTaskOpen(false)}
+              >
+                <Text style={{ fontSize: 13, fontFamily: FONT.semiBold, color: '#64748b' }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ paddingHorizontal: 16, paddingVertical: 9, borderRadius: RADIUS.md, backgroundColor: theme.primary }}
+                onPress={handleAddCustomTaskType}
+              >
+                <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>Add & Select</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1413,7 +1560,51 @@ const styles = StyleSheet.create({
     borderColor: '#fde68a',
   },
   noScheduleBadgeText: { fontSize: 9.5, fontFamily: FONT.bold, color: '#b45309' },
-  farmerSub: { fontSize: 12, color: '#475569', fontFamily: FONT.medium },
+  headerEditBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    paddingHorizontal: 9,
+    paddingVertical: 3.5,
+    borderRadius: RADIUS.pill,
+  },
+  headerEditText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#1d4ed8',
+  },
+  farmerHighlightBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 5,
+    backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    marginTop: 2,
+    marginBottom: 2,
+  },
+  farmerHighlightName: {
+    fontSize: 12.5,
+    fontFamily: FONT.extraBold,
+    color: '#1e40af',
+  },
+  farmerHighlightDot: {
+    fontSize: 12,
+    color: '#93c5fd',
+    fontFamily: FONT.bold,
+  },
+  farmerHighlightLoc: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#0369a1',
+  },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   metaText: { fontSize: 11.5, color: '#64748b', fontFamily: FONT.medium },
   scheduleBox: {
@@ -1597,4 +1788,75 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md,
   },
   modalSubmitBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 13.5 },
+  taskPickerBtn: {
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  taskPickerBtnText: {
+    fontSize: 11.5,
+    fontFamily: FONT.semiBold,
+    color: '#0f172a',
+    flex: 1,
+  },
+  taskPickerModalCard: {
+    width: '100%',
+    maxWidth: 360,
+    maxHeight: '75%',
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.xl,
+    padding: SPACING.lg,
+    ...premiumShadow('#000000', 'lg'),
+  },
+  taskOptionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    backgroundColor: '#f8fafc',
+  },
+  taskOptionRowSelected: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#bbf7d0',
+  },
+  taskOptionText: {
+    fontSize: 13,
+    fontFamily: FONT.medium,
+    color: '#334155',
+  },
+  addCustomTaskBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 11,
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: '#bbf7d0',
+    backgroundColor: '#f0fdf4',
+    marginTop: 4,
+  },
+  addCustomTaskBtnText: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#16a34a',
+  },
+  customTaskModalCard: {
+    width: '100%',
+    maxWidth: 380,
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.xl,
+    padding: SPACING.lg,
+    ...premiumShadow('#000000', 'lg'),
+  },
 });

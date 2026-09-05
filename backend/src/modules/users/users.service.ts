@@ -12,6 +12,7 @@ import { UpdateAdvisorProfileDto } from './dto/update-advisor-profile.dto';
 import { UpdatePartnerProfileDto } from './dto/update-partner-profile.dto';
 import { UpdateMyAddressDto } from './dto/update-my-address.dto';
 import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
+import { WhatsAppGroupSyncService } from '../whatsapp/whatsapp-group-sync.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { generateUniqueKingId } from '../../common/utils/king-id.util';
 import { provisionInviteCoupon } from '../../common/utils/invite-coupon.util';
@@ -38,14 +39,22 @@ const SAFE_USER_SELECT = {
   state: true,
   preferredLanguage: true,
   notificationsEnabled: true,
+  whatsappGroupEnabled: true,
+  whatsappGroupJid: true,
   weatherAlertMinTempC: true,
   weatherAlertMaxTempC: true,
   weatherAlertRainEnabled: true,
   photoUrl: true,
-  referralWelcomeCouponCode: true,
+  pincode: true,
+  postOffice: true,
+  sprayTankSizeL: true,
+  soilType: true,
+  waterType: true,
   referredById: true,
   advisorType: true,
   operatorPermissions: true,
+  upiId: true,
+  billPrintingAddress: true,
   createdAt: true,
   deletedAt: true,
 } as const;
@@ -60,6 +69,7 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly walletService: WalletService,
+    private readonly whatsappGroupSyncService: WhatsAppGroupSyncService,
   ) {}
 
   async list(query: ListUsersQueryDto) {
@@ -187,6 +197,15 @@ export class UsersService {
     return this.prisma.user.findUniqueOrThrow({ where: { id: user.id }, select: SAFE_USER_SELECT });
   }
 
+  /** Self-service Account Deletion (Google Play Store Policy Requirement): Soft-deletes user profile. */
+  async deleteMe(user: AuthUser) {
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { deletedAt: new Date() },
+    });
+    return { success: true, message: 'Account and associated data deleted successfully.' };
+  }
+
   /** Every user's shareable invite code — reuses their auto-issued personal Coupon (see provisionInviteCoupon). */
   async getMyInviteLink(user: AuthUser) {
     const coupon = await this.prisma.coupon.findFirst({
@@ -246,11 +265,44 @@ export class UsersService {
   }
 
   /** Self-serve: a CUSTOMER becomes a FARMER and gets a FREE FarmerPlan. */
-  async becomeFarmer(user: AuthUser) {
+  async becomeFarmer(user: AuthUser, dto?: UpdateFarmerProfileDto) {
+    const existingUser = await this.prisma.user.findUniqueOrThrow({
+      where: { id: user.id },
+      select: { roles: true, deactivatedRoles: true },
+    });
+
+    const currentRoles = existingUser.roles ?? [];
+    const currentDeactivated = existingUser.deactivatedRoles ?? [];
+
+    const isPartnerDeactivated = currentDeactivated.includes(Role.BUSINESS_PARTNER);
+    const rolesToAdd = isPartnerDeactivated ? [Role.FARMER] : [Role.FARMER, Role.BUSINESS_PARTNER];
+
+    const newRoles = Array.from(new Set([...currentRoles, ...rolesToAdd]));
+    const newDeactivated = currentDeactivated.filter((r) => r !== Role.FARMER);
+
+    const profileData: Prisma.UserUpdateInput = {};
+    if (dto) {
+      if (dto.photoUrl !== undefined) profileData.photoUrl = dto.photoUrl;
+      if (dto.sprayTankSizeL !== undefined) profileData.sprayTankSizeL = dto.sprayTankSizeL;
+      if (dto.soilType !== undefined) profileData.soilType = dto.soilType;
+      if (dto.waterType !== undefined) profileData.waterType = dto.waterType;
+      if (dto.pincode !== undefined) profileData.pincode = dto.pincode;
+      if (dto.postOffice !== undefined) profileData.postOffice = dto.postOffice;
+      if (dto.village !== undefined) profileData.village = dto.village;
+      if (dto.district !== undefined) profileData.district = dto.district;
+      if (dto.state !== undefined) profileData.state = dto.state;
+      if (dto.billPrintingAddress !== undefined) profileData.billPrintingAddress = dto.billPrintingAddress;
+    }
+
     const [updated] = await this.prisma.$transaction([
       this.prisma.user.update({
         where: { id: user.id },
-        data: { role: Role.FARMER, roles: { push: Role.FARMER } },
+        data: {
+          role: Role.FARMER,
+          roles: newRoles,
+          deactivatedRoles: newDeactivated,
+          ...profileData,
+        },
         select: SAFE_USER_SELECT,
       }),
       this.prisma.farmerPlan.upsert({
@@ -259,15 +311,36 @@ export class UsersService {
         update: {},
       }),
     ]);
+    if (!isPartnerDeactivated) {
+      await provisionPartnerReferralCoupon(this.prisma, user.id, user.id);
+    }
     return updated;
   }
 
   /** Self-serve: a CUSTOMER becomes a GARDENER and gets a FREE GardenerPlan. */
   async becomeGardener(user: AuthUser) {
+    const existingUser = await this.prisma.user.findUniqueOrThrow({
+      where: { id: user.id },
+      select: { roles: true, deactivatedRoles: true },
+    });
+
+    const currentRoles = existingUser.roles ?? [];
+    const currentDeactivated = existingUser.deactivatedRoles ?? [];
+
+    const isPartnerDeactivated = currentDeactivated.includes(Role.BUSINESS_PARTNER);
+    const rolesToAdd = isPartnerDeactivated ? [Role.GARDENER] : [Role.GARDENER, Role.BUSINESS_PARTNER];
+
+    const newRoles = Array.from(new Set([...currentRoles, ...rolesToAdd]));
+    const newDeactivated = currentDeactivated.filter((r) => r !== Role.GARDENER);
+
     const [updated] = await this.prisma.$transaction([
       this.prisma.user.update({
         where: { id: user.id },
-        data: { role: Role.GARDENER, roles: { push: Role.GARDENER } },
+        data: {
+          role: Role.GARDENER,
+          roles: newRoles,
+          deactivatedRoles: newDeactivated,
+        },
         select: SAFE_USER_SELECT,
       }),
       this.prisma.gardenerPlan.upsert({
@@ -276,6 +349,9 @@ export class UsersService {
         update: {},
       }),
     ]);
+    if (!isPartnerDeactivated) {
+      await provisionPartnerReferralCoupon(this.prisma, user.id, user.id);
+    }
     return updated;
   }
 
@@ -352,9 +428,6 @@ export class UsersService {
   async updateActiveRoles(caller: AuthUser, id: string, activeRoles: Role[]) {
     const user = await this.findActiveOrThrow(id);
     this.assertCanManageTarget(caller, user);
-    if (user.deletedAt) {
-      throw new ConflictException('Cannot change the roles of a deactivated user.');
-    }
     if (user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN) {
       throw new ConflictException("An admin's roles cannot be changed here.");
     }
@@ -384,14 +457,14 @@ export class UsersService {
       if (!newRoles.includes(newPrimary)) newRoles.push(newPrimary);
     }
 
-    const isNewAdvisor = toGrant.includes(Role.ADVISOR) || toReactivate.includes(Role.ADVISOR);
+    const isBrandNewAdvisor = toGrant.includes(Role.ADVISOR);
     const updated = await this.prisma.user.update({
       where: { id },
       data: {
         role: newPrimary,
         roles: newRoles,
         deactivatedRoles: newDeactivated,
-        ...(isNewAdvisor ? { specialization: null, bio: null, yearsExperience: null, advisorType: null } : {}),
+        ...(isBrandNewAdvisor ? { specialization: null, bio: null, yearsExperience: null, advisorType: null } : {}),
       },
       select: SAFE_USER_SELECT,
     });
@@ -451,7 +524,7 @@ export class UsersService {
       }
     }
 
-    return this.prisma.user.update({
+    const updatedUser = await this.prisma.user.update({
       where: { id },
       data: {
         ...(dto.name !== undefined ? { name: dto.name } : {}),
@@ -464,6 +537,8 @@ export class UsersService {
         ...(dto.district !== undefined ? { district: dto.district } : {}),
         ...(dto.state !== undefined ? { state: dto.state } : {}),
         ...(dto.notificationsEnabled !== undefined ? { notificationsEnabled: dto.notificationsEnabled } : {}),
+        ...(dto.whatsappGroupEnabled !== undefined ? { whatsappGroupEnabled: dto.whatsappGroupEnabled } : {}),
+        ...(dto.whatsappGroupJid !== undefined ? { whatsappGroupJid: dto.whatsappGroupJid } : {}),
         ...(dto.specialization !== undefined ? { specialization: dto.specialization } : {}),
         ...(dto.bio !== undefined ? { bio: dto.bio } : {}),
         ...(dto.yearsExperience !== undefined ? { yearsExperience: dto.yearsExperience } : {}),
@@ -476,6 +551,7 @@ export class UsersService {
         ...(dto.alternativeMobile !== undefined ? { alternativeMobile: dto.alternativeMobile } : {}),
         ...(dto.panNumber !== undefined ? { panNumber: dto.panNumber } : {}),
         ...(dto.upiId !== undefined ? { upiId: dto.upiId } : {}),
+        ...(dto.billPrintingAddress !== undefined ? { billPrintingAddress: dto.billPrintingAddress } : {}),
         ...(dto.bankAccountNumber !== undefined ? { bankAccountNumber: dto.bankAccountNumber } : {}),
         ...(dto.bankIfsc !== undefined ? { bankIfsc: dto.bankIfsc } : {}),
         ...(dto.bankAccountHolderName !== undefined ? { bankAccountHolderName: dto.bankAccountHolderName } : {}),
@@ -498,6 +574,12 @@ export class UsersService {
         bankAccountHolderName: true,
       },
     });
+
+    if (dto.whatsappGroupEnabled !== undefined) {
+      this.whatsappGroupSyncService.syncSingleFarmerGroupStatus(id).catch(() => {});
+    }
+
+    return updatedUser;
   }
 
   /** Admin/Super Admin: set a new password for a user. The old password is a one-way hash and can never be shown —
@@ -580,6 +662,7 @@ export class UsersService {
         ...(dto.weatherAlertMinTempC !== undefined ? { weatherAlertMinTempC: dto.weatherAlertMinTempC } : {}),
         ...(dto.weatherAlertMaxTempC !== undefined ? { weatherAlertMaxTempC: dto.weatherAlertMaxTempC } : {}),
         ...(dto.weatherAlertRainEnabled !== undefined ? { weatherAlertRainEnabled: dto.weatherAlertRainEnabled } : {}),
+        ...(dto.billPrintingAddress !== undefined ? { billPrintingAddress: dto.billPrintingAddress } : {}),
       },
       select: {
         ...SAFE_USER_SELECT,
@@ -604,6 +687,7 @@ export class UsersService {
         ...(dto.village !== undefined ? { village: dto.village } : {}),
         ...(dto.district !== undefined ? { district: dto.district } : {}),
         ...(dto.state !== undefined ? { state: dto.state } : {}),
+        ...(dto.billPrintingAddress !== undefined ? { billPrintingAddress: dto.billPrintingAddress } : {}),
       },
       select: {
         ...SAFE_USER_SELECT,

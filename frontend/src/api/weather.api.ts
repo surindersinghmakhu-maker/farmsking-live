@@ -1,5 +1,16 @@
 import { apiClient } from './client';
 
+export interface DailyForecastDay {
+  date: string;
+  dayName: string;
+  maxTempC: number;
+  minTempC: number;
+  condition: string;
+  isRaining: boolean;
+  precipitationMm: number;
+  windSpeedMs: number;
+}
+
 export interface CurrentWeather {
   locationLabel: string;
   temperatureC: number;
@@ -9,6 +20,7 @@ export interface CurrentWeather {
   humidityPct: number;
   windSpeedMs: number;
   observedAt: string;
+  forecast?: DailyForecastDay[];
 }
 
 export async function getCurrentWeather(userId?: string): Promise<CurrentWeather> {
@@ -16,7 +28,7 @@ export async function getCurrentWeather(userId?: string): Promise<CurrentWeather
   return data;
 }
 
-export type WeatherAlertTrigger = 'RAIN' | 'MIN_TEMP' | 'MAX_TEMP';
+export type WeatherAlertTrigger = 'RAIN' | 'MIN_TEMP' | 'MAX_TEMP' | 'WIND';
 
 export interface FarmerWeatherAlert {
   farmerId: string;

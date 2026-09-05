@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
@@ -104,6 +104,7 @@ export default function AdvisorProfileScreen() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.bg }]} contentContainerStyle={styles.content}>
+      <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.headerRow}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.75}>
           <Ionicons name="arrow-back" size={18} color="#0f172a" />

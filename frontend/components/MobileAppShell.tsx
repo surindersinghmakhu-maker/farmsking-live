@@ -1,20 +1,21 @@
 import React, { ReactNode } from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet, Platform, useWindowDimensions } from 'react-native';
 
 interface MobileAppShellProps {
   children: ReactNode;
 }
 
 export const MobileAppShell: React.FC<MobileAppShellProps> = ({ children }) => {
-  // On Native Mobile (iOS/Android), render 100% full screen directly
-  if (Platform.OS !== 'web') {
+  const { width, height } = useWindowDimensions();
+
+  // On Native Mobile or compact web viewports (mobile web browser), render 100% full screen
+  if (Platform.OS !== 'web' || width <= 500 || height <= 720) {
     return <View style={styles.nativeContainer}>{children}</View>;
   }
 
-  // On Web, wrap in a centered Smartphone Container
+  // On Desktop/Laptop Web, wrap in a centered Smartphone Frame container
   return (
     <View style={styles.webOuterCanvas}>
-      {/* Smartphone Device Frame */}
       <View style={styles.phoneFrame}>
         {/* Smartphone Speaker / Notch Bar */}
         <View style={styles.notchBar}>
@@ -32,6 +33,8 @@ export const MobileAppShell: React.FC<MobileAppShellProps> = ({ children }) => {
 const styles = StyleSheet.create({
   nativeContainer: {
     flex: 1,
+    width: '100%',
+    height: '100%',
     backgroundColor: '#ffffff',
   },
   webOuterCanvas: {
@@ -49,19 +52,19 @@ const styles = StyleSheet.create({
     height: '92vh' as any,
     maxHeight: 900,
     backgroundColor: '#ffffff',
-    borderRadius: 36,
-    borderWidth: 8,
+    borderRadius: 32,
+    borderWidth: 6,
     borderColor: '#1e293b',
     overflow: 'hidden',
     position: 'relative',
     shadowColor: '#000000',
-    shadowOpacity: 0.5,
-    shadowRadius: 25,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 20,
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 16,
   },
   notchBar: {
-    height: 24,
+    height: 22,
     backgroundColor: '#0f172a',
     flexDirection: 'row',
     alignItems: 'center',
@@ -70,15 +73,15 @@ const styles = StyleSheet.create({
     zIndex: 999,
   },
   notchSpeaker: {
-    width: 48,
+    width: 44,
     height: 4,
     borderRadius: 2,
     backgroundColor: '#334155',
   },
   notchCamera: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
     backgroundColor: '#334155',
   },
   phoneViewport: {
@@ -89,3 +92,4 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
 });
+

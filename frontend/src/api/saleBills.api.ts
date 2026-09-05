@@ -40,6 +40,11 @@ export async function getSaleBill(id: string): Promise<SaleBill> {
   return data;
 }
 
+export async function updateSaleBill(id: string, payload: CreateSaleBillPayload): Promise<SaleBill> {
+  const { data } = await apiClient.patch<SaleBill>(`/sale-bills/${id}`, payload);
+  return data;
+}
+
 export async function getMySaleBillCount(): Promise<{ count: number }> {
   const { data } = await apiClient.get<{ count: number }>('/sale-bills/count/mine');
   return data;

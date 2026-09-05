@@ -18,6 +18,7 @@ enum Role {
   ADMIN
   SUPER_ADMIN
   OPERATOR
+  LABOUR
 }
 
 /// Fixed, read-only capabilities an Admin/Super Admin can grant to a specific Operator account.
@@ -44,6 +45,7 @@ enum CropStatus {
   HARVESTING
   COMPLETED
   FAILED
+  DEACTIVE
 }
 
 enum CropCategory {
@@ -205,6 +207,44 @@ enum CouponKind {
   REFERRAL_WELCOME
 }
 
+enum PlanCouponCategory {
+  FARMER_PLAN
+  ADVISOR_PLAN
+}
+
+enum PartyType {
+  INDIVIDUAL
+  FIRM
+}
+
+enum PartyRole {
+  FARMER
+  CUSTOMER
+  SUPPLIER
+  VENDOR
+  LABOUR
+  ARHTIYA
+  BUSINESS_PARTNER
+  ADVISOR
+}
+
+enum ArhtiyaTransactionType {
+  ADVANCE_TAKEN
+  ADVANCE_REPAID
+  CROP_SALE_CREDIT
+  COMMISSION_FEE
+  MANDI_CHARGES
+  SETTLEMENT_PAYOUT
+}
+
+enum MandiUnit {
+  QUINTAL
+  BAG_50KG
+  BAG_35KG
+  MANN
+  KG
+}
+
 enum FarmerPlanType {
   RECORD_ONLY
   WITH_ADVISOR
@@ -212,9 +252,14 @@ enum FarmerPlanType {
 
 enum FarmerSubscriptionPlan {
   FREE
-  BASIC
-  STANDARD
-  PREMIUM
+  PRO
+  SMART
+  SUPER
+}
+
+enum AdvisorSubscriptionPlan {
+  LITE
+  PLUS
 }
 
 enum GardenerSubscriptionPlan {
@@ -319,6 +364,8 @@ model User {
   securityAnswerHash   String?
   preferredLanguage    String               @default("en")
   notificationsEnabled Boolean              @default(true)
+  whatsappGroupEnabled Boolean              @default(true)
+  whatsappGroupJid     String?
   /// Self-service weather-alert thresholds (any role). Null threshold = that side of the check is off;
   /// a set value both enables and defines it. Advisors additionally use these to flag farmers whose
   /// current temperature/rain falls outside the configured range.
@@ -338,6 +385,7 @@ model User {
   profileTitle              String?
   /// Business Partner / Advisor payout profile — all required before their wallet can be withdrawn from (see WithdrawalsService.create).
   upiId                     String?
+  billPrintingAddress       String?
   panNumber                 String?
   alternativeMobile         String?
   bankAccountNumber         String?
@@ -349,7 +397,10 @@ model User {
   referredBy                User?                @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)
   referrals                 User[]               @relation("UserReferrals")
   /// Denormalized for quick display to the referred customer — the code of their auto-issued REFERRAL_WELCOME coupon.
-  referralWelcomeCouponCode String?
+  /// WhatsApp / Phone verification status & temporary OTP storage
+  isPhoneVerified      Boolean              @default(false)
+  otpCodeHash          String?
+  otpExpiresAt         DateTime?
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
   deletedAt            DateTime?
@@ -361,6 +412,12 @@ model User {
   salesRecorded                 Sale[]
   paymentsRecorded              Payment[]
   labourEntriesRecorded         LabourEntry[]
+  labourWorkersCreated          LabourWorker[]       @relation("FarmerLabourWorkers")
+  labourWorkerUser              LabourWorker?        @relation("LabourWorkerUser")
+  labourWorkEntriesRecorded     LabourWorkEntry[]    @relation("WorkEntriesRecordedBy")
+  labourWorkEntriesAsFarmer     LabourWorkEntry[]    @relation("FarmerWorkEntries")
+  labourPaymentsRecorded        LabourPayment[]      @relation("LabourPaymentsRecordedBy")
+  labourPaymentsAsFarmer        LabourPayment[]      @relation("FarmerLabourPayments")
   fertilizersAdded              Fertilizer[]
   fertilizerUsagesRecorded      FertilizerUsage[]
   spraysRecorded                Spray[]
@@ -382,7 +439,16 @@ model User {
   gardens                       Garden[]
   customerOrders                CustomerOrder[]
   partnerReferrals              PartnerReferral[]
+  referralsSent                 UserReferral[]         @relation("ReferrerUser")
+  referralReceived              UserReferral?          @relation("ReferredUser")
+  royaltiesReceived             ReferralRoyalty[]      @relation("RoyaltyBeneficiary")
+  royaltiesGenerated            ReferralRoyalty[]      @relation("RoyaltySourceUser")
+  voiceAILogs                   VoiceAILog[]
+  farmerPriceLockContracts      PriceLockContract[]    @relation("FarmerPriceLock")
+  buyerPriceLockContracts       PriceLockContract[]    @relation("BuyerPriceLock")
   advisorSubscriptionsAsFarmer  AdvisorSubscription[]  @relation("SubscriptionFarmer")
+
+
   advisorSubscriptionsApproved  AdvisorSubscription[]  @relation("SubscriptionApprovedBy")
   planPaymentRequestsAsFarmer   PlanPaymentRequest[]   @relation("PlanPaymentFarmer")
   planPaymentRequestsConfirmed  PlanPaymentRequest[]   @relation("PlanPaymentConfirmedBy")
@@ -399,6 +465,9 @@ model User {
   walletTransactionsRelated           WalletTransaction[]  @relation("WalletTransactionsRelatedUser")
   auditLogs                           AuditLog[]           @relation("AuditLogsActor")
   parties                             Party[]
+  unifiedPartiesCreated               UnifiedParty[]       @relation("FarmerPrivateParties")
+  unifiedPartyAccount                 UnifiedParty?        @relation("UserUnifiedParty")
+  arhtiyaTransactions                 ArhtiyaTransaction[]
   saleBills                           SaleBill[]
   paymentReceipts                     PaymentReceipt[]
   withdrawalRequestsAsPartner         WithdrawalRequest[]  @relation("WithdrawalRequestsPartner")
@@ -411,6 +480,8 @@ model User {
   basicPlanCouponsUsed                BasicPlanCoupon[]    @relation("BasicPlanCouponsUsedByFarmer")
   appSettingsUpdated                  AppSetting[]         @relation("AppSettingUpdatedBy")
   couponSystemSettingsUpdated         CouponSystemSetting[] @relation("CouponSystemSettingUpdatedBy")
+  adminChatsAsFarmer                  AdminChatMessage[]    @relation("AdminChatFarmer")
+  adminChatsAsAdmin                   AdminChatMessage[]    @relation("AdminChatAdmin")
   customerAddresses                   CustomerAddress[]
   messagesSent                        Message[]            @relation("MessagesSent")
   messagesReceived                    Message[]            @relation("MessagesReceived")
@@ -431,6 +502,20 @@ model User {
   gardenerPlanCouponsCreated                 GardenerPlanCoupon[] @relation("GardenerPlanCouponsCreatedBy")
   gardenerPlanCouponsAssigned                GardenerPlanCoupon[] @relation("GardenerPlanCouponsAssignedGardener")
   gardenerPlanCouponsUsed                    GardenerPlanCoupon[] @relation("GardenerPlanCouponsUsedBy")
+  advisorTierPlan                            AdvisorTierPlan?
+
+  // King Connect Relations
+  kingConnectInitiated   KingConnectLink[]        @relation("KingConnectInitiator")
+  kingConnectReceived    KingConnectLink[]        @relation("KingConnectReceiver")
+  syncRequestsSent       P2pLedgerSyncRequest[]   @relation("SyncSender")
+  syncRequestsReceived   P2pLedgerSyncRequest[]   @relation("SyncReceiver")
+  demandsRequested       DemandRequest[]          @relation("DemandRequester")
+  demandsAsFarmer        DemandRequest[]          @relation("DemandFarmer")
+  kingPaymentsSent       KingPaymentRequest[]     @relation("KingPaymentSender")
+  kingPaymentsReceived   KingPaymentRequest[]     @relation("KingPaymentReceiver")
+  // Group Voice Call Relations
+  groupVoiceCallsHosted      GroupVoiceCall[]            @relation("VoiceCallHost")
+  groupVoiceCallParticipations GroupVoiceCallParticipant[] @relation("VoiceCallParticipant")
 
   @@map("users")
 }
@@ -458,6 +543,7 @@ model Farm {
   sales          Sale[]
   labourWorkers  LabourWorker[]
   labourEntries  LabourEntry[]
+  labourWorkEntries LabourWorkEntry[]
   inventoryItems InventoryItem[]
   machinery      Machinery[]
 
@@ -485,11 +571,14 @@ model Plot {
   expenses          Expense[]
   sales             Sale[]
   labourEntries     LabourEntry[]
+  labourWorkEntries LabourWorkEntry[]
   irrigationRecords IrrigationRecord[]
+  satelliteScans    PlotSatelliteScan[]
 
   @@index([farmId])
   @@map("plots")
 }
+
 
 model CropCycle {
   id                   String                  @id @default(uuid())
@@ -522,6 +611,7 @@ model CropCycle {
   expenses              Expense[]
   sales                 Sale[]
   labourEntries         LabourEntry[]
+  labourWorkEntries     LabourWorkEntry[]
   fertilizerUsages      FertilizerUsage[]
   sprays                Spray[]
   spraySchedules        SpraySchedule[]
@@ -669,6 +759,7 @@ model SaleBill {
   partyId         String?
   partyName       String
   partyMobile     String?
+  partyAddress    String?
   isCash          Boolean
   items           Json
   totalItems      Int
@@ -775,20 +866,31 @@ model Payment {
 
 model LabourWorker {
   id               String    @id @default(uuid())
-  farmId           String
-  farm             Farm      @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  farmerId         String
+  farmer           User      @relation("FarmerLabourWorkers", fields: [farmerId], references: [id], onDelete: Cascade)
+  farmId           String?
+  farm             Farm?     @relation(fields: [farmId], references: [id], onDelete: SetNull)
+  userId           String?   @unique
+  user             User?     @relation("LabourWorkerUser", fields: [userId], references: [id], onDelete: SetNull)
   name             String
   mobile           String?
+  address          String?
   defaultDailyWage Decimal?  @db.Decimal(12, 2)
+  defaultRate      Decimal?  @db.Decimal(12, 2)
+  defaultUnit      String?   @default("DAILY")
   notes            String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
   deletedAt        DateTime?
 
   labourEntries   LabourEntry[]
+  workEntries     LabourWorkEntry[]
+  payments        LabourPayment[]
   spraysPerformed Spray[]
 
+  @@index([farmerId])
   @@index([farmId])
+  @@index([mobile])
   @@map("labour_workers")
 }
 
@@ -820,6 +922,59 @@ model LabourEntry {
   @@index([cropCycleId])
   @@index([workerId])
   @@map("labour_entries")
+}
+
+model LabourWorkEntry {
+  id           String        @id @default(uuid())
+  farmerId     String
+  farmer       User          @relation("FarmerWorkEntries", fields: [farmerId], references: [id], onDelete: Cascade)
+  workerId     String
+  worker       LabourWorker  @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  farmId       String?
+  farm         Farm?         @relation(fields: [farmId], references: [id], onDelete: SetNull)
+  plotId       String?
+  plot         Plot?         @relation(fields: [plotId], references: [id], onDelete: SetNull)
+  cropCycleId  String?
+  cropCycle    CropCycle?    @relation(fields: [cropCycleId], references: [id], onDelete: SetNull)
+  workDate     DateTime
+  workType     String
+  unit         String        @default("DAILY")
+  quantity     Float         @default(1)
+  rate         Decimal       @db.Decimal(12, 2)
+  totalAmount  Decimal       @db.Decimal(12, 2)
+  notes        String?
+  recordedById String
+  recordedBy   User          @relation("WorkEntriesRecordedBy", fields: [recordedById], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+
+  @@index([farmerId])
+  @@index([workerId])
+  @@index([workDate])
+  @@map("labour_work_entries")
+}
+
+model LabourPayment {
+  id           String        @id @default(uuid())
+  farmerId     String
+  farmer       User          @relation("FarmerLabourPayments", fields: [farmerId], references: [id], onDelete: Cascade)
+  workerId     String
+  worker       LabourWorker  @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  paymentDate  DateTime
+  amount       Decimal       @db.Decimal(12, 2)
+  paymentMode  PaymentMode?  @default(CASH)
+  notes        String?
+  recordedById String
+  recordedBy   User          @relation("LabourPaymentsRecordedBy", fields: [recordedById], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+
+  @@index([farmerId])
+  @@index([workerId])
+  @@index([paymentDate])
+  @@map("labour_payments")
 }
 
 model Fertilizer {
@@ -961,6 +1116,8 @@ model CropProblem {
   assignedAdvisor    User?                @relation("CropProblemAdvisor", fields: [assignedAdvisorId], references: [id], onDelete: SetNull)
   advisorResponse    String?
   recommendedProduct String?
+  farmerRating       Int?
+  farmerFeedback     String?
   followUpDate       DateTime?
   resolvedAt         DateTime?
   createdAt          DateTime             @default(now())
@@ -1255,6 +1412,7 @@ model FarmerPlanPaymentRequest {
   daysGranted     Int
   status          PlanPaymentStatus      @default(PENDING)
   utr             String?
+  screenshotUrl   String?
   requestedAt     DateTime               @default(now())
   submittedAt     DateTime?
   confirmedAt     DateTime?
@@ -1604,18 +1762,25 @@ model CustomerAddress {
 /// Singleton row of app-wide, Super-Admin-editable settings — currently just the UPI ID that receives
 /// order/plan payments. Always exactly one row, id fixed to "default".
 model AppSetting {
-  id          String   @id @default("default")
-  appName     String   @default("FarmsKing")
-  logoUrl     String?
-  tagline     String?
-  upiId       String?
-  upiPayeeName String?
-  updatedAt   DateTime @updatedAt
-  updatedById String?
-  updatedBy   User?    @relation("AppSettingUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  id                    String   @id @default("default")
+  appName               String   @default("FarmsKing")
+  logoUrl               String?
+  tagline               String?
+  upiId                 String?
+  upiPayeeName          String?
+  groupVoiceCallEnabled Boolean  @default(true)
+  whatsappGroupSyncEnabled Boolean @default(true)
+  whatsappAutoAddEnabled   Boolean @default(true)
+  whatsappAutoRemoveEnabled Boolean @default(true)
+  whatsappGroupJid      String?
+  featureFlags          Json?
+  updatedAt             DateTime @updatedAt
+  updatedById           String?
+  updatedBy             User?    @relation("AppSettingUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
 
   @@map("app_settings")
 }
+
 
 /// Single unified home for every coupon-kind's default rates/validity — Referral, Commission-Based, and
 /// Special (personal invite). Farmer/Advisor Plan pricing lives separately in FarmerPlanPricing (one row
@@ -1759,10 +1924,25 @@ model FarmerPlan {
   @@map("farmer_plans")
 }
 
+/// Advisor ki current active plan record (LITE or PLUS).
+model AdvisorTierPlan {
+  id        String                  @id @default(uuid())
+  advisorId String                  @unique
+  advisor   User                    @relation(fields: [advisorId], references: [id], onDelete: Cascade)
+  plan      AdvisorSubscriptionPlan @default(LITE)
+  startDate DateTime                @default(now())
+  endDate   DateTime? // null = LITE plan (no expiry)
+  createdAt DateTime                @default(now())
+  updatedAt DateTime                @updatedAt
+
+  @@map("advisor_tier_plans")
+}
+
 /// Super admin creates these coupons to give farmers BASIC or PREMIUM plans.
 model FarmerPlanCoupon {
   id                        String                 @id @default(uuid())
   code                      String                 @unique
+  category                  PlanCouponCategory     @default(FARMER_PLAN)
   plan                      FarmerSubscriptionPlan // BASIC or PREMIUM
   daysGranted               Int // how many days to activate
   assignedFarmerId          String? // optional: lock to a specific farmer
@@ -1779,6 +1959,9 @@ model FarmerPlanCoupon {
   generationCostAmount      Decimal?               @db.Decimal(10, 2) // snapshot of what was debited from the assignee's wallet at creation time, if any
   createdById               String
   createdBy                 User                   @relation("FarmerPlanCouponsCreatedBy", fields: [createdById], references: [id])
+  createdByRole             Role?
+  payoutAmount              Decimal?               @db.Decimal(10, 2)
+  payoutRecipientId         String?
   createdAt                 DateTime               @default(now())
 
   farmerPlans FarmerPlan[]
@@ -1794,7 +1977,7 @@ model FarmerPlanCoupon {
 /// business partner's/advisor's wallet accordingly — the remainder is the platform's (admin) share.
 model FarmerPlanPricing {
   id                           String                 @id @default(uuid())
-  plan                         FarmerSubscriptionPlan @unique
+  plan                         FarmerSubscriptionPlan
   price                        Decimal                @db.Decimal(10, 2)
   billingPeriodDays            Int // e.g. 365 for a yearly plan, 30 for a monthly one
   partnerShareType             DiscountValueType // PERCENTAGE (e.g. BASIC's 10%) or FIXED (e.g. STANDARD/PREMIUM's flat ₹ cut)
@@ -1803,10 +1986,18 @@ model FarmerPlanPricing {
   adminShareValue              Decimal?               @db.Decimal(10, 2) // informational — platform's own cut, for display only
   partnerGenerationCostPercent Decimal?               @db.Decimal(5, 2) // % of price debited from a Business Partner's wallet the moment they're issued a coupon for this plan
   advisorGenerationCostPercent Decimal?               @db.Decimal(5, 2) // % of price debited from an Advisor's wallet the moment they're issued a coupon for this plan
+  maxTotalCrops                Int?                   // null = unlimited
+  maxActiveCrops               Int?                   // null = unlimited
+  advisorIncluded              Boolean                @default(true)
+  chatEnabled                  Boolean                @default(true)
+  weatherEnabled               Boolean                @default(true)
+  gardenAdvisorIncluded        Boolean                @default(false)
+  isActive                     Boolean                @default(true)
   updatedAt                    DateTime               @updatedAt
   updatedById                  String?
   updatedBy                    User?                  @relation("FarmerPlanPricingUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
 
+  @@unique([plan, billingPeriodDays])
   @@map("farmer_plan_pricing")
 }
 
@@ -1852,3 +2043,391 @@ model GardenerPlanCoupon {
   @@index([createdById])
   @@map("gardener_plan_coupons")
 }
+
+model AdminChatMessage {
+  id             String   @id @default(uuid())
+  farmerId       String
+  farmer         User     @relation("AdminChatFarmer", fields: [farmerId], references: [id], onDelete: Cascade)
+  adminId        String?
+  admin          User?    @relation("AdminChatAdmin", fields: [adminId], references: [id], onDelete: SetNull)
+  senderRole     Role     @default(FARMER)
+  message        String   @db.Text
+  imageUrl       String?
+  isReadByFarmer Boolean  @default(false)
+  isReadByAdmin  Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  @@index([farmerId])
+  @@index([adminId])
+  @@map("admin_chat_messages")
+}
+
+// ─── Unified Party System & Arhtiya Management ──────────────────────────────
+
+model UnifiedParty {
+  id            String      @id @default(uuid())
+  kingId        String      @unique // Uniform format: FK-100238
+  type          PartyType   @default(INDIVIDUAL)
+  name          String
+  mandiName     String?
+  shopNumber    String?
+  mobile        String?
+  address       String?
+  village       String?
+  district      String?
+  state         String?
+  roles         PartyRole[]
+
+  ownerFarmerId String?
+  ownerFarmer   User?       @relation("FarmerPrivateParties", fields: [ownerFarmerId], references: [id], onDelete: Cascade)
+
+  userId        String?     @unique
+  user          User?       @relation("UserUnifiedParty", fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
+
+  arhtiyaTransactions ArhtiyaTransaction[]
+
+  @@index([kingId])
+  @@index([ownerFarmerId])
+  @@map("unified_parties")
+}
+
+model ArhtiyaTransaction {
+  id                  String                 @id @default(uuid())
+  farmerId            String
+  farmer              User                   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  partyId             String
+  party               UnifiedParty           @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  type                ArhtiyaTransactionType
+  amount              Decimal                @db.Decimal(12, 2)
+  transactionDate     DateTime
+
+  /// Feature 1: Advance Cash & Auto Interest Engine
+  interestRateMonthly Decimal?               @db.Decimal(5, 2) // e.g. 1.50 (% per month)
+  interestAccruedDays Int?
+  interestAmount      Decimal?               @db.Decimal(10, 2)
+
+  /// Feature 2: Crop Sale Details & Mandi Unit Converter
+  cropCycleId         String?
+  cropName            String?
+  inputUnit           MandiUnit?             @default(QUINTAL)
+  inputQuantity       Float?
+  quantityQuintals    Float?
+  ratePerQuintal      Decimal?               @db.Decimal(10, 2)
+  grossAmount         Decimal?               @db.Decimal(12, 2)
+  commissionPercent   Decimal?               @db.Decimal(5, 2)
+  commissionAmount    Decimal?               @db.Decimal(10, 2)
+  otherCharges        Decimal?               @db.Decimal(10, 2)
+  netAmount           Decimal?               @db.Decimal(12, 2)
+
+  /// Feature 3: Digital J-Form Record
+  jFormNumber         String?
+  jFormDate           DateTime?
+  jFormPhotoUrl       String?
+
+  notes               String?
+  createdAt           DateTime               @default(now())
+
+  @@index([farmerId])
+  @@index([partyId])
+  @@map("arhtiya_transactions")
+}
+
+// ─── Customer Referral & 2-Tier Lifetime Royalty Engine ──────────────────────
+
+model UserReferral {
+  id              String   @id @default(uuid())
+  referrerId      String
+  referrer        User     @relation("ReferrerUser", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredUserId  String   @unique
+  referredUser    User     @relation("ReferredUser", fields: [referredUserId], references: [id], onDelete: Cascade)
+  level           Int      @default(1) // 1 = Direct, 2 = Indirect
+  isGuarantor     Boolean  @default(false)
+  trustScoreBonus Int      @default(10)
+  createdAt       DateTime @default(now())
+
+  @@index([referrerId])
+  @@index([referredUserId])
+  @@map("user_referrals")
+}
+
+model ReferralRoyalty {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation("RoyaltyBeneficiary", fields: [userId], references: [id], onDelete: Cascade)
+  sourceUserId  String
+  sourceUser    User     @relation("RoyaltySourceUser", fields: [sourceUserId], references: [id], onDelete: Cascade)
+  amount        Decimal  @db.Decimal(10, 2)
+  royaltyType   String   // 'PLAN_PURCHASE' | 'STORE_PURCHASE' | 'SERVICE_HIRE'
+  referenceCode String?
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+  @@map("referral_royalties")
+}
+
+// ─── 3 Disruption Modules ───────────────────────────────────────────────────
+
+model VoiceAILog {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transcribedText  String
+  parsedIntent     String
+  spokenResponse   String?
+  audioUrl         String?
+  createdAt        DateTime @default(now())
+
+  @@index([userId])
+  @@map("voice_ai_logs")
+}
+
+model PlotSatelliteScan {
+  id           String   @id @default(uuid())
+  plotId       String
+  plot         Plot     @relation(fields: [plotId], references: [id], onDelete: Cascade)
+  scanDate     DateTime @default(now())
+  meanNdvi     Float
+  healthStatus String   // 'HEALTHY' | 'MODERATE_STRESS' | 'HIGH_DISEASE'
+  tileLayerUrl String
+  redZoneAlerts Json?
+  createdAt    DateTime @default(now())
+
+  @@index([plotId])
+  @@map("plot_satellite_scans")
+}
+
+model MandiPricePrediction {
+  id              String   @id @default(uuid())
+  cropName        String
+  mandiName       String
+  predictedDate   DateTime
+  predictedPrice  Decimal  @db.Decimal(10, 2)
+  confidenceScore Float
+  createdAt       DateTime @default(now())
+
+  @@index([cropName, mandiName])
+  @@map("mandi_price_predictions")
+}
+
+model PriceLockContract {
+  id              String   @id @default(uuid())
+  farmerId        String
+  farmer          User     @relation("FarmerPriceLock", fields: [farmerId], references: [id], onDelete: Cascade)
+  buyerId         String
+  buyer           User     @relation("BuyerPriceLock", fields: [buyerId], references: [id], onDelete: Cascade)
+  cropName        String
+  quantityQuintal Decimal  @db.Decimal(10, 2)
+  lockedRate      Decimal  @db.Decimal(10, 2)
+  status          String   // 'ACTIVE' | 'FULFILLED' | 'CANCELLED'
+  escrowDeposit   Decimal  @db.Decimal(10, 2)
+  createdAt       DateTime @default(now())
+
+  @@index([farmerId])
+  @@index([buyerId])
+  @@map("price_lock_contracts")
+}
+
+// ─── King Connect — Multi-Party P2P Ecosystem ───────────────────────────────
+
+enum KingConnectStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  BLOCKED
+}
+
+enum SyncRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  COUNTER_PROPOSED
+}
+
+enum TrustLevel {
+  NONE
+  BASIC
+  TRUSTED
+  AUTO_ACCEPT
+}
+
+enum DemandStatus {
+  PENDING
+  ACCEPTED
+  PARTIALLY_ACCEPTED
+  REJECTED
+  CONVERTED_TO_ORDER
+  EXPIRED
+}
+
+enum PaymentRequestStatus {
+  PENDING
+  ACCEPTED
+  PARTIALLY_ACCEPTED
+  POSTPONED
+  REJECTED
+  EXPIRED
+}
+
+/// Bidirectional link between two FarmsKing users (Farmer <-> Shopkeeper/Arhtiya/Customer/Labour)
+model KingConnectLink {
+  id                  String            @id @default(uuid())
+  initiatorId         String
+  initiator           User              @relation("KingConnectInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
+  receiverId          String
+  receiver            User              @relation("KingConnectReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  status              KingConnectStatus @default(PENDING)
+  trustLevel          TrustLevel        @default(NONE)
+  initiatorAutoAccept Boolean           @default(false)
+  receiverAutoAccept  Boolean           @default(false)
+  acceptedCount       Int               @default(0)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  syncRequests    P2pLedgerSyncRequest[]
+  demandRequests  DemandRequest[]
+  paymentRequests KingPaymentRequest[]
+
+  @@unique([initiatorId, receiverId])
+  @@index([initiatorId])
+  @@index([receiverId])
+  @@map("king_connect_links")
+}
+
+/// P2P Ledger Sync Request — when User A records a transaction for connected User B
+model P2pLedgerSyncRequest {
+  id              String               @id @default(uuid())
+  linkId          String
+  link            KingConnectLink      @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  senderId        String
+  sender          User                 @relation("SyncSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId      String
+  receiver        User                 @relation("SyncReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  transactionType PartyLedgerEntryType
+  amount          Decimal              @db.Decimal(12, 2)
+  reason          String
+  refBillNo       String?
+  notes           String?
+  status          SyncRequestStatus    @default(PENDING)
+  rejectionReason String?
+  counterAmount   Decimal?             @db.Decimal(12, 2)
+  counterNote     String?
+  isVerified      Boolean              @default(false)
+  expiresAt       DateTime
+  acceptedAt      DateTime?
+  rejectedAt      DateTime?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([linkId])
+  @@index([status])
+  @@map("p2p_ledger_sync_requests")
+}
+
+/// Product Demand Request — Shopkeeper/Customer raises demand to connected Farmer
+model DemandRequest {
+  id              String          @id @default(uuid())
+  linkId          String
+  link            KingConnectLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  requesterId     String
+  requester       User            @relation("DemandRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  farmerId        String
+  farmer          User            @relation("DemandFarmer", fields: [farmerId], references: [id], onDelete: Cascade)
+  cropName        String
+  quantity        Float
+  unit            String
+  offeredPrice    Decimal?        @db.Decimal(12, 2)
+  requiredByDate  DateTime?
+  notes           String?
+  status          DemandStatus    @default(PENDING)
+  acceptedQty     Float?
+  counterNote     String?
+  rejectionReason String?
+  orderId         String?
+  expiresAt       DateTime
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([requesterId])
+  @@index([farmerId])
+  @@index([linkId])
+  @@map("demand_requests")
+}
+
+/// Payment Request between connected King users (Accept / Partial / Postpone / Reject)
+model KingPaymentRequest {
+  id              String               @id @default(uuid())
+  linkId          String
+  link            KingConnectLink      @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  senderId        String
+  sender          User                 @relation("KingPaymentSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId      String
+  receiver        User                 @relation("KingPaymentReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  amount          Decimal              @db.Decimal(12, 2)
+  acceptedAmount  Decimal?             @db.Decimal(12, 2)
+  reason          String
+  refBillNo       String?
+  dueDate         DateTime?
+  postponedDate   DateTime?
+  status          PaymentRequestStatus @default(PENDING)
+  rejectionReason String?
+  notes           String?
+  expiresAt       DateTime
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([linkId])
+  @@map("king_payment_requests")
+}
+
+// ─── Group Voice Call & Live Audio Room ───────────────────────────────────────
+
+enum GroupVoiceCallStatus {
+  ACTIVE
+  ENDED
+}
+
+model GroupVoiceCall {
+  id           String               @id @default(uuid())
+  title        String
+  channelName  String               @unique
+  hostId       String
+  host         User                 @relation("VoiceCallHost", fields: [hostId], references: [id], onDelete: Cascade)
+  status       GroupVoiceCallStatus @default(ACTIVE)
+  startedAt    DateTime             @default(now())
+  endedAt      DateTime?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  participants GroupVoiceCallParticipant[]
+
+  @@index([hostId])
+  @@index([status])
+  @@map("group_voice_calls")
+}
+
+model GroupVoiceCallParticipant {
+  id             String         @id @default(uuid())
+  callId         String
+  call           GroupVoiceCall @relation(fields: [callId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User           @relation("VoiceCallParticipant", fields: [userId], references: [id], onDelete: Cascade)
+  role           String         @default("LISTENER") // HOST, SPEAKER, LISTENER
+  isMuted        Boolean        @default(true)
+  isHandRaised   Boolean        @default(false)
+  joinedAt       DateTime       @default(now())
+  leftAt         DateTime?
+
+  @@index([callId])
+  @@index([userId])
+  @@map("group_voice_call_participants")
+}
+

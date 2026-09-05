@@ -7,6 +7,11 @@ export interface AppSettings {
   tagline: string | null;
   upiId: string | null;
   upiPayeeName: string | null;
+  groupVoiceCallEnabled?: boolean;
+  whatsappGroupSyncEnabled?: boolean;
+  whatsappAutoAddEnabled?: boolean;
+  whatsappAutoRemoveEnabled?: boolean;
+  whatsappGroupJid?: string | null;
   updatedAt: string;
   updatedById: string | null;
 }
@@ -17,6 +22,14 @@ export interface UpdateAppSettingsPayload {
   tagline?: string;
   upiId?: string;
   upiPayeeName?: string;
+  adminName?: string;
+  adminMobile?: string;
+  adminEmail?: string;
+  groupVoiceCallEnabled?: boolean;
+  whatsappGroupSyncEnabled?: boolean;
+  whatsappAutoAddEnabled?: boolean;
+  whatsappAutoRemoveEnabled?: boolean;
+  whatsappGroupJid?: string;
 }
 
 export async function getAppSettings(): Promise<AppSettings> {

@@ -25,7 +25,15 @@ import { SplashView } from '@/components/SplashView';
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 10_000,
+      gcTime: 10 * 60 * 1000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function RootNavigation() {
   const { user, isLoading } = useAuth();
@@ -60,7 +68,7 @@ import { MobileAppShell } from '@/components/MobileAppShell';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
+  const [loaded, fontError] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     Manrope_400Regular,
     Manrope_500Medium,
@@ -70,12 +78,12 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
+    if (loaded || fontError) {
+      SplashScreen.hideAsync().catch(() => {});
     }
-  }, [loaded]);
+  }, [loaded, fontError]);
 
-  if (!loaded) {
+  if (!loaded && !fontError) {
     return null;
   }
 

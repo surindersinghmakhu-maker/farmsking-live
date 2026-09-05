@@ -6,7 +6,8 @@ export type Role =
   | 'BUSINESS_PARTNER'
   | 'ADMIN'
   | 'SUPER_ADMIN'
-  | 'OPERATOR';
+  | 'OPERATOR'
+  | 'LABOUR';
 export type AdvisorType = 'FARM' | 'GARDEN';
 export type AreaUnit = 'ACRE' | 'HECTARE' | 'BIGHA' | 'GUNTA';
 export type SoilType =
@@ -39,6 +40,7 @@ export interface User {
   role: Role;
   /** Every role this account has ever been granted — `role` is just the current/primary one. */
   roles?: Role[];
+  deactivatedRoles?: Role[];
   name: string;
   email?: string | null;
   village?: string | null;
@@ -48,6 +50,8 @@ export interface User {
   postOffice?: string | null;
   preferredLanguage: string;
   notificationsEnabled?: boolean;
+  whatsappGroupEnabled?: boolean;
+  whatsappGroupJid?: string | null;
   weatherAlertMinTempC?: number | null;
   weatherAlertMaxTempC?: number | null;
   weatherAlertRainEnabled?: boolean;
@@ -57,6 +61,8 @@ export interface User {
   sprayTankSizeL?: SprayTankSizeL | null;
   soilType?: SoilType | null;
   waterType?: WaterType | null;
+  upiId?: string | null;
+  billPrintingAddress?: string | null;
   specialization?: string | null;
   bio?: string | null;
   yearsExperience?: number | null;
@@ -114,6 +120,7 @@ export interface AdminUser {
   alternativeMobile?: string | null;
   panNumber?: string | null;
   upiId?: string | null;
+  billPrintingAddress?: string | null;
   bankAccountNumber?: string | null;
   bankIfsc?: string | null;
   bankAccountHolderName?: string | null;
@@ -309,10 +316,16 @@ export interface AdvisorReviewCropCycle extends CropCycle {
     farmId: string;
     area?: number | null;
     areaUnit?: AreaUnit;
+    soilType?: string | null;
     irrigationType?: string | null;
+    waterSource?: string | null;
     farm: {
       id: string;
       name: string;
+      totalArea?: number;
+      areaUnit?: AreaUnit;
+      soilType?: string | null;
+      irrigationSource?: string | null;
       ownerId: string;
       owner: {
         name: string;
@@ -321,6 +334,8 @@ export interface AdvisorReviewCropCycle extends CropCycle {
         district?: string | null;
         state?: string | null;
         sprayTankSizeL?: number | null;
+        soilType?: SoilType | string | null;
+        waterType?: WaterType | string | null;
       };
     };
   };
@@ -449,6 +464,8 @@ export interface CropProblem {
   assignedAdvisorId?: string | null;
   advisorResponse?: string | null;
   recommendedProduct?: string | null;
+  farmerRating?: number | null;
+  farmerFeedback?: string | null;
   followUpDate?: string | null;
   resolvedAt?: string | null;
   createdAt: string;
@@ -644,5 +661,104 @@ export interface PlanRenewalCoupon {
   isUsed: boolean;
   usedAt?: string | null;
   bonusDayApplied: boolean;
+  createdAt: string;
+}
+
+export interface LabourWorker {
+  id: string;
+  farmerId: string;
+  farmId?: string | null;
+  userId?: string | null;
+  name: string;
+  mobile?: string | null;
+  address?: string | null;
+  defaultRate?: number | null;
+  defaultUnit?: string | null; // HOURLY, DAILY, LUMPSUM
+  notes?: string | null;
+  totalEarned?: number;
+  totalPaid?: number;
+  pendingBalance?: number;
+  createdAt: string;
+}
+
+export interface LabourWorkEntry {
+  id: string;
+  farmerId: string;
+  workerId: string;
+  worker?: { id: string; name: string; mobile?: string | null };
+  farmId?: string | null;
+  plotId?: string | null;
+  cropCycleId?: string | null;
+  workDate: string;
+  workType: string;
+  unit: string;
+  quantity: number;
+  rate: number;
+  totalAmount: number;
+  notes?: string | null;
+  createdAt: string;
+}
+
+export interface LabourPayment {
+  id: string;
+  farmerId: string;
+  workerId: string;
+  worker?: { id: string; name: string };
+  paymentDate: string;
+  amount: number;
+  paymentMode?: PaymentMode | null;
+  notes?: string | null;
+  createdAt: string;
+}
+
+export interface LabourStatementTimelineEntry {
+  id: string;
+  type: 'WORK' | 'PAYMENT';
+  date: string;
+  title: string;
+  description: string;
+  amount: number;
+  notes?: string | null;
+  runningBalance: number;
+}
+
+export interface LabourStatement {
+  worker: LabourWorker;
+  totalEarned: number;
+  totalPaid: number;
+  pendingBalance: number;
+  timeline: LabourStatementTimelineEntry[];
+  workEntries: LabourWorkEntry[];
+  payments: LabourPayment[];
+}
+
+export interface LabourDashboardData {
+  worker: {
+    id: string;
+    name: string;
+    mobile?: string | null;
+    address?: string | null;
+    defaultRate?: number | null;
+    defaultUnit?: string | null;
+    farmer?: { id: string; name: string; mobile: string; village?: string | null; photoUrl?: string | null } | null;
+  };
+  summary: {
+    totalEarned: number;
+    totalPaid: number;
+    pendingBalance: number;
+  };
+  workEntries: LabourWorkEntry[];
+  payments: LabourPayment[];
+}
+
+export interface AdminChatMessage {
+  id: string;
+  farmerId: string;
+  adminId?: string | null;
+  senderRole: 'FARMER' | 'ADMIN' | 'SUPER_ADMIN';
+  message: string;
+  imageUrl?: string | null;
+  isReadByFarmer: boolean;
+  isReadByAdmin: boolean;
   createdAt: string;
 }

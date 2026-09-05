@@ -41,7 +41,6 @@ export const CustomerDashboardView: React.FC = () => {
         return list.sort((a, b) => Number(b.price) - Number(a.price));
       case 'RECENT':
       default:
-        // Products already arrive newest-first from the API.
         return list;
     }
   }, [activeProducts, sortMode]);
@@ -64,7 +63,7 @@ export const CustomerDashboardView: React.FC = () => {
         <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm')]}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>All Products</Text>
-            <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/(tabs)/categories')}>
+            <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/(tabs)/shop')}>
               <Text style={[styles.viewAllText, { color: theme.primary }]}>Open Shop</Text>
             </TouchableOpacity>
           </View>
@@ -94,7 +93,7 @@ export const CustomerDashboardView: React.FC = () => {
 
               <View style={styles.productGrid}>
                 {visibleProducts.map((p) => (
-                  <TouchableOpacity key={p.id} style={styles.productCard} activeOpacity={0.8} onPress={() => router.push('/(tabs)/categories')}>
+                  <TouchableOpacity key={p.id} style={styles.productCard} activeOpacity={0.8} onPress={() => router.push('/(tabs)/shop')}>
                     {p.imageUrl ? (
                       <Image source={{ uri: p.imageUrl }} style={styles.productImg} />
                     ) : (

@@ -40,3 +40,14 @@ export function useUpdateCropProblemStatus() {
     },
   });
 }
+
+export function useRateCropProblem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, rating, feedback }: { id: string; rating: number; feedback?: string }) =>
+      api.rateCropProblem(id, { rating, feedback }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crop-problems'] });
+    },
+  });
+}

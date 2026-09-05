@@ -31,4 +31,18 @@ export class AddressesService {
     await this.prisma.customerAddress.delete({ where: { id } });
     return { success: true };
   }
+
+  async update(user: AuthUser, id: string, dto: Partial<CreateAddressDto>) {
+    const address = await this.prisma.customerAddress.findUnique({ where: { id } });
+    if (!address) {
+      throw new NotFoundException('Address not found.');
+    }
+    if (address.ownerId !== user.id) {
+      throw new ForbiddenException('This address does not belong to you.');
+    }
+    return this.prisma.customerAddress.update({
+      where: { id },
+      data: dto,
+    });
+  }
 }

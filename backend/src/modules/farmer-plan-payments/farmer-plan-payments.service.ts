@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { NotificationType, PlanPaymentStatus, Role } from '@prisma/client';
+import { FarmerSubscriptionPlan, NotificationType, PlanCouponCategory, PlanPaymentStatus, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AdvisorAssignmentService } from '../advisor-assignment/advisor-assignment.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -28,7 +28,7 @@ export class FarmerPlanPaymentsService {
 
   /** Farmer (or their advisor) taps "Upgrade" and picks BASIC/STANDARD/PREMIUM — generates a fixed-amount UPI link and opens a pending payment claim. */
   async initiate(user: AuthUser, dto: InitiateFarmerPlanPaymentDto, farmerId?: string) {
-    const targetFarmerId = farmerId ?? (hasActiveRole(user, Role.FARMER) ? user.id : undefined);
+    const targetFarmerId = farmerId ?? user.id;
     if (!targetFarmerId) {
       throw new BadRequestException('A farmer must be specified to start a payment.');
     }
@@ -36,9 +36,9 @@ export class FarmerPlanPaymentsService {
       await this.advisorAssignmentService.assertAdvisorAssignedToFarmerAnyExpiry(user.id, targetFarmerId);
     }
 
-    const farmer = await this.prisma.user.findFirst({ where: { id: targetFarmerId, roles: { has: Role.FARMER }, deletedAt: null } });
+    const farmer = await this.prisma.user.findFirst({ where: { id: targetFarmerId, deletedAt: null } });
     if (!farmer) {
-      throw new NotFoundException('Farmer not found.');
+      throw new NotFoundException('Farmer account not found. Please log in again.');
     }
 
     const effective = await this.farmerPlansService.getEffectivePlan(targetFarmerId);
@@ -46,7 +46,19 @@ export class FarmerPlanPaymentsService {
       throw new BadRequestException(`You already have the ${effective.plan} plan active — this would be a downgrade.`);
     }
 
-    const pricing = await this.prisma.farmerPlanPricing.findUnique({ where: { plan: dto.targetPlan } });
+    let pricing = dto.billingPeriodDays
+      ? await this.prisma.farmerPlanPricing.findFirst({
+          where: { plan: dto.targetPlan, billingPeriodDays: Number(dto.billingPeriodDays) },
+        })
+      : null;
+
+    if (!pricing) {
+      pricing = await this.prisma.farmerPlanPricing.findFirst({
+        where: { plan: dto.targetPlan },
+        orderBy: { billingPeriodDays: 'desc' },
+      });
+    }
+
     if (!pricing) {
       throw new BadRequestException('Pricing for this plan is not configured yet. Please contact support.');
     }
@@ -65,7 +77,7 @@ export class FarmerPlanPaymentsService {
     }
     const upiLink = buildUpiPaymentLink({
       amount,
-      note: farmer.kingId ?? farmer.id,
+      note: `${dto.targetPlan} Plan, ID=${farmer.kingId ?? farmer.id}, ${farmer.name}`,
       transactionRef: request.id,
       payeeVpa: settings.upiId,
       payeeName: settings.upiPayeeName ?? undefined,
@@ -107,7 +119,7 @@ export class FarmerPlanPaymentsService {
 
     const updated = await this.prisma.farmerPlanPaymentRequest.update({
       where: { id },
-      data: { status: PlanPaymentStatus.SUBMITTED, submittedAt: new Date(), utr: dto.utr },
+      data: { status: PlanPaymentStatus.SUBMITTED, submittedAt: new Date(), utr: dto.utr, screenshotUrl: dto.screenshotUrl },
       include: DETAIL_INCLUDE,
     });
 
@@ -136,7 +148,7 @@ export class FarmerPlanPaymentsService {
     });
   }
 
-  /** Admin has verified the UPI payment manually and confirms it — applies the plan upgrade/extension. */
+  /** Admin has verified the UPI payment manually and confirms it — applies the plan upgrade/extension and generates assigned coupon. */
   async confirm(admin: AuthUser, id: string) {
     const request = await this.prisma.farmerPlanPaymentRequest.findUnique({ where: { id }, include: DETAIL_INCLUDE });
     if (!request) {
@@ -145,6 +157,27 @@ export class FarmerPlanPaymentsService {
     if (request.status !== PlanPaymentStatus.SUBMITTED) {
       throw new BadRequestException('Only submitted payment requests can be confirmed.');
     }
+
+    const prefix = request.targetPlan === FarmerSubscriptionPlan.PRO ? 'KC-LITE' : request.targetPlan === FarmerSubscriptionPlan.SMART ? 'KC-PRO' : request.targetPlan === FarmerSubscriptionPlan.SUPER ? 'KC-SUPER' : 'KC-FREE';
+    const digits = Math.floor(Math.random() * 1000000);
+    const code = `${prefix}-${digits.toString().padStart(6, '0')}`;
+
+    const isAdvisorPlan = (request.targetPlan === FarmerSubscriptionPlan.SMART || request.targetPlan === FarmerSubscriptionPlan.SUPER);
+    const coupon = await this.prisma.farmerPlanCoupon.create({
+      data: {
+        code,
+        category: isAdvisorPlan ? PlanCouponCategory.ADVISOR_PLAN : PlanCouponCategory.FARMER_PLAN,
+        plan: request.targetPlan,
+        daysGranted: request.daysGranted,
+        assignedFarmerId: request.farmerId,
+        createdById: admin.id,
+        createdByRole: admin.role,
+        isUsed: true,
+        usedAt: new Date(),
+        usedByFarmerId: request.farmerId,
+        generationCostAmount: request.amount,
+      },
+    });
 
     const result = await this.farmerPlansService.applyPlanChange(request.farmerId, request.targetPlan, request.daysGranted);
 
@@ -158,11 +191,11 @@ export class FarmerPlanPaymentsService {
       request.farmerId,
       NotificationType.SYSTEM,
       'Payment confirmed',
-      `Your payment of ₹${request.amount} was confirmed. ${result.plan.plan} plan active until ${result.newEndDate.toLocaleDateString('en-IN')}.${result.advisorHired ? ' A Farm Advisor has been assigned to you.' : ''}`,
-      { farmerPlanPaymentRequestId: id },
+      `Your payment of ₹${request.amount} was confirmed! Coupon ${coupon.code} has been assigned & redeemed for your account. ${result.plan.plan} plan is active until ${result.newEndDate.toLocaleDateString('en-IN')}.${isAdvisorPlan ? ' Please select your preferred Farm Advisor in the Advisor section.' : ''}`,
+      { farmerPlanPaymentRequestId: id, couponCode: coupon.code },
     );
 
-    return { request: updated, ...result };
+    return { request: updated, coupon, ...result };
   }
 
   /** Admin rejects a claim (e.g. no matching UPI transaction found). */

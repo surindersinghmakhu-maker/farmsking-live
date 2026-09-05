@@ -20,6 +20,30 @@ export class ExpensesController {
     return this.expensesService.listCategories();
   }
 
+  @Get('categories/all')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  listAllCategoriesForAdmin() {
+    return this.expensesService.listAllCategoriesForAdmin();
+  }
+
+  @Post('categories')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  createCategory(@Body() dto: { key: string; labelEn: string; labelHi?: string; sortOrder?: number }) {
+    return this.expensesService.createCategory(dto);
+  }
+
+  @Patch('categories/:id')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  updateCategory(@Param('id') id: string, @Body() dto: { labelEn?: string; labelHi?: string; sortOrder?: number; isActive?: boolean }) {
+    return this.expensesService.updateCategory(id, dto);
+  }
+
+  @Delete('categories/:id')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  deleteCategory(@Param('id') id: string) {
+    return this.expensesService.deleteCategory(id);
+  }
+
   @Post()
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateExpenseDto) {
     return this.expensesService.create(user, dto);

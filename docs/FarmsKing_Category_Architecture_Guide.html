@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pa">
+<head>
+  <meta charset="UTF-8">
+  <title>FarmsKing Category Architecture & Toggle System Guide</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Gurmukhi:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+    @page { size: A4; margin: 12mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Noto Sans Gurmukhi', 'Raavi', 'Inter', sans-serif; color: #0f172a; background: #ffffff; line-height: 1.5; font-size: 12px; }
+    .header-banner { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%); color: #ffffff; padding: 20px; border-radius: 12px; margin-bottom: 18px; }
+    .header-banner h1 { font-size: 22px; font-weight: 800; color: #ffffff; margin-bottom: 4px; }
+    .header-banner p { font-size: 13px; color: #c7d2fe; }
+    .badge { background: #4f46e5; color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; margin-top: 8px; }
+    .section-title { font-size: 15px; font-weight: 800; color: #312e81; border-bottom: 2px solid #6366f1; padding-bottom: 4px; margin: 18px 0 10px 0; }
+    .cat-box { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-bottom: 10px; border-left: 5px solid #4f46e5; }
+    .cat-title { font-size: 13.5px; font-weight: 700; color: #1e1b4b; display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .sub-list { font-size: 11.5px; color: #334155; margin-left: 15px; margin-top: 4px; }
+    .sub-list li { margin-bottom: 3px; }
+    .code-block { background: #0f172a; color: #38bdf8; font-family: monospace; font-size: 10.5px; padding: 10px; border-radius: 8px; margin: 8px 0; overflow-x: auto; white-space: pre-wrap; }
+    .table-custom { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 11px; }
+    .table-custom th { background: #1e1b4b; color: #fff; text-align: left; padding: 8px; font-weight: 700; }
+    .table-custom td { border-bottom: 1px solid #e2e8f0; padding: 7px 8px; color: #334155; }
+    .table-custom tr:nth-child(even) { background: #f8fafc; }
+    .page-break { page-break-before: always; }
+  </style>
+</head>
+<body>
+
+  <div class="header-banner">
+    <h1>🌾 FarmsKing Category Architecture & Dynamic Admin Toggle Guide</h1>
+    <p>ਪ੍ਰੋਜੈਕਟ ਸ਼੍ਰੇਣੀ ਵੰਡ, ਆਜ਼ਾਦ ਮੋਡਿਊਲ ਡਿਜ਼ਾਇਨ (Decoupled Architecture) ਅਤੇ ਐਡਮਿਨ ਆਨ/ਓਫ (Category & Sub-Category Toggle) ਸਿਸਟਮ ਗਾਈਡ</p>
+    <div class="badge">Architecture & Feature Flags Manual • 2026</div>
+  </div>
+
+  <div class="section-title">1. FarmsKing ਦੀਆਂ 8 ਮੁੱਖ Categories ਅਤੇ Sub-Categories ਦੀ ਪੂਰੀ ਵੰਡ</div>
+  
+  <div class="cat-box">
+    <div class="cat-title"><span>1. 👤 User Accounts & Auth Domain</span> <code>Category Key: user_accounts</code></div>
+    <p style="color: #475569;">ਯੂਜ਼ਰ ਲੌਗਇਨ, ਰਜਿਸਟ੍ਰੇਸ਼ਨ, ਸੁਰੱਖਿਆ ਅਤੇ ਐਡਰੈੱਸ ਪ੍ਰਬੰਧਨ।</p>
+    <ul class="sub-list">
+      <li><strong>Authentication (auth):</strong> OTP ਲੌਗਇਨ, ਰਿਫ੍ਰੈਸ਼ ਟੋਕਨ, JWT ਵੈਰੀਫਿਕੇਸ਼ਨ।</li>
+      <li><strong>User Profile (users):</strong> ਕਿਸਾਨ/ਐਡਵਾਈਜ਼ਰ/ਵਰਕਰ ਪ੍ਰੋਫਾਈਲ, King ID ਤਿਆਰੀ।</li>
+      <li><strong>Address Book (addresses):</strong> ਪਿੰਡ, ਜ਼ਿਲ੍ਹਾ, ਪਿਨਕੋਡ ਅਤੇ ਡਿਲੀਵਰੀ ਪਤੇ।</li>
+      <li><strong>Audit & Security (audit):</strong> ਲੌਗਇਨ ਹਿਸਟਰੀ, ਐਕਟੀਵਿਟੀ ਟ੍ਰੈਕਿੰਗ।</li>
+      <li><strong>Uploads System (uploads):</strong> ਪ੍ਰੋਫਾਈਲ ਅਤੇ ਡੌਕੂਮੈਂਟ ਅਪਲੋਡਜ਼।</li>
+    </ul>
+  </div>
+
+  <div class="cat-box">
+    <div class="cat-title"><span>2. 🌾 Farmer & Agriculture Domain</span> <code>Category Key: farmer_operations</code></div>
+    <p style="color: #475569;">ਕਿਸਾਨ ਦੀਆਂ ਫਸਲਾਂ, ਖੇਤ, ਸਪਰੇਅ ਅਤੇ ਹਿਸਾਬ-ਕਿਤਾਬ।</p>
+    <ul class="sub-list">
+      <li><strong>Farms & Plots (farms / plots):</strong> ਖੇਤਾਂ ਅਤੇ ਪਲਾਟਾਂ ਦਾ ਏਕੜ ਰਿਕਾਰਡ।</li>
+      <li><strong>Crops Management (crops):</strong> ਐਕਟਿਵ ਫਸਲਾਂ ਅਤੇ ਬੀਜਣ ਦੀਆਂ ਤਰੀਕਾਂ।</li>
+      <li><strong>Crop Problems (crop-problems):</strong> ਫਸਲ ਦੀਆਂ ਬੀਮਾਰੀਆਂ ਤੇ ਕੀੜਿਆਂ ਦੀ ਪਛਾਣ।</li>
+      <li><strong>Spray Schedules (spray-schedules):</strong> ਛਿੜਕਾਅ ਦੀਆਂ ਤਰੀਕਾਂ ਅਤੇ ਖਾਦ ਰਿਕਾਰਡ।</li>
+      <li><strong>Labour & Expenses (labour / expenses):</strong> ਮਜ਼ਦੂਰੀ ਦੀ ਹਾਜ਼ਰੀ, ਦਿਹਾੜੀ ਤੇ ਖੇਤ ਦੇ ਖਰਚੇ।</li>
+    </ul>
+  </div>
+
+  <div class="cat-box">
+    <div class="cat-title"><span>3. 🛒 Shopping & E-Commerce Domain</span> <code>Category Key: shopping</code></div>
+    <p style="color: #475569;">ਪ੍ਰੋਡਕਟ ਲਿਸਟਿੰਗ, ਆਰਡਰ ਪ੍ਰਬੰਧਨ ਅਤੇ ਵਿਕਰੀ ਬਿੱਲ।</p>
+    <ul class="sub-list">
+      <li><strong>Products Catalog (products):</strong> ਖਾਦ, ਬੀਜ, ਦਵਾਈਆਂ ਤੇ ਔਜ਼ਾਰ।</li>
+      <li><strong>Orders Management (orders):</strong> ਕਾਰਟ, ਚੈੱਕਆਊਟ, ਆਰਡਰ ਸਟੇਟਸ (Pending, Shipped, Delivered)।</li>
+      <li><strong>Sale Bills (sale-bills):</strong> ਕਿਸਾਨਾਂ ਦੁਆਰਾ ਵੇਚੀਆਂ ਫਸਲਾਂ ਦੇ ਡਿਜੀਟਲ ਬਿੱਲ।</li>
+      <li><strong>Parties Ledger (parties):</strong> ਆੜ੍ਹਤੀ, ਦੁਕਾਨਦਾਰ ਅਤੇ ਖਰੀਦਦਾਰਾਂ ਦਾ ਖਾਤਾ।</li>
+      <li><strong>Payment Receipts (payment-receipts):</strong> ਪ੍ਰਾਪਤ ਪੈਸਿਆਂ ਦੀਆਂ ਡਿਜੀਟਲ ਰਸੀਦਾਂ।</li>
+    </ul>
+  </div>
+
+  <div class="cat-box">
+    <div class="cat-title"><span>4. 👨‍🌾 Advisor & Support Domain</span> <code>Category Key: advisor_support</code></div>
+    <p style="color: #475569;">ਖੇਤੀ ਮਾਹਿਰਾਂ ਨਾਲ ਰਾਬਤਾ ਅਤੇ ਸਲਾਹਕਾਰੀ।</p>
+    <ul class="sub-list">
+      <li><strong>Advisor Assignment (advisor-assignment):</strong> ਕਿਸਾਨ ਨੂੰ ਸਹੀ ਐਡਵਾਈਜ਼ਰ ਅਲੋਟ ਕਰਨਾ।</li>
+      <li><strong>Advisor Chat (chat):</strong> ਫੋਟੋਆਂ ਤੇ ਮੈਸੇਜ ਭੇਜ ਕੇ ਫਸਲ ਦੀ ਸਲਾਹ ਲੈਣਾ।</li>
+      <li><strong>Call Requests (call-requests):</strong> ਫੋਨ ਕਾਲ ਲਈ ਰਿਕਵੈਸਟ ਬਟਨ।</li>
+      <li><strong>Admin Support Chat (admin-chat):</strong> 24x7 ਐਡਮਿਨ ਹੈਲਪਲਾਈਨ।</li>
+    </ul>
+  </div>
+
+  <div class="page-break"></div>
+
+  <div class="cat-box">
+    <div class="cat-title"><span>5. 💳 Coupons, Plans & Financial Domain</span> <code>Category Key: coupons_financial</code></div>
+    <p style="color: #475569;">ਪਲਾਨ, ਕੂਪਨ ਡਿਸਕਾਊਂਟ, ਵਾਲੇਟ ਅਤੇ ਪੇਮੈਂਟਸ।</p>
+    <ul class="sub-list">
+      <li><strong>Coupons System (coupons / coupon-settings):</strong> ਪ੍ਰੋਮੋ ਕੋਡ ਅਤੇ ਡਿਸਕਾਊਂਟ ਰੂਲਜ਼।</li>
+      <li><strong>Subscription Plans (farmer-plans / gardener-plans):</strong> Free, Lite, Pro, Smart ਪਲਾਨ।</li>
+      <li><strong>Plan Payments & Renewal (plan-payments / plan-renewal):</strong> ਪਲਾਨ ਰੀਨਿਊ ਅਤੇ UPI QR Payment।</li>
+      <li><strong>Wallet & Withdrawals (wallet / withdrawals):</strong> ਕਿਸਾਨ/ਐਡਵਾਈਜ਼ਰ ਵਾਲੇਟ ਅਤੇ ਪੈਸੇ ਕਢਵਾਉਣਾ।</li>
+      <li><strong>Payment Gateway (phonepe):</strong> PhonePe ਆਨਲਾਈਨ ਭੁਗਤਾਨ ਇੰਟੀਗ੍ਰੇਸ਼ਨ।</li>
+    </ul>
+  </div>
+
+  <div class="cat-box">
+    <div class="cat-title"><span>6. 📞 Telephony & Communication Domain</span> <code>Category Key: telephony_comm</code></div>
+    <p style="color: #475569;">ਆਡੀਓ ਕਾਲਿੰਗ, ਵਟਸਐਪ ਆਟੋਮੇਸ਼ਨ ਤੇ ਨੋਟੀਫਿਕੇਸ਼ਨ।</p>
+    <ul class="sub-list">
+      <li><strong>WhatsApp System (whatsapp):</strong> ਬਿੱਲ, ਅਲਰਟ ਤੇ ਮੈਸੇਜ ਵਟਸਐਪ 'ਤੇ ਭੇਜਣਾ।</li>
+      <li><strong>Voice Call (voice-call):</strong> ਐਪ ਅੰਦਰ ਇੰਟਰਨੈੱਟ/ਸਿਮ ਰਾਹੀਂ ਆਡੀਓ ਕਾਲਿੰਗ।</li>
+      <li><strong>Voice AI (voice-ai):</strong> ਆਟੋਮੇਟਿਡ AI ਆਡੀਓ ਸੁਨੇਹੇ।</li>
+      <li><strong>Push Notifications (notifications):</strong> ਮੋਬਾਈਲ ਪੁਸ਼ ਨੋਟੀਫਿਕੇਸ਼ਨਜ਼।</li>
+    </ul>
+  </div>
+
+  <div class="cat-box">
+    <div class="cat-title"><span>7. 🌤️ Weather & Satellite Intelligence</span> <code>Category Key: weather_intelligence</code></div>
+    <p style="color: #475569;">ਮੌਸਮ, ਸੈਟੇਲਾਇਟ ਫਸਲ ਨਿਗਰਾਨੀ ਅਤੇ ਮੰਡੀ ਭਾਅ।</p>
+    <ul class="sub-list">
+      <li><strong>Live Weather (weather):</strong> ਤਾਪਮਾਨ, ਬਾਰਿਸ਼ ਤੇ ਮੌਸਮੀ ਚੇਤਾਵਨੀਆਂ।</li>
+      <li><strong>Satellite Crop Monitoring (satellite):</strong> ਖੇਤ ਦਾ ਸੈਟੇਲਾਇਟ ਮੈਪ ਤੇ ਫਸਲ ਦੀ ਸਿਹਤ (NDVI)।</li>
+      <li><strong>Mandi AI & Rates (mandi-ai / market-rates):</strong> ਲਾਈਵ ਮੰਡੀ ਰੇਟ ਅਤੇ ਕੀਮਤ ਦਾ ਅਨੁਮਾਨ।</li>
+    </ul>
+  </div>
+
+  <div class="cat-box">
+    <div class="cat-title"><span>8. ⚙️ System & Infrastructure Domain</span> <code>Category Key: system_infra</code></div>
+    <p style="color: #475569;">ਐਪ ਸੈਟਿੰਗਜ਼, ਬੈਕਅੱਪ ਤੇ ਐਡਮਿਨ ਕੰਟਰੋਲ।</p>
+    <ul class="sub-list">
+      <li><strong>App Settings (app-settings):</strong> ਗਲੋਬਲ ਕੌਨਫਿਗ੍ਰੇਸ਼ਨ ਅਤੇ ਮੋਡਿਊਲ ਟੌਗਲਜ਼।</li>
+      <li><strong>Drive Backup (google-drive-backup):</strong> ਡਾਟਾਬੇਸ ਦਾ ਆਟੋਮੈਟਿਕ ਬੈਕਅੱਪ।</li>
+      <li><strong>Referral System (referrals):</strong> ਦੋਸਤਾਂ ਨੂੰ ਐਪ ਰੈਫਰ ਕਰਕੇ ਇਨਾਮ ਜਿੱਤਣਾ।</li>
+    </ul>
+  </div>
+
+  <div class="section-title">2. Admin Panel ਵਿੱਚ Dynamic Toggle (ON/OFF) ਸਿਸਟਮ ਕਿਵੇਂ ਕੰਮ ਕਰੇਗਾ?</div>
+
+  <p>ਐਡਮਿਨ ਪੈਨਲ ਵਿੱਚ ਕਿਸੇ ਵੀ Main Category ਜਾਂ Sub-Category ਨੂੰ <strong>Dynamic ON/OFF</strong> ਕਰਨ ਲਈ 3 ਲੇਅਰਾਂ (Database, Backend Guard, Frontend Dynamic UI) ਦਾ ਡਿਜ਼ਾਇਨ ਤਿਆਰ ਕੀਤਾ ਗਿਆ ਹੈ:</p>
+
+  <h3 style="font-size: 13px; color: #1e1b4b; margin-top: 10px;">Step 1: Database Feature Flag JSON Schema</h3>
+  <p>ਡਾਟਾਬੇਸ ਦੇ <code>AppSetting</code> ਟੇਬਲ ਵਿੱਚ ਹਰੇਕ ਕੈਟੇਗਰੀ ਅਤੇ ਸਬ-ਕੈਟੇਗਰੀ ਦੀ ਸਟੇਟਸ ਫਲੈਗ (Status Flag) ਰੱਖੀ ਜਾਵੇਗੀ:</p>
+
+  <div class="code-block">
+{
+  "featureFlags": {
+    "shopping": {
+      "enabled": true,
+      "subCategories": {
+        "products": true,
+        "orders": true,
+        "saleBills": false,  // Admin toggled OFF
+        "parties": true
+      }
+    },
+    "telephony_comm": {
+      "enabled": true,
+      "subCategories": {
+        "whatsapp": true,
+        "voiceCall": false,  // Admin toggled OFF
+        "voiceAi": false
+      }
+    }
+  }
+}
+  </div>
+
+  <h3 style="font-size: 13px; color: #1e1b4b; margin-top: 10px;">Step 2: Backend (NestJS) Route Protection Guard</h3>
+  <p>ਜੇਕਰ ਐਡਮਿਨ ਨੇ ਕੋਈ ਕੈਟੇਗਰੀ ਬੰਦ ਕੀਤੀ ਹੋਵੇਗੀ, ਤਾਂ Backend API ਤੁਰੰਤ <code>403 Service Disabled</code> ਦਾ ਰਿਸਪੌਂਸ ਦੇਵੇਗਾ ਤਾਂ ਜੋ ਕੋਈ ਡਾਇਰੈਕਟ API ਕਾਲ ਵੀ ਨਾ ਕਰ ਸਕੇ:</p>
+
+  <div class="code-block">
+// Controller Route Protection Example
+@UseGuards(FeatureFlagGuard)
+@RequireFeature('shopping', 'saleBills')
+@Post('create-bill')
+async createSaleBill(@Body() dto: CreateBillDto) {
+  return this.saleBillsService.create(dto);
+}
+  </div>
+
+  <h3 style="font-size: 13px; color: #1e1b4b; margin-top: 10px;">Step 3: Frontend (React / Mobile App) Dynamic UI Hiding</h3>
+  <p>ਫਰੰਟਐਂਡ <code>useFeatureFlags()</code> ਹੁੱਕ ਜ਼ਰੀਏ ਸੈਟਿੰਗਜ਼ ਰੀਡ ਕਰੇਗਾ। ਜੇਕਰ ਕੋਈ ਕੈਟੇਗਰੀ ਜਾਂ ਸਬ-ਕੈਟੇਗਰੀ OFF ਹੈ:</p>
+  <ul style="margin-left: 20px; font-size: 11.5px; color: #334155; margin-top: 4px;">
+    <li>ਉਸਦਾ **Sidebar Menu Item / Tab ਆਟੋਮੈਟਿਕ ਗਾਇਬ (Hide)** ਹੋ ਜਾਵੇਗਾ।</li>
+    <li>ਉਸ ਨਾਲ ਸੰਬੰਧਿਤ ਬਟਨ (ਜਿਵੇਂ Call Advisor ਜਾਂ WhatsApp Share) ਐਪ ਵਿੱਚੋਂ Disappear ਹੋ ਜਾਣਗੇ।</li>
+    <li>ਕੋਈ ਵੀ ਪੇਜ ਖੋਲ੍ਹਣ 'ਤੇ *"ਇਹ ਸੁਵਿਧਾ ਫਿਲਹਾਲ ਐਡਮਿਨ ਦੁਆਰਾ ਬੰਦ ਕੀਤੀ ਗਈ ਹੈ"* ਦਾ ਨੋਟਿਸ ਦਿਖਾਈ ਦੇਵੇਗਾ।</li>
+  </ul>
+
+  <div class="section-title">3. Admin Toggle Control Panel Interface Overview</div>
+  
+  <table class="table-custom">
+    <thead>
+      <tr>
+        <th>Category Name</th>
+        <th>Sub-Category</th>
+        <th>Main Status</th>
+        <th>Sub Status</th>
+        <th>Admin Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Shopping Domain</strong></td>
+        <td>Sale Bills (ਸੇਲ ਬਿੱਲ)</td>
+        <td><span style="color:green;">● ON</span></td>
+        <td><span style="color:red;">○ OFF</span></td>
+        <td>Switch OFF / Turn ON</td>
+      </tr>
+      <tr>
+        <td><strong>Shopping Domain</strong></td>
+        <td>Products Catalog</td>
+        <td><span style="color:green;">● ON</span></td>
+        <td><span style="color:green;">● ON</span></td>
+        <td>Switch OFF</td>
+      </tr>
+      <tr>
+        <td><strong>Telephony Domain</strong></td>
+        <td>Voice Call (ਆਡੀਓ ਕਾਲ)</td>
+        <td><span style="color:green;">● ON</span></td>
+        <td><span style="color:red;">○ OFF</span></td>
+        <td>Switch OFF / Turn ON</td>
+      </tr>
+      <tr>
+        <td><strong>Advisor Domain</strong></td>
+        <td>Advisor Call Request</td>
+        <td><span style="color:green;">● ON</span></td>
+        <td><span style="color:green;">● ON</span></td>
+        <td>Switch OFF</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="background: #0f172a; color: #ffffff; padding: 14px; border-radius: 10px; margin-top: 15px;">
+    <h4 style="color: #38bdf8; margin-bottom: 4px;">💡 Decoupled Development Rule for Engineers:</h4>
+    <p style="font-size: 11px; color: #cbd5e1;">ਜਦੋਂ ਵੀ ਕਿਸੇ ਨਵੀਂ ਕੈਟੇਗਰੀ 'ਤੇ ਕੰਮ ਕਰਨਾ ਹੋਵੇ, ਤਾਂ ਉਸ ਕੈਟੇਗਰੀ ਨੂੰ <code>featureFlags</code> JSON ਕੌਨਫਿਗ੍ਰੇਸ਼ਨ ਵਿੱਚ ਰਜਿਸਟਰ ਕਰੋ। ਇਸ ਨਾਲ ਹੋਰ ਸਾਰੇ ਮੋਡਿਊਲਾਂ ਤੋਂ ਬਿਨਾਂ ਛੇੜਛਾੜ ਕੀਤੇ ਉਸ ਕੈਟੇਗਰੀ ਨੂੰ ਐਡਮਿਨ ਪੈਨਲ ਤੋਂ ਲਾਈਵ ਕੰਟਰੋਲ ਕੀਤਾ ਜਾ ਸਕਦਾ ਹੈ।</p>
+  </div>
+
+</body>
+</html>

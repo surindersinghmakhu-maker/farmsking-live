@@ -9,6 +9,44 @@ export function useExpenseCategories() {
   });
 }
 
+export function useAllExpenseCategoriesForAdmin() {
+  return useQuery({
+    queryKey: ['expense-categories', 'admin-all'],
+    queryFn: expensesApi.listAllExpenseCategoriesForAdmin,
+  });
+}
+
+export function useCreateAdminExpenseCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: expensesApi.createAdminExpenseCategory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expense-categories'] });
+    },
+  });
+}
+
+export function useUpdateAdminExpenseCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: { labelEn?: string; labelHi?: string; sortOrder?: number; isActive?: boolean } }) =>
+      expensesApi.updateAdminExpenseCategory(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expense-categories'] });
+    },
+  });
+}
+
+export function useDeleteAdminExpenseCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: expensesApi.deleteAdminExpenseCategory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expense-categories'] });
+    },
+  });
+}
+
 export function useExpensesForFarm(farmId: string | undefined) {
   return useQuery({
     queryKey: ['expenses', 'farm', farmId],

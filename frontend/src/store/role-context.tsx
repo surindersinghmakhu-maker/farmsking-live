@@ -38,7 +38,9 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   const assignedRoles = useMemo<UserRole[]>(() => {
     if (!user) return ['CUSTOMER'];
     const granted = user.roles && user.roles.length > 0 ? user.roles : [user.role];
-    const mapped = granted.map((r) => toUserRole(r, user.advisorType));
+    const deactivated = user.deactivatedRoles ?? [];
+    const activeRoles = granted.filter((r) => !deactivated.includes(r));
+    const mapped = activeRoles.map((r) => toUserRole(r, user.advisorType));
     // De-dupe while keeping the primary role first.
     return Array.from(new Set([primaryRole, ...mapped]));
   }, [user, primaryRole]);

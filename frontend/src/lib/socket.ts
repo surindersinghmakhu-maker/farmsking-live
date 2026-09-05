@@ -35,8 +35,38 @@ export async function getChatSocket(): Promise<Socket> {
   return socket;
 }
 
+let voiceSocket: Socket | null = null;
+let voiceSocketToken: string | null = null;
+
+export async function getVoiceCallSocket(): Promise<Socket> {
+  const apiUrl = apiClient.defaults.baseURL || (await getActiveApiUrl());
+  const serverUrl = apiUrl.replace(/\/api\/v1\/?$/, '');
+  const token = await Storage.getItemAsync(TOKEN_KEY);
+
+  if (voiceSocket?.connected && token === voiceSocketToken) return voiceSocket;
+
+  if (voiceSocket) {
+    voiceSocket.disconnect();
+    voiceSocket = null;
+  }
+
+  voiceSocketToken = token;
+  voiceSocket = ioFunc(`${serverUrl}/voice-call`, {
+    auth: { token },
+    transports: ['websocket'],
+    reconnection: true,
+  });
+
+  return voiceSocket;
+}
+
 export function disconnectChatSocket() {
   socket?.disconnect();
   socket = null;
   socketToken = null;
+
+  voiceSocket?.disconnect();
+  voiceSocket = null;
+  voiceSocketToken = null;
 }
+

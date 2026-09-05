@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -20,6 +20,11 @@ export class AddressesController {
   @Get('mine')
   listMine(@CurrentUser() user: AuthUser) {
     return this.addressesService.listMine(user);
+  }
+
+  @Patch(':id')
+  update(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: Partial<CreateAddressDto>) {
+    return this.addressesService.update(user, id, dto);
   }
 
   @Delete(':id')

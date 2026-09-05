@@ -6,6 +6,8 @@ import { Platform } from 'react-native';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useBulkCreateSchedules, useSchedulesForCropCycle } from '@/src/hooks/useCropActivitySchedules';
+import { useMySprayItemTemplates } from '@/src/hooks/useSprayItemTemplates';
+import { QuickAddDoseItemModal } from '@/src/components/QuickAddDoseItemModal';
 import { ActivityType, CropActivitySchedule } from '@/src/types/api';
 
 const theme = RoleThemes.FARM_ADVISOR;
@@ -63,13 +65,20 @@ interface AdvisorScheduleTimelineProps {
 export function AdvisorScheduleTimeline({ cropCycleId, cropName, farmerName }: AdvisorScheduleTimelineProps) {
   const { data: tasks, isLoading } = useSchedulesForCropCycle(cropCycleId);
   const bulkCreate = useBulkCreateSchedules();
+  const { data: itemTemplatesForSearch } = useMySprayItemTemplates();
 
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isQuickAddDoseOpen, setIsQuickAddDoseOpen] = useState(false);
   const [activityType, setActivityType] = useState<ActivityType>('SPRAY');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [scheduledDate, setScheduledDate] = useState(new Date().toISOString().slice(0, 10));
   const [error, setError] = useState<string | null>(null);
+
+  const query = title.trim().toLowerCase();
+  const doseSuggestions = query
+    ? (itemTemplatesForSearch ?? []).filter((t) => t.item.toLowerCase().includes(query) || (t.dose && t.dose.toLowerCase().includes(query))).slice(0, 5)
+    : [];
 
   const resetForm = () => {
     setActivityType('SPRAY');
@@ -81,7 +90,7 @@ export function AdvisorScheduleTimeline({ cropCycleId, cropName, farmerName }: A
 
   const handleAddTask = async () => {
     if (!title.trim()) {
-      setError('Enter a task title.');
+      setError('Enter a Task / Activity title.');
       return;
     }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(scheduledDate)) {
@@ -130,7 +139,7 @@ export function AdvisorScheduleTimeline({ cropCycleId, cropName, farmerName }: A
         <View style={styles.table}>
           <View style={styles.tableHeaderRow}>
             <Text style={[styles.tableHeaderCell, styles.dateCol]}>Date</Text>
-            <Text style={[styles.tableHeaderCell, styles.taskCol]}>Task</Text>
+            <Text style={[styles.tableHeaderCell, styles.taskCol]}>Task / Activity</Text>
             <Text style={[styles.tableHeaderCell, styles.remarksCol]}>Remarks</Text>
           </View>
           {[...tasks]
@@ -197,14 +206,47 @@ export function AdvisorScheduleTimeline({ cropCycleId, cropName, farmerName }: A
                 })}
               </View>
 
-              <Text style={styles.label}>Task Title</Text>
+              <View style={styles.labelHeaderRow}>
+                <Text style={styles.label}>Task / Activity</Text>
+                <TouchableOpacity
+                  style={styles.quickAddDoseBtn}
+                  activeOpacity={0.8}
+                  onPress={() => setIsQuickAddDoseOpen(true)}
+                >
+                  <Ionicons name="add-circle" size={13} color={theme.primary} />
+                  <Text style={styles.quickAddDoseBtnText}>+ Add New Dose Item</Text>
+                </TouchableOpacity>
+              </View>
+
               <TextInput
                 style={styles.input}
-                placeholder="e.g. Imidacloprid Foliar Spray"
+                placeholder="e.g. Imidacloprid Foliar Spray or Dose Item"
                 placeholderTextColor="#94a3b8"
                 value={title}
                 onChangeText={setTitle}
               />
+
+              {doseSuggestions.length > 0 ? (
+                <View style={styles.itemSuggestBox}>
+                  {doseSuggestions.map((s) => (
+                    <TouchableOpacity
+                      key={s.id}
+                      style={styles.itemSuggestRow}
+                      onPress={() => {
+                        tap();
+                        const composed = s.dose ? `${s.item} (${s.dose})` : s.item;
+                        setTitle(composed);
+                      }}
+                    >
+                      <Ionicons name="flask-outline" size={14} color={theme.primary} />
+                      <Text style={styles.itemSuggestText}>
+                        {s.item}
+                        {s.dose ? <Text style={styles.itemSuggestDose}> · {s.dose}</Text> : null}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ) : null}
 
               <Text style={styles.label}>Description (optional)</Text>
               <TextInput
@@ -243,6 +285,17 @@ export function AdvisorScheduleTimeline({ cropCycleId, cropName, farmerName }: A
           </View>
         </View>
       </Modal>
+
+      {/* Quick Add Dose Item Modal */}
+      <QuickAddDoseItemModal
+        visible={isQuickAddDoseOpen}
+        onClose={() => setIsQuickAddDoseOpen(false)}
+        themeColor={theme.primary}
+        onCreated={(newItem) => {
+          const composed = newItem.dose ? `${newItem.item} (${newItem.dose})` : newItem.item;
+          setTitle(composed);
+        }}
+      />
     </View>
   );
 }
@@ -317,7 +370,10 @@ const styles = StyleSheet.create({
   modalHeaderRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 },
   modalTitle: { fontSize: 15.5, fontFamily: FONT.extraBold, color: '#0f172a' },
   modalSub: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 },
-  label: { fontSize: 11.5, fontFamily: FONT.bold, color: '#334155', marginTop: 2 },
+  labelHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
+  label: { fontSize: 11.5, fontFamily: FONT.bold, color: '#334155' },
+  quickAddDoseBtn: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  quickAddDoseBtnText: { fontSize: 11, fontFamily: FONT.bold, color: theme.primary },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: {
     flexDirection: 'row',
@@ -342,7 +398,37 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     color: '#0f172a',
   },
+  itemSuggestBox: {
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: RADIUS.md,
+    backgroundColor: '#ffffff',
+    marginTop: -4,
+    maxHeight: 150,
+    overflow: 'hidden',
+    ...premiumShadow('#000000', 'sm'),
+  },
+  itemSuggestRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  itemSuggestText: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  itemSuggestDose: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    color: '#15803d',
+  },
   errorText: { color: '#dc2626', fontFamily: FONT.semiBold, fontSize: 12 },
   submitBtn: { backgroundColor: theme.primary, borderRadius: RADIUS.md, paddingVertical: 13, alignItems: 'center', marginTop: 4 },
   submitBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 14 },
 });
+

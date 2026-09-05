@@ -26,7 +26,7 @@ export class CreateProductDto {
   imageUrl?: string;
 
   @IsOptional()
-  @IsInt()
+  @IsNumber()
   @Min(0)
   stockQty?: number;
 }

@@ -1,9 +1,13 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { PartyLedgerEntryType } from '@prisma/client';
+import { ArhtiyaTransactionType, MandiUnit, PartyLedgerEntryType, PartyRole, PartyType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { RecordSaleLedgerDto } from './dto/record-sale-ledger.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
+import { CreateUnifiedPartyDto } from './dto/create-unified-party.dto';
+import { RecordArhtiyaAdvanceDto } from './dto/record-arhtiya-advance.dto';
+import { RecordArhtiyaCropSaleDto } from './dto/record-arhtiya-crop-sale.dto';
+
 
 /** Sign each ledger entry type contributes to a party's balance: + = party owes the farmer, - = farmer owes the party. */
 const SIGN: Record<PartyLedgerEntryType, 1 | -1> = {
@@ -20,6 +24,18 @@ export class PartiesService {
   create(user: AuthUser, name: string, address: string, mobile?: string) {
     return this.prisma.party.create({
       data: { ownerId: user.id, name: name.trim(), address: address.trim(), mobile: mobile?.trim() || null },
+    });
+  }
+
+  async update(user: AuthUser, partyId: string, dto: { name?: string; address?: string; mobile?: string }) {
+    await this.findOwnedOrThrow(user, partyId);
+    return this.prisma.party.update({
+      where: { id: partyId },
+      data: {
+        ...(dto.name && { name: dto.name.trim() }),
+        ...(dto.address !== undefined && { address: dto.address.trim() }),
+        ...(dto.mobile !== undefined && { mobile: dto.mobile.trim() || null }),
+      },
     });
   }
 
@@ -155,4 +171,183 @@ export class PartiesService {
       data: { partyId, type: PartyLedgerEntryType.EXPENSE_CREDIT, amount, reason, expenseId },
     });
   }
+
+  // ─── Unified Party System & King ID ───────────────────────────────────────
+
+  private async generateKingId(): Promise<string> {
+    let kingId = `FK-${Math.floor(100000 + Math.random() * 900000)}`;
+    while (await this.prisma.unifiedParty.findUnique({ where: { kingId } })) {
+      kingId = `FK-${Math.floor(100000 + Math.random() * 900000)}`;
+    }
+    return kingId;
+  }
+
+  async createUnifiedParty(user: AuthUser, dto: CreateUnifiedPartyDto) {
+    const kingId = await this.generateKingId();
+    return this.prisma.unifiedParty.create({
+      data: {
+        kingId,
+        ownerFarmerId: user.id,
+        name: dto.name.trim(),
+        type: dto.type ?? PartyType.INDIVIDUAL,
+        roles: dto.roles && dto.roles.length > 0 ? dto.roles : [PartyRole.CUSTOMER],
+        mandiName: dto.mandiName?.trim() || null,
+        shopNumber: dto.shopNumber?.trim() || null,
+        mobile: dto.mobile?.trim() || null,
+        address: dto.address?.trim() || null,
+        village: dto.village?.trim() || null,
+        district: dto.district?.trim() || null,
+        state: dto.state?.trim() || null,
+      },
+    });
+  }
+
+  async listUnifiedParties(user: AuthUser, role?: PartyRole) {
+    const where: any = { ownerFarmerId: user.id, deletedAt: null };
+    if (role) {
+      where.roles = { has: role };
+    }
+    return this.prisma.unifiedParty.findMany({
+      where,
+      orderBy: { name: 'asc' },
+    });
+  }
+
+  // ─── Arhtiya Management Module ───────────────────────────────────────────
+
+  async recordArhtiyaAdvance(user: AuthUser, dto: RecordArhtiyaAdvanceDto) {
+    const party = await this.prisma.unifiedParty.findFirst({
+      where: { id: dto.partyId, ownerFarmerId: user.id, deletedAt: null },
+    });
+    if (!party) throw new NotFoundException('Arhtiya / Party not found.');
+
+    return this.prisma.arhtiyaTransaction.create({
+      data: {
+        farmerId: user.id,
+        partyId: dto.partyId,
+        type: ArhtiyaTransactionType.ADVANCE_TAKEN,
+        amount: dto.amount,
+        interestRateMonthly: dto.interestRateMonthly ?? null,
+        transactionDate: new Date(dto.transactionDate),
+        notes: dto.notes?.trim() || null,
+      },
+    });
+  }
+
+  /** Convert input unit to Quintals */
+  private convertToQuintals(quantity: number, unit: MandiUnit = MandiUnit.QUINTAL): number {
+    switch (unit) {
+      case MandiUnit.BAG_50KG:
+        return (quantity * 50) / 100;
+      case MandiUnit.BAG_35KG:
+        return (quantity * 35) / 100;
+      case MandiUnit.MANN:
+        return (quantity * 40) / 100;
+      case MandiUnit.KG:
+        return quantity / 100;
+      case MandiUnit.QUINTAL:
+      default:
+        return quantity;
+    }
+  }
+
+  async recordArhtiyaCropSale(user: AuthUser, dto: RecordArhtiyaCropSaleDto) {
+    const party = await this.prisma.unifiedParty.findFirst({
+      where: { id: dto.partyId, ownerFarmerId: user.id, deletedAt: null },
+    });
+    if (!party) throw new NotFoundException('Arhtiya / Party not found.');
+
+    const unit = dto.inputUnit ?? MandiUnit.QUINTAL;
+    const quantityQuintals = this.convertToQuintals(dto.inputQuantity, unit);
+    const grossAmount = Math.round(quantityQuintals * dto.ratePerQuintal * 100) / 100;
+
+    const commissionPercent = dto.commissionPercent ?? 0;
+    const commissionAmount = Math.round(((grossAmount * commissionPercent) / 100) * 100) / 100;
+    const otherCharges = dto.otherCharges ?? 0;
+    const netAmount = Math.max(0, Math.round((grossAmount - commissionAmount - otherCharges) * 100) / 100);
+
+    return this.prisma.arhtiyaTransaction.create({
+      data: {
+        farmerId: user.id,
+        partyId: dto.partyId,
+        type: ArhtiyaTransactionType.CROP_SALE_CREDIT,
+        amount: netAmount,
+        transactionDate: new Date(dto.transactionDate),
+        cropCycleId: dto.cropCycleId || null,
+        cropName: dto.cropName.trim(),
+        inputUnit: unit,
+        inputQuantity: dto.inputQuantity,
+        quantityQuintals,
+        ratePerQuintal: dto.ratePerQuintal,
+        grossAmount,
+        commissionPercent,
+        commissionAmount,
+        otherCharges,
+        netAmount,
+        jFormNumber: dto.jFormNumber?.trim() || null,
+        jFormDate: dto.jFormDate ? new Date(dto.jFormDate) : null,
+        jFormPhotoUrl: dto.jFormPhotoUrl?.trim() || null,
+        notes: dto.notes?.trim() || null,
+      },
+    });
+  }
+
+  /** Calculate net settlement, auto interest, and transaction ledger for an Arhtiya */
+  async getArhtiyaLedgerHisab(user: AuthUser, partyId: string) {
+    const party = await this.prisma.unifiedParty.findFirst({
+      where: { id: partyId, ownerFarmerId: user.id, deletedAt: null },
+    });
+    if (!party) throw new NotFoundException('Arhtiya / Party not found.');
+
+    const transactions = await this.prisma.arhtiyaTransaction.findMany({
+      where: { partyId, farmerId: user.id },
+      orderBy: { transactionDate: 'asc' },
+    });
+
+    const now = new Date();
+    let totalAdvances = 0;
+    let totalInterestAccrued = 0;
+    let totalCropSalesNet = 0;
+
+    const processedTransactions = transactions.map((tx) => {
+      let accruedInterest = 0;
+      let daysElapsed = 0;
+
+      if (tx.type === ArhtiyaTransactionType.ADVANCE_TAKEN && tx.interestRateMonthly) {
+        const startDate = new Date(tx.transactionDate);
+        const diffMs = now.getTime() - startDate.getTime();
+        daysElapsed = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+        const monthlyRate = Number(tx.interestRateMonthly);
+        const principal = Number(tx.amount);
+        accruedInterest = Math.round(principal * (monthlyRate / 100) * (daysElapsed / 30) * 100) / 100;
+        totalInterestAccrued += accruedInterest;
+        totalAdvances += principal;
+      } else if (tx.type === ArhtiyaTransactionType.ADVANCE_TAKEN) {
+        totalAdvances += Number(tx.amount);
+      } else if (tx.type === ArhtiyaTransactionType.CROP_SALE_CREDIT) {
+        totalCropSalesNet += Number(tx.netAmount || tx.amount);
+      }
+
+      return {
+        ...tx,
+        accruedInterest,
+        daysElapsed,
+      };
+    });
+
+    const totalDebt = totalAdvances + totalInterestAccrued;
+    const netBalance = Math.round((totalCropSalesNet - totalDebt) * 100) / 100;
+
+    return {
+      party,
+      totalAdvances: Math.round(totalAdvances * 100) / 100,
+      totalInterestAccrued: Math.round(totalInterestAccrued * 100) / 100,
+      totalDebt: Math.round(totalDebt * 100) / 100,
+      totalCropSalesNet: Math.round(totalCropSalesNet * 100) / 100,
+      netBalance,
+      status: netBalance >= 0 ? 'RECEIVABLE_FROM_ARHTIYA' : 'OWED_TO_ARHTIYA',
+      transactions: processedTransactions,
+    };
+  }
 }
+

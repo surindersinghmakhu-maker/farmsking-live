@@ -1,22 +1,26 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Platform, TextInput, ActivityIndicator, Alert, Image } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Platform, TextInput, ActivityIndicator, Alert, Image, Linking, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
-import { useFarmersList, useFarmerDetails } from '@/src/hooks/useAdvisorAssignments';
+import { useFarmersList, useFarmerDetails, useAcceptAssignment, useRejectAssignment } from '@/src/hooks/useAdvisorAssignments';
 import { useAssignedCropProblems, useRespondToCropProblem } from '@/src/hooks/useCropProblems';
+import { useMyCallRequests, useResolveCallRequest } from '@/src/hooks/useCallRequests';
 import { AdvisorScheduleTimeline } from '@/src/components/AdvisorScheduleTimeline';
 import { RenewModal } from '@/src/components/RenewPlanCard';
 import { SprayScheduleCards } from '@/src/components/SprayScheduleCards';
 import { SprayDetailCard } from '@/src/components/SprayDetailCard';
+import { FarmerProfileModal } from '@/src/components/FarmerProfileModal';
 import { useMySprayItemTemplates } from '@/src/hooks/useSprayItemTemplates';
+import { WeatherForecastModal } from '@/src/components/WeatherForecastModal';
 import { useUserWeather } from '@/src/hooks/useWeather';
 import { resolveMediaUrl } from '@/src/api/client';
 import { CropProblem, SprayScheduleItem } from '@/src/types/api';
 
-type FarmSubTab = 'PLOTS' | 'PROBLEMS';
+type FarmSubTab = 'PLOTS' | 'PROBLEMS' | 'CALL_REQUESTS';
 
 const theme = RoleThemes.FARM_ADVISOR;
 
@@ -90,25 +94,110 @@ const WEATHER_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
   Haze: 'cloud-outline',
 };
 
-/** Compact per-farmer weather chip — this farmer's local weather, not the advisor's own. */
+/** Compact per-farmer weather chip — opens 7-day forecast modal on tap with blinking alert indicator. */
 function FarmerWeatherChip({ farmerId }: { farmerId: string }) {
   const { data, isLoading, isError } = useUserWeather(farmerId);
+  const [modalVisible, setModalVisible] = useState(false);
+  const blinkAnim = useRef(new Animated.Value(1)).current;
+
+  const alertInfo = useMemo(() => {
+    if (!data) return null;
+    const forecast = data.forecast ?? [];
+
+    const isRain = data.isRaining || forecast.some((d) => d.isRaining || d.precipitationMm >= 3.0);
+    const isHeat = forecast.some((d) => d.maxTempC >= 37);
+    const isCold = forecast.some((d) => d.minTempC <= 10);
+    const isWind = forecast.some((d) => d.windSpeedMs >= 7.0 || (d.windSpeedMs >= 25.0 && d.windSpeedMs < 100));
+
+    const isHighRain = forecast.some((d) => d.precipitationMm >= 15.0) || (data.isRaining && forecast.some((d) => d.precipitationMm >= 10.0));
+    const isHighHeat = forecast.some((d) => d.maxTempC >= 41);
+    const isHighCold = forecast.some((d) => d.minTempC <= 5);
+    const isHighWind = forecast.some((d) => d.windSpeedMs >= 15.0);
+
+    if (isRain) return { icon: 'rainy' as const, text: `${data.temperatureC}°C 🌧️`, bg: '#0284c7', border: '#0369a1', textColor: '#ffffff', isHigh: isHighRain };
+    if (isHeat) return { icon: 'sunny' as const, text: `${data.temperatureC}°C 🔥`, bg: '#dc2626', border: '#991b1b', textColor: '#ffffff', isHigh: isHighHeat };
+    if (isCold) return { icon: 'snow' as const, text: `${data.temperatureC}°C ❄️`, bg: '#1d4ed8', border: '#1e40af', textColor: '#ffffff', isHigh: isHighCold };
+    if (isWind) return { icon: 'flag' as const, text: `${data.temperatureC}°C 💨`, bg: '#d97706', border: '#b45309', textColor: '#ffffff', isHigh: isHighWind };
+
+    return null;
+  }, [data]);
+
+  const shouldBlink = alertInfo?.isHigh === true;
+
+  useEffect(() => {
+    if (shouldBlink) {
+      const animation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(blinkAnim, {
+            toValue: 0.15,
+            duration: 450,
+            useNativeDriver: true,
+          }),
+          Animated.timing(blinkAnim, {
+            toValue: 1,
+            duration: 450,
+            useNativeDriver: true,
+          }),
+        ]),
+      );
+      animation.start();
+      return () => animation.stop();
+    } else {
+      blinkAnim.setValue(1);
+    }
+  }, [shouldBlink, blinkAnim]);
+
   if (isLoading) return <ActivityIndicator size="small" color={theme.primary} style={{ marginHorizontal: 6 }} />;
   if (isError || !data) return null;
   return (
-    <View style={styles.weatherChip}>
-      <Ionicons name={WEATHER_ICON[data.condition] ?? 'partly-sunny'} size={14} color="#0369a1" />
-      <Text style={styles.weatherChipText}>{data.temperatureC}°C</Text>
-    </View>
+    <>
+      <TouchableOpacity
+        activeOpacity={0.75}
+        onPress={() => {
+          tap();
+          setModalVisible(true);
+        }}
+      >
+        <Animated.View
+          style={[
+            styles.weatherChip,
+            alertInfo
+              ? { backgroundColor: alertInfo.bg, borderColor: alertInfo.border, opacity: shouldBlink ? blinkAnim : 1 }
+              : null,
+          ]}
+        >
+          <Ionicons
+            name={alertInfo ? alertInfo.icon : (WEATHER_ICON[data.condition] ?? 'partly-sunny')}
+            size={14}
+            color={alertInfo ? alertInfo.textColor : '#0369a1'}
+          />
+          <Text
+            style={[
+              styles.weatherChipText,
+              { color: alertInfo ? alertInfo.textColor : '#0369a1', fontFamily: FONT.extraBold },
+            ]}
+          >
+            {alertInfo ? alertInfo.text : `${data.temperatureC}°C`}
+          </Text>
+        </Animated.View>
+      </TouchableOpacity>
+
+      <WeatherForecastModal visible={modalVisible} weather={data} onClose={() => setModalVisible(false)} />
+    </>
   );
 }
 
 export default function AdvisorFarmsScreen() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<FarmSubTab>('PLOTS');
-  const [expandedCropCycleId, setExpandedCropCycleId] = useState<string | null>(null);
   const [expandedFarmerId, setExpandedFarmerId] = useState<string | null>(null);
+  const [expandedCropCycleId, setExpandedCropCycleId] = useState<string | null>(null);
+  const [isProblemHistoryOpen, setIsProblemHistoryOpen] = useState(false);
+  const [historyPage, setHistoryPage] = useState<number>(1);
   const [sprayDetailItem, setSprayDetailItem] = useState<SprayScheduleItem | null>(null);
   const [sprayDetailTitle, setSprayDetailTitle] = useState('');
+  const [profileModalFarmerId, setProfileModalFarmerId] = useState<string | null>(null);
+  const [profileModalAssignmentId, setProfileModalAssignmentId] = useState<string | null>(null);
 
   const { data: activeAssignments, isLoading: isLoadingAssignments } = useFarmersList('ACTIVE');
   const farmerIds = useMemo(() => (activeAssignments ?? []).map((a) => a.farmerId), [activeAssignments]);
@@ -116,6 +205,11 @@ export default function AdvisorFarmsScreen() {
   const isLoadingDetails = farmerDetailQueries.some((q) => q.isLoading);
 
   const { data: assignedProblems, isLoading: isLoadingProblems } = useAssignedCropProblems();
+  const { data: callRequests } = useMyCallRequests();
+  const resolveCallRequest = useResolveCallRequest();
+  const pendingCallRequests = useMemo(() => (callRequests ?? []).filter((r) => r.status === 'PENDING'), [callRequests]);
+  const resolvedCallRequests = useMemo(() => (callRequests ?? []).filter((r) => r.status === 'RESOLVED'), [callRequests]);
+
   // "Active" = still waiting on the advisor (new report or under review) — these drive the notification/badge
   // count. Once the advisor responds (status moves to ADVISOR_RESPONDED) or it's later closed/resolved, it
   // moves to History — this is the signal the advisor has "cleared" it.
@@ -127,11 +221,13 @@ export default function AdvisorFarmsScreen() {
     () => (assignedProblems ?? []).filter((p) => p.status !== 'REPORTED' && p.status !== 'UNDER_REVIEW'),
     [assignedProblems],
   );
-  const [isProblemHistoryOpen, setIsProblemHistoryOpen] = useState(false);
 
   // "ALL" includes farmers whose plan has lapsed (they drop out of the ACTIVE list above but their assignment.status is still ACTIVE) —
   // used only to surface a renew action for them, since they'd otherwise become unreachable once hidden from the roster.
   const { data: allAssignments } = useFarmersList('ALL');
+  const { data: pendingAssignments } = useFarmersList('PENDING');
+  const acceptAssignment = useAcceptAssignment();
+  const rejectAssignment = useRejectAssignment();
   const expiredAssignments = useMemo(
     () =>
       (allAssignments ?? []).filter((a) => {
@@ -150,6 +246,7 @@ export default function AdvisorFarmsScreen() {
       detail.farmer.farms.forEach((farm) => {
         farm.plots.forEach((plot) => {
           plot.cropCycles.forEach((cropCycle) => {
+            if (cropCycle.stage === 'COMPLETED' || cropCycle.status === 'COMPLETED' || cropCycle.status === 'FAILED') return;
             rows.push({
               key: cropCycle.id,
               farmerId: detail.farmer.id,
@@ -180,6 +277,22 @@ export default function AdvisorFarmsScreen() {
 
   const farmerGroups = useMemo<FarmerGroup[]>(() => {
     const map = new Map<string, FarmerGroup>();
+
+    (activeAssignments ?? []).forEach((assignment) => {
+      const f = assignment.farmer;
+      if (f && !map.has(f.id)) {
+        map.set(f.id, {
+          farmerId: f.id,
+          farmerName: f.name ?? 'Farmer',
+          kingId: f.kingId,
+          mobile: f.mobile,
+          state: f.state,
+          photoUrl: f.photoUrl,
+          rows: [],
+        });
+      }
+    });
+
     plotRows.forEach((row) => {
       if (!map.has(row.farmerId)) {
         const profile = farmerProfileById.get(row.farmerId);
@@ -196,7 +309,7 @@ export default function AdvisorFarmsScreen() {
       map.get(row.farmerId)!.rows.push(row);
     });
     return Array.from(map.values());
-  }, [plotRows, farmerProfileById]);
+  }, [activeAssignments, plotRows, farmerProfileById]);
 
   const toggleExpand = (cropCycleId: string) => {
     tap();
@@ -252,6 +365,63 @@ export default function AdvisorFarmsScreen() {
       </LinearGradient>
 
       <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+
+        {pendingAssignments && pendingAssignments.length > 0 ? (
+          <View style={[styles.pendingCard, premiumShadow('#0f172a', 'sm')]}>
+            <Text style={styles.pendingTitle}>🔔 New Farmer Hire Requests ({pendingAssignments.length})</Text>
+            {pendingAssignments.map((a) => (
+              <View key={a.id} style={styles.pendingRow}>
+                <TouchableOpacity
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    tap();
+                    setProfileModalFarmerId(a.farmerId);
+                    setProfileModalAssignmentId(a.id);
+                  }}
+                >
+                  <InitialsAvatar name={a.farmer?.name ?? 'Farmer'} size={32} />
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={styles.pendingFarmerName} numberOfLines={1}>{a.farmer?.name ?? 'Farmer'}</Text>
+                      <View style={styles.viewProfileChip}>
+                        <Ionicons name="eye-outline" size={10} color="#15803d" />
+                        <Text style={styles.viewProfileChipText}>Profile</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.pendingFarmerMeta} numberOfLines={1}>
+                      {a.farmer?.kingId ? `🔑 ${a.farmer.kingId} · ` : ''}{a.farmer?.mobile ? `📱 ${a.farmer.mobile}` : ''}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.acceptBtn}
+                  activeOpacity={0.85}
+                  disabled={acceptAssignment.isPending}
+                  onPress={() => {
+                    tap();
+                    acceptAssignment.mutate(a.id);
+                  }}
+                >
+                  <Ionicons name="checkmark-circle" size={14} color="#ffffff" />
+                  <Text style={styles.acceptBtnText}>Accept</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.rejectBtn}
+                  activeOpacity={0.85}
+                  disabled={rejectAssignment.isPending}
+                  onPress={() => {
+                    tap();
+                    rejectAssignment.mutate({ id: a.id });
+                  }}
+                >
+                  <Ionicons name="close-circle-outline" size={18} color="#ef4444" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        ) : null}
+
         {expiredAssignments.length > 0 ? (
           <View style={[styles.expiredCard, premiumShadow('#0f172a', 'sm')]}>
             <Text style={styles.expiredTitle}>⚠️ Plans Expired — Renew to Restore Access</Text>
@@ -299,15 +469,29 @@ export default function AdvisorFarmsScreen() {
                       ) : (
                         <InitialsAvatar name={group.farmerName} />
                       )}
-                      <View style={styles.plotCardInfo}>
-                        <Text style={styles.plotCardFarmer} numberOfLines={1}>{group.farmerName}</Text>
+                      <TouchableOpacity
+                        style={styles.plotCardInfo}
+                        activeOpacity={0.7}
+                        onPress={() => {
+                          tap();
+                          setProfileModalFarmerId(group.farmerId);
+                          setProfileModalAssignmentId(null);
+                        }}
+                      >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text style={styles.plotCardFarmer} numberOfLines={1}>{group.farmerName}</Text>
+                          <View style={styles.viewProfileChip}>
+                            <Ionicons name="eye-outline" size={10} color="#15803d" />
+                            <Text style={styles.viewProfileChipText}>Profile</Text>
+                          </View>
+                        </View>
                         <Text style={styles.plotCardMeta} numberOfLines={1}>
                           {group.kingId ? `🔑 ${group.kingId} · ` : ''}🌾 {group.rows.length} crop{group.rows.length === 1 ? '' : 's'}
                         </Text>
                         <Text style={styles.plotCardMeta} numberOfLines={1}>
                           {group.mobile ? `📱 ${group.mobile}` : ''}{group.mobile && group.state ? ' · ' : ''}{group.state ? `📍 ${group.state}` : ''}
                         </Text>
-                      </View>
+                      </TouchableOpacity>
                       <FarmerWeatherChip farmerId={group.farmerId} />
                       <View style={[styles.expandBtn, !isCollapsed && { backgroundColor: theme.primary }]}>
                         <Ionicons name={isCollapsed ? 'chevron-down' : 'chevron-up'} size={15} color={!isCollapsed ? '#ffffff' : theme.primary} />
@@ -316,7 +500,12 @@ export default function AdvisorFarmsScreen() {
 
                     {!isCollapsed ? (
                       <View style={styles.farmerGroupBody}>
-                        {group.rows.map((row) => {
+                        {group.rows.length === 0 ? (
+                          <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8', paddingVertical: 8 }}>
+                            No crops added yet by this farmer.
+                          </Text>
+                        ) : (
+                          group.rows.map((row) => {
                           const isExpanded = expandedCropCycleId === row.cropCycleId;
                           return (
                             <View key={row.key} style={styles.cropCard}>
@@ -331,6 +520,42 @@ export default function AdvisorFarmsScreen() {
                                     {row.sowingDate ? ` · 📅 Sown: ${new Date(row.sowingDate).toLocaleDateString('en-IN')}` : ''}
                                   </Text>
                                 </View>
+
+                                {/* Satellite Information Button in Empty Space */}
+                                <TouchableOpacity
+                                  style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    gap: 5,
+                                    backgroundColor: '#eff6ff',
+                                    borderWidth: 1.5,
+                                    borderColor: '#bfdbfe',
+                                    paddingHorizontal: 9,
+                                    paddingVertical: 6,
+                                    borderRadius: RADIUS.pill,
+                                    marginLeft: 6,
+                                  }}
+                                  activeOpacity={0.85}
+                                  onPress={() => {
+                                    tap();
+                                    router.push({
+                                      pathname: '/(tabs)/satellite-map',
+                                      params: {
+                                        cropId: row.cropCycleId,
+                                        cropName: row.cropName,
+                                        farmerName: row.farmerName,
+                                        plotName: row.plotName,
+                                        area: row.area,
+                                        sowingDate: row.sowingDate,
+                                      },
+                                    } as any);
+                                  }}
+                                >
+                                  <Ionicons name="planet" size={13} color="#2563eb" />
+                                  <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#1d4ed8' }}>
+                                    🛰️ Satellite View
+                                  </Text>
+                                </TouchableOpacity>
                               </View>
 
                               <SprayScheduleCards
@@ -359,7 +584,8 @@ export default function AdvisorFarmsScreen() {
                               ) : null}
                             </View>
                           );
-                        })}
+                        })
+                        )}
                       </View>
                     ) : null}
                   </View>
@@ -367,7 +593,7 @@ export default function AdvisorFarmsScreen() {
               })}
             </View>
           )
-        ) : (
+        ) : activeTab === 'PROBLEMS' ? (
           /* PROBLEM REPORTS TAB */
           <View style={{ gap: 12 }}>
             {isLoadingProblems ? (
@@ -403,13 +629,121 @@ export default function AdvisorFarmsScreen() {
                       <Text style={styles.historyHeaderText}>Problems History ({historyProblems.length})</Text>
                       <Ionicons name={isProblemHistoryOpen ? 'chevron-up' : 'chevron-down'} size={16} color="#64748b" />
                     </TouchableOpacity>
-                    {isProblemHistoryOpen
-                      ? historyProblems.map((problem) => <ProblemCard key={problem.id} problem={problem} />)
-                      : null}
+                    {isProblemHistoryOpen ? (
+                      <View style={{ gap: 10 }}>
+                        {(() => {
+                          const HISTORY_PAGE_SIZE = 10;
+                          const totalHistoryPages = Math.ceil(historyProblems.length / HISTORY_PAGE_SIZE) || 1;
+                          const start = (historyPage - 1) * HISTORY_PAGE_SIZE;
+                          const paginatedHistory = historyProblems.slice(start, start + HISTORY_PAGE_SIZE);
+
+                          return (
+                            <>
+                              {paginatedHistory.map((problem) => (
+                                <ProblemCard key={problem.id} problem={problem} />
+                              ))}
+
+                              {/* Pagination Bar (10 items per page) */}
+                              {totalHistoryPages > 1 && (
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', marginTop: 4 }}>
+                                  <TouchableOpacity
+                                    style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.xs, backgroundColor: historyPage > 1 ? theme.primary : '#cbd5e1', flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                                    disabled={historyPage <= 1}
+                                    onPress={() => setHistoryPage((p) => Math.max(p - 1, 1))}
+                                  >
+                                    <Ionicons name="chevron-back" size={14} color="#ffffff" />
+                                    <Text style={{ color: '#ffffff', fontSize: 11, fontFamily: FONT.bold }}>Prev</Text>
+                                  </TouchableOpacity>
+
+                                  <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#334155' }}>
+                                    Page {historyPage} of {totalHistoryPages} ({historyProblems.length} Items)
+                                  </Text>
+
+                                  <TouchableOpacity
+                                    style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.xs, backgroundColor: historyPage < totalHistoryPages ? theme.primary : '#cbd5e1', flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                                    disabled={historyPage >= totalHistoryPages}
+                                    onPress={() => setHistoryPage((p) => Math.min(p + 1, totalHistoryPages))}
+                                  >
+                                    <Text style={{ color: '#ffffff', fontSize: 11, fontFamily: FONT.bold }}>Next</Text>
+                                    <Ionicons name="chevron-forward" size={14} color="#ffffff" />
+                                  </TouchableOpacity>
+                                </View>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </View>
+                    ) : null}
                   </View>
                 ) : null}
               </>
             )}
+          </View>
+        ) : (
+          /* CALL REQUESTS TAB */
+          <View style={{ gap: 12 }}>
+            <View style={[styles.callBannerCard, premiumShadow('#0f172a', 'sm')]}>
+              <Text style={styles.callBannerTitle}>📞 Pending Call Requests ({pendingCallRequests.length})</Text>
+              {pendingCallRequests.length === 0 ? (
+                <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#94a3b8', marginVertical: 10 }}>
+                  No pending call requests right now.
+                </Text>
+              ) : (
+                pendingCallRequests.map((req) => (
+                  <View key={req.id} style={styles.callBannerRow}>
+                    <InitialsAvatar name={req.farmer?.name ?? 'Farmer'} size={32} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.callFarmerName} numberOfLines={1}>{req.farmer?.name ?? 'Farmer'}</Text>
+                      <Text style={styles.callFarmerMeta} numberOfLines={1}>
+                        {req.farmer?.kingId ? `🔑 ${req.farmer.kingId} · ` : ''}{req.farmer?.mobile ? `📱 ${req.farmer.mobile}` : ''}
+                      </Text>
+                    </View>
+                    {req.farmer?.mobile ? (
+                      <TouchableOpacity
+                        style={styles.callNowBtn}
+                        activeOpacity={0.85}
+                        onPress={() => {
+                          tap();
+                          Linking.openURL(`tel:${req.farmer?.mobile}`);
+                        }}
+                      >
+                        <Ionicons name="call" size={13} color="#ffffff" />
+                        <Text style={styles.callNowBtnText}>Call</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                    <TouchableOpacity
+                      style={styles.doneCallBtn}
+                      activeOpacity={0.85}
+                      disabled={resolveCallRequest.isPending}
+                      onPress={() => {
+                        tap();
+                        resolveCallRequest.mutate({ id: req.id, comment: 'Done' });
+                      }}
+                    >
+                      <Ionicons name="checkmark-done" size={14} color="#15803d" />
+                      <Text style={styles.doneCallBtnText}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))
+              )}
+            </View>
+
+            {resolvedCallRequests.length > 0 ? (
+              <View style={[styles.callBannerCard, { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }]}>
+                <Text style={[styles.callBannerTitle, { color: '#64748b' }]}>Resolved History ({resolvedCallRequests.length})</Text>
+                {resolvedCallRequests.map((req) => (
+                  <View key={req.id} style={[styles.callBannerRow, { opacity: 0.75 }]}>
+                    <InitialsAvatar name={req.farmer?.name ?? 'Farmer'} size={28} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.callFarmerName} numberOfLines={1}>{req.farmer?.name ?? 'Farmer'}</Text>
+                      <Text style={styles.callFarmerMeta} numberOfLines={1}>
+                        Resolved · {req.resolvedAt ? new Date(req.resolvedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : ''}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            ) : null}
           </View>
         )}
       </ScrollView>
@@ -442,6 +776,16 @@ export default function AdvisorFarmsScreen() {
           </View>
         </View>
       </Modal>
+
+      <FarmerProfileModal
+        visible={!!profileModalFarmerId}
+        farmerId={profileModalFarmerId}
+        assignmentId={profileModalAssignmentId}
+        onClose={() => {
+          setProfileModalFarmerId(null);
+          setProfileModalAssignmentId(null);
+        }}
+      />
     </View>
   );
 }
@@ -449,6 +793,8 @@ export default function AdvisorFarmsScreen() {
 function ProblemCard({ problem }: { problem: CropProblem }) {
   const respond = useRespondToCropProblem();
   const [isRespondOpen, setIsRespondOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [selectedPreviewImage, setSelectedPreviewImage] = useState<string | null>(null);
   const [advisorResponse, setAdvisorResponse] = useState('');
   const [productQuery, setProductQuery] = useState('');
   const [recommendedProducts, setRecommendedProducts] = useState<string[]>([]);
@@ -459,6 +805,8 @@ function ProblemCard({ problem }: { problem: CropProblem }) {
   const doseSuggestions = productQueryLower
     ? (itemTemplatesForSearch ?? []).filter((t) => t.item.toLowerCase().includes(productQueryLower)).slice(0, 6)
     : [];
+
+  const photoCount = problem.photos?.length ?? 0;
 
   const addRecommendedProduct = (composed: string) => {
     tap();
@@ -495,47 +843,147 @@ function ProblemCard({ problem }: { problem: CropProblem }) {
 
   return (
     <View style={[styles.problemCard, premiumShadow('#0f172a', 'sm')]}>
-      <View style={styles.cardHeaderRow}>
+      <TouchableOpacity
+        style={styles.cardHeaderRow}
+        activeOpacity={0.7}
+        onPress={() => {
+          tap();
+          setIsExpanded((prev) => !prev);
+        }}
+      >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', flex: 1 }}>
-          <Text style={styles.plotTitle}>{problem.title}</Text>
+          <Text style={styles.plotTitle}>⚠️ {problem.title}</Text>
           <View style={[styles.severityBadge, { backgroundColor: severityMeta.bg }]}>
             <View style={[styles.badgeDot, { backgroundColor: severityMeta.color }]} />
             <Text style={[styles.severityBadgeText, { color: severityMeta.color }]}>{problem.severity ?? 'MEDIUM'}</Text>
           </View>
         </View>
-        <View style={styles.statusBadge}>
-          <Text style={styles.statusBadgeText}>{problem.status.replace('_', ' ')}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <View style={styles.statusBadge}>
+            <Text style={styles.statusBadgeText}>{problem.status.replace('_', ' ')}</Text>
+          </View>
+          <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={18} color="#64748b" />
         </View>
-      </View>
+      </TouchableOpacity>
 
-      <View style={styles.problemIdentityRow}>
+      <TouchableOpacity
+        style={styles.problemIdentityRow}
+        activeOpacity={0.7}
+        onPress={() => {
+          tap();
+          setIsExpanded((prev) => !prev);
+        }}
+      >
         <InitialsAvatar name={problem.reportedBy?.name ?? 'Farmer'} size={28} />
         <Text style={styles.farmerSub} numberOfLines={1}>
           {problem.reportedBy?.name ?? 'Farmer'} · 🌾 {problem.cropCycle?.cropName ?? '—'}
         </Text>
-      </View>
-      <Text style={styles.problemDescription}>{problem.description}</Text>
+        {photoCount > 0 && (
+          <View style={{ backgroundColor: '#fff1f2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: '#fca5a5', flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+            <Ionicons name="camera-outline" size={11} color="#dc2626" />
+            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#dc2626' }}>{photoCount} Photo{photoCount > 1 ? 's' : ''}</Text>
+          </View>
+        )}
+        {problem.farmerRating ? (
+          <View style={{ backgroundColor: '#fffbeb', paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: '#fde68a', flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+            <Ionicons name="star" size={10} color="#d97706" />
+            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#b45309' }}>{problem.farmerRating}/5 ⭐</Text>
+          </View>
+        ) : null}
+      </TouchableOpacity>
 
-      {problem.advisorResponse ? (
-        <View style={styles.responseBox}>
-          <Ionicons name="checkmark-circle" size={12} color="#16a34a" />
-          <Text style={styles.responseText} numberOfLines={1}>{problem.advisorResponse}</Text>
-        </View>
+      {isExpanded ? (
+        <>
+          <Text style={styles.problemDescription}>{problem.description}</Text>
+
+          {/* Disease Photo Attachments Gallery */}
+          {problem.photos && problem.photos.length > 0 ? (
+            <View style={{ marginVertical: 6, gap: 4 }}>
+              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#334155' }}>
+                📷 Disease Photos ({problem.photos.length}):
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                {problem.photos.map((p, idx) => {
+                  const fullUrl = resolveMediaUrl(p.photoUrl);
+                  return (
+                    <TouchableOpacity
+                      key={p.id || idx}
+                      activeOpacity={0.85}
+                      onPress={() => fullUrl && setSelectedPreviewImage(fullUrl)}
+                      style={{ position: 'relative', borderRadius: RADIUS.sm, overflow: 'hidden', borderWidth: 1, borderColor: '#cbd5e1' }}
+                    >
+                      <Image source={{ uri: fullUrl }} style={{ width: 68, height: 68 }} />
+                      <View style={{ position: 'absolute', bottom: 3, right: 3, backgroundColor: 'rgba(0,0,0,0.6)', padding: 3, borderRadius: 10 }}>
+                        <Ionicons name="expand" size={10} color="#ffffff" />
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          ) : null}
+
+          {problem.advisorResponse ? (
+            <View style={styles.responseBox}>
+              <Ionicons name="checkmark-circle" size={12} color="#16a34a" />
+              <Text style={styles.responseText} numberOfLines={1}>{problem.advisorResponse}</Text>
+            </View>
+          ) : null}
+
+          {/* Farmer Rating & Feedback */}
+          {problem.farmerRating ? (
+            <View style={{ backgroundColor: '#fffbeb', padding: 8, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: '#fde68a', marginVertical: 4, gap: 3 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Ionicons
+                    key={star}
+                    name={star <= (problem.farmerRating || 0) ? 'star' : 'star-outline'}
+                    size={14}
+                    color="#d97706"
+                  />
+                ))}
+                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#b45309', marginLeft: 2 }}>
+                  Farmer Rating: {problem.farmerRating}/5 Stars
+                </Text>
+              </View>
+              {problem.farmerFeedback ? (
+                <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#92400e', fontStyle: 'italic' }}>
+                  💬 Feedback: "{problem.farmerFeedback}"
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
+
+          <View style={styles.actionBtnRow}>
+            <TouchableOpacity
+              style={styles.respondBtn}
+              activeOpacity={0.85}
+              onPress={() => {
+                tap();
+                setIsRespondOpen(true);
+              }}
+            >
+              <Ionicons name="chatbubble-ellipses-outline" size={14} color={theme.primary} />
+              <Text style={styles.respondBtnText}>{problem.advisorResponse ? 'Update Response' : 'Respond'}</Text>
+            </TouchableOpacity>
+          </View>
+        </>
       ) : null}
 
-      <View style={styles.actionBtnRow}>
-        <TouchableOpacity
-          style={styles.respondBtn}
-          activeOpacity={0.85}
-          onPress={() => {
-            tap();
-            setIsRespondOpen(true);
-          }}
-        >
-          <Ionicons name="chatbubble-ellipses-outline" size={14} color={theme.primary} />
-          <Text style={styles.respondBtnText}>{problem.advisorResponse ? 'Update Response' : 'Respond'}</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Fullscreen Photo Preview Modal */}
+      <Modal visible={!!selectedPreviewImage} transparent animationType="fade" onRequestClose={() => setSelectedPreviewImage(null)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center', padding: 16 }}>
+          <TouchableOpacity
+            style={{ position: 'absolute', top: 40, right: 20, zIndex: 10, backgroundColor: 'rgba(255,255,255,0.2)', padding: 8, borderRadius: 20 }}
+            onPress={() => setSelectedPreviewImage(null)}
+          >
+            <Ionicons name="close" size={24} color="#ffffff" />
+          </TouchableOpacity>
+          {selectedPreviewImage ? (
+            <Image source={{ uri: selectedPreviewImage }} style={{ width: '100%', height: '80%' }} resizeMode="contain" />
+          ) : null}
+        </View>
+      </Modal>
 
       {/* Respond Modal */}
       <Modal visible={isRespondOpen} transparent animationType="fade" onRequestClose={() => setIsRespondOpen(false)}>
@@ -646,6 +1094,28 @@ const styles = StyleSheet.create({
   tabChipActive: { backgroundColor: '#ffffff' },
   tabChipText: { fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' },
   list: { padding: SPACING.lg, gap: 12, paddingBottom: SPACING.xxl },
+  pendingCard: { backgroundColor: '#f0fdf4', borderRadius: RADIUS.lg, padding: SPACING.md, borderWidth: 1.5, borderColor: '#86efac', gap: 10 },
+  pendingTitle: { fontSize: 13, fontFamily: FONT.extraBold, color: '#15803d' },
+  pendingRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#ffffff', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#dcfce7' },
+  pendingFarmerName: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
+  pendingFarmerMeta: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
+  viewProfileChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#dcfce7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+  },
+  viewProfileChipText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#15803d',
+  },
+  acceptBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#16a34a', paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.pill },
+  acceptBtnText: { color: '#ffffff', fontSize: 11.5, fontFamily: FONT.bold },
+  rejectBtn: { padding: 4 },
   expiredCard: { backgroundColor: '#fef2f2', borderRadius: RADIUS.lg, padding: SPACING.md, borderWidth: 1, borderColor: '#fca5a5', gap: 8 },
   expiredTitle: { fontSize: 12.5, fontFamily: FONT.bold, color: '#dc2626' },
   expiredRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
@@ -822,4 +1292,45 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   modalSubmitBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 13.5 },
+  callBannerCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    padding: SPACING.md,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    gap: 8,
+  },
+  callBannerTitle: { fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' },
+  callBannerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  callFarmerName: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
+  callFarmerMeta: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
+  callNowBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#16a34a',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+  },
+  callNowBtnText: { fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' },
+  doneCallBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#dcfce7',
+    borderWidth: 1,
+    borderColor: '#86efac',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+  },
+  doneCallBtnText: { fontSize: 11, fontFamily: FONT.bold, color: '#15803d' },
 });

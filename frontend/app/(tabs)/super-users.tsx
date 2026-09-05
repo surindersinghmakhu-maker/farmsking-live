@@ -635,6 +635,7 @@ const ROLE_LABELS: Record<Role, string> = {
   ADMIN: 'Admin',
   SUPER_ADMIN: 'Super Admin',
   OPERATOR: 'Operator',
+  LABOUR: 'Labour Worker',
 };
 
 function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose: () => void }) {
@@ -642,9 +643,11 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
   const updateUser = useAdminUpdateUser();
   const [selected, setSelected] = useState<Role[]>([]);
   const [advisorType, setAdvisorType] = useState<AdvisorType | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!target) return;
+    setError(null);
     const active = (target.roles ?? [target.role]).filter((r) => !(target.deactivatedRoles ?? []).includes(r));
     setSelected(active.includes('CUSTOMER') ? active : [...active, 'CUSTOMER']);
     setAdvisorType(target.advisorType ?? null);
@@ -672,13 +675,18 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
   const roleLabels = selected.map((r) => (r === 'ADVISOR' ? (advisorType === 'GARDEN' ? 'Garden Advisor' : 'Farm Advisor') : ROLE_LABELS[r]));
 
   const handleSave = () => {
+    setError(null);
     const message = `${target.name} ke roles update ho jayenge:\n${roleLabels.join(', ') || 'None'}\n\nConfirm karein?`;
     const doSave = async () => {
-      await updateActiveRoles.mutateAsync({ id: target.id, activeRoles: selected });
-      if (selected.includes('ADVISOR') && advisorType) {
-        await updateUser.mutateAsync({ id: target.id, payload: { advisorType } });
+      try {
+        await updateActiveRoles.mutateAsync({ id: target.id, activeRoles: selected });
+        if (selected.includes('ADVISOR') && advisorType) {
+          await updateUser.mutateAsync({ id: target.id, payload: { advisorType } });
+        }
+        onClose();
+      } catch (err: any) {
+        setError(err?.response?.data?.message ?? 'Could not update user roles.');
       }
-      onClose();
     };
     if (Platform.OS === 'web') {
       if (confirm(message)) doSave();
@@ -735,6 +743,8 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
               );
             })}
           </View>
+
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
           <TouchableOpacity style={styles.submitBtn} disabled={updateActiveRoles.isPending} onPress={handleSave}>
             {updateActiveRoles.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Save Roles</Text>}

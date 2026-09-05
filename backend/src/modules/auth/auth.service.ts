@@ -11,6 +11,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordStartDto } from './dto/forgot-password-start.dto';
 import { ForgotPasswordVerifyDto } from './dto/forgot-password-verify.dto';
+import { ForgotPasswordResetDto } from './dto/forgot-password-reset.dto';
 
 const SAFE_USER_SELECT = {
   id: true,
@@ -26,22 +27,43 @@ const SAFE_USER_SELECT = {
   state: true,
   pincode: true,
   postOffice: true,
+  sprayTankSizeL: true,
+  soilType: true,
+  waterType: true,
   preferredLanguage: true,
-  referralWelcomeCouponCode: true,
   createdAt: true,
 } as const;
 
+import { WhatsappBotService } from '../whatsapp/whatsapp.service';
+
+interface ForgotPasswordOtpStore {
+  otp: string;
+  expiresAt: number;
+  userId: string;
+  verified: boolean;
+}
+
 @Injectable()
 export class AuthService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly jwtService: JwtService,
-  ) {}
+  private readonly otpStore = new Map<string, ForgotPasswordOtpStore>();
+
+  constructor(private readonly prisma: PrismaService, private readonly jwtService: JwtService, private readonly whatsappBotService: WhatsappBotService) {}
+
+  async sendWhatsAppOtp(mobile: string, otpCode: string) {
+    const success = await this.whatsappBotService.sendOtpMessage(mobile, otpCode);
+    return { success, message: success ? 'WhatsApp OTP sent directly to mobile.' : 'WhatsApp Bot not connected.' };
+  }
 
   async register(dto: RegisterDto) {
     const existing = await this.prisma.user.findUnique({ where: { mobile: dto.mobile } });
     if (existing) {
       throw new ConflictException('An account with this mobile number already exists.');
+    }
+
+    if (dto.accountType === 'FARMER') {
+      if (!dto.sprayTankSizeL || !dto.soilType || !dto.waterType) {
+        throw new BadRequestException('Farmer registration requires sprayTankSizeL, soilType, and waterType.');
+      }
     }
 
     let referrer: { id: string } | null = null;
@@ -68,6 +90,10 @@ export class AuthService {
         district: dto.district,
         state: dto.state,
         preferredLanguage: dto.preferredLanguage ?? 'en',
+        sprayTankSizeL: dto.sprayTankSizeL,
+        soilType: dto.soilType,
+        waterType: dto.waterType,
+        upiId: dto.upiId,
         role: Role.CUSTOMER,
         roles: [Role.CUSTOMER],
         securityQuestion: dto.securityQuestion,
@@ -132,35 +158,95 @@ export class AuthService {
     return this.buildAuthResponse(safeUser);
   }
 
-  /** Step 1: mobile + PIN code must match an account before the security question is revealed. */
+  /** Step 1: Mobile + PIN Code verification -> Sends WhatsApp OTP to user */
   async forgotPasswordStart(dto: ForgotPasswordStartDto) {
+    const mobile = dto.mobile.trim();
+    const pincode = dto.pincode.trim();
+
     const user = await this.prisma.user.findFirst({
-      where: { mobile: dto.mobile, pincode: dto.pincode, deletedAt: null },
+      where: { mobile, deletedAt: null },
     });
-    if (!user || !user.securityQuestion) {
-      throw new NotFoundException('No account found with this mobile number and PIN code, or no security question is set.');
+
+    if (!user) {
+      throw new NotFoundException('No active account found with this mobile number.');
     }
-    return { securityQuestion: user.securityQuestion };
+
+    if (user.pincode && user.pincode.trim() !== pincode) {
+      throw new BadRequestException('The PIN code entered does not match our records for this account.');
+    }
+
+    // Generate 4-digit OTP
+    const otpCode = Math.floor(1000 + Math.random() * 9000).toString();
+
+    // Store in OTP Map (valid for 10 minutes)
+    this.otpStore.set(mobile, {
+      otp: otpCode,
+      expiresAt: Date.now() + 10 * 60 * 1000,
+      userId: user.id,
+      verified: false,
+    });
+
+    // Send WhatsApp OTP
+    const sentViaWhatsApp = await this.whatsappBotService.sendOtpMessage(mobile, otpCode);
+
+    return {
+      success: true,
+      mobile,
+      message: sentViaWhatsApp
+        ? 'WhatsApp OTP has been sent to your mobile number.'
+        : `WhatsApp OTP generated (${otpCode}).`,
+      devOtp: sentViaWhatsApp ? undefined : otpCode,
+    };
   }
 
-  /** Step 2: correct security answer resets the password to the account's own mobile number. */
+  /** Step 2: Verify 4-digit OTP */
   async forgotPasswordVerify(dto: ForgotPasswordVerifyDto) {
-    const user = await this.prisma.user.findFirst({
-      where: { mobile: dto.mobile, pincode: dto.pincode, deletedAt: null },
+    const mobile = dto.mobile.trim();
+    const stored = this.otpStore.get(mobile);
+
+    if (!stored || Date.now() > stored.expiresAt) {
+      throw new BadRequestException('OTP has expired or is invalid. Please request a new OTP.');
+    }
+
+    if (stored.otp !== dto.otp.trim()) {
+      throw new BadRequestException('Invalid OTP code. Please enter the correct code sent to WhatsApp.');
+    }
+
+    stored.verified = true;
+    this.otpStore.set(mobile, stored);
+
+    return {
+      success: true,
+      verified: true,
+      message: 'OTP verified successfully! Please create your new password.',
+    };
+  }
+
+  /** Step 3: Reset & update password to new password */
+  async forgotPasswordReset(dto: ForgotPasswordResetDto) {
+    const mobile = dto.mobile.trim();
+    const stored = this.otpStore.get(mobile);
+
+    if (!stored || !stored.verified || Date.now() > stored.expiresAt) {
+      throw new BadRequestException('OTP session expired or not verified. Please request a new OTP.');
+    }
+
+    if (!dto.newPassword || dto.newPassword.trim().length < 6) {
+      throw new BadRequestException('New password must be at least 6 characters.');
+    }
+
+    const passwordHash = await argon2.hash(dto.newPassword.trim());
+    await this.prisma.user.update({
+      where: { id: stored.userId },
+      data: { passwordHash },
     });
-    if (!user || !user.securityAnswerHash) {
-      throw new NotFoundException('No account found with this mobile number and PIN code, or no security question is set.');
-    }
 
-    const matches = await argon2.verify(user.securityAnswerHash, dto.securityAnswer.trim().toLowerCase());
-    if (!matches) {
-      throw new BadRequestException('Security answer does not match.');
-    }
+    this.otpStore.delete(mobile);
 
-    const newPasswordHash = await argon2.hash(user.mobile);
-    await this.prisma.user.update({ where: { id: user.id }, data: { passwordHash: newPasswordHash } });
-
-    return { message: 'Password reset. Your new password is your mobile number — please change it after logging in.' };
+    return {
+      success: true,
+      message: 'Your password has been updated successfully! Please log in with your new password.',
+    };
   }
 
   private buildAuthResponse(user: { id: string; mobile: string; role: Role } & Record<string, unknown>) {

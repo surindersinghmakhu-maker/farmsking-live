@@ -7,7 +7,7 @@ import * as Clipboard from 'expo-clipboard';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
-import { useMyReferrals } from '@/src/hooks/useReferrals';
+import { useMyReferralNetwork } from '@/src/hooks/useReferralNetwork';
 
 const theme = RoleThemes.BUSINESS_PARTNER;
 
@@ -17,67 +17,100 @@ const tap = () => {
 
 export default function ReferralsScreen() {
   const { user } = useAuth();
-  const { data: referrals, isLoading } = useMyReferrals();
-  const kingId = user?.kingId ?? '';
-
-  const totalEarned = (referrals ?? []).reduce((sum, r) => sum + r.commissionEarned, 0);
+  const { data: network, isLoading } = useMyReferralNetwork();
+  const kingId = network?.kingId || user?.kingId || '';
 
   const handleShare = async () => {
     tap();
-    const link = Linking.createURL('/register', { queryParams: { ref: kingId } });
-    const message = `Join FarmsKing using my referral code ${kingId} and get a welcome discount coupon on your first orders!\n${link}`;
+    const link = network?.inviteUrl || `https://farmsking.com/invite?ref=${kingId}`;
+    const message = `Join FarmsKing! (My King ID: ${kingId})\nFor agriculture management, mandi accounts, and advisor plan features click the link:\n${link}`;
     if (Platform.OS === 'web') {
       await Clipboard.setStringAsync(message);
-      alert('Referral link copied to clipboard!');
+      alert('Invite link copied to clipboard!');
       return;
     }
     try {
       await Share.share({ message });
     } catch {
-      // user dismissed the share sheet — nothing to do
+      // share sheet dismissed
     }
   };
 
   return (
     <View style={styles.container}>
       <LinearGradient colors={theme.gradient} style={styles.hero}>
-        <Text style={styles.heroTitle}>My Referrals</Text>
+        <Text style={styles.heroTitle}>Farm Network & Lifetime Royalties</Text>
         <View style={styles.codeCard}>
           <View>
-            <Text style={styles.codeLabel}>Your Referral Code (King ID)</Text>
+            <Text style={styles.codeLabel}>Your King ID (Referral Link)</Text>
             <Text style={styles.codeValue}>{kingId || '—'}</Text>
           </View>
           <TouchableOpacity style={styles.shareBtn} activeOpacity={0.8} onPress={handleShare} disabled={!kingId}>
-            <Ionicons name="person-add-outline" size={16} color={theme.primary} />
+            <Ionicons name="logo-whatsapp" size={16} color="#16a34a" />
             <Text style={styles.shareText}>Invite</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Network Stats Cards */}
+        <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+          <View style={styles.statBox}>
+            <Text style={styles.statLabel}>Direct Friends (L1)</Text>
+            <Text style={styles.statValue}>{network?.directCount ?? 0}</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statLabel}>Extended Network (L2)</Text>
+            <Text style={styles.statValue}>{network?.extendedCount ?? 0}</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statLabel}>Total Royalties</Text>
+            <Text style={[styles.statValue, { color: '#f59e0b' }]}>₹{(network?.totalRoyaltiesEarned ?? 0).toLocaleString('en-IN')}</Text>
+          </View>
         </View>
       </LinearGradient>
 
       <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
         <Text style={styles.sectionTitle}>
-          {referrals?.length ?? 0} Total Referrals · ₹{totalEarned.toLocaleString('en-IN')} earned
+          Farm Network ({network?.totalNetworkCount ?? 0} Connected Farmers)
         </Text>
         {isLoading ? (
           <ActivityIndicator color={theme.primary} style={{ marginTop: 30 }} />
-        ) : !referrals || referrals.length === 0 ? (
+        ) : !network || (network.directReferrals.length === 0 && network.extendedReferrals.length === 0) ? (
           <View style={styles.emptyState}>
             <Ionicons name="people-outline" size={40} color="#cbd5e1" />
-            <Text style={styles.emptyText}>Share your referral code — anyone who signs up with it will show up here.</Text>
+            <Text style={styles.emptyText}>Share your King ID link — anyone who joins will be added to your Farm Network & earn you Lifetime Royalties!</Text>
           </View>
         ) : (
-          referrals.map((ref) => (
-            <View key={ref.id} style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
-              <View style={styles.avatar}>
-                <Ionicons name="person-outline" size={18} color={theme.primary} />
+          <View style={{ gap: 10 }}>
+            {network.directReferrals.map((ref) => (
+              <View key={ref.id} style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
+                <View style={styles.avatar}>
+                  <Ionicons name="person-outline" size={18} color={theme.primary} />
+                </View>
+                <View style={styles.info}>
+                  <Text style={styles.name}>{ref.referredUser.name}</Text>
+                  <Text style={styles.date}>King ID: {ref.referredUser.kingId || '—'} · Level 1 Direct</Text>
+                </View>
+                <View style={styles.levelBadge}>
+                  <Text style={styles.levelBadgeText}>1% Share</Text>
+                </View>
               </View>
-              <View style={styles.info}>
-                <Text style={styles.name}>{ref.name}</Text>
-                <Text style={styles.date}>Joined {new Date(ref.createdAt).toLocaleDateString('en-IN')}</Text>
+            ))}
+
+            {network.extendedReferrals.map((ref) => (
+              <View key={ref.id} style={[styles.card, premiumShadow('#0f172a', 'sm'), { opacity: 0.9 }]}>
+                <View style={[styles.avatar, { backgroundColor: '#f1f5f9' }]}>
+                  <Ionicons name="people-outline" size={18} color="#64748b" />
+                </View>
+                <View style={styles.info}>
+                  <Text style={styles.name}>{ref.referredUser.name}</Text>
+                  <Text style={styles.date}>King ID: {ref.referredUser.kingId || '—'} · Level 2 Extended</Text>
+                </View>
+                <View style={[styles.levelBadge, { backgroundColor: '#fef3c7' }]}>
+                  <Text style={[styles.levelBadgeText, { color: '#b45309' }]}>0.5% Share</Text>
+                </View>
               </View>
-              <Text style={styles.comm}>₹{ref.commissionEarned.toLocaleString('en-IN')}</Text>
-            </View>
-          ))
+            ))}
+          </View>
         )}
       </ScrollView>
     </View>
@@ -86,17 +119,20 @@ export default function ReferralsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.bg },
-  hero: { paddingTop: 20, paddingBottom: 24, paddingHorizontal: SPACING.xxl },
-  heroTitle: { color: '#fff', fontSize: 22, fontFamily: FONT.extraBold, letterSpacing: -0.2, marginBottom: 16 },
+  hero: { paddingTop: 20, paddingBottom: 20, paddingHorizontal: SPACING.xxl },
+  heroTitle: { color: '#fff', fontSize: 20, fontFamily: FONT.extraBold, letterSpacing: -0.2, marginBottom: 12 },
   codeCard: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: 'rgba(255,255,255,0.14)', borderRadius: RADIUS.md, padding: SPACING.lg,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
   },
-  codeLabel: { color: 'rgba(255,255,255,0.75)', fontSize: 11.5, fontFamily: FONT.medium },
-  codeValue: { color: '#fff', fontSize: 20, fontFamily: FONT.extraBold, letterSpacing: 1, marginTop: 2 },
+  codeLabel: { color: 'rgba(255,255,255,0.75)', fontSize: 11, fontFamily: FONT.medium },
+  codeValue: { color: '#fff', fontSize: 19, fontFamily: FONT.extraBold, letterSpacing: 1, marginTop: 2 },
   shareBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#ffffff', borderRadius: RADIUS.pill, paddingHorizontal: 14, paddingVertical: 9 },
-  shareText: { color: theme.primary, fontSize: 12.5, fontFamily: FONT.bold },
+  shareText: { color: '#16a34a', fontSize: 12.5, fontFamily: FONT.bold },
+  statBox: { flex: 1, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: RADIUS.md, padding: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', alignItems: 'center' },
+  statLabel: { color: 'rgba(255,255,255,0.8)', fontSize: 9.5, fontFamily: FONT.bold, textTransform: 'uppercase' },
+  statValue: { color: '#ffffff', fontSize: 15, fontFamily: FONT.extraBold, marginTop: 2 },
   list: { padding: SPACING.xxl, gap: 10 },
   sectionTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#64748b', marginBottom: 4 },
   emptyState: { alignItems: 'center', justifyContent: 'center', padding: 50, gap: 10 },
@@ -105,6 +141,8 @@ const styles = StyleSheet.create({
   avatar: { width: 40, height: 40, borderRadius: 14, backgroundColor: theme.primaryLight, alignItems: 'center', justifyContent: 'center' },
   info: { flex: 1 },
   name: { fontSize: 14, fontFamily: FONT.bold, color: '#0f172a' },
-  date: { fontSize: 12, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
-  comm: { fontSize: 14, fontFamily: FONT.extraBold, color: theme.primary },
+  date: { fontSize: 11.5, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
+  levelBadge: { backgroundColor: '#dcfce7', paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.pill },
+  levelBadgeText: { fontSize: 10, fontFamily: FONT.extraBold, color: '#15803d' },
 });
+

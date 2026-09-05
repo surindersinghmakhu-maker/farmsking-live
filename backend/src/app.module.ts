@@ -45,7 +45,19 @@ import { CouponSettingsModule } from './modules/coupon-settings/coupon-settings.
 import { CallRequestsModule } from './modules/call-requests/call-requests.module';
 import { AddressesModule } from './modules/addresses/addresses.module';
 import { AuditModule } from './modules/audit/audit.module';
+import { LabourModule } from './modules/labour/labour.module';
+import { AdminChatModule } from './modules/admin-chat/admin-chat.module';
+import { WhatsappBotModule } from './modules/whatsapp/whatsapp.module';
+import { ReferralsModule } from './modules/referrals/referrals.module';
+import { VoiceAIModule } from './modules/voice-ai/voice-ai.module';
+import { SatelliteModule } from './modules/satellite/satellite.module';
+import { MandiAIModule } from './modules/mandi-ai/mandi-ai.module';
+import { GoogleDriveBackupModule } from './modules/google-drive-backup/google-drive-backup.module';
+import { KingConnectModule } from './modules/king-connect/king-connect.module';
+import { VoiceCallModule } from './modules/voice-call/voice-call.module';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
+
+
 import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor';
 
 @Module({
@@ -68,6 +80,9 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
     CallRequestsModule,
     AddressesModule,
     ExpensesModule,
+    LabourModule,
+    AdminChatModule,
+    WhatsappBotModule,
     UploadsModule,
     AdvisorAssignmentModule,
     SubscriptionsModule,
@@ -93,7 +108,15 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
     GardenerPlansModule,
     GardensModule,
     AuditModule,
+    ReferralsModule,
+    VoiceAIModule,
+    SatelliteModule,
+    MandiAIModule,
+    KingConnectModule,
+    VoiceCallModule,
   ],
+
+
   controllers: [AppController],
   providers: [
     AppService,

@@ -161,8 +161,8 @@ export class PlanRenewalService {
       await this.advisorAssignmentService.createFromSubscription(newSubscription.id, targetFarmerId);
       await this.prisma.farmerPlan.upsert({
         where: { farmerId: targetFarmerId },
-        create: { farmerId: targetFarmerId, plan: FarmerSubscriptionPlan.PREMIUM, endDate: newEndDate },
-        update: { plan: FarmerSubscriptionPlan.PREMIUM, endDate: newEndDate, expiredAt: null },
+        create: { farmerId: targetFarmerId, plan: FarmerSubscriptionPlan.PRO, endDate: newEndDate },
+        update: { plan: FarmerSubscriptionPlan.PRO, endDate: newEndDate, expiredAt: null },
       });
       await this.prisma.planRenewalCoupon.update({
         where: { id: coupon.id },
@@ -185,8 +185,8 @@ export class PlanRenewalService {
       }),
       this.prisma.farmerPlan.upsert({
         where: { farmerId: targetFarmerId },
-        create: { farmerId: targetFarmerId, plan: FarmerSubscriptionPlan.PREMIUM, endDate: newEndDate },
-        update: { plan: FarmerSubscriptionPlan.PREMIUM, endDate: newEndDate, expiredAt: null },
+        create: { farmerId: targetFarmerId, plan: FarmerSubscriptionPlan.PRO, endDate: newEndDate },
+        update: { plan: FarmerSubscriptionPlan.PRO, endDate: newEndDate, expiredAt: null },
       }),
     ]);
 

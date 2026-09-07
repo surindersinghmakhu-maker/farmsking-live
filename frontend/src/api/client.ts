@@ -6,7 +6,7 @@ export const TOKEN_KEY = 'farmsking_access_token';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 45000,
 });
 
 let isBaseUrlInitialized = false;

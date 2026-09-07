@@ -37,6 +37,7 @@ export class UsersController {
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
+    Role.LABOUR,
   )
   @Get('me')
   getMe(@CurrentUser() user: AuthUser) {
@@ -52,6 +53,7 @@ export class UsersController {
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
+    Role.LABOUR,
   )
   @Delete('me')
   deleteMe(@CurrentUser() user: AuthUser) {
@@ -67,6 +69,7 @@ export class UsersController {
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
+    Role.LABOUR,
   )
   @Post('me/delete')
   deleteMePost(@CurrentUser() user: AuthUser) {
@@ -82,6 +85,7 @@ export class UsersController {
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
+    Role.LABOUR,
   )
   @Get('me/invite-link')
   getMyInviteLink(@CurrentUser() user: AuthUser) {
@@ -97,6 +101,7 @@ export class UsersController {
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
+    Role.LABOUR,
   )
   @Get('me/referrals')
   getMyReferrals(@CurrentUser() user: AuthUser) {
@@ -124,6 +129,7 @@ export class UsersController {
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
+    Role.LABOUR,
   )
   @Patch('me/address')
   updateMyAddress(@CurrentUser() user: AuthUser, @Body() dto: UpdateMyAddressDto) {
@@ -139,6 +145,7 @@ export class UsersController {
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
+    Role.LABOUR,
   )
   @Get('me/profile-status')
   getMyProfileStatus(@CurrentUser() user: AuthUser) {
@@ -154,6 +161,7 @@ export class UsersController {
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
+    Role.LABOUR,
   )
   @Patch('me/profile')
   updateMyProfile(@CurrentUser() user: AuthUser, @Body() dto: UpdateFarmerProfileDto) {

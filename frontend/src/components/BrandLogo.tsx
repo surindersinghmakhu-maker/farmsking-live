@@ -61,7 +61,8 @@ export function BrandLogo({
     ? LOGO_ICON_FAST
     : LOGO_STANDARD;
 
-  const finalSource = (logoUri && !imageError && !useFastBundledOnly)
+  // Prefer Database logoUrl when present; fall back to local official emblem
+  const finalSource = (logoUri && !imageError)
     ? { uri: logoUri }
     : resolveAsset(bundledAsset);
 

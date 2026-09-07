@@ -22,7 +22,7 @@ export class ProductsController {
 
   @Get()
   listAll(@CurrentUser() user?: AuthUser, @Query('includeInactive') includeInactive?: string) {
-    const canSeeInactive = user && (user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN) && includeInactive === 'true';
+    const canSeeInactive = Boolean(user && (user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN) && includeInactive === 'true');
     return this.productsService.listAll(canSeeInactive);
   }
 

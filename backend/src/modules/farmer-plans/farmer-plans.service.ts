@@ -33,6 +33,12 @@ export const PLAN_RANK: Record<FarmerSubscriptionPlan, number> = {
   PRO: 1,
   SMART: 2,
   SUPER: 3,
+  BASIC: 0,
+  SILVER: 1,
+  GOLD: 2,
+  PLATINUM: 3,
+  DIAMOND: 4,
+  ROYAL: 5,
 };
 
 /** Days before expiry that the "plan expiring soon" indicator turns on for both farmer and advisor. */

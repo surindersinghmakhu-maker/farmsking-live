@@ -96,7 +96,17 @@ export async function getActiveApiUrl(): Promise<string> {
   try {
     const stored = await Storage.getItemAsync(CUSTOM_API_URL_KEY);
     if (stored && stored.trim()) {
-      return normalizeApiUrl(stored);
+      const normalized = normalizeApiUrl(stored);
+
+      // On HTTPS Web (e.g. Vercel), ignore unencrypted http:// URLs or obsolete render.com URLs
+      // to prevent browser Mixed Content blocking and network errors
+      const isHttpsWeb = Platform.OS === 'web' && typeof window !== 'undefined' && window.location.protocol === 'https:';
+      if ((isHttpsWeb && normalized.startsWith('http://')) || normalized.includes('onrender.com')) {
+        await Storage.deleteItemAsync(CUSTOM_API_URL_KEY);
+        return getDefaultApiUrl();
+      }
+
+      return normalized;
     }
   } catch (err) {
     console.warn('Error reading stored API URL:', err);

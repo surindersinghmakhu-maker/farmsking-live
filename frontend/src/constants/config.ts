@@ -82,8 +82,8 @@ export function getDefaultApiUrl(): string {
     return envUrl;
   }
 
-  // Permanent 24/7 Railway Cloud Server (No GitHub required, 24/7 Online)
-  return 'https://farmsking-backend-production.up.railway.app/api/v1';
+  // Permanent 24/7 Render Cloud Server
+  return 'https://farmsking-live-md6m.onrender.com/api/v1';
 }
 
 // Initial default API URL
@@ -98,10 +98,10 @@ export async function getActiveApiUrl(): Promise<string> {
     if (stored && stored.trim()) {
       const normalized = normalizeApiUrl(stored);
 
-      // On HTTPS Web (e.g. Vercel), ignore unencrypted http:// URLs or obsolete render.com URLs
+      // On HTTPS Web (e.g. Vercel), ignore unencrypted http:// URLs
       // to prevent browser Mixed Content blocking and network errors
       const isHttpsWeb = Platform.OS === 'web' && typeof window !== 'undefined' && window.location.protocol === 'https:';
-      if ((isHttpsWeb && normalized.startsWith('http://')) || normalized.includes('onrender.com')) {
+      if (isHttpsWeb && normalized.startsWith('http://')) {
         await Storage.deleteItemAsync(CUSTOM_API_URL_KEY);
         return getDefaultApiUrl();
       }

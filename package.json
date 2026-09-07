@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "cd frontend && npm install --legacy-peer-deps && npx expo export -p web"
+    "build": "cd frontend && npm install --legacy-peer-deps && CI=1 npx expo export -p web"
   }
 }

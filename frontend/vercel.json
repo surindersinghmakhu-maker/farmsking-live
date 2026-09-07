@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm install --legacy-peer-deps && NODE_OPTIONS=\"--max-old-space-size=4096\" CI=1 npx expo export --platform web",
+  "buildCommand": "node build.js",
   "outputDirectory": "dist",
   "rewrites": [
     {

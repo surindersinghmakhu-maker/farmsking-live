@@ -517,6 +517,11 @@ model User {
   groupVoiceCallsHosted      GroupVoiceCall[]            @relation("VoiceCallHost")
   groupVoiceCallParticipations GroupVoiceCallParticipant[] @relation("VoiceCallParticipant")
 
+  @@index([kingId])
+  @@index([mobile])
+  @@index([role])
+  @@index([kingId, role])
+  @@index([deletedAt])
   @@map("users")
 }
 
@@ -548,6 +553,7 @@ model Farm {
   machinery      Machinery[]
 
   @@index([ownerId])
+  @@index([ownerId, deletedAt])
   @@map("farms")
 }
 
@@ -576,6 +582,7 @@ model Plot {
   satelliteScans    PlotSatelliteScan[]
 
   @@index([farmId])
+  @@index([farmId, deletedAt])
   @@map("plots")
 }
 
@@ -622,6 +629,9 @@ model CropCycle {
   activitySchedules     CropActivitySchedule[]
 
   @@index([plotId])
+  @@index([cropName])
+  @@index([status])
+  @@index([plotId, status, deletedAt])
   @@map("crop_cycles")
 }
 
@@ -685,6 +695,9 @@ model Expense {
   @@index([categoryId])
   @@index([machineryId])
   @@index([partyId])
+  @@index([recordedById])
+  @@index([expenseDate])
+  @@index([farmId, expenseDate, deletedAt])
   @@map("expenses")
 }
 
@@ -1553,20 +1566,6 @@ model GardenVisit {
   @@map("garden_visits")
 }
 
-model CustomerProduct {
-  id          String   @id @default(uuid())
-  name        String
-  category    String
-  price       Decimal  @db.Decimal(12, 2)
-  rating      Float    @default(4.5)
-  unit        String
-  imageUrl    String?
-  isTopSeller Boolean  @default(false)
-  createdAt   DateTime @default(now())
-
-  @@map("customer_products")
-}
-
 model Product {
   id          String   @id @default(uuid())
   name        String
@@ -1574,6 +1573,8 @@ model Product {
   category    String?
   unit        String   @default("piece")
   price       Decimal  @db.Decimal(12, 2)
+  rating      Float    @default(4.5)
+  isTopSeller Boolean  @default(false)
   imageUrl    String?
   stockQty    Int      @default(0)
   isActive    Boolean  @default(true)
@@ -1584,6 +1585,8 @@ model Product {
 
   orderItems CustomerOrderItem[]
 
+  @@index([category])
+  @@index([isActive])
   @@map("products")
 }
 
@@ -1620,6 +1623,9 @@ model CustomerOrder {
 
   @@index([customerId])
   @@index([couponId])
+  @@index([status])
+  @@index([orderDate])
+  @@index([customerId, status, orderDate])
   @@map("customer_orders")
 }
 
@@ -2133,6 +2139,8 @@ model ArhtiyaTransaction {
 
   @@index([farmerId])
   @@index([partyId])
+  @@index([transactionDate])
+  @@index([farmerId, partyId, transactionDate])
   @@map("arhtiya_transactions")
 }
 

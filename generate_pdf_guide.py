@@ -265,9 +265,12 @@ html_content = """<!DOCTYPE html>
 
   <!-- HEADER BANNER -->
   <div class="header-banner">
-    <div class="header-text">
-      <h1>🌾 FarmsKing ਕਿਸਾਨ ਗਾਈਡ (Farmer Guide)</h1>
-      <p>ਡਿਜੀਟਲ ਸਮਾਰਟ ਖੇਤੀਬਾੜੀ ਪਲੇਟਫਾਰਮ — ਸਰਵਿਸਾਂ, ਸੁਵਿਧਾਵਾਂ ਅਤੇ ਪਲਾਨਾਂ ਦੀ ਪੂਰੀ ਮੁਕੰਮਲ ਜਾਣਕਾਰੀ</p>
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <img src="file:///d:/FarmsKing/frontend/assets/images/farmsking_logo_hd.png" style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid #fef08a; background: #ffffff;" />
+      <div class="header-text">
+        <h1>👑 FarmsKing ਕਿਸਾਨ ਗਾਈਡ (Farmer Guide)</h1>
+        <p>ਡਿਜੀਟਲ ਸਮਾਰਟ ਖੇਤੀਬਾੜੀ ਪਲੇਟਫਾਰਮ — ਸਰਵਿਸਾਂ, ਸੁਵਿਧਾਵਾਂ ਅਤੇ ਪਲਾਨਾਂ ਦੀ ਪੂਰੀ ਮੁਕੰਮਲ ਜਾਣਕਾਰੀ</p>
+      </div>
     </div>
     <div class="header-badge">
       <span>Official Manual</span>

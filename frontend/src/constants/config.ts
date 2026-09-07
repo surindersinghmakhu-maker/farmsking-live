@@ -74,24 +74,16 @@ export function normalizeApiUrl(rawInput: string): string {
  * Calculates standard default API URL based on environment & device type
  */
 export function getDefaultApiUrl(): string {
-  const autoHostIp = getAutoDetectedHostIp();
-
-  // If running on Expo Go / physical device and autoHostIp found, use it!
-  if (autoHostIp) {
-    return `http://${autoHostIp}:3000/api/v1`;
-  }
-
   const envUrl = process.env.EXPO_PUBLIC_API_URL;
   if (envUrl) {
-    // If env contains localhost but we are on mobile device, replace localhost with PC Wi-Fi IP
     if (Platform.OS !== 'web' && (envUrl.includes('localhost') || envUrl.includes('127.0.0.1'))) {
       return envUrl.replace(/localhost|127\.0\.0\.1/g, '192.168.1.79');
     }
     return envUrl;
   }
 
-  const DEV_HOST = Platform.OS === 'web' ? 'localhost' : '192.168.1.79';
-  return `http://${DEV_HOST}:3000/api/v1`;
+  // Permanent 24/7 Railway Cloud Server (No GitHub required, 24/7 Online)
+  return 'https://farmsking-backend-production.up.railway.app/api/v1';
 }
 
 // Initial default API URL

@@ -61,17 +61,9 @@ export function BrandLogo({
     ? LOGO_ICON_FAST
     : LOGO_STANDARD;
 
-  const finalSource = (logoUri && !imageError)
+  const finalSource = (logoUri && !imageError && !useFastBundledOnly)
     ? { uri: logoUri }
     : resolveAsset(bundledAsset);
-
-  if (imageError) {
-    return (
-      <View style={[{ width: size, height: size, alignItems: 'center', justifyContent: 'center', backgroundColor: '#14532d', borderRadius: size / 3, borderWidth: 1.5, borderColor: '#facc15' }, style as StyleProp<ViewStyle>]}>
-        <MaterialCommunityIcons name="crown" size={size * 0.6} color={iconColor} />
-      </View>
-    );
-  }
 
   return (
     <Image

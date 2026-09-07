@@ -12,12 +12,30 @@ import { RejectCropDto } from './dto/reject-crop.dto';
 import { UpdateCropScheduleDto } from './dto/update-crop-schedule.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.FARMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
+@Roles(
+  Role.CUSTOMER,
+  Role.FARMER,
+  Role.GARDENER,
+  Role.ADVISOR,
+  Role.BUSINESS_PARTNER,
+  Role.ADMIN,
+  Role.SUPER_ADMIN,
+  Role.OPERATOR,
+)
 @Controller('crops')
 export class CropsController {
   constructor(private readonly cropsService: CropsService) {}
 
-  @Roles(Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(
+    Role.CUSTOMER,
+    Role.FARMER,
+    Role.GARDENER,
+    Role.ADVISOR,
+    Role.BUSINESS_PARTNER,
+    Role.ADMIN,
+    Role.SUPER_ADMIN,
+    Role.OPERATOR,
+  )
   @Post()
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateCropDto) {
     return this.cropsService.create(user, dto);
@@ -65,7 +83,16 @@ export class CropsController {
     return this.cropsService.updateAssignedSchedule(user, id, dto.assignedSchedule);
   }
 
-  @Roles(Role.FARMER)
+  @Roles(
+    Role.CUSTOMER,
+    Role.FARMER,
+    Role.GARDENER,
+    Role.ADVISOR,
+    Role.BUSINESS_PARTNER,
+    Role.ADMIN,
+    Role.SUPER_ADMIN,
+    Role.OPERATOR,
+  )
   @Get('mine')
   listMineForFarmer(@CurrentUser() user: AuthUser) {
     return this.cropsService.listMineForFarmer(user);

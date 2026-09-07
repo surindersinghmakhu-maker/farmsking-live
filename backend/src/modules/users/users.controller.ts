@@ -130,13 +130,31 @@ export class UsersController {
     return this.usersService.updateMyAddress(user, dto);
   }
 
-  @Roles(Role.FARMER)
+  @Roles(
+    Role.CUSTOMER,
+    Role.FARMER,
+    Role.GARDENER,
+    Role.ADVISOR,
+    Role.BUSINESS_PARTNER,
+    Role.ADMIN,
+    Role.SUPER_ADMIN,
+    Role.OPERATOR,
+  )
   @Get('me/profile-status')
   getMyProfileStatus(@CurrentUser() user: AuthUser) {
     return this.usersService.getFarmerProfileStatus(user);
   }
 
-  @Roles(Role.FARMER)
+  @Roles(
+    Role.CUSTOMER,
+    Role.FARMER,
+    Role.GARDENER,
+    Role.ADVISOR,
+    Role.BUSINESS_PARTNER,
+    Role.ADMIN,
+    Role.SUPER_ADMIN,
+    Role.OPERATOR,
+  )
   @Patch('me/profile')
   updateMyProfile(@CurrentUser() user: AuthUser, @Body() dto: UpdateFarmerProfileDto) {
     return this.usersService.updateFarmerProfile(user, dto);

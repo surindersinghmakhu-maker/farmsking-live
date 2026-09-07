@@ -791,7 +791,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT.bold,
     marginHorizontal: 1,
   },
-  avatarRingBig: { width: 56, height: 56, borderRadius: 28, borderWidth: 2, borderColor: '#16a34a', padding: 2, position: 'relative', marginBottom: 4 },
+  avatarRingBig: { width: 58, height: 58, borderRadius: 29, borderWidth: 2.5, borderColor: '#16a34a', alignItems: 'center', justifyContent: 'center', position: 'relative', marginBottom: 4 },
   cameraBadge: { width: 18, height: 18, borderRadius: 9, backgroundColor: '#16a34a', position: 'absolute', bottom: 0, right: 0, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#ffffff' },
   changePhotoText: { fontSize: 11, fontFamily: FONT.bold, color: '#16a34a' },
   browsePhotoBtn: {

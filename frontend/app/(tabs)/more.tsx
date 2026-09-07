@@ -707,9 +707,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.bg },
   hero: { paddingTop: 12, paddingBottom: 12, alignItems: 'center' },
   avatarCircle: {
-    width: 46, height: 46, borderRadius: 23, backgroundColor: 'rgba(255,255,255,0.18)',
-    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.3)',
-    alignItems: 'center', justifyContent: 'center', marginBottom: 4,
+    width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.18)',
+    borderWidth: 2, borderColor: 'rgba(255,255,255,0.4)',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 4, overflow: 'hidden',
   },
   name: { color: '#fff', fontSize: 15, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
   mobile: { color: 'rgba(255,255,255,0.85)', fontSize: 11.5, fontFamily: FONT.medium, marginTop: 1 },

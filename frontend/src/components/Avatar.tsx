@@ -21,8 +21,14 @@ export function Avatar({ uri, size = 52, showBadge }: AvatarProps) {
   const badgeSize = Math.max(14, Math.round(size * 0.32));
 
   return (
-    <View style={{ width: size, height: size }}>
-      <Image source={{ uri: resolvedUri }} style={[styles.image, { width: size, height: size, borderRadius: size / 2 }]} />
+    <View style={{ width: size, height: size, position: 'relative' }}>
+      <View style={{ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', backgroundColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center' }}>
+        <Image
+          source={{ uri: resolvedUri }}
+          style={{ width: '100%', height: '100%', borderRadius: size / 2 }}
+          resizeMode="cover"
+        />
+      </View>
       {isPreset ? (
         <View
           style={[

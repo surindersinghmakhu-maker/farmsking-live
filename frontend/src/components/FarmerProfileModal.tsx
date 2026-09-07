@@ -30,7 +30,15 @@ function initialsOf(name: string): string {
 
 function CompactAvatar({ name, photoUrl, size = 44 }: { name: string; photoUrl?: string | null; size?: number }) {
   if (photoUrl) {
-    return <Image source={{ uri: resolveMediaUrl(photoUrl) }} style={{ width: size, height: size, borderRadius: size / 2 }} />;
+    return (
+      <View style={{ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', backgroundColor: '#e2e8f0' }}>
+        <Image
+          source={{ uri: resolveMediaUrl(photoUrl) }}
+          style={{ width: '100%', height: '100%', borderRadius: size / 2 }}
+          resizeMode="cover"
+        />
+      </View>
+    );
   }
   const bg = colorForName(name || '?');
   return (

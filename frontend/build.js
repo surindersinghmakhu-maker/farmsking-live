@@ -2,21 +2,33 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const frontendDir = fs.existsSync(path.join(__dirname, 'frontend'))
-  ? path.join(__dirname, 'frontend')
-  : __dirname;
+// Walk up parent directories to locate frontend package.json
+let currentDir = __dirname;
+let targetDir = currentDir;
 
-console.log(`🚀 Starting Expo Web build in directory: ${frontendDir}`);
+while (currentDir !== path.parse(currentDir).root) {
+  if (fs.existsSync(path.join(currentDir, 'frontend', 'package.json'))) {
+    targetDir = path.join(currentDir, 'frontend');
+    break;
+  }
+  if (fs.existsSync(path.join(currentDir, 'package.json')) && (fs.existsSync(path.join(currentDir, 'app')) || fs.existsSync(path.join(currentDir, 'src')))) {
+    targetDir = currentDir;
+    break;
+  }
+  currentDir = path.dirname(currentDir);
+}
+
+console.log(`🚀 Starting Expo Web build in resolved directory: ${targetDir}`);
 
 process.env.CI = '1';
 process.env.NODE_OPTIONS = '--max-old-space-size=4096';
 
 try {
   console.log('📦 Running npm install...');
-  execSync('npm install --legacy-peer-deps', { cwd: frontendDir, stdio: 'inherit' });
+  execSync('npm install --legacy-peer-deps', { cwd: targetDir, stdio: 'inherit' });
 
   console.log('⚡ Running Expo Export...');
-  execSync('npx expo export -p web', { cwd: frontendDir, stdio: 'inherit' });
+  execSync('npx expo export -p web', { cwd: targetDir, stdio: 'inherit' });
 
   console.log('✅ Expo Web build completed successfully!');
 } catch (err) {

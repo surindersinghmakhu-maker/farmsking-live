@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "cd frontend && npm install --legacy-peer-deps && CI=1 npx expo export -p web"
+    "build": "if [ -d \"frontend\" ]; then cd frontend; fi && npm install --legacy-peer-deps && NODE_OPTIONS=\"--max-old-space-size=4096\" CI=1 npx expo export --platform web"
   }
 }

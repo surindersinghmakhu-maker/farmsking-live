@@ -130,8 +130,8 @@ export function ServerConfigModal({ visible, onClose, onSaved }: ServerConfigMod
               </TouchableOpacity>
             ) : null}
 
-            <TouchableOpacity style={[styles.presetChip, { backgroundColor: '#e0e7ff', borderColor: '#a5b4fc' }]} onPress={() => applyPreset('https://farmsking-api.onrender.com/api/v1')}>
-              <Text style={[styles.presetChipText, { color: '#4338ca', fontFamily: FONT.bold }]}>☁️ Cloud API (Render)</Text>
+            <TouchableOpacity style={[styles.presetChip, { backgroundColor: '#dcfce7', borderColor: '#86efac' }]} onPress={() => applyPreset('https://farmsking-backend-production.up.railway.app/api/v1')}>
+              <Text style={[styles.presetChipText, { color: '#15803d', fontFamily: FONT.bold }]}>☁️ Cloud API (Railway 24/7)</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.presetChip} onPress={() => applyPreset('http://10.0.2.2:4100/api/v1')}>

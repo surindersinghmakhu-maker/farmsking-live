@@ -6,6 +6,9 @@ import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
 import compression from 'compression';
 import { AppModule } from './app.module';
+import { PrismaService } from './modules/prisma/prisma.service';
+import { Role } from '@prisma/client';
+import * as argon2 from 'argon2';
 
 // A client disconnecting mid-request (common behind tunnels/proxies, or a mobile device losing
 // signal) fires a raw socket 'error' event with no listener attached, which Node treats as an
@@ -55,6 +58,43 @@ async function bootstrap() {
   );
 
   const host = configService.get<string>('HOST', '0.0.0.0');
+
+  // Ensure Super Admin account 9872066901 is initialized on backend startup
+  try {
+    const prisma = app.get(PrismaService);
+    const superAdminMobile = '9872066901';
+    const passwordHash = await argon2.hash('12345678');
+    const existing = await prisma.user.findUnique({ where: { mobile: superAdminMobile } });
+    if (existing) {
+      const currentRoles = existing.roles ?? [];
+      const hasSuper = currentRoles.includes(Role.SUPER_ADMIN);
+      await prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          passwordHash,
+          role: Role.SUPER_ADMIN,
+          roles: hasSuper ? currentRoles : [...currentRoles, Role.SUPER_ADMIN],
+          deletedAt: null,
+        },
+      });
+      console.log('[Bootstrap] Super Admin 9872066901 initialized/updated.');
+    } else {
+      await prisma.user.create({
+        data: {
+          kingId: '02101982',
+          mobile: superAdminMobile,
+          passwordHash,
+          role: Role.SUPER_ADMIN,
+          roles: [Role.SUPER_ADMIN, Role.CUSTOMER],
+          name: 'FarmsKing Super Admin',
+        },
+      });
+      console.log('[Bootstrap] Super Admin 9872066901 created.');
+    }
+  } catch (err) {
+    console.warn('[Bootstrap] Super Admin check warning:', err);
+  }
+
   await app.listen(port, host);
 }
 bootstrap();

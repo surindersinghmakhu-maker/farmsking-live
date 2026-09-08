@@ -173,6 +173,7 @@ export function OpenMeteoWeatherCard() {
   const [data, setData] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const fetchWeather = async () => {
     setLoading(true);
@@ -236,110 +237,180 @@ export function OpenMeteoWeatherCard() {
   }, [user?.pincode, user?.district, user?.village]);
 
   return (
-    <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={() => setExpanded(!expanded)}
+      style={[styles.card, premiumShadow('#0f172a', 'sm')]}
+    >
       {/* Header */}
       <View style={styles.headerRow}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
           <View style={styles.liveTag}>
             <Text style={styles.liveTagText}>LIVE OPEN-METEO</Text>
           </View>
-          <Text style={styles.headerTitle} numberOfLines={1}>🌤️ Agri Weather Forecast</Text>
-        </View>
-        <TouchableOpacity style={styles.refreshBtn} onPress={fetchWeather}>
-          <Ionicons name="refresh" size={14} color="#0284c7" />
+          <Text style={styles.headerTitle} numberOfLines={1}>🌤️ Weather</Text>
           <Text style={styles.locationText} numberOfLines={1}>
             {data?.locationName || (user?.pincode ? `📍 PIN ${user.pincode}` : `📍 ${user?.district || 'Punjab'}`)}
           </Text>
-        </TouchableOpacity>
+        </View>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <TouchableOpacity
+            style={styles.refreshBtn}
+            onPress={(e) => {
+              e.stopPropagation?.();
+              fetchWeather();
+            }}
+          >
+            <Ionicons name="refresh" size={14} color="#0284c7" />
+          </TouchableOpacity>
+          <Ionicons
+            name={expanded ? 'chevron-up-circle' : 'chevron-down-circle'}
+            size={20}
+            color="#0284c7"
+          />
+        </View>
       </View>
 
       {loading ? (
-        <View style={styles.centerBox}>
+        <View style={styles.centerBoxCompact}>
           <ActivityIndicator size="small" color="#0284c7" />
-          <Text style={styles.loadingText}>Fetching PIN Code live weather...</Text>
+          <Text style={styles.loadingText}>Loading PIN Code weather...</Text>
         </View>
       ) : error || !data ? (
-        <View style={styles.centerBox}>
-          <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#64748b' }}>
-            Unable to fetch weather forecast right now.
+        <View style={styles.centerBoxCompact}>
+          <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
+            Weather unavailable
           </Text>
           <TouchableOpacity style={styles.retryBtn} onPress={fetchWeather}>
             <Text style={styles.retryText}>Retry</Text>
           </TouchableOpacity>
         </View>
       ) : (
-        <View style={{ gap: 10 }}>
-          {/* Main Weather Display Banner */}
-          <View style={styles.bannerRow}>
-            <View style={styles.mainTempGroup}>
-              <Ionicons name={data.conditionIcon} size={42} color="#0284c7" />
+        <View style={{ gap: 8 }}>
+          {/* Compact View Summary Row (always visible) */}
+          <View style={styles.compactRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+              <Ionicons name={data.conditionIcon} size={28} color="#0284c7" />
               <View>
-                <Text style={styles.tempText}>{data.temp}°C</Text>
-                <Text style={styles.feelsLikeText}>Feels like: {data.feelsLike}°C</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={styles.compactTemp}>{data.temp}°C</Text>
+                  <Text style={styles.compactCondition}>{data.conditionText}</Text>
+                </View>
+                <Text style={styles.compactSubtext}>
+                  💧 {data.humidity}% | 💨 {data.windSpeed} km/h
+                </Text>
               </View>
             </View>
 
-            <View style={styles.conditionGroup}>
-              <Text style={styles.conditionTitle}>{data.conditionText}</Text>
-              <View style={styles.metricsRow}>
-                <View style={styles.metricBadge}>
-                  <Ionicons name="water-outline" size={11} color="#0284c7" />
-                  <Text style={styles.metricText}>Humidity: {data.humidity}%</Text>
-                </View>
-                <View style={styles.metricBadge}>
-                  <Ionicons name="navigate-outline" size={11} color="#0369a1" />
-                  <Text style={styles.metricText}>Wind: {data.windSpeed} km/h</Text>
-                </View>
-              </View>
-            </View>
-          </View>
-
-          {/* Agri Spray Advisory Banner */}
-          <View
-            style={[
-              styles.advisoryBanner,
-              {
-                backgroundColor: data.isSpraySafe ? '#f0fdf4' : '#fff1f2',
-                borderColor: data.isSpraySafe ? '#bbf7d0' : '#fca5a5',
-              },
-            ]}
-          >
-            <Ionicons
-              name={data.isSpraySafe ? 'checkmark-circle-outline' : 'warning-outline'}
-              size={18}
-              color={data.isSpraySafe ? '#166534' : '#991b1b'}
-            />
-            <Text
+            <View
               style={[
-                styles.advisoryText,
-                { color: data.isSpraySafe ? '#15803d' : '#991b1b' },
+                styles.compactSprayBadge,
+                { backgroundColor: data.isSpraySafe ? '#dcfce7' : '#fee2e2' },
               ]}
             >
-              {data.advice}
-            </Text>
+              <Text
+                style={[
+                  styles.compactSprayText,
+                  { color: data.isSpraySafe ? '#166534' : '#991b1b' },
+                ]}
+              >
+                {data.isSpraySafe ? '✅ Spray Safe' : '⚠️ Avoid Spray'}
+              </Text>
+            </View>
           </View>
 
-          {/* 5-Day Forecast Row */}
-          {data.daily && data.daily.length > 0 ? (
-            <View style={styles.forecastContainer}>
-              <Text style={styles.forecastHeader}>📅 5-Day Weather Forecast</Text>
-              <View style={styles.forecastRow}>
-                {data.daily.map((item, index) => (
-                  <View key={index} style={styles.forecastCol}>
-                    <Text style={styles.forecastDay}>{item.day}</Text>
-                    <Ionicons name={item.icon} size={20} color="#0284c7" style={{ marginVertical: 2 }} />
-                    <Text style={styles.forecastTemp}>{item.maxTemp}° / {item.minTemp}°</Text>
-                    {item.rainProb > 20 ? (
-                      <Text style={styles.rainProbText}>🌧️ {item.rainProb}%</Text>
-                    ) : null}
+          {/* Toggle Indicator Hint */}
+          {!expanded && (
+            <View style={styles.expandHintRow}>
+              <Text style={styles.expandHintText}>
+                Tap to view 5-day forecast & full advisory
+              </Text>
+              <Ionicons name="chevron-down" size={13} color="#0284c7" />
+            </View>
+          )}
+
+          {/* Expanded Details Section */}
+          {expanded && (
+            <View style={{ gap: 10, marginTop: 4, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#f1f5f9' }}>
+              {/* Main Weather Display Banner */}
+              <View style={styles.bannerRow}>
+                <View style={styles.mainTempGroup}>
+                  <Ionicons name={data.conditionIcon} size={40} color="#0284c7" />
+                  <View>
+                    <Text style={styles.tempText}>{data.temp}°C</Text>
+                    <Text style={styles.feelsLikeText}>Feels like: {data.feelsLike}°C</Text>
                   </View>
-                ))}
+                </View>
+
+                <View style={styles.conditionGroup}>
+                  <Text style={styles.conditionTitle}>{data.conditionText}</Text>
+                  <View style={styles.metricsRow}>
+                    <View style={styles.metricBadge}>
+                      <Ionicons name="water-outline" size={11} color="#0284c7" />
+                      <Text style={styles.metricText}>Humidity: {data.humidity}%</Text>
+                    </View>
+                    <View style={styles.metricBadge}>
+                      <Ionicons name="navigate-outline" size={11} color="#0369a1" />
+                      <Text style={styles.metricText}>Wind: {data.windSpeed} km/h</Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+
+              {/* Agri Spray Advisory Banner */}
+              <View
+                style={[
+                  styles.advisoryBanner,
+                  {
+                    backgroundColor: data.isSpraySafe ? '#f0fdf4' : '#fff1f2',
+                    borderColor: data.isSpraySafe ? '#bbf7d0' : '#fca5a5',
+                  },
+                ]}
+              >
+                <Ionicons
+                  name={data.isSpraySafe ? 'checkmark-circle-outline' : 'warning-outline'}
+                  size={18}
+                  color={data.isSpraySafe ? '#166534' : '#991b1b'}
+                />
+                <Text
+                  style={[
+                    styles.advisoryText,
+                    { color: data.isSpraySafe ? '#15803d' : '#991b1b' },
+                  ]}
+                >
+                  {data.advice}
+                </Text>
+              </View>
+
+              {/* 5-Day Forecast Row */}
+              {data.daily && data.daily.length > 0 ? (
+                <View style={styles.forecastContainer}>
+                  <Text style={styles.forecastHeader}>📅 5-Day Weather Forecast</Text>
+                  <View style={styles.forecastRow}>
+                    {data.daily.map((item, index) => (
+                      <View key={index} style={styles.forecastCol}>
+                        <Text style={styles.forecastDay}>{item.day}</Text>
+                        <Ionicons name={item.icon} size={20} color="#0284c7" style={{ marginVertical: 2 }} />
+                        <Text style={styles.forecastTemp}>{item.maxTemp}° / {item.minTemp}°</Text>
+                        {item.rainProb > 20 ? (
+                          <Text style={styles.rainProbText}>🌧️ {item.rainProb}%</Text>
+                        ) : null}
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              ) : null}
+
+              <View style={styles.collapseHintRow}>
+                <Text style={styles.expandHintText}>Tap to collapse</Text>
+                <Ionicons name="chevron-up" size={13} color="#0284c7" />
               </View>
             </View>
-          ) : null}
+          )}
         </View>
       )}
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -517,5 +588,66 @@ const styles = StyleSheet.create({
     fontFamily: FONT.extraBold,
     color: '#0284c7',
     marginTop: 1,
+  },
+  centerBoxCompact: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    gap: 4,
+  },
+  compactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  compactTemp: {
+    fontSize: 18,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+  },
+  compactCondition: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#0284c7',
+  },
+  compactSubtext: {
+    fontSize: 9.5,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    marginTop: 1,
+  },
+  compactSprayBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: RADIUS.sm,
+  },
+  compactSprayText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+  },
+  expandHintRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    marginTop: 2,
+  },
+  collapseHintRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    marginTop: 6,
+  },
+  expandHintText: {
+    fontSize: 9.5,
+    fontFamily: FONT.semiBold,
+    color: '#0284c7',
   },
 });

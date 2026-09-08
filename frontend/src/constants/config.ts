@@ -74,14 +74,6 @@ export function normalizeApiUrl(rawInput: string): string {
  * Calculates standard default API URL based on environment & device type
  */
 export function getDefaultApiUrl(): string {
-  const envUrl = process.env.EXPO_PUBLIC_API_URL;
-  if (envUrl) {
-    if (Platform.OS !== 'web' && (envUrl.includes('localhost') || envUrl.includes('127.0.0.1'))) {
-      return envUrl.replace(/localhost|127\.0\.0\.1/g, '192.168.1.79');
-    }
-    return envUrl;
-  }
-
   // Permanent 24/7 Render Cloud Server
   return 'https://farmsking-live-md6m.onrender.com/api/v1';
 }

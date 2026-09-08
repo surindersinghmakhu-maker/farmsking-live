@@ -31,6 +31,7 @@ import { Avatar } from '@/src/components/Avatar';
 import { useCrops } from '@/src/store/crops-context';
 import { useGroupVoiceCall } from '@/src/hooks/useGroupVoiceCall';
 import { GroupVoiceCallModal } from '@/src/components/chat/GroupVoiceCallModal';
+import { SwitchDashboardSection } from '@/src/components/SwitchDashboardSection';
 
 const theme = RoleThemes.SUPER_ADMIN;
 const LIVE_REQUESTS_POLL_MS = 20000;
@@ -161,6 +162,8 @@ export const SuperAdminDashboardView: React.FC = () => {
       />
 
       <View style={styles.content}>
+        <SwitchDashboardSection />
+
         <View style={[styles.kpiBar, premiumShadow('#0f172a', 'sm')]}>
           <View style={styles.kpiCol}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>

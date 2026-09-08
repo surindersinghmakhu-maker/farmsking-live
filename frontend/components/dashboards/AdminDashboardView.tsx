@@ -10,6 +10,7 @@ import { useAuth } from '@/src/store/auth-context';
 import { useAdminConversations } from '@/src/hooks/useAdminChat';
 import { AdminSupportModal } from '@/src/components/AdminSupportModal';
 import { useCrops } from '@/src/store/crops-context';
+import { SwitchDashboardSection } from '@/src/components/SwitchDashboardSection';
 
 export const AdminDashboardView: React.FC = () => {
   const theme = RoleThemes.ADMIN;
@@ -38,6 +39,7 @@ export const AdminDashboardView: React.FC = () => {
       />
 
       <View style={styles.content}>
+        <SwitchDashboardSection />
         {/* Real-time Farmer Support Chat Card Banner */}
         <TouchableOpacity
           style={[

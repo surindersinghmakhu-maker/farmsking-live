@@ -255,6 +255,12 @@ enum FarmerSubscriptionPlan {
   PRO
   SMART
   SUPER
+  BASIC
+  SILVER
+  GOLD
+  PLATINUM
+  DIAMOND
+  ROYAL
 }
 
 enum AdvisorSubscriptionPlan {

@@ -41,6 +41,11 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     const deactivated = user.deactivatedRoles ?? [];
     const activeRoles = granted.filter((r) => !deactivated.includes(r));
     const mapped = activeRoles.map((r) => toUserRole(r, user.advisorType));
+    if (user.role === 'SUPER_ADMIN' || granted.includes('SUPER_ADMIN')) {
+      if (!mapped.includes('ADMIN')) {
+        mapped.push('ADMIN');
+      }
+    }
     // De-dupe while keeping the primary role first.
     return Array.from(new Set([primaryRole, ...mapped]));
   }, [user, primaryRole]);

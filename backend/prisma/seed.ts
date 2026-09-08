@@ -109,39 +109,41 @@ async function main() {
   }
 
   const demoSuperAdminMobile = '9872066901';
-  const existingSuperAdmin = await prisma.user.findFirst({
-    where: {
-      OR: [
-        { mobile: demoSuperAdminMobile },
-        { mobile: '9999900002' },
-        { role: Role.SUPER_ADMIN },
-      ],
-    },
-  });
   const superAdminPasswordHash = await argon2.hash('12345678');
-  if (!existingSuperAdmin) {
-    await prisma.user.create({
+  const existingUserWithMobile = await prisma.user.findUnique({ where: { mobile: demoSuperAdminMobile } });
+
+  if (existingUserWithMobile) {
+    const roles = existingUserWithMobile.roles ?? [];
+    await prisma.user.update({
+      where: { id: existingUserWithMobile.id },
       data: {
-        kingId: await generateUniqueKingId(prisma),
-        mobile: demoSuperAdminMobile,
         passwordHash: superAdminPasswordHash,
         role: Role.SUPER_ADMIN,
-        roles: [Role.SUPER_ADMIN, Role.CUSTOMER],
-        name: 'FarmsKing Super Admin',
+        roles: Array.from(new Set([...roles, Role.SUPER_ADMIN])),
       },
     });
   } else {
-    await prisma.user.update({
-      where: { id: existingSuperAdmin.id },
-      data: {
-        mobile: demoSuperAdminMobile,
-        passwordHash: superAdminPasswordHash,
-        role: Role.SUPER_ADMIN,
-        roles: existingSuperAdmin.roles.includes(Role.SUPER_ADMIN)
-          ? existingSuperAdmin.roles
-          : [...existingSuperAdmin.roles, Role.SUPER_ADMIN],
-      },
-    });
+    const existingSuperAdmin = await prisma.user.findFirst({ where: { role: Role.SUPER_ADMIN } });
+    if (existingSuperAdmin) {
+      await prisma.user.update({
+        where: { id: existingSuperAdmin.id },
+        data: {
+          mobile: demoSuperAdminMobile,
+          passwordHash: superAdminPasswordHash,
+        },
+      });
+    } else {
+      await prisma.user.create({
+        data: {
+          kingId: await generateUniqueKingId(prisma),
+          mobile: demoSuperAdminMobile,
+          passwordHash: superAdminPasswordHash,
+          role: Role.SUPER_ADMIN,
+          roles: [Role.SUPER_ADMIN, Role.CUSTOMER],
+          name: 'FarmsKing Super Admin',
+        },
+      });
+    }
   }
 
   const demoOperatorMobile = '9999900003';

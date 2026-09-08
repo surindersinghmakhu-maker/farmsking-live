@@ -417,6 +417,10 @@ let UsersService = class UsersService {
         if (role === client_1.Role.BUSINESS_PARTNER && !user.roles.includes(client_1.Role.BUSINESS_PARTNER)) {
             await (0, partner_coupon_util_1.provisionPartnerReferralCoupon)(this.prisma, id, caller.id);
         }
+        const eligibleRoles = [client_1.Role.FARMER, client_1.Role.ADVISOR];
+        if (eligibleRoles.includes(role)) {
+            this.whatsappGroupSyncService.autoAddNewUser(id, user.mobile ?? '', user.name ?? 'User').catch(() => { });
+        }
         return updated;
     }
     async updateActiveRoles(caller, id, activeRoles) {
@@ -465,6 +469,20 @@ let UsersService = class UsersService {
         }
         if (toGrant.includes(client_1.Role.GARDENER) || toReactivate.includes(client_1.Role.GARDENER)) {
             await this.prisma.gardenerPlan.upsert({ where: { gardenerId: id }, create: { gardenerId: id }, update: {} });
+        }
+        const eligibleRoles = [client_1.Role.FARMER, client_1.Role.ADVISOR];
+        const gettingEligible = [...toGrant, ...toReactivate].some((r) => eligibleRoles.includes(r));
+        const losingEligible = toDeactivate.some((r) => eligibleRoles.includes(r));
+        if (gettingEligible) {
+            this.whatsappGroupSyncService.autoAddNewUser(id, user.mobile ?? '', user.name ?? 'User').catch(() => { });
+        }
+        else if (losingEligible) {
+            const remainingEligible = newRoles
+                .filter((r) => !newDeactivated.includes(r))
+                .some((r) => eligibleRoles.includes(r));
+            if (!remainingEligible) {
+                this.whatsappGroupSyncService.autoRemoveUser(id, user.mobile ?? '', user.name ?? 'User').catch(() => { });
+            }
         }
         return updated;
     }

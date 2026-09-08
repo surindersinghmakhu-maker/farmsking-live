@@ -159,83 +159,31 @@ let WhatsAppGroupSyncService = WhatsAppGroupSyncService_1 = class WhatsAppGroupS
                 timestamp,
             };
         }
-        this.logger.log(`🔍 Starting sync for WhatsApp Group: ${groupJid} (AdvisorId: ${advisorId || 'Global'}, AutoAdd: ${autoAddEnabled}, AutoRemove: ${autoRemoveEnabled})`);
-        const now = new Date();
-        const activeAssignments = await this.prisma.advisorAssignment.findMany({
+        this.logger.log(`🔍 Starting role-based sync for WhatsApp Group: ${groupJid} (AutoAdd: ${autoAddEnabled}, AutoRemove: ${autoRemoveEnabled})`);
+        const eligibleUsers = await this.prisma.user.findMany({
             where: {
-                status: { in: [client_1.AdvisorAssignmentStatus.ACTIVE, client_1.AdvisorAssignmentStatus.PENDING] },
                 deletedAt: null,
-                ...(advisorId ? { advisorId } : {}),
-                OR: [{ endDate: null }, { endDate: { gt: now } }],
-                farmer: {
-                    deletedAt: null,
-                    mobile: { not: '' },
-                    whatsappGroupEnabled: true,
-                },
+                mobile: { not: '' },
+                whatsappGroupEnabled: true,
+                OR: [
+                    { role: { in: [client_1.Role.FARMER, client_1.Role.ADVISOR] } },
+                    { roles: { hasSome: [client_1.Role.FARMER, client_1.Role.ADVISOR] } },
+                ],
             },
-            select: {
-                farmerId: true,
-                farmer: {
-                    select: { id: true, mobile: true, name: true, whatsappGroupEnabled: true },
-                },
-            },
+            select: { id: true, mobile: true, name: true },
         });
-        const activeSubscriptions = await this.prisma.advisorSubscription.findMany({
-            where: {
-                status: client_1.SubscriptionPlanStatus.ACTIVE,
-                deletedAt: null,
-                OR: [{ endDate: null }, { endDate: { gt: now } }],
-                farmer: {
-                    deletedAt: null,
-                    mobile: { not: '' },
-                    whatsappGroupEnabled: true,
-                },
-            },
-            select: {
-                farmerId: true,
-                farmer: {
-                    select: { id: true, mobile: true, name: true, whatsappGroupEnabled: true },
-                },
-            },
-        });
-        const activeFarmerPlans = await this.prisma.farmerPlan.findMany({
-            where: {
-                plan: { in: [client_1.FarmerSubscriptionPlan.PRO, client_1.FarmerSubscriptionPlan.SMART, client_1.FarmerSubscriptionPlan.SUPER] },
-                expiredAt: null,
-                OR: [{ endDate: null }, { endDate: { gt: now } }],
-                farmer: {
-                    deletedAt: null,
-                    mobile: { not: '' },
-                    whatsappGroupEnabled: true,
-                },
-            },
-            select: {
-                farmerId: true,
-                farmer: {
-                    select: { id: true, mobile: true, name: true, whatsappGroupEnabled: true },
-                },
-            },
-        });
-        const activeFarmersMap = new Map();
-        for (const a of activeAssignments) {
-            if (a.farmer?.mobile)
-                activeFarmersMap.set(a.farmer.mobile.trim(), a.farmer);
-        }
-        for (const s of activeSubscriptions) {
-            if (s.farmer?.mobile)
-                activeFarmersMap.set(s.farmer.mobile.trim(), s.farmer);
-        }
-        for (const p of activeFarmerPlans) {
-            if (p.farmer?.mobile)
-                activeFarmersMap.set(p.farmer.mobile.trim(), p.farmer);
+        const eligibleMap = new Map();
+        for (const u of eligibleUsers) {
+            if (u.mobile)
+                eligibleMap.set(u.mobile.trim(), u);
         }
         const protectedStaffUsers = await this.prisma.user.findMany({
             where: {
                 deletedAt: null,
                 mobile: { not: '' },
                 OR: [
-                    { role: { in: [client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN, client_1.Role.ADVISOR] } },
-                    { roles: { hasSome: [client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN, client_1.Role.ADVISOR] } },
+                    { role: { in: [client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN] } },
+                    { roles: { hasSome: [client_1.Role.SUPER_ADMIN, client_1.Role.ADMIN] } },
                 ],
             },
             select: { mobile: true },
@@ -251,21 +199,24 @@ let WhatsAppGroupSyncService = WhatsAppGroupSyncService_1 = class WhatsAppGroupS
         let inviteSentCount = 0;
         let removedCount = 0;
         let skippedCount = 0;
-        for (const [mobile, farmer] of activeFarmersMap.entries()) {
-            const farmerJid = this.whatsappBotService.formatJid(mobile).toLowerCase();
-            if (!memberJidSet.has(farmerJid)) {
+        for (const [mobile, user] of eligibleMap.entries()) {
+            const userJid = this.whatsappBotService.formatJid(mobile).toLowerCase();
+            if (!memberJidSet.has(userJid)) {
                 if (autoAddEnabled) {
-                    this.logger.log(`➕ Auto-adding active advisor farmer: ${farmer.name} (${mobile}) to WhatsApp Group`);
-                    const result = await this.whatsappBotService.addParticipantToGroup(groupJid, mobile, farmer.name);
+                    this.logger.log(`➕ Auto-adding FARMER/ADVISOR: ${user.name} (${mobile}) to WhatsApp Group`);
+                    const result = await this.whatsappBotService.addParticipantToGroup(groupJid, mobile, user.name);
                     if (result.status === 'ADDED') {
                         addedCount++;
+                    }
+                    else if (result.status === 'INVITE_SENT') {
+                        inviteSentCount++;
                     }
                     else {
                         skippedCount++;
                     }
                 }
                 else {
-                    this.logger.log(`⏩ Auto-add is OFF. Skipping adding active farmer ${farmer.name} (${mobile}).`);
+                    this.logger.log(`⏩ Auto-add is OFF. Skipping ${user.name} (${mobile}).`);
                     skippedCount++;
                 }
             }
@@ -274,38 +225,37 @@ let WhatsAppGroupSyncService = WhatsAppGroupSyncService_1 = class WhatsAppGroupS
             }
         }
         if (autoRemoveEnabled) {
-            const allFarmers = await this.prisma.user.findMany({
+            const allUsers = await this.prisma.user.findMany({
                 where: { mobile: { not: '' } },
-                select: { id: true, mobile: true, name: true, whatsappGroupEnabled: true },
+                select: { id: true, mobile: true, name: true, whatsappGroupEnabled: true, role: true, roles: true },
             });
-            for (const farmer of allFarmers) {
-                if (!farmer.mobile)
+            for (const user of allUsers) {
+                if (!user.mobile)
                     continue;
-                const cleanMobile = farmer.mobile.trim();
+                const cleanMobile = user.mobile.trim();
                 if (protectedMobilesSet.has(cleanMobile))
                     continue;
-                if (activeFarmersMap.has(cleanMobile) && farmer.whatsappGroupEnabled)
+                if (eligibleMap.has(cleanMobile))
                     continue;
-                const farmerJid = this.whatsappBotService.formatJid(cleanMobile).toLowerCase();
-                if (memberJidSet.has(farmerJid)) {
-                    this.logger.warn(`➖ Plan Expired/Switch OFF. Auto-removing user: ${farmer.name} (${cleanMobile}) from WhatsApp Group`);
-                    const result = await this.whatsappBotService.removeParticipantFromGroup(groupJid, cleanMobile, farmer.name);
-                    if (result.success) {
+                const userJid = this.whatsappBotService.formatJid(cleanMobile).toLowerCase();
+                if (memberJidSet.has(userJid)) {
+                    this.logger.warn(`➖ Not eligible (no FARMER/ADVISOR role OR switch OFF). Removing: ${user.name} (${cleanMobile})`);
+                    const result = await this.whatsappBotService.removeParticipantFromGroup(groupJid, cleanMobile, user.name);
+                    if (result.success)
                         removedCount++;
-                    }
                 }
             }
         }
         const summary = {
             groupJid,
-            totalActiveEligible: activeFarmersMap.size,
+            totalActiveEligible: eligibleMap.size,
             addedCount,
             inviteSentCount,
             removedCount,
             skippedCount,
             timestamp,
         };
-        this.logger.log(`✅ WhatsApp Group Sync completed. Eligible: ${summary.totalActiveEligible}, Added: ${addedCount}, Removed: ${removedCount}, Skipped: ${skippedCount}`);
+        this.logger.log(`✅ WhatsApp Group Sync completed. Eligible: ${summary.totalActiveEligible}, Added: ${addedCount}, Invited: ${inviteSentCount}, Removed: ${removedCount}, Skipped: ${skippedCount}`);
         return summary;
     }
     async syncSingleFarmerGroupStatus(farmerId) {
@@ -356,12 +306,23 @@ let WhatsAppGroupSyncService = WhatsAppGroupSyncService_1 = class WhatsAppGroupS
         try {
             const { isEnabled, autoAddEnabled } = await this.getSyncSettings();
             if (!isEnabled || !autoAddEnabled) {
-                this.logger.log(`⏩ Auto-add skipped for new user ${mobile} (sync disabled in settings).`);
+                this.logger.log(`⏩ Auto-add skipped for ${mobile} (sync disabled in settings).`);
+                return;
+            }
+            const user = await this.prisma.user.findUnique({
+                where: { id: userId },
+                select: { role: true, roles: true },
+            });
+            const eligibleRoles = [client_1.Role.FARMER, client_1.Role.ADVISOR];
+            const hasEligibleRole = (user?.role && eligibleRoles.includes(user.role)) ||
+                (Array.isArray(user?.roles) && user.roles.some((r) => eligibleRoles.includes(r)));
+            if (!hasEligibleRole) {
+                this.logger.log(`⏩ Skipping auto-add for ${mobile} — not a FARMER or ADVISOR.`);
                 return;
             }
             const { isConnected } = this.whatsappBotService.getQrCodeStatus();
             if (!isConnected) {
-                this.logger.warn(`⚠️ WhatsApp Bot not connected — skipping auto-add for new user ${mobile}.`);
+                this.logger.warn(`⚠️ WhatsApp Bot not connected — skipping auto-add for ${mobile}.`);
                 return;
             }
             const groupJid = await this.getAdvisorGroupJid();
@@ -369,12 +330,12 @@ let WhatsAppGroupSyncService = WhatsAppGroupSyncService_1 = class WhatsAppGroupS
                 this.logger.warn(`⚠️ No target WhatsApp group configured — skipping auto-add for ${mobile}.`);
                 return;
             }
-            this.logger.log(`🆕 New user registered: Auto-adding ${name} (${mobile}) to WhatsApp group ${groupJid}`);
+            this.logger.log(`🆕 FARMER/ADVISOR: Auto-adding ${name} (${mobile}) to WhatsApp group ${groupJid}`);
             const result = await this.whatsappBotService.addParticipantToGroup(groupJid, mobile, name);
             this.logger.log(`Auto-add result for ${mobile}: ${result.status}`);
         }
         catch (err) {
-            this.logger.error(`Failed to auto-add new user ${mobile} to WhatsApp group:`, err);
+            this.logger.error(`Failed to auto-add user ${mobile} to WhatsApp group:`, err);
         }
     }
     async autoRemoveUser(userId, mobile, name) {

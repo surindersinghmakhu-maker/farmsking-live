@@ -431,6 +431,17 @@ export class UsersService {
     if (role === Role.BUSINESS_PARTNER && !user.roles.includes(Role.BUSINESS_PARTNER)) {
       await provisionPartnerReferralCoupon(this.prisma, id, caller.id);
     }
+
+    // 📲 WhatsApp Group: add if newly assigned FARMER or ADVISOR role
+    const eligibleRoles = [Role.FARMER, Role.ADVISOR];
+    if (eligibleRoles.includes(role)) {
+      this.whatsappGroupSyncService.autoAddNewUser(
+        id,
+        user.mobile ?? '',
+        user.name ?? 'User',
+      ).catch(() => {});
+    }
+
     return updated;
   }
 
@@ -495,6 +506,32 @@ export class UsersService {
     if (toGrant.includes(Role.GARDENER) || toReactivate.includes(Role.GARDENER)) {
       await this.prisma.gardenerPlan.upsert({ where: { gardenerId: id }, create: { gardenerId: id }, update: {} });
     }
+
+    // 📲 WhatsApp Group: instant add when FARMER/ADVISOR is granted or reactivated
+    const eligibleRoles = [Role.FARMER, Role.ADVISOR];
+    const gettingEligible = [...toGrant, ...toReactivate].some((r) => eligibleRoles.includes(r));
+    const losingEligible = toDeactivate.some((r) => eligibleRoles.includes(r));
+
+    if (gettingEligible) {
+      this.whatsappGroupSyncService.autoAddNewUser(
+        id,
+        user.mobile ?? '',
+        user.name ?? 'User',
+      ).catch(() => {});
+    } else if (losingEligible) {
+      // Only remove from group if user has NO remaining eligible role
+      const remainingEligible = newRoles
+        .filter((r) => !newDeactivated.includes(r))
+        .some((r) => eligibleRoles.includes(r));
+      if (!remainingEligible) {
+        this.whatsappGroupSyncService.autoRemoveUser(
+          id,
+          user.mobile ?? '',
+          user.name ?? 'User',
+        ).catch(() => {});
+      }
+    }
+
     return updated;
   }
 

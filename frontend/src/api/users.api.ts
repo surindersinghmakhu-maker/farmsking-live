@@ -278,3 +278,9 @@ export async function deleteMyAccount(): Promise<{ success: boolean; message: st
   const { data } = await apiClient.delete<{ success: boolean; message: string }>('/users/me');
   return data;
 }
+
+/** Super Admin: Delete user record from database */
+export async function deleteUserByAdmin(id: string): Promise<{ success: boolean; message: string }> {
+  const { data } = await apiClient.delete<{ success: boolean; message: string }>(`/users/${id}`);
+  return data;
+}

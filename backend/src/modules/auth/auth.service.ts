@@ -110,6 +110,10 @@ export class AuthService {
 
     const finalUser = await this.applyAccountType(user.id, dto.accountType);
 
+    // Send WhatsApp Welcome & Registration message directly to mobile via WhatsApp Bot
+    const welcomeMsg = `🌾 *Welcome to FarmsKing!* 🙏✨\n\nHello *${dto.name}* ji,\nYour FarmsKing account has been created successfully!\n\n🔑 *King ID:* ${kingId}\n📱 *Registered Mobile:* ${dto.mobile}\n\nThank you for choosing FarmsKing!`;
+    this.whatsappBotService.sendDirectTextMessage(dto.mobile, welcomeMsg).catch(() => {});
+
     return this.buildAuthResponse(finalUser ?? user);
   }
 

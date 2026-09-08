@@ -11,6 +11,7 @@ import {
   useCreateAdvisor,
   useCreateOperator,
   useDeactivateUser,
+  useDeleteUser,
   useReactivateUser,
   useResetUserPassword,
   useUpdateActiveRoles,
@@ -87,6 +88,36 @@ export default function SuperUsersScreen() {
   const { data, isLoading } = useUsersList({ role: filterToBackendRole(filter), search: search.trim() || undefined, limit: 100 });
   const deactivate = useDeactivateUser();
   const reactivate = useReactivateUser();
+  const deleteUser = useDeleteUser();
+
+  const handleDeleteUser = (targetUser: AdminUser) => {
+    if (targetUser.mobile === '9872066901') {
+      const msg = 'Primary Super Admin account 9872066901 cannot be deleted.';
+      if (Platform.OS === 'web') alert(msg);
+      else Alert.alert('Cannot Delete', msg);
+      return;
+    }
+    const message = `Are you sure you want to PERMANENTLY DELETE user record "${targetUser.name}" (${targetUser.mobile})?`;
+    const confirmDelete = async () => {
+      try {
+        await deleteUser.mutateAsync(targetUser.id);
+        if (Platform.OS === 'web') alert('User deleted successfully!');
+        else Alert.alert('Deleted', 'User record deleted successfully.');
+      } catch (err: any) {
+        const msg = err?.response?.data?.message || 'Could not delete user record.';
+        if (Platform.OS === 'web') alert(msg);
+        else Alert.alert('Error', msg);
+      }
+    };
+    if (Platform.OS === 'web') {
+      if (confirm(message)) confirmDelete();
+    } else {
+      Alert.alert('Delete User Record', message, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: confirmDelete },
+      ]);
+    }
+  };
 
   const items = (data?.items ?? []).filter((u) =>
     filter === 'FARM_ADVISOR' ? u.advisorType === 'FARM' : filter === 'GARDEN_ADVISOR' ? u.advisorType === 'GARDEN' : true,
@@ -190,6 +221,7 @@ export default function SuperUsersScreen() {
               isOperator={filter === 'OPERATOR'}
               onDeactivate={() => deactivate.mutate(u.id)}
               onReactivate={() => reactivate.mutate(u.id)}
+              onDelete={isSuperAdmin ? () => handleDeleteUser(u) : undefined}
               onEditPermissions={filter === 'OPERATOR' ? () => setPermissionsTarget(u) : undefined}
               onEditRoles={filter !== 'OPERATOR' && filter !== 'ADMIN' && filter !== 'SUPER_ADMIN' ? () => setRolesTarget(u) : undefined}
               onOpenDetail={() => setDetailTargetId(u.id)}
@@ -760,6 +792,7 @@ function UserRow({
   isOperator,
   onDeactivate,
   onReactivate,
+  onDelete,
   onEditPermissions,
   onEditRoles,
   onOpenDetail,
@@ -768,6 +801,7 @@ function UserRow({
   isOperator?: boolean;
   onDeactivate: () => void;
   onReactivate: () => void;
+  onDelete?: () => void;
   onEditPermissions?: () => void;
   onEditRoles?: () => void;
   onOpenDetail?: () => void;
@@ -818,6 +852,11 @@ function UserRow({
             <Text style={[styles.actionBtnLabel, { color: '#dc2626' }]}>Deactivate</Text>
           </TouchableOpacity>
         )}
+        {onDelete ? (
+          <TouchableOpacity style={[styles.actionBtnText, { backgroundColor: '#991b1b' }]} activeOpacity={0.8} onPress={onDelete}>
+            <Text style={[styles.actionBtnLabel, { color: '#ffffff' }]}>🗑️ Delete</Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
     </View>
   );

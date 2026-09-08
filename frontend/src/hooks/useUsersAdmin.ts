@@ -112,3 +112,13 @@ export function useResetUserPassword() {
     mutationFn: ({ id, newPassword }: { id: string; newPassword?: string }) => api.resetUserPassword(id, newPassword),
   });
 }
+
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.deleteUserByAdmin(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users', 'admin-list'] });
+    },
+  });
+}

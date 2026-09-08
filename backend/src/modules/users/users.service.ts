@@ -843,4 +843,95 @@ export class UsersService {
     }
     return { ...computePartnerProfileStatus(partner), profile: partner };
   }
+
+  /** Super Admin: permanently deletes user and ALL associated records from the database */
+  async deleteUserByAdmin(caller: AuthUser, id: string) {
+    if (caller.role !== Role.SUPER_ADMIN && !caller.roles?.includes(Role.SUPER_ADMIN)) {
+      throw new ForbiddenException('Only Super Admin can delete user records.');
+    }
+    if (caller.id === id) {
+      throw new ConflictException('Super Admin cannot delete their own account.');
+    }
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('User record not found.');
+    }
+    if (user.mobile === '9872066901') {
+      throw new ConflictException('Primary Super Admin account 9872066901 cannot be deleted.');
+    }
+
+    await this.prisma.$transaction(
+      async (tx) => {
+        // 1. Clear referral links
+        await tx.user.updateMany({ where: { referredById: id }, data: { referredById: null } });
+
+        // 2. Delete child plans, subscriptions & assignments
+        await tx.farmerPlan.deleteMany({ where: { farmerId: id } });
+        await tx.gardenerPlan.deleteMany({ where: { gardenerId: id } });
+        await tx.advisorTierPlan.deleteMany({ where: { advisorId: id } });
+        await tx.advisorAssignment.deleteMany({ where: { OR: [{ farmerId: id }, { advisorId: id }, { assignedById: id }] } });
+        await tx.callRequest.deleteMany({ where: { OR: [{ farmerId: id }, { advisorId: id }] } });
+        await tx.partnerAssignment.deleteMany({ where: { OR: [{ businessPartnerId: id }, { customerId: id }] } });
+        await tx.advisorSubscription.deleteMany({ where: { OR: [{ farmerId: id }, { approvedById: id }] } });
+
+        // 3. Delete financial requests, transactions & wallet data
+        await tx.walletTransaction.deleteMany({ where: { OR: [{ userId: id }, { relatedUserId: id }] } });
+        await tx.withdrawalRequest.deleteMany({ where: { OR: [{ businessPartnerId: id }, { processedById: id }] } });
+        await tx.planPaymentRequest.deleteMany({ where: { OR: [{ farmerId: id }, { confirmedById: id }] } });
+        await tx.farmerPlanPaymentRequest.deleteMany({ where: { OR: [{ farmerId: id }, { confirmedById: id }] } });
+        await tx.saleBill.deleteMany({ where: { farmerId: id } });
+        await tx.paymentReceipt.deleteMany({ where: { farmerId: id } });
+
+        // 4. Delete messages, notifications & chats
+        await tx.notification.deleteMany({ where: { userId: id } });
+        await tx.adminChatMessage.deleteMany({ where: { OR: [{ farmerId: id }, { adminId: id }] } });
+        await tx.message.deleteMany({ where: { OR: [{ senderId: id }, { receiverId: id }] } });
+        await tx.cropProblem.deleteMany({ where: { OR: [{ reportedById: id }, { assignedAdvisorId: id }] } });
+        await tx.groupVoiceCallParticipant.deleteMany({ where: { userId: id } });
+
+        // 5. Delete labour records
+        await tx.labourEntry.deleteMany({ where: { recordedById: id } });
+        await tx.labourWorkEntry.deleteMany({ where: { OR: [{ recordedById: id }, { farmerId: id }] } });
+        await tx.labourPayment.deleteMany({ where: { OR: [{ recordedById: id }, { farmerId: id }] } });
+        await tx.labourWorker.deleteMany({ where: { OR: [{ farmerId: id }, { userId: id }] } });
+
+        // 6. Delete expenses, sales & parties
+        await tx.expense.deleteMany({ where: { recordedById: id } });
+        await tx.sale.deleteMany({ where: { recordedById: id } });
+        await tx.payment.deleteMany({ where: { recordedById: id } });
+        await tx.party.deleteMany({ where: { ownerId: id } });
+        await tx.unifiedParty.deleteMany({ where: { OR: [{ ownerFarmerId: id }, { userId: id }] } });
+        await tx.customer.deleteMany({ where: { farmerId: id } });
+
+        // 7. Delete farms & related plots
+        await tx.farm.deleteMany({ where: { ownerId: id } });
+
+        // 8. Delete orders, addresses, coupons & logs
+        await tx.customerOrder.deleteMany({ where: { customerId: id } });
+        await tx.customerAddress.deleteMany({ where: { ownerId: id } });
+        await tx.couponRedemption.deleteMany({ where: { customerId: id } });
+        await tx.coupon.deleteMany({ where: { OR: [{ businessPartnerId: id }, { createdById: id }] } });
+        await tx.farmerPlanCoupon.deleteMany({ where: { OR: [{ createdById: id }, { assignedFarmerId: id }, { assignedAdvisorId: id }, { assignedBusinessPartnerId: id }] } });
+        await tx.gardenerPlanCoupon.deleteMany({ where: { OR: [{ createdById: id }, { assignedGardenerId: id }] } });
+        await tx.auditLog.deleteMany({ where: { actorId: id } });
+        await tx.upload.deleteMany({ where: { uploadedById: id } });
+
+        // 9. Delete KingConnect & Voice AI
+        await tx.kingConnectLink.deleteMany({ where: { OR: [{ initiatorId: id }, { receiverId: id }] } });
+        await tx.p2pLedgerSyncRequest.deleteMany({ where: { OR: [{ senderId: id }, { receiverId: id }] } });
+        await tx.demandRequest.deleteMany({ where: { OR: [{ requesterId: id }, { farmerId: id }] } });
+        await tx.kingPaymentRequest.deleteMany({ where: { OR: [{ senderId: id }, { receiverId: id }] } });
+        await tx.voiceAILog.deleteMany({ where: { userId: id } });
+
+        // 10. Finally, hard delete the User record itself from the database
+        await tx.user.delete({ where: { id } });
+      },
+      {
+        timeout: 30000,
+        maxWait: 10000,
+      },
+    );
+
+    return { success: true, message: `User ${user.name} (${user.mobile}) and all associated records deleted permanently.` };
+  }
 }

@@ -286,4 +286,10 @@ export class UsersController {
   reactivate(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.usersService.reactivate(user, id);
   }
+
+  @Roles(Role.SUPER_ADMIN)
+  @Delete(':id')
+  deleteUserByAdmin(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.usersService.deleteUserByAdmin(user, id);
+  }
 }

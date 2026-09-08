@@ -32,4 +32,6 @@ export declare class WhatsAppGroupSyncService implements OnModuleInit {
         action: string;
         success: boolean;
     }>;
+    autoAddNewUser(userId: string, mobile: string, name: string): Promise<void>;
+    autoRemoveUser(userId: string, mobile: string, name: string): Promise<void>;
 }

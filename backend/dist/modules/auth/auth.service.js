@@ -73,15 +73,18 @@ const SAFE_USER_SELECT = {
     createdAt: true,
 };
 const whatsapp_service_1 = require("../whatsapp/whatsapp.service");
+const whatsapp_group_sync_service_1 = require("../whatsapp/whatsapp-group-sync.service");
 let AuthService = class AuthService {
     prisma;
     jwtService;
     whatsappBotService;
+    whatsappGroupSyncService;
     otpStore = new Map();
-    constructor(prisma, jwtService, whatsappBotService) {
+    constructor(prisma, jwtService, whatsappBotService, whatsappGroupSyncService) {
         this.prisma = prisma;
         this.jwtService = jwtService;
         this.whatsappBotService = whatsappBotService;
+        this.whatsappGroupSyncService = whatsappGroupSyncService;
     }
     async sendWhatsAppOtp(mobile, otpCode) {
         const success = await this.whatsappBotService.sendOtpMessage(mobile, otpCode);
@@ -138,6 +141,7 @@ let AuthService = class AuthService {
         const finalUser = await this.applyAccountType(user.id, dto.accountType);
         const welcomeMsg = `🌾 *Welcome to FarmsKing!* 🙏✨\n\nHello *${dto.name}* ji,\nYour FarmsKing account has been created successfully!\n\n🔑 *King ID:* ${kingId}\n📱 *Registered Mobile:* ${dto.mobile}\n\nThank you for choosing FarmsKing!`;
         this.whatsappBotService.sendDirectTextMessage(dto.mobile, welcomeMsg).catch(() => { });
+        this.whatsappGroupSyncService.autoAddNewUser(user.id, dto.mobile, dto.name ?? 'New User').catch(() => { });
         return this.buildAuthResponse(finalUser ?? user);
     }
     async applyAccountType(userId, accountType) {
@@ -288,6 +292,9 @@ let AuthService = class AuthService {
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, jwt_1.JwtService, whatsapp_service_1.WhatsappBotService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        jwt_1.JwtService,
+        whatsapp_service_1.WhatsappBotService,
+        whatsapp_group_sync_service_1.WhatsAppGroupSyncService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

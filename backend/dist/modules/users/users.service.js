@@ -554,8 +554,11 @@ let UsersService = class UsersService {
                 bankAccountHolderName: true,
             },
         });
-        if (dto.whatsappGroupEnabled !== undefined) {
-            this.whatsappGroupSyncService.syncSingleFarmerGroupStatus(id).catch(() => { });
+        if (dto.whatsappGroupEnabled === true) {
+            this.whatsappGroupSyncService.autoAddNewUser(id, updatedUser.mobile ?? '', updatedUser.name ?? 'User').catch(() => { });
+        }
+        else if (dto.whatsappGroupEnabled === false) {
+            this.whatsappGroupSyncService.autoRemoveUser(id, updatedUser.mobile ?? '', updatedUser.name ?? 'User').catch(() => { });
         }
         return updatedUser;
     }

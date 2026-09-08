@@ -7,12 +7,14 @@ import { ForgotPasswordStartDto } from './dto/forgot-password-start.dto';
 import { ForgotPasswordVerifyDto } from './dto/forgot-password-verify.dto';
 import { ForgotPasswordResetDto } from './dto/forgot-password-reset.dto';
 import { WhatsappBotService } from '../whatsapp/whatsapp.service';
+import { WhatsAppGroupSyncService } from '../whatsapp/whatsapp-group-sync.service';
 export declare class AuthService {
     private readonly prisma;
     private readonly jwtService;
     private readonly whatsappBotService;
+    private readonly whatsappGroupSyncService;
     private readonly otpStore;
-    constructor(prisma: PrismaService, jwtService: JwtService, whatsappBotService: WhatsappBotService);
+    constructor(prisma: PrismaService, jwtService: JwtService, whatsappBotService: WhatsappBotService, whatsappGroupSyncService: WhatsAppGroupSyncService);
     sendWhatsAppOtp(mobile: string, otpCode: string): Promise<{
         success: boolean;
         message: string;

@@ -13,10 +13,10 @@ export declare class SprayScheduleService {
     private rememberProductNames;
     create(user: AuthUser, dto: CreateSprayScheduleDto): Promise<{
         id: string;
-        status: import(".prisma/client").$Enums.SprayScheduleStatus;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
+        status: import(".prisma/client").$Enums.SprayScheduleStatus;
         notes: string | null;
         recommendedProduct: string | null;
         cropCycleId: string;
@@ -30,10 +30,10 @@ export declare class SprayScheduleService {
     }>;
     listForCrop(user: AuthUser, cropCycleId: string): Promise<{
         id: string;
-        status: import(".prisma/client").$Enums.SprayScheduleStatus;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
+        status: import(".prisma/client").$Enums.SprayScheduleStatus;
         notes: string | null;
         recommendedProduct: string | null;
         cropCycleId: string;
@@ -47,10 +47,10 @@ export declare class SprayScheduleService {
     }[]>;
     update(user: AuthUser, id: string, dto: UpdateSprayScheduleDto): Promise<{
         id: string;
-        status: import(".prisma/client").$Enums.SprayScheduleStatus;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
+        status: import(".prisma/client").$Enums.SprayScheduleStatus;
         notes: string | null;
         recommendedProduct: string | null;
         cropCycleId: string;
@@ -64,10 +64,10 @@ export declare class SprayScheduleService {
     }>;
     remove(user: AuthUser, id: string): Promise<{
         id: string;
-        status: import(".prisma/client").$Enums.SprayScheduleStatus;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
+        status: import(".prisma/client").$Enums.SprayScheduleStatus;
         notes: string | null;
         recommendedProduct: string | null;
         cropCycleId: string;

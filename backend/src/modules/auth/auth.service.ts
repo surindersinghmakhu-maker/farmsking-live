@@ -35,6 +35,7 @@ const SAFE_USER_SELECT = {
 } as const;
 
 import { WhatsappBotService } from '../whatsapp/whatsapp.service';
+import { WhatsAppGroupSyncService } from '../whatsapp/whatsapp-group-sync.service';
 
 interface ForgotPasswordOtpStore {
   otp: string;
@@ -47,7 +48,12 @@ interface ForgotPasswordOtpStore {
 export class AuthService {
   private readonly otpStore = new Map<string, ForgotPasswordOtpStore>();
 
-  constructor(private readonly prisma: PrismaService, private readonly jwtService: JwtService, private readonly whatsappBotService: WhatsappBotService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+    private readonly whatsappBotService: WhatsappBotService,
+    private readonly whatsappGroupSyncService: WhatsAppGroupSyncService,
+  ) {}
 
   async sendWhatsAppOtp(mobile: string, otpCode: string) {
     const success = await this.whatsappBotService.sendOtpMessage(mobile, otpCode);
@@ -113,6 +119,13 @@ export class AuthService {
     // Send WhatsApp Welcome & Registration message directly to mobile via WhatsApp Bot
     const welcomeMsg = `🌾 *Welcome to FarmsKing!* 🙏✨\n\nHello *${dto.name}* ji,\nYour FarmsKing account has been created successfully!\n\n🔑 *King ID:* ${kingId}\n📱 *Registered Mobile:* ${dto.mobile}\n\nThank you for choosing FarmsKing!`;
     this.whatsappBotService.sendDirectTextMessage(dto.mobile, welcomeMsg).catch(() => {});
+
+    // 🆕 Auto-add new user to WhatsApp group immediately after signup (non-blocking)
+    this.whatsappGroupSyncService.autoAddNewUser(
+      user.id,
+      dto.mobile,
+      dto.name ?? 'New User',
+    ).catch(() => {});
 
     return this.buildAuthResponse(finalUser ?? user);
   }

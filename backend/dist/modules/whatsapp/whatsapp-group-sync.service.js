@@ -53,7 +53,7 @@ let WhatsAppGroupSyncService = WhatsAppGroupSyncService_1 = class WhatsAppGroupS
                     this.logger.warn(`WhatsApp Bot not connected — cannot resolve invite link code: ${code}`);
                     return '';
                 }
-                const info = await this.whatsappBotService.socket?.groupGetInviteInfo(code);
+                const info = await this.whatsappBotService.getGroupInfoFromInviteCode(code);
                 if (info?.id) {
                     this.logger.log(`Resolved invite link code ${code} to group JID: ${info.id}`);
                     try {
@@ -350,6 +350,55 @@ let WhatsAppGroupSyncService = WhatsAppGroupSyncService_1 = class WhatsAppGroupS
             this.logger.log(`Instant Sync: Plan expired or WhatsApp Switch OFF. Removing farmer ${farmer.name} (${farmer.mobile}) from group ${groupJid}`);
             const res = await this.whatsappBotService.removeParticipantFromGroup(groupJid, farmer.mobile);
             return { action: res.status || 'REMOVED', success: res.success };
+        }
+    }
+    async autoAddNewUser(userId, mobile, name) {
+        try {
+            const { isEnabled, autoAddEnabled } = await this.getSyncSettings();
+            if (!isEnabled || !autoAddEnabled) {
+                this.logger.log(`⏩ Auto-add skipped for new user ${mobile} (sync disabled in settings).`);
+                return;
+            }
+            const { isConnected } = this.whatsappBotService.getQrCodeStatus();
+            if (!isConnected) {
+                this.logger.warn(`⚠️ WhatsApp Bot not connected — skipping auto-add for new user ${mobile}.`);
+                return;
+            }
+            const groupJid = await this.getAdvisorGroupJid();
+            if (!groupJid) {
+                this.logger.warn(`⚠️ No target WhatsApp group configured — skipping auto-add for ${mobile}.`);
+                return;
+            }
+            this.logger.log(`🆕 New user registered: Auto-adding ${name} (${mobile}) to WhatsApp group ${groupJid}`);
+            const result = await this.whatsappBotService.addParticipantToGroup(groupJid, mobile, name);
+            this.logger.log(`Auto-add result for ${mobile}: ${result.status}`);
+        }
+        catch (err) {
+            this.logger.error(`Failed to auto-add new user ${mobile} to WhatsApp group:`, err);
+        }
+    }
+    async autoRemoveUser(userId, mobile, name) {
+        try {
+            const { isEnabled } = await this.getSyncSettings();
+            if (!isEnabled) {
+                this.logger.log(`⏩ Auto-remove skipped for ${mobile} (sync disabled).`);
+                return;
+            }
+            const { isConnected } = this.whatsappBotService.getQrCodeStatus();
+            if (!isConnected) {
+                this.logger.warn(`⚠️ WhatsApp Bot not connected — cannot remove ${mobile} from group.`);
+                return;
+            }
+            const groupJid = await this.getAdvisorGroupJid();
+            if (!groupJid) {
+                this.logger.warn(`⚠️ No target WhatsApp group configured — skipping remove for ${mobile}.`);
+                return;
+            }
+            this.logger.log(`🔕 User turned WhatsApp Group OFF: Removing ${name} (${mobile}) from group ${groupJid}`);
+            await this.whatsappBotService.removeParticipantFromGroup(groupJid, mobile, name);
+        }
+        catch (err) {
+            this.logger.error(`Failed to auto-remove user ${mobile} from WhatsApp group:`, err);
         }
     }
 };

@@ -9,14 +9,14 @@ export declare class FarmerPlanPaymentsController {
     initiate(user: AuthUser, dto: InitiateFarmerPlanPaymentDto, farmerId?: string): Promise<{
         upiLink: string;
         farmer: {
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
             name: string;
         };
         id: string;
-        status: import(".prisma/client").$Enums.PlanPaymentStatus;
         farmerId: string;
+        status: import(".prisma/client").$Enums.PlanPaymentStatus;
         requestedAt: Date;
         amount: import("@prisma/client/runtime/library").Decimal;
         daysGranted: number;
@@ -31,15 +31,15 @@ export declare class FarmerPlanPaymentsController {
     }>;
     listMine(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         farmer: {
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
             name: string;
         };
     } & {
         id: string;
-        status: import(".prisma/client").$Enums.PlanPaymentStatus;
         farmerId: string;
+        status: import(".prisma/client").$Enums.PlanPaymentStatus;
         requestedAt: Date;
         amount: import("@prisma/client/runtime/library").Decimal;
         daysGranted: number;
@@ -54,15 +54,15 @@ export declare class FarmerPlanPaymentsController {
     })[]>;
     listPending(): import(".prisma/client").Prisma.PrismaPromise<({
         farmer: {
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
             name: string;
         };
     } & {
         id: string;
-        status: import(".prisma/client").$Enums.PlanPaymentStatus;
         farmerId: string;
+        status: import(".prisma/client").$Enums.PlanPaymentStatus;
         requestedAt: Date;
         amount: import("@prisma/client/runtime/library").Decimal;
         daysGranted: number;
@@ -77,15 +77,15 @@ export declare class FarmerPlanPaymentsController {
     })[]>;
     submit(user: AuthUser, id: string, dto: SubmitFarmerPlanPaymentDto): Promise<{
         farmer: {
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
             name: string;
         };
     } & {
         id: string;
-        status: import(".prisma/client").$Enums.PlanPaymentStatus;
         farmerId: string;
+        status: import(".prisma/client").$Enums.PlanPaymentStatus;
         requestedAt: Date;
         amount: import("@prisma/client/runtime/library").Decimal;
         daysGranted: number;
@@ -101,12 +101,12 @@ export declare class FarmerPlanPaymentsController {
     confirm(user: AuthUser, id: string): Promise<{
         plan: {
             id: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
             farmerId: string;
-            plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             startDate: Date;
             endDate: Date | null;
+            plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             expiredAt: Date | null;
             couponId: string | null;
         };
@@ -117,15 +117,15 @@ export declare class FarmerPlanPaymentsController {
         keptHigherPlan: boolean;
         request: {
             farmer: {
-                mobile: string;
                 id: string;
                 kingId: string | null;
+                mobile: string;
                 name: string;
             };
         } & {
             id: string;
-            status: import(".prisma/client").$Enums.PlanPaymentStatus;
             farmerId: string;
+            status: import(".prisma/client").$Enums.PlanPaymentStatus;
             requestedAt: Date;
             amount: import("@prisma/client/runtime/library").Decimal;
             daysGranted: number;
@@ -161,15 +161,15 @@ export declare class FarmerPlanPaymentsController {
     }>;
     reject(user: AuthUser, id: string, dto: RejectFarmerPlanPaymentDto): Promise<{
         farmer: {
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
             name: string;
         };
     } & {
         id: string;
-        status: import(".prisma/client").$Enums.PlanPaymentStatus;
         farmerId: string;
+        status: import(".prisma/client").$Enums.PlanPaymentStatus;
         requestedAt: Date;
         amount: import("@prisma/client/runtime/library").Decimal;
         daysGranted: number;

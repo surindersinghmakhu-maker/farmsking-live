@@ -593,8 +593,21 @@ export class UsersService {
       },
     });
 
-    if (dto.whatsappGroupEnabled !== undefined) {
-      this.whatsappGroupSyncService.syncSingleFarmerGroupStatus(id).catch(() => {});
+    // 🔔 Instant WhatsApp Group add/remove based on switch toggle
+    if (dto.whatsappGroupEnabled === true) {
+      // User turned group switch ON → add them to group immediately
+      this.whatsappGroupSyncService.autoAddNewUser(
+        id,
+        updatedUser.mobile ?? '',
+        (updatedUser as any).name ?? 'User',
+      ).catch(() => {});
+    } else if (dto.whatsappGroupEnabled === false) {
+      // User turned group switch OFF → remove them from group immediately
+      this.whatsappGroupSyncService.autoRemoveUser(
+        id,
+        updatedUser.mobile ?? '',
+        (updatedUser as any).name ?? 'User',
+      ).catch(() => {});
     }
 
     return updatedUser;

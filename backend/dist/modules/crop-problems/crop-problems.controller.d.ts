@@ -17,13 +17,13 @@ export declare class CropProblemsController {
             };
         };
         assignedAdvisor: {
-            mobile: string;
             id: string;
+            mobile: string;
             name: string;
         } | null;
         reportedBy: {
-            mobile: string;
             id: string;
+            mobile: string;
             name: string;
             sprayTankSizeL: number | null;
         };
@@ -36,10 +36,10 @@ export declare class CropProblemsController {
         }[];
     } & {
         id: string;
-        status: import(".prisma/client").$Enums.CropProblemStatus;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
+        status: import(".prisma/client").$Enums.CropProblemStatus;
         title: string;
         description: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;
@@ -64,13 +64,13 @@ export declare class CropProblemsController {
             };
         };
         assignedAdvisor: {
-            mobile: string;
             id: string;
+            mobile: string;
             name: string;
         } | null;
         reportedBy: {
-            mobile: string;
             id: string;
+            mobile: string;
             name: string;
             sprayTankSizeL: number | null;
         };
@@ -83,10 +83,10 @@ export declare class CropProblemsController {
         }[];
     } & {
         id: string;
-        status: import(".prisma/client").$Enums.CropProblemStatus;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
+        status: import(".prisma/client").$Enums.CropProblemStatus;
         title: string;
         description: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;
@@ -111,13 +111,13 @@ export declare class CropProblemsController {
             };
         };
         assignedAdvisor: {
-            mobile: string;
             id: string;
+            mobile: string;
             name: string;
         } | null;
         reportedBy: {
-            mobile: string;
             id: string;
+            mobile: string;
             name: string;
             sprayTankSizeL: number | null;
         };
@@ -130,10 +130,10 @@ export declare class CropProblemsController {
         }[];
     } & {
         id: string;
-        status: import(".prisma/client").$Enums.CropProblemStatus;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
+        status: import(".prisma/client").$Enums.CropProblemStatus;
         title: string;
         description: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;
@@ -158,13 +158,13 @@ export declare class CropProblemsController {
             };
         };
         assignedAdvisor: {
-            mobile: string;
             id: string;
+            mobile: string;
             name: string;
         } | null;
         reportedBy: {
-            mobile: string;
             id: string;
+            mobile: string;
             name: string;
             sprayTankSizeL: number | null;
         };
@@ -177,10 +177,10 @@ export declare class CropProblemsController {
         }[];
     } & {
         id: string;
-        status: import(".prisma/client").$Enums.CropProblemStatus;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
+        status: import(".prisma/client").$Enums.CropProblemStatus;
         title: string;
         description: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;
@@ -206,13 +206,13 @@ export declare class CropProblemsController {
             };
         };
         assignedAdvisor: {
-            mobile: string;
             id: string;
+            mobile: string;
             name: string;
         } | null;
         reportedBy: {
-            mobile: string;
             id: string;
+            mobile: string;
             name: string;
             sprayTankSizeL: number | null;
         };
@@ -224,10 +224,10 @@ export declare class CropProblemsController {
             cropProblemId: string;
         }[];
         id: string;
-        status: import(".prisma/client").$Enums.CropProblemStatus;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
+        status: import(".prisma/client").$Enums.CropProblemStatus;
         title: string;
         description: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;
@@ -252,13 +252,13 @@ export declare class CropProblemsController {
             };
         };
         assignedAdvisor: {
-            mobile: string;
             id: string;
+            mobile: string;
             name: string;
         } | null;
         reportedBy: {
-            mobile: string;
             id: string;
+            mobile: string;
             name: string;
             sprayTankSizeL: number | null;
         };
@@ -271,10 +271,10 @@ export declare class CropProblemsController {
         }[];
     } & {
         id: string;
-        status: import(".prisma/client").$Enums.CropProblemStatus;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
+        status: import(".prisma/client").$Enums.CropProblemStatus;
         title: string;
         description: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;
@@ -302,13 +302,13 @@ export declare class CropProblemsController {
             };
         };
         assignedAdvisor: {
-            mobile: string;
             id: string;
+            mobile: string;
             name: string;
         } | null;
         reportedBy: {
-            mobile: string;
             id: string;
+            mobile: string;
             name: string;
             sprayTankSizeL: number | null;
         };
@@ -321,10 +321,10 @@ export declare class CropProblemsController {
         }[];
     } & {
         id: string;
-        status: import(".prisma/client").$Enums.CropProblemStatus;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
+        status: import(".prisma/client").$Enums.CropProblemStatus;
         title: string;
         description: string;
         severity: import(".prisma/client").$Enums.CropProblemSeverity | null;

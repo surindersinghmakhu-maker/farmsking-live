@@ -15,24 +15,24 @@ export declare class ExpensesService {
     constructor(prisma: PrismaService, farmsService: FarmsService, plotsService: PlotsService, cropsService: CropsService, partiesService: PartiesService);
     private assertRelationsBelongToFarm;
     listCategories(): import(".prisma/client").Prisma.PrismaPromise<{
-        key: string;
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         isActive: boolean;
         isSystem: boolean;
+        key: string;
         labelEn: string;
         labelHi: string;
         icon: string | null;
         sortOrder: number;
     }[]>;
     listAllCategoriesForAdmin(): import(".prisma/client").Prisma.PrismaPromise<{
-        key: string;
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         isActive: boolean;
         isSystem: boolean;
+        key: string;
         labelEn: string;
         labelHi: string;
         icon: string | null;
@@ -44,12 +44,12 @@ export declare class ExpensesService {
         labelHi?: string;
         sortOrder?: number;
     }): Promise<{
-        key: string;
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         isActive: boolean;
         isSystem: boolean;
+        key: string;
         labelEn: string;
         labelHi: string;
         icon: string | null;
@@ -61,24 +61,24 @@ export declare class ExpensesService {
         sortOrder?: number;
         isActive?: boolean;
     }): Promise<{
-        key: string;
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         isActive: boolean;
         isSystem: boolean;
+        key: string;
         labelEn: string;
         labelHi: string;
         icon: string | null;
         sortOrder: number;
     }>;
     deleteCategory(id: string): Promise<{
-        key: string;
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         isActive: boolean;
         isSystem: boolean;
+        key: string;
         labelEn: string;
         labelHi: string;
         icon: string | null;
@@ -91,12 +91,12 @@ export declare class ExpensesService {
             cropName: string;
         } | null;
         category: {
-            key: string;
             id: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
             isActive: boolean;
             isSystem: boolean;
+            key: string;
             labelEn: string;
             labelHi: string;
             icon: string | null;
@@ -104,8 +104,8 @@ export declare class ExpensesService {
         };
     } & {
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
         notes: string | null;
         description: string | null;
@@ -130,12 +130,12 @@ export declare class ExpensesService {
             cropName: string;
         } | null;
         category: {
-            key: string;
             id: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
             isActive: boolean;
             isSystem: boolean;
+            key: string;
             labelEn: string;
             labelHi: string;
             icon: string | null;
@@ -143,8 +143,8 @@ export declare class ExpensesService {
         };
     } & {
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
         notes: string | null;
         description: string | null;
@@ -169,26 +169,26 @@ export declare class ExpensesService {
             cropName: string;
         } | null;
         category: {
-            key: string;
             id: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
             isActive: boolean;
             isSystem: boolean;
+            key: string;
             labelEn: string;
             labelHi: string;
             icon: string | null;
             sortOrder: number;
         };
         farm: {
-            state: string | null;
             id: string;
+            updatedAt: Date;
             name: string;
             village: string | null;
             district: string | null;
+            state: string | null;
             soilType: string | null;
             createdAt: Date;
-            updatedAt: Date;
             deletedAt: Date | null;
             notes: string | null;
             areaUnit: import(".prisma/client").$Enums.AreaUnit;
@@ -198,8 +198,8 @@ export declare class ExpensesService {
         };
     } & {
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
         notes: string | null;
         description: string | null;
@@ -224,12 +224,12 @@ export declare class ExpensesService {
             cropName: string;
         } | null;
         category: {
-            key: string;
             id: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
             isActive: boolean;
             isSystem: boolean;
+            key: string;
             labelEn: string;
             labelHi: string;
             icon: string | null;
@@ -237,8 +237,8 @@ export declare class ExpensesService {
         };
     } & {
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
         notes: string | null;
         description: string | null;
@@ -259,8 +259,8 @@ export declare class ExpensesService {
     }>;
     remove(user: AuthUser, id: string): Promise<{
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
         notes: string | null;
         description: string | null;

@@ -67,12 +67,12 @@ export declare class FarmerPlansService implements OnModuleInit {
     redeemCoupon(user: AuthUser, dto: RedeemFarmerPlanCouponDto): Promise<{
         plan: {
             id: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
             farmerId: string;
-            plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             startDate: Date;
             endDate: Date | null;
+            plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             expiredAt: Date | null;
             couponId: string | null;
         };
@@ -85,12 +85,12 @@ export declare class FarmerPlansService implements OnModuleInit {
     applyPlanChange(farmerId: string, targetPlan: FarmerSubscriptionPlan, daysGranted: number, couponId?: string, selectedAdvisorId?: string): Promise<{
         plan: {
             id: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
             farmerId: string;
-            plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             startDate: Date;
             endDate: Date | null;
+            plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             expiredAt: Date | null;
             couponId: string | null;
         };
@@ -104,8 +104,8 @@ export declare class FarmerPlansService implements OnModuleInit {
     getPricing(): import(".prisma/client").Prisma.PrismaPromise<{
         id: string;
         updatedAt: Date;
-        plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
         updatedById: string | null;
+        plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
         price: import("@prisma/client/runtime/library").Decimal;
         billingPeriodDays: number;
         partnerShareType: import(".prisma/client").$Enums.DiscountValueType;
@@ -125,8 +125,8 @@ export declare class FarmerPlansService implements OnModuleInit {
     updatePricing(admin: AuthUser, plan: FarmerSubscriptionPlan, dto: UpdateFarmerPlanPricingDto): Promise<{
         id: string;
         updatedAt: Date;
-        plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
         updatedById: string | null;
+        plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
         price: import("@prisma/client/runtime/library").Decimal;
         billingPeriodDays: number;
         partnerShareType: import(".prisma/client").$Enums.DiscountValueType;
@@ -146,8 +146,8 @@ export declare class FarmerPlansService implements OnModuleInit {
     deletePricing(admin: AuthUser, id: string): Promise<{
         id: string;
         updatedAt: Date;
-        plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
         updatedById: string | null;
+        plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
         price: import("@prisma/client/runtime/library").Decimal;
         billingPeriodDays: number;
         partnerShareType: import(".prisma/client").$Enums.DiscountValueType;
@@ -167,27 +167,27 @@ export declare class FarmerPlansService implements OnModuleInit {
     private ensurePremiumAdvisorHire;
     chooseAdvisor(user: AuthUser, advisorId: string): Promise<{
         id: string;
-        status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         deletedAt: Date | null;
-        farmerId: string;
-        startDate: Date;
-        endDate: Date | null;
         advisorId: string;
+        farmerId: string;
+        status: import(".prisma/client").$Enums.AdvisorAssignmentStatus;
         assignedById: string | null;
         subscriptionId: string | null;
+        startDate: Date;
+        endDate: Date | null;
         notes: string | null;
     }>;
     grantDaysDirectly(dto: GrantFarmerPlanDaysDto): Promise<{
         plan: {
             id: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
             farmerId: string;
-            plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             startDate: Date;
             endDate: Date | null;
+            plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             expiredAt: Date | null;
             couponId: string | null;
         };
@@ -200,12 +200,12 @@ export declare class FarmerPlansService implements OnModuleInit {
     applyCouponToFarmerDirectly(user: AuthUser, dto: ApplyCouponToFarmerDto): Promise<{
         plan: {
             id: string;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
             farmerId: string;
-            plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             startDate: Date;
             endDate: Date | null;
+            plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             expiredAt: Date | null;
             couponId: string | null;
         };
@@ -336,23 +336,23 @@ export declare class FarmerPlansService implements OnModuleInit {
     }[]>;
     listAllCoupons(): import(".prisma/client").Prisma.PrismaPromise<({
         assignedFarmer: {
-            mobile: string;
             id: string;
+            mobile: string;
             name: string;
         } | null;
         assignedAdvisor: {
-            mobile: string;
             id: string;
+            mobile: string;
             name: string;
         } | null;
         assignedBusinessPartner: {
-            mobile: string;
             id: string;
+            mobile: string;
             name: string;
         } | null;
         usedByFarmer: {
-            mobile: string;
             id: string;
+            mobile: string;
             name: string;
         } | null;
         createdBy: {
@@ -390,9 +390,9 @@ export declare class FarmerPlansService implements OnModuleInit {
     }>;
     listAllFarmerPlans(): import(".prisma/client").Prisma.PrismaPromise<({
         farmer: {
-            mobile: string;
             id: string;
             kingId: string | null;
+            mobile: string;
             name: string;
         };
         coupon: {
@@ -401,12 +401,12 @@ export declare class FarmerPlansService implements OnModuleInit {
         } | null;
     } & {
         id: string;
-        createdAt: Date;
         updatedAt: Date;
+        createdAt: Date;
         farmerId: string;
-        plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
         startDate: Date;
         endDate: Date | null;
+        plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
         expiredAt: Date | null;
         couponId: string | null;
     })[]>;

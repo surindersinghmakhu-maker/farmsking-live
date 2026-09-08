@@ -17,10 +17,9 @@ export declare class UsersController {
     private readonly usersService;
     constructor(usersService: UsersService);
     getMe(user: AuthUser): Promise<{
-        mobile: string;
-        state: string | null;
         id: string;
         kingId: string | null;
+        mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
@@ -28,6 +27,7 @@ export declare class UsersController {
         email: string | null;
         village: string | null;
         district: string | null;
+        state: string | null;
         pincode: string | null;
         postOffice: string | null;
         preferredLanguage: string;
@@ -62,17 +62,16 @@ export declare class UsersController {
     }>;
     getMyReferrals(user: AuthUser): Promise<{
         commissionEarned: number;
-        mobile: string;
         id: string;
         kingId: string | null;
+        mobile: string;
         name: string;
         createdAt: Date;
     }[]>;
     becomeFarmer(user: AuthUser, dto?: UpdateFarmerProfileDto): Promise<{
-        mobile: string;
-        state: string | null;
         id: string;
         kingId: string | null;
+        mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
@@ -80,6 +79,7 @@ export declare class UsersController {
         email: string | null;
         village: string | null;
         district: string | null;
+        state: string | null;
         pincode: string | null;
         postOffice: string | null;
         preferredLanguage: string;
@@ -102,10 +102,9 @@ export declare class UsersController {
         deletedAt: Date | null;
     }>;
     becomeGardener(user: AuthUser): Promise<{
-        mobile: string;
-        state: string | null;
         id: string;
         kingId: string | null;
+        mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
@@ -113,6 +112,7 @@ export declare class UsersController {
         email: string | null;
         village: string | null;
         district: string | null;
+        state: string | null;
         pincode: string | null;
         postOffice: string | null;
         preferredLanguage: string;
@@ -135,10 +135,9 @@ export declare class UsersController {
         deletedAt: Date | null;
     }>;
     updateMyAddress(user: AuthUser, dto: UpdateMyAddressDto): Promise<{
-        mobile: string;
-        state: string | null;
         id: string;
         kingId: string | null;
+        mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
@@ -146,6 +145,7 @@ export declare class UsersController {
         email: string | null;
         village: string | null;
         district: string | null;
+        state: string | null;
         pincode: string | null;
         postOffice: string | null;
         preferredLanguage: string;
@@ -178,10 +178,9 @@ export declare class UsersController {
         };
     }>;
     updateMyProfile(user: AuthUser, dto: UpdateFarmerProfileDto): Promise<{
-        mobile: string;
-        state: string | null;
         id: string;
         kingId: string | null;
+        mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
@@ -189,6 +188,7 @@ export declare class UsersController {
         email: string | null;
         village: string | null;
         district: string | null;
+        state: string | null;
         pincode: string | null;
         postOffice: string | null;
         preferredLanguage: string;
@@ -211,10 +211,9 @@ export declare class UsersController {
         deletedAt: Date | null;
     }>;
     updateMyAdvisorProfile(user: AuthUser, dto: UpdateAdvisorProfileDto): Promise<{
-        mobile: string;
-        state: string | null;
         id: string;
         kingId: string | null;
+        mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
@@ -222,6 +221,7 @@ export declare class UsersController {
         email: string | null;
         village: string | null;
         district: string | null;
+        state: string | null;
         pincode: string | null;
         postOffice: string | null;
         preferredLanguage: string;
@@ -270,10 +270,9 @@ export declare class UsersController {
         missingFields: ("email" | "photoUrl" | "qualification" | "profileTitle" | "upiId" | "panNumber" | "alternativeMobile" | "bankAccountNumber" | "bankIfsc" | "bankAccountHolderName")[];
     }>;
     updateMyPartnerProfile(user: AuthUser, dto: UpdatePartnerProfileDto): Promise<{
-        mobile: string;
-        state: string | null;
         id: string;
         kingId: string | null;
+        mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
@@ -281,6 +280,7 @@ export declare class UsersController {
         email: string | null;
         village: string | null;
         district: string | null;
+        state: string | null;
         pincode: string | null;
         postOffice: string | null;
         preferredLanguage: string;
@@ -322,10 +322,9 @@ export declare class UsersController {
     }>;
     list(query: ListUsersQueryDto): Promise<{
         items: {
-            mobile: string;
-            state: string | null;
             id: string;
             kingId: string | null;
+            mobile: string;
             role: import(".prisma/client").$Enums.Role;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
@@ -333,6 +332,7 @@ export declare class UsersController {
             email: string | null;
             village: string | null;
             district: string | null;
+            state: string | null;
             pincode: string | null;
             postOffice: string | null;
             preferredLanguage: string;
@@ -359,23 +359,22 @@ export declare class UsersController {
         limit: number;
     }>;
     lookupByKingId(kingId: string): Promise<{
-        mobile: string;
         id: string;
         kingId: string | null;
+        mobile: string;
         role: import(".prisma/client").$Enums.Role;
         name: string;
     }>;
     searchBusinessPartners(q?: string): Promise<{
-        mobile: string;
         id: string;
         kingId: string | null;
+        mobile: string;
         name: string;
     }[]>;
     setReferrer(id: string, dto: SetReferrerDto): Promise<{
-        mobile: string;
-        state: string | null;
         id: string;
         kingId: string | null;
+        mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
@@ -383,6 +382,7 @@ export declare class UsersController {
         email: string | null;
         village: string | null;
         district: string | null;
+        state: string | null;
         pincode: string | null;
         postOffice: string | null;
         preferredLanguage: string;
@@ -405,10 +405,9 @@ export declare class UsersController {
         deletedAt: Date | null;
     }>;
     adminUpdateUser(user: AuthUser, id: string, dto: AdminUpdateUserDto): Promise<{
-        mobile: string;
-        state: string | null;
         id: string;
         kingId: string | null;
+        mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
@@ -416,6 +415,7 @@ export declare class UsersController {
         email: string | null;
         village: string | null;
         district: string | null;
+        state: string | null;
         pincode: string | null;
         postOffice: string | null;
         preferredLanguage: string;
@@ -451,10 +451,9 @@ export declare class UsersController {
         tempPassword: string;
     }>;
     updateOperatorPermissions(id: string, dto: UpdateOperatorPermissionsDto): Promise<{
-        mobile: string;
-        state: string | null;
         id: string;
         kingId: string | null;
+        mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
@@ -462,6 +461,7 @@ export declare class UsersController {
         email: string | null;
         village: string | null;
         district: string | null;
+        state: string | null;
         pincode: string | null;
         postOffice: string | null;
         preferredLanguage: string;
@@ -485,10 +485,9 @@ export declare class UsersController {
     }>;
     createAdvisor(dto: CreateAdvisorDto): Promise<{
         user: {
-            mobile: string;
-            state: string | null;
             id: string;
             kingId: string | null;
+            mobile: string;
             role: import(".prisma/client").$Enums.Role;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
@@ -496,6 +495,7 @@ export declare class UsersController {
             email: string | null;
             village: string | null;
             district: string | null;
+            state: string | null;
             pincode: string | null;
             postOffice: string | null;
             preferredLanguage: string;
@@ -521,10 +521,9 @@ export declare class UsersController {
     }>;
     createOperator(dto: CreateStaffDto): Promise<{
         user: {
-            mobile: string;
-            state: string | null;
             id: string;
             kingId: string | null;
+            mobile: string;
             role: import(".prisma/client").$Enums.Role;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
@@ -532,6 +531,7 @@ export declare class UsersController {
             email: string | null;
             village: string | null;
             district: string | null;
+            state: string | null;
             pincode: string | null;
             postOffice: string | null;
             preferredLanguage: string;
@@ -557,10 +557,9 @@ export declare class UsersController {
     }>;
     createAdmin(dto: CreateStaffDto): Promise<{
         user: {
-            mobile: string;
-            state: string | null;
             id: string;
             kingId: string | null;
+            mobile: string;
             role: import(".prisma/client").$Enums.Role;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
@@ -568,6 +567,7 @@ export declare class UsersController {
             email: string | null;
             village: string | null;
             district: string | null;
+            state: string | null;
             pincode: string | null;
             postOffice: string | null;
             preferredLanguage: string;
@@ -593,10 +593,9 @@ export declare class UsersController {
     }>;
     getDetail(user: AuthUser, id: string): Promise<{
         user: {
-            mobile: string;
-            state: string | null;
             id: string;
             kingId: string | null;
+            mobile: string;
             role: import(".prisma/client").$Enums.Role;
             roles: import(".prisma/client").$Enums.Role[];
             deactivatedRoles: import(".prisma/client").$Enums.Role[];
@@ -604,6 +603,7 @@ export declare class UsersController {
             email: string | null;
             village: string | null;
             district: string | null;
+            state: string | null;
             pincode: string | null;
             postOffice: string | null;
             securityQuestion: string | null;
@@ -644,8 +644,8 @@ export declare class UsersController {
         walletBalance: number;
         couponsUsed: {
             id: string;
-            plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             code: string;
+            plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             daysGranted: number;
             usedAt: Date | null;
         }[];
@@ -674,10 +674,9 @@ export declare class UsersController {
         } | null;
     }>;
     updateRole(user: AuthUser, id: string, dto: UpdateRoleDto): Promise<{
-        mobile: string;
-        state: string | null;
         id: string;
         kingId: string | null;
+        mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
@@ -685,6 +684,7 @@ export declare class UsersController {
         email: string | null;
         village: string | null;
         district: string | null;
+        state: string | null;
         pincode: string | null;
         postOffice: string | null;
         preferredLanguage: string;
@@ -707,10 +707,9 @@ export declare class UsersController {
         deletedAt: Date | null;
     }>;
     updateActiveRoles(user: AuthUser, id: string, dto: UpdateActiveRolesDto): Promise<{
-        mobile: string;
-        state: string | null;
         id: string;
         kingId: string | null;
+        mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
@@ -718,6 +717,7 @@ export declare class UsersController {
         email: string | null;
         village: string | null;
         district: string | null;
+        state: string | null;
         pincode: string | null;
         postOffice: string | null;
         preferredLanguage: string;
@@ -740,10 +740,9 @@ export declare class UsersController {
         deletedAt: Date | null;
     }>;
     deactivate(user: AuthUser, id: string): Promise<{
-        mobile: string;
-        state: string | null;
         id: string;
         kingId: string | null;
+        mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
@@ -751,6 +750,7 @@ export declare class UsersController {
         email: string | null;
         village: string | null;
         district: string | null;
+        state: string | null;
         pincode: string | null;
         postOffice: string | null;
         preferredLanguage: string;
@@ -773,10 +773,9 @@ export declare class UsersController {
         deletedAt: Date | null;
     }>;
     reactivate(user: AuthUser, id: string): Promise<{
-        mobile: string;
-        state: string | null;
         id: string;
         kingId: string | null;
+        mobile: string;
         role: import(".prisma/client").$Enums.Role;
         roles: import(".prisma/client").$Enums.Role[];
         deactivatedRoles: import(".prisma/client").$Enums.Role[];
@@ -784,6 +783,7 @@ export declare class UsersController {
         email: string | null;
         village: string | null;
         district: string | null;
+        state: string | null;
         pincode: string | null;
         postOffice: string | null;
         preferredLanguage: string;

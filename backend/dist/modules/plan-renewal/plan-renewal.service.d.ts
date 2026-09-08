@@ -23,13 +23,13 @@ export declare class PlanRenewalService {
     }>;
     listAll(): import(".prisma/client").Prisma.PrismaPromise<({
         assignedFarmer: {
-            mobile: string;
             id: string;
+            mobile: string;
             name: string;
         } | null;
         assignedAdvisor: {
-            mobile: string;
             id: string;
+            mobile: string;
             name: string;
         } | null;
     } & {
@@ -66,11 +66,11 @@ export declare class PlanRenewalService {
     redeem(user: AuthUser, code: string, dto: RedeemPlanRenewalCouponDto): Promise<{
         subscription: {
             id: string;
-            status: import(".prisma/client").$Enums.SubscriptionPlanStatus;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
             deletedAt: Date | null;
             farmerId: string;
+            status: import(".prisma/client").$Enums.SubscriptionPlanStatus;
             startDate: Date | null;
             endDate: Date | null;
             notes: string | null;
@@ -94,11 +94,11 @@ export declare class PlanRenewalService {
     grantDaysDirectly(farmerId: string, daysGranted: number): Promise<{
         subscription: {
             id: string;
-            status: import(".prisma/client").$Enums.SubscriptionPlanStatus;
-            createdAt: Date;
             updatedAt: Date;
+            createdAt: Date;
             deletedAt: Date | null;
             farmerId: string;
+            status: import(".prisma/client").$Enums.SubscriptionPlanStatus;
             startDate: Date | null;
             endDate: Date | null;
             notes: string | null;

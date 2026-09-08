@@ -1635,7 +1635,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                             <Image source={{ uri: displayImg }} style={[styles.mgmtProductImg, !p.isActive && { opacity: 0.6 }]} resizeMode="cover" />
                           ) : (
                             <View style={[styles.mgmtProductImgPlaceholder, !p.isActive && { backgroundColor: '#fee2e2' }]}>
-                              <Ionicons name={!p.isActive ? 'eye-off' : 'cube'} size={20} color={!p.isActive ? '#dc2626' : '#0284c7'} />
+                              <BrandLogo size={26} style={{ opacity: !p.isActive ? 0.6 : 1 }} />
                             </View>
                           );
                         })()}
@@ -5468,8 +5468,8 @@ function ProductCard({
           return displayImg ? (
             <Image source={{ uri: displayImg }} style={{ width: 56, height: 56, borderRadius: 8, opacity: isHidden ? 0.6 : 1 }} resizeMode="cover" />
           ) : (
-            <View style={{ width: 56, height: 56, borderRadius: 8, backgroundColor: isHidden ? '#fee2e2' : '#dcfce7', alignItems: 'center', justifyContent: 'center' }}>
-              <Ionicons name={isHidden ? 'eye-off' : 'leaf'} size={24} color={isHidden ? '#dc2626' : '#15803d'} />
+            <View style={{ width: 56, height: 56, borderRadius: 8, backgroundColor: isHidden ? '#fee2e2' : '#f0fdf4', alignItems: 'center', justifyContent: 'center' }}>
+              <BrandLogo size={32} style={{ opacity: isHidden ? 0.6 : 1 }} />
             </View>
           );
         })()}

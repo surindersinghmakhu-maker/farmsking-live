@@ -47,7 +47,7 @@ export function BrandLogo({
   const { user } = useAuth();
   const [imageError, setImageError] = useState(false);
 
-  const rawLogo = settings?.logoUrl || user?.photoUrl;
+  const rawLogo = settings?.logoUrl;
   const logoUri = resolveMediaUrl(rawLogo);
 
   useEffect(() => {

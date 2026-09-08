@@ -10,6 +10,8 @@ import { useProducts } from '@/src/hooks/useProducts';
 import { useCart } from '@/src/store/cart-context';
 import { Product } from '@/src/types/api';
 
+import { BrandLogo } from '@/src/components/BrandLogo';
+
 const theme = RoleThemes.CUSTOMER;
 
 const tap = () => {
@@ -94,7 +96,7 @@ function ProductCard({ product, cartQty, onAdd }: { product: Product; cartQty: n
         <Image source={{ uri: product.imageUrl }} style={styles.productImage} />
       ) : (
         <View style={[styles.productImage, styles.productImagePlaceholder]}>
-          <Ionicons name="cube-outline" size={26} color={theme.primary} />
+          <BrandLogo size={36} />
         </View>
       )}
       <Text style={styles.productName} numberOfLines={2}>{product.name}</Text>

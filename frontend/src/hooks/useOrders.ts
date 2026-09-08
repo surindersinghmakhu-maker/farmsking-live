@@ -97,7 +97,7 @@ export function useDispatchOrder() {
   return useMutation({
     mutationFn: ({ id, courierName, trackingId }: { id: string; courierName: string; trackingId?: string }) =>
       api.dispatchOrder(id, courierName, trackingId),
-    onSuccess: (data: any, vars: { id: string }) => {
+    onSuccess: (data: any, vars: { id: string; courierName: string; trackingId?: string }) => {
       queryClient.setQueriesData({ queryKey: ['orders'] }, (oldData: any) => {
         if (!oldData) return oldData;
         if (Array.isArray(oldData)) {

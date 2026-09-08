@@ -69,7 +69,7 @@ export default function SuperCropEditScreen() {
         }
 
         if (result.plot?.areaUnit) {
-          const found = LAND_AREA_UNITS.find(u => u.unit.toLowerCase().includes(result.plot.areaUnit.toLowerCase()));
+          const found = LAND_AREA_UNITS.find(u => u.unit.toLowerCase().includes((result.plot?.areaUnit || '').toLowerCase()));
           if (found) setAreaUnit(found.unit);
         }
 

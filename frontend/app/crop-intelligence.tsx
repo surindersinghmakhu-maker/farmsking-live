@@ -531,7 +531,7 @@ export default function CropIntelligenceScreen() {
                         {/* 🛑 HARVESTING & PICKING STOPPAGE ADVISORY BOX */}
                         <View style={styles.harvestDelayBox}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                            <Ionicons name="hand-palm" size={17} color="#b45309" />
+                            <Ionicons name="hand-stop-outline" size={17} color="#b45309" />
                             <Text style={styles.harvestDelayTitle}>{uiText.harvestDelayHeaderLabel}</Text>
                           </View>
                           <Text style={styles.harvestDelayText}>{harvestDelayAdviceStr}</Text>

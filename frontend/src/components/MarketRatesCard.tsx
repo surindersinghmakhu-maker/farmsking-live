@@ -276,7 +276,7 @@ export function MarketRatesCard() {
                         ) : null}
                       </View>
                     ) : (
-                      <Text style={[styles.rateValue, { color: '#94a3b8' }]}>-</Text>
+                      <Text style={[styles.rateValue, { color: '#94a3b8' }]}>--</Text>
                     )}
                   </View>
 
@@ -295,7 +295,7 @@ export function MarketRatesCard() {
                         ) : null}
                       </View>
                     ) : (
-                      <Text style={[styles.rateValue, { color: '#94a3b8' }]}>-</Text>
+                      <Text style={[styles.rateValue, { color: '#94a3b8' }]}>--</Text>
                     )}
                   </View>
                 </View>

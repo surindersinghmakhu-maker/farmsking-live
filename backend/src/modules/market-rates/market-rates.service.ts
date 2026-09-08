@@ -58,16 +58,16 @@ export class MarketRatesService {
     const distinctCrops = Array.from(distinctCropMap.values());
     const since = new Date(Date.now() - ONE_DAY_MS);
 
-    // Fetch user's recent sale bills for sales rate extraction
+    // Fetch user's recent sale bills for sales rate extraction in last 24 hrs
     const recentBills = await this.prisma.saleBill.findMany({
-      where: { farmerId: user.id },
+      where: { farmerId: user.id, createdAt: { gte: since } },
       orderBy: { createdAt: 'desc' },
       take: 20,
     });
 
-    // Fetch user's recent Arhtiya crop sales
+    // Fetch user's recent Arhtiya crop sales in last 24 hrs
     const recentArhtiyaSales = await this.prisma.arhtiyaTransaction.findMany({
-      where: { farmerId: user.id, type: 'CROP_SALE_CREDIT' },
+      where: { farmerId: user.id, type: 'CROP_SALE_CREDIT', transactionDate: { gte: since } },
       orderBy: { transactionDate: 'desc' },
       take: 20,
     });

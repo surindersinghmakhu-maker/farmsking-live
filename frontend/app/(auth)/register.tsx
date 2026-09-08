@@ -15,7 +15,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/src/store/auth-context';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING } from '@/constants/theme';
-import { ServerConfigModal } from '@/components/ServerConfigModal';
 import { lookupPincode } from '@/src/api/pincode.api';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { OtpVerificationModal } from '@/src/components/OtpVerificationModal';
@@ -24,13 +23,6 @@ import { SOIL_TYPE_OPTIONS, SPRAY_TANK_SIZE_OPTIONS, WATER_TYPE_OPTIONS } from '
 import { SoilType, SprayTankSizeL, WaterType } from '@/src/types/api';
 
 const theme = RoleThemes.FARMER;
-
-const SECURITY_QUESTIONS = [
-  'Your childhood nickname?',
-  "Your mother's maiden name?",
-  'Name of your first pet?',
-  'Your birth city/village?',
-];
 
 const FIELDS: { key: 'name' | 'mobile' | 'password' | 'confirmPassword'; label: string; icon: keyof typeof Ionicons.glyphMap; placeholder: string; secure?: boolean; keyboard?: 'phone-pad' }[] = [
   { key: 'name', label: 'Full Name *', icon: 'person-outline', placeholder: 'Your name' },
@@ -65,12 +57,9 @@ export default function RegisterScreen() {
   const [state, setState] = useState('');
   const [isFetchingPincode, setIsFetchingPincode] = useState(false);
   const [pincodeError, setPincodeError] = useState<string | null>(null);
-  const [securityQuestion, setSecurityQuestion] = useState(SECURITY_QUESTIONS[0]);
-  const [securityAnswer, setSecurityAnswer] = useState('');
   const [referralCode, setReferralCode] = useState(typeof refParam === 'string' ? refParam : '');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showServerModal, setShowServerModal] = useState(false);
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [generatedOtp, setGeneratedOtp] = useState('');
 
@@ -126,10 +115,6 @@ export default function RegisterScreen() {
       setError('PIN Code se district/state fetch karein pehle "Fetch" button dabakar.');
       return;
     }
-    if (!securityAnswer.trim()) {
-      setError('Forgot-password ke liye security answer bharna zaroori hai.');
-      return;
-    }
     if (values.password !== values.confirmPassword) {
       setError('Passwords do not match.');
       return;
@@ -162,15 +147,13 @@ export default function RegisterScreen() {
         postOffice: postOffice || undefined,
         district: district || undefined,
         state: state || undefined,
-        securityQuestion,
-        securityAnswer: securityAnswer.trim(),
         referralCode: referralCode.trim() || undefined,
       });
       router.replace('/(auth)/onboarding');
     } catch (err: any) {
       const isNetworkErr = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
       if (isNetworkErr) {
-        setError('Network error! Could not connect to backend server. Tap "Configure Server IP" below.');
+        setError('Network error! Could not connect to backend server. Please check your internet connection.');
       } else {
         setError(err?.response?.data?.message ?? 'Registration failed. Please try again.');
       }
@@ -182,13 +165,6 @@ export default function RegisterScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <View style={styles.topHeader}>
-          <TouchableOpacity style={styles.serverPill} onPress={() => setShowServerModal(true)}>
-            <Ionicons name="hardware-chip-outline" size={15} color="#16a34a" />
-            <Text style={styles.serverPillText}>Server IP</Text>
-          </TouchableOpacity>
-        </View>
-
         <View style={styles.brandBadge}>
           <BrandLogo size={24} iconColor="#ffffff" fallbackIconName="leaf" />
         </View>
@@ -366,40 +342,10 @@ export default function RegisterScreen() {
           <Text style={styles.accountTypeHint}>Applied from your invite link — you'll get a welcome discount coupon after signup.</Text>
         ) : null}
 
-        {/* Security question, for forgot-password */}
-        <Text style={styles.label}>Security Question (Forgot Password ke liye) *</Text>
-        <View style={styles.chipRow}>
-          {SECURITY_QUESTIONS.map((q) => (
-            <TouchableOpacity
-              key={q}
-              style={[styles.chip, securityQuestion === q && { backgroundColor: theme.primary, borderColor: theme.primary }]}
-              onPress={() => setSecurityQuestion(q)}
-            >
-              <Text style={[styles.chipText, securityQuestion === q && { color: '#ffffff' }]}>{q}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        <View style={styles.inputWrap}>
-          <Ionicons name="help-circle-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
-          <TextInput
-            style={styles.input}
-            placeholder="Your answer"
-            placeholderTextColor="#94a3b8"
-            value={securityAnswer}
-            onChangeText={setSecurityAnswer}
-          />
-        </View>
-
         {error ? (
           <View style={styles.errorBox}>
             <Ionicons name="alert-circle" size={18} color="#dc2626" />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.error}>{error}</Text>
-              <TouchableOpacity style={styles.configErrorBtn} onPress={() => setShowServerModal(true)}>
-                <Ionicons name="settings-outline" size={13} color="#16a34a" />
-                <Text style={styles.configErrorBtnText}>⚙️ Configure Server IP</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={styles.error}>{error}</Text>
           </View>
         ) : null}
 
@@ -414,12 +360,6 @@ export default function RegisterScreen() {
           </Link>
         </View>
       </ScrollView>
-
-      <ServerConfigModal
-        visible={showServerModal}
-        onClose={() => setShowServerModal(false)}
-        onSaved={() => setError(null)}
-      />
 
       <OtpVerificationModal
         visible={showOtpModal}

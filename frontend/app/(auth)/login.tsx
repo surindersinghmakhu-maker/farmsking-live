@@ -16,7 +16,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@/src/store/auth-context';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
-import { ServerConfigModal } from '@/components/ServerConfigModal';
 import { BrandLogo } from '@/src/components/BrandLogo';
 
 const theme = RoleThemes.FARMER;
@@ -30,7 +29,6 @@ export default function LoginScreen() {
   const [focusedField, setFocusedField] = useState<'mobile' | 'password' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showServerModal, setShowServerModal] = useState(false);
 
   const onSubmit = async () => {
     setError(null);
@@ -49,7 +47,7 @@ export default function LoginScreen() {
     } catch (err: any) {
       const isNetworkErr = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
       if (isNetworkErr) {
-        setError('Network error! Could not connect to backend server. Tap "Configure Server IP" below to set your PC IP.');
+        setError('Network error! Could not connect to backend server. Please check your internet connection.');
       } else {
         setError(err?.response?.data?.message ?? err?.message ?? 'Login failed. Please check your credentials.');
       }
@@ -65,13 +63,6 @@ export default function LoginScreen() {
         
         {/* Top Hero Header */}
         <LinearGradient colors={['#16a34a', '#15803d', '#0f766e']} style={styles.heroBanner}>
-          <View style={styles.heroHeaderRow}>
-            <TouchableOpacity style={styles.serverPill} onPress={() => setShowServerModal(true)} activeOpacity={0.8}>
-              <Ionicons name="hardware-chip-outline" size={14} color="#ffffff" />
-              <Text style={styles.serverPillText}>Server IP</Text>
-            </TouchableOpacity>
-          </View>
-
           <View style={styles.brandBox}>
             <View style={styles.brandIconWrap}>
               <BrandLogo size={32} iconColor="#ffffff" fallbackIconName="leaf" />
@@ -131,13 +122,7 @@ export default function LoginScreen() {
           {error ? (
             <View style={styles.errorBox}>
               <Ionicons name="alert-circle" size={20} color="#dc2626" />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.error}>{error}</Text>
-                <TouchableOpacity style={styles.configErrorBtn} onPress={() => setShowServerModal(true)}>
-                  <Ionicons name="settings-outline" size={14} color="#16a34a" />
-                  <Text style={styles.configErrorBtnText}>⚙️ Configure Server IP</Text>
-                </TouchableOpacity>
-              </View>
+              <Text style={styles.error}>{error}</Text>
             </View>
           ) : null}
 
@@ -165,12 +150,6 @@ export default function LoginScreen() {
 
         </View>
       </ScrollView>
-
-      <ServerConfigModal
-        visible={showServerModal}
-        onClose={() => setShowServerModal(false)}
-        onSaved={() => setError(null)}
-      />
     </KeyboardAvoidingView>
   );
 }

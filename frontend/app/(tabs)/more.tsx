@@ -10,7 +10,6 @@ import { useRole } from '@/src/store/role-context';
 import { useLanguage } from '@/src/store/language-context';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
-import { ServerConfigModal } from '@/components/ServerConfigModal';
 import { LanguagePickerModal } from '@/src/components/LanguagePickerModal';
 import { SwitchDashboardSection } from '@/src/components/SwitchDashboardSection';
 import { TranslationKey, LANGUAGE_OPTIONS } from '@/src/constants/translations';
@@ -504,17 +503,11 @@ export default function MoreScreen() {
           </View>
         </View>
 
-        {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} activeOpacity={0.8} onPress={() => logout()}>
           <Ionicons name="log-out-outline" size={19} color="#dc2626" />
           <Text style={styles.logoutText}>{t('logout')}</Text>
         </TouchableOpacity>
       </View>
-
-      <ServerConfigModal
-        visible={showServerModal}
-        onClose={() => setShowServerModal(false)}
-      />
 
       <LanguagePickerModal visible={showLanguageModal} onClose={() => setShowLanguageModal(false)} />
 

@@ -90,27 +90,9 @@ export function getDefaultApiUrl(): string {
 export const API_BASE_URL = getDefaultApiUrl();
 
 /**
- * Retrieves stored API URL or default
+ * Retrieves permanent active API URL
  */
 export async function getActiveApiUrl(): Promise<string> {
-  try {
-    const stored = await Storage.getItemAsync(CUSTOM_API_URL_KEY);
-    if (stored && stored.trim()) {
-      const normalized = normalizeApiUrl(stored);
-
-      // On HTTPS Web (e.g. Vercel), ignore unencrypted http:// URLs
-      // to prevent browser Mixed Content blocking and network errors
-      const isHttpsWeb = Platform.OS === 'web' && typeof window !== 'undefined' && window.location.protocol === 'https:';
-      if (isHttpsWeb && normalized.startsWith('http://')) {
-        await Storage.deleteItemAsync(CUSTOM_API_URL_KEY);
-        return getDefaultApiUrl();
-      }
-
-      return normalized;
-    }
-  } catch (err) {
-    console.warn('Error reading stored API URL:', err);
-  }
   return getDefaultApiUrl();
 }
 

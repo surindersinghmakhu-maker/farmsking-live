@@ -15,6 +15,7 @@ interface WeatherData {
   conditionIcon: keyof typeof Ionicons.glyphMap;
   advice: string;
   isSpraySafe: boolean;
+  locationName: string;
   daily: Array<{
     day: string;
     maxTemp: number;
@@ -104,22 +105,83 @@ function getWeatherInfo(code: number, rainProb: number = 0): {
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+/** Resolve exact latitude, longitude & place name from user's postal PIN code or district */
+async function getCoordsForPincode(
+  pincode?: string,
+  district?: string,
+  village?: string
+): Promise<{ lat: number; lon: number; name: string }> {
+  const defaultCoords = { lat: 30.9010, lon: 75.8573, name: 'Ludhiana, PB' };
+
+  try {
+    let searchTerm = district || village || '';
+    let pinDistrictName = '';
+
+    if (pincode && pincode.trim().length === 6) {
+      try {
+        const pinRes = await fetch(`https://api.postalpincode.in/pincode/${pincode.trim()}`);
+        if (pinRes.ok) {
+          const pinJson = await pinRes.json();
+          if (pinJson?.[0]?.Status === 'Success' && pinJson[0].PostOffice?.[0]) {
+            const po = pinJson[0].PostOffice[0];
+            pinDistrictName = po.District || po.Name;
+            searchTerm = `${pinDistrictName}, ${po.State || 'Punjab'}, India`;
+          }
+        }
+      } catch (e) {
+        console.warn('Postal PIN lookup failed:', e);
+      }
+    }
+
+    if (!searchTerm && (district || village)) {
+      searchTerm = `${district || village}, Punjab, India`;
+    }
+
+    if (!searchTerm) {
+      return defaultCoords;
+    }
+
+    const geoRes = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchTerm)}&count=1&language=en&format=json`
+    );
+
+    if (geoRes.ok) {
+      const geoJson = await geoRes.json();
+      if (geoJson.results && geoJson.results.length > 0) {
+        const result = geoJson.results[0];
+        const placeName = result.name || pinDistrictName || district || 'Location';
+        const displayLocationName = pincode ? `📍 ${placeName} (${pincode})` : `📍 ${placeName}, ${result.admin1 || 'PB'}`;
+        return {
+          lat: result.latitude,
+          lon: result.longitude,
+          name: displayLocationName,
+        };
+      }
+    }
+  } catch (e) {
+    console.warn('Geocoding error:', e);
+  }
+
+  const fallbackName = pincode
+    ? `📍 ${district || village || 'PIN'} (${pincode})`
+    : `📍 ${district || village || 'Ludhiana, PB'}`;
+  return { ...defaultCoords, name: fallbackName };
+}
+
 export function OpenMeteoWeatherCard() {
   const { user } = useAuth();
   const [data, setData] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  const cityName = user?.district || user?.village || 'Ludhiana, Punjab';
-
   const fetchWeather = async () => {
     setLoading(true);
     setError(false);
     try {
-      const lat = 30.9010;
-      const lon = 75.8573;
+      const location = await getCoordsForPincode(user?.pincode, user?.district, user?.village);
+
       const res = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto`
+        `https://api.open-meteo.com/v1/forecast?latitude=${location.lat}&longitude=${location.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto`
       );
 
       if (!res.ok) throw new Error('Open-Meteo HTTP error');
@@ -158,6 +220,7 @@ export function OpenMeteoWeatherCard() {
         conditionIcon: info.icon,
         advice: info.advice,
         isSpraySafe: info.isSpraySafe,
+        locationName: location.name,
         daily: dailyList,
       });
     } catch (e) {
@@ -170,28 +233,30 @@ export function OpenMeteoWeatherCard() {
 
   useEffect(() => {
     fetchWeather();
-  }, []);
+  }, [user?.pincode, user?.district, user?.village]);
 
   return (
     <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
       {/* Header */}
       <View style={styles.headerRow}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
           <View style={styles.liveTag}>
             <Text style={styles.liveTagText}>LIVE OPEN-METEO</Text>
           </View>
-          <Text style={styles.headerTitle}>🌤️ Agri Weather Forecast</Text>
+          <Text style={styles.headerTitle} numberOfLines={1}>🌤️ Agri Weather Forecast</Text>
         </View>
         <TouchableOpacity style={styles.refreshBtn} onPress={fetchWeather}>
           <Ionicons name="refresh" size={14} color="#0284c7" />
-          <Text style={styles.locationText}>📍 {cityName}</Text>
+          <Text style={styles.locationText} numberOfLines={1}>
+            {data?.locationName || (user?.pincode ? `📍 PIN ${user.pincode}` : `📍 ${user?.district || 'Punjab'}`)}
+          </Text>
         </TouchableOpacity>
       </View>
 
       {loading ? (
         <View style={styles.centerBox}>
           <ActivityIndicator size="small" color="#0284c7" />
-          <Text style={styles.loadingText}>Fetching Open-Meteo live weather...</Text>
+          <Text style={styles.loadingText}>Fetching PIN Code live weather...</Text>
         </View>
       ) : error || !data ? (
         <View style={styles.centerBox}>

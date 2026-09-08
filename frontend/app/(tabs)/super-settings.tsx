@@ -458,6 +458,11 @@ const wStyles = StyleSheet.create({
     gap: 6, paddingVertical: 11, borderRadius: RADIUS.md,
   },
   actionBtnText: { fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' },
+  btn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, paddingVertical: 11, borderRadius: RADIUS.md,
+  },
+  btnText: { fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' },
 
   // Bot connection
   centerBox: { alignItems: 'center', gap: 8, paddingVertical: 12 },

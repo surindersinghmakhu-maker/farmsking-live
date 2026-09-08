@@ -256,7 +256,7 @@ function DispatchModal({ order, onClose }: { order: CustomerOrder | null; onClos
 }
 
 function PrintModal({ target, onClose }: { target: { order: CustomerOrder; mode: 'BILL' | 'LABEL' } | null; onClose: () => void }) {
-  const shotRef = useRef<ViewShot>(null);
+  const shotRef = useRef<any>(null);
   const [isDownloading, setIsDownloading] = useState(false);
 
   if (!target) return null;

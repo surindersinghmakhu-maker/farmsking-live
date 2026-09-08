@@ -475,7 +475,7 @@ export function PaymentReceiptPreview({ inv }: { inv: PaymentReceiptData }) {
  * Auto-saves a temporary cached copy on device/web system temporary files when previewed.
  */
 export function useShareBillAsJpg() {
-  const billShotRef = useRef<ViewShot>(null);
+  const billShotRef = useRef<any>(null);
   const [isSharingBill, setIsSharingBill] = useState(false);
   const [tempCachedUri, setTempCachedUri] = useState<string | null>(null);
 

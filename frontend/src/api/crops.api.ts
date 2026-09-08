@@ -39,9 +39,14 @@ export async function getCrop(id: string): Promise<CropCycle> {
 }
 
 export interface CropLookupResult extends CropCycle {
+  cropId?: string | null;
+  minPrice?: number | null;
+  maxPrice?: number | null;
   plot: {
     id: string;
     name: string;
+    areaUnit?: string | null;
+    irrigationType?: string | null;
     farm: {
       id: string;
       name: string;

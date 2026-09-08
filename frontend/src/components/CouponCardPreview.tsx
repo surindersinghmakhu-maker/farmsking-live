@@ -191,7 +191,7 @@ export function FarmerPlanCouponCardPreview({
 }
 
 export function useShareCouponAsJpg() {
-  const cardShotRef = useRef<ViewShot>(null);
+  const cardShotRef = useRef<any>(null);
   const [isSharing, setIsSharing] = useState(false);
 
   const shareCouponAsJpg = async (fileName?: string) => {

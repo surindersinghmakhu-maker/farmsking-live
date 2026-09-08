@@ -55,7 +55,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "sendWhatsAppOtp", null);
 __decorate([
-    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: 60_000 } }),
+    (0, throttler_1.Throttle)({ default: { limit: 1000, ttl: 60_000 } }),
     (0, common_1.Post)('register'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),

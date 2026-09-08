@@ -17,7 +17,7 @@ export class AuthController {
     return this.authService.sendWhatsAppOtp(body.mobile, body.otp);
   }
 
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Throttle({ default: { limit: 1000, ttl: 60_000 } })
   @Post('register')
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);

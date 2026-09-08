@@ -146,11 +146,14 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
+    const cleanMobile = (dto.mobile ?? '').trim();
+    const cleanPassword = (dto.password ?? '').trim();
+
     const user = await this.prisma.user.findFirst({
-      where: { mobile: dto.mobile, deletedAt: null },
+      where: { mobile: cleanMobile, deletedAt: null },
     });
 
-    if (!user || !(await argon2.verify(user.passwordHash, dto.password))) {
+    if (!user || !(await argon2.verify(user.passwordHash, cleanPassword))) {
       throw new UnauthorizedException('Invalid mobile number or password.');
     }
 

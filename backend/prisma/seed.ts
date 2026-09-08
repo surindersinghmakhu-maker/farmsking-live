@@ -248,10 +248,6 @@ async function main() {
     role: Role.ADMIN,
     name: 'FarmsKing Admin',
   });
-  await prisma.user.update({
-    where: { id: demoAdminUser.id },
-    data: { kingId: '01012000' },
-  });
 
   // ─── Sample records so every dashboard has something real to show ────────
 

@@ -1602,7 +1602,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     }
 
                     // 3. Crop Category Filter
-                    if (activeCropFilter === 'All') return true;
+                    if (activeCropFilter === 'All' || activeCropFilter === 'Hidden / Off') return true;
                     return p.category && (p.category.toLowerCase().includes(activeCropFilter.toLowerCase()) || activeCropFilter.toLowerCase().includes(p.category.toLowerCase()));
                   });
 

@@ -108,22 +108,39 @@ async function main() {
     });
   }
 
-  const demoSuperAdminMobile = '9999900002';
-  const existingSuperAdmin = await prisma.user.findUnique({ where: { mobile: demoSuperAdminMobile } });
+  const demoSuperAdminMobile = '9872066901';
+  const existingSuperAdmin = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { mobile: demoSuperAdminMobile },
+        { mobile: '9999900002' },
+        { role: Role.SUPER_ADMIN },
+      ],
+    },
+  });
   if (!existingSuperAdmin) {
     await prisma.user.create({
       data: {
         kingId: '02101982',
         mobile: demoSuperAdminMobile,
-        passwordHash: await argon2.hash('superadmin123'),
+        passwordHash: await argon2.hash('12345678'),
         role: Role.SUPER_ADMIN,
+        roles: [Role.SUPER_ADMIN, Role.CUSTOMER],
         name: 'FarmsKing Super Admin',
       },
     });
   } else {
     await prisma.user.update({
       where: { id: existingSuperAdmin.id },
-      data: { kingId: '02101982' },
+      data: {
+        kingId: '02101982',
+        mobile: demoSuperAdminMobile,
+        passwordHash: await argon2.hash('12345678'),
+        role: Role.SUPER_ADMIN,
+        roles: existingSuperAdmin.roles.includes(Role.SUPER_ADMIN)
+          ? existingSuperAdmin.roles
+          : [...existingSuperAdmin.roles, Role.SUPER_ADMIN],
+      },
     });
   }
 

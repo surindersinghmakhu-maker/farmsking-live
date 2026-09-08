@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "cd backend && npm install --legacy-peer-deps && npx prisma generate && npm run build",
+    "build": "cd backend && npm install --legacy-peer-deps && npx prisma@6.4.0 generate && npm run build",
     "start": "cd backend && node dist/main.js",
     "build:web": "node build.js"
   }

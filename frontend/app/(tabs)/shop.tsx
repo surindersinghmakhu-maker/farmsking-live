@@ -775,6 +775,7 @@ export default function ShopScreen() {
   const categoriesList = useMemo(() => {
     const defaults = ['All', '🔥 Deals & VIP Coupons', 'Seeds', 'Fertilizers', 'Crop Protection', 'Farm Machinery & Tools', 'Bio & Organics'];
     if (farmerFoodsEnabled) defaults.push('Farmer Made Foods');
+    if (isAdminOrSuperAdmin) defaults.push('🔴 Hidden / Off Products');
     const mappedDistinct = (products ?? [])
       .map((p) => {
         if (!p.category) return '';
@@ -790,10 +791,25 @@ export default function ShopScreen() {
       })
       .filter(Boolean);
     return Array.from(new Set([...defaults, ...mappedDistinct]));
-  }, [products, farmerFoodsEnabled]);
+  }, [products, farmerFoodsEnabled, isAdminOrSuperAdmin]);
 
   const filteredProducts = useMemo(() => {
     return (products ?? []).filter((p) => {
+      // 1. Regular customers only see active products
+      if (!isAdminOrSuperAdmin && !p.isActive) return false;
+
+      // 2. If '🔴 Hidden / Off Products' or 'Hidden / Off' category is selected by Admin
+      if (activeCategory === '🔴 Hidden / Off Products' || activeCategory === 'Hidden / Off') {
+        const matchesSearch =
+          !searchQuery.trim() ||
+          p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (p.category && p.category.toLowerCase().includes(searchQuery.toLowerCase()));
+        return !p.isActive && matchesSearch;
+      }
+
+      // 3. For standard store categories (All, Seeds, Fertilizers, etc.), show active products
+      if (!p.isActive) return false;
+
       const pCat = (p.category || '').toLowerCase().trim();
       const aCat = activeCategory.toLowerCase().trim();
       const matchesCategory =
@@ -808,11 +824,12 @@ export default function ShopScreen() {
         (p.category && p.category.toLowerCase().includes(searchQuery.toLowerCase()));
       return matchesCategory && matchesSearch;
     });
-  }, [products, activeCategory, searchQuery]);
+  }, [products, activeCategory, searchQuery, isAdminOrSuperAdmin]);
 
   const outOfStockCount = (products ?? []).filter((p) => p.stockQty <= 0).length;
   const lowStockCount = (products ?? []).filter((p) => p.stockQty > 0 && p.stockQty <= Number(lowStockAlertThreshold)).length;
   const activeProductCount = (products ?? []).filter((p) => p.isActive).length;
+  const inactiveProductCount = (products ?? []).filter((p) => !p.isActive).length;
 
   const cartQtyFor = (productId: string) => items.find((i) => i.productId === productId)?.quantity ?? 0;
 
@@ -2133,34 +2150,79 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   style={styles.categoryFilterRow}
                   contentContainerStyle={{ gap: 8, paddingHorizontal: 12, paddingVertical: 6, alignItems: 'center', maxWidth: 1200, alignSelf: 'center' }}
                 >
-                {categoriesList.map((cat) => (
-                  <TouchableOpacity
-                    key={cat}
-                    style={[
-                      styles.filterChip,
-                      activeCategory === cat && { backgroundColor: '#15803d', borderColor: '#166534' },
-                    ]}
-                    onPress={() => {
-                      tap();
-                      setActiveCategory(cat);
-                    }}
-                  >
-                    <Text style={[styles.filterChipText, activeCategory === cat && { color: '#ffffff' }]}>
-                      {cat}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                {categoriesList.map((cat) => {
+                  const isHiddenCat = cat === '🔴 Hidden / Off Products';
+                  const isActive = activeCategory === cat;
+                  return (
+                    <TouchableOpacity
+                      key={cat}
+                      style={[
+                        styles.filterChip,
+                        isHiddenCat && { backgroundColor: '#fee2e2', borderColor: '#fca5a5' },
+                        isActive && {
+                          backgroundColor: isHiddenCat ? '#dc2626' : '#15803d',
+                          borderColor: isHiddenCat ? '#b91c1c' : '#166534',
+                        },
+                      ]}
+                      onPress={() => {
+                        tap();
+                        setActiveCategory(cat);
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.filterChipText,
+                          isHiddenCat && { color: '#991b1b', fontFamily: FONT.extraBold },
+                          isActive && { color: '#ffffff' },
+                        ]}
+                      >
+                        {cat}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
                 </ScrollView>
               </View>
 
-
-
-              
+              {/* Admin Quick Alert Banner for Hidden / Turned Off Products */}
+              {isAdminOrSuperAdmin && inactiveProductCount > 0 && (
+                <TouchableOpacity
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    backgroundColor: activeCategory === '🔴 Hidden / Off Products' ? '#dc2626' : '#fef2f2',
+                    borderColor: activeCategory === '🔴 Hidden / Off Products' ? '#b91c1c' : '#fca5a5',
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    marginHorizontal: 12,
+                    marginTop: 8,
+                  }}
+                  onPress={() => {
+                    tap();
+                    setActiveCategory(activeCategory === '🔴 Hidden / Off Products' ? 'All' : '🔴 Hidden / Off Products');
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="eye-off" size={16} color={activeCategory === '🔴 Hidden / Off Products' ? '#ffffff' : '#dc2626'} />
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: activeCategory === '🔴 Hidden / Off Products' ? '#ffffff' : '#991b1b' }}>
+                      {inactiveProductCount} Product(s) Hidden / Turned OFF
+                    </Text>
+                  </View>
+                  <View style={{ backgroundColor: activeCategory === '🔴 Hidden / Off Products' ? '#ffffff' : '#dc2626', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }}>
+                    <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: activeCategory === '🔴 Hidden / Off Products' ? '#dc2626' : '#ffffff' }}>
+                      {activeCategory === '🔴 Hidden / Off Products' ? 'Showing Hidden (Click for All)' : '🔴 Show Hidden Products'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              )}
 
               {/* Layout View Mode Bar (Grid vs List Toggle) */}
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.md, paddingVertical: 6, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', maxWidth: 1200, width: '100%', alignSelf: 'center' }}>
                 <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#475569' }}>
-                  📦 Available Products ({filteredProducts.length})
+                  {activeCategory === '🔴 Hidden / Off Products' ? '🔴 Hidden / Off Products' : '📦 Available Products'} ({filteredProducts.length})
                 </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <TouchableOpacity
@@ -2212,7 +2274,9 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                 {filteredProducts.length === 0 ? (
                   <View style={styles.emptyCenter}>
                     <Ionicons name="storefront-outline" size={44} color="#cbd5e1" />
-                    <Text style={styles.emptyText}>No products available right now.</Text>
+                    <Text style={styles.emptyText}>
+                      {activeCategory === '🔴 Hidden / Off Products' ? 'No hidden products found.' : 'No products available right now.'}
+                    </Text>
                   </View>
                 ) : (
                   filteredProducts.map((product) => (
@@ -2221,6 +2285,10 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                       product={product}
                       cartQty={cartQtyFor(product.id)}
                       layoutMode={storeLayoutMode}
+                      isAdmin={isAdminOrSuperAdmin}
+                      onToggleActive={(p) => {
+                        updateProduct.mutate({ id: p.id, payload: { isActive: !p.isActive } });
+                      }}
                       onPressProduct={(p) => setSelectedProductForDetail(p)}
                       onAdd={() =>
                         addItem({
@@ -5261,14 +5329,19 @@ function ProductCard({
   onAdd,
   onPressProduct,
   layoutMode = 'GRID',
+  isAdmin,
+  onToggleActive,
 }: {
   product: Product;
   cartQty: number;
   onAdd: () => void;
   onPressProduct?: (product: Product) => void;
   layoutMode?: 'GRID' | 'COMPACT_LIST';
+  isAdmin?: boolean;
+  onToggleActive?: (product: Product) => void;
 }) {
   const outOfStock = product.stockQty <= 0;
+  const isHidden = !product.isActive;
 
   const sellingPrice = Number(product.price);
   const mrpPrice = (product as any).mrp ? Number((product as any).mrp) : Math.round(sellingPrice * 1.25);
@@ -5283,8 +5356,9 @@ function ProductCard({
         style={[
           styles.listRowCard,
           premiumShadow('#0f172a', 'sm'),
-          isFarmerFood && { backgroundColor: '#f0fdf4', borderColor: '#16a34a', borderWidth: 1.5 },
-          isCouponProduct && { backgroundColor: '#fffbeb', borderColor: '#fcd34d', borderWidth: 1.5 },
+          isHidden && { backgroundColor: '#fff1f2', borderColor: '#fca5a5', borderWidth: 1.5 },
+          isFarmerFood && !isHidden && { backgroundColor: '#f0fdf4', borderColor: '#16a34a', borderWidth: 1.5 },
+          isCouponProduct && !isHidden && { backgroundColor: '#fffbeb', borderColor: '#fcd34d', borderWidth: 1.5 },
         ]}
         activeOpacity={0.88}
         onPress={() => {
@@ -5295,53 +5369,74 @@ function ProductCard({
         {(() => {
           const displayImg = getProductDisplayImage(product);
           return displayImg ? (
-            <Image source={{ uri: displayImg }} style={{ width: 56, height: 56, borderRadius: 8 }} resizeMode="cover" />
+            <Image source={{ uri: displayImg }} style={{ width: 56, height: 56, borderRadius: 8, opacity: isHidden ? 0.6 : 1 }} resizeMode="cover" />
           ) : (
-            <View style={{ width: 56, height: 56, borderRadius: 8, backgroundColor: '#dcfce7', alignItems: 'center', justifyContent: 'center' }}>
-              <Ionicons name="leaf" size={24} color="#15803d" />
+            <View style={{ width: 56, height: 56, borderRadius: 8, backgroundColor: isHidden ? '#fee2e2' : '#dcfce7', alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name={isHidden ? 'eye-off' : 'leaf'} size={24} color={isHidden ? '#dc2626' : '#15803d'} />
             </View>
           );
         })()}
 
         <View style={{ flex: 1, paddingHorizontal: 10, gap: 2 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#0284c7', textTransform: 'uppercase' }}>
-              {product.category || 'Agri Inputs'}
-            </Text>
-            {discountPercent > 0 && (
+            {isHidden ? (
+              <View style={{ backgroundColor: '#dc2626', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 }}>
+                <Text style={{ fontSize: 8.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>🔴 HIDDEN / OFF</Text>
+              </View>
+            ) : (
+              <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#0284c7', textTransform: 'uppercase' }}>
+                {product.category || 'Agri Inputs'}
+              </Text>
+            )}
+            {discountPercent > 0 && !isHidden && (
               <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 4, paddingVertical: 1, borderRadius: 4 }}>
                 <Text style={{ fontSize: 8.5, fontFamily: FONT.extraBold, color: '#15803d' }}>{discountPercent}% OFF</Text>
               </View>
             )}
           </View>
 
-          <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
+          <Text style={[{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }, isHidden && { color: '#991b1b', textDecorationLine: 'line-through' }]} numberOfLines={1}>
             {product.name}
           </Text>
 
           <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
-            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#166534' }}>
+            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: isHidden ? '#dc2626' : '#166534' }}>
               ₹{sellingPrice.toLocaleString('en-IN')}
             </Text>
             <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b' }}>/ {product.unit}</Text>
           </View>
         </View>
 
-        <TouchableOpacity
-          style={[styles.addBtn, { paddingHorizontal: 12, paddingVertical: 8, marginTop: 0 }, outOfStock && styles.addBtnDisabled, cartQty > 0 && styles.addBtnActive]}
-          activeOpacity={0.88}
-          disabled={outOfStock}
-          onPress={(e) => {
-            e.stopPropagation();
-            tap();
-            onAdd();
-          }}
-        >
-          <Ionicons name={cartQty > 0 ? 'checkmark-circle' : 'cart'} size={14} color={outOfStock ? '#94a3b8' : '#ffffff'} />
-          <Text style={[styles.addBtnText, outOfStock && { color: '#94a3b8' }]}>
-            {outOfStock ? 'Out' : cartQty > 0 ? `(${cartQty})` : '+ Add'}
-          </Text>
-        </TouchableOpacity>
+        {isHidden && isAdmin && onToggleActive ? (
+          <TouchableOpacity
+            style={[styles.addBtn, { paddingHorizontal: 10, paddingVertical: 8, marginTop: 0, backgroundColor: '#16a34a', borderColor: '#15803d' }]}
+            activeOpacity={0.88}
+            onPress={(e) => {
+              e.stopPropagation();
+              tap();
+              onToggleActive(product);
+            }}
+          >
+            <Ionicons name="power" size={13} color="#ffffff" />
+            <Text style={[styles.addBtnText, { color: '#ffffff' }]}>Turn ON</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={[styles.addBtn, { paddingHorizontal: 12, paddingVertical: 8, marginTop: 0 }, outOfStock && styles.addBtnDisabled, cartQty > 0 && styles.addBtnActive]}
+            activeOpacity={0.88}
+            disabled={outOfStock}
+            onPress={(e) => {
+              e.stopPropagation();
+              tap();
+              onAdd();
+            }}
+          >
+            <Ionicons name={cartQty > 0 ? 'checkmark-circle' : 'cart'} size={14} color={outOfStock ? '#94a3b8' : '#ffffff'} />
+            <Text style={[styles.addBtnText, outOfStock && { color: '#94a3b8' }]}>
+              {outOfStock ? 'Out' : cartQty > 0 ? `(${cartQty})` : '+ Add'}
+            </Text>
+          </TouchableOpacity>
+        )}
       </TouchableOpacity>
     );
   }
@@ -5351,8 +5446,9 @@ function ProductCard({
       style={[
         styles.card,
         premiumShadow('#0f172a', 'sm'),
-        isFarmerFood && { backgroundColor: '#f0fdf4', borderColor: '#16a34a', borderWidth: 2 },
-        isCouponProduct && { backgroundColor: '#fffbeb', borderColor: '#fcd34d', borderWidth: 1.5 },
+        isHidden && { backgroundColor: '#fff1f2', borderColor: '#fca5a5', borderWidth: 1.5 },
+        isFarmerFood && !isHidden && { backgroundColor: '#f0fdf4', borderColor: '#16a34a', borderWidth: 2 },
+        isCouponProduct && !isHidden && { backgroundColor: '#fffbeb', borderColor: '#fcd34d', borderWidth: 1.5 },
       ]}
       activeOpacity={0.88}
       onPress={() => {
@@ -5361,7 +5457,12 @@ function ProductCard({
       }}
     >
       <View style={styles.cardBadgeRow}>
-        {isFarmerFood ? (
+        {isHidden ? (
+          <View style={[styles.certifiedTag, { backgroundColor: '#dc2626', borderColor: '#b91c1c', borderWidth: 1 }]}>
+            <Ionicons name="eye-off" size={9} color="#ffffff" />
+            <Text style={[styles.certifiedTagText, { color: '#ffffff', fontFamily: FONT.extraBold }]}>HIDDEN / OFF</Text>
+          </View>
+        ) : isFarmerFood ? (
           <View style={[styles.certifiedTag, { backgroundColor: '#dcfce7', borderColor: '#16a34a', borderWidth: 1 }]}>
             <Text style={{ fontSize: 9 }}>👨‍🌾</Text>
             <Text style={[styles.certifiedTagText, { color: '#14532d', fontFamily: FONT.bold }]}>Direct Farmer</Text>
@@ -5382,17 +5483,17 @@ function ProductCard({
       {(() => {
         const displayImg = getProductDisplayImage(product);
         return displayImg ? (
-          <Image source={{ uri: displayImg }} style={styles.productImage} resizeMode="cover" />
+          <Image source={{ uri: displayImg }} style={[styles.productImage, isHidden && { opacity: 0.65 }]} resizeMode="cover" />
         ) : (
-          <View style={[styles.productImage, styles.productImagePlaceholder]}>
-            <Ionicons name="leaf" size={28} color="#15803d" />
+          <View style={[styles.productImage, styles.productImagePlaceholder, isHidden && { backgroundColor: '#fee2e2' }]}>
+            <Ionicons name={isHidden ? 'eye-off' : 'leaf'} size={28} color={isHidden ? '#dc2626' : '#15803d'} />
           </View>
         );
       })()}
 
       <View style={styles.cardContent}>
         <Text style={styles.productCategoryTag}>{product.category || 'Agri Inputs'}</Text>
-        <Text style={styles.productName} numberOfLines={2}>{product.name}</Text>
+        <Text style={[styles.productName, isHidden && { color: '#991b1b', textDecorationLine: 'line-through' }]} numberOfLines={2}>{product.name}</Text>
 
         <View style={{ gap: 2, marginVertical: 2 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
@@ -5405,26 +5506,43 @@ function ProductCard({
           </View>
 
           <View style={styles.priceRow}>
-            <Text style={styles.productPrice}>₹{sellingPrice.toLocaleString('en-IN')}</Text>
+            <Text style={[styles.productPrice, isHidden && { color: '#dc2626' }]}>₹{sellingPrice.toLocaleString('en-IN')}</Text>
             <Text style={styles.productUnit}>/ {product.unit}</Text>
           </View>
         </View>
 
-        <TouchableOpacity
-          style={[styles.addBtn, outOfStock && styles.addBtnDisabled, cartQty > 0 && styles.addBtnActive]}
-          activeOpacity={0.88}
-          disabled={outOfStock}
-          onPress={(e) => {
-            e.stopPropagation();
-            tap();
-            onAdd();
-          }}
-        >
-          <Ionicons name={cartQty > 0 ? 'checkmark-circle' : 'cart'} size={14} color={outOfStock ? '#94a3b8' : '#ffffff'} />
-          <Text style={[styles.addBtnText, outOfStock && { color: '#94a3b8' }]}>
-            {outOfStock ? 'Out of Stock' : cartQty > 0 ? `In Cart (${cartQty})` : '+ Add to Cart'}
-          </Text>
-        </TouchableOpacity>
+        {isHidden && isAdmin && onToggleActive ? (
+          <TouchableOpacity
+            style={[styles.addBtn, { backgroundColor: '#16a34a', borderColor: '#15803d' }]}
+            activeOpacity={0.88}
+            onPress={(e) => {
+              e.stopPropagation();
+              tap();
+              onToggleActive(product);
+            }}
+          >
+            <Ionicons name="power" size={14} color="#ffffff" />
+            <Text style={[styles.addBtnText, { color: '#ffffff' }]}>
+              🟢 Turn ON / Restore
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={[styles.addBtn, outOfStock && styles.addBtnDisabled, cartQty > 0 && styles.addBtnActive]}
+            activeOpacity={0.88}
+            disabled={outOfStock}
+            onPress={(e) => {
+              e.stopPropagation();
+              tap();
+              onAdd();
+            }}
+          >
+            <Ionicons name={cartQty > 0 ? 'checkmark-circle' : 'cart'} size={14} color={outOfStock ? '#94a3b8' : '#ffffff'} />
+            <Text style={[styles.addBtnText, outOfStock && { color: '#94a3b8' }]}>
+              {outOfStock ? 'Out of Stock' : cartQty > 0 ? `In Cart (${cartQty})` : '+ Add to Cart'}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </TouchableOpacity>
   );

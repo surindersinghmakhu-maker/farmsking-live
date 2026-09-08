@@ -77,32 +77,39 @@ export class UsersService {
     const limit = query.limit ?? 20;
     const status = query.status ?? 'all';
 
-    const where: Prisma.UserWhereInput = {
-      ...(query.role
-        ? {
-            OR: [
-              { role: query.role },
-              {
-                AND: [
-                  { roles: { has: query.role } },
-                  { NOT: { deactivatedRoles: { has: query.role } } },
-                ],
-              },
+    const conditions: Prisma.UserWhereInput[] = [];
+
+    if (query.role) {
+      conditions.push({
+        OR: [
+          { role: query.role },
+          {
+            AND: [
+              { roles: { has: query.role } },
+              { NOT: { deactivatedRoles: { has: query.role } } },
             ],
-          }
-        : {}),
-      ...(status === 'active' ? { deletedAt: null } : {}),
-      ...(status === 'inactive' ? { deletedAt: { not: null } } : {}),
-      ...(query.search
-        ? {
-            OR: [
-              { name: { contains: query.search, mode: Prisma.QueryMode.insensitive } },
-              { mobile: { contains: query.search } },
-              { kingId: { contains: query.search, mode: Prisma.QueryMode.insensitive } },
-            ],
-          }
-        : {}),
-    };
+          },
+        ],
+      });
+    }
+
+    if (status === 'active') {
+      conditions.push({ deletedAt: null });
+    } else if (status === 'inactive') {
+      conditions.push({ deletedAt: { not: null } });
+    }
+
+    if (query.search) {
+      conditions.push({
+        OR: [
+          { name: { contains: query.search, mode: Prisma.QueryMode.insensitive } },
+          { mobile: { contains: query.search } },
+          { kingId: { contains: query.search, mode: Prisma.QueryMode.insensitive } },
+        ],
+      });
+    }
+
+    const where: Prisma.UserWhereInput = conditions.length > 0 ? { AND: conditions } : {};
 
     const [items, total] = await Promise.all([
       this.prisma.user.findMany({
@@ -518,6 +525,13 @@ export class UsersService {
       const stillActive = newRoles.filter((r) => !newDeactivated.includes(r));
       newPrimary = stillActive[0] ?? Role.CUSTOMER;
       if (!newRoles.includes(newPrimary)) newRoles.push(newPrimary);
+    } else if (user.role === Role.CUSTOMER) {
+      // If user's current primary role is CUSTOMER and a non-CUSTOMER role is granted or active,
+      // update primary role to the granted non-CUSTOMER role.
+      const activeNonCustomer = newRoles.filter((r) => !newDeactivated.includes(r) && r !== Role.CUSTOMER);
+      if (activeNonCustomer.length > 0) {
+        newPrimary = activeNonCustomer[activeNonCustomer.length - 1];
+      }
     }
 
     const isBrandNewAdvisor = toGrant.includes(Role.ADVISOR);

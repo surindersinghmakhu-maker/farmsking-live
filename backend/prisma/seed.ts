@@ -309,130 +309,19 @@ async function main() {
     });
   }
 
-  const sampleProductsData = [
-    {
-      name: 'Organic Vermicompost 5kg',
-      description: 'Nutrient-rich 100% organic compost for healthier soil & root development.',
-      category: 'Fertilizers',
-      unit: 'bag',
-      price: 350,
-      stockQty: 100,
-      imageUrl: 'https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?w=600&auto=format&fit=crop&q=60',
-      isTopSeller: true,
-    },
-    {
-      name: 'NPK 19:19:19 Water Soluble Fertilizer 1kg',
-      description: 'Balanced 100% water-soluble NPK fertilizer for early foliage and crop growth.',
-      category: 'Fertilizers',
-      unit: 'kg',
-      price: 185,
-      stockQty: 250,
-      imageUrl: 'https://images.unsplash.com/photo-1628352081506-83c43123ed6d?w=600&auto=format&fit=crop&q=60',
-      isTopSeller: true,
-    },
-    {
-      name: 'DAP (Di-Ammonium Phosphate) 50kg Bag',
-      description: 'High quality phosphatic fertilizer essential for root development & germination.',
-      category: 'Fertilizers',
-      unit: 'bag',
-      price: 1350,
-      stockQty: 150,
-      imageUrl: 'https://images.unsplash.com/photo-1592417817098-8f3d6eb19655?w=600&auto=format&fit=crop&q=60',
-      isTopSeller: false,
-    },
-    {
-      name: 'Paddy Hybrid Seeds PR-126 (10kg)',
-      description: 'High yielding short duration paddy hybrid seeds suitable for Punjab & Haryana.',
-      category: 'Seeds',
-      unit: 'bag',
-      price: 950,
-      stockQty: 300,
-      imageUrl: 'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?w=600&auto=format&fit=crop&q=60',
-      isTopSeller: true,
-    },
-    {
-      name: 'Hybrid Tomato Seeds Rashmi (10g)',
-      description: 'Disease resistant hybrid tomato seeds with high fruit firmness and yield.',
-      category: 'Seeds',
-      unit: 'packet',
-      price: 420,
-      stockQty: 500,
-      imageUrl: 'https://images.unsplash.com/photo-1592841200221-a6898f307baa?w=600&auto=format&fit=crop&q=60',
-      isTopSeller: false,
-    },
-    {
-      name: '16L Battery Operated Agriculture Sprayer Pump',
-      description: '12V 12Ah heavy duty dual-motor battery sprayer with brass nozzles & regulator.',
-      category: 'Farm Machinery & Tools',
-      unit: 'piece',
-      price: 2450,
-      stockQty: 45,
-      imageUrl: 'https://images.unsplash.com/photo-1589923188900-85dae523342b?w=600&auto=format&fit=crop&q=60',
-      isTopSeller: true,
-    },
-    {
-      name: 'Pure Cold-Pressed Mustard Oil 1L (Kachi Ghani)',
-      description: '100% pure unrefined cold-pressed desi mustard oil straight from organic farms.',
-      category: 'Farmer Made Foods',
-      unit: 'bottle',
-      price: 210,
-      stockQty: 180,
-      imageUrl: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&auto=format&fit=crop&q=60',
-      isTopSeller: true,
-    },
-    {
-      name: 'Organic Desi Gur (Jaggery) 1kg',
-      description: 'Natural chemical-free organic jaggery made from fresh sugarcane juice.',
-      category: 'Farmer Made Foods',
-      unit: 'kg',
-      price: 90,
-      stockQty: 200,
-      imageUrl: 'https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?w=600&auto=format&fit=crop&q=60',
-      isTopSeller: true,
-    },
-    {
-      name: 'Neem Oil Bio Pesticide 10000 PPM 1L',
-      description: 'Natural botanical neem seed kernel extract for eco-friendly insect control.',
-      category: 'Bio & Organics',
-      unit: 'litre',
-      price: 490,
-      stockQty: 120,
-      imageUrl: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=600&auto=format&fit=crop&q=60',
-      isTopSeller: false,
-    },
-    {
-      name: 'VIP Gold Farmer Membership Pass',
-      description: 'Access to 1-on-1 expert crop advisory, priority delivery, and flat discounts.',
-      category: '🔥 Deals & VIP Coupons',
-      unit: 'piece',
-      price: 499,
-      stockQty: 999,
-      imageUrl: 'https://images.unsplash.com/photo-1556742049-0a670f4a4591?w=600&auto=format&fit=crop&q=60',
-      isTopSeller: true,
-    },
-  ];
-
-  for (const item of sampleProductsData) {
-    const existingP = await prisma.product.findFirst({ where: { name: item.name } });
-    if (!existingP) {
-      await prisma.product.create({
-        data: {
-          name: item.name,
-          description: item.description,
-          category: item.category,
-          unit: item.unit,
-          price: item.price,
-          stockQty: item.stockQty,
-          imageUrl: item.imageUrl,
-          isTopSeller: item.isTopSeller,
-          createdById: demoAdminUser.id,
-        },
-      });
-    }
-  }
-
-  const demoProduct = await prisma.product.findFirst({ where: { name: 'Organic Vermicompost 5kg' } });
-  if (!demoProduct) throw new Error('Demo product failed to seed');
+  const demoProduct =
+    (await prisma.product.findFirst({ where: { name: 'Organic Vermicompost 5kg' } })) ??
+    (await prisma.product.create({
+      data: {
+        name: 'Organic Vermicompost 5kg',
+        description: 'Nutrient-rich organic compost for healthier soil.',
+        category: 'Fertilizer',
+        unit: 'bag',
+        price: 350,
+        stockQty: 100,
+        createdById: demoAdminUser.id,
+      },
+    }));
 
   const demoCoupon =
     (await prisma.coupon.findUnique({ where: { code: 'DEMO-PARTNER10' } })) ??

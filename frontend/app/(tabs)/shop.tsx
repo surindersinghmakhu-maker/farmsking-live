@@ -405,6 +405,7 @@ export default function ShopScreen() {
   const [courierNameInput, setCourierNameInput] = useState('Delhivery Express');
   const [trackingIdInput, setTrackingIdInput] = useState('');
   const [activeCropFilter, setActiveCropFilter] = useState<string>('All');
+  const [inventoryStatusTab, setInventoryStatusTab] = useState<'ACTIVE' | 'INACTIVE'>('ACTIVE');
 
   // Cart & Checkout State
   const { addItem, items, itemCount, subtotal, updateQuantity, removeItem, clearCart } = useCart();
@@ -1510,22 +1511,72 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
               <View style={{ gap: 10 }}>
                 <View style={styles.tableHeaderRow}>
                   <Text style={styles.tableHeaderTitle}>📦 SKU Inventory & Multi-Crop Catalog</Text>
-                  <Text style={styles.tableHeaderCount}>({filteredProducts.length} items)</Text>
+                  <Text style={styles.tableHeaderCount}>({(products ?? []).length} total items)</Text>
+                </View>
+
+                {/* Status Sub-Tabs: 🟢 Active SKUs vs 🔴 Inactive / Hidden SKUs */}
+                <View style={{ flexDirection: 'row', gap: 8, marginVertical: 2 }}>
+                  <TouchableOpacity
+                    style={{
+                      flex: 1,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                      paddingVertical: 10,
+                      borderRadius: RADIUS.md,
+                      backgroundColor: inventoryStatusTab === 'ACTIVE' ? '#15803d' : '#ffffff',
+                      borderWidth: 1.5,
+                      borderColor: inventoryStatusTab === 'ACTIVE' ? '#166534' : '#cbd5e1',
+                    }}
+                    onPress={() => {
+                      tap();
+                      setInventoryStatusTab('ACTIVE');
+                    }}
+                  >
+                    <Ionicons name="checkmark-circle" size={16} color={inventoryStatusTab === 'ACTIVE' ? '#ffffff' : '#16a34a'} />
+                    <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: inventoryStatusTab === 'ACTIVE' ? '#ffffff' : '#334155' }}>
+                      🟢 Active SKUs ({activeProductCount})
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={{
+                      flex: 1,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                      paddingVertical: 10,
+                      borderRadius: RADIUS.md,
+                      backgroundColor: inventoryStatusTab === 'INACTIVE' ? '#dc2626' : '#ffffff',
+                      borderWidth: 1.5,
+                      borderColor: inventoryStatusTab === 'INACTIVE' ? '#b91c1c' : '#cbd5e1',
+                    }}
+                    onPress={() => {
+                      tap();
+                      setInventoryStatusTab('INACTIVE');
+                    }}
+                  >
+                    <Ionicons name="eye-off" size={16} color={inventoryStatusTab === 'INACTIVE' ? '#ffffff' : '#dc2626'} />
+                    <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: inventoryStatusTab === 'INACTIVE' ? '#ffffff' : '#334155' }}>
+                      🔴 Inactive / Hidden ({inactiveProductCount})
+                    </Text>
+                  </TouchableOpacity>
                 </View>
 
                 {/* Crop Filter Bar */}
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
-                  {['All', 'Hidden / Off', 'Seeds', 'Fertilizers', 'Crop Protection', 'Farm Machinery & Tools', 'Bio & Organics'].map((cropCat) => {
+                  {['All', 'Seeds', 'Fertilizers', 'Crop Protection', 'Farm Machinery & Tools', 'Bio & Organics'].map((cropCat) => {
                     const isActive = activeCropFilter === cropCat;
-                    const isHiddenBtn = cropCat === 'Hidden / Off';
                     return (
                       <TouchableOpacity
                         key={cropCat}
                         style={[
                           styles.filterChip,
                           isActive && {
-                            backgroundColor: isHiddenBtn ? '#dc2626' : '#0284c7',
-                            borderColor: isHiddenBtn ? '#b91c1c' : '#0369a1',
+                            backgroundColor: '#0284c7',
+                            borderColor: '#0369a1',
                           },
                         ]}
                         onPress={() => setActiveCropFilter(cropCat)}
@@ -1536,30 +1587,68 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   })}
                 </ScrollView>
 
-                {filteredProducts
-                  .filter((p) => {
-                    if (activeCropFilter === 'Hidden / Off') return !p.isActive;
+                {(() => {
+                  const listToRender = (products ?? []).filter((p) => {
+                    // 1. Status Tab Filter: Active vs Inactive list
+                    if (inventoryStatusTab === 'ACTIVE' && !p.isActive) return false;
+                    if (inventoryStatusTab === 'INACTIVE' && p.isActive) return false;
+
+                    // 2. Search Query Filter
+                    if (searchQuery.trim()) {
+                      const q = searchQuery.toLowerCase();
+                      const matchName = p.name.toLowerCase().includes(q);
+                      const matchCat = p.category && p.category.toLowerCase().includes(q);
+                      if (!matchName && !matchCat) return false;
+                    }
+
+                    // 3. Crop Category Filter
                     if (activeCropFilter === 'All') return true;
                     return p.category && (p.category.toLowerCase().includes(activeCropFilter.toLowerCase()) || activeCropFilter.toLowerCase().includes(p.category.toLowerCase()));
-                  })
-                  .map((p) => {
+                  });
+
+                  if (listToRender.length === 0) {
+                    return (
+                      <View style={[styles.emptyCenter, { paddingVertical: 36, backgroundColor: '#ffffff', borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0' }]}>
+                        <Ionicons name={inventoryStatusTab === 'INACTIVE' ? "eye-off-outline" : "cube-outline"} size={40} color="#cbd5e1" />
+                        <Text style={[styles.emptyText, { fontFamily: FONT.bold, color: '#64748b', marginTop: 4 }]}>
+                          {inventoryStatusTab === 'INACTIVE'
+                            ? 'No inactive / hidden products in this list.'
+                            : 'No active products found.'}
+                        </Text>
+                        <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8' }}>
+                          {inventoryStatusTab === 'INACTIVE'
+                            ? 'Items turned OFF using the switch toggle will appear here.'
+                            : 'Items turned ON using the switch toggle will appear here.'}
+                        </Text>
+                      </View>
+                    );
+                  }
+
+                  return listToRender.map((p) => {
                     const isLow = p.stockQty > 0 && p.stockQty < 5;
                     const isOut = p.stockQty <= 0;
                     return (
-                      <View key={p.id} style={[styles.mgmtProductCard, premiumShadow('#0f172a', 'sm'), !p.isActive && { opacity: 0.6 }]}>
+                      <View key={p.id} style={[styles.mgmtProductCard, premiumShadow('#0f172a', 'sm'), !p.isActive && { backgroundColor: '#fff1f2', borderColor: '#fca5a5' }]}>
                         {(() => {
                           const displayImg = getProductDisplayImage(p);
                           return displayImg ? (
-                            <Image source={{ uri: displayImg }} style={styles.mgmtProductImg} resizeMode="cover" />
+                            <Image source={{ uri: displayImg }} style={[styles.mgmtProductImg, !p.isActive && { opacity: 0.6 }]} resizeMode="cover" />
                           ) : (
-                            <View style={styles.mgmtProductImgPlaceholder}>
-                              <Ionicons name="cube" size={20} color="#0284c7" />
+                            <View style={[styles.mgmtProductImgPlaceholder, !p.isActive && { backgroundColor: '#fee2e2' }]}>
+                              <Ionicons name={!p.isActive ? 'eye-off' : 'cube'} size={20} color={!p.isActive ? '#dc2626' : '#0284c7'} />
                             </View>
                           );
                         })()}
 
                         <View style={{ flex: 1, gap: 2 }}>
-                          <Text style={styles.mgmtProductName} numberOfLines={1}>{p.name}</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                            {!p.isActive && (
+                              <View style={{ backgroundColor: '#dc2626', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 }}>
+                                <Text style={{ fontSize: 8.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>HIDDEN</Text>
+                              </View>
+                            )}
+                            <Text style={[styles.mgmtProductName, !p.isActive && { color: '#991b1b' }]} numberOfLines={1}>{p.name}</Text>
+                          </View>
                           <Text style={styles.mgmtProductMeta}>
                             💰 ₹{p.price} / {p.unit} · {p.category || 'General'}
                           </Text>
@@ -1619,13 +1708,20 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                             <Text style={styles.updatePhotoBtnText}>Photo</Text>
                           </TouchableOpacity>
 
-                          <Switch
-                            value={p.isActive}
-                            onValueChange={(val) => {
-                              tap();
-                              updateProduct.mutate({ id: p.id, payload: { isActive: val } });
-                            }}
-                          />
+                          <View style={{ alignItems: 'center', gap: 1 }}>
+                            <Text style={{ fontSize: 8.5, fontFamily: FONT.extraBold, color: p.isActive ? '#16a34a' : '#dc2626' }}>
+                              {p.isActive ? 'ON' : 'OFF'}
+                            </Text>
+                            <Switch
+                              value={p.isActive}
+                              trackColor={{ false: '#fca5a5', true: '#86efac' }}
+                              thumbColor={p.isActive ? '#16a34a' : '#dc2626'}
+                              onValueChange={(val) => {
+                                tap();
+                                updateProduct.mutate({ id: p.id, payload: { isActive: val } });
+                              }}
+                            />
+                          </View>
 
                           <TouchableOpacity onPress={() => { tap(); removeProduct.mutate(p.id); }}>
                             <Ionicons name="trash-outline" size={16} color="#dc2626" />
@@ -1633,7 +1729,8 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                         </View>
                       </View>
                     );
-                  })}
+                  });
+                })()}
               </View>
             ) : adminTab === 'ORDERS' ? (
               <View style={{ gap: 12 }}>

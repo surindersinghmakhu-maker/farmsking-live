@@ -266,12 +266,12 @@ export function MarketRatesCard() {
                     {rate.localAvgRate != null && rate.localAvgRate > 0 ? (
                       <View style={{ gap: 1 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 3 }}>
-                          <Text style={styles.rateValue}>₹{formatInr(rate.localAvgRate)}</Text>
+                          <Text style={styles.rateValue}>{formatInr(rate.localAvgRate)}</Text>
                           <Text style={styles.rateUnit}>/{rate.unit}</Text>
                         </View>
                         {rate.localMinRate != null && rate.localMaxRate != null ? (
                           <Text style={styles.rangeSubtext}>
-                            Min ₹{formatInr(rate.localMinRate)} · Max ₹{formatInr(rate.localMaxRate)}
+                            Min {formatInr(rate.localMinRate)} · Max {formatInr(rate.localMaxRate)}
                           </Text>
                         ) : null}
                       </View>
@@ -285,12 +285,12 @@ export function MarketRatesCard() {
                     {rate.nationalAvgRate != null && rate.nationalAvgRate > 0 ? (
                       <View style={{ gap: 1 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 3 }}>
-                          <Text style={[styles.rateValue, { color: '#334155' }]}>₹{formatInr(rate.nationalAvgRate)}</Text>
+                          <Text style={[styles.rateValue, { color: '#334155' }]}>{formatInr(rate.nationalAvgRate)}</Text>
                           <Text style={styles.rateUnit}>/{rate.unit}</Text>
                         </View>
                         {rate.nationalMinRate != null && rate.nationalMaxRate != null ? (
                           <Text style={styles.rangeSubtext}>
-                            Min ₹{formatInr(rate.nationalMinRate)} · Max ₹{formatInr(rate.nationalMaxRate)}
+                            Min {formatInr(rate.nationalMinRate)} · Max {formatInr(rate.nationalMaxRate)}
                           </Text>
                         ) : null}
                       </View>

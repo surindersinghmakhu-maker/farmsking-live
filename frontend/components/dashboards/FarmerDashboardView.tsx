@@ -20,6 +20,7 @@ import { useLabourWorkers } from '@/src/hooks/useLabour';
 import { useParties } from '@/src/hooks/useParties';
 import { KisanCropIntelligenceCard } from '@/src/components/KisanCropIntelligenceCard';
 import { CropAdvisoryPromoCard } from '@/src/components/CropAdvisoryPromoCard';
+import { OpenMeteoWeatherCard } from '@/src/components/OpenMeteoWeatherCard';
 
 
 const tap = () => {
@@ -136,6 +137,9 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
             </View>
           </TouchableOpacity>
         ) : null}
+
+        {/* Live Open-Meteo Weather Card */}
+        <OpenMeteoWeatherCard />
 
         {/* Quick Accounts & Payments Action Grid */}
         <View style={styles.quickAccountsCard}>

@@ -45,19 +45,14 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
   const [syncResult, setSyncResult] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Group JID input state
-  const [jidInput, setJidInput] = useState(savedGroupJid);
-  const [savingJid, setSavingJid] = useState(false);
-  const [jidSaved, setJidSaved] = useState(false);
+  // ── Group address (always visible & editable) ──────────────────────
+  const [groupInput, setGroupInput] = useState(savedGroupJid);
+  const [savingGroup, setSavingGroup] = useState(false);
+  const [groupSaved, setGroupSaved] = useState(false);
+  const [groupError, setGroupError] = useState<string | null>(null);
 
-  // Manual paste link/JID state
-  const [linkInput, setLinkInput] = useState('');
-  const [savingLink, setSavingLink] = useState(false);
-  const [linkSaved, setLinkSaved] = useState(false);
-  const [linkError, setLinkError] = useState<string | null>(null);
-
-  // Sync jidInput when savedGroupJid changes (e.g. on first load)
-  useEffect(() => { setJidInput(savedGroupJid); }, [savedGroupJid]);
+  // Keep input in sync when prop loads from server
+  useEffect(() => { setGroupInput(savedGroupJid); }, [savedGroupJid]);
 
   const fetchStatus = async () => {
     try {
@@ -72,9 +67,7 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
   useEffect(() => {
     fetchStatus();
     intervalRef.current = setInterval(fetchStatus, 5000);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, []);
 
   const handleUnlink = async () => {
@@ -86,7 +79,7 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
       setLoading(true);
       setTimeout(fetchStatus, 2500);
     } catch {
-      setSyncResult('⚠️ Unlink failed. Try again.');
+      setSyncResult('⚠️ Unlink failed. Please try again.');
     } finally {
       setUnlinking(false);
     }
@@ -108,61 +101,36 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
     }
   };
 
-  const handleSaveJid = async (jid: string) => {
-    const trimmed = jid.trim();
-    if (!trimmed) return;
-    setSavingJid(true);
-    setJidSaved(false);
-    try {
-      await onSaveJid(trimmed);
-      setJidSaved(true);
-      setTimeout(() => setJidSaved(false), 3000);
-    } finally {
-      setSavingJid(false);
-    }
-  };
-
-  /**
-   * Save from manual paste: accepts WhatsApp invite link or raw JID
-   * e.g. https://chat.whatsapp.com/XXXXXX  → saved as invite URL for backend
-   *      120363XXXXXXXXXX@g.us              → saved as JID directly
-   */
-  const handleSavePastedLink = async () => {
-    setLinkError(null);
-    const raw = linkInput.trim();
+  /** Save group address — accepts invite link or @g.us JID */
+  const handleSaveGroup = async () => {
+    setGroupError(null);
+    const raw = groupInput.trim();
     if (!raw) {
-      setLinkError('⚠️ ਕਿਰਪਾ ਕਰਕੇ WhatsApp Group Link ਜਾਂ JID ਪੇਸਟ ਕਰੋ।');
+      setGroupError('Please enter a WhatsApp Group Invite Link or Group JID.');
       return;
     }
-
-    // Accept invite link or JID
     const isInviteLink = raw.startsWith('https://chat.whatsapp.com/');
     const isJid = raw.includes('@g.us');
-
     if (!isInviteLink && !isJid) {
-      setLinkError('⚠️ Invalid format. ਸਿਰਫ਼ https://chat.whatsapp.com/... link ਜਾਂ Group JID (xxx@g.us) ਪੇਸਟ ਕਰੋ।');
+      setGroupError('Invalid format. Use https://chat.whatsapp.com/... or a Group JID ending in @g.us');
       return;
     }
-
-    setSavingLink(true);
-    setLinkSaved(false);
+    setSavingGroup(true);
+    setGroupSaved(false);
     try {
-      // For invite links, store the full URL as the JID field (backend can handle)
-      // For @g.us JIDs, pass directly
       await onSaveJid(raw);
-      setLinkSaved(true);
-      setLinkInput('');
-      setTimeout(() => setLinkSaved(false), 4000);
+      setGroupSaved(true);
+      setTimeout(() => setGroupSaved(false), 4000);
     } catch {
-      setLinkError('⚠️ Save failed. ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।');
+      setGroupError('Save failed. Please try again.');
     } finally {
-      setSavingLink(false);
+      setSavingGroup(false);
     }
   };
 
   const jidConfigured = savedGroupJid && savedGroupJid !== 'NOT_CONFIGURED' && savedGroupJid !== '';
 
-  // Fetch groups list from bot
+  // ── Group list picker (available when bot is connected) ────────────
   const [groupsList, setGroupsList] = useState<{ jid: string; name: string; memberCount: number }[]>([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [showGroupPicker, setShowGroupPicker] = useState(false);
@@ -175,7 +143,7 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
       setShowGroupPicker(true);
     } catch {
       setGroupsList([]);
-      alert('⚠️ Could not load groups. WhatsApp bot must be connected.');
+      alert('⚠️ Could not load groups. WhatsApp bot must be connected and set as group admin.');
     } finally {
       setLoadingGroups(false);
     }
@@ -183,99 +151,92 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
 
   const handleSelectGroup = async (group: { jid: string; name: string; memberCount: number }) => {
     setShowGroupPicker(false);
-    await handleSaveJid(group.jid);
+    setGroupInput(group.jid);
+    setSavingGroup(true);
+    try {
+      await onSaveJid(group.jid);
+      setGroupSaved(true);
+      setTimeout(() => setGroupSaved(false), 4000);
+    } catch {
+      setGroupError('Failed to save selected group.');
+    } finally {
+      setSavingGroup(false);
+    }
   };
 
   return (
     <View style={wStyles.panel}>
-      {/* ── Section 1: Group Selection ──────────────────────── */}
-      <View style={wStyles.panelTitleRow}>
+
+      {/* ══════════════════════════════════════════════════════
+          SECTION 1 — TARGET GROUP (always editable)
+      ══════════════════════════════════════════════════════ */}
+      <View style={wStyles.sectionHeader}>
         <Ionicons name="people-circle-outline" size={15} color="#7c3aed" />
-        <Text style={[wStyles.panelTitle, { color: '#7c3aed' }]}>📋 Target WhatsApp Group</Text>
+        <Text style={[wStyles.sectionTitle, { color: '#7c3aed' }]}>📋 Target WhatsApp Group</Text>
       </View>
 
-      {/* Currently selected group badge */}
-      {jidConfigured ? (
-        <View style={wStyles.jidSavedBadge}>
-          <Ionicons name="checkmark-circle" size={14} color="#16a34a" />
-          <View style={{ flex: 1 }}>
-            <Text style={wStyles.jidSavedText} numberOfLines={1}>✅ Selected Group JID:</Text>
-            <Text style={[wStyles.jidSavedText, { fontSize: 10, color: '#64748b' }]} numberOfLines={1}>
-              {savedGroupJid}
-            </Text>
-          </View>
-          {jidSaved && <Ionicons name="checkmark-circle" size={14} color="#16a34a" />}
-        </View>
-      ) : (
-        <View style={[wStyles.jidSavedBadge, { backgroundColor: '#fef3c7', borderColor: '#fde68a' }]}>
-          <Ionicons name="warning-outline" size={14} color="#b45309" />
-          <Text style={[wStyles.jidSavedText, { color: '#b45309' }]}>
-            ⚠️ No target group selected — Member sync is disabled
-          </Text>
-        </View>
-      )}
-
-      {/* ── Manual Paste Link / JID ───────────────────────── */}
-      <View style={wStyles.jidHelpBox}>
-        <Text style={wStyles.jidHelpTitle}>📎 WhatsApp Group Link Paste ਕਰੋ</Text>
-        <Text style={wStyles.jidHelpText}>
-          WhatsApp Group ਖੋਲ੍ਹੋ → Info → Invite Link Copy ਕਰੋ ਅਤੇ ਹੇਠਾਂ Paste ਕਰੋ।{`
-`}
-          Format: <Text style={{ fontFamily: 'monospace', fontSize: 10 }}>https://chat.whatsapp.com/XXX</Text>{`
-`}
-          ਜਾਂ Group JID: <Text style={{ fontFamily: 'monospace', fontSize: 10 }}>120363XXXX@g.us</Text>
-        </Text>
-      </View>
-
-      <View style={wStyles.jidInputRow}>
-        <TextInput
-          style={[wStyles.jidInput, { flex: 1 }]}
-          value={linkInput}
-          onChangeText={(t) => { setLinkInput(t); setLinkError(null); }}
-          placeholder="https://chat.whatsapp.com/... ਜਾਂ JID paste ਕਰੋ"
-          placeholderTextColor="#94a3b8"
-          autoCapitalize="none"
-          autoCorrect={false}
-          multiline={false}
+      {/* Current status badge */}
+      <View style={[wStyles.statusBadge, jidConfigured ? {} : wStyles.statusBadgeWarn]}>
+        <Ionicons
+          name={jidConfigured ? 'checkmark-circle' : 'warning-outline'}
+          size={13}
+          color={jidConfigured ? '#16a34a' : '#b45309'}
         />
-        <TouchableOpacity
-          style={[
-            wStyles.jidSaveBtn,
-            { backgroundColor: linkSaved ? '#16a34a' : '#7c3aed' },
-          ]}
-          onPress={handleSavePastedLink}
-          disabled={savingLink}
-        >
-          {savingLink ? (
-            <ActivityIndicator color="#ffffff" size="small" />
-          ) : linkSaved ? (
-            <Ionicons name="checkmark-circle" size={18} color="#ffffff" />
-          ) : (
-            <Text style={wStyles.jidSaveBtnText}>Save</Text>
-          )}
-        </TouchableOpacity>
+        <Text style={[wStyles.statusBadgeText, { color: jidConfigured ? '#15803d' : '#b45309' }]}>
+          {jidConfigured ? 'Group configured — Sync active' : 'No target group set — Member sync is disabled'}
+        </Text>
       </View>
 
-      {linkSaved && (
-        <Text style={{ fontSize: 12, fontFamily: 'System', color: '#16a34a', textAlign: 'center' }}>
-          ✅ Target Group Link ਸੇਵ ਹੋ ਗਿਆ!
+      {/* ── Editable group address box ──────────────────────────── */}
+      <View style={wStyles.groupBox}>
+        <Text style={wStyles.groupBoxLabel}>Group Invite Link or JID</Text>
+        <Text style={wStyles.groupBoxHint}>
+          {'Open WhatsApp Group → ⋮ → Group Info → Invite Link → Copy\n'}
+          {'Format: '}
+          <Text style={{ fontFamily: 'monospace', fontSize: 10 }}>https://chat.whatsapp.com/XXX</Text>
+          {'  or JID: '}
+          <Text style={{ fontFamily: 'monospace', fontSize: 10 }}>120363XXXX@g.us</Text>
         </Text>
-      )}
-      {linkError && (
-        <Text style={{ fontSize: 11.5, fontFamily: 'System', color: '#dc2626', textAlign: 'center' }}>
-          {linkError}
-        </Text>
-      )}
 
-      {/* Divider */}
-      <View style={{ height: 1, backgroundColor: '#e9d5ff', marginVertical: 2 }} />
-      <Text style={{ fontSize: 11, color: '#7c3aed', fontFamily: 'System', textAlign: 'center' }}>
-        — ਜਾਂ Bot Connected ਹੋਣ 'ਤੇ List ਤੋਂ Select ਕਰੋ —
-      </Text>
+        <View style={wStyles.inputRow}>
+          <TextInput
+            style={wStyles.groupInput}
+            value={groupInput}
+            onChangeText={(t) => { setGroupInput(t); setGroupError(null); setGroupSaved(false); }}
+            placeholder="https://chat.whatsapp.com/... or JID"
+            placeholderTextColor="#94a3b8"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <TouchableOpacity
+            style={[wStyles.groupSaveBtn, { backgroundColor: groupSaved ? '#16a34a' : '#7c3aed' }]}
+            onPress={handleSaveGroup}
+            disabled={savingGroup}
+          >
+            {savingGroup ? (
+              <ActivityIndicator color="#ffffff" size="small" />
+            ) : groupSaved ? (
+              <Ionicons name="checkmark-circle" size={18} color="#ffffff" />
+            ) : (
+              <Text style={wStyles.groupSaveBtnText}>Save</Text>
+            )}
+          </TouchableOpacity>
+        </View>
 
-      {/* Fetch & Pick Button */}
+        {groupSaved && <Text style={wStyles.successText}>✅ Group address saved successfully!</Text>}
+        {groupError && <Text style={wStyles.errorText}>{groupError}</Text>}
+      </View>
+
+      {/* ── Divider ─────────────────────────────────────────────── */}
+      <View style={wStyles.orRow}>
+        <View style={wStyles.orLine} />
+        <Text style={wStyles.orText}>or select from bot's group list</Text>
+        <View style={wStyles.orLine} />
+      </View>
+
+      {/* ── Select from group list button ───────────────────────── */}
       <TouchableOpacity
-        style={[wStyles.btn, { backgroundColor: '#7c3aed' }]}
+        style={[wStyles.actionBtn, { backgroundColor: status?.isConnected ? '#7c3aed' : '#94a3b8' }]}
         onPress={handleFetchGroups}
         disabled={loadingGroups || !status?.isConnected}
       >
@@ -284,8 +245,10 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
         ) : (
           <>
             <Ionicons name="list-outline" size={16} color="#ffffff" />
-            <Text style={wStyles.btnText}>
-              {status?.isConnected ? '📋 Select Target Group from Bot Groups' : '⚠️ Bot Connected ਹੋਣ ਤੋਂ ਬਾਅਦ List ਦੇਖੋ'}
+            <Text style={wStyles.actionBtnText}>
+              {status?.isConnected
+                ? "📋 Select Group from Bot's Group List"
+                : '⚠️ Connect bot first to browse groups'}
             </Text>
           </>
         )}
@@ -293,30 +256,27 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
 
       {/* Group Picker Modal */}
       <Modal visible={showGroupPicker} transparent animationType="slide" onRequestClose={() => setShowGroupPicker(false)}>
-        <View style={wStyles.pickerOverlay}>
-          <View style={wStyles.pickerCard}>
-            <View style={wStyles.pickerHeader}>
-              <Text style={wStyles.pickerTitle}>📋 Select Target WhatsApp Group</Text>
+        <View style={wStyles.modalOverlay}>
+          <View style={wStyles.modalCard}>
+            <View style={wStyles.modalHeader}>
+              <Text style={wStyles.modalTitle}>📋 Select Target WhatsApp Group</Text>
               <TouchableOpacity onPress={() => setShowGroupPicker(false)}>
                 <Ionicons name="close-circle" size={22} color="#64748b" />
               </TouchableOpacity>
             </View>
-            <Text style={wStyles.pickerSub}>
-              Select a group where active advisor plan farmers will be automatically added and synced:
+            <Text style={wStyles.modalSub}>
+              Select the group where FARMER and ADVISOR members will be automatically added and removed:
             </Text>
             <ScrollView style={{ maxHeight: 380 }} showsVerticalScrollIndicator={false}>
               {groupsList.length === 0 ? (
-                <Text style={wStyles.pickerEmpty}>
+                <Text style={wStyles.emptyText}>
                   ⚠️ No groups found. Make sure the WhatsApp Bot is added as an Admin to your target group.
                 </Text>
               ) : (
                 groupsList.map((group) => (
                   <TouchableOpacity
                     key={group.jid}
-                    style={[
-                      wStyles.groupRow,
-                      savedGroupJid === group.jid && wStyles.groupRowSelected,
-                    ]}
+                    style={[wStyles.groupRow, savedGroupJid === group.jid && wStyles.groupRowSelected]}
                     onPress={() => handleSelectGroup(group)}
                   >
                     <View style={wStyles.groupIcon}>
@@ -338,32 +298,54 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
         </View>
       </Modal>
 
-      {/* Divider */}
+      {/* ══════════════════════════════════════════════════════
+          SECTION 2 — BOT CONNECTION & QR CODE
+      ══════════════════════════════════════════════════════ */}
       <View style={{ height: 1, backgroundColor: '#d1fae5', marginVertical: 2 }} />
 
-      {/* ── Section 2: Bot Link & QR ───────────────────────────── */}
-      <View style={wStyles.panelTitleRow}>
+      <View style={wStyles.sectionHeader}>
         <Ionicons name="qr-code-outline" size={15} color="#0369a1" />
-        <Text style={wStyles.panelTitle}>📲 WhatsApp Bot — Link & Status</Text>
+        <Text style={wStyles.sectionTitle}>📲 WhatsApp Bot — Link & Status</Text>
       </View>
 
       {loading || !status ? (
         <View style={wStyles.centerBox}>
           <ActivityIndicator color="#25d366" />
-          <Text style={wStyles.loadingText}>Checking status...</Text>
+          <Text style={wStyles.loadingText}>Checking connection status...</Text>
         </View>
+
       ) : status.isConnected ? (
+        /* ── CONNECTED ─────────────────────────────── */
         <View style={{ gap: 10 }}>
           <View style={wStyles.connectedBadge}>
             <View style={wStyles.connectedDot} />
-            <Text style={wStyles.connectedText}>🟢 WhatsApp Bot Connected & Active</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={wStyles.connectedText}>🟢 WhatsApp Bot Connected & Active</Text>
+              <Text style={wStyles.connectedSub}>
+                Bot is linked. Auto add/remove reconciliation runs every 30 minutes.
+              </Text>
+            </View>
           </View>
-          <Text style={wStyles.connectedSub}>
-            Bot linked successfully. Automatic member add/remove reconciliation active.
-          </Text>
+
+          <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+            <View style={wStyles.infoChip}>
+              <Ionicons name="shield-checkmark-outline" size={12} color="#0369a1" />
+              <Text style={wStyles.infoChipText}>Session Active</Text>
+            </View>
+            <View style={wStyles.infoChip}>
+              <Ionicons name="sync-outline" size={12} color="#0369a1" />
+              <Text style={wStyles.infoChipText}>Auto-Sync ON</Text>
+            </View>
+            {jidConfigured && (
+              <View style={[wStyles.infoChip, { backgroundColor: '#f0fdf4', borderColor: '#86efac' }]}>
+                <Ionicons name="people-outline" size={12} color="#16a34a" />
+                <Text style={[wStyles.infoChipText, { color: '#15803d' }]}>Group Configured</Text>
+              </View>
+            )}
+          </View>
 
           <TouchableOpacity
-            style={[wStyles.btn, { backgroundColor: '#25d366' }]}
+            style={[wStyles.actionBtn, { backgroundColor: '#25d366' }]}
             onPress={handleManualSync}
             disabled={syncing}
           >
@@ -372,15 +354,15 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
             ) : (
               <>
                 <Ionicons name="sync-outline" size={15} color="#ffffff" />
-                <Text style={wStyles.btnText}>Run Manual Sync Now</Text>
+                <Text style={wStyles.actionBtnText}>🔄 Run Manual Sync Now</Text>
               </>
             )}
           </TouchableOpacity>
 
-          {syncResult ? <Text style={wStyles.syncResultText}>{syncResult}</Text> : null}
+          {syncResult ? <Text style={wStyles.syncText}>{syncResult}</Text> : null}
 
           <TouchableOpacity
-            style={[wStyles.btn, { backgroundColor: '#fee2e2', borderWidth: 1, borderColor: '#fecaca' }]}
+            style={[wStyles.actionBtn, { backgroundColor: '#fee2e2', borderWidth: 1, borderColor: '#fecaca' }]}
             onPress={handleUnlink}
             disabled={unlinking}
           >
@@ -389,37 +371,36 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
             ) : (
               <>
                 <Ionicons name="unlink-outline" size={15} color="#dc2626" />
-                <Text style={[wStyles.btnText, { color: '#dc2626' }]}>Unlink WhatsApp Session</Text>
+                <Text style={[wStyles.actionBtnText, { color: '#dc2626' }]}>Unlink WhatsApp Session</Text>
               </>
             )}
           </TouchableOpacity>
         </View>
+
       ) : status.qrCodeDataUrl ? (
+        /* ── QR CODE ───────────────────────────────── */
         <View style={{ gap: 10, alignItems: 'center' }}>
           <View style={wStyles.qrInstructions}>
-            <Text style={wStyles.qrInstructTitle}>📱 QR Code Scan Steps:</Text>
-            <Text style={wStyles.qrStep}>1️⃣ Open WhatsApp Business on your phone</Text>
-            <Text style={wStyles.qrStep}>2️⃣ Go to Menu (⋮) → Linked Devices</Text>
-            <Text style={wStyles.qrStep}>3️⃣ Tap "Link a Device" and scan the QR below</Text>
+            <Text style={wStyles.qrInstructTitle}>📱 How to link your WhatsApp:</Text>
+            <Text style={wStyles.qrStep}>1️⃣  Open WhatsApp or WhatsApp Business on your phone</Text>
+            <Text style={wStyles.qrStep}>2️⃣  Tap Menu (⋮) → Settings → Linked Devices</Text>
+            <Text style={wStyles.qrStep}>3️⃣  Tap "Link a Device" → scan the QR code below</Text>
+            <Text style={[wStyles.qrStep, { color: '#b45309', marginTop: 4 }]}>
+              ⚠️  The account you link must be Admin in the target group.
+            </Text>
           </View>
-
           <View style={wStyles.qrImageBox}>
-            <Image
-              source={{ uri: status.qrCodeDataUrl }}
-              style={wStyles.qrImage}
-              resizeMode="contain"
-            />
+            <Image source={{ uri: status.qrCodeDataUrl }} style={wStyles.qrImage} resizeMode="contain" />
           </View>
-
-          <Text style={wStyles.qrRefreshNote}>
-            🔄 QR code auto-refreshes every 5 seconds
-          </Text>
+          <Text style={wStyles.qrNote}>🔄 QR code auto-refreshes every 5 seconds — scan quickly</Text>
         </View>
+
       ) : (
+        /* ── GENERATING ────────────────────────────── */
         <View style={wStyles.centerBox}>
           <ActivityIndicator color="#f59e0b" />
           <Text style={[wStyles.loadingText, { color: '#b45309' }]}>
-            ⏳ Generating QR Code... Please wait
+            ⏳ Generating QR Code... Please wait a moment
           </Text>
         </View>
       )}
@@ -427,81 +408,100 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
   );
 }
 
-
 const wStyles = StyleSheet.create({
   panel: {
-    backgroundColor: '#f0fdf4',
-    borderRadius: RADIUS.md,
-    borderWidth: 1.5,
-    borderColor: '#bbf7d0',
-    padding: 14,
-    gap: 8,
+    backgroundColor: '#f0fdf4', borderRadius: RADIUS.md,
+    borderWidth: 1.5, borderColor: '#bbf7d0', padding: 14, gap: 8,
   },
-  panelTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  panelTitle: { fontSize: 13, fontFamily: FONT.extraBold, color: '#0369a1' },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  sectionTitle: { fontSize: 13, fontFamily: FONT.extraBold, color: '#0369a1' },
+
+  // Status badge
+  statusBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: '#f0fdf4', borderRadius: RADIUS.sm,
+    paddingHorizontal: 10, paddingVertical: 6,
+    borderWidth: 1, borderColor: '#bbf7d0',
+  },
+  statusBadgeWarn: { backgroundColor: '#fef3c7', borderColor: '#fde68a' },
+  statusBadgeText: { fontSize: 11.5, fontFamily: FONT.semiBold, flex: 1 },
+
+  // Group address box
+  groupBox: {
+    backgroundColor: '#f5f3ff', borderRadius: RADIUS.md,
+    padding: 12, gap: 6, borderWidth: 1.5, borderColor: '#e9d5ff',
+  },
+  groupBoxLabel: { fontSize: 12, fontFamily: FONT.extraBold, color: '#7c3aed' },
+  groupBoxHint: { fontSize: 10.5, fontFamily: FONT.medium, color: '#5b21b6', lineHeight: 17 },
+  inputRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  groupInput: {
+    flex: 1, borderWidth: 1.5, borderColor: '#c4b5fd',
+    borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 9,
+    fontSize: 12, fontFamily: FONT.medium, backgroundColor: '#ffffff', color: '#0f172a',
+  },
+  groupSaveBtn: {
+    borderRadius: RADIUS.md, paddingHorizontal: 16, paddingVertical: 10,
+    alignItems: 'center', justifyContent: 'center', minWidth: 62,
+  },
+  groupSaveBtnText: { fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' },
+  successText: { fontSize: 12, fontFamily: FONT.semiBold, color: '#16a34a', textAlign: 'center' },
+  errorText: { fontSize: 11.5, fontFamily: FONT.medium, color: '#dc2626', textAlign: 'center' },
+
+  // Or divider
+  orRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  orLine: { flex: 1, height: 1, backgroundColor: '#e9d5ff' },
+  orText: { fontSize: 11, fontFamily: FONT.medium, color: '#7c3aed' },
+
+  // Action buttons
+  actionBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, paddingVertical: 11, borderRadius: RADIUS.md,
+  },
+  actionBtnText: { fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' },
+
+  // Bot connection
   centerBox: { alignItems: 'center', gap: 8, paddingVertical: 12 },
   loadingText: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
   connectedBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
+    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
     backgroundColor: '#dcfce7', borderRadius: RADIUS.md,
-    paddingHorizontal: 12, paddingVertical: 8,
+    paddingHorizontal: 12, paddingVertical: 10,
     borderWidth: 1, borderColor: '#86efac',
   },
-  connectedDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#16a34a' },
+  connectedDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#16a34a', marginTop: 3 },
   connectedText: { fontSize: 13, fontFamily: FONT.bold, color: '#15803d' },
-  connectedSub: { fontSize: 11.5, fontFamily: FONT.medium, color: '#166534' },
-  btn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 6, paddingVertical: 10, borderRadius: RADIUS.md,
+  connectedSub: { fontSize: 11, fontFamily: FONT.medium, color: '#166534', marginTop: 2 },
+  infoChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: '#eff6ff', borderRadius: 999,
+    paddingHorizontal: 8, paddingVertical: 4,
+    borderWidth: 1, borderColor: '#bae6fd',
   },
-  btnText: { fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' },
-  syncResultText: { fontSize: 12, fontFamily: FONT.semiBold, color: '#15803d', textAlign: 'center' },
+  infoChipText: { fontSize: 10.5, fontFamily: FONT.bold, color: '#0369a1' },
+  syncText: { fontSize: 12, fontFamily: FONT.semiBold, color: '#15803d', textAlign: 'center' },
+
+  // QR code
   qrInstructions: {
     backgroundColor: '#eff6ff', borderRadius: RADIUS.md,
-    padding: 10, gap: 3, width: '100%',
+    padding: 12, gap: 4, width: '100%',
     borderWidth: 1, borderColor: '#bae6fd',
   },
   qrInstructTitle: { fontSize: 12, fontFamily: FONT.extraBold, color: '#0369a1', marginBottom: 2 },
   qrStep: { fontSize: 11.5, fontFamily: FONT.medium, color: '#1e40af' },
   qrImageBox: {
     backgroundColor: '#ffffff', padding: 10,
-    borderRadius: RADIUS.lg, borderWidth: 2, borderColor: '#25d366',
+    borderRadius: RADIUS.lg, borderWidth: 2.5, borderColor: '#25d366',
   },
   qrImage: { width: 220, height: 220 },
-  qrRefreshNote: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b' },
-  // JID styles
-  jidHelpBox: {
-    backgroundColor: '#f5f3ff', borderRadius: RADIUS.md,
-    padding: 10, gap: 4,
-    borderWidth: 1, borderColor: '#e9d5ff',
-  },
-  jidHelpTitle: { fontSize: 11.5, fontFamily: FONT.extraBold, color: '#7c3aed', marginBottom: 1 },
-  jidHelpText: { fontSize: 11, fontFamily: FONT.medium, color: '#5b21b6', lineHeight: 16 },
-  jidLabel: { fontSize: 11.5, fontFamily: FONT.bold, color: '#334155' },
-  jidInputRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-  jidInput: {
-    flex: 1, borderWidth: 1.5, borderColor: '#e2e8f0',
-    borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 8,
-    fontSize: 12, fontFamily: FONT.medium, backgroundColor: '#f8fafc', color: '#0f172a',
-  },
-  jidSaveBtn: {
-    backgroundColor: '#7c3aed', borderRadius: RADIUS.md,
-    paddingHorizontal: 14, paddingVertical: 9, alignItems: 'center', justifyContent: 'center',
-  },
-  jidSaveBtnText: { fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' },
-  jidSavedBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: '#f0fdf4', borderRadius: RADIUS.sm,
-    paddingHorizontal: 8, paddingVertical: 5,
-    borderWidth: 1, borderColor: '#bbf7d0',
-  },
-  jidSavedText: { fontSize: 11, fontFamily: FONT.semiBold, color: '#15803d', flex: 1 },
-  pickerOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.65)', justifyContent: 'center', alignItems: 'center', padding: 16 },
-  pickerCard: { width: '100%', maxWidth: 440, backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 16, gap: 10, ...premiumShadow('#000000', 'lg') },
-  pickerHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  pickerTitle: { fontSize: 15, fontFamily: FONT.extraBold, color: '#0f172a' },
-  pickerSub: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
-  pickerEmpty: { fontSize: 12, fontFamily: FONT.medium, color: '#b45309', textAlign: 'center', paddingVertical: 16 },
+  qrNote: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b' },
+
+  // Group picker modal
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.65)', justifyContent: 'center', alignItems: 'center', padding: 16 },
+  modalCard: { width: '100%', maxWidth: 440, backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 16, gap: 10, ...premiumShadow('#000000', 'lg') },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  modalTitle: { fontSize: 15, fontFamily: FONT.extraBold, color: '#0f172a' },
+  modalSub: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
+  emptyText: { fontSize: 12, fontFamily: FONT.medium, color: '#b45309', textAlign: 'center', paddingVertical: 16 },
   groupRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 8, backgroundColor: '#f8fafc' },
   groupRowSelected: { backgroundColor: '#f0fdf4', borderColor: '#86efac' },
   groupIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#f3e8ff', alignItems: 'center', justifyContent: 'center' },

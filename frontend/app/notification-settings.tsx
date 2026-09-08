@@ -77,6 +77,8 @@ export default function NotificationSettingsScreen() {
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Could not save your settings.');
     }
+  };
+
   const handleGoBack = () => {
     if (router.canGoBack()) {
       router.back();

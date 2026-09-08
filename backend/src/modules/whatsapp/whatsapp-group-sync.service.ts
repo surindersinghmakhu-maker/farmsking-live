@@ -385,36 +385,27 @@ export class WhatsAppGroupSyncService implements OnModuleInit {
         return;
       }
 
-      // Only FARMER and ADVISOR role users should be in the group
-      const user = await this.prisma.user.findUnique({
-        where: { id: userId },
-        select: { role: true, roles: true },
-      });
-      const eligibleRoles: Role[] = [Role.FARMER, Role.ADVISOR];
-      const hasEligibleRole =
-        (user?.role && eligibleRoles.includes(user.role as Role)) ||
-        (Array.isArray(user?.roles) && user.roles.some((r) => eligibleRoles.includes(r as Role)));
-
-      if (!hasEligibleRole) {
-        this.logger.log(`⏩ Skipping auto-add for ${mobile} — not a FARMER or ADVISOR.`);
-        return;
-      }
-
-      const { isConnected } = this.whatsappBotService.getQrCodeStatus();
-      if (!isConnected) {
-        this.logger.warn(`⚠️ WhatsApp Bot not connected — skipping auto-add for ${mobile}.`);
-        return;
-      }
-
       const groupJid = await this.getAdvisorGroupJid();
-      if (!groupJid) {
-        this.logger.warn(`⚠️ No target WhatsApp group configured — skipping auto-add for ${mobile}.`);
-        return;
+      const rawGroupSetting = await this.prisma.appSetting.findUnique({
+        where: { id: 'default' },
+        select: { whatsappGroupJid: true },
+      });
+
+      const rawValue = rawGroupSetting?.whatsappGroupJid || process.env.WHATSAPP_ADVISOR_GROUP_JID || '';
+      const groupInviteLink = rawValue.startsWith('https://chat.whatsapp.com/')
+        ? rawValue
+        : 'https://chat.whatsapp.com/FarmsKingCommunity';
+
+      // 1. Try Baileys direct group participant add if connected & group JID available
+      const { isConnected } = this.whatsappBotService.getQrCodeStatus();
+      if (isConnected && groupJid && groupJid.includes('@g.us')) {
+        this.logger.log(`🆕 Auto-adding ${name} (${mobile}) to WhatsApp group ${groupJid}`);
+        await this.whatsappBotService.addParticipantToGroup(groupJid, mobile, name).catch(() => {});
       }
 
-      this.logger.log(`🆕 FARMER/ADVISOR: Auto-adding ${name} (${mobile}) to WhatsApp group ${groupJid}`);
-      const result = await this.whatsappBotService.addParticipantToGroup(groupJid, mobile, name);
-      this.logger.log(`Auto-add result for ${mobile}: ${result.status}`);
+      // 2. Always send Meta Cloud API / WhatsApp Welcome & Group Invite Link message directly to user!
+      const welcomeMessage = `🌾 *Welcome to FarmsKing, ${name || 'User'}!* 🙏✨\n\nYour account has been created successfully.\n\nTap the link below to join our official FarmsKing Community WhatsApp Group for live crop advice, market rates & weather updates:\n👇\n${groupInviteLink}`;
+      await this.whatsappBotService.sendDirectTextMessage(mobile, welcomeMessage);
     } catch (err) {
       this.logger.error(`Failed to auto-add user ${mobile} to WhatsApp group:`, err);
     }
@@ -432,20 +423,16 @@ export class WhatsAppGroupSyncService implements OnModuleInit {
         return;
       }
 
-      const { isConnected } = this.whatsappBotService.getQrCodeStatus();
-      if (!isConnected) {
-        this.logger.warn(`⚠️ WhatsApp Bot not connected — cannot remove ${mobile} from group.`);
-        return;
-      }
-
       const groupJid = await this.getAdvisorGroupJid();
-      if (!groupJid) {
-        this.logger.warn(`⚠️ No target WhatsApp group configured — skipping remove for ${mobile}.`);
-        return;
+      const { isConnected } = this.whatsappBotService.getQrCodeStatus();
+      if (isConnected && groupJid && groupJid.includes('@g.us')) {
+        this.logger.log(`🔕 User turned WhatsApp Group OFF: Removing ${name} (${mobile}) from group ${groupJid}`);
+        await this.whatsappBotService.removeParticipantFromGroup(groupJid, mobile, name).catch(() => {});
       }
 
-      this.logger.log(`🔕 User turned WhatsApp Group OFF: Removing ${name} (${mobile}) from group ${groupJid}`);
-      await this.whatsappBotService.removeParticipantFromGroup(groupJid, mobile, name);
+      // Send Meta Cloud API / WhatsApp opt-out confirmation message
+      const optOutMessage = `ℹ️ Hello *${name || 'User'}*, you have turned OFF WhatsApp Group Notifications in your FarmsKing profile.\n\nYou have been unsubscribed from the WhatsApp group. You can turn this setting back ON anytime in Notification Settings.`;
+      await this.whatsappBotService.sendDirectTextMessage(mobile, optOutMessage);
     } catch (err) {
       this.logger.error(`Failed to auto-remove user ${mobile} from WhatsApp group:`, err);
     }

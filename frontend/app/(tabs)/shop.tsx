@@ -1498,14 +1498,18 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
 
                 {/* Crop Filter Bar */}
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
-                  {['All', 'Seeds', 'Fertilizers', 'Crop Protection', 'Farm Machinery & Tools', 'Bio & Organics'].map((cropCat) => {
+                  {['All', 'Hidden / Off', 'Seeds', 'Fertilizers', 'Crop Protection', 'Farm Machinery & Tools', 'Bio & Organics'].map((cropCat) => {
                     const isActive = activeCropFilter === cropCat;
+                    const isHiddenBtn = cropCat === 'Hidden / Off';
                     return (
                       <TouchableOpacity
                         key={cropCat}
                         style={[
                           styles.filterChip,
-                          isActive && { backgroundColor: '#0284c7', borderColor: '#0369a1' },
+                          isActive && {
+                            backgroundColor: isHiddenBtn ? '#dc2626' : '#0284c7',
+                            borderColor: isHiddenBtn ? '#b91c1c' : '#0369a1',
+                          },
                         ]}
                         onPress={() => setActiveCropFilter(cropCat)}
                       >
@@ -1516,7 +1520,11 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                 </ScrollView>
 
                 {filteredProducts
-                  .filter((p) => activeCropFilter === 'All' || (p.category && (p.category.toLowerCase().includes(activeCropFilter.toLowerCase()) || activeCropFilter.toLowerCase().includes(p.category.toLowerCase()))))
+                  .filter((p) => {
+                    if (activeCropFilter === 'Hidden / Off') return !p.isActive;
+                    if (activeCropFilter === 'All') return true;
+                    return p.category && (p.category.toLowerCase().includes(activeCropFilter.toLowerCase()) || activeCropFilter.toLowerCase().includes(p.category.toLowerCase()));
+                  })
                   .map((p) => {
                     const isLow = p.stockQty > 0 && p.stockQty < 5;
                     const isOut = p.stockQty <= 0;

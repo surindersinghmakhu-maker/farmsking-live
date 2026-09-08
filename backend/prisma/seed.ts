@@ -324,7 +324,7 @@ async function main() {
     }));
 
   const demoCoupon =
-    (await prisma.coupon.findFirst({ where: { businessPartnerId: demoPartnerUser.id, code: 'DEMO-PARTNER10' } })) ??
+    (await prisma.coupon.findUnique({ where: { code: 'DEMO-PARTNER10' } })) ??
     (await prisma.coupon.create({
       data: {
         code: 'DEMO-PARTNER10',

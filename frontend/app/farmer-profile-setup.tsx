@@ -1,14 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { PickerModal } from '@/src/components/PickerModal';
 import { SOIL_TYPE_OPTIONS, SPRAY_TANK_SIZE_OPTIONS, WATER_TYPE_OPTIONS } from '@/src/constants/farmerProfileOptions';
 import { useFarmerProfileStatus, useUpdateFarmerProfile } from '@/src/hooks/useFarmerProfile';
+import { useUpdateMyAddress } from '@/src/hooks/useAdvisorProfile';
 import { useAuth } from '@/src/store/auth-context';
 import { uploadPhoto } from '@/src/api/uploads.api';
 import { resolveMediaUrl } from '@/src/api/client';
@@ -16,16 +18,22 @@ import { SoilType, SprayTankSizeL, WaterType } from '@/src/types/api';
 
 const theme = RoleThemes.FARMER;
 
+const tap = () => {
+  if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+};
+
 export default function FarmerProfileSetupScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { data: status } = useFarmerProfileStatus();
   const updateProfile = useUpdateFarmerProfile();
+  const updateAddress = useUpdateMyAddress();
 
   const [sprayTankSizeL, setSprayTankSizeL] = useState<SprayTankSizeL | null>(status?.profile.sprayTankSizeL ?? null);
   const [soilType, setSoilType] = useState<SoilType | null>(status?.profile.soilType ?? null);
   const [waterType, setWaterType] = useState<WaterType | null>(status?.profile.waterType ?? null);
   const [billPrintingAddress, setBillPrintingAddress] = useState<string>(user?.billPrintingAddress ?? '');
+  const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState<boolean>(user?.whatsappGroupEnabled ?? true);
 
   const [isSoilPickerOpen, setIsSoilPickerOpen] = useState(false);
   const [isWaterPickerOpen, setIsWaterPickerOpen] = useState(false);
@@ -38,6 +46,7 @@ export default function FarmerProfileSetupScreen() {
       setSoilType(status.profile.soilType);
       setWaterType(status.profile.waterType);
       if (user?.billPrintingAddress) setBillPrintingAddress(user.billPrintingAddress);
+      if (user?.whatsappGroupEnabled !== undefined) setWhatsappGroupEnabled(user.whatsappGroupEnabled);
     }
   }, [status, user]);
 
@@ -48,13 +57,20 @@ export default function FarmerProfileSetupScreen() {
 
   const handleSave = async () => {
     if (!canSave) return;
+    tap();
     try {
-      await updateProfile.mutateAsync({
-        sprayTankSizeL: sprayTankSizeL!,
-        soilType: soilType!,
-        waterType: waterType!,
-        billPrintingAddress: billPrintingAddress.trim() || undefined,
-      });
+      await Promise.all([
+        updateProfile.mutateAsync({
+          sprayTankSizeL: sprayTankSizeL!,
+          soilType: soilType!,
+          waterType: waterType!,
+          billPrintingAddress: billPrintingAddress.trim() || undefined,
+        }),
+        updateAddress.mutateAsync({
+          billPrintingAddress: billPrintingAddress.trim() || undefined,
+          whatsappGroupEnabled,
+        }),
+      ]);
       router.back();
     } catch (error) {
       Alert.alert('Could not save', 'Something went wrong while saving your details. Please try again.');
@@ -68,7 +84,7 @@ export default function FarmerProfileSetupScreen() {
         <TouchableOpacity style={styles.backBtn} activeOpacity={0.75} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color="#ffffff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Farm & Spray Tank Setup</Text>
+        <Text style={styles.headerTitle}>Farmer Special Profile</Text>
         <View style={{ width: 34 }} />
       </LinearGradient>
 
@@ -118,7 +134,7 @@ export default function FarmerProfileSetupScreen() {
 
       {/* Bill Printing Address */}
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>Bill Printing Address (ਬਿੱਲ 'ਤੇ ਪ੍ਰਿੰਟ ਹੋਣ ਵਾਲਾ ਪਤਾ)</Text>
+        <Text style={styles.sectionLabel}>Bill Printing Address (Printed on Bill)</Text>
         <View style={styles.selectField}>
           <Ionicons name="document-text-outline" size={18} color="#64748b" style={{ marginRight: 8 }} />
           <TextInput
@@ -129,6 +145,30 @@ export default function FarmerProfileSetupScreen() {
             onChangeText={setBillPrintingAddress}
           />
         </View>
+      </View>
+
+      {/* WhatsApp Group Toggle */}
+      <View style={styles.whatsappGroupToggleCard}>
+        <View style={{ flex: 1, paddingRight: 10 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+            <Ionicons name="logo-whatsapp" size={18} color="#25D366" />
+            <Text style={styles.whatsappGroupToggleTitle}>WhatsApp Group Membership</Text>
+          </View>
+          <Text style={styles.whatsappGroupToggleSubtitle}>
+            {whatsappGroupEnabled
+              ? 'ON (Default): Auto-added to official WhatsApp group'
+              : 'OFF: Immediately removed from official WhatsApp group'}
+          </Text>
+        </View>
+        <Switch
+          value={whatsappGroupEnabled}
+          onValueChange={(val) => {
+            tap();
+            setWhatsappGroupEnabled(val);
+          }}
+          trackColor={{ false: '#cbd5e1', true: '#86efac' }}
+          thumbColor={whatsappGroupEnabled ? '#16a34a' : '#f8fafc'}
+        />
       </View>
 
           <TouchableOpacity
@@ -205,6 +245,27 @@ const styles = StyleSheet.create({
   },
   selectFieldText: { fontSize: 14, fontFamily: FONT.medium, color: '#0f172a' },
   selectFieldPlaceholder: { color: '#94a3b8' },
+  whatsappGroupToggleCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    borderRadius: RADIUS.md,
+    padding: 12,
+    marginTop: 4,
+  },
+  whatsappGroupToggleTitle: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  whatsappGroupToggleSubtitle: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
   saveButton: {
     backgroundColor: theme.primary,
     borderRadius: RADIUS.lg,

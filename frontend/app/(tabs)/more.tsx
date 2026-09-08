@@ -33,7 +33,7 @@ type AccountItem = { key: TranslationKey; label: string; icon: keyof typeof Ioni
 const MY_PROFILE_ITEM: AccountItem = { key: 'myProfile', label: 'My Profile', icon: 'person-outline', href: '/profile?tab=PROFILE' };
 const MY_ADDRESSES_ITEM: AccountItem = { key: 'myAddresses' as any, label: 'My Addresses', icon: 'location-outline', href: '/profile?tab=ADDRESSES' };
 const NOTIFICATIONS_ITEM: AccountItem = { key: 'notifications', label: 'Notification & Weather Preferences', icon: 'notifications-outline', href: '/notification-settings' };
-const FARMER_ONLY_ITEM: AccountItem = { key: 'editFarmProfile', label: 'Farm Setup & Spray Tank', icon: 'flask-outline', href: '/farmer-profile-setup' };
+const FARMER_ONLY_ITEM: AccountItem = { key: 'editFarmProfile', label: 'Farmer Special Profile', icon: 'flask-outline', href: '/farmer-profile-setup' };
 const LABOUR_ITEM: AccountItem = { key: 'tabLabour' as any, label: 'Labour & Worker Management', icon: 'people-outline', href: '/(tabs)/records' };
 const ADVISOR_PROFILE_ITEM: AccountItem = { key: 'advisorProfile', label: 'Advisor Profile', icon: 'briefcase-outline', href: '/advisor-profile' };
 

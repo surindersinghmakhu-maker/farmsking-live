@@ -12,6 +12,10 @@ export declare class WhatsappBotService implements OnModuleInit {
     };
     unlinkSession(): Promise<boolean>;
     sendOtpMessage(mobileNumber: string, otpCode: string): Promise<boolean>;
+    getGroupInfoFromInviteCode(inviteCode: string): Promise<{
+        id: string;
+        subject: string;
+    } | null>;
     formatJid(mobileNumber: string): string;
     sendDirectTextMessage(mobileNumber: string, text: string): Promise<boolean>;
     getGroupParticipants(groupJid: string): Promise<string[]>;

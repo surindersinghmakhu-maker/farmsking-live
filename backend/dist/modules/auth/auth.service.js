@@ -136,6 +136,8 @@ let AuthService = class AuthService {
             await (0, referral_coupon_util_1.provisionReferralWelcomeCoupon)(this.prisma, user.id, referrer.id);
         }
         const finalUser = await this.applyAccountType(user.id, dto.accountType);
+        const welcomeMsg = `🌾 *Welcome to FarmsKing!* 🙏✨\n\nHello *${dto.name}* ji,\nYour FarmsKing account has been created successfully!\n\n🔑 *King ID:* ${kingId}\n📱 *Registered Mobile:* ${dto.mobile}\n\nThank you for choosing FarmsKing!`;
+        this.whatsappBotService.sendDirectTextMessage(dto.mobile, welcomeMsg).catch(() => { });
         return this.buildAuthResponse(finalUser ?? user);
     }
     async applyAccountType(userId, accountType) {

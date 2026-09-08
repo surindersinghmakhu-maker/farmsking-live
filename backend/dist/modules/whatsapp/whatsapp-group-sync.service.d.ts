@@ -19,6 +19,7 @@ export declare class WhatsAppGroupSyncService implements OnModuleInit {
     private syncIntervalMs;
     constructor(prisma: PrismaService, whatsappBotService: WhatsappBotService, configService: ConfigService);
     onModuleInit(): Promise<void>;
+    resolveGroupJidFromValue(value: string): Promise<string>;
     getAdvisorGroupJid(advisorId?: string): Promise<string>;
     getSyncSettings(): Promise<{
         isEnabled: boolean;

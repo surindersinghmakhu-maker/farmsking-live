@@ -37,6 +37,42 @@ let WhatsAppGroupSyncService = WhatsAppGroupSyncService_1 = class WhatsAppGroupS
             this.syncAdvisorWhatsAppGroup().catch((err) => this.logger.error('Scheduled WhatsApp group sync failed:', err));
         }, this.syncIntervalMs);
     }
+    async resolveGroupJidFromValue(value) {
+        const trimmed = value.trim();
+        if (!trimmed)
+            return '';
+        if (trimmed.includes('@g.us'))
+            return trimmed;
+        if (trimmed.startsWith('https://chat.whatsapp.com/')) {
+            const code = trimmed.replace('https://chat.whatsapp.com/', '').split('?')[0].trim();
+            if (!code)
+                return '';
+            try {
+                const { isConnected } = this.whatsappBotService.getQrCodeStatus();
+                if (!isConnected) {
+                    this.logger.warn(`WhatsApp Bot not connected — cannot resolve invite link code: ${code}`);
+                    return '';
+                }
+                const info = await this.whatsappBotService.socket?.groupGetInviteInfo(code);
+                if (info?.id) {
+                    this.logger.log(`Resolved invite link code ${code} to group JID: ${info.id}`);
+                    try {
+                        await this.prisma.appSetting.updateMany({
+                            where: { id: 'default', whatsappGroupJid: trimmed },
+                            data: { whatsappGroupJid: info.id },
+                        });
+                    }
+                    catch { }
+                    return info.id;
+                }
+            }
+            catch (err) {
+                this.logger.error(`Failed to resolve WhatsApp invite link ${trimmed}:`, err);
+            }
+            return '';
+        }
+        return trimmed;
+    }
     async getAdvisorGroupJid(advisorId) {
         if (advisorId) {
             try {
@@ -45,7 +81,7 @@ let WhatsAppGroupSyncService = WhatsAppGroupSyncService_1 = class WhatsAppGroupS
                     select: { whatsappGroupJid: true },
                 });
                 if (advisor?.whatsappGroupJid) {
-                    return advisor.whatsappGroupJid.trim();
+                    return this.resolveGroupJidFromValue(advisor.whatsappGroupJid);
                 }
             }
             catch { }
@@ -55,7 +91,7 @@ let WhatsAppGroupSyncService = WhatsAppGroupSyncService_1 = class WhatsAppGroupS
                 where: { id: 'default' },
             });
             if (settings?.whatsappGroupJid) {
-                return settings.whatsappGroupJid.trim();
+                return this.resolveGroupJidFromValue(settings.whatsappGroupJid);
             }
         }
         catch { }

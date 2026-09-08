@@ -145,6 +145,23 @@ let WhatsappBotService = WhatsappBotService_1 = class WhatsappBotService {
             return false;
         }
     }
+    async getGroupInfoFromInviteCode(inviteCode) {
+        if (!this.socket || !this.isConnected) {
+            this.logger.warn('WhatsApp Bot not connected. Cannot resolve invite code.');
+            return null;
+        }
+        try {
+            const info = await this.socket.groupGetInviteInfo(inviteCode);
+            if (info?.id) {
+                return { id: info.id, subject: info.subject || '' };
+            }
+            return null;
+        }
+        catch (err) {
+            this.logger.error(`Failed to get group info for invite code ${inviteCode}:`, err);
+            return null;
+        }
+    }
     formatJid(mobileNumber) {
         const cleanMobile = mobileNumber.replace(/\D/g, '');
         return `${cleanMobile.startsWith('91') ? cleanMobile : '91' + cleanMobile}@s.whatsapp.net`;

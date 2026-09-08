@@ -50,6 +50,12 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
   const [savingJid, setSavingJid] = useState(false);
   const [jidSaved, setJidSaved] = useState(false);
 
+  // Manual paste link/JID state
+  const [linkInput, setLinkInput] = useState('');
+  const [savingLink, setSavingLink] = useState(false);
+  const [linkSaved, setLinkSaved] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
+
   // Sync jidInput when savedGroupJid changes (e.g. on first load)
   useEffect(() => { setJidInput(savedGroupJid); }, [savedGroupJid]);
 
@@ -116,6 +122,44 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
     }
   };
 
+  /**
+   * Save from manual paste: accepts WhatsApp invite link or raw JID
+   * e.g. https://chat.whatsapp.com/XXXXXX  → saved as invite URL for backend
+   *      120363XXXXXXXXXX@g.us              → saved as JID directly
+   */
+  const handleSavePastedLink = async () => {
+    setLinkError(null);
+    const raw = linkInput.trim();
+    if (!raw) {
+      setLinkError('⚠️ ਕਿਰਪਾ ਕਰਕੇ WhatsApp Group Link ਜਾਂ JID ਪੇਸਟ ਕਰੋ।');
+      return;
+    }
+
+    // Accept invite link or JID
+    const isInviteLink = raw.startsWith('https://chat.whatsapp.com/');
+    const isJid = raw.includes('@g.us');
+
+    if (!isInviteLink && !isJid) {
+      setLinkError('⚠️ Invalid format. ਸਿਰਫ਼ https://chat.whatsapp.com/... link ਜਾਂ Group JID (xxx@g.us) ਪੇਸਟ ਕਰੋ।');
+      return;
+    }
+
+    setSavingLink(true);
+    setLinkSaved(false);
+    try {
+      // For invite links, store the full URL as the JID field (backend can handle)
+      // For @g.us JIDs, pass directly
+      await onSaveJid(raw);
+      setLinkSaved(true);
+      setLinkInput('');
+      setTimeout(() => setLinkSaved(false), 4000);
+    } catch {
+      setLinkError('⚠️ Save failed. ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।');
+    } finally {
+      setSavingLink(false);
+    }
+  };
+
   const jidConfigured = savedGroupJid && savedGroupJid !== 'NOT_CONFIGURED' && savedGroupJid !== '';
 
   // Fetch groups list from bot
@@ -171,6 +215,64 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
         </View>
       )}
 
+      {/* ── Manual Paste Link / JID ───────────────────────── */}
+      <View style={wStyles.jidHelpBox}>
+        <Text style={wStyles.jidHelpTitle}>📎 WhatsApp Group Link Paste ਕਰੋ</Text>
+        <Text style={wStyles.jidHelpText}>
+          WhatsApp Group ਖੋਲ੍ਹੋ → Info → Invite Link Copy ਕਰੋ ਅਤੇ ਹੇਠਾਂ Paste ਕਰੋ।{`
+`}
+          Format: <Text style={{ fontFamily: 'monospace', fontSize: 10 }}>https://chat.whatsapp.com/XXX</Text>{`
+`}
+          ਜਾਂ Group JID: <Text style={{ fontFamily: 'monospace', fontSize: 10 }}>120363XXXX@g.us</Text>
+        </Text>
+      </View>
+
+      <View style={wStyles.jidInputRow}>
+        <TextInput
+          style={[wStyles.jidInput, { flex: 1 }]}
+          value={linkInput}
+          onChangeText={(t) => { setLinkInput(t); setLinkError(null); }}
+          placeholder="https://chat.whatsapp.com/... ਜਾਂ JID paste ਕਰੋ"
+          placeholderTextColor="#94a3b8"
+          autoCapitalize="none"
+          autoCorrect={false}
+          multiline={false}
+        />
+        <TouchableOpacity
+          style={[
+            wStyles.jidSaveBtn,
+            { backgroundColor: linkSaved ? '#16a34a' : '#7c3aed' },
+          ]}
+          onPress={handleSavePastedLink}
+          disabled={savingLink}
+        >
+          {savingLink ? (
+            <ActivityIndicator color="#ffffff" size="small" />
+          ) : linkSaved ? (
+            <Ionicons name="checkmark-circle" size={18} color="#ffffff" />
+          ) : (
+            <Text style={wStyles.jidSaveBtnText}>Save</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {linkSaved && (
+        <Text style={{ fontSize: 12, fontFamily: 'System', color: '#16a34a', textAlign: 'center' }}>
+          ✅ Target Group Link ਸੇਵ ਹੋ ਗਿਆ!
+        </Text>
+      )}
+      {linkError && (
+        <Text style={{ fontSize: 11.5, fontFamily: 'System', color: '#dc2626', textAlign: 'center' }}>
+          {linkError}
+        </Text>
+      )}
+
+      {/* Divider */}
+      <View style={{ height: 1, backgroundColor: '#e9d5ff', marginVertical: 2 }} />
+      <Text style={{ fontSize: 11, color: '#7c3aed', fontFamily: 'System', textAlign: 'center' }}>
+        — ਜਾਂ Bot Connected ਹੋਣ 'ਤੇ List ਤੋਂ Select ਕਰੋ —
+      </Text>
+
       {/* Fetch & Pick Button */}
       <TouchableOpacity
         style={[wStyles.btn, { backgroundColor: '#7c3aed' }]}
@@ -183,7 +285,7 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
           <>
             <Ionicons name="list-outline" size={16} color="#ffffff" />
             <Text style={wStyles.btnText}>
-              {status?.isConnected ? '📋 Select Target Group from Bot Groups' : '⚠️ Connect WhatsApp Bot First'}
+              {status?.isConnected ? '📋 Select Target Group from Bot Groups' : '⚠️ Bot Connected ਹੋਣ ਤੋਂ ਬਾਅਦ List ਦੇਖੋ'}
             </Text>
           </>
         )}

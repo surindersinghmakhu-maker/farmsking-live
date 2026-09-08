@@ -45,6 +45,49 @@ export class WhatsAppGroupSyncService implements OnModuleInit {
   }
 
   /**
+   * If stored value is a WhatsApp invite link (https://chat.whatsapp.com/CODE),
+   * resolve it to the actual group JID using Baileys groupGetInviteInfo().
+   * Otherwise return the value as-is (already a JID or empty string).
+   */
+  async resolveGroupJidFromValue(value: string): Promise<string> {
+    const trimmed = value.trim();
+    if (!trimmed) return '';
+
+    // If it's already a JID like 120363XXXXXX@g.us return directly
+    if (trimmed.includes('@g.us')) return trimmed;
+
+    // If it's a WhatsApp invite link, extract invite code and resolve
+    if (trimmed.startsWith('https://chat.whatsapp.com/')) {
+      const code = trimmed.replace('https://chat.whatsapp.com/', '').split('?')[0].trim();
+      if (!code) return '';
+      try {
+        const { isConnected } = this.whatsappBotService.getQrCodeStatus();
+        if (!isConnected) {
+          this.logger.warn(`WhatsApp Bot not connected — cannot resolve invite link code: ${code}`);
+          return '';
+        }
+        const info = await this.whatsappBotService.getGroupInfoFromInviteCode(code);
+        if (info?.id) {
+          this.logger.log(`Resolved invite link code ${code} to group JID: ${info.id}`);
+          // Persist the resolved JID back to AppSetting so future lookups are instant
+          try {
+            await this.prisma.appSetting.updateMany({
+              where: { id: 'default', whatsappGroupJid: trimmed },
+              data: { whatsappGroupJid: info.id },
+            });
+          } catch {}
+          return info.id;
+        }
+      } catch (err) {
+        this.logger.error(`Failed to resolve WhatsApp invite link ${trimmed}:`, err);
+      }
+      return '';
+    }
+
+    return trimmed;
+  }
+
+  /**
    * Get target Advisor WhatsApp Group JID from specific Advisor user, AppSetting DB, or .env fallback
    */
   async getAdvisorGroupJid(advisorId?: string): Promise<string> {
@@ -55,7 +98,7 @@ export class WhatsAppGroupSyncService implements OnModuleInit {
           select: { whatsappGroupJid: true },
         });
         if (advisor?.whatsappGroupJid) {
-          return advisor.whatsappGroupJid.trim();
+          return this.resolveGroupJidFromValue(advisor.whatsappGroupJid);
         }
       } catch {}
     }
@@ -65,7 +108,7 @@ export class WhatsAppGroupSyncService implements OnModuleInit {
         where: { id: 'default' },
       });
       if (settings?.whatsappGroupJid) {
-        return settings.whatsappGroupJid.trim();
+        return this.resolveGroupJidFromValue(settings.whatsappGroupJid);
       }
     } catch {}
 

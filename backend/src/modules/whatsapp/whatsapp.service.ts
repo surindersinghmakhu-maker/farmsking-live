@@ -121,6 +121,27 @@ export class WhatsappBotService implements OnModuleInit {
   }
 
   /**
+   * Resolve a WhatsApp group invite code (from invite link) to group JID
+   * Code is the part after https://chat.whatsapp.com/
+   */
+  async getGroupInfoFromInviteCode(inviteCode: string): Promise<{ id: string; subject: string } | null> {
+    if (!this.socket || !this.isConnected) {
+      this.logger.warn('WhatsApp Bot not connected. Cannot resolve invite code.');
+      return null;
+    }
+    try {
+      const info = await this.socket.groupGetInviteInfo(inviteCode);
+      if (info?.id) {
+        return { id: info.id, subject: info.subject || '' };
+      }
+      return null;
+    } catch (err) {
+      this.logger.error(`Failed to get group info for invite code ${inviteCode}:`, err);
+      return null;
+    }
+  }
+
+  /**
    * Helper to format mobile number into standard Baileys JID (e.g. 919876543210@s.whatsapp.net)
    */
   formatJid(mobileNumber: string): string {

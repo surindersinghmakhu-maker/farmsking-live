@@ -1,0 +1,83 @@
+import type { AuthUser } from '../../common/types/auth-user.type';
+import { SprayScheduleService } from './spray-schedules.service';
+import { CreateSprayScheduleDto } from './dto/create-spray-schedule.dto';
+import { UpdateSprayScheduleDto } from './dto/update-spray-schedule.dto';
+export declare class SprayScheduleController {
+    private readonly sprayScheduleService;
+    constructor(sprayScheduleService: SprayScheduleService);
+    create(user: AuthUser, dto: CreateSprayScheduleDto): Promise<{
+        id: string;
+        status: import(".prisma/client").$Enums.SprayScheduleStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        notes: string | null;
+        recommendedProduct: string | null;
+        cropCycleId: string;
+        sprayType: import(".prisma/client").$Enums.SprayType | null;
+        scheduledDate: Date;
+        dosageInstructions: string | null;
+        alternativeOption: string | null;
+        alternativeOption2: string | null;
+        createdByAdvisorId: string;
+        completedSprayId: string | null;
+    }>;
+    searchCatalog(q?: string): Promise<{
+        id: string;
+        name: string;
+        createdAt: Date;
+        deletedAt: Date | null;
+        sprayType: import(".prisma/client").$Enums.SprayType | null;
+    }[]>;
+    listForCrop(user: AuthUser, cropCycleId: string): Promise<{
+        id: string;
+        status: import(".prisma/client").$Enums.SprayScheduleStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        notes: string | null;
+        recommendedProduct: string | null;
+        cropCycleId: string;
+        sprayType: import(".prisma/client").$Enums.SprayType | null;
+        scheduledDate: Date;
+        dosageInstructions: string | null;
+        alternativeOption: string | null;
+        alternativeOption2: string | null;
+        createdByAdvisorId: string;
+        completedSprayId: string | null;
+    }[]>;
+    update(user: AuthUser, id: string, dto: UpdateSprayScheduleDto): Promise<{
+        id: string;
+        status: import(".prisma/client").$Enums.SprayScheduleStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        notes: string | null;
+        recommendedProduct: string | null;
+        cropCycleId: string;
+        sprayType: import(".prisma/client").$Enums.SprayType | null;
+        scheduledDate: Date;
+        dosageInstructions: string | null;
+        alternativeOption: string | null;
+        alternativeOption2: string | null;
+        createdByAdvisorId: string;
+        completedSprayId: string | null;
+    }>;
+    remove(user: AuthUser, id: string): Promise<{
+        id: string;
+        status: import(".prisma/client").$Enums.SprayScheduleStatus;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        notes: string | null;
+        recommendedProduct: string | null;
+        cropCycleId: string;
+        sprayType: import(".prisma/client").$Enums.SprayType | null;
+        scheduledDate: Date;
+        dosageInstructions: string | null;
+        alternativeOption: string | null;
+        alternativeOption2: string | null;
+        createdByAdvisorId: string;
+        completedSprayId: string | null;
+    }>;
+}

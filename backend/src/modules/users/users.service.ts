@@ -236,6 +236,7 @@ export class UsersService {
       where: { id: user.id },
       data: { deletedAt: new Date() },
     });
+    this.whatsappGroupSyncService.autoRemoveUser(user.id, user.mobile ?? '', user.name ?? 'User').catch(() => {});
     return { success: true, message: 'Account and associated data deleted successfully.' };
   }
 
@@ -453,10 +454,22 @@ export class UsersService {
       await provisionPartnerReferralCoupon(this.prisma, id, caller.id);
     }
 
-    // 📲 WhatsApp Group: add if newly assigned FARMER or ADVISOR role
+    // 📲 WhatsApp Group: add if assigned FARMER or ADVISOR role, remove if non-eligible
     const eligibleRoles: Role[] = [Role.FARMER, Role.ADVISOR];
+    const hasRemainingEligible =
+      eligibleRoles.includes(role) ||
+      (user.roles ?? [])
+        .filter((r) => !(user.deactivatedRoles ?? []).includes(r))
+        .some((r) => eligibleRoles.includes(r));
+
     if (eligibleRoles.includes(role)) {
       this.whatsappGroupSyncService.autoAddNewUser(
+        id,
+        user.mobile ?? '',
+        user.name ?? 'User',
+      ).catch(() => {});
+    } else if (!hasRemainingEligible) {
+      this.whatsappGroupSyncService.autoRemoveUser(
         id,
         user.mobile ?? '',
         user.name ?? 'User',
@@ -694,11 +707,16 @@ export class UsersService {
       throw new ConflictException('User is already deactivated.');
     }
 
-    return this.prisma.user.update({
+    const updated = await this.prisma.user.update({
       where: { id },
       data: { deletedAt: new Date() },
       select: SAFE_USER_SELECT,
     });
+
+    // 📲 WhatsApp Group: remove deactivated user from group
+    this.whatsappGroupSyncService.autoRemoveUser(id, user.mobile ?? '', user.name ?? 'User').catch(() => {});
+
+    return updated;
   }
 
   async reactivate(caller: AuthUser, id: string) {
@@ -708,11 +726,25 @@ export class UsersService {
       throw new ConflictException('User is already active.');
     }
 
-    return this.prisma.user.update({
+    const updated = await this.prisma.user.update({
       where: { id },
       data: { deletedAt: null },
       select: SAFE_USER_SELECT,
     });
+
+    // 📲 WhatsApp Group: re-add if user holds FARMER or ADVISOR role
+    const eligibleRoles: Role[] = [Role.FARMER, Role.ADVISOR];
+    const isEligible =
+      eligibleRoles.includes(user.role) ||
+      (user.roles ?? [])
+        .filter((r) => !(user.deactivatedRoles ?? []).includes(r))
+        .some((r) => eligibleRoles.includes(r));
+
+    if (isEligible) {
+      this.whatsappGroupSyncService.autoAddNewUser(id, user.mobile ?? '', user.name ?? 'User').catch(() => {});
+    }
+
+    return updated;
   }
 
   /** Grants an Operator account read-only access to specific fixed areas — orders, coupons, users, wallets, farmer plans. */
@@ -1002,6 +1034,9 @@ export class UsersService {
         maxWait: 10000,
       },
     );
+
+    // 📲 WhatsApp Group: remove deleted user from WhatsApp group if present
+    this.whatsappGroupSyncService.autoRemoveUser(id, user.mobile ?? '', user.name ?? 'User').catch(() => {});
 
     return { success: true, message: `User ${user.name} (${user.mobile}) and all associated records deleted permanently.` };
   }

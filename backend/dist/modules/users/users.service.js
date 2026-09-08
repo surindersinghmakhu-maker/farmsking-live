@@ -245,6 +245,7 @@ let UsersService = class UsersService {
             where: { id: user.id },
             data: { deletedAt: new Date() },
         });
+        this.whatsappGroupSyncService.autoRemoveUser(user.id, user.mobile ?? '', user.name ?? 'User').catch(() => { });
         return { success: true, message: 'Account and associated data deleted successfully.' };
     }
     async getMyInviteLink(user) {
@@ -439,8 +440,15 @@ let UsersService = class UsersService {
             await (0, partner_coupon_util_1.provisionPartnerReferralCoupon)(this.prisma, id, caller.id);
         }
         const eligibleRoles = [client_1.Role.FARMER, client_1.Role.ADVISOR];
+        const hasRemainingEligible = eligibleRoles.includes(role) ||
+            (user.roles ?? [])
+                .filter((r) => !(user.deactivatedRoles ?? []).includes(r))
+                .some((r) => eligibleRoles.includes(r));
         if (eligibleRoles.includes(role)) {
             this.whatsappGroupSyncService.autoAddNewUser(id, user.mobile ?? '', user.name ?? 'User').catch(() => { });
+        }
+        else if (!hasRemainingEligible) {
+            this.whatsappGroupSyncService.autoRemoveUser(id, user.mobile ?? '', user.name ?? 'User').catch(() => { });
         }
         return updated;
     }
@@ -618,11 +626,13 @@ let UsersService = class UsersService {
         if (user.deletedAt) {
             throw new common_1.ConflictException('User is already deactivated.');
         }
-        return this.prisma.user.update({
+        const updated = await this.prisma.user.update({
             where: { id },
             data: { deletedAt: new Date() },
             select: SAFE_USER_SELECT,
         });
+        this.whatsappGroupSyncService.autoRemoveUser(id, user.mobile ?? '', user.name ?? 'User').catch(() => { });
+        return updated;
     }
     async reactivate(caller, id) {
         const user = await this.findActiveOrThrow(id);
@@ -630,11 +640,20 @@ let UsersService = class UsersService {
         if (!user.deletedAt) {
             throw new common_1.ConflictException('User is already active.');
         }
-        return this.prisma.user.update({
+        const updated = await this.prisma.user.update({
             where: { id },
             data: { deletedAt: null },
             select: SAFE_USER_SELECT,
         });
+        const eligibleRoles = [client_1.Role.FARMER, client_1.Role.ADVISOR];
+        const isEligible = eligibleRoles.includes(user.role) ||
+            (user.roles ?? [])
+                .filter((r) => !(user.deactivatedRoles ?? []).includes(r))
+                .some((r) => eligibleRoles.includes(r));
+        if (isEligible) {
+            this.whatsappGroupSyncService.autoAddNewUser(id, user.mobile ?? '', user.name ?? 'User').catch(() => { });
+        }
+        return updated;
     }
     async updateOperatorPermissions(id, permissions) {
         const user = await this.findActiveOrThrow(id);
@@ -867,6 +886,7 @@ let UsersService = class UsersService {
             timeout: 30000,
             maxWait: 10000,
         });
+        this.whatsappGroupSyncService.autoRemoveUser(id, user.mobile ?? '', user.name ?? 'User').catch(() => { });
         return { success: true, message: `User ${user.name} (${user.mobile}) and all associated records deleted permanently.` };
     }
 };

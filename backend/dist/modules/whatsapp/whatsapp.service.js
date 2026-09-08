@@ -231,18 +231,7 @@ let WhatsappBotService = WhatsappBotService_1 = class WhatsappBotService {
                 await this.sendDirectTextMessage(mobileNumber, welcomeMessage).catch(() => { });
                 return { success: true, status: 'ADDED' };
             }
-            const nameLabel = farmerName?.trim() || 'Farmer';
-            this.logger.warn(`Direct add for ${mobileNumber} returned status ${res.status}. Sending group invite fallback message...`);
-            try {
-                const inviteCode = await this.socket.groupInviteCode(groupJid);
-                const inviteUrl = `https://chat.whatsapp.com/${inviteCode}`;
-                const inviteMessage = `🌾 *FarmsKing Advisor Group Invite*\n\nHello *${nameLabel}* ji! Your FarmsKing Advisor Plan is active. Tap the link below to join our exclusive Advisor WhatsApp Group:\n👉 ${inviteUrl}`;
-                await this.sendDirectTextMessage(mobileNumber, inviteMessage);
-                return { success: true, status: 'INVITE_SENT' };
-            }
-            catch (inviteErr) {
-                this.logger.error(`Failed to send group invite code to ${mobileNumber}:`, inviteErr);
-            }
+            this.logger.warn(`Direct add for ${mobileNumber} returned status ${res.status}. Direct add skipped/failed.`);
             return { success: false, status: res.status };
         }
         catch (err) {

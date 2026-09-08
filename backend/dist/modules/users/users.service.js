@@ -105,7 +105,19 @@ let UsersService = class UsersService {
         const limit = query.limit ?? 20;
         const status = query.status ?? 'all';
         const where = {
-            ...(query.role ? { role: query.role } : {}),
+            ...(query.role
+                ? {
+                    OR: [
+                        { role: query.role },
+                        {
+                            AND: [
+                                { roles: { has: query.role } },
+                                { NOT: { deactivatedRoles: { has: query.role } } },
+                            ],
+                        },
+                    ],
+                }
+                : {}),
             ...(status === 'active' ? { deletedAt: null } : {}),
             ...(status === 'inactive' ? { deletedAt: { not: null } } : {}),
             ...(query.search
@@ -113,6 +125,7 @@ let UsersService = class UsersService {
                     OR: [
                         { name: { contains: query.search, mode: client_1.Prisma.QueryMode.insensitive } },
                         { mobile: { contains: query.search } },
+                        { kingId: { contains: query.search, mode: client_1.Prisma.QueryMode.insensitive } },
                     ],
                 }
                 : {}),
@@ -133,7 +146,15 @@ let UsersService = class UsersService {
         const query = (q ?? '').trim();
         return this.prisma.user.findMany({
             where: {
-                roles: { has: client_1.Role.BUSINESS_PARTNER },
+                OR: [
+                    { role: client_1.Role.BUSINESS_PARTNER },
+                    {
+                        AND: [
+                            { roles: { has: client_1.Role.BUSINESS_PARTNER } },
+                            { NOT: { deactivatedRoles: { has: client_1.Role.BUSINESS_PARTNER } } },
+                        ],
+                    },
+                ],
                 deletedAt: null,
                 ...(query
                     ? {

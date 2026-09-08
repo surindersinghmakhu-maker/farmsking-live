@@ -78,7 +78,19 @@ export class UsersService {
     const status = query.status ?? 'all';
 
     const where: Prisma.UserWhereInput = {
-      ...(query.role ? { role: query.role } : {}),
+      ...(query.role
+        ? {
+            OR: [
+              { role: query.role },
+              {
+                AND: [
+                  { roles: { has: query.role } },
+                  { NOT: { deactivatedRoles: { has: query.role } } },
+                ],
+              },
+            ],
+          }
+        : {}),
       ...(status === 'active' ? { deletedAt: null } : {}),
       ...(status === 'inactive' ? { deletedAt: { not: null } } : {}),
       ...(query.search
@@ -86,6 +98,7 @@ export class UsersService {
             OR: [
               { name: { contains: query.search, mode: Prisma.QueryMode.insensitive } },
               { mobile: { contains: query.search } },
+              { kingId: { contains: query.search, mode: Prisma.QueryMode.insensitive } },
             ],
           }
         : {}),
@@ -110,7 +123,15 @@ export class UsersService {
     const query = (q ?? '').trim();
     return this.prisma.user.findMany({
       where: {
-        roles: { has: Role.BUSINESS_PARTNER },
+        OR: [
+          { role: Role.BUSINESS_PARTNER },
+          {
+            AND: [
+              { roles: { has: Role.BUSINESS_PARTNER } },
+              { NOT: { deactivatedRoles: { has: Role.BUSINESS_PARTNER } } },
+            ],
+          },
+        ],
         deletedAt: null,
         ...(query
           ? {
@@ -433,7 +454,7 @@ export class UsersService {
     }
 
     // 📲 WhatsApp Group: add if newly assigned FARMER or ADVISOR role
-    const eligibleRoles = [Role.FARMER, Role.ADVISOR];
+    const eligibleRoles: Role[] = [Role.FARMER, Role.ADVISOR];
     if (eligibleRoles.includes(role)) {
       this.whatsappGroupSyncService.autoAddNewUser(
         id,
@@ -508,7 +529,7 @@ export class UsersService {
     }
 
     // 📲 WhatsApp Group: instant add when FARMER/ADVISOR is granted or reactivated
-    const eligibleRoles = [Role.FARMER, Role.ADVISOR];
+    const eligibleRoles: Role[] = [Role.FARMER, Role.ADVISOR];
     const gettingEligible = [...toGrant, ...toReactivate].some((r) => eligibleRoles.includes(r));
     const losingEligible = toDeactivate.some((r) => eligibleRoles.includes(r));
 

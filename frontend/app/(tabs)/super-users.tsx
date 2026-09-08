@@ -808,6 +808,12 @@ function UserRow({
 }) {
   const isDeactivated = !!user.deletedAt;
   const initials = (user.name ?? '').trim().split(/\s+/).slice(0, 2).map((p) => p[0] ?? '').join('').toUpperCase() || '?';
+  const activeAssignedRoles = Array.from(
+    new Set([
+      user.role,
+      ...(user.roles ?? []).filter((r) => !(user.deactivatedRoles ?? []).includes(r)),
+    ]),
+  );
 
   return (
     <View style={[styles.userCard, premiumShadow('#0f172a', 'sm'), isDeactivated && styles.userCardDeactivated]}>
@@ -816,7 +822,7 @@ function UserRow({
           <Text style={[styles.userAvatarText, isDeactivated && { color: '#94a3b8' }]}>{initials}</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             <Text style={styles.userName} numberOfLines={1}>{user.name}</Text>
             {isDeactivated ? (
               <View style={styles.deactivatedBadge}>
@@ -828,6 +834,15 @@ function UserRow({
           <Text style={styles.userMeta} numberOfLines={1}>
             {user.kingId ? `🔑 ${user.kingId} · ` : ''}📱 {user.mobile}
           </Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+            {activeAssignedRoles.map((r) => (
+              <View key={r} style={{ backgroundColor: r === user.role ? '#e0f2fe' : '#f1f5f9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: r === user.role ? '#0369a1' : '#475569' }}>
+                  {r.replace('_', ' ')}
+                </Text>
+              </View>
+            ))}
+          </View>
         </View>
         {onOpenDetail ? <Ionicons name="chevron-forward" size={16} color="#cbd5e1" /> : null}
       </TouchableOpacity>

@@ -390,7 +390,7 @@ export class WhatsAppGroupSyncService implements OnModuleInit {
         where: { id: userId },
         select: { role: true, roles: true },
       });
-      const eligibleRoles = [Role.FARMER, Role.ADVISOR];
+      const eligibleRoles: Role[] = [Role.FARMER, Role.ADVISOR];
       const hasEligibleRole =
         (user?.role && eligibleRoles.includes(user.role as Role)) ||
         (Array.isArray(user?.roles) && user.roles.some((r) => eligibleRoles.includes(r as Role)));

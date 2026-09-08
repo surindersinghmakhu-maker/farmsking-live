@@ -1,4 +1,4 @@
-import 'multer';
+/// <reference types="multer" />
 import { randomUUID } from 'crypto';
 import { extname } from 'path';
 import {

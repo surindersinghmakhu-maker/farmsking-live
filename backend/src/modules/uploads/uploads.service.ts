@@ -1,4 +1,4 @@
-import 'multer';
+/// <reference types="multer" />
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../../common/types/auth-user.type';

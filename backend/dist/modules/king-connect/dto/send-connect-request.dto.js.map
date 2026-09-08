@@ -1,0 +1,1 @@
+{"version":3,"file":"send-connect-request.dto.js","sourceRoot":"","sources":["../../../../src/modules/king-connect/dto/send-connect-request.dto.ts"],"names":[],"mappings":";;;;;;;;;;;;AAAA,qDAAuD;AAEvD,MAAa,qBAAqB;IAGhC,MAAM,CAAU;IAIhB,MAAM,CAAU;CACjB;AARD,sDAQC;AALC;IAFC,IAAA,4BAAU,GAAE;IACZ,IAAA,0BAAQ,GAAE;;qDACK;AAIhB;IAFC,IAAA,4BAAU,GAAE;IACZ,IAAA,0BAAQ,GAAE;;qDACK"}

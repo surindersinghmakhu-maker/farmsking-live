@@ -7,7 +7,7 @@ node_modules/
 .env.*.local
 
 # Backend (NestJS/Prisma)
-backend/dist/
+# backend/dist/
 backend/generated/prisma/
 backend/coverage/
 

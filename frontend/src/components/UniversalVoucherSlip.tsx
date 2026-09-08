@@ -93,11 +93,11 @@ export function UniversalVoucherSlipModal({ visible, data, onClose }: UniversalV
     : '#0284c7';
 
   const defaultTitle = isReceipt
-    ? '📑 PAYMENT RECEIPT (ਵਸੂਲੀ ਰਸੀਦ)'
+    ? '📑 PAYMENT RECEIPT'
     : isPaymentOut
-    ? '💸 PAYMENT VOUCHER (ਭੁਗਤਾਨ ਰਸੀਦ)'
+    ? '💸 PAYMENT VOUCHER'
     : isExpense
-    ? '🔴 EXPENSE STATEMENT SLIP (ਖਰਚਾ ਰਸੀਦ)'
+    ? '🔴 EXPENSE STATEMENT SLIP'
     : isSale
     ? '🌾 SALE INVOICE / CROP BILL'
     : '📜 ACCOUNT STATEMENT SLIP';
@@ -233,12 +233,12 @@ export function UniversalVoucherSlipModal({ visible, data, onClose }: UniversalV
                 ${typeof data.previousBalance === 'number' ? `
                 <div class="amount-row" style="margin-top:6px; font-size:11px; border-top:1px dashed #cbd5e1; padding-top:4px;">
                   <span>Previous Balance:</span>
-                  <span>₹${Math.abs(data.previousBalance).toLocaleString('en-IN')} ${data.previousBalance >= 0 ? '(ਲੇਣੀ / Rec)' : '(ਦੇਣੀ / Pay)'}</span>
+                  <span>₹${Math.abs(data.previousBalance).toLocaleString('en-IN')} ${data.previousBalance >= 0 ? '(Receivable)' : '(Payable)'}</span>
                 </div>` : ''}
                 ${typeof data.newBalance === 'number' ? `
                 <div class="amount-row" style="font-size:12px; font-weight:bold; color:${data.newBalance >= 0 ? '#16a34a' : '#dc2626'};">
                   <span>Net Balance:</span>
-                  <span>₹${Math.abs(data.newBalance).toLocaleString('en-IN')} ${data.newBalance >= 0 ? '(ਲੇਣੀ / Rec)' : '(ਦੇਣੀ / Pay)'}</span>
+                  <span>₹${Math.abs(data.newBalance).toLocaleString('en-IN')} ${data.newBalance >= 0 ? '(Receivable)' : '(Payable)'}</span>
                 </div>` : ''}
               </div>
 
@@ -374,7 +374,7 @@ export function UniversalVoucherSlipModal({ visible, data, onClose }: UniversalV
                   <View style={styles.balanceRow}>
                     <Text style={styles.balanceLabel}>Previous Balance:</Text>
                     <Text style={styles.balanceValue}>
-                      {formatInr(Math.abs(data.previousBalance))} {data.previousBalance >= 0 ? '(ਲੇਣੀ)' : '(ਦੇਣੀ)'}
+                      {formatInr(Math.abs(data.previousBalance))} {data.previousBalance >= 0 ? '(Receivable)' : '(Payable)'}
                     </Text>
                   </View>
                 )}
@@ -383,7 +383,7 @@ export function UniversalVoucherSlipModal({ visible, data, onClose }: UniversalV
                   <View style={[styles.balanceRow, { borderTopWidth: 1, borderTopColor: '#cbd5e1', paddingTop: 4, marginTop: 4 }]}>
                     <Text style={[styles.balanceLabel, { fontFamily: FONT.bold, color: '#0f172a' }]}>New Net Balance:</Text>
                     <Text style={[styles.balanceValue, { fontFamily: FONT.extraBold, color: data.newBalance >= 0 ? '#16a34a' : '#dc2626' }]}>
-                      {formatInr(Math.abs(data.newBalance))} {data.newBalance >= 0 ? '(ਲੇਣੀ / Receivable)' : '(ਦੇਣੀ / Payable)'}
+                      {formatInr(Math.abs(data.newBalance))} {data.newBalance >= 0 ? '(Receivable)' : '(Payable)'}
                     </Text>
                   </View>
                 )}

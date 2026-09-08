@@ -181,11 +181,11 @@ export function ProfessionalOverviewView({
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={[styles.gridCardLabel, { color: '#075985' }]}>Receivable (ਲੇਣੀ)</Text>
+              <Text style={[styles.gridCardLabel, { color: '#075985' }]}>Receivable</Text>
               <Ionicons name="arrow-down-circle" size={14} color="#0284c7" />
             </View>
             <Text style={[styles.gridCardValue, { color: '#0369a1' }]}>{formatInr(totalReceivable)}</Text>
-            <Text style={styles.gridCardSub}>View Khata ➔</Text>
+            <Text style={styles.gridCardSub}>View Ledger ➔</Text>
           </TouchableOpacity>
 
           {/* Card 4: Payables */}
@@ -198,11 +198,11 @@ export function ProfessionalOverviewView({
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={[styles.gridCardLabel, { color: '#9a3412' }]}>Payable (ਦੇਣੀ)</Text>
+              <Text style={[styles.gridCardLabel, { color: '#9a3412' }]}>Payable</Text>
               <Ionicons name="arrow-up-circle" size={14} color="#ea580c" />
             </View>
             <Text style={[styles.gridCardValue, { color: '#c2410c' }]}>{formatInr(totalPayable)}</Text>
-            <Text style={styles.gridCardSub}>View Khata ➔</Text>
+            <Text style={styles.gridCardSub}>View Ledger ➔</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -563,7 +563,7 @@ function CropStatementModal({
                 <BrandLogo size={34} useHdQuality />
                 <View>
                   <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: '#15803d', letterSpacing: -0.3 }}>FarmsKing</Text>
-                  <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>CROP STATEMENT / ਫਸਲ ਖਾਤਾ ਸਟੇਟਮੈਂਟ</Text>
+                  <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>CROP STATEMENT</Text>
                 </View>
               </View>
               <View style={{ alignItems: 'flex-end' }}>

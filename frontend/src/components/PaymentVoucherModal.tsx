@@ -182,7 +182,7 @@ export function PaymentVoucherModal({
 
       const slipData: UniversalVoucherData = {
         voucherType: voucherType === 'RECEIPT_IN' ? 'PAYMENT_IN' : voucherType === 'PAYMENT_OUT' ? 'PAYMENT_OUT' : 'PARTY_STATEMENT',
-        title: voucherType === 'RECEIPT_IN' ? '💰 PAYMENT RECEIPT (ਵਸੂਲੀ ਰਸੀਦ)' : voucherType === 'PAYMENT_OUT' ? '💸 PAYMENT OUT VOUCHER (ਭੁਗਤਾਨ ਰਸੀਦ)' : '🧾 ACCOUNT TRANSFER VOUCHER',
+        title: voucherType === 'RECEIPT_IN' ? '💰 PAYMENT RECEIPT' : voucherType === 'PAYMENT_OUT' ? '💸 PAYMENT OUT VOUCHER' : '🧾 ACCOUNT TRANSFER VOUCHER',
         voucherNo: `VCH-${Date.now().toString().slice(-6)}`,
         date: voucherDate,
         farmerName: user?.name || 'Farmer',
@@ -343,9 +343,9 @@ export function PaymentVoucherModal({
                   {sourceParty.name} Current Balance:{' '}
                   <Text style={{ fontFamily: FONT.bold }}>
                     {sourceBalance > 0
-                      ? `${formatInr(sourceBalance)} (Receivable / ਲੇਣੀ)`
+                      ? `${formatInr(sourceBalance)} (Receivable)`
                       : sourceBalance < 0
-                        ? `${formatInr(Math.abs(sourceBalance))} (Payable / ਦੇਣੀ)`
+                        ? `${formatInr(Math.abs(sourceBalance))} (Payable)`
                         : '₹0 (Settled)'}
                   </Text>
                 </Text>
@@ -353,9 +353,9 @@ export function PaymentVoucherModal({
                   ➔ New Balance:{' '}
                   <Text style={{ fontFamily: FONT.extraBold, color: calculatedSourceNet >= 0 ? '#16a34a' : '#dc2626' }}>
                     {calculatedSourceNet > 0
-                      ? `${formatInr(calculatedSourceNet)} (Receivable / ਲੇਣੀ)`
+                      ? `${formatInr(calculatedSourceNet)} (Receivable)`
                       : calculatedSourceNet < 0
-                        ? `${formatInr(Math.abs(calculatedSourceNet))} (Payable / ਦੇਣੀ)`
+                        ? `${formatInr(Math.abs(calculatedSourceNet))} (Payable)`
                         : '₹0 (Settled)'}
                   </Text>
                 </Text>
@@ -364,17 +364,17 @@ export function PaymentVoucherModal({
                     {targetParty.name} Current Balance:{' '}
                     <Text style={{ fontFamily: FONT.bold }}>
                       {targetBalance > 0
-                        ? `${formatInr(targetBalance)} (Receivable / ਲੇਣੀ)`
+                        ? `${formatInr(targetBalance)} (Receivable)`
                         : targetBalance < 0
-                          ? `${formatInr(Math.abs(targetBalance))} (Payable / ਦੇਣੀ)`
+                          ? `${formatInr(Math.abs(targetBalance))} (Payable)`
                           : '₹0 (Settled)'}
                     </Text>
                     {' ➔ '}New Balance:{' '}
                     <Text style={{ fontFamily: FONT.extraBold, color: calculatedTargetNet >= 0 ? '#16a34a' : '#dc2626' }}>
                       {calculatedTargetNet > 0
-                        ? `${formatInr(calculatedTargetNet)} (Receivable / ਲੇਣੀ)`
+                        ? `${formatInr(calculatedTargetNet)} (Receivable)`
                         : calculatedTargetNet < 0
-                          ? `${formatInr(Math.abs(calculatedTargetNet))} (Payable / ਦੇਣੀ)`
+                          ? `${formatInr(Math.abs(calculatedTargetNet))} (Payable)`
                           : '₹0 (Settled)'}
                     </Text>
                   </Text>

@@ -191,7 +191,7 @@ export function UniversalStatementModal({
           <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; font-weight: bold; color: #0f172a;">${item.reason}</td>
           <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; text-align: right; color: #16a34a; font-weight: bold;">${item.plusAmount > 0 ? `+ ₹${item.plusAmount.toLocaleString('en-IN')}` : '-'}</td>
           <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; text-align: right; color: #dc2626; font-weight: bold;">${item.minusAmount > 0 ? `- ₹${item.minusAmount.toLocaleString('en-IN')}` : '-'}</td>
-          <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; text-align: right; font-weight: 800; color: ${item.runningBalance >= 0 ? '#15803d' : '#b91c1c'};">= ₹${Math.abs(item.runningBalance).toLocaleString('en-IN')} ${item.runningBalance >= 0 ? '(ਲੇਣੀ)' : '(ਦੇਣੀ)'}</td>
+          <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; text-align: right; font-weight: 800; color: ${item.runningBalance >= 0 ? '#15803d' : '#b91c1c'};">= ₹${Math.abs(item.runningBalance).toLocaleString('en-IN')} ${item.runningBalance >= 0 ? '(Receivable)' : '(Payable)'}</td>
         </tr>`
         )
         .join('');
@@ -231,7 +231,7 @@ export function UniversalStatementModal({
                 </div>
               </div>
 
-              <div class="title-banner">📜 OFFICIAL PARTY LEDGER STATEMENT (ਖਾਤਾ ਸਟੇਟਮੈਂਟ)</div>
+              <div class="title-banner">📜 OFFICIAL PARTY LEDGER STATEMENT</div>
 
               <div class="grid">
                 <div class="box">
@@ -265,7 +265,7 @@ export function UniversalStatementModal({
               <div class="summary-box">
                 <span style="color:#16a34a;">Total Received (+): ₹${totalPlus.toLocaleString('en-IN')}</span>
                 <span style="color:#dc2626;">Total Paid (-): ₹${totalMinus.toLocaleString('en-IN')}</span>
-                <span style="color:#15803d;">Net Balance (=): ₹${Math.abs(finalNetBalance).toLocaleString('en-IN')} ${finalNetBalance >= 0 ? '(ਲੇਣੀ)' : '(ਦੇਣੀ)'}</span>
+                <span style="color:#15803d;">Net Balance (=): ₹${Math.abs(finalNetBalance).toLocaleString('en-IN')} ${finalNetBalance >= 0 ? '(Receivable)' : '(Payable)'}</span>
               </div>
 
               <div class="footer">
@@ -311,7 +311,7 @@ export function UniversalStatementModal({
           {/* Date Filter Bar: From Date to To Date */}
           <View style={styles.dateFilterContainer}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.dateLabel}>From Date (ਤੋਂ):</Text>
+              <Text style={styles.dateLabel}>From Date:</Text>
               <TextInput
                 style={styles.dateInput}
                 placeholder="YYYY-MM-DD"
@@ -321,7 +321,7 @@ export function UniversalStatementModal({
               />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.dateLabel}>To Date (ਤੱਕ):</Text>
+              <Text style={styles.dateLabel}>To Date:</Text>
               <TextInput
                 style={styles.dateInput}
                 placeholder="YYYY-MM-DD"
@@ -373,7 +373,7 @@ export function UniversalStatementModal({
               <View style={styles.partyGridRow}>
                 <View style={styles.partyBox}>
                   <View style={[styles.partyHeader, { backgroundColor: '#15803d' }]}>
-                    <Text style={styles.partyHeaderText}>👨‍🌾 FARMER (ਕਿਸਾਨ)</Text>
+                    <Text style={styles.partyHeaderText}>👨‍🌾 FARMER</Text>
                   </View>
                   <View style={styles.partyBody}>
                     <Text style={styles.partyNameBold}>{farmerName}</Text>
@@ -468,7 +468,7 @@ export function UniversalStatementModal({
                       { color: finalNetBalance >= 0 ? '#15803d' : '#b91c1c' },
                     ]}
                   >
-                    {formatInr(Math.abs(finalNetBalance))} {finalNetBalance >= 0 ? '(ਲੇਣੀ)' : '(ਦੇਣੀ)'}
+                    {formatInr(Math.abs(finalNetBalance))} {finalNetBalance >= 0 ? '(Receivable)' : '(Payable)'}
                   </Text>
                 </View>
               </View>

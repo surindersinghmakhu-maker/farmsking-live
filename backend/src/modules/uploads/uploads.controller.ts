@@ -1,4 +1,3 @@
-/// <reference types="multer" />
 import { randomUUID } from 'crypto';
 import { extname } from 'path';
 import {
@@ -43,7 +42,7 @@ export class UploadsController {
       },
     }),
   )
-  upload(@CurrentUser() user: AuthUser, @UploadedFile() file: Express.Multer.File) {
+  upload(@CurrentUser() user: AuthUser, @UploadedFile() file: any) {
     if (!file) {
       throw new BadRequestException('No file uploaded.');
     }

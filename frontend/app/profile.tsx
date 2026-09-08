@@ -10,6 +10,7 @@ import {
   Modal,
   Alert,
   ActivityIndicator,
+  Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -55,6 +56,14 @@ export default function ProfileScreen() {
   const [email, setEmail] = useState(user?.email ?? '');
   const [billPrintingAddress, setBillPrintingAddress] = useState(user?.billPrintingAddress ?? '');
   const [photoUrl, setPhotoUrl] = useState<string | null>(user?.photoUrl ?? null);
+
+  const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState<boolean>(user?.whatsappGroupEnabled ?? true);
+
+  React.useEffect(() => {
+    if (user?.whatsappGroupEnabled !== undefined) {
+      setWhatsappGroupEnabled(user.whatsappGroupEnabled);
+    }
+  }, [user?.whatsappGroupEnabled]);
 
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
@@ -138,6 +147,7 @@ export default function ProfileScreen() {
         district: district.trim() || undefined,
         state: state.trim() || undefined,
         billPrintingAddress: billPrintingAddress.trim() || undefined,
+        whatsappGroupEnabled,
       });
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2500);
@@ -212,7 +222,7 @@ export default function ProfileScreen() {
             <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="you@example.com" placeholderTextColor="#94a3b8" />
           </View>
 
-          <Text style={styles.inputLabel}>Bill Printing Address (ਬਿੱਲ 'ਤੇ ਪ੍ਰਿੰਟ ਹੋਣ ਵਾਲਾ ਪਤਾ)</Text>
+          <Text style={styles.inputLabel}>Bill Printing Address (Printed on Bill)</Text>
           <View style={styles.inputWrap}>
             <Ionicons name="document-text-outline" size={16} color="#94a3b8" />
             <TextInput
@@ -335,6 +345,29 @@ export default function ProfileScreen() {
                 <Text style={styles.readOnlyText} numberOfLines={1}>{state || '—'}</Text>
               </View>
             </View>
+          </View>
+
+          <View style={styles.whatsappGroupToggleCard}>
+            <View style={{ flex: 1, paddingRight: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                <Ionicons name="logo-whatsapp" size={18} color="#25D366" />
+                <Text style={styles.whatsappGroupToggleTitle}>WhatsApp Group Membership</Text>
+              </View>
+              <Text style={styles.whatsappGroupToggleSubtitle}>
+                {whatsappGroupEnabled
+                  ? 'ON (Default): Auto-added to official WhatsApp group'
+                  : 'OFF: Immediately removed from official WhatsApp group'}
+              </Text>
+            </View>
+            <Switch
+              value={whatsappGroupEnabled}
+              onValueChange={(val) => {
+                tap();
+                setWhatsappGroupEnabled(val);
+              }}
+              trackColor={{ false: '#cbd5e1', true: '#86efac' }}
+              thumbColor={whatsappGroupEnabled ? '#16a34a' : '#f8fafc'}
+            />
           </View>
 
           {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
@@ -882,6 +915,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   readOnlyText: { flex: 1, fontSize: 13, fontFamily: FONT.bold, color: '#475569' },
+  whatsappGroupToggleCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    borderRadius: RADIUS.md,
+    padding: 12,
+    marginTop: 14,
+  },
+  whatsappGroupToggleTitle: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  whatsappGroupToggleSubtitle: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
   errorText: { color: '#dc2626', fontFamily: FONT.semiBold, fontSize: 12.5, marginTop: 8 },
   saveBtn: { marginTop: 18, borderRadius: RADIUS.md, paddingVertical: 12, alignItems: 'center' },
   saveBtnText: { color: '#ffffff', fontSize: 14.5, fontFamily: FONT.bold },

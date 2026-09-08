@@ -118,12 +118,13 @@ async function main() {
       ],
     },
   });
+  const superAdminPasswordHash = await argon2.hash('12345678');
   if (!existingSuperAdmin) {
     await prisma.user.create({
       data: {
-        kingId: '02101982',
+        kingId: await generateUniqueKingId(prisma),
         mobile: demoSuperAdminMobile,
-        passwordHash: await argon2.hash('12345678'),
+        passwordHash: superAdminPasswordHash,
         role: Role.SUPER_ADMIN,
         roles: [Role.SUPER_ADMIN, Role.CUSTOMER],
         name: 'FarmsKing Super Admin',
@@ -133,9 +134,8 @@ async function main() {
     await prisma.user.update({
       where: { id: existingSuperAdmin.id },
       data: {
-        kingId: '02101982',
         mobile: demoSuperAdminMobile,
-        passwordHash: await argon2.hash('12345678'),
+        passwordHash: superAdminPasswordHash,
         role: Role.SUPER_ADMIN,
         roles: existingSuperAdmin.roles.includes(Role.SUPER_ADMIN)
           ? existingSuperAdmin.roles

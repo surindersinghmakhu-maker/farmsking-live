@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
@@ -34,41 +34,41 @@ function getWeatherInfo(code: number, rainProb: number = 0): {
   switch (code) {
     case 0:
       return {
-        text: 'ਸਾਫ਼ ਧੁੱਪ (Sunny Clear)',
+        text: 'Sunny Clear Sky',
         icon: 'sunny-outline',
-        advice: '🌾 ਛਿੜਕਾਅ ਅਤੇ ਸਿੰਚਾਈ (Irrigation & Spray) ਲਈ ਵਧੀਆ ਦਿਨ ਹੈ।',
+        advice: '🌾 Great day for crop spraying & field irrigation.',
         isSpraySafe: true,
       };
     case 1:
     case 2:
       return {
-        text: 'ਹਲਕੇ ਬੱਦਲ (Partly Cloudy)',
+        text: 'Partly Cloudy',
         icon: 'cloudy-night-outline',
-        advice: '🌱 ਫਸਲ ਦਾ ਨਿਰੀਖਣ ਕਰੋ; ਮੌਸਮ ਛਿੜਕਾਅ ਲਈ ਅਨੁਕੂਲ ਹੈ।',
+        advice: '🌱 Inspect crop conditions; weather is favorable for spraying.',
         isSpraySafe: true,
       };
     case 3:
       return {
-        text: 'ਬੱਦਲਵਾਈ (Overcast)',
+        text: 'Overcast Sky',
         icon: 'cloud-outline',
-        advice: '⛅ ਬੱਦਲਵਾਈ ਹੈ; ਤੇਜ਼ ਹਵਾਵਾਂ ਵੇਲੇ ਛਿੜਕਾਅ ਤੋਂ ਗੁਰੇਜ਼ ਕਰੋ।',
+        advice: '⛅ Overcast sky; avoid crop spraying during strong winds.',
         isSpraySafe: true,
       };
     case 45:
     case 48:
       return {
-        text: 'ਧੁੰਦ / ਧੁੰਦਲਾ (Foggy)',
+        text: 'Foggy / Mist',
         icon: 'cloud-sharp',
-        advice: '🌫️ ਧੁੰਦ ਕਾਰਨ ਫੰਗਸ ਦਾ ਖਤਰਾ ਵੱਧ ਸਕਦਾ ਹੈ; ਨਜ਼ਰ ਰੱਖੋ।',
+        advice: '🌫️ Dense fog: monitor crops closely for fungal diseases.',
         isSpraySafe: false,
       };
     case 51:
     case 53:
     case 55:
       return {
-        text: 'ਹਲਕੀ ਫੁਹਾਰ (Drizzle)',
+        text: 'Light Drizzle',
         icon: 'rainy-outline',
-        advice: '🌧️ ਹਲਕੀ ਬਾਰਿਸ਼: ਛਿੜਕਾਅ ਥੋੜ੍ਹਾ ਸਮਾਂ ਰੋਕੋ।',
+        advice: '🌧️ Light drizzle: delay crop spraying for a while.',
         isSpraySafe: false,
       };
     case 61:
@@ -78,31 +78,31 @@ function getWeatherInfo(code: number, rainProb: number = 0): {
     case 81:
     case 82:
       return {
-        text: 'ਮੀਂਹ / ਬਾਰਿਸ਼ (Rain Showers)',
+        text: 'Rain Showers',
         icon: 'rainy',
-        advice: '⚠️ ਬਾਰਿਸ਼ ਦੇ ਆਸਾਰ! ਸਪਰੇਅ ਅਤੇ ਖਾਦ ਪਾਉਣਾ ਮੁਲਤਵੀ (Postpone) ਕਰੋ।',
+        advice: '⚠️ Rain expected: postpone pesticide & fertilizer spray.',
         isSpraySafe: false,
       };
     case 95:
     case 96:
     case 99:
       return {
-        text: 'ਝੱਖੜ / ਤੂਫ਼ਾਨ (Thunderstorm)',
+        text: 'Thunderstorm',
         icon: 'thunderstorm-outline',
-        advice: '🌩️ ਤੇਜ਼ ਹਵਾਵਾਂ ਤੇ ਤੂਫ਼ਾਨ: ਖੇਤਾਂ ਵਿੱਚ ਸਿੰਚਾਈ ਤੁਰੰਤ ਬੰਦ ਕਰੋ।',
+        advice: '🌩️ High winds & storm: stop field irrigation immediately.',
         isSpraySafe: false,
       };
     default:
       return {
-        text: rainProb > 40 ? 'ਬਾਰਿਸ਼ ਸੰਭਾਵਨਾ (Rain Likely)' : 'ਆਮ ਮੌਸਮ (Normal Weather)',
+        text: rainProb > 40 ? 'Rain Likely' : 'Normal Weather',
         icon: rainProb > 40 ? 'rainy-outline' : 'partly-sunny-outline',
-        advice: rainProb > 40 ? '⚠️ ਬਾਰਿਸ਼ ਦੀ ਸੰਭਾਵਨਾ ਹੈ, ਛਿੜਕਾਅ ਧਿਆਨ ਨਾਲ ਕਰੋ।' : '🌾 ਫਸਲਾਂ ਲਈ ਮੌਸਮ ਅਨੁਕੂਲ ਹੈ।',
+        advice: rainProb > 40 ? '⚠️ Rain likely today: spray with caution.' : '🌾 Favorable weather for field activities.',
         isSpraySafe: rainProb <= 40,
       };
   }
 }
 
-const WEEKDAYS = ['ਐਤ (Sun)', 'ਸੋਮ (Mon)', 'ਮੰਗਲ (Tue)', 'ਬੁੱਧ (Wed)', 'ਵੀਰ (Thu)', 'ਸ਼ੁੱਕਰ (Fri)', 'ਸ਼ਨਿੱਚਰ (Sat)'];
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export function OpenMeteoWeatherCard() {
   const { user } = useAuth();
@@ -116,7 +116,6 @@ export function OpenMeteoWeatherCard() {
     setLoading(true);
     setError(false);
     try {
-      // Default to Ludhiana coordinates (30.9010, 75.8573) or user state
       const lat = 30.9010;
       const lon = 75.8573;
       const res = await fetch(
@@ -181,7 +180,7 @@ export function OpenMeteoWeatherCard() {
           <View style={styles.liveTag}>
             <Text style={styles.liveTagText}>LIVE OPEN-METEO</Text>
           </View>
-          <Text style={styles.headerTitle}>🌤️ ਖੇਤੀ ਮੌਸਮ (Agri Weather)</Text>
+          <Text style={styles.headerTitle}>🌤️ Agri Weather Forecast</Text>
         </View>
         <TouchableOpacity style={styles.refreshBtn} onPress={fetchWeather}>
           <Ionicons name="refresh" size={14} color="#0284c7" />
@@ -192,15 +191,15 @@ export function OpenMeteoWeatherCard() {
       {loading ? (
         <View style={styles.centerBox}>
           <ActivityIndicator size="small" color="#0284c7" />
-          <Text style={styles.loadingText}>Open-Meteo ਮੌਸਮ ਅਪਡੇਟ ਹੋ ਰਿਹਾ ਹੈ...</Text>
+          <Text style={styles.loadingText}>Fetching Open-Meteo live weather...</Text>
         </View>
       ) : error || !data ? (
         <View style={styles.centerBox}>
           <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#64748b' }}>
-            ਮੌਸਮ ਜਾਣਕਾਰੀ ਪ੍ਰਾਪਤ ਨਹੀਂ ਹੋ ਸਕੀ।
+            Unable to fetch weather forecast right now.
           </Text>
           <TouchableOpacity style={styles.retryBtn} onPress={fetchWeather}>
-            <Text style={styles.retryText}>ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ (Retry)</Text>
+            <Text style={styles.retryText}>Retry</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -211,7 +210,7 @@ export function OpenMeteoWeatherCard() {
               <Ionicons name={data.conditionIcon} size={42} color="#0284c7" />
               <View>
                 <Text style={styles.tempText}>{data.temp}°C</Text>
-                <Text style={styles.feelsLikeText}>ਮਹਿਸੂਸ: {data.feelsLike}°C</Text>
+                <Text style={styles.feelsLikeText}>Feels like: {data.feelsLike}°C</Text>
               </View>
             </View>
 
@@ -220,11 +219,11 @@ export function OpenMeteoWeatherCard() {
               <View style={styles.metricsRow}>
                 <View style={styles.metricBadge}>
                   <Ionicons name="water-outline" size={11} color="#0284c7" />
-                  <Text style={styles.metricText}>ਸਲਾਭ: {data.humidity}%</Text>
+                  <Text style={styles.metricText}>Humidity: {data.humidity}%</Text>
                 </View>
                 <View style={styles.metricBadge}>
-                  <Ionicons name="location-outline" size={11} color="#0369a1" />
-                  <Text style={styles.metricText}>ਹਵਾ: {data.windSpeed} km/h</Text>
+                  <Ionicons name="navigate-outline" size={11} color="#0369a1" />
+                  <Text style={styles.metricText}>Wind: {data.windSpeed} km/h</Text>
                 </View>
               </View>
             </View>
@@ -258,7 +257,7 @@ export function OpenMeteoWeatherCard() {
           {/* 5-Day Forecast Row */}
           {data.daily && data.daily.length > 0 ? (
             <View style={styles.forecastContainer}>
-              <Text style={styles.forecastHeader}>📅 ਅਗਲੇ 5 ਦਿਨਾਂ ਦਾ ਅਨੁਮਾਨ (Forecast)</Text>
+              <Text style={styles.forecastHeader}>📅 5-Day Weather Forecast</Text>
               <View style={styles.forecastRow}>
                 {data.daily.map((item, index) => (
                   <View key={index} style={styles.forecastCol}>

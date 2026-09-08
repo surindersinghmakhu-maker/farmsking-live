@@ -26,7 +26,7 @@ export class AppController {
     if (!Array.isArray(body.users)) {
       throw new BadRequestException('users must be an array');
     }
-    const results = [];
+    const results: any[] = [];
     for (const u of body.users) {
       if (!u.mobile || !u.passwordHash) continue;
       const cleanMobile = u.mobile.trim();

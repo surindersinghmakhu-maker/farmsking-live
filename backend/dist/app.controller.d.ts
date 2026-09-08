@@ -14,7 +14,7 @@ export declare class AppController {
     }): Promise<{
         success: boolean;
         count: number;
-        details: never[];
+        details: any[];
     }>;
     setupAdmin(): Promise<{
         success: boolean;

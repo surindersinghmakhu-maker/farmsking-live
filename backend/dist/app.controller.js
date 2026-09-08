@@ -41,6 +41,9 @@ var __importStar = (this && this.__importStar) || (function () {
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppController = void 0;
 const common_1 = require("@nestjs/common");
@@ -60,6 +63,55 @@ let AppController = class AppController {
     }
     getHealth() {
         return { status: 'ok', timestamp: new Date().toISOString() };
+    }
+    async syncUsers(body) {
+        if (!Array.isArray(body.users)) {
+            throw new common_1.BadRequestException('users must be an array');
+        }
+        const results = [];
+        for (const u of body.users) {
+            if (!u.mobile || !u.passwordHash)
+                continue;
+            const cleanMobile = u.mobile.trim();
+            const existing = await this.prisma.user.findFirst({ where: { mobile: cleanMobile } });
+            const userData = {
+                kingId: u.kingId ?? '00000000',
+                mobile: cleanMobile,
+                passwordHash: u.passwordHash,
+                role: u.role ?? client_1.Role.CUSTOMER,
+                roles: Array.isArray(u.roles) && u.roles.length > 0 ? u.roles : [u.role ?? client_1.Role.CUSTOMER],
+                deactivatedRoles: Array.isArray(u.deactivatedRoles) ? u.deactivatedRoles : [],
+                name: u.name ?? 'User',
+                email: u.email ?? null,
+                village: u.village ?? null,
+                district: u.district ?? null,
+                state: u.state ?? null,
+                pincode: u.pincode ?? null,
+                postOffice: u.postOffice ?? null,
+                sprayTankSizeL: u.sprayTankSizeL ?? null,
+                soilType: u.soilType ?? null,
+                waterType: u.waterType ?? null,
+                preferredLanguage: u.preferredLanguage ?? 'en',
+                advisorType: u.advisorType ?? null,
+                operatorPermissions: Array.isArray(u.operatorPermissions) ? u.operatorPermissions : [],
+                upiId: u.upiId ?? null,
+                deletedAt: u.deletedAt ? new Date(u.deletedAt) : null,
+            };
+            if (existing) {
+                const updated = await this.prisma.user.update({
+                    where: { id: existing.id },
+                    data: userData,
+                });
+                results.push({ mobile: cleanMobile, action: 'updated', id: updated.id });
+            }
+            else {
+                const created = await this.prisma.user.create({
+                    data: userData,
+                });
+                results.push({ mobile: cleanMobile, action: 'created', id: created.id });
+            }
+        }
+        return { success: true, count: results.length, details: results };
     }
     async setupAdmin() {
         const mobile = '9872066901';
@@ -108,6 +160,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], AppController.prototype, "getHealth", null);
+__decorate([
+    (0, common_1.Post)('sync-users'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AppController.prototype, "syncUsers", null);
 __decorate([
     (0, common_1.Get)('setup-admin'),
     __metadata("design:type", Function),

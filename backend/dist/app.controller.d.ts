@@ -9,6 +9,13 @@ export declare class AppController {
         status: string;
         timestamp: string;
     };
+    syncUsers(body: {
+        users: any[];
+    }): Promise<{
+        success: boolean;
+        count: number;
+        details: never[];
+    }>;
     setupAdmin(): Promise<{
         success: boolean;
         action: string;

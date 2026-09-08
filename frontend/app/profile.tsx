@@ -156,11 +156,19 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleGoBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       <LinearGradient colors={theme.gradient} style={styles.headerBar}>
-        <TouchableOpacity style={styles.backBtn} activeOpacity={0.75} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backBtn} activeOpacity={0.75} onPress={handleGoBack}>
           <Ionicons name="arrow-back" size={22} color="#ffffff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>

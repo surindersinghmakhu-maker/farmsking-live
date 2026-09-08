@@ -55,6 +55,14 @@ export default function FarmerProfileSetupScreen() {
 
   const canSave = !!sprayTankSizeL && !!soilType && !!waterType;
 
+  const handleGoBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)');
+    }
+  };
+
   const handleSave = async () => {
     if (!canSave) return;
     tap();
@@ -71,7 +79,7 @@ export default function FarmerProfileSetupScreen() {
           whatsappGroupEnabled,
         }),
       ]);
-      router.back();
+      handleGoBack();
     } catch (error) {
       Alert.alert('Could not save', 'Something went wrong while saving your details. Please try again.');
     }
@@ -81,7 +89,7 @@ export default function FarmerProfileSetupScreen() {
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       <LinearGradient colors={theme.gradient} style={styles.headerBar}>
-        <TouchableOpacity style={styles.backBtn} activeOpacity={0.75} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backBtn} activeOpacity={0.75} onPress={handleGoBack}>
           <Ionicons name="arrow-back" size={22} color="#ffffff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Farmer Special Profile</Text>

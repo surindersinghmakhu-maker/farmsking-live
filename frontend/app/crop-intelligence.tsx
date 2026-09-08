@@ -182,6 +182,15 @@ export default function CropIntelligenceScreen() {
     });
   };
 
+  const handleGoBack = () => {
+    tap();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)');
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* 🌟 TOP APP HEADER */}
@@ -189,10 +198,7 @@ export default function CropIntelligenceScreen() {
         <TouchableOpacity
           style={styles.backBtn}
           activeOpacity={0.8}
-          onPress={() => {
-            tap();
-            router.back();
-          }}
+          onPress={handleGoBack}
         >
           <Ionicons name="arrow-back" size={18} color="#ffffff" />
           <Text style={styles.backBtnText}>ਪਿੱਛੇ (Back)</Text>

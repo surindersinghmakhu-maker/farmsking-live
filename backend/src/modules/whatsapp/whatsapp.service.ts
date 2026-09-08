@@ -100,8 +100,45 @@ export class WhatsappBotService implements OnModuleInit {
   }
 
   async sendOtpMessage(mobileNumber: string, otpCode: string): Promise<boolean> {
+    const metaToken = process.env.META_WA_TOKEN || process.env.WHATSAPP_CLOUD_API_TOKEN;
+    const metaPhoneId = process.env.META_WA_PHONE_ID || process.env.WHATSAPP_CLOUD_PHONE_ID;
+
+    // 1. Primary: Official Meta WhatsApp Cloud API (If configured in .env)
+    if (metaToken && metaPhoneId) {
+      try {
+        const cleanMobile = mobileNumber.replace(/\D/g, '');
+        const recipient = cleanMobile.startsWith('91') ? cleanMobile : '91' + cleanMobile;
+        const response = await fetch(`https://graph.facebook.com/v20.0/${metaPhoneId}/messages`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${metaToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            messaging_product: 'whatsapp',
+            to: recipient,
+            type: 'text',
+            text: {
+              body: `🌾 *FarmsKing Verification Code*\n\nYour 5-digit FarmsKing verification code is: *${otpCode}*\n\nThis code is valid for 10 minutes.`,
+            },
+          }),
+        });
+
+        if (response.ok) {
+          this.logger.log(`🟢 Meta WhatsApp Cloud API OTP sent successfully to ${recipient}`);
+          return true;
+        } else {
+          const errJson = await response.json().catch(() => ({}));
+          this.logger.warn('Meta WhatsApp Cloud API error response:', JSON.stringify(errJson));
+        }
+      } catch (metaErr) {
+        this.logger.error('Meta WhatsApp Cloud API request failed:', metaErr);
+      }
+    }
+
+    // 2. Secondary: Baileys WhatsApp Web Socket Connection
     if (!this.socket || !this.isConnected) {
-      this.logger.warn('WhatsApp Bot is not connected yet. Fallback to deep-link.');
+      this.logger.warn('WhatsApp Bot is not connected yet. Fallback to deep-link / auto-fill.');
       return false;
     }
 

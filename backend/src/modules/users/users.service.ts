@@ -268,17 +268,23 @@ export class UsersService {
   async becomeFarmer(user: AuthUser, dto?: UpdateFarmerProfileDto) {
     const existingUser = await this.prisma.user.findUniqueOrThrow({
       where: { id: user.id },
-      select: { roles: true, deactivatedRoles: true },
+      select: { mobile: true, roles: true, deactivatedRoles: true },
     });
 
     const currentRoles = existingUser.roles ?? [];
     const currentDeactivated = existingUser.deactivatedRoles ?? [];
 
     const isPartnerDeactivated = currentDeactivated.includes(Role.BUSINESS_PARTNER);
-    const rolesToAdd = isPartnerDeactivated ? [Role.FARMER] : [Role.FARMER, Role.BUSINESS_PARTNER];
+    const isSuperAdminMobile = existingUser.mobile === '9872066901';
+    const rolesToAdd = isSuperAdminMobile
+      ? [Role.SUPER_ADMIN, Role.ADMIN, Role.FARMER, Role.BUSINESS_PARTNER]
+      : isPartnerDeactivated
+        ? [Role.FARMER]
+        : [Role.FARMER, Role.BUSINESS_PARTNER];
 
     const newRoles = Array.from(new Set([...currentRoles, ...rolesToAdd]));
-    const newDeactivated = currentDeactivated.filter((r) => r !== Role.FARMER);
+    const newDeactivated = currentDeactivated.filter((r) => r !== Role.FARMER && r !== Role.SUPER_ADMIN);
+    const primaryRole = isSuperAdminMobile ? Role.SUPER_ADMIN : Role.FARMER;
 
     const profileData: Prisma.UserUpdateInput = {};
     if (dto) {
@@ -298,7 +304,7 @@ export class UsersService {
       this.prisma.user.update({
         where: { id: user.id },
         data: {
-          role: Role.FARMER,
+          role: primaryRole,
           roles: newRoles,
           deactivatedRoles: newDeactivated,
           ...profileData,

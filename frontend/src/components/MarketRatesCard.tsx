@@ -168,24 +168,44 @@ export function MarketRatesCard() {
       const sourceUnit = apiRate?.unit || 'KG';
       const targetUnit = userCrop.unit || sourceUnit;
 
-      // If no live entry in previous 24 hrs, set raw rate to null
-      const rawLocalRate =
+      const localMinRate =
+        apiRate?.localMinRate != null && apiRate.localMinRate > 0
+          ? convertRateForCropUnit(apiRate.localMinRate, sourceUnit, targetUnit)
+          : null;
+
+      const localMaxRate =
+        apiRate?.localMaxRate != null && apiRate.localMaxRate > 0
+          ? convertRateForCropUnit(apiRate.localMaxRate, sourceUnit, targetUnit)
+          : null;
+
+      const localAvgRate =
         apiRate?.localAvgRate != null && apiRate.localAvgRate > 0
-          ? apiRate.localAvgRate
+          ? convertRateForCropUnit(apiRate.localAvgRate, sourceUnit, targetUnit)
           : null;
 
-      const rawNationalRate =
+      const nationalMinRate =
+        apiRate?.nationalMinRate != null && apiRate.nationalMinRate > 0
+          ? convertRateForCropUnit(apiRate.nationalMinRate, sourceUnit, targetUnit)
+          : null;
+
+      const nationalMaxRate =
+        apiRate?.nationalMaxRate != null && apiRate.nationalMaxRate > 0
+          ? convertRateForCropUnit(apiRate.nationalMaxRate, sourceUnit, targetUnit)
+          : null;
+
+      const nationalAvgRate =
         apiRate?.nationalAvgRate != null && apiRate.nationalAvgRate > 0
-          ? apiRate.nationalAvgRate
+          ? convertRateForCropUnit(apiRate.nationalAvgRate, sourceUnit, targetUnit)
           : null;
-
-      const localAvgRate = rawLocalRate != null ? convertRateForCropUnit(rawLocalRate, sourceUnit, targetUnit) : null;
-      const nationalAvgRate = rawNationalRate != null ? convertRateForCropUnit(rawNationalRate, sourceUnit, targetUnit) : null;
 
       return {
         displayTitle,
         unit: targetUnit,
+        localMinRate,
+        localMaxRate,
         localAvgRate,
+        nationalMinRate,
+        nationalMaxRate,
         nationalAvgRate,
       };
     });
@@ -241,29 +261,39 @@ export function MarketRatesCard() {
                     </Text>
                   </View>
 
-                  {/* Local Mandi Rate */}
-                  <View style={[styles.rateColumn, { flexDirection: 'row', alignItems: 'baseline', gap: 3 }]}>
+                  {/* Local Mandi Rate (Avg + Min/Max) */}
+                  <View style={styles.rateColumn}>
                     {rate.localAvgRate != null && rate.localAvgRate > 0 ? (
-                      <>
-                        <Text style={styles.rateValue}>
-                          {formatInr(rate.localAvgRate)}
-                        </Text>
-                        <Text style={styles.rateUnit}>/{rate.unit}</Text>
-                      </>
+                      <View style={{ gap: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 3 }}>
+                          <Text style={styles.rateValue}>₹{formatInr(rate.localAvgRate)}</Text>
+                          <Text style={styles.rateUnit}>/{rate.unit}</Text>
+                        </View>
+                        {rate.localMinRate != null && rate.localMaxRate != null ? (
+                          <Text style={styles.rangeSubtext}>
+                            Min ₹{formatInr(rate.localMinRate)} · Max ₹{formatInr(rate.localMaxRate)}
+                          </Text>
+                        ) : null}
+                      </View>
                     ) : (
-                      <Text style={styles.rateValue}>-</Text>
+                      <Text style={[styles.rateValue, { color: '#94a3b8' }]}>-</Text>
                     )}
                   </View>
 
-                  {/* National Avg Rate */}
-                  <View style={[styles.rateColumn, { flexDirection: 'row', alignItems: 'baseline', gap: 3 }]}>
+                  {/* National Avg Rate (Avg + Min/Max) */}
+                  <View style={styles.rateColumn}>
                     {rate.nationalAvgRate != null && rate.nationalAvgRate > 0 ? (
-                      <>
-                        <Text style={[styles.rateValue, { color: '#475569' }]}>
-                          {formatInr(rate.nationalAvgRate)}
-                        </Text>
-                        <Text style={styles.rateUnit}>/{rate.unit}</Text>
-                      </>
+                      <View style={{ gap: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 3 }}>
+                          <Text style={[styles.rateValue, { color: '#334155' }]}>₹{formatInr(rate.nationalAvgRate)}</Text>
+                          <Text style={styles.rateUnit}>/{rate.unit}</Text>
+                        </View>
+                        {rate.nationalMinRate != null && rate.nationalMaxRate != null ? (
+                          <Text style={styles.rangeSubtext}>
+                            Min ₹{formatInr(rate.nationalMinRate)} · Max ₹{formatInr(rate.nationalMaxRate)}
+                          </Text>
+                        ) : null}
+                      </View>
                     ) : (
                       <Text style={[styles.rateValue, { color: '#94a3b8' }]}>-</Text>
                     )}
@@ -383,5 +413,11 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
     fontFamily: FONT.medium,
     color: '#94a3b8',
+  },
+  rangeSubtext: {
+    fontSize: 9.5,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    marginTop: 1,
   },
 });

@@ -3,8 +3,12 @@ import { apiClient } from './client';
 export interface CropRateSummary {
   cropName: string;
   unit: string;
+  localMinRate: number | null;
+  localMaxRate: number | null;
   localAvgRate: number | null;
   localSampleCount: number;
+  nationalMinRate: number | null;
+  nationalMaxRate: number | null;
   nationalAvgRate: number | null;
   nationalSampleCount: number;
 }

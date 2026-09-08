@@ -7,8 +7,12 @@ const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 export interface CropRateSummary {
   cropName: string;
   unit: string;
+  localMinRate: number | null;
+  localMaxRate: number | null;
   localAvgRate: number | null;
   localSampleCount: number;
+  nationalMinRate: number | null;
+  nationalMaxRate: number | null;
   nationalAvgRate: number | null;
   nationalSampleCount: number;
 }
@@ -69,10 +73,12 @@ export class MarketRatesService {
     });
 
     const rates = await Promise.all(
-      distinctCrops.map(async ({ cropName, unit: cropUnit, pricePerUnit }) => {
+      distinctCrops.map(async ({ cropName, unit: cropUnit }) => {
         const [nationalAgg, localAgg] = await Promise.all([
           this.prisma.marketRate.aggregate({
             where: { cropName: { equals: cropName, mode: 'insensitive' }, rateDate: { gte: since } },
+            _min: { minPrice: true, modalPrice: true },
+            _max: { maxPrice: true, modalPrice: true },
             _avg: { modalPrice: true },
             _count: true,
           }),
@@ -83,55 +89,57 @@ export class MarketRatesService {
                   rateDate: { gte: since },
                   state: { equals: profile.state, mode: 'insensitive' },
                 },
+                _min: { minPrice: true, modalPrice: true },
+                _max: { maxPrice: true, modalPrice: true },
                 _avg: { modalPrice: true },
                 _count: true,
               })
             : Promise.resolve(null),
         ]);
 
-        let localAvgRate = localAgg?._avg.modalPrice ? Number(localAgg._avg.modalPrice) : null;
-        let localSampleCount = localAgg?._count ?? 0;
+        const localRatePool: number[] = [];
         let unit = cropUnit || 'quintal';
 
-        // 1. Check recent SaleBills for this user and crop (prioritize recent sales within 24 hrs or latest sale)
+        // 1. From local MarketRate aggregate data if present
+        if (localAgg && localAgg._count > 0) {
+          const minP = Number(localAgg._min.minPrice ?? localAgg._min.modalPrice);
+          const maxP = Number(localAgg._max.maxPrice ?? localAgg._max.modalPrice);
+          const avgP = Number(localAgg._avg.modalPrice);
+          if (!isNaN(minP) && minP > 0) localRatePool.push(minP);
+          if (!isNaN(maxP) && maxP > 0) localRatePool.push(maxP);
+          if (!isNaN(avgP) && avgP > 0) localRatePool.push(avgP);
+        }
+
+        // 2. From recent SaleBills for this user & crop
         for (const bill of recentBills) {
           const items = bill.items as any[];
           if (Array.isArray(items)) {
-            const matched = items.find((it) => {
+            for (const it of items) {
               const iName = (it.cropName || '').split('(')[0].trim().toLowerCase();
-              return iName === cropName.toLowerCase() || iName.includes(cropName.toLowerCase()) || cropName.toLowerCase().includes(iName);
-            });
-            if (matched && Number(matched.rate) > 0) {
-              if (localAvgRate == null || bill.createdAt >= since) {
-                localAvgRate = Number(matched.rate);
-                localSampleCount = Math.max(localSampleCount, 1);
-                if (matched.unit) unit = matched.unit;
+              if (iName === cropName.toLowerCase() || iName.includes(cropName.toLowerCase()) || cropName.toLowerCase().includes(iName)) {
+                const rVal = Number(it.rate);
+                if (rVal > 0) {
+                  localRatePool.push(rVal);
+                  if (it.unit) unit = it.unit;
+                }
               }
-              break;
             }
           }
         }
 
-        // 2. Check recent Arhtiya crop sales for this user and crop
-        if (localAvgRate == null) {
-          const matchedArhtiya = recentArhtiyaSales.find((tx) => {
-            const tName = (tx.cropName || '').split('(')[0].trim().toLowerCase();
-            return tName === cropName.toLowerCase() || tName.includes(cropName.toLowerCase()) || cropName.toLowerCase().includes(tName);
-          });
-          if (matchedArhtiya && Number(matchedArhtiya.ratePerQuintal) > 0) {
-            localAvgRate = Number(matchedArhtiya.ratePerQuintal);
-            localSampleCount = 1;
-            unit = matchedArhtiya.inputUnit || 'QUINTAL';
+        // 3. From recent Arhtiya crop sales
+        for (const tx of recentArhtiyaSales) {
+          const tName = (tx.cropName || '').split('(')[0].trim().toLowerCase();
+          if (tName === cropName.toLowerCase() || tName.includes(cropName.toLowerCase()) || cropName.toLowerCase().includes(tName)) {
+            const rVal = Number(tx.ratePerQuintal);
+            if (rVal > 0) {
+              localRatePool.push(rVal);
+              if (tx.inputUnit) unit = tx.inputUnit;
+            }
           }
         }
 
-        // 3. Fallback to cropCycle pricePerUnit
-        if (localAvgRate == null && pricePerUnit != null && Number(pricePerUnit) > 0) {
-          localAvgRate = Number(pricePerUnit);
-          localSampleCount = 1;
-        }
-
-        // 4. Sample MarketRate for unit info if not yet determined
+        // Sample MarketRate for unit info if not yet determined
         if (!unit || unit === 'quintal') {
           const sample = await this.prisma.marketRate.findFirst({
             where: { cropName: { equals: cropName, mode: 'insensitive' } },
@@ -141,13 +149,42 @@ export class MarketRatesService {
           if (sample?.unit) unit = sample.unit;
         }
 
-        const nationalAvgRate = nationalAgg._avg.modalPrice ? Number(nationalAgg._avg.modalPrice) : localAvgRate;
+        let localMinRate: number | null = null;
+        let localMaxRate: number | null = null;
+        let localAvgRate: number | null = null;
+
+        if (localRatePool.length > 0) {
+          localMinRate = Math.min(...localRatePool);
+          localMaxRate = Math.max(...localRatePool);
+          localAvgRate = Math.round(localRatePool.reduce((a, b) => a + b, 0) / localRatePool.length);
+        }
+
+        let nationalMinRate: number | null = null;
+        let nationalMaxRate: number | null = null;
+        let nationalAvgRate: number | null = null;
+
+        if (nationalAgg._count && nationalAgg._count > 0) {
+          const minNat = Number(nationalAgg._min.minPrice ?? nationalAgg._min.modalPrice);
+          const maxNat = Number(nationalAgg._max.maxPrice ?? nationalAgg._max.modalPrice);
+          const avgNat = Number(nationalAgg._avg.modalPrice);
+          nationalMinRate = !isNaN(minNat) && minNat > 0 ? minNat : null;
+          nationalMaxRate = !isNaN(maxNat) && maxNat > 0 ? maxNat : null;
+          nationalAvgRate = !isNaN(avgNat) && avgNat > 0 ? Math.round(avgNat) : null;
+        } else if (localRatePool.length > 0) {
+          nationalMinRate = localMinRate;
+          nationalMaxRate = localMaxRate;
+          nationalAvgRate = localAvgRate;
+        }
 
         return {
           cropName,
           unit,
+          localMinRate,
+          localMaxRate,
           localAvgRate,
-          localSampleCount,
+          localSampleCount: localRatePool.length,
+          nationalMinRate,
+          nationalMaxRate,
           nationalAvgRate,
           nationalSampleCount: nationalAgg._count,
         };

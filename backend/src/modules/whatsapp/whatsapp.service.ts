@@ -187,9 +187,44 @@ export class WhatsappBotService implements OnModuleInit {
   }
 
   /**
-   * Send arbitrary text message to a user on WhatsApp
+   * Send arbitrary text message to a user on WhatsApp (Meta Cloud API Primary + Baileys Fallback)
    */
   async sendDirectTextMessage(mobileNumber: string, text: string): Promise<boolean> {
+    const metaToken = process.env.META_WA_TOKEN || process.env.WHATSAPP_CLOUD_API_TOKEN;
+    const metaPhoneId = process.env.META_WA_PHONE_ID || process.env.WHATSAPP_CLOUD_PHONE_ID;
+
+    // 1. Primary: Official Meta WhatsApp Cloud API
+    if (metaToken && metaPhoneId) {
+      try {
+        const cleanMobile = mobileNumber.replace(/\D/g, '');
+        const recipient = cleanMobile.startsWith('91') ? cleanMobile : '91' + cleanMobile;
+        const response = await fetch(`https://graph.facebook.com/v20.0/${metaPhoneId}/messages`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${metaToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            messaging_product: 'whatsapp',
+            to: recipient,
+            type: 'text',
+            text: { body: text },
+          }),
+        });
+
+        if (response.ok) {
+          this.logger.log(`🟢 Meta WhatsApp Cloud API text message sent to ${recipient}`);
+          return true;
+        } else {
+          const errJson = await response.json().catch(() => ({}));
+          this.logger.warn('Meta WhatsApp Cloud API error response:', JSON.stringify(errJson));
+        }
+      } catch (metaErr) {
+        this.logger.error('Meta WhatsApp Cloud API text message request failed:', metaErr);
+      }
+    }
+
+    // 2. Secondary: Baileys WhatsApp Web Socket Connection
     if (!this.socket || !this.isConnected) {
       this.logger.warn('WhatsApp Bot is not connected. Unable to send direct message.');
       return false;

@@ -449,7 +449,7 @@ async function main() {
       `  Customer:       9999900007 / customer123 (linked to Business Partner)\n` +
       `  Business Partner: 9999900008 / partner123\n` +
       `  Admin:          9999900009 / admin123\n` +
-      `  Super Admin:    ${demoSuperAdminMobile} / superadmin123\n` +
+      `  Super Admin:    ${demoSuperAdminMobile} / 12345678\n` +
       `  Operator:       ${demoOperatorMobile} / operator123`
   );
 }

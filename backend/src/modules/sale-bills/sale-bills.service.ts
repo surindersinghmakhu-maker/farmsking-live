@@ -63,6 +63,15 @@ export class SaleBillsService {
   }
 
   async create(user: AuthUser, dto: CreateSaleBillDto) {
+    if (dto.billNo) {
+      const existing = await this.prisma.saleBill.findFirst({
+        where: { farmerId: user.id, billNo: dto.billNo },
+      });
+      if (existing) {
+        return this.update(user, existing.id, dto);
+      }
+    }
+
     const billNo = dto.billNo ? dto.billNo : await this.nextBillNo();
     const bill = await this.prisma.saleBill.create({
       data: {
@@ -121,10 +130,10 @@ export class SaleBillsService {
 
   async update(user: AuthUser, id: string, dto: CreateSaleBillDto) {
     const existing = await this.findOneOrThrow(user, id);
-    return this.prisma.saleBill.update({
+    const updated = await this.prisma.saleBill.update({
       where: { id: existing.id },
       data: {
-        billNo: dto.billNo || existing.billNo,
+        billNo: existing.billNo,
         farmerName: dto.farmerName,
         partyId: dto.partyId,
         partyName: dto.partyName,
@@ -140,13 +149,27 @@ export class SaleBillsService {
         netReceivable: dto.netReceivable,
       },
     });
+
+    return updated;
   }
 
   async findOneOrThrow(user: AuthUser, id: string) {
-    let bill = await this.prisma.saleBill.findUnique({ where: { id } }).catch(() => null);
+    let bill: any = null;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (isUuid) {
+      bill = await this.prisma.saleBill.findUnique({ where: { id } }).catch(() => null);
+    }
     if (!bill) {
       bill = await this.prisma.saleBill.findFirst({
         where: { farmerId: user.id, billNo: id },
+      });
+    }
+    if (!bill) {
+      bill = await this.prisma.saleBill.findFirst({
+        where: {
+          farmerId: user.id,
+          billNo: { equals: id, mode: 'insensitive' },
+        },
       });
     }
     if (!bill) {

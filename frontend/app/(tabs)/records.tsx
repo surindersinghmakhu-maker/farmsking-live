@@ -1448,11 +1448,12 @@ export default function RecordsScreen() {
         });
       }
 
-      await queryClient.refetchQueries({ queryKey: ['sale-bills'] });
+      await queryClient.refetchQueries({ queryKey: ['sale-bills', 'mine'] });
+      queryClient.invalidateQueries({ queryKey: ['sale-bills'] });
       queryClient.invalidateQueries({ queryKey: ['market-rates'] });
       queryClient.invalidateQueries({ queryKey: ['farmer-crops'] });
       queryClient.invalidateQueries({ queryKey: ['parties'] });
-      queryClient.invalidateQueries({ queryKey: ['party-statement'] });
+      queryClient.invalidateQueries({ queryKey: ['parties', 'statement'] });
 
       const now = new Date();
       const invoice: SavedSaleInvoice = {

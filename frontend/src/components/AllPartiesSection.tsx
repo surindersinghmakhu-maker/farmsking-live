@@ -352,37 +352,49 @@ export function AllPartiesSection() {
 
             return (
               <View key={item.id} style={[styles.compactCard, premiumShadow('#0f172a', 'sm')]}>
-                {/* Row 1: Avatar + Name + Type Tag + Net Balance */}
-                <View style={styles.cardRow1}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                {/* Header Row: Avatar + Name + Type Badge + Edit Button (Left) | Net Balance + Statement Button (Right) */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                  {/* Left: Avatar + Party Name + Type Badge + Edit Button */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, minWidth: 160 }}>
                     <Avatar size={34} />
-                    <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Text style={styles.partyName} numberOfLines={1}>
-                          {item.name}
-                        </Text>
-                        <Text style={styles.typeBadge}>{typeLabel}</Text>
-                      </View>
+                    <View style={{ flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                      <Text style={styles.partyName} numberOfLines={1}>
+                        {item.name}
+                      </Text>
+                      <Text style={styles.typeBadge}>{typeLabel}</Text>
+                      {/* Edit Button right next to Party Name */}
+                      <TouchableOpacity
+                        style={{
+                          paddingHorizontal: 6,
+                          paddingVertical: 3,
+                          borderRadius: 6,
+                          backgroundColor: '#f1f5f9',
+                          borderWidth: 1,
+                          borderColor: '#cbd5e1',
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 3,
+                        }}
+                        activeOpacity={0.8}
+                        onPress={() => handleOpenEdit(item)}
+                        hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                      >
+                        <Ionicons name="create-outline" size={12} color="#475569" />
+                        <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#475569' }}>Edit</Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
 
-                  {/* Net Balance Badge */}
-                  <View style={[styles.balanceBadge, { backgroundColor: badgeBg, borderColor: badgeBorder }]}>
-                    <Text style={[styles.balanceBadgeText, { color: badgeColor }]}>{balanceText}</Text>
-                  </View>
-                </View>
-
-                {/* Row 2: Contact info & Quick Action Buttons */}
-                <View style={styles.cardRow2}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                    {item.mobile ? <Text style={styles.metaText}>📱 {item.mobile}</Text> : null}
-                    {item.address ? <Text style={styles.metaText}>📍 {item.address}</Text> : null}
-                  </View>
-
-                  {/* Compact Quick Action Buttons */}
+                  {/* Right: Net Balance + Statement Button */}
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    {/* Party Balance */}
+                    <View style={[styles.balanceBadge, { backgroundColor: badgeBg, borderColor: badgeBorder }]}>
+                      <Text style={[styles.balanceBadgeText, { color: badgeColor }]}>{balanceText}</Text>
+                    </View>
+
+                    {/* Statement Button at the end */}
                     <TouchableOpacity
-                      style={styles.compactBtn}
+                      style={[styles.compactBtn, { backgroundColor: '#e0f2fe', borderColor: '#bae6fd', borderWidth: 1 }]}
                       activeOpacity={0.8}
                       onPress={() => {
                         tap();
@@ -390,19 +402,18 @@ export function AllPartiesSection() {
                       }}
                     >
                       <Ionicons name="document-text-outline" size={13} color="#0284c7" />
-                      <Text style={[styles.compactBtnText, { color: '#0284c7' }]}>Statement</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[styles.compactBtn, { backgroundColor: '#f1f5f9' }]}
-                      activeOpacity={0.8}
-                      onPress={() => handleOpenEdit(item)}
-                    >
-                      <Ionicons name="create-outline" size={13} color="#475569" />
-                      <Text style={[styles.compactBtnText, { color: '#475569' }]}>Edit</Text>
+                      <Text style={[styles.compactBtnText, { color: '#0284c7', fontFamily: FONT.bold }]}>Statement</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
+
+                {/* Sub-row: Contact info if available */}
+                {(item.mobile || item.address) ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4, paddingLeft: 40 }}>
+                    {item.mobile ? <Text style={styles.metaText}>📱 {item.mobile}</Text> : null}
+                    {item.address ? <Text style={styles.metaText}>📍 {item.address}</Text> : null}
+                  </View>
+                ) : null}
               </View>
             );
           })}

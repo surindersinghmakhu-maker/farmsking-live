@@ -316,8 +316,8 @@ export default function RecordsScreen() {
           </Text>
         </View>
 
-        {/* 4. Bill Amount */}
-        <Text style={{ width: 80, fontSize: 11, fontFamily: FONT.bold, color: '#0f172a', textAlign: 'right' }}>
+        {/* 4. Net Sale Amount */}
+        <Text style={{ width: 85, fontSize: 11, fontFamily: FONT.bold, color: '#0f172a', textAlign: 'right' }}>
           ₹{billTotal.toLocaleString('en-IN')}
         </Text>
 
@@ -1764,14 +1764,14 @@ export default function RecordsScreen() {
                 </View>
               ) : (salesViewMode === 'MONTH' || salesViewMode === 'PERIOD') ? (
                 <View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, overflow: 'hidden', backgroundColor: '#ffffff', marginBottom: 16 }}>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 650, flexGrow: 1 }}>
-                    <View style={{ flex: 1, minWidth: 650 }}>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 660, flexGrow: 1 }}>
+                    <View style={{ flex: 1, minWidth: 660 }}>
                       {/* Table Header Row */}
-                      <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 8, paddingHorizontal: 8, alignItems: 'center', minWidth: 650 }}>
+                      <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 8, paddingHorizontal: 8, alignItems: 'center', minWidth: 660 }}>
                         <Text style={{ width: 78, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff' }}>#</Text>
                         <Text style={{ width: 72, fontSize: 10, fontFamily: FONT.bold, color: '#e2e8f0' }}>DATE</Text>
                         <Text style={{ flex: 1.8, minWidth: 140, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff' }}>PARTY / CROP</Text>
-                        <Text style={{ width: 80, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right' }}>BILL AMT</Text>
+                        <Text style={{ width: 85, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right' }}>NET SALE</Text>
                         <Text style={{ width: 80, fontSize: 10, fontFamily: FONT.bold, color: '#86efac', textAlign: 'right' }}>RECEIVED</Text>
                         <Text style={{ width: 95, fontSize: 10, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right', paddingRight: 8 }}>REM. BAL</Text>
                         <Text style={{ width: 60, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'center' }}>ACTION</Text>
@@ -1808,13 +1808,13 @@ export default function RecordsScreen() {
                         </TouchableOpacity>
                         {isExpanded ? (
                           <View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, overflow: 'hidden', backgroundColor: '#ffffff', marginTop: 6 }}>
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 650, flexGrow: 1 }}>
-                              <View style={{ flex: 1, minWidth: 650 }}>
-                                <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 7, paddingHorizontal: 8, alignItems: 'center', minWidth: 650 }}>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 660, flexGrow: 1 }}>
+                              <View style={{ flex: 1, minWidth: 660 }}>
+                                <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 7, paddingHorizontal: 8, alignItems: 'center', minWidth: 660 }}>
                                   <Text style={{ width: 78, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>#</Text>
                                   <Text style={{ width: 72, fontSize: 9.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>DATE</Text>
                                   <Text style={{ flex: 1.8, minWidth: 140, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>PARTY / CROP</Text>
-                                  <Text style={{ width: 80, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right' }}>BILL AMT</Text>
+                                  <Text style={{ width: 85, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right' }}>NET SALE</Text>
                                   <Text style={{ width: 80, fontSize: 9.5, fontFamily: FONT.bold, color: '#86efac', textAlign: 'right' }}>RECEIVED</Text>
                                   <Text style={{ width: 95, fontSize: 9.5, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right', paddingRight: 8 }}>REM. BAL</Text>
                                   <Text style={{ width: 60, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'center' }}>ACTION</Text>

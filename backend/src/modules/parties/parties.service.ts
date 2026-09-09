@@ -28,9 +28,19 @@ export class PartiesService {
   }
 
   async update(user: AuthUser, partyId: string, dto: { name?: string; address?: string; mobile?: string }) {
-    await this.findOwnedOrThrow(user, partyId);
+    const party = await this.findOwnedOrThrow(user, partyId);
+    if ((party as any).isUnified) {
+      return this.prisma.unifiedParty.update({
+        where: { id: party.id },
+        data: {
+          ...(dto.name && { name: dto.name.trim() }),
+          ...(dto.address !== undefined && { address: dto.address.trim() }),
+          ...(dto.mobile !== undefined && { mobile: dto.mobile.trim() || null }),
+        },
+      });
+    }
     return this.prisma.party.update({
-      where: { id: partyId },
+      where: { id: party.id },
       data: {
         ...(dto.name && { name: dto.name.trim() }),
         ...(dto.address !== undefined && { address: dto.address.trim() }),
@@ -58,19 +68,66 @@ export class PartiesService {
 
   private async findOwnedOrThrow(user: AuthUser, partyId: string) {
     const party = await this.prisma.party.findFirst({ where: { id: partyId, deletedAt: null } });
-    if (!party) {
-      throw new NotFoundException('Party not found.');
+    if (party) {
+      if (party.ownerId !== user.id) {
+        throw new ForbiddenException('This party does not belong to you.');
+      }
+      return { ...party, isUnified: false };
     }
-    if (party.ownerId !== user.id) {
-      throw new ForbiddenException('This party does not belong to you.');
+
+    const unified = await this.prisma.unifiedParty.findFirst({
+      where: {
+        OR: [{ id: partyId }, { kingId: partyId }],
+        ownerFarmerId: user.id,
+        deletedAt: null,
+      },
+    });
+
+    if (unified) {
+      return {
+        id: unified.id,
+        ownerId: unified.ownerFarmerId,
+        name: unified.name,
+        address: unified.address || '',
+        mobile: unified.mobile || null,
+        createdAt: unified.createdAt,
+        kingId: unified.kingId,
+        isUnified: true,
+      };
     }
-    return party;
+
+    throw new NotFoundException('Party not found.');
   }
 
   async getStatement(user: AuthUser, partyId: string) {
     const party = await this.findOwnedOrThrow(user, partyId);
+
+    const partyIds = new Set<string>([partyId, party.id]);
+    if ((party as any).kingId) {
+      partyIds.add((party as any).kingId);
+    }
+
+    if (party.mobile) {
+      const matchParties = await this.prisma.party.findMany({
+        where: { ownerId: user.id, mobile: party.mobile, deletedAt: null },
+        select: { id: true },
+      });
+      matchParties.forEach((p) => partyIds.add(p.id));
+
+      const matchUnified = await this.prisma.unifiedParty.findMany({
+        where: { ownerFarmerId: user.id, mobile: party.mobile, deletedAt: null },
+        select: { id: true, kingId: true },
+      });
+      matchUnified.forEach((u) => {
+        partyIds.add(u.id);
+        if (u.kingId) partyIds.add(u.kingId);
+      });
+    }
+
     const entries = await this.prisma.partyLedgerEntry.findMany({
-      where: { partyId },
+      where: {
+        partyId: { in: Array.from(partyIds) },
+      },
       include: {
         saleBill: {
           select: {
@@ -81,7 +138,62 @@ export class PartiesService {
       },
       orderBy: { createdAt: 'desc' },
     });
-    return { party, balance: this.computeBalance(entries), entries };
+
+    const existingBillIds = new Set(
+      entries.map((e) => e.saleBillId).filter((id): id is string => Boolean(id))
+    );
+
+    const saleBills = await this.prisma.saleBill.findMany({
+      where: {
+        farmerId: user.id,
+        OR: [
+          { partyId: { in: Array.from(partyIds) } },
+          { partyName: { equals: party.name, mode: 'insensitive' } },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const extraEntries: any[] = [];
+    for (const bill of saleBills) {
+      if (!existingBillIds.has(bill.id)) {
+        extraEntries.push({
+          id: `synth_credit_${bill.id}`,
+          partyId: party.id,
+          type: PartyLedgerEntryType.SALE_CREDIT,
+          amount: bill.totalAmount,
+          reason: `Sale Bill #${bill.billNo}`,
+          saleBillId: bill.id,
+          saleBill: {
+            id: bill.id,
+            billNo: bill.billNo,
+          },
+          createdAt: bill.createdAt,
+        });
+
+        if (Number(bill.amountReceived) > 0) {
+          extraEntries.push({
+            id: `synth_pay_${bill.id}`,
+            partyId: party.id,
+            type: PartyLedgerEntryType.SALE_PAYMENT,
+            amount: bill.amountReceived,
+            reason: `Amount received against: Sale Bill #${bill.billNo}`,
+            saleBillId: bill.id,
+            saleBill: {
+              id: bill.id,
+              billNo: bill.billNo,
+            },
+            createdAt: bill.createdAt,
+          });
+        }
+      }
+    }
+
+    const allEntries = [...entries, ...extraEntries].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    return { party, balance: this.computeBalance(allEntries), entries: allEntries };
   }
 
   async recordSaleLedger(user: AuthUser, partyId: string, dto: RecordSaleLedgerDto) {

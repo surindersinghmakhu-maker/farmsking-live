@@ -10,6 +10,7 @@ export interface SaleBillItemPayload {
 }
 
 export interface CreateSaleBillPayload {
+  billNo?: string;
   farmerName: string;
   partyId?: string;
   partyName: string;

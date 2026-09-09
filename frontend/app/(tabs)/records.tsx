@@ -1314,6 +1314,7 @@ export default function RecordsScreen() {
     try {
       const currentReceivedMode = paymentMode === 'PARTY' ? amountReceivedMode : 'CASH';
       const billPayload = {
+        billNo: editingBillNo || undefined,
         farmerName: user?.name || 'Farmer',
         partyId: paymentMode === 'PARTY' ? selectedParty?.id : undefined,
         partyName: paymentMode === 'PARTY' && selectedParty ? selectedParty.name : cashName || 'Cash',
@@ -1339,16 +1340,35 @@ export default function RecordsScreen() {
             id: editingBillId,
             payload: billPayload,
           });
-          billNo = updatedBill.billNo;
+          billNo = updatedBill.billNo || editingBillNo || billNo;
           realDbBillId = updatedBill.id;
         } catch {
-          // If updating an old/local bill failed because bill ID was not in DB, create a new DB bill snapshot
-          try {
-            const newBill = await createSaleBill.mutateAsync(billPayload);
-            billNo = newBill.billNo;
-            realDbBillId = newBill.id;
-          } catch {
-            realDbBillId = undefined;
+          // If updating by ID failed, try updating by billNo if editingBillNo exists
+          if (editingBillNo) {
+            try {
+              const updatedBill = await updateSaleBill.mutateAsync({
+                id: editingBillNo,
+                payload: billPayload,
+              });
+              billNo = updatedBill.billNo || editingBillNo;
+              realDbBillId = updatedBill.id;
+            } catch {
+              try {
+                const newBill = await createSaleBill.mutateAsync(billPayload);
+                billNo = newBill.billNo || editingBillNo;
+                realDbBillId = newBill.id;
+              } catch {
+                realDbBillId = undefined;
+              }
+            }
+          } else {
+            try {
+              const newBill = await createSaleBill.mutateAsync(billPayload);
+              billNo = newBill.billNo;
+              realDbBillId = newBill.id;
+            } catch {
+              realDbBillId = undefined;
+            }
           }
         }
       } else {

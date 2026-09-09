@@ -22,6 +22,10 @@ class SaleBillItemDto {
 }
 
 export class CreateSaleBillDto {
+  @IsOptional()
+  @IsString()
+  billNo?: string;
+
   @IsString()
   farmerName: string;
 

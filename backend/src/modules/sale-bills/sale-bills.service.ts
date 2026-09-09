@@ -63,7 +63,7 @@ export class SaleBillsService {
   }
 
   async create(user: AuthUser, dto: CreateSaleBillDto) {
-    const billNo = await this.nextBillNo();
+    const billNo = dto.billNo ? dto.billNo : await this.nextBillNo();
     const bill = await this.prisma.saleBill.create({
       data: {
         farmerId: user.id,
@@ -124,6 +124,7 @@ export class SaleBillsService {
     return this.prisma.saleBill.update({
       where: { id: existing.id },
       data: {
+        billNo: dto.billNo || existing.billNo,
         farmerName: dto.farmerName,
         partyId: dto.partyId,
         partyName: dto.partyName,

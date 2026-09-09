@@ -324,12 +324,12 @@ export default function RecordsScreen() {
         </Text>
 
         {/* 6. Balance */}
-        <Text style={{ flex: 1.1, fontSize: 11, fontFamily: FONT.extraBold, color: billBal > 0 ? '#dc2626' : '#16a34a', textAlign: 'right' }}>
+        <Text style={{ flex: 1.1, fontSize: 11, fontFamily: FONT.extraBold, color: billBal > 0 ? '#dc2626' : '#16a34a', textAlign: 'right', paddingRight: 10 }}>
           ₹{billBal.toLocaleString('en-IN')}
         </Text>
 
         {/* 7. Action Buttons (Edit & Download) */}
-        <View style={{ width: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+        <View style={{ width: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingLeft: 4 }}>
           <TouchableOpacity
             style={{
               width: 26,
@@ -1768,8 +1768,8 @@ export default function RecordsScreen() {
                     <Text style={{ flex: 1.8, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff' }}>PARTY / CROP</Text>
                     <Text style={{ flex: 1.1, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right' }}>BILL AMT</Text>
                     <Text style={{ flex: 1.1, fontSize: 10, fontFamily: FONT.bold, color: '#86efac', textAlign: 'right' }}>RECEIVED</Text>
-                    <Text style={{ flex: 1.1, fontSize: 10, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right' }}>BALANCE</Text>
-                    <Text style={{ width: 56, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'center' }}>ACTION</Text>
+                    <Text style={{ flex: 1.1, fontSize: 10, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right', paddingRight: 10 }}>BALANCE</Text>
+                    <Text style={{ width: 60, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'center' }}>ACTION</Text>
                   </View>
 
                   {/* Table Body Rows */}
@@ -1807,8 +1807,8 @@ export default function RecordsScreen() {
                               <Text style={{ flex: 1.8, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>PARTY / CROP</Text>
                               <Text style={{ flex: 1.1, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right' }}>BILL AMT</Text>
                               <Text style={{ flex: 1.1, fontSize: 9.5, fontFamily: FONT.bold, color: '#86efac', textAlign: 'right' }}>RECEIVED</Text>
-                              <Text style={{ flex: 1.1, fontSize: 9.5, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right' }}>BALANCE</Text>
-                              <Text style={{ width: 56, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'center' }}>ACTION</Text>
+                              <Text style={{ flex: 1.1, fontSize: 9.5, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right', paddingRight: 10 }}>BALANCE</Text>
+                              <Text style={{ width: 60, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'center' }}>ACTION</Text>
                             </View>
                             {group.entries.map((item, idx) => renderSaleRowItem(item, idx))}
                           </View>

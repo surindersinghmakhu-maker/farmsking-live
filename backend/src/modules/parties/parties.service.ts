@@ -79,6 +79,56 @@ export class PartiesService {
   async recordSaleLedger(user: AuthUser, partyId: string, dto: RecordSaleLedgerDto) {
     await this.findOwnedOrThrow(user, partyId);
 
+    if (dto.saleBillId) {
+      const existingCreditEntry = await this.prisma.partyLedgerEntry.findFirst({
+        where: { saleBillId: dto.saleBillId, type: PartyLedgerEntryType.SALE_CREDIT },
+      });
+
+      if (existingCreditEntry) {
+        await this.prisma.partyLedgerEntry.update({
+          where: { id: existingCreditEntry.id },
+          data: {
+            partyId,
+            amount: dto.totalAmount,
+            reason: dto.reason,
+          },
+        });
+
+        const existingPaymentEntry = await this.prisma.partyLedgerEntry.findFirst({
+          where: { saleBillId: dto.saleBillId, type: PartyLedgerEntryType.SALE_PAYMENT },
+        });
+
+        if (dto.amountReceived && dto.amountReceived > 0) {
+          if (existingPaymentEntry) {
+            await this.prisma.partyLedgerEntry.update({
+              where: { id: existingPaymentEntry.id },
+              data: {
+                partyId,
+                amount: dto.amountReceived,
+                reason: `Amount received against: ${dto.reason}`,
+              },
+            });
+          } else {
+            await this.prisma.partyLedgerEntry.create({
+              data: {
+                partyId,
+                type: PartyLedgerEntryType.SALE_PAYMENT,
+                amount: dto.amountReceived,
+                reason: `Amount received against: ${dto.reason}`,
+                saleBillId: dto.saleBillId,
+              },
+            });
+          }
+        } else if (existingPaymentEntry) {
+          await this.prisma.partyLedgerEntry.delete({
+            where: { id: existingPaymentEntry.id },
+          });
+        }
+
+        return this.getStatement(user, partyId);
+      }
+    }
+
     await this.prisma.partyLedgerEntry.create({
       data: {
         partyId,
@@ -96,6 +146,7 @@ export class PartiesService {
           type: PartyLedgerEntryType.SALE_PAYMENT,
           amount: dto.amountReceived,
           reason: `Amount received against: ${dto.reason}`,
+          saleBillId: dto.saleBillId,
         },
       });
     }

@@ -1123,6 +1123,8 @@ export default function RecordsScreen() {
       queryClient.invalidateQueries({ queryKey: ['market-rates'] });
       queryClient.invalidateQueries({ queryKey: ['farmer-crops'] });
       queryClient.invalidateQueries({ queryKey: ['sale-bills'] });
+      queryClient.invalidateQueries({ queryKey: ['parties'] });
+      queryClient.invalidateQueries({ queryKey: ['party-statement'] });
 
       const now = new Date();
       const invoice: SavedSaleInvoice = {

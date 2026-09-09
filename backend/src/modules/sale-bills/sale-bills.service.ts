@@ -142,7 +142,12 @@ export class SaleBillsService {
   }
 
   async findOneOrThrow(user: AuthUser, id: string) {
-    const bill = await this.prisma.saleBill.findUnique({ where: { id } });
+    let bill = await this.prisma.saleBill.findUnique({ where: { id } }).catch(() => null);
+    if (!bill) {
+      bill = await this.prisma.saleBill.findFirst({
+        where: { farmerId: user.id, billNo: id },
+      });
+    }
     if (!bill) {
       throw new NotFoundException('Bill not found.');
     }

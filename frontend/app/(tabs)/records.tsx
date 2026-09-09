@@ -396,7 +396,7 @@ export default function RecordsScreen() {
     setSaleDelivery('');
     setAmountReceived(isParty ? String(item.totalAmount) : '');
     setSaleDescription(item.notes || '');
-    setEditingBillId(item.id);
+    setEditingBillId(item.billId || item.id);
     setEditingBillNo(billNoToUse);
     setShowSaleForm(true);
     setRecordType('SALES');
@@ -1066,25 +1066,36 @@ export default function RecordsScreen() {
         netReceivable: paymentMode === 'PARTY' ? previousPartyBalance + thisSaleBalance : 0,
       };
 
-      // Save the bill snapshot FIRST so its id can be linked onto the ledger entry below — this is what
-      // lets "Share Bill" from the Party Statement re-open the real saved bill instead of a reconstruction.
+      // Save/update the bill snapshot FIRST so its real DB id can be linked onto the ledger entry.
       let billNo = editingBillNo || `FK-${Date.now().toString().slice(-8)}`;
-      let billId: string | undefined = editingBillId || undefined;
-      try {
-        if (editingBillId) {
+      let realDbBillId: string | undefined = undefined;
+      
+      if (editingBillId) {
+        try {
           const updatedBill = await updateSaleBill.mutateAsync({
             id: editingBillId,
             payload: billPayload,
           });
           billNo = updatedBill.billNo;
-          billId = updatedBill.id;
-        } else {
+          realDbBillId = updatedBill.id;
+        } catch {
+          // If updating an old/local bill failed because bill ID was not in DB, create a new DB bill snapshot
+          try {
+            const newBill = await createSaleBill.mutateAsync(billPayload);
+            billNo = newBill.billNo;
+            realDbBillId = newBill.id;
+          } catch {
+            realDbBillId = undefined;
+          }
+        }
+      } else {
+        try {
           const savedBill = await createSaleBill.mutateAsync(billPayload);
           billNo = savedBill.billNo;
-          billId = savedBill.id;
+          realDbBillId = savedBill.id;
+        } catch {
+          realDbBillId = undefined;
         }
-      } catch {
-        // Bill snapshot storage is best-effort — the sale/ledger entry below still saves successfully.
       }
 
       if (paymentMode === 'PARTY' && selectedParty) {
@@ -1092,15 +1103,20 @@ export default function RecordsScreen() {
         const reason = `Sale: ${saleItems.map((i) => i.cropName).join(', ')} (${totalCartItems} item${totalCartItems > 1 ? 's' : ''})${modeLabel}`;
         await recordSaleLedger.mutateAsync({
           id: selectedParty.id,
-          payload: { totalAmount: totalCartAmount, amountReceived: effectiveAmountReceived, reason, saleBillId: billId },
+          payload: {
+            totalAmount: totalCartAmount,
+            amountReceived: effectiveAmountReceived,
+            reason,
+            saleBillId: realDbBillId || undefined,
+          },
         });
       }
 
       saleItems.forEach((item) => {
-        if (editingBillId) {
+        if (editingBillId && item.id && !item.id.startsWith('bill-item-') && !item.id.startsWith('cart-')) {
           updateSale(item.id, { quantity: String(item.qty), pricePerUnit: String(item.rate), buyerName, totalAmount: item.amount, notes: saleDescription.trim() }).catch(() => { });
-        } else {
-          recordSale(item.cropId, { quantity: String(item.qty), rate: String(item.rate), buyerName, billId }).catch(() => { });
+        } else if (item.cropId) {
+          recordSale(item.cropId, { quantity: String(item.qty), rate: String(item.rate), buyerName, billId: realDbBillId }).catch(() => { });
         }
       });
 

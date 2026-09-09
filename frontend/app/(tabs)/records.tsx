@@ -525,13 +525,45 @@ export default function RecordsScreen() {
     const partyObj = foundParty || (isParty ? ({ id: item.partyId || `party-${Date.now()}`, name: item.buyerName || 'Party', mobile: item.partyMobile || '' } as Party) : null);
 
     let loadedItems: Array<{ id: string; cropId: string; cropName: string; unit: string; qty: number; rate: number; amount: number }> = [];
-    let billNoToUse = item.billId ? item.billId : `FK-${item.id.slice(0, 6).toUpperCase()}`;
+    let billNoToUse = item.billNo || (item.billId ? `FK-${item.billId.slice(-4).toUpperCase()}` : 'FK-2601');
+    let realBillIdToUse = item.billId || item.id;
+    let loadedAmountReceived: string | null = null;
+    let loadedReceivedMode: 'CASH' | 'UPI' = 'CASH';
 
-    if (item.billId) {
+    const matchedBill = item.billId ? saleBillsMap.get(item.billId) : (item.billNo ? saleBillsMap.get(item.billNo) : null);
+
+    if (matchedBill) {
+      realBillIdToUse = matchedBill.id;
+      billNoToUse = matchedBill.billNo || billNoToUse;
+      if (matchedBill.amountReceived !== undefined && matchedBill.amountReceived !== null) {
+        loadedAmountReceived = String(matchedBill.amountReceived);
+      }
+      if (matchedBill.amountReceivedMode) {
+        loadedReceivedMode = matchedBill.amountReceivedMode as 'CASH' | 'UPI';
+      }
+      if (Array.isArray(matchedBill.items) && matchedBill.items.length > 0) {
+        loadedItems = (matchedBill.items as any[]).map((bi: any, idx: number) => ({
+          id: bi.id || `bill-item-${idx}-${Date.now()}`,
+          cropId: bi.cropId || item.cropId,
+          cropName: bi.cropName || item.cropName,
+          unit: bi.unit || item.unit || 'Quintal',
+          qty: Number(bi.qty) || 1,
+          rate: Number(bi.rate) || 0,
+          amount: Number(bi.amount) || ((Number(bi.qty) || 1) * (Number(bi.rate) || 0)),
+        }));
+      }
+    } else if (item.billId || item.billNo) {
       try {
-        const bill = await saleBillsApi.getSaleBill(item.billId);
+        const bill = await saleBillsApi.getSaleBill(item.billId || item.billNo!);
         if (bill) {
-          billNoToUse = bill.billNo;
+          realBillIdToUse = bill.id;
+          billNoToUse = bill.billNo || billNoToUse;
+          if (bill.amountReceived !== undefined && bill.amountReceived !== null) {
+            loadedAmountReceived = String(bill.amountReceived);
+          }
+          if ((bill as any).amountReceivedMode) {
+            loadedReceivedMode = (bill as any).amountReceivedMode as 'CASH' | 'UPI';
+          }
           if (Array.isArray(bill.items) && bill.items.length > 0) {
             loadedItems = (bill.items as any[]).map((bi: any, idx: number) => ({
               id: bi.id || `bill-item-${idx}-${Date.now()}`,
@@ -570,9 +602,10 @@ export default function RecordsScreen() {
     setSaleItems(loadedItems);
     setSaleDiscount('');
     setSaleDelivery('');
-    setAmountReceived(isParty ? String(item.totalAmount) : '');
+    setAmountReceived(loadedAmountReceived !== null ? loadedAmountReceived : (isParty ? String(item.totalAmount) : ''));
+    setAmountReceivedMode(loadedReceivedMode);
     setSaleDescription(item.notes || '');
-    setEditingBillId(item.billId || item.id);
+    setEditingBillId(realBillIdToUse);
     setEditingBillNo(billNoToUse);
     setShowSaleForm(true);
     setRecordType('SALES');

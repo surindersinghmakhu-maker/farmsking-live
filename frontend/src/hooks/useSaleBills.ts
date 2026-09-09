@@ -6,7 +6,7 @@ export function useCreateSaleBill() {
   return useMutation({
     mutationFn: saleBillsApi.createSaleBill,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sale-bills', 'count', 'mine'] });
+      queryClient.invalidateQueries({ queryKey: ['sale-bills'] });
     },
   });
 }
@@ -23,7 +23,7 @@ export function useUpdateSaleBill() {
     mutationFn: ({ id, payload }: { id: string; payload: saleBillsApi.CreateSaleBillPayload }) =>
       saleBillsApi.updateSaleBill(id, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sale-bills', 'count', 'mine'] });
+      queryClient.invalidateQueries({ queryKey: ['sale-bills'] });
     },
   });
 }

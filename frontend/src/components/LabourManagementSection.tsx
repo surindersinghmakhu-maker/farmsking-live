@@ -456,10 +456,11 @@ export function LabourManagementSection() {
               const pending = w.pendingBalance ?? 0;
               return (
                 <View key={w.id} style={[styles.workerCard, premiumShadow('#0f172a', 'sm')]}>
-                  <View style={styles.workerCardHeader}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-                      <Avatar size={44} />
-                      <View style={{ flex: 1 }}>
+                  {/* Top Row: Worker Avatar, Info & Same-Row Metrics (Earned, Paid, Balance) */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 }}>
+                      <Avatar size={36} />
+                      <View>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                           <Text style={styles.workerName}>{w.name}</Text>
                           <TouchableOpacity
@@ -468,11 +469,11 @@ export function LabourManagementSection() {
                             onPress={() => handleOpenEditWorker(w)}
                             hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                           >
-                            <Ionicons name="create-outline" size={15} color="#16a34a" />
+                            <Ionicons name="create-outline" size={14} color="#16a34a" />
                           </TouchableOpacity>
                         </View>
 
-                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 2 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 1 }}>
                           {w.mobile ? <Text style={styles.workerMeta}>📱 {w.mobile}</Text> : null}
                           {w.defaultRate ? (
                             <Text style={styles.workerMeta}>
@@ -482,21 +483,21 @@ export function LabourManagementSection() {
                         </View>
                       </View>
                     </View>
-                  </View>
 
-                  {/* Worker Metrics: Earned, Paid & Balance Side-by-Side */}
-                  <View style={styles.workerMetricsBox}>
-                    <Text style={styles.workerMetricText}>
-                      Earned: <Text style={{ fontFamily: FONT.bold, color: '#c2410c' }}>{formatInr(w.totalEarned ?? 0)}</Text>
-                    </Text>
-                    <Text style={styles.workerMetricText}>·</Text>
-                    <Text style={styles.workerMetricText}>
-                      Paid: <Text style={{ fontFamily: FONT.bold, color: '#16a34a' }}>{formatInr(w.totalPaid ?? 0)}</Text>
-                    </Text>
-                    <Text style={styles.workerMetricText}>·</Text>
-                    <Text style={styles.workerMetricText}>
-                      Balance: <Text style={{ fontFamily: FONT.extraBold, color: pending > 0 ? '#dc2626' : '#16a34a' }}>{formatInr(pending)}</Text>
-                    </Text>
+                    {/* Same-Row Metrics Badge: Earned · Paid · Balance */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f8fafc', paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                      <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569' }}>
+                        Earned: <Text style={{ fontFamily: FONT.bold, color: '#c2410c' }}>{formatInr(w.totalEarned ?? 0)}</Text>
+                      </Text>
+                      <Text style={{ fontSize: 10.5, color: '#cbd5e1' }}>·</Text>
+                      <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569' }}>
+                        Paid: <Text style={{ fontFamily: FONT.bold, color: '#16a34a' }}>{formatInr(w.totalPaid ?? 0)}</Text>
+                      </Text>
+                      <Text style={{ fontSize: 10.5, color: '#cbd5e1' }}>·</Text>
+                      <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569' }}>
+                        Balance: <Text style={{ fontFamily: FONT.extraBold, color: pending > 0 ? '#dc2626' : '#16a34a' }}>{formatInr(pending)}</Text>
+                      </Text>
+                    </View>
                   </View>
 
                   {/* Card Actions: + Work | + Pay | Statement */}

@@ -1049,12 +1049,14 @@ export default function RecordsScreen() {
     const buyerName = paymentMode === 'PARTY' && selectedParty ? selectedParty.name : cashName || 'Cash Sale';
 
     try {
+      const currentReceivedMode = paymentMode === 'PARTY' ? amountReceivedMode : 'CASH';
       const billPayload = {
         farmerName: user?.name || 'Farmer',
         partyId: paymentMode === 'PARTY' ? selectedParty?.id : undefined,
         partyName: paymentMode === 'PARTY' && selectedParty ? selectedParty.name : cashName || 'Cash',
         partyMobile: paymentMode === 'PARTY' ? selectedParty?.mobile ?? undefined : cashBuyerMobile.trim() || undefined,
         isCash: paymentMode === 'CASH',
+        amountReceivedMode: currentReceivedMode,
         items: saleItems.map((i) => ({ cropId: i.cropId, cropName: i.cropName, unit: i.unit, qty: i.qty, rate: i.rate, amount: i.amount })),
         totalItems: totalCartItems,
         totalAmount: totalCartAmount,
@@ -1086,7 +1088,8 @@ export default function RecordsScreen() {
       }
 
       if (paymentMode === 'PARTY' && selectedParty) {
-        const reason = `Sale: ${saleItems.map((i) => i.cropName).join(', ')} (${totalCartItems} item${totalCartItems > 1 ? 's' : ''})`;
+        const modeLabel = effectiveAmountReceived > 0 ? ` (${currentReceivedMode})` : '';
+        const reason = `Sale: ${saleItems.map((i) => i.cropName).join(', ')} (${totalCartItems} item${totalCartItems > 1 ? 's' : ''})${modeLabel}`;
         await recordSaleLedger.mutateAsync({
           id: selectedParty.id,
           payload: { totalAmount: totalCartAmount, amountReceived: effectiveAmountReceived, reason, saleBillId: billId },
@@ -1113,6 +1116,7 @@ export default function RecordsScreen() {
         partyName: billPayload.partyName,
         partyMobile: billPayload.partyMobile,
         isCash: billPayload.isCash,
+        amountReceivedMode: currentReceivedMode,
         items: saleItems,
         totalItems: billPayload.totalItems,
         totalAmount: billPayload.totalAmount,

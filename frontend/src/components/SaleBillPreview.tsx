@@ -118,6 +118,7 @@ export interface SavedSaleInvoice {
   partyMobile?: string;
   partyAddress?: string;
   isCash: boolean;
+  amountReceivedMode?: 'CASH' | 'UPI';
   items: SaleCartItem[];
   totalItems: number;
   totalAmount: number;
@@ -332,7 +333,9 @@ export function BillPreview({ inv }: { inv: SavedSaleInvoice }) {
               <Text style={billStyles.billSummaryValue}>{formatInr(totalAmt)}</Text>
             </View>
             <View style={billStyles.billSummaryLine}>
-              <Text style={billStyles.billSummaryLabel}>Cash Received</Text>
+              <Text style={billStyles.billSummaryLabel}>
+                Cash Received {inv.amountReceivedMode ? `(${inv.amountReceivedMode})` : '(Cash)'}
+              </Text>
               <Text style={[billStyles.billSummaryValue, { color: '#16a34a', fontFamily: FONT.bold }]}>{formatInr(totalAmt)}</Text>
             </View>
             <View style={[billStyles.billSummaryLine, billStyles.billSummaryNetLine, { borderTopColor: '#bbf7d0' }]}>
@@ -358,7 +361,9 @@ export function BillPreview({ inv }: { inv: SavedSaleInvoice }) {
               <Text style={billStyles.billSummaryValue}>{formatInr(grossBal)}</Text>
             </View>
             <View style={billStyles.billSummaryLine}>
-              <Text style={billStyles.billSummaryLabel}>(-) Payment Received</Text>
+              <Text style={billStyles.billSummaryLabel}>
+                (-) Payment Received {rcvd > 0 ? `(${inv.amountReceivedMode || 'Cash'})` : ''}
+              </Text>
               <Text style={[billStyles.billSummaryValue, { color: '#dc2626' }]}>{formatInr(rcvd)}</Text>
             </View>
             <View style={[billStyles.billSummaryLine, billStyles.billSummaryNetLine]}>
@@ -808,7 +813,7 @@ export async function exportBillAsPdf(inv: SavedSaleInvoice, fileName?: string, 
               <strong>₹${inv.totalAmount.toLocaleString('en-IN')}</strong>
             </div>
             <div class="summary-line">
-              <span>Amount Received / Paid</span>
+              <span>Amount Received / Paid ${inv.amountReceivedMode ? `(${inv.amountReceivedMode})` : ''}</span>
               <strong style="color: #16a34a;">₹${inv.amountReceived.toLocaleString('en-IN')}</strong>
             </div>
             <div class="summary-line">

@@ -257,7 +257,7 @@ export default function RecordsScreen() {
     return map;
   }, [rawSaleBillsList]);
 
-  const renderSaleCardItem = (item: CropSaleRecord) => {
+  const renderSaleRowItem = (item: CropSaleRecord, idx: number) => {
     const matchedBill = item.billId ? saleBillsMap.get(item.billId) : (item.billNo ? saleBillsMap.get(item.billNo) : null);
     const formattedBillNo = matchedBill?.billNo || item.billNo || (item.billId ? `FK-${item.billId.slice(-4).toUpperCase()}` : 'FK-2601');
     
@@ -266,117 +266,105 @@ export default function RecordsScreen() {
     const billRecd = matchedBill ? Number(matchedBill.amountReceived) : (isCashSale ? billTotal : 0);
     const billBal = matchedBill && matchedBill.thisSaleBalance !== undefined ? Number(matchedBill.thisSaleBalance) : Math.max(0, billTotal - billRecd);
 
+    const buyerDisplayName = matchedBill?.partyName || (matchedBill?.isCash ? 'Cash Sale' : item.buyerName || 'Cash Sale');
+
+    const cropDetailText = matchedBill && matchedBill.items && matchedBill.items.length > 0
+      ? matchedBill.items.map((i: any) => `${i.cropName} (${i.qty} ${i.unit} @ ₹${i.rate})`).join(', ')
+      : `${item.cropName} (${item.quantity} ${item.unit} @ ₹${item.pricePerUnit})`;
+
+    const displayDateStr = matchedBill?.createdAt
+      ? formatDateDDMMYYYY(matchedBill.createdAt)
+      : (item.saleDate ? formatDateDDMMYYYY(item.saleDate) : 'Today');
+
     return (
       <View
         key={item.id}
         style={{
-          backgroundColor: '#ffffff',
-          borderRadius: RADIUS.md,
-          paddingHorizontal: 10,
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingHorizontal: 8,
           paddingVertical: 8,
-          marginBottom: 6,
-          borderWidth: 1,
-          borderColor: '#e2e8f0',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.03,
-          shadowRadius: 3,
-          elevation: 1.5,
-          gap: 6,
+          backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc',
+          borderBottomWidth: 1,
+          borderBottomColor: '#f1f5f9',
         }}
       >
-        {/* Top Header Row: Bill No | Date | Buyer & Crop | Actions */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
-          {/* Left: Bill No + Date */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <View style={{ backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: RADIUS.sm, paddingHorizontal: 5, paddingVertical: 2 }}>
-              <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: '#1d4ed8' }}>
-                {formattedBillNo}
-              </Text>
-            </View>
-            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#475569' }}>
-              {item.saleDate ? formatDateDDMMYYYY(item.saleDate) : 'Today'}
+        {/* 1. Bill No */}
+        <View style={{ width: 62 }}>
+          <View style={{ backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1, alignSelf: 'flex-start' }}>
+            <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#1d4ed8' }}>
+              {formattedBillNo}
             </Text>
-          </View>
-
-          {/* Center: Buyer & Crop */}
-          <View style={{ flex: 1, minWidth: 140 }}>
-            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#0f172a' }} numberOfLines={1}>
-              🤝 {item.buyerName || 'Cash Sale'}
-            </Text>
-            <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#16a34a', marginTop: 1 }} numberOfLines={1}>
-              🌾 {item.cropName} ({item.quantity} {item.unit} @ ₹{item.pricePerUnit})
-            </Text>
-          </View>
-
-          {/* Right: Actions (Edit & Download) */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-            <TouchableOpacity
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 15,
-                backgroundColor: '#f0fdf4',
-                borderWidth: 1,
-                borderColor: '#bbf7d0',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              activeOpacity={0.7}
-              onPress={() => handleOpenEditSale(item)}
-              hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
-            >
-              <Ionicons name="create-outline" size={15} color="#16a34a" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 15,
-                backgroundColor: '#eff6ff',
-                borderWidth: 1,
-                borderColor: '#bfdbfe',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              activeOpacity={0.7}
-              onPress={() => openBillPreviewForSale(item)}
-              hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
-            >
-              <Ionicons name="download-outline" size={15} color="#2563eb" />
-            </TouchableOpacity>
           </View>
         </View>
 
-        {/* Bottom Auto-Fit Summary Bar: Total Bill | Received | Balance */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f8fafc', paddingVertical: 5, paddingHorizontal: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#f1f5f9' }}>
-          <View style={{ flex: 1, alignItems: 'center' }}>
-            <Text style={{ fontSize: 8.5, fontFamily: FONT.bold, color: '#64748b' }}>Total Bill (ਕੁੱਲ)</Text>
-            <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: '#0f172a' }}>
-              ₹{billTotal.toLocaleString('en-IN')}
-            </Text>
-          </View>
+        {/* 2. Date */}
+        <Text style={{ width: 68, fontSize: 10, fontFamily: FONT.bold, color: '#475569' }}>
+          {displayDateStr}
+        </Text>
 
-          <View style={{ width: 1, height: 16, backgroundColor: '#cbd5e1' }} />
+        {/* 3. Party / Crop */}
+        <View style={{ flex: 1.8, paddingRight: 4 }}>
+          <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
+            🤝 {buyerDisplayName}
+          </Text>
+          <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#16a34a', marginTop: 1 }} numberOfLines={1}>
+            🌾 {cropDetailText}
+          </Text>
+        </View>
 
-          <View style={{ flex: 1, alignItems: 'center' }}>
-            <Text style={{ fontSize: 8.5, fontFamily: FONT.bold, color: '#16a34a' }}>Received (ਮਿਲੇ)</Text>
-            <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: '#16a34a' }}>
-              ₹{billRecd.toLocaleString('en-IN')}
-            </Text>
-          </View>
+        {/* 4. Bill Amount */}
+        <Text style={{ flex: 1.1, fontSize: 11, fontFamily: FONT.bold, color: '#0f172a', textAlign: 'right' }}>
+          ₹{billTotal.toLocaleString('en-IN')}
+        </Text>
 
-          <View style={{ width: 1, height: 16, backgroundColor: '#cbd5e1' }} />
+        {/* 5. Received */}
+        <Text style={{ flex: 1.1, fontSize: 11, fontFamily: FONT.bold, color: '#16a34a', textAlign: 'right' }}>
+          ₹{billRecd.toLocaleString('en-IN')}
+        </Text>
 
-          <View style={{ flex: 1, alignItems: 'center' }}>
-            <Text style={{ fontSize: 8.5, fontFamily: FONT.bold, color: billBal > 0 ? '#dc2626' : '#15803d' }}>
-              Balance (ਬਾਕੀ)
-            </Text>
-            <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: billBal > 0 ? '#dc2626' : '#16a34a' }}>
-              ₹{billBal.toLocaleString('en-IN')}
-            </Text>
-          </View>
+        {/* 6. Balance */}
+        <Text style={{ flex: 1.1, fontSize: 11, fontFamily: FONT.extraBold, color: billBal > 0 ? '#dc2626' : '#16a34a', textAlign: 'right' }}>
+          ₹{billBal.toLocaleString('en-IN')}
+        </Text>
+
+        {/* 7. Action Buttons (Edit & Download) */}
+        <View style={{ width: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+          <TouchableOpacity
+            style={{
+              width: 26,
+              height: 26,
+              borderRadius: 13,
+              backgroundColor: '#f0fdf4',
+              borderWidth: 1,
+              borderColor: '#bbf7d0',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            activeOpacity={0.7}
+            onPress={() => handleOpenEditSale(item)}
+            hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+          >
+            <Ionicons name="create-outline" size={13} color="#16a34a" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{
+              width: 26,
+              height: 26,
+              borderRadius: 13,
+              backgroundColor: '#eff6ff',
+              borderWidth: 1,
+              borderColor: '#bfdbfe',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            activeOpacity={0.7}
+            onPress={() => openBillPreviewForSale(item)}
+            hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+          >
+            <Ionicons name="download-outline" size={13} color="#2563eb" />
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -1765,29 +1753,6 @@ export default function RecordsScreen() {
                 () => setShowToDatePicker(false)
               )}
 
-              {/* Professional Responsive Sales Table Header */}
-              {salesRecords.length > 0 && (
-                <View style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  backgroundColor: '#f1f5f9',
-                  paddingHorizontal: 8,
-                  paddingVertical: 7,
-                  borderRadius: RADIUS.md,
-                  marginBottom: 6,
-                  borderWidth: 1,
-                  borderColor: '#e2e8f0',
-                }}>
-                  <Text style={{ width: 56, fontSize: 9.5, fontFamily: FONT.extraBold, color: '#475569', letterSpacing: 0.2 }}>#</Text>
-                  <Text style={{ width: 66, fontSize: 9.5, fontFamily: FONT.extraBold, color: '#475569', letterSpacing: 0.2 }}>DATE</Text>
-                  <Text style={{ flex: 1.8, fontSize: 9.5, fontFamily: FONT.extraBold, color: '#475569', letterSpacing: 0.2 }}>PARTY / CROP</Text>
-                  <Text style={{ flex: 1.1, fontSize: 9.5, fontFamily: FONT.extraBold, color: '#475569', textAlign: 'right', letterSpacing: 0.2 }}>BILL AMT</Text>
-                  <Text style={{ flex: 1.1, fontSize: 9.5, fontFamily: FONT.extraBold, color: '#16a34a', textAlign: 'right', letterSpacing: 0.2 }}>RECEIVED</Text>
-                  <Text style={{ flex: 1.1, fontSize: 9.5, fontFamily: FONT.extraBold, color: '#dc2626', textAlign: 'right', letterSpacing: 0.2 }}>BALANCE</Text>
-                  <Text style={{ width: 52, fontSize: 9.5, fontFamily: FONT.extraBold, color: '#475569', textAlign: 'center', letterSpacing: 0.2 }}>ACTION</Text>
-                </View>
-              )}
-
               {salesRecords.length === 0 ? (
                 <View style={styles.center}>
                   <Ionicons name="cart-outline" size={36} color="#cbd5e1" />
@@ -1795,12 +1760,25 @@ export default function RecordsScreen() {
                   <Text style={styles.emptySub}>Tap "+ Sale" to log revenue from your harvested crops.</Text>
                 </View>
               ) : (salesViewMode === 'MONTH' || salesViewMode === 'PERIOD') ? (
-                <FlatList
-                  data={salesViewMode === 'MONTH' ? salesThisMonth : salesInPeriod}
-                  keyExtractor={(item) => item.id}
-                  contentContainerStyle={styles.list}
-                  renderItem={({ item }) => renderSaleCardItem(item)}
-                />
+                <View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, overflow: 'hidden', backgroundColor: '#ffffff', marginBottom: 16 }}>
+                  {/* Table Header Row */}
+                  <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 8, paddingHorizontal: 8, alignItems: 'center' }}>
+                    <Text style={{ width: 62, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff' }}>#</Text>
+                    <Text style={{ width: 68, fontSize: 10, fontFamily: FONT.bold, color: '#e2e8f0' }}>DATE</Text>
+                    <Text style={{ flex: 1.8, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff' }}>PARTY / CROP</Text>
+                    <Text style={{ flex: 1.1, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right' }}>BILL AMT</Text>
+                    <Text style={{ flex: 1.1, fontSize: 10, fontFamily: FONT.bold, color: '#86efac', textAlign: 'right' }}>RECEIVED</Text>
+                    <Text style={{ flex: 1.1, fontSize: 10, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right' }}>BALANCE</Text>
+                    <Text style={{ width: 56, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'center' }}>ACTION</Text>
+                  </View>
+
+                  {/* Table Body Rows */}
+                  <FlatList
+                    data={salesViewMode === 'MONTH' ? salesThisMonth : salesInPeriod}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item, index }) => renderSaleRowItem(item, index)}
+                  />
+                </View>
               ) : (
                 <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
                   {salesByBuyer.map((group) => {
@@ -1821,9 +1799,20 @@ export default function RecordsScreen() {
                           </Text>
                           <Text style={styles.salesGroupTotal}>{formatInr(group.total)}</Text>
                         </TouchableOpacity>
-                        {isExpanded
-                          ? group.entries.map((item) => renderSaleCardItem(item))
-                          : null}
+                        {isExpanded ? (
+                          <View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, overflow: 'hidden', backgroundColor: '#ffffff', marginTop: 6 }}>
+                            <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 7, paddingHorizontal: 8, alignItems: 'center' }}>
+                              <Text style={{ width: 62, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>#</Text>
+                              <Text style={{ width: 68, fontSize: 9.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>DATE</Text>
+                              <Text style={{ flex: 1.8, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>PARTY / CROP</Text>
+                              <Text style={{ flex: 1.1, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right' }}>BILL AMT</Text>
+                              <Text style={{ flex: 1.1, fontSize: 9.5, fontFamily: FONT.bold, color: '#86efac', textAlign: 'right' }}>RECEIVED</Text>
+                              <Text style={{ flex: 1.1, fontSize: 9.5, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right' }}>BALANCE</Text>
+                              <Text style={{ width: 56, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'center' }}>ACTION</Text>
+                            </View>
+                            {group.entries.map((item, idx) => renderSaleRowItem(item, idx))}
+                          </View>
+                        ) : null}
                       </View>
                     );
                   })}

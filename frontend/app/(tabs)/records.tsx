@@ -256,12 +256,12 @@ export default function RecordsScreen() {
   // Unified list of ALL sales (both from DB sale bills and local crop sale records)
   const unifiedSalesRecords = useMemo(() => {
     const list: CropSaleRecord[] = [];
-    const processedBillIds = new Set<string>();
+    const processedBillKeys = new Set<string>();
 
     // 1. Add all actual DB Sale Bills FIRST
     (rawSaleBillsList || []).forEach((b) => {
-      processedBillIds.add(b.id);
-      if (b.billNo) processedBillIds.add(b.billNo);
+      if (b.id) processedBillKeys.add(b.id);
+      if (b.billNo) processedBillKeys.add(b.billNo);
 
       const cropSummary = (b.items && b.items.length > 0)
         ? b.items.map((i: any) => `${i.cropName} (${i.qty} ${i.unit} @ ₹${i.rate})`).join(', ')
@@ -285,11 +285,18 @@ export default function RecordsScreen() {
 
     // 2. Add any crop sale records that are NOT linked to an already-processed DB bill
     (allSalesRecords || []).forEach((s) => {
-      const key = s.billId || s.billNo;
-      if (key && processedBillIds.has(key)) {
+      const isLinkedToDb =
+        (s.id && processedBillKeys.has(s.id)) ||
+        (s.billId && processedBillKeys.has(s.billId)) ||
+        (s.billNo && processedBillKeys.has(s.billNo));
+
+      if (isLinkedToDb) {
         return; // Skip since we already included the parent DB bill
       }
-      if (key) processedBillIds.add(key);
+
+      if (s.id) processedBillKeys.add(s.id);
+      if (s.billId) processedBillKeys.add(s.billId);
+      if (s.billNo) processedBillKeys.add(s.billNo);
       list.push(s);
     });
 
@@ -1371,7 +1378,10 @@ export default function RecordsScreen() {
       if (editingBillId) {
         const targetBillId = realDbBillId || editingBillId;
         const existingSales = allSalesRecords.filter(
-          (s) => (s.billId && (s.billId === editingBillId || (realDbBillId && s.billId === realDbBillId))) || s.id === editingBillId
+          (s) =>
+            (s.billId && (s.billId === editingBillId || s.billId === editingBillNo || (realDbBillId && s.billId === realDbBillId))) ||
+            (s.billNo && (s.billNo === editingBillNo || s.billNo === editingBillId)) ||
+            s.id === editingBillId
         );
 
         if (existingSales.length > 0) {
@@ -1379,12 +1389,15 @@ export default function RecordsScreen() {
             if (index < existingSales.length) {
               const existing = existingSales[index];
               updateSale(existing.id, {
+                cropName: item.cropName,
                 quantity: String(item.qty),
                 pricePerUnit: String(item.rate),
                 buyerName,
                 totalAmount: item.amount,
                 notes: saleDescription.trim(),
                 billId: targetBillId,
+                billNo,
+                partyId: paymentMode === 'PARTY' ? selectedParty?.id : undefined,
               }).catch(() => {});
             } else if (item.cropId) {
               recordSale(item.cropId, {
@@ -1401,17 +1414,6 @@ export default function RecordsScreen() {
               deleteSale(existingSales[i].id).catch(() => {});
             }
           }
-        } else {
-          saleItems.forEach((item) => {
-            if (item.cropId) {
-              recordSale(item.cropId, {
-                quantity: String(item.qty),
-                rate: String(item.rate),
-                buyerName,
-                billId: targetBillId,
-              }).catch(() => {});
-            }
-          });
         }
       } else {
         saleItems.forEach((item) => {
@@ -1426,9 +1428,9 @@ export default function RecordsScreen() {
         });
       }
 
+      await queryClient.refetchQueries({ queryKey: ['sale-bills'] });
       queryClient.invalidateQueries({ queryKey: ['market-rates'] });
       queryClient.invalidateQueries({ queryKey: ['farmer-crops'] });
-      queryClient.invalidateQueries({ queryKey: ['sale-bills'] });
       queryClient.invalidateQueries({ queryKey: ['parties'] });
       queryClient.invalidateQueries({ queryKey: ['party-statement'] });
 

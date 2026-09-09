@@ -242,10 +242,6 @@ export default function RecordsScreen() {
   // the Completed stage it drops out of cropFields, so it naturally stops
   // contributing here too; its sale record only lives on in Crop History.
   const { cropFields: farmerCrops, salesRecords: allSalesRecords, recordSale, updateSale, deleteSale } = useCrops();
-  const salesRecords = useMemo(
-    () => allSalesRecords.filter((s) => farmerCrops.some((c) => c.id === s.cropId)),
-    [allSalesRecords, farmerCrops]
-  );
 
   const { data: rawSaleBillsList } = useSaleBills();
   const saleBillsMap = useMemo(() => {
@@ -256,6 +252,49 @@ export default function RecordsScreen() {
     });
     return map;
   }, [rawSaleBillsList]);
+
+  // Unified list of ALL sales (both from DB sale bills and local crop sale records)
+  const unifiedSalesRecords = useMemo(() => {
+    const list: CropSaleRecord[] = [];
+    const processedBillIds = new Set<string>();
+
+    // 1. Add all actual DB Sale Bills FIRST
+    (rawSaleBillsList || []).forEach((b) => {
+      processedBillIds.add(b.id);
+      if (b.billNo) processedBillIds.add(b.billNo);
+
+      const cropSummary = (b.items && b.items.length > 0)
+        ? b.items.map((i: any) => `${i.cropName} (${i.qty} ${i.unit} @ ₹${i.rate})`).join(', ')
+        : 'Crop Sale';
+
+      list.push({
+        id: b.id,
+        cropId: b.items?.[0]?.cropId || '',
+        cropName: cropSummary,
+        quantity: String(b.items?.[0]?.qty || 1),
+        unit: b.items?.[0]?.unit || 'kg',
+        pricePerUnit: String(b.items?.[0]?.rate || b.totalAmount),
+        totalAmount: Number(b.totalAmount),
+        buyerName: b.partyName || (b.isCash ? 'Cash Sale' : 'Direct Cash'),
+        saleDate: b.createdAt ? b.createdAt.slice(0, 10) : todayIso(),
+        billId: b.id,
+        billNo: b.billNo,
+        partyId: b.partyId,
+      });
+    });
+
+    // 2. Add any crop sale records that are NOT linked to an already-processed DB bill
+    (allSalesRecords || []).forEach((s) => {
+      const key = s.billId || s.billNo;
+      if (key && processedBillIds.has(key)) {
+        return; // Skip since we already included the parent DB bill
+      }
+      if (key) processedBillIds.add(key);
+      list.push(s);
+    });
+
+    return list;
+  }, [rawSaleBillsList, allSalesRecords]);
 
   const renderSaleRowItem = (item: CropSaleRecord, idx: number) => {
     const matchedBill = item.billId ? saleBillsMap.get(item.billId) : (item.billNo ? saleBillsMap.get(item.billNo) : null);
@@ -289,7 +328,7 @@ export default function RecordsScreen() {
           backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc',
           borderBottomWidth: 1,
           borderBottomColor: '#f1f5f9',
-          minWidth: 650,
+          minWidth: 690,
         }}
       >
         {/* 1. Bill No */}
@@ -386,57 +425,44 @@ export default function RecordsScreen() {
   const [showFromDatePicker, setShowFromDatePicker] = useState(false);
   const [showToDatePicker, setShowToDatePicker] = useState(false);
 
-  const getUniqueBillRows = (records: CropSaleRecord[]) => {
-    const seenBillKeys = new Set<string>();
-    const uniqueRows: CropSaleRecord[] = [];
-    for (const item of records) {
-      const key = item.billId || item.billNo;
-      if (key) {
-        if (seenBillKeys.has(key)) continue;
-        seenBillKeys.add(key);
-      }
-      uniqueRows.push(item);
-    }
-    return uniqueRows;
-  };
-
   // 1. Filter sales for Current Calendar Month
   const currentMonthPrefix = useMemo(() => new Date().toISOString().slice(0, 7), []);
   const salesThisMonth = useMemo(() => {
-    const filtered = salesRecords.filter((s) => s.saleDate && s.saleDate.startsWith(currentMonthPrefix));
-    return getUniqueBillRows(filtered);
-  }, [salesRecords, currentMonthPrefix]);
+    return unifiedSalesRecords.filter((s) => {
+      if (!s.saleDate) return true;
+      return s.saleDate.slice(0, 7) === currentMonthPrefix;
+    });
+  }, [unifiedSalesRecords, currentMonthPrefix]);
 
   // 2. Filter sales for Custom Period Date Range (From Date -> To Date)
   const salesInPeriod = useMemo(() => {
-    const filtered = salesRecords.filter((s) => {
+    return unifiedSalesRecords.filter((s) => {
       if (!s.saleDate) return true;
-      return s.saleDate >= salesFromDate && s.saleDate <= salesToDate;
+      const datePart = s.saleDate.slice(0, 10);
+      return datePart >= salesFromDate && datePart <= salesToDate;
     });
-    return getUniqueBillRows(filtered);
-  }, [salesRecords, salesFromDate, salesToDate]);
+  }, [unifiedSalesRecords, salesFromDate, salesToDate]);
 
   // 3. Group sales Buyer-wise
   const salesByBuyer = useMemo(() => {
-    const map = new Map<string, typeof salesRecords>();
-    salesRecords.forEach((item) => {
+    const map = new Map<string, CropSaleRecord[]>();
+    unifiedSalesRecords.forEach((item) => {
       const name = item.buyerName || 'Cash Sale';
       const existing = map.get(name) || [];
       map.set(name, [...existing, item]);
     });
     return Array.from(map.entries()).map(([buyer, entries]) => {
-      const uniqueEntries = getUniqueBillRows(entries);
-      const total = uniqueEntries.reduce((acc, e) => {
+      const total = entries.reduce((acc, e) => {
         const matchedBill = e.billId ? saleBillsMap.get(e.billId) : (e.billNo ? saleBillsMap.get(e.billNo) : null);
         return acc + (matchedBill ? Number(matchedBill.totalAmount) : e.totalAmount);
       }, 0);
       return {
         name: buyer,
-        entries: uniqueEntries,
+        entries,
         total,
       };
     });
-  }, [salesRecords, saleBillsMap]);
+  }, [unifiedSalesRecords, saleBillsMap]);
 
   const [expenseViewMode, setExpenseViewMode] = useState<'ALL' | 'CROP' | 'VENDOR'>('ALL');
   const [expandedExpenseGroup, setExpandedExpenseGroup] = useState<string | null>(null);
@@ -1017,14 +1043,14 @@ export default function RecordsScreen() {
   const expensesByVendor = useMemo(() => groupExpenses('vendor'), [expenses]);
 
   const totalSalesRevenue = useMemo(
-    () => salesRecords.reduce((acc, curr) => acc + curr.totalAmount, 0),
-    [salesRecords]
+    () => unifiedSalesRecords.reduce((acc, curr) => acc + curr.totalAmount, 0),
+    [unifiedSalesRecords]
   );
 
   /** Sales grouped by crop or by buyer, each group sorted by most recent sale first. */
   const groupSales = (key: 'cropName' | 'buyerName') => {
-    const groups = new Map<string, typeof salesRecords>();
-    salesRecords.forEach((s) => {
+    const groups = new Map<string, typeof unifiedSalesRecords>();
+    unifiedSalesRecords.forEach((s) => {
       const groupKey = s[key] || 'Unknown';
       if (!groups.has(groupKey)) groups.set(groupKey, []);
       groups.get(groupKey)!.push(s);
@@ -1033,7 +1059,7 @@ export default function RecordsScreen() {
       .map(([name, entries]) => ({ name, entries, total: entries.reduce((sum, e) => sum + e.totalAmount, 0) }))
       .sort((a, b) => b.total - a.total);
   };
-  const salesByCrop = useMemo(() => groupSales('cropName'), [salesRecords]);
+  const salesByCrop = useMemo(() => groupSales('cropName'), [unifiedSalesRecords]);
 
   // Crop-wise breakdown for the Analysis tab. Expenses are logged per-farm, not
   // per-crop, so each active crop field is given an even share of total expenses.
@@ -1077,7 +1103,7 @@ export default function RecordsScreen() {
     return Array.from(cropGroupsMap.values()).map((grp) => {
       const groupKey = grp.cropName.toLowerCase();
 
-      const income = salesRecords
+      const income = unifiedSalesRecords
         .filter((s) => {
           if (s.cropId && grp.cropIds.has(s.cropId)) return true;
           const sBase = getBaseCropName(s.cropName || '').toLowerCase();
@@ -1096,7 +1122,7 @@ export default function RecordsScreen() {
         net,
       };
     });
-  }, [farmerCrops, salesRecords, totalSpent]);
+  }, [farmerCrops, unifiedSalesRecords, totalSpent]);
 
   const maxCropValue = Math.max(1, ...cropAnalysis.map((c) => Math.max(c.income, c.expense)));
   const overallNet = totalSalesRevenue - totalSpent;
@@ -1778,7 +1804,7 @@ export default function RecordsScreen() {
                 () => setShowToDatePicker(false)
               )}
 
-              {salesRecords.length === 0 ? (
+              {unifiedSalesRecords.length === 0 ? (
                 <View style={styles.center}>
                   <Ionicons name="cart-outline" size={36} color="#cbd5e1" />
                   <Text style={styles.emptyText}>No sales recorded yet.</Text>
@@ -3245,10 +3271,10 @@ export default function RecordsScreen() {
               overallNet={overallNet}
               totalReceivable={totalReceivable}
               totalPayable={totalPayable}
-              salesCount={salesRecords.length}
+              salesCount={unifiedSalesRecords.length}
               expenseCount={expenses?.length ?? 0}
               cropAnalysis={cropAnalysis}
-              salesRecords={salesRecords}
+              salesRecords={unifiedSalesRecords}
               expenses={expenses}
               onNavigateTab={(tab, subTab) => {
                 if (subTab) setAnalysisSubTab(subTab);

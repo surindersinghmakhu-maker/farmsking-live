@@ -19,12 +19,26 @@ export function buildPartyLedgerRows(entries: any[]): GroupedLedgerRow[] {
     (a, b) => new Date(a.createdAt || a.date).getTime() - new Date(b.createdAt || b.date).getTime()
   );
 
+  const cleanReasonForMatching = (reasonStr: string): string => {
+    if (!reasonStr) return '';
+    let cleaned = reasonStr.toLowerCase();
+    cleaned = cleaned.replace(/^amount received against:\s*/i, '');
+    cleaned = cleaned.replace(/\s*\([^)]*\)$/gi, '');
+    cleaned = cleaned.replace(/\s*\(fk-[a-z0-9]+\)/gi, '');
+    return cleaned.trim();
+  };
+
   const extractBillKey = (e: any): string | null => {
     if (e.saleBillId) return `bill_id_${e.saleBillId}`;
     if (e.saleBill?.billNo) return `bill_no_${e.saleBill.billNo.toUpperCase()}`;
     if (e.reason) {
       const match = e.reason.match(/FK-[A-Za-z0-9]+/i);
       if (match) return `bill_no_${match[0].toUpperCase()}`;
+      const cleaned = cleanReasonForMatching(e.reason);
+      if (cleaned.length > 3) {
+        const dateKey = new Date(e.createdAt || e.date).toISOString().slice(0, 13);
+        return `reason_${cleaned}_${dateKey}`;
+      }
     }
     return null;
   };
@@ -79,8 +93,17 @@ export function buildPartyLedgerRows(entries: any[]): GroupedLedgerRow[] {
       dateStr = firstItem.createdAt || firstItem.date;
       saleBillId = firstItem.saleBillId || undefined;
 
-      const rawBillNo = firstItem.saleBill?.billNo || (firstItem.reason ? (firstItem.reason.match(/FK-[A-Za-z0-9]+/i)?.[0] || '—') : '—');
-      billNo = rawBillNo !== '—' ? rawBillNo.toUpperCase() : '—';
+      let rawBillNo = firstItem.saleBill?.billNo || (firstItem.reason ? (firstItem.reason.match(/FK-[A-Za-z0-9]+/i)?.[0] || '') : '');
+      if (!rawBillNo && firstItem.saleBillId) {
+        rawBillNo = `FK-${firstItem.saleBillId.slice(-6).toUpperCase()}`;
+      }
+      if (!rawBillNo) {
+        const dt = new Date(dateStr);
+        const yymmdd = `${String(dt.getFullYear()).slice(-2)}${String(dt.getMonth() + 1).padStart(2, '0')}${String(dt.getDate()).padStart(2, '0')}`;
+        const itemHash = (firstItem.id || '101').replace(/[^a-zA-Z0-9]/g, '').slice(-3).toUpperCase();
+        rawBillNo = `FK-${yymmdd}${itemHash}`;
+      }
+      billNo = rawBillNo.toUpperCase();
 
       ev.items.forEach((item) => {
         if (item.type === 'SALE_CREDIT' || item.type === 'EXPENSE_PAYMENT') {
@@ -93,15 +116,24 @@ export function buildPartyLedgerRows(entries: any[]): GroupedLedgerRow[] {
       if (creditEntry) {
         reason = creditEntry.reason.replace(/\s*\(FK-[A-Za-z0-9]+\)/gi, '').trim();
       } else if (paymentEntry) {
-        reason = paymentEntry.reason.replace(/\s*\(FK-[A-Za-z0-9]+\)/gi, '').trim();
+        reason = paymentEntry.reason.replace(/^amount received against:\s*/i, '').replace(/\s*\(FK-[A-Za-z0-9]+\)/gi, '').trim();
       } else {
         reason = firstItem.reason;
       }
     } else {
       const e = ev.items[0];
       dateStr = e.createdAt || e.date;
-      const rawBillNo = e.saleBill?.billNo || (e.reason ? (e.reason.match(/FK-[A-Za-z0-9]+/i)?.[0] || '—') : '—');
-      billNo = rawBillNo !== '—' ? rawBillNo.toUpperCase() : '—';
+      let rawBillNo = e.saleBill?.billNo || (e.reason ? (e.reason.match(/FK-[A-Za-z0-9]+/i)?.[0] || '') : '');
+      if (!rawBillNo && e.saleBillId) {
+        rawBillNo = `FK-${e.saleBillId.slice(-6).toUpperCase()}`;
+      }
+      if (!rawBillNo) {
+        const dt = new Date(dateStr);
+        const yymmdd = `${String(dt.getFullYear()).slice(-2)}${String(dt.getMonth() + 1).padStart(2, '0')}${String(dt.getDate()).padStart(2, '0')}`;
+        const itemHash = (e.id || '101').replace(/[^a-zA-Z0-9]/g, '').slice(-3).toUpperCase();
+        rawBillNo = `FK-${yymmdd}${itemHash}`;
+      }
+      billNo = rawBillNo.toUpperCase();
       reason = e.reason;
 
       if (e.type === 'SALE_CREDIT' || e.type === 'EXPENSE_PAYMENT') {

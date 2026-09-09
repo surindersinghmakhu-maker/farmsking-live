@@ -20,6 +20,10 @@ import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { Avatar } from '@/src/components/Avatar';
 import { useAuth } from '@/src/store/auth-context';
 import { BrandLogo } from '@/src/components/BrandLogo';
+import { buildPartyLedgerRows } from '@/src/utils/partyLedger';
+import ViewShot, { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
+import * as Print from 'expo-print';
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -789,7 +793,7 @@ function WorkerStatementModalInner({ workerId, onClose }: { workerId: string; on
                   <BrandLogo size={34} useHdQuality />
                   <View>
                     <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: '#15803d', letterSpacing: -0.3 }}>FarmsKing</Text>
-                    <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>WORKER STATEMENT / ਖਾਤਾ ਸਟੇਟਮੈਂਟ</Text>
+                    <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>WORKER ACCOUNT STATEMENT</Text>
                   </View>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
@@ -859,19 +863,161 @@ function WorkerStatementModalInner({ workerId, onClose }: { workerId: string; on
 }
 
 function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: string; partyName: string; onClose: () => void }) {
+  const shotRef = React.useRef<any>(null);
+  const [isSharing, setIsSharing] = useState(false);
   const { user } = useAuth();
   const { data: statement, isLoading } = usePartyStatement(partyId);
   const entries = statement?.entries || [];
   const party = statement?.party;
 
+  const ledgerRows = useMemo(() => buildPartyLedgerRows(entries), [entries]);
+
   const farmerName = user?.name || 'Farm Owner';
   const farmerMobile = user?.mobile || '';
   const farmerVillage = user?.village || '';
 
+  const handleDownloadJpg = async () => {
+    if (!shotRef.current) return;
+    tap();
+    setIsSharing(true);
+    try {
+      const uri = await captureRef(shotRef, {
+        format: 'jpg',
+        quality: 0.95,
+        result: Platform.OS === 'web' ? 'data-uri' : 'tmpfile',
+      });
+      const cleanFileName = `Party_Statement_${partyName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.jpg`;
+
+      if (Platform.OS === 'web') {
+        const link = document.createElement('a');
+        link.href = uri;
+        link.download = cleanFileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        await Sharing.shareAsync(uri, {
+          mimeType: 'image/jpeg',
+          dialogTitle: `Download Party Statement JPG`,
+          UTI: 'public.jpeg',
+        });
+      }
+    } catch (err) {
+      console.error('Failed to capture statement JPG:', err);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const handleExportPdf = async () => {
+    tap();
+    setIsSharing(true);
+    try {
+      const rowsHtml = ledgerRows
+        .map(
+          (row) => `
+        <tr>
+          <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px;">${new Date(row.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+          <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; font-weight: bold; color: #1d4ed8;">${row.billNo}</td>
+          <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; font-weight: bold; color: #0f172a;">${row.reason}</td>
+          <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; text-align: right; color: #dc2626; font-weight: bold;">${row.drAmount > 0 ? `₹${row.drAmount.toLocaleString('en-IN')}` : '—'}</td>
+          <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; text-align: right; color: #16a34a; font-weight: bold;">${row.crAmount > 0 ? `₹${row.crAmount.toLocaleString('en-IN')}` : '—'}</td>
+          <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; text-align: right; font-weight: 800; color: ${row.runningBalance >= 0 ? '#15803d' : '#b91c1c'};">₹${Math.abs(row.runningBalance).toLocaleString('en-IN')} ${row.runningBalance >= 0 ? 'Dr' : 'Cr'}</td>
+        </tr>`
+        )
+        .join('');
+
+      const html = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <title>FARMSKING PARTY ACCOUNT STATEMENT</title>
+            <style>
+              body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #ffffff; color: #0f172a; }
+              .card { max-width: 750px; margin: 0 auto; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 20px; }
+              .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2.5px solid #16a34a; padding-bottom: 10px; margin-bottom: 12px; }
+              .brand { font-size: 22px; font-weight: 800; color: #15803d; }
+              .tagline { font-size: 10px; color: #64748b; }
+              .grid { display: flex; gap: 10px; margin-bottom: 12px; }
+              .box { flex: 1; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; font-size: 11px; }
+              .box-title { font-weight: 800; color: #475569; font-size: 9.5px; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; margin-bottom: 4px; }
+              .summary-box { background: ${(statement?.balance || 0) >= 0 ? '#f0fdf4' : '#fef2f2'}; border: 1.5px solid ${(statement?.balance || 0) >= 0 ? '#16a34a' : '#dc2626'}; border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 12px; }
+              .table { width: 100%; border-collapse: collapse; margin-bottom: 12px; border: 1px solid #cbd5e1; }
+              .table th { background: #334155; color: #fff; font-size: 9.5px; padding: 7px; text-align: left; }
+            </style>
+          </head>
+          <body>
+            <div class="card">
+              <div class="header">
+                <div>
+                  <div class="brand">👑 FarmsKing</div>
+                  <div class="tagline">PARTY ACCOUNT STATEMENT</div>
+                </div>
+                <div style="text-align: right; font-size: 11px;">
+                  <strong>Date: ${new Date().toLocaleDateString('en-IN')}</strong><br/>
+                  <span style="color:#16a34a; font-weight: bold;">Official Ledger</span>
+                </div>
+              </div>
+              <div class="grid">
+                <div class="box">
+                  <div class="box-title">👨‍🌾 FARMER DETAILS</div>
+                  <strong>${farmerName}</strong><br/>
+                  ${farmerMobile ? `Mobile: ${farmerMobile}<br/>` : ''}
+                  ${farmerVillage ? `Location: ${farmerVillage}` : ''}
+                </div>
+                <div class="box">
+                  <div class="box-title">🤝 PARTY DETAILS</div>
+                  <strong>${party?.name || partyName}</strong><br/>
+                  ${party?.mobile ? `Mobile: ${party.mobile}<br/>` : ''}
+                  ${party?.address ? `Location: ${party.address}` : ''}
+                </div>
+              </div>
+              <div class="summary-box">
+                <span>Net Party Balance</span>
+                <span style="color: ${(statement?.balance || 0) >= 0 ? '#16a34a' : '#dc2626'}">₹${Math.abs(statement?.balance || 0).toLocaleString('en-IN')} ${(statement?.balance || 0) >= 0 ? 'Dr (Receivable)' : 'Cr (Payable)'}</span>
+              </div>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Bill No.</th>
+                    <th>Particulars</th>
+                    <th style="text-align:right; color:#fca5a5;">Dr. (₹)</th>
+                    <th style="text-align:right; color:#86efac;">Cr. (₹)</th>
+                    <th style="text-align:right; color:#38bdf8;">Balance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rowsHtml}
+                </tbody>
+              </table>
+            </div>
+          </body>
+        </html>
+      `;
+
+      if (Platform.OS === 'web') {
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          printWindow.document.write(html);
+          printWindow.document.close();
+          printWindow.print();
+        }
+      } else {
+        await Print.printAsync({ html });
+      }
+    } catch (err) {
+      console.error('Failed to export PDF statement:', err);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
-        <View style={[styles.modalCard, { maxWidth: 520, maxHeight: '90%', padding: 14 }]}>
+        <View style={[styles.modalCard, { maxWidth: 580, maxHeight: '90%', padding: 14 }]}>
           {/* Modal Header */}
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>📜 Party Account Statement</Text>
@@ -883,65 +1029,140 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
           {isLoading ? (
             <ActivityIndicator color="#16a34a" size="large" style={{ marginVertical: 30 }} />
           ) : (
-            <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-              {/* 1. TOP HEADING: FarmsKing Logo & Title */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 2.5, borderBottomColor: '#16a34a', paddingBottom: 8, marginBottom: 10 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <BrandLogo size={34} useHdQuality />
-                  <View>
-                    <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: '#15803d', letterSpacing: -0.3 }}>FarmsKing</Text>
-                    <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>PARTY STATEMENT / ਖਾਤਾ ਸਟੇਟਮੈਂਟ</Text>
+            <>
+              {/* Action Bar with Download JPG & Download PDF Buttons */}
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8, marginTop: 4 }}>
+                <TouchableOpacity
+                  style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#16a34a', paddingVertical: 8, borderRadius: RADIUS.md }}
+                  onPress={handleDownloadJpg}
+                  disabled={isSharing}
+                  activeOpacity={0.85}
+                >
+                  {isSharing ? (
+                    <ActivityIndicator color="#ffffff" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="image-outline" size={15} color="#ffffff" />
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' }}>Download JPG</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#0284c7', paddingVertical: 8, borderRadius: RADIUS.md }}
+                  onPress={handleExportPdf}
+                  disabled={isSharing}
+                  activeOpacity={0.85}
+                >
+                  {isSharing ? (
+                    <ActivityIndicator color="#ffffff" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="document-text-outline" size={15} color="#ffffff" />
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' }}>Download PDF</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+                <ViewShot ref={shotRef} options={{ format: 'jpg', quality: 0.95 }} style={{ backgroundColor: '#ffffff', padding: 2 }}>
+                  {/* 1. TOP HEADING: FarmsKing Logo & Title */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 2.5, borderBottomColor: '#16a34a', paddingBottom: 8, marginBottom: 10 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <BrandLogo size={34} useHdQuality />
+                      <View>
+                        <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: '#15803d', letterSpacing: -0.3 }}>FarmsKing</Text>
+                        <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>PARTY ACCOUNT STATEMENT</Text>
+                      </View>
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#334155' }}>Date: {new Date().toLocaleDateString('en-IN')}</Text>
+                      <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#16a34a' }}>Official Ledger</Text>
+                    </View>
                   </View>
-                </View>
-                <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#334155' }}>Date: {new Date().toLocaleDateString('en-IN')}</Text>
-                  <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#16a34a' }}>Official Ledger</Text>
-                </View>
-              </View>
 
-              {/* 2 & 3. FARMER DETAILS (LEFT) & PARTY DETAILS (RIGHT) ROW */}
-              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
-                {/* Farmer Details Box (Left) */}
-                <View style={{ flex: 1, backgroundColor: '#f0fdf4', padding: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#bbf7d0' }}>
-                  <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: '#15803d', marginBottom: 2 }}>👨‍🌾 FARMER DETAILS</Text>
-                  <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>{farmerName}</Text>
-                  {farmerMobile ? <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>📱 {farmerMobile}</Text> : null}
-                  {farmerVillage ? <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>📍 {farmerVillage}</Text> : null}
-                </View>
+                  {/* 2 & 3. FARMER DETAILS (LEFT) & PARTY DETAILS (RIGHT) ROW */}
+                  <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
+                    {/* Farmer Details Box (Left) */}
+                    <View style={{ flex: 1, backgroundColor: '#f0fdf4', padding: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#bbf7d0' }}>
+                      <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: '#15803d', marginBottom: 2 }}>👨‍🌾 FARMER DETAILS</Text>
+                      <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>{farmerName}</Text>
+                      {farmerMobile ? <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>📱 {farmerMobile}</Text> : null}
+                      {farmerVillage ? <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>📍 {farmerVillage}</Text> : null}
+                    </View>
 
-                {/* Party Details Box (Right) */}
-                <View style={{ flex: 1, backgroundColor: '#f8fafc', padding: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                  <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: '#475569', marginBottom: 2 }}>🤝 PARTY DETAILS</Text>
-                  <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>{party?.name || partyName}</Text>
-                  {party?.mobile ? <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>📱 {party.mobile}</Text> : null}
-                  {party?.address ? <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>📍 {party.address}</Text> : null}
-                </View>
-              </View>
-
-              {/* FINANCIAL SUMMARY METRICS */}
-              <View style={{ padding: 8, backgroundColor: (statement?.balance || 0) >= 0 ? '#f0fdf4' : '#fef2f2', borderRadius: 6, borderWidth: 1, borderColor: (statement?.balance || 0) >= 0 ? '#bbf7d0' : '#fecdd3', marginBottom: 10, alignItems: 'center' }}>
-                <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: (statement?.balance || 0) >= 0 ? '#15803d' : '#b91c1c' }}>Net Party Balance</Text>
-                <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: (statement?.balance || 0) >= 0 ? '#16a34a' : '#dc2626' }}>
-                  ₹{Math.abs(statement?.balance || 0).toLocaleString('en-IN')} {(statement?.balance || 0) >= 0 ? 'Cr (ਲੇਣੀ)' : 'Dr (ਦੇਣੀ)'}
-                </Text>
-              </View>
-
-              {/* 4. STATEMENT LEDGER TABLE */}
-              <View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 6, overflow: 'hidden' }}>
-                <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 6, paddingHorizontal: 8 }}>
-                  <Text style={{ width: 65, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff' }}>Date</Text>
-                  <Text style={{ flex: 2, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff' }}>Particulars / Reason</Text>
-                  <Text style={{ flex: 1, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right' }}>Amount</Text>
-                </View>
-                {entries.map((e, idx) => (
-                  <View key={e.id || idx} style={{ flexDirection: 'row', paddingHorizontal: 8, paddingVertical: 6, backgroundColor: idx % 2 === 0 ? '#fff' : '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }}>
-                    <Text style={{ width: 65, fontSize: 10, fontFamily: FONT.medium, color: '#475569' }}>{new Date(e.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</Text>
-                    <Text style={{ flex: 2, fontSize: 11, fontFamily: FONT.bold, color: '#0f172a' }}>{e.reason}</Text>
-                    <Text style={{ flex: 1, fontSize: 10.5, fontFamily: FONT.bold, color: e.type.includes('CREDIT') ? '#16a34a' : '#c2410c', textAlign: 'right' }}>₹{Number(e.amount).toLocaleString('en-IN')}</Text>
+                    {/* Party Details Box (Right) */}
+                    <View style={{ flex: 1, backgroundColor: '#f8fafc', padding: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                      <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: '#475569', marginBottom: 2 }}>🤝 PARTY DETAILS</Text>
+                      <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>{party?.name || partyName}</Text>
+                      {party?.mobile ? <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>📱 {party.mobile}</Text> : null}
+                      {party?.address ? <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>📍 {party.address}</Text> : null}
+                    </View>
                   </View>
-                ))}
-              </View>
-            </ScrollView>
+
+                  {/* FINANCIAL SUMMARY METRICS - Single Row for Net Party Balance */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, paddingVertical: 8, backgroundColor: (statement?.balance || 0) >= 0 ? '#f0fdf4' : '#fef2f2', borderRadius: 8, borderWidth: 1, borderColor: (statement?.balance || 0) >= 0 ? '#bbf7d0' : '#fecdd3', marginBottom: 10 }}>
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: (statement?.balance || 0) >= 0 ? '#15803d' : '#b91c1c' }}>Net Party Balance</Text>
+                    <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: (statement?.balance || 0) >= 0 ? '#16a34a' : '#dc2626' }}>
+                      ₹{Math.abs(statement?.balance || 0).toLocaleString('en-IN')} {(statement?.balance || 0) >= 0 ? 'Dr (Receivable)' : 'Cr (Payable)'}
+                    </Text>
+                  </View>
+
+                  {/* 4. STATEMENT LEDGER TABLE */}
+                  <View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 6, overflow: 'hidden' }}>
+                    <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 7, paddingHorizontal: 6, alignItems: 'center' }}>
+                      <Text style={{ width: 55, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>Date</Text>
+                      <Text style={{ width: 65, fontSize: 9.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>Bill No.</Text>
+                      <Text style={{ flex: 1, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>Particulars</Text>
+                      <Text style={{ width: 60, fontSize: 9.5, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right' }}>Dr. (₹)</Text>
+                      <Text style={{ width: 60, fontSize: 9.5, fontFamily: FONT.bold, color: '#86efac', textAlign: 'right' }}>Cr. (₹)</Text>
+                      <Text style={{ width: 75, fontSize: 9.5, fontFamily: FONT.bold, color: '#38bdf8', textAlign: 'right' }}>Balance</Text>
+                    </View>
+
+                    {ledgerRows.length === 0 ? (
+                      <View style={{ padding: 16, alignItems: 'center' }}>
+                        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#94a3b8' }}>No ledger transactions yet.</Text>
+                      </View>
+                    ) : (
+                      ledgerRows.map((row, idx) => (
+                        <View key={row.id || idx} style={{ flexDirection: 'row', paddingHorizontal: 6, paddingVertical: 7, backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center' }}>
+                          <Text style={{ width: 55, fontSize: 9.5, fontFamily: FONT.medium, color: '#475569' }}>
+                            {new Date(row.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                          </Text>
+
+                          <View style={{ width: 65 }}>
+                            {row.billNo && row.billNo !== '—' ? (
+                              <View style={{ backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: 4, paddingHorizontal: 3, paddingVertical: 1, alignSelf: 'flex-start' }}>
+                                <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#1d4ed8' }}>{row.billNo}</Text>
+                              </View>
+                            ) : (
+                              <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8' }}>—</Text>
+                            )}
+                          </View>
+
+                          <Text style={{ flex: 1, fontSize: 10, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={2}>
+                            {row.reason}
+                          </Text>
+
+                          <Text style={{ width: 60, fontSize: 10, fontFamily: FONT.bold, color: row.drAmount > 0 ? '#b91c1c' : '#94a3b8', textAlign: 'right' }}>
+                            {row.drAmount > 0 ? `₹${row.drAmount.toLocaleString('en-IN')}` : '—'}
+                          </Text>
+
+                          <Text style={{ width: 60, fontSize: 10, fontFamily: FONT.bold, color: row.crAmount > 0 ? '#15803d' : '#94a3b8', textAlign: 'right' }}>
+                            {row.crAmount > 0 ? `₹${row.crAmount.toLocaleString('en-IN')}` : '—'}
+                          </Text>
+
+                          <Text style={{ width: 75, fontSize: 9.5, fontFamily: FONT.extraBold, color: row.runningBalance >= 0 ? '#16a34a' : '#dc2626', textAlign: 'right' }}>
+                            ₹{Math.abs(row.runningBalance).toLocaleString('en-IN')} {row.runningBalance >= 0 ? 'Dr' : 'Cr'}
+                          </Text>
+                        </View>
+                      ))
+                    )}
+                  </View>
+                </ViewShot>
+              </ScrollView>
+            </>
           )}
         </View>
       </View>

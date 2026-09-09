@@ -66,7 +66,15 @@ let SaleBillsService = class SaleBillsService {
         return candidate;
     }
     async create(user, dto) {
-        const billNo = await this.nextBillNo();
+        if (dto.billNo) {
+            const existing = await this.prisma.saleBill.findFirst({
+                where: { farmerId: user.id, billNo: dto.billNo },
+            });
+            if (existing) {
+                return this.update(user, existing.id, dto);
+            }
+        }
+        const billNo = dto.billNo ? dto.billNo : await this.nextBillNo();
         const bill = await this.prisma.saleBill.create({
             data: {
                 farmerId: user.id,
@@ -122,9 +130,10 @@ let SaleBillsService = class SaleBillsService {
     }
     async update(user, id, dto) {
         const existing = await this.findOneOrThrow(user, id);
-        return this.prisma.saleBill.update({
+        const updated = await this.prisma.saleBill.update({
             where: { id: existing.id },
             data: {
+                billNo: existing.billNo,
                 farmerName: dto.farmerName,
                 partyId: dto.partyId,
                 partyName: dto.partyName,
@@ -140,9 +149,27 @@ let SaleBillsService = class SaleBillsService {
                 netReceivable: dto.netReceivable,
             },
         });
+        return updated;
     }
     async findOneOrThrow(user, id) {
-        const bill = await this.prisma.saleBill.findUnique({ where: { id } });
+        let bill = null;
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        if (isUuid) {
+            bill = await this.prisma.saleBill.findUnique({ where: { id } }).catch(() => null);
+        }
+        if (!bill) {
+            bill = await this.prisma.saleBill.findFirst({
+                where: { farmerId: user.id, billNo: id },
+            });
+        }
+        if (!bill) {
+            bill = await this.prisma.saleBill.findFirst({
+                where: {
+                    farmerId: user.id,
+                    billNo: { equals: id, mode: 'insensitive' },
+                },
+            });
+        }
         if (!bill) {
             throw new common_1.NotFoundException('Bill not found.');
         }
@@ -150,6 +177,12 @@ let SaleBillsService = class SaleBillsService {
             throw new common_1.ForbiddenException('This bill does not belong to you.');
         }
         return bill;
+    }
+    async listMine(user) {
+        return this.prisma.saleBill.findMany({
+            where: { farmerId: user.id },
+            orderBy: { createdAt: 'desc' },
+        });
     }
     async countMine(user) {
         const count = await this.prisma.saleBill.count({ where: { farmerId: user.id } });

@@ -8,13 +8,13 @@ export declare class CropProblemsController {
     constructor(cropProblemsService: CropProblemsService);
     create(user: AuthUser, dto: CreateCropProblemDto): Promise<{
         cropCycle: {
-            id: string;
-            cropName: string;
             plot: {
                 id: string;
                 name: string;
                 farmId: string;
             };
+            id: string;
+            cropName: string;
         };
         assignedAdvisor: {
             id: string;
@@ -36,8 +36,8 @@ export declare class CropProblemsController {
         }[];
     } & {
         id: string;
-        updatedAt: Date;
         createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
         status: import(".prisma/client").$Enums.CropProblemStatus;
         title: string;
@@ -55,13 +55,13 @@ export declare class CropProblemsController {
     }>;
     findMine(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         cropCycle: {
-            id: string;
-            cropName: string;
             plot: {
                 id: string;
                 name: string;
                 farmId: string;
             };
+            id: string;
+            cropName: string;
         };
         assignedAdvisor: {
             id: string;
@@ -83,8 +83,8 @@ export declare class CropProblemsController {
         }[];
     } & {
         id: string;
-        updatedAt: Date;
         createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
         status: import(".prisma/client").$Enums.CropProblemStatus;
         title: string;
@@ -102,13 +102,13 @@ export declare class CropProblemsController {
     })[]>;
     findAssigned(user: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
         cropCycle: {
-            id: string;
-            cropName: string;
             plot: {
                 id: string;
                 name: string;
                 farmId: string;
             };
+            id: string;
+            cropName: string;
         };
         assignedAdvisor: {
             id: string;
@@ -130,8 +130,8 @@ export declare class CropProblemsController {
         }[];
     } & {
         id: string;
-        updatedAt: Date;
         createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
         status: import(".prisma/client").$Enums.CropProblemStatus;
         title: string;
@@ -149,13 +149,13 @@ export declare class CropProblemsController {
     })[]>;
     findOne(user: AuthUser, id: string): Promise<{
         cropCycle: {
-            id: string;
-            cropName: string;
             plot: {
                 id: string;
                 name: string;
                 farmId: string;
             };
+            id: string;
+            cropName: string;
         };
         assignedAdvisor: {
             id: string;
@@ -177,8 +177,8 @@ export declare class CropProblemsController {
         }[];
     } & {
         id: string;
-        updatedAt: Date;
         createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
         status: import(".prisma/client").$Enums.CropProblemStatus;
         title: string;
@@ -197,13 +197,13 @@ export declare class CropProblemsController {
     respond(user: AuthUser, id: string, dto: RespondCropProblemDto): Promise<{
         insertedScheduleDate: Date | null;
         cropCycle: {
-            id: string;
-            cropName: string;
             plot: {
                 id: string;
                 name: string;
                 farmId: string;
             };
+            id: string;
+            cropName: string;
         };
         assignedAdvisor: {
             id: string;
@@ -224,8 +224,8 @@ export declare class CropProblemsController {
             cropProblemId: string;
         }[];
         id: string;
-        updatedAt: Date;
         createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
         status: import(".prisma/client").$Enums.CropProblemStatus;
         title: string;
@@ -243,13 +243,13 @@ export declare class CropProblemsController {
     }>;
     updateStatus(user: AuthUser, id: string, dto: UpdateCropProblemStatusDto): Promise<{
         cropCycle: {
-            id: string;
-            cropName: string;
             plot: {
                 id: string;
                 name: string;
                 farmId: string;
             };
+            id: string;
+            cropName: string;
         };
         assignedAdvisor: {
             id: string;
@@ -271,8 +271,8 @@ export declare class CropProblemsController {
         }[];
     } & {
         id: string;
-        updatedAt: Date;
         createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
         status: import(".prisma/client").$Enums.CropProblemStatus;
         title: string;
@@ -293,13 +293,13 @@ export declare class CropProblemsController {
         feedback?: string;
     }): Promise<{
         cropCycle: {
-            id: string;
-            cropName: string;
             plot: {
                 id: string;
                 name: string;
                 farmId: string;
             };
+            id: string;
+            cropName: string;
         };
         assignedAdvisor: {
             id: string;
@@ -321,8 +321,8 @@ export declare class CropProblemsController {
         }[];
     } & {
         id: string;
-        updatedAt: Date;
         createdAt: Date;
+        updatedAt: Date;
         deletedAt: Date | null;
         status: import(".prisma/client").$Enums.CropProblemStatus;
         title: string;

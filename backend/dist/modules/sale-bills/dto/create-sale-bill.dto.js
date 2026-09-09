@@ -45,6 +45,7 @@ __decorate([
     __metadata("design:type", Number)
 ], SaleBillItemDto.prototype, "amount", void 0);
 class CreateSaleBillDto {
+    billNo;
     farmerName;
     partyId;
     partyName;
@@ -60,6 +61,11 @@ class CreateSaleBillDto {
     netReceivable;
 }
 exports.CreateSaleBillDto = CreateSaleBillDto;
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateSaleBillDto.prototype, "billNo", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)

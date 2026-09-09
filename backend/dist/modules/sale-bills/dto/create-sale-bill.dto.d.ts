@@ -7,6 +7,7 @@ declare class SaleBillItemDto {
     amount: number;
 }
 export declare class CreateSaleBillDto {
+    billNo?: string;
     farmerName: string;
     partyId?: string;
     partyName: string;

@@ -29,6 +29,9 @@ let SaleBillsController = class SaleBillsController {
     create(user, dto) {
         return this.saleBillsService.create(user, dto);
     }
+    findAllMine(user) {
+        return this.saleBillsService.listMine(user);
+    }
     countMine(user) {
         return this.saleBillsService.countMine(user);
     }
@@ -48,6 +51,13 @@ __decorate([
     __metadata("design:paramtypes", [Object, create_sale_bill_dto_1.CreateSaleBillDto]),
     __metadata("design:returntype", void 0)
 ], SaleBillsController.prototype, "create", null);
+__decorate([
+    (0, common_1.Get)(),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], SaleBillsController.prototype, "findAllMine", null);
 __decorate([
     (0, common_1.Get)('count/mine'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),

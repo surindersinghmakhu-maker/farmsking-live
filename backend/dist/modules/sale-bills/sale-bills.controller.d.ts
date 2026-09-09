@@ -23,10 +23,7 @@ export declare class SaleBillsController {
         previousBalance: import("@prisma/client/runtime/library").Decimal;
         netReceivable: import("@prisma/client/runtime/library").Decimal;
     }>;
-    countMine(user: AuthUser): Promise<{
-        count: number;
-    }>;
-    findOne(user: AuthUser, id: string): Promise<{
+    findAllMine(user: AuthUser): Promise<{
         id: string;
         createdAt: Date;
         farmerId: string;
@@ -44,7 +41,11 @@ export declare class SaleBillsController {
         thisSaleBalance: import("@prisma/client/runtime/library").Decimal;
         previousBalance: import("@prisma/client/runtime/library").Decimal;
         netReceivable: import("@prisma/client/runtime/library").Decimal;
+    }[]>;
+    countMine(user: AuthUser): Promise<{
+        count: number;
     }>;
+    findOne(user: AuthUser, id: string): Promise<any>;
     update(user: AuthUser, id: string, dto: CreateSaleBillDto): Promise<{
         id: string;
         createdAt: Date;

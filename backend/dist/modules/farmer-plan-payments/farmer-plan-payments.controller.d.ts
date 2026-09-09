@@ -15,10 +15,10 @@ export declare class FarmerPlanPaymentsController {
             name: string;
         };
         id: string;
-        farmerId: string;
         status: import(".prisma/client").$Enums.PlanPaymentStatus;
-        requestedAt: Date;
+        farmerId: string;
         amount: import("@prisma/client/runtime/library").Decimal;
+        requestedAt: Date;
         daysGranted: number;
         utr: string | null;
         submittedAt: Date | null;
@@ -38,10 +38,10 @@ export declare class FarmerPlanPaymentsController {
         };
     } & {
         id: string;
-        farmerId: string;
         status: import(".prisma/client").$Enums.PlanPaymentStatus;
-        requestedAt: Date;
+        farmerId: string;
         amount: import("@prisma/client/runtime/library").Decimal;
+        requestedAt: Date;
         daysGranted: number;
         utr: string | null;
         submittedAt: Date | null;
@@ -61,10 +61,10 @@ export declare class FarmerPlanPaymentsController {
         };
     } & {
         id: string;
-        farmerId: string;
         status: import(".prisma/client").$Enums.PlanPaymentStatus;
-        requestedAt: Date;
+        farmerId: string;
         amount: import("@prisma/client/runtime/library").Decimal;
+        requestedAt: Date;
         daysGranted: number;
         utr: string | null;
         submittedAt: Date | null;
@@ -84,10 +84,10 @@ export declare class FarmerPlanPaymentsController {
         };
     } & {
         id: string;
-        farmerId: string;
         status: import(".prisma/client").$Enums.PlanPaymentStatus;
-        requestedAt: Date;
+        farmerId: string;
         amount: import("@prisma/client/runtime/library").Decimal;
+        requestedAt: Date;
         daysGranted: number;
         utr: string | null;
         submittedAt: Date | null;
@@ -101,8 +101,8 @@ export declare class FarmerPlanPaymentsController {
     confirm(user: AuthUser, id: string): Promise<{
         plan: {
             id: string;
-            updatedAt: Date;
             createdAt: Date;
+            updatedAt: Date;
             farmerId: string;
             startDate: Date;
             endDate: Date | null;
@@ -124,10 +124,10 @@ export declare class FarmerPlanPaymentsController {
             };
         } & {
             id: string;
-            farmerId: string;
             status: import(".prisma/client").$Enums.PlanPaymentStatus;
-            requestedAt: Date;
+            farmerId: string;
             amount: import("@prisma/client/runtime/library").Decimal;
+            requestedAt: Date;
             daysGranted: number;
             utr: string | null;
             submittedAt: Date | null;
@@ -141,19 +141,19 @@ export declare class FarmerPlanPaymentsController {
         coupon: {
             id: string;
             createdAt: Date;
+            code: string;
+            expiresAt: Date | null;
+            createdById: string;
             plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             assignedAdvisorId: string | null;
             category: import(".prisma/client").$Enums.PlanCouponCategory;
-            code: string;
             daysGranted: number;
             assignedFarmerId: string | null;
             assignedBusinessPartnerId: string | null;
             isUsed: boolean;
             usedAt: Date | null;
             usedByFarmerId: string | null;
-            expiresAt: Date | null;
             generationCostAmount: import("@prisma/client/runtime/library").Decimal | null;
-            createdById: string;
             createdByRole: import(".prisma/client").$Enums.Role | null;
             payoutAmount: import("@prisma/client/runtime/library").Decimal | null;
             payoutRecipientId: string | null;
@@ -168,10 +168,10 @@ export declare class FarmerPlanPaymentsController {
         };
     } & {
         id: string;
-        farmerId: string;
         status: import(".prisma/client").$Enums.PlanPaymentStatus;
-        requestedAt: Date;
+        farmerId: string;
         amount: import("@prisma/client/runtime/library").Decimal;
+        requestedAt: Date;
         daysGranted: number;
         utr: string | null;
         submittedAt: Date | null;

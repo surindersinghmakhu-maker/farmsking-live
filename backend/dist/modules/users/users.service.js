@@ -104,32 +104,36 @@ let UsersService = class UsersService {
         const page = query.page ?? 1;
         const limit = query.limit ?? 20;
         const status = query.status ?? 'all';
-        const where = {
-            ...(query.role
-                ? {
-                    OR: [
-                        { role: query.role },
-                        {
-                            AND: [
-                                { roles: { has: query.role } },
-                                { NOT: { deactivatedRoles: { has: query.role } } },
-                            ],
-                        },
-                    ],
-                }
-                : {}),
-            ...(status === 'active' ? { deletedAt: null } : {}),
-            ...(status === 'inactive' ? { deletedAt: { not: null } } : {}),
-            ...(query.search
-                ? {
-                    OR: [
-                        { name: { contains: query.search, mode: client_1.Prisma.QueryMode.insensitive } },
-                        { mobile: { contains: query.search } },
-                        { kingId: { contains: query.search, mode: client_1.Prisma.QueryMode.insensitive } },
-                    ],
-                }
-                : {}),
-        };
+        const conditions = [];
+        if (query.role) {
+            conditions.push({
+                OR: [
+                    { role: query.role },
+                    {
+                        AND: [
+                            { roles: { has: query.role } },
+                            { NOT: { deactivatedRoles: { has: query.role } } },
+                        ],
+                    },
+                ],
+            });
+        }
+        if (status === 'active') {
+            conditions.push({ deletedAt: null });
+        }
+        else if (status === 'inactive') {
+            conditions.push({ deletedAt: { not: null } });
+        }
+        if (query.search) {
+            conditions.push({
+                OR: [
+                    { name: { contains: query.search, mode: client_1.Prisma.QueryMode.insensitive } },
+                    { mobile: { contains: query.search } },
+                    { kingId: { contains: query.search, mode: client_1.Prisma.QueryMode.insensitive } },
+                ],
+            });
+        }
+        const where = conditions.length > 0 ? { AND: conditions } : {};
         const [items, total] = await Promise.all([
             this.prisma.user.findMany({
                 where,
@@ -478,6 +482,12 @@ let UsersService = class UsersService {
             newPrimary = stillActive[0] ?? client_1.Role.CUSTOMER;
             if (!newRoles.includes(newPrimary))
                 newRoles.push(newPrimary);
+        }
+        else if (user.role === client_1.Role.CUSTOMER) {
+            const activeNonCustomer = newRoles.filter((r) => !newDeactivated.includes(r) && r !== client_1.Role.CUSTOMER);
+            if (activeNonCustomer.length > 0) {
+                newPrimary = activeNonCustomer[activeNonCustomer.length - 1];
+            }
         }
         const isBrandNewAdvisor = toGrant.includes(client_1.Role.ADVISOR);
         const updated = await this.prisma.user.update({

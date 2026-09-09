@@ -30,6 +30,24 @@ export declare class PartiesService {
         deletedAt: Date | null;
         ownerId: string;
         address: string | null;
+    } | {
+        id: string;
+        kingId: string;
+        mobile: string | null;
+        roles: import(".prisma/client").$Enums.PartyRole[];
+        name: string;
+        village: string | null;
+        district: string | null;
+        state: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        deletedAt: Date | null;
+        type: import(".prisma/client").$Enums.PartyType;
+        userId: string | null;
+        address: string | null;
+        mandiName: string | null;
+        shopNumber: string | null;
+        ownerFarmerId: string | null;
     }>;
     private computeBalance;
     listMine(user: AuthUser): Promise<{
@@ -45,6 +63,7 @@ export declare class PartiesService {
     private findOwnedOrThrow;
     getStatement(user: AuthUser, partyId: string): Promise<{
         party: {
+            isUnified: boolean;
             id: string;
             mobile: string | null;
             name: string;
@@ -52,22 +71,23 @@ export declare class PartiesService {
             deletedAt: Date | null;
             ownerId: string;
             address: string | null;
+            kingId?: undefined;
+        } | {
+            id: string;
+            ownerId: string | null;
+            name: string;
+            address: string;
+            mobile: string | null;
+            createdAt: Date;
+            kingId: string;
+            isUnified: boolean;
         };
         balance: number;
-        entries: {
-            id: string;
-            createdAt: Date;
-            type: import(".prisma/client").$Enums.PartyLedgerEntryType;
-            amount: import("@prisma/client/runtime/library").Decimal;
-            reason: string;
-            partyId: string;
-            expenseId: string | null;
-            saleBillId: string | null;
-            paymentReceiptId: string | null;
-        }[];
+        entries: any[];
     }>;
     recordSaleLedger(user: AuthUser, partyId: string, dto: RecordSaleLedgerDto): Promise<{
         party: {
+            isUnified: boolean;
             id: string;
             mobile: string | null;
             name: string;
@@ -75,24 +95,25 @@ export declare class PartiesService {
             deletedAt: Date | null;
             ownerId: string;
             address: string | null;
+            kingId?: undefined;
+        } | {
+            id: string;
+            ownerId: string | null;
+            name: string;
+            address: string;
+            mobile: string | null;
+            createdAt: Date;
+            kingId: string;
+            isUnified: boolean;
         };
         balance: number;
-        entries: {
-            id: string;
-            createdAt: Date;
-            type: import(".prisma/client").$Enums.PartyLedgerEntryType;
-            amount: import("@prisma/client/runtime/library").Decimal;
-            reason: string;
-            partyId: string;
-            expenseId: string | null;
-            saleBillId: string | null;
-            paymentReceiptId: string | null;
-        }[];
+        entries: any[];
     }>;
     private nextReceiptNo;
     recordPaymentReceived(user: AuthUser, partyId: string, dto: RecordPaymentDto): Promise<{
         receiptNo: string;
         party: {
+            isUnified: boolean;
             id: string;
             mobile: string | null;
             name: string;
@@ -100,23 +121,24 @@ export declare class PartiesService {
             deletedAt: Date | null;
             ownerId: string;
             address: string | null;
+            kingId?: undefined;
+        } | {
+            id: string;
+            ownerId: string | null;
+            name: string;
+            address: string;
+            mobile: string | null;
+            createdAt: Date;
+            kingId: string;
+            isUnified: boolean;
         };
         balance: number;
-        entries: {
-            id: string;
-            createdAt: Date;
-            type: import(".prisma/client").$Enums.PartyLedgerEntryType;
-            amount: import("@prisma/client/runtime/library").Decimal;
-            reason: string;
-            partyId: string;
-            expenseId: string | null;
-            saleBillId: string | null;
-            paymentReceiptId: string | null;
-        }[];
+        entries: any[];
     }>;
     recordPaymentMade(user: AuthUser, partyId: string, dto: RecordPaymentDto): Promise<{
         receiptNo: string;
         party: {
+            isUnified: boolean;
             id: string;
             mobile: string | null;
             name: string;
@@ -124,19 +146,19 @@ export declare class PartiesService {
             deletedAt: Date | null;
             ownerId: string;
             address: string | null;
+            kingId?: undefined;
+        } | {
+            id: string;
+            ownerId: string | null;
+            name: string;
+            address: string;
+            mobile: string | null;
+            createdAt: Date;
+            kingId: string;
+            isUnified: boolean;
         };
         balance: number;
-        entries: {
-            id: string;
-            createdAt: Date;
-            type: import(".prisma/client").$Enums.PartyLedgerEntryType;
-            amount: import("@prisma/client/runtime/library").Decimal;
-            reason: string;
-            partyId: string;
-            expenseId: string | null;
-            saleBillId: string | null;
-            paymentReceiptId: string | null;
-        }[];
+        entries: any[];
     }>;
     recordExpenseCredit(partyId: string, expenseId: string, amount: number, reason: string): Promise<void>;
     private generateKingId;

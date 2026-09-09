@@ -455,9 +455,9 @@ export declare class UsersService {
             createdAt: Date;
             updatedAt: Date;
             farmerId: string;
-            plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             startDate: Date;
             endDate: Date | null;
+            plan: import(".prisma/client").$Enums.FarmerSubscriptionPlan;
             expiredAt: Date | null;
             couponId: string | null;
         } | null;
@@ -465,9 +465,9 @@ export declare class UsersService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
             startDate: Date;
             endDate: Date | null;
+            plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
             expiredAt: Date | null;
             couponId: string | null;
             gardenerId: string;

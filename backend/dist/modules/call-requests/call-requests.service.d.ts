@@ -9,6 +9,11 @@ export declare class CallRequestsService {
     private readonly chatGateway;
     constructor(prisma: PrismaService, notificationsService: NotificationsService, chatGateway: ChatGateway);
     create(farmer: AuthUser): Promise<{
+        advisor: {
+            id: string;
+            mobile: string;
+            name: string;
+        };
         farmer: {
             id: string;
             kingId: string | null;
@@ -16,21 +21,21 @@ export declare class CallRequestsService {
             name: string;
             photoUrl: string | null;
         };
-        advisor: {
-            id: string;
-            mobile: string;
-            name: string;
-        };
     } & {
         id: string;
         createdAt: Date;
         status: import(".prisma/client").$Enums.CallRequestStatus;
-        farmerId: string;
         advisorId: string;
+        farmerId: string;
         resolvedAt: Date | null;
         resolvedComment: string | null;
     }>;
     getMyPending(farmer: AuthUser): import(".prisma/client").Prisma.Prisma__CallRequestClient<({
+        advisor: {
+            id: string;
+            mobile: string;
+            name: string;
+        };
         farmer: {
             id: string;
             kingId: string | null;
@@ -38,21 +43,21 @@ export declare class CallRequestsService {
             name: string;
             photoUrl: string | null;
         };
-        advisor: {
-            id: string;
-            mobile: string;
-            name: string;
-        };
     } & {
         id: string;
         createdAt: Date;
         status: import(".prisma/client").$Enums.CallRequestStatus;
-        farmerId: string;
         advisorId: string;
+        farmerId: string;
         resolvedAt: Date | null;
         resolvedComment: string | null;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs, import(".prisma/client").Prisma.PrismaClientOptions>;
     listMine(advisor: AuthUser): import(".prisma/client").Prisma.PrismaPromise<({
+        advisor: {
+            id: string;
+            mobile: string;
+            name: string;
+        };
         farmer: {
             id: string;
             kingId: string | null;
@@ -60,21 +65,21 @@ export declare class CallRequestsService {
             name: string;
             photoUrl: string | null;
         };
-        advisor: {
-            id: string;
-            mobile: string;
-            name: string;
-        };
     } & {
         id: string;
         createdAt: Date;
         status: import(".prisma/client").$Enums.CallRequestStatus;
-        farmerId: string;
         advisorId: string;
+        farmerId: string;
         resolvedAt: Date | null;
         resolvedComment: string | null;
     })[]>;
     resolve(advisor: AuthUser, id: string, dto: ResolveCallRequestDto): Promise<{
+        advisor: {
+            id: string;
+            mobile: string;
+            name: string;
+        };
         farmer: {
             id: string;
             kingId: string | null;
@@ -82,17 +87,12 @@ export declare class CallRequestsService {
             name: string;
             photoUrl: string | null;
         };
-        advisor: {
-            id: string;
-            mobile: string;
-            name: string;
-        };
     } & {
         id: string;
         createdAt: Date;
         status: import(".prisma/client").$Enums.CallRequestStatus;
-        farmerId: string;
         advisorId: string;
+        farmerId: string;
         resolvedAt: Date | null;
         resolvedComment: string | null;
     }>;

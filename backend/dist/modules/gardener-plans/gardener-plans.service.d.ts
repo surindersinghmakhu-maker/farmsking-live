@@ -48,9 +48,9 @@ export declare class GardenerPlansService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
             startDate: Date;
             endDate: Date | null;
+            plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
             expiredAt: Date | null;
             couponId: string | null;
             gardenerId: string;
@@ -115,9 +115,9 @@ export declare class GardenerPlansService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
         startDate: Date;
         endDate: Date | null;
+        plan: import(".prisma/client").$Enums.GardenerSubscriptionPlan;
         expiredAt: Date | null;
         couponId: string | null;
         gardenerId: string;

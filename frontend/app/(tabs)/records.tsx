@@ -271,6 +271,7 @@ export default function RecordsScreen() {
         id: b.id,
         cropId: b.items?.[0]?.cropId || '',
         cropName: cropSummary,
+        fieldName: b.partyName || 'Sale',
         quantity: String(b.items?.[0]?.qty || 1),
         unit: b.items?.[0]?.unit || 'kg',
         pricePerUnit: String(b.items?.[0]?.rate || b.totalAmount),
@@ -361,7 +362,7 @@ export default function RecordsScreen() {
 
         {/* 4. Bill Items */}
         <View style={{ flex: 1.5, minWidth: 140, paddingRight: 4 }}>
-          <Text style={{ fontSize: 10.5, fontFamily: FONT.semibold, color: '#16a34a' }} numberOfLines={2}>
+          <Text style={{ fontSize: 10.5, fontFamily: FONT.semiBold, color: '#16a34a' }} numberOfLines={2}>
             🌾 {cropDetailText}
           </Text>
         </View>
@@ -499,6 +500,8 @@ export default function RecordsScreen() {
   // Main Form Edit Bill State
   const [editingBillId, setEditingBillId] = useState<string | null>(null);
   const [editingBillNo, setEditingBillNo] = useState<string | null>(null);
+  // ✅ ਇਹ track ਕਰਦਾ ਹੈ ਕਿ save ਤੋਂ ਪਹਿਲਾਂ edit mode ਸੀ ਜਾਂ ਨਹੀਂ
+  const [wasEditingBill, setWasEditingBill] = useState(false);
 
   // Handle incoming route params (e.g. action: 'NEW_SALE' or action: 'NEW_EXPENSE' from Quick Accounts Card)
   const { action, t } = useLocalSearchParams<{ action?: string; t?: string }>();
@@ -607,8 +610,13 @@ export default function RecordsScreen() {
     setAmountReceived(loadedAmountReceived !== null ? loadedAmountReceived : (isParty ? String(item.totalAmount) : ''));
     setAmountReceivedMode(loadedReceivedMode);
     setSaleDescription(item.notes || '');
+    // ✅ FIX: sale date ਵੀ form ਵਿੱਚ ਭਰੋ
+    if (item.saleDate) {
+      setSaleDate(item.saleDate.slice(0, 10));
+    }
     setEditingBillId(realBillIdToUse);
     setEditingBillNo(billNoToUse);
+    setSaleStep('FORM');
     setShowSaleForm(true);
     setRecordType('SALES');
   };
@@ -1192,6 +1200,7 @@ export default function RecordsScreen() {
     setSaleDescription('');
     setEditingBillId(null);
     setEditingBillNo(null);
+    setWasEditingBill(false);
   };
 
   const getCropMaxRateDetails = (cropName: string, userSetPrice?: string | number) => {
@@ -1376,7 +1385,8 @@ export default function RecordsScreen() {
         }
       }
 
-      if (paymentMode === 'PARTY' && selectedParty) {
+      // ✅ FIX: Edit mode ਵਿੱਚ ਨਵੀਂ ledger entry ਨਾ ਬਣਾਓ — ਸਿਰਫ਼ bill update ਕਾਫ਼ੀ ਹੈ
+      if (!editingBillId && paymentMode === 'PARTY' && selectedParty) {
         const modeLabel = effectiveAmountReceived > 0 ? ` (${currentReceivedMode})` : '';
         const reason = `Sale: ${saleItems.map((i) => i.cropName).join(', ')} (${totalCartItems} item${totalCartItems > 1 ? 's' : ''})${modeLabel}`;
         await recordSaleLedger.mutateAsync({
@@ -1469,6 +1479,7 @@ export default function RecordsScreen() {
         date: now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
         time: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
       };
+      setWasEditingBill(Boolean(editingBillId));
       setEditingBillId(null);
       setEditingBillNo(null);
       setSavedInvoice(invoice);
@@ -2614,8 +2625,8 @@ export default function RecordsScreen() {
                       <ScrollView showsVerticalScrollIndicator={false}>
                         <View style={{ alignItems: 'center', paddingVertical: 10 }}>
                           <Ionicons name="checkmark-circle" size={40} color="#16a34a" />
-                          <Text style={styles.savedTitle}>Sale Saved ✅</Text>
-                          <Text style={styles.savedSub}>Preview the bill below, then share it as an image.</Text>
+                          <Text style={styles.savedTitle}>{wasEditingBill ? 'Bill Updated ✅' : 'Sale Saved ✅'}</Text>
+                          <Text style={styles.savedSub}>{wasEditingBill ? 'Bill successfully updated. Same Bill # preserved.' : 'Preview the bill below, then share it as an image.'}</Text>
 
                           {savedInvoice && (
                             <View style={{ marginTop: 12 }}>

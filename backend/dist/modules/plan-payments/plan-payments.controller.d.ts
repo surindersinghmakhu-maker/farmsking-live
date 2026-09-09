@@ -16,23 +16,23 @@ export declare class PlanPaymentsController {
         subscription: {
             plan: {
                 id: string;
-                updatedAt: Date;
                 name: string;
                 createdAt: Date;
+                updatedAt: Date;
+                isActive: boolean;
                 description: string | null;
                 price: import("@prisma/client/runtime/library").Decimal;
-                isActive: boolean;
                 billingCycle: string;
                 planType: import(".prisma/client").$Enums.FarmerPlanType;
                 maxFarms: number;
             };
         } & {
             id: string;
-            updatedAt: Date;
             createdAt: Date;
+            updatedAt: Date;
             deletedAt: Date | null;
-            farmerId: string;
             status: import(".prisma/client").$Enums.SubscriptionPlanStatus;
+            farmerId: string;
             startDate: Date | null;
             endDate: Date | null;
             notes: string | null;
@@ -43,11 +43,11 @@ export declare class PlanPaymentsController {
             cancelledAt: Date | null;
         };
         id: string;
-        farmerId: string;
         status: import(".prisma/client").$Enums.PlanPaymentStatus;
+        farmerId: string;
         subscriptionId: string;
-        requestedAt: Date;
         amount: import("@prisma/client/runtime/library").Decimal;
+        requestedAt: Date;
         daysGranted: number;
         utr: string | null;
         submittedAt: Date | null;
@@ -66,23 +66,23 @@ export declare class PlanPaymentsController {
         subscription: {
             plan: {
                 id: string;
-                updatedAt: Date;
                 name: string;
                 createdAt: Date;
+                updatedAt: Date;
+                isActive: boolean;
                 description: string | null;
                 price: import("@prisma/client/runtime/library").Decimal;
-                isActive: boolean;
                 billingCycle: string;
                 planType: import(".prisma/client").$Enums.FarmerPlanType;
                 maxFarms: number;
             };
         } & {
             id: string;
-            updatedAt: Date;
             createdAt: Date;
+            updatedAt: Date;
             deletedAt: Date | null;
-            farmerId: string;
             status: import(".prisma/client").$Enums.SubscriptionPlanStatus;
+            farmerId: string;
             startDate: Date | null;
             endDate: Date | null;
             notes: string | null;
@@ -94,11 +94,11 @@ export declare class PlanPaymentsController {
         };
     } & {
         id: string;
-        farmerId: string;
         status: import(".prisma/client").$Enums.PlanPaymentStatus;
+        farmerId: string;
         subscriptionId: string;
-        requestedAt: Date;
         amount: import("@prisma/client/runtime/library").Decimal;
+        requestedAt: Date;
         daysGranted: number;
         utr: string | null;
         submittedAt: Date | null;
@@ -117,23 +117,23 @@ export declare class PlanPaymentsController {
         subscription: {
             plan: {
                 id: string;
-                updatedAt: Date;
                 name: string;
                 createdAt: Date;
+                updatedAt: Date;
+                isActive: boolean;
                 description: string | null;
                 price: import("@prisma/client/runtime/library").Decimal;
-                isActive: boolean;
                 billingCycle: string;
                 planType: import(".prisma/client").$Enums.FarmerPlanType;
                 maxFarms: number;
             };
         } & {
             id: string;
-            updatedAt: Date;
             createdAt: Date;
+            updatedAt: Date;
             deletedAt: Date | null;
-            farmerId: string;
             status: import(".prisma/client").$Enums.SubscriptionPlanStatus;
+            farmerId: string;
             startDate: Date | null;
             endDate: Date | null;
             notes: string | null;
@@ -145,11 +145,11 @@ export declare class PlanPaymentsController {
         };
     } & {
         id: string;
-        farmerId: string;
         status: import(".prisma/client").$Enums.PlanPaymentStatus;
+        farmerId: string;
         subscriptionId: string;
-        requestedAt: Date;
         amount: import("@prisma/client/runtime/library").Decimal;
+        requestedAt: Date;
         daysGranted: number;
         utr: string | null;
         submittedAt: Date | null;
@@ -168,23 +168,23 @@ export declare class PlanPaymentsController {
         subscription: {
             plan: {
                 id: string;
-                updatedAt: Date;
                 name: string;
                 createdAt: Date;
+                updatedAt: Date;
+                isActive: boolean;
                 description: string | null;
                 price: import("@prisma/client/runtime/library").Decimal;
-                isActive: boolean;
                 billingCycle: string;
                 planType: import(".prisma/client").$Enums.FarmerPlanType;
                 maxFarms: number;
             };
         } & {
             id: string;
-            updatedAt: Date;
             createdAt: Date;
+            updatedAt: Date;
             deletedAt: Date | null;
-            farmerId: string;
             status: import(".prisma/client").$Enums.SubscriptionPlanStatus;
+            farmerId: string;
             startDate: Date | null;
             endDate: Date | null;
             notes: string | null;
@@ -196,11 +196,11 @@ export declare class PlanPaymentsController {
         };
     } & {
         id: string;
-        farmerId: string;
         status: import(".prisma/client").$Enums.PlanPaymentStatus;
+        farmerId: string;
         subscriptionId: string;
-        requestedAt: Date;
         amount: import("@prisma/client/runtime/library").Decimal;
+        requestedAt: Date;
         daysGranted: number;
         utr: string | null;
         submittedAt: Date | null;
@@ -220,23 +220,23 @@ export declare class PlanPaymentsController {
             subscription: {
                 plan: {
                     id: string;
-                    updatedAt: Date;
                     name: string;
                     createdAt: Date;
+                    updatedAt: Date;
+                    isActive: boolean;
                     description: string | null;
                     price: import("@prisma/client/runtime/library").Decimal;
-                    isActive: boolean;
                     billingCycle: string;
                     planType: import(".prisma/client").$Enums.FarmerPlanType;
                     maxFarms: number;
                 };
             } & {
                 id: string;
-                updatedAt: Date;
                 createdAt: Date;
+                updatedAt: Date;
                 deletedAt: Date | null;
-                farmerId: string;
                 status: import(".prisma/client").$Enums.SubscriptionPlanStatus;
+                farmerId: string;
                 startDate: Date | null;
                 endDate: Date | null;
                 notes: string | null;
@@ -248,11 +248,11 @@ export declare class PlanPaymentsController {
             };
         } & {
             id: string;
-            farmerId: string;
             status: import(".prisma/client").$Enums.PlanPaymentStatus;
+            farmerId: string;
             subscriptionId: string;
-            requestedAt: Date;
             amount: import("@prisma/client/runtime/library").Decimal;
+            requestedAt: Date;
             daysGranted: number;
             utr: string | null;
             submittedAt: Date | null;
@@ -273,23 +273,23 @@ export declare class PlanPaymentsController {
         subscription: {
             plan: {
                 id: string;
-                updatedAt: Date;
                 name: string;
                 createdAt: Date;
+                updatedAt: Date;
+                isActive: boolean;
                 description: string | null;
                 price: import("@prisma/client/runtime/library").Decimal;
-                isActive: boolean;
                 billingCycle: string;
                 planType: import(".prisma/client").$Enums.FarmerPlanType;
                 maxFarms: number;
             };
         } & {
             id: string;
-            updatedAt: Date;
             createdAt: Date;
+            updatedAt: Date;
             deletedAt: Date | null;
-            farmerId: string;
             status: import(".prisma/client").$Enums.SubscriptionPlanStatus;
+            farmerId: string;
             startDate: Date | null;
             endDate: Date | null;
             notes: string | null;
@@ -301,11 +301,11 @@ export declare class PlanPaymentsController {
         };
     } & {
         id: string;
-        farmerId: string;
         status: import(".prisma/client").$Enums.PlanPaymentStatus;
+        farmerId: string;
         subscriptionId: string;
-        requestedAt: Date;
         amount: import("@prisma/client/runtime/library").Decimal;
+        requestedAt: Date;
         daysGranted: number;
         utr: string | null;
         submittedAt: Date | null;

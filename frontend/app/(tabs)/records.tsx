@@ -2277,18 +2277,67 @@ export default function RecordsScreen() {
                               </View>
                             </View>
 
-                            {/* Received Amount Input for Credit/Party only */}
+                            {/* Received Amount Input with Cash / UPI Radio Selection */}
                             {paymentMode === 'PARTY' ? (
                               <View style={{ marginBottom: 8 }}>
-                                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#334155', marginBottom: 3 }}>Amount Received Now (₹)</Text>
-                                <TextInput
-                                  style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 8, paddingVertical: 4, fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#fff', height: 36 }}
-                                  placeholder="0"
-                                  placeholderTextColor="#94a3b8"
-                                  keyboardType="numeric"
-                                  value={amountReceived}
-                                  onChangeText={setAmountReceived}
-                                />
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                                  <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#334155' }}>Amount Received Now (₹)</Text>
+                                  
+                                  {/* Cash / UPI Radio Option */}
+                                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                                    <TouchableOpacity
+                                      style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}
+                                      activeOpacity={0.8}
+                                      onPress={() => {
+                                        tap();
+                                        setAmountReceivedMode('CASH');
+                                      }}
+                                    >
+                                      <Ionicons
+                                        name={amountReceivedMode === 'CASH' ? 'radio-button-on' : 'radio-button-off'}
+                                        size={14}
+                                        color={amountReceivedMode === 'CASH' ? '#16a34a' : '#94a3b8'}
+                                      />
+                                      <Text style={{ fontSize: 11, fontFamily: amountReceivedMode === 'CASH' ? FONT.bold : FONT.medium, color: amountReceivedMode === 'CASH' ? '#16a34a' : '#64748b' }}>
+                                        Cash
+                                      </Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                      style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}
+                                      activeOpacity={0.8}
+                                      onPress={() => {
+                                        tap();
+                                        setAmountReceivedMode('UPI');
+                                      }}
+                                    >
+                                      <Ionicons
+                                        name={amountReceivedMode === 'UPI' ? 'radio-button-on' : 'radio-button-off'}
+                                        size={14}
+                                        color={amountReceivedMode === 'UPI' ? '#0284c7' : '#94a3b8'}
+                                      />
+                                      <Text style={{ fontSize: 11, fontFamily: amountReceivedMode === 'UPI' ? FONT.bold : FONT.medium, color: amountReceivedMode === 'UPI' ? '#0284c7' : '#64748b' }}>
+                                        UPI
+                                      </Text>
+                                    </TouchableOpacity>
+                                  </View>
+                                </View>
+
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                  <TextInput
+                                    style={{ flex: 1, borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 8, paddingVertical: 4, fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#fff', height: 36 }}
+                                    placeholder="0"
+                                    placeholderTextColor="#94a3b8"
+                                    keyboardType="numeric"
+                                    value={amountReceived}
+                                    onChangeText={setAmountReceived}
+                                  />
+                                  <View style={{ paddingHorizontal: 8, paddingVertical: 6, borderRadius: RADIUS.md, backgroundColor: amountReceivedMode === 'CASH' ? '#f0fdf4' : '#f0f9ff', borderWidth: 1, borderColor: amountReceivedMode === 'CASH' ? '#bbf7d0' : '#bae6fd' }}>
+                                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: amountReceivedMode === 'CASH' ? '#16a34a' : '#0284c7' }}>
+                                      {amountReceivedMode === 'CASH' ? '💵 CASH' : '📱 UPI'}
+                                    </Text>
+                                  </View>
+                                </View>
                               </View>
                             ) : null}
 

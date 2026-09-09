@@ -16,6 +16,7 @@ import { PartyPicker } from '@/src/components/PartyPicker';
 import { UniversalVoucherSlipModal, UniversalVoucherData } from '@/src/components/UniversalVoucherSlip';
 import { useAuth } from '@/src/store/auth-context';
 import { useRecordPaymentReceived, useRecordPaymentMade, useRecordSaleLedger } from '@/src/hooks/useParties';
+import { useCreateLabourPayment } from '@/src/hooks/useLabour';
 import { Party } from '@/src/types/api';
 import { FONT, RADIUS, SPACING } from '@/constants/theme';
 import { formatInr } from '@/src/utils/formatInr';
@@ -84,6 +85,14 @@ export function PaymentVoucherModal({
   const recordPaymentReceived = useRecordPaymentReceived();
   const recordPaymentMade = useRecordPaymentMade();
   const recordSaleLedger = useRecordSaleLedger();
+  const createLabourPayment = useCreateLabourPayment();
+
+  const isLabourWorker = useMemo(() => {
+    return (
+      (labourWorkers || []).some((w: any) => w.id === sourceParty?.id) ||
+      sourceParty?.address === 'Labour Worker'
+    );
+  }, [labourWorkers, sourceParty?.id, sourceParty?.address]);
 
   const resetForm = () => {
     setAmount('');
@@ -148,7 +157,15 @@ export function PaymentVoucherModal({
       const baseReason = userMemo || (voucherType === 'RECEIPT_IN' ? 'Payment Received' : voucherType === 'PAYMENT_OUT' ? 'Payment Made' : 'Party Entry');
       const finalReason = `${baseReason}${modeTag}`;
 
-      if (voucherType === 'RECEIPT_IN') {
+      if (isLabourWorker && voucherType === 'PAYMENT_OUT') {
+        await createLabourPayment.mutateAsync({
+          workerId: sourceParty.id,
+          amount: numAmount,
+          paymentDate: voucherDate,
+          paymentMode,
+          notes: finalReason,
+        });
+      } else if (voucherType === 'RECEIPT_IN') {
         await recordPaymentReceived.mutateAsync({
           id: sourceParty.id,
           payload: { amount: numAmount, reason: finalReason },
@@ -315,6 +332,7 @@ export function PaymentVoucherModal({
                     : 'Party / Account Name *'
                 }
                 parties={parties}
+                labourWorkers={labourWorkers}
                 selectedParty={sourceParty}
                 onSelect={setSourceParty}
                 onCreate={async (p) => p as any}
@@ -328,6 +346,7 @@ export function PaymentVoucherModal({
                 <PartyPicker
                   label="To Account / Credited Party *"
                   parties={parties.filter((p) => p.id !== sourceParty?.id)}
+                  labourWorkers={labourWorkers}
                   selectedParty={targetParty}
                   onSelect={setTargetParty}
                   onCreate={async (p) => p as any}

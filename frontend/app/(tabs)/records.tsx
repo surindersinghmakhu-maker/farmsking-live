@@ -2636,7 +2636,7 @@ export default function RecordsScreen() {
                 visible={showPaymentVoucherModal}
                 initialType={voucherInitialType}
                 parties={parties}
-                labourWorkers={[]}
+                labourWorkers={expenseLabourWorkers}
                 onClose={() => setShowPaymentVoucherModal(false)}
               />
             </View>
@@ -3232,6 +3232,57 @@ export default function RecordsScreen() {
           ) : (
             /* ANALYSIS (PAYMENTS) TAB — Receivable/Payable party ledgers */
             <View style={{ flex: 1 }}>
+              {/* Quick Action Bar: + Receipt (Money In) & + Payment (Money Out) */}
+              <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 12, paddingTop: 10, paddingBottom: 6 }}>
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    backgroundColor: '#f0fdf4',
+                    borderWidth: 1.5,
+                    borderColor: '#bbf7d0',
+                    paddingVertical: 9,
+                    borderRadius: RADIUS.md,
+                  }}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    tap();
+                    setVoucherInitialType('RECEIPT_IN');
+                    setShowPaymentVoucherModal(true);
+                  }}
+                >
+                  <Ionicons name="arrow-down-circle" size={16} color="#16a34a" />
+                  <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: '#15803d' }}>+ Receipt (Money In)</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    backgroundColor: '#fff1f2',
+                    borderWidth: 1.5,
+                    borderColor: '#fecdd3',
+                    paddingVertical: 9,
+                    borderRadius: RADIUS.md,
+                  }}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    tap();
+                    setVoucherInitialType('PAYMENT_OUT');
+                    setShowPaymentVoucherModal(true);
+                  }}
+                >
+                  <Ionicons name="arrow-up-circle" size={16} color="#dc2626" />
+                  <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: '#b91c1c' }}>+ Payment (Money Out)</Text>
+                </TouchableOpacity>
+              </View>
+
               <View style={styles.analysisSubTabRow}>
                 {(['RECEIVABLE', 'PAYABLE'] as const).map((tab) => (
                   <TouchableOpacity

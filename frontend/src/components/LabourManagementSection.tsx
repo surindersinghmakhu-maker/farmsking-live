@@ -330,30 +330,6 @@ export function LabourManagementSection() {
             <Text style={styles.addWorkerTopBtnText}>+ Add Worker</Text>
           </TouchableOpacity>
         </View>
-
-        <View style={styles.metricsRow}>
-          <View style={styles.metricItem}>
-            <Text style={styles.metricLabel}>Total Earned</Text>
-            <Text style={[styles.metricValue, { color: '#c2410c' }]}>{formatInr(totalEarnedOverall)}</Text>
-          </View>
-
-          <View style={styles.metricItem}>
-            <Text style={styles.metricLabel}>Total Paid</Text>
-            <Text style={[styles.metricValue, { color: '#16a34a' }]}>{formatInr(totalPaidOverall)}</Text>
-          </View>
-
-          <View style={styles.metricItem}>
-            <Text style={styles.metricLabel}>Pending Balance</Text>
-            <Text
-              style={[
-                styles.metricValue,
-                { color: totalPendingBalanceOverall > 0 ? '#dc2626' : '#16a34a' },
-              ]}
-            >
-              {formatInr(totalPendingBalanceOverall)}
-            </Text>
-          </View>
-        </View>
       </View>
 
       {/* 2. Quick Action Bar */}
@@ -456,12 +432,12 @@ export function LabourManagementSection() {
               const pending = w.pendingBalance ?? 0;
               return (
                 <View key={w.id} style={[styles.workerCard, premiumShadow('#0f172a', 'sm')]}>
-                  {/* Top Row: Worker Avatar, Info & Same-Row Metrics (Earned, Paid, Balance) */}
+                  {/* Top Row: Worker Avatar, Name & Inline Metrics (Earned, Paid, Balance) */}
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, flexWrap: 'wrap' }}>
                       <Avatar size={36} />
-                      <View>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                           <Text style={styles.workerName}>{w.name}</Text>
                           <TouchableOpacity
                             style={{ padding: 2 }}
@@ -471,9 +447,24 @@ export function LabourManagementSection() {
                           >
                             <Ionicons name="create-outline" size={14} color="#16a34a" />
                           </TouchableOpacity>
+
+                          {/* Inline Metrics Directly Next To Worker Name */}
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#f8fafc', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                            <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569' }}>
+                              Earned: <Text style={{ fontFamily: FONT.bold, color: '#c2410c' }}>{formatInr(w.totalEarned ?? 0)}</Text>
+                            </Text>
+                            <Text style={{ fontSize: 10.5, color: '#cbd5e1' }}>·</Text>
+                            <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569' }}>
+                              Paid: <Text style={{ fontFamily: FONT.bold, color: '#16a34a' }}>{formatInr(w.totalPaid ?? 0)}</Text>
+                            </Text>
+                            <Text style={{ fontSize: 10.5, color: '#cbd5e1' }}>·</Text>
+                            <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569' }}>
+                              Bal: <Text style={{ fontFamily: FONT.extraBold, color: pending > 0 ? '#dc2626' : '#16a34a' }}>{formatInr(pending)}</Text>
+                            </Text>
+                          </View>
                         </View>
 
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }}>
                           {w.mobile ? <Text style={styles.workerMeta}>📱 {w.mobile}</Text> : null}
                           {w.defaultRate ? (
                             <Text style={styles.workerMeta}>
@@ -482,21 +473,6 @@ export function LabourManagementSection() {
                           ) : null}
                         </View>
                       </View>
-                    </View>
-
-                    {/* Same-Row Metrics Badge: Earned · Paid · Balance */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f8fafc', paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                      <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569' }}>
-                        Earned: <Text style={{ fontFamily: FONT.bold, color: '#c2410c' }}>{formatInr(w.totalEarned ?? 0)}</Text>
-                      </Text>
-                      <Text style={{ fontSize: 10.5, color: '#cbd5e1' }}>·</Text>
-                      <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569' }}>
-                        Paid: <Text style={{ fontFamily: FONT.bold, color: '#16a34a' }}>{formatInr(w.totalPaid ?? 0)}</Text>
-                      </Text>
-                      <Text style={{ fontSize: 10.5, color: '#cbd5e1' }}>·</Text>
-                      <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569' }}>
-                        Balance: <Text style={{ fontFamily: FONT.extraBold, color: pending > 0 ? '#dc2626' : '#16a34a' }}>{formatInr(pending)}</Text>
-                      </Text>
                     </View>
                   </View>
 

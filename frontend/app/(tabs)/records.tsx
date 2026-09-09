@@ -30,7 +30,7 @@ import { useCreateExpense, useUpdateExpense, useExpenseCategories, useExpensesFo
 import { useCrops, CropSaleRecord } from '@/src/store/crops-context';
 import { useMyCrops } from '@/src/hooks/useCrops';
 import { useParties, useCreateParty, usePartyStatement, useRecordSaleLedger, useRecordPaymentReceived, useRecordPaymentMade } from '@/src/hooks/useParties';
-import { useCreateSaleBill, useFetchSaleBill, useMySaleBillCount, useUpdateSaleBill } from '@/src/hooks/useSaleBills';
+import { useCreateSaleBill, useFetchSaleBill, useMySaleBillCount, useUpdateSaleBill, useSaleBills } from '@/src/hooks/useSaleBills';
 import * as saleBillsApi from '@/src/api/saleBills.api';
 import { useFetchPaymentReceipt, useMyPaymentReceiptCount } from '@/src/hooks/usePaymentReceipts';
 import { useFarmerPlan } from '@/src/hooks/useFarmerPlan';
@@ -38,6 +38,7 @@ import { PartyPicker } from '@/src/components/PartyPicker';
 import { PaymentVoucherModal, type VoucherType } from '@/src/components/PaymentVoucherModal';
 import { LabourManagementSection } from '@/src/components/LabourManagementSection';
 import { AllPartiesSection } from '@/src/components/AllPartiesSection';
+import { buildPartyLedgerRows } from '@/src/utils/partyLedger';
 import { ProfessionalOverviewView } from '@/src/components/ProfessionalOverviewView';
 import { PaymentMode } from '@/src/types/api';
 import { useLabourWorkers } from '@/src/hooks/useLabour';
@@ -246,6 +247,141 @@ export default function RecordsScreen() {
     [allSalesRecords, farmerCrops]
   );
 
+  const { data: rawSaleBillsList } = useSaleBills();
+  const saleBillsMap = useMemo(() => {
+    const map = new Map<string, any>();
+    (rawSaleBillsList || []).forEach((b) => {
+      if (b.id) map.set(b.id, b);
+      if (b.billNo) map.set(b.billNo, b);
+    });
+    return map;
+  }, [rawSaleBillsList]);
+
+  const renderSaleCardItem = (item: CropSaleRecord) => {
+    const matchedBill = item.billId ? saleBillsMap.get(item.billId) : (item.billNo ? saleBillsMap.get(item.billNo) : null);
+    const formattedBillNo = matchedBill?.billNo || item.billNo || (item.billId ? `FK-${item.billId.slice(-4).toUpperCase()}` : 'FK-2601');
+    
+    const billTotal = matchedBill ? Number(matchedBill.totalAmount) : item.totalAmount;
+    const isCashSale = !item.partyId || item.buyerName === 'Cash Sale' || item.buyerName === 'Direct / Cash';
+    const billRecd = matchedBill ? Number(matchedBill.amountReceived) : (isCashSale ? billTotal : 0);
+    const billBal = matchedBill && matchedBill.thisSaleBalance !== undefined ? Number(matchedBill.thisSaleBalance) : Math.max(0, billTotal - billRecd);
+
+    return (
+      <View
+        key={item.id}
+        style={{
+          backgroundColor: '#ffffff',
+          borderRadius: RADIUS.md,
+          paddingHorizontal: 10,
+          paddingVertical: 8,
+          marginBottom: 6,
+          borderWidth: 1,
+          borderColor: '#e2e8f0',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.03,
+          shadowRadius: 3,
+          elevation: 1.5,
+          gap: 6,
+        }}
+      >
+        {/* Top Header Row: Bill No | Date | Buyer & Crop | Actions */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+          {/* Left: Bill No + Date */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <View style={{ backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: RADIUS.sm, paddingHorizontal: 5, paddingVertical: 2 }}>
+              <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: '#1d4ed8' }}>
+                {formattedBillNo}
+              </Text>
+            </View>
+            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#475569' }}>
+              {item.saleDate ? formatDateDDMMYYYY(item.saleDate) : 'Today'}
+            </Text>
+          </View>
+
+          {/* Center: Buyer & Crop */}
+          <View style={{ flex: 1, minWidth: 140 }}>
+            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#0f172a' }} numberOfLines={1}>
+              🤝 {item.buyerName || 'Cash Sale'}
+            </Text>
+            <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#16a34a', marginTop: 1 }} numberOfLines={1}>
+              🌾 {item.cropName} ({item.quantity} {item.unit} @ ₹{item.pricePerUnit})
+            </Text>
+          </View>
+
+          {/* Right: Actions (Edit & Download) */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+            <TouchableOpacity
+              style={{
+                width: 30,
+                height: 30,
+                borderRadius: 15,
+                backgroundColor: '#f0fdf4',
+                borderWidth: 1,
+                borderColor: '#bbf7d0',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              activeOpacity={0.7}
+              onPress={() => handleOpenEditSale(item)}
+              hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+            >
+              <Ionicons name="create-outline" size={15} color="#16a34a" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={{
+                width: 30,
+                height: 30,
+                borderRadius: 15,
+                backgroundColor: '#eff6ff',
+                borderWidth: 1,
+                borderColor: '#bfdbfe',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              activeOpacity={0.7}
+              onPress={() => openBillPreviewForSale(item)}
+              hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+            >
+              <Ionicons name="download-outline" size={15} color="#2563eb" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Bottom Auto-Fit Summary Bar: Total Bill | Received | Balance */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f8fafc', paddingVertical: 5, paddingHorizontal: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#f1f5f9' }}>
+          <View style={{ flex: 1, alignItems: 'center' }}>
+            <Text style={{ fontSize: 8.5, fontFamily: FONT.bold, color: '#64748b' }}>Total Bill (ਕੁੱਲ)</Text>
+            <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: '#0f172a' }}>
+              ₹{billTotal.toLocaleString('en-IN')}
+            </Text>
+          </View>
+
+          <View style={{ width: 1, height: 16, backgroundColor: '#cbd5e1' }} />
+
+          <View style={{ flex: 1, alignItems: 'center' }}>
+            <Text style={{ fontSize: 8.5, fontFamily: FONT.bold, color: '#16a34a' }}>Received (ਮਿਲੇ)</Text>
+            <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: '#16a34a' }}>
+              ₹{billRecd.toLocaleString('en-IN')}
+            </Text>
+          </View>
+
+          <View style={{ width: 1, height: 16, backgroundColor: '#cbd5e1' }} />
+
+          <View style={{ flex: 1, alignItems: 'center' }}>
+            <Text style={{ fontSize: 8.5, fontFamily: FONT.bold, color: billBal > 0 ? '#dc2626' : '#15803d' }}>
+              Balance (ਬਾਕੀ)
+            </Text>
+            <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: billBal > 0 ? '#dc2626' : '#16a34a' }}>
+              ₹{billBal.toLocaleString('en-IN')}
+            </Text>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
   // Sales list view mode — Month / Period Range / Buyer-wise
   const [salesViewMode, setSalesViewMode] = useState<'MONTH' | 'PERIOD' | 'BUYER'>('MONTH');
   const [expandedSalesGroup, setExpandedSalesGroup] = useState<string | null>(null);
@@ -346,7 +482,8 @@ export default function RecordsScreen() {
     tap();
     const isParty = Boolean(item.partyId || (item.buyerName && item.buyerName !== 'Cash Sale' && item.buyerName !== 'Direct / Cash'));
 
-    const foundParty = parties.find(p => p.id === item.partyId || p.name === item.buyerName);
+    const foundParty = parties.find(p => p.id === item.partyId || (p.name && p.name.trim().toLowerCase() === item.buyerName?.trim().toLowerCase()));
+    const partyObj = foundParty || (isParty ? ({ id: item.partyId || `party-${Date.now()}`, name: item.buyerName || 'Party', mobile: item.partyMobile || '' } as Party) : null);
 
     let loadedItems: Array<{ id: string; cropId: string; cropName: string; unit: string; qty: number; rate: number; amount: number }> = [];
     let billNoToUse = item.billId ? item.billId : `FK-${item.id.slice(0, 6).toUpperCase()}`;
@@ -388,7 +525,7 @@ export default function RecordsScreen() {
     }
 
     setPaymentMode(isParty ? 'PARTY' : 'CASH');
-    setSelectedParty(foundParty || null);
+    setSelectedParty(partyObj);
     setCashBuyerName(item.buyerName || '');
     setCashBuyerMobile(item.partyMobile || '');
     setSaleItems(loadedItems);
@@ -676,6 +813,7 @@ export default function RecordsScreen() {
   const [analysisSubTab, setAnalysisSubTab] = useState<'RECEIVABLE' | 'PAYABLE'>('RECEIVABLE');
   const [statementPartyId, setStatementPartyId] = useState<string | null>(null);
   const { data: statement, isLoading: isLoadingStatement } = usePartyStatement(statementPartyId ?? undefined);
+  const statementLedgerRows = useMemo(() => buildPartyLedgerRows(statement?.entries || []), [statement?.entries]);
   const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentNote, setPaymentNote] = useState('');
@@ -885,18 +1023,64 @@ export default function RecordsScreen() {
   const salesByCrop = useMemo(() => groupSales('cropName'), [salesRecords]);
 
   // Crop-wise breakdown for the Analysis tab. Expenses are logged per-farm, not
-  // per-crop, so each active crop is given an even share of total expenses.
+  // per-crop, so each active crop field is given an even share of total expenses.
+  // Group all fields/items of the same crop into a single row.
   const cropAnalysis = useMemo(() => {
-    const expenseShare = farmerCrops.length > 0 ? totalSpent / farmerCrops.length : 0;
-    return farmerCrops.map((crop) => {
+    const totalFields = farmerCrops.length;
+    const perFieldExpense = totalFields > 0 ? totalSpent / totalFields : 0;
+
+    const getBaseCropName = (name: string): string => {
+      if (!name) return 'Unknown Crop';
+      const cleaned = name.split('(')[0].trim();
+      return cleaned || name.trim();
+    };
+
+    const cropGroupsMap = new Map<
+      string,
+      {
+        cropName: string;
+        fieldCount: number;
+        cropIds: Set<string>;
+      }
+    >();
+
+    farmerCrops.forEach((crop) => {
+      const baseName = getBaseCropName(crop.cropName);
+      const groupKey = baseName.toLowerCase();
+
+      if (!cropGroupsMap.has(groupKey)) {
+        cropGroupsMap.set(groupKey, {
+          cropName: baseName,
+          fieldCount: 0,
+          cropIds: new Set<string>(),
+        });
+      }
+
+      const grp = cropGroupsMap.get(groupKey)!;
+      grp.fieldCount += 1;
+      if (crop.id) grp.cropIds.add(crop.id);
+    });
+
+    return Array.from(cropGroupsMap.values()).map((grp) => {
+      const groupKey = grp.cropName.toLowerCase();
+
       const income = salesRecords
-        .filter((s) => s.cropId === crop.id)
+        .filter((s) => {
+          if (s.cropId && grp.cropIds.has(s.cropId)) return true;
+          const sBase = getBaseCropName(s.cropName || '').toLowerCase();
+          return sBase === groupKey;
+        })
         .reduce((acc, s) => acc + s.totalAmount, 0);
+
+      const expense = grp.fieldCount * perFieldExpense;
+      const net = income - expense;
+
       return {
-        cropName: crop.cropName,
+        cropName: grp.cropName,
+        fieldCount: grp.fieldCount,
         income,
-        expense: expenseShare,
-        net: income - expenseShare,
+        expense,
+        net,
       };
     });
   }, [farmerCrops, salesRecords, totalSpent]);
@@ -1112,13 +1296,63 @@ export default function RecordsScreen() {
         });
       }
 
-      saleItems.forEach((item) => {
-        if (editingBillId && item.id && !item.id.startsWith('bill-item-') && !item.id.startsWith('cart-')) {
-          updateSale(item.id, { quantity: String(item.qty), pricePerUnit: String(item.rate), buyerName, totalAmount: item.amount, notes: saleDescription.trim() }).catch(() => { });
-        } else if (item.cropId) {
-          recordSale(item.cropId, { quantity: String(item.qty), rate: String(item.rate), buyerName, billId: realDbBillId }).catch(() => { });
+      if (editingBillId) {
+        const targetBillId = realDbBillId || editingBillId;
+        const existingSales = allSalesRecords.filter(
+          (s) => (s.billId && (s.billId === editingBillId || (realDbBillId && s.billId === realDbBillId))) || s.id === editingBillId
+        );
+
+        if (existingSales.length > 0) {
+          saleItems.forEach((item, index) => {
+            if (index < existingSales.length) {
+              const existing = existingSales[index];
+              updateSale(existing.id, {
+                quantity: String(item.qty),
+                pricePerUnit: String(item.rate),
+                buyerName,
+                totalAmount: item.amount,
+                notes: saleDescription.trim(),
+                billId: targetBillId,
+              }).catch(() => {});
+            } else if (item.cropId) {
+              recordSale(item.cropId, {
+                quantity: String(item.qty),
+                rate: String(item.rate),
+                buyerName,
+                billId: targetBillId,
+              }).catch(() => {});
+            }
+          });
+
+          if (existingSales.length > saleItems.length) {
+            for (let i = saleItems.length; i < existingSales.length; i++) {
+              deleteSale(existingSales[i].id).catch(() => {});
+            }
+          }
+        } else {
+          saleItems.forEach((item) => {
+            if (item.cropId) {
+              recordSale(item.cropId, {
+                quantity: String(item.qty),
+                rate: String(item.rate),
+                buyerName,
+                billId: targetBillId,
+              }).catch(() => {});
+            }
+          });
         }
-      });
+      } else {
+        saleItems.forEach((item) => {
+          if (item.cropId) {
+            recordSale(item.cropId, {
+              quantity: String(item.qty),
+              rate: String(item.rate),
+              buyerName,
+              billId: realDbBillId,
+            }).catch(() => {});
+          }
+        });
+      }
 
       queryClient.invalidateQueries({ queryKey: ['market-rates'] });
       queryClient.invalidateQueries({ queryKey: ['farmer-crops'] });
@@ -1531,7 +1765,7 @@ export default function RecordsScreen() {
                 () => setShowToDatePicker(false)
               )}
 
-              {/* Professional Responsive 5-Column Sales Table Header */}
+              {/* Professional Responsive Sales Table Header */}
               {salesRecords.length > 0 && (
                 <View style={{
                   flexDirection: 'row',
@@ -1544,11 +1778,13 @@ export default function RecordsScreen() {
                   borderWidth: 1,
                   borderColor: '#e2e8f0',
                 }}>
-                  <Text style={{ width: 64, fontSize: 10, fontFamily: FONT.extraBold, color: '#475569', letterSpacing: 0.3 }}>#</Text>
-                  <Text style={{ width: 72, fontSize: 10, fontFamily: FONT.extraBold, color: '#475569', letterSpacing: 0.3 }}>DATE</Text>
-                  <Text style={{ flex: 2, fontSize: 10, fontFamily: FONT.extraBold, color: '#475569', letterSpacing: 0.3 }}>PARTY / CROP</Text>
-                  <Text style={{ flex: 1.2, fontSize: 10, fontFamily: FONT.extraBold, color: '#475569', textAlign: 'right', letterSpacing: 0.3 }}>AMOUNT</Text>
-                  <Text style={{ width: 62, fontSize: 10, fontFamily: FONT.extraBold, color: '#475569', textAlign: 'center', letterSpacing: 0.3 }}>ACTION</Text>
+                  <Text style={{ width: 56, fontSize: 9.5, fontFamily: FONT.extraBold, color: '#475569', letterSpacing: 0.2 }}>#</Text>
+                  <Text style={{ width: 66, fontSize: 9.5, fontFamily: FONT.extraBold, color: '#475569', letterSpacing: 0.2 }}>DATE</Text>
+                  <Text style={{ flex: 1.8, fontSize: 9.5, fontFamily: FONT.extraBold, color: '#475569', letterSpacing: 0.2 }}>PARTY / CROP</Text>
+                  <Text style={{ flex: 1.1, fontSize: 9.5, fontFamily: FONT.extraBold, color: '#475569', textAlign: 'right', letterSpacing: 0.2 }}>BILL AMT</Text>
+                  <Text style={{ flex: 1.1, fontSize: 9.5, fontFamily: FONT.extraBold, color: '#16a34a', textAlign: 'right', letterSpacing: 0.2 }}>RECEIVED</Text>
+                  <Text style={{ flex: 1.1, fontSize: 9.5, fontFamily: FONT.extraBold, color: '#dc2626', textAlign: 'right', letterSpacing: 0.2 }}>BALANCE</Text>
+                  <Text style={{ width: 52, fontSize: 9.5, fontFamily: FONT.extraBold, color: '#475569', textAlign: 'center', letterSpacing: 0.2 }}>ACTION</Text>
                 </View>
               )}
 
@@ -1563,103 +1799,7 @@ export default function RecordsScreen() {
                   data={salesViewMode === 'MONTH' ? salesThisMonth : salesInPeriod}
                   keyExtractor={(item) => item.id}
                   contentContainerStyle={styles.list}
-                  renderItem={({ item }) => {
-                    const formattedBillNo = item.billNo || (item.billId ? `FK-${item.billId.slice(-4).toUpperCase()}` : 'FK-2601');
-                    return (
-                      <View
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          backgroundColor: '#ffffff',
-                          borderRadius: RADIUS.md,
-                          paddingHorizontal: 8,
-                          paddingVertical: 7,
-                          marginBottom: 5,
-                          borderWidth: 1,
-                          borderColor: '#e2e8f0',
-                          shadowColor: '#000',
-                          shadowOffset: { width: 0, height: 1 },
-                          shadowOpacity: 0.02,
-                          shadowRadius: 2,
-                          elevation: 1,
-                        }}
-                      >
-                        {/* Column 1: # (Bill No.) */}
-                        <View style={{ width: 64, justifyContent: 'center' }}>
-                          <View style={{ backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0', borderRadius: RADIUS.sm, paddingHorizontal: 3, paddingVertical: 1.5, alignSelf: 'flex-start' }}>
-                            <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#15803d' }} numberOfLines={1}>
-                              {formattedBillNo}
-                            </Text>
-                          </View>
-                        </View>
-
-                        {/* Column 2: DATE */}
-                        <View style={{ width: 72, justifyContent: 'center' }}>
-                          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#334155' }} numberOfLines={1}>
-                            {item.saleDate ? formatDateDDMMYYYY(item.saleDate) : 'Today'}
-                          </Text>
-                        </View>
-
-                        {/* Column 3: PARTY / BUYER & CROP */}
-                        <View style={{ flex: 2, justifyContent: 'center', paddingRight: 4 }}>
-                          <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
-                            {item.buyerName || 'Cash Sale'}
-                          </Text>
-                          <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#16a34a', marginTop: 1 }} numberOfLines={1}>
-                            🌾 {item.cropName} ({item.quantity} {item.unit} @ ₹{item.pricePerUnit})
-                          </Text>
-                        </View>
-
-                        {/* Column 4: AMOUNT */}
-                        <View style={{ flex: 1.2, alignItems: 'flex-end', justifyContent: 'center', paddingRight: 4 }}>
-                          <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#16a34a' }} numberOfLines={1}>
-                            +₹{item.totalAmount.toLocaleString('en-IN')}
-                          </Text>
-                        </View>
-
-                        {/* Column 5: ACTION SYMBOLS (Edit ✏️ & Download 📥) */}
-                        <View style={{ width: 62, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
-                          {/* ✏️ EDIT SYMBOL */}
-                          <TouchableOpacity
-                            style={{
-                              width: 27,
-                              height: 27,
-                              borderRadius: 14,
-                              backgroundColor: '#f0fdf4',
-                              borderWidth: 1,
-                              borderColor: '#bbf7d0',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                            activeOpacity={0.7}
-                            onPress={() => handleOpenEditSale(item)}
-                            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                          >
-                            <Ionicons name="create-outline" size={14} color="#16a34a" />
-                          </TouchableOpacity>
-
-                          {/* 📥 DOWNLOAD BILL SYMBOL */}
-                          <TouchableOpacity
-                            style={{
-                              width: 27,
-                              height: 27,
-                              borderRadius: 14,
-                              backgroundColor: '#eff6ff',
-                              borderWidth: 1,
-                              borderColor: '#bfdbfe',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                            activeOpacity={0.7}
-                            onPress={() => openBillPreviewForSale(item)}
-                            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                          >
-                            <Ionicons name="download-outline" size={14} color="#2563eb" />
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-                    );
-                  }}
+                  renderItem={({ item }) => renderSaleCardItem(item)}
                 />
               ) : (
                 <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
@@ -1682,92 +1822,7 @@ export default function RecordsScreen() {
                           <Text style={styles.salesGroupTotal}>{formatInr(group.total)}</Text>
                         </TouchableOpacity>
                         {isExpanded
-                          ? group.entries.map((item) => {
-                            const formattedBillNo = item.billNo || (item.billId ? `FK-${item.billId.slice(-4).toUpperCase()}` : 'FK-2601');
-                            return (
-                              <View
-                                key={item.id}
-                                style={{
-                                  flexDirection: 'row',
-                                  alignItems: 'center',
-                                  backgroundColor: '#ffffff',
-                                  borderRadius: RADIUS.md,
-                                  paddingHorizontal: 8,
-                                  paddingVertical: 7,
-                                  marginTop: 4,
-                                  borderWidth: 1,
-                                  borderColor: '#e2e8f0',
-                                }}
-                              >
-                                {/* Column 1: # (Bill No.) */}
-                                <View style={{ width: 64, justifyContent: 'center' }}>
-                                  <View style={{ backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0', borderRadius: RADIUS.sm, paddingHorizontal: 3, paddingVertical: 1.5, alignSelf: 'flex-start' }}>
-                                    <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#15803d' }} numberOfLines={1}>
-                                      {formattedBillNo}
-                                    </Text>
-                                  </View>
-                                </View>
-
-                                {/* Column 2: DATE */}
-                                <View style={{ width: 72, justifyContent: 'center' }}>
-                                  <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#334155' }} numberOfLines={1}>
-                                    {item.saleDate ? formatDateDDMMYYYY(item.saleDate) : 'Today'}
-                                  </Text>
-                                </View>
-
-                                {/* Column 3: PARTY / BUYER & CROP */}
-                                <View style={{ flex: 2, justifyContent: 'center', paddingRight: 4 }}>
-                                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
-                                    {item.cropName}
-                                  </Text>
-                                  <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#64748b' }} numberOfLines={1}>
-                                    {item.quantity} {item.unit} @ ₹{item.pricePerUnit}
-                                  </Text>
-                                </View>
-
-                                {/* Column 4: AMOUNT */}
-                                <View style={{ flex: 1.2, alignItems: 'flex-end', justifyContent: 'center', paddingRight: 4 }}>
-                                  <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#16a34a' }} numberOfLines={1}>
-                                    +{formatInr(item.totalAmount)}
-                                  </Text>
-                                </View>
-
-                                {/* Column 5: ACTION SYMBOLS */}
-                                <View style={{ width: 62, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
-                                  <TouchableOpacity
-                                    style={{
-                                      width: 27,
-                                      height: 27,
-                                      borderRadius: 14,
-                                      backgroundColor: '#f0fdf4',
-                                      borderWidth: 1,
-                                      borderColor: '#bbf7d0',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                    }}
-                                    onPress={() => handleOpenEditSale(item)}
-                                  >
-                                    <Ionicons name="create-outline" size={14} color="#16a34a" />
-                                  </TouchableOpacity>
-                                  <TouchableOpacity
-                                    style={{
-                                      width: 27,
-                                      height: 27,
-                                      borderRadius: 14,
-                                      backgroundColor: '#eff6ff',
-                                      borderWidth: 1,
-                                      borderColor: '#bfdbfe',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                    }}
-                                    onPress={() => openBillPreviewForSale(item)}
-                                  >
-                                    <Ionicons name="download-outline" size={14} color="#2563eb" />
-                                  </TouchableOpacity>
-                                </View>
-                              </View>
-                            );
-                          })
+                          ? group.entries.map((item) => renderSaleCardItem(item))
                           : null}
                       </View>
                     );
@@ -3347,62 +3402,56 @@ export default function RecordsScreen() {
                         ) : null}
 
                         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 6 }}>
-                          {statement.entries.length === 0 ? (
-                            <Text style={styles.emptyText}>No ledger entries yet.</Text>
-                          ) : (
-                            statement.entries.map((entry) => {
-                              const isSaleCredit = entry.type === 'SALE_CREDIT';
-                              const isExpenseCredit = entry.type === 'EXPENSE_CREDIT';
-                              const isPaymentReceived = entry.type === 'SALE_PAYMENT';
-                              const isPaymentMade = entry.type === 'EXPENSE_PAYMENT';
+                          <View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 6, overflow: 'hidden' }}>
+                            <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 7, paddingHorizontal: 6, alignItems: 'center' }}>
+                              <Text style={{ width: 55, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>Date</Text>
+                              <Text style={{ width: 65, fontSize: 9.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>Bill No.</Text>
+                              <Text style={{ flex: 1, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>Particulars</Text>
+                              <Text style={{ width: 60, fontSize: 9.5, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right' }}>Dr. (₹)</Text>
+                              <Text style={{ width: 60, fontSize: 9.5, fontFamily: FONT.bold, color: '#86efac', textAlign: 'right' }}>Cr. (₹)</Text>
+                              <Text style={{ width: 75, fontSize: 9.5, fontFamily: FONT.bold, color: '#38bdf8', textAlign: 'right' }}>Balance</Text>
+                            </View>
 
-                              const label = isSaleCredit
-                                ? 'Sale Bill (Credit / ਉਧਾਰ ਸੇਲ)'
-                                : isExpenseCredit
-                                  ? 'Expense Bill (Credit / ਉਧਾਰ ਖਰਚਾ)'
-                                  : isPaymentReceived
-                                    ? 'Payment Received (Payment In / ਵਸੂਲੀ)'
-                                    : 'Payment Made (Payment Out / ਭੁਗਤਾਨ)';
-
-                              const amountColor = isSaleCredit
-                                ? '#16a34a'
-                                : isExpenseCredit
-                                  ? '#dc2626'
-                                  : isPaymentReceived
-                                    ? '#0284c7'
-                                    : '#ea580c';
-
-                              const amountPrefix = isSaleCredit
-                                ? '+ '
-                                : isExpenseCredit
-                                  ? '- '
-                                  : isPaymentReceived
-                                    ? '🟢 '
-                                    : '🟠 ';
-
-                              return (
-                                <View key={entry.id} style={styles.statementRow}>
-                                  <View style={{ flex: 1 }}>
-                                    <Text style={[styles.statementLabel, { color: amountColor }]}>{label}</Text>
-                                    <Text style={styles.statementReason} numberOfLines={2}>{entry.reason}</Text>
-                                    <Text style={styles.statementDate}>{new Date(entry.createdAt).toLocaleDateString('en-IN')}</Text>
-                                  </View>
-                                  <Text style={[styles.statementAmount, { color: amountColor }]}>
-                                    {amountPrefix}{formatInr(Number(entry.amount))}
+                            {statementLedgerRows.length === 0 ? (
+                              <View style={{ padding: 16, alignItems: 'center' }}>
+                                <Text style={styles.emptyText}>No ledger entries yet.</Text>
+                              </View>
+                            ) : (
+                              statementLedgerRows.map((row, idx) => (
+                                <View key={row.id || idx} style={{ flexDirection: 'row', paddingHorizontal: 6, paddingVertical: 7, backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center' }}>
+                                  <Text style={{ width: 55, fontSize: 9.5, fontFamily: FONT.medium, color: '#475569' }}>
+                                    {new Date(row.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                                   </Text>
-                                  {entry.type === 'SALE_CREDIT' ? (
-                                    <TouchableOpacity style={styles.shareBillIconBtn} onPress={() => shareStatementSaleEntry(entry)}>
-                                      <Ionicons name="share-social-outline" size={15} color="#16a34a" />
-                                    </TouchableOpacity>
-                                  ) : entry.type === 'SALE_PAYMENT' || entry.type === 'EXPENSE_PAYMENT' ? (
-                                    <TouchableOpacity style={styles.shareBillIconBtn} onPress={() => shareStatementPaymentEntry(entry)}>
-                                      <Ionicons name="receipt-outline" size={15} color="#16a34a" />
-                                    </TouchableOpacity>
-                                  ) : null}
+
+                                  <View style={{ width: 65 }}>
+                                    {row.billNo && row.billNo !== '—' ? (
+                                      <View style={{ backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: 4, paddingHorizontal: 3, paddingVertical: 1, alignSelf: 'flex-start' }}>
+                                        <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#1d4ed8' }}>{row.billNo}</Text>
+                                      </View>
+                                    ) : (
+                                      <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8' }}>—</Text>
+                                    )}
+                                  </View>
+
+                                  <Text style={{ flex: 1, fontSize: 10, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={2}>
+                                    {row.reason}
+                                  </Text>
+
+                                  <Text style={{ width: 60, fontSize: 10, fontFamily: FONT.bold, color: row.drAmount > 0 ? '#b91c1c' : '#94a3b8', textAlign: 'right' }}>
+                                    {row.drAmount > 0 ? `₹${row.drAmount.toLocaleString('en-IN')}` : '—'}
+                                  </Text>
+
+                                  <Text style={{ width: 60, fontSize: 10, fontFamily: FONT.bold, color: row.crAmount > 0 ? '#15803d' : '#94a3b8', textAlign: 'right' }}>
+                                    {row.crAmount > 0 ? `₹${row.crAmount.toLocaleString('en-IN')}` : '—'}
+                                  </Text>
+
+                                  <Text style={{ width: 75, fontSize: 9.5, fontFamily: FONT.extraBold, color: row.runningBalance >= 0 ? '#16a34a' : '#dc2626', textAlign: 'right' }}>
+                                    ₹{Math.abs(row.runningBalance).toLocaleString('en-IN')} {row.runningBalance >= 0 ? 'Dr' : 'Cr'}
+                                  </Text>
                                 </View>
-                              );
-                            })
-                          )}
+                              ))
+                            )}
+                          </View>
                         </ScrollView>
                       </>
                     )}

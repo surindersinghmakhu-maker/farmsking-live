@@ -24,6 +24,7 @@ const tap = () => {
 
 export interface CropAnalysisItem {
   cropName: string;
+  fieldCount?: number;
   income: number;
   expense: number;
   net: number;
@@ -230,6 +231,11 @@ export function ProfessionalOverviewView({
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                     <Ionicons name="leaf" size={13} color="#16a34a" />
                     <Text style={styles.cropName}>{c.cropName}</Text>
+                    {c.fieldCount && c.fieldCount > 1 ? (
+                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b', backgroundColor: '#f1f5f9', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 }}>
+                        {c.fieldCount} Fields
+                      </Text>
+                    ) : null}
                   </View>
 
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>

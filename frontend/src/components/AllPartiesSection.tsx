@@ -352,17 +352,22 @@ export function AllPartiesSection() {
 
             return (
               <View key={item.id} style={[styles.compactCard, premiumShadow('#0f172a', 'sm')]}>
-                {/* Header Row: Avatar + Name + Type Badge + Edit Button (Left) | Net Balance + Statement Button (Right) */}
+                {/* Header Row: Avatar + Name + Address + Type Badge + Edit Button (Left) | Net Balance + Statement Button (Right) */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
-                  {/* Left: Avatar + Party Name + Type Badge + Edit Button */}
+                  {/* Left: Avatar + Party Name + Address + Type Badge + Edit Button */}
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, minWidth: 160 }}>
                     <Avatar size={34} />
                     <View style={{ flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
                       <Text style={styles.partyName} numberOfLines={1}>
                         {item.name}
                       </Text>
+                      {item.address ? (
+                        <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#475569' }} numberOfLines={1}>
+                          📍 {item.address}
+                        </Text>
+                      ) : null}
                       <Text style={styles.typeBadge}>{typeLabel}</Text>
-                      {/* Edit Button right next to Party Name */}
+                      {/* Edit Button right next to Party Name / Address */}
                       <TouchableOpacity
                         style={{
                           paddingHorizontal: 6,
@@ -407,11 +412,10 @@ export function AllPartiesSection() {
                   </View>
                 </View>
 
-                {/* Sub-row: Contact info if available */}
-                {(item.mobile || item.address) ? (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4, paddingLeft: 40 }}>
-                    {item.mobile ? <Text style={styles.metaText}>📱 {item.mobile}</Text> : null}
-                    {item.address ? <Text style={styles.metaText}>📍 {item.address}</Text> : null}
+                {/* Sub-row: Mobile info if available */}
+                {item.mobile ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 3, paddingLeft: 40 }}>
+                    <Text style={styles.metaText}>📱 {item.mobile}</Text>
                   </View>
                 ) : null}
               </View>

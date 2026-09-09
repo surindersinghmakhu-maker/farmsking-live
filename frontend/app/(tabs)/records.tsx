@@ -387,18 +387,34 @@ export default function RecordsScreen() {
   const [showFromDatePicker, setShowFromDatePicker] = useState(false);
   const [showToDatePicker, setShowToDatePicker] = useState(false);
 
+  const getUniqueBillRows = (records: CropSaleRecord[]) => {
+    const seenBillKeys = new Set<string>();
+    const uniqueRows: CropSaleRecord[] = [];
+    for (const item of records) {
+      const key = item.billId || item.billNo;
+      if (key) {
+        if (seenBillKeys.has(key)) continue;
+        seenBillKeys.add(key);
+      }
+      uniqueRows.push(item);
+    }
+    return uniqueRows;
+  };
+
   // 1. Filter sales for Current Calendar Month
   const currentMonthPrefix = useMemo(() => new Date().toISOString().slice(0, 7), []);
   const salesThisMonth = useMemo(() => {
-    return salesRecords.filter((s) => s.saleDate && s.saleDate.startsWith(currentMonthPrefix));
+    const filtered = salesRecords.filter((s) => s.saleDate && s.saleDate.startsWith(currentMonthPrefix));
+    return getUniqueBillRows(filtered);
   }, [salesRecords, currentMonthPrefix]);
 
   // 2. Filter sales for Custom Period Date Range (From Date -> To Date)
   const salesInPeriod = useMemo(() => {
-    return salesRecords.filter((s) => {
+    const filtered = salesRecords.filter((s) => {
       if (!s.saleDate) return true;
       return s.saleDate >= salesFromDate && s.saleDate <= salesToDate;
     });
+    return getUniqueBillRows(filtered);
   }, [salesRecords, salesFromDate, salesToDate]);
 
   // 3. Group sales Buyer-wise
@@ -409,12 +425,19 @@ export default function RecordsScreen() {
       const existing = map.get(name) || [];
       map.set(name, [...existing, item]);
     });
-    return Array.from(map.entries()).map(([buyer, entries]) => ({
-      name: buyer,
-      entries,
-      total: entries.reduce((acc, e) => acc + e.totalAmount, 0),
-    }));
-  }, [salesRecords]);
+    return Array.from(map.entries()).map(([buyer, entries]) => {
+      const uniqueEntries = getUniqueBillRows(entries);
+      const total = uniqueEntries.reduce((acc, e) => {
+        const matchedBill = e.billId ? saleBillsMap.get(e.billId) : (e.billNo ? saleBillsMap.get(e.billNo) : null);
+        return acc + (matchedBill ? Number(matchedBill.totalAmount) : e.totalAmount);
+      }, 0);
+      return {
+        name: buyer,
+        entries: uniqueEntries,
+        total,
+      };
+    });
+  }, [salesRecords, saleBillsMap]);
 
   const [expenseViewMode, setExpenseViewMode] = useState<'ALL' | 'CROP' | 'VENDOR'>('ALL');
   const [expandedExpenseGroup, setExpandedExpenseGroup] = useState<string | null>(null);
@@ -1768,7 +1791,7 @@ export default function RecordsScreen() {
                     <View style={{ flex: 1, minWidth: 660 }}>
                       {/* Table Header Row */}
                       <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 8, paddingHorizontal: 8, alignItems: 'center', minWidth: 660 }}>
-                        <Text style={{ width: 78, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff' }}>#</Text>
+                        <Text style={{ width: 78, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff' }}>BILL NO.</Text>
                         <Text style={{ width: 72, fontSize: 10, fontFamily: FONT.bold, color: '#e2e8f0' }}>DATE</Text>
                         <Text style={{ flex: 1.8, minWidth: 140, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff' }}>PARTY / CROP</Text>
                         <Text style={{ width: 85, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right' }}>NET SALE</Text>
@@ -1811,7 +1834,7 @@ export default function RecordsScreen() {
                             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 660, flexGrow: 1 }}>
                               <View style={{ flex: 1, minWidth: 660 }}>
                                 <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 7, paddingHorizontal: 8, alignItems: 'center', minWidth: 660 }}>
-                                  <Text style={{ width: 78, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>#</Text>
+                                  <Text style={{ width: 78, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>BILL NO.</Text>
                                   <Text style={{ width: 72, fontSize: 9.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>DATE</Text>
                                   <Text style={{ flex: 1.8, minWidth: 140, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>PARTY / CROP</Text>
                                   <Text style={{ width: 85, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right' }}>NET SALE</Text>

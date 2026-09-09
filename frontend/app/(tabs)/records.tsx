@@ -264,15 +264,9 @@ export default function RecordsScreen() {
     const billTotal = matchedBill ? Number(matchedBill.totalAmount) : item.totalAmount;
     const isCashSale = !item.partyId || item.buyerName === 'Cash Sale' || item.buyerName === 'Direct / Cash';
     const billRecd = matchedBill ? Number(matchedBill.amountReceived) : (isCashSale ? billTotal : 0);
-    const matchedParty = (item.partyId ? parties.find((p) => p.id === item.partyId) : null) || (matchedBill?.partyId ? parties.find((p) => p.id === matchedBill.partyId) : null);
-
-    const billBal = matchedBill
-      ? (matchedBill.netReceivable !== undefined && matchedBill.netReceivable !== null
-          ? Number(matchedBill.netReceivable)
-          : (matchedBill.thisSaleBalance !== undefined
-              ? Number(matchedBill.thisSaleBalance)
-              : (matchedParty ? Number(matchedParty.balance) : Math.max(0, billTotal - billRecd))))
-      : (matchedParty ? Number(matchedParty.balance) : Math.max(0, billTotal - billRecd));
+    const remainingBal = matchedBill && matchedBill.thisSaleBalance !== undefined
+      ? Number(matchedBill.thisSaleBalance)
+      : Math.max(0, billTotal - billRecd);
 
     const buyerDisplayName = matchedBill?.partyName || (matchedBill?.isCash ? 'Cash Sale' : item.buyerName || 'Cash Sale');
 
@@ -295,7 +289,7 @@ export default function RecordsScreen() {
           backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc',
           borderBottomWidth: 1,
           borderBottomColor: '#f1f5f9',
-          minWidth: 620,
+          minWidth: 650,
         }}
       >
         {/* 1. Bill No */}
@@ -332,9 +326,9 @@ export default function RecordsScreen() {
           ₹{billRecd.toLocaleString('en-IN')}
         </Text>
 
-        {/* 6. Balance */}
-        <Text style={{ width: 80, fontSize: 11, fontFamily: FONT.extraBold, color: billBal > 0 ? '#dc2626' : '#16a34a', textAlign: 'right', paddingRight: 8 }}>
-          ₹{billBal.toLocaleString('en-IN')}
+        {/* 6. Remaining Balance */}
+        <Text style={{ width: 95, fontSize: 11, fontFamily: FONT.extraBold, color: remainingBal > 0 ? '#dc2626' : '#16a34a', textAlign: 'right', paddingRight: 8 }}>
+          ₹{remainingBal.toLocaleString('en-IN')}
         </Text>
 
         {/* 7. Action Buttons (Edit & Download) */}
@@ -1770,16 +1764,16 @@ export default function RecordsScreen() {
                 </View>
               ) : (salesViewMode === 'MONTH' || salesViewMode === 'PERIOD') ? (
                 <View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, overflow: 'hidden', backgroundColor: '#ffffff', marginBottom: 16 }}>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 620, flexGrow: 1 }}>
-                    <View style={{ flex: 1, minWidth: 620 }}>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 650, flexGrow: 1 }}>
+                    <View style={{ flex: 1, minWidth: 650 }}>
                       {/* Table Header Row */}
-                      <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 8, paddingHorizontal: 8, alignItems: 'center', minWidth: 620 }}>
+                      <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 8, paddingHorizontal: 8, alignItems: 'center', minWidth: 650 }}>
                         <Text style={{ width: 78, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff' }}>#</Text>
                         <Text style={{ width: 72, fontSize: 10, fontFamily: FONT.bold, color: '#e2e8f0' }}>DATE</Text>
                         <Text style={{ flex: 1.8, minWidth: 140, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff' }}>PARTY / CROP</Text>
                         <Text style={{ width: 80, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right' }}>BILL AMT</Text>
                         <Text style={{ width: 80, fontSize: 10, fontFamily: FONT.bold, color: '#86efac', textAlign: 'right' }}>RECEIVED</Text>
-                        <Text style={{ width: 80, fontSize: 10, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right', paddingRight: 8 }}>BALANCE</Text>
+                        <Text style={{ width: 95, fontSize: 10, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right', paddingRight: 8 }}>REM. BAL</Text>
                         <Text style={{ width: 60, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'center' }}>ACTION</Text>
                       </View>
 
@@ -1814,15 +1808,15 @@ export default function RecordsScreen() {
                         </TouchableOpacity>
                         {isExpanded ? (
                           <View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, overflow: 'hidden', backgroundColor: '#ffffff', marginTop: 6 }}>
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 620, flexGrow: 1 }}>
-                              <View style={{ flex: 1, minWidth: 620 }}>
-                                <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 7, paddingHorizontal: 8, alignItems: 'center', minWidth: 620 }}>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 650, flexGrow: 1 }}>
+                              <View style={{ flex: 1, minWidth: 650 }}>
+                                <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 7, paddingHorizontal: 8, alignItems: 'center', minWidth: 650 }}>
                                   <Text style={{ width: 78, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>#</Text>
                                   <Text style={{ width: 72, fontSize: 9.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>DATE</Text>
                                   <Text style={{ flex: 1.8, minWidth: 140, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>PARTY / CROP</Text>
                                   <Text style={{ width: 80, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right' }}>BILL AMT</Text>
                                   <Text style={{ width: 80, fontSize: 9.5, fontFamily: FONT.bold, color: '#86efac', textAlign: 'right' }}>RECEIVED</Text>
-                                  <Text style={{ width: 80, fontSize: 9.5, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right', paddingRight: 8 }}>BALANCE</Text>
+                                  <Text style={{ width: 95, fontSize: 9.5, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right', paddingRight: 8 }}>REM. BAL</Text>
                                   <Text style={{ width: 60, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'center' }}>ACTION</Text>
                                 </View>
                                 {group.entries.map((item, idx) => renderSaleRowItem(item, idx))}

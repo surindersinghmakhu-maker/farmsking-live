@@ -34,7 +34,6 @@ const FIELDS: { key: 'name' | 'mobile' | 'password' | 'confirmPassword'; label: 
 const ACCOUNT_TYPES: { value: 'CUSTOMER' | 'FARMER' | 'GARDENER'; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: 'CUSTOMER', label: 'Customer', icon: 'cart-outline' },
   { value: 'FARMER', label: 'Farmer', icon: 'leaf-outline' },
-  { value: 'GARDENER', label: 'Gardener', icon: 'flower-outline' },
 ];
 
 export default function RegisterScreen() {
@@ -190,9 +189,9 @@ export default function RegisterScreen() {
             );
           })}
         </View>
-        {accountType !== 'CUSTOMER' ? (
+        {accountType === 'FARMER' ? (
           <Text style={styles.accountTypeHint}>
-            {accountType === 'FARMER' ? 'Farmer' : 'Gardener'} account ke saath aapko Customer role (products khareedne ke liye) bhi mil jayega.
+            Farmer account ke saath aapko Customer role (products khareedne ke liye) bhi mil jayega.
           </Text>
         ) : null}
 

@@ -1030,10 +1030,10 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
             <ActivityIndicator color="#16a34a" size="large" style={{ marginVertical: 30 }} />
           ) : (
             <>
-              {/* Action Bar with Download JPG & Download PDF Buttons */}
-              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8, marginTop: 4 }}>
+              {/* Action Bar with Compact Download JPG & Download PDF Buttons */}
+              <View style={{ flexDirection: 'row', gap: 6, marginBottom: 6, marginTop: 2 }}>
                 <TouchableOpacity
-                  style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#16a34a', paddingVertical: 8, borderRadius: RADIUS.md }}
+                  style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: '#16a34a', paddingVertical: 6, borderRadius: RADIUS.md }}
                   onPress={handleDownloadJpg}
                   disabled={isSharing}
                   activeOpacity={0.85}
@@ -1042,14 +1042,14 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
                     <ActivityIndicator color="#ffffff" size="small" />
                   ) : (
                     <>
-                      <Ionicons name="image-outline" size={15} color="#ffffff" />
-                      <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' }}>Download JPG</Text>
+                      <Ionicons name="image-outline" size={14} color="#ffffff" />
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Download JPG</Text>
                     </>
                   )}
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#0284c7', paddingVertical: 8, borderRadius: RADIUS.md }}
+                  style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: '#0284c7', paddingVertical: 6, borderRadius: RADIUS.md }}
                   onPress={handleExportPdf}
                   disabled={isSharing}
                   activeOpacity={0.85}
@@ -1058,8 +1058,8 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
                     <ActivityIndicator color="#ffffff" size="small" />
                   ) : (
                     <>
-                      <Ionicons name="document-text-outline" size={15} color="#ffffff" />
-                      <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' }}>Download PDF</Text>
+                      <Ionicons name="document-text-outline" size={14} color="#ffffff" />
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Download PDF</Text>
                     </>
                   )}
                 </TouchableOpacity>
@@ -1067,93 +1067,93 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
 
               <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
                 <ViewShot ref={shotRef} options={{ format: 'jpg', quality: 0.95 }} style={{ backgroundColor: '#ffffff', padding: 2 }}>
-                  {/* 1. TOP HEADING: FarmsKing Logo & Title */}
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 2.5, borderBottomColor: '#16a34a', paddingBottom: 8, marginBottom: 10 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <BrandLogo size={34} useHdQuality />
+                  {/* 1. TOP HEADING: Compact FarmsKing Logo & Title */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 2, borderBottomColor: '#16a34a', paddingBottom: 6, marginBottom: 8 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <BrandLogo size={28} useHdQuality />
                       <View>
-                        <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: '#15803d', letterSpacing: -0.3 }}>FarmsKing</Text>
-                        <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>PARTY ACCOUNT STATEMENT</Text>
+                        <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: '#15803d', letterSpacing: -0.3 }}>FarmsKing</Text>
+                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b' }}>PARTY ACCOUNT STATEMENT</Text>
                       </View>
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#334155' }}>Date: {new Date().toLocaleDateString('en-IN')}</Text>
-                      <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#16a34a' }}>Official Ledger</Text>
+                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#334155' }}>Date: {new Date().toLocaleDateString('en-IN')}</Text>
+                      <Text style={{ fontSize: 9, fontFamily: FONT.medium, color: '#16a34a' }}>Official Ledger</Text>
                     </View>
                   </View>
 
                   {/* 2 & 3. FARMER DETAILS (LEFT) & PARTY DETAILS (RIGHT) ROW */}
-                  <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
+                  <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
                     {/* Farmer Details Box (Left) */}
-                    <View style={{ flex: 1, backgroundColor: '#f0fdf4', padding: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#bbf7d0' }}>
-                      <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: '#15803d', marginBottom: 2 }}>👨‍🌾 FARMER DETAILS</Text>
-                      <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>{farmerName}</Text>
-                      {farmerMobile ? <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>📱 {farmerMobile}</Text> : null}
-                      {farmerVillage ? <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>📍 {farmerVillage}</Text> : null}
+                    <View style={{ flex: 1, backgroundColor: '#f0fdf4', padding: 6, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#bbf7d0' }}>
+                      <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#15803d', marginBottom: 1 }}>👨‍🌾 FARMER DETAILS</Text>
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>{farmerName}</Text>
+                      {farmerMobile ? <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>📱 {farmerMobile}</Text> : null}
+                      {farmerVillage ? <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>📍 {farmerVillage}</Text> : null}
                     </View>
 
                     {/* Party Details Box (Right) */}
-                    <View style={{ flex: 1, backgroundColor: '#f8fafc', padding: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                      <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: '#475569', marginBottom: 2 }}>🤝 PARTY DETAILS</Text>
-                      <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>{party?.name || partyName}</Text>
-                      {party?.mobile ? <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>📱 {party.mobile}</Text> : null}
-                      {party?.address ? <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>📍 {party.address}</Text> : null}
+                    <View style={{ flex: 1, backgroundColor: '#f8fafc', padding: 6, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                      <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#475569', marginBottom: 1 }}>🤝 PARTY DETAILS</Text>
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>{party?.name || partyName}</Text>
+                      {party?.mobile ? <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>📱 {party.mobile}</Text> : null}
+                      {party?.address ? <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>📍 {party.address}</Text> : null}
                     </View>
                   </View>
 
-                  {/* FINANCIAL SUMMARY METRICS - Single Row for Net Party Balance */}
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12, paddingVertical: 8, backgroundColor: (statement?.balance || 0) >= 0 ? '#f0fdf4' : '#fef2f2', borderRadius: 8, borderWidth: 1, borderColor: (statement?.balance || 0) >= 0 ? '#bbf7d0' : '#fecdd3', marginBottom: 10 }}>
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: (statement?.balance || 0) >= 0 ? '#15803d' : '#b91c1c' }}>Net Party Balance</Text>
-                    <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: (statement?.balance || 0) >= 0 ? '#16a34a' : '#dc2626' }}>
+                  {/* FINANCIAL SUMMARY METRICS - Single Compact Row for Net Party Balance */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 10, paddingVertical: 6, backgroundColor: (statement?.balance || 0) >= 0 ? '#f0fdf4' : '#fef2f2', borderRadius: 6, borderWidth: 1, borderColor: (statement?.balance || 0) >= 0 ? '#bbf7d0' : '#fecdd3', marginBottom: 8 }}>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: (statement?.balance || 0) >= 0 ? '#15803d' : '#b91c1c' }}>Net Party Balance</Text>
+                    <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: (statement?.balance || 0) >= 0 ? '#16a34a' : '#dc2626' }}>
                       ₹{Math.abs(statement?.balance || 0).toLocaleString('en-IN')} {(statement?.balance || 0) >= 0 ? 'Dr (Receivable)' : 'Cr (Payable)'}
                     </Text>
                   </View>
 
-                  {/* 4. STATEMENT LEDGER TABLE */}
+                  {/* 4. STATEMENT LEDGER TABLE WITH CLEAN NON-OVERLAPPING COLUMNS */}
                   <View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 6, overflow: 'hidden' }}>
-                    <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 7, paddingHorizontal: 6, alignItems: 'center' }}>
-                      <Text style={{ width: 55, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>Date</Text>
-                      <Text style={{ width: 65, fontSize: 9.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>Bill No.</Text>
+                    <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 6, paddingHorizontal: 6, alignItems: 'center' }}>
+                      <Text style={{ width: 50, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>Date</Text>
+                      <Text style={{ width: 82, fontSize: 9.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>Bill No.</Text>
                       <Text style={{ flex: 1, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>Particulars</Text>
-                      <Text style={{ width: 60, fontSize: 9.5, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right' }}>Dr. (₹)</Text>
-                      <Text style={{ width: 60, fontSize: 9.5, fontFamily: FONT.bold, color: '#86efac', textAlign: 'right' }}>Cr. (₹)</Text>
-                      <Text style={{ width: 75, fontSize: 9.5, fontFamily: FONT.bold, color: '#38bdf8', textAlign: 'right' }}>Balance</Text>
+                      <Text style={{ width: 58, fontSize: 9.5, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right' }}>Dr. (₹)</Text>
+                      <Text style={{ width: 58, fontSize: 9.5, fontFamily: FONT.bold, color: '#86efac', textAlign: 'right' }}>Cr. (₹)</Text>
+                      <Text style={{ width: 70, fontSize: 9.5, fontFamily: FONT.bold, color: '#38bdf8', textAlign: 'right' }}>Balance</Text>
                     </View>
 
                     {ledgerRows.length === 0 ? (
-                      <View style={{ padding: 16, alignItems: 'center' }}>
+                      <View style={{ padding: 14, alignItems: 'center' }}>
                         <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#94a3b8' }}>No ledger transactions yet.</Text>
                       </View>
                     ) : (
                       ledgerRows.map((row, idx) => (
-                        <View key={row.id || idx} style={{ flexDirection: 'row', paddingHorizontal: 6, paddingVertical: 7, backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center' }}>
-                          <Text style={{ width: 55, fontSize: 9.5, fontFamily: FONT.medium, color: '#475569' }}>
+                        <View key={row.id || idx} style={{ flexDirection: 'row', paddingHorizontal: 6, paddingVertical: 5, backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center' }}>
+                          <Text style={{ width: 50, fontSize: 9, fontFamily: FONT.medium, color: '#475569' }}>
                             {new Date(row.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                           </Text>
 
-                          <View style={{ width: 65 }}>
+                          <View style={{ width: 82 }}>
                             {row.billNo && row.billNo !== '—' ? (
-                              <View style={{ backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: 4, paddingHorizontal: 3, paddingVertical: 1, alignSelf: 'flex-start' }}>
-                                <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#1d4ed8' }}>{row.billNo}</Text>
+                              <View style={{ backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1, alignSelf: 'flex-start', maxWidth: 78 }}>
+                                <Text style={{ fontSize: 8.5, fontFamily: FONT.extraBold, color: '#1d4ed8' }} numberOfLines={1}>{row.billNo}</Text>
                               </View>
                             ) : (
-                              <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8' }}>—</Text>
+                              <Text style={{ fontSize: 9, fontFamily: FONT.medium, color: '#94a3b8' }}>—</Text>
                             )}
                           </View>
 
-                          <Text style={{ flex: 1, fontSize: 10, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={2}>
+                          <Text style={{ flex: 1, fontSize: 9.5, fontFamily: FONT.bold, color: '#0f172a', paddingRight: 4 }} numberOfLines={2}>
                             {row.reason}
                           </Text>
 
-                          <Text style={{ width: 60, fontSize: 10, fontFamily: FONT.bold, color: row.drAmount > 0 ? '#b91c1c' : '#94a3b8', textAlign: 'right' }}>
+                          <Text style={{ width: 58, fontSize: 9.5, fontFamily: FONT.bold, color: row.drAmount > 0 ? '#b91c1c' : '#94a3b8', textAlign: 'right' }}>
                             {row.drAmount > 0 ? `₹${row.drAmount.toLocaleString('en-IN')}` : '—'}
                           </Text>
 
-                          <Text style={{ width: 60, fontSize: 10, fontFamily: FONT.bold, color: row.crAmount > 0 ? '#15803d' : '#94a3b8', textAlign: 'right' }}>
+                          <Text style={{ width: 58, fontSize: 9.5, fontFamily: FONT.bold, color: row.crAmount > 0 ? '#15803d' : '#94a3b8', textAlign: 'right' }}>
                             {row.crAmount > 0 ? `₹${row.crAmount.toLocaleString('en-IN')}` : '—'}
                           </Text>
 
-                          <Text style={{ width: 75, fontSize: 9.5, fontFamily: FONT.extraBold, color: row.runningBalance >= 0 ? '#16a34a' : '#dc2626', textAlign: 'right' }}>
+                          <Text style={{ width: 70, fontSize: 9, fontFamily: FONT.extraBold, color: row.runningBalance >= 0 ? '#16a34a' : '#dc2626', textAlign: 'right' }}>
                             ₹{Math.abs(row.runningBalance).toLocaleString('en-IN')} {row.runningBalance >= 0 ? 'Dr' : 'Cr'}
                           </Text>
                         </View>

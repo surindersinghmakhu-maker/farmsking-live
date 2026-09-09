@@ -157,6 +157,13 @@ export class SaleBillsService {
     return bill;
   }
 
+  async listMine(user: AuthUser) {
+    return this.prisma.saleBill.findMany({
+      where: { farmerId: user.id },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async countMine(user: AuthUser) {
     const count = await this.prisma.saleBill.count({ where: { farmerId: user.id } });
     return { count };

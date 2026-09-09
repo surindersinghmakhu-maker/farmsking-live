@@ -71,6 +71,14 @@ export class PartiesService {
     const party = await this.findOwnedOrThrow(user, partyId);
     const entries = await this.prisma.partyLedgerEntry.findMany({
       where: { partyId },
+      include: {
+        saleBill: {
+          select: {
+            id: true,
+            billNo: true,
+          },
+        },
+      },
       orderBy: { createdAt: 'desc' },
     });
     return { party, balance: this.computeBalance(entries), entries };

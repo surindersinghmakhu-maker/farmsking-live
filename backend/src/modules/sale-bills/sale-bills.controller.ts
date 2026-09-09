@@ -19,6 +19,11 @@ export class SaleBillsController {
     return this.saleBillsService.create(user, dto);
   }
 
+  @Get()
+  findAllMine(@CurrentUser() user: AuthUser) {
+    return this.saleBillsService.listMine(user);
+  }
+
   @Get('count/mine')
   countMine(@CurrentUser() user: AuthUser) {
     return this.saleBillsService.countMine(user);

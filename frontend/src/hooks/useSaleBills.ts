@@ -34,3 +34,10 @@ export function useMySaleBillCount() {
     queryFn: saleBillsApi.getMySaleBillCount,
   });
 }
+
+export function useSaleBills() {
+  return useQuery({
+    queryKey: ['sale-bills', 'mine'],
+    queryFn: saleBillsApi.listSaleBills,
+  });
+}

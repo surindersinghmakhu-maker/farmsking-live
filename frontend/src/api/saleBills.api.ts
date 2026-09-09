@@ -45,6 +45,11 @@ export async function updateSaleBill(id: string, payload: CreateSaleBillPayload)
   return data;
 }
 
+export async function listSaleBills(): Promise<SaleBill[]> {
+  const { data } = await apiClient.get<SaleBill[]>('/sale-bills');
+  return Array.isArray(data) ? data : [];
+}
+
 export async function getMySaleBillCount(): Promise<{ count: number }> {
   const { data } = await apiClient.get<{ count: number }>('/sale-bills/count/mine');
   return data;

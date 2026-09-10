@@ -200,17 +200,6 @@ export class PartiesService {
       validEntries.map((e) => e.saleBillId).filter((id): id is string => Boolean(id))
     );
 
-    const saleBills = await this.prisma.saleBill.findMany({
-      where: {
-        farmerId: user.id,
-        OR: [
-          { partyId: { in: Array.from(partyIds) } },
-          { partyName: { equals: party.name, mode: 'insensitive' } },
-        ],
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
     // Auto-link unlinked ledger entries to sale bills if matching
     for (const entry of entries) {
       if (!entry.saleBillId && entry.type === PartyLedgerEntryType.SALE_CREDIT) {

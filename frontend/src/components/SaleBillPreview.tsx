@@ -442,7 +442,7 @@ export function BillPreview({ inv }: { inv: SavedSaleInvoice }) {
         {/* Right: Amount in Words Box (Full width on Cash Sale) */}
         <View style={[billStyles.billWordsBoxRight, inv.isCash && { flex: 1 }]}>
           <Text style={billStyles.billWordsLabel}>AMOUNT IN WORDS</Text>
-          <Text style={billStyles.billWordsValue} numberOfLines={2}>{amountToWords(inv.totalAmount)}</Text>
+          <Text style={billStyles.billWordsValue} numberOfLines={2}>{amountToWords(inv.isCash ? totalAmt : (netBal !== 0 ? netBal : totalAmt))}</Text>
         </View>
       </View>
 
@@ -907,6 +907,10 @@ export async function exportBillAsPdf(inv: SavedSaleInvoice, fileName?: string, 
               <span>Net Receivable Balance</span>
               <span>₹${inv.netReceivable.toLocaleString('en-IN')}</span>
             </div>
+          </div>
+
+          <div style="margin-bottom: 14px; padding: 8px 12px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; color: #334155;">
+            <strong>AMOUNT IN WORDS:</strong> ${amountToWords(inv.isCash ? inv.totalAmount : (inv.netReceivable ? Number(inv.netReceivable) : inv.totalAmount))}
           </div>
 
           <div class="footer">

@@ -125,20 +125,28 @@ export default function FarmListScreen() {
       setIsLoadingBillPreview(true);
       try {
         const bill = await fetchSaleBill.mutateAsync(sale.billId);
+        const rcvdAmt = bill.amountReceived !== undefined && bill.amountReceived !== null ? Number(bill.amountReceived) : 0;
+        const totalAmt = Number(bill.totalAmount || 0);
+        const prevBal = Number(bill.previousBalance || 0);
+        const thisBal = bill.thisSaleBalance !== undefined ? Number(bill.thisSaleBalance) : Math.max(0, totalAmt - rcvdAmt);
+        const netRecv = bill.netReceivable !== undefined ? Number(bill.netReceivable) : prevBal + thisBal;
+
         setBillPreviewInvoice({
           billNo: bill.billNo,
           farmerName: bill.farmerName,
           partyId: bill.partyId,
           partyName: bill.partyName,
           partyMobile: bill.partyMobile,
+          partyAddress: bill.partyAddress,
           isCash: bill.isCash,
-          items: bill.items.map((i, idx) => ({ id: String(idx), ...i })),
+          amountReceivedMode: (bill as any).amountReceivedMode || 'CASH',
+          items: (bill.items || []).map((i: any, idx: number) => ({ id: String(idx), ...i })),
           totalItems: bill.totalItems,
-          totalAmount: bill.totalAmount,
-          amountReceived: bill.amountReceived,
-          thisSaleBalance: bill.thisSaleBalance,
-          previousBalance: bill.previousBalance,
-          netReceivable: bill.netReceivable,
+          totalAmount: totalAmt,
+          amountReceived: rcvdAmt,
+          thisSaleBalance: thisBal,
+          previousBalance: prevBal,
+          netReceivable: netRecv,
           date: new Date(bill.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
           time: new Date(bill.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
         });
@@ -157,18 +165,23 @@ export default function FarmListScreen() {
 
     // Legacy sale with no linked bill — reconstruct a minimal single-item preview.
     const isCash = !sale.buyerName || sale.buyerName === 'Local Mandi Trader' || sale.buyerName === 'Cash Sale';
+    const rcvdAmt = sale.amountReceived !== undefined && sale.amountReceived !== null ? Number(sale.amountReceived) : (isCash ? sale.totalAmount : 0);
+    const prevBal = sale.previousBalance !== undefined ? Number(sale.previousBalance) : 0;
+    const thisBal = Math.max(0, sale.totalAmount - rcvdAmt);
+
     setBillPreviewInvoice({
-      billNo: `FK-${sale.saleDate.replace(/-/g, '')}`,
+      billNo: `FK-${sale.saleDate ? sale.saleDate.replace(/-/g, '') : '260901'}`,
       farmerName: user?.name || 'Farmer',
       partyName: isCash ? 'Cash' : sale.buyerName,
       isCash,
+      amountReceivedMode: sale.amountReceivedMode || 'CASH',
       items: [{ id: '0', cropId: sale.cropId, cropName: sale.cropName, unit: sale.unit, qty: Number(sale.quantity), rate: Number(sale.pricePerUnit), amount: sale.totalAmount }],
       totalItems: 1,
       totalAmount: sale.totalAmount,
-      amountReceived: sale.totalAmount,
-      thisSaleBalance: 0,
-      previousBalance: 0,
-      netReceivable: 0,
+      amountReceived: rcvdAmt,
+      thisSaleBalance: thisBal,
+      previousBalance: prevBal,
+      netReceivable: prevBal + thisBal,
       date: sale.saleDate,
       time: '',
     });

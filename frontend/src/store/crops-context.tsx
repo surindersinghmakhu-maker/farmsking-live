@@ -93,6 +93,7 @@ export interface CropSaleRecord {
   saleDate: string;
   billId?: string;
   billNo?: string;
+  amountReceived?: number | string;
 }
 
 export interface SpecialTreatmentTemplate {

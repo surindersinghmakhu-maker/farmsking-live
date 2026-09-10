@@ -276,6 +276,7 @@ export default function RecordsScreen() {
         unit: b.items?.[0]?.unit || 'kg',
         pricePerUnit: String(b.items?.[0]?.rate || b.totalAmount),
         totalAmount: Number(b.totalAmount),
+        amountReceived: b.amountReceived !== undefined && b.amountReceived !== null ? Number(b.amountReceived) : undefined,
         buyerName: b.partyName || (b.isCash ? 'Cash Sale' : 'Direct Cash'),
         saleDate: b.createdAt ? b.createdAt.slice(0, 10) : todayIso(),
         billId: b.id,
@@ -535,7 +536,7 @@ export default function RecordsScreen() {
     let loadedAmountReceived: string | null = null;
     let loadedReceivedMode: 'CASH' | 'UPI' = 'CASH';
 
-    const matchedBill = item.billId ? saleBillsMap.get(item.billId) : (item.billNo ? saleBillsMap.get(item.billNo) : null);
+    const matchedBill = item.billId ? saleBillsMap.get(item.billId) : (item.billNo ? saleBillsMap.get(item.billNo) : (item.id ? saleBillsMap.get(item.id) : null));
 
     if (matchedBill) {
       realBillIdToUse = matchedBill.id;
@@ -557,9 +558,9 @@ export default function RecordsScreen() {
           amount: Number(bi.amount) || ((Number(bi.qty) || 1) * (Number(bi.rate) || 0)),
         }));
       }
-    } else if (item.billId || item.billNo) {
+    } else if (item.billId || item.billNo || item.id) {
       try {
-        const bill = await saleBillsApi.getSaleBill(item.billId || item.billNo!);
+        const bill = await saleBillsApi.getSaleBill(item.billId || item.billNo || item.id!);
         if (bill) {
           realBillIdToUse = bill.id;
           billNoToUse = bill.billNo || billNoToUse;
@@ -586,6 +587,10 @@ export default function RecordsScreen() {
       }
     }
 
+    if (loadedAmountReceived === null && item.amountReceived !== undefined && item.amountReceived !== null) {
+      loadedAmountReceived = String(item.amountReceived);
+    }
+
     if (loadedItems.length === 0) {
       loadedItems = [
         {
@@ -607,7 +612,7 @@ export default function RecordsScreen() {
     setSaleItems(loadedItems);
     setSaleDiscount('');
     setSaleDelivery('');
-    setAmountReceived(loadedAmountReceived !== null ? loadedAmountReceived : (isParty ? String(item.totalAmount) : ''));
+    setAmountReceived(loadedAmountReceived !== null ? loadedAmountReceived : '');
     setAmountReceivedMode(loadedReceivedMode);
     setSaleDescription(item.notes || '');
     // ✅ FIX: sale date ਵੀ form ਵਿੱਚ ਭਰੋ

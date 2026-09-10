@@ -95,6 +95,7 @@ export interface CropSaleRecord {
   billNo?: string;
   amountReceived?: number | string;
   previousBalance?: number;
+  amountReceivedMode?: 'CASH' | 'UPI';
 }
 
 export interface SpecialTreatmentTemplate {
@@ -144,6 +145,7 @@ interface SalePayload {
   billId?: string;
   amountReceived?: number | string;
   previousBalance?: number;
+  amountReceivedMode?: 'CASH' | 'UPI';
 }
 
 export interface GpsUnlockRequest {
@@ -508,6 +510,7 @@ export function CropsProvider({ children }: { children: ReactNode }) {
         billId: payload.billId,
         amountReceived: payload.amountReceived,
         previousBalance: payload.previousBalance,
+        amountReceivedMode: payload.amountReceivedMode,
       },
       ...prev,
     ]);

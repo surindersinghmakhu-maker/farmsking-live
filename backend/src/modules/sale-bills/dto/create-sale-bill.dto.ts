@@ -47,6 +47,10 @@ export class CreateSaleBillDto {
   @IsBoolean()
   isCash: boolean;
 
+  @IsOptional()
+  @IsString()
+  amountReceivedMode?: string;
+
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })

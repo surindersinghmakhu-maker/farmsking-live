@@ -278,6 +278,7 @@ export default function RecordsScreen() {
         totalAmount: Number(b.totalAmount),
         amountReceived: b.amountReceived !== undefined && b.amountReceived !== null ? Number(b.amountReceived) : undefined,
         previousBalance: b.previousBalance !== undefined && b.previousBalance !== null ? Number(b.previousBalance) : undefined,
+        amountReceivedMode: (b as any).amountReceivedMode as 'CASH' | 'UPI' | undefined,
         buyerName: b.partyName || (b.isCash ? 'Cash Sale' : 'Direct Cash'),
         saleDate: b.createdAt ? b.createdAt.slice(0, 10) : todayIso(),
         billId: b.id,
@@ -601,6 +602,9 @@ export default function RecordsScreen() {
     }
     if (loadedPreviousBalance === null && item.previousBalance !== undefined && item.previousBalance !== null) {
       loadedPreviousBalance = Number(item.previousBalance);
+    }
+    if (item.amountReceivedMode) {
+      loadedReceivedMode = item.amountReceivedMode;
     }
 
     if (loadedItems.length === 0) {
@@ -1448,6 +1452,7 @@ export default function RecordsScreen() {
                 totalAmount: item.amount,
                 amountReceived: effectiveAmountReceived,
                 previousBalance: previousPartyBalance,
+                amountReceivedMode: currentReceivedMode,
                 notes: saleDescription.trim(),
                 billId: targetBillId,
                 billNo,
@@ -1461,6 +1466,7 @@ export default function RecordsScreen() {
                 billId: targetBillId,
                 amountReceived: effectiveAmountReceived,
                 previousBalance: previousPartyBalance,
+                amountReceivedMode: currentReceivedMode,
               }).catch(() => {});
             }
           });
@@ -1481,6 +1487,7 @@ export default function RecordsScreen() {
               billId: realDbBillId,
               amountReceived: effectiveAmountReceived,
               previousBalance: previousPartyBalance,
+              amountReceivedMode: currentReceivedMode,
             }).catch(() => {});
           }
         });

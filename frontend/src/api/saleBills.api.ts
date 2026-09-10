@@ -16,6 +16,7 @@ export interface CreateSaleBillPayload {
   partyName: string;
   partyMobile?: string;
   isCash: boolean;
+  amountReceivedMode?: string;
   items: SaleBillItemPayload[];
   totalItems: number;
   totalAmount: number;

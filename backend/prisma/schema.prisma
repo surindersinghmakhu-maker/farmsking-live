@@ -780,6 +780,7 @@ model SaleBill {
   partyMobile     String?
   partyAddress    String?
   isCash          Boolean
+  amountReceivedMode String?  @default("CASH")
   items           Json
   totalItems      Int
   totalAmount     Decimal  @db.Decimal(12, 2)

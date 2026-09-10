@@ -56,37 +56,30 @@ export class AppSettingsService {
   }
 
   /** Real contact details for the "Support"/"Contact Us" screens — pulled from the live Super Admin (or Admin) account. */
+  /** Real contact details for the "Support"/"Contact Us" screens — pulled from AppSetting or live Super Admin account. */
   async getSupportContact() {
-    const superAdmin = await this.prisma.user.findFirst({
-      where: { role: 'SUPER_ADMIN', deletedAt: null },
-      select: { name: true, mobile: true, email: true },
-      orderBy: { createdAt: 'asc' },
-    });
-    if (superAdmin) {
-      return {
-        name: superAdmin.name || 'Surinder Singh (Super Admin)',
-        mobile: superAdmin.mobile || '9577622000',
-        email: superAdmin.email || 'support@farmsking.com',
-      };
-    }
+    const settings = await this.get();
+    let name = (settings as any)?.adminName;
+    let mobile = (settings as any)?.adminMobile;
+    let email = (settings as any)?.adminEmail;
 
-    const admin = await this.prisma.user.findFirst({
-      where: { role: 'ADMIN', deletedAt: null },
-      select: { name: true, mobile: true, email: true },
-      orderBy: { createdAt: 'asc' },
-    });
-    if (admin) {
-      return {
-        name: admin.name || 'Admin',
-        mobile: admin.mobile || '9577622000',
-        email: admin.email || 'support@farmsking.com',
-      };
+    if (!mobile || !name || !email) {
+      const superAdmin = await this.prisma.user.findFirst({
+        where: { role: 'SUPER_ADMIN', deletedAt: null },
+        select: { name: true, mobile: true, email: true },
+        orderBy: { createdAt: 'asc' },
+      });
+      if (superAdmin) {
+        name = name || superAdmin.name || 'Surinder Singh (Super Admin)';
+        mobile = mobile || superAdmin.mobile || '9577622000';
+        email = email || superAdmin.email || 'support@farmsking.com';
+      }
     }
 
     return {
-      name: 'Surinder Singh (Super Admin)',
-      mobile: '9577622000',
-      email: 'support@farmsking.com',
+      name: name || 'Surinder Singh (Super Admin)',
+      mobile: mobile || '9577622000',
+      email: email || 'support@farmsking.com',
     };
   }
 
@@ -99,6 +92,9 @@ export class AppSettingsService {
       'tagline',
       'upiId',
       'upiPayeeName',
+      'adminName',
+      'adminMobile',
+      'adminEmail',
       'groupVoiceCallEnabled',
       'whatsappGroupSyncEnabled',
       'whatsappAutoAddEnabled',
@@ -114,27 +110,51 @@ export class AppSettingsService {
       try {
         const userData: Record<string, unknown> = {};
         if (dto.adminName !== undefined) userData.name = dto.adminName;
-        if (dto.adminMobile !== undefined) userData.mobile = dto.adminMobile;
         if (dto.adminEmail !== undefined) userData.email = dto.adminEmail;
         if (dto.upiId !== undefined) userData.upiId = dto.upiId;
         if (dto.tagline !== undefined) userData.bio = dto.tagline;
         if (dto.appName !== undefined) userData.specialization = dto.appName;
         if (dto.logoUrl !== undefined) userData.photoUrl = dto.logoUrl;
 
+        // If adminMobile is specified, handle unique constraint gracefully
+        if (dto.adminMobile !== undefined && dto.adminMobile) {
+          const targetMobile = dto.adminMobile.trim();
+          const targetUserId = admin?.id;
+
+          // Check if another user has this mobile number
+          const existingOwner = await this.prisma.user.findFirst({
+            where: { mobile: targetMobile },
+            select: { id: true, role: true },
+          });
+
+          if (existingOwner && existingOwner.id !== targetUserId) {
+            // Free up mobile number on conflicting secondary account by appending prefix
+            await this.prisma.user.update({
+              where: { id: existingOwner.id },
+              data: { mobile: `${targetMobile}_old_${Date.now().toString().slice(-4)}` },
+            }).catch(() => {});
+          }
+
+          userData.mobile = targetMobile;
+        }
+
         if (Object.keys(userData).length > 0) {
-          // Update the current performing admin's user record in DB
+          // Update performing admin user record
           if (admin && admin.id) {
             await this.prisma.user.update({
               where: { id: admin.id },
               data: userData as any,
-            }).catch(() => {});
+            }).catch((err) => console.warn('Could not update admin user:', err));
           }
 
-          // Also update all SUPER_ADMIN user records in DB for universal data sharing
-          await this.prisma.user.updateMany({
-            where: { role: 'SUPER_ADMIN', deletedAt: null },
-            data: userData as any,
-          }).catch(() => {});
+          // Update non-unique fields on all SUPER_ADMIN records
+          const { mobile, ...nonUniqueUserData } = userData;
+          if (Object.keys(nonUniqueUserData).length > 0) {
+            await this.prisma.user.updateMany({
+              where: { role: 'SUPER_ADMIN', deletedAt: null },
+              data: nonUniqueUserData as any,
+            }).catch(() => {});
+          }
         }
       } catch (err) {
         console.warn('Could not update super admin user contact details in User table:', err);
@@ -143,8 +163,8 @@ export class AppSettingsService {
 
     return this.prisma.appSetting.upsert({
       where: { id: SINGLETON_ID },
-      create: { id: SINGLETON_ID, ...fields, updatedById: admin.id },
-      update: { ...fields, updatedById: admin.id },
+      create: { id: SINGLETON_ID, ...fields, updatedById: admin?.id },
+      update: { ...fields, updatedById: admin?.id },
     });
   }
 

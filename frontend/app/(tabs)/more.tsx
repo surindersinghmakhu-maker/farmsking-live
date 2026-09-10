@@ -1153,6 +1153,7 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
         adminEmail: formAdminEmail,
       });
       queryClient.invalidateQueries({ queryKey: ['app-settings'] });
+      queryClient.invalidateQueries({ queryKey: ['app-settings', 'support-contact'] });
       queryClient.invalidateQueries({ queryKey: ['users', 'me'] });
       if (refreshUser) refreshUser();
       setSaveSuccess(true);

@@ -1781,6 +1781,9 @@ model AppSetting {
   tagline               String?
   upiId                 String?
   upiPayeeName          String?
+  adminName             String?
+  adminMobile           String?
+  adminEmail            String?
   groupVoiceCallEnabled Boolean  @default(true)
   whatsappGroupSyncEnabled Boolean @default(true)
   whatsappAutoAddEnabled   Boolean @default(true)

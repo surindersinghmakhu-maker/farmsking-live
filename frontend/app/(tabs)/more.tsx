@@ -1129,9 +1129,9 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
       setFormLogoUrl(appSettings?.logoUrl || '');
       setFormUpiId(appSettings?.upiId || 'surindersinghmakhu-5@oksbi');
       setFormUpiPayeeName(appSettings?.upiPayeeName || 'Surinder Singh');
-      setFormAdminName(contact?.name || 'Surinder Singh (Super Admin)');
-      setFormAdminMobile(contact?.mobile || '9577622000');
-      setFormAdminEmail(contact?.email || 'support@farmsking.com');
+      setFormAdminName((appSettings as any)?.adminName || contact?.name || 'Surinder Singh (Super Admin)');
+      setFormAdminMobile((appSettings as any)?.adminMobile || contact?.mobile || user?.mobile || '9577622000');
+      setFormAdminEmail((appSettings as any)?.adminEmail || contact?.email || 'support@farmsking.com');
       setSaveSuccess(false);
       // Default to editing mode for Admins so fields are immediately editable
       setIsEditing(isAdmin);

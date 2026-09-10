@@ -117,9 +117,11 @@ export function UniversalStatementModal({
     try {
       const isSale = item.type === 'SALE_CREDIT' || item.type === 'CREDIT' || item.plusAmount > 0;
       if (isSale) {
-        if (item.saleBillId) {
+        const refMatch = item.billNo && item.billNo !== '—' ? item.billNo : item.reason?.match(/FK-[A-Za-z0-9]+/i)?.[0];
+        const targetBillId = item.saleBillId || refMatch;
+        if (targetBillId) {
           try {
-            const bill = await fetchSaleBill.mutateAsync(item.saleBillId);
+            const bill = await fetchSaleBill.mutateAsync(targetBillId);
             const created = new Date(bill.createdAt);
             setPreviewInvoice({
               billNo: bill.billNo,

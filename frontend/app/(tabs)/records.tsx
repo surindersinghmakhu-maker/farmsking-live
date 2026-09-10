@@ -1098,9 +1098,11 @@ export default function RecordsScreen() {
   const shareStatementSaleEntry = async (entry: { id: string; reason: string; amount: string; createdAt: string; saleBillId?: string | null }) => {
     if (!statement) return;
     tap();
-    if (entry.saleBillId) {
-      await loadBillPreviewById(entry.saleBillId);
-      return;
+    const refMatch = entry.reason?.match(/FK-[A-Za-z0-9]+/i)?.[0];
+    const targetBillId = entry.saleBillId || refMatch;
+    if (targetBillId) {
+      const loaded = await loadBillPreviewById(targetBillId);
+      if (loaded) return;
     }
 
     // Older entry recorded before bill-linking was added — reconstruct a best-effort single-line preview.

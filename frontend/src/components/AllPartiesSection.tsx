@@ -973,9 +973,11 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
     );
 
     if (isSale) {
-      if (saleBillId) {
+      const refMatch = row.billNo && row.billNo !== '—' ? row.billNo : rawEntry?.reason?.match(/FK-[A-Za-z0-9]+/i)?.[0];
+      const targetBillId = saleBillId || refMatch;
+      if (targetBillId) {
         try {
-          const bill = await fetchSaleBill.mutateAsync(saleBillId);
+          const bill = await fetchSaleBill.mutateAsync(targetBillId);
           if (bill) {
             const rcvdAmt = bill.amountReceived !== undefined && bill.amountReceived !== null ? Number(bill.amountReceived) : 0;
             const totalAmt = Number(bill.totalAmount || 0);

@@ -1,5 +1,7 @@
 export interface GroupedLedgerRow {
   id: string;
+  srNo: number;
+  entryNo: string;
   date: string;
   billNo: string;
   reason: string;
@@ -15,7 +17,7 @@ export interface GroupedLedgerRow {
 export function buildPartyLedgerRows(entries: any[]): GroupedLedgerRow[] {
   if (!entries || entries.length === 0) return [];
 
-  // Sort entries chronologically (oldest first) for accurate running balance calculation
+  // Sort entries chronologically (oldest first) for accurate running balance & sequential Sr No.
   const sorted = [...entries].sort(
     (a, b) => new Date(a.createdAt || a.date).getTime() - new Date(b.createdAt || b.date).getTime()
   );
@@ -23,7 +25,10 @@ export function buildPartyLedgerRows(entries: any[]): GroupedLedgerRow[] {
   let runningBalance = 0;
   const rows: GroupedLedgerRow[] = [];
 
-  sorted.forEach((e) => {
+  sorted.forEach((e, idx) => {
+    const srNo = idx + 1;
+    const entryNo = `#${srNo}`;
+
     let drAmount = 0;
     let crAmount = 0;
 
@@ -71,6 +76,8 @@ export function buildPartyLedgerRows(entries: any[]): GroupedLedgerRow[] {
 
     rows.push({
       id: e.id || `row-${Math.random()}`,
+      srNo,
+      entryNo,
       date: e.createdAt || e.date,
       billNo: billNo.toUpperCase(),
       reason,

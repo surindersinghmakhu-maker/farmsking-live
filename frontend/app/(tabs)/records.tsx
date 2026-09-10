@@ -923,8 +923,15 @@ export default function RecordsScreen() {
   // Analysis tab — Receivable / Payable sub-tabs + party statement
   const [analysisSubTab, setAnalysisSubTab] = useState<'RECEIVABLE' | 'PAYABLE'>('RECEIVABLE');
   const [statementPartyId, setStatementPartyId] = useState<string | null>(null);
+  const [statementSortAsc, setStatementSortAsc] = useState(false);
   const { data: statement, isLoading: isLoadingStatement } = usePartyStatement(statementPartyId ?? undefined);
-  const statementLedgerRows = useMemo(() => buildPartyLedgerRows(statement?.entries || []), [statement?.entries]);
+  const statementLedgerRows = useMemo(() => {
+    const rows = buildPartyLedgerRows(statement?.entries || []);
+    if (statementSortAsc) {
+      return [...rows].sort((a, b) => a.srNo - b.srNo);
+    }
+    return rows;
+  }, [statement?.entries, statementSortAsc]);
   const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentNote, setPaymentNote] = useState('');
@@ -3549,18 +3556,33 @@ export default function RecordsScreen() {
                           </TouchableOpacity>
                         </View>
 
-                        <TouchableOpacity
-                          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0', paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.md, marginVertical: 6 }}
-                          onPress={() => {
-                            tap();
-                            setShowFullStatementModal(true);
-                          }}
-                        >
-                          <Ionicons name="document-text-outline" size={16} color="#16a34a" />
-                          <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#16a34a' }}>
-                            📜 View & Download Full Statement (+ - =)
-                          </Text>
-                        </TouchableOpacity>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 6, marginVertical: 6 }}>
+                          <TouchableOpacity
+                            style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0', paddingHorizontal: 10, paddingVertical: 7, borderRadius: RADIUS.md }}
+                            onPress={() => {
+                              tap();
+                              setShowFullStatementModal(true);
+                            }}
+                          >
+                            <Ionicons name="document-text-outline" size={15} color="#16a34a" />
+                            <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: '#16a34a' }}>
+                              📜 View / PDF
+                            </Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#cbd5e1', paddingHorizontal: 10, paddingVertical: 7, borderRadius: RADIUS.md }}
+                            onPress={() => {
+                              tap();
+                              setStatementSortAsc(!statementSortAsc);
+                            }}
+                          >
+                            <Ionicons name="swap-vertical" size={14} color="#0284c7" />
+                            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0369a1' }}>
+                              {statementSortAsc ? '🔼 Seq (#1 -> #N)' : '🔽 Newest First'}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
 
                         {statement.balance !== 0 && isPaymentFormOpen ? (
                           <View style={{ gap: 8, marginBottom: 8 }}>
@@ -3613,12 +3635,13 @@ export default function RecordsScreen() {
                         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 6 }}>
                           <View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 6, overflow: 'hidden' }}>
                             <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 7, paddingHorizontal: 6, alignItems: 'center' }}>
-                              <Text style={{ width: 55, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>Date</Text>
-                              <Text style={{ width: 65, fontSize: 9.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>Bill No.</Text>
+                              <Text style={{ width: 32, fontSize: 9.5, fontFamily: FONT.bold, color: '#fbbf24' }}>Sr.</Text>
+                              <Text style={{ width: 52, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>Date</Text>
+                              <Text style={{ width: 62, fontSize: 9.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>Bill No.</Text>
                               <Text style={{ flex: 1, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>Particulars</Text>
-                              <Text style={{ width: 60, fontSize: 9.5, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right' }}>Dr. (₹)</Text>
-                              <Text style={{ width: 60, fontSize: 9.5, fontFamily: FONT.bold, color: '#86efac', textAlign: 'right' }}>Cr. (₹)</Text>
-                              <Text style={{ width: 75, fontSize: 9.5, fontFamily: FONT.bold, color: '#38bdf8', textAlign: 'right' }}>Balance</Text>
+                              <Text style={{ width: 55, fontSize: 9.5, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right' }}>Dr. (₹)</Text>
+                              <Text style={{ width: 55, fontSize: 9.5, fontFamily: FONT.bold, color: '#86efac', textAlign: 'right' }}>Cr. (₹)</Text>
+                              <Text style={{ width: 70, fontSize: 9.5, fontFamily: FONT.bold, color: '#38bdf8', textAlign: 'right' }}>Balance</Text>
                             </View>
 
                             {statementLedgerRows.length === 0 ? (
@@ -3628,14 +3651,18 @@ export default function RecordsScreen() {
                             ) : (
                               statementLedgerRows.map((row, idx) => (
                                 <View key={row.id || idx} style={{ flexDirection: 'row', paddingHorizontal: 6, paddingVertical: 7, backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center' }}>
-                                  <Text style={{ width: 55, fontSize: 9.5, fontFamily: FONT.medium, color: '#475569' }}>
+                                  <Text style={{ width: 32, fontSize: 9.5, fontFamily: FONT.bold, color: '#0369a1' }}>
+                                    {row.entryNo || `#${row.srNo}`}
+                                  </Text>
+
+                                  <Text style={{ width: 52, fontSize: 9.5, fontFamily: FONT.medium, color: '#475569' }}>
                                     {new Date(row.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                                   </Text>
 
-                                  <View style={{ width: 65 }}>
+                                  <View style={{ width: 62 }}>
                                     {row.billNo && row.billNo !== '—' ? (
                                       <View style={{ backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: 4, paddingHorizontal: 3, paddingVertical: 1, alignSelf: 'flex-start' }}>
-                                        <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#1d4ed8' }}>{row.billNo}</Text>
+                                        <Text style={{ fontSize: 8.5, fontFamily: FONT.bold, color: '#1d4ed8' }}>{row.billNo}</Text>
                                       </View>
                                     ) : (
                                       <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8' }}>—</Text>
@@ -3646,11 +3673,11 @@ export default function RecordsScreen() {
                                     {row.reason}
                                   </Text>
 
-                                  <Text style={{ width: 60, fontSize: 10, fontFamily: FONT.bold, color: row.drAmount > 0 ? '#b91c1c' : '#94a3b8', textAlign: 'right' }}>
+                                  <Text style={{ width: 55, fontSize: 10, fontFamily: FONT.bold, color: row.drAmount > 0 ? '#b91c1c' : '#94a3b8', textAlign: 'right' }}>
                                     {row.drAmount > 0 ? `₹${row.drAmount.toLocaleString('en-IN')}` : '—'}
                                   </Text>
 
-                                  <Text style={{ width: 60, fontSize: 10, fontFamily: FONT.bold, color: row.crAmount > 0 ? '#15803d' : '#94a3b8', textAlign: 'right' }}>
+                                  <Text style={{ width: 55, fontSize: 10, fontFamily: FONT.bold, color: row.crAmount > 0 ? '#15803d' : '#94a3b8', textAlign: 'right' }}>
                                     {row.crAmount > 0 ? `₹${row.crAmount.toLocaleString('en-IN')}` : '—'}
                                   </Text>
 

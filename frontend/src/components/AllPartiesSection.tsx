@@ -932,6 +932,7 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
         .map(
           (row) => `
         <tr>
+          <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; font-weight: bold; color: #64748b;">${row.entryNo || `#${row.srNo}`}</td>
           <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px;">${new Date(row.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
           <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; font-weight: bold; color: #1d4ed8;">${row.billNo}</td>
           <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; font-weight: bold; color: #0f172a;">${row.reason}</td>
@@ -995,6 +996,7 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
               <table class="table">
                 <thead>
                   <tr>
+                    <th>Sr.</th>
                     <th>Date</th>
                     <th>Ref. No.</th>
                     <th>Particulars</th>

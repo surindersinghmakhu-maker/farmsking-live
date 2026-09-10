@@ -96,11 +96,12 @@ export function PaymentVoucherModal({
   const createLabourPayment = useCreateLabourPayment();
 
   const isLabourWorker = useMemo(() => {
-    return (
-      (labourWorkers || []).some((w: any) => w.id === sourceParty?.id) ||
-      sourceParty?.address === 'Labour Worker'
-    );
-  }, [labourWorkers, sourceParty?.id, sourceParty?.address]);
+    if (!sourceParty) return false;
+    if ((sourceParty as any).__type === 'LABOUR' || (sourceParty as any).isWorker) return true;
+    if (sourceParty.address === 'Labour Worker' || sourceParty.address?.includes('Labour Worker')) return true;
+    const cleanId = sourceParty.id.replace(/^labour_/, '');
+    return (labourWorkers || []).some((w: any) => w.id === cleanId || w.id === sourceParty.id || `labour_${w.id}` === sourceParty.id);
+  }, [labourWorkers, sourceParty]);
 
   const resetForm = () => {
     setAmount('');
@@ -165,24 +166,57 @@ export function PaymentVoucherModal({
       const baseReason = userMemo || (voucherType === 'RECEIPT_IN' ? 'Payment Received' : voucherType === 'PAYMENT_OUT' ? 'Payment Made' : 'Party Entry');
       const finalReason = `${baseReason}${modeTag}`;
 
-      if (isLabourWorker && voucherType === 'PAYMENT_OUT') {
+      const cleanWorkerId = sourceParty.id.replace(/^labour_/, '');
+
+      if (isLabourWorker && (voucherType === 'PAYMENT_OUT' || voucherType === 'RECEIPT_IN')) {
+        const paymentAmt = voucherType === 'PAYMENT_OUT' ? numAmount : -numAmount;
         await createLabourPayment.mutateAsync({
-          workerId: sourceParty.id,
-          amount: numAmount,
+          workerId: cleanWorkerId,
+          amount: paymentAmt,
           paymentDate: voucherDate,
           paymentMode,
           notes: finalReason,
         });
       } else if (voucherType === 'RECEIPT_IN') {
-        await recordPaymentReceived.mutateAsync({
-          id: sourceParty.id,
-          payload: { amount: numAmount, reason: finalReason },
-        });
+        try {
+          await recordPaymentReceived.mutateAsync({
+            id: sourceParty.id,
+            payload: { amount: numAmount, reason: finalReason },
+          });
+        } catch (err: any) {
+          const is404 = err?.response?.status === 404 || err?.response?.data?.message?.includes('Party not found') || err?.message?.includes('Party not found');
+          if (is404) {
+            await createLabourPayment.mutateAsync({
+              workerId: cleanWorkerId,
+              amount: -numAmount,
+              paymentDate: voucherDate,
+              paymentMode,
+              notes: finalReason,
+            });
+          } else {
+            throw err;
+          }
+        }
       } else if (voucherType === 'PAYMENT_OUT') {
-        await recordPaymentMade.mutateAsync({
-          id: sourceParty.id,
-          payload: { amount: numAmount, reason: finalReason },
-        });
+        try {
+          await recordPaymentMade.mutateAsync({
+            id: sourceParty.id,
+            payload: { amount: numAmount, reason: finalReason },
+          });
+        } catch (err: any) {
+          const is404 = err?.response?.status === 404 || err?.response?.data?.message?.includes('Party not found') || err?.message?.includes('Party not found');
+          if (is404) {
+            await createLabourPayment.mutateAsync({
+              workerId: cleanWorkerId,
+              amount: numAmount,
+              paymentDate: voucherDate,
+              paymentMode,
+              notes: finalReason,
+            });
+          } else {
+            throw err;
+          }
+        }
       } else if (voucherType === 'ACCOUNT_TRANSFER' && targetParty) {
         // Double-entry transfer: deduct from Source, add to Target
         await recordPaymentReceived.mutateAsync({

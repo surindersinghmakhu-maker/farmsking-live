@@ -170,7 +170,7 @@ export function PartyPicker({
     } else {
       // Synthesize a Party object for Labour Worker compatibility
       const w = item.originalItem as LabourWorker;
-      const synthParty: Party = {
+      const synthParty: Party & { __type?: string; isWorker?: boolean } = {
         id: w.id,
         ownerId: w.farmerId || '',
         name: w.name,
@@ -178,6 +178,8 @@ export function PartyPicker({
         address: w.address ?? 'Labour Worker',
         balance: w.pendingBalance || 0,
         createdAt: w.createdAt || new Date().toISOString(),
+        __type: 'LABOUR',
+        isWorker: true,
       };
       onSelect(synthParty);
     }

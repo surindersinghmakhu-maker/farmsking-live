@@ -215,8 +215,6 @@ export function ProfessionalOverviewView({
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
           <Text style={styles.sectionTitle}>🌱 Crop Performance Overview</Text>
           <Text style={styles.sectionSubTitle}>{cropAnalysis.length} Active Field{cropAnalysis.length === 1 ? '' : 's'}</Text>
-        </View>
-
         {cropAnalysis.length === 0 ? (
           <View style={styles.emptyCard}>
             <Ionicons name="leaf-outline" size={24} color="#cbd5e1" />
@@ -224,16 +222,16 @@ export function ProfessionalOverviewView({
             <Text style={styles.emptySubText}>Add active crops to track profitability per crop field.</Text>
           </View>
         ) : (
-          <View style={[{ backgroundColor: '#ffffff', borderRadius: 10, borderWidth: 1, borderColor: '#cbd5e1', overflow: 'hidden' }, premiumShadow('#0f172a', 'sm')]}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 560, flexGrow: 1 }}>
-              <View style={{ flex: 1, minWidth: 560 }}>
+          <View style={[{ backgroundColor: '#ffffff', borderRadius: 10, borderWidth: 1, borderColor: '#94a3b8', overflow: 'hidden' }, premiumShadow('#0f172a', 'sm')]}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 460, flexGrow: 1 }}>
+              <View style={{ flex: 1, minWidth: 460 }}>
                 {/* Table Header */}
-                <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 6, paddingHorizontal: 8, alignItems: 'center' }}>
-                  <Text style={{ flex: 1.4, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>CROP & FIELD NAME</Text>
-                  <Text style={{ width: 95, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right', paddingRight: 4 }}>INCOME</Text>
-                  <Text style={{ width: 95, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right', paddingRight: 4 }}>EXPENSE</Text>
-                  <Text style={{ width: 125, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'center' }}>NET PROFIT / LOSS</Text>
-                  <Text style={{ width: 75, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'center' }}>ACTION</Text>
+                <View style={{ flexDirection: 'row', backgroundColor: '#1e293b', paddingVertical: 6, paddingHorizontal: 8, alignItems: 'center' }}>
+                  <Text style={{ flex: 1, minWidth: 125, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>CROP & FIELD NAME</Text>
+                  <Text style={{ width: 78, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right', paddingRight: 2 }}>INCOME</Text>
+                  <Text style={{ width: 78, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right', paddingRight: 2 }}>EXPENSE</Text>
+                  <Text style={{ width: 108, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'center' }}>NET PROFIT/LOSS</Text>
+                  <Text style={{ width: 66, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'center' }}>ACTION</Text>
                 </View>
 
                 {/* Table Rows */}
@@ -247,20 +245,20 @@ export function ProfessionalOverviewView({
                         alignItems: 'center',
                         paddingHorizontal: 8,
                         paddingVertical: 5.5,
-                        backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc',
+                        backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f1f5f9',
                         borderBottomWidth: idx === cropAnalysis.length - 1 ? 0 : 1,
-                        borderBottomColor: '#f1f5f9',
+                        borderBottomColor: '#cbd5e1',
                       }}
                     >
                       {/* Crop Name & Field Name (Inline Compact) */}
-                      <View style={{ flex: 1.4, flexDirection: 'row', alignItems: 'center', gap: 5, paddingRight: 4 }}>
-                        <Ionicons name="leaf" size={12} color="#16a34a" />
-                        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
+                      <View style={{ flex: 1, minWidth: 125, flexDirection: 'row', alignItems: 'center', gap: 4, paddingRight: 2 }}>
+                        <Ionicons name="leaf" size={11.5} color="#16a34a" />
+                        <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
                           {c.cropName}
                         </Text>
                         {c.fieldName ? (
-                          <View style={{ backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 }}>
-                            <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#475569' }} numberOfLines={1}>
+                          <View style={{ backgroundColor: '#e2e8f0', borderWidth: 1, borderColor: '#cbd5e1', paddingHorizontal: 4, paddingVertical: 0.5, borderRadius: 3 }}>
+                            <Text style={{ fontSize: 8.5, fontFamily: FONT.bold, color: '#334155' }} numberOfLines={1}>
                               📍 {c.fieldName}
                             </Text>
                           </View>
@@ -268,49 +266,49 @@ export function ProfessionalOverviewView({
                       </View>
 
                       {/* Income */}
-                      <View style={{ width: 95, alignItems: 'flex-end', paddingRight: 4 }}>
-                        <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 }}>
-                          <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }}>
+                      <View style={{ width: 78, alignItems: 'flex-end', paddingRight: 2 }}>
+                        <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 5, paddingVertical: 1.5, borderRadius: 6 }}>
+                          <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#15803d' }}>
                             +{formatInr(c.income)}
                           </Text>
                         </View>
                       </View>
 
                       {/* Expense */}
-                      <View style={{ width: 95, alignItems: 'flex-end', paddingRight: 4 }}>
-                        <View style={{ backgroundColor: '#fee2e2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 }}>
-                          <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#dc2626' }}>
+                      <View style={{ width: 78, alignItems: 'flex-end', paddingRight: 2 }}>
+                        <View style={{ backgroundColor: '#fee2e2', paddingHorizontal: 5, paddingVertical: 1.5, borderRadius: 6 }}>
+                          <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#dc2626' }}>
                             -{formatInr(c.expense)}
                           </Text>
                         </View>
                       </View>
 
                       {/* Profit / Loss Badge */}
-                      <View style={{ width: 125, alignItems: 'center' }}>
+                      <View style={{ width: 108, alignItems: 'center' }}>
                         <View
                           style={[
                             styles.cropProfitBadge,
-                            { backgroundColor: isProfit ? '#dcfce7' : '#fee2e2', paddingHorizontal: 7, paddingVertical: 2 },
+                            { backgroundColor: isProfit ? '#dcfce7' : '#fee2e2', paddingHorizontal: 5, paddingVertical: 1.5 },
                           ]}
                         >
-                          <Text style={[styles.cropProfitBadgeText, { color: isProfit ? '#15803d' : '#dc2626', fontSize: 9.5 }]}>
+                          <Text style={[styles.cropProfitBadgeText, { color: isProfit ? '#15803d' : '#dc2626', fontSize: 9 }]}>
                             {isProfit ? `▲ Profit: +${formatInr(c.net)}` : `▼ Loss: -${formatInr(Math.abs(c.net))}`}
                           </Text>
                         </View>
                       </View>
 
                       {/* Statement Action Button */}
-                      <View style={{ width: 75, alignItems: 'center' }}>
+                      <View style={{ width: 66, alignItems: 'center' }}>
                         <TouchableOpacity
-                          style={[styles.cropStatementBtn, { paddingHorizontal: 6, paddingVertical: 2 }]}
+                          style={[styles.cropStatementBtn, { paddingHorizontal: 5, paddingVertical: 1.5 }]}
                           activeOpacity={0.8}
                           onPress={() => {
                             tap();
                             setSelectedCropForStatement({ cropName: c.cropName, fieldName: c.fieldName });
                           }}
                         >
-                          <Ionicons name="document-text-outline" size={10} color="#0284c7" />
-                          <Text style={[styles.cropStatementBtnText, { fontSize: 9.5 }]}>Statement</Text>
+                          <Ionicons name="document-text-outline" size={9.5} color="#0284c7" />
+                          <Text style={[styles.cropStatementBtnText, { fontSize: 9 }]}>Statement</Text>
                         </TouchableOpacity>
                       </View>
                     </View>

@@ -1235,13 +1235,34 @@ export default function RecordsScreen() {
     setPaymentReceiptVisible(true);
   };
 
+  const unifiedAccountParties = useMemo<Party[]>(() => {
+    const list: Party[] = [...parties];
+    (expenseLabourWorkers || []).forEach((w: any) => {
+      const pending = Number(w.pendingBalance || 0);
+      if (pending !== 0) {
+        list.push({
+          id: w.id,
+          ownerId: w.farmerId || '',
+          name: w.name.startsWith('👷') ? w.name : `👷 ${w.name}`,
+          mobile: w.mobile ?? undefined,
+          address: w.address ?? 'Labour Worker',
+          balance: -pending, // pending > 0 is Payable (-balance in Party convention)
+          createdAt: w.createdAt || new Date().toISOString(),
+          __type: 'LABOUR',
+          isWorker: true,
+        } as any);
+      }
+    });
+    return list;
+  }, [parties, expenseLabourWorkers]);
+
   const receivableParties = useMemo(
-    () => parties.filter((p) => p.balance > 0).sort((a, b) => b.balance - a.balance),
-    [parties],
+    () => unifiedAccountParties.filter((p) => p.balance > 0).sort((a, b) => b.balance - a.balance),
+    [unifiedAccountParties],
   );
   const payableParties = useMemo(
-    () => parties.filter((p) => p.balance < 0).sort((a, b) => a.balance - b.balance),
-    [parties],
+    () => unifiedAccountParties.filter((p) => p.balance < 0).sort((a, b) => a.balance - b.balance),
+    [unifiedAccountParties],
   );
   const totalReceivable = useMemo(() => receivableParties.reduce((sum, p) => sum + p.balance, 0), [receivableParties]);
   const totalPayable = useMemo(() => payableParties.reduce((sum, p) => sum + Math.abs(p.balance), 0), [payableParties]);
@@ -3844,11 +3865,19 @@ export default function RecordsScreen() {
                     activeOpacity={0.85}
                     onPress={() => {
                       tap();
-                      setIsPaymentFormOpen(false);
-                      setPaymentAmount('');
-                      setPaymentNote('');
-                      setPaymentError(null);
-                      setStatementPartyId(item.id);
+                      if ((item as any).isWorker || (item as any).__type === 'LABOUR') {
+                        const isReceivable = analysisSubTab === 'RECEIVABLE';
+                        setVoucherInitialType(isReceivable ? 'RECEIPT_IN' : 'PAYMENT_OUT');
+                        setVoucherInitialParty(item);
+                        setLockVoucherParty(true);
+                        setShowPaymentVoucherModal(true);
+                      } else {
+                        setIsPaymentFormOpen(false);
+                        setPaymentAmount('');
+                        setPaymentNote('');
+                        setPaymentError(null);
+                        setStatementPartyId(item.id);
+                      }
                     }}
                   >
                     <View style={[styles.cardIconWrap, { backgroundColor: analysisSubTab === 'RECEIVABLE' ? '#dcfce7' : '#fee2e2' }]}>

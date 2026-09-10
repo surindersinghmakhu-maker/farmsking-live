@@ -128,6 +128,9 @@ export interface SavedSaleInvoice {
   netReceivable: number;
   date: string;
   time: string;
+  discountAmount?: number;
+  deliveryCharge?: number;
+  notes?: string;
 }
 
 export interface PaymentReceiptData {
@@ -179,6 +182,9 @@ export function BillPreview({ inv }: { inv: SavedSaleInvoice }) {
   const prevBal = Number(inv.previousBalance) || 0;
   const totalAmt = Number(inv.totalAmount) || 0;
   const rcvd = Number(inv.amountReceived) || 0;
+  const discountVal = Number(inv.discountAmount) || 0;
+  const deliveryVal = Number(inv.deliveryCharge) || 0;
+  const rawSubtotal = (inv.items || []).reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const grossBal = prevBal + totalAmt;
   const netBal = inv.netReceivable !== undefined && !isNaN(Number(inv.netReceivable))
     ? Number(inv.netReceivable)
@@ -320,6 +326,39 @@ export function BillPreview({ inv }: { inv: SavedSaleInvoice }) {
           </Text>
         </View>
       </View>
+
+      {/* Discount, Delivery & Remarks / Notes Section */}
+      {(discountVal > 0 || deliveryVal > 0 || (inv.notes && inv.notes.trim())) ? (
+        <View style={{ backgroundColor: '#f8fafc', padding: 8, borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 10 }}>
+          {(discountVal > 0 || deliveryVal > 0) ? (
+            <View style={{ marginBottom: inv.notes && inv.notes.trim() ? 6 : 0 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
+                <Text style={{ fontSize: 9.5, color: '#64748b', fontFamily: FONT.medium }}>Items Subtotal:</Text>
+                <Text style={{ fontSize: 10, color: '#0f172a', fontFamily: FONT.bold }}>{formatInr(rawSubtotal)}</Text>
+              </View>
+              {discountVal > 0 ? (
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
+                  <Text style={{ fontSize: 9.5, color: '#dc2626', fontFamily: FONT.bold }}>(-) Discount:</Text>
+                  <Text style={{ fontSize: 10, color: '#dc2626', fontFamily: FONT.bold }}>-₹{discountVal.toLocaleString('en-IN')}</Text>
+                </View>
+              ) : null}
+              {deliveryVal > 0 ? (
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
+                  <Text style={{ fontSize: 9.5, color: '#2563eb', fontFamily: FONT.bold }}>(+) Delivery Charge:</Text>
+                  <Text style={{ fontSize: 10, color: '#2563eb', fontFamily: FONT.bold }}>+₹{deliveryVal.toLocaleString('en-IN')}</Text>
+                </View>
+              ) : null}
+            </View>
+          ) : null}
+
+          {inv.notes && inv.notes.trim() ? (
+            <View style={{ borderTopWidth: (discountVal > 0 || deliveryVal > 0) ? 1 : 0, borderTopColor: '#cbd5e1', paddingTop: (discountVal > 0 || deliveryVal > 0) ? 4 : 0 }}>
+              <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#475569' }}>📝 REMARKS / NOTES:</Text>
+              <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#1e293b', marginTop: 1 }}>{inv.notes.trim()}</Text>
+            </View>
+          ) : null}
+        </View>
+      ) : null}
 
       {/* Cash Sale Payment Summary Box OR Credit Party Account Statement */}
       <View style={billStyles.billBottomRow}>
@@ -579,6 +618,9 @@ async function fetchAsBase64DataUri(url?: string | null): Promise<string | null>
 
 /** Generates clean PDF bill file and opens Print/Download/Share dialog */
 export async function exportBillAsPdf(inv: SavedSaleInvoice, fileName?: string, appSettings?: any, user?: any) {
+  const discountVal = Number(inv.discountAmount) || 0;
+  const deliveryVal = Number(inv.deliveryCharge) || 0;
+  const rawSubtotal = (inv.items || []).reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const appName = appSettings?.appName || 'FarmsKing';
   const tagline = appSettings?.tagline || 'Agricultural & Farm Management Platform';
   const logoUrl = appSettings?.logoUrl || user?.photoUrl;
@@ -800,12 +842,36 @@ export async function exportBillAsPdf(inv: SavedSaleInvoice, fileName?: string, 
             </thead>
             <tbody>
               ${itemsRows}
+              ${(discountVal > 0 || deliveryVal > 0) ? `
+                <tr style="background: #f8fafc; font-size: 11px;">
+                  <td colspan="4" style="text-align: right; padding: 4px 8px; color: #64748b;">Subtotal:</td>
+                  <td style="text-align: right; padding: 4px 8px; font-weight: 700; color: #0f172a;">₹${rawSubtotal.toLocaleString('en-IN')}</td>
+                </tr>
+                ${discountVal > 0 ? `
+                  <tr style="background: #fef2f2; font-size: 11px;">
+                    <td colspan="4" style="text-align: right; padding: 4px 8px; color: #dc2626; font-weight: 700;">(-) Discount:</td>
+                    <td style="text-align: right; padding: 4px 8px; color: #dc2626; font-weight: 700;">-₹${discountVal.toLocaleString('en-IN')}</td>
+                  </tr>
+                ` : ''}
+                ${deliveryVal > 0 ? `
+                  <tr style="background: #eff6ff; font-size: 11px;">
+                    <td colspan="4" style="text-align: right; padding: 4px 8px; color: #2563eb; font-weight: 700;">(+) Delivery Charge:</td>
+                    <td style="text-align: right; padding: 4px 8px; color: #2563eb; font-weight: 700;">+₹${deliveryVal.toLocaleString('en-IN')}</td>
+                  </tr>
+                ` : ''}
+              ` : ''}
               <tr style="background: #f0fdf4; font-weight: 800;">
                 <td colspan="4" style="text-align: right; padding: 8px; font-size: 12px;">TOTAL AMOUNT:</td>
                 <td style="text-align: right; padding: 8px; color: #15803d; font-size: 13px;">₹${inv.totalAmount.toLocaleString('en-IN')}</td>
               </tr>
             </tbody>
           </table>
+
+          ${inv.notes && inv.notes.trim() ? `
+            <div style="margin-top: 8px; margin-bottom: 12px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 8px; font-size: 11px; color: #78350f;">
+              <strong>📝 Remarks / Notes:</strong> ${inv.notes.trim()}
+            </div>
+          ` : ''}
 
           <div class="summary-box">
             <div class="summary-line">

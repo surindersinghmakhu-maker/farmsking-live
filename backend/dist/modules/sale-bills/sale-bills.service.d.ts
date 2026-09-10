@@ -7,12 +7,10 @@ export declare class SaleBillsService {
     private nextBillNo;
     create(user: AuthUser, dto: CreateSaleBillDto): Promise<{
         id: string;
-        createdAt: Date;
         farmerId: string;
-        partyId: string | null;
-        totalAmount: import("@prisma/client/runtime/library").Decimal;
         billNo: string;
         farmerName: string;
+        partyId: string | null;
         partyName: string;
         partyMobile: string | null;
         partyAddress: string | null;
@@ -20,19 +18,19 @@ export declare class SaleBillsService {
         amountReceivedMode: string | null;
         items: import("@prisma/client/runtime/library").JsonValue;
         totalItems: number;
+        totalAmount: import("@prisma/client/runtime/library").Decimal;
         amountReceived: import("@prisma/client/runtime/library").Decimal;
         thisSaleBalance: import("@prisma/client/runtime/library").Decimal;
         previousBalance: import("@prisma/client/runtime/library").Decimal;
         netReceivable: import("@prisma/client/runtime/library").Decimal;
+        createdAt: Date;
     }>;
     update(user: AuthUser, id: string, dto: CreateSaleBillDto): Promise<{
         id: string;
-        createdAt: Date;
         farmerId: string;
-        partyId: string | null;
-        totalAmount: import("@prisma/client/runtime/library").Decimal;
         billNo: string;
         farmerName: string;
+        partyId: string | null;
         partyName: string;
         partyMobile: string | null;
         partyAddress: string | null;
@@ -40,20 +38,20 @@ export declare class SaleBillsService {
         amountReceivedMode: string | null;
         items: import("@prisma/client/runtime/library").JsonValue;
         totalItems: number;
+        totalAmount: import("@prisma/client/runtime/library").Decimal;
         amountReceived: import("@prisma/client/runtime/library").Decimal;
         thisSaleBalance: import("@prisma/client/runtime/library").Decimal;
         previousBalance: import("@prisma/client/runtime/library").Decimal;
         netReceivable: import("@prisma/client/runtime/library").Decimal;
+        createdAt: Date;
     }>;
     findOneOrThrow(user: AuthUser, id: string): Promise<any>;
     listMine(user: AuthUser): Promise<{
         id: string;
-        createdAt: Date;
         farmerId: string;
-        partyId: string | null;
-        totalAmount: import("@prisma/client/runtime/library").Decimal;
         billNo: string;
         farmerName: string;
+        partyId: string | null;
         partyName: string;
         partyMobile: string | null;
         partyAddress: string | null;
@@ -61,22 +59,22 @@ export declare class SaleBillsService {
         amountReceivedMode: string | null;
         items: import("@prisma/client/runtime/library").JsonValue;
         totalItems: number;
+        totalAmount: import("@prisma/client/runtime/library").Decimal;
         amountReceived: import("@prisma/client/runtime/library").Decimal;
         thisSaleBalance: import("@prisma/client/runtime/library").Decimal;
         previousBalance: import("@prisma/client/runtime/library").Decimal;
         netReceivable: import("@prisma/client/runtime/library").Decimal;
+        createdAt: Date;
     }[]>;
     countMine(user: AuthUser): Promise<{
         count: number;
     }>;
     remove(user: AuthUser, id: string): Promise<{
         id: string;
-        createdAt: Date;
         farmerId: string;
-        partyId: string | null;
-        totalAmount: import("@prisma/client/runtime/library").Decimal;
         billNo: string;
         farmerName: string;
+        partyId: string | null;
         partyName: string;
         partyMobile: string | null;
         partyAddress: string | null;
@@ -84,9 +82,11 @@ export declare class SaleBillsService {
         amountReceivedMode: string | null;
         items: import("@prisma/client/runtime/library").JsonValue;
         totalItems: number;
+        totalAmount: import("@prisma/client/runtime/library").Decimal;
         amountReceived: import("@prisma/client/runtime/library").Decimal;
         thisSaleBalance: import("@prisma/client/runtime/library").Decimal;
         previousBalance: import("@prisma/client/runtime/library").Decimal;
         netReceivable: import("@prisma/client/runtime/library").Decimal;
+        createdAt: Date;
     }>;
 }

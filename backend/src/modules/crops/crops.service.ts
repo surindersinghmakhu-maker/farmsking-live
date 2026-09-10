@@ -69,10 +69,6 @@ export class CropsService {
     // Verifies the plot exists and belongs to this user (or ADMIN) before allowing a crop cycle on it.
     await this.plotsService.findOneOrThrow(user, dto.plotId);
 
-    if (user.role === Role.FARMER) {
-      await this.assertAdvanceProfileComplete(user.id);
-    }
-
     // ── Dynamic Farmer Plan crop limit enforcement ──────────────────────────
     if (user.role === Role.FARMER) {
       const { plan } = await this.farmerPlansService.getEffectivePlan(user.id);

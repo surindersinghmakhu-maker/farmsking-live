@@ -76,7 +76,33 @@ export function useRecordPaymentMade() {
   });
 }
 
+export function useClearAllPartyEntries() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: partiesApi.clearAllPartyEntries,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['parties'] });
+      queryClient.invalidateQueries({ queryKey: ['unified-parties'] });
+      queryClient.invalidateQueries({ queryKey: ['arhtiya-hisab'] });
+    },
+  });
+}
+
+export function useClearPartyEntries() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => partiesApi.clearPartyEntries(id),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['parties'] });
+      queryClient.invalidateQueries({ queryKey: ['parties', variables, 'statement'] });
+      queryClient.invalidateQueries({ queryKey: ['unified-parties'] });
+      queryClient.invalidateQueries({ queryKey: ['arhtiya-hisab', variables] });
+    },
+  });
+}
+
 // ─── Unified Party System & Arhtiya Hooks ──────────────────────────────────
+
 
 export function useUnifiedParties(role?: partiesApi.PartyRole) {
   return useQuery({

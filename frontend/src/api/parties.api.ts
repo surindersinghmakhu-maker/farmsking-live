@@ -77,7 +77,19 @@ export async function recordPaymentMade(id: string, payload: RecordPaymentPayloa
   return data;
 }
 
+export async function clearAllPartyEntries(): Promise<{ message: string; deletedCounts: any }> {
+  const { data } = await apiClient.delete('/parties/entries/clear-all');
+  return data;
+}
+
+export async function clearPartyEntries(id: string): Promise<{ message: string; partyName: string; deletedCounts: any }> {
+  const cleanId = ensureUuid(id);
+  const { data } = await apiClient.delete(`/parties/${cleanId}/entries`);
+  return data;
+}
+
 // ─── Unified Party System & Arhtiya Types & APIs ──────────────────────────
+
 
 export type MandiUnit = 'QUINTAL' | 'BAG_50KG' | 'BAG_35KG' | 'MANN' | 'KG';
 export type PartyRole = 'FARMER' | 'CUSTOMER' | 'SUPPLIER' | 'VENDOR' | 'LABOUR' | 'ARHTIYA' | 'BUSINESS_PARTNER' | 'ADVISOR';

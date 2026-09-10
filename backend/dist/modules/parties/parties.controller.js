@@ -34,6 +34,12 @@ let PartiesController = class PartiesController {
     create(user, dto) {
         return this.partiesService.create(user, dto.name, dto.address, dto.mobile);
     }
+    clearAllEntries(user) {
+        return this.partiesService.clearAllEntries(user);
+    }
+    clearPartyEntries(user, id) {
+        return this.partiesService.clearPartyEntries(user, id);
+    }
     update(user, id, dto) {
         return this.partiesService.update(user, id, dto);
     }
@@ -77,6 +83,21 @@ __decorate([
     __metadata("design:paramtypes", [Object, create_party_dto_1.CreatePartyDto]),
     __metadata("design:returntype", void 0)
 ], PartiesController.prototype, "create", null);
+__decorate([
+    (0, common_1.Delete)('entries/clear-all'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], PartiesController.prototype, "clearAllEntries", null);
+__decorate([
+    (0, common_1.Delete)(':id/entries'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], PartiesController.prototype, "clearPartyEntries", null);
 __decorate([
     (0, common_1.Patch)(':id'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),

@@ -20,7 +20,18 @@ import { BrandLogo } from '@/src/components/BrandLogo';
 import { useAuth } from '@/src/store/auth-context';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { formatInr } from '@/src/utils/formatInr';
+import { cleanParticulars } from '@/src/utils/partyLedger';
 import { FONT, RADIUS } from '@/constants/theme';
+
+import {
+  BillPreview,
+  PaymentReceiptPreview,
+  useShareBillAsJpg,
+  type SavedSaleInvoice,
+  type PaymentReceiptData,
+} from '@/src/components/SaleBillPreview';
+import { useFetchSaleBill } from '@/src/hooks/useSaleBills';
+import { useFetchPaymentReceipt } from '@/src/hooks/usePaymentReceipts';
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -32,6 +43,9 @@ export interface RawStatementEntry {
   type: string; // 'SALE_CREDIT' | 'SALE_PAYMENT' | 'EXPENSE_CREDIT' | 'EXPENSE_PAYMENT' | 'INCOME' | 'EXPENSE'
   reason: string;
   amount: number;
+  billNo?: string;
+  saleBillId?: string;
+  paymentReceiptId?: string;
 }
 
 export interface ComputedStatementEntry extends RawStatementEntry {
@@ -86,6 +100,126 @@ export function UniversalStatementModal({
   const [fromDate, setFromDate] = useState(() => thirtyDaysAgoIso());
   const [toDate, setToDate] = useState(() => todayIso());
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Preview Modal States
+  const [previewInvoice, setPreviewInvoice] = useState<SavedSaleInvoice | null>(null);
+  const [previewReceipt, setPreviewReceipt] = useState<PaymentReceiptData | null>(null);
+  const [previewModalVisible, setPreviewModalVisible] = useState(false);
+  const [isFetchingPreview, setIsFetchingPreview] = useState(false);
+
+  const fetchSaleBill = useFetchSaleBill();
+  const fetchPaymentReceipt = useFetchPaymentReceipt();
+  const { billShotRef: previewShotRef, isSharingBill, shareInvoiceAsJpg } = useShareBillAsJpg();
+
+  const handleOpenPreviewForEntry = async (item: ComputedStatementEntry) => {
+    tap();
+    setIsFetchingPreview(true);
+    try {
+      const isSale = item.type === 'SALE_CREDIT' || item.type === 'CREDIT' || item.plusAmount > 0;
+      if (isSale) {
+        if (item.saleBillId) {
+          try {
+            const bill = await fetchSaleBill.mutateAsync(item.saleBillId);
+            const created = new Date(bill.createdAt);
+            setPreviewInvoice({
+              billNo: bill.billNo,
+              farmerName,
+              partyId: bill.partyId || '',
+              partyName: bill.partyName || partyName,
+              isCash: bill.isCash,
+              items: (bill.items || []).map((i: any) => ({
+                id: i.id,
+                cropId: i.cropId || '',
+                cropName: i.cropName,
+                unit: i.unit || '',
+                qty: Number(i.qty),
+                rate: Number(i.rate),
+                amount: Number(i.amount),
+              })),
+              totalItems: bill.totalItems || bill.items?.length || 1,
+              totalAmount: Number(bill.totalAmount),
+              amountReceived: Number(bill.amountReceived || 0),
+              thisSaleBalance: Number(bill.thisSaleBalance || bill.totalAmount),
+              previousBalance: Number(bill.previousBalance || 0),
+              netReceivable: Number(bill.netReceivable || bill.totalAmount),
+              discountAmount: bill.discountAmount !== undefined ? Number(bill.discountAmount) : 0,
+              deliveryCharge: bill.deliveryCharge !== undefined ? Number(bill.deliveryCharge) : 0,
+              notes: bill.notes || undefined,
+              date: created.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+              time: created.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+            });
+            setPreviewReceipt(null);
+            setPreviewModalVisible(true);
+            return;
+          } catch (e) {
+            console.log('Online bill fetch failed, falling back to local reconstruction');
+          }
+        }
+
+        // Local fallback invoice
+        const now = new Date(item.date);
+        setPreviewInvoice({
+          billNo: item.billNo || `FK-${item.id.slice(0, 8).toUpperCase()}`,
+          farmerName,
+          partyId: '',
+          partyName,
+          isCash: false,
+          items: [{ id: item.id, cropId: '', cropName: item.reason || 'Sale', unit: '', qty: 1, rate: Number(item.amount), amount: Number(item.amount) }],
+          totalItems: 1,
+          totalAmount: Number(item.amount),
+          amountReceived: 0,
+          thisSaleBalance: Number(item.amount),
+          previousBalance: 0,
+          netReceivable: Number(item.amount),
+          date: now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+          time: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+        });
+        setPreviewReceipt(null);
+        setPreviewModalVisible(true);
+      } else {
+        if (item.paymentReceiptId) {
+          try {
+            const receipt = await fetchPaymentReceipt.mutateAsync(item.paymentReceiptId);
+            const created = new Date(receipt.createdAt);
+            setPreviewReceipt({
+              receiptNo: receipt.receiptNo,
+              receiverName: farmerName,
+              partyName: receipt.partyName || partyName,
+              isReceived: receipt.isReceived,
+              previousBalance: Number(receipt.previousBalance),
+              paymentAmount: Number(receipt.paymentAmount),
+              netBalance: Number(receipt.netBalance),
+              date: created.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+              time: created.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+            });
+            setPreviewInvoice(null);
+            setPreviewModalVisible(true);
+            return;
+          } catch (e) {
+            console.log('Online receipt fetch failed, falling back to local reconstruction');
+          }
+        }
+
+        // Local fallback receipt
+        const now = new Date(item.date);
+        setPreviewReceipt({
+          receiptNo: item.billNo || `RCT-${item.id.slice(0, 8).toUpperCase()}`,
+          receiverName: farmerName,
+          partyName,
+          isReceived: true,
+          previousBalance: 0,
+          paymentAmount: Number(item.amount),
+          netBalance: Number(item.runningBalance),
+          date: now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+          time: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+        });
+        setPreviewInvoice(null);
+        setPreviewModalVisible(true);
+      }
+    } finally {
+      setIsFetchingPreview(false);
+    }
+  };
 
   // Compute Running Balances & Date Filtering (+ - =)
   const { computedEntries, totalPlus, totalMinus, finalNetBalance } = useMemo(() => {
@@ -188,7 +322,7 @@ export function UniversalStatementModal({
           (item, idx) => `
         <tr>
           <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px;">${item.date.slice(0, 10)}</td>
-          <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; font-weight: bold; color: #0f172a;">${item.reason}</td>
+          <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; font-weight: bold; color: #0f172a;">${cleanParticulars(item.reason, item.plusAmount, item.minusAmount)}</td>
           <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; text-align: right; color: #16a34a; font-weight: bold;">${item.plusAmount > 0 ? `+ ₹${item.plusAmount.toLocaleString('en-IN')}` : '-'}</td>
           <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; text-align: right; color: #dc2626; font-weight: bold;">${item.minusAmount > 0 ? `- ₹${item.minusAmount.toLocaleString('en-IN')}` : '-'}</td>
           <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; text-align: right; font-weight: 800; color: ${item.runningBalance >= 0 ? '#15803d' : '#b91c1c'};">= ₹${Math.abs(item.runningBalance).toLocaleString('en-IN')} ${item.runningBalance >= 0 ? '(Receivable)' : '(Payable)'}</td>
@@ -415,9 +549,21 @@ export function UniversalStatementModal({
                   computedEntries.map((item, idx) => (
                     <View key={item.id || idx} style={styles.tableBodyRow}>
                       <Text style={[styles.tableCell, { flex: 0.8, fontSize: 8.5 }]}>{item.date.slice(5, 10)}</Text>
-                      <Text style={[styles.tableCell, { flex: 2, fontFamily: FONT.bold }]} numberOfLines={2}>
-                        {item.reason}
-                      </Text>
+                      <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => handleOpenPreviewForEntry(item)}
+                        style={{ flex: 2, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 4 }}
+                      >
+                        <Text style={[styles.tableCell, { fontFamily: FONT.bold, color: '#0369a1' }]} numberOfLines={2}>
+                          {cleanParticulars(item.reason, item.plusAmount, item.minusAmount)}
+                        </Text>
+                        {item.billNo ? (
+                          <View style={{ backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: 4, paddingHorizontal: 3, paddingVertical: 1, flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+                            <Ionicons name="document-text-outline" size={9} color="#1d4ed8" />
+                            <Text style={{ fontSize: 7.5, fontFamily: FONT.bold, color: '#1d4ed8' }}>{item.billNo}</Text>
+                          </View>
+                        ) : null}
+                      </TouchableOpacity>
 
                       {/* (+) Credit Amount */}
                       <Text style={[styles.tableCell, { flex: 1, textAlign: 'right', fontFamily: FONT.bold, color: '#16a34a' }]}>
@@ -524,6 +670,67 @@ export function UniversalStatementModal({
           </View>
         </View>
       </View>
+
+      {/* Bill / Receipt Preview Modal */}
+      <Modal
+        visible={previewModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPreviewModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.containerCard, { maxHeight: '92%', padding: 10 }]}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, paddingHorizontal: 4 }}>
+              <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>
+                {previewInvoice ? '📄 Bill Preview' : '🧾 Receipt Preview'}
+              </Text>
+              <TouchableOpacity onPress={() => setPreviewModalVisible(false)}>
+                <Ionicons name="close-circle" size={24} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView contentContainerStyle={{ alignItems: 'center', paddingVertical: 6 }}>
+              {isFetchingPreview ? (
+                <View style={{ padding: 30, alignItems: 'center' }}>
+                  <ActivityIndicator size="large" color="#16a34a" />
+                  <Text style={{ marginTop: 8, fontSize: 12, color: '#64748b', fontFamily: FONT.medium }}>Loading Document...</Text>
+                </View>
+              ) : (
+                <ViewShot ref={previewShotRef} options={{ format: 'jpg', quality: 1.0 }} style={{ width: '100%', alignItems: 'center' }}>
+                  {previewInvoice ? (
+                    <BillPreview inv={previewInvoice} />
+                  ) : previewReceipt ? (
+                    <PaymentReceiptPreview inv={previewReceipt} />
+                  ) : null}
+                </ViewShot>
+              )}
+            </ScrollView>
+
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+              <TouchableOpacity
+                style={[styles.actionBtn, { flex: 1, backgroundColor: '#16a34a' }]}
+                onPress={() => shareInvoiceAsJpg(previewInvoice?.billNo || previewReceipt?.receiptNo || 'Document')}
+                disabled={isSharingBill}
+              >
+                {isSharingBill ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <>
+                    <Ionicons name="download-outline" size={16} color="#fff" />
+                    <Text style={styles.actionBtnText}>Download JPG</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionBtn, { flex: 1, backgroundColor: '#475569' }]}
+                onPress={() => setPreviewModalVisible(false)}
+              >
+                <Text style={styles.actionBtnText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </Modal>
   );
 }

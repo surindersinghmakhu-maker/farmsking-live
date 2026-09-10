@@ -77,4 +77,16 @@ export class CreateSaleBillDto {
 
   @IsNumber()
   netReceivable: number;
+
+  @IsOptional()
+  @IsNumber()
+  discountAmount?: number;
+
+  @IsOptional()
+  @IsNumber()
+  deliveryCharge?: number;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }

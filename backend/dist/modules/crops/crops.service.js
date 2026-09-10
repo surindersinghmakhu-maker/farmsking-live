@@ -67,9 +67,6 @@ let CropsService = class CropsService {
     async create(user, dto) {
         await this.plotsService.findOneOrThrow(user, dto.plotId);
         if (user.role === client_1.Role.FARMER) {
-            await this.assertAdvanceProfileComplete(user.id);
-        }
-        if (user.role === client_1.Role.FARMER) {
             const { plan } = await this.farmerPlansService.getEffectivePlan(user.id);
             const planPricing = await this.prisma.farmerPlanPricing.findFirst({
                 where: { plan },

@@ -60,6 +60,9 @@ class CreateSaleBillDto {
     thisSaleBalance;
     previousBalance;
     netReceivable;
+    discountAmount;
+    deliveryCharge;
+    notes;
 }
 exports.CreateSaleBillDto = CreateSaleBillDto;
 __decorate([
@@ -133,4 +136,19 @@ __decorate([
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], CreateSaleBillDto.prototype, "netReceivable", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateSaleBillDto.prototype, "discountAmount", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], CreateSaleBillDto.prototype, "deliveryCharge", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateSaleBillDto.prototype, "notes", void 0);
 //# sourceMappingURL=create-sale-bill.dto.js.map

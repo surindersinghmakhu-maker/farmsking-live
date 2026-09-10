@@ -212,11 +212,6 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
   };
 
   const handleFormSubmit = () => {
-    const maxP = parseFloat(maxPricePerUnit) || 0;
-    if (maxP <= 0) {
-      setErrorNotice('⚠️ Please enter a valid Estimated max price.');
-      return;
-    }
     tap();
     const baseCrop = selectedCrop || filteredCrops[0] || {
       id: `custom-${Date.now()}`,
@@ -229,14 +224,17 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
       ...baseCrop,
       variety: varietyName.trim() || undefined,
     };
+    const maxP = parseFloat(maxPricePerUnit) > 0 ? parseFloat(maxPricePerUnit) : (cropToSave.defaultPrice || 50);
+    const finalFieldName = fieldName.trim() ? fieldName.trim() : `${cropToSave.name || 'Crop'} Plot 1`;
+
     onSaveCropForm({
       crop: cropToSave,
       category: currentCategory,
-      fieldName: fieldName.trim(),
-      area: area.trim(),
+      fieldName: finalFieldName,
+      area: area.trim() || '1',
       areaUnit: selectedAreaUnit,
       sowingDate: sowingDate,
-      unit: selectedUnit,
+      unit: selectedUnit || 'KG',
       pricePerUnit: String(maxP),
       minPricePerUnit: String(maxP),
       maxPricePerUnit: String(maxP),

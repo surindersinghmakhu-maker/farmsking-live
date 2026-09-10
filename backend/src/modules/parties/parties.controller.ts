@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { PartyRole, Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -23,6 +23,16 @@ export class PartiesController {
   @Post()
   create(@CurrentUser() user: AuthUser, @Body() dto: CreatePartyDto) {
     return this.partiesService.create(user, dto.name, dto.address, dto.mobile);
+  }
+
+  @Delete('entries/clear-all')
+  clearAllEntries(@CurrentUser() user: AuthUser) {
+    return this.partiesService.clearAllEntries(user);
+  }
+
+  @Delete(':id/entries')
+  clearPartyEntries(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.partiesService.clearPartyEntries(user, id);
   }
 
   @Patch(':id')
@@ -84,4 +94,5 @@ export class PartiesController {
     return this.partiesService.getArhtiyaLedgerHisab(user, id);
   }
 }
+
 

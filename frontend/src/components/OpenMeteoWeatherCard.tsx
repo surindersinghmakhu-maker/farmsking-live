@@ -179,7 +179,7 @@ export function OpenMeteoWeatherCard() {
     setLoading(true);
     setError(false);
     try {
-      const location = await getCoordsForPincode(user?.pincode, user?.district, user?.village);
+      const location = await getCoordsForPincode(user?.pincode || undefined, user?.district || undefined, user?.village || undefined);
 
       const res = await fetch(
         `https://api.open-meteo.com/v1/forecast?latitude=${location.lat}&longitude=${location.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto`

@@ -35,12 +35,12 @@ let SaleBillsService = class SaleBillsService {
         });
         let nextSeq = countThisMonth + 1;
         let paddedSeq = String(nextSeq).padStart(2, '0');
-        let candidate = `${prefix}${paddedSeq}`;
+        let candidate = `FK-${prefix}${paddedSeq}`;
         let exists = await this.prisma.saleBill.findFirst({ where: { billNo: candidate } });
         while (exists) {
             nextSeq++;
             paddedSeq = String(nextSeq).padStart(2, '0');
-            candidate = `${prefix}${paddedSeq}`;
+            candidate = `FK-${prefix}${paddedSeq}`;
             exists = await this.prisma.saleBill.findFirst({ where: { billNo: candidate } });
         }
         return candidate;
@@ -73,6 +73,9 @@ let SaleBillsService = class SaleBillsService {
                 thisSaleBalance: dto.thisSaleBalance,
                 previousBalance: dto.previousBalance,
                 netReceivable: dto.netReceivable,
+                discountAmount: dto.discountAmount !== undefined ? dto.discountAmount : 0,
+                deliveryCharge: dto.deliveryCharge !== undefined ? dto.deliveryCharge : 0,
+                notes: dto.notes ?? null,
             },
         });
         try {
@@ -129,6 +132,9 @@ let SaleBillsService = class SaleBillsService {
                 thisSaleBalance: dto.thisSaleBalance,
                 previousBalance: dto.previousBalance,
                 netReceivable: dto.netReceivable,
+                discountAmount: dto.discountAmount !== undefined ? dto.discountAmount : 0,
+                deliveryCharge: dto.deliveryCharge !== undefined ? dto.deliveryCharge : 0,
+                notes: dto.notes ?? null,
             },
         });
         return updated;

@@ -143,6 +143,7 @@ interface SalePayload {
   rate: string;
   buyerName: string;
   billId?: string;
+  billNo?: string;
   amountReceived?: number | string;
   previousBalance?: number;
   amountReceivedMode?: 'CASH' | 'UPI';
@@ -245,10 +246,26 @@ function normalizeStage(stage: CropStage): 'PLANTATION' | 'VEGETATIVE' | 'FLOWER
 
 /** The mock's sowingDate is a free-text display string (optionally with a season suffix) — best-effort parse to ISO for the real date column. */
 function parseSowingDateToISO(display: string): string | undefined {
+  if (!display) return new Date().toISOString();
   const datePart = display.split(' (')[0].trim();
-  if (!datePart) return undefined;
+  if (!datePart) return new Date().toISOString();
+
+  // If already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}/.test(datePart)) {
+    const d = new Date(datePart);
+    return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+  }
+
+  // Handle DD/MM/YYYY or DD-MM-YYYY
+  const dmYMatch = datePart.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
+  if (dmYMatch) {
+    const [, day, month, year] = dmYMatch;
+    const d = new Date(Number(year), Number(month) - 1, Number(day));
+    return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+  }
+
   const parsed = new Date(datePart);
-  return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
+  return Number.isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
 }
 
 function formatDateDisplay(iso: string): string {
@@ -414,6 +431,7 @@ export function CropsProvider({ children }: { children: ReactNode }) {
     areaUnit: LandAreaUnit,
     irrigationType: IrrigationType
   ) => {
+    const targetPlotName = fieldName?.trim() || 'Field Plot 1';
     const farms = await farmsApi.listFarms();
     let farm = farms[0];
     if (!farm) {
@@ -425,12 +443,12 @@ export function CropsProvider({ children }: { children: ReactNode }) {
     }
 
     const plots = await plotsApi.listPlotsForFarm(farm.id);
-    const existingPlot = plots.find((p) => p.name === fieldName);
+    const existingPlot = plots.find((p) => p.name === targetPlotName);
     if (existingPlot) return existingPlot;
 
     return plotsApi.createPlot({
       farmId: farm.id,
-      name: fieldName,
+      name: targetPlotName,
       area: areaValue || 1,
       areaUnit: LAND_UNIT_TO_REAL[areaUnit] ?? 'ACRE',
       irrigationType,
@@ -438,18 +456,22 @@ export function CropsProvider({ children }: { children: ReactNode }) {
   };
 
   const addCrop = async (values: CropFormValues) => {
-    const plot = await ensureFarmAndPlot(values.fieldName.trim(), Number(values.area) || 1, values.areaUnit, values.irrigationType);
+    const fieldNameClean = values.fieldName?.trim() || `${values.crop?.name || 'Crop'} Plot 1`;
+    const plot = await ensureFarmAndPlot(fieldNameClean, Number(values.area) || 1, values.areaUnit, values.irrigationType);
+
+    const realCategory = (values.category?.id && CATEGORY_ID_TO_REAL[values.category.id]) ? CATEGORY_ID_TO_REAL[values.category.id] : 'OTHER';
+    const cropNameClean = values.crop?.name?.trim() || 'Registered Crop';
 
     await cropsApi.createCrop({
       plotId: plot.id,
-      category: CATEGORY_ID_TO_REAL[values.category.id] ?? 'OTHER',
-      cropName: values.crop.name.trim(),
-      variety: values.crop.variety,
+      category: realCategory,
+      cropName: cropNameClean,
+      variety: values.crop?.variety || undefined,
       sowingDate: parseSowingDateToISO(values.sowingDate),
-      unit: values.unit,
-      pricePerUnit: values.pricePerUnit.trim() ? Number(values.pricePerUnit) : undefined,
+      unit: values.unit || 'KG',
+      pricePerUnit: values.pricePerUnit && values.pricePerUnit.trim() ? Number(values.pricePerUnit) : undefined,
       stage: normalizeStage(values.stage),
-      harvestType: values.harvestType,
+      harvestType: values.harvestType || 'CONTINUOUS',
       plantCount: values.plantCount ? Number(values.plantCount) : undefined,
       notes: `${values.sowingDate} [UNIT:${values.areaUnit}]`,
     });
@@ -509,6 +531,7 @@ export function CropsProvider({ children }: { children: ReactNode }) {
         buyerName,
         saleDate,
         billId: payload.billId,
+        billNo: payload.billNo,
         amountReceived: payload.amountReceived,
         previousBalance: payload.previousBalance,
         amountReceivedMode: payload.amountReceivedMode,

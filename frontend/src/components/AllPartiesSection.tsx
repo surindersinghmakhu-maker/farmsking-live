@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Modal,
   Platform,
   ScrollView,
@@ -12,7 +13,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useParties, useCreateParty, useUpdateParty, usePartyStatement } from '@/src/hooks/useParties';
+import { useParties, useCreateParty, useUpdateParty, usePartyStatement, useClearAllPartyEntries, useClearPartyEntries } from '@/src/hooks/useParties';
+
 import { useLabourWorkers, useCreateLabourWorker, useUpdateLabourWorker, useLabourWorkerStatement } from '@/src/hooks/useLabour';
 import { Party, LabourWorker } from '@/src/types/api';
 import { formatInr } from '@/src/utils/formatInr';
@@ -20,7 +22,17 @@ import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { Avatar } from '@/src/components/Avatar';
 import { useAuth } from '@/src/store/auth-context';
 import { BrandLogo } from '@/src/components/BrandLogo';
-import { buildPartyLedgerRows } from '@/src/utils/partyLedger';
+import { buildPartyLedgerRows, GroupedLedgerRow } from '@/src/utils/partyLedger';
+import { useFetchSaleBill } from '@/src/hooks/useSaleBills';
+import { useFetchPaymentReceipt } from '@/src/hooks/usePaymentReceipts';
+import { formatDateDDMMYYYY } from '@/src/utils/formatDate';
+import {
+  BillPreview,
+  PaymentReceiptPreview,
+  useShareBillAsJpg,
+  type SavedSaleInvoice,
+  type PaymentReceiptData,
+} from '@/src/components/SaleBillPreview';
 import ViewShot, { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import * as Print from 'expo-print';
@@ -50,6 +62,30 @@ export function AllPartiesSection() {
   const createWorker = useCreateLabourWorker();
   const updateParty = useUpdateParty();
   const updateWorker = useUpdateLabourWorker();
+  const clearAllEntries = useClearAllPartyEntries();
+
+  const handleClearAllEntries = () => {
+    tap();
+    if (Platform.OS === 'web') {
+      if (window.confirm('ਸਾਰੀਆਂ ਪਾਰਟੀਆਂ ਦੀਆਂ ਐਂਟਰੀਆਂ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?\n\n(ਪਾਰਟੀਆਂ ਦੇ ਰਿਕਾਰਡ ਸੁਰੱਖਿਅਤ ਰਹਿਣਗੇ, ਸਭ ਹਿਸਾਬ ₹0 ਹੋ ਜਾਵੇਗਾ।)')) {
+        clearAllEntries.mutate();
+      }
+    } else {
+      Alert.alert(
+        'Clear All Party Entries?',
+        'ਸਾਰੀਆਂ ਪਾਰਟੀਆਂ ਦੀਆਂ ਐਂਟਰੀਆਂ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?\n\n(ਪਾਰਟੀਆਂ ਦੇ ਰਿਕਾਰਡ ਸੁਰੱਖਿਅਤ ਰਹਿਣਗੇ, ਸਭ ਹਿਸਾਬ ₹0 ਹੋ ਜਾਵੇਗਾ।)',
+        [
+          { text: 'ਕੈਂਸਲ (Cancel)', style: 'cancel' },
+          {
+            text: 'ਹਾਂ, ਡਿਲੀਟ ਕਰੋ (Clear All)',
+            style: 'destructive',
+            onPress: () => clearAllEntries.mutate(),
+          },
+        ]
+      );
+    }
+  };
+
 
   const [searchText, setSearchText] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<'ALL' | 'BUYERS' | 'SUPPLIERS' | 'LABOUR'>('ALL');
@@ -277,7 +313,24 @@ export function AllPartiesSection() {
           <Ionicons name="add" size={16} color="#ffffff" />
           <Text style={styles.addBtnText}>+ New</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.addBtn, { backgroundColor: '#ef4444' }]}
+          activeOpacity={0.8}
+          onPress={handleClearAllEntries}
+          disabled={clearAllEntries.isPending}
+        >
+          {clearAllEntries.isPending ? (
+            <ActivityIndicator color="#ffffff" size="small" />
+          ) : (
+            <>
+              <Ionicons name="trash-outline" size={15} color="#ffffff" />
+              <Text style={styles.addBtnText}>Clear Entries</Text>
+            </>
+          )}
+        </TouchableOpacity>
       </View>
+
 
       {/* 2. Compact Filter Chips */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginBottom: 8 }}>
@@ -882,14 +935,183 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
   const [isSharing, setIsSharing] = useState(false);
   const { user } = useAuth();
   const { data: statement, isLoading } = usePartyStatement(partyId);
+  const clearPartyEntries = useClearPartyEntries();
   const entries = statement?.entries || [];
   const party = statement?.party;
+
+  const fetchSaleBill = useFetchSaleBill();
+  const fetchPaymentReceipt = useFetchPaymentReceipt();
+
+  const { billShotRef, isSharingBill, shareInvoiceAsJpg, shareInvoiceAsPdf } = useShareBillAsJpg();
+  const [previewInvoice, setPreviewInvoice] = useState<SavedSaleInvoice | null>(null);
+  const [previewReceipt, setPreviewReceipt] = useState<PaymentReceiptData | null>(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
 
   const ledgerRows = useMemo(() => buildPartyLedgerRows(entries), [entries]);
 
   const farmerName = user?.name || 'Farm Owner';
   const farmerMobile = user?.mobile || '';
   const farmerVillage = user?.village || '';
+
+  const handleOpenPreviewForLedgerRow = async (row: GroupedLedgerRow) => {
+    tap();
+    setIsLoadingPreview(true);
+    setShowPreviewModal(true);
+    setPreviewInvoice(null);
+    setPreviewReceipt(null);
+
+    const rawEntry = row.rawEntries?.[0];
+    const saleBillId = row.saleBillId || rawEntry?.saleBillId || rawEntry?.saleBill?.id;
+    const paymentReceiptId = row.paymentReceiptId || rawEntry?.paymentReceiptId || rawEntry?.paymentReceipt?.id;
+
+    const isSale = Boolean(
+      saleBillId ||
+      row.drAmount > 0 ||
+      (row.billNo && row.billNo.toUpperCase().startsWith('FK')) ||
+      (rawEntry?.type === 'SALE_CREDIT')
+    );
+
+    if (isSale) {
+      if (saleBillId) {
+        try {
+          const bill = await fetchSaleBill.mutateAsync(saleBillId);
+          if (bill) {
+            const rcvdAmt = bill.amountReceived !== undefined && bill.amountReceived !== null ? Number(bill.amountReceived) : 0;
+            const totalAmt = Number(bill.totalAmount || 0);
+            const prevBal = Number(bill.previousBalance || 0);
+            const thisBal = bill.thisSaleBalance !== undefined ? Number(bill.thisSaleBalance) : Math.max(0, totalAmt - rcvdAmt);
+            const netRecv = bill.netReceivable !== undefined ? Number(bill.netReceivable) : prevBal + thisBal;
+
+            setPreviewInvoice({
+              billNo: bill.billNo,
+              farmerName: bill.farmerName || farmerName,
+              partyId: bill.partyId || partyId,
+              partyName: bill.partyName || partyName,
+              partyMobile: bill.partyMobile || party?.mobile || '',
+              partyAddress: bill.partyAddress || party?.address || '',
+              isCash: bill.isCash,
+              amountReceivedMode: (bill as any).amountReceivedMode || 'CASH',
+              items: (bill.items || []).map((i: any, idx: number) => ({ id: String(idx), ...i })),
+              totalItems: bill.totalItems || (bill.items?.length || 1),
+              totalAmount: totalAmt,
+              amountReceived: rcvdAmt,
+              thisSaleBalance: thisBal,
+              previousBalance: prevBal,
+              netReceivable: netRecv,
+              discountAmount: bill.discountAmount !== undefined ? Number(bill.discountAmount) : 0,
+              deliveryCharge: bill.deliveryCharge !== undefined ? Number(bill.deliveryCharge) : 0,
+              notes: bill.notes || undefined,
+              date: formatDateDDMMYYYY(bill.createdAt || row.date),
+              time: new Date(bill.createdAt || row.date).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+            });
+            setIsLoadingPreview(false);
+            return;
+          }
+        } catch (err) {
+          console.warn('Could not fetch sale bill by ID:', err);
+        }
+      }
+
+      // Fallback: reconstruct Sale Bill preview from row data
+      const rAmt = Number(rawEntry?.amountReceived || 0);
+      const drAmt = row.drAmount || Number(rawEntry?.amount) || 0;
+      setPreviewInvoice({
+        billNo: row.billNo && row.billNo !== '—' ? row.billNo : `FK-${row.id.slice(0, 6).toUpperCase()}`,
+        farmerName,
+        partyId,
+        partyName: party?.name || partyName,
+        partyMobile: party?.mobile || '',
+        partyAddress: party?.address || '',
+        isCash: false,
+        amountReceivedMode: 'CASH',
+        items: [
+          {
+            id: row.id,
+            cropId: '',
+            cropName: row.reason || 'Crop Sale',
+            unit: 'item',
+            qty: 1,
+            rate: drAmt,
+            amount: drAmt,
+          },
+        ],
+        totalItems: 1,
+        totalAmount: drAmt,
+        amountReceived: rAmt,
+        thisSaleBalance: Math.max(0, drAmt - rAmt),
+        previousBalance: row.runningBalance - drAmt,
+        netReceivable: row.runningBalance,
+        date: formatDateDDMMYYYY(row.date),
+        time: '',
+      });
+      setIsLoadingPreview(false);
+    } else {
+      if (paymentReceiptId) {
+        try {
+          const receipt = await fetchPaymentReceipt.mutateAsync(paymentReceiptId);
+          if (receipt) {
+            const created = new Date(receipt.createdAt || row.date);
+            setPreviewReceipt({
+              receiptNo: receipt.receiptNo,
+              receiverName: user?.name || farmerName,
+              partyName: receipt.partyName || partyName,
+              isReceived: receipt.isReceived,
+              previousBalance: Number(receipt.previousBalance),
+              paymentAmount: Number(receipt.paymentAmount),
+              netBalance: Number(receipt.netBalance),
+              date: formatDateDDMMYYYY(created),
+              time: created.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+            });
+            setIsLoadingPreview(false);
+            return;
+          }
+        } catch (err) {
+          console.warn('Could not fetch payment receipt by ID:', err);
+        }
+      }
+
+      // Fallback: reconstruct Payment Receipt preview from row data
+      const crAmt = row.crAmount || Number(rawEntry?.amount) || 0;
+      const isPaymentReceived = rawEntry?.type === 'SALE_PAYMENT' || row.crAmount > 0;
+      setPreviewReceipt({
+        receiptNo: row.billNo && row.billNo !== '—' ? row.billNo : `RCT-${row.id.slice(0, 6).toUpperCase()}`,
+        receiverName: farmerName,
+        partyName: party?.name || partyName,
+        isReceived: isPaymentReceived,
+        previousBalance: row.runningBalance + crAmt,
+        paymentAmount: crAmt,
+        netBalance: row.runningBalance,
+        date: formatDateDDMMYYYY(row.date),
+        time: '',
+      });
+      setIsLoadingPreview(false);
+    }
+  };
+
+  const handleClearThisPartyEntries = () => {
+    tap();
+    const displayName = party?.name || partyName;
+    if (Platform.OS === 'web') {
+      if (window.confirm(`ਇਸ ਪਾਰਟੀ "${displayName}" ਦੀਆਂ ਸਾਰੀਆਂ ਐਂਟਰੀਆਂ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?\n\n(ਪਾਰਟੀ ਦਾ ਰਿਕਾਰਡ ਰਹੇਗਾ, ਹਿਸਾਬ ₹0 ਹੋ ਜਾਵੇਗਾ।)`)) {
+        clearPartyEntries.mutate(partyId);
+      }
+    } else {
+      Alert.alert(
+        'Clear Party Entries?',
+        `ਇਸ ਪਾਰਟੀ "${displayName}" ਦੀਆਂ ਸਾਰੀਆਂ ਐਂਟਰੀਆਂ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?\n\n(ਪਾਰਟੀ ਦਾ ਰਿਕਾਰਡ ਰਹੇਗਾ, ਹਿਸਾਬ ₹0 ਹੋ ਜਾਵੇਗਾ।)` ,
+        [
+          { text: 'ਕੈਂਸਲ (Cancel)', style: 'cancel' },
+          {
+            text: 'ਹਾਂ, ਡਿਲੀਟ ਕਰੋ (Clear Entries)',
+            style: 'destructive',
+            onPress: () => clearPartyEntries.mutate(partyId),
+          },
+        ]
+      );
+    }
+  };
+
 
   const handleDownloadJpg = async () => {
     if (!shotRef.current) return;
@@ -1080,7 +1302,24 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
                     </>
                   )}
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: '#ef4444', paddingHorizontal: 10, paddingVertical: 6, borderRadius: RADIUS.md }}
+                  onPress={handleClearThisPartyEntries}
+                  disabled={clearPartyEntries.isPending}
+                  activeOpacity={0.85}
+                >
+                  {clearPartyEntries.isPending ? (
+                    <ActivityIndicator color="#ffffff" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="trash-outline" size={14} color="#ffffff" />
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Clear</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
               </View>
+
 
               <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
                 <ViewShot ref={shotRef} options={{ format: 'jpg', quality: 0.95 }} style={{ backgroundColor: '#ffffff', padding: 2 }}>
@@ -1152,9 +1391,14 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
 
                               <View style={{ width: 82 }}>
                                 {row.billNo && row.billNo !== '—' ? (
-                                  <View style={{ backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1, alignSelf: 'flex-start', maxWidth: 78 }}>
+                                  <TouchableOpacity
+                                    activeOpacity={0.7}
+                                    onPress={() => handleOpenPreviewForLedgerRow(row)}
+                                    style={{ backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1, alignSelf: 'flex-start', maxWidth: 78, flexDirection: 'row', alignItems: 'center', gap: 2 }}
+                                  >
+                                    <Ionicons name="document-text-outline" size={9} color="#1d4ed8" />
                                     <Text style={{ fontSize: 8.5, fontFamily: FONT.extraBold, color: '#1d4ed8' }} numberOfLines={1}>{row.billNo}</Text>
-                                  </View>
+                                  </TouchableOpacity>
                                 ) : (
                                   <Text style={{ fontSize: 9, fontFamily: FONT.medium, color: '#94a3b8' }}>—</Text>
                                 )}
@@ -1187,6 +1431,71 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
           )}
         </View>
       </View>
+
+      {/* 5. ENTRY BILL / RECEIPT PREVIEW MODAL */}
+      <Modal visible={showPreviewModal} transparent animationType="fade" onRequestClose={() => setShowPreviewModal(false)}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowPreviewModal(false)}>
+          <TouchableOpacity activeOpacity={1} style={[styles.modalCard, { maxWidth: 460, maxHeight: '90%', padding: 14 }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 6 }}>
+              <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: '#0f172a' }}>
+                {previewInvoice ? `📄 Sale Bill (${previewInvoice.billNo})` : previewReceipt ? `🧾 Payment Receipt (${previewReceipt.receiptNo})` : '📄 Entry Preview'}
+              </Text>
+              <TouchableOpacity onPress={() => setShowPreviewModal(false)} style={{ padding: 2 }}>
+                <Ionicons name="close" size={22} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            {isLoadingPreview ? (
+              <ActivityIndicator color="#16a34a" size="large" style={{ marginVertical: 40 }} />
+            ) : (
+              <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+                <View ref={billShotRef} collapsable={false}>
+                  {previewInvoice ? <BillPreview inv={previewInvoice} /> : previewReceipt ? <PaymentReceiptPreview inv={previewReceipt} /> : null}
+                </View>
+              </ScrollView>
+            )}
+
+            {/* Action Buttons: Download JPG / PDF / Close */}
+            <View style={{ flexDirection: 'row', gap: 6, marginTop: 10, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#f1f5f9' }}>
+              <TouchableOpacity
+                style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: '#16a34a', paddingVertical: 8, borderRadius: RADIUS.md }}
+                onPress={() => shareInvoiceAsJpg(previewInvoice ? `Bill_${previewInvoice.billNo}` : `Receipt_${previewReceipt?.receiptNo}`)}
+                disabled={isSharingBill}
+                activeOpacity={0.85}
+              >
+                {isSharingBill ? (
+                  <ActivityIndicator color="#ffffff" size="small" />
+                ) : (
+                  <>
+                    <Ionicons name="image-outline" size={14} color="#ffffff" />
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Download JPG</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+
+              {previewInvoice ? (
+                <TouchableOpacity
+                  style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: '#0284c7', paddingVertical: 8, borderRadius: RADIUS.md }}
+                  onPress={() => shareInvoiceAsPdf(previewInvoice, `Bill_${previewInvoice.billNo}`)}
+                  disabled={isSharingBill}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="document-text-outline" size={14} color="#ffffff" />
+                  <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Download PDF</Text>
+                </TouchableOpacity>
+              ) : null}
+
+              <TouchableOpacity
+                style={{ backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#cbd5e1', paddingHorizontal: 12, justifyContent: 'center', borderRadius: RADIUS.md }}
+                onPress={() => setShowPreviewModal(false)}
+                activeOpacity={0.85}
+              >
+                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569' }}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </Modal>
   );
 }

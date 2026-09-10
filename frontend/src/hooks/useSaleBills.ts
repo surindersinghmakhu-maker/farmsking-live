@@ -41,3 +41,16 @@ export function useSaleBills() {
     queryFn: saleBillsApi.listSaleBills,
   });
 }
+
+export function useDeleteSaleBill() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => saleBillsApi.deleteSaleBill(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sale-bills'] });
+      queryClient.invalidateQueries({ queryKey: ['parties'] });
+      queryClient.invalidateQueries({ queryKey: ['parties', 'statement'] });
+      queryClient.invalidateQueries({ queryKey: ['unified-parties'] });
+    },
+  });
+}

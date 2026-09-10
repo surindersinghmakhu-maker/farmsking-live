@@ -22,5 +22,8 @@ export declare class CreateSaleBillDto {
     thisSaleBalance: number;
     previousBalance: number;
     netReceivable: number;
+    discountAmount?: number;
+    deliveryCharge?: number;
+    notes?: string;
 }
 export {};

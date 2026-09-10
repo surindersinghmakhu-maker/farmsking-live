@@ -15,6 +15,7 @@ export interface CreateSaleBillPayload {
   partyId?: string;
   partyName: string;
   partyMobile?: string;
+  partyAddress?: string;
   isCash: boolean;
   amountReceivedMode?: string;
   items: SaleBillItemPayload[];
@@ -24,6 +25,9 @@ export interface CreateSaleBillPayload {
   thisSaleBalance: number;
   previousBalance: number;
   netReceivable: number;
+  discountAmount?: number;
+  deliveryCharge?: number;
+  notes?: string;
 }
 
 export interface SaleBill extends CreateSaleBillPayload {
@@ -55,4 +59,8 @@ export async function listSaleBills(): Promise<SaleBill[]> {
 export async function getMySaleBillCount(): Promise<{ count: number }> {
   const { data } = await apiClient.get<{ count: number }>('/sale-bills/count/mine');
   return data;
+}
+
+export async function deleteSaleBill(id: string): Promise<void> {
+  await apiClient.delete(`/sale-bills/${id}`);
 }

@@ -14,6 +14,67 @@ export interface GroupedLedgerRow {
   rawEntries: any[];
 }
 
+export function cleanParticulars(reason: string, drAmount: number = 0, crAmount: number = 0): string {
+  if (!reason) {
+    return drAmount > 0 ? 'Sale' : 'Payment';
+  }
+
+  let text = reason.trim();
+
+  // Handle Payment entries
+  if (
+    /^payment/i.test(text) ||
+    /^amount received/i.test(text) ||
+    /^rct/i.test(text) ||
+    /^rec/i.test(text) ||
+    /^pay/i.test(text)
+  ) {
+    if (/received/i.test(text) || /^amount received/i.test(text) || crAmount > 0) {
+      return 'Payment Received';
+    }
+    if (/made/i.test(text) || drAmount > 0) {
+      return 'Payment Made';
+    }
+    return 'Payment';
+  }
+
+  // Handle Sale entries
+  if (/^sale/i.test(text) || drAmount > 0) {
+    // Extract crop item names
+    let content = text.replace(/^sale:?\s*/i, '').trim();
+    // Remove payment mode / bill numbers in parentheses e.g. (CASH), (FK-2601), (1 items)
+    content = content.replace(/\([^)]*\)/g, '').trim();
+    // Remove quantity / rate brackets e.g. " (10 Qtl @ ₹2000)" or " 10 kg @ 200"
+    content = content.replace(/\s*\d+[^,@)]*@?\s*₹?[^,)]*/gi, '').trim();
+    // Clean remaining punctuation & double spaces
+    content = content.replace(/[():@₹]/g, '').replace(/\s*,\s*/g, ', ').replace(/\s+/g, ' ').trim();
+    content = content.replace(/^,|,$/g, '').trim();
+
+    if (content && content.toLowerCase() !== 'crop sale' && content.toLowerCase() !== 'sale') {
+      return `Sale - ${content}`;
+    }
+    return 'Sale';
+  }
+
+  // Fallback: strip parenthesized text (like payment mode or bill numbers)
+  const cleaned = text.replace(/\([^)]*\)/g, '').trim();
+  return cleaned || (drAmount > 0 ? 'Sale' : 'Payment');
+}
+
+function extractRefNo(e: any): string {
+  if (e.saleBill?.billNo) return e.saleBill.billNo.trim().toUpperCase();
+  if (e.paymentReceipt?.receiptNo) return e.paymentReceipt.receiptNo.trim().toUpperCase();
+  if (e.referenceNo && String(e.referenceNo).trim()) return String(e.referenceNo).trim().toUpperCase();
+  if (e.billNo && String(e.billNo).trim()) return String(e.billNo).trim().toUpperCase();
+  if (e.reason) {
+    const match = e.reason.match(/FK-[A-Za-z0-9]+/i);
+    if (match) return match[0].toUpperCase();
+    const rctMatch = e.reason.match(/RCT-[A-Za-z0-9]+/i);
+    if (rctMatch) return rctMatch[0].toUpperCase();
+  }
+  return '';
+}
+
 export function buildPartyLedgerRows(entries: any[]): GroupedLedgerRow[] {
   if (!entries || entries.length === 0) return [];
 
@@ -22,72 +83,94 @@ export function buildPartyLedgerRows(entries: any[]): GroupedLedgerRow[] {
     (a, b) => new Date(a.createdAt || a.date).getTime() - new Date(b.createdAt || b.date).getTime()
   );
 
+  // Group entries by reference/bill number, saleBillId, or paymentReceiptId
+  const groupedMap = new Map<string, any[]>();
+  const groupOrder: string[] = [];
+
+  sorted.forEach((e) => {
+    const refNo = extractRefNo(e);
+    let key = '';
+
+    if (refNo && refNo !== '—') {
+      key = `ref_${refNo}`;
+    } else if (e.saleBillId) {
+      key = `sb_${e.saleBillId}`;
+    } else if (e.paymentReceiptId) {
+      key = `pr_${e.paymentReceiptId}`;
+    } else {
+      key = `single_${e.id || Math.random()}`;
+    }
+
+    if (!groupedMap.has(key)) {
+      groupedMap.set(key, []);
+      groupOrder.push(key);
+    }
+    groupedMap.get(key)!.push(e);
+  });
+
   let runningBalance = 0;
   const rows: GroupedLedgerRow[] = [];
 
-  sorted.forEach((e, idx) => {
+  groupOrder.forEach((key, idx) => {
+    const group = groupedMap.get(key)!;
     const srNo = idx + 1;
     const entryNo = `#${srNo}`;
 
     let drAmount = 0;
     let crAmount = 0;
+    let mainReason = '';
+    let billNo = '';
+    let saleBillId = undefined;
+    let paymentReceiptId = undefined;
+    const date = group[0].createdAt || group[0].date;
 
-    if (e.type === 'SALE_CREDIT' || e.type === 'EXPENSE_PAYMENT') {
-      drAmount = Number(e.amount) || 0;
-    } else if (e.type === 'SALE_PAYMENT' || e.type === 'EXPENSE_CREDIT') {
-      crAmount = Number(e.amount) || 0;
-    }
+    group.forEach((e) => {
+      if (e.type === 'SALE_CREDIT' || e.type === 'EXPENSE_PAYMENT') {
+        drAmount += Number(e.amount) || 0;
+        if (!mainReason || e.type === 'SALE_CREDIT') {
+          mainReason = e.reason || '';
+        }
+      } else if (e.type === 'SALE_PAYMENT' || e.type === 'EXPENSE_CREDIT') {
+        crAmount += Number(e.amount) || 0;
+        if (!mainReason) {
+          mainReason = e.reason || '';
+        }
+      } else {
+        const amt = Number(e.amount) || 0;
+        if (e.drAmount) drAmount += Number(e.drAmount);
+        else if (e.crAmount) crAmount += Number(e.crAmount);
+        else if (amt > 0) drAmount += amt;
+      }
+
+      if (e.saleBillId) saleBillId = e.saleBillId;
+      if (e.paymentReceiptId) paymentReceiptId = e.paymentReceiptId;
+
+      if (!billNo) {
+        billNo = extractRefNo(e);
+      }
+    });
+
+    if (!billNo) billNo = '—';
 
     const netChange = drAmount - crAmount;
     runningBalance += netChange;
 
-    // Determine Real Bill No / Receipt No (NEVER generate fake synthetic FK-XXXXXX)
-    let billNo = '';
-    if (e.saleBill?.billNo) {
-      billNo = e.saleBill.billNo;
-    } else if (e.paymentReceipt?.receiptNo) {
-      billNo = e.paymentReceipt.receiptNo;
-    } else if (e.reason) {
-      const match = e.reason.match(/FK-[A-Za-z0-9]+/i);
-      if (match) {
-        billNo = match[0].toUpperCase();
-      } else {
-        const rctMatch = e.reason.match(/RCT-[A-Za-z0-9]+/i);
-        if (rctMatch) {
-          billNo = rctMatch[0].toUpperCase();
-        }
-      }
-    }
-
-    if (!billNo) {
-      billNo = '—';
-    }
-
-    // Format Reason / Particulars clearly
-    let reason = e.reason || '';
-    if (e.type === 'SALE_PAYMENT') {
-      const cleanMsg = reason.replace(/^amount received against:\s*/i, '').trim();
-      reason = cleanMsg ? `Payment Received (${cleanMsg})` : 'Payment Received';
-    } else if (e.type === 'SALE_CREDIT') {
-      if (!reason) {
-        reason = 'Sale';
-      }
-    }
+    const reason = cleanParticulars(mainReason || group[0].reason || '', drAmount, crAmount);
 
     rows.push({
-      id: e.id || `row-${Math.random()}`,
+      id: saleBillId || paymentReceiptId || group[0].id || `row-${Math.random()}`,
       srNo,
       entryNo,
-      date: e.createdAt || e.date,
+      date,
       billNo: billNo.toUpperCase(),
       reason,
       drAmount,
       crAmount,
       netChange,
       runningBalance,
-      saleBillId: e.saleBillId || undefined,
-      paymentReceiptId: e.paymentReceiptId || undefined,
-      rawEntries: [e],
+      saleBillId,
+      paymentReceiptId,
+      rawEntries: group,
     });
   });
 

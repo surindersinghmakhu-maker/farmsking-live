@@ -30,7 +30,7 @@ import { useCreateExpense, useUpdateExpense, useExpenseCategories, useExpensesFo
 import { useCrops, CropSaleRecord } from '@/src/store/crops-context';
 import { useMyCrops } from '@/src/hooks/useCrops';
 import { useParties, useCreateParty, usePartyStatement, useRecordSaleLedger, useRecordPaymentReceived, useRecordPaymentMade } from '@/src/hooks/useParties';
-import { useCreateSaleBill, useFetchSaleBill, useMySaleBillCount, useUpdateSaleBill, useSaleBills } from '@/src/hooks/useSaleBills';
+import { useCreateSaleBill, useDeleteSaleBill, useFetchSaleBill, useMySaleBillCount, useUpdateSaleBill, useSaleBills } from '@/src/hooks/useSaleBills';
 import * as saleBillsApi from '@/src/api/saleBills.api';
 import { useFetchPaymentReceipt, useMyPaymentReceiptCount } from '@/src/hooks/usePaymentReceipts';
 import { useFarmerPlan } from '@/src/hooks/useFarmerPlan';
@@ -254,17 +254,22 @@ export default function RecordsScreen() {
   }, [rawSaleBillsList]);
 
   // Unified list of ALL sales — DB Sale Bills are the single source of truth.
-  // Local/session records are only shown as fallback when DB has no bills yet (offline).
+  // Local/session records are merged seamlessly to avoid flickering or separate un-grouped rows.
   const unifiedSalesRecords = useMemo(() => {
-    const dbBills: CropSaleRecord[] = [];
+    const result: CropSaleRecord[] = [];
+    const dbBillIds = new Set<string>();
+    const dbBillNos = new Set<string>();
 
     if (rawSaleBillsList && Array.isArray(rawSaleBillsList)) {
       rawSaleBillsList.forEach((b) => {
+        if (b.id) dbBillIds.add(b.id);
+        if (b.billNo) dbBillNos.add(b.billNo);
+
         const cropSummary = (b.items && b.items.length > 0)
           ? b.items.map((i: any) => `${i.cropName} (${i.qty} ${i.unit} @ ₹${i.rate})`).join(', ')
           : 'Crop Sale';
 
-        dbBills.push({
+        result.push({
           id: b.id,
           cropId: b.items?.[0]?.cropId || '',
           cropName: cropSummary,
@@ -285,18 +290,51 @@ export default function RecordsScreen() {
       });
     }
 
-    // Only use local/session records if DB has no bills yet (pure offline fallback)
-    if (dbBills.length === 0 && allSalesRecords && allSalesRecords.length > 0) {
-      return allSalesRecords;
+    // Merge unsynced local/session records that are not yet present in DB bills
+    if (allSalesRecords && allSalesRecords.length > 0) {
+      const unsyncedLocals = allSalesRecords.filter((s) => {
+        if (s.billId && dbBillIds.has(s.billId)) return false;
+        if (s.billNo && dbBillNos.has(s.billNo)) return false;
+        if (s.id && dbBillIds.has(s.id)) return false;
+        return true;
+      });
+
+      if (unsyncedLocals.length > 0) {
+        const groupedMap = new Map<string, CropSaleRecord[]>();
+        unsyncedLocals.forEach((s) => {
+          const key = s.billId || s.billNo || `${s.saleDate}_${s.buyerName}`;
+          const existing = groupedMap.get(key) || [];
+          groupedMap.set(key, [...existing, s]);
+        });
+
+        groupedMap.forEach((items) => {
+          if (items.length === 1) {
+            result.push(items[0]);
+          } else {
+            const first = items[0];
+            const combinedCropSummary = items
+              .map((i) => `${i.cropName} (${i.quantity} ${i.unit} @ ₹${i.pricePerUnit})`)
+              .join(', ');
+            const totalAmt = items.reduce((sum, i) => sum + i.totalAmount, 0);
+
+            result.push({
+              ...first,
+              id: first.billId || first.id,
+              cropName: combinedCropSummary,
+              totalAmount: totalAmt,
+            });
+          }
+        });
+      }
     }
 
-    return dbBills;
+    return result;
   }, [rawSaleBillsList, allSalesRecords]);
 
 
   const renderSaleRowItem = (item: CropSaleRecord, idx: number) => {
     const matchedBill = item.billId ? saleBillsMap.get(item.billId) : (item.billNo ? saleBillsMap.get(item.billNo) : null);
-    const formattedBillNo = matchedBill?.billNo || item.billNo || (item.billId ? `FK-${item.billId.slice(-4).toUpperCase()}` : 'FK-2601');
+    const formattedBillNo = matchedBill?.billNo || item.billNo || (item.billId ? `FK-${item.billId.slice(-4).toUpperCase()}` : 'FK-SALE');
     
     const billTotal = matchedBill ? Number(matchedBill.totalAmount) : item.totalAmount;
     const isCashSale = !item.partyId || item.buyerName === 'Cash Sale' || item.buyerName === 'Direct / Cash';
@@ -573,7 +611,7 @@ export default function RecordsScreen() {
     const partyObj = foundParty || (isParty ? ({ id: item.partyId || `party-${Date.now()}`, name: item.buyerName || 'Party', mobile: item.partyMobile || '' } as Party) : null);
 
     let loadedItems: Array<{ id: string; cropId: string; cropName: string; unit: string; qty: number; rate: number; amount: number }> = [];
-    let billNoToUse = item.billNo || (item.billId ? `FK-${item.billId.slice(-4).toUpperCase()}` : 'FK-2601');
+    let billNoToUse = item.billNo || (item.billId ? `FK-${item.billId.slice(-4).toUpperCase()}` : (item.id ? `FK-${item.id.slice(-4).toUpperCase()}` : 'FK-SALE'));
     let realBillIdToUse = item.billId || item.id;
     let loadedAmountReceived: string | null = null;
     let loadedPreviousBalance: number | null = null;
@@ -665,13 +703,13 @@ export default function RecordsScreen() {
     setCashBuyerName(item.buyerName || '');
     setCashBuyerMobile(item.partyMobile || '');
     setSaleItems(loadedItems);
-    setSaleDiscount('');
-    setSaleDelivery('');
+    setSaleDiscount(matchedBill?.discountAmount ? String(matchedBill.discountAmount) : '');
+    setSaleDelivery(matchedBill?.deliveryCharge ? String(matchedBill.deliveryCharge) : '');
     setEditingPreviousBalance(loadedPreviousBalance);
     const defaultRecd = !isParty ? String(item.totalAmount) : '';
     setAmountReceived(loadedAmountReceived !== null ? loadedAmountReceived : defaultRecd);
     setAmountReceivedMode(loadedReceivedMode);
-    setSaleDescription(item.notes || '');
+    setSaleDescription(matchedBill?.notes || item.notes || '');
     // ✅ FIX: sale date ਵੀ form ਵਿੱਚ ਭਰੋ
     if (item.saleDate) {
       setSaleDate(item.saleDate.slice(0, 10));
@@ -687,11 +725,20 @@ export default function RecordsScreen() {
     if (!editingBillId) return;
     try {
       tap();
+      await deleteSaleBill.mutateAsync(editingBillId);
       await deleteSale(editingBillId);
-      // resetSaleForm(); // Assuming resetSaleForm exists in your context
       setShowSaleForm(false);
+      resetSaleForm();
+      if (Platform.OS === 'web') {
+        alert('Bill and statement entry deleted successfully.');
+      } else {
+        Alert.alert('Deleted', 'Bill and statement entry deleted successfully.');
+      }
     } catch (err) {
       console.error('Failed to delete bill:', err);
+      await deleteSale(editingBillId);
+      setShowSaleForm(false);
+      resetSaleForm();
     }
   };
 
@@ -845,6 +892,7 @@ export default function RecordsScreen() {
   const recordSaleLedger = useRecordSaleLedger();
   const createSaleBill = useCreateSaleBill();
   const updateSaleBill = useUpdateSaleBill();
+  const deleteSaleBill = useDeleteSaleBill();
   const fetchSaleBill = useFetchSaleBill();
   const fetchPaymentReceipt = useFetchPaymentReceipt();
 
@@ -922,6 +970,9 @@ export default function RecordsScreen() {
         thisSaleBalance: thisBal,
         previousBalance: prevBal,
         netReceivable: netRecv,
+        discountAmount: bill.discountAmount !== undefined ? Number(bill.discountAmount) : 0,
+        deliveryCharge: bill.deliveryCharge !== undefined ? Number(bill.deliveryCharge) : 0,
+        notes: bill.notes || undefined,
         date: formatDateDDMMYYYY(bill.createdAt),
         time: new Date(bill.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
       });
@@ -1153,8 +1204,15 @@ export default function RecordsScreen() {
   const totalCartItems = saleItems.length;
   const totalCartAmount = useMemo(() => saleItems.reduce((sum, i) => sum + i.amount, 0), [saleItems]);
   const totalCartQty = useMemo(() => saleItems.reduce((sum, i) => sum + Number(i.qty), 0), [saleItems]);
-  const effectiveAmountReceived = paymentMode === 'CASH' ? totalCartAmount : Number(amountReceived) || 0;
-  const thisSaleBalance = totalCartAmount - effectiveAmountReceived;
+  
+  const netCartAmount = useMemo(() => {
+    const discountVal = Number(saleDiscount) || 0;
+    const deliveryVal = Number(saleDelivery) || 0;
+    return Math.max(0, totalCartAmount - discountVal + deliveryVal);
+  }, [totalCartAmount, saleDiscount, saleDelivery]);
+
+  const effectiveAmountReceived = paymentMode === 'CASH' ? netCartAmount : Number(amountReceived) || 0;
+  const thisSaleBalance = netCartAmount - effectiveAmountReceived;
   const netReceivable = previousPartyBalance + thisSaleBalance;
 
   const totalSpent = useMemo(
@@ -1416,11 +1474,14 @@ export default function RecordsScreen() {
         amountReceivedMode: currentReceivedMode,
         items: saleItems.map((i) => ({ cropId: i.cropId, cropName: i.cropName, unit: i.unit, qty: i.qty, rate: i.rate, amount: i.amount })),
         totalItems: totalCartItems,
-        totalAmount: totalCartAmount,
+        totalAmount: netCartAmount,
         amountReceived: effectiveAmountReceived,
         thisSaleBalance,
         previousBalance: previousPartyBalance,
         netReceivable: paymentMode === 'PARTY' ? previousPartyBalance + thisSaleBalance : 0,
+        discountAmount: Number(saleDiscount) || 0,
+        deliveryCharge: Number(saleDelivery) || 0,
+        notes: saleDescription.trim() || undefined,
       };
 
       // Save/update the bill snapshot FIRST so its real DB id can be linked onto the ledger entry.
@@ -1474,16 +1535,16 @@ export default function RecordsScreen() {
         }
       }
 
-      if (paymentMode === 'PARTY' && selectedParty && !editingBillId) {
+      if (paymentMode === 'PARTY' && selectedParty) {
         const modeLabel = effectiveAmountReceived > 0 ? ` (${currentReceivedMode})` : '';
         const realBillNoStr = billNo ? ` (${billNo})` : '';
         const reason = `Sale: ${saleItems.map((i) => i.cropName).join(', ')} (${totalCartItems} item${totalCartItems > 1 ? 's' : ''})${modeLabel}${realBillNoStr}`;
         try {
-          const validBillIdToPass = realDbBillId || undefined;
+          const validBillIdToPass = realDbBillId || editingBillId || undefined;
           await recordSaleLedger.mutateAsync({
             id: selectedParty.id,
             payload: {
-              totalAmount: totalCartAmount,
+              totalAmount: netCartAmount,
               amountReceived: effectiveAmountReceived,
               reason,
               saleBillId: validBillIdToPass,
@@ -1527,6 +1588,7 @@ export default function RecordsScreen() {
                 rate: String(item.rate),
                 buyerName,
                 billId: targetBillId,
+                billNo,
                 amountReceived: effectiveAmountReceived,
                 previousBalance: previousPartyBalance,
                 amountReceivedMode: currentReceivedMode,
@@ -1539,6 +1601,21 @@ export default function RecordsScreen() {
               deleteSale(existingSales[i].id).catch(() => {});
             }
           }
+        } else {
+          saleItems.forEach((item) => {
+            if (item.cropId) {
+              recordSale(item.cropId, {
+                quantity: String(item.qty),
+                rate: String(item.rate),
+                buyerName,
+                billId: targetBillId,
+                billNo,
+                amountReceived: effectiveAmountReceived,
+                previousBalance: previousPartyBalance,
+                amountReceivedMode: currentReceivedMode,
+              }).catch(() => {});
+            }
+          });
         }
       } else {
         saleItems.forEach((item) => {
@@ -1548,6 +1625,7 @@ export default function RecordsScreen() {
               rate: String(item.rate),
               buyerName,
               billId: realDbBillId,
+              billNo,
               amountReceived: effectiveAmountReceived,
               previousBalance: previousPartyBalance,
               amountReceivedMode: currentReceivedMode,
@@ -1579,6 +1657,9 @@ export default function RecordsScreen() {
         thisSaleBalance: billPayload.thisSaleBalance,
         previousBalance: billPayload.previousBalance,
         netReceivable: billPayload.netReceivable,
+        discountAmount: billPayload.discountAmount,
+        deliveryCharge: billPayload.deliveryCharge,
+        notes: billPayload.notes,
         date: now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
         time: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
       };
@@ -3726,9 +3807,33 @@ export default function RecordsScreen() {
 
                                   <View style={{ width: 62 }}>
                                     {row.billNo && row.billNo !== '—' ? (
-                                      <View style={{ backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: 4, paddingHorizontal: 3, paddingVertical: 1, alignSelf: 'flex-start' }}>
+                                      <TouchableOpacity
+                                        activeOpacity={0.7}
+                                        onPress={() => {
+                                          const raw = row.rawEntries?.[0];
+                                          if (row.saleBillId || raw?.type === 'SALE_CREDIT' || raw?.type === 'CREDIT' || row.drAmount > 0) {
+                                            shareStatementSaleEntry({
+                                              id: raw?.id || row.id,
+                                              reason: raw?.reason || row.reason,
+                                              amount: String(raw?.amount || row.drAmount || row.crAmount),
+                                              createdAt: raw?.createdAt || row.date,
+                                              saleBillId: row.saleBillId || (raw as any)?.saleBillId,
+                                            });
+                                          } else {
+                                            shareStatementPaymentEntry({
+                                              id: raw?.id || row.id,
+                                              type: raw?.type || 'PAYMENT',
+                                              amount: String(raw?.amount || row.crAmount || row.drAmount),
+                                              createdAt: raw?.createdAt || row.date,
+                                              paymentReceiptId: row.paymentReceiptId || (raw as any)?.paymentReceiptId,
+                                            });
+                                          }
+                                        }}
+                                        style={{ backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 2, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 2 }}
+                                      >
+                                        <Ionicons name="document-text-outline" size={10} color="#1d4ed8" />
                                         <Text style={{ fontSize: 8.5, fontFamily: FONT.bold, color: '#1d4ed8' }}>{row.billNo}</Text>
-                                      </View>
+                                      </TouchableOpacity>
                                     ) : (
                                       <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8' }}>—</Text>
                                     )}
@@ -3828,12 +3933,15 @@ export default function RecordsScreen() {
         onClose={() => setShowFullStatementModal(false)}
         partyName={statement?.party.name || 'Party Account'}
         partyPhone={statement?.party.mobile || undefined}
-        entries={(statement?.entries || []).map((e) => ({
+        entries={(statement?.entries || []).map((e: any) => ({
           id: e.id,
           date: e.createdAt || todayIso(),
           type: e.type,
           reason: e.reason || 'Ledger entry',
           amount: Number(e.amount),
+          billNo: e.billNo || e.saleBill?.billNo || (e.paymentReceipt?.receiptNo ? e.paymentReceipt.receiptNo : undefined),
+          saleBillId: e.saleBillId || e.saleBill?.id,
+          paymentReceiptId: e.paymentReceiptId || e.paymentReceipt?.id,
         }))}
       />
     </View>

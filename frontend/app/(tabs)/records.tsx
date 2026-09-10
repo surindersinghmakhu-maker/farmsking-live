@@ -351,20 +351,21 @@ export default function RecordsScreen() {
         .map((i: any) => `${i.cropName} (${i.qty} ${i.unit || 'unit'})`)
         .join(', ');
     } else {
-      let rawName = item.cropName || 'Crop Sale';
-      rawName = rawName.replace(/^Sale-\s*/i, '');
-      const noiseIdx = rawName.indexOf('(FK-');
-      if (noiseIdx !== -1) {
-        rawName = rawName.substring(0, noiseIdx);
-      }
-      rawName = rawName.replace(/\(\d+\s*item\)\s*\(CASH\)/g, '').trim();
-      rawName = rawName.replace(/\s*@\s*₹\d+(\.\d+)?/g, '').trim();
+      let str = item.cropName || 'Crop Sale';
+      str = str.replace(/^Sale[-:\s]*/i, '');
+      str = str.replace(/\(FK-[^)]+\).*/i, '');
+      str = str.replace(/\((CASH|UPI)\)/gi, '');
+      str = str.replace(/\(\d+\s*items?\)/gi, '');
+      str = str.replace(/\s*@\s*₹?\d+(\.\d+)?/gi, '');
+      str = str.replace(/\s+/g, ' ').trim();
 
-      const qtyStr = item.quantity ? `${item.quantity} ${item.unit || 'unit'}` : '';
-      if (rawName.includes('(') && rawName.includes(')')) {
-        cropDetailText = rawName;
+      const qty = item.quantity ? Number(item.quantity) : 0;
+      const unit = item.unit || 'item';
+      
+      if (qty > 0 && !str.includes('(')) {
+        cropDetailText = `${str} (${qty} ${unit})`;
       } else {
-        cropDetailText = qtyStr ? `${rawName} (${qtyStr})` : rawName;
+        cropDetailText = str || 'Crop Sale';
       }
     }
 

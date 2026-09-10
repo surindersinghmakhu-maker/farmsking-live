@@ -1276,7 +1276,7 @@ export default function RecordsScreen() {
 
     const q = accountSearchQuery.trim().toLowerCase();
     if (!q) return baseList;
-    return unifiedAccountParties.filter(
+    return baseList.filter(
       (p) =>
         p.name.toLowerCase().includes(q) ||
         (p.mobile && p.mobile.includes(q)) ||
@@ -3916,15 +3916,22 @@ export default function RecordsScreen() {
                     </Text>
                   </View>
                 }
-                renderItem={({ item }) => (
+                renderItem={({ item }) => {
+                  // Determine per-party direction based on its own balance (works correctly for ALL tab too)
+                  const isItemReceivable = item.balance > 0;
+                  const itemColor = isItemReceivable ? '#16a34a' : '#dc2626';
+                  const itemBg = isItemReceivable ? '#dcfce7' : '#fee2e2';
+                  const itemVoucherType = isItemReceivable ? 'RECEIPT_IN' : 'PAYMENT_OUT';
+                  const itemBtnLabel = isItemReceivable ? 'Receive Amount' : 'Pay Amount';
+
+                  return (
                   <TouchableOpacity
                     style={[styles.card, premiumShadow('#000000', 'sm')]}
                     activeOpacity={0.85}
                     onPress={() => {
                       tap();
                       if ((item as any).isWorker || (item as any).__type === 'LABOUR') {
-                        const isReceivable = analysisSubTab === 'RECEIVABLE';
-                        setVoucherInitialType(isReceivable ? 'RECEIPT_IN' : 'PAYMENT_OUT');
+                        setVoucherInitialType(itemVoucherType);
                         setVoucherInitialParty(item);
                         setLockVoucherParty(true);
                         setShowPaymentVoucherModal(true);
@@ -3937,36 +3944,38 @@ export default function RecordsScreen() {
                       }
                     }}
                   >
-                    <View style={[styles.cardIconWrap, { backgroundColor: analysisSubTab === 'RECEIVABLE' ? '#dcfce7' : '#fee2e2' }]}>
-                      <Ionicons name="person" size={18} color={analysisSubTab === 'RECEIVABLE' ? '#16a34a' : '#dc2626'} />
+                    <View style={[styles.cardIconWrap, { backgroundColor: itemBg }]}>
+                      <Ionicons name="person" size={18} color={itemColor} />
                     </View>
                     <View style={styles.cardBody}>
                       <Text style={styles.cardTitle}>{item.name}</Text>
-                      <Text style={styles.cardSubtitle}>Tap to view full statement</Text>
+                      <Text style={[styles.cardSubtitle, { color: itemColor, fontFamily: FONT.semiBold }]}>
+                        {isItemReceivable ? '↑ Receivable (CR)' : '↓ Payable (DR)'}
+                      </Text>
                     </View>
                     <View style={{ alignItems: 'flex-end', gap: 6 }}>
-                      <Text style={{ color: analysisSubTab === 'RECEIVABLE' ? '#16a34a' : '#dc2626', fontSize: 15, fontFamily: FONT.extraBold }}>
+                      <Text style={{ color: itemColor, fontSize: 15, fontFamily: FONT.extraBold }}>
                         {formatInr(Math.abs(item.balance))}
                       </Text>
                       <TouchableOpacity
-                        style={[styles.rowPaymentBtn, { backgroundColor: analysisSubTab === 'RECEIVABLE' ? '#16a34a' : '#dc2626' }]}
+                        style={[styles.rowPaymentBtn, { backgroundColor: itemColor }]}
                         activeOpacity={0.85}
                         onPress={() => {
                           tap();
-                          const isReceivable = analysisSubTab === 'RECEIVABLE';
-                          setVoucherInitialType(isReceivable ? 'RECEIPT_IN' : 'PAYMENT_OUT');
+                          setVoucherInitialType(itemVoucherType);
                           setVoucherInitialParty(item);
                           setLockVoucherParty(true);
                           setShowPaymentVoucherModal(true);
                         }}
                       >
                         <Text style={styles.rowPaymentBtnText}>
-                          {analysisSubTab === 'RECEIVABLE' ? 'Receive Amount' : 'Pay Amount'}
+                          {itemBtnLabel}
                         </Text>
                       </TouchableOpacity>
                     </View>
                   </TouchableOpacity>
-                )}
+                  );
+                }}
               />
 
               {/* Party Statement Modal */}

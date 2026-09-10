@@ -160,6 +160,33 @@ export class PartiesService {
       orderBy: { createdAt: 'desc' },
     });
 
+    // Auto-link unlinked ledger entries to sale bills if matching
+    for (const entry of entries) {
+      if (!entry.saleBillId && entry.type === PartyLedgerEntryType.SALE_CREDIT) {
+        const match = saleBills.find((b) => {
+          if (entry.reason && entry.reason.includes(b.billNo)) return true;
+          const timeDiff = Math.abs(new Date(b.createdAt).getTime() - new Date(entry.createdAt).getTime());
+          return timeDiff < 5 * 60 * 1000 && Number(b.totalAmount) === Number(entry.amount);
+        });
+        if (match) {
+          (entry as any).saleBillId = match.id;
+          (entry as any).saleBill = { id: match.id, billNo: match.billNo };
+          existingBillIds.add(match.id);
+        }
+      } else if (!entry.saleBillId && entry.type === PartyLedgerEntryType.SALE_PAYMENT) {
+        const match = saleBills.find((b) => {
+          if (entry.reason && entry.reason.includes(b.billNo)) return true;
+          const timeDiff = Math.abs(new Date(b.createdAt).getTime() - new Date(entry.createdAt).getTime());
+          return timeDiff < 5 * 60 * 1000 && Number(b.amountReceived) === Number(entry.amount);
+        });
+        if (match) {
+          (entry as any).saleBillId = match.id;
+          (entry as any).saleBill = { id: match.id, billNo: match.billNo };
+          existingBillIds.add(match.id);
+        }
+      }
+    }
+
     const extraEntries: any[] = [];
     for (const bill of saleBills) {
       if (!existingBillIds.has(bill.id)) {

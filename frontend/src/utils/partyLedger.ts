@@ -55,11 +55,7 @@ export function buildPartyLedgerRows(entries: any[]): GroupedLedgerRow[] {
     }
 
     if (!billNo) {
-      if (e.type === 'SALE_PAYMENT' || e.type === 'EXPENSE_PAYMENT') {
-        billNo = 'Payment';
-      } else {
-        billNo = '—';
-      }
+      billNo = '—';
     }
 
     // Format Reason / Particulars clearly

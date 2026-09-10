@@ -996,7 +996,7 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
                 <thead>
                   <tr>
                     <th>Date</th>
-                    <th>Bill No.</th>
+                    <th>Ref. No.</th>
                     <th>Particulars</th>
                     <th style="text-align:right; color:#fca5a5;">Dr. (₹)</th>
                     <th style="text-align:right; color:#86efac;">Cr. (₹)</th>
@@ -1130,7 +1130,7 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
                       <View style={{ flex: 1, minWidth: 460 }}>
                         <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 6, paddingHorizontal: 6, alignItems: 'center', minWidth: 460 }}>
                           <Text style={{ width: 50, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>Date</Text>
-                          <Text style={{ width: 82, fontSize: 9.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>Bill No.</Text>
+                          <Text style={{ width: 82, fontSize: 9.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>Ref. No.</Text>
                           <Text style={{ flex: 1, minWidth: 100, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>Particulars</Text>
                           <Text style={{ width: 58, fontSize: 9.5, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right' }}>Dr. (₹)</Text>
                           <Text style={{ width: 58, fontSize: 9.5, fontFamily: FONT.bold, color: '#86efac', textAlign: 'right' }}>Cr. (₹)</Text>

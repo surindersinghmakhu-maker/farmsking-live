@@ -405,8 +405,38 @@ export class PartiesService {
     return this.getStatement(user, partyId);
   }
 
-  private nextReceiptNo(): string {
-    return `RCT-${Date.now().toString().slice(-8)}`;
+  private async nextReceiptNo(isReceived: boolean): Promise<string> {
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const prefix = isReceived ? `R${yy}${mm}` : `PAY${yy}${mm}`;
+
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    const countThisMonth = await this.prisma.paymentReceipt.count({
+      where: {
+        isReceived,
+        createdAt: {
+          gte: startOfMonth,
+          lte: endOfMonth,
+        },
+      },
+    });
+
+    let nextSeq = countThisMonth + 1;
+    let paddedSeq = String(nextSeq).padStart(2, '0');
+    let candidate = `${prefix}${paddedSeq}`;
+
+    let exists = await this.prisma.paymentReceipt.findFirst({ where: { receiptNo: candidate } });
+    while (exists) {
+      nextSeq++;
+      paddedSeq = String(nextSeq).padStart(2, '0');
+      candidate = `${prefix}${paddedSeq}`;
+      exists = await this.prisma.paymentReceipt.findFirst({ where: { receiptNo: candidate } });
+    }
+
+    return candidate;
   }
 
   /** Farmer records a payment RECEIVED from a party — reduces what that party owes (receivable). */
@@ -424,7 +454,7 @@ export class PartiesService {
     const receipt = await this.prisma.paymentReceipt.create({
       data: {
         farmerId: user.id,
-        receiptNo: this.nextReceiptNo(),
+        receiptNo: await this.nextReceiptNo(true),
         partyId,
         partyName: before.party.name,
         isReceived: true,
@@ -453,7 +483,7 @@ export class PartiesService {
     const receipt = await this.prisma.paymentReceipt.create({
       data: {
         farmerId: user.id,
-        receiptNo: this.nextReceiptNo(),
+        receiptNo: await this.nextReceiptNo(false),
         partyId,
         partyName: before.party.name,
         isReceived: false,

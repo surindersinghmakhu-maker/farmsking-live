@@ -11,42 +11,23 @@ export class SaleBillsService {
     const now = new Date();
     const fullYear = now.getFullYear();
     const yy = String(fullYear).slice(-2); // e.g. "26" for 2026
-    const prefix = `FK-${yy}`;
+    const mm = String(now.getMonth() + 1).padStart(2, '0'); // e.g. "09" for September
+    const prefix = `${yy}${mm}`;
 
-    // Query latest bill for the current year prefix across all farmers
-    const latestBill = await this.prisma.saleBill.findFirst({
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    // Count sale bills created in current calendar month
+    const countThisMonth = await this.prisma.saleBill.count({
       where: {
-        billNo: {
-          startsWith: prefix,
+        createdAt: {
+          gte: startOfMonth,
+          lte: endOfMonth,
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      select: {
-        billNo: true,
       },
     });
 
-    let nextSeq = 1;
-    if (latestBill && latestBill.billNo) {
-      const seqPart = latestBill.billNo.slice(prefix.length);
-      const parsed = parseInt(seqPart, 10);
-      if (!isNaN(parsed) && parsed >= 1) {
-        nextSeq = parsed + 1;
-      } else {
-        const startOfYear = new Date(fullYear, 0, 1);
-        const count = await this.prisma.saleBill.count({
-          where: {
-            createdAt: {
-              gte: startOfYear,
-            },
-          },
-        });
-        nextSeq = count + 1;
-      }
-    }
-
+    let nextSeq = countThisMonth + 1;
     let paddedSeq = String(nextSeq).padStart(2, '0');
     let candidate = `${prefix}${paddedSeq}`;
 

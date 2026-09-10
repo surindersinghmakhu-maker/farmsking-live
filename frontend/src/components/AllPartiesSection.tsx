@@ -1379,63 +1379,61 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
 
                   {/* 4. STATEMENT LEDGER TABLE WITH CLEAN NON-OVERLAPPING COLUMNS */}
                   <View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 6, overflow: 'hidden' }}>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 460, flexGrow: 1 }}>
-                      <View style={{ flex: 1, minWidth: 460 }}>
-                        <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 6, paddingHorizontal: 6, alignItems: 'center', minWidth: 460 }}>
-                          <Text style={{ width: 50, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>Date</Text>
-                          <Text style={{ width: 82, fontSize: 9.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>Ref. No.</Text>
-                          <Text style={{ flex: 1, minWidth: 100, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>Particulars</Text>
-                          <Text style={{ width: 58, fontSize: 9.5, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right' }}>Dr. (₹)</Text>
-                          <Text style={{ width: 58, fontSize: 9.5, fontFamily: FONT.bold, color: '#86efac', textAlign: 'right' }}>Cr. (₹)</Text>
-                          <Text style={{ width: 70, fontSize: 9.5, fontFamily: FONT.bold, color: '#38bdf8', textAlign: 'right' }}>Balance</Text>
-                        </View>
-
-                        {ledgerRows.length === 0 ? (
-                          <View style={{ padding: 14, alignItems: 'center' }}>
-                            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#94a3b8' }}>No ledger transactions yet.</Text>
-                          </View>
-                        ) : (
-                          ledgerRows.map((row, idx) => (
-                            <View key={row.id || idx} style={{ flexDirection: 'row', paddingHorizontal: 6, paddingVertical: 5, backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center', minWidth: 460 }}>
-                              <Text style={{ width: 50, fontSize: 9, fontFamily: FONT.medium, color: '#475569' }}>
-                                {new Date(row.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                              </Text>
-
-                              <View style={{ width: 82 }}>
-                                {row.billNo && row.billNo !== '—' ? (
-                                  <TouchableOpacity
-                                    activeOpacity={0.7}
-                                    onPress={() => handleOpenPreviewForLedgerRow(row)}
-                                    style={{ backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1, alignSelf: 'flex-start', maxWidth: 78, flexDirection: 'row', alignItems: 'center', gap: 2 }}
-                                  >
-                                    <Ionicons name="document-text-outline" size={9} color="#1d4ed8" />
-                                    <Text style={{ fontSize: 8.5, fontFamily: FONT.extraBold, color: '#1d4ed8' }} numberOfLines={1}>{row.billNo}</Text>
-                                  </TouchableOpacity>
-                                ) : (
-                                  <Text style={{ fontSize: 9, fontFamily: FONT.medium, color: '#94a3b8' }}>—</Text>
-                                )}
-                              </View>
-
-                              <Text style={{ flex: 1, minWidth: 100, fontSize: 9.5, fontFamily: FONT.bold, color: '#0f172a', paddingRight: 4 }} numberOfLines={2}>
-                                {row.reason}
-                              </Text>
-
-                              <Text style={{ width: 58, fontSize: 9.5, fontFamily: FONT.bold, color: row.drAmount > 0 ? '#b91c1c' : '#94a3b8', textAlign: 'right' }}>
-                                {row.drAmount > 0 ? `₹${row.drAmount.toLocaleString('en-IN')}` : '—'}
-                              </Text>
-
-                              <Text style={{ width: 58, fontSize: 9.5, fontFamily: FONT.bold, color: row.crAmount > 0 ? '#15803d' : '#94a3b8', textAlign: 'right' }}>
-                                {row.crAmount > 0 ? `₹${row.crAmount.toLocaleString('en-IN')}` : '—'}
-                              </Text>
-
-                              <Text style={{ width: 70, fontSize: 9, fontFamily: FONT.extraBold, color: row.runningBalance >= 0 ? '#16a34a' : '#dc2626', textAlign: 'right' }}>
-                                ₹{Math.abs(row.runningBalance).toLocaleString('en-IN')} {row.runningBalance >= 0 ? 'Dr' : 'Cr'}
-                              </Text>
-                            </View>
-                          ))
-                        )}
+                    <View style={{ width: '100%' }}>
+                      <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 5, paddingHorizontal: 5, alignItems: 'center' }}>
+                        <Text style={{ width: 44, fontSize: 9, fontFamily: FONT.bold, color: '#ffffff' }}>Date</Text>
+                        <Text style={{ width: 62, fontSize: 9, fontFamily: FONT.bold, color: '#e2e8f0' }}>Ref. No.</Text>
+                        <Text style={{ flex: 1, fontSize: 9, fontFamily: FONT.bold, color: '#ffffff' }}>Particulars</Text>
+                        <Text style={{ width: 52, fontSize: 9, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right' }}>Dr (₹)</Text>
+                        <Text style={{ width: 52, fontSize: 9, fontFamily: FONT.bold, color: '#86efac', textAlign: 'right' }}>Cr (₹)</Text>
+                        <Text style={{ width: 62, fontSize: 9, fontFamily: FONT.bold, color: '#38bdf8', textAlign: 'right' }}>Balance</Text>
                       </View>
-                    </ScrollView>
+
+                      {ledgerRows.length === 0 ? (
+                        <View style={{ padding: 14, alignItems: 'center' }}>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#94a3b8' }}>No ledger transactions yet.</Text>
+                        </View>
+                      ) : (
+                        ledgerRows.map((row, idx) => (
+                          <View key={row.id || idx} style={{ flexDirection: 'row', paddingHorizontal: 5, paddingVertical: 4, backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center' }}>
+                            <Text style={{ width: 44, fontSize: 8.5, fontFamily: FONT.medium, color: '#475569' }}>
+                              {new Date(row.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                            </Text>
+
+                            <View style={{ width: 62 }}>
+                              {row.billNo && row.billNo !== '—' ? (
+                                <TouchableOpacity
+                                  activeOpacity={0.7}
+                                  onPress={() => handleOpenPreviewForLedgerRow(row)}
+                                  style={{ backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#3b82f6', borderRadius: 4, paddingHorizontal: 3, paddingVertical: 1, alignSelf: 'flex-start', maxWidth: 58, flexDirection: 'row', alignItems: 'center', gap: 2 }}
+                                >
+                                  <Ionicons name="document-text-outline" size={8} color="#1d4ed8" />
+                                  <Text style={{ fontSize: 8, fontFamily: FONT.extraBold, color: '#1d4ed8' }} numberOfLines={1}>{row.billNo}</Text>
+                                </TouchableOpacity>
+                              ) : (
+                                <Text style={{ fontSize: 8.5, fontFamily: FONT.medium, color: '#94a3b8' }}>—</Text>
+                              )}
+                            </View>
+
+                            <Text style={{ flex: 1, fontSize: 9, fontFamily: FONT.bold, color: '#0f172a', paddingRight: 2 }} numberOfLines={1}>
+                              {row.reason}
+                            </Text>
+
+                            <Text style={{ width: 52, fontSize: 8.5, fontFamily: FONT.bold, color: row.drAmount > 0 ? '#b91c1c' : '#94a3b8', textAlign: 'right' }}>
+                              {row.drAmount > 0 ? `₹${row.drAmount.toLocaleString('en-IN')}` : '—'}
+                            </Text>
+
+                            <Text style={{ width: 52, fontSize: 8.5, fontFamily: FONT.bold, color: row.crAmount > 0 ? '#15803d' : '#94a3b8', textAlign: 'right' }}>
+                              {row.crAmount > 0 ? `₹${row.crAmount.toLocaleString('en-IN')}` : '—'}
+                            </Text>
+
+                            <Text style={{ width: 62, fontSize: 8.5, fontFamily: FONT.extraBold, color: row.runningBalance >= 0 ? '#16a34a' : '#dc2626', textAlign: 'right' }}>
+                              ₹${Math.abs(row.runningBalance).toLocaleString('en-IN')} {row.runningBalance >= 0 ? 'Dr' : 'Cr'}
+                            </Text>
+                          </View>
+                        ))
+                      )}
+                    </View>
                   </View>
                 </ViewShot>
               </ScrollView>

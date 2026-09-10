@@ -852,10 +852,10 @@ const styles = StyleSheet.create({
   partySubText: { fontSize: 8.5, fontFamily: FONT.medium, color: '#475569' },
 
   tableCard: { borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 6, overflow: 'hidden', marginBottom: 6 },
-  tableHeaderRow: { flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 4, paddingHorizontal: 6 },
+  tableHeaderRow: { flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 4, paddingHorizontal: 5 },
   tableHeaderCell: { fontSize: 7.5, fontFamily: FONT.bold, color: '#ffffff' },
-  tableBodyRow: { flexDirection: 'row', paddingVertical: 4, paddingHorizontal: 6, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center' },
-  tableCell: { fontSize: 9, fontFamily: FONT.medium, color: '#334155' },
+  tableBodyRow: { flexDirection: 'row', paddingVertical: 3.5, paddingHorizontal: 5, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center' },
+  tableCell: { fontSize: 8.5, fontFamily: FONT.medium, color: '#334155' },
 
   summaryBar: {
     flexDirection: 'row',

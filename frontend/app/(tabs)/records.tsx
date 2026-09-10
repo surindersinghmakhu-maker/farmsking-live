@@ -614,6 +614,9 @@ export default function RecordsScreen() {
   // Voucher modal state
   const [showPaymentVoucherModal, setShowPaymentVoucherModal] = useState(false);
   const [voucherInitialType, setVoucherInitialType] = useState<VoucherType>('RECEIPT_IN');
+  const [voucherInitialParty, setVoucherInitialParty] = useState<Party | null>(null);
+  const [lockVoucherParty, setLockVoucherParty] = useState(false);
+  const [inlinePaymentMode, setInlinePaymentMode] = useState<'CASH' | 'UPI'>('CASH');
 
   // Sales Form state
   const [showSaleForm, setShowSaleForm] = useState(false);
@@ -3163,6 +3166,8 @@ export default function RecordsScreen() {
               <PaymentVoucherModal
                 visible={showPaymentVoucherModal}
                 initialType={voucherInitialType}
+                initialParty={voucherInitialParty}
+                lockParty={lockVoucherParty}
                 parties={parties}
                 labourWorkers={expenseLabourWorkers}
                 onClose={() => setShowPaymentVoucherModal(false)}
@@ -3783,6 +3788,8 @@ export default function RecordsScreen() {
                   onPress={() => {
                     tap();
                     setVoucherInitialType('RECEIPT_IN');
+                    setVoucherInitialParty(null);
+                    setLockVoucherParty(false);
                     setShowPaymentVoucherModal(true);
                   }}
                 >
@@ -3807,6 +3814,8 @@ export default function RecordsScreen() {
                   onPress={() => {
                     tap();
                     setVoucherInitialType('PAYMENT_OUT');
+                    setVoucherInitialParty(null);
+                    setLockVoucherParty(false);
                     setShowPaymentVoucherModal(true);
                   }}
                 >
@@ -3874,11 +3883,11 @@ export default function RecordsScreen() {
                         activeOpacity={0.85}
                         onPress={() => {
                           tap();
-                          setPaymentAmount('');
-                          setPaymentNote('');
-                          setPaymentError(null);
-                          setStatementPartyId(item.id);
-                          setIsPaymentFormOpen(true);
+                          const isReceivable = analysisSubTab === 'RECEIVABLE';
+                          setVoucherInitialType(isReceivable ? 'RECEIPT_IN' : 'PAYMENT_OUT');
+                          setVoucherInitialParty(item);
+                          setLockVoucherParty(true);
+                          setShowPaymentVoucherModal(true);
                         }}
                       >
                         <Text style={styles.rowPaymentBtnText}>
@@ -3941,26 +3950,93 @@ export default function RecordsScreen() {
                         </View>
 
                         {statement.balance !== 0 && isPaymentFormOpen ? (
-                          <View style={{ gap: 8, marginBottom: 8 }}>
-                            <Text style={styles.label}>Amount (₹)</Text>
-                            <TextInput
-                              style={styles.input}
-                              keyboardType="numeric"
-                              value={paymentAmount}
-                              onChangeText={setPaymentAmount}
-                              placeholder="e.g. 500"
-                              placeholderTextColor="#94a3b8"
-                            />
-                            <Text style={styles.label}>Note (optional)</Text>
-                            <TextInput
-                              style={styles.input}
-                              value={paymentNote}
-                              onChangeText={setPaymentNote}
-                              placeholder="Cash, UPI, etc."
-                              placeholderTextColor="#94a3b8"
-                            />
+                          <View style={{ gap: 8, marginBottom: 8, backgroundColor: '#f8fafc', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#cbd5e1' }}>
+                            {/* Party / Account Name (Read Only) */}
+                            <View style={{ gap: 4 }}>
+                              <Text style={styles.label}>Party / Account Name *</Text>
+                              <View style={[styles.input, { backgroundColor: '#f1f5f9', height: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 10 }]}>
+                                <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>{statement.party.name}</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#e2e8f0', paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.sm }}>
+                                  <Ionicons name="lock-closed" size={11} color="#64748b" />
+                                  <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b' }}>Read Only</Text>
+                                </View>
+                              </View>
+                            </View>
+
+                            {/* Amount (₹) & Inline Cash/UPI Radio */}
+                            <View style={{ gap: 4 }}>
+                              <Text style={styles.label}>
+                                {statement.balance >= 0 ? 'Received Amount (₹) *' : 'Paid Amount (₹) *'}
+                              </Text>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                <TextInput
+                                  style={[styles.input, { flex: 1, height: 40 }]}
+                                  keyboardType="numeric"
+                                  value={paymentAmount}
+                                  onChangeText={setPaymentAmount}
+                                  placeholder="e.g. 5000"
+                                  placeholderTextColor="#94a3b8"
+                                />
+
+                                <View style={{ flexDirection: 'row', gap: 6 }}>
+                                  <TouchableOpacity
+                                    style={[
+                                      styles.modePill,
+                                      inlinePaymentMode === 'CASH' && styles.modePillCashActive,
+                                      { height: 40 }
+                                    ]}
+                                    activeOpacity={0.8}
+                                    onPress={() => {
+                                      tap();
+                                      setInlinePaymentMode('CASH');
+                                    }}
+                                  >
+                                    <Ionicons
+                                      name={inlinePaymentMode === 'CASH' ? 'radio-button-on' : 'radio-button-off'}
+                                      size={14}
+                                      color={inlinePaymentMode === 'CASH' ? '#ffffff' : '#16a34a'}
+                                    />
+                                    <Text style={[styles.modePillText, inlinePaymentMode === 'CASH' && styles.modePillTextActive]}>Cash</Text>
+                                  </TouchableOpacity>
+
+                                  <TouchableOpacity
+                                    style={[
+                                      styles.modePill,
+                                      inlinePaymentMode === 'UPI' && styles.modePillUpiActive,
+                                      { height: 40 }
+                                    ]}
+                                    activeOpacity={0.8}
+                                    onPress={() => {
+                                      tap();
+                                      setInlinePaymentMode('UPI');
+                                    }}
+                                  >
+                                    <Ionicons
+                                      name={inlinePaymentMode === 'UPI' ? 'radio-button-on' : 'radio-button-off'}
+                                      size={14}
+                                      color={inlinePaymentMode === 'UPI' ? '#ffffff' : '#2563eb'}
+                                    />
+                                    <Text style={[styles.modePillText, inlinePaymentMode === 'UPI' && styles.modePillTextActive]}>UPI/Online</Text>
+                                  </TouchableOpacity>
+                                </View>
+                              </View>
+                            </View>
+
+                            {/* Description / Note */}
+                            <View style={{ gap: 4 }}>
+                              <Text style={styles.label}>Description</Text>
+                              <TextInput
+                                style={[styles.input, { height: 40 }]}
+                                value={paymentNote}
+                                onChangeText={setPaymentNote}
+                                placeholder="e.g. Land Rent, Advance, Bill payment..."
+                                placeholderTextColor="#94a3b8"
+                              />
+                            </View>
+
                             {paymentError ? <Text style={styles.errorText}>{paymentError}</Text> : null}
-                            <View style={{ flexDirection: 'row', gap: 8 }}>
+
+                            <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
                               <TouchableOpacity style={styles.secondaryButton} onPress={() => setIsPaymentFormOpen(false)}>
                                 <Text style={styles.secondaryButtonText}>Cancel</Text>
                               </TouchableOpacity>

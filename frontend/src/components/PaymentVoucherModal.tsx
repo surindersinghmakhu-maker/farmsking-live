@@ -32,6 +32,8 @@ interface PaymentVoucherModalProps {
   visible: boolean;
   initialType?: VoucherType;
   lockType?: boolean;
+  initialParty?: Party | null;
+  lockParty?: boolean;
   parties: Party[];
   labourWorkers: any[];
   onClose: () => void;
@@ -42,6 +44,8 @@ export function PaymentVoucherModal({
   visible,
   initialType = 'RECEIPT_IN',
   lockType = true,
+  initialParty = null,
+  lockParty = false,
   parties = [],
   labourWorkers = [],
   onClose,
@@ -51,7 +55,7 @@ export function PaymentVoucherModal({
   const [voucherType, setVoucherType] = useState<VoucherType>(initialType);
 
   // Selected Parties
-  const [sourceParty, setSourceParty] = useState<Party | null>(null);
+  const [sourceParty, setSourceParty] = useState<Party | null>(initialParty);
   const [targetParty, setTargetParty] = useState<Party | null>(null);
 
   // Form Fields
@@ -60,11 +64,11 @@ export function PaymentVoucherModal({
   const [paymentMode, setPaymentMode] = useState<'CASH' | 'UPI'>('CASH');
   const [voucherDate, setVoucherDate] = useState(() => new Date().toISOString().slice(0, 10));
 
-  // Sync initialType whenever modal opens
+  // Sync initialType and initialParty whenever modal opens
   React.useEffect(() => {
     if (visible) {
       setVoucherType(initialType);
-      setSourceParty(null);
+      setSourceParty(initialParty || null);
       setTargetParty(null);
       setAmount('');
       setNote('');
@@ -73,7 +77,7 @@ export function PaymentVoucherModal({
       setErrorMsg(null);
       setSuccessMsg(null);
     }
-  }, [visible, initialType]);
+  }, [visible, initialType, initialParty]);
 
   const { user } = useAuth();
   const [showVoucherSlipModal, setShowVoucherSlipModal] = useState(false);
@@ -333,25 +337,65 @@ export function PaymentVoucherModal({
           )}
 
           <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
-            {/* Source Party Picker */}
-            <View style={{ marginTop: 12 }}>
-              <PartyPicker
-                label={
-                  voucherType === 'ACCOUNT_TRANSFER'
-                    ? 'From Account / Debited Party *'
-                    : 'Party / Account Name *'
-                }
-                parties={parties}
-                labourWorkers={labourWorkers}
-                selectedParty={sourceParty}
-                onSelect={setSourceParty}
-                onCreate={async (p) => {
-                  const newParty = await createParty.mutateAsync(p);
-                  return newParty;
-                }}
-                accentColor="#2563eb"
-              />
-            </View>
+            {/* Source Party Picker / Locked Read-Only Party Box */}
+            {lockParty && sourceParty ? (
+              <View style={{ marginTop: 12 }}>
+                <Text style={styles.label}>Party / Account Name *</Text>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    borderWidth: 1,
+                    borderColor: '#cbd5e1',
+                    borderRadius: RADIUS.md,
+                    paddingHorizontal: 12,
+                    height: 40,
+                    backgroundColor: '#f1f5f9',
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Ionicons name="person-circle" size={20} color="#16a34a" />
+                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>
+                      {sourceParty.name}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 4,
+                      backgroundColor: '#e2e8f0',
+                      paddingHorizontal: 6,
+                      paddingVertical: 3,
+                      borderRadius: RADIUS.sm,
+                    }}
+                  >
+                    <Ionicons name="lock-closed" size={12} color="#64748b" />
+                    <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>Read Only</Text>
+                  </View>
+                </View>
+              </View>
+            ) : (
+              <View style={{ marginTop: 12 }}>
+                <PartyPicker
+                  label={
+                    voucherType === 'ACCOUNT_TRANSFER'
+                      ? 'From Account / Debited Party *'
+                      : 'Party / Account Name *'
+                  }
+                  parties={parties}
+                  labourWorkers={labourWorkers}
+                  selectedParty={sourceParty}
+                  onSelect={setSourceParty}
+                  onCreate={async (p) => {
+                    const newParty = await createParty.mutateAsync(p);
+                    return newParty;
+                  }}
+                  accentColor="#2563eb"
+                />
+              </View>
+            )}
 
             {/* Target Party Picker (Only for Account Transfer) */}
             {voucherType === 'ACCOUNT_TRANSFER' && (

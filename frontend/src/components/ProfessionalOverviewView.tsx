@@ -165,10 +165,12 @@ export function ProfessionalOverviewView({
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text style={[styles.gridCardLabel, { color: '#166534' }]}>Income (+)</Text>
-              <Ionicons name="trending-up" size={14} color="#16a34a" />
+              <Ionicons name="trending-up" size={13} color="#16a34a" />
             </View>
-            <Text style={[styles.gridCardValue, { color: '#15803d' }]}>+{formatInr(totalSalesRevenue)}</Text>
-            <Text style={styles.gridCardSub}>{salesCount} Sales ➔</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 2 }}>
+              <Text style={[styles.gridCardValue, { color: '#15803d' }]}>+{formatInr(totalSalesRevenue)}</Text>
+              <Text style={styles.gridCardSub}>{salesCount} Sales ➔</Text>
+            </View>
           </TouchableOpacity>
 
           {/* Card 2: Total Expenses */}
@@ -182,10 +184,12 @@ export function ProfessionalOverviewView({
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text style={[styles.gridCardLabel, { color: '#991b1b' }]}>Expenses (-)</Text>
-              <Ionicons name="receipt" size={14} color="#dc2626" />
+              <Ionicons name="receipt" size={13} color="#dc2626" />
             </View>
-            <Text style={[styles.gridCardValue, { color: '#dc2626' }]}>-{formatInr(totalSpent)}</Text>
-            <Text style={styles.gridCardSub}>{expenseCount} Logs ➔</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 2 }}>
+              <Text style={[styles.gridCardValue, { color: '#dc2626' }]}>-{formatInr(totalSpent)}</Text>
+              <Text style={styles.gridCardSub}>{expenseCount} Logs ➔</Text>
+            </View>
           </TouchableOpacity>
 
           {/* Card 3: Receivables */}
@@ -199,10 +203,12 @@ export function ProfessionalOverviewView({
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text style={[styles.gridCardLabel, { color: '#075985' }]}>Receivable</Text>
-              <Ionicons name="arrow-down-circle" size={14} color="#0284c7" />
+              <Ionicons name="arrow-down-circle" size={13} color="#0284c7" />
             </View>
-            <Text style={[styles.gridCardValue, { color: '#0369a1' }]}>{formatInr(totalReceivable)}</Text>
-            <Text style={styles.gridCardSub}>View Ledger ➔</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 2 }}>
+              <Text style={[styles.gridCardValue, { color: '#0369a1' }]}>{formatInr(totalReceivable)}</Text>
+              <Text style={styles.gridCardSub}>View Ledger ➔</Text>
+            </View>
           </TouchableOpacity>
 
           {/* Card 4: Payables */}
@@ -216,10 +222,12 @@ export function ProfessionalOverviewView({
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text style={[styles.gridCardLabel, { color: '#9a3412' }]}>Payable</Text>
-              <Ionicons name="arrow-up-circle" size={14} color="#ea580c" />
+              <Ionicons name="arrow-up-circle" size={13} color="#ea580c" />
             </View>
-            <Text style={[styles.gridCardValue, { color: '#c2410c' }]}>{formatInr(totalPayable)}</Text>
-            <Text style={styles.gridCardSub}>View Ledger ➔</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 2 }}>
+              <Text style={[styles.gridCardValue, { color: '#c2410c' }]}>{formatInr(totalPayable)}</Text>
+              <Text style={styles.gridCardSub}>View Ledger ➔</Text>
+            </View>
           </TouchableOpacity>
         </View>
       </View>
@@ -384,33 +392,6 @@ export function ProfessionalOverviewView({
           </View>
         </View>
       </TouchableOpacity>
-
-      {/* 4. Quick Action CTA Bar */}
-      <View style={styles.ctaRow}>
-        <TouchableOpacity
-          style={[styles.ctaBtn, { backgroundColor: '#16a34a' }]}
-          activeOpacity={0.8}
-          onPress={() => {
-            tap();
-            onOpenSaleForm();
-          }}
-        >
-          <Ionicons name="add-circle" size={14} color="#ffffff" />
-          <Text style={styles.ctaBtnText}>+ New Sale Bill</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.ctaBtn, { backgroundColor: '#dc2626' }]}
-          activeOpacity={0.8}
-          onPress={() => {
-            tap();
-            onOpenExpenseForm();
-          }}
-        >
-          <Ionicons name="remove-circle" size={14} color="#ffffff" />
-          <Text style={styles.ctaBtnText}>+ New Expense Log</Text>
-        </TouchableOpacity>
-      </View>
 
       {/* CROP STATEMENT MODAL */}
       {selectedCropForStatement && (

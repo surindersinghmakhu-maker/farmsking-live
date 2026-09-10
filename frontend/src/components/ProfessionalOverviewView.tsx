@@ -371,6 +371,33 @@ export function ProfessionalOverviewView({
         </View>
       </TouchableOpacity>
 
+      {/* 4. Quick Action CTA Bar */}
+      <View style={styles.ctaRow}>
+        <TouchableOpacity
+          style={[styles.ctaBtn, { backgroundColor: '#16a34a' }]}
+          activeOpacity={0.8}
+          onPress={() => {
+            tap();
+            onOpenSaleForm();
+          }}
+        >
+          <Ionicons name="add-circle" size={14} color="#ffffff" />
+          <Text style={styles.ctaBtnText}>+ New Sale Bill</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.ctaBtn, { backgroundColor: '#dc2626' }]}
+          activeOpacity={0.8}
+          onPress={() => {
+            tap();
+            onOpenExpenseForm();
+          }}
+        >
+          <Ionicons name="remove-circle" size={14} color="#ffffff" />
+          <Text style={styles.ctaBtnText}>+ New Expense Log</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* CROP STATEMENT MODAL */}
       {selectedCropForStatement && (
         <CropStatementModal
@@ -735,17 +762,14 @@ const modalStyles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 10,
     paddingBottom: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-  },
   modalTitle: { fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' },
 });
 
 const styles = StyleSheet.create({
-  container: { padding: 10, gap: 10, paddingBottom: 24 },
+  container: { padding: 8, gap: 8, paddingBottom: 20 },
   quickActionsRow: {
     flexDirection: 'row',
-    gap: 6,
+    gap: 5,
   },
   quickActionPill: {
     flex: 1,
@@ -753,47 +777,47 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    paddingVertical: 7,
+    paddingVertical: 6,
     borderRadius: RADIUS.pill,
   },
   quickActionText: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontFamily: FONT.bold,
     color: '#ffffff',
   },
   heroCard: {
     backgroundColor: '#ffffff',
-    borderRadius: RADIUS.lg,
-    padding: 10,
+    borderRadius: RADIUS.md,
+    padding: 8,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    gap: 8,
+    borderColor: '#cbd5e1',
+    gap: 6,
   },
   heroTopStrip: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#f8fafc',
-    borderRadius: RADIUS.md,
-    padding: 8,
+    borderRadius: RADIUS.sm,
+    padding: 6,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
   },
-  heroHeaderTitle: { fontSize: 12, fontFamily: FONT.bold, color: '#334155' },
+  heroHeaderTitle: { fontSize: 11, fontFamily: FONT.bold, color: '#334155' },
   netStatusPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
   },
-  netStatusPillText: { fontSize: 10, fontFamily: FONT.extraBold, letterSpacing: 0.2 },
-  netBoxLabel: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b' },
-  netBoxValue: { fontSize: 18, fontFamily: FONT.extraBold },
-  progressSection: { gap: 2 },
-  progressLabel: { fontSize: 10, fontFamily: FONT.medium, color: '#64748b' },
-  progressVal: { fontSize: 10, fontFamily: FONT.bold },
+  netStatusPillText: { fontSize: 9.5, fontFamily: FONT.extraBold, letterSpacing: 0.2 },
+  netBoxLabel: { fontSize: 10, fontFamily: FONT.medium, color: '#64748b' },
+  netBoxValue: { fontSize: 16, fontFamily: FONT.extraBold },
+  progressSection: { gap: 2, marginVertical: 1 },
+  progressLabel: { fontSize: 9.5, fontFamily: FONT.medium, color: '#64748b' },
+  progressVal: { fontSize: 9.5, fontFamily: FONT.bold },
   progressBarTrack: {
-    height: 6,
+    height: 5,
     borderRadius: 3,
     backgroundColor: '#e2e8f0',
     overflow: 'hidden',
@@ -805,65 +829,65 @@ const styles = StyleSheet.create({
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: 5,
   },
   gridCard: {
-    width: '48.8%',
-    borderRadius: RADIUS.md,
-    padding: 8,
+    width: '49%',
+    borderRadius: RADIUS.sm,
+    padding: 6,
     borderWidth: 1,
     gap: 1,
   },
-  gridCardLabel: { fontSize: 10, fontFamily: FONT.bold },
-  gridCardValue: { fontSize: 13.5, fontFamily: FONT.extraBold, marginTop: 1 },
-  gridCardSub: { fontSize: 9.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
-  sectionTitle: { fontSize: 12, fontFamily: FONT.extraBold, color: '#0f172a' },
-  sectionSubTitle: { fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' },
+  gridCardLabel: { fontSize: 9.5, fontFamily: FONT.bold },
+  gridCardValue: { fontSize: 12.5, fontFamily: FONT.extraBold, marginTop: 1 },
+  gridCardSub: { fontSize: 8.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
+  sectionTitle: { fontSize: 11.5, fontFamily: FONT.extraBold, color: '#0f172a' },
+  sectionSubTitle: { fontSize: 9.5, fontFamily: FONT.medium, color: '#64748b' },
   emptyCard: {
     backgroundColor: '#ffffff',
-    borderRadius: RADIUS.lg,
-    padding: 16,
+    borderRadius: RADIUS.md,
+    padding: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: 3,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: '#cbd5e1',
   },
-  emptyText: { fontSize: 12.5, fontFamily: FONT.bold, color: '#334155' },
-  emptySubText: { fontSize: 10.5, fontFamily: FONT.medium, color: '#94a3b8', textAlign: 'center' },
+  emptyText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#334155' },
+  emptySubText: { fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8', textAlign: 'center' },
   cropCard: {
     backgroundColor: '#ffffff',
-    borderRadius: RADIUS.md,
-    padding: 9,
+    borderRadius: RADIUS.sm,
+    padding: 7,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    gap: 6,
+    borderColor: '#cbd5e1',
+    gap: 5,
   },
   cropCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  cropName: { fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' },
+  cropName: { fontSize: 12, fontFamily: FONT.extraBold, color: '#0f172a' },
   cropProfitBadge: {
-    paddingHorizontal: 7,
-    paddingVertical: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
     borderRadius: RADIUS.pill,
   },
-  cropProfitBadgeText: { fontSize: 10.5, fontFamily: FONT.extraBold },
+  cropProfitBadgeText: { fontSize: 9.5, fontFamily: FONT.extraBold },
   cropStatementBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
     backgroundColor: '#e0f2fe',
-    paddingHorizontal: 7,
-    paddingVertical: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
     borderColor: '#bae6fd',
   },
   cropStatementBtnText: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontFamily: FONT.bold,
     color: '#0284c7',
   },
@@ -872,50 +896,50 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#f8fafc',
     borderRadius: RADIUS.sm,
-    padding: 5,
+    padding: 4,
   },
   cropMetricBox: { flex: 1, alignItems: 'center' },
-  cropMetricLabel: { fontSize: 9, fontFamily: FONT.bold, color: '#64748b' },
-  cropMetricVal: { fontSize: 11.5, fontFamily: FONT.extraBold, marginTop: 1 },
-  cropMetricDivider: { width: 1, height: 18, backgroundColor: '#e2e8f0' },
+  cropMetricLabel: { fontSize: 8.5, fontFamily: FONT.bold, color: '#64748b' },
+  cropMetricVal: { fontSize: 10.5, fontFamily: FONT.extraBold, marginTop: 1 },
+  cropMetricDivider: { width: 1, height: 16, backgroundColor: '#e2e8f0' },
   labourDigestCard: {
     backgroundColor: '#ffffff',
-    borderRadius: RADIUS.lg,
-    padding: 9,
+    borderRadius: RADIUS.md,
+    padding: 7,
     borderWidth: 1,
-    borderColor: '#bfdbfe',
-    gap: 8,
+    borderColor: '#94a3b8',
+    gap: 6,
   },
   labourIconBg: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: '#eff6ff',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  labourTitle: { fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' },
-  labourSub: { fontSize: 10, fontFamily: FONT.medium, color: '#64748b' },
+  labourTitle: { fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' },
+  labourSub: { fontSize: 9.5, fontFamily: FONT.medium, color: '#64748b' },
   labourMetricsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f8fafc',
-    padding: 6,
+    padding: 5,
     borderRadius: RADIUS.sm,
   },
   labourMetricItem: { flex: 1, alignItems: 'center' },
-  labourMetricLabel: { fontSize: 9, fontFamily: FONT.medium, color: '#64748b' },
-  labourMetricVal: { fontSize: 11.5, fontFamily: FONT.extraBold, marginTop: 1 },
-  labourMetricDivider: { width: 1, height: 18, backgroundColor: '#e2e8f0' },
-  ctaRow: { flexDirection: 'row', gap: 6 },
+  labourMetricLabel: { fontSize: 8.5, fontFamily: FONT.medium, color: '#64748b' },
+  labourMetricVal: { fontSize: 10.5, fontFamily: FONT.extraBold, marginTop: 1 },
+  labourMetricDivider: { width: 1, height: 16, backgroundColor: '#e2e8f0' },
+  ctaRow: { flexDirection: 'row', gap: 5 },
   ctaBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    paddingVertical: 8,
-    borderRadius: RADIUS.md,
+    paddingVertical: 7,
+    borderRadius: RADIUS.sm,
   },
-  ctaBtnText: { color: '#ffffff', fontSize: 11.5, fontFamily: FONT.bold },
+  ctaBtnText: { color: '#ffffff', fontSize: 10.5, fontFamily: FONT.bold },
 });

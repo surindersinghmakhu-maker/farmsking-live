@@ -135,6 +135,12 @@ export class PartiesService {
             billNo: true,
           },
         },
+        paymentReceipt: {
+          select: {
+            id: true,
+            receiptNo: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });

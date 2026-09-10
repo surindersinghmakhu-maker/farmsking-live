@@ -360,9 +360,10 @@ export function BillPreview({ inv }: { inv: SavedSaleInvoice }) {
 
           {/* Remarks / Notes (if present) */}
           {inv.notes && inv.notes.trim() ? (
-            <View style={{ borderTopWidth: (discountVal > 0 || deliveryVal > 0) ? 1 : 0, borderTopColor: '#e2e8f0', paddingTop: (discountVal > 0 || deliveryVal > 0) ? 6 : 0 }}>
-              <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#475569' }}>📝 REMARKS / NOTES:</Text>
-              <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#1e293b', marginTop: 1 }}>{inv.notes.trim()}</Text>
+            <View style={{ borderTopWidth: (discountVal > 0 || deliveryVal > 0) ? 1 : 0, borderTopColor: '#cbd5e1', paddingTop: (discountVal > 0 || deliveryVal > 0) ? 6 : 0, marginTop: (discountVal > 0 || deliveryVal > 0) ? 6 : 0 }}>
+              <Text style={{ fontSize: 9.5, color: '#475569', fontFamily: FONT.bold }}>
+                📝 REMARKS / NOTES: <Text style={{ fontFamily: FONT.medium, color: '#0f172a' }}>{inv.notes.trim()}</Text>
+              </Text>
             </View>
           ) : null}
         </View>

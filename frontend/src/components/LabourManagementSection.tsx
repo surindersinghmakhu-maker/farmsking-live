@@ -1537,29 +1537,29 @@ function WorkerStatementModal({
                           flexDirection: 'row',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          borderBottomWidth: 2.5,
+                          borderBottomWidth: 2,
                           borderBottomColor: '#16a34a',
-                          paddingBottom: 10,
-                          marginBottom: 12,
+                          paddingBottom: 8,
+                          marginBottom: 10,
                         }}
                       >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                          <BrandLogo size={36} useHdQuality />
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <BrandLogo size={32} useHdQuality />
                           <View>
-                            <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: '#15803d', letterSpacing: -0.3 }}>
+                            <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: '#15803d', letterSpacing: -0.3 }}>
                               FarmsKing
                             </Text>
-                            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#64748b' }}>
-                              WORKER STATEMENT / ਖਾਤਾ ਸਟੇਟਮੈਂਟ
+                            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b' }}>
+                              WORKER STATEMENT
                             </Text>
                           </View>
                         </View>
 
                         <View style={{ alignItems: 'flex-end' }}>
-                          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#334155' }}>
+                          <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#334155' }}>
                             Date: {new Date().toLocaleDateString('en-IN')}
                           </Text>
-                          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#16a34a' }}>
+                          <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#16a34a' }}>
                             Page {pageIdx + 1} of {pages.length}
                           </Text>
                         </View>
@@ -1567,29 +1567,29 @@ function WorkerStatementModal({
 
                       {/* 2. FARMER & WORKER DETAILS BOX (SIDE-BY-SIDE) */}
                       {isFirstPage && (
-                        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
+                        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
                           {/* Farmer Details */}
                           <View
                             style={{
                               flex: 1,
                               backgroundColor: '#f0fdf4',
-                              padding: 10,
+                              padding: 8,
                               borderRadius: RADIUS.sm,
                               borderWidth: 1,
                               borderColor: '#bbf7d0',
                             }}
                           >
-                            <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: '#15803d', marginBottom: 3 }}>
+                            <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#15803d', marginBottom: 2 }}>
                               👨‍🌾 FARMER DETAILS
                             </Text>
-                            <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>{farmerName}</Text>
+                            <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>{farmerName}</Text>
                             {farmerMobile ? (
-                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>
+                              <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>
                                 📱 {farmerMobile}
                               </Text>
                             ) : null}
                             {farmerVillage ? (
-                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>
+                              <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>
                                 📍 {farmerVillage}
                               </Text>
                             ) : null}
@@ -1600,18 +1600,18 @@ function WorkerStatementModal({
                             style={{
                               flex: 1,
                               backgroundColor: '#f8fafc',
-                              padding: 10,
+                              padding: 8,
                               borderRadius: RADIUS.sm,
                               borderWidth: 1,
                               borderColor: '#e2e8f0',
                             }}
                           >
-                            <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: '#475569', marginBottom: 3 }}>
+                            <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#475569', marginBottom: 2 }}>
                               👤 WORKER DETAILS
                             </Text>
-                            <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>{worker.name}</Text>
+                            <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>{worker.name}</Text>
                             {worker.mobile ? (
-                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>
+                              <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>
                                 📱 {worker.mobile}
                               </Text>
                             ) : null}
@@ -1621,20 +1621,20 @@ function WorkerStatementModal({
 
                       {/* 3. FINANCIAL SUMMARY METRICS */}
                       {isFirstPage && (
-                        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+                        <View style={{ flexDirection: 'row', gap: 6, marginBottom: 10 }}>
                           <View
                             style={{
                               flex: 1,
                               backgroundColor: '#fff7ed',
-                              padding: 8,
+                              padding: 6,
                               borderRadius: RADIUS.sm,
                               borderWidth: 1,
                               borderColor: '#ffedd5',
                               alignItems: 'center',
                             }}
                           >
-                            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#c2410c' }}>Total Earned</Text>
-                            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#c2410c', marginTop: 2 }}>
+                            <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#c2410c' }}>Total Earned</Text>
+                            <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: '#c2410c', marginTop: 1 }}>
                               {formatInr(totalEarned)}
                             </Text>
                           </View>
@@ -1643,15 +1643,15 @@ function WorkerStatementModal({
                             style={{
                               flex: 1,
                               backgroundColor: '#f0fdf4',
-                              padding: 8,
+                              padding: 6,
                               borderRadius: RADIUS.sm,
                               borderWidth: 1,
                               borderColor: '#bbf7d0',
                               alignItems: 'center',
                             }}
                           >
-                            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }}>Total Paid</Text>
-                            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#15803d', marginTop: 2 }}>
+                            <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#15803d' }}>Total Paid</Text>
+                            <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: '#15803d', marginTop: 1 }}>
                               {formatInr(totalPaid)}
                             </Text>
                           </View>
@@ -1660,7 +1660,7 @@ function WorkerStatementModal({
                             style={{
                               flex: 1,
                               backgroundColor: pendingBalance > 0 ? '#fef2f2' : '#f0fdf4',
-                              padding: 8,
+                              padding: 6,
                               borderRadius: RADIUS.sm,
                               borderWidth: 1,
                               borderColor: pendingBalance > 0 ? '#fecdd3' : '#bbf7d0',
@@ -1669,7 +1669,7 @@ function WorkerStatementModal({
                           >
                             <Text
                               style={{
-                                fontSize: 10,
+                                fontSize: 9,
                                 fontFamily: FONT.bold,
                                 color: pendingBalance > 0 ? '#b91c1c' : '#15803d',
                               }}
@@ -1678,10 +1678,10 @@ function WorkerStatementModal({
                             </Text>
                             <Text
                               style={{
-                                fontSize: 14,
+                                fontSize: 12.5,
                                 fontFamily: FONT.extraBold,
                                 color: pendingBalance > 0 ? '#dc2626' : '#16a34a',
-                                marginTop: 2,
+                                marginTop: 1,
                               }}
                             >
                               {formatInr(pendingBalance)}
@@ -1697,29 +1697,29 @@ function WorkerStatementModal({
                           style={{
                             flexDirection: 'row',
                             backgroundColor: '#334155',
-                            paddingVertical: 7,
-                            paddingHorizontal: 10,
+                            paddingVertical: 5,
+                            paddingHorizontal: 8,
                           }}
                         >
-                          <Text style={{ width: 75, fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Date</Text>
-                          <Text style={{ flex: 2.2, fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>
+                          <Text style={{ width: 68, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>Date</Text>
+                          <Text style={{ flex: 2.2, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>
                             Particulars
                           </Text>
-                          <Text style={{ flex: 1, fontSize: 11, fontFamily: FONT.bold, color: '#ffedd5', textAlign: 'right' }}>
+                          <Text style={{ flex: 1, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffedd5', textAlign: 'right' }}>
                             Earned (+)
                           </Text>
-                          <Text style={{ flex: 1, fontSize: 11, fontFamily: FONT.bold, color: '#bbf7d0', textAlign: 'right' }}>
+                          <Text style={{ flex: 1, fontSize: 9.5, fontFamily: FONT.bold, color: '#bbf7d0', textAlign: 'right' }}>
                             Paid (-)
                           </Text>
-                          <Text style={{ flex: 1.1, fontSize: 11, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right' }}>
+                          <Text style={{ flex: 1.1, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right' }}>
                             Balance
                           </Text>
                         </View>
 
                         {/* Table Rows */}
                         {pageItems.length === 0 ? (
-                          <View style={{ paddingVertical: 16, alignItems: 'center', backgroundColor: '#ffffff' }}>
-                            <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#94a3b8' }}>
+                          <View style={{ paddingVertical: 14, alignItems: 'center', backgroundColor: '#ffffff' }}>
+                            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8' }}>
                               No entries found.
                             </Text>
                           </View>
@@ -1727,52 +1727,60 @@ function WorkerStatementModal({
                           pageItems.map((row, idx) => {
                             const isWork = row.type === 'WORK';
                             const isEven = idx % 2 === 0;
+                            const isUpi = /upi|online|gpay|phonepe|paytm|netbanking/i.test(
+                              `${row.notes || ''} ${row.description || ''} ${row.title || ''}`
+                            );
+                            const paymentText = isUpi ? 'Payment (UPI)' : 'Payment (Cash)';
+
                             return (
                               <View
                                 key={row.id}
                                 style={{
                                   flexDirection: 'row',
                                   alignItems: 'center',
-                                  paddingHorizontal: 10,
-                                  paddingVertical: 8,
+                                  paddingHorizontal: 8,
+                                  paddingVertical: 5,
                                   backgroundColor: isEven ? '#ffffff' : '#f8fafc',
                                   borderBottomWidth: 1,
                                   borderBottomColor: '#f1f5f9',
                                 }}
                               >
-                                <Text style={{ width: 75, fontSize: 11, fontFamily: FONT.bold, color: '#475569' }}>
+                                <Text style={{ width: 68, fontSize: 9, fontFamily: FONT.bold, color: '#475569' }}>
                                   {new Date(row.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                                 </Text>
 
-                                {/* PARTICULAR COLUMN WITH Crisp Font & Generous Space */}
+                                {/* PARTICULAR COLUMN */}
                                 <View style={{ flex: 2.2, paddingRight: 6 }}>
-                                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>
-                                    {row.title}
-                                  </Text>
-                                  {row.description ? (
-                                    <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 }}>
-                                      {row.description}
+                                  {isWork ? (
+                                    <>
+                                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#0f172a' }}>
+                                        {row.title}
+                                      </Text>
+                                      {row.description ? (
+                                        <Text style={{ fontSize: 8.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 }}>
+                                          {row.description}
+                                        </Text>
+                                      ) : null}
+                                    </>
+                                  ) : (
+                                    <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#0f172a' }}>
+                                      {paymentText}
                                     </Text>
-                                  ) : null}
-                                  {row.notes ? (
-                                    <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#475569', marginTop: 1, fontStyle: 'italic' }}>
-                                      📝 {row.notes}
-                                    </Text>
-                                  ) : null}
+                                  )}
                                 </View>
 
-                                <Text style={{ flex: 1, fontSize: 11.5, fontFamily: FONT.bold, color: '#c2410c', textAlign: 'right' }}>
+                                <Text style={{ flex: 1, fontSize: 9.5, fontFamily: FONT.bold, color: '#c2410c', textAlign: 'right' }}>
                                   {isWork ? `+${formatInr(row.amount)}` : '—'}
                                 </Text>
 
-                                <Text style={{ flex: 1, fontSize: 11.5, fontFamily: FONT.bold, color: '#16a34a', textAlign: 'right' }}>
+                                <Text style={{ flex: 1, fontSize: 9.5, fontFamily: FONT.bold, color: '#16a34a', textAlign: 'right' }}>
                                   {!isWork ? `-${formatInr(row.amount)}` : '—'}
                                 </Text>
 
                                 <Text
                                   style={{
                                     flex: 1.1,
-                                    fontSize: 11.5,
+                                    fontSize: 9.5,
                                     fontFamily: FONT.extraBold,
                                     color: row.runningBalance > 0 ? '#dc2626' : '#16a34a',
                                     textAlign: 'right',
@@ -1787,11 +1795,11 @@ function WorkerStatementModal({
                       </View>
 
                       {/* Footer Page Counter */}
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, paddingTop: 6, borderTopWidth: 1, borderTopColor: '#f1f5f9' }}>
-                        <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8' }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6, paddingTop: 5, borderTopWidth: 1, borderTopColor: '#f1f5f9' }}>
+                        <Text style={{ fontSize: 8.5, fontFamily: FONT.medium, color: '#94a3b8' }}>
                           Generated via FarmsKing App
                         </Text>
-                        <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>
+                        <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#64748b' }}>
                           Page {pageIdx + 1} of {pages.length}
                         </Text>
                       </View>
@@ -1910,88 +1918,97 @@ function generateWorkerStatementPdfHtml({
     const isLastPage = p === pageCount - 1;
 
     pagesHtml += `
-      <div style="page-break-after: ${isLastPage ? 'auto' : 'always'}; padding: 14px 18px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0f172a;">
+      <div style="page-break-after: ${isLastPage ? 'auto' : 'always'}; padding: 12px 14px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0f172a;">
         <!-- Brand Header -->
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2.5px solid #16a34a; padding-bottom: 8px; margin-bottom: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #16a34a; padding-bottom: 6px; margin-bottom: 8px;">
           <div>
-            <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #15803d; letter-spacing: -0.5px;">👑 FarmsKing</h1>
-            <p style="margin: 2px 0 0 0; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">WORKER STATEMENT / ਲੇਬਰ ਖਾਤਾ ਸਟੇਟਮੈਂਟ</p>
+            <h1 style="margin: 0; font-size: 16px; font-weight: 800; color: #15803d; letter-spacing: -0.3px;">👑 FarmsKing</h1>
+            <p style="margin: 2px 0 0 0; font-size: 9.5px; font-weight: 700; color: #64748b; text-transform: uppercase;">WORKER STATEMENT</p>
           </div>
           <div style="text-align: right;">
-            <p style="margin: 0; font-size: 10.5px; font-weight: 700; color: #334155;">Date: ${new Date().toLocaleDateString('en-IN')}</p>
-            <p style="margin: 2px 0 0 0; font-size: 10px; color: #16a34a; font-weight: 700;">Page ${p + 1} of ${pageCount}</p>
+            <p style="margin: 0; font-size: 9.5px; font-weight: 700; color: #334155;">Date: ${new Date().toLocaleDateString('en-IN')}</p>
+            <p style="margin: 2px 0 0 0; font-size: 9px; color: #16a34a; font-weight: 700;">Page ${p + 1} of ${pageCount}</p>
           </div>
         </div>
 
         <!-- Farmer & Worker Info Box -->
-        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-          <div style="flex: 1; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 7px 10px;">
-            <p style="margin: 0 0 3px 0; font-size: 9.5px; font-weight: 800; color: #15803d; text-transform: uppercase;">👨‍🌾 Farmer Details</p>
-            <p style="margin: 0; font-size: 13px; font-weight: 700; color: #0f172a;">${farmerName}</p>
-            ${farmerMobile ? `<p style="margin: 1px 0 0 0; font-size: 10.5px; color: #475569;">📱 ${farmerMobile}</p>` : ''}
-            ${farmerVillage ? `<p style="margin: 1px 0 0 0; font-size: 10.5px; color: #475569;">📍 ${farmerVillage}</p>` : ''}
+        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+          <div style="flex: 1; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 6px 8px;">
+            <p style="margin: 0 0 2px 0; font-size: 8.5px; font-weight: 800; color: #15803d; text-transform: uppercase;">👨‍🌾 Farmer Details</p>
+            <p style="margin: 0; font-size: 11.5px; font-weight: 700; color: #0f172a;">${farmerName}</p>
+            ${farmerMobile ? `<p style="margin: 1px 0 0 0; font-size: 9.5px; color: #475569;">📱 ${farmerMobile}</p>` : ''}
+            ${farmerVillage ? `<p style="margin: 1px 0 0 0; font-size: 9.5px; color: #475569;">📍 ${farmerVillage}</p>` : ''}
           </div>
 
-          <div style="flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 7px 10px;">
-            <p style="margin: 0 0 3px 0; font-size: 9.5px; font-weight: 800; color: #475569; text-transform: uppercase;">👤 Worker Details</p>
-            <p style="margin: 0; font-size: 13px; font-weight: 700; color: #0f172a;">${workerName}</p>
-            ${workerMobile ? `<p style="margin: 1px 0 0 0; font-size: 10.5px; color: #475569;">📱 ${workerMobile}</p>` : ''}
+          <div style="flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 8px;">
+            <p style="margin: 0 0 2px 0; font-size: 8.5px; font-weight: 800; color: #475569; text-transform: uppercase;">👤 Worker Details</p>
+            <p style="margin: 0; font-size: 11.5px; font-weight: 700; color: #0f172a;">${workerName}</p>
+            ${workerMobile ? `<p style="margin: 1px 0 0 0; font-size: 9.5px; color: #475569;">📱 ${workerMobile}</p>` : ''}
           </div>
         </div>
 
         <!-- Financial Summary Banner -->
-        <div style="display: flex; gap: 6px; margin-bottom: 10px;">
-          <div style="flex: 1; background: #fff7ed; border: 1px solid #ffedd5; border-radius: 6px; padding: 6px; text-align: center;">
-            <p style="margin: 0; font-size: 9.5px; font-weight: 700; color: #c2410c;">Total Earned</p>
-            <p style="margin: 2px 0 0 0; font-size: 14px; font-weight: 800; color: #c2410c;">₹${totalEarned.toLocaleString('en-IN')}</p>
+        <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+          <div style="flex: 1; background: #fff7ed; border: 1px solid #ffedd5; border-radius: 6px; padding: 5px; text-align: center;">
+            <p style="margin: 0; font-size: 8.5px; font-weight: 700; color: #c2410c;">Total Earned</p>
+            <p style="margin: 2px 0 0 0; font-size: 12.5px; font-weight: 800; color: #c2410c;">₹${totalEarned.toLocaleString('en-IN')}</p>
           </div>
-          <div style="flex: 1; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 6px; text-align: center;">
-            <p style="margin: 0; font-size: 9.5px; font-weight: 700; color: #15803d;">Total Paid</p>
-            <p style="margin: 2px 0 0 0; font-size: 14px; font-weight: 800; color: #15803d;">₹${totalPaid.toLocaleString('en-IN')}</p>
+          <div style="flex: 1; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 5px; text-align: center;">
+            <p style="margin: 0; font-size: 8.5px; font-weight: 700; color: #15803d;">Total Paid</p>
+            <p style="margin: 2px 0 0 0; font-size: 12.5px; font-weight: 800; color: #15803d;">₹${totalPaid.toLocaleString('en-IN')}</p>
           </div>
-          <div style="flex: 1; background: ${pendingBalance > 0 ? '#fef2f2' : '#f0fdf4'}; border: 1px solid ${pendingBalance > 0 ? '#fecdd3' : '#bbf7d0'}; border-radius: 6px; padding: 6px; text-align: center;">
-            <p style="margin: 0; font-size: 9.5px; font-weight: 700; color: ${pendingBalance > 0 ? '#b91c1c' : '#15803d'};">Net Balance</p>
-            <p style="margin: 2px 0 0 0; font-size: 14px; font-weight: 800; color: ${pendingBalance > 0 ? '#dc2626' : '#16a34a'};">
-              ₹${pendingBalance.toLocaleString('en-IN')} ${pendingBalance > 0 ? '(Payable / ਦੇਣੀ)' : 'Nil'}
+          <div style="flex: 1; background: ${pendingBalance > 0 ? '#fef2f2' : '#f0fdf4'}; border: 1px solid ${pendingBalance > 0 ? '#fecdd3' : '#bbf7d0'}; border-radius: 6px; padding: 5px; text-align: center;">
+            <p style="margin: 0; font-size: 8.5px; font-weight: 700; color: ${pendingBalance > 0 ? '#b91c1c' : '#15803d'};">Balance</p>
+            <p style="margin: 2px 0 0 0; font-size: 12.5px; font-weight: 800; color: ${pendingBalance > 0 ? '#dc2626' : '#16a34a'};">
+              ₹${pendingBalance.toLocaleString('en-IN')}
             </p>
           </div>
         </div>
 
         <!-- Ledger Table -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden;">
           <thead>
-            <tr style="background: #1e293b; color: #ffffff; font-size: 10px; font-weight: 700; text-align: left;">
-              <th style="padding: 6px 8px; width: 70px;">Date</th>
-              <th style="padding: 6px 8px;">Particulars / Description</th>
-              <th style="padding: 6px 8px; text-align: right; color: #ffedd5; width: 80px;">Earned (+)</th>
-              <th style="padding: 6px 8px; text-align: right; color: #bbf7d0; width: 80px;">Paid (-)</th>
-              <th style="padding: 6px 8px; text-align: right; width: 85px;">Balance</th>
+            <tr style="background: #1e293b; color: #ffffff; font-size: 9.5px; font-weight: 700; text-align: left;">
+              <th style="padding: 5px 6px; width: 65px;">Date</th>
+              <th style="padding: 5px 6px;">Particulars</th>
+              <th style="padding: 5px 6px; text-align: right; color: #ffedd5; width: 75px;">Earned (+)</th>
+              <th style="padding: 5px 6px; text-align: right; color: #bbf7d0; width: 75px;">Paid (-)</th>
+              <th style="padding: 5px 6px; text-align: right; width: 80px;">Balance</th>
             </tr>
           </thead>
           <tbody>
             ${
               pageItems.length === 0
-                ? `<tr><td colspan="5" style="text-align: center; padding: 14px; color: #94a3b8; font-size: 11px;">No entries recorded</td></tr>`
+                ? `<tr><td colspan="5" style="text-align: center; padding: 12px; color: #94a3b8; font-size: 10px;">No entries recorded</td></tr>`
                 : pageItems
                     .map((item, idx) => {
                       const isWork = item.type === 'WORK';
                       const bg = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
-                      const formattedDate = new Date(item.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' });
+                      const formattedDate = new Date(item.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+                      const isUpi = /upi|online|gpay|phonepe|paytm|netbanking/i.test(
+                        `${item.notes || ''} ${item.description || ''} ${item.title || ''}`
+                      );
+                      const paymentText = isUpi ? 'Payment (UPI)' : 'Payment (Cash)';
+
                       return `
-                        <tr style="background: ${bg}; border-bottom: 1px solid #e2e8f0; font-size: 10.5px;">
-                          <td style="padding: 5px 8px; color: #475569; font-weight: 600;">${formattedDate}</td>
-                          <td style="padding: 5px 8px;">
-                            <div style="font-weight: 700; color: #0f172a;">${item.title}</div>
-                            ${item.description ? `<div style="font-size: 9.5px; color: #64748b; margin-top: 1px;">${item.description}</div>` : ''}
-                            ${item.notes ? `<div style="font-size: 9px; color: #475569; margin-top: 1px; font-style: italic;">📝 ${item.notes}</div>` : ''}
+                        <tr style="background: ${bg}; border-bottom: 1px solid #e2e8f0; font-size: 9.5px;">
+                          <td style="padding: 4px 6px; color: #475569; font-weight: 600;">${formattedDate}</td>
+                          <td style="padding: 4px 6px;">
+                            ${
+                              isWork
+                                ? `<div style="font-weight: 700; color: #0f172a;">${item.title}</div>${
+                                    item.description ? `<div style="font-size: 8.5px; color: #64748b; margin-top: 1px;">${item.description}</div>` : ''
+                                  }`
+                                : `<div style="font-weight: 700; color: #0f172a;">${paymentText}</div>`
+                            }
                           </td>
-                          <td style="padding: 5px 8px; text-align: right; font-weight: 700; color: #c2410c;">
+                          <td style="padding: 4px 6px; text-align: right; font-weight: 700; color: #c2410c;">
                             ${isWork ? `+₹${item.amount.toLocaleString('en-IN')}` : '—'}
                           </td>
-                          <td style="padding: 5px 8px; text-align: right; font-weight: 700; color: #16a34a;">
+                          <td style="padding: 4px 6px; text-align: right; font-weight: 700; color: #16a34a;">
                             ${!isWork ? `-₹${item.amount.toLocaleString('en-IN')}` : '—'}
                           </td>
-                          <td style="padding: 5px 8px; text-align: right; font-weight: 800; color: ${item.runningBalance > 0 ? '#dc2626' : '#16a34a'};">
+                          <td style="padding: 4px 6px; text-align: right; font-weight: 800; color: ${item.runningBalance > 0 ? '#dc2626' : '#16a34a'};">
                             ₹${item.runningBalance.toLocaleString('en-IN')}
                           </td>
                         </tr>
@@ -2003,7 +2020,7 @@ function generateWorkerStatementPdfHtml({
         </table>
 
         <!-- Page Footer -->
-        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 6px; font-size: 8.5px; color: #64748b;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 5px; font-size: 8px; color: #64748b;">
           <div>Generated via <strong>FarmsKing App</strong> — Official Worker Khata Ledger</div>
           <div>Page ${p + 1} of ${pageCount}</div>
         </div>

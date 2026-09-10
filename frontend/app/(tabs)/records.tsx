@@ -253,22 +253,18 @@ export default function RecordsScreen() {
     return map;
   }, [rawSaleBillsList]);
 
-  // Unified list of ALL sales (DB Sale Bills + Local Offline Sales)
+  // Unified list of ALL sales — DB Sale Bills are the single source of truth.
+  // Local/session records are only shown as fallback when DB has no bills yet (offline).
   const unifiedSalesRecords = useMemo(() => {
-    const list: CropSaleRecord[] = [];
-    const dbBillIds = new Set<string>();
+    const dbBills: CropSaleRecord[] = [];
 
-    // 1. Include DB Sale Bills
     if (rawSaleBillsList && Array.isArray(rawSaleBillsList)) {
       rawSaleBillsList.forEach((b) => {
-        if (b.id) dbBillIds.add(b.id);
-        if (b.billNo) dbBillIds.add(b.billNo);
-
         const cropSummary = (b.items && b.items.length > 0)
           ? b.items.map((i: any) => `${i.cropName} (${i.qty} ${i.unit} @ ₹${i.rate})`).join(', ')
           : 'Crop Sale';
 
-        list.push({
+        dbBills.push({
           id: b.id,
           cropId: b.items?.[0]?.cropId || '',
           cropName: cropSummary,
@@ -289,15 +285,14 @@ export default function RecordsScreen() {
       });
     }
 
-    // 2. Include local sales records from context/AsyncStorage if not already present in DB list
-    (allSalesRecords || []).forEach((s) => {
-      if (!dbBillIds.has(s.id) && !dbBillIds.has(s.billId || '') && !dbBillIds.has(s.billNo || '')) {
-        list.push(s);
-      }
-    });
+    // Only use local/session records if DB has no bills yet (pure offline fallback)
+    if (dbBills.length === 0 && allSalesRecords && allSalesRecords.length > 0) {
+      return allSalesRecords;
+    }
 
-    return list;
+    return dbBills;
   }, [rawSaleBillsList, allSalesRecords]);
+
 
   const renderSaleRowItem = (item: CropSaleRecord, idx: number) => {
     const matchedBill = item.billId ? saleBillsMap.get(item.billId) : (item.billNo ? saleBillsMap.get(item.billNo) : null);

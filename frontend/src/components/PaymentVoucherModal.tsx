@@ -169,13 +169,13 @@ export function PaymentVoucherModal({
       const cleanWorkerId = sourceParty.id.replace(/^labour_/, '');
 
       if (isLabourWorker && (voucherType === 'PAYMENT_OUT' || voucherType === 'RECEIPT_IN')) {
-        const paymentAmt = voucherType === 'PAYMENT_OUT' ? numAmount : -numAmount;
+        const workerNotes = voucherType === 'RECEIPT_IN' ? `[Refund / Received] ${finalReason}` : finalReason;
         await createLabourPayment.mutateAsync({
           workerId: cleanWorkerId,
-          amount: paymentAmt,
+          amount: numAmount,
           paymentDate: voucherDate,
           paymentMode,
-          notes: finalReason,
+          notes: workerNotes,
         });
       } else if (voucherType === 'RECEIPT_IN') {
         try {
@@ -188,10 +188,10 @@ export function PaymentVoucherModal({
           if (is404) {
             await createLabourPayment.mutateAsync({
               workerId: cleanWorkerId,
-              amount: -numAmount,
+              amount: numAmount,
               paymentDate: voucherDate,
               paymentMode,
-              notes: finalReason,
+              notes: `[Refund / Received] ${finalReason}`,
             });
           } else {
             throw err;

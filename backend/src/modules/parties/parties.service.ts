@@ -56,14 +56,37 @@ export class PartiesService {
   async listMine(user: AuthUser) {
     const parties = await this.prisma.party.findMany({
       where: { ownerId: user.id, deletedAt: null },
-      include: { ledgerEntries: { select: { type: true, amount: true } } },
+      include: { ledgerEntries: { select: { id: true, type: true, amount: true, saleBillId: true, reason: true } } },
       orderBy: { name: 'asc' },
     });
 
-    return parties.map(({ ledgerEntries, ...party }) => ({
-      ...party,
-      balance: this.computeBalance(ledgerEntries),
-    }));
+    const saleBills = await this.prisma.saleBill.findMany({
+      where: { farmerId: user.id },
+      select: { id: true, billNo: true },
+    });
+    const validBillIds = new Set(saleBills.map((b) => b.id));
+
+    return parties.map(({ ledgerEntries, ...party }) => {
+      const validEntries = ledgerEntries.filter((e) => {
+        if (e.saleBillId && !validBillIds.has(e.saleBillId)) {
+          this.prisma.partyLedgerEntry.delete({ where: { id: e.id } }).catch(() => {});
+          return false;
+        }
+        if (!e.saleBillId && (e.type === PartyLedgerEntryType.SALE_CREDIT || e.type === PartyLedgerEntryType.SALE_PAYMENT)) {
+          const matchesAnyBill = saleBills.some((b) => e.reason && e.reason.includes(b.billNo));
+          if (!matchesAnyBill) {
+            this.prisma.partyLedgerEntry.delete({ where: { id: e.id } }).catch(() => {});
+            return false;
+          }
+        }
+        return true;
+      });
+
+      return {
+        ...party,
+        balance: this.computeBalance(validEntries),
+      };
+    });
   }
 
   private async findOwnedOrThrow(user: AuthUser, partyId: string) {
@@ -145,11 +168,30 @@ export class PartiesService {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Clean up any orphaned entries where saleBillId is set but saleBill no longer exists
+    const saleBills = await this.prisma.saleBill.findMany({
+      where: {
+        farmerId: user.id,
+        OR: [
+          { partyId: { in: Array.from(partyIds) } },
+          { partyName: { equals: party.name, mode: 'insensitive' } },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Clean up any orphaned entries where saleBillId is set but saleBill no longer exists,
+    // OR unlinked sale entries with no matching sale bill
     const validEntries = entries.filter((e) => {
       if (e.saleBillId && !e.saleBill) {
         this.prisma.partyLedgerEntry.delete({ where: { id: e.id } }).catch(() => {});
         return false;
+      }
+      if (!e.saleBillId && (e.type === PartyLedgerEntryType.SALE_CREDIT || e.type === PartyLedgerEntryType.SALE_PAYMENT)) {
+        const matchesAnyBill = saleBills.some((b) => e.reason && e.reason.includes(b.billNo));
+        if (!matchesAnyBill) {
+          this.prisma.partyLedgerEntry.delete({ where: { id: e.id } }).catch(() => {});
+          return false;
+        }
       }
       return true;
     });

@@ -1082,8 +1082,9 @@ export default function RecordsScreen() {
     setBillPreviewVisible(true);
   };
 
-  // Analysis tab — Receivable / Payable sub-tabs + party statement
-  const [analysisSubTab, setAnalysisSubTab] = useState<'RECEIVABLE' | 'PAYABLE'>('RECEIVABLE');
+  // Analysis tab — Receivable / Payable / All sub-tabs + party statement
+  const [analysisSubTab, setAnalysisSubTab] = useState<'RECEIVABLE' | 'PAYABLE' | 'ALL'>('RECEIVABLE');
+  const [accountSearchQuery, setAccountSearchQuery] = useState('');
   const [statementPartyId, setStatementPartyId] = useState<string | null>(null);
   const [statementSortAsc, setStatementSortAsc] = useState(false);
   const { data: statement, isLoading: isLoadingStatement } = usePartyStatement(statementPartyId ?? undefined);
@@ -1239,19 +1240,17 @@ export default function RecordsScreen() {
     const list: Party[] = [...parties];
     (expenseLabourWorkers || []).forEach((w: any) => {
       const pending = Number(w.pendingBalance || 0);
-      if (pending !== 0) {
-        list.push({
-          id: w.id,
-          ownerId: w.farmerId || '',
-          name: w.name.startsWith('👷') ? w.name : `👷 ${w.name}`,
-          mobile: w.mobile ?? undefined,
-          address: w.address ?? 'Labour Worker',
-          balance: -pending, // pending > 0 is Payable (-balance in Party convention)
-          createdAt: w.createdAt || new Date().toISOString(),
-          __type: 'LABOUR',
-          isWorker: true,
-        } as any);
-      }
+      list.push({
+        id: w.id,
+        ownerId: w.farmerId || '',
+        name: w.name.startsWith('👷') ? w.name : `👷 ${w.name}`,
+        mobile: w.mobile ?? undefined,
+        address: w.address ?? 'Labour Worker',
+        balance: -pending, // pending > 0 is Payable (-balance in Party convention)
+        createdAt: w.createdAt || new Date().toISOString(),
+        __type: 'LABOUR',
+        isWorker: true,
+      } as any);
     });
     return list;
   }, [parties, expenseLabourWorkers]);
@@ -1266,6 +1265,24 @@ export default function RecordsScreen() {
   );
   const totalReceivable = useMemo(() => receivableParties.reduce((sum, p) => sum + p.balance, 0), [receivableParties]);
   const totalPayable = useMemo(() => payableParties.reduce((sum, p) => sum + Math.abs(p.balance), 0), [payableParties]);
+
+  const filteredAccountsList = useMemo(() => {
+    let baseList =
+      analysisSubTab === 'RECEIVABLE'
+        ? receivableParties
+        : analysisSubTab === 'PAYABLE'
+        ? payableParties
+        : unifiedAccountParties;
+
+    const q = accountSearchQuery.trim().toLowerCase();
+    if (!q) return baseList;
+    return unifiedAccountParties.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        (p.mobile && p.mobile.includes(q)) ||
+        (p.address && p.address.toLowerCase().includes(q))
+    );
+  }, [analysisSubTab, receivableParties, payableParties, unifiedAccountParties, accountSearchQuery]);
   const { data: partyStatement } = usePartyStatement(paymentMode === 'PARTY' ? selectedParty?.id : undefined);
   const livePartyBalance = partyStatement?.balance ?? selectedParty?.balance ?? 0;
   const previousPartyBalance = editingBillId && editingPreviousBalance !== null
@@ -3827,10 +3844,10 @@ export default function RecordsScreen() {
                 </TouchableOpacity>
               </View>
 
-              {/* Receivable/Payable subtabs */}
+              {/* Receivable/Payable/All subtabs */}
 
               <View style={styles.analysisSubTabRow}>
-                {(['RECEIVABLE', 'PAYABLE'] as const).map((tab) => (
+                {(['RECEIVABLE', 'PAYABLE', 'ALL'] as const).map((tab) => (
                   <TouchableOpacity
                     key={tab}
                     style={[styles.analysisSubTabBtn, analysisSubTab === tab && styles.analysisSubTabBtnActive]}
@@ -3841,21 +3858,61 @@ export default function RecordsScreen() {
                     }}
                   >
                     <Text style={[styles.analysisSubTabText, analysisSubTab === tab && styles.analysisSubTabTextActive]}>
-                      {tab === 'RECEIVABLE' ? `Receivable ${formatInr(totalReceivable)}` : `Payable ${formatInr(totalPayable)}`}
+                      {tab === 'RECEIVABLE'
+                        ? `Receivable ${formatInr(totalReceivable)}`
+                        : tab === 'PAYABLE'
+                        ? `Payable ${formatInr(totalPayable)}`
+                        : `All (${unifiedAccountParties.length})`}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
+              {/* Search Bar for Accounts */}
+              <View style={{ paddingHorizontal: 12, paddingTop: 8, paddingBottom: 4, backgroundColor: '#ffffff' }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: '#f8fafc',
+                    borderWidth: 1,
+                    borderColor: '#cbd5e1',
+                    borderRadius: RADIUS.md,
+                    paddingHorizontal: 10,
+                    height: 38,
+                  }}
+                >
+                  <Ionicons name="search" size={16} color="#64748b" style={{ marginRight: 6 }} />
+                  <TextInput
+                    style={{ flex: 1, fontSize: 12.5, fontFamily: FONT.medium, color: '#0f172a' }}
+                    placeholder="Search worker, supplier, buyer or party..."
+                    placeholderTextColor="#94a3b8"
+                    value={accountSearchQuery}
+                    onChangeText={setAccountSearchQuery}
+                  />
+                  {accountSearchQuery.length > 0 && (
+                    <TouchableOpacity onPress={() => setAccountSearchQuery('')}>
+                      <Ionicons name="close-circle" size={16} color="#94a3b8" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+
               <FlatList
-                data={analysisSubTab === 'RECEIVABLE' ? receivableParties : payableParties}
+                data={filteredAccountsList}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.list}
                 ListEmptyComponent={
                   <View style={styles.center}>
                     <Ionicons name="people-outline" size={36} color="#cbd5e1" />
                     <Text style={styles.emptyText}>
-                      {analysisSubTab === 'RECEIVABLE' ? 'Koi party aapko amount nahi de rahi.' : 'Aap kisi party ko amount nahi dete.'}
+                      {accountSearchQuery
+                        ? 'Koi party ya worker nahi milya.'
+                        : analysisSubTab === 'RECEIVABLE'
+                        ? 'Koi party/worker aapko amount nahi de raha.'
+                        : analysisSubTab === 'PAYABLE'
+                        ? 'Aap kisi party/worker ko amount nahi dete.'
+                        : 'Koi party ya worker registered nahi hai.'}
                     </Text>
                   </View>
                 }

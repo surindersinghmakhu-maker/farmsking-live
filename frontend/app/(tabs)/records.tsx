@@ -410,7 +410,7 @@ export default function RecordsScreen() {
   };
 
   // Sales list view mode — Month / Today / Custom Period Range / Buyer-wise / All Time
-  const [salesViewMode, setSalesViewMode] = useState<'MONTH' | 'TODAY' | 'PERIOD' | 'BUYER' | 'ALL'>('MONTH');
+  const [salesViewMode, setSalesViewMode] = useState<'MONTH' | 'TODAY' | 'PERIOD' | 'BUYER' | 'ALL'>('ALL');
   const [expandedSalesGroup, setExpandedSalesGroup] = useState<string | null>(null);
 
   // Custom Period Date Range state (Default to start of current month till today)
@@ -1472,12 +1472,12 @@ export default function RecordsScreen() {
         }
       }
 
-      if (paymentMode === 'PARTY' && selectedParty) {
+      if (paymentMode === 'PARTY' && selectedParty && !editingBillId) {
         const modeLabel = effectiveAmountReceived > 0 ? ` (${currentReceivedMode})` : '';
         const realBillNoStr = billNo ? ` (${billNo})` : '';
         const reason = `Sale: ${saleItems.map((i) => i.cropName).join(', ')} (${totalCartItems} item${totalCartItems > 1 ? 's' : ''})${modeLabel}${realBillNoStr}`;
         try {
-          const validBillIdToPass = realDbBillId || (editingBillId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(editingBillId) ? editingBillId : undefined);
+          const validBillIdToPass = realDbBillId || undefined;
           await recordSaleLedger.mutateAsync({
             id: selectedParty.id,
             payload: {

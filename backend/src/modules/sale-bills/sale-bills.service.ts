@@ -165,27 +165,8 @@ export class SaleBillsService {
   }
 
   async listMine(user: AuthUser) {
-    const userRoles = Array.isArray(user.roles) ? user.roles : [user.role];
-    const isAdmin = userRoles.includes('ADMIN' as any) || userRoles.includes('SUPER_ADMIN' as any) || user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
-
-    if (isAdmin) {
-      return this.prisma.saleBill.findMany({
-        orderBy: { createdAt: 'desc' },
-      });
-    }
-
-    const cleanMobile = user.mobile ? user.mobile.split('_')[0] : '';
-    const userIds = [user.id];
-    if (cleanMobile && cleanMobile.length >= 10) {
-      const sameMobileUsers = await this.prisma.user.findMany({
-        where: { mobile: { startsWith: cleanMobile } },
-        select: { id: true },
-      });
-      sameMobileUsers.forEach((u) => userIds.push(u.id));
-    }
-
     return this.prisma.saleBill.findMany({
-      where: { farmerId: { in: Array.from(new Set(userIds)) } },
+      where: { farmerId: user.id },
       orderBy: { createdAt: 'desc' },
     });
   }

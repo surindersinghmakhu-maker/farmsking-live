@@ -409,7 +409,7 @@ export class PartiesService {
     const now = new Date();
     const yy = String(now.getFullYear()).slice(-2);
     const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const prefix = isReceived ? `R${yy}${mm}` : `PAY${yy}${mm}`;
+    const prefix = isReceived ? `R${yy}${mm}` : `Pay${yy}${mm}`;
 
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);

@@ -10,9 +10,9 @@ export declare class AppSettingsService {
     clearCache(): void;
     get(): Promise<any>;
     getSupportContact(): Promise<{
-        name: string;
-        mobile: string;
-        email: string;
+        name: any;
+        mobile: any;
+        email: any;
     }>;
     update(admin: AuthUser, dto: UpdateAppSettingsDto): Promise<{
         id: string;
@@ -24,6 +24,9 @@ export declare class AppSettingsService {
         logoUrl: string | null;
         tagline: string | null;
         upiPayeeName: string | null;
+        adminName: string | null;
+        adminMobile: string | null;
+        adminEmail: string | null;
         groupVoiceCallEnabled: boolean;
         whatsappGroupSyncEnabled: boolean;
         whatsappAutoAddEnabled: boolean;
@@ -41,6 +44,9 @@ export declare class AppSettingsService {
         logoUrl: string | null;
         tagline: string | null;
         upiPayeeName: string | null;
+        adminName: string | null;
+        adminMobile: string | null;
+        adminEmail: string | null;
         groupVoiceCallEnabled: boolean;
         whatsappGroupSyncEnabled: boolean;
         whatsappAutoAddEnabled: boolean;

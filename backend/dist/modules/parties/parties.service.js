@@ -171,13 +171,6 @@ let PartiesService = class PartiesService {
                 this.prisma.partyLedgerEntry.delete({ where: { id: e.id } }).catch(() => { });
                 return false;
             }
-            if (!e.saleBillId && (e.type === client_1.PartyLedgerEntryType.SALE_CREDIT || e.type === client_1.PartyLedgerEntryType.SALE_PAYMENT)) {
-                const matchesAnyBill = saleBills.some((b) => e.reason && e.reason.includes(b.billNo));
-                if (!matchesAnyBill) {
-                    this.prisma.partyLedgerEntry.delete({ where: { id: e.id } }).catch(() => { });
-                    return false;
-                }
-            }
             return true;
         });
         const existingBillIds = new Set(validEntries.map((e) => e.saleBillId).filter((id) => Boolean(id)));
@@ -321,6 +314,41 @@ let PartiesService = class PartiesService {
                 return this.getStatement(user, partyId);
             }
         }
+        if (!validSaleBillId) {
+            try {
+                const farmerObj = await this.prisma.user.findUnique({ where: { id: user.id }, select: { name: true } });
+                const billNo = `FK-${Date.now().toString().slice(-6)}`;
+                const createdBill = await this.prisma.saleBill.create({
+                    data: {
+                        farmerId: user.id,
+                        billNo,
+                        farmerName: farmerObj?.name || 'Farmer',
+                        partyId: targetPartyId,
+                        partyName: partyObj.name,
+                        isCash: false,
+                        amountReceivedMode: 'CASH',
+                        items: [
+                            {
+                                cropName: dto.reason || 'Crop Sale',
+                                qty: 1,
+                                unit: 'item',
+                                rate: Number(dto.totalAmount),
+                            },
+                        ],
+                        totalItems: 1,
+                        totalAmount: dto.totalAmount,
+                        amountReceived: dto.amountReceived || 0,
+                        thisSaleBalance: Math.max(0, Number(dto.totalAmount) - (Number(dto.amountReceived) || 0)),
+                        previousBalance: 0,
+                        netReceivable: dto.totalAmount,
+                    },
+                });
+                validSaleBillId = createdBill.id;
+            }
+            catch (err) {
+                console.warn('Could not auto-create SaleBill in recordSaleLedger:', err);
+            }
+        }
         await this.prisma.partyLedgerEntry.create({
             data: {
                 partyId: targetPartyId,
@@ -343,8 +371,33 @@ let PartiesService = class PartiesService {
         }
         return this.getStatement(user, partyId);
     }
-    nextReceiptNo() {
-        return `RCT-${Date.now().toString().slice(-8)}`;
+    async nextReceiptNo(isReceived) {
+        const now = new Date();
+        const yy = String(now.getFullYear()).slice(-2);
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const prefix = isReceived ? `R${yy}${mm}` : `Pay${yy}${mm}`;
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+        const countThisMonth = await this.prisma.paymentReceipt.count({
+            where: {
+                isReceived,
+                createdAt: {
+                    gte: startOfMonth,
+                    lte: endOfMonth,
+                },
+            },
+        });
+        let nextSeq = countThisMonth + 1;
+        let paddedSeq = String(nextSeq).padStart(2, '0');
+        let candidate = `${prefix}${paddedSeq}`;
+        let exists = await this.prisma.paymentReceipt.findFirst({ where: { receiptNo: candidate } });
+        while (exists) {
+            nextSeq++;
+            paddedSeq = String(nextSeq).padStart(2, '0');
+            candidate = `${prefix}${paddedSeq}`;
+            exists = await this.prisma.paymentReceipt.findFirst({ where: { receiptNo: candidate } });
+        }
+        return candidate;
     }
     async recordPaymentReceived(user, partyId, dto) {
         const before = await this.getStatement(user, partyId);
@@ -360,7 +413,7 @@ let PartiesService = class PartiesService {
         const receipt = await this.prisma.paymentReceipt.create({
             data: {
                 farmerId: user.id,
-                receiptNo: this.nextReceiptNo(),
+                receiptNo: await this.nextReceiptNo(true),
                 partyId,
                 partyName: before.party.name,
                 isReceived: true,
@@ -387,7 +440,7 @@ let PartiesService = class PartiesService {
         const receipt = await this.prisma.paymentReceipt.create({
             data: {
                 farmerId: user.id,
-                receiptNo: this.nextReceiptNo(),
+                receiptNo: await this.nextReceiptNo(false),
                 partyId,
                 partyName: before.party.name,
                 isReceived: false,

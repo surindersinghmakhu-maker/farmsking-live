@@ -9,7 +9,7 @@ import { SaleBillsService } from './sale-bills.service';
 import { CreateSaleBillDto } from './dto/create-sale-bill.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.FARMER)
+@Roles(Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN)
 @Controller('sale-bills')
 export class SaleBillsController {
   constructor(private readonly saleBillsService: SaleBillsService) {}

@@ -239,17 +239,6 @@ export function ProfessionalOverviewView({
                   </View>
 
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <View
-                      style={[
-                        styles.cropProfitBadge,
-                        { backgroundColor: isProfit ? '#dcfce7' : '#fee2e2' },
-                      ]}
-                    >
-                      <Text style={[styles.cropProfitBadgeText, { color: isProfit ? '#15803d' : '#dc2626' }]}>
-                        {isProfit ? `▲ Profit: +${formatInr(c.net)}` : `▼ Loss: -${formatInr(Math.abs(c.net))}`}
-                      </Text>
-                    </View>
-
                     <TouchableOpacity
                       style={styles.cropStatementBtn}
                       activeOpacity={0.8}
@@ -281,10 +270,16 @@ export function ProfessionalOverviewView({
                   <View style={styles.cropMetricDivider} />
 
                   <View style={styles.cropMetricBox}>
-                    <Text style={styles.cropMetricLabel}>{isProfit ? 'Profit' : 'Loss'}</Text>
-                    <Text style={[styles.cropMetricVal, { color: isProfit ? '#16a34a' : '#dc2626' }]}>
-                      {isProfit ? `▲ +${formatInr(c.net)}` : `▼ -${formatInr(Math.abs(c.net))}`}
-                    </Text>
+                    <View
+                      style={[
+                        styles.cropProfitBadge,
+                        { backgroundColor: isProfit ? '#dcfce7' : '#fee2e2' },
+                      ]}
+                    >
+                      <Text style={[styles.cropProfitBadgeText, { color: isProfit ? '#15803d' : '#dc2626' }]}>
+                        {isProfit ? `▲ Profit: +${formatInr(c.net)}` : `▼ Loss: -${formatInr(Math.abs(c.net))}`}
+                      </Text>
+                    </View>
                   </View>
                 </View>
               </View>

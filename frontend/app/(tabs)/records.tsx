@@ -398,8 +398,8 @@ export default function RecordsScreen() {
     );
   };
 
-  // Sales list view mode — Month / Period Range / Buyer-wise
-  const [salesViewMode, setSalesViewMode] = useState<'MONTH' | 'PERIOD' | 'BUYER'>('MONTH');
+  // Sales list view mode — Month / Today / Custom Period Range / Buyer-wise / All Time
+  const [salesViewMode, setSalesViewMode] = useState<'MONTH' | 'TODAY' | 'PERIOD' | 'BUYER' | 'ALL'>('MONTH');
   const [expandedSalesGroup, setExpandedSalesGroup] = useState<string | null>(null);
 
   // Custom Period Date Range state (Default to start of current month till today)
@@ -421,7 +421,16 @@ export default function RecordsScreen() {
     });
   }, [unifiedSalesRecords, currentMonthPrefix]);
 
-  // 2. Filter sales for Custom Period Date Range (From Date -> To Date)
+  // 2. Filter sales for Today
+  const todayDateStr = useMemo(() => todayIso(), []);
+  const salesToday = useMemo(() => {
+    return unifiedSalesRecords.filter((s) => {
+      if (!s.saleDate) return false;
+      return s.saleDate.slice(0, 10) === todayDateStr;
+    });
+  }, [unifiedSalesRecords, todayDateStr]);
+
+  // 3. Filter sales for Custom Period Date Range (From Date -> To Date)
   const salesInPeriod = useMemo(() => {
     return unifiedSalesRecords.filter((s) => {
       if (!s.saleDate) return true;
@@ -429,6 +438,22 @@ export default function RecordsScreen() {
       return datePart >= salesFromDate && datePart <= salesToDate;
     });
   }, [unifiedSalesRecords, salesFromDate, salesToDate]);
+
+  // Active filtered list depending on selected view mode
+  const activeSalesList = useMemo(() => {
+    if (salesViewMode === 'MONTH') return salesThisMonth;
+    if (salesViewMode === 'TODAY') return salesToday;
+    if (salesViewMode === 'PERIOD') return salesInPeriod;
+    return unifiedSalesRecords;
+  }, [salesViewMode, salesThisMonth, salesToday, salesInPeriod, unifiedSalesRecords]);
+
+  // Dynamic Total Sales Revenue for selected filter
+  const totalSalesRevenue = useMemo(() => {
+    return activeSalesList.reduce((acc, item) => {
+      const matchedBill = item.billId ? saleBillsMap.get(item.billId) : (item.billNo ? saleBillsMap.get(item.billNo) : null);
+      return acc + (matchedBill ? Number(matchedBill.totalAmount) : (Number(item.totalAmount) || 0));
+    }, 0);
+  }, [activeSalesList, saleBillsMap]);
 
   // 3. Group sales Buyer-wise
   const salesByBuyer = useMemo(() => {
@@ -1091,11 +1116,6 @@ export default function RecordsScreen() {
   };
   const expensesByCrop = useMemo(() => groupExpenses('crop'), [expenses]);
   const expensesByVendor = useMemo(() => groupExpenses('vendor'), [expenses]);
-
-  const totalSalesRevenue = useMemo(
-    () => unifiedSalesRecords.reduce((acc, curr) => acc + curr.totalAmount, 0),
-    [unifiedSalesRecords]
-  );
 
   /** Sales grouped by crop or by buyer, each group sorted by most recent sale first. */
   const groupSales = (key: 'cropName' | 'buyerName') => {
@@ -1809,19 +1829,27 @@ export default function RecordsScreen() {
 
               {/* Sales List view mode */}
               <View style={styles.salesViewModeRow}>
-                {(['MONTH', 'PERIOD', 'BUYER'] as const).map((mode) => (
+                {(
+                  [
+                    { id: 'MONTH', label: '📅 This Month' },
+                    { id: 'TODAY', label: '📆 Today' },
+                    { id: 'PERIOD', label: '🗓️ Custom Period' },
+                    { id: 'BUYER', label: '🤝 Buyer-wise' },
+                    { id: 'ALL', label: '🌐 All Time' },
+                  ] as const
+                ).map((mode) => (
                   <TouchableOpacity
-                    key={mode}
-                    style={[styles.salesViewModeChip, salesViewMode === mode && styles.salesViewModeChipActive]}
+                    key={mode.id}
+                    style={[styles.salesViewModeChip, salesViewMode === mode.id && styles.salesViewModeChipActive]}
                     activeOpacity={0.8}
                     onPress={() => {
                       tap();
-                      setSalesViewMode(mode);
+                      setSalesViewMode(mode.id);
                       setExpandedSalesGroup(null);
                     }}
                   >
-                    <Text style={[styles.salesViewModeChipText, salesViewMode === mode && styles.salesViewModeChipTextActive]}>
-                      {mode === 'MONTH' ? '📅 This Month' : mode === 'PERIOD' ? '🗓️ Custom Period' : '🤝 Buyer-wise'}
+                    <Text style={[styles.salesViewModeChipText, salesViewMode === mode.id && styles.salesViewModeChipTextActive]}>
+                      {mode.label}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -1888,13 +1916,13 @@ export default function RecordsScreen() {
                 () => setShowToDatePicker(false)
               )}
 
-              {unifiedSalesRecords.length === 0 ? (
+              {activeSalesList.length === 0 ? (
                 <View style={styles.center}>
                   <Ionicons name="cart-outline" size={36} color="#cbd5e1" />
-                  <Text style={styles.emptyText}>No sales recorded yet.</Text>
+                  <Text style={styles.emptyText}>No sales recorded for this period.</Text>
                   <Text style={styles.emptySub}>Tap "+ Sale" to log revenue from your harvested crops.</Text>
                 </View>
-              ) : (salesViewMode === 'MONTH' || salesViewMode === 'PERIOD') ? (
+              ) : (salesViewMode !== 'BUYER') ? (
                 <View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, overflow: 'hidden', backgroundColor: '#ffffff', marginBottom: 16 }}>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 560, flexGrow: 1 }}>
                     <View style={{ flex: 1, minWidth: 560 }}>
@@ -1910,7 +1938,7 @@ export default function RecordsScreen() {
 
                       {/* Table Body Rows */}
                       <FlatList
-                        data={salesViewMode === 'MONTH' ? salesThisMonth : salesInPeriod}
+                        data={activeSalesList}
                         keyExtractor={(item) => item.id}
                         renderItem={({ item, index }) => renderSaleRowItem(item, index)}
                       />

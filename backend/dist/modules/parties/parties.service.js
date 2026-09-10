@@ -126,10 +126,23 @@ let PartiesService = class PartiesService {
                         billNo: true,
                     },
                 },
+                paymentReceipt: {
+                    select: {
+                        id: true,
+                        receiptNo: true,
+                    },
+                },
             },
             orderBy: { createdAt: 'desc' },
         });
-        const existingBillIds = new Set(entries.map((e) => e.saleBillId).filter((id) => Boolean(id)));
+        const validEntries = entries.filter((e) => {
+            if (e.saleBillId && !e.saleBill) {
+                this.prisma.partyLedgerEntry.delete({ where: { id: e.id } }).catch(() => { });
+                return false;
+            }
+            return true;
+        });
+        const existingBillIds = new Set(validEntries.map((e) => e.saleBillId).filter((id) => Boolean(id)));
         const saleBills = await this.prisma.saleBill.findMany({
             where: {
                 farmerId: user.id,
@@ -140,6 +153,34 @@ let PartiesService = class PartiesService {
             },
             orderBy: { createdAt: 'desc' },
         });
+        for (const entry of entries) {
+            if (!entry.saleBillId && entry.type === client_1.PartyLedgerEntryType.SALE_CREDIT) {
+                const match = saleBills.find((b) => {
+                    if (entry.reason && entry.reason.includes(b.billNo))
+                        return true;
+                    const timeDiff = Math.abs(new Date(b.createdAt).getTime() - new Date(entry.createdAt).getTime());
+                    return timeDiff < 5 * 60 * 1000 && Number(b.totalAmount) === Number(entry.amount);
+                });
+                if (match) {
+                    entry.saleBillId = match.id;
+                    entry.saleBill = { id: match.id, billNo: match.billNo };
+                    existingBillIds.add(match.id);
+                }
+            }
+            else if (!entry.saleBillId && entry.type === client_1.PartyLedgerEntryType.SALE_PAYMENT) {
+                const match = saleBills.find((b) => {
+                    if (entry.reason && entry.reason.includes(b.billNo))
+                        return true;
+                    const timeDiff = Math.abs(new Date(b.createdAt).getTime() - new Date(entry.createdAt).getTime());
+                    return timeDiff < 5 * 60 * 1000 && Number(b.amountReceived) === Number(entry.amount);
+                });
+                if (match) {
+                    entry.saleBillId = match.id;
+                    entry.saleBill = { id: match.id, billNo: match.billNo };
+                    existingBillIds.add(match.id);
+                }
+            }
+        }
         const extraEntries = [];
         for (const bill of saleBills) {
             if (!existingBillIds.has(bill.id)) {
@@ -177,29 +218,56 @@ let PartiesService = class PartiesService {
         return { party, balance: this.computeBalance(allEntries), entries: allEntries };
     }
     async recordSaleLedger(user, partyId, dto) {
-        await this.findOwnedOrThrow(user, partyId);
+        const partyObj = await this.findOwnedOrThrow(user, partyId);
+        let targetPartyId = partyObj.id;
+        const dbParty = await this.prisma.party.findFirst({ where: { id: partyObj.id, ownerId: user.id, deletedAt: null } });
+        if (!dbParty) {
+            let existingParty = await this.prisma.party.findFirst({
+                where: { ownerId: user.id, name: partyObj.name, deletedAt: null },
+            });
+            if (!existingParty) {
+                existingParty = await this.prisma.party.create({
+                    data: { ownerId: user.id, name: partyObj.name, mobile: partyObj.mobile, address: partyObj.address },
+                });
+            }
+            targetPartyId = existingParty.id;
+        }
+        let validSaleBillId = null;
         if (dto.saleBillId) {
+            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dto.saleBillId);
+            let bill = null;
+            if (isUuid) {
+                bill = await this.prisma.saleBill.findUnique({ where: { id: dto.saleBillId } }).catch(() => null);
+            }
+            if (!bill) {
+                bill = await this.prisma.saleBill.findFirst({ where: { farmerId: user.id, billNo: dto.saleBillId } }).catch(() => null);
+            }
+            if (bill) {
+                validSaleBillId = bill.id;
+            }
+        }
+        if (validSaleBillId) {
             const existingCreditEntry = await this.prisma.partyLedgerEntry.findFirst({
-                where: { saleBillId: dto.saleBillId, type: client_1.PartyLedgerEntryType.SALE_CREDIT },
+                where: { saleBillId: validSaleBillId, type: client_1.PartyLedgerEntryType.SALE_CREDIT },
             });
             if (existingCreditEntry) {
                 await this.prisma.partyLedgerEntry.update({
                     where: { id: existingCreditEntry.id },
                     data: {
-                        partyId,
+                        partyId: targetPartyId,
                         amount: dto.totalAmount,
                         reason: dto.reason,
                     },
                 });
                 const existingPaymentEntry = await this.prisma.partyLedgerEntry.findFirst({
-                    where: { saleBillId: dto.saleBillId, type: client_1.PartyLedgerEntryType.SALE_PAYMENT },
+                    where: { saleBillId: validSaleBillId, type: client_1.PartyLedgerEntryType.SALE_PAYMENT },
                 });
                 if (dto.amountReceived && dto.amountReceived > 0) {
                     if (existingPaymentEntry) {
                         await this.prisma.partyLedgerEntry.update({
                             where: { id: existingPaymentEntry.id },
                             data: {
-                                partyId,
+                                partyId: targetPartyId,
                                 amount: dto.amountReceived,
                                 reason: `Amount received against: ${dto.reason}`,
                             },
@@ -208,11 +276,11 @@ let PartiesService = class PartiesService {
                     else {
                         await this.prisma.partyLedgerEntry.create({
                             data: {
-                                partyId,
+                                partyId: targetPartyId,
                                 type: client_1.PartyLedgerEntryType.SALE_PAYMENT,
                                 amount: dto.amountReceived,
                                 reason: `Amount received against: ${dto.reason}`,
-                                saleBillId: dto.saleBillId,
+                                saleBillId: validSaleBillId,
                             },
                         });
                     }
@@ -227,21 +295,21 @@ let PartiesService = class PartiesService {
         }
         await this.prisma.partyLedgerEntry.create({
             data: {
-                partyId,
+                partyId: targetPartyId,
                 type: client_1.PartyLedgerEntryType.SALE_CREDIT,
                 amount: dto.totalAmount,
                 reason: dto.reason,
-                saleBillId: dto.saleBillId,
+                saleBillId: validSaleBillId,
             },
         });
         if (dto.amountReceived && dto.amountReceived > 0) {
             await this.prisma.partyLedgerEntry.create({
                 data: {
-                    partyId,
+                    partyId: targetPartyId,
                     type: client_1.PartyLedgerEntryType.SALE_PAYMENT,
                     amount: dto.amountReceived,
                     reason: `Amount received against: ${dto.reason}`,
-                    saleBillId: dto.saleBillId,
+                    saleBillId: validSaleBillId,
                 },
             });
         }

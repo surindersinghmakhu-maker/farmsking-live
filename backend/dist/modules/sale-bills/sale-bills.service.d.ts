@@ -17,6 +17,7 @@ export declare class SaleBillsService {
         partyMobile: string | null;
         partyAddress: string | null;
         isCash: boolean;
+        amountReceivedMode: string | null;
         items: import("@prisma/client/runtime/library").JsonValue;
         totalItems: number;
         amountReceived: import("@prisma/client/runtime/library").Decimal;
@@ -36,6 +37,7 @@ export declare class SaleBillsService {
         partyMobile: string | null;
         partyAddress: string | null;
         isCash: boolean;
+        amountReceivedMode: string | null;
         items: import("@prisma/client/runtime/library").JsonValue;
         totalItems: number;
         amountReceived: import("@prisma/client/runtime/library").Decimal;
@@ -56,6 +58,7 @@ export declare class SaleBillsService {
         partyMobile: string | null;
         partyAddress: string | null;
         isCash: boolean;
+        amountReceivedMode: string | null;
         items: import("@prisma/client/runtime/library").JsonValue;
         totalItems: number;
         amountReceived: import("@prisma/client/runtime/library").Decimal;
@@ -65,5 +68,25 @@ export declare class SaleBillsService {
     }[]>;
     countMine(user: AuthUser): Promise<{
         count: number;
+    }>;
+    remove(user: AuthUser, id: string): Promise<{
+        id: string;
+        createdAt: Date;
+        farmerId: string;
+        partyId: string | null;
+        totalAmount: import("@prisma/client/runtime/library").Decimal;
+        billNo: string;
+        farmerName: string;
+        partyName: string;
+        partyMobile: string | null;
+        partyAddress: string | null;
+        isCash: boolean;
+        amountReceivedMode: string | null;
+        items: import("@prisma/client/runtime/library").JsonValue;
+        totalItems: number;
+        amountReceived: import("@prisma/client/runtime/library").Decimal;
+        thisSaleBalance: import("@prisma/client/runtime/library").Decimal;
+        previousBalance: import("@prisma/client/runtime/library").Decimal;
+        netReceivable: import("@prisma/client/runtime/library").Decimal;
     }>;
 }

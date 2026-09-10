@@ -207,8 +207,11 @@ let ExpensesService = class ExpensesService {
         });
     }
     async remove(user, id) {
-        await this.findOneOrThrow(user, id);
-        return this.prisma.expense.update({ where: { id }, data: { deletedAt: new Date() } });
+        const expense = await this.findOneOrThrow(user, id);
+        await this.prisma.partyLedgerEntry.deleteMany({
+            where: { expenseId: expense.id },
+        });
+        return this.prisma.expense.update({ where: { id: expense.id }, data: { deletedAt: new Date() } });
     }
 };
 exports.ExpensesService = ExpensesService;

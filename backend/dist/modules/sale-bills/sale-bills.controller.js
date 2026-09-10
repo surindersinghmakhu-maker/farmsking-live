@@ -41,6 +41,9 @@ let SaleBillsController = class SaleBillsController {
     update(user, id, dto) {
         return this.saleBillsService.update(user, id, dto);
     }
+    remove(user, id) {
+        return this.saleBillsService.remove(user, id);
+    }
 };
 exports.SaleBillsController = SaleBillsController;
 __decorate([
@@ -82,6 +85,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, create_sale_bill_dto_1.CreateSaleBillDto]),
     __metadata("design:returntype", void 0)
 ], SaleBillsController.prototype, "update", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], SaleBillsController.prototype, "remove", null);
 exports.SaleBillsController = SaleBillsController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(client_1.Role.FARMER),

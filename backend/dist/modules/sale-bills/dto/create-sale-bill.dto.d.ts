@@ -14,6 +14,7 @@ export declare class CreateSaleBillDto {
     partyMobile?: string;
     partyAddress?: string;
     isCash: boolean;
+    amountReceivedMode?: string;
     items: SaleBillItemDto[];
     totalItems: number;
     totalAmount: number;

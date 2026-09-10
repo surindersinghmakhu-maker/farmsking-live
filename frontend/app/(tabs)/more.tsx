@@ -1080,6 +1080,13 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
   const { data: contact } = useSupportContact();
   const updateSettings = useUpdateAppSettings();
   const { role } = useRole();
+  const { user, refreshUser } = useAuth();
+
+  const userDeactivated = user?.deactivatedRoles ?? [];
+  const userRoles: string[] = (Array.isArray(user?.roles) && user.roles.length > 0 ? user.roles : [user?.role || role])
+    .filter((r) => r && !userDeactivated.includes(r as any)) as string[];
+
+  const isAdmin = userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN') || user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'SUPER_ADMIN';
 
   const [formAppName, setFormAppName] = useState('');
   const [formTagline, setFormTagline] = useState('');
@@ -1126,11 +1133,12 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
       setFormAdminMobile(contact?.mobile || '9577622000');
       setFormAdminEmail(contact?.email || 'support@farmsking.com');
       setSaveSuccess(false);
+      // Default to editing mode for Admins so fields are immediately editable
+      setIsEditing(isAdmin);
     }
-  }, [visible, appSettings, contact]);
+  }, [visible, appSettings, contact, isAdmin]);
 
   const queryClient = useQueryClient();
-  const { refreshUser } = useAuth();
 
   const handleSave = async () => {
     try {
@@ -1160,67 +1168,88 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={contactStyles.overlay}>
-        <View style={[contactStyles.card, { maxWidth: 460, maxHeight: '90%' }]}>
+        <View style={[contactStyles.card, { maxWidth: 480, maxHeight: '92%' }]}>
           <View style={contactStyles.header}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Ionicons name="shield-checkmark" size={22} color="#2563eb" />
-              <Text style={contactStyles.title}>👑 Admin Info</Text>
+              <Text style={contactStyles.title}>👑 Admin Info & Settings</Text>
             </View>
-            <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close-circle" size={22} color="#64748b" />
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              {isAdmin && (
+                <TouchableOpacity
+                  onPress={() => setIsEditing(!isEditing)}
+                  style={{
+                    backgroundColor: isEditing ? '#e0f2fe' : '#0284c7',
+                    paddingHorizontal: 12,
+                    paddingVertical: 5,
+                    borderRadius: RADIUS.pill,
+                    borderWidth: 1,
+                    borderColor: isEditing ? '#0284c7' : 'transparent',
+                  }}
+                >
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isEditing ? '#0369a1' : '#ffffff' }}>
+                    {isEditing ? '🔒 View Mode' : '✏️ Edit Mode'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity onPress={onClose}>
+                <Ionicons name="close-circle" size={24} color="#64748b" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingVertical: 4 }}>
             {saveSuccess && (
-              <View style={{ backgroundColor: '#f0fdf4', borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#86efac', padding: 8, borderRadius: RADIUS.md, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
-                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#15803d' }}>Settings saved successfully in Database!</Text>
+              <View style={{ backgroundColor: '#f0fdf4', borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#86efac', padding: 10, borderRadius: RADIUS.md, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="checkmark-circle" size={20} color="#16a34a" />
+                <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#15803d' }}>Settings saved successfully in Database!</Text>
               </View>
             )}
 
             {/* Section 1: App Branding */}
             <View style={{ backgroundColor: '#f0f9ff', padding: 14, borderRadius: RADIUS.lg, borderWidth: 1, borderColor: '#bae6fd' }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                 <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0369a1', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                   👑 App Branding & Logo
                 </Text>
-                {!isEditing && (role === 'SUPER_ADMIN' || role === 'ADMIN') && (
+                {isAdmin && !isEditing && (
                   <TouchableOpacity onPress={() => setIsEditing(true)} style={{ backgroundColor: '#0284c7', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill }}>
-                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#fff' }}>✏️ Edit Settings</Text>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#fff' }}>✏️ Edit</Text>
                   </TouchableOpacity>
                 )}
               </View>
 
               {isEditing ? (
-                <View style={{ gap: 8 }}>
+                <View style={{ gap: 10 }}>
                   <View>
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#0369a1', marginBottom: 2 }}>App Name</Text>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0369a1', marginBottom: 4 }}>App Name</Text>
                     <TextInput
-                      style={{ borderWidth: 1, borderColor: '#bae6fd', borderRadius: RADIUS.md, paddingHorizontal: 8, paddingVertical: 4, fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#fff' }}
+                      style={{ borderWidth: 1, borderColor: '#bae6fd', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#ffffff' }}
                       value={formAppName}
                       onChangeText={setFormAppName}
+                      placeholder="e.g. FarmsKing"
                     />
                   </View>
                   <View>
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#0369a1', marginBottom: 2 }}>Tagline</Text>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0369a1', marginBottom: 4 }}>Tagline</Text>
                     <TextInput
-                      style={{ borderWidth: 1, borderColor: '#bae6fd', borderRadius: RADIUS.md, paddingHorizontal: 8, paddingVertical: 4, fontSize: 12, fontFamily: FONT.medium, color: '#0f172a', backgroundColor: '#fff' }}
+                      style={{ borderWidth: 1, borderColor: '#bae6fd', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 12.5, fontFamily: FONT.medium, color: '#0f172a', backgroundColor: '#ffffff' }}
                       value={formTagline}
                       onChangeText={setFormTagline}
+                      placeholder="e.g. Smart Farming, Better Future"
                     />
                   </View>
                   <View>
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#0369a1', marginBottom: 2 }}>Brand Logo Image</Text>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0369a1', marginBottom: 4 }}>Brand Logo Image URL</Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <TextInput
-                        style={{ flex: 1, borderWidth: 1, borderColor: '#bae6fd', borderRadius: RADIUS.md, paddingHorizontal: 8, paddingVertical: 6, fontSize: 11.5, fontFamily: FONT.regular, color: '#0f172a', backgroundColor: '#fff' }}
+                        style={{ flex: 1, borderWidth: 1, borderColor: '#bae6fd', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 12, fontFamily: FONT.regular, color: '#0f172a', backgroundColor: '#ffffff' }}
                         value={formLogoUrl}
                         onChangeText={setFormLogoUrl}
-                        placeholder="https://... or upload file"
+                        placeholder="https://... or click Browse to upload"
                       />
                       <TouchableOpacity
-                        style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#0284c7', paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.md }}
+                        style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#0284c7', paddingHorizontal: 12, paddingVertical: 8, borderRadius: RADIUS.md }}
                         onPress={handlePickLogo}
                         disabled={isUploadingLogo}
                         activeOpacity={0.8}
@@ -1229,8 +1258,8 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
                           <ActivityIndicator color="#ffffff" size="small" />
                         ) : (
                           <>
-                            <Ionicons name="folder-open-outline" size={14} color="#ffffff" />
-                            <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' }}>Browse</Text>
+                            <Ionicons name="folder-open-outline" size={15} color="#ffffff" />
+                            <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>Browse</Text>
                           </>
                         )}
                       </TouchableOpacity>
@@ -1238,19 +1267,19 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
 
                     {formLogoUrl ? (
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, backgroundColor: '#ffffff', padding: 6, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#cbd5e1' }}>
-                        <Avatar uri={formLogoUrl} size={34} />
-                        <Text style={{ fontSize: 10.5, fontFamily: FONT.semiBold, color: '#16a34a', flex: 1 }} numberOfLines={1}>
+                        <Avatar uri={formLogoUrl} size={36} />
+                        <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#16a34a', flex: 1 }} numberOfLines={1}>
                           ✓ Brand Logo Uploaded
                         </Text>
                         <TouchableOpacity onPress={() => setFormLogoUrl('')}>
-                          <Ionicons name="close-circle" size={16} color="#ef4444" />
+                          <Ionicons name="close-circle" size={18} color="#ef4444" />
                         </TouchableOpacity>
                       </View>
                     ) : null}
                   </View>
                 </View>
               ) : (
-                <View style={{ alignItems: 'center' }}>
+                <View style={{ alignItems: 'center', paddingVertical: 4 }}>
                   <BrandLogo size={56} useHdQuality style={{ marginBottom: 4 }} />
                   <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: '#0369a1', marginTop: 4 }}>{formAppName}</Text>
                   <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#0284c7', textAlign: 'center', marginTop: 2 }}>{formTagline}</Text>
@@ -1265,21 +1294,23 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
               </Text>
 
               {isEditing ? (
-                <View style={{ gap: 8 }}>
+                <View style={{ gap: 10 }}>
                   <View>
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>UPI ID (VPA)</Text>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#64748b', marginBottom: 4 }}>UPI ID (VPA)</Text>
                     <TextInput
-                      style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 8, paddingVertical: 4, fontSize: 12, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#fff' }}
+                      style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#ffffff' }}
                       value={formUpiId}
                       onChangeText={setFormUpiId}
+                      placeholder="e.g. surindersinghmakhu-5@oksbi"
                     />
                   </View>
                   <View>
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>UPI Payee Name</Text>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#64748b', marginBottom: 4 }}>UPI Payee Name</Text>
                     <TextInput
-                      style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 8, paddingVertical: 4, fontSize: 12, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#fff' }}
+                      style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#ffffff' }}
                       value={formUpiPayeeName}
                       onChangeText={setFormUpiPayeeName}
+                      placeholder="e.g. Surinder Singh"
                     />
                   </View>
                 </View>
@@ -1300,29 +1331,34 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
               </Text>
 
               {isEditing ? (
-                <View style={{ gap: 8 }}>
+                <View style={{ gap: 10 }}>
                   <View>
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>Admin Name</Text>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#64748b', marginBottom: 4 }}>Admin Name</Text>
                     <TextInput
-                      style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 8, paddingVertical: 4, fontSize: 12, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#fff' }}
+                      style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#ffffff' }}
                       value={formAdminName}
                       onChangeText={setFormAdminName}
+                      placeholder="e.g. Surinder Singh"
                     />
                   </View>
                   <View>
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>Mobile Number</Text>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#64748b', marginBottom: 4 }}>Mobile Number</Text>
                     <TextInput
-                      style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 8, paddingVertical: 4, fontSize: 12, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#fff' }}
+                      style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#ffffff' }}
                       value={formAdminMobile}
                       onChangeText={setFormAdminMobile}
+                      placeholder="e.g. 9577622000"
+                      keyboardType="phone-pad"
                     />
                   </View>
                   <View>
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>Email Address</Text>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#64748b', marginBottom: 4 }}>Email Address</Text>
                     <TextInput
-                      style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 8, paddingVertical: 4, fontSize: 12, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#fff' }}
+                      style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#ffffff' }}
                       value={formAdminEmail}
                       onChangeText={setFormAdminEmail}
+                      placeholder="e.g. support@farmsking.com"
+                      keyboardType="email-address"
                     />
                   </View>
                 </View>
@@ -1362,17 +1398,17 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
             </View>
 
             {/* Action Buttons when editing */}
-            {isEditing && (
-              <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+            {isEditing ? (
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 6, marginBottom: 8 }}>
                 <TouchableOpacity
-                  style={{ flex: 1, backgroundColor: '#f1f5f9', paddingVertical: 10, borderRadius: RADIUS.md, alignItems: 'center' }}
+                  style={{ flex: 1, backgroundColor: '#f1f5f9', paddingVertical: 12, borderRadius: RADIUS.md, alignItems: 'center', borderWidth: 1, borderColor: '#cbd5e1' }}
                   onPress={() => setIsEditing(false)}
                 >
-                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#475569' }}>Cancel</Text>
+                  <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: '#475569' }}>Cancel</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={{ flex: 1, backgroundColor: '#16a34a', paddingVertical: 10, borderRadius: RADIUS.md, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 6 }}
+                  style={{ flex: 1.5, backgroundColor: '#16a34a', paddingVertical: 12, borderRadius: RADIUS.md, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 6, elevation: 2 }}
                   onPress={handleSave}
                   disabled={updateSettings.isPending}
                 >
@@ -1380,13 +1416,21 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
                     <ActivityIndicator color="#fff" size="small" />
                   ) : (
                     <>
-                      <Ionicons name="save" size={16} color="#fff" />
-                      <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#fff' }}>Save Settings</Text>
+                      <Ionicons name="save" size={18} color="#fff" />
+                      <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: '#fff' }}>💾 Save Settings</Text>
                     </>
                   )}
                 </TouchableOpacity>
               </View>
-            )}
+            ) : isAdmin ? (
+              <TouchableOpacity
+                style={{ backgroundColor: '#0284c7', paddingVertical: 12, borderRadius: RADIUS.md, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 4, marginBottom: 4 }}
+                onPress={() => setIsEditing(true)}
+              >
+                <Ionicons name="create-outline" size={18} color="#ffffff" />
+                <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' }}>✏️ Edit Admin Info & Settings</Text>
+              </TouchableOpacity>
+            ) : null}
           </ScrollView>
         </View>
       </View>

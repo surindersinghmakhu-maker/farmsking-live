@@ -52,6 +52,7 @@ class CreateSaleBillDto {
     partyMobile;
     partyAddress;
     isCash;
+    amountReceivedMode;
     items;
     totalItems;
     totalAmount;
@@ -93,6 +94,11 @@ __decorate([
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], CreateSaleBillDto.prototype, "isCash", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateSaleBillDto.prototype, "amountReceivedMode", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.ArrayMinSize)(1),

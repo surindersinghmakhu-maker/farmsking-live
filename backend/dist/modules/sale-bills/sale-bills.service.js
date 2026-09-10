@@ -85,6 +85,7 @@ let SaleBillsService = class SaleBillsService {
                 partyMobile: dto.partyMobile,
                 partyAddress: dto.partyAddress,
                 isCash: dto.isCash,
+                amountReceivedMode: dto.amountReceivedMode || 'CASH',
                 items: dto.items,
                 totalItems: dto.totalItems,
                 totalAmount: dto.totalAmount,
@@ -140,6 +141,7 @@ let SaleBillsService = class SaleBillsService {
                 partyMobile: dto.partyMobile,
                 partyAddress: dto.partyAddress,
                 isCash: dto.isCash,
+                amountReceivedMode: dto.amountReceivedMode || 'CASH',
                 items: dto.items,
                 totalItems: dto.totalItems,
                 totalAmount: dto.totalAmount,
@@ -187,6 +189,15 @@ let SaleBillsService = class SaleBillsService {
     async countMine(user) {
         const count = await this.prisma.saleBill.count({ where: { farmerId: user.id } });
         return { count };
+    }
+    async remove(user, id) {
+        const bill = await this.findOneOrThrow(user, id);
+        await this.prisma.partyLedgerEntry.deleteMany({
+            where: { saleBillId: bill.id },
+        });
+        return this.prisma.saleBill.delete({
+            where: { id: bill.id },
+        });
     }
 };
 exports.SaleBillsService = SaleBillsService;

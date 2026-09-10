@@ -1317,12 +1317,13 @@ export default function RecordsScreen() {
   };
   const salesByCrop = useMemo(() => groupSales('cropName'), [unifiedSalesRecords]);
 
-  // Crop-wise breakdown for the Analysis tab. Expenses are logged per-farm, not
-  // per-crop, so each active crop field is given an even share of total expenses.
-  // Aggregates itemized sale totals per crop field to calculate accurate field-wise income & expenses.
+  // Crop-wise breakdown for the Analysis tab.
+  // Proportional allocation:
+  // - Delivery charges added to Income based on item sale value ratio.
+  // - Discounts added to Expense based on item sale value ratio.
+  // - Expenses (tagged + general farm expenses) allocated per crop field.
   const cropAnalysis = useMemo(() => {
     const totalFields = farmerCrops.length;
-    const perFieldExpense = totalFields > 0 ? totalSpent / totalFields : 0;
 
     const getCleanName = (name: string): string => {
       if (!name) return '';
@@ -1333,29 +1334,61 @@ export default function RecordsScreen() {
         .trim();
     };
 
-    // 1. Flatten all sales down to individual items from DB bills + local sales
-    const allFlatSaleItems: Array<{ cropId?: string; cropName: string; amount: number }> = [];
+    // Data structures for field-level income and expense tracking
+    const fieldIncomes: Record<string, number> = {};
+    const fieldExpenses: Record<string, number> = {};
+
+    farmerCrops.forEach((c) => {
+      fieldIncomes[c.id] = 0;
+      fieldExpenses[c.id] = 0;
+    });
+
+    // 1. Process Sale Bills (rawSaleBillsList) & Sale Records
+    // Flatten into itemized entries with proportional delivery charge (added to income)
+    // and proportional discount (added to expense)
+    const allFlatSaleItems: Array<{
+      cropId?: string;
+      cropName: string;
+      incomeAmount: number;
+      discountAmount: number;
+    }> = [];
 
     (rawSaleBillsList || []).forEach((bill: any) => {
+      const deliveryVal = Number(bill.deliveryCharge) || 0;
+      const discountVal = Number(bill.discountAmount) || 0;
+
       if (Array.isArray(bill.items) && bill.items.length > 0) {
+        const rawSubtotal = bill.items.reduce((sum: number, i: any) => {
+          return sum + (Number(i.amount) || ((Number(i.qty) || 1) * (Number(i.rate) || 0)));
+        }, 0);
+
         bill.items.forEach((item: any) => {
-          const amt = Number(item.amount) || ((Number(item.qty) || 1) * (Number(item.rate) || 0));
+          const itemBaseAmt = Number(item.amount) || ((Number(item.qty) || 1) * (Number(item.rate) || 0));
+          const ratio = rawSubtotal > 0 ? itemBaseAmt / rawSubtotal : 1 / bill.items.length;
+
+          const propDelivery = deliveryVal * ratio;
+          const propDiscount = discountVal * ratio;
+          const finalItemIncome = itemBaseAmt + propDelivery;
+
           allFlatSaleItems.push({
             cropId: item.cropId || bill.cropId,
             cropName: item.cropName || '',
-            amount: amt > 0 ? amt : (Number(bill.totalAmount) || 0),
+            incomeAmount: finalItemIncome,
+            discountAmount: propDiscount,
           });
         });
       } else {
+        const billTotal = Number(bill.totalAmount) || 0;
         allFlatSaleItems.push({
           cropId: bill.cropId,
           cropName: bill.cropName || 'Crop Sale',
-          amount: Number(bill.totalAmount) || 0,
+          incomeAmount: billTotal + deliveryVal,
+          discountAmount: discountVal,
         });
       }
     });
 
-    // Also include any local sales records not in rawSaleBillsList
+    // Also process local/unsynced sales records not in rawSaleBillsList
     const dbBillIds = new Set<string>();
     const dbBillNos = new Set<string>();
     (rawSaleBillsList || []).forEach((b: any) => {
@@ -1370,34 +1403,32 @@ export default function RecordsScreen() {
       allFlatSaleItems.push({
         cropId: s.cropId,
         cropName: s.cropName || '',
-        amount: Number(s.totalAmount) || 0,
+        incomeAmount: Number(s.totalAmount) || 0,
+        discountAmount: 0,
       });
     });
 
-    // 2. Match sale items to farmerCrops (direct ID match -> name match -> fallback distribution)
-    const fieldIncomes: Record<string, number> = {};
-    farmerCrops.forEach((c) => {
-      fieldIncomes[c.id] = 0;
-    });
-
+    // 2. Allocate Sale Income and Sale Discounts to crop fields
     allFlatSaleItems.forEach((sItem) => {
-      if (!sItem.amount || sItem.amount <= 0) return;
+      if (sItem.incomeAmount <= 0 && sItem.discountAmount <= 0) return;
       const sKey = getCleanName(sItem.cropName);
 
-      // Check direct crop ID matches first
+      // Direct crop ID matches
       const directMatches = farmerCrops.filter(
         (c) => sItem.cropId && (sItem.cropId === c.id || (c.cropId && sItem.cropId === c.cropId))
       );
 
       if (directMatches.length > 0) {
-        const share = sItem.amount / directMatches.length;
+        const incShare = sItem.incomeAmount / directMatches.length;
+        const discShare = sItem.discountAmount / directMatches.length;
         directMatches.forEach((c) => {
-          fieldIncomes[c.id] = (fieldIncomes[c.id] || 0) + share;
+          fieldIncomes[c.id] = (fieldIncomes[c.id] || 0) + incShare;
+          fieldExpenses[c.id] = (fieldExpenses[c.id] || 0) + discShare;
         });
         return;
       }
 
-      // Name matches if no direct ID match
+      // Name matches
       const nameMatches = farmerCrops.filter((c) => {
         const cKey = getCleanName(c.cropName);
         if (!sKey || !cKey) return false;
@@ -1405,18 +1436,68 @@ export default function RecordsScreen() {
       });
 
       if (nameMatches.length > 0) {
-        const share = sItem.amount / nameMatches.length;
+        const incShare = sItem.incomeAmount / nameMatches.length;
+        const discShare = sItem.discountAmount / nameMatches.length;
         nameMatches.forEach((c) => {
-          fieldIncomes[c.id] = (fieldIncomes[c.id] || 0) + share;
+          fieldIncomes[c.id] = (fieldIncomes[c.id] || 0) + incShare;
+          fieldExpenses[c.id] = (fieldExpenses[c.id] || 0) + discShare;
         });
         return;
       }
 
-      // Fallback: If no direct ID or name match, distribute evenly across active fields
+      // Fallback: distribute evenly across active fields
       if (totalFields > 0) {
-        const share = sItem.amount / totalFields;
+        const incShare = sItem.incomeAmount / totalFields;
+        const discShare = sItem.discountAmount / totalFields;
         farmerCrops.forEach((c) => {
-          fieldIncomes[c.id] = (fieldIncomes[c.id] || 0) + share;
+          fieldIncomes[c.id] = (fieldIncomes[c.id] || 0) + incShare;
+          fieldExpenses[c.id] = (fieldExpenses[c.id] || 0) + discShare;
+        });
+      }
+    });
+
+    // 3. Process Farm Expenses (expenses array) & allocate per crop field
+    (expenses || []).forEach((exp: any) => {
+      const expAmt = Number(exp.amount) || 0;
+      if (expAmt <= 0) return;
+
+      const expCropId = exp.cropId || exp.cropCycleId || exp.cropCycle?.id;
+      const expCropName = exp.cropName || exp.cropCycle?.cropName;
+      const eKey = getCleanName(expCropName);
+
+      // Explicitly tagged crop ID match
+      const directMatches = farmerCrops.filter(
+        (c) => expCropId && (expCropId === c.id || (c.cropId && expCropId === c.cropId))
+      );
+
+      if (directMatches.length > 0) {
+        const share = expAmt / directMatches.length;
+        directMatches.forEach((c) => {
+          fieldExpenses[c.id] = (fieldExpenses[c.id] || 0) + share;
+        });
+        return;
+      }
+
+      // Explicitly tagged crop name match
+      const nameMatches = farmerCrops.filter((c) => {
+        const cKey = getCleanName(c.cropName);
+        if (!eKey || !cKey) return false;
+        return eKey.includes(cKey) || cKey.includes(eKey);
+      });
+
+      if (nameMatches.length > 0) {
+        const share = expAmt / nameMatches.length;
+        nameMatches.forEach((c) => {
+          fieldExpenses[c.id] = (fieldExpenses[c.id] || 0) + share;
+        });
+        return;
+      }
+
+      // General / untagged farm expenses: distribute across active crop fields
+      if (totalFields > 0) {
+        const share = expAmt / totalFields;
+        farmerCrops.forEach((c) => {
+          fieldExpenses[c.id] = (fieldExpenses[c.id] || 0) + share;
         });
       }
     });
@@ -1426,7 +1507,7 @@ export default function RecordsScreen() {
       const cropName = crop.cropName || 'Crop';
       const fieldName = crop.fieldName || 'Field 1';
       const income = fieldIncomes[cropIdStr] || 0;
-      const expense = perFieldExpense;
+      const expense = fieldExpenses[cropIdStr] || 0;
       const net = income - expense;
 
       return {
@@ -1438,7 +1519,7 @@ export default function RecordsScreen() {
         net,
       };
     });
-  }, [farmerCrops, rawSaleBillsList, allSalesRecords, totalSpent]);
+  }, [farmerCrops, rawSaleBillsList, allSalesRecords, expenses]);
 
   const maxCropValue = Math.max(1, ...cropAnalysis.map((c) => Math.max(c.income, c.expense)));
   const overallNet = totalSalesRevenue - totalSpent;

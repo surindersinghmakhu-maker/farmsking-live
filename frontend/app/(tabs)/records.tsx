@@ -1139,14 +1139,21 @@ export default function RecordsScreen() {
     ? editingPreviousBalance
     : livePartyBalance;
 
-  // Keep the selected crop valid as the active crop list changes (e.g. a crop completes elsewhere)
+  // ਸਿਰਫ਼ HARVESTING stage ਵਾਲੀਆਂ crops sale ਲਈ
+  const harvestingCrops = useMemo(() => {
+    const harvesting = farmerCrops.filter((c) => c.stage === 'HARVESTING');
+    // ਜੇ HARVESTING ਵਾਲੀ ਕੋਈ ਨਹੀਂ ਤਾਂ ਸਾਰੀਆਂ active ਦਿਖਾਓ (fallback)
+    return harvesting.length > 0 ? harvesting : farmerCrops;
+  }, [farmerCrops]);
+
+  // Keep the selected crop valid as the active crop list changes
   useEffect(() => {
-    if (farmerCrops.length === 0) return;
-    if (!farmerCrops.some((c) => c.id === selectedCropId)) {
-      setSelectedCropId(farmerCrops[0].id);
-      setSaleRate(farmerCrops[0].pricePerUnit);
+    if (harvestingCrops.length === 0) return;
+    if (!harvestingCrops.some((c) => c.id === selectedCropId)) {
+      setSelectedCropId(harvestingCrops[0].id);
+      setSaleRate(harvestingCrops[0].pricePerUnit);
     }
-  }, [farmerCrops, selectedCropId]);
+  }, [harvestingCrops, selectedCropId]);
 
   const totalCartItems = saleItems.length;
   const totalCartAmount = useMemo(() => saleItems.reduce((sum, i) => sum + i.amount, 0), [saleItems]);
@@ -1257,12 +1264,12 @@ export default function RecordsScreen() {
   const overallNet = totalSalesRevenue - totalSpent;
   const maxOverallValue = Math.max(1, totalSalesRevenue, totalSpent);
 
-  const selectedFarmerCrop = farmerCrops.find((c) => c.id === selectedCropId) ?? farmerCrops[0];
+  const selectedFarmerCrop = harvestingCrops.find((c) => c.id === selectedCropId) ?? harvestingCrops[0];
 
   const handleSelectFarmerCrop = (cropId: string) => {
     tap();
     setSelectedCropId(cropId);
-    const found = farmerCrops.find((c) => c.id === cropId);
+    const found = harvestingCrops.find((c) => c.id === cropId);
     if (found) {
       setSaleRate(found.pricePerUnit);
     }
@@ -1384,7 +1391,7 @@ export default function RecordsScreen() {
 
     // Validate estimated max rate (+10% cap over all farmers) for all items in the cart
     for (const item of saleItems) {
-      const crop = farmerCrops.find((c) => c.id === item.cropId);
+      const crop = harvestingCrops.find((c) => c.id === item.cropId) || farmerCrops.find((c) => c.id === item.cropId);
       const { highestFarmerRate, maxAllowedRate } = getCropMaxRateDetails(
         item.cropName,
         crop?.maxPricePerUnit || crop?.pricePerUnit
@@ -2242,7 +2249,7 @@ export default function RecordsScreen() {
                                     padding: 4,
                                   }}>
                                     <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
-                                      {farmerCrops.map((crop) => (
+                                      {harvestingCrops.map((crop) => (
                                         <TouchableOpacity
                                           key={crop.id}
                                           style={{
@@ -2263,14 +2270,19 @@ export default function RecordsScreen() {
                                             setIsCropDropdownOpen(false);
                                           }}
                                         >
-                                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                                            <Ionicons name="leaf-outline" size={16} color={crop.id === selectedCropId ? '#16a34a' : '#64748b'} />
-                                            <Text style={{ fontSize: 13, fontFamily: crop.id === selectedCropId ? FONT.bold : FONT.medium, color: crop.id === selectedCropId ? '#16a34a' : '#0f172a' }}>
-                                              {crop.cropName}
+                                          <View style={{ flex: 1 }}>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                              <Ionicons name="leaf-outline" size={15} color={crop.id === selectedCropId ? '#16a34a' : '#64748b'} />
+                                              <Text style={{ fontSize: 13, fontFamily: crop.id === selectedCropId ? FONT.bold : FONT.medium, color: crop.id === selectedCropId ? '#16a34a' : '#0f172a' }}>
+                                                {crop.cropName}
+                                              </Text>
+                                            </View>
+                                            <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b', marginLeft: 21 }}>
+                                              🌱 {crop.fieldName} • {crop.area}
                                             </Text>
                                           </View>
-                                          <View style={{ backgroundColor: '#e2e8f0', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                                            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569' }}>{crop.unit}</Text>
+                                          <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                                            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }}>{crop.unit}</Text>
                                           </View>
                                         </TouchableOpacity>
                                       ))}
@@ -2380,7 +2392,7 @@ export default function RecordsScreen() {
                                     shadowOffset: { width: 0, height: 3 },
                                   }}>
                                     <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
-                                      {farmerCrops.map((crop) => (
+                                      {harvestingCrops.map((crop) => (
                                         <TouchableOpacity
                                           key={crop.id}
                                           style={{
@@ -2398,6 +2410,9 @@ export default function RecordsScreen() {
                                         >
                                           <Text style={{ fontSize: 12, fontFamily: crop.id === selectedCropId ? FONT.bold : FONT.medium, color: crop.id === selectedCropId ? '#16a34a' : '#0f172a' }}>
                                             🌾 {crop.cropName} ({crop.unit})
+                                          </Text>
+                                          <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b' }}>
+                                            🌱 {crop.fieldName} • {crop.area}
                                           </Text>
                                         </TouchableOpacity>
                                       ))}

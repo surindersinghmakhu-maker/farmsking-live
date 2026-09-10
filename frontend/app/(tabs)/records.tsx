@@ -558,6 +558,39 @@ export default function RecordsScreen() {
     }, 0);
   }, [activeSalesList, saleBillsMap]);
 
+  // Automatically calculate next bill number by finding max numerical bill number and adding +1
+  const nextSuggestedBillNo = useMemo(() => {
+    let maxNum = 0;
+    let maxDigitsLength = 6;
+
+    const checkBillNo = (bNo?: string | null) => {
+      if (!bNo) return;
+      const cleanStr = String(bNo).trim().toUpperCase();
+      const match = cleanStr.match(/\d+/);
+      if (match) {
+        const num = parseInt(match[0], 10);
+        if (!isNaN(num) && num > maxNum && num < 99999999 && match[0].length <= 8) {
+          maxNum = num;
+          if (match[0].length > maxDigitsLength) {
+            maxDigitsLength = match[0].length;
+          }
+        }
+      }
+    };
+
+    (rawSaleBillsList || []).forEach((b) => checkBillNo(b.billNo));
+    (allSalesRecords || []).forEach((s) => {
+      checkBillNo(s.billNo);
+      checkBillNo(s.billId);
+    });
+
+    if (maxNum === 0) {
+      maxNum = 1000;
+    }
+    const nextNum = maxNum + 1;
+    return `FK-${String(nextNum).padStart(maxDigitsLength, '0')}`;
+  }, [rawSaleBillsList, allSalesRecords]);
+
   // 3. Group sales Buyer-wise
   const salesByBuyer = useMemo(() => {
     const map = new Map<string, CropSaleRecord[]>();
@@ -1498,8 +1531,9 @@ export default function RecordsScreen() {
 
     try {
       const currentReceivedMode = paymentMode === 'PARTY' ? amountReceivedMode : 'CASH';
+      const targetBillNo = editingBillNo || nextSuggestedBillNo;
       const billPayload = {
-        billNo: editingBillNo || undefined,
+        billNo: targetBillNo,
         farmerName: user?.name || 'Farmer',
         partyId: paymentMode === 'PARTY' ? selectedParty?.id : undefined,
         partyName: paymentMode === 'PARTY' && selectedParty ? selectedParty.name : cashName || 'Cash',
@@ -1519,7 +1553,7 @@ export default function RecordsScreen() {
       };
 
       // Save/update the bill snapshot FIRST so its real DB id can be linked onto the ledger entry.
-      let billNo = editingBillNo || `FK-${Date.now().toString().slice(-8)}`;
+      let billNo = targetBillNo;
       let realDbBillId: string | undefined = undefined;
       
       if (editingBillId) {
@@ -2173,10 +2207,10 @@ export default function RecordsScreen() {
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }}>
                           <View>
                             <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: theme.text }}>
-                              {editingBillId ? `✏️ Edit Sale / Bill #${editingBillNo}` : 'New Sale / Billing'}
+                              {editingBillId ? `✏️ Edit Sale / Bill #${editingBillNo}` : `New Sale / Bill #${nextSuggestedBillNo}`}
                             </Text>
                             <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
-                              {editingBillId ? `Updating record for Bill #${editingBillNo} (Bill # stays unchanged)` : 'Vyapar Billing POS — Cash or Party Credit Sale'}
+                              {editingBillId ? `Updating record for Bill #${editingBillNo} (Bill # stays unchanged)` : `Vyapar Billing POS — Auto Bill #${nextSuggestedBillNo}`}
                             </Text>
                           </View>
 

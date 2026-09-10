@@ -215,6 +215,8 @@ export function ProfessionalOverviewView({
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
           <Text style={styles.sectionTitle}>🌱 Crop Performance Overview</Text>
           <Text style={styles.sectionSubTitle}>{cropAnalysis.length} Active Field{cropAnalysis.length === 1 ? '' : 's'}</Text>
+        </View>
+
         {cropAnalysis.length === 0 ? (
           <View style={styles.emptyCard}>
             <Ionicons name="leaf-outline" size={24} color="#cbd5e1" />

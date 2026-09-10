@@ -3162,20 +3162,6 @@ export default function RecordsScreen() {
                 </View>
               </Modal>
 
-              {/* Payment Voucher Modal Component */}
-              <PaymentVoucherModal
-                visible={showPaymentVoucherModal}
-                initialType={voucherInitialType}
-                initialParty={voucherInitialParty}
-                lockParty={lockVoucherParty}
-                parties={parties}
-                labourWorkers={expenseLabourWorkers}
-                onClose={() => setShowPaymentVoucherModal(false)}
-                onSuccess={() => {
-                  refetch();
-                  queryClient.invalidateQueries({ queryKey: ['parties'] });
-                }}
-              />
             </View>
           ) : recordType === 'LABOUR' ? (
             /* LABOUR MANAGEMENT TAB */
@@ -4206,6 +4192,20 @@ export default function RecordsScreen() {
       )}
 
       {/* Universal Voucher Slip & Statement Modals (Accessible across ALL Tabs) */}
+      <PaymentVoucherModal
+        visible={showPaymentVoucherModal}
+        initialType={voucherInitialType}
+        initialParty={voucherInitialParty}
+        lockParty={lockVoucherParty}
+        parties={parties}
+        labourWorkers={expenseLabourWorkers}
+        onClose={() => setShowPaymentVoucherModal(false)}
+        onSuccess={() => {
+          refetch();
+          queryClient.invalidateQueries({ queryKey: ['parties'] });
+        }}
+      />
+
       <UniversalVoucherSlipModal
         visible={showVoucherSlipModal}
         data={activeVoucherData}

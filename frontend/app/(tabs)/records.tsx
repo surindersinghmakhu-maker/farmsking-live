@@ -345,9 +345,33 @@ export default function RecordsScreen() {
 
     const buyerDisplayName = matchedBill?.partyName || (matchedBill?.isCash ? 'Cash Sale' : item.buyerName || 'Cash Sale');
 
-    const cropDetailText = matchedBill && matchedBill.items && matchedBill.items.length > 0
-      ? matchedBill.items.map((i: any) => `${i.cropName} (${i.qty} ${i.unit} @ ₹${i.rate})`).join(', ')
-      : `${item.cropName} (${item.quantity} ${item.unit} @ ₹${item.pricePerUnit})`;
+    let cropDetailText = '';
+    if (matchedBill && Array.isArray(matchedBill.items) && matchedBill.items.length > 0) {
+      cropDetailText = matchedBill.items
+        .map((i: any) => `${i.cropName} (${i.qty} ${i.unit || 'unit'})`)
+        .join(', ');
+    } else {
+      let rawName = item.cropName || 'Crop Sale';
+      rawName = rawName.replace(/^Sale-\s*/i, '');
+      const noiseIdx = rawName.indexOf('(FK-');
+      if (noiseIdx !== -1) {
+        rawName = rawName.substring(0, noiseIdx);
+      }
+      rawName = rawName.replace(/\(\d+\s*item\)\s*\(CASH\)/g, '').trim();
+      rawName = rawName.replace(/\s*@\s*₹\d+(\.\d+)?/g, '').trim();
+
+      const qtyStr = item.quantity ? `${item.quantity} ${item.unit || 'unit'}` : '';
+      if (rawName.includes('(') && rawName.includes(')')) {
+        cropDetailText = rawName;
+      } else {
+        cropDetailText = qtyStr ? `${rawName} (${qtyStr})` : rawName;
+      }
+    }
+
+    const rcvdMode = (matchedBill as any)?.amountReceivedMode || item.amountReceivedMode || 'CASH';
+    const rcvdAmtVal = matchedBill
+      ? Number(matchedBill.amountReceived || 0)
+      : (isCashSale ? billTotal : Number(item.amountReceived || 0));
 
     const displayDateStr = matchedBill?.createdAt
       ? formatDateDDMMYYYY(matchedBill.createdAt)
@@ -364,7 +388,7 @@ export default function RecordsScreen() {
           backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc',
           borderBottomWidth: 1,
           borderBottomColor: '#f1f5f9',
-          minWidth: 690,
+          minWidth: 720,
         }}
       >
         {/* 1. Bill No */}
@@ -396,11 +420,22 @@ export default function RecordsScreen() {
         </View>
 
         {/* 5. Net Sale Amount */}
-        <Text style={{ width: 110, fontSize: 11, fontFamily: FONT.bold, color: '#0f172a', textAlign: 'right', paddingRight: 6 }}>
+        <Text style={{ width: 100, fontSize: 11, fontFamily: FONT.bold, color: '#0f172a', textAlign: 'right', paddingRight: 6 }}>
           ₹{billTotal.toLocaleString('en-IN')}
         </Text>
 
-        {/* 6. Action Buttons (Edit & Download) */}
+        {/* 6. Received Amount Column */}
+        <View style={{ width: 110, alignItems: 'flex-end', paddingRight: 6 }}>
+          {rcvdAmtVal > 0 ? (
+            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#dc2626' }}>
+              {rcvdMode}: -₹{rcvdAmtVal.toLocaleString('en-IN')}
+            </Text>
+          ) : (
+            <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#94a3b8' }}>—</Text>
+          )}
+        </View>
+
+        {/* 7. Action Buttons (Edit & Download) */}
         <View style={{ width: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingLeft: 2 }}>
           <TouchableOpacity
             style={{
@@ -2068,15 +2103,16 @@ export default function RecordsScreen() {
                 </View>
               ) : (salesViewMode !== 'BUYER') ? (
                 <View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, overflow: 'hidden', backgroundColor: '#ffffff', marginBottom: 16 }}>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 560, flexGrow: 1 }}>
-                    <View style={{ flex: 1, minWidth: 560 }}>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 720, flexGrow: 1 }}>
+                    <View style={{ flex: 1, minWidth: 720 }}>
                       {/* Table Header Row */}
-                      <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 8, paddingHorizontal: 8, alignItems: 'center', minWidth: 560 }}>
+                      <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 8, paddingHorizontal: 8, alignItems: 'center', minWidth: 720 }}>
                         <Text style={{ width: 75, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>BILL NO.</Text>
                         <Text style={{ width: 70, fontSize: 9.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>DATE</Text>
                         <Text style={{ width: 105, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>PARTY</Text>
                         <Text style={{ flex: 1.5, minWidth: 140, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>BILL ITEMS</Text>
-                        <Text style={{ width: 110, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right', paddingRight: 6 }}>NET SALE AMT</Text>
+                        <Text style={{ width: 100, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right', paddingRight: 6 }}>NET SALE AMT</Text>
+                        <Text style={{ width: 110, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right', paddingRight: 6 }}>RECEIVED</Text>
                         <Text style={{ width: 60, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'center' }}>ACTION</Text>
                       </View>
 
@@ -2109,14 +2145,15 @@ export default function RecordsScreen() {
                         </TouchableOpacity>
                         {isExpanded ? (
                           <View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, overflow: 'hidden', backgroundColor: '#ffffff', marginTop: 6 }}>
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 560, flexGrow: 1 }}>
-                              <View style={{ flex: 1, minWidth: 560 }}>
-                                <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 7, paddingHorizontal: 8, alignItems: 'center', minWidth: 560 }}>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 720, flexGrow: 1 }}>
+                              <View style={{ flex: 1, minWidth: 720 }}>
+                                <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 7, paddingHorizontal: 8, alignItems: 'center', minWidth: 720 }}>
                                   <Text style={{ width: 75, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>BILL NO.</Text>
                                   <Text style={{ width: 70, fontSize: 9.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>DATE</Text>
                                   <Text style={{ width: 105, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>PARTY</Text>
                                   <Text style={{ flex: 1.5, minWidth: 140, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>BILL ITEMS</Text>
-                                  <Text style={{ width: 110, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right', paddingRight: 6 }}>NET SALE AMT</Text>
+                                  <Text style={{ width: 100, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right', paddingRight: 6 }}>NET SALE AMT</Text>
+                                  <Text style={{ width: 110, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right', paddingRight: 6 }}>RECEIVED</Text>
                                   <Text style={{ width: 60, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'center' }}>ACTION</Text>
                                 </View>
                                 {group.entries.map((item, idx) => renderSaleRowItem(item, idx))}

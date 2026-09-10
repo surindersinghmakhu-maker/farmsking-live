@@ -1411,15 +1411,20 @@ export default function RecordsScreen() {
       if (paymentMode === 'PARTY' && selectedParty) {
         const modeLabel = effectiveAmountReceived > 0 ? ` (${currentReceivedMode})` : '';
         const reason = `Sale: ${saleItems.map((i) => i.cropName).join(', ')} (${totalCartItems} item${totalCartItems > 1 ? 's' : ''})${modeLabel}`;
-        await recordSaleLedger.mutateAsync({
-          id: selectedParty.id,
-          payload: {
-            totalAmount: totalCartAmount,
-            amountReceived: effectiveAmountReceived,
-            reason,
-            saleBillId: realDbBillId || editingBillId || undefined,
-          },
-        });
+        try {
+          const validBillIdToPass = realDbBillId || (editingBillId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(editingBillId) ? editingBillId : undefined);
+          await recordSaleLedger.mutateAsync({
+            id: selectedParty.id,
+            payload: {
+              totalAmount: totalCartAmount,
+              amountReceived: effectiveAmountReceived,
+              reason,
+              saleBillId: validBillIdToPass,
+            },
+          });
+        } catch (ledgerErr) {
+          console.warn('Could not record party ledger entry:', ledgerErr);
+        }
       }
 
       if (editingBillId) {

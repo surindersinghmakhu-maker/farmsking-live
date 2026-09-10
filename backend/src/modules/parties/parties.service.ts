@@ -197,25 +197,54 @@ export class PartiesService {
   }
 
   async recordSaleLedger(user: AuthUser, partyId: string, dto: RecordSaleLedgerDto) {
-    await this.findOwnedOrThrow(user, partyId);
+    const partyObj = await this.findOwnedOrThrow(user, partyId);
 
+    let targetPartyId = partyObj.id;
+    const dbParty = await this.prisma.party.findFirst({ where: { id: partyObj.id, ownerId: user.id, deletedAt: null } });
+    if (!dbParty) {
+      let existingParty = await this.prisma.party.findFirst({
+        where: { ownerId: user.id, name: partyObj.name, deletedAt: null },
+      });
+      if (!existingParty) {
+        existingParty = await this.prisma.party.create({
+          data: { ownerId: user.id, name: partyObj.name, mobile: partyObj.mobile, address: partyObj.address },
+        });
+      }
+      targetPartyId = existingParty.id;
+    }
+
+    let validSaleBillId: string | null = null;
     if (dto.saleBillId) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dto.saleBillId);
+      let bill: any = null;
+      if (isUuid) {
+        bill = await this.prisma.saleBill.findUnique({ where: { id: dto.saleBillId } }).catch(() => null);
+      }
+      if (!bill) {
+        bill = await this.prisma.saleBill.findFirst({ where: { farmerId: user.id, billNo: dto.saleBillId } }).catch(() => null);
+      }
+      if (bill) {
+        validSaleBillId = bill.id;
+      }
+    }
+
+    if (validSaleBillId) {
       const existingCreditEntry = await this.prisma.partyLedgerEntry.findFirst({
-        where: { saleBillId: dto.saleBillId, type: PartyLedgerEntryType.SALE_CREDIT },
+        where: { saleBillId: validSaleBillId, type: PartyLedgerEntryType.SALE_CREDIT },
       });
 
       if (existingCreditEntry) {
         await this.prisma.partyLedgerEntry.update({
           where: { id: existingCreditEntry.id },
           data: {
-            partyId,
+            partyId: targetPartyId,
             amount: dto.totalAmount,
             reason: dto.reason,
           },
         });
 
         const existingPaymentEntry = await this.prisma.partyLedgerEntry.findFirst({
-          where: { saleBillId: dto.saleBillId, type: PartyLedgerEntryType.SALE_PAYMENT },
+          where: { saleBillId: validSaleBillId, type: PartyLedgerEntryType.SALE_PAYMENT },
         });
 
         if (dto.amountReceived && dto.amountReceived > 0) {
@@ -223,7 +252,7 @@ export class PartiesService {
             await this.prisma.partyLedgerEntry.update({
               where: { id: existingPaymentEntry.id },
               data: {
-                partyId,
+                partyId: targetPartyId,
                 amount: dto.amountReceived,
                 reason: `Amount received against: ${dto.reason}`,
               },
@@ -231,11 +260,11 @@ export class PartiesService {
           } else {
             await this.prisma.partyLedgerEntry.create({
               data: {
-                partyId,
+                partyId: targetPartyId,
                 type: PartyLedgerEntryType.SALE_PAYMENT,
                 amount: dto.amountReceived,
                 reason: `Amount received against: ${dto.reason}`,
-                saleBillId: dto.saleBillId,
+                saleBillId: validSaleBillId,
               },
             });
           }
@@ -251,22 +280,22 @@ export class PartiesService {
 
     await this.prisma.partyLedgerEntry.create({
       data: {
-        partyId,
+        partyId: targetPartyId,
         type: PartyLedgerEntryType.SALE_CREDIT,
         amount: dto.totalAmount,
         reason: dto.reason,
-        saleBillId: dto.saleBillId,
+        saleBillId: validSaleBillId,
       },
     });
 
     if (dto.amountReceived && dto.amountReceived > 0) {
       await this.prisma.partyLedgerEntry.create({
         data: {
-          partyId,
+          partyId: targetPartyId,
           type: PartyLedgerEntryType.SALE_PAYMENT,
           amount: dto.amountReceived,
           reason: `Amount received against: ${dto.reason}`,
-          saleBillId: dto.saleBillId,
+          saleBillId: validSaleBillId,
         },
       });
     }

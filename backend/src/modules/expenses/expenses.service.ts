@@ -229,7 +229,11 @@ export class ExpensesService {
   }
 
   async remove(user: AuthUser, id: string) {
-    await this.findOneOrThrow(user, id);
-    return this.prisma.expense.update({ where: { id }, data: { deletedAt: new Date() } });
+    const expense = await this.findOneOrThrow(user, id);
+    // Delete any linked party ledger entries for this expense to avoid orphaned entries
+    await this.prisma.partyLedgerEntry.deleteMany({
+      where: { expenseId: expense.id },
+    });
+    return this.prisma.expense.update({ where: { id: expense.id }, data: { deletedAt: new Date() } });
   }
 }

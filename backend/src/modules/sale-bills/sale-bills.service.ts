@@ -194,4 +194,16 @@ export class SaleBillsService {
     const count = await this.prisma.saleBill.count({ where: { farmerId: user.id } });
     return { count };
   }
+
+  async remove(user: AuthUser, id: string) {
+    const bill = await this.findOneOrThrow(user, id);
+    // Delete all linked party ledger entries first to avoid orphaned records
+    await this.prisma.partyLedgerEntry.deleteMany({
+      where: { saleBillId: bill.id },
+    });
+    // Delete the sale bill
+    return this.prisma.saleBill.delete({
+      where: { id: bill.id },
+    });
+  }
 }

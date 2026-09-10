@@ -145,8 +145,17 @@ export class PartiesService {
       orderBy: { createdAt: 'desc' },
     });
 
+    // Clean up any orphaned entries where saleBillId is set but saleBill no longer exists
+    const validEntries = entries.filter((e) => {
+      if (e.saleBillId && !e.saleBill) {
+        this.prisma.partyLedgerEntry.delete({ where: { id: e.id } }).catch(() => {});
+        return false;
+      }
+      return true;
+    });
+
     const existingBillIds = new Set(
-      entries.map((e) => e.saleBillId).filter((id): id is string => Boolean(id))
+      validEntries.map((e) => e.saleBillId).filter((id): id is string => Boolean(id))
     );
 
     const saleBills = await this.prisma.saleBill.findMany({

@@ -762,6 +762,9 @@ const modalStyles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 10,
     paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
   modalTitle: { fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' },
 });
 

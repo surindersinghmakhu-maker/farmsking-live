@@ -253,54 +253,41 @@ export default function RecordsScreen() {
     return map;
   }, [rawSaleBillsList]);
 
-  // Unified list of ALL sales (both from DB sale bills and local crop sale records)
+  // Unified list of ALL sales (Single Source of Truth: DB Sale Bills)
   const unifiedSalesRecords = useMemo(() => {
     const list: CropSaleRecord[] = [];
-    const processedBillKeys = new Set<string>();
 
-    // 1. Add all actual DB Sale Bills FIRST
-    (rawSaleBillsList || []).forEach((b) => {
-      if (b.id) processedBillKeys.add(b.id);
-      if (b.billNo) processedBillKeys.add(b.billNo);
+    // 1. If DB Sale Bills are loaded (even if empty []), DB is the SINGLE SOURCE OF TRUTH
+    if (rawSaleBillsList && Array.isArray(rawSaleBillsList)) {
+      rawSaleBillsList.forEach((b) => {
+        const cropSummary = (b.items && b.items.length > 0)
+          ? b.items.map((i: any) => `${i.cropName} (${i.qty} ${i.unit} @ ₹${i.rate})`).join(', ')
+          : 'Crop Sale';
 
-      const cropSummary = (b.items && b.items.length > 0)
-        ? b.items.map((i: any) => `${i.cropName} (${i.qty} ${i.unit} @ ₹${i.rate})`).join(', ')
-        : 'Crop Sale';
-
-      list.push({
-        id: b.id,
-        cropId: b.items?.[0]?.cropId || '',
-        cropName: cropSummary,
-        fieldName: b.partyName || 'Sale',
-        quantity: String(b.items?.[0]?.qty || 1),
-        unit: b.items?.[0]?.unit || 'kg',
-        pricePerUnit: String(b.items?.[0]?.rate || b.totalAmount),
-        totalAmount: Number(b.totalAmount),
-        amountReceived: b.amountReceived !== undefined && b.amountReceived !== null ? Number(b.amountReceived) : undefined,
-        previousBalance: b.previousBalance !== undefined && b.previousBalance !== null ? Number(b.previousBalance) : undefined,
-        amountReceivedMode: (b as any).amountReceivedMode as 'CASH' | 'UPI' | undefined,
-        buyerName: b.partyName || (b.isCash ? 'Cash Sale' : 'Direct Cash'),
-        saleDate: b.createdAt ? b.createdAt.slice(0, 10) : todayIso(),
-        billId: b.id,
-        billNo: b.billNo,
-        partyId: b.partyId,
+        list.push({
+          id: b.id,
+          cropId: b.items?.[0]?.cropId || '',
+          cropName: cropSummary,
+          fieldName: b.partyName || 'Sale',
+          quantity: String(b.items?.[0]?.qty || 1),
+          unit: b.items?.[0]?.unit || 'kg',
+          pricePerUnit: String(b.items?.[0]?.rate || b.totalAmount),
+          totalAmount: Number(b.totalAmount),
+          amountReceived: b.amountReceived !== undefined && b.amountReceived !== null ? Number(b.amountReceived) : undefined,
+          previousBalance: b.previousBalance !== undefined && b.previousBalance !== null ? Number(b.previousBalance) : undefined,
+          amountReceivedMode: (b as any).amountReceivedMode as 'CASH' | 'UPI' | undefined,
+          buyerName: b.partyName || (b.isCash ? 'Cash Sale' : 'Direct Cash'),
+          saleDate: b.createdAt ? b.createdAt.slice(0, 10) : todayIso(),
+          billId: b.id,
+          billNo: b.billNo,
+          partyId: b.partyId,
+        });
       });
-    });
+      return list;
+    }
 
-    // 2. Add any crop sale records that are NOT linked to an already-processed DB bill
+    // 2. Offline fallback ONLY if rawSaleBillsList is undefined
     (allSalesRecords || []).forEach((s) => {
-      const isLinkedToDb =
-        (s.id && processedBillKeys.has(s.id)) ||
-        (s.billId && processedBillKeys.has(s.billId)) ||
-        (s.billNo && processedBillKeys.has(s.billNo));
-
-      if (isLinkedToDb) {
-        return; // Skip since we already included the parent DB bill
-      }
-
-      if (s.id) processedBillKeys.add(s.id);
-      if (s.billId) processedBillKeys.add(s.billId);
-      if (s.billNo) processedBillKeys.add(s.billNo);
       list.push(s);
     });
 

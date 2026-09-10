@@ -257,7 +257,7 @@ export default function RecordsScreen() {
   const unifiedSalesRecords = useMemo(() => {
     const list: CropSaleRecord[] = [];
 
-    // 1. If DB Sale Bills are loaded (even if empty []), DB is the SINGLE SOURCE OF TRUTH
+    // DB is the SINGLE SOURCE OF TRUTH — do not render mock offline records
     if (rawSaleBillsList && Array.isArray(rawSaleBillsList)) {
       rawSaleBillsList.forEach((b) => {
         const cropSummary = (b.items && b.items.length > 0)
@@ -283,16 +283,10 @@ export default function RecordsScreen() {
           partyId: b.partyId,
         });
       });
-      return list;
     }
 
-    // 2. Offline fallback ONLY if rawSaleBillsList is undefined
-    (allSalesRecords || []).forEach((s) => {
-      list.push(s);
-    });
-
     return list;
-  }, [rawSaleBillsList, allSalesRecords]);
+  }, [rawSaleBillsList]);
 
   const renderSaleRowItem = (item: CropSaleRecord, idx: number) => {
     const matchedBill = item.billId ? saleBillsMap.get(item.billId) : (item.billNo ? saleBillsMap.get(item.billNo) : null);

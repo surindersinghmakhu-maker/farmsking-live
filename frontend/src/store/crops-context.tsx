@@ -338,7 +338,8 @@ export function CropsProvider({ children }: { children: ReactNode }) {
         const raw = await AppStorage.getItemAsync(STORAGE_KEY);
         if (raw) {
           const parsed: PersistedLocalState = JSON.parse(raw);
-          setSalesRecords(parsed.salesRecords ?? []);
+          // DB is single source of truth — do not load legacy sales from LocalStorage
+          setSalesRecords([]);
           setSpecialTreatments(parsed.specialTreatments ?? INITIAL_SPECIAL_TREATMENTS);
           setCustomCropLocations(parsed.customCropLocations ?? {});
           setCropGpsDataMap(parsed.cropGpsDataMap ?? {});
@@ -357,14 +358,14 @@ export function CropsProvider({ children }: { children: ReactNode }) {
     AppStorage.setItemAsync(
       STORAGE_KEY,
       JSON.stringify({
-        salesRecords,
+        salesRecords: [],
         specialTreatments,
         customCropLocations,
         cropGpsDataMap,
         unlockedCropIds,
       })
     );
-  }, [salesRecords, specialTreatments, customCropLocations, cropGpsDataMap, unlockedCropIds, isPersistLoaded]);
+  }, [specialTreatments, customCropLocations, cropGpsDataMap, unlockedCropIds, isPersistLoaded]);
 
   const farmerName = user?.name;
   const farmerPhone = user?.mobile;

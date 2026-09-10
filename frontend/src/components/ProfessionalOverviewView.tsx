@@ -93,11 +93,11 @@ export function ProfessionalOverviewView({
       {/* 1. Ultra-Compact Executive Financial Hero Header */}
       <View style={[styles.heroCard, premiumShadow('#0f172a', 'sm')]}>
         {/* Top Header Strip */}
-        <View style={styles.heroTopStrip}>
+        <View style={[styles.heroTopStrip, { backgroundColor: isOverallProfit ? '#f0fdf4' : '#fef2f2', borderColor: isOverallProfit ? '#bbf7d0' : '#fecaca' }]}>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-              <Ionicons name="stats-chart" size={15} color="#15803d" />
-              <Text style={styles.heroHeaderTitle}>Farm Net Financial Outcome</Text>
+              <Ionicons name="stats-chart" size={13} color={isOverallProfit ? '#15803d' : '#dc2626'} />
+              <Text style={[styles.heroHeaderTitle, { color: isOverallProfit ? '#14532d' : '#7f1d1d' }]}>Farm Net Financial Outcome</Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
               <Text style={[styles.netBoxValue, { color: isOverallProfit ? '#16a34a' : '#dc2626' }]}>
@@ -118,22 +118,36 @@ export function ProfessionalOverviewView({
           </View>
         </View>
 
-        {/* Income vs Expense Progress Track */}
+        {/* Income vs Expense Progress Track & Retention Margin Card */}
         {totalSalesRevenue > 0 ? (
-          <View style={styles.progressSection}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 }}>
-              <Text style={styles.progressLabel}>Profit Retention Margin</Text>
-              <Text style={[styles.progressVal, { color: isOverallProfit ? '#16a34a' : '#dc2626' }]}>
-                {profitMarginPercent}% Margin
+          <View style={styles.marginCard}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Ionicons name="pie-chart" size={12} color={isOverallProfit ? '#15803d' : '#dc2626'} />
+                <Text style={styles.marginCardTitle}>Profit Retention Margin</Text>
+              </View>
+              <Text style={[styles.marginCardVal, { color: isOverallProfit ? '#16a34a' : '#dc2626' }]}>
+                {profitMarginPercent}% Retained
               </Text>
             </View>
-            <View style={styles.progressBarTrack}>
+
+            {/* Custom Track */}
+            <View style={styles.marginTrack}>
               <View
                 style={[
-                  styles.progressBarFill,
+                  styles.marginFill,
                   { width: `${profitMarginPercent}%`, backgroundColor: isOverallProfit ? '#16a34a' : '#dc2626' },
                 ]}
               />
+            </View>
+
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 3 }}>
+              <Text style={{ fontSize: 8.5, fontFamily: FONT.medium, color: '#64748b' }}>
+                Net Profit: <Text style={{ fontFamily: FONT.bold, color: isOverallProfit ? '#15803d' : '#dc2626' }}>{formatInr(Math.max(0, overallNet))}</Text>
+              </Text>
+              <Text style={{ fontSize: 8.5, fontFamily: FONT.medium, color: '#64748b' }}>
+                Total Revenue: <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>{formatInr(totalSalesRevenue)}</Text>
+              </Text>
             </View>
           </View>
         ) : null}
@@ -816,16 +830,23 @@ const styles = StyleSheet.create({
   netStatusPillText: { fontSize: 9.5, fontFamily: FONT.extraBold, letterSpacing: 0.2 },
   netBoxLabel: { fontSize: 10, fontFamily: FONT.medium, color: '#64748b' },
   netBoxValue: { fontSize: 16, fontFamily: FONT.extraBold },
-  progressSection: { gap: 2, marginVertical: 1 },
-  progressLabel: { fontSize: 9.5, fontFamily: FONT.medium, color: '#64748b' },
-  progressVal: { fontSize: 9.5, fontFamily: FONT.bold },
-  progressBarTrack: {
+  marginCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.sm,
+    padding: 6,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    gap: 1,
+  },
+  marginCardTitle: { fontSize: 9.5, fontFamily: FONT.bold, color: '#334155' },
+  marginCardVal: { fontSize: 9.5, fontFamily: FONT.extraBold },
+  marginTrack: {
     height: 5,
     borderRadius: 3,
     backgroundColor: '#e2e8f0',
     overflow: 'hidden',
   },
-  progressBarFill: {
+  marginFill: {
     height: '100%',
     borderRadius: 3,
   },

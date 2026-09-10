@@ -173,6 +173,9 @@ export function UniversalStatementModal({
           thisSaleBalance: Number(item.amount),
           previousBalance: 0,
           netReceivable: Number(item.amount),
+          discountAmount: (item as any).discountAmount !== undefined ? Number((item as any).discountAmount) : 0,
+          deliveryCharge: (item as any).deliveryCharge !== undefined ? Number((item as any).deliveryCharge) : 0,
+          notes: (item as any).notes || undefined,
           date: now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
           time: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
         });

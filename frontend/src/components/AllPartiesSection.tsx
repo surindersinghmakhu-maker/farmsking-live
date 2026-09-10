@@ -1044,6 +1044,9 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
         thisSaleBalance: Math.max(0, drAmt - rAmt),
         previousBalance: row.runningBalance - drAmt,
         netReceivable: row.runningBalance,
+        discountAmount: (rawEntry as any)?.discountAmount !== undefined ? Number((rawEntry as any).discountAmount) : 0,
+        deliveryCharge: (rawEntry as any)?.deliveryCharge !== undefined ? Number((rawEntry as any).deliveryCharge) : 0,
+        notes: (rawEntry as any)?.notes || undefined,
         date: formatDateDDMMYYYY(row.date),
         time: '',
       });

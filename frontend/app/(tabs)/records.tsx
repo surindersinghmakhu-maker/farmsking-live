@@ -1319,7 +1319,7 @@ export default function RecordsScreen() {
 
   // Crop-wise breakdown for the Analysis tab. Expenses are logged per-farm, not
   // per-crop, so each active crop field is given an even share of total expenses.
-  // Group all fields/items of the same crop into a single row.
+  // Show a separate row for each individual crop field/plot.
   const cropAnalysis = useMemo(() => {
     const totalFields = farmerCrops.length;
     const perFieldExpense = totalFields > 0 ? totalSpent / totalFields : 0;
@@ -1330,49 +1330,43 @@ export default function RecordsScreen() {
       return cleaned || name.trim();
     };
 
-    const cropGroupsMap = new Map<
-      string,
-      {
-        cropName: string;
-        fieldCount: number;
-        cropIds: Set<string>;
-      }
-    >();
-
+    // Group fields by base crop name to count how many fields share unlinked sales
+    const baseCropCounts: Record<string, number> = {};
     farmerCrops.forEach((crop) => {
-      const baseName = getBaseCropName(crop.cropName);
-      const groupKey = baseName.toLowerCase();
-
-      if (!cropGroupsMap.has(groupKey)) {
-        cropGroupsMap.set(groupKey, {
-          cropName: baseName,
-          fieldCount: 0,
-          cropIds: new Set<string>(),
-        });
-      }
-
-      const grp = cropGroupsMap.get(groupKey)!;
-      grp.fieldCount += 1;
-      if (crop.id) grp.cropIds.add(crop.id);
+      const baseKey = getBaseCropName(crop.cropName).toLowerCase();
+      baseCropCounts[baseKey] = (baseCropCounts[baseKey] || 0) + 1;
     });
 
-    return Array.from(cropGroupsMap.values()).map((grp) => {
-      const groupKey = grp.cropName.toLowerCase();
+    return farmerCrops.map((crop) => {
+      const cropIdStr = crop.id;
+      const cropName = crop.cropName || 'Crop';
+      const fieldName = crop.fieldName || 'Field 1';
+      const baseKey = getBaseCropName(cropName).toLowerCase();
+      const fieldsCountForCrop = baseCropCounts[baseKey] || 1;
 
-      const income = unifiedSalesRecords
+      // 1. Direct sales matching crop.id or crop.cropId
+      const directIncome = unifiedSalesRecords
+        .filter((s) => s.cropId && (s.cropId === cropIdStr || (crop.cropId && s.cropId === crop.cropId)))
+        .reduce((acc, s) => acc + (Number(s.totalAmount) || 0), 0);
+
+      // 2. Unlinked sales for this crop (sales where cropId is missing but cropName matches)
+      const unlinkedSalesTotal = unifiedSalesRecords
         .filter((s) => {
-          if (s.cropId && grp.cropIds.has(s.cropId)) return true;
+          if (s.cropId) return false;
           const sBase = getBaseCropName(s.cropName || '').toLowerCase();
-          return sBase === groupKey;
+          return sBase === baseKey;
         })
-        .reduce((acc, s) => acc + s.totalAmount, 0);
+        .reduce((acc, s) => acc + (Number(s.totalAmount) || 0), 0);
 
-      const expense = grp.fieldCount * perFieldExpense;
+      const sharedUnlinkedIncome = unlinkedSalesTotal / fieldsCountForCrop;
+      const income = directIncome + sharedUnlinkedIncome;
+      const expense = perFieldExpense;
       const net = income - expense;
 
       return {
-        cropName: grp.cropName,
-        fieldCount: grp.fieldCount,
+        cropId: cropIdStr,
+        cropName,
+        fieldName,
         income,
         expense,
         net,

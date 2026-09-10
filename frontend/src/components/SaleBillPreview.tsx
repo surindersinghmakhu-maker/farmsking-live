@@ -330,37 +330,37 @@ export function BillPreview({ inv }: { inv: SavedSaleInvoice }) {
       {/* Discount, Delivery & Net Amount Calculation Card */}
       {(discountVal > 0 || deliveryVal > 0 || (inv.notes && inv.notes.trim())) ? (
         <View style={{ backgroundColor: '#f8fafc', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#cbd5e1', marginBottom: 10 }}>
-          {/* Sale Amount (Items Total) */}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-            <Text style={{ fontSize: 10, color: '#475569', fontFamily: FONT.medium }}>Sale Amount (Items Total):</Text>
-            <Text style={{ fontSize: 10.5, color: '#0f172a', fontFamily: FONT.bold }}>{formatInr(rawSubtotal)}</Text>
-          </View>
+          {(discountVal > 0 || deliveryVal > 0) ? (
+            <View style={{ marginBottom: inv.notes && inv.notes.trim() ? 8 : 0 }}>
+              {/* Upper Row: Headings */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#cbd5e1', paddingBottom: 5, marginBottom: 6 }}>
+                <Text style={{ flex: 1.2, fontSize: 9.5, color: '#475569', fontFamily: FONT.bold }}>Sale Amount</Text>
+                {discountVal > 0 && (
+                  <Text style={{ flex: 1, fontSize: 9.5, color: '#dc2626', fontFamily: FONT.bold, textAlign: 'center' }}>(-) Discount</Text>
+                )}
+                {deliveryVal > 0 && (
+                  <Text style={{ flex: 1, fontSize: 9.5, color: '#2563eb', fontFamily: FONT.bold, textAlign: 'center' }}>(+) Delivery</Text>
+                )}
+                <Text style={{ flex: 1.3, fontSize: 9.5, color: '#15803d', fontFamily: FONT.extraBold, textAlign: 'right' }}>Net Sale Amount</Text>
+              </View>
 
-          {/* (-) Discount */}
-          {discountVal > 0 && (
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-              <Text style={{ fontSize: 10, color: '#dc2626', fontFamily: FONT.bold }}>(-) Discount:</Text>
-              <Text style={{ fontSize: 10.5, color: '#dc2626', fontFamily: FONT.bold }}>-₹{discountVal.toLocaleString('en-IN')}</Text>
+              {/* Lower Row: Values in single row! */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text style={{ flex: 1.2, fontSize: 11, color: '#0f172a', fontFamily: FONT.bold }}>{formatInr(rawSubtotal)}</Text>
+                {discountVal > 0 && (
+                  <Text style={{ flex: 1, fontSize: 11, color: '#dc2626', fontFamily: FONT.bold, textAlign: 'center' }}>-₹{discountVal.toLocaleString('en-IN')}</Text>
+                )}
+                {deliveryVal > 0 && (
+                  <Text style={{ flex: 1, fontSize: 11, color: '#2563eb', fontFamily: FONT.bold, textAlign: 'center' }}>+₹{deliveryVal.toLocaleString('en-IN')}</Text>
+                )}
+                <Text style={{ flex: 1.3, fontSize: 12.5, color: '#15803d', fontFamily: FONT.extraBold, textAlign: 'right' }}>{formatInr(totalAmt)}</Text>
+              </View>
             </View>
-          )}
-
-          {/* (+) Delivery Charge */}
-          {deliveryVal > 0 && (
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-              <Text style={{ fontSize: 10, color: '#2563eb', fontFamily: FONT.bold }}>(+) Delivery Charge:</Text>
-              <Text style={{ fontSize: 10.5, color: '#2563eb', fontFamily: FONT.bold }}>+₹{deliveryVal.toLocaleString('en-IN')}</Text>
-            </View>
-          )}
-
-          {/* Net Amount Row (Aligned to right) */}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#cbd5e1', paddingTop: 6, marginTop: 4 }}>
-            <Text style={{ fontSize: 11, color: '#15803d', fontFamily: FONT.extraBold }}>Net Sale Amount:</Text>
-            <Text style={{ fontSize: 12, color: '#15803d', fontFamily: FONT.extraBold }}>{formatInr(totalAmt)}</Text>
-          </View>
+          ) : null}
 
           {/* Remarks / Notes (if present) */}
           {inv.notes && inv.notes.trim() ? (
-            <View style={{ borderTopWidth: 1, borderTopColor: '#e2e8f0', paddingTop: 6, marginTop: 6 }}>
+            <View style={{ borderTopWidth: (discountVal > 0 || deliveryVal > 0) ? 1 : 0, borderTopColor: '#e2e8f0', paddingTop: (discountVal > 0 || deliveryVal > 0) ? 6 : 0 }}>
               <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#475569' }}>📝 REMARKS / NOTES:</Text>
               <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#1e293b', marginTop: 1 }}>{inv.notes.trim()}</Text>
             </View>
@@ -859,28 +859,30 @@ export async function exportBillAsPdf(inv: SavedSaleInvoice, fileName?: string, 
 
           ${(discountVal > 0 || deliveryVal > 0 || (inv.notes && inv.notes.trim())) ? `
             <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; margin-bottom: 14px;">
-              <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: #475569;">
-                <span>Sale Amount (Items Total):</span>
-                <strong style="color: #0f172a;">₹${rawSubtotal.toLocaleString('en-IN')}</strong>
-              </div>
-              ${discountVal > 0 ? `
-                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: #dc2626; font-weight: 700;">
-                  <span>(-) Discount:</span>
-                  <span>-₹${discountVal.toLocaleString('en-IN')}</span>
+              ${(discountVal > 0 || deliveryVal > 0) ? `
+                <div style="margin-bottom: ${inv.notes && inv.notes.trim() ? '8px' : '0'};">
+                  <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                    <thead>
+                      <tr style="border-bottom: 1px solid #cbd5e1; color: #475569; font-weight: 700;">
+                        <th style="text-align: left; padding-bottom: 4px; font-size: 10px;">Sale Amount</th>
+                        ${discountVal > 0 ? `<th style="text-align: center; padding-bottom: 4px; color: #dc2626; font-size: 10px;">(-) Discount</th>` : ''}
+                        ${deliveryVal > 0 ? `<th style="text-align: center; padding-bottom: 4px; color: #2563eb; font-size: 10px;">(+) Delivery</th>` : ''}
+                        <th style="text-align: right; padding-bottom: 4px; color: #15803d; font-weight: 800; font-size: 10px;">Net Sale Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td style="text-align: left; padding-top: 6px; font-weight: 700; color: #0f172a; font-size: 12px;">₹${rawSubtotal.toLocaleString('en-IN')}</td>
+                        ${discountVal > 0 ? `<td style="text-align: center; padding-top: 6px; font-weight: 700; color: #dc2626; font-size: 12px;">-₹${discountVal.toLocaleString('en-IN')}</td>` : ''}
+                        ${deliveryVal > 0 ? `<td style="text-align: center; padding-top: 6px; font-weight: 700; color: #2563eb; font-size: 12px;">+₹${deliveryVal.toLocaleString('en-IN')}</td>` : ''}
+                        <td style="text-align: right; padding-top: 6px; font-weight: 800; color: #15803d; font-size: 13px;">₹${inv.totalAmount.toLocaleString('en-IN')}</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               ` : ''}
-              ${deliveryVal > 0 ? `
-                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: #2563eb; font-weight: 700;">
-                  <span>(+) Delivery Charge:</span>
-                  <span>+₹${deliveryVal.toLocaleString('en-IN')}</span>
-                </div>
-              ` : ''}
-              <div style="display: flex; justify-content: space-between; border-top: 1px solid #cbd5e1; padding-top: 6px; margin-top: 4px; font-size: 12px; color: #15803d; font-weight: 800;">
-                <span>Net Sale Amount:</span>
-                <span>₹${inv.totalAmount.toLocaleString('en-IN')}</span>
-              </div>
               ${inv.notes && inv.notes.trim() ? `
-                <div style="border-top: 1px solid #e2e8f0; padding-top: 6px; margin-top: 6px; font-size: 11px; color: #334155;">
+                <div style="border-top: ${discountVal > 0 || deliveryVal > 0 ? '1px solid #e2e8f0' : 'none'}; padding-top: 6px; margin-top: 6px; font-size: 11px; color: #334155;">
                   <strong>📝 Remarks / Notes:</strong> ${inv.notes.trim()}
                 </div>
               ` : ''}

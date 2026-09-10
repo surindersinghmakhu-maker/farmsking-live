@@ -1374,12 +1374,50 @@ export default function RecordsScreen() {
       });
     });
 
-    // 2. Count fields per base crop name for fair distribution of unlinked sales
-    const baseCropCounts: Record<string, number> = {};
-    farmerCrops.forEach((crop) => {
-      const cKey = getCleanName(crop.cropName);
-      if (cKey) {
-        baseCropCounts[cKey] = (baseCropCounts[cKey] || 0) + 1;
+    // 2. Match sale items to farmerCrops (direct ID match -> name match -> fallback distribution)
+    const fieldIncomes: Record<string, number> = {};
+    farmerCrops.forEach((c) => {
+      fieldIncomes[c.id] = 0;
+    });
+
+    allFlatSaleItems.forEach((sItem) => {
+      if (!sItem.amount || sItem.amount <= 0) return;
+      const sKey = getCleanName(sItem.cropName);
+
+      // Check direct crop ID matches first
+      const directMatches = farmerCrops.filter(
+        (c) => sItem.cropId && (sItem.cropId === c.id || (c.cropId && sItem.cropId === c.cropId))
+      );
+
+      if (directMatches.length > 0) {
+        const share = sItem.amount / directMatches.length;
+        directMatches.forEach((c) => {
+          fieldIncomes[c.id] = (fieldIncomes[c.id] || 0) + share;
+        });
+        return;
+      }
+
+      // Name matches if no direct ID match
+      const nameMatches = farmerCrops.filter((c) => {
+        const cKey = getCleanName(c.cropName);
+        if (!sKey || !cKey) return false;
+        return sKey.includes(cKey) || cKey.includes(sKey);
+      });
+
+      if (nameMatches.length > 0) {
+        const share = sItem.amount / nameMatches.length;
+        nameMatches.forEach((c) => {
+          fieldIncomes[c.id] = (fieldIncomes[c.id] || 0) + share;
+        });
+        return;
+      }
+
+      // Fallback: If no direct ID or name match, distribute evenly across active fields
+      if (totalFields > 0) {
+        const share = sItem.amount / totalFields;
+        farmerCrops.forEach((c) => {
+          fieldIncomes[c.id] = (fieldIncomes[c.id] || 0) + share;
+        });
       }
     });
 
@@ -1387,29 +1425,7 @@ export default function RecordsScreen() {
       const cropIdStr = crop.id;
       const cropName = crop.cropName || 'Crop';
       const fieldName = crop.fieldName || 'Field 1';
-      const cKey = getCleanName(cropName);
-      const fieldsCountForCrop = (cKey && baseCropCounts[cKey]) || 1;
-
-      let directIncome = 0;
-      let sharedIncome = 0;
-
-      allFlatSaleItems.forEach((sItem) => {
-        // Direct crop ID match
-        if (sItem.cropId && (sItem.cropId === cropIdStr || (crop.cropId && sItem.cropId === crop.cropId))) {
-          directIncome += sItem.amount;
-          return;
-        }
-
-        // Match by crop name if cropId is not specified or doesn't match directly
-        const sKey = getCleanName(sItem.cropName);
-        if (sKey && cKey && (sKey.includes(cKey) || cKey.includes(sKey))) {
-          if (!sItem.cropId) {
-            sharedIncome += sItem.amount / fieldsCountForCrop;
-          }
-        }
-      });
-
-      const income = directIncome + sharedIncome;
+      const income = fieldIncomes[cropIdStr] || 0;
       const expense = perFieldExpense;
       const net = income - expense;
 

@@ -267,25 +267,20 @@ export function BillPreview({ inv }: { inv: SavedSaleInvoice }) {
 
         <View style={[billStyles.billPartyBox, { borderColor: '#1e40af' }]}>
           <View style={[billStyles.billPartyHeader, { backgroundColor: '#1e40af' }]}>
-            <Text style={billStyles.billPartyHeaderText}>TO (BUYER / MANDI)</Text>
+            <Text style={billStyles.billPartyHeaderText}>TO (BUYER)</Text>
           </View>
           <View style={billStyles.billPartyBody}>
-            <Text style={billStyles.billPartyLine}>
-              Type: <Text style={billStyles.billPartyLineBold}>{inv.isCash ? 'CASH SALE' : 'CREDIT/PARTY'}</Text>
-            </Text>
             {inv.partyName ? (
               <Text style={billStyles.billPartyLine}>
                 Name: <Text style={billStyles.billPartyLineBold}>{inv.partyName}</Text>
               </Text>
             ) : null}
+            <Text style={billStyles.billPartyLine}>
+              Address: <Text style={billStyles.billPartyLineBold}>{inv.partyAddress || '-'}</Text>
+            </Text>
             {inv.partyMobile ? (
               <Text style={billStyles.billPartyLine}>
                 Mobile: <Text style={billStyles.billPartyLineBold}>{inv.partyMobile}</Text>
-              </Text>
-            ) : null}
-            {inv.partyAddress ? (
-              <Text style={billStyles.billPartyLine}>
-                Address: <Text style={billStyles.billPartyLineBold}>{inv.partyAddress}</Text>
               </Text>
             ) : null}
           </View>
@@ -830,11 +825,11 @@ export async function exportBillAsPdf(inv: SavedSaleInvoice, fileName?: string, 
               </div>
             </div>
             <div class="party-box">
-              <div class="party-header buyer">🤝 BUYER / PARTY</div>
+              <div class="party-header buyer">TO (BUYER)</div>
               <div class="party-body">
-                <strong>${inv.partyName}</strong><br/>
+                <strong>${inv.partyName || 'Cash Sale'}</strong><br/>
+                Address: ${inv.partyAddress || '-'}<br/>
                 ${inv.partyMobile ? `Mobile: ${inv.partyMobile}<br/>` : ''}
-                Payment: ${inv.isCash ? '💵 CASH SALE' : '📜 CREDIT ACCOUNT'}<br/>
               </div>
             </div>
           </div>

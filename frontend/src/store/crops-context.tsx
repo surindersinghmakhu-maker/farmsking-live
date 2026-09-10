@@ -94,6 +94,7 @@ export interface CropSaleRecord {
   billId?: string;
   billNo?: string;
   amountReceived?: number | string;
+  previousBalance?: number;
 }
 
 export interface SpecialTreatmentTemplate {
@@ -142,6 +143,7 @@ interface SalePayload {
   buyerName: string;
   billId?: string;
   amountReceived?: number | string;
+  previousBalance?: number;
 }
 
 export interface GpsUnlockRequest {
@@ -505,6 +507,7 @@ export function CropsProvider({ children }: { children: ReactNode }) {
         saleDate,
         billId: payload.billId,
         amountReceived: payload.amountReceived,
+        previousBalance: payload.previousBalance,
       },
       ...prev,
     ]);

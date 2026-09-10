@@ -277,6 +277,7 @@ export default function RecordsScreen() {
         pricePerUnit: String(b.items?.[0]?.rate || b.totalAmount),
         totalAmount: Number(b.totalAmount),
         amountReceived: b.amountReceived !== undefined && b.amountReceived !== null ? Number(b.amountReceived) : undefined,
+        previousBalance: b.previousBalance !== undefined && b.previousBalance !== null ? Number(b.previousBalance) : undefined,
         buyerName: b.partyName || (b.isCash ? 'Cash Sale' : 'Direct Cash'),
         saleDate: b.createdAt ? b.createdAt.slice(0, 10) : todayIso(),
         billId: b.id,
@@ -501,6 +502,7 @@ export default function RecordsScreen() {
   // Main Form Edit Bill State
   const [editingBillId, setEditingBillId] = useState<string | null>(null);
   const [editingBillNo, setEditingBillNo] = useState<string | null>(null);
+  const [editingPreviousBalance, setEditingPreviousBalance] = useState<number | null>(null);
   // ✅ ਇਹ track ਕਰਦਾ ਹੈ ਕਿ save ਤੋਂ ਪਹਿਲਾਂ edit mode ਸੀ ਜਾਂ ਨਹੀਂ
   const [wasEditingBill, setWasEditingBill] = useState(false);
 
@@ -534,6 +536,7 @@ export default function RecordsScreen() {
     let billNoToUse = item.billNo || (item.billId ? `FK-${item.billId.slice(-4).toUpperCase()}` : 'FK-2601');
     let realBillIdToUse = item.billId || item.id;
     let loadedAmountReceived: string | null = null;
+    let loadedPreviousBalance: number | null = null;
     let loadedReceivedMode: 'CASH' | 'UPI' = 'CASH';
 
     const matchedBill = item.billId ? saleBillsMap.get(item.billId) : (item.billNo ? saleBillsMap.get(item.billNo) : (item.id ? saleBillsMap.get(item.id) : null));
@@ -543,6 +546,9 @@ export default function RecordsScreen() {
       billNoToUse = matchedBill.billNo || billNoToUse;
       if (matchedBill.amountReceived !== undefined && matchedBill.amountReceived !== null) {
         loadedAmountReceived = String(matchedBill.amountReceived);
+      }
+      if (matchedBill.previousBalance !== undefined && matchedBill.previousBalance !== null) {
+        loadedPreviousBalance = Number(matchedBill.previousBalance);
       }
       if (matchedBill.amountReceivedMode) {
         loadedReceivedMode = matchedBill.amountReceivedMode as 'CASH' | 'UPI';
@@ -567,6 +573,9 @@ export default function RecordsScreen() {
           if (bill.amountReceived !== undefined && bill.amountReceived !== null) {
             loadedAmountReceived = String(bill.amountReceived);
           }
+          if (bill.previousBalance !== undefined && bill.previousBalance !== null) {
+            loadedPreviousBalance = Number(bill.previousBalance);
+          }
           if ((bill as any).amountReceivedMode) {
             loadedReceivedMode = (bill as any).amountReceivedMode as 'CASH' | 'UPI';
           }
@@ -590,6 +599,9 @@ export default function RecordsScreen() {
     if (loadedAmountReceived === null && item.amountReceived !== undefined && item.amountReceived !== null) {
       loadedAmountReceived = String(item.amountReceived);
     }
+    if (loadedPreviousBalance === null && item.previousBalance !== undefined && item.previousBalance !== null) {
+      loadedPreviousBalance = Number(item.previousBalance);
+    }
 
     if (loadedItems.length === 0) {
       loadedItems = [
@@ -612,6 +624,7 @@ export default function RecordsScreen() {
     setSaleItems(loadedItems);
     setSaleDiscount('');
     setSaleDelivery('');
+    setEditingPreviousBalance(loadedPreviousBalance);
     const defaultRecd = !isParty ? String(item.totalAmount) : '';
     setAmountReceived(loadedAmountReceived !== null ? loadedAmountReceived : defaultRecd);
     setAmountReceivedMode(loadedReceivedMode);
@@ -1052,7 +1065,10 @@ export default function RecordsScreen() {
   const totalReceivable = useMemo(() => receivableParties.reduce((sum, p) => sum + p.balance, 0), [receivableParties]);
   const totalPayable = useMemo(() => payableParties.reduce((sum, p) => sum + Math.abs(p.balance), 0), [payableParties]);
   const { data: partyStatement } = usePartyStatement(paymentMode === 'PARTY' ? selectedParty?.id : undefined);
-  const previousPartyBalance = partyStatement?.balance ?? 0;
+  const livePartyBalance = partyStatement?.balance ?? selectedParty?.balance ?? 0;
+  const previousPartyBalance = editingBillId && editingPreviousBalance !== null
+    ? editingPreviousBalance
+    : livePartyBalance;
 
   // Keep the selected crop valid as the active crop list changes (e.g. a crop completes elsewhere)
   useEffect(() => {
@@ -1207,6 +1223,7 @@ export default function RecordsScreen() {
     setEditingBillId(null);
     setEditingBillNo(null);
     setWasEditingBill(false);
+    setEditingPreviousBalance(null);
   };
 
   const getCropMaxRateDetails = (cropName: string, userSetPrice?: string | number) => {
@@ -1391,8 +1408,7 @@ export default function RecordsScreen() {
         }
       }
 
-      // ✅ FIX: Edit mode ਵਿੱਚ ਨਵੀਂ ledger entry ਨਾ ਬਣਾਓ — ਸਿਰਫ਼ bill update ਕਾਫ਼ੀ ਹੈ
-      if (!editingBillId && paymentMode === 'PARTY' && selectedParty) {
+      if (paymentMode === 'PARTY' && selectedParty) {
         const modeLabel = effectiveAmountReceived > 0 ? ` (${currentReceivedMode})` : '';
         const reason = `Sale: ${saleItems.map((i) => i.cropName).join(', ')} (${totalCartItems} item${totalCartItems > 1 ? 's' : ''})${modeLabel}`;
         await recordSaleLedger.mutateAsync({
@@ -1401,7 +1417,7 @@ export default function RecordsScreen() {
             totalAmount: totalCartAmount,
             amountReceived: effectiveAmountReceived,
             reason,
-            saleBillId: realDbBillId || undefined,
+            saleBillId: realDbBillId || editingBillId || undefined,
           },
         });
       }
@@ -1426,6 +1442,7 @@ export default function RecordsScreen() {
                 buyerName,
                 totalAmount: item.amount,
                 amountReceived: effectiveAmountReceived,
+                previousBalance: previousPartyBalance,
                 notes: saleDescription.trim(),
                 billId: targetBillId,
                 billNo,
@@ -1438,6 +1455,7 @@ export default function RecordsScreen() {
                 buyerName,
                 billId: targetBillId,
                 amountReceived: effectiveAmountReceived,
+                previousBalance: previousPartyBalance,
               }).catch(() => {});
             }
           });
@@ -1457,6 +1475,7 @@ export default function RecordsScreen() {
               buyerName,
               billId: realDbBillId,
               amountReceived: effectiveAmountReceived,
+              previousBalance: previousPartyBalance,
             }).catch(() => {});
           }
         });

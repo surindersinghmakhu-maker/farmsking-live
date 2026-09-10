@@ -3769,6 +3769,57 @@ export default function RecordsScreen() {
           ) : (
             /* ANALYSIS (PAYMENTS) TAB — Receivable/Payable party ledgers */
             <View style={{ flex: 1 }}>
+              {/* Quick Action Buttons: Payment In & Payment Out (Pill layout from Home) */}
+              <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 12, paddingTop: 10, paddingBottom: 6 }}>
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    backgroundColor: '#0284c7',
+                    paddingVertical: 10,
+                    borderRadius: RADIUS.pill,
+                  }}
+                  activeOpacity={0.85}
+                  onPress={() => {
+                    tap();
+                    setVoucherInitialType('RECEIPT_IN');
+                    setVoucherInitialParty(null);
+                    setLockVoucherParty(false);
+                    setShowPaymentVoucherModal(true);
+                  }}
+                >
+                  <Ionicons name="arrow-down-circle" size={16} color="#ffffff" />
+                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>💰 Payment In</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    backgroundColor: '#ea580c',
+                    paddingVertical: 10,
+                    borderRadius: RADIUS.pill,
+                  }}
+                  activeOpacity={0.85}
+                  onPress={() => {
+                    tap();
+                    setVoucherInitialType('PAYMENT_OUT');
+                    setVoucherInitialParty(null);
+                    setLockVoucherParty(false);
+                    setShowPaymentVoucherModal(true);
+                  }}
+                >
+                  <Ionicons name="arrow-up-circle" size={16} color="#ffffff" />
+                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>💸 Payment Out</Text>
+                </TouchableOpacity>
+              </View>
+
               {/* Receivable/Payable subtabs */}
 
               <View style={styles.analysisSubTabRow}>

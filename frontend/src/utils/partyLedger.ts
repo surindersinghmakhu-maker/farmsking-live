@@ -40,15 +40,15 @@ export function cleanParticulars(reason: string, drAmount: number = 0, crAmount:
 
   // Handle Sale entries
   if (/^sale/i.test(text) || drAmount > 0) {
-    // Extract crop item names
-    let content = text.replace(/^sale:?\s*/i, '').trim();
-    // Remove payment mode / bill numbers in parentheses e.g. (CASH), (FK-2601), (1 items)
-    content = content.replace(/\([^)]*\)/g, '').trim();
-    // Remove quantity / rate brackets e.g. " (10 Qtl @ ₹2000)" or " 10 kg @ 200"
-    content = content.replace(/\s*\d+[^,@)]*@?\s*₹?[^,)]*/gi, '').trim();
-    // Clean remaining punctuation & double spaces
-    content = content.replace(/[():@₹]/g, '').replace(/\s*,\s*/g, ', ').replace(/\s+/g, ' ').trim();
-    content = content.replace(/^,|,$/g, '').trim();
+    let content = text.replace(/^sale:?\s*/i, '').replace(/^sale-\s*/i, '').trim();
+    // Strip noisy metadata e.g. (CASH), (UPI), (FK-65095547), (1 item)
+    content = content
+      .replace(/\((CASH|UPI)\)/gi, '')
+      .replace(/\(FK-[^)]+\)/gi, '')
+      .replace(/\(\d+\s*item\)/gi, '')
+      .replace(/\s*@\s*₹\d+(\.\d+)?/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim();
 
     if (content && content.toLowerCase() !== 'crop sale' && content.toLowerCase() !== 'sale') {
       return `Sale - ${content}`;
@@ -56,8 +56,13 @@ export function cleanParticulars(reason: string, drAmount: number = 0, crAmount:
     return 'Sale';
   }
 
-  // Fallback: strip parenthesized text (like payment mode or bill numbers)
-  const cleaned = text.replace(/\([^)]*\)/g, '').trim();
+  // Fallback: strip noisy metadata
+  const cleaned = text
+    .replace(/\((CASH|UPI)\)/gi, '')
+    .replace(/\(FK-[^)]+\)/gi, '')
+    .replace(/\(\d+\s*item\)/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
   return cleaned || (drAmount > 0 ? 'Sale' : 'Payment');
 }
 

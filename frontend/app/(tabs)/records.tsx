@@ -1573,9 +1573,8 @@ export default function RecordsScreen() {
       }
 
       if (paymentMode === 'PARTY' && selectedParty) {
-        const modeLabel = effectiveAmountReceived > 0 ? ` (${currentReceivedMode})` : '';
-        const realBillNoStr = billNo ? ` (${billNo})` : '';
-        const reason = `Sale: ${saleItems.map((i) => i.cropName).join(', ')} (${totalCartItems} item${totalCartItems > 1 ? 's' : ''})${modeLabel}${realBillNoStr}`;
+        const itemSummaryWithQty = saleItems.map((i) => `${i.cropName} (${i.qty} ${i.unit || 'unit'})`).join(', ');
+        const reason = `Sale: ${itemSummaryWithQty}`;
         try {
           const validBillIdToPass = realDbBillId || editingBillId || undefined;
           await recordSaleLedger.mutateAsync({

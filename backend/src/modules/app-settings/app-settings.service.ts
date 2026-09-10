@@ -110,27 +110,34 @@ export class AppSettingsService {
       if (dto[key] !== undefined) fields[key] = dto[key];
     }
 
-    if (dto.adminName || dto.adminMobile || dto.adminEmail) {
+    if (dto.adminName !== undefined || dto.adminMobile !== undefined || dto.adminEmail !== undefined || dto.upiId !== undefined || dto.logoUrl !== undefined || dto.appName !== undefined || dto.tagline !== undefined) {
       try {
-        const superAdmin = await this.prisma.user.findFirst({
-          where: { role: 'SUPER_ADMIN', deletedAt: null },
-        });
-        if (superAdmin) {
-          await this.prisma.user.update({
-            where: { id: superAdmin.id },
-            data: {
-              ...(dto.adminName !== undefined && { name: dto.adminName }),
-              ...(dto.adminMobile !== undefined && { mobile: dto.adminMobile }),
-              ...(dto.adminEmail !== undefined && { email: dto.adminEmail }),
-              ...(dto.upiId !== undefined && { upiId: dto.upiId }),
-              ...(dto.tagline !== undefined && { bio: dto.tagline }),
-              ...(dto.appName !== undefined && { specialization: dto.appName }),
-              ...(dto.logoUrl !== undefined && { photoUrl: dto.logoUrl }),
-            },
-          });
+        const userData: Record<string, unknown> = {};
+        if (dto.adminName !== undefined) userData.name = dto.adminName;
+        if (dto.adminMobile !== undefined) userData.mobile = dto.adminMobile;
+        if (dto.adminEmail !== undefined) userData.email = dto.adminEmail;
+        if (dto.upiId !== undefined) userData.upiId = dto.upiId;
+        if (dto.tagline !== undefined) userData.bio = dto.tagline;
+        if (dto.appName !== undefined) userData.specialization = dto.appName;
+        if (dto.logoUrl !== undefined) userData.photoUrl = dto.logoUrl;
+
+        if (Object.keys(userData).length > 0) {
+          // Update the current performing admin's user record in DB
+          if (admin && admin.id) {
+            await this.prisma.user.update({
+              where: { id: admin.id },
+              data: userData as any,
+            }).catch(() => {});
+          }
+
+          // Also update all SUPER_ADMIN user records in DB for universal data sharing
+          await this.prisma.user.updateMany({
+            where: { role: 'SUPER_ADMIN', deletedAt: null },
+            data: userData as any,
+          }).catch(() => {});
         }
       } catch (err) {
-        console.warn('Could not update super admin user contact details:', err);
+        console.warn('Could not update super admin user contact details in User table:', err);
       }
     }
 

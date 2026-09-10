@@ -186,13 +186,6 @@ export class PartiesService {
         this.prisma.partyLedgerEntry.delete({ where: { id: e.id } }).catch(() => {});
         return false;
       }
-      if (!e.saleBillId && (e.type === PartyLedgerEntryType.SALE_CREDIT || e.type === PartyLedgerEntryType.SALE_PAYMENT)) {
-        const matchesAnyBill = saleBills.some((b) => e.reason && e.reason.includes(b.billNo));
-        if (!matchesAnyBill) {
-          this.prisma.partyLedgerEntry.delete({ where: { id: e.id } }).catch(() => {});
-          return false;
-        }
-      }
       return true;
     });
 
@@ -348,6 +341,42 @@ export class PartiesService {
         }
 
         return this.getStatement(user, partyId);
+      }
+    }
+
+    // Auto-create SaleBill if validSaleBillId was not provided so every sale has a DB SaleBill record
+    if (!validSaleBillId) {
+      try {
+        const farmerObj = await this.prisma.user.findUnique({ where: { id: user.id }, select: { name: true } });
+        const billNo = `FK-${Date.now().toString().slice(-6)}`;
+        const createdBill = await this.prisma.saleBill.create({
+          data: {
+            farmerId: user.id,
+            billNo,
+            farmerName: farmerObj?.name || 'Farmer',
+            partyId: targetPartyId,
+            partyName: partyObj.name,
+            isCash: false,
+            amountReceivedMode: 'CASH',
+            items: [
+              {
+                cropName: dto.reason || 'Crop Sale',
+                qty: 1,
+                unit: 'item',
+                rate: Number(dto.totalAmount),
+              },
+            ],
+            totalItems: 1,
+            totalAmount: dto.totalAmount,
+            amountReceived: dto.amountReceived || 0,
+            thisSaleBalance: Math.max(0, Number(dto.totalAmount) - (Number(dto.amountReceived) || 0)),
+            previousBalance: 0,
+            netReceivable: dto.totalAmount,
+          },
+        });
+        validSaleBillId = createdBill.id;
+      } catch (err) {
+        console.warn('Could not auto-create SaleBill in recordSaleLedger:', err);
       }
     }
 

@@ -256,15 +256,21 @@ export function ProfessionalOverviewView({
                 {/* 3 Metrics Row */}
                 <View style={styles.cropMetricsRow}>
                   <View style={styles.cropMetricBox}>
-                    <Text style={styles.cropMetricLabel}>Income</Text>
-                    <Text style={[styles.cropMetricVal, { color: '#16a34a' }]}>+{formatInr(c.income)}</Text>
+                    <View style={[styles.cropProfitBadge, { backgroundColor: '#dcfce7' }]}>
+                      <Text style={[styles.cropProfitBadgeText, { color: '#15803d' }]}>
+                        Income: +{formatInr(c.income)}
+                      </Text>
+                    </View>
                   </View>
 
                   <View style={styles.cropMetricDivider} />
 
                   <View style={styles.cropMetricBox}>
-                    <Text style={styles.cropMetricLabel}>Expense</Text>
-                    <Text style={[styles.cropMetricVal, { color: '#dc2626' }]}>-{formatInr(c.expense)}</Text>
+                    <View style={[styles.cropProfitBadge, { backgroundColor: '#fee2e2' }]}>
+                      <Text style={[styles.cropProfitBadgeText, { color: '#dc2626' }]}>
+                        Expense: -{formatInr(c.expense)}
+                      </Text>
+                    </View>
                   </View>
 
                   <View style={styles.cropMetricDivider} />

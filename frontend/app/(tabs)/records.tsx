@@ -253,13 +253,17 @@ export default function RecordsScreen() {
     return map;
   }, [rawSaleBillsList]);
 
-  // Unified list of ALL sales (Single Source of Truth: DB Sale Bills)
+  // Unified list of ALL sales (DB Sale Bills + Local Offline Sales)
   const unifiedSalesRecords = useMemo(() => {
     const list: CropSaleRecord[] = [];
+    const dbBillIds = new Set<string>();
 
-    // DB is the SINGLE SOURCE OF TRUTH — do not render mock offline records
+    // 1. Include DB Sale Bills
     if (rawSaleBillsList && Array.isArray(rawSaleBillsList)) {
       rawSaleBillsList.forEach((b) => {
+        if (b.id) dbBillIds.add(b.id);
+        if (b.billNo) dbBillIds.add(b.billNo);
+
         const cropSummary = (b.items && b.items.length > 0)
           ? b.items.map((i: any) => `${i.cropName} (${i.qty} ${i.unit} @ ₹${i.rate})`).join(', ')
           : 'Crop Sale';
@@ -285,8 +289,15 @@ export default function RecordsScreen() {
       });
     }
 
+    // 2. Include local sales records from context/AsyncStorage if not already present in DB list
+    (allSalesRecords || []).forEach((s) => {
+      if (!dbBillIds.has(s.id) && !dbBillIds.has(s.billId || '') && !dbBillIds.has(s.billNo || '')) {
+        list.push(s);
+      }
+    });
+
     return list;
-  }, [rawSaleBillsList]);
+  }, [rawSaleBillsList, allSalesRecords]);
 
   const renderSaleRowItem = (item: CropSaleRecord, idx: number) => {
     const matchedBill = item.billId ? saleBillsMap.get(item.billId) : (item.billNo ? saleBillsMap.get(item.billNo) : null);
@@ -412,12 +423,34 @@ export default function RecordsScreen() {
   const [showFromDatePicker, setShowFromDatePicker] = useState(false);
   const [showToDatePicker, setShowToDatePicker] = useState(false);
 
+  // Helper to extract clean YYYY-MM-DD from any date representation
+  const getCleanIsoDate = (dateStr?: string): string => {
+    if (!dateStr) return todayIso();
+    const str = String(dateStr).trim();
+    if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+      return str.slice(0, 10);
+    }
+    if (/^\d{1,2}\/\d{1,2}\/\d{4}/.test(str)) {
+      const parts = str.split('/');
+      const day = parts[0].padStart(2, '0');
+      const month = parts[1].padStart(2, '0');
+      const year = parts[2];
+      return `${year}-${month}-${day}`;
+    }
+    const parsed = new Date(str);
+    if (!isNaN(parsed.getTime())) {
+      return parsed.toISOString().slice(0, 10);
+    }
+    return str;
+  };
+
   // 1. Filter sales for Current Calendar Month
   const currentMonthPrefix = useMemo(() => new Date().toISOString().slice(0, 7), []);
   const salesThisMonth = useMemo(() => {
     return unifiedSalesRecords.filter((s) => {
       if (!s.saleDate) return true;
-      return s.saleDate.slice(0, 7) === currentMonthPrefix;
+      const iso = getCleanIsoDate(s.saleDate);
+      return iso.slice(0, 7) === currentMonthPrefix;
     });
   }, [unifiedSalesRecords, currentMonthPrefix]);
 
@@ -426,7 +459,8 @@ export default function RecordsScreen() {
   const salesToday = useMemo(() => {
     return unifiedSalesRecords.filter((s) => {
       if (!s.saleDate) return false;
-      return s.saleDate.slice(0, 10) === todayDateStr;
+      const iso = getCleanIsoDate(s.saleDate);
+      return iso === todayDateStr;
     });
   }, [unifiedSalesRecords, todayDateStr]);
 
@@ -434,14 +468,18 @@ export default function RecordsScreen() {
   const salesInPeriod = useMemo(() => {
     return unifiedSalesRecords.filter((s) => {
       if (!s.saleDate) return true;
-      const datePart = s.saleDate.slice(0, 10);
-      return datePart >= salesFromDate && datePart <= salesToDate;
+      const iso = getCleanIsoDate(s.saleDate);
+      return iso >= salesFromDate && iso <= salesToDate;
     });
   }, [unifiedSalesRecords, salesFromDate, salesToDate]);
 
-  // Active filtered list depending on selected view mode
+  // Active filtered list depending on selected view mode (fallback to unifiedSalesRecords if selected month filter is empty but total sales exist)
   const activeSalesList = useMemo(() => {
-    if (salesViewMode === 'MONTH') return salesThisMonth;
+    if (salesViewMode === 'MONTH') {
+      if (salesThisMonth.length > 0) return salesThisMonth;
+      if (unifiedSalesRecords.length > 0) return unifiedSalesRecords; // Fallback so entries are never hidden
+      return salesThisMonth;
+    }
     if (salesViewMode === 'TODAY') return salesToday;
     if (salesViewMode === 'PERIOD') return salesInPeriod;
     return unifiedSalesRecords;

@@ -1177,17 +1177,21 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
             <meta charset="utf-8" />
             <title>FARMSKING PARTY ACCOUNT STATEMENT</title>
             <style>
-              body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #ffffff; color: #0f172a; }
-              .card { max-width: 750px; margin: 0 auto; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 20px; }
-              .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2.5px solid #16a34a; padding-bottom: 10px; margin-bottom: 12px; }
-              .brand { font-size: 22px; font-weight: 800; color: #15803d; }
-              .tagline { font-size: 10px; color: #64748b; }
-              .grid { display: flex; gap: 10px; margin-bottom: 12px; }
-              .box { flex: 1; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; font-size: 11px; }
-              .box-title { font-weight: 800; color: #475569; font-size: 9.5px; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; margin-bottom: 4px; }
-              .summary-box { background: ${(statement?.balance || 0) >= 0 ? '#f0fdf4' : '#fef2f2'}; border: 1.5px solid ${(statement?.balance || 0) >= 0 ? '#16a34a' : '#dc2626'}; border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 12px; }
-              .table { width: 100%; border-collapse: collapse; margin-bottom: 12px; border: 1px solid #cbd5e1; }
-              .table th { background: #334155; color: #fff; font-size: 9.5px; padding: 7px; text-align: left; }
+              @page { size: A4 portrait; margin: 8mm; }
+              * { box-sizing: border-box; }
+              body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 12px; background: #ffffff; color: #0f172a; font-size: 11px; }
+              .card { max-width: 100%; margin: 0 auto; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 14px; }
+              .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #16a34a; padding-bottom: 8px; margin-bottom: 8px; }
+              .brand { font-size: 20px; font-weight: 800; color: #15803d; letter-spacing: -0.5px; }
+              .tagline { font-size: 9.5px; color: #64748b; font-weight: 600; }
+              .grid { display: flex; gap: 8px; margin-bottom: 10px; }
+              .box { flex: 1; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 8px; font-size: 10.5px; background: #f8fafc; }
+              .box-title { font-weight: 800; color: #15803d; font-size: 9px; border-bottom: 1px solid #e2e8f0; padding-bottom: 2px; margin-bottom: 4px; letter-spacing: 0.3px; }
+              .summary-box { background: ${(statement?.balance || 0) >= 0 ? '#f0fdf4' : '#fef2f2'}; border: 1.5px solid ${(statement?.balance || 0) >= 0 ? '#16a34a' : '#dc2626'}; border-radius: 6px; padding: 8px 12px; display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; margin-bottom: 10px; }
+              .table { width: 100%; border-collapse: collapse; margin-bottom: 10px; border: 1px solid #cbd5e1; }
+              .table th { background: #1e293b; color: #ffffff; font-size: 9.5px; padding: 6px; text-align: left; font-weight: 700; text-transform: uppercase; }
+              .table td { padding: 5px 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; }
+              .footer { text-align: center; font-size: 8.5px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 6px; margin-top: 10px; }
             </style>
           </head>
           <body>
@@ -1197,7 +1201,7 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
                   <div class="brand">👑 FarmsKing</div>
                   <div class="tagline">PARTY ACCOUNT STATEMENT</div>
                 </div>
-                <div style="text-align: right; font-size: 11px;">
+                <div style="text-align: right; font-size: 10.5px;">
                   <strong>Date: ${new Date().toLocaleDateString('en-IN')}</strong><br/>
                   <span style="color:#16a34a; font-weight: bold;">Official Ledger</span>
                 </div>
@@ -1223,19 +1227,22 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
               <table class="table">
                 <thead>
                   <tr>
-                    <th>Sr.</th>
-                    <th>Date</th>
-                    <th>Ref. No.</th>
-                    <th>Particulars</th>
-                    <th style="text-align:right; color:#fca5a5;">Dr. (₹)</th>
-                    <th style="text-align:right; color:#86efac;">Cr. (₹)</th>
-                    <th style="text-align:right; color:#38bdf8;">Balance</th>
+                    <th style="width: 8%;">Sr.</th>
+                    <th style="width: 14%;">Date</th>
+                    <th style="width: 18%;">Ref. No.</th>
+                    <th style="width: 24%;">Particulars</th>
+                    <th style="text-align:right; color:#fca5a5; width: 12%;">Dr. (₹)</th>
+                    <th style="text-align:right; color:#86efac; width: 12%;">Cr. (₹)</th>
+                    <th style="text-align:right; color:#38bdf8; width: 12%;">Balance</th>
                   </tr>
                 </thead>
                 <tbody>
                   ${rowsHtml}
                 </tbody>
               </table>
+              <div class="footer">
+                Computer Generated Official Ledger Statement · FarmsKing Platform
+              </div>
             </div>
           </body>
         </html>

@@ -1396,8 +1396,8 @@ function WorkerStatementModal({
     return [...rawTimeline].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [rawTimeline]);
 
-  // Multi-Page Pagination for JPG & View
-  const ITEMS_PER_PAGE = 12;
+  // Single Page / Compact Pagination for JPG & View
+  const ITEMS_PER_PAGE = 22;
   const pages = useMemo(() => {
     if (timeline.length === 0) return [[]];
     const chunked: (typeof timeline)[] = [];
@@ -1900,7 +1900,7 @@ function generateWorkerStatementPdfHtml({
   pendingBalance: number;
   timeline: any[];
 }) {
-  const itemsPerPage = 14;
+  const itemsPerPage = 22;
   const pageCount = Math.max(1, Math.ceil(timeline.length / itemsPerPage));
 
   let pagesHtml = '';
@@ -1910,88 +1910,88 @@ function generateWorkerStatementPdfHtml({
     const isLastPage = p === pageCount - 1;
 
     pagesHtml += `
-      <div style="page-break-after: ${isLastPage ? 'auto' : 'always'}; padding: 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0f172a;">
+      <div style="page-break-after: ${isLastPage ? 'auto' : 'always'}; padding: 14px 18px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #0f172a;">
         <!-- Brand Header -->
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #16a34a; padding-bottom: 10px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2.5px solid #16a34a; padding-bottom: 8px; margin-bottom: 10px;">
           <div>
-            <h1 style="margin: 0; font-size: 22px; font-weight: 800; color: #15803d; letter-spacing: -0.5px;">FarmsKing</h1>
-            <p style="margin: 2px 0 0 0; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">WORKER STATEMENT / ਖਾਤਾ ਸਟੇਟਮੈਂਟ</p>
+            <h1 style="margin: 0; font-size: 20px; font-weight: 800; color: #15803d; letter-spacing: -0.5px;">👑 FarmsKing</h1>
+            <p style="margin: 2px 0 0 0; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">WORKER STATEMENT / ਲੇਬਰ ਖਾਤਾ ਸਟੇਟਮੈਂਟ</p>
           </div>
           <div style="text-align: right;">
-            <p style="margin: 0; font-size: 11px; font-weight: 700; color: #334155;">Date: ${new Date().toLocaleDateString('en-IN')}</p>
-            <p style="margin: 2px 0 0 0; font-size: 10.5px; color: #16a34a; font-weight: 700;">Page ${p + 1} of ${pageCount}</p>
+            <p style="margin: 0; font-size: 10.5px; font-weight: 700; color: #334155;">Date: ${new Date().toLocaleDateString('en-IN')}</p>
+            <p style="margin: 2px 0 0 0; font-size: 10px; color: #16a34a; font-weight: 700;">Page ${p + 1} of ${pageCount}</p>
           </div>
         </div>
 
         <!-- Farmer & Worker Info Box -->
-        <div style="display: flex; gap: 12px; margin-bottom: 12px;">
-          <div style="flex: 1; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 10px;">
-            <p style="margin: 0 0 4px 0; font-size: 10px; font-weight: 800; color: #15803d; text-transform: uppercase;">👨‍🌾 Farmer Details</p>
-            <p style="margin: 0; font-size: 14px; font-weight: 700; color: #0f172a;">${farmerName}</p>
-            ${farmerMobile ? `<p style="margin: 2px 0 0 0; font-size: 11px; color: #475569;">📱 ${farmerMobile}</p>` : ''}
-            ${farmerVillage ? `<p style="margin: 2px 0 0 0; font-size: 11px; color: #475569;">📍 ${farmerVillage}</p>` : ''}
+        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+          <div style="flex: 1; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 7px 10px;">
+            <p style="margin: 0 0 3px 0; font-size: 9.5px; font-weight: 800; color: #15803d; text-transform: uppercase;">👨‍🌾 Farmer Details</p>
+            <p style="margin: 0; font-size: 13px; font-weight: 700; color: #0f172a;">${farmerName}</p>
+            ${farmerMobile ? `<p style="margin: 1px 0 0 0; font-size: 10.5px; color: #475569;">📱 ${farmerMobile}</p>` : ''}
+            ${farmerVillage ? `<p style="margin: 1px 0 0 0; font-size: 10.5px; color: #475569;">📍 ${farmerVillage}</p>` : ''}
           </div>
 
-          <div style="flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px;">
-            <p style="margin: 0 0 4px 0; font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase;">👤 Worker Details</p>
-            <p style="margin: 0; font-size: 14px; font-weight: 700; color: #0f172a;">${workerName}</p>
-            ${workerMobile ? `<p style="margin: 2px 0 0 0; font-size: 11px; color: #475569;">📱 ${workerMobile}</p>` : ''}
+          <div style="flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 7px 10px;">
+            <p style="margin: 0 0 3px 0; font-size: 9.5px; font-weight: 800; color: #475569; text-transform: uppercase;">👤 Worker Details</p>
+            <p style="margin: 0; font-size: 13px; font-weight: 700; color: #0f172a;">${workerName}</p>
+            ${workerMobile ? `<p style="margin: 1px 0 0 0; font-size: 10.5px; color: #475569;">📱 ${workerMobile}</p>` : ''}
           </div>
         </div>
 
         <!-- Financial Summary Banner -->
-        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-          <div style="flex: 1; background: #fff7ed; border: 1px solid #ffedd5; border-radius: 6px; padding: 8px; text-align: center;">
-            <p style="margin: 0; font-size: 10px; font-weight: 700; color: #c2410c;">Total Earned</p>
-            <p style="margin: 2px 0 0 0; font-size: 15px; font-weight: 800; color: #c2410c;">₹${totalEarned.toLocaleString('en-IN')}</p>
+        <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+          <div style="flex: 1; background: #fff7ed; border: 1px solid #ffedd5; border-radius: 6px; padding: 6px; text-align: center;">
+            <p style="margin: 0; font-size: 9.5px; font-weight: 700; color: #c2410c;">Total Earned</p>
+            <p style="margin: 2px 0 0 0; font-size: 14px; font-weight: 800; color: #c2410c;">₹${totalEarned.toLocaleString('en-IN')}</p>
           </div>
-          <div style="flex: 1; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 8px; text-align: center;">
-            <p style="margin: 0; font-size: 10px; font-weight: 700; color: #15803d;">Total Paid</p>
-            <p style="margin: 2px 0 0 0; font-size: 15px; font-weight: 800; color: #15803d;">₹${totalPaid.toLocaleString('en-IN')}</p>
+          <div style="flex: 1; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 6px; text-align: center;">
+            <p style="margin: 0; font-size: 9.5px; font-weight: 700; color: #15803d;">Total Paid</p>
+            <p style="margin: 2px 0 0 0; font-size: 14px; font-weight: 800; color: #15803d;">₹${totalPaid.toLocaleString('en-IN')}</p>
           </div>
-          <div style="flex: 1; background: ${pendingBalance > 0 ? '#fef2f2' : '#f0fdf4'}; border: 1px solid ${pendingBalance > 0 ? '#fecdd3' : '#bbf7d0'}; border-radius: 6px; padding: 8px; text-align: center;">
-            <p style="margin: 0; font-size: 10px; font-weight: 700; color: ${pendingBalance > 0 ? '#b91c1c' : '#15803d'};">Net Balance</p>
-            <p style="margin: 2px 0 0 0; font-size: 15px; font-weight: 800; color: ${pendingBalance > 0 ? '#dc2626' : '#16a34a'};">
-              ₹${pendingBalance.toLocaleString('en-IN')} ${pendingBalance > 0 ? 'Dr (ਦੇਣੀ)' : 'Nil'}
+          <div style="flex: 1; background: ${pendingBalance > 0 ? '#fef2f2' : '#f0fdf4'}; border: 1px solid ${pendingBalance > 0 ? '#fecdd3' : '#bbf7d0'}; border-radius: 6px; padding: 6px; text-align: center;">
+            <p style="margin: 0; font-size: 9.5px; font-weight: 700; color: ${pendingBalance > 0 ? '#b91c1c' : '#15803d'};">Net Balance</p>
+            <p style="margin: 2px 0 0 0; font-size: 14px; font-weight: 800; color: ${pendingBalance > 0 ? '#dc2626' : '#16a34a'};">
+              ₹${pendingBalance.toLocaleString('en-IN')} ${pendingBalance > 0 ? '(Payable / ਦੇਣੀ)' : 'Nil'}
             </p>
           </div>
         </div>
 
         <!-- Ledger Table -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden;">
           <thead>
-            <tr style="background: #334155; color: #ffffff; font-size: 11px; font-weight: 700; text-align: left;">
-              <th style="padding: 8px 10px; width: 75px;">Date</th>
-              <th style="padding: 8px 10px;">Particulars / Description</th>
-              <th style="padding: 8px 10px; text-align: right; color: #ffedd5; width: 85px;">Earned (+)</th>
-              <th style="padding: 8px 10px; text-align: right; color: #bbf7d0; width: 85px;">Paid (-)</th>
-              <th style="padding: 8px 10px; text-align: right; width: 95px;">Balance</th>
+            <tr style="background: #1e293b; color: #ffffff; font-size: 10px; font-weight: 700; text-align: left;">
+              <th style="padding: 6px 8px; width: 70px;">Date</th>
+              <th style="padding: 6px 8px;">Particulars / Description</th>
+              <th style="padding: 6px 8px; text-align: right; color: #ffedd5; width: 80px;">Earned (+)</th>
+              <th style="padding: 6px 8px; text-align: right; color: #bbf7d0; width: 80px;">Paid (-)</th>
+              <th style="padding: 6px 8px; text-align: right; width: 85px;">Balance</th>
             </tr>
           </thead>
           <tbody>
             ${
               pageItems.length === 0
-                ? `<tr><td colspan="5" style="text-align: center; padding: 16px; color: #94a3b8; font-size: 12px;">No entries recorded</td></tr>`
+                ? `<tr><td colspan="5" style="text-align: center; padding: 14px; color: #94a3b8; font-size: 11px;">No entries recorded</td></tr>`
                 : pageItems
                     .map((item, idx) => {
                       const isWork = item.type === 'WORK';
                       const bg = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
                       const formattedDate = new Date(item.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' });
                       return `
-                        <tr style="background: ${bg}; border-bottom: 1px solid #e2e8f0; font-size: 12px;">
-                          <td style="padding: 8px 10px; color: #475569; font-weight: 600;">${formattedDate}</td>
-                          <td style="padding: 8px 10px;">
+                        <tr style="background: ${bg}; border-bottom: 1px solid #e2e8f0; font-size: 10.5px;">
+                          <td style="padding: 5px 8px; color: #475569; font-weight: 600;">${formattedDate}</td>
+                          <td style="padding: 5px 8px;">
                             <div style="font-weight: 700; color: #0f172a;">${item.title}</div>
-                            ${item.description ? `<div style="font-size: 11px; color: #64748b; margin-top: 1px;">${item.description}</div>` : ''}
-                            ${item.notes ? `<div style="font-size: 10.5px; color: #475569; margin-top: 1px; font-style: italic;">📝 ${item.notes}</div>` : ''}
+                            ${item.description ? `<div style="font-size: 9.5px; color: #64748b; margin-top: 1px;">${item.description}</div>` : ''}
+                            ${item.notes ? `<div style="font-size: 9px; color: #475569; margin-top: 1px; font-style: italic;">📝 ${item.notes}</div>` : ''}
                           </td>
-                          <td style="padding: 8px 10px; text-align: right; font-weight: 700; color: #c2410c;">
+                          <td style="padding: 5px 8px; text-align: right; font-weight: 700; color: #c2410c;">
                             ${isWork ? `+₹${item.amount.toLocaleString('en-IN')}` : '—'}
                           </td>
-                          <td style="padding: 8px 10px; text-align: right; font-weight: 700; color: #16a34a;">
+                          <td style="padding: 5px 8px; text-align: right; font-weight: 700; color: #16a34a;">
                             ${!isWork ? `-₹${item.amount.toLocaleString('en-IN')}` : '—'}
                           </td>
-                          <td style="padding: 8px 10px; text-align: right; font-weight: 800; color: ${item.runningBalance > 0 ? '#dc2626' : '#16a34a'};">
+                          <td style="padding: 5px 8px; text-align: right; font-weight: 800; color: ${item.runningBalance > 0 ? '#dc2626' : '#16a34a'};">
                             ₹${item.runningBalance.toLocaleString('en-IN')}
                           </td>
                         </tr>
@@ -2003,8 +2003,8 @@ function generateWorkerStatementPdfHtml({
         </table>
 
         <!-- Page Footer -->
-        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 8px; font-size: 10px; color: #64748b;">
-          <div>Generated via <strong>FarmsKing App</strong> — Farm Management & Khata Ledger</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 6px; font-size: 8.5px; color: #64748b;">
+          <div>Generated via <strong>FarmsKing App</strong> — Official Worker Khata Ledger</div>
           <div>Page ${p + 1} of ${pageCount}</div>
         </div>
       </div>
@@ -2018,7 +2018,8 @@ function generateWorkerStatementPdfHtml({
         <meta charset="utf-8">
         <title>Worker Statement - ${workerName}</title>
         <style>
-          @page { size: A4 portrait; margin: 0; }
+          @page { size: A4 portrait; margin: 6mm; }
+          * { box-sizing: border-box; }
           body { margin: 0; padding: 0; background: #ffffff; }
         </style>
       </head>

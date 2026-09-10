@@ -342,19 +342,22 @@ export function UniversalStatementModal({
             <meta charset="utf-8" />
             <title>FARMSKING PARTY STATEMENT</title>
             <style>
-              body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #ffffff; color: #0f172a; }
-              .card { max-width: 750px; margin: 0 auto; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 20px; }
-              .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2.5px solid #16a34a; padding-bottom: 10px; margin-bottom: 12px; }
-              .brand { font-size: 22px; font-weight: 800; color: #15803d; }
-              .tagline { font-size: 10px; color: #64748b; }
-              .title-banner { background: #15803d; color: #ffffff; text-align: center; font-weight: 800; font-size: 13px; padding: 6px; border-radius: 20px; margin: 10px 0; letter-spacing: 0.5px; }
-              .grid { display: flex; gap: 10px; margin-bottom: 12px; }
-              .box { flex: 1; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; font-size: 11px; }
-              .box-title { font-weight: 800; color: #475569; font-size: 9.5px; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; margin-bottom: 4px; }
-              .table { width: 100%; border-collapse: collapse; margin-bottom: 12px; border: 1px solid #cbd5e1; }
-              .table th { background: #334155; color: #fff; font-size: 9.5px; padding: 7px; text-align: left; }
-              .summary-box { background: #f8fafc; border: 1.5px solid #16a34a; border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; }
-              .footer { text-align: center; font-size: 9px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 8px; margin-top: 12px; }
+              @page { size: A4 portrait; margin: 8mm; }
+              * { box-sizing: border-box; }
+              body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 12px; background: #ffffff; color: #0f172a; font-size: 11px; }
+              .card { max-width: 100%; margin: 0 auto; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 14px; }
+              .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #16a34a; padding-bottom: 8px; margin-bottom: 8px; }
+              .brand { font-size: 20px; font-weight: 800; color: #15803d; letter-spacing: -0.5px; }
+              .tagline { font-size: 9.5px; color: #64748b; font-weight: 600; }
+              .title-banner { background: #15803d; color: #ffffff; text-align: center; font-weight: 800; font-size: 12px; padding: 5px; border-radius: 16px; margin: 8px 0; letter-spacing: 0.5px; }
+              .grid { display: flex; gap: 8px; margin-bottom: 10px; }
+              .box { flex: 1; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 8px; font-size: 10.5px; background: #f8fafc; }
+              .box-title { font-weight: 800; color: #15803d; font-size: 9px; border-bottom: 1px solid #e2e8f0; padding-bottom: 2px; margin-bottom: 4px; letter-spacing: 0.3px; }
+              .table { width: 100%; border-collapse: collapse; margin-bottom: 10px; border: 1px solid #cbd5e1; }
+              .table th { background: #1e293b; color: #ffffff; font-size: 9.5px; padding: 6px; text-align: left; font-weight: 700; text-transform: uppercase; }
+              .table td { padding: 5px 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; }
+              .summary-box { background: #f0fdf4; border: 1.5px solid #16a34a; border-radius: 6px; padding: 8px 12px; display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; }
+              .footer { text-align: center; font-size: 8.5px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 6px; margin-top: 10px; }
             </style>
           </head>
           <body>
@@ -364,7 +367,7 @@ export function UniversalStatementModal({
                   <div class="brand">👑 ${appName}</div>
                   <div class="tagline">${tagline}</div>
                 </div>
-                <div style="text-align: right; font-size: 11px;">
+                <div style="text-align: right; font-size: 10.5px;">
                   <strong>STATEMENT OF ACCOUNT</strong><br/>
                   <span style="color:#64748b;">Period: ${fromDate} to ${toDate}</span>
                 </div>
@@ -391,11 +394,11 @@ export function UniversalStatementModal({
               <table class="table">
                 <thead>
                   <tr>
-                    <th>DATE</th>
-                    <th>PARTICULARS / REASON</th>
-                    <th style="text-align:right;">(+) CREDIT (₹)</th>
-                    <th style="text-align:right;">(-) DEBIT (₹)</th>
-                    <th style="text-align:right;">(=) NET BALANCE (₹)</th>
+                    <th style="width: 18%;">DATE</th>
+                    <th style="width: 27%;">PARTICULARS</th>
+                    <th style="width: 18%; text-align:right;">(+) CREDIT (₹)</th>
+                    <th style="width: 18%; text-align:right;">(-) DEBIT (₹)</th>
+                    <th style="width: 19%; text-align:right;">(=) BALANCE</th>
                   </tr>
                 </thead>
                 <tbody>${rowsHtml}</tbody>

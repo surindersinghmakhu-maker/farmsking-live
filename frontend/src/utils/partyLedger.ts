@@ -16,54 +16,43 @@ export interface GroupedLedgerRow {
 
 export function cleanParticulars(reason: string, drAmount: number = 0, crAmount: number = 0): string {
   if (!reason) {
-    return drAmount > 0 ? 'Sale' : 'Payment';
-  }
-
-  let text = reason.trim();
-
-  // Handle Payment entries
-  if (
-    /^payment/i.test(text) ||
-    /^amount received/i.test(text) ||
-    /^rct/i.test(text) ||
-    /^rec/i.test(text) ||
-    /^pay/i.test(text)
-  ) {
-    if (/received/i.test(text) || /^amount received/i.test(text) || crAmount > 0) {
-      return 'Payment Received';
-    }
-    if (/made/i.test(text) || drAmount > 0) {
-      return 'Payment Made';
-    }
+    if (drAmount > 0) return 'Sale';
+    if (crAmount > 0) return 'Receipt';
     return 'Payment';
   }
 
-  // Handle Sale entries
-  if (/^sale/i.test(text) || drAmount > 0) {
-    let content = text.replace(/^sale:?\s*/i, '').replace(/^sale-\s*/i, '').trim();
-    // Strip noisy metadata e.g. (CASH), (UPI), (FK-65095547), (1 item)
-    content = content
-      .replace(/\((CASH|UPI)\)/gi, '')
-      .replace(/\(FK-[^)]+\)/gi, '')
-      .replace(/\(\d+\s*item\)/gi, '')
-      .replace(/\s*@\s*₹\d+(\.\d+)?/gi, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+  const text = reason.trim();
+  const isUpi = /upi|online/i.test(text);
 
-    if (content && content.toLowerCase() !== 'crop sale' && content.toLowerCase() !== 'sale') {
-      return `Sale - ${content}`;
-    }
+  // Handle Receipt / Payment Received (Credit amount or Payment In)
+  if (
+    /received|receipt|\brct\b|payment in/i.test(text) ||
+    crAmount > 0
+  ) {
+    if (isUpi) return 'Receipt (UPI)';
+    if (/cash/i.test(text)) return 'Receipt (Cash)';
+    return 'Receipt';
+  }
+
+  // Handle Payment Out / Payment Made
+  if (
+    /payment made|\bpay out\b|\bpaid\b/i.test(text) ||
+    (/^payment/i.test(text) && !/received/i.test(text))
+  ) {
+    if (isUpi) return 'Payment (UPI)';
+    if (/cash/i.test(text)) return 'Payment (Cash)';
+    return 'Payment';
+  }
+
+  // Handle Sale
+  if (/^sale/i.test(text) || drAmount > 0) {
     return 'Sale';
   }
 
-  // Fallback: strip noisy metadata
-  const cleaned = text
-    .replace(/\((CASH|UPI)\)/gi, '')
-    .replace(/\(FK-[^)]+\)/gi, '')
-    .replace(/\(\d+\s*item\)/gi, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  return cleaned || (drAmount > 0 ? 'Sale' : 'Payment');
+  // Default fallback
+  if (isUpi) return 'Payment (UPI)';
+  if (/cash/i.test(text)) return 'Payment (Cash)';
+  return drAmount > 0 ? 'Sale' : 'Payment';
 }
 
 function extractRefNo(e: any): string {

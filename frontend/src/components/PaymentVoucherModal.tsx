@@ -242,8 +242,18 @@ export function PaymentVoucherModal({
       // Invalidate queries so that parties, labour workers & ledgers update instantly
       queryClient.invalidateQueries({ queryKey: ['parties'] });
       queryClient.invalidateQueries({ queryKey: ['labour-workers'] });
+      queryClient.invalidateQueries({ queryKey: ['labour-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['labour-work-entries'] });
       queryClient.invalidateQueries({ queryKey: ['expenses'] });
       queryClient.invalidateQueries({ queryKey: ['arhtiya-hisab'] });
+      queryClient.invalidateQueries({ queryKey: ['unified-parties'] });
+      if (sourceParty?.id) {
+        queryClient.invalidateQueries({ queryKey: ['parties', sourceParty.id, 'statement'] });
+        queryClient.invalidateQueries({ queryKey: ['labour-worker-statement', sourceParty.id] });
+      }
+      if (targetParty?.id) {
+        queryClient.invalidateQueries({ queryKey: ['parties', targetParty.id, 'statement'] });
+      }
 
       const slipData: UniversalVoucherData = {
         voucherType: voucherType === 'RECEIPT_IN' ? 'PAYMENT_IN' : voucherType === 'PAYMENT_OUT' ? 'PAYMENT_OUT' : 'PARTY_STATEMENT',

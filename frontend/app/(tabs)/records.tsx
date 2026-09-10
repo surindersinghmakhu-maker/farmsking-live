@@ -217,7 +217,7 @@ export default function RecordsScreen() {
   const activeCrops = useMemo(() => {
     return (myRealCrops ?? []).filter((c) => c.status === 'ACTIVE' || c.status === 'HARVESTING' || c.status === 'PLANNED');
   }, [myRealCrops]);
-  const { data: expenseLabourWorkers = [] } = useLabourWorkers();
+  const { data: expenseLabourWorkers = [], refetch: refetchLabourWorkers } = useLabourWorkers();
   const [expenseRecipientType, setExpenseRecipientType] = useState<'SUPPLIER' | 'LABOUR' | 'CASH'>('CASH');
   const [selectedLabourWorkerId, setSelectedLabourWorkerId] = useState<string | undefined>(undefined);
   const [labourWorkType, setLabourWorkType] = useState<string>('general');
@@ -951,7 +951,7 @@ export default function RecordsScreen() {
   };
 
   const queryClient = useQueryClient();
-  const { data: parties = [] } = useParties();
+  const { data: parties = [], refetch: refetchParties } = useParties();
   const createParty = useCreateParty();
   const recordSaleLedger = useRecordSaleLedger();
   const createSaleBill = useCreateSaleBill();
@@ -4288,7 +4288,11 @@ export default function RecordsScreen() {
         onClose={() => setShowPaymentVoucherModal(false)}
         onSuccess={() => {
           refetch();
+          refetchParties();
+          refetchLabourWorkers();
           queryClient.invalidateQueries({ queryKey: ['parties'] });
+          queryClient.invalidateQueries({ queryKey: ['labour-workers'] });
+          queryClient.invalidateQueries({ queryKey: ['unified-parties'] });
         }}
       />
 

@@ -2278,11 +2278,11 @@ export default function RecordsScreen() {
                                               </Text>
                                             </View>
                                             <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b', marginLeft: 21 }}>
-                                              🌱 {crop.fieldName} • {crop.area}
+                                              {crop.area} • {crop.unit}/unit
                                             </Text>
                                           </View>
-                                          <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                                            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }}>{crop.unit}</Text>
+                                          <View style={{ backgroundColor: '#eff6ff', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, maxWidth: 100 }}>
+                                            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#1d4ed8' }} numberOfLines={1}>🌱 {crop.fieldName}</Text>
                                           </View>
                                         </TouchableOpacity>
                                       ))}
@@ -2408,11 +2408,16 @@ export default function RecordsScreen() {
                                             setIsCropDropdownOpen(false);
                                           }}
                                         >
-                                          <Text style={{ fontSize: 12, fontFamily: crop.id === selectedCropId ? FONT.bold : FONT.medium, color: crop.id === selectedCropId ? '#16a34a' : '#0f172a' }}>
-                                            🌾 {crop.cropName} ({crop.unit})
-                                          </Text>
-                                          <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b' }}>
-                                            🌱 {crop.fieldName} • {crop.area}
+                                          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <Text style={{ fontSize: 12, fontFamily: crop.id === selectedCropId ? FONT.bold : FONT.medium, color: crop.id === selectedCropId ? '#16a34a' : '#0f172a', flex: 1 }}>
+                                              🌾 {crop.cropName}
+                                            </Text>
+                                            <View style={{ backgroundColor: '#eff6ff', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5, marginLeft: 6 }}>
+                                              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#1d4ed8' }} numberOfLines={1}>🌱 {crop.fieldName}</Text>
+                                            </View>
+                                          </View>
+                                          <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 2 }}>
+                                            {crop.area} • {crop.unit}/unit
                                           </Text>
                                         </TouchableOpacity>
                                       ))}

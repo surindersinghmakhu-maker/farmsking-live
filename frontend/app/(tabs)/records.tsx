@@ -612,7 +612,8 @@ export default function RecordsScreen() {
     setSaleItems(loadedItems);
     setSaleDiscount('');
     setSaleDelivery('');
-    setAmountReceived(loadedAmountReceived !== null ? loadedAmountReceived : '');
+    const defaultRecd = !isParty ? String(item.totalAmount) : '';
+    setAmountReceived(loadedAmountReceived !== null ? loadedAmountReceived : defaultRecd);
     setAmountReceivedMode(loadedReceivedMode);
     setSaleDescription(item.notes || '');
     // ✅ FIX: sale date ਵੀ form ਵਿੱਚ ਭਰੋ
@@ -1424,6 +1425,7 @@ export default function RecordsScreen() {
                 pricePerUnit: String(item.rate),
                 buyerName,
                 totalAmount: item.amount,
+                amountReceived: effectiveAmountReceived,
                 notes: saleDescription.trim(),
                 billId: targetBillId,
                 billNo,
@@ -1435,6 +1437,7 @@ export default function RecordsScreen() {
                 rate: String(item.rate),
                 buyerName,
                 billId: targetBillId,
+                amountReceived: effectiveAmountReceived,
               }).catch(() => {});
             }
           });
@@ -1453,6 +1456,7 @@ export default function RecordsScreen() {
               rate: String(item.rate),
               buyerName,
               billId: realDbBillId,
+              amountReceived: effectiveAmountReceived,
             }).catch(() => {});
           }
         });

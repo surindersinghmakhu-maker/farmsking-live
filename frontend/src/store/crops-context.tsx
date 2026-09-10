@@ -141,6 +141,7 @@ interface SalePayload {
   rate: string;
   buyerName: string;
   billId?: string;
+  amountReceived?: number | string;
 }
 
 export interface GpsUnlockRequest {
@@ -503,6 +504,7 @@ export function CropsProvider({ children }: { children: ReactNode }) {
         buyerName,
         saleDate,
         billId: payload.billId,
+        amountReceived: payload.amountReceived,
       },
       ...prev,
     ]);

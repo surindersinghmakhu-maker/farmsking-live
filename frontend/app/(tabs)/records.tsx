@@ -3166,6 +3166,10 @@ export default function RecordsScreen() {
                 parties={parties}
                 labourWorkers={expenseLabourWorkers}
                 onClose={() => setShowPaymentVoucherModal(false)}
+                onSuccess={() => {
+                  refetch();
+                  queryClient.invalidateQueries({ queryKey: ['parties'] });
+                }}
               />
             </View>
           ) : recordType === 'LABOUR' ? (

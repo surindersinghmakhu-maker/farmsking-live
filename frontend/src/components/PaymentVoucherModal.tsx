@@ -15,7 +15,8 @@ import * as Haptics from 'expo-haptics';
 import { PartyPicker } from '@/src/components/PartyPicker';
 import { UniversalVoucherSlipModal, UniversalVoucherData } from '@/src/components/UniversalVoucherSlip';
 import { useAuth } from '@/src/store/auth-context';
-import { useRecordPaymentReceived, useRecordPaymentMade, useRecordSaleLedger } from '@/src/hooks/useParties';
+import { useQueryClient } from '@tanstack/react-query';
+import { useRecordPaymentReceived, useRecordPaymentMade, useRecordSaleLedger, useCreateParty } from '@/src/hooks/useParties';
 import { useCreateLabourPayment } from '@/src/hooks/useLabour';
 import { Party } from '@/src/types/api';
 import { FONT, RADIUS, SPACING } from '@/constants/theme';
@@ -46,6 +47,7 @@ export function PaymentVoucherModal({
   onClose,
   onSuccess,
 }: PaymentVoucherModalProps) {
+  const queryClient = useQueryClient();
   const [voucherType, setVoucherType] = useState<VoucherType>(initialType);
 
   // Selected Parties
@@ -56,7 +58,7 @@ export function PaymentVoucherModal({
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
   const [paymentMode, setPaymentMode] = useState<'CASH' | 'UPI'>('CASH');
-  const [voucherDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [voucherDate, setVoucherDate] = useState(() => new Date().toISOString().slice(0, 10));
 
   // Sync initialType whenever modal opens
   React.useEffect(() => {
@@ -67,6 +69,7 @@ export function PaymentVoucherModal({
       setAmount('');
       setNote('');
       setPaymentMode('CASH');
+      setVoucherDate(new Date().toISOString().slice(0, 10));
       setErrorMsg(null);
       setSuccessMsg(null);
     }
@@ -82,6 +85,7 @@ export function PaymentVoucherModal({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   // Hooks
+  const createParty = useCreateParty();
   const recordPaymentReceived = useRecordPaymentReceived();
   const recordPaymentMade = useRecordPaymentMade();
   const recordSaleLedger = useRecordSaleLedger();
@@ -196,6 +200,12 @@ export function PaymentVoucherModal({
           payload: { totalAmount: -numAmount, reason: `${userMemo || 'Party Direct Expense Entry'}${modeTag}` },
         });
       }
+
+      // Invalidate queries so that parties, labour workers & ledgers update instantly
+      queryClient.invalidateQueries({ queryKey: ['parties'] });
+      queryClient.invalidateQueries({ queryKey: ['labour-workers'] });
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      queryClient.invalidateQueries({ queryKey: ['arhtiya-hisab'] });
 
       const slipData: UniversalVoucherData = {
         voucherType: voucherType === 'RECEIPT_IN' ? 'PAYMENT_IN' : voucherType === 'PAYMENT_OUT' ? 'PAYMENT_OUT' : 'PARTY_STATEMENT',
@@ -335,7 +345,10 @@ export function PaymentVoucherModal({
                 labourWorkers={labourWorkers}
                 selectedParty={sourceParty}
                 onSelect={setSourceParty}
-                onCreate={async (p) => p as any}
+                onCreate={async (p) => {
+                  const newParty = await createParty.mutateAsync(p);
+                  return newParty;
+                }}
                 accentColor="#2563eb"
               />
             </View>
@@ -349,7 +362,10 @@ export function PaymentVoucherModal({
                   labourWorkers={labourWorkers}
                   selectedParty={targetParty}
                   onSelect={setTargetParty}
-                  onCreate={async (p) => p as any}
+                  onCreate={async (p) => {
+                  const newParty = await createParty.mutateAsync(p);
+                  return newParty;
+                }}
                   accentColor="#16a34a"
                 />
               </View>

@@ -246,7 +246,7 @@ export function ProfessionalOverviewView({
                       ]}
                     >
                       <Text style={[styles.cropProfitBadgeText, { color: isProfit ? '#15803d' : '#dc2626' }]}>
-                        {isProfit ? `Net Margin +${formatInr(c.net)}` : `Net Margin -${formatInr(Math.abs(c.net))}`}
+                        {isProfit ? `▲ Profit: +${formatInr(c.net)}` : `▼ Loss: -${formatInr(Math.abs(c.net))}`}
                       </Text>
                     </View>
 
@@ -281,9 +281,9 @@ export function ProfessionalOverviewView({
                   <View style={styles.cropMetricDivider} />
 
                   <View style={styles.cropMetricBox}>
-                    <Text style={styles.cropMetricLabel}>Net Margin</Text>
+                    <Text style={styles.cropMetricLabel}>{isProfit ? 'Profit' : 'Loss'}</Text>
                     <Text style={[styles.cropMetricVal, { color: isProfit ? '#16a34a' : '#dc2626' }]}>
-                      {isProfit ? '+' : ''}{formatInr(c.net)}
+                      {isProfit ? `▲ +${formatInr(c.net)}` : `▼ -${formatInr(Math.abs(c.net))}`}
                     </Text>
                   </View>
                 </View>
@@ -631,9 +631,11 @@ function CropStatementModal({
                 <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#dc2626' }}>-{formatInr(totalExpense)}</Text>
               </View>
               <View style={{ flex: 1, backgroundColor: isProfit ? '#dcfce7' : '#fee2e2', padding: 6, borderRadius: 6, alignItems: 'center', borderWidth: 1, borderColor: isProfit ? '#86efac' : '#fca5a5' }}>
-                <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isProfit ? '#15803d' : '#b91c1c' }}>Net Margin</Text>
+                <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isProfit ? '#15803d' : '#b91c1c' }}>
+                  {isProfit ? 'Profit' : 'Loss'}
+                </Text>
                 <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: isProfit ? '#15803d' : '#dc2626' }}>
-                  {isProfit ? '+' : ''}{formatInr(netMargin)}
+                  {isProfit ? `▲ +${formatInr(netMargin)}` : `▼ -${formatInr(Math.abs(netMargin))}`}
                 </Text>
               </View>
             </View>

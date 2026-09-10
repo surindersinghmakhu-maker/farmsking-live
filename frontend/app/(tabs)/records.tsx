@@ -281,7 +281,7 @@ export default function RecordsScreen() {
           previousBalance: b.previousBalance !== undefined && b.previousBalance !== null ? Number(b.previousBalance) : undefined,
           amountReceivedMode: (b as any).amountReceivedMode as 'CASH' | 'UPI' | undefined,
           buyerName: b.partyName || (b.isCash ? 'Cash Sale' : 'Direct Cash'),
-          saleDate: b.createdAt ? b.createdAt.slice(0, 10) : todayIso(),
+          saleDate: b.createdAt ? (typeof b.createdAt === 'string' ? b.createdAt.slice(0, 10) : new Date(b.createdAt).toISOString().slice(0, 10)) : todayIso(),
           billId: b.id,
           billNo: b.billNo,
           partyId: b.partyId,

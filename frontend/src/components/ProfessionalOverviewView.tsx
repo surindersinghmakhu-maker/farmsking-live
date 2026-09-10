@@ -246,7 +246,7 @@ export function ProfessionalOverviewView({
                       ]}
                     >
                       <Text style={[styles.cropProfitBadgeText, { color: isProfit ? '#15803d' : '#dc2626' }]}>
-                        {isProfit ? '▲ Net Profit: ' : '▼ Loss: '}{formatInr(Math.abs(c.net))}
+                        {isProfit ? `Net Margin +${formatInr(c.net)}` : `Net Margin -${formatInr(Math.abs(c.net))}`}
                       </Text>
                     </View>
 

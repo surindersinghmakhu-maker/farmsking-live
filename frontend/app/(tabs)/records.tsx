@@ -266,7 +266,7 @@ export default function RecordsScreen() {
         if (b.billNo) dbBillNos.add(b.billNo);
 
         const cropSummary = (b.items && b.items.length > 0)
-          ? b.items.map((i: any) => `${i.cropName} (${i.qty} ${i.unit} @ ₹${i.rate})`).join(', ')
+          ? b.items.map((i: any) => `${i.cropName} (${i.qty} ${i.unit || 'unit'})`).join(', ')
           : 'Crop Sale';
 
         result.push({
@@ -313,7 +313,7 @@ export default function RecordsScreen() {
           } else {
             const first = items[0];
             const combinedCropSummary = items
-              .map((i) => `${i.cropName} (${i.quantity} ${i.unit} @ ₹${i.pricePerUnit})`)
+              .map((i) => `${i.cropName} (${i.quantity} ${i.unit || 'unit'})`)
               .join(', ');
             const totalAmt = items.reduce((sum, i) => sum + i.totalAmount, 0);
 
@@ -353,20 +353,16 @@ export default function RecordsScreen() {
     } else {
       let str = item.cropName || 'Crop Sale';
       str = str.replace(/^Sale[-:\s]*/i, '');
-      str = str.replace(/\(FK-[^)]+\).*/i, '');
+      str = str.replace(/\(FK-[^)]+\).*/gi, '');
       str = str.replace(/\((CASH|UPI)\)/gi, '');
       str = str.replace(/\(\d+\s*items?\)/gi, '');
       str = str.replace(/\s*@\s*₹?\d+(\.\d+)?/gi, '');
       str = str.replace(/\s+/g, ' ').trim();
 
-      const qty = item.quantity ? Number(item.quantity) : 0;
+      const qty = item.quantity ? Number(item.quantity) : 1;
       const unit = item.unit || 'item';
       
-      if (qty > 0 && !str.includes('(')) {
-        cropDetailText = `${str} (${qty} ${unit})`;
-      } else {
-        cropDetailText = str || 'Crop Sale';
-      }
+      cropDetailText = `${str || 'Crop Sale'} (${qty} ${unit})`;
     }
 
     const rcvdMode = (matchedBill as any)?.amountReceivedMode || item.amountReceivedMode || 'CASH';

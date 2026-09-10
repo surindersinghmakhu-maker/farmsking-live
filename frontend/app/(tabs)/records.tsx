@@ -475,7 +475,7 @@ export default function RecordsScreen() {
   };
 
   // Sales list view mode — Month / Today / Custom Period Range / Buyer-wise / All Time
-  const [salesViewMode, setSalesViewMode] = useState<'MONTH' | 'TODAY' | 'PERIOD' | 'BUYER' | 'ALL'>('ALL');
+  const [salesViewMode, setSalesViewMode] = useState<'MONTH' | 'TODAY' | 'PERIOD' | 'BUYER' | 'ALL'>('MONTH');
   const [expandedSalesGroup, setExpandedSalesGroup] = useState<string | null>(null);
 
   // Custom Period Date Range state (Default to start of current month till today)
@@ -540,11 +540,7 @@ export default function RecordsScreen() {
 
   // Active filtered list depending on selected view mode (fallback to unifiedSalesRecords if selected month filter is empty but total sales exist)
   const activeSalesList = useMemo(() => {
-    if (salesViewMode === 'MONTH') {
-      if (salesThisMonth.length > 0) return salesThisMonth;
-      if (unifiedSalesRecords.length > 0) return unifiedSalesRecords; // Fallback so entries are never hidden
-      return salesThisMonth;
-    }
+    if (salesViewMode === 'MONTH') return salesThisMonth;
     if (salesViewMode === 'TODAY') return salesToday;
     if (salesViewMode === 'PERIOD') return salesInPeriod;
     return unifiedSalesRecords;

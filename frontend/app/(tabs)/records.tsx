@@ -1319,47 +1319,97 @@ export default function RecordsScreen() {
 
   // Crop-wise breakdown for the Analysis tab. Expenses are logged per-farm, not
   // per-crop, so each active crop field is given an even share of total expenses.
-  // Show a separate row for each individual crop field/plot.
+  // Aggregates itemized sale totals per crop field to calculate accurate field-wise income & expenses.
   const cropAnalysis = useMemo(() => {
     const totalFields = farmerCrops.length;
     const perFieldExpense = totalFields > 0 ? totalSpent / totalFields : 0;
 
-    const getBaseCropName = (name: string): string => {
-      if (!name) return 'Unknown Crop';
-      const cleaned = name.split('(')[0].trim();
-      return cleaned || name.trim();
+    const getCleanName = (name: string): string => {
+      if (!name) return '';
+      return name
+        .toLowerCase()
+        .replace(/\([^)]*\)/g, '')
+        .replace(/[^a-z0-9]/g, '')
+        .trim();
     };
 
-    // Group fields by base crop name to count how many fields share unlinked sales
+    // 1. Flatten all sales down to individual items from DB bills + local sales
+    const allFlatSaleItems: Array<{ cropId?: string; cropName: string; amount: number }> = [];
+
+    (rawSaleBillsList || []).forEach((bill: any) => {
+      if (Array.isArray(bill.items) && bill.items.length > 0) {
+        bill.items.forEach((item: any) => {
+          const amt = Number(item.amount) || ((Number(item.qty) || 1) * (Number(item.rate) || 0));
+          allFlatSaleItems.push({
+            cropId: item.cropId || bill.cropId,
+            cropName: item.cropName || '',
+            amount: amt > 0 ? amt : (Number(bill.totalAmount) || 0),
+          });
+        });
+      } else {
+        allFlatSaleItems.push({
+          cropId: bill.cropId,
+          cropName: bill.cropName || 'Crop Sale',
+          amount: Number(bill.totalAmount) || 0,
+        });
+      }
+    });
+
+    // Also include any local sales records not in rawSaleBillsList
+    const dbBillIds = new Set<string>();
+    const dbBillNos = new Set<string>();
+    (rawSaleBillsList || []).forEach((b: any) => {
+      if (b.id) dbBillIds.add(b.id);
+      if (b.billNo) dbBillNos.add(b.billNo);
+    });
+
+    (allSalesRecords || []).forEach((s: any) => {
+      if (s.billId && dbBillIds.has(s.billId)) return;
+      if (s.billNo && dbBillNos.has(s.billNo)) return;
+      if (s.id && dbBillIds.has(s.id)) return;
+      allFlatSaleItems.push({
+        cropId: s.cropId,
+        cropName: s.cropName || '',
+        amount: Number(s.totalAmount) || 0,
+      });
+    });
+
+    // 2. Count fields per base crop name for fair distribution of unlinked sales
     const baseCropCounts: Record<string, number> = {};
     farmerCrops.forEach((crop) => {
-      const baseKey = getBaseCropName(crop.cropName).toLowerCase();
-      baseCropCounts[baseKey] = (baseCropCounts[baseKey] || 0) + 1;
+      const cKey = getCleanName(crop.cropName);
+      if (cKey) {
+        baseCropCounts[cKey] = (baseCropCounts[cKey] || 0) + 1;
+      }
     });
 
     return farmerCrops.map((crop) => {
       const cropIdStr = crop.id;
       const cropName = crop.cropName || 'Crop';
       const fieldName = crop.fieldName || 'Field 1';
-      const baseKey = getBaseCropName(cropName).toLowerCase();
-      const fieldsCountForCrop = baseCropCounts[baseKey] || 1;
+      const cKey = getCleanName(cropName);
+      const fieldsCountForCrop = (cKey && baseCropCounts[cKey]) || 1;
 
-      // 1. Direct sales matching crop.id or crop.cropId
-      const directIncome = unifiedSalesRecords
-        .filter((s) => s.cropId && (s.cropId === cropIdStr || (crop.cropId && s.cropId === crop.cropId)))
-        .reduce((acc, s) => acc + (Number(s.totalAmount) || 0), 0);
+      let directIncome = 0;
+      let sharedIncome = 0;
 
-      // 2. Unlinked sales for this crop (sales where cropId is missing but cropName matches)
-      const unlinkedSalesTotal = unifiedSalesRecords
-        .filter((s) => {
-          if (s.cropId) return false;
-          const sBase = getBaseCropName(s.cropName || '').toLowerCase();
-          return sBase === baseKey;
-        })
-        .reduce((acc, s) => acc + (Number(s.totalAmount) || 0), 0);
+      allFlatSaleItems.forEach((sItem) => {
+        // Direct crop ID match
+        if (sItem.cropId && (sItem.cropId === cropIdStr || (crop.cropId && sItem.cropId === crop.cropId))) {
+          directIncome += sItem.amount;
+          return;
+        }
 
-      const sharedUnlinkedIncome = unlinkedSalesTotal / fieldsCountForCrop;
-      const income = directIncome + sharedUnlinkedIncome;
+        // Match by crop name if cropId is not specified or doesn't match directly
+        const sKey = getCleanName(sItem.cropName);
+        if (sKey && cKey && (sKey.includes(cKey) || cKey.includes(sKey))) {
+          if (!sItem.cropId) {
+            sharedIncome += sItem.amount / fieldsCountForCrop;
+          }
+        }
+      });
+
+      const income = directIncome + sharedIncome;
       const expense = perFieldExpense;
       const net = income - expense;
 
@@ -1372,7 +1422,7 @@ export default function RecordsScreen() {
         net,
       };
     });
-  }, [farmerCrops, unifiedSalesRecords, totalSpent]);
+  }, [farmerCrops, rawSaleBillsList, allSalesRecords, totalSpent]);
 
   const maxCropValue = Math.max(1, ...cropAnalysis.map((c) => Math.max(c.income, c.expense)));
   const overallNet = totalSalesRevenue - totalSpent;

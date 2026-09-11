@@ -1,5 +1,5 @@
 declare class SaleBillItemDto {
-    cropId: string;
+    cropId?: string;
     cropName: string;
     unit: string;
     qty: number;

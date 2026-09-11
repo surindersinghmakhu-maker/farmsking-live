@@ -2,8 +2,9 @@ import { Type } from 'class-transformer';
 import { ArrayMinSize, IsArray, IsBoolean, IsInt, IsNumber, IsOptional, IsString, Min, ValidateNested } from 'class-validator';
 
 class SaleBillItemDto {
+  @IsOptional()
   @IsString()
-  cropId: string;
+  cropId?: string;
 
   @IsString()
   cropName: string;

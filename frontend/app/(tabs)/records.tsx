@@ -1850,7 +1850,7 @@ export default function RecordsScreen() {
         partyMobile: paymentMode === 'PARTY' ? selectedParty?.mobile ?? undefined : cashBuyerMobile.trim() || undefined,
         isCash: paymentMode === 'CASH',
         amountReceivedMode: currentReceivedMode,
-        items: saleItems.map((i) => ({ cropId: i.cropId, cropName: i.cropName, unit: i.unit, qty: i.qty, rate: i.rate, amount: i.amount })),
+        items: saleItems.map((i) => ({ cropId: i.cropId || '', cropName: i.cropName, unit: i.unit || 'unit', qty: Number(i.qty) || 1, rate: Number(i.rate) || 0, amount: Number(i.amount) || 0 })),
         totalItems: totalCartItems,
         totalAmount: netCartAmount,
         amountReceived: effectiveAmountReceived,
@@ -1875,8 +1875,8 @@ export default function RecordsScreen() {
           });
           billNo = updatedBill.billNo || editingBillNo || billNo;
           realDbBillId = updatedBill.id;
-        } catch {
-          // If updating by ID failed, try updating by billNo if editingBillNo exists
+        } catch (err) {
+          console.warn('Update sale bill by ID failed:', err);
           if (editingBillNo) {
             try {
               const updatedBill = await updateSaleBill.mutateAsync({
@@ -1885,12 +1885,14 @@ export default function RecordsScreen() {
               });
               billNo = updatedBill.billNo || editingBillNo;
               realDbBillId = updatedBill.id;
-            } catch {
+            } catch (err2) {
+              console.warn('Update sale bill by billNo failed:', err2);
               try {
                 const newBill = await createSaleBill.mutateAsync(billPayload);
                 billNo = newBill.billNo || editingBillNo;
                 realDbBillId = newBill.id;
-              } catch {
+              } catch (err3) {
+                console.error('Create sale bill fallback failed:', err3);
                 realDbBillId = undefined;
               }
             }
@@ -1899,7 +1901,8 @@ export default function RecordsScreen() {
               const newBill = await createSaleBill.mutateAsync(billPayload);
               billNo = newBill.billNo;
               realDbBillId = newBill.id;
-            } catch {
+            } catch (err2) {
+              console.error('Create sale bill failed:', err2);
               realDbBillId = undefined;
             }
           }
@@ -1909,7 +1912,8 @@ export default function RecordsScreen() {
           const savedBill = await createSaleBill.mutateAsync(billPayload);
           billNo = savedBill.billNo;
           realDbBillId = savedBill.id;
-        } catch {
+        } catch (err) {
+          console.error('Create sale bill failed:', err);
           realDbBillId = undefined;
         }
       }

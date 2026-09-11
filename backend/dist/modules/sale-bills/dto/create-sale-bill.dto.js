@@ -21,6 +21,7 @@ class SaleBillItemDto {
     amount;
 }
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], SaleBillItemDto.prototype, "cropId", void 0);

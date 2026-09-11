@@ -484,7 +484,7 @@ export default function RecordsScreen() {
   };
 
   // Sales list view mode — Month / Today / Custom Period Range / Buyer-wise / All Time
-  const [salesViewMode, setSalesViewMode] = useState<'MONTH' | 'TODAY' | 'PERIOD' | 'BUYER' | 'ALL'>('MONTH');
+  const [salesViewMode, setSalesViewMode] = useState<'MONTH' | 'TODAY' | 'PERIOD' | 'BUYER' | 'ALL'>('ALL');
   const [expandedSalesGroup, setExpandedSalesGroup] = useState<string | null>(null);
 
   // Custom Period Date Range state (Default to start of current month till today)
@@ -553,10 +553,12 @@ export default function RecordsScreen() {
     });
   }, [unifiedSalesRecords, salesFromDate, salesToDate]);
 
-  // Active filtered list depending on selected view mode (fallback to unifiedSalesRecords if filter is empty so sales are never hidden)
+  // Active filtered list depending on selected view mode
+  // 'ALL' always shows everything from DB — DB is single source of truth
   const activeSalesList = useMemo(() => {
+    if (salesViewMode === 'ALL') return unifiedSalesRecords;
     if (salesViewMode === 'MONTH') return salesThisMonth.length > 0 ? salesThisMonth : unifiedSalesRecords;
-    if (salesViewMode === 'TODAY') return salesToday.length > 0 ? salesToday : (salesThisMonth.length > 0 ? salesThisMonth : unifiedSalesRecords);
+    if (salesViewMode === 'TODAY') return salesToday.length > 0 ? salesToday : unifiedSalesRecords;
     if (salesViewMode === 'PERIOD') return salesInPeriod.length > 0 ? salesInPeriod : unifiedSalesRecords;
     return unifiedSalesRecords;
   }, [salesViewMode, salesThisMonth, salesToday, salesInPeriod, unifiedSalesRecords]);
@@ -2326,11 +2328,11 @@ export default function RecordsScreen() {
               <View style={styles.salesViewModeRow}>
                 {(
                   [
+                    { id: 'ALL', label: '🌐 All Time' },
                     { id: 'MONTH', label: '📅 This Month' },
                     { id: 'TODAY', label: '📆 Today' },
                     { id: 'PERIOD', label: '🗓️ Custom Period' },
                     { id: 'BUYER', label: '🤝 Buyer-wise' },
-                    { id: 'ALL', label: '🌐 All Time' },
                   ] as const
                 ).map((mode) => (
                   <TouchableOpacity

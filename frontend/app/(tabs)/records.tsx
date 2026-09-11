@@ -834,24 +834,48 @@ export default function RecordsScreen() {
     setRecordType('SALES');
   };
 
-  const onDeleteEditingBill = async () => {
+  const onDeleteEditingBill = () => {
     if (!editingBillId) return;
-    try {
-      tap();
-      await deleteSaleBill.mutateAsync(editingBillId);
-      await deleteSale(editingBillId);
-      setShowSaleForm(false);
-      resetSaleForm();
-      if (Platform.OS === 'web') {
-        alert('Bill and statement entry deleted successfully.');
-      } else {
-        Alert.alert('Deleted', 'Bill and statement entry deleted successfully.');
+
+    const performDelete = async () => {
+      try {
+        tap();
+        await deleteSaleBill.mutateAsync(editingBillId);
+        await deleteSale(editingBillId);
+        setShowSaleForm(false);
+        resetSaleForm();
+        if (Platform.OS === 'web') {
+          alert('Bill and statement entry deleted successfully.');
+        } else {
+          Alert.alert('Deleted', 'Bill and statement entry deleted successfully.');
+        }
+      } catch (err) {
+        console.error('Failed to delete bill:', err);
+        await deleteSale(editingBillId);
+        setShowSaleForm(false);
+        resetSaleForm();
       }
-    } catch (err) {
-      console.error('Failed to delete bill:', err);
-      await deleteSale(editingBillId);
-      setShowSaleForm(false);
-      resetSaleForm();
+    };
+
+    const confirmMsg = `Are you sure you want to delete Sale Bill #${editingBillNo || editingBillId}?\n\n(ਕੀ ਤੁਸੀਂ ਯਕੀਨਨ ਇਹ ਸੇਲ ਬਿਲ ਡਿਲੀਟ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?)`;
+
+    if (Platform.OS === 'web') {
+      if (window.confirm(confirmMsg)) {
+        performDelete();
+      }
+    } else {
+      Alert.alert(
+        'Delete Sale Bill?',
+        confirmMsg,
+        [
+          { text: 'ਕੈਂਸਲ (Cancel)', style: 'cancel' },
+          {
+            text: 'ਹਾਂ, ਡਿਲੀਟ ਕਰੋ (Delete)',
+            style: 'destructive',
+            onPress: performDelete,
+          },
+        ]
+      );
     }
   };
 

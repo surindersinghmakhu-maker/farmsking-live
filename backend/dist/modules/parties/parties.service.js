@@ -593,103 +593,10 @@ let PartiesService = class PartiesService {
         };
     }
     async clearAllEntries(user) {
-        const parties = await this.prisma.party.findMany({
-            where: { ownerId: user.id },
-            select: { id: true },
-        });
-        const unifiedParties = await this.prisma.unifiedParty.findMany({
-            where: { ownerFarmerId: user.id },
-            select: { id: true, kingId: true },
-        });
-        const partyIds = new Set();
-        parties.forEach((p) => partyIds.add(p.id));
-        unifiedParties.forEach((u) => {
-            partyIds.add(u.id);
-            if (u.kingId)
-                partyIds.add(u.kingId);
-        });
-        const targetPartyIdList = Array.from(partyIds);
-        const deletedLedger = await this.prisma.partyLedgerEntry.deleteMany({
-            where: {
-                OR: [
-                    { partyId: { in: targetPartyIdList } },
-                    { saleBill: { farmerId: user.id } },
-                    { paymentReceipt: { farmerId: user.id } },
-                ],
-            },
-        });
-        const deletedBills = await this.prisma.saleBill.deleteMany({
-            where: { farmerId: user.id },
-        });
-        const deletedReceipts = await this.prisma.paymentReceipt.deleteMany({
-            where: { farmerId: user.id },
-        });
-        const deletedArhtiyaTx = await this.prisma.arhtiyaTransaction.deleteMany({
-            where: { farmerId: user.id },
-        });
-        await this.prisma.expense.updateMany({
-            where: { recordedById: user.id, partyId: { in: targetPartyIdList } },
-            data: { partyId: null },
-        });
-        return {
-            message: 'All party entries cleared successfully. Party master records remain intact.',
-            deletedCounts: {
-                ledgerEntries: deletedLedger.count,
-                saleBills: deletedBills.count,
-                paymentReceipts: deletedReceipts.count,
-                arhtiyaTransactions: deletedArhtiyaTx.count,
-            },
-        };
+        throw new common_1.ForbiddenException('Clearing transaction entries has been permanently disabled to protect your financial records.');
     }
     async clearPartyEntries(user, partyId) {
-        const party = await this.findOwnedOrThrow(user, partyId);
-        const partyIds = new Set([partyId, party.id]);
-        if (party.kingId) {
-            partyIds.add(party.kingId);
-        }
-        if (party.mobile) {
-            const matchParties = await this.prisma.party.findMany({
-                where: { ownerId: user.id, mobile: party.mobile },
-                select: { id: true },
-            });
-            matchParties.forEach((p) => partyIds.add(p.id));
-            const matchUnified = await this.prisma.unifiedParty.findMany({
-                where: { ownerFarmerId: user.id, mobile: party.mobile },
-                select: { id: true, kingId: true },
-            });
-            matchUnified.forEach((u) => {
-                partyIds.add(u.id);
-                if (u.kingId)
-                    partyIds.add(u.kingId);
-            });
-        }
-        const targetList = Array.from(partyIds);
-        const deletedLedger = await this.prisma.partyLedgerEntry.deleteMany({
-            where: { partyId: { in: targetList } },
-        });
-        const deletedBills = await this.prisma.saleBill.deleteMany({
-            where: { farmerId: user.id, OR: [{ partyId: { in: targetList } }, { partyName: { equals: party.name, mode: 'insensitive' } }] },
-        });
-        const deletedReceipts = await this.prisma.paymentReceipt.deleteMany({
-            where: { farmerId: user.id, partyId: { in: targetList } },
-        });
-        const deletedArhtiyaTx = await this.prisma.arhtiyaTransaction.deleteMany({
-            where: { farmerId: user.id, partyId: { in: targetList } },
-        });
-        await this.prisma.expense.updateMany({
-            where: { recordedById: user.id, partyId: { in: targetList } },
-            data: { partyId: null },
-        });
-        return {
-            message: `Entries for party "${party.name}" cleared successfully.`,
-            partyName: party.name,
-            deletedCounts: {
-                ledgerEntries: deletedLedger.count,
-                saleBills: deletedBills.count,
-                paymentReceipts: deletedReceipts.count,
-                arhtiyaTransactions: deletedArhtiyaTx.count,
-            },
-        };
+        throw new common_1.ForbiddenException('Clearing transaction entries has been permanently disabled to protect your financial records.');
     }
 };
 exports.PartiesService = PartiesService;

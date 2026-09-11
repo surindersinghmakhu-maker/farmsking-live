@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useParties, useCreateParty, useUpdateParty, usePartyStatement, useClearAllPartyEntries, useClearPartyEntries } from '@/src/hooks/useParties';
+import { useParties, useCreateParty, useUpdateParty, usePartyStatement } from '@/src/hooks/useParties';
 
 import { useLabourWorkers, useCreateLabourWorker, useUpdateLabourWorker, useLabourWorkerStatement } from '@/src/hooks/useLabour';
 import { Party, LabourWorker } from '@/src/types/api';
@@ -62,29 +62,6 @@ export function AllPartiesSection() {
   const createWorker = useCreateLabourWorker();
   const updateParty = useUpdateParty();
   const updateWorker = useUpdateLabourWorker();
-  const clearAllEntries = useClearAllPartyEntries();
-
-  const handleClearAllEntries = () => {
-    tap();
-    if (Platform.OS === 'web') {
-      if (window.confirm('ਸਾਰੀਆਂ ਪਾਰਟੀਆਂ ਦੀਆਂ ਐਂਟਰੀਆਂ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?\n\n(ਪਾਰਟੀਆਂ ਦੇ ਰਿਕਾਰਡ ਸੁਰੱਖਿਅਤ ਰਹਿਣਗੇ, ਸਭ ਹਿਸਾਬ ₹0 ਹੋ ਜਾਵੇਗਾ।)')) {
-        clearAllEntries.mutate();
-      }
-    } else {
-      Alert.alert(
-        'Clear All Party Entries?',
-        'ਸਾਰੀਆਂ ਪਾਰਟੀਆਂ ਦੀਆਂ ਐਂਟਰੀਆਂ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?\n\n(ਪਾਰਟੀਆਂ ਦੇ ਰਿਕਾਰਡ ਸੁਰੱਖਿਅਤ ਰਹਿਣਗੇ, ਸਭ ਹਿਸਾਬ ₹0 ਹੋ ਜਾਵੇਗਾ।)',
-        [
-          { text: 'ਕੈਂਸਲ (Cancel)', style: 'cancel' },
-          {
-            text: 'ਹਾਂ, ਡਿਲੀਟ ਕਰੋ (Clear All)',
-            style: 'destructive',
-            onPress: () => clearAllEntries.mutate(),
-          },
-        ]
-      );
-    }
-  };
 
 
   const [searchText, setSearchText] = useState('');
@@ -312,22 +289,6 @@ export function AllPartiesSection() {
         >
           <Ionicons name="add" size={16} color="#ffffff" />
           <Text style={styles.addBtnText}>+ New</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.addBtn, { backgroundColor: '#ef4444' }]}
-          activeOpacity={0.8}
-          onPress={handleClearAllEntries}
-          disabled={clearAllEntries.isPending}
-        >
-          {clearAllEntries.isPending ? (
-            <ActivityIndicator color="#ffffff" size="small" />
-          ) : (
-            <>
-              <Ionicons name="trash-outline" size={15} color="#ffffff" />
-              <Text style={styles.addBtnText}>Clear Entries</Text>
-            </>
-          )}
         </TouchableOpacity>
       </View>
 
@@ -935,7 +896,6 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
   const [isSharing, setIsSharing] = useState(false);
   const { user } = useAuth();
   const { data: statement, isLoading } = usePartyStatement(partyId);
-  const clearPartyEntries = useClearPartyEntries();
   const entries = statement?.entries || [];
   const party = statement?.party;
 
@@ -1091,29 +1051,6 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
         time: '',
       });
       setIsLoadingPreview(false);
-    }
-  };
-
-  const handleClearThisPartyEntries = () => {
-    tap();
-    const displayName = party?.name || partyName;
-    if (Platform.OS === 'web') {
-      if (window.confirm(`ਇਸ ਪਾਰਟੀ "${displayName}" ਦੀਆਂ ਸਾਰੀਆਂ ਐਂਟਰੀਆਂ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?\n\n(ਪਾਰਟੀ ਦਾ ਰਿਕਾਰਡ ਰਹੇਗਾ, ਹਿਸਾਬ ₹0 ਹੋ ਜਾਵੇਗਾ।)`)) {
-        clearPartyEntries.mutate(partyId);
-      }
-    } else {
-      Alert.alert(
-        'Clear Party Entries?',
-        `ਇਸ ਪਾਰਟੀ "${displayName}" ਦੀਆਂ ਸਾਰੀਆਂ ਐਂਟਰੀਆਂ ਹਟਾਉਣਾ ਚਾਹੁੰਦੇ ਹੋ?\n\n(ਪਾਰਟੀ ਦਾ ਰਿਕਾਰਡ ਰਹੇਗਾ, ਹਿਸਾਬ ₹0 ਹੋ ਜਾਵੇਗਾ।)` ,
-        [
-          { text: 'ਕੈਂਸਲ (Cancel)', style: 'cancel' },
-          {
-            text: 'ਹਾਂ, ਡਿਲੀਟ ਕਰੋ (Clear Entries)',
-            style: 'destructive',
-            onPress: () => clearPartyEntries.mutate(partyId),
-          },
-        ]
-      );
     }
   };
 
@@ -1311,22 +1248,6 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
                     <>
                       <Ionicons name="document-text-outline" size={14} color="#ffffff" />
                       <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Download PDF</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: '#ef4444', paddingHorizontal: 10, paddingVertical: 6, borderRadius: RADIUS.md }}
-                  onPress={handleClearThisPartyEntries}
-                  disabled={clearPartyEntries.isPending}
-                  activeOpacity={0.85}
-                >
-                  {clearPartyEntries.isPending ? (
-                    <ActivityIndicator color="#ffffff" size="small" />
-                  ) : (
-                    <>
-                      <Ionicons name="trash-outline" size={14} color="#ffffff" />
-                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Clear</Text>
                     </>
                   )}
                 </TouchableOpacity>

@@ -2002,29 +2002,74 @@ export default function RecordsScreen() {
       queryClient.invalidateQueries({ queryKey: ['parties', 'statement'] });
 
       const now = new Date();
-      // Use the actual saleDate chosen in the form (not today's date) for the bill preview
       const saleDateForBill = saleDate ? formatDateDDMMYYYY(saleDate) : now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-      const invoice: SavedSaleInvoice = {
-        billNo,
-        farmerName: billPayload.farmerName,
-        partyId: billPayload.partyId,
-        partyName: billPayload.partyName,
-        partyMobile: billPayload.partyMobile,
-        isCash: billPayload.isCash,
-        amountReceivedMode: currentReceivedMode,
-        items: saleItems,
-        totalItems: billPayload.totalItems,
-        totalAmount: billPayload.totalAmount,
-        amountReceived: billPayload.amountReceived,
-        thisSaleBalance: billPayload.thisSaleBalance,
-        previousBalance: billPayload.previousBalance,
-        netReceivable: billPayload.netReceivable,
-        discountAmount: billPayload.discountAmount,
-        deliveryCharge: billPayload.deliveryCharge,
-        notes: billPayload.notes,
-        date: saleDateForBill,
-        time: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-      };
+
+      // Fetch the freshly created/updated bill directly from the DB API to construct invoice preview
+      let invoice: SavedSaleInvoice | null = null;
+      if (realDbBillId) {
+        try {
+          const dbBill = await saleBillsApi.getSaleBill(realDbBillId);
+          if (dbBill) {
+            const created = new Date(dbBill.createdAt || now);
+            invoice = {
+              billNo: dbBill.billNo,
+              farmerName: dbBill.farmerName || billPayload.farmerName,
+              partyId: dbBill.partyId || billPayload.partyId,
+              partyName: dbBill.partyName || billPayload.partyName,
+              partyMobile: dbBill.partyMobile || billPayload.partyMobile,
+              isCash: dbBill.isCash,
+              amountReceivedMode: (dbBill as any).amountReceivedMode || currentReceivedMode,
+              items: (dbBill.items as any[] || []).map((bi: any, idx: number) => ({
+                id: bi.id || String(idx),
+                cropId: bi.cropId || '',
+                cropName: bi.cropName || '',
+                unit: bi.unit || 'unit',
+                qty: Number(bi.qty) || 1,
+                rate: Number(bi.rate) || 0,
+                amount: Number(bi.amount) || ((Number(bi.qty) || 1) * (Number(bi.rate) || 0)),
+              })),
+              totalItems: dbBill.totalItems || billPayload.totalItems,
+              totalAmount: Number(dbBill.totalAmount),
+              amountReceived: Number(dbBill.amountReceived),
+              thisSaleBalance: Number(dbBill.thisSaleBalance),
+              previousBalance: Number(dbBill.previousBalance),
+              netReceivable: Number(dbBill.netReceivable),
+              discountAmount: dbBill.discountAmount !== undefined ? Number(dbBill.discountAmount) : billPayload.discountAmount,
+              deliveryCharge: dbBill.deliveryCharge !== undefined ? Number(dbBill.deliveryCharge) : billPayload.deliveryCharge,
+              notes: dbBill.notes || billPayload.notes,
+              date: formatDateDDMMYYYY(created),
+              time: created.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+            };
+          }
+        } catch (fetchErr) {
+          console.warn('Could not fetch created bill from DB for preview:', fetchErr);
+        }
+      }
+
+      if (!invoice) {
+        invoice = {
+          billNo,
+          farmerName: billPayload.farmerName,
+          partyId: billPayload.partyId,
+          partyName: billPayload.partyName,
+          partyMobile: billPayload.partyMobile,
+          isCash: billPayload.isCash,
+          amountReceivedMode: currentReceivedMode,
+          items: saleItems,
+          totalItems: billPayload.totalItems,
+          totalAmount: billPayload.totalAmount,
+          amountReceived: billPayload.amountReceived,
+          thisSaleBalance: billPayload.thisSaleBalance,
+          previousBalance: billPayload.previousBalance,
+          netReceivable: billPayload.netReceivable,
+          discountAmount: billPayload.discountAmount,
+          deliveryCharge: billPayload.deliveryCharge,
+          notes: billPayload.notes,
+          date: saleDateForBill,
+          time: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+        };
+      }
+
       setWasEditingBill(Boolean(editingBillId));
       setEditingBillId(null);
       setEditingBillNo(null);

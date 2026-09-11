@@ -71,6 +71,29 @@ function todayIso() {
   return `${year}-${month}-${day}`;
 }
 
+function getCleanIsoDate(dateStr?: string): string {
+  if (!dateStr) return todayIso();
+  const str = String(dateStr).trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+    return str.slice(0, 10);
+  }
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}/.test(str)) {
+    const parts = str.split('/');
+    const day = parts[0].padStart(2, '0');
+    const month = parts[1].padStart(2, '0');
+    const year = parts[2];
+    return `${year}-${month}-${day}`;
+  }
+  const parsed = new Date(str);
+  if (!isNaN(parsed.getTime())) {
+    const year = parsed.getFullYear();
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  return str;
+}
+
 // Individual Agricultural Work & Farming Expense Categories
 export const COMBINED_EXPENSE_CATEGORIES = [
   {
@@ -497,29 +520,7 @@ export default function RecordsScreen() {
   const [showFromDatePicker, setShowFromDatePicker] = useState(false);
   const [showToDatePicker, setShowToDatePicker] = useState(false);
 
-  // Helper to extract clean YYYY-MM-DD from any date representation
-  const getCleanIsoDate = (dateStr?: string): string => {
-    if (!dateStr) return todayIso();
-    const str = String(dateStr).trim();
-    if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
-      return str.slice(0, 10);
-    }
-    if (/^\d{1,2}\/\d{1,2}\/\d{4}/.test(str)) {
-      const parts = str.split('/');
-      const day = parts[0].padStart(2, '0');
-      const month = parts[1].padStart(2, '0');
-      const year = parts[2];
-      return `${year}-${month}-${day}`;
-    }
-    const parsed = new Date(str);
-    if (!isNaN(parsed.getTime())) {
-      const year = parsed.getFullYear();
-      const month = String(parsed.getMonth() + 1).padStart(2, '0');
-      const day = String(parsed.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
-    return str;
-  };
+
 
   // 1. Filter sales for Current Calendar Month
   const currentMonthPrefix = useMemo(() => {

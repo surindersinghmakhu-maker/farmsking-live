@@ -211,15 +211,15 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
             activeOpacity={0.8}
             onPress={() => {
               tap();
-              router.push('/(tabs)/crop-disease-scanner' as any);
+              router.push('/(tabs)/satellite-map' as any);
             }}
           >
-            <View style={[styles.actionIconBg, { backgroundColor: '#dcfce7' }]}>
-              <Ionicons name="scan-circle" size={19} color="#15803d" />
+            <View style={[styles.actionIconBg, { backgroundColor: '#fef3c7' }]}>
+              <Ionicons name="location" size={19} color="#b45309" />
             </View>
             <View style={styles.actionCardTextGroup}>
-              <Text style={styles.actionCardTitle} numberOfLines={1}>AI Disease Scanner</Text>
-              <Text style={styles.actionCardSub} numberOfLines={1}>Instant Leaf Scan</Text>
+              <Text style={styles.actionCardTitle} numberOfLines={1}>Farm GPS Location</Text>
+              <Text style={styles.actionCardSub} numberOfLines={1}>1-Tap GPS Lock</Text>
             </View>
           </TouchableOpacity>
 
@@ -245,15 +245,15 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
             activeOpacity={0.8}
             onPress={() => {
               tap();
-              router.push('/(tabs)/satellite-map' as any);
+              router.push('/(tabs)/crop-disease-scanner' as any);
             }}
           >
-            <View style={[styles.actionIconBg, { backgroundColor: '#fef3c7' }]}>
-              <Ionicons name="location" size={19} color="#b45309" />
+            <View style={[styles.actionIconBg, { backgroundColor: '#dcfce7' }]}>
+              <Ionicons name="scan-circle" size={19} color="#15803d" />
             </View>
             <View style={styles.actionCardTextGroup}>
-              <Text style={styles.actionCardTitle} numberOfLines={1}>Farm GPS Location</Text>
-              <Text style={styles.actionCardSub} numberOfLines={1}>1-Tap GPS Lock</Text>
+              <Text style={styles.actionCardTitle} numberOfLines={1}>AI Disease Scanner</Text>
+              <Text style={styles.actionCardSub} numberOfLines={1}>Instant Leaf Scan</Text>
             </View>
           </TouchableOpacity>
 

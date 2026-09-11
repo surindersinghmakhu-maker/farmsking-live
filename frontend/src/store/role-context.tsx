@@ -25,12 +25,6 @@ function toUserRole(role: Role, advisorType: 'FARM' | 'GARDEN' | null | undefine
   return role as UserRole;
 }
 
-/**
- * The dashboards shown are always exactly the ones the logged-in account actually holds — derived from
- * the backend's `role` (current/primary) and `roles` (every role ever granted). An account with more
- * than one granted role gets a "Switch Dashboard" option (see SwitchDashboardSection) instead of always
- * showing every dashboard, which is what the old dev-only switcher used to do.
- */
 export function RoleProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
 
@@ -50,16 +44,22 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     return Array.from(new Set([primaryRole, ...mapped]));
   }, [user, primaryRole]);
 
-  const [role, setRoleState] = useState<UserRole>(primaryRole);
+  // Default initial role: If account is assigned FARMER role, default to FARMER tab first on app launch.
+  const defaultInitialRole = assignedRoles.includes('FARMER') ? 'FARMER' : primaryRole;
+  const [role, setRoleState] = useState<UserRole>(defaultInitialRole);
 
-  // Whenever the logged-in account changes (login/logout/role change), restore that account's last-picked
-  // dashboard (if any, and still valid for this account) — otherwise fall back to the primary role. Never
-  // leak a previous account's picked dashboard into a new session.
   useEffect(() => {
     if (!user?.id) {
       setRoleState(primaryRole);
       return;
     }
+
+    // Priority requirement: If account has FARMER role assigned, always open FARMER tab first by default
+    if (assignedRoles.includes('FARMER')) {
+      setRoleState('FARMER');
+      return;
+    }
+
     let cancelled = false;
     (async () => {
       const saved = await AppStorage.getItemAsync(`${LAST_DASHBOARD_KEY_PREFIX}${user.id}`);
@@ -69,8 +69,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, primaryRole]);
+  }, [user?.id, primaryRole, assignedRoles]);
 
   const setRole = (next: UserRole) => {
     if (assignedRoles.includes(next)) {

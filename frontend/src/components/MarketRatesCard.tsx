@@ -1,75 +1,14 @@
+import React, { useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-// Updated MarketRatesCard component with fixed syntax and inline unit layout
 import { Ionicons } from '@expo/vector-icons';
 import { useMyCropRates } from '../hooks/useMarketRates';
 import { useAuth } from '../store/auth-context';
+import { useCrops } from '../store/crops-context';
 import { formatInr } from '../utils/formatInr';
 import { RoleThemes } from '../../constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '../../constants/theme';
 
 const theme = RoleThemes.FARMER;
-
-export interface HarvestingCropRateItem {
-  cropName: string;
-  categoryName: string;
-  stage: 'PLANTATION' | 'VEGETATIVE' | 'FLOWERING' | 'HARVESTING' | 'COMPLETED' | 'SOWING' | 'GROWTH';
-  unit: string;
-  localAvgRate: number;
-  nationalAvgRate: number;
-  trend: 'UP' | 'STABLE' | 'DOWN';
-  trendDiff: string;
-  harvestType: 'CONTINUOUS' | 'ONE_TIME';
-}
-
-const DEFAULT_HARVESTING_CROPS_RATES: HarvestingCropRateItem[] = [
-  {
-    cropName: 'Rose',
-    categoryName: 'Flowers & Floriculture',
-    stage: 'HARVESTING',
-    unit: 'Bunch',
-    localAvgRate: 44,
-    nationalAvgRate: 40,
-    trend: 'UP',
-    trendDiff: '+₹4 (Up)',
-    harvestType: 'CONTINUOUS',
-  },
-  {
-    cropName: 'Wheat',
-    categoryName: 'Cereals & Grains',
-    stage: 'HARVESTING',
-    unit: 'Quintal',
-    localAvgRate: 2412,
-    nationalAvgRate: 2275,
-    trend: 'UP',
-    trendDiff: '+₹137 (Up)',
-    harvestType: 'ONE_TIME',
-  },
-  {
-    cropName: 'Tomato',
-    categoryName: 'Vegetables',
-    stage: 'HARVESTING',
-    unit: 'KG',
-    localAvgRate: 34,
-    nationalAvgRate: 30,
-    trend: 'UP',
-    trendDiff: '+₹4 (Up)',
-    harvestType: 'CONTINUOUS',
-  },
-  {
-    cropName: 'Marigold',
-    categoryName: 'Flowers & Floriculture',
-    stage: 'HARVESTING',
-    unit: 'KG',
-    localAvgRate: 65,
-    nationalAvgRate: 60,
-    trend: 'UP',
-    trendDiff: '+₹5 (Up)',
-    harvestType: 'CONTINUOUS',
-  },
-];
-
-import { useMemo } from 'react';
-import { useCrops } from '../store/crops-context';
 
 /**
  * Convert base rate between measurement units (e.g. KG, Quintal, 50KG Bag, Grams, Tonne).
@@ -130,7 +69,7 @@ export function MarketRatesCard() {
   const userState = user?.state || data?.state || 'Punjab';
 
   // Filter user's active crops in HARVESTING stage (or active crops fallback).
-  // Show SUBCATEGORY-WISE rates (base crop name) WITHOUT variety, converted per crop's measurement unit!
+  // Calculate 24h Min, Max & Avg for State level and National level.
   const subcategoryRates = useMemo(() => {
     let harvestingCrops = cropFields.filter((c) => c.status === 'ACTIVE' && c.stage === 'HARVESTING');
     if (harvestingCrops.length === 0) {
@@ -168,34 +107,34 @@ export function MarketRatesCard() {
       const sourceUnit = apiRate?.unit || 'KG';
       const targetUnit = userCrop.unit || sourceUnit;
 
-      const localMinRate =
-        apiRate?.localMinRate != null && apiRate.localMinRate > 0
-          ? convertRateForCropUnit(apiRate.localMinRate, sourceUnit, targetUnit)
-          : null;
-
-      const localMaxRate =
-        apiRate?.localMaxRate != null && apiRate.localMaxRate > 0
-          ? convertRateForCropUnit(apiRate.localMaxRate, sourceUnit, targetUnit)
-          : null;
-
       const localAvgRate =
         apiRate?.localAvgRate != null && apiRate.localAvgRate > 0
           ? convertRateForCropUnit(apiRate.localAvgRate, sourceUnit, targetUnit)
           : null;
 
-      const nationalMinRate =
-        apiRate?.nationalMinRate != null && apiRate.nationalMinRate > 0
-          ? convertRateForCropUnit(apiRate.nationalMinRate, sourceUnit, targetUnit)
+      const localMinRate =
+        localAvgRate != null
+          ? convertRateForCropUnit(apiRate?.localMinRate ?? apiRate!.localAvgRate!, sourceUnit, targetUnit)
           : null;
 
-      const nationalMaxRate =
-        apiRate?.nationalMaxRate != null && apiRate.nationalMaxRate > 0
-          ? convertRateForCropUnit(apiRate.nationalMaxRate, sourceUnit, targetUnit)
+      const localMaxRate =
+        localAvgRate != null
+          ? convertRateForCropUnit(apiRate?.localMaxRate ?? apiRate!.localAvgRate!, sourceUnit, targetUnit)
           : null;
 
       const nationalAvgRate =
         apiRate?.nationalAvgRate != null && apiRate.nationalAvgRate > 0
           ? convertRateForCropUnit(apiRate.nationalAvgRate, sourceUnit, targetUnit)
+          : null;
+
+      const nationalMinRate =
+        nationalAvgRate != null
+          ? convertRateForCropUnit(apiRate?.nationalMinRate ?? apiRate!.nationalAvgRate!, sourceUnit, targetUnit)
+          : null;
+
+      const nationalMaxRate =
+        nationalAvgRate != null
+          ? convertRateForCropUnit(apiRate?.nationalMaxRate ?? apiRate!.nationalAvgRate!, sourceUnit, targetUnit)
           : null;
 
       return {
@@ -213,22 +152,18 @@ export function MarketRatesCard() {
 
   return (
     <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
-      {/* Header with LIVE Indicator */}
+      {/* Compact Header with LIVE Indicator */}
       <View style={styles.header}>
-        <View>
-          <View style={styles.titleRow}>
-            <Text style={styles.title}>Your Crop Prices</Text>
-            {/* Glowing LIVE Indicator */}
-            <View style={styles.liveBadge}>
-              <View style={styles.redDot} />
-              <Text style={styles.liveText}>LIVE</Text>
-            </View>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>Your Crop Prices</Text>
+          <View style={styles.liveBadge}>
+            <View style={styles.redDot} />
+            <Text style={styles.liveText}>LIVE 24H</Text>
           </View>
-          <Text style={styles.subtitle}>📍 Mandi Rates: {userState}</Text>
         </View>
 
         <View style={styles.pill}>
-          <Ionicons name="time-outline" size={11} color={theme.primary} />
+          <Ionicons name="time-outline" size={10} color={theme.primary} />
           <Text style={styles.pillText}>Previous 24 hrs</Text>
         </View>
       </View>
@@ -241,61 +176,72 @@ export function MarketRatesCard() {
         <>
           {/* Table Header */}
           <View style={styles.columnHeaderRow}>
-            <Text style={[styles.columnHeader, styles.cropColumn]}>Crop</Text>
-            <Text style={[styles.columnHeader, styles.rateColumn]}>Local Mandi</Text>
-            <Text style={[styles.columnHeader, styles.rateColumn]}>National Avg</Text>
+            <Text style={[styles.columnHeader, styles.cropColumn]}>Your Crop</Text>
+            <Text style={[styles.columnHeader, styles.rateColumn]}>Local ({userState})</Text>
+            <Text style={[styles.columnHeader, styles.rateColumn]}>National</Text>
           </View>
 
-          {/* Harvesting Stage Subcategory Rates List */}
+          {/* Subcategory Rates List */}
           {subcategoryRates.length === 0 ? (
-            <Text style={[styles.emptyText, { textAlign: 'center', marginTop: 12 }]}>
+            <Text style={[styles.emptyText, { textAlign: 'center', marginVertical: 8 }]}>
               No active crops in harvesting stage to show live prices.
             </Text>
           ) : (
             subcategoryRates.map((rate) => {
+              const hasLocal = rate.localAvgRate != null && rate.localAvgRate > 0;
+              const hasNational = rate.nationalAvgRate != null && rate.nationalAvgRate > 0;
+
               return (
                 <View key={rate.displayTitle} style={styles.row}>
+                  {/* 1. Crop Name & Unit */}
                   <View style={styles.cropColumn}>
                     <Text style={styles.cropName} numberOfLines={1}>
                       {rate.displayTitle}
                     </Text>
+                    <Text style={styles.cropUnitSub}>Per {rate.unit}</Text>
                   </View>
 
-                  {/* Local Mandi Rate (Avg + Min/Max) */}
+                  {/* 2. Local (State) Rate Box */}
                   <View style={styles.rateColumn}>
-                    {rate.localAvgRate != null && rate.localAvgRate > 0 ? (
-                      <View style={{ gap: 1 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 3 }}>
-                          <Text style={styles.rateValue}>{formatInr(rate.localAvgRate)}</Text>
-                          <Text style={styles.rateUnit}>/{rate.unit}</Text>
+                    {hasLocal ? (
+                      <View style={styles.rateDetailBox}>
+                        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 2 }}>
+                          <Text style={styles.rateLabelPrefix}>Avg: </Text>
+                          <Text style={styles.rateValueAvg}>{formatInr(rate.localAvgRate!)}</Text>
                         </View>
-                        {rate.localMinRate != null && rate.localMaxRate != null ? (
-                          <Text style={styles.rangeSubtext}>
-                            Min {formatInr(rate.localMinRate)} · Max {formatInr(rate.localMaxRate)}
+                        <View style={styles.minMaxRow}>
+                          <Text style={styles.minText}>
+                            Min: <Text style={{ fontFamily: FONT.bold }}>{formatInr(rate.localMinRate!)}</Text>
                           </Text>
-                        ) : null}
+                          <Text style={styles.maxText}>
+                            Max: <Text style={{ fontFamily: FONT.bold }}>{formatInr(rate.localMaxRate!)}</Text>
+                          </Text>
+                        </View>
                       </View>
                     ) : (
-                      <Text style={[styles.rateValue, { color: '#94a3b8' }]}>--</Text>
+                      <Text style={styles.dashText}>-</Text>
                     )}
                   </View>
 
-                  {/* National Avg Rate (Avg + Min/Max) */}
+                  {/* 3. National Rate Box */}
                   <View style={styles.rateColumn}>
-                    {rate.nationalAvgRate != null && rate.nationalAvgRate > 0 ? (
-                      <View style={{ gap: 1 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 3 }}>
-                          <Text style={[styles.rateValue, { color: '#334155' }]}>{formatInr(rate.nationalAvgRate)}</Text>
-                          <Text style={styles.rateUnit}>/{rate.unit}</Text>
+                    {hasNational ? (
+                      <View style={styles.rateDetailBox}>
+                        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 2 }}>
+                          <Text style={styles.rateLabelPrefix}>Avg: </Text>
+                          <Text style={[styles.rateValueAvg, { color: '#0f172a' }]}>{formatInr(rate.nationalAvgRate!)}</Text>
                         </View>
-                        {rate.nationalMinRate != null && rate.nationalMaxRate != null ? (
-                          <Text style={styles.rangeSubtext}>
-                            Min {formatInr(rate.nationalMinRate)} · Max {formatInr(rate.nationalMaxRate)}
+                        <View style={styles.minMaxRow}>
+                          <Text style={styles.minText}>
+                            Min: <Text style={{ fontFamily: FONT.bold }}>{formatInr(rate.nationalMinRate!)}</Text>
                           </Text>
-                        ) : null}
+                          <Text style={styles.maxText}>
+                            Max: <Text style={{ fontFamily: FONT.bold }}>{formatInr(rate.nationalMaxRate!)}</Text>
+                          </Text>
+                        </View>
                       </View>
                     ) : (
-                      <Text style={[styles.rateValue, { color: '#94a3b8' }]}>--</Text>
+                      <Text style={styles.dashText}>-</Text>
                     )}
                   </View>
                 </View>
@@ -311,24 +257,28 @@ export function MarketRatesCard() {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#ffffff',
-    borderRadius: RADIUS.lg,
-    padding: SPACING.lg,
-    borderWidth: 1.5,
+    borderRadius: RADIUS.md,
+    padding: 10,
+    borderWidth: 1,
     borderColor: '#e2e8f0',
+    marginVertical: 4,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
+    paddingBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   title: {
-    fontSize: 15.5,
+    fontSize: 13.5,
     fontFamily: FONT.extraBold,
     color: '#0f172a',
     letterSpacing: -0.1,
@@ -336,88 +286,106 @@ const styles = StyleSheet.create({
   liveBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
     backgroundColor: '#fee2e2',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
     borderRadius: RADIUS.pill,
   },
   redDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 4.5,
+    height: 4.5,
+    borderRadius: 2.5,
     backgroundColor: '#dc2626',
   },
   liveText: {
-    fontSize: 10,
+    fontSize: 8.5,
     fontFamily: FONT.bold,
     color: '#dc2626',
-    letterSpacing: 0.3,
-  },
-  subtitle: {
-    fontSize: 11,
-    fontFamily: FONT.medium,
-    color: '#16a34a',
-    marginTop: 2,
+    letterSpacing: 0.2,
   },
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
     backgroundColor: theme.primaryLight,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: RADIUS.pill,
   },
   pillText: {
-    fontSize: 10.5,
+    fontSize: 9,
     fontFamily: FONT.bold,
     color: theme.primary,
   },
-  spinner: { marginVertical: 12 },
-  emptyText: { color: '#64748b', fontSize: 13, fontFamily: FONT.medium },
+  spinner: { marginVertical: 8 },
+  emptyText: { color: '#64748b', fontSize: 11.5, fontFamily: FONT.medium },
   columnHeaderRow: {
     flexDirection: 'row',
-    marginBottom: 6,
+    alignItems: 'center',
+    marginBottom: 4,
     paddingBottom: 4,
     borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9',
   },
   columnHeader: {
-    fontSize: 10,
-    fontFamily: FONT.bold,
-    color: '#94a3b8',
+    fontSize: 9,
+    fontFamily: FONT.extraBold,
+    color: '#64748b',
     textTransform: 'uppercase',
     letterSpacing: 0.3,
   },
-  cropColumn: { flex: 1.4 },
+  cropColumn: { flex: 1.1 },
   rateColumn: { flex: 1, alignItems: 'flex-start' },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 9,
+    paddingVertical: 5,
     borderTopWidth: 1,
     borderTopColor: '#f8fafc',
   },
   cropName: {
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: FONT.bold,
     color: '#0f172a',
   },
-  rateValue: {
-    fontSize: 12.5,
-    fontFamily: FONT.bold,
-    color: theme.primary,
-  },
-  rateUnit: {
-    fontSize: 9.5,
-    fontFamily: FONT.medium,
-    color: '#94a3b8',
-  },
-  rangeSubtext: {
-    fontSize: 9.5,
+  cropUnitSub: {
+    fontSize: 8.5,
     fontFamily: FONT.medium,
     color: '#64748b',
-    marginTop: 1,
+    marginTop: 0.5,
+  },
+  rateDetailBox: {
+    gap: 1,
+  },
+  rateLabelPrefix: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+  },
+  rateValueAvg: {
+    fontSize: 11.5,
+    fontFamily: FONT.extraBold,
+    color: theme.primary,
+  },
+  minMaxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  minText: {
+    fontSize: 8.5,
+    fontFamily: FONT.medium,
+    color: '#15803d',
+  },
+  maxText: {
+    fontSize: 8.5,
+    fontFamily: FONT.medium,
+    color: '#dc2626',
+  },
+  dashText: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#94a3b8',
   },
 });

@@ -64,7 +64,11 @@ const tap = () => {
 };
 
 function todayIso() {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 // Individual Agricultural Work & Farming Expense Categories
@@ -282,7 +286,8 @@ export default function RecordsScreen() {
           previousBalance: b.previousBalance !== undefined && b.previousBalance !== null ? Number(b.previousBalance) : undefined,
           amountReceivedMode: (b as any).amountReceivedMode as 'CASH' | 'UPI' | undefined,
           buyerName: b.partyName || (b.isCash ? 'Cash Sale' : 'Direct Cash'),
-          saleDate: b.createdAt ? (typeof b.createdAt === 'string' ? b.createdAt.slice(0, 10) : new Date(b.createdAt).toISOString().slice(0, 10)) : todayIso(),
+          saleDate: b.createdAt ? getCleanIsoDate(String(b.createdAt)) : todayIso(),
+          createdAt: b.createdAt ? String(b.createdAt) : undefined,
           billId: b.id,
           billNo: b.billNo,
           partyId: b.partyId,
@@ -328,7 +333,11 @@ export default function RecordsScreen() {
       }
     }
 
-    return result;
+    return result.sort((a, b) => {
+      const timeA = (a as any).createdAt ? new Date((a as any).createdAt).getTime() : (a.saleDate ? new Date(a.saleDate).getTime() : 0);
+      const timeB = (b as any).createdAt ? new Date((b as any).createdAt).getTime() : (b.saleDate ? new Date(b.saleDate).getTime() : 0);
+      return timeB - timeA;
+    });
   }, [rawSaleBillsList, allSalesRecords]);
 
 
@@ -504,13 +513,19 @@ export default function RecordsScreen() {
     }
     const parsed = new Date(str);
     if (!isNaN(parsed.getTime())) {
-      return parsed.toISOString().slice(0, 10);
+      const year = parsed.getFullYear();
+      const month = String(parsed.getMonth() + 1).padStart(2, '0');
+      const day = String(parsed.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     }
     return str;
   };
 
   // 1. Filter sales for Current Calendar Month
-  const currentMonthPrefix = useMemo(() => new Date().toISOString().slice(0, 7), []);
+  const currentMonthPrefix = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }, []);
   const salesThisMonth = useMemo(() => {
     return unifiedSalesRecords.filter((s) => {
       if (!s.saleDate) return true;
@@ -538,11 +553,11 @@ export default function RecordsScreen() {
     });
   }, [unifiedSalesRecords, salesFromDate, salesToDate]);
 
-  // Active filtered list depending on selected view mode (fallback to unifiedSalesRecords if selected month filter is empty but total sales exist)
+  // Active filtered list depending on selected view mode (fallback to unifiedSalesRecords if filter is empty so sales are never hidden)
   const activeSalesList = useMemo(() => {
-    if (salesViewMode === 'MONTH') return salesThisMonth;
-    if (salesViewMode === 'TODAY') return salesToday;
-    if (salesViewMode === 'PERIOD') return salesInPeriod;
+    if (salesViewMode === 'MONTH') return salesThisMonth.length > 0 ? salesThisMonth : unifiedSalesRecords;
+    if (salesViewMode === 'TODAY') return salesToday.length > 0 ? salesToday : (salesThisMonth.length > 0 ? salesThisMonth : unifiedSalesRecords);
+    if (salesViewMode === 'PERIOD') return salesInPeriod.length > 0 ? salesInPeriod : unifiedSalesRecords;
     return unifiedSalesRecords;
   }, [salesViewMode, salesThisMonth, salesToday, salesInPeriod, unifiedSalesRecords]);
 
@@ -1818,6 +1833,7 @@ export default function RecordsScreen() {
         discountAmount: Number(saleDiscount) || 0,
         deliveryCharge: Number(saleDelivery) || 0,
         notes: saleDescription.trim() || undefined,
+        createdAt: saleDate ? new Date(`${saleDate}T12:00:00.000Z`).toISOString() : undefined,
       };
 
       // Save/update the bill snapshot FIRST so its real DB id can be linked onto the ledger entry.
@@ -4803,9 +4819,20 @@ const styles = StyleSheet.create({
     borderColor: '#cbd5e1',
     backgroundColor: '#f8fafc',
   },
+  modePillCashActive: {
+    backgroundColor: '#16a34a',
+    borderColor: '#15803d',
+  },
+  modePillUpiActive: {
+    backgroundColor: '#2563eb',
+    borderColor: '#1d4ed8',
+  },
   modePillText: {
     fontSize: 11,
     fontFamily: FONT.bold,
     color: '#475569',
+  },
+  modePillTextActive: {
+    color: '#ffffff',
   },
 });

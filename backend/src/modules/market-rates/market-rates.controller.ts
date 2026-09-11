@@ -7,8 +7,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthUser } from '../../common/types/auth-user.type';
 import { MarketRatesService } from './market-rates.service';
 
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN)
+@UseGuards(JwtAuthGuard)
 @Controller('market-rates')
 export class MarketRatesController {
   constructor(private readonly marketRatesService: MarketRatesService) {}

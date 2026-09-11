@@ -63,6 +63,7 @@ class CreateSaleBillDto {
     discountAmount;
     deliveryCharge;
     notes;
+    createdAt;
 }
 exports.CreateSaleBillDto = CreateSaleBillDto;
 __decorate([
@@ -151,4 +152,9 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateSaleBillDto.prototype, "notes", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateSaleBillDto.prototype, "createdAt", void 0);
 //# sourceMappingURL=create-sale-bill.dto.js.map

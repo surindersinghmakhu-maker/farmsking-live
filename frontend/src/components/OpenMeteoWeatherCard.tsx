@@ -150,7 +150,7 @@ async function getCoordsForPincode(
       if (geoJson.results && geoJson.results.length > 0) {
         const result = geoJson.results[0];
         const placeName = result.name || pinDistrictName || district || 'Location';
-        const displayLocationName = pincode ? `📍 ${placeName} (${pincode})` : `📍 ${placeName}, ${result.admin1 || 'PB'}`;
+        const displayLocationName = pincode ? `${placeName} (${pincode})` : `${placeName}, ${result.admin1 || 'PB'}`;
         return {
           lat: result.latitude,
           lon: result.longitude,
@@ -163,8 +163,8 @@ async function getCoordsForPincode(
   }
 
   const fallbackName = pincode
-    ? `📍 ${district || village || 'PIN'} (${pincode})`
-    : `📍 ${district || village || 'Ludhiana, PB'}`;
+    ? `${district || village || 'PIN'} (${pincode})`
+    : `${district || village || 'Ludhiana, PB'}`;
   return { ...defaultCoords, name: fallbackName };
 }
 
@@ -238,23 +238,23 @@ export function OpenMeteoWeatherCard() {
 
   return (
     <TouchableOpacity
-      activeOpacity={0.9}
+      activeOpacity={0.92}
       onPress={() => setExpanded(!expanded)}
       style={[styles.card, premiumShadow('#0f172a', 'sm')]}
     >
-      {/* Header */}
+      {/* Compact Header Bar */}
       <View style={styles.headerRow}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+        <View style={styles.headerLeft}>
           <View style={styles.liveTag}>
             <Text style={styles.liveTagText}>LIVE OPEN-METEO</Text>
           </View>
-          <Text style={styles.headerTitle} numberOfLines={1}>🌤️ Weather</Text>
+          <Text style={styles.headerTitle}>🌤️ Weather</Text>
           <Text style={styles.locationText} numberOfLines={1}>
-            {data?.locationName || (user?.pincode ? `📍 PIN ${user.pincode}` : `📍 ${user?.district || 'Punjab'}`)}
+            📍 {data?.locationName || (user?.pincode ? `PIN ${user.pincode}` : `${user?.district || 'Punjab'}`)}
           </Text>
         </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <View style={styles.headerRight}>
           <TouchableOpacity
             style={styles.refreshBtn}
             onPress={(e) => {
@@ -262,11 +262,11 @@ export function OpenMeteoWeatherCard() {
               fetchWeather();
             }}
           >
-            <Ionicons name="refresh" size={14} color="#0284c7" />
+            <Ionicons name="refresh" size={13} color="#0284c7" />
           </TouchableOpacity>
           <Ionicons
-            name={expanded ? 'chevron-up-circle' : 'chevron-down-circle'}
-            size={20}
+            name={expanded ? 'chevron-up-circle-outline' : 'chevron-down-circle-outline'}
+            size={18}
             color="#0284c7"
           />
         </View>
@@ -275,93 +275,85 @@ export function OpenMeteoWeatherCard() {
       {loading ? (
         <View style={styles.centerBoxCompact}>
           <ActivityIndicator size="small" color="#0284c7" />
-          <Text style={styles.loadingText}>Loading PIN Code weather...</Text>
+          <Text style={styles.loadingText}>Fetching live weather...</Text>
         </View>
       ) : error || !data ? (
         <View style={styles.centerBoxCompact}>
-          <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
-            Weather unavailable
-          </Text>
+          <Text style={styles.errorText}>Weather service unavailable</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={fetchWeather}>
             <Text style={styles.retryText}>Retry</Text>
           </TouchableOpacity>
         </View>
       ) : (
-        <View style={{ gap: 8 }}>
-          {/* Compact View Summary Row (always visible) */}
-          <View style={styles.compactRow}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-              <Ionicons name={data.conditionIcon} size={28} color="#0284c7" />
-              <View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={styles.compactTemp}>{data.temp}°C</Text>
-                  <Text style={styles.compactCondition}>{data.conditionText}</Text>
-                </View>
-                <Text style={styles.compactSubtext}>
-                  💧 {data.humidity}% | 💨 {data.windSpeed} km/h
+        <View style={styles.contentBody}>
+          {/* Collapsed Compact Row */}
+          {!expanded && (
+            <View style={styles.compactBar}>
+              <View style={styles.compactBarLeft}>
+                <Ionicons name={data.conditionIcon} size={24} color="#0284c7" />
+                <Text style={styles.compactTempText}>{data.temp}°C</Text>
+                <Text style={styles.compactConditionText} numberOfLines={1}>{data.conditionText}</Text>
+                <View style={styles.metricDotDivider} />
+                <Text style={styles.compactMetricsText} numberOfLines={1}>
+                  💧 {data.humidity}% · 💨 {data.windSpeed}km/h
+                </Text>
+              </View>
+
+              <View
+                style={[
+                  styles.sprayPill,
+                  { backgroundColor: data.isSpraySafe ? '#dcfce7' : '#fee2e2' },
+                ]}
+              >
+                <Ionicons
+                  name={data.isSpraySafe ? 'checkmark-circle' : 'warning'}
+                  size={12}
+                  color={data.isSpraySafe ? '#15803d' : '#dc2626'}
+                />
+                <Text
+                  style={[
+                    styles.sprayPillText,
+                    { color: data.isSpraySafe ? '#166534' : '#991b1b' },
+                  ]}
+                >
+                  {data.isSpraySafe ? 'Spray Safe' : 'Avoid Spray'}
                 </Text>
               </View>
             </View>
-
-            <View
-              style={[
-                styles.compactSprayBadge,
-                { backgroundColor: data.isSpraySafe ? '#dcfce7' : '#fee2e2' },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.compactSprayText,
-                  { color: data.isSpraySafe ? '#166534' : '#991b1b' },
-                ]}
-              >
-                {data.isSpraySafe ? '✅ Spray Safe' : '⚠️ Avoid Spray'}
-              </Text>
-            </View>
-          </View>
-
-          {/* Toggle Indicator Hint */}
-          {!expanded && (
-            <View style={styles.expandHintRow}>
-              <Text style={styles.expandHintText}>
-                Tap to view 5-day forecast & full advisory
-              </Text>
-              <Ionicons name="chevron-down" size={13} color="#0284c7" />
-            </View>
           )}
 
-          {/* Expanded Details Section */}
+          {/* Expanded Executive Details View */}
           {expanded && (
-            <View style={{ gap: 10, marginTop: 4, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#f1f5f9' }}>
-              {/* Main Weather Display Banner */}
-              <View style={styles.bannerRow}>
-                <View style={styles.mainTempGroup}>
-                  <Ionicons name={data.conditionIcon} size={40} color="#0284c7" />
+            <View style={styles.expandedContent}>
+              {/* Main Weather Metric Banner */}
+              <View style={styles.mainBanner}>
+                <View style={styles.tempSection}>
+                  <Ionicons name={data.conditionIcon} size={36} color="#0284c7" />
                   <View>
-                    <Text style={styles.tempText}>{data.temp}°C</Text>
-                    <Text style={styles.feelsLikeText}>Feels like: {data.feelsLike}°C</Text>
+                    <Text style={styles.mainTempText}>{data.temp}°C</Text>
+                    <Text style={styles.feelsLikeText}>Feels like {data.feelsLike}°C</Text>
                   </View>
                 </View>
 
-                <View style={styles.conditionGroup}>
-                  <Text style={styles.conditionTitle}>{data.conditionText}</Text>
-                  <View style={styles.metricsRow}>
-                    <View style={styles.metricBadge}>
+                <View style={styles.detailSection}>
+                  <Text style={styles.expandedConditionText}>{data.conditionText}</Text>
+                  <View style={styles.metricsPillsRow}>
+                    <View style={styles.metricChip}>
                       <Ionicons name="water-outline" size={11} color="#0284c7" />
-                      <Text style={styles.metricText}>Humidity: {data.humidity}%</Text>
+                      <Text style={styles.metricChipText}>Humidity {data.humidity}%</Text>
                     </View>
-                    <View style={styles.metricBadge}>
+                    <View style={styles.metricChip}>
                       <Ionicons name="navigate-outline" size={11} color="#0369a1" />
-                      <Text style={styles.metricText}>Wind: {data.windSpeed} km/h</Text>
+                      <Text style={styles.metricChipText}>Wind {data.windSpeed}km/h</Text>
                     </View>
                   </View>
                 </View>
               </View>
 
-              {/* Agri Spray Advisory Banner */}
+              {/* Spray Advisory Alert */}
               <View
                 style={[
-                  styles.advisoryBanner,
+                  styles.advisoryAlert,
                   {
                     backgroundColor: data.isSpraySafe ? '#f0fdf4' : '#fff1f2',
                     borderColor: data.isSpraySafe ? '#bbf7d0' : '#fca5a5',
@@ -369,13 +361,13 @@ export function OpenMeteoWeatherCard() {
                 ]}
               >
                 <Ionicons
-                  name={data.isSpraySafe ? 'checkmark-circle-outline' : 'warning-outline'}
-                  size={18}
+                  name={data.isSpraySafe ? 'checkmark-circle' : 'alert-circle'}
+                  size={16}
                   color={data.isSpraySafe ? '#166534' : '#991b1b'}
                 />
                 <Text
                   style={[
-                    styles.advisoryText,
+                    styles.advisoryAlertText,
                     { color: data.isSpraySafe ? '#15803d' : '#991b1b' },
                   ]}
                 >
@@ -383,28 +375,28 @@ export function OpenMeteoWeatherCard() {
                 </Text>
               </View>
 
-              {/* 5-Day Forecast Row */}
-              {data.daily && data.daily.length > 0 ? (
-                <View style={styles.forecastContainer}>
-                  <Text style={styles.forecastHeader}>📅 5-Day Weather Forecast</Text>
-                  <View style={styles.forecastRow}>
+              {/* 5-Day Compact Forecast */}
+              {data.daily && data.daily.length > 0 && (
+                <View style={styles.forecastBox}>
+                  <Text style={styles.forecastHeaderTitle}>📅 5-Day Weather Forecast</Text>
+                  <View style={styles.forecastGrid}>
                     {data.daily.map((item, index) => (
-                      <View key={index} style={styles.forecastCol}>
-                        <Text style={styles.forecastDay}>{item.day}</Text>
-                        <Ionicons name={item.icon} size={20} color="#0284c7" style={{ marginVertical: 2 }} />
-                        <Text style={styles.forecastTemp}>{item.maxTemp}° / {item.minTemp}°</Text>
-                        {item.rainProb > 20 ? (
-                          <Text style={styles.rainProbText}>🌧️ {item.rainProb}%</Text>
-                        ) : null}
+                      <View key={index} style={styles.forecastItemCard}>
+                        <Text style={styles.forecastDayText}>{item.day}</Text>
+                        <Ionicons name={item.icon} size={18} color="#0284c7" style={{ marginVertical: 2 }} />
+                        <Text style={styles.forecastTempRange}>{item.maxTemp}°/{item.minTemp}°</Text>
+                        {item.rainProb > 20 && (
+                          <Text style={styles.forecastRainProb}>🌧️ {item.rainProb}%</Text>
+                        )}
                       </View>
                     ))}
                   </View>
                 </View>
-              ) : null}
+              )}
 
-              <View style={styles.collapseHintRow}>
-                <Text style={styles.expandHintText}>Tap to collapse</Text>
-                <Ionicons name="chevron-up" size={13} color="#0284c7" />
+              <View style={styles.collapseRow}>
+                <Text style={styles.collapseText}>Tap to collapse weather details</Text>
+                <Ionicons name="chevron-up" size={12} color="#0284c7" />
               </View>
             </View>
           )}
@@ -418,176 +410,59 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#ffffff',
     borderRadius: RADIUS.lg,
-    padding: SPACING.md,
-    borderWidth: 1.5,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderWidth: 1,
     borderColor: '#e2e8f0',
-    marginVertical: 4,
+    marginVertical: 3,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 4,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   liveTag: {
     backgroundColor: '#0284c7',
     paddingHorizontal: 5,
-    paddingVertical: 2,
+    paddingVertical: 1.5,
     borderRadius: RADIUS.xs,
   },
   liveTagText: {
     color: '#ffffff',
-    fontSize: 8.5,
+    fontSize: 8,
     fontFamily: FONT.extraBold,
+    letterSpacing: 0.2,
   },
   headerTitle: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontFamily: FONT.extraBold,
     color: '#0f172a',
-  },
-  refreshBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
   },
   locationText: {
     fontSize: 11,
-    fontFamily: FONT.semiBold,
+    fontFamily: FONT.bold,
     color: '#0284c7',
+    flex: 1,
   },
-  centerBox: {
+  refreshBtn: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#f0f9ff',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    gap: 6,
-  },
-  loadingText: {
-    fontSize: 11,
-    fontFamily: FONT.medium,
-    color: '#64748b',
-  },
-  retryBtn: {
-    backgroundColor: '#0284c7',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: RADIUS.sm,
-  },
-  retryText: {
-    color: '#ffffff',
-    fontSize: 11,
-    fontFamily: FONT.bold,
-  },
-  bannerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#f8fafc',
-    padding: 10,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
-  },
-  mainTempGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  tempText: {
-    fontSize: 24,
-    fontFamily: FONT.extraBold,
-    color: '#0f172a',
-    lineHeight: 28,
-  },
-  feelsLikeText: {
-    fontSize: 10,
-    fontFamily: FONT.medium,
-    color: '#64748b',
-  },
-  conditionGroup: {
-    alignItems: 'flex-end',
-    gap: 4,
-  },
-  conditionTitle: {
-    fontSize: 12,
-    fontFamily: FONT.extraBold,
-    color: '#0284c7',
-  },
-  metricsRow: {
-    flexDirection: 'row',
-    gap: 4,
-  },
-  metricBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: RADIUS.xs,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  metricText: {
-    fontSize: 9.5,
-    fontFamily: FONT.semiBold,
-    color: '#334155',
-  },
-  advisoryBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    padding: 9,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-  },
-  advisoryText: {
-    flex: 1,
-    fontSize: 11,
-    fontFamily: FONT.bold,
-    lineHeight: 15,
-  },
-  forecastContainer: {
-    marginTop: 4,
-    borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
-    paddingTop: 8,
-  },
-  forecastHeader: {
-    fontSize: 11,
-    fontFamily: FONT.extraBold,
-    color: '#475569',
-    marginBottom: 6,
-  },
-  forecastRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 4,
-  },
-  forecastCol: {
-    flex: 1,
-    alignItems: 'center',
-    backgroundColor: '#f8fafc',
-    paddingVertical: 6,
-    paddingHorizontal: 2,
-    borderRadius: RADIUS.sm,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  forecastDay: {
-    fontSize: 9.5,
-    fontFamily: FONT.bold,
-    color: '#334155',
-  },
-  forecastTemp: {
-    fontSize: 9.5,
-    fontFamily: FONT.bold,
-    color: '#0f172a',
-  },
-  rainProbText: {
-    fontSize: 8.5,
-    fontFamily: FONT.extraBold,
-    color: '#0284c7',
-    marginTop: 1,
   },
   centerBoxCompact: {
     alignItems: 'center',
@@ -595,7 +470,91 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     gap: 4,
   },
-  compactRow: {
+  loadingText: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  errorText: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  retryBtn: {
+    backgroundColor: '#0284c7',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: RADIUS.xs,
+  },
+  retryText: {
+    color: '#ffffff',
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+  },
+  contentBody: {
+    marginTop: 2,
+  },
+
+  /* Compact Collapsed Row */
+  compactBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  compactBarLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  compactTempText: {
+    fontSize: 15,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+  },
+  compactConditionText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#0284c7',
+  },
+  metricDotDivider: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: '#cbd5e1',
+  },
+  compactMetricsText: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  sprayPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill || 12,
+  },
+  sprayPillText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+  },
+
+  /* Expanded Executive View */
+  expandedContent: {
+    gap: 8,
+    paddingTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  mainBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -606,48 +565,116 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#f1f5f9',
   },
-  compactTemp: {
-    fontSize: 18,
+  tempSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  mainTempText: {
+    fontSize: 22,
     fontFamily: FONT.extraBold,
     color: '#0f172a',
+    lineHeight: 26,
   },
-  compactCondition: {
-    fontSize: 11.5,
-    fontFamily: FONT.bold,
-    color: '#0284c7',
-  },
-  compactSubtext: {
+  feelsLikeText: {
     fontSize: 9.5,
     fontFamily: FONT.medium,
     color: '#64748b',
+  },
+  detailSection: {
+    alignItems: 'flex-end',
+    gap: 3,
+  },
+  expandedConditionText: {
+    fontSize: 11.5,
+    fontFamily: FONT.extraBold,
+    color: '#0284c7',
+  },
+  metricsPillsRow: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  metricChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: RADIUS.xs,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  metricChipText: {
+    fontSize: 9,
+    fontFamily: FONT.semiBold,
+    color: '#334155',
+  },
+  advisoryAlert: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 9,
+    paddingVertical: 7,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+  },
+  advisoryAlertText: {
+    flex: 1,
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    lineHeight: 14,
+  },
+  forecastBox: {
+    paddingTop: 4,
+  },
+  forecastHeaderTitle: {
+    fontSize: 10.5,
+    fontFamily: FONT.extraBold,
+    color: '#475569',
+    marginBottom: 4,
+  },
+  forecastGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 4,
+  },
+  forecastItemCard: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    paddingVertical: 5,
+    paddingHorizontal: 2,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  forecastDayText: {
+    fontSize: 9,
+    fontFamily: FONT.bold,
+    color: '#334155',
+  },
+  forecastTempRange: {
+    fontSize: 9,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  forecastRainProb: {
+    fontSize: 8,
+    fontFamily: FONT.extraBold,
+    color: '#0284c7',
     marginTop: 1,
   },
-  compactSprayBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: RADIUS.sm,
-  },
-  compactSprayText: {
-    fontSize: 10,
-    fontFamily: FONT.bold,
-  },
-  expandHintRow: {
+  collapseRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    marginTop: 2,
+    paddingTop: 2,
   },
-  collapseHintRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    marginTop: 6,
-  },
-  expandHintText: {
-    fontSize: 9.5,
-    fontFamily: FONT.semiBold,
+  collapseText: {
+    fontSize: 9,
+    fontFamily: FONT.medium,
     color: '#0284c7',
   },
 });

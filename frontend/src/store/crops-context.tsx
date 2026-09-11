@@ -96,6 +96,7 @@ export interface CropSaleRecord {
   amountReceived?: number | string;
   previousBalance?: number;
   amountReceivedMode?: 'CASH' | 'UPI';
+  createdAt?: string;
 }
 
 export interface SpecialTreatmentTemplate {

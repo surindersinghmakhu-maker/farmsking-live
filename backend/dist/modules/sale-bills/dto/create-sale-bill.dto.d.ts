@@ -25,5 +25,6 @@ export declare class CreateSaleBillDto {
     discountAmount?: number;
     deliveryCharge?: number;
     notes?: string;
+    createdAt?: string;
 }
 export {};

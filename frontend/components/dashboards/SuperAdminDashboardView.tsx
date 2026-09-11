@@ -89,7 +89,8 @@ export const SuperAdminDashboardView: React.FC = () => {
       const { data } = await apiClient.get('/app-settings');
       return data;
     },
-    refetchInterval: 3000,
+    staleTime: 15_000,
+    refetchInterval: 30_000,
   });
 
   const isGroupVoiceCallEnabled = appSettings?.groupVoiceCallEnabled ?? true;

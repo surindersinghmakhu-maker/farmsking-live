@@ -27,6 +27,9 @@ export class MarketRatesService {
       select: { state: true },
     });
 
+    const userState = (profile?.state || 'Punjab').trim();
+
+    // 1. Fetch user's active crops in HARVESTING or ACTIVE stage
     let cropCycles = await this.prisma.cropCycle.findMany({
       where: {
         deletedAt: null,
@@ -46,109 +49,207 @@ export class MarketRatesService {
       });
     }
 
-    const distinctCropMap = new Map<string, { cropName: string; unit?: string | null; pricePerUnit?: any }>();
+    const distinctCropMap = new Map<string, { cropName: string; unit?: string | null }>();
     for (const c of cropCycles) {
       const englishName = c.cropName.split('(')[0].trim();
       const key = englishName.toLowerCase();
       if (!distinctCropMap.has(key)) {
-        distinctCropMap.set(key, { cropName: englishName, unit: c.unit, pricePerUnit: c.pricePerUnit });
+        distinctCropMap.set(key, { cropName: englishName, unit: c.unit });
+      }
+    }
+
+    // Fallback: If user has 0 crops registered, populate from recent market rates or default crops
+    if (distinctCropMap.size === 0) {
+      try {
+        const recentMR = await this.prisma.marketRate.findMany({
+          take: 20,
+          orderBy: { createdAt: 'desc' },
+          select: { cropName: true, unit: true },
+        });
+        for (const mr of recentMR) {
+          if (mr.cropName) {
+            const englishName = mr.cropName.split('(')[0].trim();
+            const key = englishName.toLowerCase();
+            if (!distinctCropMap.has(key)) {
+              distinctCropMap.set(key, { cropName: englishName, unit: mr.unit });
+            }
+          }
+        }
+      } catch {
+        // ignore fallback error
+      }
+    }
+
+    if (distinctCropMap.size === 0) {
+      const defaultCrops = [
+        { cropName: 'Rose', unit: 'KG' },
+        { cropName: 'Marigold', unit: 'KG' },
+        { cropName: 'Wheat', unit: 'Quintal' },
+        { cropName: 'Paddy', unit: 'Quintal' },
+      ];
+      for (const dc of defaultCrops) {
+        distinctCropMap.set(dc.cropName.toLowerCase(), dc);
       }
     }
 
     const distinctCrops = Array.from(distinctCropMap.values());
     const since = new Date(Date.now() - ONE_DAY_MS);
+    const sinceTime = since.getTime();
 
-    // Fetch user's recent sale bills for sales rate extraction in last 24 hrs
-    const recentBills = await this.prisma.saleBill.findMany({
-      where: { farmerId: user.id, createdAt: { gte: since } },
-      orderBy: { createdAt: 'desc' },
-      take: 20,
+    // 2. Fetch all SaleItems recorded across the app in the last 24 hours
+    const recentSaleItems = await this.prisma.saleItem.findMany({
+      where: {
+        createdAt: { gte: since },
+        sale: { deletedAt: null },
+      },
+      select: {
+        productName: true,
+        unit: true,
+        pricePerUnit: true,
+        createdAt: true,
+        sale: {
+          select: {
+            recordedBy: { select: { state: true } },
+          },
+        },
+      },
     });
 
-    // Fetch user's recent Arhtiya crop sales in last 24 hrs
+    // 3. Fetch all SaleBills recorded across the app in the last 24 hours
+    const recentSaleBills = await this.prisma.saleBill.findMany({
+      where: { createdAt: { gte: since } },
+      select: {
+        createdAt: true,
+        items: true,
+        farmer: { select: { state: true } },
+      },
+    });
+
+    // 4. Fetch all Arhtiya crop sales in the last 24 hours
     const recentArhtiyaSales = await this.prisma.arhtiyaTransaction.findMany({
-      where: { farmerId: user.id, type: 'CROP_SALE_CREDIT', transactionDate: { gte: since } },
-      orderBy: { transactionDate: 'desc' },
-      take: 20,
+      where: { transactionDate: { gte: since } },
+      select: {
+        cropName: true,
+        inputUnit: true,
+        ratePerQuintal: true,
+        transactionDate: true,
+        farmer: { select: { state: true } },
+      },
+    });
+
+    // 5. Fetch MarketRate records updated in the last 24 hours
+    const recentMarketRates = await this.prisma.marketRate.findMany({
+      where: { rateDate: { gte: since } },
+      select: {
+        cropName: true,
+        unit: true,
+        minPrice: true,
+        maxPrice: true,
+        modalPrice: true,
+        rateDate: true,
+        state: true,
+      },
     });
 
     const rates = await Promise.all(
       distinctCrops.map(async ({ cropName, unit: cropUnit }) => {
-        const [nationalAgg, localAgg] = await Promise.all([
-          this.prisma.marketRate.aggregate({
-            where: { cropName: { equals: cropName, mode: 'insensitive' }, rateDate: { gte: since } },
-            _min: { minPrice: true, modalPrice: true },
-            _max: { maxPrice: true, modalPrice: true },
-            _avg: { modalPrice: true },
-            _count: true,
-          }),
-          profile?.state
-            ? this.prisma.marketRate.aggregate({
-                where: {
-                  cropName: { equals: cropName, mode: 'insensitive' },
-                  rateDate: { gte: since },
-                  state: { equals: profile.state, mode: 'insensitive' },
-                },
-                _min: { minPrice: true, modalPrice: true },
-                _max: { maxPrice: true, modalPrice: true },
-                _avg: { modalPrice: true },
-                _count: true,
-              })
-            : Promise.resolve(null),
-        ]);
-
-        const localRatePool: number[] = [];
+        const cropKey = cropName.toLowerCase();
         let unit = cropUnit || 'quintal';
 
-        // 1. From local MarketRate aggregate data if present
-        if (localAgg && localAgg._count > 0) {
-          const minP = Number(localAgg._min.minPrice ?? localAgg._min.modalPrice);
-          const maxP = Number(localAgg._max.maxPrice ?? localAgg._max.modalPrice);
-          const avgP = Number(localAgg._avg.modalPrice);
-          if (!isNaN(minP) && minP > 0) localRatePool.push(minP);
-          if (!isNaN(maxP) && maxP > 0) localRatePool.push(maxP);
-          if (!isNaN(avgP) && avgP > 0) localRatePool.push(avgP);
+        const localRatePool: number[] = [];
+        const nationalRatePool: number[] = [];
+
+        // Helper to check if crop name matches
+        const matchesCrop = (targetName: string) => {
+          const t = (targetName || '').split('(')[0].trim().toLowerCase();
+          return t === cropKey || t.includes(cropKey) || cropKey.includes(t);
+        };
+
+        // Helper to check if state matches user's state
+        const isUserState = (st?: string | null) => {
+          if (!st || !userState) return false;
+          return st.trim().toLowerCase() === userState.toLowerCase();
+        };
+
+        // Helper to check item timestamp is strictly within last 24 hrs
+        const isWithin24h = (dt?: Date | string | null) => {
+          if (!dt) return true; // Fallback if bill is already filtered by 24h gte
+          const t = new Date(dt).getTime();
+          return !isNaN(t) && t >= sinceTime;
+        };
+
+        // A) Process SaleItems
+        for (const item of recentSaleItems) {
+          if (matchesCrop(item.productName) && isWithin24h(item.createdAt)) {
+            const rVal = Number(item.pricePerUnit);
+            if (!isNaN(rVal) && rVal > 0) {
+              nationalRatePool.push(rVal);
+              if (isUserState(item.sale?.recordedBy?.state)) {
+                localRatePool.push(rVal);
+              }
+              if (item.unit) unit = item.unit;
+            }
+          }
         }
 
-        // 2. From recent SaleBills for this user & crop
-        for (const bill of recentBills) {
+        // B) Process SaleBills and Sale Item JSON array timestamps
+        for (const bill of recentSaleBills) {
           const items = bill.items as any[];
           if (Array.isArray(items)) {
             for (const it of items) {
-              const iName = (it.cropName || '').split('(')[0].trim().toLowerCase();
-              if (iName === cropName.toLowerCase() || iName.includes(cropName.toLowerCase()) || cropName.toLowerCase().includes(iName)) {
-                const rVal = Number(it.rate);
-                if (rVal > 0) {
-                  localRatePool.push(rVal);
-                  if (it.unit) unit = it.unit;
+              if (matchesCrop(it.cropName || it.productName)) {
+                const itemTime = it.timestamp || it.createdAt || bill.createdAt;
+                if (isWithin24h(itemTime)) {
+                  const rVal = Number(it.rate || it.pricePerUnit);
+                  if (!isNaN(rVal) && rVal > 0) {
+                    nationalRatePool.push(rVal);
+                    if (isUserState(bill.farmer?.state)) {
+                      localRatePool.push(rVal);
+                    }
+                    if (it.unit) unit = it.unit;
+                  }
                 }
               }
             }
           }
         }
 
-        // 3. From recent Arhtiya crop sales
+        // C) Process Arhtiya Transactions
         for (const tx of recentArhtiyaSales) {
-          const tName = (tx.cropName || '').split('(')[0].trim().toLowerCase();
-          if (tName === cropName.toLowerCase() || tName.includes(cropName.toLowerCase()) || cropName.toLowerCase().includes(tName)) {
+          if (tx.cropName && matchesCrop(tx.cropName) && isWithin24h(tx.transactionDate)) {
             const rVal = Number(tx.ratePerQuintal);
-            if (rVal > 0) {
-              localRatePool.push(rVal);
+            if (!isNaN(rVal) && rVal > 0) {
+              nationalRatePool.push(rVal);
+              if (isUserState(tx.farmer?.state)) {
+                localRatePool.push(rVal);
+              }
               if (tx.inputUnit) unit = tx.inputUnit;
             }
           }
         }
 
-        // Sample MarketRate for unit info if not yet determined
-        if (!unit || unit === 'quintal') {
-          const sample = await this.prisma.marketRate.findFirst({
-            where: { cropName: { equals: cropName, mode: 'insensitive' } },
-            orderBy: { rateDate: 'desc' },
-            select: { unit: true },
-          });
-          if (sample?.unit) unit = sample.unit;
+        // D) Process MarketRate table entries
+        for (const mr of recentMarketRates) {
+          if (matchesCrop(mr.cropName) && isWithin24h(mr.rateDate)) {
+            const minP = Number(mr.minPrice ?? mr.modalPrice);
+            const maxP = Number(mr.maxPrice ?? mr.modalPrice);
+            const avgP = Number(mr.modalPrice);
+
+            if (!isNaN(minP) && minP > 0) nationalRatePool.push(minP);
+            if (!isNaN(maxP) && maxP > 0) nationalRatePool.push(maxP);
+            if (!isNaN(avgP) && avgP > 0) nationalRatePool.push(avgP);
+
+            if (isUserState(mr.state)) {
+              if (!isNaN(minP) && minP > 0) localRatePool.push(minP);
+              if (!isNaN(maxP) && maxP > 0) localRatePool.push(maxP);
+              if (!isNaN(avgP) && avgP > 0) localRatePool.push(avgP);
+            }
+
+            if (mr.unit) unit = mr.unit;
+          }
         }
 
+        // Compute State (Local) Level Min, Max, Avg rates
         let localMinRate: number | null = null;
         let localMaxRate: number | null = null;
         let localAvgRate: number | null = null;
@@ -159,21 +260,15 @@ export class MarketRatesService {
           localAvgRate = Math.round(localRatePool.reduce((a, b) => a + b, 0) / localRatePool.length);
         }
 
+        // Compute National Level Min, Max, Avg rates
         let nationalMinRate: number | null = null;
         let nationalMaxRate: number | null = null;
         let nationalAvgRate: number | null = null;
 
-        if (nationalAgg._count && nationalAgg._count > 0) {
-          const minNat = Number(nationalAgg._min.minPrice ?? nationalAgg._min.modalPrice);
-          const maxNat = Number(nationalAgg._max.maxPrice ?? nationalAgg._max.modalPrice);
-          const avgNat = Number(nationalAgg._avg.modalPrice);
-          nationalMinRate = !isNaN(minNat) && minNat > 0 ? minNat : null;
-          nationalMaxRate = !isNaN(maxNat) && maxNat > 0 ? maxNat : null;
-          nationalAvgRate = !isNaN(avgNat) && avgNat > 0 ? Math.round(avgNat) : null;
-        } else if (localRatePool.length > 0) {
-          nationalMinRate = localMinRate;
-          nationalMaxRate = localMaxRate;
-          nationalAvgRate = localAvgRate;
+        if (nationalRatePool.length > 0) {
+          nationalMinRate = Math.min(...nationalRatePool);
+          nationalMaxRate = Math.max(...nationalRatePool);
+          nationalAvgRate = Math.round(nationalRatePool.reduce((a, b) => a + b, 0) / nationalRatePool.length);
         }
 
         return {
@@ -186,12 +281,11 @@ export class MarketRatesService {
           nationalMinRate,
           nationalMaxRate,
           nationalAvgRate,
-          nationalSampleCount: nationalAgg._count,
+          nationalSampleCount: nationalRatePool.length,
         };
       }),
     );
 
-    return { state: profile?.state ?? null, rates };
+    return { state: userState, rates };
   }
 }
-

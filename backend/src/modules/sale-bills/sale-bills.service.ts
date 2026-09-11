@@ -54,6 +54,17 @@ export class SaleBillsService {
     }
 
     const billNo = dto.billNo ? dto.billNo : await this.nextBillNo();
+    const nowIso = new Date().toISOString();
+
+    // Attach exact timestamp to each sale item in JSON array
+    const timestampedItems = Array.isArray(dto.items)
+      ? dto.items.map((it: any) => ({
+          ...it,
+          timestamp: it.timestamp || nowIso,
+          createdAt: it.createdAt || nowIso,
+        }))
+      : dto.items;
+
     const bill = await this.prisma.saleBill.create({
       data: {
         farmerId: user.id,
@@ -65,7 +76,7 @@ export class SaleBillsService {
         partyAddress: dto.partyAddress,
         isCash: dto.isCash,
         amountReceivedMode: dto.amountReceivedMode || 'CASH',
-        items: dto.items as unknown as object,
+        items: timestampedItems as unknown as object,
         totalItems: dto.totalItems,
         totalAmount: dto.totalAmount,
         amountReceived: dto.amountReceived,
@@ -75,6 +86,7 @@ export class SaleBillsService {
         discountAmount: dto.discountAmount !== undefined ? dto.discountAmount : 0,
         deliveryCharge: dto.deliveryCharge !== undefined ? dto.deliveryCharge : 0,
         notes: dto.notes ?? null,
+        ...(dto.createdAt && { createdAt: new Date(dto.createdAt) }),
       },
     });
 
@@ -115,6 +127,16 @@ export class SaleBillsService {
 
   async update(user: AuthUser, id: string, dto: CreateSaleBillDto) {
     const existing = await this.findOneOrThrow(user, id);
+    const nowIso = new Date().toISOString();
+
+    const timestampedItems = Array.isArray(dto.items)
+      ? dto.items.map((it: any) => ({
+          ...it,
+          timestamp: it.timestamp || nowIso,
+          createdAt: it.createdAt || nowIso,
+        }))
+      : dto.items;
+
     const updated = await this.prisma.saleBill.update({
       where: { id: existing.id },
       data: {
@@ -126,7 +148,7 @@ export class SaleBillsService {
         partyAddress: dto.partyAddress,
         isCash: dto.isCash,
         amountReceivedMode: dto.amountReceivedMode || 'CASH',
-        items: dto.items as unknown as object,
+        items: timestampedItems as unknown as object,
         totalItems: dto.totalItems,
         totalAmount: dto.totalAmount,
         amountReceived: dto.amountReceived,
@@ -136,8 +158,41 @@ export class SaleBillsService {
         discountAmount: dto.discountAmount !== undefined ? dto.discountAmount : 0,
         deliveryCharge: dto.deliveryCharge !== undefined ? dto.deliveryCharge : 0,
         notes: dto.notes ?? null,
+        ...(dto.createdAt && { createdAt: new Date(dto.createdAt) }),
       },
     });
+
+    try {
+      const userProfile = await this.prisma.user.findUnique({
+        where: { id: user.id },
+        select: { state: true, district: true },
+      });
+      const items = dto.items as any[];
+      if (Array.isArray(items)) {
+        for (const item of items) {
+          if (item.cropName && Number(item.rate) > 0) {
+            const cleanName = item.cropName.split('(')[0].trim();
+            await this.prisma.marketRate.create({
+              data: {
+                cropName: cleanName,
+                variety: 'Farmer Sale',
+                market: userProfile?.district ? `${userProfile.district} Mandi` : 'Local Mandi',
+                state: userProfile?.state || 'Punjab',
+                district: userProfile?.district || null,
+                modalPrice: Number(item.rate),
+                minPrice: Number(item.rate),
+                maxPrice: Number(item.rate),
+                unit: item.unit || 'KG',
+                rateDate: new Date(),
+                source: 'farmer_sale_bill_update',
+              },
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Could not record market rate on bill update:', err);
+    }
 
     return updated;
   }

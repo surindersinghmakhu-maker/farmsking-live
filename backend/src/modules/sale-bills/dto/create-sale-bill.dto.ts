@@ -89,4 +89,8 @@ export class CreateSaleBillDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsString()
+  createdAt?: string;
 }

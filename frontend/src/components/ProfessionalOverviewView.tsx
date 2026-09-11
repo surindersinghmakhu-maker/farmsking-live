@@ -344,6 +344,57 @@ export function ProfessionalOverviewView({
         )}
       </View>
 
+      {/* ── Receivable / Payable Balance Strip (below Crop Performance) ── */}
+      <View style={{ flexDirection: 'row', gap: 6 }}>
+        {/* Receivable */}
+        <TouchableOpacity
+          style={{
+            flex: 1,
+            backgroundColor: '#eff6ff',
+            borderRadius: 8,
+            borderWidth: 1,
+            borderColor: '#bfdbfe',
+            paddingVertical: 7,
+            paddingHorizontal: 10,
+          }}
+          activeOpacity={0.8}
+          onPress={() => { tap(); onNavigateTab('ANALYSIS', 'RECEIVABLE'); }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#1d4ed8' }}>Receivable</Text>
+            <Ionicons name="arrow-down-circle" size={13} color="#2563eb" />
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
+            <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#1d4ed8' }}>{formatInr(totalReceivable)}</Text>
+            <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#3b82f6' }}>View Ledger →</Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* Payable */}
+        <TouchableOpacity
+          style={{
+            flex: 1,
+            backgroundColor: '#fff7ed',
+            borderRadius: 8,
+            borderWidth: 1,
+            borderColor: '#fed7aa',
+            paddingVertical: 7,
+            paddingHorizontal: 10,
+          }}
+          activeOpacity={0.8}
+          onPress={() => { tap(); onNavigateTab('ANALYSIS', 'PAYABLE'); }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#c2410c' }}>Payable</Text>
+            <Ionicons name="arrow-up-circle" size={13} color="#ea580c" />
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
+            <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#c2410c' }}>{formatInr(totalPayable)}</Text>
+            <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#ea580c' }}>View Ledger →</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+
       {/* 3. Compact Labour Digest */}
       <TouchableOpacity
         style={[styles.labourDigestCard, premiumShadow('#0f172a', 'sm')]}

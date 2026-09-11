@@ -191,8 +191,11 @@ export function BillPreview({ inv }: { inv: SavedSaleInvoice }) {
     : grossBal - rcvd;
 
   const activeUpiId = inv.farmerUpiId || user?.upiId || settings?.upiId || 'surindersinghmakhu-5@oksbi';
-  const payableAmt = netBal > 0 ? netBal : totalAmt;
-  const upiPayUrl = `upi://pay?pa=${encodeURIComponent(activeUpiId)}&pn=${encodeURIComponent(inv.farmerName || 'FarmsKing')}&am=${payableAmt}&cu=INR`;
+  const isNetPayable = netBal < 0; // Party has overpaid — we owe them money
+  // QR: if balance is minus (payable), show UPI ID only without amount; otherwise include amount
+  const upiPayUrl = isNetPayable
+    ? `upi://pay?pa=${encodeURIComponent(activeUpiId)}&pn=${encodeURIComponent(inv.farmerName || 'FarmsKing')}&cu=INR`
+    : `upi://pay?pa=${encodeURIComponent(activeUpiId)}&pn=${encodeURIComponent(inv.farmerName || 'FarmsKing')}&am=${netBal}&cu=INR`;
   const qrCodeUri = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=1&ecc=H&data=${encodeURIComponent(upiPayUrl)}`;
   const captureSafeQrUri = useCaptureSafeImageUri(qrCodeUri);
   const resolvedQrUri = Platform.OS === 'web' ? captureSafeQrUri : qrCodeUri;
@@ -409,9 +412,13 @@ export function BillPreview({ inv }: { inv: SavedSaleInvoice }) {
               </Text>
               <Text style={[billStyles.billSummaryValue, { color: '#dc2626' }]}>{formatInr(rcvd)}</Text>
             </View>
-            <View style={[billStyles.billSummaryLine, billStyles.billSummaryNetLine]}>
-              <Text style={billStyles.billSummaryNetLabel}>NET RECEIVABLE BALANCE</Text>
-              <Text style={billStyles.billSummaryNetValue}>{formatInr(netBal)}</Text>
+            <View style={[billStyles.billSummaryLine, billStyles.billSummaryNetLine, isNetPayable && { borderTopColor: '#fecaca', backgroundColor: '#fef2f2' }]}>
+              <Text style={[billStyles.billSummaryNetLabel, isNetPayable && { color: '#dc2626' }]}>
+                {isNetPayable ? 'NET PAYABLE BALANCE' : 'NET RECEIVABLE BALANCE'}
+              </Text>
+              <Text style={[billStyles.billSummaryNetValue, isNetPayable && { color: '#dc2626' }]}>
+                {isNetPayable ? `- ${formatInr(Math.abs(netBal))}` : formatInr(netBal)}
+              </Text>
             </View>
           </View>
         )}
@@ -421,10 +428,17 @@ export function BillPreview({ inv }: { inv: SavedSaleInvoice }) {
       <View style={billStyles.billBottomTwoCardsRow}>
         {/* Left: UPI QR Code Box - Hidden for Cash Sales */}
         {!inv.isCash ? (
-          <View style={billStyles.billUpiQrBoxLeft}>
+          <View style={[billStyles.billUpiQrBoxLeft, isNetPayable && { borderColor: '#fecaca', backgroundColor: '#fef2f2' }]}>
             <View style={{ flex: 1, justifyContent: 'center', gap: 1 }}>
-              <Text style={billStyles.billUpiTitle}>📲 Pay via UPI</Text>
-              <Text style={billStyles.billUpiAmtText}>Amt: <Text style={{ fontFamily: FONT.extraBold, color: '#0f172a', fontSize: 10.5 }}>{formatInr(payableAmt)}</Text></Text>
+              <Text style={[billStyles.billUpiTitle, isNetPayable && { color: '#dc2626' }]}>
+                {isNetPayable ? '↩️ Pay via UPI' : '📲 Pay via UPI'}
+              </Text>
+              <Text style={[billStyles.billUpiAmtText, isNetPayable && { color: '#dc2626' }]}>
+                {isNetPayable ? 'Net Payable:' : 'Net Receivable:'}
+              </Text>
+              <Text style={{ fontFamily: FONT.extraBold, color: isNetPayable ? '#dc2626' : '#15803d', fontSize: 11.5 }}>
+                {isNetPayable ? `- ${formatInr(Math.abs(netBal))}` : formatInr(netBal)}
+              </Text>
             </View>
             <View style={billStyles.billQrWrapper}>
               {resolvedQrUri ? (
@@ -898,9 +912,9 @@ export async function exportBillAsPdf(inv: SavedSaleInvoice, fileName?: string, 
               <span>Previous Balance</span>
               <strong>₹${inv.previousBalance.toLocaleString('en-IN')}</strong>
             </div>
-            <div class="summary-line summary-net">
-              <span>Net Receivable Balance</span>
-              <span>₹${inv.netReceivable.toLocaleString('en-IN')}</span>
+            <div class="summary-line summary-net" style="${Number(inv.netReceivable) < 0 ? 'border-top-color: #fecaca; background: #fef2f2;' : ''}">
+              <span style="${Number(inv.netReceivable) < 0 ? 'color: #dc2626; font-weight: 800;' : ''}">${Number(inv.netReceivable) < 0 ? 'Net Payable Balance' : 'Net Receivable Balance'}</span>
+              <span style="${Number(inv.netReceivable) < 0 ? 'color: #dc2626; font-weight: 800;' : ''}">${Number(inv.netReceivable) < 0 ? '- ₹' + Math.abs(Number(inv.netReceivable)).toLocaleString('en-IN') : '₹' + Number(inv.netReceivable).toLocaleString('en-IN')}</span>
             </div>
           </div>
 

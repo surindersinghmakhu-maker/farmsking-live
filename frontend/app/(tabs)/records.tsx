@@ -680,9 +680,15 @@ export default function RecordsScreen() {
     let loadedAmountReceived: string | null = null;
     let loadedPreviousBalance: number | null = null;
     let loadedReceivedMode: 'CASH' | 'UPI' = 'CASH';
+    // ✅ Track discount/delivery/notes/date from bill
+    let loadedDiscount: string = '';
+    let loadedDelivery: string = '';
+    let loadedNotes: string = '';
+    let loadedBillDate: string | null = null;
 
     const matchedBill = item.billId ? saleBillsMap.get(item.billId) : (item.billNo ? saleBillsMap.get(item.billNo) : (item.id ? saleBillsMap.get(item.id) : null));
 
+    // Step 1: Load from cache first (fast path)
     if (matchedBill) {
       realBillIdToUse = matchedBill.id;
       billNoToUse = matchedBill.billNo || billNoToUse;
@@ -695,6 +701,14 @@ export default function RecordsScreen() {
       if (matchedBill.amountReceivedMode) {
         loadedReceivedMode = matchedBill.amountReceivedMode as 'CASH' | 'UPI';
       }
+      if (matchedBill.discountAmount !== undefined && matchedBill.discountAmount !== null) {
+        loadedDiscount = Number(matchedBill.discountAmount) !== 0 ? String(Number(matchedBill.discountAmount)) : '';
+      }
+      if (matchedBill.deliveryCharge !== undefined && matchedBill.deliveryCharge !== null) {
+        loadedDelivery = Number(matchedBill.deliveryCharge) !== 0 ? String(Number(matchedBill.deliveryCharge)) : '';
+      }
+      if (matchedBill.notes) loadedNotes = matchedBill.notes;
+      if (matchedBill.createdAt) loadedBillDate = String(matchedBill.createdAt).slice(0, 10);
       if (Array.isArray(matchedBill.items) && matchedBill.items.length > 0) {
         loadedItems = (matchedBill.items as any[]).map((bi: any, idx: number) => ({
           id: bi.id || `bill-item-${idx}-${Date.now()}`,
@@ -706,10 +720,15 @@ export default function RecordsScreen() {
           amount: Number(bi.amount) || ((Number(bi.qty) || 1) * (Number(bi.rate) || 0)),
         }));
       }
-    } else if (item.billId || item.billNo || item.id) {
+    }
+
+    // Step 2: ALWAYS fetch from DB API for fresh/accurate data (discount, delivery, notes may be missing from cache)
+    const fetchBillId = (matchedBill?.id) || item.billId || item.billNo || item.id;
+    if (fetchBillId) {
       try {
-        const bill = await saleBillsApi.getSaleBill(item.billId || item.billNo || item.id!);
+        const bill = await saleBillsApi.getSaleBill(fetchBillId);
         if (bill) {
+          // Override with fresh data from DB
           realBillIdToUse = bill.id;
           billNoToUse = bill.billNo || billNoToUse;
           if (bill.amountReceived !== undefined && bill.amountReceived !== null) {
@@ -721,6 +740,15 @@ export default function RecordsScreen() {
           if ((bill as any).amountReceivedMode) {
             loadedReceivedMode = (bill as any).amountReceivedMode as 'CASH' | 'UPI';
           }
+          // ✅ Always override discount/delivery/notes from fresh API data
+          loadedDiscount = (bill.discountAmount !== undefined && bill.discountAmount !== null && Number(bill.discountAmount) !== 0)
+            ? String(Number(bill.discountAmount))
+            : '';
+          loadedDelivery = (bill.deliveryCharge !== undefined && bill.deliveryCharge !== null && Number(bill.deliveryCharge) !== 0)
+            ? String(Number(bill.deliveryCharge))
+            : '';
+          if (bill.notes !== undefined) loadedNotes = bill.notes || '';
+          if (bill.createdAt) loadedBillDate = String(bill.createdAt).slice(0, 10);
           if (Array.isArray(bill.items) && bill.items.length > 0) {
             loadedItems = (bill.items as any[]).map((bi: any, idx: number) => ({
               id: bi.id || `bill-item-${idx}-${Date.now()}`,
@@ -734,7 +762,7 @@ export default function RecordsScreen() {
           }
         }
       } catch {
-        // fallback
+        // API failed — keep using cache values loaded above
       }
     }
 
@@ -767,16 +795,20 @@ export default function RecordsScreen() {
     setCashBuyerName(item.buyerName || '');
     setCashBuyerMobile(item.partyMobile || '');
     setSaleItems(loadedItems);
-    setSaleDiscount(matchedBill?.discountAmount ? String(matchedBill.discountAmount) : '');
-    setSaleDelivery(matchedBill?.deliveryCharge ? String(matchedBill.deliveryCharge) : '');
+    // ✅ Use loaded values from bill (not just matchedBill)
+    setSaleDiscount(loadedDiscount);
+    setSaleDelivery(loadedDelivery);
     setEditingPreviousBalance(loadedPreviousBalance);
     const defaultRecd = !isParty ? String(item.totalAmount) : '';
     setAmountReceived(loadedAmountReceived !== null ? loadedAmountReceived : defaultRecd);
     setAmountReceivedMode(loadedReceivedMode);
-    setSaleDescription(matchedBill?.notes || item.notes || '');
-    // ✅ FIX: sale date ਵੀ form ਵਿੱਚ ਭਰੋ
-    if (item.saleDate) {
-      setSaleDate(item.saleDate.slice(0, 10));
+    setSaleDescription(loadedNotes || item.notes || '');
+    // ✅ FIX: sale date — prefer bill date, then item.saleDate, then today
+    const rawSaleDate = loadedBillDate || item.saleDate || item.createdAt;
+    if (rawSaleDate) {
+      setSaleDate(String(rawSaleDate).slice(0, 10));
+    } else {
+      setSaleDate(todayIso());
     }
     setEditingBillId(realBillIdToUse);
     setEditingBillNo(billNoToUse);
@@ -1043,28 +1075,85 @@ export default function RecordsScreen() {
       setBillPreviewVisible(true);
       return true;
     } catch {
-      Alert.alert('Bill Not Found', 'Could not load the saved bill for this sale.');
+      // Return false silently — caller (openBillPreviewForSale) will use saleBillsMap fallback
       return false;
     } finally {
       setIsLoadingBillPreview(false);
     }
   };
 
-  const openBillPreviewForSale = async (sale: { billId?: string; cropName: string; quantity: string; unit: string; pricePerUnit: string; totalAmount: number; buyerName: string; saleDate: string; amountReceived?: number | string; previousBalance?: number; amountReceivedMode?: 'CASH' | 'UPI' }) => {
+  const openBillPreviewForSale = async (sale: { billId?: string; billNo?: string; id?: string; cropName: string; quantity: string; unit: string; pricePerUnit: string; totalAmount: number; buyerName: string; saleDate: string; amountReceived?: number | string; previousBalance?: number; amountReceivedMode?: 'CASH' | 'UPI' }) => {
     tap();
-    if (sale.billId) {
-      await loadBillPreviewById(sale.billId);
+
+    const targetBillId = sale.billId || sale.id;
+
+    // ─── Helper: build invoice object from a SaleBill record ─────────────────────
+    const buildInvoiceFromBillRecord = (b: any): SavedSaleInvoice => {
+      const rcvdAmt = b.amountReceived !== undefined ? Number(b.amountReceived) : 0;
+      const totalAmt = Number(b.totalAmount || 0);
+      const prevBal = Number(b.previousBalance || 0);
+      const thisBal = b.thisSaleBalance !== undefined ? Number(b.thisSaleBalance) : Math.max(0, totalAmt - rcvdAmt);
+      const netRecv = b.netReceivable !== undefined ? Number(b.netReceivable) : prevBal + thisBal;
+      return {
+        billNo: b.billNo,
+        farmerName: b.farmerName || user?.name || 'Farmer',
+        partyId: b.partyId,
+        partyName: b.partyName,
+        partyMobile: b.partyMobile,
+        partyAddress: b.partyAddress,
+        isCash: b.isCash,
+        amountReceivedMode: (b as any).amountReceivedMode || 'CASH',
+        items: (b.items || []).map((i: any, idx: number) => ({ id: String(i.id || idx), ...i })),
+        totalItems: b.totalItems,
+        totalAmount: totalAmt,
+        amountReceived: rcvdAmt,
+        thisSaleBalance: thisBal,
+        previousBalance: prevBal,
+        netReceivable: netRecv,
+        discountAmount: b.discountAmount !== undefined ? Number(b.discountAmount) : 0,
+        deliveryCharge: b.deliveryCharge !== undefined ? Number(b.deliveryCharge) : 0,
+        notes: b.notes || undefined,
+        date: formatDateDDMMYYYY(b.createdAt || sale.saleDate),
+        time: b.createdAt ? new Date(b.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '',
+      };
+    };
+
+    if (targetBillId) {
+      // Step 1: Show cached data immediately for instant feedback
+      const cachedBill = saleBillsMap.get(targetBillId) || (sale.billNo ? saleBillsMap.get(sale.billNo) : null);
+      if (cachedBill) {
+        setBillPreviewInvoice(buildInvoiceFromBillRecord(cachedBill));
+        setBillPreviewVisible(true);
+      } else {
+        setIsLoadingBillPreview(true);
+      }
+
+      // Step 2: Fetch fresh data from DB (has all fields: discount, delivery, notes, previousBalance)
+      try {
+        const freshBill = await saleBillsApi.getSaleBill(targetBillId);
+        if (freshBill) {
+          setBillPreviewInvoice(buildInvoiceFromBillRecord(freshBill));
+          setBillPreviewVisible(true);
+        }
+      } catch {
+        // If fresh fetch failed but we already showed cached data, that's fine
+        if (!cachedBill) {
+          Alert.alert('Bill Not Found', 'Could not load the saved bill. Please check your connection.');
+        }
+      } finally {
+        setIsLoadingBillPreview(false);
+      }
       return;
     }
 
-    // Legacy sale with no linked bill — reconstruct a minimal single-item preview.
+    // ─── Legacy sale with no linked bill — reconstruct minimal preview ────────────
     const isCash = sale.buyerName === 'Cash Sale' || !sale.buyerName;
     const rcvdAmt = sale.amountReceived !== undefined && sale.amountReceived !== null ? Number(sale.amountReceived) : (isCash ? sale.totalAmount : 0);
     const prevBal = sale.previousBalance !== undefined ? Number(sale.previousBalance) : 0;
     const thisBal = Math.max(0, sale.totalAmount - rcvdAmt);
 
     setBillPreviewInvoice({
-      billNo: `FK-${sale.saleDate ? sale.saleDate.replace(/-/g, '') : '260901'}`,
+      billNo: sale.billNo || `FK-${sale.saleDate ? sale.saleDate.replace(/-/g, '') : '260901'}`,
       farmerName: user?.name || 'Farmer',
       partyName: isCash ? 'Cash' : sale.buyerName,
       isCash,
@@ -1593,6 +1682,7 @@ export default function RecordsScreen() {
     setEditingBillNo(null);
     setWasEditingBill(false);
     setEditingPreviousBalance(null);
+    setSaleDate(todayIso()); // ✅ Reset date to today for new sale
   };
 
   const getCropMaxRateDetails = (cropName: string, userSetPrice?: string | number) => {
@@ -1887,6 +1977,8 @@ export default function RecordsScreen() {
       queryClient.invalidateQueries({ queryKey: ['parties', 'statement'] });
 
       const now = new Date();
+      // Use the actual saleDate chosen in the form (not today's date) for the bill preview
+      const saleDateForBill = saleDate ? formatDateDDMMYYYY(saleDate) : now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
       const invoice: SavedSaleInvoice = {
         billNo,
         farmerName: billPayload.farmerName,
@@ -1905,7 +1997,7 @@ export default function RecordsScreen() {
         discountAmount: billPayload.discountAmount,
         deliveryCharge: billPayload.deliveryCharge,
         notes: billPayload.notes,
-        date: now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+        date: saleDateForBill,
         time: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
       };
       setWasEditingBill(Boolean(editingBillId));
@@ -3117,15 +3209,31 @@ export default function RecordsScreen() {
                               </View>
                             </TouchableOpacity>
                           </View>
-                          <TouchableOpacity
-                            style={{ marginTop: 10, paddingVertical: 8 }}
-                            onPress={() => {
-                              setShowSaleForm(false);
-                              resetSaleForm();
-                            }}
-                          >
-                            <Text style={{ color: '#64748b', fontFamily: FONT.bold, fontSize: 13 }}>Close</Text>
-                          </TouchableOpacity>
+
+                          {/* Action row: New Sale + Close */}
+                          <View style={{ flexDirection: 'row', gap: 10, marginTop: 10, width: '100%' }}>
+                            <TouchableOpacity
+                              style={{ flex: 1, paddingVertical: 9, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#16a34a', alignItems: 'center' }}
+                              onPress={() => {
+                                tap();
+                                resetSaleForm();
+                                setSaleStep('FORM');
+                              }}
+                              activeOpacity={0.8}
+                            >
+                              <Text style={{ color: '#16a34a', fontFamily: FONT.bold, fontSize: 13 }}>➕ New Sale</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={{ flex: 1, paddingVertical: 9, borderRadius: RADIUS.md, backgroundColor: '#f1f5f9', alignItems: 'center' }}
+                              onPress={() => {
+                                setShowSaleForm(false);
+                                resetSaleForm();
+                              }}
+                              activeOpacity={0.8}
+                            >
+                              <Text style={{ color: '#64748b', fontFamily: FONT.bold, fontSize: 13 }}>✕ Close</Text>
+                            </TouchableOpacity>
+                          </View>
                         </View>
                       </ScrollView>
                     )}

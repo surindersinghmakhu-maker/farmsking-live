@@ -1875,46 +1875,24 @@ export default function RecordsScreen() {
           });
           billNo = updatedBill.billNo || editingBillNo || billNo;
           realDbBillId = updatedBill.id;
-        } catch (err) {
-          console.warn('Update sale bill by ID failed:', err);
-          if (editingBillNo) {
-            try {
-              const updatedBill = await updateSaleBill.mutateAsync({
-                id: editingBillNo,
-                payload: billPayload,
-              });
-              billNo = updatedBill.billNo || editingBillNo;
-              realDbBillId = updatedBill.id;
-            } catch (err2) {
-              console.warn('Update sale bill by billNo failed:', err2);
-              try {
-                const newBill = await createSaleBill.mutateAsync(billPayload);
-                billNo = newBill.billNo || editingBillNo;
-                realDbBillId = newBill.id;
-              } catch (err3) {
-                console.error('Create sale bill fallback failed:', err3);
-                realDbBillId = undefined;
-              }
-            }
-          } else {
-            try {
-              const newBill = await createSaleBill.mutateAsync(billPayload);
-              billNo = newBill.billNo;
-              realDbBillId = newBill.id;
-            } catch (err2) {
-              console.error('Create sale bill failed:', err2);
-              realDbBillId = undefined;
-            }
-          }
+        } catch (err: any) {
+          console.error('Update sale bill failed:', err);
+          const errorMsg = err?.response?.data?.message || err?.message || 'Could not update sale bill on server.';
+          setSaleError(`❌ Failed to update sale bill: ${Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg}`);
+          setIsSavingSale(false);
+          return;
         }
       } else {
         try {
           const savedBill = await createSaleBill.mutateAsync(billPayload);
           billNo = savedBill.billNo;
           realDbBillId = savedBill.id;
-        } catch (err) {
+        } catch (err: any) {
           console.error('Create sale bill failed:', err);
-          realDbBillId = undefined;
+          const errorMsg = err?.response?.data?.message || err?.message || 'Could not save sale bill to server.';
+          setSaleError(`❌ Failed to save sale bill: ${Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg}`);
+          setIsSavingSale(false);
+          return;
         }
       }
 

@@ -1,0 +1,31 @@
+import { AdvisorType, SoilType, WaterType } from '@prisma/client';
+export declare class AdminUpdateUserDto {
+    name?: string;
+    mobile?: string;
+    email?: string;
+    photoUrl?: string;
+    pincode?: string;
+    postOffice?: string;
+    village?: string;
+    district?: string;
+    state?: string;
+    notificationsEnabled?: boolean;
+    whatsappGroupEnabled?: boolean;
+    whatsappGroupJid?: string;
+    specialization?: string;
+    bio?: string;
+    yearsExperience?: number;
+    advisorType?: AdvisorType;
+    qualification?: string;
+    profileTitle?: string;
+    sprayTankSizeL?: number;
+    soilType?: SoilType;
+    waterType?: WaterType;
+    alternativeMobile?: string;
+    panNumber?: string;
+    upiId?: string;
+    bankAccountNumber?: string;
+    bankIfsc?: string;
+    bankAccountHolderName?: string;
+    billPrintingAddress?: string;
+}

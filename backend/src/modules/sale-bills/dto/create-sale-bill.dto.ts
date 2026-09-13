@@ -4,106 +4,107 @@ import { ArrayMinSize, IsArray, IsBoolean, IsInt, IsNumber, IsOptional, IsString
 class SaleBillItemDto {
   @IsOptional()
   @IsString()
-  id?: string;
+  id?: string = undefined;
 
   @IsOptional()
   @IsString()
-  cropId?: string;
+  cropId?: string = undefined;
 
   @IsString()
-  cropName: string;
+  cropName: string = '';
 
   @IsString()
-  unit: string;
+  unit: string = '';
 
   @IsNumber()
-  qty: number;
+  qty: number = 0;
 
   @IsNumber()
-  rate: number;
+  rate: number = 0;
 
   @IsNumber()
-  amount: number;
+  amount: number = 0;
 
   @IsOptional()
   @IsString()
-  createdAt?: string;
+  createdAt?: string = undefined;
 
   @IsOptional()
   @IsString()
-  timestamp?: string;
+  timestamp?: string = undefined;
 }
 
 export class CreateSaleBillDto {
   @IsOptional()
   @IsString()
-  billNo?: string;
+  billNo?: string = undefined;
 
   @IsString()
-  farmerName: string;
+  farmerName: string = '';
 
   @IsOptional()
   @IsString()
-  partyId?: string;
+  partyId?: string = undefined;
 
   @IsString()
-  partyName: string;
+  partyName: string = '';
 
   @IsOptional()
   @IsString()
-  partyMobile?: string;
+  partyMobile?: string = undefined;
 
   @IsOptional()
   @IsString()
-  partyAddress?: string;
+  partyAddress?: string = undefined;
 
+  @IsOptional()
   @IsBoolean()
-  isCash: boolean;
+  isCash?: boolean = true;
 
   @IsOptional()
   @IsString()
-  amountReceivedMode?: string;
+  amountReceivedMode?: string = 'CASH';
 
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => SaleBillItemDto)
-  items: SaleBillItemDto[];
+  items: SaleBillItemDto[] = [];
 
   @IsNumber()
   @Min(0)
-  totalItems: number;
+  totalItems: number = 0;
 
   @IsNumber()
   @Min(0)
-  totalAmount: number;
+  totalAmount: number = 0;
 
   @IsNumber()
   @Min(0)
-  amountReceived: number;
+  amountReceived: number = 0;
 
   @IsNumber()
-  thisSaleBalance: number;
+  thisSaleBalance: number = 0;
 
   @IsNumber()
-  previousBalance: number;
+  previousBalance: number = 0;
 
   @IsNumber()
-  netReceivable: number;
+  netReceivable: number = 0;
 
   @IsOptional()
   @IsNumber()
-  discountAmount?: number;
+  discountAmount?: number = 0;
 
   @IsOptional()
   @IsNumber()
-  deliveryCharge?: number;
+  deliveryCharge?: number = 0;
 
   @IsOptional()
   @IsString()
-  notes?: string;
+  notes?: string = undefined;
 
   @IsOptional()
   @IsString()
-  createdAt?: string;
+  createdAt?: string = undefined;
 }

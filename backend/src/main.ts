@@ -52,6 +52,8 @@ async function bootstrap() {
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: false,
+      forbidUnknownValues: false,
+      skipMissingProperties: true,
       transform: true,
       transformOptions: { enableImplicitConversion: true },
     }),

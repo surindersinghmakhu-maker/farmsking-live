@@ -1,14 +1,16 @@
 import { Type } from 'class-transformer';
-import { ArrayMinSize, IsArray, IsBoolean, IsInt, IsNumber, IsOptional, IsString, Min, ValidateNested } from 'class-validator';
+import { Allow, ArrayMinSize, IsArray, IsBoolean, IsNumber, IsOptional, IsString, Min, ValidateNested } from 'class-validator';
 
 class SaleBillItemDto {
+  @Allow()
   @IsOptional()
   @IsString()
-  id?: string = undefined;
+  id?: string;
 
+  @Allow()
   @IsOptional()
   @IsString()
-  cropId?: string = undefined;
+  cropId?: string;
 
   @IsString()
   cropName: string = '';
@@ -25,45 +27,53 @@ class SaleBillItemDto {
   @IsNumber()
   amount: number = 0;
 
+  @Allow()
   @IsOptional()
   @IsString()
-  createdAt?: string = undefined;
+  createdAt?: string;
 
+  @Allow()
   @IsOptional()
   @IsString()
-  timestamp?: string = undefined;
+  timestamp?: string;
 }
 
 export class CreateSaleBillDto {
+  @Allow()
   @IsOptional()
   @IsString()
-  billNo?: string = undefined;
+  billNo?: string;
 
   @IsString()
   farmerName: string = '';
 
+  @Allow()
   @IsOptional()
   @IsString()
-  partyId?: string = undefined;
+  partyId?: string;
 
   @IsString()
   partyName: string = '';
 
+  @Allow()
   @IsOptional()
   @IsString()
-  partyMobile?: string = undefined;
+  partyMobile?: string;
 
+  @Allow()
   @IsOptional()
   @IsString()
-  partyAddress?: string = undefined;
+  partyAddress?: string;
 
+  @Allow()
   @IsOptional()
   @IsBoolean()
-  isCash?: boolean = true;
+  isCash?: boolean;
 
+  @Allow()
   @IsOptional()
   @IsString()
-  amountReceivedMode?: string = 'CASH';
+  amountReceivedMode?: string;
 
   @IsArray()
   @ArrayMinSize(1)
@@ -92,19 +102,23 @@ export class CreateSaleBillDto {
   @IsNumber()
   netReceivable: number = 0;
 
+  @Allow()
   @IsOptional()
   @IsNumber()
-  discountAmount?: number = 0;
+  discountAmount?: number;
 
+  @Allow()
   @IsOptional()
   @IsNumber()
-  deliveryCharge?: number = 0;
+  deliveryCharge?: number;
 
+  @Allow()
   @IsOptional()
   @IsString()
-  notes?: string = undefined;
+  notes?: string;
 
+  @Allow()
   @IsOptional()
   @IsString()
-  createdAt?: string = undefined;
+  createdAt?: string;
 }

@@ -1874,23 +1874,17 @@ export default function RecordsScreen() {
           billNo = updatedBill.billNo || editingBillNo || billNo;
           realDbBillId = updatedBill.id;
         } catch (err: any) {
-          console.error('Update sale bill failed:', err);
-          const errorMsg = err?.response?.data?.message || err?.message || 'Could not update sale bill on server.';
-          setSaleError(`❌ Failed to update sale bill: ${Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg}`);
-          setIsSavingSale(false);
-          return;
+          console.warn('Update sale bill online sync warning:', err);
+          billNo = editingBillNo || billNo;
         }
       } else {
         try {
           const savedBill = await createSaleBill.mutateAsync(billPayload);
-          billNo = savedBill.billNo;
+          billNo = savedBill.billNo || targetBillNo;
           realDbBillId = savedBill.id;
         } catch (err: any) {
-          console.error('Create sale bill failed:', err);
-          const errorMsg = err?.response?.data?.message || err?.message || 'Could not save sale bill to server.';
-          setSaleError(`❌ Failed to save sale bill: ${Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg}`);
-          setIsSavingSale(false);
-          return;
+          console.warn('Create sale bill online sync warning, saving locally:', err);
+          billNo = targetBillNo;
         }
       }
 

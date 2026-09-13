@@ -572,22 +572,22 @@ export default function RecordsScreen() {
     }, 0);
   }, [activeSalesList, saleBillsMap]);
 
-  // Automatically calculate next bill number by finding max numerical bill number and adding +1
+  // Automatically calculate next bill number adhering to standard FK-YYMM-XXX sequential rules
   const nextSuggestedBillNo = useMemo(() => {
-    let maxNum = 0;
-    let maxDigitsLength = 6;
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const prefix = `FK-${yy}${mm}-`;
 
+    let maxSeq = 0;
     const checkBillNo = (bNo?: string | null) => {
       if (!bNo) return;
       const cleanStr = String(bNo).trim().toUpperCase();
-      const match = cleanStr.match(/\d+/);
+      const match = cleanStr.match(/\d+$/);
       if (match) {
         const num = parseInt(match[0], 10);
-        if (!isNaN(num) && num > maxNum && num < 99999999 && match[0].length <= 8) {
-          maxNum = num;
-          if (match[0].length > maxDigitsLength) {
-            maxDigitsLength = match[0].length;
-          }
+        if (!isNaN(num) && num > maxSeq && num < 99999) {
+          maxSeq = num;
         }
       }
     };
@@ -598,11 +598,9 @@ export default function RecordsScreen() {
       checkBillNo(s.billId);
     });
 
-    if (maxNum === 0) {
-      maxNum = 1000;
-    }
-    const nextNum = maxNum + 1;
-    return `FK-${String(nextNum).padStart(maxDigitsLength, '0')}`;
+    const nextSeq = maxSeq + 1;
+    const padded = String(nextSeq).padStart(3, '0');
+    return `${prefix}${padded}`;
   }, [rawSaleBillsList, allSalesRecords]);
 
   // 3. Group sales Buyer-wise

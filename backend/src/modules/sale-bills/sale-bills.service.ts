@@ -28,15 +28,15 @@ export class SaleBillsService {
     });
 
     let nextSeq = countThisMonth + 1;
-    let paddedSeq = String(nextSeq).padStart(2, '0');
-    let candidate = `FK-${prefix}${paddedSeq}`;
+    let paddedSeq = String(nextSeq).padStart(3, '0');
+    let candidate = `FK-${prefix}-${paddedSeq}`;
 
     // Guarantee 100% Unique Bill Number across concurrent requests
     let exists = await this.prisma.saleBill.findFirst({ where: { billNo: candidate } });
     while (exists) {
       nextSeq++;
-      paddedSeq = String(nextSeq).padStart(2, '0');
-      candidate = `FK-${prefix}${paddedSeq}`;
+      paddedSeq = String(nextSeq).padStart(3, '0');
+      candidate = `FK-${prefix}-${paddedSeq}`;
       exists = await this.prisma.saleBill.findFirst({ where: { billNo: candidate } });
     }
 

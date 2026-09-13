@@ -555,10 +555,11 @@ export default function ShopScreen() {
   const [couponCode, setCouponCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState<{ code: string; amount: number } | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
-  const [requestHardCopyDelivery, setRequestHardCopyDelivery] = useState(false);
+  // 2-Step Checkout Wizard Step State
+  const [checkoutStep, setCheckoutStep] = useState<1 | 2>(1);
 
   const discountAmount = appliedDiscount?.amount ?? 0;
-  const deliveryFeeAmount = requestHardCopyDelivery ? 100 : 0;
+  const deliveryFeeAmount = (subtotal || 0) >= 999 ? 0 : 100;
   const finalPayableAmount = Math.max((subtotal || 0) - discountAmount + deliveryFeeAmount, 0);
 
   const composeAddress = (addr: (typeof savedAddresses)[number]) => {
@@ -1316,11 +1317,6 @@ export default function ShopScreen() {
       if (paymentMethod === 'DIRECT_QR' && utrTransactionId.trim()) {
         addressParts.push(`[UPI UTR: ${utrTransactionId.trim()}]`);
       }
-      if (requestHardCopyDelivery) {
-        addressParts.push(`[HARD-COPY COUPON CARD COURIER (+₹100 Fee)]`);
-      } else {
-        addressParts.push(`[FREE WHATSAPP COUPON DELIVERY]`);
-      }
       const finalAddressNote = addressParts.join(' | ');
 
       const order = await createOrder.mutateAsync({
@@ -1337,6 +1333,7 @@ export default function ShopScreen() {
       setUtrTransactionId('');
       setCouponCode('');
       setAppliedDiscount(null);
+      setCheckoutStep(1);
 
       const msg = `Order #${placedOrderNum} confirmed successfully! ${paymentMethod === 'DIRECT_QR' ? 'UTR transaction reference saved.' : ''}`;
       if (Platform.OS === 'web') {
@@ -2458,348 +2455,360 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
               )}
 
               {items.length > 0 && (
-                <View style={[styles.checkoutBox, premiumShadow('#0f172a', 'md'), { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 16, borderWidth: 1.5, borderColor: '#cbd5e1', gap: 16 }]}>
-                  
-                  {/* Checkout Header Banner */}
-                  <View style={{ backgroundColor: '#0f172a', borderRadius: 10, padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Ionicons name="bag-check" size={22} color="#facc15" />
-                      <View>
-                        <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' }}>⚡ Quick 3-Step Checkout</Text>
-                        <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#94a3b8' }}>Verified Safe & Fast Village Delivery</Text>
+                checkoutStep === 1 ? (
+                  <View style={[styles.checkoutBox, premiumShadow('#0f172a', 'md'), { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 16, borderWidth: 1.5, borderColor: '#cbd5e1', gap: 16 }]}>
+                    {/* Checkout Header Banner */}
+                    <View style={{ backgroundColor: '#0f172a', borderRadius: 10, padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Ionicons name="bag-check" size={22} color="#facc15" />
+                        <View>
+                          <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' }}>⚡ Checkout — Step 1 of 2</Text>
+                          <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#94a3b8' }}>Review Bill & Discount Coupon</Text>
+                        </View>
+                      </View>
+                      <View style={{ backgroundColor: '#15803d', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill }}>
+                        <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: '#ffffff' }}>Step 1 of 2</Text>
                       </View>
                     </View>
-                    <View style={{ backgroundColor: '#15803d', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill }}>
-                      <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: '#ffffff' }}>Step-by-Step</Text>
-                    </View>
-                  </View>
 
-                  {/* 📍 STEP 1: DELIVERY ADDRESS */}
-                  <View style={{ backgroundColor: '#f8fafc', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#e2e8f0', gap: 8 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#cbd5e1', paddingBottom: 6 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#15803d', alignItems: 'center', justifyContent: 'center' }}>
+                    {/* 🎟️ & 🧾 STEP 1: DISCOUNT COUPON & BILL SUMMARY */}
+                    <View style={{ backgroundColor: '#ffffff', borderRadius: 12, padding: 14, borderWidth: 1.5, borderColor: '#bbf7d0', borderLeftWidth: 5, borderLeftColor: '#15803d', gap: 12 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 6 }}>
+                        <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#b45309', alignItems: 'center', justifyContent: 'center' }}>
                           <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#ffffff' }}>1</Text>
                         </View>
-                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>📍 Select Delivery Address</Text>
+                        <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' }}>🎟️ Have a Discount Coupon?</Text>
                       </View>
-                      <TouchableOpacity onPress={() => handleOpenEditAddressModal(null)}>
-                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#15803d' }}>+ Add New</Text>
+
+                      {/* Coupon Section */}
+                      {appliedDiscount ? (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f0fdf4', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#bbf7d0', paddingVertical: 8, paddingHorizontal: 10 }}>
+                          <Ionicons name="pricetag" size={16} color="#16a34a" />
+                          <Text style={{ flex: 1, fontSize: 12, fontFamily: FONT.bold, color: '#15803d' }}>
+                            Discount Code '{appliedDiscount.code}' Applied — Savings: ₹{appliedDiscount.amount.toLocaleString('en-IN')}
+                          </Text>
+                          <TouchableOpacity onPress={handleRemoveCoupon}>
+                            <Ionicons name="close-circle" size={18} color="#94a3b8" />
+                          </TouchableOpacity>
+                        </View>
+                      ) : (
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                          <TextInput
+                            style={[styles.modalInput, { flex: 1, height: 40, textTransform: 'uppercase', fontFamily: FONT.bold, fontSize: 12.5 }]}
+                            placeholder="Enter coupon code (e.g. KISAAN50)"
+                            placeholderTextColor="#94a3b8"
+                            autoCapitalize="characters"
+                            value={couponCode}
+                            onChangeText={setCouponCode}
+                          />
+                          <TouchableOpacity
+                            style={{ backgroundColor: '#15803d', paddingHorizontal: 16, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center' }}
+                            disabled={!couponCode.trim() || couponPreview.isPending}
+                            onPress={handleApplyCoupon}
+                          >
+                            {couponPreview.isPending ? (
+                              <ActivityIndicator color="#ffffff" size="small" />
+                            ) : (
+                              <Text style={{ color: '#ffffff', fontSize: 12.5, fontFamily: FONT.bold }}>Apply Code</Text>
+                            )}
+                          </TouchableOpacity>
+                        </View>
+                      )}
+                      {couponError ? <Text style={{ color: '#dc2626', fontSize: 11.5, fontFamily: FONT.medium }}>{couponError}</Text> : null}
+
+                      {/* Live Bill Summary Breakdown */}
+                      <View style={{ gap: 6, marginTop: 4, backgroundColor: '#f8fafc', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                        <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a', marginBottom: 2 }}>🧾 Order Bill Summary:</Text>
+                        
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#64748b' }}>Items Subtotal:</Text>
+                          <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#334155' }}>₹{(subtotal || 0).toLocaleString('en-IN')}</Text>
+                        </View>
+
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: deliveryFeeAmount === 0 ? '#16a34a' : '#64748b' }}>
+                            Delivery Fee:
+                          </Text>
+                          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: deliveryFeeAmount === 0 ? '#16a34a' : '#0f172a' }}>
+                            {deliveryFeeAmount === 0 ? 'FREE (Order >= ₹999) 🎉' : '+₹100 (Free above ₹999)'}
+                          </Text>
+                        </View>
+
+                        {appliedDiscount ? (
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#16a34a' }}>Coupon Savings:</Text>
+                            <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#16a34a' }}>-₹{discountAmount.toLocaleString('en-IN')}</Text>
+                          </View>
+                        ) : null}
+
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#cbd5e1', paddingTop: 8, marginTop: 4 }}>
+                          <Text style={{ fontFamily: FONT.extraBold, fontSize: 15, color: '#0f172a' }}>Total Amount Payable:</Text>
+                          <Text style={{ fontFamily: FONT.extraBold, fontSize: 20, color: '#15803d' }}>
+                            ₹{finalPayableAmount.toLocaleString('en-IN')}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* Prominent Button to Step 2 */}
+                      <TouchableOpacity
+                        style={[styles.placeOrderBtn, { backgroundColor: '#15803d', marginTop: 4, paddingVertical: 14, borderRadius: RADIUS.md }]}
+                        activeOpacity={0.88}
+                        onPress={() => {
+                          tap();
+                          setCheckoutStep(2);
+                        }}
+                      >
+                        <Text style={[styles.placeOrderBtnText, { fontSize: 15, fontFamily: FONT.extraBold }]}>
+                          Proceed to Select Address & Payment ➔
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ) : (
+                  /* 📍 & 💳 STEP 2 PAGE: DELIVERY ADDRESS, PAYMENT & ORDER CONFIRMATION */
+                  <View style={[styles.checkoutBox, premiumShadow('#0f172a', 'md'), { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 16, borderWidth: 1.5, borderColor: '#cbd5e1', gap: 16 }]}>
+                    {/* Checkout Header Banner */}
+                    <View style={{ backgroundColor: '#15803d', borderRadius: 10, padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Ionicons name="location" size={22} color="#ffffff" />
+                        <View>
+                          <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' }}>⚡ Checkout — Step 2 of 2</Text>
+                          <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#dcfce7' }}>Select Address & Payment Mode</Text>
+                        </View>
+                      </View>
+                      <TouchableOpacity
+                        style={{ backgroundColor: '#ffffff22', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill }}
+                        onPress={() => { tap(); setCheckoutStep(1); }}
+                      >
+                        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>← Edit Bill</Text>
                       </TouchableOpacity>
                     </View>
 
-                    {savedAddresses.length > 0 ? (
-                      <View style={{ gap: 8 }}>
-                        {savedAddresses.map((addr) => {
-                          const isSelected = selectedAddressId === addr.id;
-                          return (
-                            <TouchableOpacity
-                              key={addr.id}
-                              style={{
-                                flexDirection: 'row',
-                                alignItems: 'flex-start',
-                                gap: 10,
-                                padding: 10,
-                                borderRadius: RADIUS.md,
-                                borderWidth: 1.5,
-                                borderColor: isSelected ? '#15803d' : '#cbd5e1',
-                                backgroundColor: isSelected ? '#f0fdf4' : '#ffffff',
-                              }}
-                              onPress={() => {
-                                setSelectedAddressId(addr.id);
-                                setDeliveryAddress(composeAddress(addr));
-                              }}
-                            >
-                              <Ionicons
-                                name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
-                                size={20}
-                                color={isSelected ? '#15803d' : '#94a3b8'}
-                                style={{ marginTop: 2 }}
-                              />
-                              <View style={{ flex: 1 }}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isSelected ? '#15803d' : '#0f172a' }}>
-                                    🏷️ {addr.tag || 'Address'}
-                                  </Text>
-                                  {isSelected && (
-                                    <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 }}>
-                                      <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#15803d' }}>SELECTED</Text>
-                                    </View>
-                                  )}
-                                </View>
-                                <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#334155', marginTop: 2, lineHeight: 16 }}>
-                                  {composeAddress(addr)}
-                                </Text>
-                              </View>
+                    {/* 📍 STEP 1 IN PAGE 2: DELIVERY ADDRESS SELECTION */}
+                    <View style={{ backgroundColor: '#f8fafc', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#e2e8f0', gap: 8 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#cbd5e1', paddingBottom: 6 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#15803d', alignItems: 'center', justifyContent: 'center' }}>
+                            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#ffffff' }}>1</Text>
+                          </View>
+                          <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>📍 Select Delivery Address</Text>
+                        </View>
+                        <TouchableOpacity onPress={() => handleOpenEditAddressModal(null)}>
+                          <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#15803d' }}>+ Add New</Text>
+                        </TouchableOpacity>
+                      </View>
+
+                      {savedAddresses.length > 0 ? (
+                        <View style={{ gap: 8 }}>
+                          {savedAddresses.map((addr) => {
+                            const isSelected = selectedAddressId === addr.id;
+                            return (
                               <TouchableOpacity
-                                style={{ padding: 4 }}
-                                onPress={(e) => {
-                                  e.stopPropagation();
-                                  handleOpenEditAddressModal(addr);
+                                key={addr.id}
+                                style={{
+                                  flexDirection: 'row',
+                                  alignItems: 'flex-start',
+                                  gap: 10,
+                                  padding: 10,
+                                  borderRadius: RADIUS.md,
+                                  borderWidth: 1.5,
+                                  borderColor: isSelected ? '#15803d' : '#cbd5e1',
+                                  backgroundColor: isSelected ? '#f0fdf4' : '#ffffff',
+                                }}
+                                onPress={() => {
+                                  setSelectedAddressId(addr.id);
+                                  setDeliveryAddress(composeAddress(addr));
                                 }}
                               >
-                                <Ionicons name="pencil" size={16} color={isSelected ? '#15803d' : '#64748b'} />
+                                <Ionicons
+                                  name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
+                                  size={20}
+                                  color={isSelected ? '#15803d' : '#94a3b8'}
+                                  style={{ marginTop: 2 }}
+                                />
+                                <View style={{ flex: 1 }}>
+                                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: isSelected ? '#15803d' : '#0f172a' }}>
+                                      🏷️ {addr.tag || 'Address'}
+                                    </Text>
+                                    {isSelected && (
+                                      <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4 }}>
+                                        <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#15803d' }}>SELECTED</Text>
+                                      </View>
+                                    )}
+                                  </View>
+                                  <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#334155', marginTop: 2, lineHeight: 16 }}>
+                                    {composeAddress(addr)}
+                                  </Text>
+                                </View>
+                                <TouchableOpacity
+                                  style={{ padding: 4 }}
+                                  onPress={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenEditAddressModal(addr);
+                                  }}
+                                >
+                                  <Ionicons name="pencil" size={16} color={isSelected ? '#15803d' : '#64748b'} />
+                                </TouchableOpacity>
                               </TouchableOpacity>
-                            </TouchableOpacity>
-                          );
-                        })}
-                      </View>
-                    ) : (
-                      <TouchableOpacity
-                        style={{ flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, backgroundColor: '#ffffff', borderRadius: 8, borderWidth: 1, borderColor: '#15803d', borderStyle: 'dashed' }}
-                        onPress={() => handleOpenEditAddressModal(null)}
-                      >
-                        <Ionicons name="location-sharp" size={20} color="#15803d" />
-                        <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#15803d' }}>+ Add Registered Delivery Address</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-
-                  {/* 🎟️ STEP 2: DISCOUNT COUPON */}
-                  <View style={{ backgroundColor: '#f8fafc', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#e2e8f0', gap: 6 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#b45309', alignItems: 'center', justifyContent: 'center' }}>
-                        <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#ffffff' }}>2</Text>
-                      </View>
-                      <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>🎟️ Have a Discount Coupon?</Text>
-                    </View>
-
-                    {appliedDiscount ? (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f0fdf4', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#bbf7d0', paddingVertical: 8, paddingHorizontal: 10 }}>
-                        <Ionicons name="pricetag" size={16} color="#16a34a" />
-                        <Text style={{ flex: 1, fontSize: 12, fontFamily: FONT.bold, color: '#15803d' }}>
-                          Discount Code '{appliedDiscount.code}' Applied — Savings: ₹{appliedDiscount.amount.toLocaleString('en-IN')}
-                        </Text>
-                        <TouchableOpacity onPress={handleRemoveCoupon}>
-                          <Ionicons name="close-circle" size={18} color="#94a3b8" />
-                        </TouchableOpacity>
-                      </View>
-                    ) : (
-                      <View style={{ flexDirection: 'row', gap: 8, marginTop: 2 }}>
-                        <TextInput
-                          style={[styles.modalInput, { flex: 1, height: 40, textTransform: 'uppercase', fontFamily: FONT.bold, fontSize: 12.5 }]}
-                          placeholder="Enter coupon code (e.g. KISAAN50)"
-                          placeholderTextColor="#94a3b8"
-                          autoCapitalize="characters"
-                          value={couponCode}
-                          onChangeText={setCouponCode}
-                        />
+                            );
+                          })}
+                        </View>
+                      ) : (
                         <TouchableOpacity
-                          style={{ backgroundColor: '#15803d', paddingHorizontal: 16, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center' }}
-                          disabled={!couponCode.trim() || couponPreview.isPending}
-                          onPress={handleApplyCoupon}
+                          style={{ flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, backgroundColor: '#ffffff', borderRadius: 8, borderWidth: 1, borderColor: '#15803d', borderStyle: 'dashed' }}
+                          onPress={() => handleOpenEditAddressModal(null)}
                         >
-                          {couponPreview.isPending ? (
-                            <ActivityIndicator color="#ffffff" size="small" />
-                          ) : (
-                            <Text style={{ color: '#ffffff', fontSize: 12.5, fontFamily: FONT.bold }}>Apply Code</Text>
-                          )}
+                          <Ionicons name="location-sharp" size={20} color="#15803d" />
+                          <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#15803d' }}>+ Add Registered Delivery Address</Text>
                         </TouchableOpacity>
-                      </View>
-                    )}
-                    {couponError ? <Text style={{ color: '#dc2626', fontSize: 11.5, fontFamily: FONT.medium }}>{couponError}</Text> : null}
-                  </View>
-
-                  {/* 💳 STEP 2.5: COUPON & PLAN HARD-COPY DELIVERY OPTION */}
-                  <View style={{ backgroundColor: requestHardCopyDelivery ? '#fff7ed' : '#f8fafc', borderRadius: 12, padding: 12, borderWidth: 1.5, borderColor: requestHardCopyDelivery ? '#ea580c' : '#e2e8f0', gap: 8 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, paddingRight: 8 }}>
-                        <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: requestHardCopyDelivery ? '#ffedd5' : '#e2e8f0', alignItems: 'center', justifyContent: 'center' }}>
-                          <Ionicons name="card" size={16} color={requestHardCopyDelivery ? '#c2410c' : '#64748b'} />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: requestHardCopyDelivery ? '#9a3412' : '#0f172a' }}>
-                            💳 Printed Hard-Copy Card Courier (+₹100)
-                          </Text>
-                          <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 }}>
-                            {requestHardCopyDelivery
-                              ? 'Physical printed coupon card will be couriered to your address (+₹100 fee added).'
-                              : 'By default, your coupon/plan pass is sent FREE instantly on WhatsApp upon order confirmation.'}
-                          </Text>
-                        </View>
-                      </View>
-                      <Switch
-                        value={requestHardCopyDelivery}
-                        onValueChange={(val) => {
-                          tap();
-                          setRequestHardCopyDelivery(val);
-                        }}
-                        trackColor={{ false: '#cbd5e1', true: '#ffedd5' }}
-                        thumbColor={requestHardCopyDelivery ? '#ea580c' : '#94a3b8'}
-                      />
+                      )}
                     </View>
 
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: requestHardCopyDelivery ? '#ffedd5' : '#f1f5f9', padding: 8, borderRadius: 8 }}>
-                      <Ionicons name={requestHardCopyDelivery ? 'cube-outline' : 'logo-whatsapp'} size={15} color={requestHardCopyDelivery ? '#c2410c' : '#16a34a'} />
-                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: requestHardCopyDelivery ? '#9a3412' : '#166534', flex: 1 }}>
-                        {requestHardCopyDelivery
-                          ? '📦 Hard-Copy Delivery Selected: ₹100 courier fee added to cart total.'
-                          : '📱 Free Digital Delivery: Coupon code sent via WhatsApp on order confirmation.'}
+                    {/* 💳 STEP 2 IN PAGE 2: SELECT PAYMENT MODE */}
+                    <View style={{ backgroundColor: '#f8fafc', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#e2e8f0', gap: 10 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#4338ca', alignItems: 'center', justifyContent: 'center' }}>
+                          <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#ffffff' }}>2</Text>
+                        </View>
+                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>💳 Select Payment Mode *</Text>
+                      </View>
+
+                      <View style={{ flexDirection: 'column', gap: 8 }}>
+                        <TouchableOpacity
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 10,
+                            padding: 12,
+                            borderRadius: RADIUS.md,
+                            borderWidth: 1.5,
+                            borderColor: paymentMethod === 'DIRECT_QR' ? '#0284c7' : '#cbd5e1',
+                            backgroundColor: paymentMethod === 'DIRECT_QR' ? '#f0f9ff' : '#ffffff',
+                          }}
+                          onPress={() => setPaymentMethod('DIRECT_QR')}
+                        >
+                          <Ionicons name={paymentMethod === 'DIRECT_QR' ? 'checkmark-circle' : 'ellipse-outline'} size={20} color={paymentMethod === 'DIRECT_QR' ? '#0284c7' : '#94a3b8'} />
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: paymentMethod === 'DIRECT_QR' ? '#0369a1' : '#0f172a' }}>
+                              📱 Direct UPI QR Code Payment (PhonePe / GPay / Paytm)
+                            </Text>
+                            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 }}>
+                              Instant payment via QR Code scan. Enter 12-digit UTR to confirm order immediately.
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
+
+                        {onlinePayEnabled && (
+                          <TouchableOpacity
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              gap: 10,
+                              padding: 12,
+                              borderRadius: RADIUS.md,
+                              borderWidth: 1.5,
+                              borderColor: paymentMethod === 'ONLINE' ? '#6366f1' : '#cbd5e1',
+                              backgroundColor: paymentMethod === 'ONLINE' ? '#eeef2' : '#ffffff',
+                            }}
+                            onPress={() => setPaymentMethod('ONLINE')}
+                          >
+                            <Ionicons name={paymentMethod === 'ONLINE' ? 'checkmark-circle' : 'ellipse-outline'} size={20} color={paymentMethod === 'ONLINE' ? '#6366f1' : '#94a3b8'} />
+                            <View style={{ flex: 1 }}>
+                              <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: paymentMethod === 'ONLINE' ? '#4338ca' : '#0f172a' }}>
+                                💳 Online Payment Gateway (PhonePe / Debit Card / Netbanking)
+                              </Text>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 }}>
+                                Automatic online checkout via integrated payment gateway.
+                              </Text>
+                            </View>
+                          </TouchableOpacity>
+                        )}
+
+                        {codEnabled && (
+                          <TouchableOpacity
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              gap: 10,
+                              padding: 12,
+                              borderRadius: RADIUS.md,
+                              borderWidth: 1.5,
+                              borderColor: paymentMethod === 'COD' ? '#16a34a' : '#cbd5e1',
+                              backgroundColor: paymentMethod === 'COD' ? '#f0fdf4' : '#ffffff',
+                            }}
+                            onPress={() => setPaymentMethod('COD')}
+                          >
+                            <Ionicons name={paymentMethod === 'COD' ? 'checkmark-circle' : 'ellipse-outline'} size={20} color={paymentMethod === 'COD' ? '#16a34a' : '#94a3b8'} />
+                            <View style={{ flex: 1 }}>
+                              <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: paymentMethod === 'COD' ? '#15803d' : '#0f172a' }}>
+                                📦 Cash on Delivery
+                              </Text>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 }}>
+                                Pay in cash when order arrives at your village doorstep.
+                              </Text>
+                            </View>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    </View>
+
+                    {/* Total Amount Summary Bar */}
+                    <View style={{ backgroundColor: '#ffffff', borderRadius: 10, padding: 12, borderWidth: 1.5, borderColor: '#bbf7d0', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={{ fontFamily: FONT.extraBold, fontSize: 14, color: '#0f172a' }}>Total Amount Payable:</Text>
+                      <Text style={{ fontFamily: FONT.extraBold, fontSize: 20, color: '#15803d' }}>
+                        ₹{finalPayableAmount.toLocaleString('en-IN')}
                       </Text>
                     </View>
-                  </View>
 
-                  {/* 🧾 STEP 3: ORDER BILL SUMMARY */}
-                  <View style={{ backgroundColor: '#ffffff', borderRadius: 12, padding: 14, borderWidth: 1.5, borderColor: '#bbf7d0', borderLeftWidth: 5, borderLeftColor: '#15803d', gap: 6 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 6 }}>
-                      <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#0284c7', alignItems: 'center', justifyContent: 'center' }}>
-                        <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#ffffff' }}>3</Text>
-                      </View>
-                      <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>🧾 Order Bill Summary</Text>
-                    </View>
-
-                    <View style={{ gap: 4, marginTop: 2 }}>
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#64748b' }}>Items Subtotal:</Text>
-                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#334155' }}>₹{finalPayableAmount.toLocaleString('en-IN')}</Text>
-                      </View>
-
-                      {appliedDiscount ? (
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#16a34a' }}>Coupon Discount:</Text>
-                          <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#16a34a' }}>-₹{discountAmount.toLocaleString('en-IN')}</Text>
-                        </View>
-                      ) : null}
-
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: requestHardCopyDelivery ? '#c2410c' : '#16a34a' }}>
-                          {requestHardCopyDelivery ? 'Courier Fee (Hard-Copy Card):' : 'Delivery Fee:'}
-                        </Text>
-                        <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: requestHardCopyDelivery ? '#c2410c' : '#16a34a' }}>
-                          {requestHardCopyDelivery ? '+₹100 (Printed Card Courier)' : 'FREE Instant WhatsApp Delivery 📱'}
-                        </Text>
-                      </View>
-
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#cbd5e1', paddingTop: 8, marginTop: 4 }}>
-                        <Text style={{ fontFamily: FONT.extraBold, fontSize: 16, color: '#0f172a' }}>Total Amount Payable:</Text>
-                        <Text style={{ fontFamily: FONT.extraBold, fontSize: 22, color: '#15803d' }}>
-                          ₹{finalPayableAmount.toLocaleString('en-IN')}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  {/* 💳 STEP 4: PAYMENT METHOD & PLACE ORDER */}
-                  <View style={{ backgroundColor: '#f8fafc', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#e2e8f0', gap: 10 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#4338ca', alignItems: 'center', justifyContent: 'center' }}>
-                        <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#ffffff' }}>4</Text>
-                      </View>
-                      <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>💳 Select Payment Mode *</Text>
-                    </View>
-
-                    <View style={{ flexDirection: 'column', gap: 8 }}>
-                      <TouchableOpacity
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          gap: 10,
-                          padding: 12,
-                          borderRadius: RADIUS.md,
-                          borderWidth: 1.5,
-                          borderColor: paymentMethod === 'DIRECT_QR' ? '#0284c7' : '#cbd5e1',
-                          backgroundColor: paymentMethod === 'DIRECT_QR' ? '#f0f9ff' : '#ffffff',
-                        }}
-                        onPress={() => setPaymentMethod('DIRECT_QR')}
-                      >
-                        <Ionicons name={paymentMethod === 'DIRECT_QR' ? 'checkmark-circle' : 'ellipse-outline'} size={20} color={paymentMethod === 'DIRECT_QR' ? '#0284c7' : '#94a3b8'} />
-                        <View style={{ flex: 1 }}>
-                          <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: paymentMethod === 'DIRECT_QR' ? '#0369a1' : '#0f172a' }}>
-                            📱 Direct UPI QR Code Payment (PhonePe / GPay / Paytm)
-                          </Text>
-                          <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 }}>
-                            Instant payment via QR Code scan. Enter 12-digit UTR to confirm order immediately.
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-
-                      {onlinePayEnabled && (
-                        <TouchableOpacity
-                          style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 10,
-                            padding: 12,
-                            borderRadius: RADIUS.md,
-                            borderWidth: 1.5,
-                            borderColor: paymentMethod === 'ONLINE' ? '#6366f1' : '#cbd5e1',
-                            backgroundColor: paymentMethod === 'ONLINE' ? '#eeef2' : '#ffffff',
-                          }}
-                          onPress={() => setPaymentMethod('ONLINE')}
-                        >
-                          <Ionicons name={paymentMethod === 'ONLINE' ? 'checkmark-circle' : 'ellipse-outline'} size={20} color={paymentMethod === 'ONLINE' ? '#6366f1' : '#94a3b8'} />
-                          <View style={{ flex: 1 }}>
-                            <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: paymentMethod === 'ONLINE' ? '#4338ca' : '#0f172a' }}>
-                              💳 Online Payment Gateway (PhonePe / Debit Card / Netbanking)
-                            </Text>
-                            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 }}>
-                              Automatic online checkout via integrated payment gateway.
-                            </Text>
-                          </View>
-                        </TouchableOpacity>
-                      )}
-
-                      {codEnabled && (
-                        <TouchableOpacity
-                          style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 10,
-                            padding: 12,
-                            borderRadius: RADIUS.md,
-                            borderWidth: 1.5,
-                            borderColor: paymentMethod === 'COD' ? '#16a34a' : '#cbd5e1',
-                            backgroundColor: paymentMethod === 'COD' ? '#f0fdf4' : '#ffffff',
-                          }}
-                          onPress={() => setPaymentMethod('COD')}
-                        >
-                          <Ionicons name={paymentMethod === 'COD' ? 'checkmark-circle' : 'ellipse-outline'} size={20} color={paymentMethod === 'COD' ? '#16a34a' : '#94a3b8'} />
-                          <View style={{ flex: 1 }}>
-                            <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: paymentMethod === 'COD' ? '#15803d' : '#0f172a' }}>
-                              📦 Cash on Delivery
-                            </Text>
-                            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 }}>
-                              Pay in cash when order arrives at your village doorstep.
-                            </Text>
-                          </View>
-                        </TouchableOpacity>
-                      )}
-                    </View>
-
-                    {/* Helper Instruction Banner */}
+                    {/* Helper Banner */}
                     <View style={{ backgroundColor: '#fffbebe6', borderRadius: 8, padding: 8, borderWidth: 1, borderColor: '#fef3c7', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <Ionicons name="information-circle" size={16} color="#b45309" />
                       <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#92400e', flex: 1 }}>
                         {paymentMethod === 'DIRECT_QR'
-                          ? '👇 Tap "Scan QR & Confirm Order" button below. Scan the QR code and enter 12-digit UTR.'
+                          ? '👇 Tap button below to scan QR code and confirm order.'
                           : paymentMethod === 'ONLINE'
-                          ? '👇 Tap "Pay Online & Confirm Order" button below.'
-                          : '👇 Tap "Confirm Cash on Delivery Order" button below to complete your order.'}
+                          ? '👇 Tap button below to open Online Payment Gateway.'
+                          : '👇 Tap button below to place your Cash on Delivery order.'}
                       </Text>
                     </View>
 
-                    {/* Prominent Action Button */}
-                    <TouchableOpacity
-                      style={[styles.placeOrderBtn, { backgroundColor: '#15803d', marginTop: 2, paddingVertical: 14, borderRadius: RADIUS.md }]}
-                      activeOpacity={0.88}
-                      onPress={() => {
-                        if (paymentMethod === 'DIRECT_QR') {
-                          setIsQrPaymentModalOpen(true);
-                        } else {
-                          handlePlaceOrderDirect();
-                        }
-                      }}
-                    >
-                      <Text style={[styles.placeOrderBtnText, { fontSize: 15, fontFamily: FONT.extraBold }]}>
-                        {paymentMethod === 'DIRECT_QR'
-                          ? `📱 Scan QR & Confirm Order (₹${finalPayableAmount.toLocaleString('en-IN')})`
-                          : paymentMethod === 'ONLINE'
-                          ? `💳 Pay Online & Confirm Order (₹${finalPayableAmount.toLocaleString('en-IN')})`
-                          : `📦 Confirm Cash on Delivery Order (₹${finalPayableAmount.toLocaleString('en-IN')})`}
-                      </Text>
-                    </TouchableOpacity>
+                    {/* Actions Row */}
+                    <View style={{ flexDirection: 'row', gap: 10 }}>
+                      <TouchableOpacity
+                        style={{ flex: 1, backgroundColor: '#f1f5f9', borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderWidth: 1, borderColor: '#cbd5e1' }}
+                        onPress={() => { tap(); setCheckoutStep(1); }}
+                      >
+                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#475569' }}>← Back</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[styles.placeOrderBtn, { flex: 2.5, backgroundColor: '#15803d', paddingVertical: 14, borderRadius: RADIUS.md }]}
+                        activeOpacity={0.88}
+                        onPress={() => {
+                          if (!deliveryAddress.trim()) {
+                            setCheckoutError('Please select or add a delivery address.');
+                            return;
+                          }
+                          setCheckoutError(null);
+                          if (paymentMethod === 'DIRECT_QR') {
+                            setIsQrPaymentModalOpen(true);
+                          } else {
+                            handlePlaceOrderDirect();
+                          }
+                        }}
+                      >
+                        <Text style={[styles.placeOrderBtnText, { fontSize: 14, fontFamily: FONT.extraBold }]}>
+                          {paymentMethod === 'DIRECT_QR'
+                            ? `📱 Scan QR & Confirm (₹${finalPayableAmount.toLocaleString('en-IN')})`
+                            : paymentMethod === 'ONLINE'
+                            ? `💳 Pay Online (₹${finalPayableAmount.toLocaleString('en-IN')})`
+                            : `📦 Confirm COD Order (₹${finalPayableAmount.toLocaleString('en-IN')})`}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                </View>
+                )
               )}
             </ScrollView>
           ) : (

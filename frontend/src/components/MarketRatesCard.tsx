@@ -91,6 +91,19 @@ export function MarketRatesCard() {
 
     const uniqueSubcategoryCrops = Array.from(subcategoryMap.values());
 
+    if (uniqueSubcategoryCrops.length === 0 && data?.rates && data.rates.length > 0) {
+      return data.rates.map((r) => ({
+        displayTitle: r.cropName,
+        unit: r.unit || 'Quintal',
+        localMinRate: r.localMinRate,
+        localMaxRate: r.localMaxRate,
+        localAvgRate: r.localAvgRate,
+        nationalMinRate: r.nationalMinRate,
+        nationalMaxRate: r.nationalMaxRate,
+        nationalAvgRate: r.nationalAvgRate,
+      }));
+    }
+
     return uniqueSubcategoryCrops.map((userCrop) => {
       let displayTitle = userCrop.cropName.split('(')[0].trim();
       if (userCrop.variety && displayTitle.toLowerCase().includes(userCrop.variety.toLowerCase())) {

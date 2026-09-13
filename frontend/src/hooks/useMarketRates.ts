@@ -8,5 +8,7 @@ export function useMyCropRates() {
     staleTime: 30_000, // Cache for 30 seconds
     refetchInterval: 60_000, // Refresh automatically every 60 seconds (1 minute)
     refetchOnWindowFocus: true,
+    retry: 1,
   });
 }
+

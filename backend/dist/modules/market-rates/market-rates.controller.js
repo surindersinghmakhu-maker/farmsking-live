@@ -14,7 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MarketRatesController = void 0;
 const common_1 = require("@nestjs/common");
-const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
+const optional_jwt_auth_guard_1 = require("../../common/guards/optional-jwt-auth.guard");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const market_rates_service_1 = require("./market-rates.service");
 let MarketRatesController = class MarketRatesController {
@@ -35,7 +35,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], MarketRatesController.prototype, "getMyCropRates", null);
 exports.MarketRatesController = MarketRatesController = __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(optional_jwt_auth_guard_1.OptionalJwtAuthGuard),
     (0, common_1.Controller)('market-rates'),
     __metadata("design:paramtypes", [market_rates_service_1.MarketRatesService])
 ], MarketRatesController);

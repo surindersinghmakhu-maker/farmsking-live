@@ -15,7 +15,7 @@ export interface CropRateSummary {
 export declare class MarketRatesService {
     private readonly prisma;
     constructor(prisma: PrismaService);
-    getMyCropRates(user: AuthUser): Promise<{
+    getMyCropRates(user?: AuthUser | null): Promise<{
         state: string | null;
         rates: CropRateSummary[];
     }>;

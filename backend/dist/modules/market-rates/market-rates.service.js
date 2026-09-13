@@ -19,27 +19,32 @@ let MarketRatesService = class MarketRatesService {
         this.prisma = prisma;
     }
     async getMyCropRates(user) {
-        const profile = await this.prisma.user.findUnique({
-            where: { id: user.id },
-            select: { state: true },
-        });
+        const profile = user?.id
+            ? await this.prisma.user.findUnique({
+                where: { id: user.id },
+                select: { state: true },
+            })
+            : null;
         const userState = (profile?.state || 'Punjab').trim();
-        let cropCycles = await this.prisma.cropCycle.findMany({
-            where: {
-                deletedAt: null,
-                status: { in: ['HARVESTING', 'ACTIVE'] },
-                plot: { deletedAt: null, farm: { deletedAt: null, ownerId: user.id } },
-            },
-            select: { cropName: true, unit: true, pricePerUnit: true },
-        });
-        if (cropCycles.length === 0) {
+        let cropCycles = [];
+        if (user?.id) {
             cropCycles = await this.prisma.cropCycle.findMany({
                 where: {
                     deletedAt: null,
+                    status: { in: ['HARVESTING', 'ACTIVE'] },
                     plot: { deletedAt: null, farm: { deletedAt: null, ownerId: user.id } },
                 },
                 select: { cropName: true, unit: true, pricePerUnit: true },
             });
+            if (cropCycles.length === 0) {
+                cropCycles = await this.prisma.cropCycle.findMany({
+                    where: {
+                        deletedAt: null,
+                        plot: { deletedAt: null, farm: { deletedAt: null, ownerId: user.id } },
+                    },
+                    select: { cropName: true, unit: true, pricePerUnit: true },
+                });
+            }
         }
         const distinctCropMap = new Map();
         for (const c of cropCycles) {

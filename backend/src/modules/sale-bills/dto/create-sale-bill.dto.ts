@@ -4,6 +4,10 @@ import { ArrayMinSize, IsArray, IsBoolean, IsInt, IsNumber, IsOptional, IsString
 class SaleBillItemDto {
   @IsOptional()
   @IsString()
+  id?: string;
+
+  @IsOptional()
+  @IsString()
   cropId?: string;
 
   @IsString()
@@ -20,6 +24,14 @@ class SaleBillItemDto {
 
   @IsNumber()
   amount: number;
+
+  @IsOptional()
+  @IsString()
+  createdAt?: string;
+
+  @IsOptional()
+  @IsString()
+  timestamp?: string;
 }
 
 export class CreateSaleBillDto {

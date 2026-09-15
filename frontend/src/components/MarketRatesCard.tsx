@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, Linking, Modal, Platform, Pressable, Share, S
 import { Ionicons } from '@expo/vector-icons';
 import ViewShot, { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
+import { BrandLogo } from './BrandLogo';
 import { useMyCropRates } from '../hooks/useMarketRates';
 import { useAuth } from '../store/auth-context';
 import { useCrops } from '../store/crops-context';
@@ -244,25 +245,31 @@ export function MarketRatesCard() {
 
       // Header Logo & Brand Name (Left)
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 24px sans-serif';
-      ctx.fillText('👑 FarmsKing', 24, 38);
+      ctx.font = 'bold 22px sans-serif';
+      ctx.fillText('👑 FarmsKing', 24, 36);
 
       ctx.fillStyle = '#bbf7d0';
-      ctx.font = 'bold 13.5px sans-serif';
-      ctx.fillText('Crop Ledger', 24, 58);
+      ctx.font = 'bold 11.5px sans-serif';
+      ctx.fillText('Smart Farming, Better Future', 24, 56);
 
-      // Right Side Header Tagline Pill Container
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+      // Center Header Badge: CROP LEDGER
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
       if (typeof (ctx as any).roundRect === 'function') {
-        (ctx as any).roundRect(330, 20, 286, 34, 17);
+        (ctx as any).roundRect(240, 22, 140, 30, 15);
         ctx.fill();
       } else {
-        ctx.fillRect(330, 20, 286, 34);
+        ctx.fillRect(240, 22, 140, 30);
       }
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 13.5px sans-serif';
+      ctx.font = 'bold 13px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText("India's Best Digital Farmers App", 473, 42);
+      ctx.fillText('CROP LEDGER', 310, 42);
+
+      // Right Side Header Tagline (Highlighted without card fill)
+      ctx.fillStyle = '#fef08a';
+      ctx.font = 'bold 12.5px sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText("India's Best Digital Farmers App", 616, 42);
       ctx.textAlign = 'left'; // Reset text alignment
 
       // Crop Name Dedicated Card Container
@@ -662,14 +669,15 @@ export function MarketRatesCard() {
             <View style={styles.posterHeader}>
               <View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={{ fontSize: 20 }}>👑</Text>
+                  <BrandLogo size={26} useHdQuality useFastBundledOnly />
                   <Text style={styles.posterBrandName}>FarmsKing</Text>
                 </View>
-                <Text style={styles.posterBrandSub}>Crop Ledger</Text>
+                <Text style={styles.posterBrandSub}>Smart Farming, Better Future</Text>
               </View>
-              <View style={styles.posterHeaderRightBadge}>
-                <Text style={styles.posterRightSub}>🇮🇳 India's Best Digital Farmers App</Text>
+              <View style={styles.posterCenterBadge}>
+                <Text style={styles.posterCenterBadgeText}>CROP LEDGER</Text>
               </View>
+              <Text style={styles.posterRightSub}>India's Best Digital Farmers App</Text>
             </View>
 
             {/* Crop Title & Unit Dedicated Card */}

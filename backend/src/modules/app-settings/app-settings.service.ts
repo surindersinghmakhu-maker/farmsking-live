@@ -33,16 +33,7 @@ export class AppSettingsService {
       },
     });
 
-    let logoUrl = settings.logoUrl;
-    if (!logoUrl) {
-      const superAdmin = await this.prisma.user.findFirst({
-        where: { role: 'SUPER_ADMIN', deletedAt: null },
-        select: { photoUrl: true },
-      });
-      if (superAdmin?.photoUrl) {
-        logoUrl = superAdmin.photoUrl;
-      }
-    }
+    const logoUrl = settings.logoUrl || null;
 
     const result = {
       ...settings,
@@ -114,7 +105,6 @@ export class AppSettingsService {
         if (dto.upiId !== undefined) userData.upiId = dto.upiId;
         if (dto.tagline !== undefined) userData.bio = dto.tagline;
         if (dto.appName !== undefined) userData.specialization = dto.appName;
-        if (dto.logoUrl !== undefined) userData.photoUrl = dto.logoUrl;
 
         // If adminMobile is specified, handle unique constraint gracefully
         if (dto.adminMobile !== undefined && dto.adminMobile) {

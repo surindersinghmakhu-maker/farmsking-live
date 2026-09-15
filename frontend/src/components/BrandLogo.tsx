@@ -61,15 +61,15 @@ export function BrandLogo({
     ? LOGO_ICON_FAST
     : LOGO_STANDARD;
 
-  // Prefer Database logoUrl when present; fall back to local official emblem
-  const finalSource = (logoUri && !imageError)
+  // Prefer Database logoUrl when present (and not forcing fast bundled asset); fall back to local official emblem
+  const finalSource = (logoUri && !imageError && !useFastBundledOnly)
     ? { uri: logoUri }
     : resolveAsset(bundledAsset);
 
   return (
     <Image
       source={finalSource}
-      style={[{ width: size, height: size, borderRadius: size / 4 }, style as StyleProp<ImageStyle>]}
+      style={[{ width: size, height: size }, style as StyleProp<ImageStyle>]}
       resizeMode="contain"
       onError={() => {
         setImageError(true);

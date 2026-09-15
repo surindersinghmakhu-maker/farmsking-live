@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { OperatorPermission, Prisma, Role } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
@@ -55,6 +55,8 @@ const SAFE_USER_SELECT = {
   operatorPermissions: true,
   upiId: true,
   billPrintingAddress: true,
+  printName: true,
+  printAddress: true,
   createdAt: true,
   deletedAt: true,
 } as const;
@@ -65,12 +67,25 @@ function generateTempPassword(): string {
 }
 
 @Injectable()
-export class UsersService {
+export class UsersService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
     private readonly walletService: WalletService,
     private readonly whatsappGroupSyncService: WhatsAppGroupSyncService,
   ) {}
+
+  async onModuleInit() {
+    try {
+      await this.prisma.$executeRaw`
+        UPDATE "User"
+        SET "printName" = COALESCE("printName", "name"),
+            "printAddress" = COALESCE("printAddress", "billPrintingAddress", CONCAT_WS(', ', NULLIF("village", ''), NULLIF("district", ''), NULLIF("state", '')))
+        WHERE "printName" IS NULL OR "printAddress" IS NULL;
+      `;
+    } catch (e) {
+      console.error('Failed to backfill user printName / printAddress:', e);
+    }
+  }
 
   async list(query: ListUsersQueryDto) {
     const page = query.page ?? 1;
@@ -655,6 +670,8 @@ export class UsersService {
         ...(dto.panNumber !== undefined ? { panNumber: dto.panNumber } : {}),
         ...(dto.upiId !== undefined ? { upiId: dto.upiId } : {}),
         ...(dto.billPrintingAddress !== undefined ? { billPrintingAddress: dto.billPrintingAddress } : {}),
+        ...(dto.printName !== undefined ? { printName: dto.printName } : {}),
+        ...(dto.printAddress !== undefined ? { printAddress: dto.printAddress } : {}),
         ...(dto.bankAccountNumber !== undefined ? { bankAccountNumber: dto.bankAccountNumber } : {}),
         ...(dto.bankIfsc !== undefined ? { bankIfsc: dto.bankIfsc } : {}),
         ...(dto.bankAccountHolderName !== undefined ? { bankAccountHolderName: dto.bankAccountHolderName } : {}),
@@ -798,6 +815,8 @@ export class UsersService {
         ...(dto.weatherAlertMaxTempC !== undefined ? { weatherAlertMaxTempC: dto.weatherAlertMaxTempC } : {}),
         ...(dto.weatherAlertRainEnabled !== undefined ? { weatherAlertRainEnabled: dto.weatherAlertRainEnabled } : {}),
         ...(dto.billPrintingAddress !== undefined ? { billPrintingAddress: dto.billPrintingAddress } : {}),
+        ...(dto.printName !== undefined ? { printName: dto.printName } : {}),
+        ...(dto.printAddress !== undefined ? { printAddress: dto.printAddress } : {}),
       },
       select: {
         ...SAFE_USER_SELECT,
@@ -823,6 +842,8 @@ export class UsersService {
         ...(dto.district !== undefined ? { district: dto.district } : {}),
         ...(dto.state !== undefined ? { state: dto.state } : {}),
         ...(dto.billPrintingAddress !== undefined ? { billPrintingAddress: dto.billPrintingAddress } : {}),
+        ...(dto.printName !== undefined ? { printName: dto.printName } : {}),
+        ...(dto.printAddress !== undefined ? { printAddress: dto.printAddress } : {}),
       },
       select: {
         ...SAFE_USER_SELECT,

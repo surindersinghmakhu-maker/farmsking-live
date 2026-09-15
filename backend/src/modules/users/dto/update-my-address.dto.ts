@@ -58,4 +58,12 @@ export class UpdateMyAddressDto {
   @IsOptional()
   @IsString()
   billPrintingAddress?: string;
+
+  @IsOptional()
+  @IsString()
+  printName?: string;
+
+  @IsOptional()
+  @IsString()
+  printAddress?: string;
 }

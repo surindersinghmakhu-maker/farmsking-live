@@ -136,6 +136,9 @@ export interface AdminUpdateUserPayload {
   alternativeMobile?: string;
   panNumber?: string;
   upiId?: string;
+  billPrintingAddress?: string;
+  printName?: string;
+  printAddress?: string;
   bankAccountNumber?: string;
   bankIfsc?: string;
   bankAccountHolderName?: string;
@@ -172,6 +175,8 @@ export interface UpdateFarmerProfilePayload {
   state?: string;
   upiId?: string;
   billPrintingAddress?: string;
+  printName?: string;
+  printAddress?: string;
 }
 
 export async function getMyProfileStatus(): Promise<FarmerProfileStatus> {
@@ -215,6 +220,8 @@ export interface UpdateMyAddressPayload {
   district?: string;
   state?: string;
   billPrintingAddress?: string;
+  printName?: string;
+  printAddress?: string;
   notificationsEnabled?: boolean;
   whatsappGroupEnabled?: boolean;
   /** Null clears the threshold (alert off); a number sets and enables it. */

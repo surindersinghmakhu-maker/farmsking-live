@@ -63,6 +63,8 @@ export interface User {
   waterType?: WaterType | null;
   upiId?: string | null;
   billPrintingAddress?: string | null;
+  printName?: string | null;
+  printAddress?: string | null;
   specialization?: string | null;
   bio?: string | null;
   yearsExperience?: number | null;
@@ -121,6 +123,8 @@ export interface AdminUser {
   panNumber?: string | null;
   upiId?: string | null;
   billPrintingAddress?: string | null;
+  printName?: string | null;
+  printAddress?: string | null;
   bankAccountNumber?: string | null;
   bankIfsc?: string | null;
   bankAccountHolderName?: string | null;

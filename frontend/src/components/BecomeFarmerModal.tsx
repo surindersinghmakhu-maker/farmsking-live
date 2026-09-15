@@ -40,19 +40,14 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
   const [sprayTankSizeL, setSprayTankSizeL] = useState<SprayTankSizeL | null>(
     (user as any)?.sprayTankSizeL ?? 20,
   );
-  const [soilType, setSoilType] = useState<SoilType | null>((user as any)?.soilType ?? null);
-  const [waterType, setWaterType] = useState<WaterType | null>((user as any)?.waterType ?? null);
   const [upiId, setUpiId] = useState<string>((user as any)?.upiId ?? '');
-  const [billPrintingAddress, setBillPrintingAddress] = useState<string>((user as any)?.billPrintingAddress ?? '');
+  const [printName, setPrintName] = useState<string>(user?.printName || user?.name || '');
+  const [printAddress, setPrintAddress] = useState<string>(
+    user?.printAddress || user?.billPrintingAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || ''
+  );
   const [village, setVillage] = useState<string>(user?.village ?? '');
   const [district, setDistrict] = useState<string>(user?.district ?? '');
-
-  const [isSoilPickerOpen, setIsSoilPickerOpen] = useState(false);
-  const [isWaterPickerOpen, setIsWaterPickerOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const selectedSoilLabel = SOIL_TYPE_OPTIONS.find((o) => o.value === soilType)?.label;
-  const selectedWaterLabel = WATER_TYPE_OPTIONS.find((o) => o.value === waterType)?.label;
 
   const isValid = !!sprayTankSizeL;
 
@@ -67,10 +62,10 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
     try {
       const updatedUser = await becomeFarmer.mutateAsync({
         sprayTankSizeL: sprayTankSizeL!,
-        soilType: soilType ?? undefined,
-        waterType: waterType ?? undefined,
         upiId: upiId.trim() || undefined,
-        billPrintingAddress: billPrintingAddress.trim() || undefined,
+        printName: printName.trim() || undefined,
+        printAddress: printAddress.trim() || undefined,
+        billPrintingAddress: printAddress.trim() || undefined,
         village: village.trim() || undefined,
         district: district.trim() || undefined,
       });
@@ -151,52 +146,6 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
               </View>
             </View>
 
-            {/* Soil Type */}
-            <View style={styles.fieldSection}>
-              <Text style={styles.label}>
-                Soil Type (ਮਿੱਟੀ ਦੀ ਕਿਸਮ)
-              </Text>
-              <TouchableOpacity
-                style={styles.selectField}
-                activeOpacity={0.8}
-                onPress={() => {
-                  tap();
-                  setIsSoilPickerOpen(true);
-                }}
-              >
-                <View style={styles.selectLeft}>
-                  <Ionicons name="earth" size={18} color="#64748b" />
-                  <Text style={[styles.selectText, !selectedSoilLabel && styles.placeholder]}>
-                    {selectedSoilLabel ?? 'Select Soil Type (ਮਿੱਟੀ ਚੁਣੋ)'}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-down" size={18} color="#64748b" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Water Source */}
-            <View style={styles.fieldSection}>
-              <Text style={styles.label}>
-                Water Source (ਪਾਣੀ / ਸਿੰਚਾਈ ਦਾ ਸਰੋਤ)
-              </Text>
-              <TouchableOpacity
-                style={styles.selectField}
-                activeOpacity={0.8}
-                onPress={() => {
-                  tap();
-                  setIsWaterPickerOpen(true);
-                }}
-              >
-                <View style={styles.selectLeft}>
-                  <Ionicons name="water" size={18} color="#0284c7" />
-                  <Text style={[styles.selectText, !selectedWaterLabel && styles.placeholder]}>
-                    {selectedWaterLabel ?? 'Select Water Source (ਪਾਣੀ ਦਾ ਸਰੋਤ ਚੁਣੋ)'}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-down" size={18} color="#64748b" />
-              </TouchableOpacity>
-            </View>
-
             {/* UPI ID for Bill QR Code */}
             <View style={[styles.fieldSection, styles.upiHighlightBox]}>
               <View style={styles.upiHeaderRow}>
@@ -221,18 +170,47 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
               </View>
             </View>
 
-            {/* Bill Printing Address */}
-            <View style={styles.fieldSection}>
-              <Text style={styles.label}>Bill Printing Address (ਬਿੱਲ 'ਤੇ ਪ੍ਰਿੰਟ ਹੋਣ ਵਾਲਾ ਪਤਾ)</Text>
-              <View style={styles.inputContainer}>
-                <Ionicons name="document-text-outline" size={18} color="#64748b" />
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="e.g. Grain Market, Shop No. 12, Phul"
-                  placeholderTextColor="#94a3b8"
-                  value={billPrintingAddress}
-                  onChangeText={setBillPrintingAddress}
-                />
+            {/* Use in Printing Section */}
+            <View style={[styles.fieldSection, { backgroundColor: '#f0fdf4', borderRadius: RADIUS.md, padding: 12, borderWidth: 1.5, borderColor: '#bbf7d0' }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                <Ionicons name="print" size={18} color="#15803d" />
+                <Text style={[styles.label, { color: '#15803d', marginBottom: 0 }]}>
+                  Use in Printing (ਬਿੱਲ ਪ੍ਰਿੰਟਿੰਗ ਜਾਣਕਾਰੀ)
+                </Text>
+              </View>
+
+              <Text style={{ fontSize: 11.5, color: '#166534', fontFamily: FONT.medium, marginBottom: 8 }}>
+                ਬਿੱਲ / ਰਸੀਦਾਂ ਪ੍ਰਿੰਟ ਕਰਨ ਸਮੇਂ ਹੇਠ ਲਿਖਿਆ ਫਰਮ/ਕਿਸਾਨ ਨਾਮ ਅਤੇ ਪਤਾ ਪ੍ਰਿੰਟ ਹੋਵੇਗਾ।
+              </Text>
+
+              {/* Bill Printing Name */}
+              <View style={{ marginBottom: 10 }}>
+                <Text style={[styles.label, { fontSize: 12, color: '#0f172a' }]}>Bill Printing Name (Printed on Bill)</Text>
+                <View style={[styles.inputContainer, { backgroundColor: '#ffffff' }]}>
+                  <Ionicons name="business-outline" size={18} color="#64748b" />
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="e.g. Surinder Agro Farm / Farmer Name"
+                    placeholderTextColor="#94a3b8"
+                    value={printName}
+                    onChangeText={setPrintName}
+                  />
+                </View>
+              </View>
+
+              {/* Bill Printing Address */}
+              <View>
+                <Text style={[styles.label, { fontSize: 12, color: '#0f172a' }]}>Bill Printing Address (Printed on Bill)</Text>
+                <View style={[styles.inputContainer, { backgroundColor: '#ffffff' }]}>
+                  <Ionicons name="document-text-outline" size={18} color="#64748b" />
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="e.g. Grain Market, Shop No. 12, Phul"
+                    placeholderTextColor="#94a3b8"
+                    value={printAddress}
+                    onChangeText={setPrintAddress}
+                  />
+                </View>
               </View>
             </View>
 
@@ -294,24 +272,6 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
           </View>
         </View>
       </View>
-
-      {/* Pickers */}
-      <PickerModal
-        visible={isSoilPickerOpen}
-        title="Select Soil Type (ਮਿੱਟੀ ਦੀ ਕਿਸਮ)"
-        options={SOIL_TYPE_OPTIONS}
-        selectedValue={soilType}
-        onSelect={(value) => setSoilType(value)}
-        onClose={() => setIsSoilPickerOpen(false)}
-      />
-      <PickerModal
-        visible={isWaterPickerOpen}
-        title="Select Water Source (ਪਾਣੀ ਦਾ ਸਰੋਤ)"
-        options={WATER_TYPE_OPTIONS}
-        selectedValue={waterType}
-        onSelect={(value) => setWaterType(value)}
-        onClose={() => setIsWaterPickerOpen(false)}
-      />
     </Modal>
   );
 }

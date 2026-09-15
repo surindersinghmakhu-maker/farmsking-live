@@ -72,9 +72,9 @@ export function UniversalVoucherSlipModal({ visible, data, onClose }: UniversalV
 
   const appName = settings?.appName || 'FarmsKing';
   const tagline = settings?.tagline || 'Smart Farming, Better Future';
-  const farmerName = data.farmerName || user?.name || 'Farmer';
+  const farmerName = data.farmerName || user?.printName || user?.name || 'Farmer';
   const farmerPhone = data.farmerPhone || user?.mobile || '';
-  const farmerVillage = data.farmerVillage || user?.village || '';
+  const farmerVillage = data.farmerVillage || user?.printAddress || user?.billPrintingAddress || user?.village || '';
 
   // Determine theme colors based on voucher type
   const isReceipt = data.voucherType === 'PAYMENT_IN';

@@ -392,6 +392,8 @@ model User {
   /// Business Partner / Advisor payout profile — all required before their wallet can be withdrawn from (see WithdrawalsService.create).
   upiId                     String?
   billPrintingAddress       String?
+  printName                 String?
+  printAddress              String?
   panNumber                 String?
   alternativeMobile         String?
   bankAccountNumber         String?

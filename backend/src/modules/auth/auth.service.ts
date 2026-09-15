@@ -31,6 +31,10 @@ const SAFE_USER_SELECT = {
   soilType: true,
   waterType: true,
   preferredLanguage: true,
+  upiId: true,
+  billPrintingAddress: true,
+  printName: true,
+  printAddress: true,
   createdAt: true,
 } as const;
 
@@ -84,12 +88,15 @@ export class AuthService {
     const kingId = await generateUniqueKingId(this.prisma);
     const securityAnswerHash = dto.securityAnswer ? await argon2.hash(dto.securityAnswer.trim().toLowerCase()) : undefined;
 
+    const defaultAddress = [dto.village, dto.district, dto.state].filter(Boolean).join(', ');
     const user = await this.prisma.user.create({
       data: {
         kingId,
         mobile: dto.mobile,
         passwordHash,
         name: dto.name,
+        printName: dto.printName || dto.name,
+        printAddress: dto.printAddress || defaultAddress || null,
         pincode: dto.pincode,
         postOffice: dto.postOffice,
         village: dto.village,

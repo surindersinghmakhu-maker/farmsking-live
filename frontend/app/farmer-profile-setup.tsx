@@ -30,28 +30,22 @@ export default function FarmerProfileSetupScreen() {
   const updateAddress = useUpdateMyAddress();
 
   const [sprayTankSizeL, setSprayTankSizeL] = useState<SprayTankSizeL | null>(status?.profile.sprayTankSizeL ?? null);
-  const [soilType, setSoilType] = useState<SoilType | null>(status?.profile.soilType ?? null);
-  const [waterType, setWaterType] = useState<WaterType | null>(status?.profile.waterType ?? null);
-  const [billPrintingAddress, setBillPrintingAddress] = useState<string>(user?.billPrintingAddress ?? '');
+  const [printName, setPrintName] = useState<string>(user?.printName || user?.name || '');
+  const [printAddress, setPrintAddress] = useState<string>(
+    user?.printAddress || user?.billPrintingAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || ''
+  );
   const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState<boolean>(user?.whatsappGroupEnabled ?? true);
-
-  const [isSoilPickerOpen, setIsSoilPickerOpen] = useState(false);
-  const [isWaterPickerOpen, setIsWaterPickerOpen] = useState(false);
 
   const hasSeededFromStatus = useRef(false);
   useEffect(() => {
     if (status && !hasSeededFromStatus.current) {
       hasSeededFromStatus.current = true;
       setSprayTankSizeL(status.profile.sprayTankSizeL);
-      setSoilType(status.profile.soilType);
-      setWaterType(status.profile.waterType);
-      if (user?.billPrintingAddress) setBillPrintingAddress(user.billPrintingAddress);
+      if (user?.printName) setPrintName(user.printName);
+      if (user?.printAddress || user?.billPrintingAddress) setPrintAddress(user.printAddress || user.billPrintingAddress || '');
       if (user?.whatsappGroupEnabled !== undefined) setWhatsappGroupEnabled(user.whatsappGroupEnabled);
     }
   }, [status, user]);
-
-  const selectedSoilLabel = SOIL_TYPE_OPTIONS.find((o) => o.value === soilType)?.label;
-  const selectedWaterLabel = WATER_TYPE_OPTIONS.find((o) => o.value === waterType)?.label;
 
   const canSave = !!sprayTankSizeL;
 
@@ -70,12 +64,14 @@ export default function FarmerProfileSetupScreen() {
       await Promise.all([
         updateProfile.mutateAsync({
           sprayTankSizeL: sprayTankSizeL!,
-          soilType: soilType ?? undefined,
-          waterType: waterType ?? undefined,
-          billPrintingAddress: billPrintingAddress.trim() || undefined,
+          printName: printName.trim() || undefined,
+          printAddress: printAddress.trim() || undefined,
+          billPrintingAddress: printAddress.trim() || undefined,
         }),
         updateAddress.mutateAsync({
-          billPrintingAddress: billPrintingAddress.trim() || undefined,
+          printName: printName.trim() || undefined,
+          printAddress: printAddress.trim() || undefined,
+          billPrintingAddress: printAddress.trim() || undefined,
           whatsappGroupEnabled,
         }),
       ]);
@@ -99,85 +95,89 @@ export default function FarmerProfileSetupScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
 
-      {/* Spray Tank Size */}
-      <View style={styles.section}>
-        <Text style={styles.sectionLabel}>Spray Tank Size *</Text>
-        <View style={styles.chipRow}>
-          {SPRAY_TANK_SIZE_OPTIONS.map((size) => {
-            const isSelected = size === sprayTankSizeL;
-            return (
-              <TouchableOpacity
-                key={size}
-                style={[styles.chip, isSelected && { backgroundColor: theme.primary, borderColor: theme.primary }]}
-                onPress={() => setSprayTankSizeL(size)}
-              >
-                <Text style={[styles.chipText, isSelected && { color: '#ffffff' }]}>{size} Litre</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </View>
-
-      {/* Soil type */}
-      <View style={styles.section}>
-        <Text style={styles.sectionLabel}>Soil Type</Text>
-        <TouchableOpacity style={styles.selectField} onPress={() => setIsSoilPickerOpen(true)}>
-          <Text style={[styles.selectFieldText, !selectedSoilLabel && styles.selectFieldPlaceholder]}>
-            {selectedSoilLabel ?? 'Select soil type'}
-          </Text>
-          <Ionicons name="chevron-down" size={18} color="#64748b" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Water type */}
-      <View style={styles.section}>
-        <Text style={styles.sectionLabel}>Water / Irrigation Source</Text>
-        <TouchableOpacity style={styles.selectField} onPress={() => setIsWaterPickerOpen(true)}>
-          <Text style={[styles.selectFieldText, !selectedWaterLabel && styles.selectFieldPlaceholder]}>
-            {selectedWaterLabel ?? 'Select water source'}
-          </Text>
-          <Ionicons name="chevron-down" size={18} color="#64748b" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Bill Printing Address */}
-      <View style={styles.section}>
-        <Text style={styles.sectionLabel}>Bill Printing Address (Printed on Bill)</Text>
-        <View style={styles.selectField}>
-          <Ionicons name="document-text-outline" size={18} color="#64748b" style={{ marginRight: 8 }} />
-          <TextInput
-            style={{ flex: 1, fontSize: 14, fontFamily: FONT.medium, color: '#0f172a' }}
-            placeholder="e.g. Grain Market, Shop No. 12, Phul"
-            placeholderTextColor="#94a3b8"
-            value={billPrintingAddress}
-            onChangeText={setBillPrintingAddress}
-          />
-        </View>
-      </View>
-
-      {/* WhatsApp Group Toggle */}
-      <View style={styles.whatsappGroupToggleCard}>
-        <View style={{ flex: 1, paddingRight: 10 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-            <Ionicons name="logo-whatsapp" size={18} color="#25D366" />
-            <Text style={styles.whatsappGroupToggleTitle}>WhatsApp Group Membership</Text>
+          {/* Spray Tank Size */}
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Spray Tank Size *</Text>
+            <View style={styles.chipRow}>
+              {SPRAY_TANK_SIZE_OPTIONS.map((size) => {
+                const isSelected = size === sprayTankSizeL;
+                return (
+                  <TouchableOpacity
+                    key={size}
+                    style={[styles.chip, isSelected && { backgroundColor: theme.primary, borderColor: theme.primary }]}
+                    onPress={() => setSprayTankSizeL(size)}
+                  >
+                    <Text style={[styles.chipText, isSelected && { color: '#ffffff' }]}>{size} Litre</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
-          <Text style={styles.whatsappGroupToggleSubtitle}>
-            {whatsappGroupEnabled
-              ? 'ON (Default): Auto-added to official WhatsApp group'
-              : 'OFF: Immediately removed from official WhatsApp group'}
-          </Text>
-        </View>
-        <Switch
-          value={whatsappGroupEnabled}
-          onValueChange={(val) => {
-            tap();
-            setWhatsappGroupEnabled(val);
-          }}
-          trackColor={{ false: '#cbd5e1', true: '#86efac' }}
-          thumbColor={whatsappGroupEnabled ? '#16a34a' : '#f8fafc'}
-        />
-      </View>
+
+          {/* Use in Printing Section */}
+          <View style={styles.printingHeaderBox}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+              <Ionicons name="print" size={18} color={theme.primary} />
+              <Text style={styles.printingTitle}>Use in Printing (ਬਿੱਲ ਪ੍ਰਿੰਟਿੰਗ ਜਾਣਕਾਰੀ)</Text>
+            </View>
+            <Text style={styles.printingSub}>
+              ਬਿੱਲ/ਰਸੀਦਾਂ 'ਤੇ ਪ੍ਰਿੰਟ ਹੋਣ ਲਈ ਫਰਮ ਦਾ ਨਾਮ ਅਤੇ ਪਤਾ ਦਰਜ ਕਰੋ।
+            </Text>
+
+            {/* Bill Printing Name */}
+            <View style={[styles.section, { marginTop: 10 }]}>
+              <Text style={styles.sectionLabel}>Bill Printing Name (Printed on Bill)</Text>
+              <View style={styles.selectField}>
+                <Ionicons name="business-outline" size={18} color="#64748b" style={{ marginRight: 8 }} />
+                <TextInput
+                  style={{ flex: 1, fontSize: 14, fontFamily: FONT.medium, color: '#0f172a' }}
+                  placeholder="e.g. Surinder Agro Farm / Farmer Name"
+                  placeholderTextColor="#94a3b8"
+                  value={printName}
+                  onChangeText={setPrintName}
+                />
+              </View>
+            </View>
+
+            {/* Bill Printing Address */}
+            <View style={[styles.section, { marginTop: 10 }]}>
+              <Text style={styles.sectionLabel}>Bill Printing Address (Printed on Bill)</Text>
+              <View style={styles.selectField}>
+                <Ionicons name="document-text-outline" size={18} color="#64748b" style={{ marginRight: 8 }} />
+                <TextInput
+                  style={{ flex: 1, fontSize: 14, fontFamily: FONT.medium, color: '#0f172a' }}
+                  placeholder="e.g. Grain Market, Shop No. 12, Phul"
+                  placeholderTextColor="#94a3b8"
+                  value={printAddress}
+                  onChangeText={setPrintAddress}
+                />
+              </View>
+            </View>
+          </View>
+
+          {/* WhatsApp Group Toggle */}
+          <View style={styles.whatsappGroupToggleCard}>
+            <View style={{ flex: 1, paddingRight: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                <Ionicons name="logo-whatsapp" size={18} color="#25D366" />
+                <Text style={styles.whatsappGroupToggleTitle}>WhatsApp Group Membership</Text>
+              </View>
+              <Text style={styles.whatsappGroupToggleSubtitle}>
+                {whatsappGroupEnabled
+                  ? 'ON (Default): Auto-added to official WhatsApp group'
+                  : 'OFF: Immediately removed from official WhatsApp group'}
+              </Text>
+            </View>
+            <Switch
+              value={whatsappGroupEnabled}
+              onValueChange={(val) => {
+                tap();
+                setWhatsappGroupEnabled(val);
+              }}
+              trackColor={{ false: '#cbd5e1', true: '#86efac' }}
+              thumbColor={whatsappGroupEnabled ? '#16a34a' : '#f8fafc'}
+            />
+          </View>
 
           <TouchableOpacity
             style={[styles.saveButton, premiumShadow(theme.primary, 'md'), !canSave && styles.saveButtonDisabled]}
@@ -192,23 +192,6 @@ export default function FarmerProfileSetupScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
-
-      <PickerModal
-        visible={isSoilPickerOpen}
-        title="Select Soil Type"
-        options={SOIL_TYPE_OPTIONS}
-        selectedValue={soilType}
-        onSelect={(value) => setSoilType(value)}
-        onClose={() => setIsSoilPickerOpen(false)}
-      />
-      <PickerModal
-        visible={isWaterPickerOpen}
-        title="Select Water Source"
-        options={WATER_TYPE_OPTIONS}
-        selectedValue={waterType}
-        onSelect={(value) => setWaterType(value)}
-        onClose={() => setIsWaterPickerOpen(false)}
-      />
     </View>
   );
 }
@@ -273,6 +256,25 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: FONT.medium,
     color: '#64748b',
+  },
+  printingHeaderBox: {
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1.5,
+    borderColor: '#bbf7d0',
+    borderRadius: RADIUS.md,
+    padding: 14,
+    gap: 4,
+  },
+  printingTitle: {
+    fontSize: 14,
+    fontFamily: FONT.bold,
+    color: '#15803d',
+  },
+  printingSub: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    color: '#166534',
+    marginBottom: 4,
   },
   saveButton: {
     backgroundColor: theme.primary,

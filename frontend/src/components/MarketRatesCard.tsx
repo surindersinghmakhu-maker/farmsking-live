@@ -224,17 +224,18 @@ export function MarketRatesCard() {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, 640, 450);
 
-      // Background Watermark: FarmsKing Logo + Name
+      // Tiled Anti-Crop Background Watermark across entire poster
       ctx.save();
-      ctx.globalAlpha = 0.05;
+      ctx.globalAlpha = 0.08;
       ctx.fillStyle = '#15803d';
-      ctx.textAlign = 'center';
-      ctx.translate(320, 260);
-      ctx.rotate((-14 * Math.PI) / 180);
-      ctx.font = 'bold 58px sans-serif';
-      ctx.fillText('👑 FarmsKing', 0, 0);
-      ctx.font = 'bold 20px sans-serif';
-      ctx.fillText('VERIFIED MANDI RATES', 0, 34);
+      ctx.font = 'bold 22px sans-serif';
+      ctx.rotate((-15 * Math.PI) / 180);
+
+      for (let y = -100; y < 650; y += 80) {
+        for (let x = -200; x < 800; x += 190) {
+          ctx.fillText('👑 FarmsKing', x, y);
+        }
+      }
       ctx.restore();
 
       // Top Emerald Header Bar
@@ -612,10 +613,17 @@ export function MarketRatesCard() {
       {selectedCropForShare && (
         <View style={styles.offscreenContainer}>
           <ViewShot ref={posterRef} options={{ format: 'png', quality: 0.95 }} style={styles.posterCard}>
-            {/* Background Watermark */}
-            <View style={styles.posterWatermarkContainer} pointerEvents="none">
-              <Text style={styles.posterWatermarkText}>👑 FarmsKing</Text>
-              <Text style={styles.posterWatermarkSub}>VERIFIED MANDI RATES</Text>
+            {/* Tiled Anti-Crop Background Watermark Grid */}
+            <View style={styles.posterWatermarkGridContainer} pointerEvents="none">
+              {Array.from({ length: 8 }).map((_, rowIndex) => (
+                <View key={rowIndex} style={styles.posterWatermarkRow}>
+                  {Array.from({ length: 3 }).map((_, colIndex) => (
+                    <Text key={colIndex} style={styles.posterWatermarkTileText}>
+                      👑 FarmsKing
+                    </Text>
+                  ))}
+                </View>
+              ))}
             </View>
 
             {/* Header Branding */}
@@ -915,28 +923,27 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
   },
-  posterWatermarkContainer: {
+  posterWatermarkGridContainer: {
     position: 'absolute',
-    top: 100,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-    opacity: 0.05,
-    transform: [{ rotate: '-14deg' }],
+    top: -40,
+    bottom: -40,
+    left: -50,
+    right: -50,
+    flexDirection: 'column',
+    justifyContent: 'space-around',
+    opacity: 0.08,
+    transform: [{ rotate: '-15deg' }],
   },
-  posterWatermarkText: {
-    fontSize: 38,
+  posterWatermarkRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginVertical: 4,
+  },
+  posterWatermarkTileText: {
+    fontSize: 15,
     fontFamily: FONT.extraBold,
     color: '#15803d',
-    letterSpacing: -0.5,
-  },
-  posterWatermarkSub: {
-    fontSize: 11,
-    fontFamily: FONT.bold,
-    color: '#15803d',
-    letterSpacing: 2,
-    marginTop: 2,
+    marginHorizontal: 4,
   },
   posterHeader: {
     flexDirection: 'row',

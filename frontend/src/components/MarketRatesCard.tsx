@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Modal, Platform, Pressable, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ViewShot, { captureRef } from 'react-native-view-shot';
-import * as Sharing from 'expo-sharing';
+import { BrandLogo } from './BrandLogo';
 import { useMyCropRates } from '../hooks/useMarketRates';
 import { useAuth } from '../store/auth-context';
 import { useCrops } from '../store/crops-context';
@@ -664,9 +664,10 @@ export function MarketRatesCard() {
               {Array.from({ length: 8 }).map((_, rowIndex) => (
                 <View key={rowIndex} style={styles.posterWatermarkRow}>
                   {Array.from({ length: 3 }).map((_, colIndex) => (
-                    <Text key={colIndex} style={styles.posterWatermarkTileText}>
-                      👑 FarmsKing
-                    </Text>
+                    <View key={colIndex} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginHorizontal: 4 }}>
+                      <BrandLogo size={16} useGoldRing />
+                      <Text style={styles.posterWatermarkTileText}>FarmsKing</Text>
+                    </View>
                   ))}
                 </View>
               ))}

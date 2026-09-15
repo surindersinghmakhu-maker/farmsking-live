@@ -199,6 +199,23 @@ export function MarketRatesCard() {
     }
   };
 
+  // Helper for generating dynamic poster file name: CropName_Date_Time.png
+  const getCropRateFileName = (cropTitle: string) => {
+    const now = new Date();
+    const cleanCropName = cropTitle.trim().replace(/[^a-zA-Z0-9_\-]/g, '_');
+    const dateStr = now.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).replace(/\s+/g, '-');
+    const timeStr = now.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    }).replace(/[:\s]/g, '-');
+    return `${cleanCropName}_${dateStr}_${timeStr}.png`;
+  };
+
   // Helper for generating high quality image card poster on Web browsers
   const generateWebImageCard = (crop: CropRateItem) => {
     try {
@@ -239,7 +256,7 @@ export function MarketRatesCard() {
       ctx.restore();
 
       // Top Emerald Header Bar
-      ctx.fillStyle = '#15803d';
+      ctx.fillStyle = '#166534';
       ctx.fillRect(0, 0, 640, 75);
 
       // Header Logo & Brand Name (Left)
@@ -248,21 +265,14 @@ export function MarketRatesCard() {
       ctx.fillText('👑 FarmsKing', 24, 38);
 
       ctx.fillStyle = '#bbf7d0';
-      ctx.font = 'bold 13.5px sans-serif';
-      ctx.fillText('Crop Ledger', 24, 58);
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillText('Smart Farming, Better Future', 24, 58);
 
-      // Right Side Header Tagline Pill Container
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
-      if (typeof (ctx as any).roundRect === 'function') {
-        (ctx as any).roundRect(330, 20, 286, 34, 17);
-        ctx.fill();
-      } else {
-        ctx.fillRect(330, 20, 286, 34);
-      }
+      // Right Side Header Tagline
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 13.5px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText("India's Best Digital Farmers App", 473, 42);
+      ctx.font = 'bold 14px sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText("India's Digital Mandi & Farm Ledger", 616, 42);
       ctx.textAlign = 'left'; // Reset text alignment
 
       // Crop Name Dedicated Card Container
@@ -320,9 +330,9 @@ export function MarketRatesCard() {
       ctx.fillText(`📅 Date: ${todayDateStr}   |   🕒 Time: ${currentTimeStr}   |   ⏱️ 24H Live Rates`, 36, 160);
 
       // Local Box with translucent fill so watermark shows behind text
-      ctx.fillStyle = 'rgba(248, 250, 252, 0.65)';
+      ctx.fillStyle = '#f0fdf4';
       ctx.strokeStyle = '#bbf7d0';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
       if (typeof (ctx as any).roundRect === 'function') {
         (ctx as any).roundRect(24, 178, 592, 95, 12);
@@ -333,7 +343,7 @@ export function MarketRatesCard() {
         ctx.strokeRect(24, 178, 592, 95);
       }
 
-      ctx.fillStyle = '#166534';
+      ctx.fillStyle = '#15803d';
       ctx.font = 'bold 15px sans-serif';
       ctx.fillText('🏛️ LOCAL MARKET RATES', 44, 214);
 
@@ -356,7 +366,7 @@ export function MarketRatesCard() {
       }
 
       // National Box with translucent fill so watermark shows behind text
-      ctx.fillStyle = 'rgba(248, 250, 252, 0.65)';
+      ctx.fillStyle = '#f8fafc';
       ctx.strokeStyle = '#cbd5e1';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
@@ -369,7 +379,7 @@ export function MarketRatesCard() {
         ctx.strokeRect(24, 288, 592, 95);
       }
 
-      ctx.fillStyle = '#0f172a';
+      ctx.fillStyle = '#1e293b';
       ctx.font = 'bold 15px sans-serif';
       ctx.fillText('🇮🇳 NATIONAL (ALL INDIA) RATES', 44, 324);
 
@@ -392,27 +402,28 @@ export function MarketRatesCard() {
       }
 
       // Bottom Footer Bar
-      ctx.fillStyle = '#14532d';
+      ctx.fillStyle = '#166534';
       ctx.fillRect(0, 400, 640, 50);
 
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 13px sans-serif';
       ctx.fillText('📲 Download FarmsKing App for Real-Time Mandi Rates', 24, 430);
 
-      ctx.fillStyle = '#bbf7d0';
+      ctx.fillStyle = '#86efac';
       ctx.font = 'bold 13px sans-serif';
       ctx.fillText('farmsking-1.vercel.app', 460, 430);
 
       const dataUrl = canvas.toDataURL('image/png');
+      const fileName = getCropRateFileName(crop.displayTitle);
 
       const link = document.createElement('a');
-      link.download = `FarmsKing_${crop.displayTitle}_Rate.png`;
+      link.download = fileName;
       link.href = dataUrl;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
-      Alert.alert('Success 🖼️', `${crop.displayTitle} Professional Price Poster downloaded! You can now share it on WhatsApp.`);
+      Alert.alert('Success 🖼️', `${crop.displayTitle} Professional Price Poster downloaded as ${fileName}! You can now share it on WhatsApp.`);
     } catch (err) {
       console.error('Web Canvas image generation error:', err);
       Alert.alert('Error', 'Failed to generate web image card.');
@@ -441,16 +452,20 @@ export function MarketRatesCard() {
             return;
           }
 
+          const fileName = getCropRateFileName(crop.displayTitle);
+
           const uri = await captureRef(posterRef, {
             format: 'png',
             quality: 0.95,
+            fileName: fileName.replace('.png', ''),
           });
 
           const isSharingAvailable = await Sharing.isAvailableAsync();
           if (isSharingAvailable) {
             await Sharing.shareAsync(uri, {
               mimeType: 'image/png',
-              dialogTitle: `Share ${crop.displayTitle} Market Rates`,
+              dialogTitle: `Share ${crop.displayTitle} Market Rates (${fileName})`,
+              UTI: 'public.png',
             });
           } else {
             Alert.alert('Notice', 'Image sharing is not supported on this device.');

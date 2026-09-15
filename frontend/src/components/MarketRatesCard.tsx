@@ -1018,20 +1018,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(22, 163, 74, 0.3)',
   },
-  posterCenterBadge: {
-    backgroundColor: 'rgba(22, 163, 74, 0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: RADIUS.pill,
-    borderWidth: 1,
-    borderColor: '#16a34a',
-  },
-  posterCenterBadgeText: {
-    fontSize: 10,
-    fontFamily: FONT.extraBold,
-    color: '#15803d',
-    letterSpacing: 0.5,
-  },
   posterRightSub: {
     fontSize: 10.5,
     fontFamily: FONT.extraBold,

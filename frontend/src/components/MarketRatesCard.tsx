@@ -167,10 +167,10 @@ export function MarketRatesCard() {
     const textMessage =
       `🌾 *FarmsKing — Live Market Rates (24h)* 📊\n` +
       `🌱 *Crop:* ${crop.displayTitle} (Per ${crop.unit})\n` +
-      `📍 *State:* ${userState}\n\n` +
-      `🏛️ *LOCAL (${userState.toUpperCase()}) RATES:*\n${localStr}\n\n` +
+      `⏱️ *Timeframe:* Previous 24 Hours\n\n` +
+      `🏛️ *LOCAL RATES:*\n${localStr}\n\n` +
       `🇮🇳 *NATIONAL RATES:*\n${nationalStr}\n\n` +
-      `📲 *ਆਪਣੀ ਫਸਲ ਦਾ ਲਾਈਵ ਰੇਟ ਦੇਖਣ ਲਈ FarmsKing App ਵਰਤੋ:*\n` +
+      `📲 *Use FarmsKing App to check real-time crop market rates:*\n` +
       `👉 https://farmsking-1.vercel.app`;
 
     try {
@@ -232,7 +232,7 @@ export function MarketRatesCard() {
 
       ctx.fillStyle = '#64748b';
       ctx.font = '14px sans-serif';
-      ctx.fillText(`📍 State: ${userState}  |  ⏱️ Previous 24 Hours`, 24, 172);
+      ctx.fillText(`⏱️ Previous 24 Hours`, 24, 172);
 
       // Local Box
       ctx.fillStyle = '#f8fafc';
@@ -250,7 +250,7 @@ export function MarketRatesCard() {
 
       ctx.fillStyle = '#475569';
       ctx.font = 'bold 15px sans-serif';
-      ctx.fillText(`LOCAL (${userState.toUpperCase()})`, 44, 226);
+      ctx.fillText('LOCAL RATES', 44, 226);
 
       if (crop.localAvgRate != null) {
         ctx.fillStyle = '#15803d';
@@ -299,7 +299,7 @@ export function MarketRatesCard() {
       // Footer
       ctx.fillStyle = '#16a34a';
       ctx.font = 'bold 13px sans-serif';
-      ctx.fillText('📲 FarmsKing App — https://farmsking-1.vercel.app', 120, 404);
+      ctx.fillText('📲 Use FarmsKing App — https://farmsking-1.vercel.app', 120, 404);
 
       const dataUrl = canvas.toDataURL('image/png');
 
@@ -497,7 +497,7 @@ export function MarketRatesCard() {
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.modalSub}>ਤੁਸੀਂ ਇਹ ਰੇਟ ਕਿਵੇਂ ਸ਼ੇਅਰ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?</Text>
+            <Text style={styles.modalSub}>How would you like to share these market rates?</Text>
 
             {/* Share as Text Option */}
             <TouchableOpacity
@@ -509,8 +509,8 @@ export function MarketRatesCard() {
                 <Ionicons name="logo-whatsapp" size={22} color="#16a34a" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.optionTitle}>💬 Share as Text (ਟੈਕਸਟ ਮੈਸੇਜ)</Text>
-                <Text style={styles.optionSub}>ਵਟਸਐਪ 'ਚ ਤੁਰੰਤ ਟੈਕਸਟ ਮੈਸੇਜ + ਡਾਊਨਲੋਡ ਲਿੰਕ ਸ਼ੇਅਰ ਕਰੋ</Text>
+                <Text style={styles.optionTitle}>💬 Share as Text Message</Text>
+                <Text style={styles.optionSub}>Share formatted text message with app link on WhatsApp</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
             </TouchableOpacity>
@@ -530,8 +530,8 @@ export function MarketRatesCard() {
                 )}
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.optionTitle}>🖼️ Share as Image Card (ਫੋਟੋ ਕਾਰਡ)</Text>
-                <Text style={styles.optionSub}>FarmsKing ਦੇ ਬ੍ਰੈਂਡਡ ਪੋਸਟਰ ਨਾਲ ਵਟਸਐਪ ਸਟੇਟਸ/ਫੋਟੋ ਸ਼ੇਅਰ ਕਰੋ</Text>
+                <Text style={styles.optionTitle}>🖼️ Share as Image Poster</Text>
+                <Text style={styles.optionSub}>Share branded FarmsKing crop price poster card</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
             </TouchableOpacity>
@@ -561,13 +561,13 @@ export function MarketRatesCard() {
               <Text style={styles.posterCropUnit}>Per {selectedCropForShare.unit}</Text>
             </View>
 
-            <Text style={styles.posterStateSubtitle}>📍 State: {userState} | ⏱️ Last 24 Hours</Text>
+            <Text style={styles.posterStateSubtitle}>⏱️ Previous 24 Hours</Text>
 
             {/* Rates Table Box */}
             <View style={styles.posterTableBox}>
               {/* Local State Rate */}
               <View style={styles.posterRateRow}>
-                <Text style={styles.posterRegionTitle}>LOCAL ({userState.toUpperCase()})</Text>
+                <Text style={styles.posterRegionTitle}>LOCAL RATES</Text>
                 {selectedCropForShare.localAvgRate != null ? (
                   <View style={{ alignItems: 'flex-end' }}>
                     <Text style={styles.posterAvgVal}>{formatInr(selectedCropForShare.localAvgRate)}</Text>
@@ -600,7 +600,7 @@ export function MarketRatesCard() {
 
             {/* Footer */}
             <View style={styles.posterFooter}>
-              <Text style={styles.posterFooterText}>📲 ਆਪਣੀ ਫਸਲ ਦਾ ਸਹੀ ਭਾਅ ਜਾਣਨ ਲਈ FarmsKing App ਵਰਤੋ</Text>
+              <Text style={styles.posterFooterText}>📲 Use FarmsKing App to check real-time crop market rates</Text>
               <Text style={styles.posterFooterLink}>farmsking-1.vercel.app</Text>
             </View>
           </ViewShot>

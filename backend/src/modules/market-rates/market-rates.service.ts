@@ -181,11 +181,15 @@ export class MarketRatesService {
       },
     });
 
-    // 4. Fetch MarketRate records updated in the last 24 hours (excluding Arhtiya sales)
+    // 4. Fetch MarketRate records updated in the last 24 hours (excluding Arhtiya & duplicate farmer sale bills)
     const recentMarketRates = await this.prisma.marketRate.findMany({
       where: {
         rateDate: { gte: since },
-        NOT: { source: 'arhtiya_crop_sale' },
+        NOT: [
+          { source: 'arhtiya_crop_sale' },
+          { source: 'farmer_sale_bill' },
+          { source: 'farmer_sale_bill_update' },
+        ],
       },
       select: {
         cropName: true,

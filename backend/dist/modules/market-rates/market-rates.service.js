@@ -144,7 +144,11 @@ let MarketRatesService = class MarketRatesService {
         const recentMarketRates = await this.prisma.marketRate.findMany({
             where: {
                 rateDate: { gte: since },
-                NOT: { source: 'arhtiya_crop_sale' },
+                NOT: [
+                    { source: 'arhtiya_crop_sale' },
+                    { source: 'farmer_sale_bill' },
+                    { source: 'farmer_sale_bill_update' },
+                ],
             },
             select: {
                 cropName: true,

@@ -53,7 +53,7 @@ export default function FarmerProfileSetupScreen() {
   const selectedSoilLabel = SOIL_TYPE_OPTIONS.find((o) => o.value === soilType)?.label;
   const selectedWaterLabel = WATER_TYPE_OPTIONS.find((o) => o.value === waterType)?.label;
 
-  const canSave = !!sprayTankSizeL && !!soilType && !!waterType;
+  const canSave = !!sprayTankSizeL;
 
   const handleGoBack = () => {
     if (router.canGoBack()) {
@@ -70,8 +70,8 @@ export default function FarmerProfileSetupScreen() {
       await Promise.all([
         updateProfile.mutateAsync({
           sprayTankSizeL: sprayTankSizeL!,
-          soilType: soilType!,
-          waterType: waterType!,
+          soilType: soilType ?? undefined,
+          waterType: waterType ?? undefined,
           billPrintingAddress: billPrintingAddress.trim() || undefined,
         }),
         updateAddress.mutateAsync({
@@ -120,7 +120,7 @@ export default function FarmerProfileSetupScreen() {
 
       {/* Soil type */}
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>Soil Type *</Text>
+        <Text style={styles.sectionLabel}>Soil Type</Text>
         <TouchableOpacity style={styles.selectField} onPress={() => setIsSoilPickerOpen(true)}>
           <Text style={[styles.selectFieldText, !selectedSoilLabel && styles.selectFieldPlaceholder]}>
             {selectedSoilLabel ?? 'Select soil type'}
@@ -131,7 +131,7 @@ export default function FarmerProfileSetupScreen() {
 
       {/* Water type */}
       <View style={styles.section}>
-        <Text style={styles.sectionLabel}>Water / Irrigation Source *</Text>
+        <Text style={styles.sectionLabel}>Water / Irrigation Source</Text>
         <TouchableOpacity style={styles.selectField} onPress={() => setIsWaterPickerOpen(true)}>
           <Text style={[styles.selectFieldText, !selectedWaterLabel && styles.selectFieldPlaceholder]}>
             {selectedWaterLabel ?? 'Select water source'}

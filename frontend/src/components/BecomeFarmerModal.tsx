@@ -54,12 +54,12 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
   const selectedSoilLabel = SOIL_TYPE_OPTIONS.find((o) => o.value === soilType)?.label;
   const selectedWaterLabel = WATER_TYPE_OPTIONS.find((o) => o.value === waterType)?.label;
 
-  const isValid = !!sprayTankSizeL && !!soilType && !!waterType;
+  const isValid = !!sprayTankSizeL;
 
   const handleSubmit = async () => {
     tap();
     if (!isValid) {
-      setErrorMessage('ਕਿਰਪਾ ਕਰਕੇ ਸਾਰੇ ਜ਼ਰੂਰੀ ਖੇਤਰ (Spray Tank, Soil Type, Water Source) ਭਰੋ।');
+      setErrorMessage('ਕਿਰਪਾ ਕਰਕੇ Spray Tank ਦਾ ਸਾਈਜ਼ ਚੁਣੋ।');
       return;
     }
     setErrorMessage(null);
@@ -67,8 +67,8 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
     try {
       const updatedUser = await becomeFarmer.mutateAsync({
         sprayTankSizeL: sprayTankSizeL!,
-        soilType: soilType!,
-        waterType: waterType!,
+        soilType: soilType ?? undefined,
+        waterType: waterType ?? undefined,
         upiId: upiId.trim() || undefined,
         billPrintingAddress: billPrintingAddress.trim() || undefined,
         village: village.trim() || undefined,
@@ -154,7 +154,7 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
             {/* Soil Type */}
             <View style={styles.fieldSection}>
               <Text style={styles.label}>
-                Soil Type (ਮਿੱਟੀ ਦੀ ਕਿਸਮ) <Text style={styles.req}>*</Text>
+                Soil Type (ਮਿੱਟੀ ਦੀ ਕਿਸਮ)
               </Text>
               <TouchableOpacity
                 style={styles.selectField}
@@ -177,7 +177,7 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
             {/* Water Source */}
             <View style={styles.fieldSection}>
               <Text style={styles.label}>
-                Water Source (ਪਾਣੀ / ਸਿੰਚਾਈ ਦਾ ਸਰੋਤ) <Text style={styles.req}>*</Text>
+                Water Source (ਪਾਣੀ / ਸਿੰਚਾਈ ਦਾ ਸਰੋਤ)
               </Text>
               <TouchableOpacity
                 style={styles.selectField}

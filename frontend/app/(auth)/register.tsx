@@ -100,8 +100,8 @@ export default function RegisterScreen() {
     }
 
     if (accountType === 'FARMER') {
-      if (!sprayTankSizeL || !soilType || !waterType) {
-        setError('Farmer registration ke liye Spray Tank Size, Soil Type, aur Water Source compulsory hain!');
+      if (!sprayTankSizeL) {
+        setError('Farmer registration ke liye Spray Tank Size compulsory hai!');
         return;
       }
     }

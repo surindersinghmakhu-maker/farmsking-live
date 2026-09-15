@@ -398,7 +398,7 @@ export default function MarketScreen() {
   const soilTypeLabel = useMemo(() => SOIL_TYPE_OPTIONS.find((o) => o.value === soilTypeVal)?.label, [soilTypeVal]);
   const waterTypeLabel = useMemo(() => WATER_TYPE_OPTIONS.find((o) => o.value === waterTypeVal)?.label, [waterTypeVal]);
 
-  const isFarmProfileComplete = !!farmPhotoUri && !!sprayTankSize && !!soilTypeVal && !!waterTypeVal;
+  const isFarmProfileComplete = !!farmPhotoUri && !!sprayTankSize;
 
   const targetPlotForProblem = useMemo(() => {
     const idToFind = selectedCropForProblem || acceptedRealCrops[0]?.id;
@@ -1685,7 +1685,7 @@ export default function MarketScreen() {
 
               <View style={{ gap: 6 }}>
                 <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>
-                  3. Soil Type *
+                  3. Soil Type
                 </Text>
                 <View style={{ gap: 6 }}>
                   {SOIL_TYPE_OPTIONS.map((soil) => (
@@ -1718,7 +1718,7 @@ export default function MarketScreen() {
 
               <View style={{ gap: 6 }}>
                 <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>
-                  4. Water / Irrigation Source *
+                  4. Water / Irrigation Source
                 </Text>
                 <View style={{ gap: 6 }}>
                   {WATER_TYPE_OPTIONS.map((water) => (

@@ -171,7 +171,8 @@ export class MarketRatesService {
       },
     });
 
-    // Collect ALL unique crops from user's registered crops + 24h sale bills + 24h sale items + 24h market rates + default crops
+    // Collect ONLY this farmer's crops from HARVESTING or ACTIVE crop cycles.
+    // We do NOT show other farmers' crops or default crops.
     const distinctCropMap = new Map<string, { cropName: string; unit?: string | null }>();
 
     for (const c of cropCycles) {
@@ -181,55 +182,6 @@ export class MarketRatesService {
         if (!distinctCropMap.has(key)) {
           distinctCropMap.set(key, { cropName: englishName, unit: c.unit });
         }
-      }
-    }
-
-    for (const bill of recentSaleBills) {
-      const items = bill.items as any[];
-      if (Array.isArray(items)) {
-        for (const it of items) {
-          const rawName = it.cropName || it.productName;
-          if (rawName) {
-            const englishName = toEnglishCropName(rawName);
-            const key = englishName.toLowerCase();
-            if (!distinctCropMap.has(key)) {
-              distinctCropMap.set(key, { cropName: englishName, unit: it.unit || 'KG' });
-            }
-          }
-        }
-      }
-    }
-
-    for (const item of recentSaleItems) {
-      if (item.productName) {
-        const englishName = toEnglishCropName(item.productName);
-        const key = englishName.toLowerCase();
-        if (!distinctCropMap.has(key)) {
-          distinctCropMap.set(key, { cropName: englishName, unit: item.unit || 'KG' });
-        }
-      }
-    }
-
-    for (const mr of recentMarketRates) {
-      if (mr.cropName) {
-        const englishName = toEnglishCropName(mr.cropName);
-        const key = englishName.toLowerCase();
-        if (!distinctCropMap.has(key)) {
-          distinctCropMap.set(key, { cropName: englishName, unit: mr.unit || 'KG' });
-        }
-      }
-    }
-
-    const defaultCrops = [
-      { cropName: 'Rose', unit: 'KG' },
-      { cropName: 'Marigold', unit: 'KG' },
-      { cropName: 'Wheat', unit: 'Quintal' },
-      { cropName: 'Paddy', unit: 'Quintal' },
-    ];
-    for (const dc of defaultCrops) {
-      const key = dc.cropName.toLowerCase();
-      if (!distinctCropMap.has(key)) {
-        distinctCropMap.set(key, dc);
       }
     }
 

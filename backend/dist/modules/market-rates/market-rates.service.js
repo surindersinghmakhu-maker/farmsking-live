@@ -166,51 +166,6 @@ let MarketRatesService = class MarketRatesService {
                 }
             }
         }
-        for (const bill of recentSaleBills) {
-            const items = bill.items;
-            if (Array.isArray(items)) {
-                for (const it of items) {
-                    const rawName = it.cropName || it.productName;
-                    if (rawName) {
-                        const englishName = toEnglishCropName(rawName);
-                        const key = englishName.toLowerCase();
-                        if (!distinctCropMap.has(key)) {
-                            distinctCropMap.set(key, { cropName: englishName, unit: it.unit || 'KG' });
-                        }
-                    }
-                }
-            }
-        }
-        for (const item of recentSaleItems) {
-            if (item.productName) {
-                const englishName = toEnglishCropName(item.productName);
-                const key = englishName.toLowerCase();
-                if (!distinctCropMap.has(key)) {
-                    distinctCropMap.set(key, { cropName: englishName, unit: item.unit || 'KG' });
-                }
-            }
-        }
-        for (const mr of recentMarketRates) {
-            if (mr.cropName) {
-                const englishName = toEnglishCropName(mr.cropName);
-                const key = englishName.toLowerCase();
-                if (!distinctCropMap.has(key)) {
-                    distinctCropMap.set(key, { cropName: englishName, unit: mr.unit || 'KG' });
-                }
-            }
-        }
-        const defaultCrops = [
-            { cropName: 'Rose', unit: 'KG' },
-            { cropName: 'Marigold', unit: 'KG' },
-            { cropName: 'Wheat', unit: 'Quintal' },
-            { cropName: 'Paddy', unit: 'Quintal' },
-        ];
-        for (const dc of defaultCrops) {
-            const key = dc.cropName.toLowerCase();
-            if (!distinctCropMap.has(key)) {
-                distinctCropMap.set(key, dc);
-            }
-        }
         const distinctCrops = Array.from(distinctCropMap.values());
         function normalizeToPerKg(rawRate, rawUnit) {
             if (isNaN(rawRate) || rawRate <= 0)

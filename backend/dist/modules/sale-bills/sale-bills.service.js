@@ -13,7 +13,6 @@ exports.SaleBillsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const chat_gateway_1 = require("../chat/chat.gateway");
-const market_rates_service_1 = require("../market-rates/market-rates.service");
 let SaleBillsService = class SaleBillsService {
     constructor(prisma, chatGateway) {
         this.prisma = prisma;
@@ -89,38 +88,6 @@ let SaleBillsService = class SaleBillsService {
                 ...(dto.createdAt && { createdAt: new Date(dto.createdAt) }),
             },
         });
-        try {
-            const userProfile = await this.prisma.user.findUnique({
-                where: { id: user.id },
-                select: { state: true, district: true },
-            });
-            const items = dto.items;
-            if (Array.isArray(items)) {
-                for (const item of items) {
-                    if (item.cropName && Number(item.rate) > 0) {
-                        const cleanName = (0, market_rates_service_1.toEnglishCropName)(item.cropName);
-                        await this.prisma.marketRate.create({
-                            data: {
-                                cropName: cleanName,
-                                variety: 'Farmer Sale',
-                                market: userProfile?.district ? `${userProfile.district} Mandi` : 'Local Mandi',
-                                state: userProfile?.state || 'Punjab',
-                                district: userProfile?.district || null,
-                                modalPrice: Number(item.rate),
-                                minPrice: Number(item.rate),
-                                maxPrice: Number(item.rate),
-                                unit: item.unit || 'KG',
-                                rateDate: new Date(),
-                                source: 'farmer_sale_bill',
-                            },
-                        });
-                    }
-                }
-            }
-        }
-        catch (err) {
-            console.warn('Could not record market rate from sale bill:', err);
-        }
         this.chatGateway.broadcastMarketRateUpdate({ source: 'farmer_sale_bill', billId: bill.id });
         return bill;
     }
@@ -158,38 +125,6 @@ let SaleBillsService = class SaleBillsService {
                 ...(dto.createdAt && { createdAt: new Date(dto.createdAt) }),
             },
         });
-        try {
-            const userProfile = await this.prisma.user.findUnique({
-                where: { id: user.id },
-                select: { state: true, district: true },
-            });
-            const items = dto.items;
-            if (Array.isArray(items)) {
-                for (const item of items) {
-                    if (item.cropName && Number(item.rate) > 0) {
-                        const cleanName = (0, market_rates_service_1.toEnglishCropName)(item.cropName);
-                        await this.prisma.marketRate.create({
-                            data: {
-                                cropName: cleanName,
-                                variety: 'Farmer Sale',
-                                market: userProfile?.district ? `${userProfile.district} Mandi` : 'Local Mandi',
-                                state: userProfile?.state || 'Punjab',
-                                district: userProfile?.district || null,
-                                modalPrice: Number(item.rate),
-                                minPrice: Number(item.rate),
-                                maxPrice: Number(item.rate),
-                                unit: item.unit || 'KG',
-                                rateDate: new Date(),
-                                source: 'farmer_sale_bill_update',
-                            },
-                        });
-                    }
-                }
-            }
-        }
-        catch (err) {
-            console.warn('Could not record market rate on bill update:', err);
-        }
         this.chatGateway.broadcastMarketRateUpdate({ source: 'farmer_sale_bill_update', billId: updated.id });
         return updated;
     }

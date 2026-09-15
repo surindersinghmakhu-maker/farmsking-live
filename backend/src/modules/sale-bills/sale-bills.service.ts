@@ -3,7 +3,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { CreateSaleBillDto } from './dto/create-sale-bill.dto';
 import { ChatGateway } from '../chat/chat.gateway';
-import { toEnglishCropName } from '../market-rates/market-rates.service';
 
 @Injectable()
 export class SaleBillsService {
@@ -95,38 +94,8 @@ export class SaleBillsService {
       },
     });
 
-    try {
-      const userProfile = await this.prisma.user.findUnique({
-        where: { id: user.id },
-        select: { state: true, district: true },
-      });
-      const items = dto.items as any[];
-      if (Array.isArray(items)) {
-        for (const item of items) {
-          if (item.cropName && Number(item.rate) > 0) {
-            const cleanName = toEnglishCropName(item.cropName);
-            await this.prisma.marketRate.create({
-              data: {
-                cropName: cleanName,
-                variety: 'Farmer Sale',
-                market: userProfile?.district ? `${userProfile.district} Mandi` : 'Local Mandi',
-                state: userProfile?.state || 'Punjab',
-                district: userProfile?.district || null,
-                modalPrice: Number(item.rate),
-                minPrice: Number(item.rate),
-                maxPrice: Number(item.rate),
-                unit: item.unit || 'KG',
-                rateDate: new Date(),
-                source: 'farmer_sale_bill',
-              },
-            });
-          }
-        }
-      }
-    } catch (err) {
-      console.warn('Could not record market rate from sale bill:', err);
-    }
-
+    // Broadcast real-time market rate update via WebSocket.
+    // market-rates.service.ts reads directly from SaleBill.items — no separate MarketRate record needed.
     this.chatGateway.broadcastMarketRateUpdate({ source: 'farmer_sale_bill', billId: bill.id });
 
     return bill;
@@ -169,38 +138,8 @@ export class SaleBillsService {
       },
     });
 
-    try {
-      const userProfile = await this.prisma.user.findUnique({
-        where: { id: user.id },
-        select: { state: true, district: true },
-      });
-      const items = dto.items as any[];
-      if (Array.isArray(items)) {
-        for (const item of items) {
-          if (item.cropName && Number(item.rate) > 0) {
-            const cleanName = toEnglishCropName(item.cropName);
-            await this.prisma.marketRate.create({
-              data: {
-                cropName: cleanName,
-                variety: 'Farmer Sale',
-                market: userProfile?.district ? `${userProfile.district} Mandi` : 'Local Mandi',
-                state: userProfile?.state || 'Punjab',
-                district: userProfile?.district || null,
-                modalPrice: Number(item.rate),
-                minPrice: Number(item.rate),
-                maxPrice: Number(item.rate),
-                unit: item.unit || 'KG',
-                rateDate: new Date(),
-                source: 'farmer_sale_bill_update',
-              },
-            });
-          }
-        }
-      }
-    } catch (err) {
-      console.warn('Could not record market rate on bill update:', err);
-    }
-
+    // Broadcast real-time market rate update via WebSocket.
+    // market-rates.service.ts reads directly from SaleBill.items — no separate MarketRate record needed.
     this.chatGateway.broadcastMarketRateUpdate({ source: 'farmer_sale_bill_update', billId: updated.id });
 
     return updated;

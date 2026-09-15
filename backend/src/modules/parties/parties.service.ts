@@ -602,33 +602,8 @@ export class PartiesService {
       },
     });
 
-    try {
-      const userProfile = await this.prisma.user.findUnique({
-        where: { id: user.id },
-        select: { state: true, district: true },
-      });
-      if (dto.cropName && Number(dto.ratePerQuintal) > 0) {
-        const cleanName = dto.cropName.split('(')[0].trim();
-        await this.prisma.marketRate.create({
-          data: {
-            cropName: cleanName,
-            variety: 'Arhtiya Sale',
-            market: userProfile?.district ? `${userProfile.district} Mandi` : 'Local Mandi',
-            state: userProfile?.state || 'Punjab',
-            district: userProfile?.district || null,
-            modalPrice: Number(dto.ratePerQuintal),
-            minPrice: Number(dto.ratePerQuintal),
-            maxPrice: Number(dto.ratePerQuintal),
-            unit: 'Quintal',
-            rateDate: new Date(dto.transactionDate),
-            source: 'arhtiya_crop_sale',
-          },
-        });
-      }
-    } catch (err) {
-      console.warn('Could not record market rate from arhtiya crop sale:', err);
-    }
-
+    // Arhtiya transaction rates are intentionally excluded from live market rates.
+    // We do NOT create a MarketRate record here to keep farmer market prices accurate.
     this.chatGateway.broadcastMarketRateUpdate({ source: 'arhtiya_crop_sale', transactionId: tx.id });
 
     return tx;

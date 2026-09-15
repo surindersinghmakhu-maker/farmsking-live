@@ -541,33 +541,6 @@ let PartiesService = class PartiesService {
                 notes: dto.notes?.trim() || null,
             },
         });
-        try {
-            const userProfile = await this.prisma.user.findUnique({
-                where: { id: user.id },
-                select: { state: true, district: true },
-            });
-            if (dto.cropName && Number(dto.ratePerQuintal) > 0) {
-                const cleanName = dto.cropName.split('(')[0].trim();
-                await this.prisma.marketRate.create({
-                    data: {
-                        cropName: cleanName,
-                        variety: 'Arhtiya Sale',
-                        market: userProfile?.district ? `${userProfile.district} Mandi` : 'Local Mandi',
-                        state: userProfile?.state || 'Punjab',
-                        district: userProfile?.district || null,
-                        modalPrice: Number(dto.ratePerQuintal),
-                        minPrice: Number(dto.ratePerQuintal),
-                        maxPrice: Number(dto.ratePerQuintal),
-                        unit: 'Quintal',
-                        rateDate: new Date(dto.transactionDate),
-                        source: 'arhtiya_crop_sale',
-                    },
-                });
-            }
-        }
-        catch (err) {
-            console.warn('Could not record market rate from arhtiya crop sale:', err);
-        }
         this.chatGateway.broadcastMarketRateUpdate({ source: 'arhtiya_crop_sale', transactionId: tx.id });
         return tx;
     }

@@ -81,7 +81,7 @@ export function MarketRatesCard() {
 
   const [selectedCropForShare, setSelectedCropForShare] = useState<CropRateItem | null>(null);
   const [isSharingImage, setIsSharingImage] = useState(false);
-  const posterRef = useRef<View>(null);
+  const posterRef = useRef<any>(null);
 
   const userState = user?.state || data?.state || 'Punjab';
 

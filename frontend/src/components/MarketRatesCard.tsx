@@ -676,7 +676,7 @@ export function MarketRatesCard() {
             <View style={styles.posterHeaderBanner}>
               <View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Text style={{ fontSize: 20 }}>👑</Text>
+                  <BrandLogo size={28} useGoldRing />
                   <Text style={styles.posterHeaderTitle}>FarmsKing</Text>
                 </View>
                 <Text style={styles.posterHeaderSub}>Smart Farming, Better Future</Text>

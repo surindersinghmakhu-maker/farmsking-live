@@ -8,6 +8,7 @@ import { useAuth } from '@/src/store/auth-context';
 const LOGO_ICON_FAST = require('@/assets/images/farmsking_logo_icon.png');
 const LOGO_STANDARD = require('@/assets/images/farmsking_logo.png');
 const LOGO_HD = require('@/assets/images/farmsking_logo_hd.png');
+const LOGO_ROUND_GOLDRING = require('@/assets/images/farmsking_logo_round_goldring.png');
 
 interface BrandLogoProps {
   size?: number;
@@ -17,6 +18,7 @@ interface BrandLogoProps {
   useCrownFallback?: boolean;
   useHdQuality?: boolean;
   useFastBundledOnly?: boolean;
+  useGoldRing?: boolean;
 }
 
 function resolveAsset(src: any) {
@@ -42,6 +44,7 @@ export function BrandLogo({
   useCrownFallback = false,
   useHdQuality = false,
   useFastBundledOnly = false,
+  useGoldRing = false,
 }: BrandLogoProps) {
   const { data: settings } = useAppSettings();
   const { user } = useAuth();
@@ -55,21 +58,23 @@ export function BrandLogo({
   }, [logoUri]);
 
   // Pick optimal normal quality bundled asset
-  const bundledAsset = useHdQuality
+  const bundledAsset = useGoldRing
+    ? LOGO_ROUND_GOLDRING
+    : useHdQuality
     ? LOGO_HD
     : size <= 58
     ? LOGO_ICON_FAST
     : LOGO_STANDARD;
 
-  // Prefer Database logoUrl when present; fall back to local official emblem
-  const finalSource = (logoUri && !imageError)
+  // Prefer Database logoUrl when present (and not forcing fast bundled asset or gold ring); fall back to local official emblem
+  const finalSource = (logoUri && !imageError && !useFastBundledOnly && !useGoldRing)
     ? { uri: logoUri }
     : resolveAsset(bundledAsset);
 
   return (
     <Image
       source={finalSource}
-      style={[{ width: size, height: size, borderRadius: size / 4 }, style as StyleProp<ImageStyle>]}
+      style={[{ width: size, height: size }, style as StyleProp<ImageStyle>]}
       resizeMode="contain"
       onError={() => {
         setImageError(true);

@@ -241,26 +241,21 @@ export function MarketRatesCard() {
       ctx.fillStyle = '#15803d';
       ctx.fillRect(0, 0, 640, 75);
 
-      // Header Logo & Brand Name
+      // Header Logo & Brand Name (Left)
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 24px sans-serif';
-      ctx.fillText('👑 FarmsKing', 24, 42);
+      ctx.fillText('👑 FarmsKing', 24, 40);
 
       ctx.fillStyle = '#bbf7d0';
-      ctx.font = '12px sans-serif';
-      ctx.fillText('India\'s Digital Mandi & Farm Ledger', 24, 62);
-
-      // Live Badge
-      ctx.fillStyle = '#fee2e2';
-      if (typeof (ctx as any).roundRect === 'function') {
-        (ctx as any).roundRect(460, 22, 155, 32, 16);
-        ctx.fill();
-      } else {
-        ctx.fillRect(460, 22, 155, 32);
-      }
-      ctx.fillStyle = '#dc2626';
       ctx.font = 'bold 12px sans-serif';
-      ctx.fillText('🔴 LIVE 24H RATES', 478, 43);
+      ctx.fillText('Smart Farming, Better Future', 24, 60);
+
+      // Right Side Header Tagline (formerly left subtitle)
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 12.5px sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText("India's Digital Mandi & Farm Ledger", 616, 48);
+      ctx.textAlign = 'left'; // Reset text alignment
 
       // Crop Name Header
       ctx.fillStyle = '#0f172a';
@@ -630,11 +625,10 @@ export function MarketRatesCard() {
                   <Text style={{ fontSize: 20 }}>👑</Text>
                   <Text style={styles.posterBrandName}>FarmsKing</Text>
                 </View>
-                <Text style={styles.posterBrandSub}>Digital Mandi & Farm Ledger</Text>
+                <Text style={styles.posterBrandSub}>Smart Farming, Better Future</Text>
               </View>
-              <View style={styles.posterLiveBadge}>
-                <View style={styles.posterRedDot} />
-                <Text style={styles.posterLiveText}>LIVE 24H RATES</Text>
+              <View style={{ flex: 1, alignItems: 'flex-end', justifyContent: 'center' }}>
+                <Text style={styles.posterRightSub}>India's Digital Mandi & Farm Ledger</Text>
               </View>
             </View>
 
@@ -956,6 +950,18 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: FONT.extraBold,
     color: '#15803d',
+  },
+  posterBrandSub: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#16a34a',
+    marginTop: 1,
+  },
+  posterRightSub: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#475569',
+    textAlign: 'right',
   },
   posterLiveBadge: {
     flexDirection: 'row',

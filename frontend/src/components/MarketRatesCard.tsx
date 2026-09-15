@@ -154,6 +154,12 @@ export function MarketRatesCard() {
   const handleShareText = async (crop: CropRateItem) => {
     setSelectedCropForShare(null);
 
+    const todayDateStr = new Date().toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+
     const localStr =
       crop.localAvgRate != null
         ? `• Avg Rate: ${formatInr(crop.localAvgRate)}\n• Min Rate: ${formatInr(crop.localMinRate!)}  |  Max Rate: ${formatInr(crop.localMaxRate!)}`
@@ -167,7 +173,7 @@ export function MarketRatesCard() {
     const textMessage =
       `🌾 *FarmsKing — Live Market Rates (24h)* 📊\n` +
       `🌱 *Crop:* ${crop.displayTitle} (Per ${crop.unit})\n` +
-      `⏱️ *Timeframe:* Previous 24 Hours\n\n` +
+      `📅 *Date:* ${todayDateStr}\n\n` +
       `🏛️ *LOCAL RATES:*\n${localStr}\n\n` +
       `🇮🇳 *NATIONAL RATES:*\n${nationalStr}\n\n` +
       `📲 *Use FarmsKing App to check real-time crop market rates:*\n` +
@@ -190,6 +196,12 @@ export function MarketRatesCard() {
   // Helper for generating high quality image card poster on Web browsers
   const generateWebImageCard = (crop: CropRateItem) => {
     try {
+      const todayDateStr = new Date().toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+
       const canvas = document.createElement('canvas');
       canvas.width = 600;
       canvas.height = 420;
@@ -232,7 +244,7 @@ export function MarketRatesCard() {
 
       ctx.fillStyle = '#64748b';
       ctx.font = '14px sans-serif';
-      ctx.fillText(`⏱️ Previous 24 Hours`, 24, 172);
+      ctx.fillText(`📅 Date: ${todayDateStr}  |  ⏱️ Previous 24 Hours`, 24, 172);
 
       // Local Box
       ctx.fillStyle = '#f8fafc';
@@ -561,7 +573,9 @@ export function MarketRatesCard() {
               <Text style={styles.posterCropUnit}>Per {selectedCropForShare.unit}</Text>
             </View>
 
-            <Text style={styles.posterStateSubtitle}>⏱️ Previous 24 Hours</Text>
+            <Text style={styles.posterStateSubtitle}>
+              📅 Date: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}  |  ⏱️ Previous 24 Hours
+            </Text>
 
             {/* Rates Table Box */}
             <View style={styles.posterTableBox}>

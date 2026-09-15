@@ -226,9 +226,9 @@ export function MarketRatesCard() {
 
       // Tiled Anti-Crop Background Watermark across entire poster
       ctx.save();
-      ctx.globalAlpha = 0.08;
-      ctx.fillStyle = '#15803d';
-      ctx.font = 'bold 22px sans-serif';
+      ctx.globalAlpha = 0.16;
+      ctx.fillStyle = '#166534';
+      ctx.font = 'bold 23px sans-serif';
       ctx.rotate((-15 * Math.PI) / 180);
 
       for (let y = -100; y < 650; y += 80) {
@@ -931,7 +931,7 @@ const styles = StyleSheet.create({
     right: -50,
     flexDirection: 'column',
     justifyContent: 'space-around',
-    opacity: 0.10,
+    opacity: 0.16,
     transform: [{ rotate: '-15deg' }],
   },
   posterWatermarkRow: {
@@ -940,9 +940,9 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   posterWatermarkTileText: {
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: FONT.extraBold,
-    color: '#15803d',
+    color: '#166534',
     marginHorizontal: 4,
   },
   posterHeader: {

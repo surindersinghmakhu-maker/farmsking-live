@@ -154,10 +154,16 @@ export function MarketRatesCard() {
   const handleShareText = async (crop: CropRateItem) => {
     setSelectedCropForShare(null);
 
-    const todayDateStr = new Date().toLocaleDateString('en-GB', {
+    const now = new Date();
+    const todayDateStr = now.toLocaleDateString('en-GB', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
+    });
+    const currentTimeStr = now.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
     });
 
     const localStr =
@@ -173,7 +179,7 @@ export function MarketRatesCard() {
     const textMessage =
       `🌾 *FarmsKing — Live Market Rates (24h)* 📊\n` +
       `🌱 *Crop:* ${crop.displayTitle} (Per ${crop.unit})\n` +
-      `📅 *Date:* ${todayDateStr}\n\n` +
+      `📅 *Date & Time:* ${todayDateStr}, ${currentTimeStr}\n\n` +
       `🏛️ *LOCAL RATES:*\n${localStr}\n\n` +
       `🇮🇳 *NATIONAL RATES:*\n${nationalStr}\n\n` +
       `📲 *Use FarmsKing App to check real-time crop market rates:*\n` +
@@ -196,10 +202,16 @@ export function MarketRatesCard() {
   // Helper for generating high quality image card poster on Web browsers
   const generateWebImageCard = (crop: CropRateItem) => {
     try {
-      const todayDateStr = new Date().toLocaleDateString('en-GB', {
+      const now = new Date();
+      const todayDateStr = now.toLocaleDateString('en-GB', {
         day: '2-digit',
         month: 'short',
         year: 'numeric',
+      });
+      const currentTimeStr = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
       });
 
       const canvas = document.createElement('canvas');
@@ -257,7 +269,7 @@ export function MarketRatesCard() {
       // Date & Time Subtitle Bar
       ctx.fillStyle = '#64748b';
       ctx.font = 'bold 13px sans-serif';
-      ctx.fillText(`📅 Date: ${todayDateStr}   |   ⏱️ Timeframe: Previous 24 Hours`, 24, 158);
+      ctx.fillText(`📅 Date: ${todayDateStr}   |   🕒 Time: ${currentTimeStr}   |   ⏱️ 24H Rates`, 24, 158);
 
       // Local Box
       ctx.fillStyle = '#f8fafc';
@@ -609,7 +621,7 @@ export function MarketRatesCard() {
             </View>
 
             <Text style={styles.posterStateSubtitle}>
-              📅 Date: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}  |  ⏱️ Timeframe: Previous 24 Hours
+              📅 Date: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}  |  🕒 Time: {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}  |  ⏱️ 24H Rates
             </Text>
 
             {/* Rates Table Box */}

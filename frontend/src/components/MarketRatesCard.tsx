@@ -275,8 +275,8 @@ export function MarketRatesCard() {
       ctx.font = 'bold 13px sans-serif';
       ctx.fillText(`Per ${crop.unit}`, 534, 121);
 
-      // Date & Time Subtitle Bar with light background container
-      ctx.fillStyle = '#f1f5f9';
+      // Date & Time Subtitle Bar with translucent background container
+      ctx.fillStyle = 'rgba(241, 245, 249, 0.65)';
       if (typeof (ctx as any).roundRect === 'function') {
         (ctx as any).roundRect(24, 142, 592, 28, 6);
         ctx.fill();
@@ -287,8 +287,8 @@ export function MarketRatesCard() {
       ctx.font = 'bold 12.5px sans-serif';
       ctx.fillText(`📅 Date: ${todayDateStr}   |   🕒 Time: ${currentTimeStr}   |   ⏱️ 24H Live Rates`, 36, 160);
 
-      // Local Box
-      ctx.fillStyle = '#f8fafc';
+      // Local Box with translucent fill so watermark shows behind text
+      ctx.fillStyle = 'rgba(248, 250, 252, 0.65)';
       ctx.strokeStyle = '#bbf7d0';
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -323,8 +323,8 @@ export function MarketRatesCard() {
         ctx.fillText('-', 500, 230);
       }
 
-      // National Box
-      ctx.fillStyle = '#f8fafc';
+      // National Box with translucent fill so watermark shows behind text
+      ctx.fillStyle = 'rgba(248, 250, 252, 0.65)';
       ctx.strokeStyle = '#cbd5e1';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
@@ -931,7 +931,7 @@ const styles = StyleSheet.create({
     right: -50,
     flexDirection: 'column',
     justifyContent: 'space-around',
-    opacity: 0.08,
+    opacity: 0.10,
     transform: [{ rotate: '-15deg' }],
   },
   posterWatermarkRow: {
@@ -1012,7 +1012,7 @@ const styles = StyleSheet.create({
     marginTop: -8,
   },
   posterDateTimeContainer: {
-    backgroundColor: '#f1f5f9',
+    backgroundColor: 'rgba(241, 245, 249, 0.65)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: RADIUS.xs,
@@ -1026,7 +1026,7 @@ const styles = StyleSheet.create({
     color: '#334155',
   },
   posterTableBox: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: 'rgba(248, 250, 252, 0.65)',
     borderRadius: RADIUS.md,
     padding: 12,
     borderWidth: 1,

@@ -2,10 +2,15 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { CreateSaleBillDto } from './dto/create-sale-bill.dto';
+import { ChatGateway } from '../chat/chat.gateway';
+import { toEnglishCropName } from '../market-rates/market-rates.service';
 
 @Injectable()
 export class SaleBillsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly chatGateway: ChatGateway,
+  ) {}
 
   private async nextBillNo(): Promise<string> {
     const now = new Date();
@@ -99,7 +104,7 @@ export class SaleBillsService {
       if (Array.isArray(items)) {
         for (const item of items) {
           if (item.cropName && Number(item.rate) > 0) {
-            const cleanName = item.cropName.split('(')[0].trim();
+            const cleanName = toEnglishCropName(item.cropName);
             await this.prisma.marketRate.create({
               data: {
                 cropName: cleanName,
@@ -121,6 +126,8 @@ export class SaleBillsService {
     } catch (err) {
       console.warn('Could not record market rate from sale bill:', err);
     }
+
+    this.chatGateway.broadcastMarketRateUpdate({ source: 'farmer_sale_bill', billId: bill.id });
 
     return bill;
   }
@@ -171,7 +178,7 @@ export class SaleBillsService {
       if (Array.isArray(items)) {
         for (const item of items) {
           if (item.cropName && Number(item.rate) > 0) {
-            const cleanName = item.cropName.split('(')[0].trim();
+            const cleanName = toEnglishCropName(item.cropName);
             await this.prisma.marketRate.create({
               data: {
                 cropName: cleanName,
@@ -193,6 +200,8 @@ export class SaleBillsService {
     } catch (err) {
       console.warn('Could not record market rate on bill update:', err);
     }
+
+    this.chatGateway.broadcastMarketRateUpdate({ source: 'farmer_sale_bill_update', billId: updated.id });
 
     return updated;
   }

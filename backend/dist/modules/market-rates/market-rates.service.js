@@ -10,9 +10,78 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MarketRatesService = void 0;
+exports.toEnglishCropName = toEnglishCropName;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+const CROP_ENGLISH_MAP = {
+    rose: 'Rose',
+    gulab: 'Rose',
+    'ਗੁਲਾਬ': 'Rose',
+    'गुलाब': 'Rose',
+    marigold: 'Marigold',
+    genda: 'Marigold',
+    'ਗੈਂਦਾ': 'Marigold',
+    'गेंदा': 'Marigold',
+    wheat: 'Wheat',
+    kanak: 'Wheat',
+    gehu: 'Wheat',
+    'ਕਣਕ': 'Wheat',
+    'ਗੇਹੂੰ': 'Wheat',
+    paddy: 'Paddy',
+    rice: 'Paddy',
+    jona: 'Paddy',
+    dhan: 'Paddy',
+    'ਝੋਨਾ': 'Paddy',
+    'ਚਾਵਲ': 'Paddy',
+    'धान': 'Paddy',
+    tomato: 'Tomato',
+    tamatar: 'Tomato',
+    'ਟਮਾਟਰ': 'Tomato',
+    'टमाटर': 'Tomato',
+    potato: 'Potato',
+    aloo: 'Potato',
+    'ਆਲੂ': 'Potato',
+    'आलू': 'Potato',
+    onion: 'Onion',
+    pyaz: 'Onion',
+    'ਪਿਆਜ਼': 'Onion',
+    'प्याज': 'Onion',
+    mustard: 'Mustard',
+    sarson: 'Mustard',
+    'ਸਰ੍ਹੋਂ': 'Mustard',
+    'सरसों': 'Mustard',
+    cotton: 'Cotton',
+    narma: 'Cotton',
+    kapas: 'Cotton',
+    'ਨਰਮਾ': 'Cotton',
+    'ਕਪਾਹ': 'Cotton',
+    'कपास': 'Cotton',
+    maize: 'Maize',
+    makki: 'Maize',
+    'ਮੱਕੀ': 'Maize',
+    'मक्का': 'Maize',
+    sugarcane: 'Sugarcane',
+    ganna: 'Sugarcane',
+    kamaad: 'Sugarcane',
+    'ਗੰਨਾ': 'Sugarcane',
+    'ਕਮਾਦ': 'Sugarcane',
+    'गन्ना': 'Sugarcane',
+};
+function toEnglishCropName(rawName) {
+    if (!rawName)
+        return '';
+    const cleaned = rawName.split('(')[0].trim();
+    const key = cleaned.toLowerCase();
+    if (CROP_ENGLISH_MAP[key])
+        return CROP_ENGLISH_MAP[key];
+    for (const [k, english] of Object.entries(CROP_ENGLISH_MAP)) {
+        if (key.includes(k) || k.includes(key)) {
+            return english;
+        }
+    }
+    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+}
 let MarketRatesService = class MarketRatesService {
     constructor(prisma) {
         this.prisma = prisma;
@@ -25,6 +94,8 @@ let MarketRatesService = class MarketRatesService {
             })
             : null;
         const userState = (profile?.state || 'Punjab').trim();
+        const since = new Date(Date.now() - ONE_DAY_MS);
+        const sinceTime = since.getTime();
         let cropCycles = [];
         if (user?.id) {
             cropCycles = await this.prisma.cropCycle.findMany({
@@ -45,48 +116,6 @@ let MarketRatesService = class MarketRatesService {
                 });
             }
         }
-        const distinctCropMap = new Map();
-        for (const c of cropCycles) {
-            const englishName = c.cropName.split('(')[0].trim();
-            const key = englishName.toLowerCase();
-            if (!distinctCropMap.has(key)) {
-                distinctCropMap.set(key, { cropName: englishName, unit: c.unit });
-            }
-        }
-        if (distinctCropMap.size === 0) {
-            try {
-                const recentMR = await this.prisma.marketRate.findMany({
-                    take: 20,
-                    orderBy: { createdAt: 'desc' },
-                    select: { cropName: true, unit: true },
-                });
-                for (const mr of recentMR) {
-                    if (mr.cropName) {
-                        const englishName = mr.cropName.split('(')[0].trim();
-                        const key = englishName.toLowerCase();
-                        if (!distinctCropMap.has(key)) {
-                            distinctCropMap.set(key, { cropName: englishName, unit: mr.unit });
-                        }
-                    }
-                }
-            }
-            catch {
-            }
-        }
-        if (distinctCropMap.size === 0) {
-            const defaultCrops = [
-                { cropName: 'Rose', unit: 'KG' },
-                { cropName: 'Marigold', unit: 'KG' },
-                { cropName: 'Wheat', unit: 'Quintal' },
-                { cropName: 'Paddy', unit: 'Quintal' },
-            ];
-            for (const dc of defaultCrops) {
-                distinctCropMap.set(dc.cropName.toLowerCase(), dc);
-            }
-        }
-        const distinctCrops = Array.from(distinctCropMap.values());
-        const since = new Date(Date.now() - ONE_DAY_MS);
-        const sinceTime = since.getTime();
         const recentSaleItems = await this.prisma.saleItem.findMany({
             where: {
                 createdAt: { gte: since },
@@ -112,18 +141,11 @@ let MarketRatesService = class MarketRatesService {
                 farmer: { select: { state: true } },
             },
         });
-        const recentArhtiyaSales = await this.prisma.arhtiyaTransaction.findMany({
-            where: { transactionDate: { gte: since } },
-            select: {
-                cropName: true,
-                inputUnit: true,
-                ratePerQuintal: true,
-                transactionDate: true,
-                farmer: { select: { state: true } },
-            },
-        });
         const recentMarketRates = await this.prisma.marketRate.findMany({
-            where: { rateDate: { gte: since } },
+            where: {
+                rateDate: { gte: since },
+                NOT: { source: 'arhtiya_crop_sale' },
+            },
             select: {
                 cropName: true,
                 unit: true,
@@ -134,18 +156,120 @@ let MarketRatesService = class MarketRatesService {
                 state: true,
             },
         });
+        const distinctCropMap = new Map();
+        for (const c of cropCycles) {
+            if (c.cropName) {
+                const englishName = toEnglishCropName(c.cropName);
+                const key = englishName.toLowerCase();
+                if (!distinctCropMap.has(key)) {
+                    distinctCropMap.set(key, { cropName: englishName, unit: c.unit });
+                }
+            }
+        }
+        for (const bill of recentSaleBills) {
+            const items = bill.items;
+            if (Array.isArray(items)) {
+                for (const it of items) {
+                    const rawName = it.cropName || it.productName;
+                    if (rawName) {
+                        const englishName = toEnglishCropName(rawName);
+                        const key = englishName.toLowerCase();
+                        if (!distinctCropMap.has(key)) {
+                            distinctCropMap.set(key, { cropName: englishName, unit: it.unit || 'KG' });
+                        }
+                    }
+                }
+            }
+        }
+        for (const item of recentSaleItems) {
+            if (item.productName) {
+                const englishName = toEnglishCropName(item.productName);
+                const key = englishName.toLowerCase();
+                if (!distinctCropMap.has(key)) {
+                    distinctCropMap.set(key, { cropName: englishName, unit: item.unit || 'KG' });
+                }
+            }
+        }
+        for (const mr of recentMarketRates) {
+            if (mr.cropName) {
+                const englishName = toEnglishCropName(mr.cropName);
+                const key = englishName.toLowerCase();
+                if (!distinctCropMap.has(key)) {
+                    distinctCropMap.set(key, { cropName: englishName, unit: mr.unit || 'KG' });
+                }
+            }
+        }
+        const defaultCrops = [
+            { cropName: 'Rose', unit: 'KG' },
+            { cropName: 'Marigold', unit: 'KG' },
+            { cropName: 'Wheat', unit: 'Quintal' },
+            { cropName: 'Paddy', unit: 'Quintal' },
+        ];
+        for (const dc of defaultCrops) {
+            const key = dc.cropName.toLowerCase();
+            if (!distinctCropMap.has(key)) {
+                distinctCropMap.set(key, dc);
+            }
+        }
+        const distinctCrops = Array.from(distinctCropMap.values());
+        function normalizeToPerKg(rawRate, rawUnit) {
+            if (isNaN(rawRate) || rawRate <= 0)
+                return 0;
+            const u = (rawUnit || 'KG').toUpperCase();
+            if (u.includes('QUINTAL') || u.includes('QTL')) {
+                return rawRate / 100;
+            }
+            if (u.includes('50') || u.includes('BAG_50')) {
+                return rawRate / 50;
+            }
+            if (u.includes('35') || u.includes('BAG_35')) {
+                return rawRate / 35;
+            }
+            if (u.includes('40') || u.includes('MANN')) {
+                return rawRate / 40;
+            }
+            if (u.includes('TON')) {
+                return rawRate / 1000;
+            }
+            if (u.includes('GRAM') || u.includes('GM')) {
+                return rawRate * 1000;
+            }
+            return rawRate;
+        }
+        const CROP_SYNONYMS = {
+            rose: ['rose', 'gulab', 'ਗੁਲਾਬ', 'गुलाब'],
+            marigold: ['marigold', 'genda', 'ਗੈਂਦਾ', 'गेंदा'],
+            wheat: ['wheat', 'kanak', 'gehu', 'ਕਣਕ', 'गेहूं'],
+            paddy: ['paddy', 'rice', 'jona', 'dhan', 'ਝੋਨਾ', 'ਚਾਵਲ', 'धान'],
+            tomato: ['tomato', 'tamatar', 'ਟਮਾਟਰ', 'टमाटर'],
+            potato: ['potato', 'aloo', 'ਆਲੂ', 'आलू'],
+            onion: ['onion', 'pyaz', 'ਪਿਆਜ਼', 'प्याज'],
+            mustard: ['mustard', 'sarson', 'ਸਰ੍ਹੋਂ', 'सरसों'],
+            cotton: ['cotton', 'narma', 'kapas', 'ਨਰਮਾ', 'ਕਪਾਹ', 'कपास'],
+            maize: ['maize', 'makki', 'ਮੱਕੀ', 'मक्का'],
+            sugarcane: ['sugarcane', 'ganna', 'kamaad', 'ਗੰਨਾ', 'ਕਮਾਦ', 'गन्ना'],
+        };
         const rates = await Promise.all(distinctCrops.map(async ({ cropName, unit: cropUnit }) => {
-            const cropKey = cropName.toLowerCase();
-            let unit = cropUnit || 'quintal';
+            const cropKey = cropName.toLowerCase().split('(')[0].trim();
             const localRatePool = [];
             const nationalRatePool = [];
             const matchesCrop = (targetName) => {
-                const t = (targetName || '').split('(')[0].trim().toLowerCase();
-                return t === cropKey || t.includes(cropKey) || cropKey.includes(t);
+                if (!targetName)
+                    return false;
+                const t = targetName.split('(')[0].trim().toLowerCase();
+                if (t === cropKey || t.includes(cropKey) || cropKey.includes(t))
+                    return true;
+                for (const [key, synonyms] of Object.entries(CROP_SYNONYMS)) {
+                    const matchesKey = key === cropKey || synonyms.includes(cropKey);
+                    const matchesTarget = synonyms.some((syn) => t.includes(syn) || syn.includes(t));
+                    if (matchesKey && matchesTarget)
+                        return true;
+                }
+                return false;
             };
             const isUserState = (st) => {
                 if (!st || !userState)
-                    return false;
+                    return true;
                 return st.trim().toLowerCase() === userState.toLowerCase();
             };
             const isWithin24h = (dt) => {
@@ -156,14 +280,12 @@ let MarketRatesService = class MarketRatesService {
             };
             for (const item of recentSaleItems) {
                 if (matchesCrop(item.productName) && isWithin24h(item.createdAt)) {
-                    const rVal = Number(item.pricePerUnit);
-                    if (!isNaN(rVal) && rVal > 0) {
-                        nationalRatePool.push(rVal);
+                    const perKg = normalizeToPerKg(Number(item.pricePerUnit), item.unit);
+                    if (perKg > 0) {
+                        nationalRatePool.push(perKg);
                         if (isUserState(item.sale?.recordedBy?.state)) {
-                            localRatePool.push(rVal);
+                            localRatePool.push(perKg);
                         }
-                        if (item.unit)
-                            unit = item.unit;
                     }
                 }
             }
@@ -174,54 +296,27 @@ let MarketRatesService = class MarketRatesService {
                         if (matchesCrop(it.cropName || it.productName)) {
                             const itemTime = it.timestamp || it.createdAt || bill.createdAt;
                             if (isWithin24h(itemTime)) {
-                                const rVal = Number(it.rate || it.pricePerUnit);
-                                if (!isNaN(rVal) && rVal > 0) {
-                                    nationalRatePool.push(rVal);
+                                const perKg = normalizeToPerKg(Number(it.rate || it.pricePerUnit), it.unit);
+                                if (perKg > 0) {
+                                    nationalRatePool.push(perKg);
                                     if (isUserState(bill.farmer?.state)) {
-                                        localRatePool.push(rVal);
+                                        localRatePool.push(perKg);
                                     }
-                                    if (it.unit)
-                                        unit = it.unit;
                                 }
                             }
                         }
                     }
                 }
             }
-            for (const tx of recentArhtiyaSales) {
-                if (tx.cropName && matchesCrop(tx.cropName) && isWithin24h(tx.transactionDate)) {
-                    const rVal = Number(tx.ratePerQuintal);
-                    if (!isNaN(rVal) && rVal > 0) {
-                        nationalRatePool.push(rVal);
-                        if (isUserState(tx.farmer?.state)) {
-                            localRatePool.push(rVal);
-                        }
-                        if (tx.inputUnit)
-                            unit = tx.inputUnit;
-                    }
-                }
-            }
             for (const mr of recentMarketRates) {
                 if (matchesCrop(mr.cropName) && isWithin24h(mr.rateDate)) {
-                    const minP = Number(mr.minPrice ?? mr.modalPrice);
-                    const maxP = Number(mr.maxPrice ?? mr.modalPrice);
-                    const avgP = Number(mr.modalPrice);
-                    if (!isNaN(minP) && minP > 0)
-                        nationalRatePool.push(minP);
-                    if (!isNaN(maxP) && maxP > 0)
-                        nationalRatePool.push(maxP);
-                    if (!isNaN(avgP) && avgP > 0)
-                        nationalRatePool.push(avgP);
-                    if (isUserState(mr.state)) {
-                        if (!isNaN(minP) && minP > 0)
-                            localRatePool.push(minP);
-                        if (!isNaN(maxP) && maxP > 0)
-                            localRatePool.push(maxP);
-                        if (!isNaN(avgP) && avgP > 0)
-                            localRatePool.push(avgP);
+                    const avgPerKg = normalizeToPerKg(Number(mr.modalPrice ?? mr.minPrice ?? mr.maxPrice), mr.unit);
+                    if (avgPerKg > 0) {
+                        nationalRatePool.push(avgPerKg);
+                        if (isUserState(mr.state)) {
+                            localRatePool.push(avgPerKg);
+                        }
                     }
-                    if (mr.unit)
-                        unit = mr.unit;
                 }
             }
             let localMinRate = null;
@@ -230,7 +325,7 @@ let MarketRatesService = class MarketRatesService {
             if (localRatePool.length > 0) {
                 localMinRate = Math.min(...localRatePool);
                 localMaxRate = Math.max(...localRatePool);
-                localAvgRate = Math.round(localRatePool.reduce((a, b) => a + b, 0) / localRatePool.length);
+                localAvgRate = (localMinRate + localMaxRate) / 2;
             }
             let nationalMinRate = null;
             let nationalMaxRate = null;
@@ -238,11 +333,11 @@ let MarketRatesService = class MarketRatesService {
             if (nationalRatePool.length > 0) {
                 nationalMinRate = Math.min(...nationalRatePool);
                 nationalMaxRate = Math.max(...nationalRatePool);
-                nationalAvgRate = Math.round(nationalRatePool.reduce((a, b) => a + b, 0) / nationalRatePool.length);
+                nationalAvgRate = (nationalMinRate + nationalMaxRate) / 2;
             }
             return {
                 cropName,
-                unit,
+                unit: 'KG',
                 localMinRate,
                 localMaxRate,
                 localAvgRate,

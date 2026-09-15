@@ -74,14 +74,6 @@ export function normalizeApiUrl(rawInput: string): string {
  * Calculates standard default API URL based on environment & device type
  */
 export function getDefaultApiUrl(): string {
-  if (Platform.OS === 'web' && typeof window !== 'undefined') {
-    const hostname = window.location?.hostname;
-    if (hostname) {
-      if (hostname === 'localhost' || hostname === '127.0.0.1' || /^192\.168\./.test(hostname) || /^10\./.test(hostname) || /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname)) {
-        return `http://${hostname}:3000/api/v1`;
-      }
-    }
-  }
   return 'https://farmsking-live-md6m.onrender.com/api/v1';
 }
 

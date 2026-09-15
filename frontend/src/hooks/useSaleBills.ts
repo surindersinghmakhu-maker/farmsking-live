@@ -7,6 +7,7 @@ export function useCreateSaleBill() {
     mutationFn: saleBillsApi.createSaleBill,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sale-bills'] });
+      queryClient.invalidateQueries({ queryKey: ['market-rates'] });
     },
   });
 }
@@ -24,6 +25,7 @@ export function useUpdateSaleBill() {
       saleBillsApi.updateSaleBill(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sale-bills'] });
+      queryClient.invalidateQueries({ queryKey: ['market-rates'] });
     },
   });
 }

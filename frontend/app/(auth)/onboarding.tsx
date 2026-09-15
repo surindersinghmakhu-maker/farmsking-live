@@ -55,9 +55,7 @@ export default function OnboardingScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <View style={styles.brandBadge}>
-          <BrandLogo size={24} iconColor="#ffffff" fallbackIconName="leaf" />
-        </View>
+        <BrandLogo size={52} useHdQuality style={{ marginBottom: 8 }} />
         <Text style={styles.brandName}>FarmsKing</Text>
 
         <Text style={styles.title}>Tell us about your farm</Text>

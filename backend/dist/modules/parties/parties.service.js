@@ -13,6 +13,7 @@ exports.PartiesService = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../prisma/prisma.service");
+const chat_gateway_1 = require("../chat/chat.gateway");
 const SIGN = {
     SALE_CREDIT: 1,
     SALE_PAYMENT: -1,
@@ -20,8 +21,9 @@ const SIGN = {
     EXPENSE_PAYMENT: 1,
 };
 let PartiesService = class PartiesService {
-    constructor(prisma) {
+    constructor(prisma, chatGateway) {
         this.prisma = prisma;
+        this.chatGateway = chatGateway;
     }
     create(user, name, address, mobile) {
         return this.prisma.party.create({
@@ -343,6 +345,7 @@ let PartiesService = class PartiesService {
                 },
             });
         }
+        this.chatGateway.broadcastMarketRateUpdate({ source: 'farmer_sale_ledger' });
         return this.getStatement(user, partyId);
     }
     async nextReceiptNo(isReceived) {
@@ -514,7 +517,7 @@ let PartiesService = class PartiesService {
         const commissionAmount = Math.round(((grossAmount * commissionPercent) / 100) * 100) / 100;
         const otherCharges = dto.otherCharges ?? 0;
         const netAmount = Math.max(0, Math.round((grossAmount - commissionAmount - otherCharges) * 100) / 100);
-        return this.prisma.arhtiyaTransaction.create({
+        const tx = await this.prisma.arhtiyaTransaction.create({
             data: {
                 farmerId: user.id,
                 partyId: dto.partyId,
@@ -538,6 +541,35 @@ let PartiesService = class PartiesService {
                 notes: dto.notes?.trim() || null,
             },
         });
+        try {
+            const userProfile = await this.prisma.user.findUnique({
+                where: { id: user.id },
+                select: { state: true, district: true },
+            });
+            if (dto.cropName && Number(dto.ratePerQuintal) > 0) {
+                const cleanName = dto.cropName.split('(')[0].trim();
+                await this.prisma.marketRate.create({
+                    data: {
+                        cropName: cleanName,
+                        variety: 'Arhtiya Sale',
+                        market: userProfile?.district ? `${userProfile.district} Mandi` : 'Local Mandi',
+                        state: userProfile?.state || 'Punjab',
+                        district: userProfile?.district || null,
+                        modalPrice: Number(dto.ratePerQuintal),
+                        minPrice: Number(dto.ratePerQuintal),
+                        maxPrice: Number(dto.ratePerQuintal),
+                        unit: 'Quintal',
+                        rateDate: new Date(dto.transactionDate),
+                        source: 'arhtiya_crop_sale',
+                    },
+                });
+            }
+        }
+        catch (err) {
+            console.warn('Could not record market rate from arhtiya crop sale:', err);
+        }
+        this.chatGateway.broadcastMarketRateUpdate({ source: 'arhtiya_crop_sale', transactionId: tx.id });
+        return tx;
     }
     async getArhtiyaLedgerHisab(user, partyId) {
         const party = await this.prisma.unifiedParty.findFirst({
@@ -601,6 +633,7 @@ let PartiesService = class PartiesService {
 exports.PartiesService = PartiesService;
 exports.PartiesService = PartiesService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        chat_gateway_1.ChatGateway])
 ], PartiesService);
 //# sourceMappingURL=parties.service.js.map

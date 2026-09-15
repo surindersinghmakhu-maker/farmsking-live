@@ -68,90 +68,60 @@ export function MarketRatesCard() {
 
   const userState = user?.state || data?.state || 'Punjab';
 
-  // Filter user's active crops in HARVESTING stage (or active crops fallback).
-  // Calculate 24h Min, Max & Avg for State level and National level.
+  // Calculate 24h Min, Max & Avg for State level and National level for all market rate crops.
   const subcategoryRates = useMemo(() => {
-    let harvestingCrops = cropFields.filter((c) => c.status === 'ACTIVE' && c.stage === 'HARVESTING');
-    if (harvestingCrops.length === 0) {
-      harvestingCrops = cropFields.filter((c) => c.status === 'ACTIVE');
+    if (!data?.rates || data.rates.length === 0) {
+      return [];
     }
 
-    const subcategoryMap = new Map<string, (typeof harvestingCrops)[0]>();
-
-    for (const crop of harvestingCrops) {
-      let baseName = crop.cropName.split('(')[0].trim();
-      if (crop.variety && baseName.toLowerCase().includes(crop.variety.toLowerCase())) {
-        baseName = baseName.replace(new RegExp(crop.variety, 'gi'), '').trim();
+    // Map user's registered crop units for target unit conversion
+    const userCropUnitMap = new Map<string, string>();
+    (cropFields || []).forEach((c) => {
+      let baseName = c.cropName.split('(')[0].trim();
+      if (c.variety && baseName.toLowerCase().includes(c.variety.toLowerCase())) {
+        baseName = baseName.replace(new RegExp(c.variety, 'gi'), '').trim();
       }
-      const key = baseName.toLowerCase();
-      if (!subcategoryMap.has(key)) {
-        subcategoryMap.set(key, crop);
-      }
-    }
+      userCropUnitMap.set(baseName.toLowerCase(), c.unit || 'KG');
+    });
 
-    const uniqueSubcategoryCrops = Array.from(subcategoryMap.values());
-
-    if (uniqueSubcategoryCrops.length === 0 && data?.rates && data.rates.length > 0) {
-      return data.rates.map((r) => ({
-        displayTitle: r.cropName,
-        unit: r.unit || 'Quintal',
-        localMinRate: r.localMinRate,
-        localMaxRate: r.localMaxRate,
-        localAvgRate: r.localAvgRate,
-        nationalMinRate: r.nationalMinRate,
-        nationalMaxRate: r.nationalMaxRate,
-        nationalAvgRate: r.nationalAvgRate,
-      }));
-    }
-
-    return uniqueSubcategoryCrops.map((userCrop) => {
-      let displayTitle = userCrop.cropName.split('(')[0].trim();
-      if (userCrop.variety && displayTitle.toLowerCase().includes(userCrop.variety.toLowerCase())) {
-        displayTitle = displayTitle.replace(new RegExp(userCrop.variety, 'gi'), '').trim();
-      }
-      const userCropEng = displayTitle.toLowerCase();
-
-      // Find matching rate from backend API data for last 24 hrs
-      const apiRate = data?.rates?.find((r) => {
-        const rName = r.cropName.split('(')[0].trim().toLowerCase();
-        return rName === userCropEng || rName.includes(userCropEng) || userCropEng.includes(rName);
-      });
-
-      const sourceUnit = apiRate?.unit || 'KG';
-      const targetUnit = userCrop.unit || sourceUnit;
+    return data.rates.map((r) => {
+      const cropKey = r.cropName.split('(')[0].trim().toLowerCase();
+      const userUnit = userCropUnitMap.get(cropKey);
+      const sourceUnit = r.unit || 'KG';
+      const targetUnit = userUnit || (r.cropName === 'Wheat' || r.cropName === 'Paddy' ? 'Quintal' : 'KG');
 
       const localAvgRate =
-        apiRate?.localAvgRate != null && apiRate.localAvgRate > 0
-          ? convertRateForCropUnit(apiRate.localAvgRate, sourceUnit, targetUnit)
+        r.localAvgRate != null && r.localAvgRate > 0
+          ? convertRateForCropUnit(r.localAvgRate, sourceUnit, targetUnit)
           : null;
 
       const localMinRate =
         localAvgRate != null
-          ? convertRateForCropUnit(apiRate?.localMinRate ?? apiRate!.localAvgRate!, sourceUnit, targetUnit)
+          ? convertRateForCropUnit(r.localMinRate ?? r.localAvgRate!, sourceUnit, targetUnit)
           : null;
 
       const localMaxRate =
         localAvgRate != null
-          ? convertRateForCropUnit(apiRate?.localMaxRate ?? apiRate!.localAvgRate!, sourceUnit, targetUnit)
+          ? convertRateForCropUnit(r.localMaxRate ?? r.localAvgRate!, sourceUnit, targetUnit)
           : null;
 
       const nationalAvgRate =
-        apiRate?.nationalAvgRate != null && apiRate.nationalAvgRate > 0
-          ? convertRateForCropUnit(apiRate.nationalAvgRate, sourceUnit, targetUnit)
+        r.nationalAvgRate != null && r.nationalAvgRate > 0
+          ? convertRateForCropUnit(r.nationalAvgRate, sourceUnit, targetUnit)
           : null;
 
       const nationalMinRate =
         nationalAvgRate != null
-          ? convertRateForCropUnit(apiRate?.nationalMinRate ?? apiRate!.nationalAvgRate!, sourceUnit, targetUnit)
+          ? convertRateForCropUnit(r.nationalMinRate ?? r.nationalAvgRate!, sourceUnit, targetUnit)
           : null;
 
       const nationalMaxRate =
         nationalAvgRate != null
-          ? convertRateForCropUnit(apiRate?.nationalMaxRate ?? apiRate!.nationalAvgRate!, sourceUnit, targetUnit)
+          ? convertRateForCropUnit(r.nationalMaxRate ?? r.nationalAvgRate!, sourceUnit, targetUnit)
           : null;
 
       return {
-        displayTitle,
+        displayTitle: r.cropName,
         unit: targetUnit,
         localMinRate,
         localMaxRate,

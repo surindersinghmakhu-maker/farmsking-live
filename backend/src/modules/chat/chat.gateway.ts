@@ -39,6 +39,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly chatService: ChatService,
   ) {}
 
+  broadcastMarketRateUpdate(payload?: any) {
+    if (this.server) {
+      this.server.emit('market_rate_updated', payload || { timestamp: new Date().toISOString() });
+    }
+  }
+
   isUserOnline(userId: string): boolean {
     return (this.onlineSocketCounts.get(userId) ?? 0) > 0;
   }

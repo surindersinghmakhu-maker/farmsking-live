@@ -30,6 +30,11 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
         this.logger = new common_1.Logger(ChatGateway_1.name);
         this.onlineSocketCounts = new Map();
     }
+    broadcastMarketRateUpdate(payload) {
+        if (this.server) {
+            this.server.emit('market_rate_updated', payload || { timestamp: new Date().toISOString() });
+        }
+    }
     isUserOnline(userId) {
         return (this.onlineSocketCounts.get(userId) ?? 0) > 0;
     }

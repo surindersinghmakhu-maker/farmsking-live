@@ -18,6 +18,7 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
     private readonly logger;
     private readonly onlineSocketCounts;
     constructor(jwtService: JwtService, prisma: PrismaService, chatService: ChatService);
+    broadcastMarketRateUpdate(payload?: any): void;
     isUserOnline(userId: string): boolean;
     private setOnline;
     private setOffline;

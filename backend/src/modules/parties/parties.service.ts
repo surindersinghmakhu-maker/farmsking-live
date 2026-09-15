@@ -7,6 +7,7 @@ import { RecordPaymentDto } from './dto/record-payment.dto';
 import { CreateUnifiedPartyDto } from './dto/create-unified-party.dto';
 import { RecordArhtiyaAdvanceDto } from './dto/record-arhtiya-advance.dto';
 import { RecordArhtiyaCropSaleDto } from './dto/record-arhtiya-crop-sale.dto';
+import { ChatGateway } from '../chat/chat.gateway';
 
 
 /** Sign each ledger entry type contributes to a party's balance: + = party owes the farmer, - = farmer owes the party. */
@@ -19,7 +20,10 @@ const SIGN: Record<PartyLedgerEntryType, 1 | -1> = {
 
 @Injectable()
 export class PartiesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly chatGateway: ChatGateway,
+  ) {}
 
   create(user: AuthUser, name: string, address: string, mobile?: string) {
     return this.prisma.party.create({
@@ -375,6 +379,8 @@ export class PartiesService {
       });
     }
 
+    this.chatGateway.broadcastMarketRateUpdate({ source: 'farmer_sale_ledger' });
+
     return this.getStatement(user, partyId);
   }
 
@@ -571,7 +577,7 @@ export class PartiesService {
     const otherCharges = dto.otherCharges ?? 0;
     const netAmount = Math.max(0, Math.round((grossAmount - commissionAmount - otherCharges) * 100) / 100);
 
-    return this.prisma.arhtiyaTransaction.create({
+    const tx = await this.prisma.arhtiyaTransaction.create({
       data: {
         farmerId: user.id,
         partyId: dto.partyId,
@@ -595,6 +601,37 @@ export class PartiesService {
         notes: dto.notes?.trim() || null,
       },
     });
+
+    try {
+      const userProfile = await this.prisma.user.findUnique({
+        where: { id: user.id },
+        select: { state: true, district: true },
+      });
+      if (dto.cropName && Number(dto.ratePerQuintal) > 0) {
+        const cleanName = dto.cropName.split('(')[0].trim();
+        await this.prisma.marketRate.create({
+          data: {
+            cropName: cleanName,
+            variety: 'Arhtiya Sale',
+            market: userProfile?.district ? `${userProfile.district} Mandi` : 'Local Mandi',
+            state: userProfile?.state || 'Punjab',
+            district: userProfile?.district || null,
+            modalPrice: Number(dto.ratePerQuintal),
+            minPrice: Number(dto.ratePerQuintal),
+            maxPrice: Number(dto.ratePerQuintal),
+            unit: 'Quintal',
+            rateDate: new Date(dto.transactionDate),
+            source: 'arhtiya_crop_sale',
+          },
+        });
+      }
+    } catch (err) {
+      console.warn('Could not record market rate from arhtiya crop sale:', err);
+    }
+
+    this.chatGateway.broadcastMarketRateUpdate({ source: 'arhtiya_crop_sale', transactionId: tx.id });
+
+    return tx;
   }
 
   /** Calculate net settlement, auto interest, and transaction ledger for an Arhtiya */

@@ -64,9 +64,7 @@ export default function LoginScreen() {
         {/* Top Hero Header */}
         <LinearGradient colors={['#16a34a', '#15803d', '#0f766e']} style={styles.heroBanner}>
           <View style={styles.brandBox}>
-            <View style={styles.brandIconWrap}>
-              <BrandLogo size={32} iconColor="#ffffff" fallbackIconName="leaf" />
-            </View>
+            <BrandLogo size={56} useHdQuality style={{ marginBottom: 8 }} />
             <Text style={styles.brandName}>FarmsKing</Text>
             <Text style={styles.brandTagline}>Smart Agriculture & Farm Management</Text>
           </View>

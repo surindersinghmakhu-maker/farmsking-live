@@ -1,9 +1,11 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { CreateSaleBillDto } from './dto/create-sale-bill.dto';
+import { ChatGateway } from '../chat/chat.gateway';
 export declare class SaleBillsService {
     private readonly prisma;
-    constructor(prisma: PrismaService);
+    private readonly chatGateway;
+    constructor(prisma: PrismaService, chatGateway: ChatGateway);
     private nextBillNo;
     create(user: AuthUser, dto: CreateSaleBillDto): Promise<{
         id: string;

@@ -1808,9 +1808,26 @@ export default function RecordsScreen() {
 
   const onSaveSale = async () => {
     setSaleError(null);
-    if (saleItems.length === 0) {
-      setSaleError('⚠️ Please add at least one product to the sale list.');
-      return;
+    let itemsToSave = [...saleItems];
+    if (itemsToSave.length === 0) {
+      const qty = Number(saleQuantity);
+      const rate = Number(saleRate);
+      if (selectedFarmerCrop && qty > 0 && rate > 0) {
+        itemsToSave = [
+          {
+            id: Date.now().toString(),
+            cropId: selectedFarmerCrop.id,
+            cropName: selectedFarmerCrop.cropName,
+            unit: selectedFarmerCrop.unit,
+            qty,
+            rate,
+            amount: qty * rate,
+          },
+        ];
+      } else {
+        setSaleError('⚠️ Please add at least one product to the sale list.');
+        return;
+      }
     }
     if (paymentMode === 'PARTY' && !selectedParty) {
       setSaleError('⚠️ Please select a party or choose Cash.');
@@ -1818,7 +1835,7 @@ export default function RecordsScreen() {
     }
 
     // Validate estimated max rate (+10% cap over all farmers) for all items in the cart
-    for (const item of saleItems) {
+    for (const item of itemsToSave) {
       const crop = harvestingCrops.find((c) => c.id === item.cropId) || farmerCrops.find((c) => c.id === item.cropId);
       const { highestFarmerRate, maxAllowedRate } = getCropMaxRateDetails(
         item.cropName,
@@ -1840,6 +1857,13 @@ export default function RecordsScreen() {
     try {
       const currentReceivedMode = paymentMode === 'PARTY' ? amountReceivedMode : 'CASH';
       const targetBillNo = editingBillNo || nextSuggestedBillNo;
+      const calcTotalAmount = itemsToSave.reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+      const discountVal = Number(saleDiscount) || 0;
+      const deliveryVal = Number(saleDelivery) || 0;
+      const calcNetCartAmount = Math.max(0, calcTotalAmount - discountVal + deliveryVal);
+      const calcEffectiveAmountReceived = paymentMode === 'CASH' ? calcNetCartAmount : Number(amountReceived) || 0;
+      const calcThisSaleBalance = calcNetCartAmount - calcEffectiveAmountReceived;
+
       const billPayload = {
         billNo: targetBillNo,
         farmerName: user?.name || 'Farmer',
@@ -1848,15 +1872,15 @@ export default function RecordsScreen() {
         partyMobile: paymentMode === 'PARTY' ? selectedParty?.mobile ?? undefined : cashBuyerMobile.trim() || undefined,
         isCash: paymentMode === 'CASH',
         amountReceivedMode: currentReceivedMode,
-        items: saleItems.map((i) => ({ cropId: i.cropId || '', cropName: i.cropName, unit: i.unit || 'unit', qty: Number(i.qty) || 1, rate: Number(i.rate) || 0, amount: Number(i.amount) || 0 })),
-        totalItems: totalCartItems,
-        totalAmount: netCartAmount,
-        amountReceived: effectiveAmountReceived,
-        thisSaleBalance,
+        items: itemsToSave.map((i) => ({ cropId: i.cropId || '', cropName: i.cropName, unit: i.unit || 'unit', qty: Number(i.qty) || 1, rate: Number(i.rate) || 0, amount: Number(i.amount) || 0 })),
+        totalItems: itemsToSave.length,
+        totalAmount: calcNetCartAmount,
+        amountReceived: calcEffectiveAmountReceived,
+        thisSaleBalance: calcThisSaleBalance,
         previousBalance: previousPartyBalance,
-        netReceivable: paymentMode === 'PARTY' ? previousPartyBalance + thisSaleBalance : 0,
-        discountAmount: Number(saleDiscount) || 0,
-        deliveryCharge: Number(saleDelivery) || 0,
+        netReceivable: paymentMode === 'PARTY' ? previousPartyBalance + calcThisSaleBalance : 0,
+        discountAmount: discountVal,
+        deliveryCharge: deliveryVal,
         notes: saleDescription.trim() || undefined,
         createdAt: saleDate ? new Date(`${saleDate}T12:00:00.000Z`).toISOString() : undefined,
       };
@@ -1889,15 +1913,15 @@ export default function RecordsScreen() {
       }
 
       if (paymentMode === 'PARTY' && selectedParty) {
-        const itemSummaryWithQty = saleItems.map((i) => `${i.cropName} (${i.qty} ${i.unit || 'unit'})`).join(', ');
+        const itemSummaryWithQty = itemsToSave.map((i) => `${i.cropName} (${i.qty} ${i.unit || 'unit'})`).join(', ');
         const reason = `Sale: ${itemSummaryWithQty}`;
         try {
           const validBillIdToPass = realDbBillId || editingBillId || undefined;
           await recordSaleLedger.mutateAsync({
             id: selectedParty.id,
             payload: {
-              totalAmount: netCartAmount,
-              amountReceived: effectiveAmountReceived,
+              totalAmount: calcNetCartAmount,
+              amountReceived: calcEffectiveAmountReceived,
               reason,
               saleBillId: validBillIdToPass,
             },
@@ -1917,7 +1941,7 @@ export default function RecordsScreen() {
         );
 
         if (existingSales.length > 0) {
-          saleItems.forEach((item, index) => {
+          itemsToSave.forEach((item, index) => {
             if (index < existingSales.length) {
               const existing = existingSales[index];
               updateSale(existing.id, {
@@ -1926,7 +1950,7 @@ export default function RecordsScreen() {
                 pricePerUnit: String(item.rate),
                 buyerName,
                 totalAmount: item.amount,
-                amountReceived: effectiveAmountReceived,
+                amountReceived: calcEffectiveAmountReceived,
                 previousBalance: previousPartyBalance,
                 amountReceivedMode: currentReceivedMode,
                 notes: saleDescription.trim(),
@@ -1941,20 +1965,20 @@ export default function RecordsScreen() {
                 buyerName,
                 billId: targetBillId,
                 billNo,
-                amountReceived: effectiveAmountReceived,
+                amountReceived: calcEffectiveAmountReceived,
                 previousBalance: previousPartyBalance,
                 amountReceivedMode: currentReceivedMode,
               }).catch(() => {});
             }
           });
 
-          if (existingSales.length > saleItems.length) {
-            for (let i = saleItems.length; i < existingSales.length; i++) {
+          if (existingSales.length > itemsToSave.length) {
+            for (let i = itemsToSave.length; i < existingSales.length; i++) {
               deleteSale(existingSales[i].id).catch(() => {});
             }
           }
         } else {
-          saleItems.forEach((item) => {
+          itemsToSave.forEach((item) => {
             if (item.cropId) {
               recordSale(item.cropId, {
                 quantity: String(item.qty),
@@ -1962,7 +1986,7 @@ export default function RecordsScreen() {
                 buyerName,
                 billId: targetBillId,
                 billNo,
-                amountReceived: effectiveAmountReceived,
+                amountReceived: calcEffectiveAmountReceived,
                 previousBalance: previousPartyBalance,
                 amountReceivedMode: currentReceivedMode,
               }).catch(() => {});
@@ -1970,7 +1994,7 @@ export default function RecordsScreen() {
           });
         }
       } else {
-        saleItems.forEach((item) => {
+        itemsToSave.forEach((item) => {
           if (item.cropId) {
             recordSale(item.cropId, {
               quantity: String(item.qty),
@@ -1978,7 +2002,7 @@ export default function RecordsScreen() {
               buyerName,
               billId: realDbBillId,
               billNo,
-              amountReceived: effectiveAmountReceived,
+              amountReceived: calcEffectiveAmountReceived,
               previousBalance: previousPartyBalance,
               amountReceivedMode: currentReceivedMode,
             }).catch(() => {});

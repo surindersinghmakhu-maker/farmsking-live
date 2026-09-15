@@ -10,13 +10,16 @@ exports.SaleBillsModule = void 0;
 const common_1 = require("@nestjs/common");
 const sale_bills_controller_1 = require("./sale-bills.controller");
 const sale_bills_service_1 = require("./sale-bills.service");
+const chat_module_1 = require("../chat/chat.module");
 let SaleBillsModule = class SaleBillsModule {
 };
 exports.SaleBillsModule = SaleBillsModule;
 exports.SaleBillsModule = SaleBillsModule = __decorate([
     (0, common_1.Module)({
+        imports: [chat_module_1.ChatModule],
         controllers: [sale_bills_controller_1.SaleBillsController],
         providers: [sale_bills_service_1.SaleBillsService],
+        exports: [sale_bills_service_1.SaleBillsService],
     })
 ], SaleBillsModule);
 //# sourceMappingURL=sale-bills.module.js.map

@@ -164,92 +164,11 @@ export default function RegisterScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <View style={styles.brandBadge}>
-          <BrandLogo size={24} iconColor="#ffffff" fallbackIconName="leaf" />
-        </View>
+        <BrandLogo size={52} useHdQuality style={{ marginBottom: 8 }} />
         <Text style={styles.brandName}>FarmsKing</Text>
 
-        <Text style={styles.title}>Create Account</Text>
+        <Text style={styles.title}>Create Customer Account</Text>
         <Text style={styles.subtitle}>Join FarmsKing Today</Text>
-
-        <Text style={styles.label}>Aap register hona chahte hain as *</Text>
-        <View style={styles.accountTypeRow}>
-          {ACCOUNT_TYPES.map((t) => {
-            const isSelected = accountType === t.value;
-            return (
-              <TouchableOpacity
-                key={t.value}
-                style={[styles.accountTypeChip, isSelected && { backgroundColor: theme.primary, borderColor: theme.primary }]}
-                onPress={() => setAccountType(t.value)}
-                activeOpacity={0.85}
-              >
-                <Ionicons name={t.icon} size={18} color={isSelected ? '#ffffff' : theme.primary} />
-                <Text style={[styles.accountTypeChipText, isSelected && { color: '#ffffff' }]}>{t.label}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-        {accountType === 'FARMER' ? (
-          <Text style={styles.accountTypeHint}>
-            Farmer account ke saath aapko Customer role (products khareedne ke liye) bhi mil jayega.
-          </Text>
-        ) : null}
-
-        {/* Mandatory Farmer Profile Fields when accountType is FARMER */}
-        {accountType === 'FARMER' ? (
-          <View style={styles.farmerCardBox}>
-            <View style={styles.farmerCardHeader}>
-              <Ionicons name="leaf" size={16} color={theme.primary} />
-              <Text style={styles.farmerCardTitle}>🌾 Farmer Profile Setup</Text>
-            </View>
-
-            {/* Spray Tank Size */}
-            <Text style={styles.farmerLabel}>Spray Tank Size *</Text>
-            <View style={styles.farmerChipRow}>
-              {SPRAY_TANK_SIZE_OPTIONS.map((size) => {
-                const isSelected = size === sprayTankSizeL;
-                return (
-                  <TouchableOpacity
-                    key={size}
-                    style={[styles.farmerChip, isSelected && { backgroundColor: theme.primary, borderColor: theme.primary }]}
-                    onPress={() => setSprayTankSizeL(size)}
-                  >
-                    <Text style={[styles.farmerChipText, isSelected && { color: '#ffffff' }]}>{size} L</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            {/* Soil Type */}
-            <Text style={styles.farmerLabel}>Soil Type (ਮਿੱਟੀ ਦੀ ਕਿਸਮ) *</Text>
-            <TouchableOpacity style={styles.farmerSelectField} onPress={() => setIsSoilPickerOpen(true)}>
-              <Text style={[styles.farmerSelectText, !selectedSoilLabel && styles.placeholder]}>
-                {selectedSoilLabel ?? 'Select soil type'}
-              </Text>
-              <Ionicons name="chevron-down" size={18} color="#64748b" />
-            </TouchableOpacity>
-
-            {/* Water Source */}
-            <Text style={styles.farmerLabel}>Water Source (ਪਾਣੀ ਦਾ ਸਰੋਤ) *</Text>
-            <TouchableOpacity style={styles.farmerSelectField} onPress={() => setIsWaterPickerOpen(true)}>
-              <Text style={[styles.farmerSelectText, !selectedWaterLabel && styles.placeholder]}>
-                {selectedWaterLabel ?? 'Select water source'}
-              </Text>
-              <Ionicons name="chevron-down" size={18} color="#64748b" />
-            </TouchableOpacity>
-
-            {/* UPI ID */}
-            <Text style={styles.farmerLabel}>UPI ID for Bill QR Code (e.g. GPay/Paytm)</Text>
-            <TextInput
-              style={styles.farmerSelectField}
-              placeholder="e.g. 9876543210@paytm, name@oksbi"
-              placeholderTextColor="#94a3b8"
-              value={upiId}
-              onChangeText={setUpiId}
-              autoCapitalize="none"
-            />
-          </View>
-        ) : null}
 
         {FIELDS.slice(0, 2).map((f) => (
           <View key={f.key} style={{ width: '100%' }}>

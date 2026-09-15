@@ -46,6 +46,7 @@ export function useRecordSaleLedger() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['parties'] });
       queryClient.invalidateQueries({ queryKey: ['parties', variables.id, 'statement'] });
+      queryClient.invalidateQueries({ queryKey: ['market-rates'] });
     },
   });
 }
@@ -139,6 +140,7 @@ export function useRecordArhtiyaCropSale() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['arhtiya-hisab', variables.partyId] });
       queryClient.invalidateQueries({ queryKey: ['unified-parties'] });
+      queryClient.invalidateQueries({ queryKey: ['market-rates'] });
     },
   });
 }

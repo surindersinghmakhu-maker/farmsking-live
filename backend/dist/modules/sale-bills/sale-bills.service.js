@@ -12,9 +12,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SaleBillsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const chat_gateway_1 = require("../chat/chat.gateway");
+const market_rates_service_1 = require("../market-rates/market-rates.service");
 let SaleBillsService = class SaleBillsService {
-    constructor(prisma) {
+    constructor(prisma, chatGateway) {
         this.prisma = prisma;
+        this.chatGateway = chatGateway;
     }
     async nextBillNo() {
         const now = new Date();
@@ -95,7 +98,7 @@ let SaleBillsService = class SaleBillsService {
             if (Array.isArray(items)) {
                 for (const item of items) {
                     if (item.cropName && Number(item.rate) > 0) {
-                        const cleanName = item.cropName.split('(')[0].trim();
+                        const cleanName = (0, market_rates_service_1.toEnglishCropName)(item.cropName);
                         await this.prisma.marketRate.create({
                             data: {
                                 cropName: cleanName,
@@ -118,6 +121,7 @@ let SaleBillsService = class SaleBillsService {
         catch (err) {
             console.warn('Could not record market rate from sale bill:', err);
         }
+        this.chatGateway.broadcastMarketRateUpdate({ source: 'farmer_sale_bill', billId: bill.id });
         return bill;
     }
     async update(user, id, dto) {
@@ -163,7 +167,7 @@ let SaleBillsService = class SaleBillsService {
             if (Array.isArray(items)) {
                 for (const item of items) {
                     if (item.cropName && Number(item.rate) > 0) {
-                        const cleanName = item.cropName.split('(')[0].trim();
+                        const cleanName = (0, market_rates_service_1.toEnglishCropName)(item.cropName);
                         await this.prisma.marketRate.create({
                             data: {
                                 cropName: cleanName,
@@ -186,6 +190,7 @@ let SaleBillsService = class SaleBillsService {
         catch (err) {
             console.warn('Could not record market rate on bill update:', err);
         }
+        this.chatGateway.broadcastMarketRateUpdate({ source: 'farmer_sale_bill_update', billId: updated.id });
         return updated;
     }
     async findOneOrThrow(user, id) {
@@ -238,6 +243,7 @@ let SaleBillsService = class SaleBillsService {
 exports.SaleBillsService = SaleBillsService;
 exports.SaleBillsService = SaleBillsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        chat_gateway_1.ChatGateway])
 ], SaleBillsService);
 //# sourceMappingURL=sale-bills.service.js.map

@@ -6,9 +6,11 @@ import { RecordPaymentDto } from './dto/record-payment.dto';
 import { CreateUnifiedPartyDto } from './dto/create-unified-party.dto';
 import { RecordArhtiyaAdvanceDto } from './dto/record-arhtiya-advance.dto';
 import { RecordArhtiyaCropSaleDto } from './dto/record-arhtiya-crop-sale.dto';
+import { ChatGateway } from '../chat/chat.gateway';
 export declare class PartiesService {
     private readonly prisma;
-    constructor(prisma: PrismaService);
+    private readonly chatGateway;
+    constructor(prisma: PrismaService, chatGateway: ChatGateway);
     create(user: AuthUser, name: string, address: string, mobile?: string): import(".prisma/client").Prisma.Prisma__PartyClient<{
         id: string;
         mobile: string | null;

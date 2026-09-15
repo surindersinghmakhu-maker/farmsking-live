@@ -12,6 +12,7 @@ export interface CropRateSummary {
     nationalAvgRate: number | null;
     nationalSampleCount: number;
 }
+export declare function toEnglishCropName(rawName: string): string;
 export declare class MarketRatesService {
     private readonly prisma;
     constructor(prisma: PrismaService);

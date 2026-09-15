@@ -245,14 +245,14 @@ export function MarketRatesCard() {
       // Header Logo & Brand Name (Left)
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 24px sans-serif';
-      ctx.fillText('👑 FarmsKing', 24, 40);
+      ctx.fillText('👑 FarmsKing', 24, 38);
 
       ctx.fillStyle = '#bbf7d0';
-      ctx.font = 'bold 12.5px sans-serif';
-      ctx.fillText('Crop Ledger', 24, 60);
+      ctx.font = 'bold 13.5px sans-serif';
+      ctx.fillText('Crop Ledger', 24, 58);
 
       // Right Side Header Tagline Pill Container
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
       if (typeof (ctx as any).roundRect === 'function') {
         (ctx as any).roundRect(330, 20, 286, 34, 17);
         ctx.fill();
@@ -262,35 +262,49 @@ export function MarketRatesCard() {
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 13.5px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText("🇮🇳 India's Best Digital Farmers App", 473, 42);
+      ctx.fillText("India's Best Digital Farmers App", 473, 42);
       ctx.textAlign = 'left'; // Reset text alignment
 
-      // Crop Name Left Green Accent Bar
+      // Crop Name Dedicated Card Container
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = '#16a34a';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      if (typeof (ctx as any).roundRect === 'function') {
+        (ctx as any).roundRect(24, 88, 592, 44, 10);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.fillRect(24, 88, 592, 44);
+        ctx.strokeRect(24, 88, 592, 44);
+      }
+
+      // Accent Line inside card
       ctx.fillStyle = '#16a34a';
       if (typeof (ctx as any).roundRect === 'function') {
-        (ctx as any).roundRect(24, 98, 5, 30, 3);
+        (ctx as any).roundRect(36, 98, 4, 24, 2);
         ctx.fill();
       } else {
-        ctx.fillRect(24, 98, 5, 30);
+        ctx.fillRect(36, 98, 4, 24);
       }
 
-      // Crop Name Header with Leaf Icon
+      // Crop Title with Leaf Icon
       ctx.fillStyle = '#0f172a';
-      ctx.font = 'bold 30px sans-serif';
-      ctx.fillText(`🌱 ${crop.displayTitle}`, 36, 124);
+      ctx.font = 'bold 22px sans-serif';
+      ctx.fillText(`🌱  ${crop.displayTitle}`, 48, 117);
 
-      // Premium Dark Emerald Unit Badge
+      // Unit Badge inside card
       ctx.fillStyle = '#15803d';
       if (typeof (ctx as any).roundRect === 'function') {
-        (ctx as any).roundRect(505, 98, 110, 30, 15);
+        (ctx as any).roundRect(500, 96, 104, 28, 14);
         ctx.fill();
       } else {
-        ctx.fillRect(505, 98, 110, 30);
+        ctx.fillRect(500, 96, 104, 28);
       }
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 12.5px sans-serif';
+      ctx.font = 'bold 12px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(`Per ${crop.unit}`, 560, 118);
+      ctx.fillText(`Per ${crop.unit}`, 552, 114);
       ctx.textAlign = 'left'; // Reset text alignment
 
       // Date & Time Subtitle Bar with translucent background container
@@ -658,11 +672,11 @@ export function MarketRatesCard() {
               </View>
             </View>
 
-            {/* Crop Title & Unit */}
-            <View style={styles.posterCropTitleRow}>
+            {/* Crop Title & Unit Dedicated Card */}
+            <View style={styles.posterCropNameCard}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
                 <View style={styles.cropAccentBar} />
-                <Text style={{ fontSize: 20 }}>🌱</Text>
+                <Text style={{ fontSize: 18 }}>🌱</Text>
                 <Text style={styles.posterCropName} numberOfLines={1}>
                   {selectedCropForShare.displayTitle}
                 </Text>
@@ -1001,6 +1015,19 @@ const styles = StyleSheet.create({
     fontFamily: FONT.extraBold,
     color: '#15803d',
     textAlign: 'right',
+  },
+  posterCropNameCard: {
+    backgroundColor: '#ffffff',
+    borderColor: '#16a34a',
+    borderWidth: 1.5,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginVertical: 2,
   },
   posterCropTitleRow: {
     flexDirection: 'row',

@@ -364,7 +364,8 @@ const CROP_SYNONYMS: Record<string, string[]> = {
         if (localRatePool.length > 0) {
           localMinRate = Math.min(...localRatePool);
           localMaxRate = Math.max(...localRatePool);
-          localAvgRate = (localMinRate + localMaxRate) / 2;
+          const localSum = localRatePool.reduce((acc, r) => acc + r, 0);
+          localAvgRate = Math.round((localSum / localRatePool.length) * 100) / 100;
         }
 
         // Compute National Level Min, Max, Avg rates (per-KG)
@@ -375,7 +376,8 @@ const CROP_SYNONYMS: Record<string, string[]> = {
         if (nationalRatePool.length > 0) {
           nationalMinRate = Math.min(...nationalRatePool);
           nationalMaxRate = Math.max(...nationalRatePool);
-          nationalAvgRate = (nationalMinRate + nationalMaxRate) / 2;
+          const nationalSum = nationalRatePool.reduce((acc, r) => acc + r, 0);
+          nationalAvgRate = Math.round((nationalSum / nationalRatePool.length) * 100) / 100;
         }
 
         return {

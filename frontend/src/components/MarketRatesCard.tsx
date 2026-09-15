@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Modal, Pressable, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Modal, Platform, Pressable, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ViewShot, { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
@@ -187,11 +187,149 @@ export function MarketRatesCard() {
     }
   };
 
+  // Helper for generating high quality image card poster on Web browsers
+  const generateWebImageCard = (crop: CropRateItem) => {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 600;
+      canvas.height = 420;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      // Card background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 600, 420);
+
+      // Green Header Bar
+      ctx.fillStyle = '#15803d';
+      ctx.fillRect(0, 0, 600, 65);
+
+      // Header Logo & Title
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 22px sans-serif';
+      ctx.fillText('👑 FarmsKing — Live Market Rates', 24, 40);
+
+      // Live Badge
+      ctx.fillStyle = '#fee2e2';
+      if (typeof (ctx as any).roundRect === 'function') {
+        (ctx as any).roundRect(440, 18, 135, 28, 14);
+        ctx.fill();
+      } else {
+        ctx.fillRect(440, 18, 135, 28);
+      }
+      ctx.fillStyle = '#dc2626';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillText('🔴 LIVE 24H RATES', 455, 37);
+
+      // Crop Name & Unit
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 28px sans-serif';
+      ctx.fillText(crop.displayTitle, 24, 118);
+
+      ctx.fillStyle = '#16a34a';
+      ctx.font = 'bold 15px sans-serif';
+      ctx.fillText(`Per ${crop.unit}`, 24, 144);
+
+      ctx.fillStyle = '#64748b';
+      ctx.font = '14px sans-serif';
+      ctx.fillText(`📍 State: ${userState}  |  ⏱️ Previous 24 Hours`, 24, 172);
+
+      // Local Box
+      ctx.fillStyle = '#f8fafc';
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      if (typeof (ctx as any).roundRect === 'function') {
+        (ctx as any).roundRect(24, 192, 552, 85, 12);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.fillRect(24, 192, 552, 85);
+        ctx.strokeRect(24, 192, 552, 85);
+      }
+
+      ctx.fillStyle = '#475569';
+      ctx.font = 'bold 15px sans-serif';
+      ctx.fillText(`LOCAL (${userState.toUpperCase()})`, 44, 226);
+
+      if (crop.localAvgRate != null) {
+        ctx.fillStyle = '#15803d';
+        ctx.font = 'bold 24px sans-serif';
+        ctx.fillText(`Avg: ₹${crop.localAvgRate}`, 380, 230);
+
+        ctx.fillStyle = '#64748b';
+        ctx.font = '13px sans-serif';
+        ctx.fillText(`Min: ₹${crop.localMinRate}  |  Max: ₹${crop.localMaxRate}`, 330, 258);
+      } else {
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 22px sans-serif';
+        ctx.fillText('-', 460, 238);
+      }
+
+      // National Box
+      ctx.fillStyle = '#f8fafc';
+      ctx.beginPath();
+      if (typeof (ctx as any).roundRect === 'function') {
+        (ctx as any).roundRect(24, 290, 552, 85, 12);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.fillRect(24, 290, 552, 85);
+        ctx.strokeRect(24, 290, 552, 85);
+      }
+
+      ctx.fillStyle = '#475569';
+      ctx.font = 'bold 15px sans-serif';
+      ctx.fillText('NATIONAL (INDIA)', 44, 324);
+
+      if (crop.nationalAvgRate != null) {
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'bold 24px sans-serif';
+        ctx.fillText(`Avg: ₹${crop.nationalAvgRate}`, 380, 328);
+
+        ctx.fillStyle = '#64748b';
+        ctx.font = '13px sans-serif';
+        ctx.fillText(`Min: ₹${crop.nationalMinRate}  |  Max: ₹${crop.nationalMaxRate}`, 330, 356);
+      } else {
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 22px sans-serif';
+        ctx.fillText('-', 460, 336);
+      }
+
+      // Footer
+      ctx.fillStyle = '#16a34a';
+      ctx.font = 'bold 13px sans-serif';
+      ctx.fillText('📲 FarmsKing App — https://farmsking-1.vercel.app', 120, 404);
+
+      const dataUrl = canvas.toDataURL('image/png');
+
+      const link = document.createElement('a');
+      link.download = `FarmsKing_${crop.displayTitle}_Rate.png`;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      Alert.alert('Success 🖼️', `${crop.displayTitle} Image Poster downloaded! You can now share it on WhatsApp.`);
+    } catch (err) {
+      console.error('Web Canvas image generation error:', err);
+      Alert.alert('Error', 'Failed to generate web image card.');
+    }
+  };
+
   // Handler for sharing crop rates as Image Poster
   const handleShareImage = async (crop: CropRateItem) => {
     setIsSharingImage(true);
+
+    if (Platform.OS === 'web') {
+      generateWebImageCard(crop);
+      setIsSharingImage(false);
+      setSelectedCropForShare(null);
+      return;
+    }
+
     try {
-      // Small timeout to allow ViewShot poster ref to render cleanly
+      // Small timeout to allow ViewShot poster ref to render cleanly on mobile
       setTimeout(async () => {
         try {
           if (!posterRef.current) {

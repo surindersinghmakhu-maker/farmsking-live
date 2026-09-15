@@ -658,25 +658,23 @@ export function MarketRatesCard() {
               ))}
             </View>
 
-            {/* Header Branding */}
-            <View style={styles.posterHeader}>
+            {/* Header Branding Banner */}
+            <View style={styles.posterHeaderBanner}>
               <View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Text style={{ fontSize: 20 }}>👑</Text>
-                  <Text style={styles.posterBrandName}>FarmsKing</Text>
+                  <Text style={styles.posterHeaderTitle}>FarmsKing</Text>
                 </View>
-                <Text style={styles.posterBrandSub}>Crop Ledger</Text>
+                <Text style={styles.posterHeaderSub}>Smart Farming, Better Future</Text>
               </View>
-              <View style={styles.posterHeaderRightBadge}>
-                <Text style={styles.posterRightSub}>🇮🇳 India's Best Digital Farmers App</Text>
-              </View>
+              <Text style={styles.posterHeaderRightTitle}>India's Digital Mandi & Farm Ledger</Text>
             </View>
 
-            {/* Crop Title & Unit Dedicated Card */}
+            {/* Premium Crop Title & Unit Container */}
             <View style={styles.posterCropNameCard}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
                 <View style={styles.cropAccentBar} />
-                <Text style={{ fontSize: 18 }}>🌱</Text>
+                <Text style={{ fontSize: 20 }}>🌱</Text>
                 <Text style={styles.posterCropName} numberOfLines={1}>
                   {selectedCropForShare.displayTitle}
                 </Text>
@@ -686,20 +684,21 @@ export function MarketRatesCard() {
               </View>
             </View>
 
+            {/* Date & Time Pill Bar */}
             <View style={styles.posterDateTimeContainer}>
               <Text style={styles.posterDateTimeText}>
-                📅 Date: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}  |  🕒 Time: {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}  |  ⏱️ 24H Rates
+                📅 Date: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}  |  🕒 Time: {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}  |  ⏱️ 24H Live Rates
               </Text>
             </View>
 
-            {/* Rates Table Box */}
-            <View style={styles.posterTableBox}>
-              {/* Local State Rate */}
-              <View style={styles.posterRateRow}>
-                <Text style={styles.posterRegionTitle}>🏛️ LOCAL MARKET RATES</Text>
+            {/* Rates Section */}
+            <View style={{ gap: 8 }}>
+              {/* Local State Rate Box */}
+              <View style={styles.posterLocalRateBox}>
+                <Text style={styles.posterLocalRegionTitle}>🏛️ LOCAL MARKET RATES</Text>
                 {selectedCropForShare.localAvgRate != null ? (
                   <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={styles.posterAvgVal}>{formatInr(selectedCropForShare.localAvgRate)}</Text>
+                    <Text style={styles.posterLocalAvgVal}>{formatInr(selectedCropForShare.localAvgRate)}</Text>
                     <Text style={styles.posterMinMaxVal}>
                       <Text style={{ color: '#15803d' }}>Min: {formatInr(selectedCropForShare.localMinRate!)}</Text>  |  <Text style={{ color: '#dc2626' }}>Max: {formatInr(selectedCropForShare.localMaxRate!)}</Text>
                     </Text>
@@ -709,14 +708,12 @@ export function MarketRatesCard() {
                 )}
               </View>
 
-              <View style={styles.posterDivider} />
-
-              {/* National Rate */}
-              <View style={styles.posterRateRow}>
-                <Text style={styles.posterRegionTitle}>🇮🇳 NATIONAL (ALL INDIA)</Text>
+              {/* National Rate Box */}
+              <View style={styles.posterNationalRateBox}>
+                <Text style={styles.posterNationalRegionTitle}>🇮🇳 NATIONAL (ALL INDIA) RATES</Text>
                 {selectedCropForShare.nationalAvgRate != null ? (
                   <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={[styles.posterAvgVal, { color: '#0f172a' }]}>{formatInr(selectedCropForShare.nationalAvgRate)}</Text>
+                    <Text style={styles.posterNationalAvgVal}>{formatInr(selectedCropForShare.nationalAvgRate)}</Text>
                     <Text style={styles.posterMinMaxVal}>
                       <Text style={{ color: '#15803d' }}>Min: {formatInr(selectedCropForShare.nationalMinRate!)}</Text>  |  <Text style={{ color: '#dc2626' }}>Max: {formatInr(selectedCropForShare.nationalMaxRate!)}</Text>
                     </Text>
@@ -727,8 +724,8 @@ export function MarketRatesCard() {
               </View>
             </View>
 
-            {/* Footer */}
-            <View style={styles.posterFooter}>
+            {/* Footer Banner */}
+            <View style={styles.posterFooterBanner}>
               <Text style={styles.posterFooterText}>📲 Download FarmsKing App for Real-Time Mandi Rates</Text>
               <Text style={styles.posterFooterLink}>farmsking-1.vercel.app</Text>
             </View>
@@ -983,37 +980,30 @@ const styles = StyleSheet.create({
     color: '#166534',
     marginHorizontal: 4,
   },
-  posterHeader: {
+  posterHeaderBanner: {
+    backgroundColor: '#166534',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: RADIUS.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
   },
-  posterBrandName: {
+  posterHeaderTitle: {
     fontSize: 18,
     fontFamily: FONT.extraBold,
-    color: '#15803d',
+    color: '#ffffff',
   },
-  posterBrandSub: {
-    fontSize: 10.5,
+  posterHeaderSub: {
+    fontSize: 10,
     fontFamily: FONT.bold,
-    color: '#16a34a',
+    color: '#bbf7d0',
     marginTop: 1,
   },
-  posterHeaderRightBadge: {
-    backgroundColor: 'rgba(22, 163, 74, 0.12)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: RADIUS.pill,
-    borderWidth: 1,
-    borderColor: 'rgba(22, 163, 74, 0.3)',
-  },
-  posterRightSub: {
-    fontSize: 10.5,
+  posterHeaderRightTitle: {
+    fontSize: 11.5,
     fontFamily: FONT.extraBold,
-    color: '#15803d',
+    color: '#ffffff',
     textAlign: 'right',
   },
   posterCropNameCard: {
@@ -1021,37 +1011,35 @@ const styles = StyleSheet.create({
     borderColor: '#16a34a',
     borderWidth: 1.5,
     borderRadius: RADIUS.md,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 8,
-    marginVertical: 2,
-  },
-  posterCropTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-    marginVertical: 2,
+    marginVertical: 4,
+    shadowColor: '#16a34a',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   cropAccentBar: {
     width: 4,
-    height: 22,
+    height: 26,
     backgroundColor: '#16a34a',
     borderRadius: RADIUS.pill,
   },
   posterCropName: {
-    fontSize: 22,
+    fontSize: 24,
     fontFamily: FONT.extraBold,
     color: '#0f172a',
-    letterSpacing: -0.3,
+    letterSpacing: 0.2,
   },
   posterUnitBadge: {
     backgroundColor: '#15803d',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     borderRadius: RADIUS.pill,
   },
   posterCropUnit: {
@@ -1060,80 +1048,87 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     letterSpacing: 0.2,
   },
-  posterStateSubtitle: {
-    fontSize: 11,
-    fontFamily: FONT.medium,
-    color: '#64748b',
-    marginTop: -8,
-  },
   posterDateTimeContainer: {
-    backgroundColor: 'rgba(241, 245, 249, 0.65)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: RADIUS.xs,
-    alignSelf: 'flex-start',
-    marginTop: -4,
-    marginBottom: 4,
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIUS.md,
+    marginVertical: 2,
   },
   posterDateTimeText: {
-    fontSize: 10,
+    fontSize: 10.5,
     fontFamily: FONT.bold,
     color: '#334155',
   },
-  posterTableBox: {
-    backgroundColor: 'rgba(248, 250, 252, 0.65)',
+  posterLocalRateBox: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#bbf7d0',
+    borderWidth: 1.5,
     borderRadius: RADIUS.md,
     padding: 12,
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    gap: 8,
-  },
-  posterRateRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  posterRegionTitle: {
-    fontSize: 11,
-    fontFamily: FONT.bold,
-    color: '#475569',
-  },
-  posterAvgVal: {
-    fontSize: 16,
+  posterLocalRegionTitle: {
+    fontSize: 11.5,
     fontFamily: FONT.extraBold,
     color: '#15803d',
   },
+  posterLocalAvgVal: {
+    fontSize: 20,
+    fontFamily: FONT.extraBold,
+    color: '#15803d',
+  },
+  posterNationalRateBox: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#cbd5e1',
+    borderWidth: 1.5,
+    borderRadius: RADIUS.md,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  posterNationalRegionTitle: {
+    fontSize: 11.5,
+    fontFamily: FONT.extraBold,
+    color: '#1e293b',
+  },
+  posterNationalAvgVal: {
+    fontSize: 20,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+  },
   posterMinMaxVal: {
-    fontSize: 9.5,
-    fontFamily: FONT.medium,
+    fontSize: 10,
+    fontFamily: FONT.bold,
     color: '#64748b',
     marginTop: 1,
   },
   posterDash: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: FONT.bold,
     color: '#94a3b8',
   },
-  posterDivider: {
-    height: 1,
-    backgroundColor: '#e2e8f0',
-  },
-  posterFooter: {
+  posterFooterBanner: {
+    backgroundColor: '#166534',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: RADIUS.md,
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
+    justifyContent: 'space-between',
     marginTop: 4,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
   },
   posterFooterText: {
     fontSize: 10,
     fontFamily: FONT.bold,
-    color: '#0f172a',
+    color: '#ffffff',
   },
   posterFooterLink: {
     fontSize: 10,
     fontFamily: FONT.bold,
-    color: '#16a34a',
+    color: '#86efac',
   },
 });

@@ -1,6 +1,8 @@
-import React, { useMemo } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import React, { useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Linking, Modal, Pressable, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import ViewShot, { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 import { useMyCropRates } from '../hooks/useMarketRates';
 import { useAuth } from '../store/auth-context';
 import { useCrops } from '../store/crops-context';
@@ -9,6 +11,17 @@ import { RoleThemes } from '../../constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '../../constants/theme';
 
 const theme = RoleThemes.FARMER;
+
+interface CropRateItem {
+  displayTitle: string;
+  unit: string;
+  localMinRate: number | null;
+  localMaxRate: number | null;
+  localAvgRate: number | null;
+  nationalMinRate: number | null;
+  nationalMaxRate: number | null;
+  nationalAvgRate: number | null;
+}
 
 /**
  * Convert base rate between measurement units (e.g. KG, Quintal, 50KG Bag, Grams, Tonne).
@@ -65,6 +78,10 @@ export function MarketRatesCard() {
   const { user } = useAuth();
   const { data, isLoading, isError } = useMyCropRates();
   const { cropFields } = useCrops();
+
+  const [selectedCropForShare, setSelectedCropForShare] = useState<CropRateItem | null>(null);
+  const [isSharingImage, setIsSharingImage] = useState(false);
+  const posterRef = useRef<View>(null);
 
   const userState = user?.state || data?.state || 'Punjab';
 
@@ -133,6 +150,85 @@ export function MarketRatesCard() {
     });
   }, [cropFields, data]);
 
+  // Handler for sharing crop rates as Text
+  const handleShareText = async (crop: CropRateItem) => {
+    setSelectedCropForShare(null);
+
+    const localStr =
+      crop.localAvgRate != null
+        ? `• Avg Rate: ${formatInr(crop.localAvgRate)}\n• Min Rate: ${formatInr(crop.localMinRate!)}  |  Max Rate: ${formatInr(crop.localMaxRate!)}`
+        : '• No sales recorded in last 24h (-)';
+
+    const nationalStr =
+      crop.nationalAvgRate != null
+        ? `• Avg Rate: ${formatInr(crop.nationalAvgRate)}\n• Min Rate: ${formatInr(crop.nationalMinRate!)}  |  Max Rate: ${formatInr(crop.nationalMaxRate!)}`
+        : '• No sales recorded in last 24h (-)';
+
+    const textMessage =
+      `🌾 *FarmsKing — Live Market Rates (24h)* 📊\n` +
+      `🌱 *Crop:* ${crop.displayTitle} (Per ${crop.unit})\n` +
+      `📍 *State:* ${userState}\n\n` +
+      `🏛️ *LOCAL (${userState.toUpperCase()}) RATES:*\n${localStr}\n\n` +
+      `🇮🇳 *NATIONAL RATES:*\n${nationalStr}\n\n` +
+      `📲 *ਆਪਣੀ ਫਸਲ ਦਾ ਲਾਈਵ ਰੇਟ ਦੇਖਣ ਲਈ FarmsKing App ਵਰਤੋ:*\n` +
+      `👉 https://farmsking-1.vercel.app`;
+
+    try {
+      const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(textMessage)}`;
+      const canOpen = await Linking.canOpenURL(whatsappUrl);
+      if (canOpen) {
+        await Linking.openURL(whatsappUrl);
+      } else {
+        await Share.share({ message: textMessage });
+      }
+    } catch (err) {
+      console.warn('Share text failed, fallback to system share:', err);
+      await Share.share({ message: textMessage });
+    }
+  };
+
+  // Handler for sharing crop rates as Image Poster
+  const handleShareImage = async (crop: CropRateItem) => {
+    setIsSharingImage(true);
+    try {
+      // Small timeout to allow ViewShot poster ref to render cleanly
+      setTimeout(async () => {
+        try {
+          if (!posterRef.current) {
+            Alert.alert('Error', 'Could not generate poster image.');
+            setIsSharingImage(false);
+            setSelectedCropForShare(null);
+            return;
+          }
+
+          const uri = await captureRef(posterRef, {
+            format: 'png',
+            quality: 0.95,
+          });
+
+          const isSharingAvailable = await Sharing.isAvailableAsync();
+          if (isSharingAvailable) {
+            await Sharing.shareAsync(uri, {
+              mimeType: 'image/png',
+              dialogTitle: `Share ${crop.displayTitle} Market Rates`,
+            });
+          } else {
+            Alert.alert('Notice', 'Image sharing is not supported on this device.');
+          }
+        } catch (err) {
+          console.error('Image capture error:', err);
+          Alert.alert('Error', 'Failed to create price card image.');
+        } finally {
+          setIsSharingImage(false);
+          setSelectedCropForShare(null);
+        }
+      }, 300);
+    } catch (err) {
+      setIsSharingImage(false);
+      setSelectedCropForShare(null);
+    }
+  };
+
   return (
     <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
       {/* Compact Header with LIVE Indicator */}
@@ -162,6 +258,7 @@ export function MarketRatesCard() {
             <Text style={[styles.columnHeader, styles.cropColumn]}>Your Crop</Text>
             <Text style={[styles.columnHeader, styles.rateColumn]}>Local ({userState})</Text>
             <Text style={[styles.columnHeader, styles.rateColumn]}>National</Text>
+            <Text style={[styles.columnHeader, styles.shareColumn]}>Share</Text>
           </View>
 
           {/* Subcategory Rates List */}
@@ -227,11 +324,149 @@ export function MarketRatesCard() {
                       <Text style={styles.dashText}>-</Text>
                     )}
                   </View>
+
+                  {/* 4. Crop-wise Share Button */}
+                  <TouchableOpacity
+                    style={styles.shareButton}
+                    activeOpacity={0.7}
+                    onPress={() => setSelectedCropForShare(rate)}
+                  >
+                    <Ionicons name="share-social-outline" size={15} color="#16a34a" />
+                  </TouchableOpacity>
                 </View>
               );
             })
           )}
         </>
+      )}
+
+      {/* Share Options Modal (Text vs Image Card) */}
+      <Modal
+        visible={selectedCropForShare !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSelectedCropForShare(null)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setSelectedCropForShare(null)}>
+          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={{ fontSize: 18 }}>🌾</Text>
+                <Text style={styles.modalTitle}>Share {selectedCropForShare?.displayTitle} Rates</Text>
+              </View>
+              <TouchableOpacity onPress={() => setSelectedCropForShare(null)}>
+                <Ionicons name="close" size={20} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalSub}>ਤੁਸੀਂ ਇਹ ਰੇਟ ਕਿਵੇਂ ਸ਼ੇਅਰ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?</Text>
+
+            {/* Share as Text Option */}
+            <TouchableOpacity
+              style={styles.shareOptionCard}
+              activeOpacity={0.8}
+              onPress={() => selectedCropForShare && handleShareText(selectedCropForShare)}
+            >
+              <View style={[styles.iconCircle, { backgroundColor: '#dcfce7' }]}>
+                <Ionicons name="logo-whatsapp" size={22} color="#16a34a" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.optionTitle}>💬 Share as Text (ਟੈਕਸਟ ਮੈਸੇਜ)</Text>
+                <Text style={styles.optionSub}>ਵਟਸਐਪ 'ਚ ਤੁਰੰਤ ਟੈਕਸਟ ਮੈਸੇਜ + ਡਾਊਨਲੋਡ ਲਿੰਕ ਸ਼ੇਅਰ ਕਰੋ</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
+            </TouchableOpacity>
+
+            {/* Share as Image Card Option */}
+            <TouchableOpacity
+              style={styles.shareOptionCard}
+              activeOpacity={0.8}
+              onPress={() => selectedCropForShare && handleShareImage(selectedCropForShare)}
+              disabled={isSharingImage}
+            >
+              <View style={[styles.iconCircle, { backgroundColor: '#e0f2fe' }]}>
+                {isSharingImage ? (
+                  <ActivityIndicator size="small" color="#0284c7" />
+                ) : (
+                  <Ionicons name="image-outline" size={22} color="#0284c7" />
+                )}
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.optionTitle}>🖼️ Share as Image Card (ਫੋਟੋ ਕਾਰਡ)</Text>
+                <Text style={styles.optionSub}>FarmsKing ਦੇ ਬ੍ਰੈਂਡਡ ਪੋਸਟਰ ਨਾਲ ਵਟਸਐਪ ਸਟੇਟਸ/ਫੋਟੋ ਸ਼ੇਅਰ ਕਰੋ</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
+
+      {/* Offscreen ViewShot Poster Component for generating Crop Rate Image Card */}
+      {selectedCropForShare && (
+        <View style={styles.offscreenContainer}>
+          <ViewShot ref={posterRef} options={{ format: 'png', quality: 0.95 }} style={styles.posterCard}>
+            {/* Header Branding */}
+            <View style={styles.posterHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={{ fontSize: 20 }}>👑</Text>
+                <Text style={styles.posterBrandName}>FarmsKing</Text>
+              </View>
+              <View style={styles.posterLiveBadge}>
+                <View style={styles.posterRedDot} />
+                <Text style={styles.posterLiveText}>LIVE 24H RATES</Text>
+              </View>
+            </View>
+
+            {/* Crop Title */}
+            <View style={styles.posterCropTitleRow}>
+              <Text style={styles.posterCropName}>{selectedCropForShare.displayTitle}</Text>
+              <Text style={styles.posterCropUnit}>Per {selectedCropForShare.unit}</Text>
+            </View>
+
+            <Text style={styles.posterStateSubtitle}>📍 State: {userState} | ⏱️ Last 24 Hours</Text>
+
+            {/* Rates Table Box */}
+            <View style={styles.posterTableBox}>
+              {/* Local State Rate */}
+              <View style={styles.posterRateRow}>
+                <Text style={styles.posterRegionTitle}>LOCAL ({userState.toUpperCase()})</Text>
+                {selectedCropForShare.localAvgRate != null ? (
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={styles.posterAvgVal}>{formatInr(selectedCropForShare.localAvgRate)}</Text>
+                    <Text style={styles.posterMinMaxVal}>
+                      Min: {formatInr(selectedCropForShare.localMinRate!)} | Max: {formatInr(selectedCropForShare.localMaxRate!)}
+                    </Text>
+                  </View>
+                ) : (
+                  <Text style={styles.posterDash}>-</Text>
+                )}
+              </View>
+
+              <View style={styles.posterDivider} />
+
+              {/* National Rate */}
+              <View style={styles.posterRateRow}>
+                <Text style={styles.posterRegionTitle}>NATIONAL (INDIA)</Text>
+                {selectedCropForShare.nationalAvgRate != null ? (
+                  <View style={{ alignItems: 'flex-end' }}>
+                    <Text style={styles.posterAvgVal}>{formatInr(selectedCropForShare.nationalAvgRate)}</Text>
+                    <Text style={styles.posterMinMaxVal}>
+                      Min: {formatInr(selectedCropForShare.nationalMinRate!)} | Max: {formatInr(selectedCropForShare.nationalMaxRate!)}
+                    </Text>
+                  </View>
+                ) : (
+                  <Text style={styles.posterDash}>-</Text>
+                )}
+              </View>
+            </View>
+
+            {/* Footer */}
+            <View style={styles.posterFooter}>
+              <Text style={styles.posterFooterText}>📲 ਆਪਣੀ ਫਸਲ ਦਾ ਸਹੀ ਭਾਅ ਜਾਣਨ ਲਈ FarmsKing App ਵਰਤੋ</Text>
+              <Text style={styles.posterFooterLink}>farmsking-1.vercel.app</Text>
+            </View>
+          </ViewShot>
+        </View>
       )}
     </View>
   );
@@ -370,5 +605,201 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: FONT.bold,
     color: '#94a3b8',
+  },
+  shareColumn: { width: 34, alignItems: 'center' },
+  shareButton: {
+    width: 30,
+    height: 30,
+    borderRadius: RADIUS.sm,
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 4,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: RADIUS.lg,
+    borderTopRightRadius: RADIUS.lg,
+    padding: SPACING.md,
+    gap: 12,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  modalTitle: {
+    fontSize: 15,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  modalSub: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    marginBottom: 4,
+  },
+  shareOptionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#f8fafc',
+    padding: 12,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  optionTitle: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  optionSub: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  offscreenContainer: {
+    position: 'absolute',
+    left: -9999,
+    top: -9999,
+    opacity: 0,
+  },
+  posterCard: {
+    width: 340,
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    padding: 16,
+    borderWidth: 2,
+    borderColor: '#16a34a',
+    gap: 12,
+  },
+  posterHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  posterBrandName: {
+    fontSize: 18,
+    fontFamily: FONT.extraBold,
+    color: '#15803d',
+  },
+  posterLiveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#fee2e2',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+  },
+  posterRedDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: '#dc2626',
+  },
+  posterLiveText: {
+    fontSize: 9,
+    fontFamily: FONT.bold,
+    color: '#dc2626',
+  },
+  posterCropTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+  },
+  posterCropName: {
+    fontSize: 22,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+  },
+  posterCropUnit: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#16a34a',
+  },
+  posterStateSubtitle: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    marginTop: -8,
+  },
+  posterTableBox: {
+    backgroundColor: '#f8fafc',
+    borderRadius: RADIUS.md,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    gap: 8,
+  },
+  posterRateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  posterRegionTitle: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#475569',
+  },
+  posterAvgVal: {
+    fontSize: 16,
+    fontFamily: FONT.extraBold,
+    color: '#15803d',
+  },
+  posterMinMaxVal: {
+    fontSize: 9.5,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    marginTop: 1,
+  },
+  posterDash: {
+    fontSize: 16,
+    fontFamily: FONT.bold,
+    color: '#94a3b8',
+  },
+  posterDivider: {
+    height: 1,
+    backgroundColor: '#e2e8f0',
+  },
+  posterFooter: {
+    alignItems: 'center',
+    gap: 2,
+    marginTop: 4,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  posterFooterText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  posterFooterLink: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#16a34a',
   },
 });

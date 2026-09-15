@@ -673,76 +673,96 @@ export function MarketRatesCard() {
               ))}
             </View>
 
-            {/* Header Branding Banner */}
-            <View style={styles.posterHeaderBanner}>
+            {/* Voucher Header Row */}
+            <View style={styles.posterVoucherHeader}>
               <View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <BrandLogo size={28} useGoldRing />
-                  <Text style={styles.posterHeaderTitle}>FarmsKing</Text>
-                </View>
-                <Text style={styles.posterHeaderSub}>Smart Farming, Better Future</Text>
-              </View>
-              <Text style={styles.posterHeaderRightTitle}>India's Digital Mandi & Farm Ledger</Text>
-            </View>
-
-            {/* Premium Crop Title & Unit Container */}
-            <View style={styles.posterCropNameCard}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                <View style={styles.cropAccentBar} />
-                <Text style={{ fontSize: 20 }}>🌱</Text>
-                <Text style={styles.posterCropName} numberOfLines={1}>
-                  {selectedCropForShare.displayTitle}
+                <Text style={styles.posterVchNo}>CROP RATE CARD</Text>
+                <Text style={styles.posterVchDate}>
+                  {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                 </Text>
               </View>
-              <View style={styles.posterUnitBadge}>
-                <Text style={styles.posterCropUnit}>Per {selectedCropForShare.unit}</Text>
+
+              <View style={{ alignItems: 'center' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <BrandLogo size={32} useGoldRing />
+                  <Text style={styles.posterVchBrandTitle}>FarmsKing</Text>
+                </View>
+                <Text style={styles.posterVchBrandSub}>Smart Farming, Better Future</Text>
+              </View>
+
+              <View style={styles.posterOfficialPill}>
+                <Text style={styles.posterOfficialText}>OFFICIAL</Text>
               </View>
             </View>
 
-            {/* Date & Time Pill Bar */}
-            <View style={styles.posterDateTimeContainer}>
-              <Text style={styles.posterDateTimeText}>
-                📅 Date: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}  |  🕒 Time: {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}  |  ⏱️ 24H Live Rates
-              </Text>
+            {/* Red Pill Banner */}
+            <View style={styles.posterRedPillBanner}>
+              <Text style={styles.posterRedPillText}>💸 LIVE CROP MARKET RATES 💸</Text>
             </View>
 
-            {/* Rates Section */}
-            <View style={{ gap: 8 }}>
-              {/* Local State Rate Box */}
-              <View style={styles.posterLocalRateBox}>
-                <Text style={styles.posterLocalRegionTitle}>🏛️ LOCAL MARKET RATES</Text>
-                {selectedCropForShare.localAvgRate != null ? (
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={styles.posterLocalAvgVal}>{formatInr(selectedCropForShare.localAvgRate)}</Text>
-                    <Text style={styles.posterMinMaxVal}>
-                      <Text style={{ color: '#15803d' }}>Min: {formatInr(selectedCropForShare.localMinRate!)}</Text>  |  <Text style={{ color: '#dc2626' }}>Max: {formatInr(selectedCropForShare.localMaxRate!)}</Text>
-                    </Text>
-                  </View>
-                ) : (
-                  <Text style={styles.posterDash}>-</Text>
-                )}
+            {/* Side-by-Side Regional Rate Boxes */}
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              {/* Local Market Rates Box */}
+              <View style={[styles.posterSideBox, { borderColor: '#16a34a' }]}>
+                <View style={[styles.posterSideBoxHeader, { backgroundColor: '#16a34a' }]}>
+                  <Text style={styles.posterSideBoxHeaderTitle}>🏛️ LOCAL MARKET</Text>
+                </View>
+                <View style={styles.posterSideBoxBody}>
+                  {selectedCropForShare.localAvgRate != null ? (
+                    <>
+                      <Text style={[styles.posterSideAvgVal, { color: '#16a34a' }]}>{formatInr(selectedCropForShare.localAvgRate)}</Text>
+                      <Text style={styles.posterSideMinMax}>
+                        Min: {formatInr(selectedCropForShare.localMinRate!)}  |  Max: {formatInr(selectedCropForShare.localMaxRate!)}
+                      </Text>
+                    </>
+                  ) : (
+                    <Text style={styles.posterDash}>-</Text>
+                  )}
+                </View>
               </View>
 
-              {/* National Rate Box */}
-              <View style={styles.posterNationalRateBox}>
-                <Text style={styles.posterNationalRegionTitle}>🇮🇳 NATIONAL (ALL INDIA) RATES</Text>
-                {selectedCropForShare.nationalAvgRate != null ? (
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={styles.posterNationalAvgVal}>{formatInr(selectedCropForShare.nationalAvgRate)}</Text>
-                    <Text style={styles.posterMinMaxVal}>
-                      <Text style={{ color: '#15803d' }}>Min: {formatInr(selectedCropForShare.nationalMinRate!)}</Text>  |  <Text style={{ color: '#dc2626' }}>Max: {formatInr(selectedCropForShare.nationalMaxRate!)}</Text>
-                    </Text>
-                  </View>
-                ) : (
-                  <Text style={styles.posterDash}>-</Text>
-                )}
+              {/* National Rates Box */}
+              <View style={[styles.posterSideBox, { borderColor: '#dc2626' }]}>
+                <View style={[styles.posterSideBoxHeader, { backgroundColor: '#dc2626' }]}>
+                  <Text style={styles.posterSideBoxHeaderTitle}>🇮🇳 NATIONAL RATES</Text>
+                </View>
+                <View style={styles.posterSideBoxBody}>
+                  {selectedCropForShare.nationalAvgRate != null ? (
+                    <>
+                      <Text style={[styles.posterSideAvgVal, { color: '#dc2626' }]}>{formatInr(selectedCropForShare.nationalAvgRate)}</Text>
+                      <Text style={styles.posterSideMinMax}>
+                        Min: {formatInr(selectedCropForShare.nationalMinRate!)}  |  Max: {formatInr(selectedCropForShare.nationalMaxRate!)}
+                      </Text>
+                    </>
+                  ) : (
+                    <Text style={styles.posterDash}>-</Text>
+                  )}
+                </View>
               </View>
             </View>
 
-            {/* Footer Banner */}
-            <View style={styles.posterFooterBanner}>
-              <Text style={styles.posterFooterText}>📲 Download FarmsKing App for Real-Time Mandi Rates</Text>
-              <Text style={styles.posterFooterLink}>farmsking-1.vercel.app</Text>
+            {/* Total Voucher Amount Main Crop Card (Red Border Box) */}
+            <View style={styles.posterMainCropAmountBox}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={{ fontSize: 18 }}>🌱</Text>
+                  <Text style={styles.posterMainCropTitle}>{selectedCropForShare.displayTitle}</Text>
+                </View>
+                <Text style={styles.posterMainCropPrice}>
+                  {formatInr(selectedCropForShare.localAvgRate ?? selectedCropForShare.nationalAvgRate ?? 0)}
+                </Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 }}>
+                <Text style={styles.posterMainSubText}>📝 Unit: Per {selectedCropForShare.unit}</Text>
+                <Text style={styles.posterMainLiveText}>⏱️ 24H Verified Rate</Text>
+              </View>
+            </View>
+
+            {/* Bottom Footer Note */}
+            <View style={styles.posterFooterVoucherNote}>
+              <Text style={styles.posterFooterVoucherText}>Computer Generated Official Rate Card - FarmsKing Platform</Text>
+              <Text style={styles.posterFooterVoucherSub}>Verified Digital Record</Text>
             </View>
           </ViewShot>
         </View>
@@ -995,155 +1015,148 @@ const styles = StyleSheet.create({
     color: '#166534',
     marginHorizontal: 4,
   },
-  posterHeaderBanner: {
-    backgroundColor: '#166534',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: RADIUS.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  posterHeaderTitle: {
-    fontSize: 18,
-    fontFamily: FONT.extraBold,
-    color: '#ffffff',
-  },
-  posterHeaderSub: {
-    fontSize: 10,
-    fontFamily: FONT.bold,
-    color: '#bbf7d0',
-    marginTop: 1,
-  },
-  posterHeaderRightTitle: {
-    fontSize: 11.5,
-    fontFamily: FONT.extraBold,
-    color: '#ffffff',
-    textAlign: 'right',
-  },
-  posterCropNameCard: {
-    backgroundColor: '#ffffff',
-    borderColor: '#16a34a',
-    borderWidth: 1.5,
-    borderRadius: RADIUS.md,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-    marginVertical: 4,
-    shadowColor: '#16a34a',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  cropAccentBar: {
-    width: 4,
-    height: 26,
-    backgroundColor: '#16a34a',
+  posterTopRedStripe: {
+    height: 4,
+    backgroundColor: '#dc2626',
     borderRadius: RADIUS.pill,
+    marginBottom: -4,
   },
-  posterCropName: {
-    fontSize: 24,
+  posterVoucherHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#ffffff',
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  posterVchNo: {
+    fontSize: 11,
     fontFamily: FONT.extraBold,
     color: '#0f172a',
-    letterSpacing: 0.2,
   },
-  posterUnitBadge: {
-    backgroundColor: '#15803d',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
+  posterVchDate: {
+    fontSize: 9.5,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  posterVchBrandTitle: {
+    fontSize: 17,
+    fontFamily: FONT.extraBold,
+    color: '#16a34a',
+  },
+  posterVchBrandSub: {
+    fontSize: 9,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  posterOfficialPill: {
+    borderWidth: 1.5,
+    borderColor: '#dc2626',
     borderRadius: RADIUS.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
-  posterCropUnit: {
+  posterOfficialText: {
+    fontSize: 9,
+    fontFamily: FONT.extraBold,
+    color: '#dc2626',
+    letterSpacing: 0.5,
+  },
+  posterRedPillBanner: {
+    backgroundColor: '#dc2626',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+    alignSelf: 'center',
+    marginVertical: 4,
+  },
+  posterRedPillText: {
     fontSize: 11,
     fontFamily: FONT.extraBold,
     color: '#ffffff',
-    letterSpacing: 0.2,
+    letterSpacing: 0.5,
   },
-  posterDateTimeContainer: {
-    backgroundColor: '#f1f5f9',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: RADIUS.md,
-    marginVertical: 2,
-  },
-  posterDateTimeText: {
-    fontSize: 10.5,
-    fontFamily: FONT.bold,
-    color: '#334155',
-  },
-  posterLocalRateBox: {
-    backgroundColor: '#f0fdf4',
-    borderColor: '#bbf7d0',
+  posterSideBox: {
+    flex: 1,
     borderWidth: 1.5,
     borderRadius: RADIUS.md,
-    padding: 12,
-    flexDirection: 'row',
+    overflow: 'hidden',
+    backgroundColor: '#ffffff',
+  },
+  posterSideBoxHeader: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     alignItems: 'center',
-    justifyContent: 'space-between',
   },
-  posterLocalRegionTitle: {
-    fontSize: 11.5,
+  posterSideBoxHeaderTitle: {
+    fontSize: 10,
     fontFamily: FONT.extraBold,
-    color: '#15803d',
+    color: '#ffffff',
   },
-  posterLocalAvgVal: {
-    fontSize: 20,
+  posterSideBoxBody: {
+    padding: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  posterSideAvgVal: {
+    fontSize: 18,
     fontFamily: FONT.extraBold,
-    color: '#15803d',
   },
-  posterNationalRateBox: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#cbd5e1',
+  posterSideMinMax: {
+    fontSize: 9,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  posterMainCropAmountBox: {
+    backgroundColor: '#ffffff',
     borderWidth: 1.5,
+    borderColor: '#dc2626',
     borderRadius: RADIUS.md,
-    padding: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    padding: 10,
+    marginTop: 2,
   },
-  posterNationalRegionTitle: {
-    fontSize: 11.5,
-    fontFamily: FONT.extraBold,
-    color: '#1e293b',
-  },
-  posterNationalAvgVal: {
-    fontSize: 20,
+  posterMainCropTitle: {
+    fontSize: 18,
     fontFamily: FONT.extraBold,
     color: '#0f172a',
   },
-  posterMinMaxVal: {
+  posterMainCropPrice: {
+    fontSize: 22,
+    fontFamily: FONT.extraBold,
+    color: '#dc2626',
+  },
+  posterMainSubText: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  posterMainLiveText: {
     fontSize: 10,
     fontFamily: FONT.bold,
+    color: '#16a34a',
+  },
+  posterFooterVoucherNote: {
+    alignItems: 'center',
+    marginTop: 4,
+    paddingTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  posterFooterVoucherText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
     color: '#64748b',
-    marginTop: 1,
+  },
+  posterFooterVoucherSub: {
+    fontSize: 8.5,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
   },
   posterDash: {
     fontSize: 18,
     fontFamily: FONT.bold,
     color: '#94a3b8',
-  },
-  posterFooterBanner: {
-    backgroundColor: '#166534',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: RADIUS.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 4,
-  },
-  posterFooterText: {
-    fontSize: 10,
-    fontFamily: FONT.bold,
-    color: '#ffffff',
-  },
-  posterFooterLink: {
-    fontSize: 10,
-    fontFamily: FONT.bold,
-    color: '#86efac',
   },
 });

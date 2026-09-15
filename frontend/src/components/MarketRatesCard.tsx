@@ -199,20 +199,19 @@ export function MarketRatesCard() {
     }
   };
 
-  // Helper for generating dynamic poster file name: CropName_Date_Time.png
+  // Helper for generating dynamic poster file name: CropName_DDMMYY_HHMM.png
   const getCropRateFileName = (cropTitle: string) => {
     const now = new Date();
-    const cleanCropName = cropTitle.trim().replace(/[^a-zA-Z0-9_\-]/g, '_');
-    const dateStr = now.toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    }).replace(/\s+/g, '-');
-    const timeStr = now.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    }).replace(/[:\s]/g, '-');
+    const cleanCropName = cropTitle.trim().replace(/[^a-zA-Z0-9]/g, '');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const yy = String(now.getFullYear()).slice(-2);
+    const dateStr = `${dd}${mm}${yy}`;
+
+    const hh = String(now.getHours()).padStart(2, '0');
+    const min = String(now.getMinutes()).padStart(2, '0');
+    const timeStr = `${hh}${min}`;
+
     return `${cleanCropName}_${dateStr}_${timeStr}.png`;
   };
 

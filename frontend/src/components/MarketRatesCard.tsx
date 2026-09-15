@@ -248,8 +248,8 @@ export function MarketRatesCard() {
       ctx.fillText('👑 FarmsKing', 24, 40);
 
       ctx.fillStyle = '#bbf7d0';
-      ctx.font = 'bold 12px sans-serif';
-      ctx.fillText('Smart Farming, Better Future', 24, 60);
+      ctx.font = 'bold 12.5px sans-serif';
+      ctx.fillText('Crop Ledger', 24, 60);
 
       // Right Side Header Tagline Pill Container
       ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
@@ -262,7 +262,7 @@ export function MarketRatesCard() {
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 13.5px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText("🇮🇳 India's Digital Mandi & Farm Ledger", 473, 42);
+      ctx.fillText("🇮🇳 India's Best Digital Farmers App", 473, 42);
       ctx.textAlign = 'left'; // Reset text alignment
 
       // Crop Name Left Green Accent Bar
@@ -651,10 +651,10 @@ export function MarketRatesCard() {
                   <Text style={{ fontSize: 20 }}>👑</Text>
                   <Text style={styles.posterBrandName}>FarmsKing</Text>
                 </View>
-                <Text style={styles.posterBrandSub}>Smart Farming, Better Future</Text>
+                <Text style={styles.posterBrandSub}>Crop Ledger</Text>
               </View>
               <View style={styles.posterHeaderRightBadge}>
-                <Text style={styles.posterRightSub}>🇮🇳 India's Digital Mandi & Farm Ledger</Text>
+                <Text style={styles.posterRightSub}>🇮🇳 India's Best Digital Farmers App</Text>
               </View>
             </View>
 

@@ -116,13 +116,10 @@ export default function FarmerProfileSetupScreen() {
 
           {/* Use in Printing Section */}
           <View style={styles.printingHeaderBox}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
               <Ionicons name="print" size={18} color={theme.primary} />
-              <Text style={styles.printingTitle}>Use in Printing (ਬਿੱਲ ਪ੍ਰਿੰਟਿੰਗ ਜਾਣਕਾਰੀ)</Text>
+              <Text style={styles.printingTitle}>Use in Printing</Text>
             </View>
-            <Text style={styles.printingSub}>
-              ਬਿੱਲ/ਰਸੀਦਾਂ 'ਤੇ ਪ੍ਰਿੰਟ ਹੋਣ ਲਈ ਫਰਮ ਦਾ ਨਾਮ ਅਤੇ ਪਤਾ ਦਰਜ ਕਰੋ।
-            </Text>
 
             {/* Bill Printing Name */}
             <View style={[styles.section, { marginTop: 10 }]}>

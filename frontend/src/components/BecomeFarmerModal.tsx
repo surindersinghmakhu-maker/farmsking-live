@@ -172,16 +172,12 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
 
             {/* Use in Printing Section */}
             <View style={[styles.fieldSection, { backgroundColor: '#f0fdf4', borderRadius: RADIUS.md, padding: 12, borderWidth: 1.5, borderColor: '#bbf7d0' }]}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                 <Ionicons name="print" size={18} color="#15803d" />
                 <Text style={[styles.label, { color: '#15803d', marginBottom: 0 }]}>
-                  Use in Printing (ਬਿੱਲ ਪ੍ਰਿੰਟਿੰਗ ਜਾਣਕਾਰੀ)
+                  Use in Printing
                 </Text>
               </View>
-
-              <Text style={{ fontSize: 11.5, color: '#166534', fontFamily: FONT.medium, marginBottom: 8 }}>
-                ਬਿੱਲ / ਰਸੀਦਾਂ ਪ੍ਰਿੰਟ ਕਰਨ ਸਮੇਂ ਹੇਠ ਲਿਖਿਆ ਫਰਮ/ਕਿਸਾਨ ਨਾਮ ਅਤੇ ਪਤਾ ਪ੍ਰਿੰਟ ਹੋਵੇਗਾ।
-              </Text>
 
               {/* Bill Printing Name */}
               <View style={{ marginBottom: 10 }}>

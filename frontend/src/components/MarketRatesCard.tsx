@@ -203,115 +203,145 @@ export function MarketRatesCard() {
       });
 
       const canvas = document.createElement('canvas');
-      canvas.width = 600;
-      canvas.height = 420;
+      canvas.width = 640;
+      canvas.height = 450;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      // Card background
+      // Card background with rounded outer border
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, 600, 420);
+      ctx.fillRect(0, 0, 640, 450);
 
-      // Green Header Bar
+      // Top Emerald Header Bar
       ctx.fillStyle = '#15803d';
-      ctx.fillRect(0, 0, 600, 65);
+      ctx.fillRect(0, 0, 640, 75);
 
-      // Header Logo & Title
+      // Header Logo & Brand Name
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 22px sans-serif';
-      ctx.fillText('👑 FarmsKing — Live Market Rates', 24, 40);
+      ctx.font = 'bold 24px sans-serif';
+      ctx.fillText('👑 FarmsKing', 24, 42);
+
+      ctx.fillStyle = '#bbf7d0';
+      ctx.font = '12px sans-serif';
+      ctx.fillText('India\'s Digital Mandi & Farm Ledger', 24, 62);
 
       // Live Badge
       ctx.fillStyle = '#fee2e2';
       if (typeof (ctx as any).roundRect === 'function') {
-        (ctx as any).roundRect(440, 18, 135, 28, 14);
+        (ctx as any).roundRect(460, 22, 155, 32, 16);
         ctx.fill();
       } else {
-        ctx.fillRect(440, 18, 135, 28);
+        ctx.fillRect(460, 22, 155, 32);
       }
       ctx.fillStyle = '#dc2626';
       ctx.font = 'bold 12px sans-serif';
-      ctx.fillText('🔴 LIVE 24H RATES', 455, 37);
+      ctx.fillText('🔴 LIVE 24H RATES', 478, 43);
 
-      // Crop Name & Unit
+      // Crop Name Header
       ctx.fillStyle = '#0f172a';
-      ctx.font = 'bold 28px sans-serif';
-      ctx.fillText(crop.displayTitle, 24, 118);
+      ctx.font = 'bold 30px sans-serif';
+      ctx.fillText(crop.displayTitle, 24, 126);
 
-      ctx.fillStyle = '#16a34a';
-      ctx.font = 'bold 15px sans-serif';
-      ctx.fillText(`Per ${crop.unit}`, 24, 144);
+      // Crop Unit Badge
+      ctx.fillStyle = '#dcfce7';
+      if (typeof (ctx as any).roundRect === 'function') {
+        (ctx as any).roundRect(520, 102, 95, 28, 6);
+        ctx.fill();
+      } else {
+        ctx.fillRect(520, 102, 95, 28);
+      }
+      ctx.fillStyle = '#15803d';
+      ctx.font = 'bold 13px sans-serif';
+      ctx.fillText(`Per ${crop.unit}`, 534, 121);
 
+      // Date & Time Subtitle Bar
       ctx.fillStyle = '#64748b';
-      ctx.font = '14px sans-serif';
-      ctx.fillText(`📅 Date: ${todayDateStr}  |  ⏱️ Previous 24 Hours`, 24, 172);
+      ctx.font = 'bold 13px sans-serif';
+      ctx.fillText(`📅 Date: ${todayDateStr}   |   ⏱️ Timeframe: Previous 24 Hours`, 24, 158);
 
       // Local Box
+      ctx.fillStyle = '#f8fafc';
+      ctx.strokeStyle = '#bbf7d0';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (typeof (ctx as any).roundRect === 'function') {
+        (ctx as any).roundRect(24, 178, 592, 95, 12);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.fillRect(24, 178, 592, 95);
+        ctx.strokeRect(24, 178, 592, 95);
+      }
+
+      ctx.fillStyle = '#166534';
+      ctx.font = 'bold 15px sans-serif';
+      ctx.fillText('🏛️ LOCAL MARKET RATES', 44, 214);
+
+      if (crop.localAvgRate != null) {
+        ctx.fillStyle = '#15803d';
+        ctx.font = 'bold 26px sans-serif';
+        ctx.fillText(`Avg: ₹${crop.localAvgRate}`, 420, 218);
+
+        ctx.fillStyle = '#15803d';
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillText(`Min: ₹${crop.localMinRate}`, 390, 252);
+
+        ctx.fillStyle = '#dc2626';
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillText(`Max: ₹${crop.localMaxRate}`, 490, 252);
+      } else {
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 24px sans-serif';
+        ctx.fillText('-', 500, 230);
+      }
+
+      // National Box
       ctx.fillStyle = '#f8fafc';
       ctx.strokeStyle = '#cbd5e1';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       if (typeof (ctx as any).roundRect === 'function') {
-        (ctx as any).roundRect(24, 192, 552, 85, 12);
+        (ctx as any).roundRect(24, 288, 592, 95, 12);
         ctx.fill();
         ctx.stroke();
       } else {
-        ctx.fillRect(24, 192, 552, 85);
-        ctx.strokeRect(24, 192, 552, 85);
+        ctx.fillRect(24, 288, 592, 95);
+        ctx.strokeRect(24, 288, 592, 95);
       }
 
-      ctx.fillStyle = '#475569';
+      ctx.fillStyle = '#0f172a';
       ctx.font = 'bold 15px sans-serif';
-      ctx.fillText('LOCAL RATES', 44, 226);
-
-      if (crop.localAvgRate != null) {
-        ctx.fillStyle = '#15803d';
-        ctx.font = 'bold 24px sans-serif';
-        ctx.fillText(`Avg: ₹${crop.localAvgRate}`, 380, 230);
-
-        ctx.fillStyle = '#64748b';
-        ctx.font = '13px sans-serif';
-        ctx.fillText(`Min: ₹${crop.localMinRate}  |  Max: ₹${crop.localMaxRate}`, 330, 258);
-      } else {
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = 'bold 22px sans-serif';
-        ctx.fillText('-', 460, 238);
-      }
-
-      // National Box
-      ctx.fillStyle = '#f8fafc';
-      ctx.beginPath();
-      if (typeof (ctx as any).roundRect === 'function') {
-        (ctx as any).roundRect(24, 290, 552, 85, 12);
-        ctx.fill();
-        ctx.stroke();
-      } else {
-        ctx.fillRect(24, 290, 552, 85);
-        ctx.strokeRect(24, 290, 552, 85);
-      }
-
-      ctx.fillStyle = '#475569';
-      ctx.font = 'bold 15px sans-serif';
-      ctx.fillText('NATIONAL (INDIA)', 44, 324);
+      ctx.fillText('🇮🇳 NATIONAL (ALL INDIA) RATES', 44, 324);
 
       if (crop.nationalAvgRate != null) {
         ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 24px sans-serif';
-        ctx.fillText(`Avg: ₹${crop.nationalAvgRate}`, 380, 328);
+        ctx.font = 'bold 26px sans-serif';
+        ctx.fillText(`Avg: ₹${crop.nationalAvgRate}`, 420, 328);
 
-        ctx.fillStyle = '#64748b';
-        ctx.font = '13px sans-serif';
-        ctx.fillText(`Min: ₹${crop.nationalMinRate}  |  Max: ₹${crop.nationalMaxRate}`, 330, 356);
+        ctx.fillStyle = '#15803d';
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillText(`Min: ₹${crop.nationalMinRate}`, 390, 362);
+
+        ctx.fillStyle = '#dc2626';
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillText(`Max: ₹${crop.nationalMaxRate}`, 490, 362);
       } else {
         ctx.fillStyle = '#94a3b8';
-        ctx.font = 'bold 22px sans-serif';
-        ctx.fillText('-', 460, 336);
+        ctx.font = 'bold 24px sans-serif';
+        ctx.fillText('-', 500, 340);
       }
 
-      // Footer
-      ctx.fillStyle = '#16a34a';
+      // Bottom Footer Bar
+      ctx.fillStyle = '#14532d';
+      ctx.fillRect(0, 400, 640, 50);
+
+      ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 13px sans-serif';
-      ctx.fillText('📲 Use FarmsKing App — https://farmsking-1.vercel.app', 120, 404);
+      ctx.fillText('📲 Download FarmsKing App for Real-Time Mandi Rates', 24, 430);
+
+      ctx.fillStyle = '#bbf7d0';
+      ctx.font = 'bold 13px sans-serif';
+      ctx.fillText('farmsking-1.vercel.app', 460, 430);
 
       const dataUrl = canvas.toDataURL('image/png');
 
@@ -322,7 +352,7 @@ export function MarketRatesCard() {
       link.click();
       document.body.removeChild(link);
 
-      Alert.alert('Success 🖼️', `${crop.displayTitle} Image Poster downloaded! You can now share it on WhatsApp.`);
+      Alert.alert('Success 🖼️', `${crop.displayTitle} Professional Price Poster downloaded! You can now share it on WhatsApp.`);
     } catch (err) {
       console.error('Web Canvas image generation error:', err);
       Alert.alert('Error', 'Failed to generate web image card.');
@@ -557,9 +587,12 @@ export function MarketRatesCard() {
           <ViewShot ref={posterRef} options={{ format: 'png', quality: 0.95 }} style={styles.posterCard}>
             {/* Header Branding */}
             <View style={styles.posterHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={{ fontSize: 20 }}>👑</Text>
-                <Text style={styles.posterBrandName}>FarmsKing</Text>
+              <View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={{ fontSize: 20 }}>👑</Text>
+                  <Text style={styles.posterBrandName}>FarmsKing</Text>
+                </View>
+                <Text style={styles.posterBrandSub}>Digital Mandi & Farm Ledger</Text>
               </View>
               <View style={styles.posterLiveBadge}>
                 <View style={styles.posterRedDot} />
@@ -567,26 +600,28 @@ export function MarketRatesCard() {
               </View>
             </View>
 
-            {/* Crop Title */}
+            {/* Crop Title & Unit */}
             <View style={styles.posterCropTitleRow}>
               <Text style={styles.posterCropName}>{selectedCropForShare.displayTitle}</Text>
-              <Text style={styles.posterCropUnit}>Per {selectedCropForShare.unit}</Text>
+              <View style={styles.posterUnitBadge}>
+                <Text style={styles.posterCropUnit}>Per {selectedCropForShare.unit}</Text>
+              </View>
             </View>
 
             <Text style={styles.posterStateSubtitle}>
-              📅 Date: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}  |  ⏱️ Previous 24 Hours
+              📅 Date: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}  |  ⏱️ Timeframe: Previous 24 Hours
             </Text>
 
             {/* Rates Table Box */}
             <View style={styles.posterTableBox}>
               {/* Local State Rate */}
               <View style={styles.posterRateRow}>
-                <Text style={styles.posterRegionTitle}>LOCAL RATES</Text>
+                <Text style={styles.posterRegionTitle}>🏛️ LOCAL MARKET RATES</Text>
                 {selectedCropForShare.localAvgRate != null ? (
                   <View style={{ alignItems: 'flex-end' }}>
                     <Text style={styles.posterAvgVal}>{formatInr(selectedCropForShare.localAvgRate)}</Text>
                     <Text style={styles.posterMinMaxVal}>
-                      Min: {formatInr(selectedCropForShare.localMinRate!)} | Max: {formatInr(selectedCropForShare.localMaxRate!)}
+                      <Text style={{ color: '#15803d' }}>Min: {formatInr(selectedCropForShare.localMinRate!)}</Text>  |  <Text style={{ color: '#dc2626' }}>Max: {formatInr(selectedCropForShare.localMaxRate!)}</Text>
                     </Text>
                   </View>
                 ) : (
@@ -598,12 +633,12 @@ export function MarketRatesCard() {
 
               {/* National Rate */}
               <View style={styles.posterRateRow}>
-                <Text style={styles.posterRegionTitle}>NATIONAL (INDIA)</Text>
+                <Text style={styles.posterRegionTitle}>🇮🇳 NATIONAL (ALL INDIA)</Text>
                 {selectedCropForShare.nationalAvgRate != null ? (
                   <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={styles.posterAvgVal}>{formatInr(selectedCropForShare.nationalAvgRate)}</Text>
+                    <Text style={[styles.posterAvgVal, { color: '#0f172a' }]}>{formatInr(selectedCropForShare.nationalAvgRate)}</Text>
                     <Text style={styles.posterMinMaxVal}>
-                      Min: {formatInr(selectedCropForShare.nationalMinRate!)} | Max: {formatInr(selectedCropForShare.nationalMaxRate!)}
+                      <Text style={{ color: '#15803d' }}>Min: {formatInr(selectedCropForShare.nationalMinRate!)}</Text>  |  <Text style={{ color: '#dc2626' }}>Max: {formatInr(selectedCropForShare.nationalMaxRate!)}</Text>
                     </Text>
                   </View>
                 ) : (
@@ -614,7 +649,7 @@ export function MarketRatesCard() {
 
             {/* Footer */}
             <View style={styles.posterFooter}>
-              <Text style={styles.posterFooterText}>📲 Use FarmsKing App to check real-time crop market rates</Text>
+              <Text style={styles.posterFooterText}>📲 Download FarmsKing App for Real-Time Mandi Rates</Text>
               <Text style={styles.posterFooterLink}>farmsking-1.vercel.app</Text>
             </View>
           </ViewShot>

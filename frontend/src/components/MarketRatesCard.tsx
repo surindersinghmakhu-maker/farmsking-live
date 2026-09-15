@@ -251,29 +251,47 @@ export function MarketRatesCard() {
       ctx.font = 'bold 12px sans-serif';
       ctx.fillText('Smart Farming, Better Future', 24, 60);
 
-      // Right Side Header Tagline (formerly left subtitle)
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 12.5px sans-serif';
-      ctx.textAlign = 'right';
-      ctx.fillText("India's Digital Mandi & Farm Ledger", 616, 48);
-      ctx.textAlign = 'left'; // Reset text alignment
-
-      // Crop Name Header
-      ctx.fillStyle = '#0f172a';
-      ctx.font = 'bold 30px sans-serif';
-      ctx.fillText(crop.displayTitle, 24, 126);
-
-      // Crop Unit Badge
-      ctx.fillStyle = '#dcfce7';
+      // Right Side Header Tagline Pill Container
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
       if (typeof (ctx as any).roundRect === 'function') {
-        (ctx as any).roundRect(520, 102, 95, 28, 6);
+        (ctx as any).roundRect(330, 20, 286, 34, 17);
         ctx.fill();
       } else {
-        ctx.fillRect(520, 102, 95, 28);
+        ctx.fillRect(330, 20, 286, 34);
       }
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 13.5px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText("🇮🇳 India's Digital Mandi & Farm Ledger", 473, 42);
+      ctx.textAlign = 'left'; // Reset text alignment
+
+      // Crop Name Left Green Accent Bar
+      ctx.fillStyle = '#16a34a';
+      if (typeof (ctx as any).roundRect === 'function') {
+        (ctx as any).roundRect(24, 98, 5, 30, 3);
+        ctx.fill();
+      } else {
+        ctx.fillRect(24, 98, 5, 30);
+      }
+
+      // Crop Name Header with Leaf Icon
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 30px sans-serif';
+      ctx.fillText(`🌱 ${crop.displayTitle}`, 36, 124);
+
+      // Premium Dark Emerald Unit Badge
       ctx.fillStyle = '#15803d';
-      ctx.font = 'bold 13px sans-serif';
-      ctx.fillText(`Per ${crop.unit}`, 534, 121);
+      if (typeof (ctx as any).roundRect === 'function') {
+        (ctx as any).roundRect(505, 98, 110, 30, 15);
+        ctx.fill();
+      } else {
+        ctx.fillRect(505, 98, 110, 30);
+      }
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 12.5px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`Per ${crop.unit}`, 560, 118);
+      ctx.textAlign = 'left'; // Reset text alignment
 
       // Date & Time Subtitle Bar with translucent background container
       ctx.fillStyle = 'rgba(241, 245, 249, 0.65)';
@@ -635,14 +653,20 @@ export function MarketRatesCard() {
                 </View>
                 <Text style={styles.posterBrandSub}>Smart Farming, Better Future</Text>
               </View>
-              <View style={{ flex: 1, alignItems: 'flex-end', justifyContent: 'center' }}>
-                <Text style={styles.posterRightSub}>India's Digital Mandi & Farm Ledger</Text>
+              <View style={styles.posterHeaderRightBadge}>
+                <Text style={styles.posterRightSub}>🇮🇳 India's Digital Mandi & Farm Ledger</Text>
               </View>
             </View>
 
             {/* Crop Title & Unit */}
             <View style={styles.posterCropTitleRow}>
-              <Text style={styles.posterCropName}>{selectedCropForShare.displayTitle}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                <View style={styles.cropAccentBar} />
+                <Text style={{ fontSize: 20 }}>🌱</Text>
+                <Text style={styles.posterCropName} numberOfLines={1}>
+                  {selectedCropForShare.displayTitle}
+                </Text>
+              </View>
               <View style={styles.posterUnitBadge}>
                 <Text style={styles.posterCropUnit}>Per {selectedCropForShare.unit}</Text>
               </View>
@@ -964,46 +988,50 @@ const styles = StyleSheet.create({
     color: '#16a34a',
     marginTop: 1,
   },
-  posterRightSub: {
-    fontSize: 10,
-    fontFamily: FONT.bold,
-    color: '#475569',
-    textAlign: 'right',
-  },
-  posterLiveBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#fee2e2',
-    paddingHorizontal: 6,
-    paddingVertical: 3,
+  posterHeaderRightBadge: {
+    backgroundColor: 'rgba(22, 163, 74, 0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(22, 163, 74, 0.3)',
   },
-  posterRedDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: '#dc2626',
-  },
-  posterLiveText: {
-    fontSize: 9,
-    fontFamily: FONT.bold,
-    color: '#dc2626',
+  posterRightSub: {
+    fontSize: 10.5,
+    fontFamily: FONT.extraBold,
+    color: '#15803d',
+    textAlign: 'right',
   },
   posterCropTitleRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 8,
+    marginVertical: 2,
+  },
+  cropAccentBar: {
+    width: 4,
+    height: 22,
+    backgroundColor: '#16a34a',
+    borderRadius: RADIUS.pill,
   },
   posterCropName: {
     fontSize: 22,
     fontFamily: FONT.extraBold,
     color: '#0f172a',
+    letterSpacing: -0.3,
+  },
+  posterUnitBadge: {
+    backgroundColor: '#15803d',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
   },
   posterCropUnit: {
-    fontSize: 13,
-    fontFamily: FONT.bold,
-    color: '#16a34a',
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    letterSpacing: 0.2,
   },
   posterStateSubtitle: {
     fontSize: 11,

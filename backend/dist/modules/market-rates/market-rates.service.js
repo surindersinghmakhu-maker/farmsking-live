@@ -158,6 +158,7 @@ let MarketRatesService = class MarketRatesService {
                 modalPrice: true,
                 rateDate: true,
                 state: true,
+                source: true,
             },
         });
         const distinctCropMap = new Map();
@@ -268,6 +269,9 @@ let MarketRatesService = class MarketRatesService {
                 }
             }
             for (const mr of recentMarketRates) {
+                if (mr.source && (mr.source.startsWith('farmer_sale') || mr.source.startsWith('arhtiya'))) {
+                    continue;
+                }
                 if (matchesCrop(mr.cropName) && isWithin24h(mr.rateDate)) {
                     const avgPerKg = normalizeToPerKg(Number(mr.modalPrice ?? mr.minPrice ?? mr.maxPrice), mr.unit);
                     if (avgPerKg > 0) {

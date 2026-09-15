@@ -199,6 +199,7 @@ export class MarketRatesService {
         modalPrice: true,
         rateDate: true,
         state: true,
+        source: true,
       },
     });
 
@@ -325,8 +326,11 @@ const CROP_SYNONYMS: Record<string, string[]> = {
           }
         }
 
-        // C) Process MarketRate table entries
+        // C) Process MarketRate table entries (external mandi feeds only)
         for (const mr of recentMarketRates) {
+          if (mr.source && (mr.source.startsWith('farmer_sale') || mr.source.startsWith('arhtiya'))) {
+            continue;
+          }
           if (matchesCrop(mr.cropName) && isWithin24h(mr.rateDate)) {
             const avgPerKg = normalizeToPerKg(Number(mr.modalPrice ?? mr.minPrice ?? mr.maxPrice), mr.unit);
 

@@ -34,7 +34,7 @@ const tap = () => {
 export default function ProfileScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ tab?: string }>();
-  const { user } = useAuth();
+  const { user, updateUser, refreshUser } = useAuth();
   const updateAddress = useUpdateMyAddress();
   const theme = RoleThemes[user?.role === 'ADVISOR' ? 'FARM_ADVISOR' : 'FARMER'] ?? RoleThemes.FARMER;
 
@@ -55,15 +55,27 @@ export default function ProfileScreen() {
   const [name, setName] = useState(user?.name ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
   const [billPrintingAddress, setBillPrintingAddress] = useState(user?.billPrintingAddress ?? '');
+  const [printName, setPrintName] = useState(user?.printName || user?.name || '');
+  const [printAddress, setPrintAddress] = useState(
+    user?.printAddress || user?.billPrintingAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || ''
+  );
   const [photoUrl, setPhotoUrl] = useState<string | null>(user?.photoUrl ?? null);
 
   const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState<boolean>(user?.whatsappGroupEnabled ?? true);
 
   React.useEffect(() => {
-    if (user?.whatsappGroupEnabled !== undefined) {
-      setWhatsappGroupEnabled(user.whatsappGroupEnabled);
+    if (user) {
+      if (user.name) setName(user.name);
+      if (user.printName) setPrintName(user.printName);
+      if (user.printAddress || user.billPrintingAddress) {
+        setPrintAddress(user.printAddress || user.billPrintingAddress || '');
+        setBillPrintingAddress(user.billPrintingAddress || user.printAddress || '');
+      }
+      if (user.whatsappGroupEnabled !== undefined) {
+        setWhatsappGroupEnabled(user.whatsappGroupEnabled);
+      }
     }
-  }, [user?.whatsappGroupEnabled]);
+  }, [user]);
 
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
@@ -138,7 +150,10 @@ export default function ProfileScreen() {
       return;
     }
     try {
-      await updateAddress.mutateAsync({
+      const finalPrintName = printName.trim() || name.trim() || user?.name || '';
+      const finalPrintAddress = printAddress.trim() || billPrintingAddress.trim() || '';
+
+      const updated = await updateAddress.mutateAsync({
         name: name.trim() || undefined,
         email: email.trim() || undefined,
         photoUrl: photoUrl ?? undefined,
@@ -146,9 +161,30 @@ export default function ProfileScreen() {
         postOffice: postOffice.trim() || undefined,
         district: district.trim() || undefined,
         state: state.trim() || undefined,
-        billPrintingAddress: billPrintingAddress.trim() || undefined,
+        billPrintingAddress: finalPrintAddress || undefined,
+        printName: finalPrintName || undefined,
+        printAddress: finalPrintAddress || undefined,
         whatsappGroupEnabled,
       });
+
+      if (updated) {
+        await updateUser(updated as any);
+      } else {
+        await updateUser({
+          name: name.trim(),
+          email: email.trim(),
+          photoUrl: photoUrl ?? undefined,
+          pincode: pincode.trim(),
+          postOffice: postOffice.trim(),
+          district: district.trim(),
+          state: state.trim(),
+          billPrintingAddress: finalPrintAddress,
+          printName: finalPrintName,
+          printAddress: finalPrintAddress,
+          whatsappGroupEnabled,
+        });
+      }
+      await refreshUser();
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2500);
     } catch (err: any) {
@@ -224,22 +260,63 @@ export default function ProfileScreen() {
             </View>
           </View>
 
+          <Text style={styles.inputLabel}>Full Name / Account Name *</Text>
+          <View style={styles.inputWrap}>
+            <Ionicons name="person-outline" size={16} color="#94a3b8" />
+            <TextInput
+              style={styles.input}
+              value={name}
+              onChangeText={setName}
+              placeholder="Enter full name"
+              placeholderTextColor="#94a3b8"
+            />
+          </View>
+
           <Text style={styles.inputLabel}>Email Address (Optional)</Text>
           <View style={styles.inputWrap}>
             <Ionicons name="mail-outline" size={16} color="#94a3b8" />
             <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="you@example.com" placeholderTextColor="#94a3b8" />
           </View>
 
-          <Text style={styles.inputLabel}>Bill Printing Address (Printed on Bill)</Text>
-          <View style={styles.inputWrap}>
-            <Ionicons name="document-text-outline" size={16} color="#94a3b8" />
-            <TextInput
-              style={styles.input}
-              value={billPrintingAddress}
-              onChangeText={setBillPrintingAddress}
-              placeholder="e.g. Grain Market, Shop No. 12, Phul"
-              placeholderTextColor="#94a3b8"
-            />
+          {/* Use in Printing Section */}
+          <View style={styles.printingHeaderBox}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+              <Ionicons name="print" size={18} color={theme.primary} />
+              <Text style={styles.printingTitle}>Use in Printing</Text>
+            </View>
+
+            {/* Bill Printing Name */}
+            <View style={{ marginBottom: 10 }}>
+              <Text style={styles.printingLabel}>Bill Printing Name (Printed on Bill)</Text>
+              <View style={[styles.inputWrap, { backgroundColor: '#ffffff' }]}>
+                <Ionicons name="business-outline" size={16} color="#64748b" />
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. Surinder Agro Farm / Farmer Name"
+                  placeholderTextColor="#94a3b8"
+                  value={printName}
+                  onChangeText={setPrintName}
+                />
+              </View>
+            </View>
+
+            {/* Bill Printing Address */}
+            <View>
+              <Text style={styles.printingLabel}>Bill Printing Address (Printed on Bill)</Text>
+              <View style={[styles.inputWrap, { backgroundColor: '#ffffff' }]}>
+                <Ionicons name="document-text-outline" size={16} color="#64748b" />
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. Grain Market, Shop No. 12, Phul"
+                  placeholderTextColor="#94a3b8"
+                  value={printAddress}
+                  onChangeText={(t) => {
+                    setPrintAddress(t);
+                    setBillPrintingAddress(t);
+                  }}
+                />
+              </View>
+            </View>
           </View>
 
           <Text style={styles.inputLabel}>Postal PIN Code</Text>
@@ -911,6 +988,26 @@ const styles = StyleSheet.create({
   inputLabel: { fontSize: 12, fontFamily: FONT.bold, color: '#334155', marginTop: 10, marginBottom: 4 },
   inputWrap: { height: 42, flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, backgroundColor: '#ffffff', paddingHorizontal: 10 },
   input: { flex: 1, paddingVertical: 6, fontSize: 13.5, fontFamily: FONT.medium, color: '#0f172a' },
+  printingHeaderBox: {
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1.5,
+    borderColor: '#bbf7d0',
+    borderRadius: RADIUS.md,
+    padding: 12,
+    marginTop: 12,
+    gap: 4,
+  },
+  printingTitle: {
+    fontSize: 14,
+    fontFamily: FONT.bold,
+    color: '#15803d',
+  },
+  printingLabel: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+    marginBottom: 4,
+  },
   readOnlySelector: {
     height: 42,
     flexDirection: 'row',

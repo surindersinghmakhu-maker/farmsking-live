@@ -24,7 +24,7 @@ const tap = () => {
 
 export default function FarmerProfileSetupScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, updateUser, refreshUser } = useAuth();
   const { data: status } = useFarmerProfileStatus();
   const updateProfile = useUpdateFarmerProfile();
   const updateAddress = useUpdateMyAddress();
@@ -61,20 +61,28 @@ export default function FarmerProfileSetupScreen() {
     if (!canSave) return;
     tap();
     try {
-      await Promise.all([
-        updateProfile.mutateAsync({
-          sprayTankSizeL: sprayTankSizeL!,
-          printName: printName.trim() || undefined,
-          printAddress: printAddress.trim() || undefined,
-          billPrintingAddress: printAddress.trim() || undefined,
-        }),
-        updateAddress.mutateAsync({
-          printName: printName.trim() || undefined,
-          printAddress: printAddress.trim() || undefined,
-          billPrintingAddress: printAddress.trim() || undefined,
+      const finalPrintName = printName.trim() || user?.name || '';
+      const finalPrintAddress = printAddress.trim() || user?.billPrintingAddress || '';
+
+      const updatedUser = await updateProfile.mutateAsync({
+        sprayTankSizeL: sprayTankSizeL!,
+        printName: finalPrintName,
+        printAddress: finalPrintAddress,
+        billPrintingAddress: finalPrintAddress,
+        whatsappGroupEnabled,
+      });
+
+      if (updatedUser) {
+        await updateUser(updatedUser as any);
+      } else {
+        await updateUser({
+          printName: finalPrintName,
+          printAddress: finalPrintAddress,
+          billPrintingAddress: finalPrintAddress,
           whatsappGroupEnabled,
-        }),
-      ]);
+        });
+      }
+      await refreshUser();
       handleGoBack();
     } catch (error) {
       Alert.alert('Could not save', 'Something went wrong while saving your details. Please try again.');

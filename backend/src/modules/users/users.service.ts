@@ -76,12 +76,35 @@ export class UsersService implements OnModuleInit {
 
   async onModuleInit() {
     try {
-      await this.prisma.$executeRaw`
-        UPDATE "User"
-        SET "printName" = COALESCE("printName", "name"),
-            "printAddress" = COALESCE("printAddress", "billPrintingAddress", CONCAT_WS(', ', NULLIF("village", ''), NULLIF("district", ''), NULLIF("state", '')))
-        WHERE "printName" IS NULL OR "printAddress" IS NULL;
-      `;
+      const usersToBackfill = await this.prisma.user.findMany({
+        where: {
+          OR: [{ printName: null }, { printAddress: null }],
+        },
+        select: {
+          id: true,
+          name: true,
+          printName: true,
+          printAddress: true,
+          billPrintingAddress: true,
+          village: true,
+          district: true,
+          state: true,
+        },
+      });
+
+      for (const u of usersToBackfill) {
+        const printName = u.printName || u.name;
+        const printAddress =
+          u.printAddress ||
+          u.billPrintingAddress ||
+          [u.village, u.district, u.state].filter((s) => s && s.trim().length > 0).join(', ') ||
+          '';
+
+        await this.prisma.user.update({
+          where: { id: u.id },
+          data: { printName, printAddress },
+        });
+      }
     } catch (e) {
       console.error('Failed to backfill user printName / printAddress:', e);
     }
@@ -799,7 +822,7 @@ export class UsersService implements OnModuleInit {
    * specialization/bio) only ever touch fields on top of this.
    */
   async updateMyAddress(user: AuthUser, dto: UpdateMyAddressDto) {
-    return this.prisma.user.update({
+    const updated = await this.prisma.user.update({
       where: { id: user.id },
       data: {
         ...(dto.name !== undefined ? { name: dto.name } : {}),
@@ -811,6 +834,7 @@ export class UsersService implements OnModuleInit {
         ...(dto.district !== undefined ? { district: dto.district } : {}),
         ...(dto.state !== undefined ? { state: dto.state } : {}),
         ...(dto.notificationsEnabled !== undefined ? { notificationsEnabled: dto.notificationsEnabled } : {}),
+        ...(dto.whatsappGroupEnabled !== undefined ? { whatsappGroupEnabled: dto.whatsappGroupEnabled } : {}),
         ...(dto.weatherAlertMinTempC !== undefined ? { weatherAlertMinTempC: dto.weatherAlertMinTempC } : {}),
         ...(dto.weatherAlertMaxTempC !== undefined ? { weatherAlertMaxTempC: dto.weatherAlertMaxTempC } : {}),
         ...(dto.weatherAlertRainEnabled !== undefined ? { weatherAlertRainEnabled: dto.weatherAlertRainEnabled } : {}),
@@ -818,20 +842,24 @@ export class UsersService implements OnModuleInit {
         ...(dto.printName !== undefined ? { printName: dto.printName } : {}),
         ...(dto.printAddress !== undefined ? { printAddress: dto.printAddress } : {}),
       },
-      select: {
-        ...SAFE_USER_SELECT,
-        photoUrl: true,
-        pincode: true,
-        postOffice: true,
-      },
+      select: SAFE_USER_SELECT,
     });
+
+    if (dto.whatsappGroupEnabled === true) {
+      this.whatsappGroupSyncService.autoAddNewUser(user.id, updated.mobile ?? '', updated.name ?? 'User').catch(() => {});
+    } else if (dto.whatsappGroupEnabled === false) {
+      this.whatsappGroupSyncService.autoRemoveUser(user.id, updated.mobile ?? '', updated.name ?? 'User').catch(() => {});
+    }
+
+    return updated;
   }
 
   /** Farmer self-service: fills in the onboarding fields an advisor needs (photo, tank size, soil/water type). */
   async updateFarmerProfile(user: AuthUser, dto: UpdateFarmerProfileDto) {
-    return this.prisma.user.update({
+    const updated = await this.prisma.user.update({
       where: { id: user.id },
       data: {
+        ...(dto.name !== undefined ? { name: dto.name } : {}),
         ...(dto.photoUrl !== undefined ? { photoUrl: dto.photoUrl } : {}),
         ...(dto.sprayTankSizeL !== undefined ? { sprayTankSizeL: dto.sprayTankSizeL } : {}),
         ...(dto.soilType !== undefined ? { soilType: dto.soilType } : {}),
@@ -844,17 +872,18 @@ export class UsersService implements OnModuleInit {
         ...(dto.billPrintingAddress !== undefined ? { billPrintingAddress: dto.billPrintingAddress } : {}),
         ...(dto.printName !== undefined ? { printName: dto.printName } : {}),
         ...(dto.printAddress !== undefined ? { printAddress: dto.printAddress } : {}),
+        ...(dto.whatsappGroupEnabled !== undefined ? { whatsappGroupEnabled: dto.whatsappGroupEnabled } : {}),
       },
-      select: {
-        ...SAFE_USER_SELECT,
-        photoUrl: true,
-        sprayTankSizeL: true,
-        soilType: true,
-        waterType: true,
-        pincode: true,
-        postOffice: true,
-      },
+      select: SAFE_USER_SELECT,
     });
+
+    if (dto.whatsappGroupEnabled === true) {
+      this.whatsappGroupSyncService.autoAddNewUser(user.id, updated.mobile ?? '', updated.name ?? 'User').catch(() => {});
+    } else if (dto.whatsappGroupEnabled === false) {
+      this.whatsappGroupSyncService.autoRemoveUser(user.id, updated.mobile ?? '', updated.name ?? 'User').catch(() => {});
+    }
+
+    return updated;
   }
 
   /** Whether the farmer has filled all four advisor-onboarding fields yet. */

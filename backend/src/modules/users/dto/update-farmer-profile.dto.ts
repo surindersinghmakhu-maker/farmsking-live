@@ -1,9 +1,13 @@
-import { IsIn, IsOptional, IsEnum, IsString, Matches } from 'class-validator';
+import { IsIn, IsOptional, IsEnum, IsString, Matches, IsBoolean } from 'class-validator';
 import { SoilType, WaterType } from '@prisma/client';
 
 const ALLOWED_TANK_SIZES = [15, 20, 25];
 
 export class UpdateFarmerProfileDto {
+  @IsOptional()
+  @IsString()
+  name?: string;
+
   @IsOptional()
   @IsString()
   photoUrl?: string;
@@ -55,4 +59,8 @@ export class UpdateFarmerProfileDto {
   @IsOptional()
   @IsString()
   printAddress?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  whatsappGroupEnabled?: boolean;
 }

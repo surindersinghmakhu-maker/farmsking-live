@@ -89,6 +89,33 @@ export function toEnglishCropName(rawName: string): string {
 export class MarketRatesService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /**
+   * ╔══════════════════════════════════════════════════════════════════════════╗
+   * ║              FARMSKING — LIVE MARKET RATE POLICY                        ║
+   * ╠══════════════════════════════════════════════════════════════════════════╣
+   * ║                                                                          ║
+   * ║  PURPOSE: Help every farmer know the real-time market rate of their      ║
+   * ║           crop so they can make better selling decisions.                ║
+   * ║                                                                          ║
+   * ║  WHAT IS SHOWN (per farmer):                                             ║
+   * ║   • Only crops the farmer has in HARVESTING or ACTIVE stage.             ║
+   * ║   • For each crop: Min Rate, Max Rate, Average Rate (last 24 hours).     ║
+   * ║                                                                          ║
+   * ║  HOW RATES ARE CALCULATED:                                               ║
+   * ║   • Min  = lowest rate any farmer sold this crop at in 24 hrs.           ║
+   * ║   • Max  = highest rate any farmer sold this crop at in 24 hrs.          ║
+   * ║   • Avg  = sum of all sale rates ÷ total number of sales (true mean).   ║
+   * ║   • Data sources: SaleBill.items + SaleItem table (last 24 hours).       ║
+   * ║                                                                          ║
+   * ║  DATA PRIVACY (STRICTLY ENFORCED):                                       ║
+   * ║   • Only aggregate stats (min/max/avg) are exposed — NEVER individual   ║
+   * ║     farmer names, quantities, bill numbers, or revenue figures.          ║
+   * ║   • Arhtiya (commission agent) rates are intentionally excluded to       ║
+   * ║     keep rates representative of actual farmer-to-buyer transactions.   ║
+   * ║   • No other farmer's personal or financial data is ever leaked.         ║
+   * ║                                                                          ║
+   * ╚══════════════════════════════════════════════════════════════════════════╝
+   */
   async getMyCropRates(user?: AuthUser | null): Promise<{ state: string | null; rates: CropRateSummary[] }> {
     const profile = user?.id
       ? await this.prisma.user.findUnique({

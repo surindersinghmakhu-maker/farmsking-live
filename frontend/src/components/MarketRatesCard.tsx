@@ -266,10 +266,17 @@ export function MarketRatesCard() {
       ctx.font = 'bold 13px sans-serif';
       ctx.fillText(`Per ${crop.unit}`, 534, 121);
 
-      // Date & Time Subtitle Bar
-      ctx.fillStyle = '#64748b';
-      ctx.font = 'bold 13px sans-serif';
-      ctx.fillText(`📅 Date: ${todayDateStr}   |   🕒 Time: ${currentTimeStr}   |   ⏱️ 24H Rates`, 24, 158);
+      // Date & Time Subtitle Bar with light background container
+      ctx.fillStyle = '#f1f5f9';
+      if (typeof (ctx as any).roundRect === 'function') {
+        (ctx as any).roundRect(24, 142, 592, 28, 6);
+        ctx.fill();
+      } else {
+        ctx.fillRect(24, 142, 592, 28);
+      }
+      ctx.fillStyle = '#334155';
+      ctx.font = 'bold 12.5px sans-serif';
+      ctx.fillText(`📅 Date: ${todayDateStr}   |   🕒 Time: ${currentTimeStr}   |   ⏱️ 24H Live Rates`, 36, 160);
 
       // Local Box
       ctx.fillStyle = '#f8fafc';
@@ -620,9 +627,11 @@ export function MarketRatesCard() {
               </View>
             </View>
 
-            <Text style={styles.posterStateSubtitle}>
-              📅 Date: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}  |  🕒 Time: {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}  |  ⏱️ 24H Rates
-            </Text>
+            <View style={styles.posterDateTimeContainer}>
+              <Text style={styles.posterDateTimeText}>
+                📅 Date: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}  |  🕒 Time: {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}  |  ⏱️ 24H Rates
+              </Text>
+            </View>
 
             {/* Rates Table Box */}
             <View style={styles.posterTableBox}>
@@ -944,6 +953,20 @@ const styles = StyleSheet.create({
     fontFamily: FONT.medium,
     color: '#64748b',
     marginTop: -8,
+  },
+  posterDateTimeContainer: {
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.xs,
+    alignSelf: 'flex-start',
+    marginTop: -4,
+    marginBottom: 4,
+  },
+  posterDateTimeText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#334155',
   },
   posterTableBox: {
     backgroundColor: '#f8fafc',

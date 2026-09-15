@@ -224,6 +224,19 @@ export function MarketRatesCard() {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, 640, 450);
 
+      // Background Watermark: FarmsKing Logo + Name
+      ctx.save();
+      ctx.globalAlpha = 0.05;
+      ctx.fillStyle = '#15803d';
+      ctx.textAlign = 'center';
+      ctx.translate(320, 260);
+      ctx.rotate((-14 * Math.PI) / 180);
+      ctx.font = 'bold 58px sans-serif';
+      ctx.fillText('👑 FarmsKing', 0, 0);
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText('VERIFIED MANDI RATES', 0, 34);
+      ctx.restore();
+
       // Top Emerald Header Bar
       ctx.fillStyle = '#15803d';
       ctx.fillRect(0, 0, 640, 75);
@@ -604,6 +617,12 @@ export function MarketRatesCard() {
       {selectedCropForShare && (
         <View style={styles.offscreenContainer}>
           <ViewShot ref={posterRef} options={{ format: 'png', quality: 0.95 }} style={styles.posterCard}>
+            {/* Background Watermark */}
+            <View style={styles.posterWatermarkContainer} pointerEvents="none">
+              <Text style={styles.posterWatermarkText}>👑 FarmsKing</Text>
+              <Text style={styles.posterWatermarkSub}>VERIFIED MANDI RATES</Text>
+            </View>
+
             {/* Header Branding */}
             <View style={styles.posterHeader}>
               <View>
@@ -899,6 +918,31 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#16a34a',
     gap: 12,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  posterWatermarkContainer: {
+    position: 'absolute',
+    top: 100,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    opacity: 0.05,
+    transform: [{ rotate: '-14deg' }],
+  },
+  posterWatermarkText: {
+    fontSize: 38,
+    fontFamily: FONT.extraBold,
+    color: '#15803d',
+    letterSpacing: -0.5,
+  },
+  posterWatermarkSub: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#15803d',
+    letterSpacing: 2,
+    marginTop: 2,
   },
   posterHeader: {
     flexDirection: 'row',

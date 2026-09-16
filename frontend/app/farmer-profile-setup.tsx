@@ -45,14 +45,13 @@ export default function FarmerProfileSetupScreen() {
         setFarmMobile(user.farmMobile || user.mobile || '');
         setUpiId(user.upiId || '');
         if (user.whatsappGroupEnabled !== undefined) setWhatsappGroupEnabled(user.whatsappGroupEnabled);
+        if (user.sprayTankSizeL) setSprayTankSizeL(user.sprayTankSizeL);
       }
       if (status?.profile.sprayTankSizeL) {
         setSprayTankSizeL(status.profile.sprayTankSizeL);
       }
     }, [user, status])
   );
-
-  const canSave = !!sprayTankSizeL && !!farmName.trim() && !!farmAddress.trim() && !!farmMobile.trim();
 
   const handleGoBack = () => {
     if (router.canGoBack()) {
@@ -63,21 +62,32 @@ export default function FarmerProfileSetupScreen() {
   };
 
   const handleSave = async () => {
-    if (!canSave) {
-      Alert.alert('Required Fields Missing', 'Please fill in Spray Tank Capacity, Farm Name, Farm Address, and Farm Mobile.');
+    tap();
+    const selectedTankSize = sprayTankSizeL ?? 20;
+    const finalFarmName = farmName.trim();
+    const finalFarmAddress = farmAddress.trim();
+    const finalFarmMobile = farmMobile.trim();
+    const finalUpiId = upiId.trim();
+
+    if (!finalFarmName) {
+      Alert.alert('Missing Field', 'Please enter Farm Name.');
       return;
     }
-    tap();
+    if (!finalFarmAddress) {
+      Alert.alert('Missing Field', 'Please enter Farm Address.');
+      return;
+    }
+    if (!finalFarmMobile) {
+      Alert.alert('Missing Field', 'Please enter Farm Mobile Number.');
+      return;
+    }
+
     try {
-      const trimmedName = name.trim() || user?.name || farmName.trim();
-      const finalFarmName = farmName.trim();
-      const finalFarmAddress = farmAddress.trim();
-      const finalFarmMobile = farmMobile.trim();
-      const finalUpiId = upiId.trim();
+      const trimmedName = name.trim() || user?.name || finalFarmName;
 
       const updatedUser = await updateProfile.mutateAsync({
         name: trimmedName,
-        sprayTankSizeL: sprayTankSizeL!,
+        sprayTankSizeL: selectedTankSize as SprayTankSizeL,
         farmName: finalFarmName,
         farmAddress: finalFarmAddress,
         farmMobile: finalFarmMobile,
@@ -90,6 +100,7 @@ export default function FarmerProfileSetupScreen() {
       } else {
         await updateUser({
           name: trimmedName,
+          sprayTankSizeL: selectedTankSize as SprayTankSizeL,
           farmName: finalFarmName,
           farmAddress: finalFarmAddress,
           farmMobile: finalFarmMobile,
@@ -283,8 +294,8 @@ export default function FarmerProfileSetupScreen() {
 
           {/* SUBMIT BUTTON: Save Farmer Profile */}
           <TouchableOpacity
-            style={[styles.saveButton, premiumShadow('#15803d', 'md'), !canSave && styles.saveButtonDisabled]}
-            disabled={!canSave || updateProfile.isPending}
+            style={[styles.saveButton, premiumShadow('#15803d', 'md')]}
+            disabled={updateProfile.isPending}
             onPress={handleSave}
             activeOpacity={0.85}
           >

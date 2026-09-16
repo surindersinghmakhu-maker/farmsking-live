@@ -149,16 +149,16 @@ export default function FarmerProfileSetupScreen() {
           {/* SECTION 1: SPRAY TANK SIZE */}
           <View style={styles.tableCard}>
             {/* Field: Spray Tank Size */}
-            <View style={[styles.tableRowField, { borderBottomWidth: 0 }]}>
-              <Text style={styles.fieldLabel}>Spray Tank Size *</Text>
-              <View style={styles.radioRow}>
+            <View style={[styles.tableRowField, { borderBottomWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }]}>
+              <Text style={[styles.fieldLabel, { marginTop: 0 }]}>Spray Tank Size *</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 {SPRAY_TANK_SIZE_OPTIONS.map((size) => {
                   const isSelected = size === sprayTankSizeL;
                   return (
                     <TouchableOpacity
                       key={size}
                       activeOpacity={0.75}
-                      style={[styles.radioButtonItem, isSelected && styles.radioButtonItemActive]}
+                      style={[styles.radioInlineItem, isSelected && styles.radioInlineItemActive]}
                       onPress={() => {
                         tap();
                         setSprayTankSizeL(size);
@@ -166,7 +166,7 @@ export default function FarmerProfileSetupScreen() {
                     >
                       <Ionicons
                         name={isSelected ? 'radio-button-on' : 'radio-button-off'}
-                        size={19}
+                        size={16}
                         color={isSelected ? '#16a34a' : '#94a3b8'}
                       />
                       <Text style={[styles.radioLabel, isSelected && styles.radioLabelActive]}>
@@ -385,25 +385,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 44,
   },
-  radioRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4 },
-  radioButtonItem: {
-    flex: 1,
+  radioInlineItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
+    gap: 5,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
     borderRadius: RADIUS.md,
     borderWidth: 1.5,
     borderColor: '#cbd5e1',
     backgroundColor: '#f8fafc',
   },
-  radioButtonItemActive: {
+  radioInlineItemActive: {
     borderColor: '#16a34a',
     backgroundColor: '#f0fdf4',
   },
-  radioLabel: { fontSize: 13, fontFamily: FONT.medium, color: '#334155' },
-  radioLabelActive: { fontSize: 13, fontFamily: FONT.bold, color: '#15803d' },
+  radioLabel: { fontSize: 12.5, fontFamily: FONT.medium, color: '#334155' },
+  radioLabelActive: { fontSize: 12.5, fontFamily: FONT.bold, color: '#15803d' },
   printingHeaderBox: {
     backgroundColor: '#f0fdf4',
     borderWidth: 1.5,

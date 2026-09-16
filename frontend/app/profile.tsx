@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -63,9 +63,12 @@ export default function ProfileScreen() {
 
   const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState<boolean>(user?.whatsappGroupEnabled ?? true);
 
+  const hasSeededFromUser = useRef(false);
   React.useEffect(() => {
-    if (user) {
+    if (user && !hasSeededFromUser.current) {
+      hasSeededFromUser.current = true;
       if (user.name) setName(user.name);
+      if (user.email) setEmail(user.email);
       if (user.printName) setPrintName(user.printName);
       if (user.printAddress || user.billPrintingAddress) {
         setPrintAddress(user.printAddress || user.billPrintingAddress || '');
@@ -74,6 +77,10 @@ export default function ProfileScreen() {
       if (user.whatsappGroupEnabled !== undefined) {
         setWhatsappGroupEnabled(user.whatsappGroupEnabled);
       }
+      if (user.pincode) setPincode(user.pincode);
+      if (user.postOffice) setPostOffice(user.postOffice);
+      if (user.district) setDistrict(user.district);
+      if (user.state) setState(user.state);
     }
   }, [user]);
 
@@ -145,16 +152,21 @@ export default function ProfileScreen() {
     tap();
     setSaveError(null);
     setIsSaved(false);
+    if (!name.trim()) {
+      setSaveError('❌ Please enter your full name.');
+      return;
+    }
     if (pincode && pincode.trim().length !== 6) {
       setPincodeStatus('❌ PIN Code must be exactly 6 digits.');
       return;
     }
     try {
-      const finalPrintName = printName.trim() || name.trim() || user?.name || '';
+      const trimmedName = name.trim();
+      const finalPrintName = printName.trim() || trimmedName;
       const finalPrintAddress = printAddress.trim() || billPrintingAddress.trim() || '';
 
       const updated = await updateAddress.mutateAsync({
-        name: name.trim() || undefined,
+        name: trimmedName,
         email: email.trim() || undefined,
         photoUrl: photoUrl ?? undefined,
         pincode: pincode.trim() || undefined,
@@ -162,8 +174,8 @@ export default function ProfileScreen() {
         district: district.trim() || undefined,
         state: state.trim() || undefined,
         billPrintingAddress: finalPrintAddress || undefined,
-        printName: finalPrintName || undefined,
-        printAddress: finalPrintAddress || undefined,
+        printName: finalPrintName,
+        printAddress: finalPrintAddress,
         whatsappGroupEnabled,
       });
 
@@ -171,7 +183,7 @@ export default function ProfileScreen() {
         await updateUser(updated as any);
       } else {
         await updateUser({
-          name: name.trim(),
+          name: trimmedName,
           email: email.trim(),
           photoUrl: photoUrl ?? undefined,
           pincode: pincode.trim(),
@@ -246,7 +258,7 @@ export default function ProfileScreen() {
             </TouchableOpacity>
 
             <View style={styles.singleMetaRow}>
-              <Text style={styles.metaNameText}>{user?.name || name || 'Farmer'}</Text>
+              <Text style={styles.metaNameText}>{name || user?.name || 'Farmer'}</Text>
               <Text style={styles.metaDot}>·</Text>
               <Ionicons name="key-outline" size={12} color={theme.primary} />
               <Text style={[styles.metaKingIdText, { color: theme.primary }]}>King ID: {user?.kingId || '—'}</Text>

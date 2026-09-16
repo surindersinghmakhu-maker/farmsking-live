@@ -50,7 +50,7 @@ export default function FarmerProfileSetupScreen() {
       if (status?.profile.sprayTankSizeL) {
         setSprayTankSizeL(status.profile.sprayTankSizeL);
       }
-    }, [user, status])
+    }, [])
   );
 
   const handleGoBack = () => {
@@ -85,7 +85,7 @@ export default function FarmerProfileSetupScreen() {
     try {
       const trimmedName = name.trim() || user?.name || finalFarmName;
 
-      const updatedUser = await updateProfile.mutateAsync({
+      const payload = {
         name: trimmedName,
         sprayTankSizeL: selectedTankSize as SprayTankSizeL,
         farmName: finalFarmName,
@@ -93,21 +93,15 @@ export default function FarmerProfileSetupScreen() {
         farmMobile: finalFarmMobile,
         upiId: finalUpiId || undefined,
         whatsappGroupEnabled,
-      });
+      };
 
-      if (updatedUser) {
-        await updateUser(updatedUser as any);
-      } else {
-        await updateUser({
-          name: trimmedName,
-          sprayTankSizeL: selectedTankSize as SprayTankSizeL,
-          farmName: finalFarmName,
-          farmAddress: finalFarmAddress,
-          farmMobile: finalFarmMobile,
-          upiId: finalUpiId || undefined,
-          whatsappGroupEnabled,
-        });
-      }
+      const updatedUser = await updateProfile.mutateAsync(payload);
+
+      await updateUser({
+        ...(updatedUser || {}),
+        ...payload,
+      } as any);
+
       await refreshUser();
       setSaveSuccessMsg('✨ ਕਿਸਾਨ ਪ੍ਰੋਫਾਈਲ ਜਾਣਕਾਰੀ ਸਫ਼ਲਤਾਪੂਰਵਕ ਸੇਵ ਹੋ ਗਈ ਹੈ!');
       setTimeout(() => {

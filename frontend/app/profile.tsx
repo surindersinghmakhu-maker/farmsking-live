@@ -81,7 +81,7 @@ export default function ProfileScreen() {
         if (user.district) setDistrict(user.district);
         if (user.state) setState(user.state);
       }
-    }, [user])
+    }, [])
   );
 
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);

@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
+import { Stack, useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/src/store/auth-context';
@@ -64,23 +64,25 @@ export default function ProfileScreen() {
 
   const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState<boolean>(user?.whatsappGroupEnabled ?? true);
 
-  React.useEffect(() => {
-    if (user) {
-      setName(user.name || '');
-      setEmail(user.email || '');
-      setFarmName(user.farmName || user.name || '');
-      setFarmAddress(user.farmAddress || [user.village, user.district, user.state].filter(Boolean).join(', ') || '');
-      setFarmMobile(user.farmMobile || user.mobile || '');
-      setUpiId(user.upiId || '');
-      if (user.whatsappGroupEnabled !== undefined) {
-        setWhatsappGroupEnabled(user.whatsappGroupEnabled);
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        setName(user.name || '');
+        setEmail(user.email || '');
+        setFarmName(user.farmName || user.name || '');
+        setFarmAddress(user.farmAddress || [user.village, user.district, user.state].filter(Boolean).join(', ') || '');
+        setFarmMobile(user.farmMobile || user.mobile || '');
+        setUpiId(user.upiId || '');
+        if (user.whatsappGroupEnabled !== undefined) {
+          setWhatsappGroupEnabled(user.whatsappGroupEnabled);
+        }
+        if (user.pincode) setPincode(user.pincode);
+        if (user.postOffice) setPostOffice(user.postOffice);
+        if (user.district) setDistrict(user.district);
+        if (user.state) setState(user.state);
       }
-      if (user.pincode) setPincode(user.pincode);
-      if (user.postOffice) setPostOffice(user.postOffice);
-      if (user.district) setDistrict(user.district);
-      if (user.state) setState(user.state);
-    }
-  }, [user]);
+    }, [user])
+  );
 
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);

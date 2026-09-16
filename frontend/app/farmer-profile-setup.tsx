@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { RoleThemes } from '@/constants/Colors';
@@ -34,21 +34,23 @@ export default function FarmerProfileSetupScreen() {
   const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState<boolean>(user?.whatsappGroupEnabled ?? true);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      setName(user.name || '');
-      setFarmName(user.farmName || user.name || '');
-      setFarmAddress(
-        user.farmAddress || [user.village, user.district, user.state].filter(Boolean).join(', ') || ''
-      );
-      setFarmMobile(user.farmMobile || user.mobile || '');
-      setUpiId(user.upiId || '');
-      if (user.whatsappGroupEnabled !== undefined) setWhatsappGroupEnabled(user.whatsappGroupEnabled);
-    }
-    if (status?.profile.sprayTankSizeL) {
-      setSprayTankSizeL(status.profile.sprayTankSizeL);
-    }
-  }, [status, user]);
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        setName(user.name || '');
+        setFarmName(user.farmName || user.name || '');
+        setFarmAddress(
+          user.farmAddress || [user.village, user.district, user.state].filter(Boolean).join(', ') || ''
+        );
+        setFarmMobile(user.farmMobile || user.mobile || '');
+        setUpiId(user.upiId || '');
+        if (user.whatsappGroupEnabled !== undefined) setWhatsappGroupEnabled(user.whatsappGroupEnabled);
+      }
+      if (status?.profile.sprayTankSizeL) {
+        setSprayTankSizeL(status.profile.sprayTankSizeL);
+      }
+    }, [user, status])
+  );
 
   const canSave = !!sprayTankSizeL && !!farmName.trim() && !!farmAddress.trim() && !!farmMobile.trim();
 

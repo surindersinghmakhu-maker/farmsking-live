@@ -34,17 +34,15 @@ export default function FarmerProfileSetupScreen() {
   const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState<boolean>(user?.whatsappGroupEnabled ?? true);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
 
-  const hasSeededFromUser = useRef(false);
   useEffect(() => {
-    if (user && !hasSeededFromUser.current) {
-      hasSeededFromUser.current = true;
-      if (user.name) setName(user.name);
+    if (user) {
+      setName(user.name || '');
       setFarmName(user.farmName || user.name || '');
       setFarmAddress(
         user.farmAddress || [user.village, user.district, user.state].filter(Boolean).join(', ') || ''
       );
       setFarmMobile(user.farmMobile || user.mobile || '');
-      if (user.upiId) setUpiId(user.upiId);
+      setUpiId(user.upiId || '');
       if (user.whatsappGroupEnabled !== undefined) setWhatsappGroupEnabled(user.whatsappGroupEnabled);
     }
     if (status?.profile.sprayTankSizeL) {

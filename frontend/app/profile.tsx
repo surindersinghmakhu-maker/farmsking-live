@@ -64,16 +64,14 @@ export default function ProfileScreen() {
 
   const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState<boolean>(user?.whatsappGroupEnabled ?? true);
 
-  const hasSeededFromUser = useRef(false);
   React.useEffect(() => {
-    if (user && !hasSeededFromUser.current) {
-      hasSeededFromUser.current = true;
-      if (user.name) setName(user.name);
-      if (user.email) setEmail(user.email);
-      if (user.farmName) setFarmName(user.farmName);
-      if (user.farmAddress) setFarmAddress(user.farmAddress);
-      if (user.farmMobile || user.mobile) setFarmMobile(user.farmMobile || user.mobile || '');
-      if (user.upiId) setUpiId(user.upiId);
+    if (user) {
+      setName(user.name || '');
+      setEmail(user.email || '');
+      setFarmName(user.farmName || user.name || '');
+      setFarmAddress(user.farmAddress || [user.village, user.district, user.state].filter(Boolean).join(', ') || '');
+      setFarmMobile(user.farmMobile || user.mobile || '');
+      setUpiId(user.upiId || '');
       if (user.whatsappGroupEnabled !== undefined) {
         setWhatsappGroupEnabled(user.whatsappGroupEnabled);
       }

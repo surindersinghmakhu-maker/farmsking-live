@@ -148,10 +148,6 @@ export default function FarmerProfileSetupScreen() {
 
           {/* SECTION 1: FARMER PERSONAL DETAILS TABLE */}
           <View style={styles.tableCard}>
-            <View style={styles.tableHeader}>
-              <Ionicons name="person" size={18} color="#15803d" />
-              <Text style={styles.tableHeaderTitle}>👨‍🌾 Farmer Personal Details</Text>
-            </View>
 
             {/* Field: Farmer Name: full name */}
             <View style={styles.tableRowField}>

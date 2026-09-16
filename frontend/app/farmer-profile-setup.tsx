@@ -64,34 +64,21 @@ export default function FarmerProfileSetupScreen() {
   const handleSave = async () => {
     tap();
     const selectedTankSize = sprayTankSizeL ?? 20;
-    const finalFarmName = farmName.trim();
+    const finalFarmName = farmName.trim() || user?.name || '';
     const finalFarmAddress = farmAddress.trim();
-    const finalFarmMobile = farmMobile.trim();
+    const finalFarmMobile = farmMobile.trim() || user?.mobile || '';
     const finalUpiId = upiId.trim();
 
-    if (!finalFarmName) {
-      Alert.alert('Missing Field', 'Please enter Farm Name.');
-      return;
-    }
-    if (!finalFarmAddress) {
-      Alert.alert('Missing Field', 'Please enter Farm Address.');
-      return;
-    }
-    if (!finalFarmMobile) {
-      Alert.alert('Missing Field', 'Please enter Farm Mobile Number.');
-      return;
-    }
-
     try {
-      const trimmedName = name.trim() || user?.name || finalFarmName;
+      const trimmedName = name.trim() || user?.name || finalFarmName || 'Farmer';
 
       const payload = {
         name: trimmedName,
         sprayTankSizeL: selectedTankSize as SprayTankSizeL,
-        farmName: finalFarmName,
-        farmAddress: finalFarmAddress,
-        farmMobile: finalFarmMobile,
-        upiId: finalUpiId,
+        farmName: finalFarmName || undefined,
+        farmAddress: finalFarmAddress || undefined,
+        farmMobile: finalFarmMobile || undefined,
+        upiId: finalUpiId !== '' ? finalUpiId : undefined,
         whatsappGroupEnabled,
       };
 
@@ -101,9 +88,9 @@ export default function FarmerProfileSetupScreen() {
         ...(user || {}),
         ...(updatedUser || {}),
         name: trimmedName,
-        farmName: finalFarmName,
-        farmAddress: finalFarmAddress,
-        farmMobile: finalFarmMobile,
+        farmName: finalFarmName || user?.farmName || user?.name,
+        farmAddress: finalFarmAddress || user?.farmAddress,
+        farmMobile: finalFarmMobile || user?.farmMobile || user?.mobile,
         upiId: finalUpiId,
         sprayTankSizeL: selectedTankSize,
         whatsappGroupEnabled,

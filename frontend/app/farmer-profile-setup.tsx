@@ -118,7 +118,7 @@ export default function FarmerProfileSetupScreen() {
         </TouchableOpacity>
         <View style={{ flex: 1, alignItems: 'center' }}>
           <Text style={styles.headerTitle}>🌾 Farmer Profile Setup</Text>
-          <Text style={styles.headerSubtitle}>ਕਿਸਾਨ ਪ੍ਰੋਫਾਈਲ ਅਤੇ ਪ੍ਰਿੰਟਿੰਗ ਸੈਟਿੰਗਜ਼</Text>
+          <Text style={styles.headerSubtitle}>Farmer Profile & Printing Settings</Text>
         </View>
         <View style={{ width: 34 }} />
       </LinearGradient>
@@ -199,7 +199,7 @@ export default function FarmerProfileSetupScreen() {
               <Ionicons name="print" size={18} color="#15803d" />
               <View style={{ flex: 1 }}>
                 <Text style={styles.printingTitle}>🖨️ Use in Printing</Text>
-                <Text style={styles.printingSub}>ਬਿੱਲਾਂ, ਰਸੀਦਾਂ ਅਤੇ ਵਊਚਰਾਂ ਉੱਪਰ ਪ੍ਰਿੰਟ ਹੋਣ ਲਈ ਫਰਮ ਦੀ ਜਾਣਕਾਰੀ ਦਰਜ ਕਰੋ।</Text>
+                <Text style={styles.printingSub}>Enter farm details to be printed on bills, receipts, and vouchers.</Text>
               </View>
             </View>
 

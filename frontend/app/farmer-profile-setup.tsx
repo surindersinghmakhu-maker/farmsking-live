@@ -240,7 +240,9 @@ export default function FarmerProfileSetupScreen() {
 
             {/* UPI ID (Optional) */}
             <View style={[styles.tableRowField, { borderBottomWidth: 0 }]}>
-              <Text style={styles.fieldLabel}>UPI ID (Optional)</Text>
+              <Text style={styles.fieldLabel}>
+                UPI ID (Optional) <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>(for generating payment QR Code on bill)</Text>
+              </Text>
               <View style={[styles.inputWrap, { backgroundColor: '#ffffff' }]}>
                 <Ionicons name="qr-code-outline" size={18} color="#64748b" style={{ marginRight: 8 }} />
                 <TextInput

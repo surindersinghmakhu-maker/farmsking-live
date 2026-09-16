@@ -367,6 +367,7 @@ export class UsersService implements OnModuleInit {
 
     const profileData: Prisma.UserUpdateInput = {};
     if (dto) {
+      if (dto.name !== undefined) profileData.name = dto.name;
       if (dto.photoUrl !== undefined) profileData.photoUrl = dto.photoUrl;
       if (dto.sprayTankSizeL !== undefined) profileData.sprayTankSizeL = dto.sprayTankSizeL;
       if (dto.soilType !== undefined) profileData.soilType = dto.soilType;
@@ -377,6 +378,8 @@ export class UsersService implements OnModuleInit {
       if (dto.district !== undefined) profileData.district = dto.district;
       if (dto.state !== undefined) profileData.state = dto.state;
       if (dto.billPrintingAddress !== undefined) profileData.billPrintingAddress = dto.billPrintingAddress;
+      if (dto.printName !== undefined) profileData.printName = dto.printName;
+      if (dto.printAddress !== undefined) profileData.printAddress = dto.printAddress;
     }
 
     const [updated] = await this.prisma.$transaction([

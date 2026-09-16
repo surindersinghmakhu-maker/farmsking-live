@@ -30,20 +30,26 @@ export default function FarmerProfileSetupScreen() {
   const updateAddress = useUpdateMyAddress();
 
   const [sprayTankSizeL, setSprayTankSizeL] = useState<SprayTankSizeL | null>(status?.profile.sprayTankSizeL ?? null);
+  const [name, setName] = useState<string>(user?.name || '');
   const [printName, setPrintName] = useState<string>(user?.printName || user?.name || '');
   const [printAddress, setPrintAddress] = useState<string>(
     user?.printAddress || user?.billPrintingAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || ''
   );
   const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState<boolean>(user?.whatsappGroupEnabled ?? true);
 
-  const hasSeededFromStatus = useRef(false);
+  const hasSeededFromUser = useRef(false);
   useEffect(() => {
-    if (status && !hasSeededFromStatus.current) {
-      hasSeededFromStatus.current = true;
+    if (user && !hasSeededFromUser.current) {
+      hasSeededFromUser.current = true;
+      if (user.name) setName(user.name);
+      setPrintName(user.printName || user.name || '');
+      setPrintAddress(
+        user.printAddress || user.billPrintingAddress || [user.village, user.district, user.state].filter(Boolean).join(', ') || ''
+      );
+      if (user.whatsappGroupEnabled !== undefined) setWhatsappGroupEnabled(user.whatsappGroupEnabled);
+    }
+    if (status?.profile.sprayTankSizeL) {
       setSprayTankSizeL(status.profile.sprayTankSizeL);
-      if (user?.printName) setPrintName(user.printName);
-      if (user?.printAddress || user?.billPrintingAddress) setPrintAddress(user.printAddress || user.billPrintingAddress || '');
-      if (user?.whatsappGroupEnabled !== undefined) setWhatsappGroupEnabled(user.whatsappGroupEnabled);
     }
   }, [status, user]);
 
@@ -61,10 +67,12 @@ export default function FarmerProfileSetupScreen() {
     if (!canSave) return;
     tap();
     try {
-      const finalPrintName = printName.trim() || user?.name || '';
+      const trimmedName = name.trim() || user?.name || '';
+      const finalPrintName = printName.trim() || trimmedName;
       const finalPrintAddress = printAddress.trim() || user?.billPrintingAddress || '';
 
       const updatedUser = await updateProfile.mutateAsync({
+        name: trimmedName,
         sprayTankSizeL: sprayTankSizeL!,
         printName: finalPrintName,
         printAddress: finalPrintAddress,
@@ -76,6 +84,7 @@ export default function FarmerProfileSetupScreen() {
         await updateUser(updatedUser as any);
       } else {
         await updateUser({
+          name: trimmedName,
           printName: finalPrintName,
           printAddress: finalPrintAddress,
           billPrintingAddress: finalPrintAddress,
@@ -102,6 +111,26 @@ export default function FarmerProfileSetupScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
+
+          {/* Full Name */}
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Full Name / Account Name *</Text>
+            <View style={styles.selectField}>
+              <Ionicons name="person-outline" size={18} color="#64748b" style={{ marginRight: 8 }} />
+              <TextInput
+                style={{ flex: 1, fontSize: 14, fontFamily: FONT.medium, color: '#0f172a' }}
+                placeholder="Enter full name"
+                placeholderTextColor="#94a3b8"
+                value={name}
+                onChangeText={(t) => {
+                  setName(t);
+                  if (!printName || printName === user?.name) {
+                    setPrintName(t);
+                  }
+                }}
+              />
+            </View>
+          </View>
 
           {/* Spray Tank Size */}
           <View style={styles.section}>

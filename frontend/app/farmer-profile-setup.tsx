@@ -128,10 +128,15 @@ export default function FarmerProfileSetupScreen() {
 
           {/* King ID Badge Banner */}
           <View style={styles.kingIdBanner}>
-            <Ionicons name="key" size={16} color="#15803d" />
-            <Text style={styles.kingIdBannerText}>
-              FarmsKing Account ID: <Text style={{ fontFamily: FONT.extraBold }}>{user?.kingId || '—'}</Text>
-            </Text>
+            <Ionicons name="key" size={18} color="#15803d" style={{ marginTop: 2 }} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.kingIdBannerText}>
+                FarmsKing Account ID: <Text style={{ fontFamily: FONT.extraBold }}>{user?.kingId || '—'}</Text>
+              </Text>
+              <Text style={styles.userNameBannerText}>
+                Farmer Name: <Text style={{ fontFamily: FONT.bold }}>{user?.name || name || '—'}</Text>
+              </Text>
+            </View>
           </View>
 
           {saveSuccessMsg ? (
@@ -351,6 +356,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   kingIdBannerText: { fontSize: 12.5, fontFamily: FONT.bold, color: '#166534' },
+  userNameBannerText: { fontSize: 12, fontFamily: FONT.medium, color: '#15803d', marginTop: 2 },
   successBox: {
     flexDirection: 'row',
     alignItems: 'center',

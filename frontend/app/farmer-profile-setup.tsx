@@ -36,22 +36,26 @@ export default function FarmerProfileSetupScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (user) {
-        setName(user.name || '');
-        setFarmName(user.farmName || user.name || '');
-        setFarmAddress(
-          user.farmAddress || [user.village, user.district, user.state].filter(Boolean).join(', ') || ''
-        );
-        setFarmMobile(user.farmMobile || user.mobile || '');
-        setUpiId(user.upiId || '');
-        if (user.whatsappGroupEnabled !== undefined) setWhatsappGroupEnabled(user.whatsappGroupEnabled);
-        if (user.sprayTankSizeL) setSprayTankSizeL(user.sprayTankSizeL);
-      }
-      if (status?.profile.sprayTankSizeL) {
-        setSprayTankSizeL(status.profile.sprayTankSizeL);
-      }
+      refreshUser();
     }, [])
   );
+
+  React.useEffect(() => {
+    if (user) {
+      setName(user.name || '');
+      setFarmName(user.farmName || user.name || '');
+      setFarmAddress(
+        user.farmAddress || [user.village, user.district, user.state].filter(Boolean).join(', ') || ''
+      );
+      setFarmMobile(user.farmMobile || user.mobile || '');
+      setUpiId(user.upiId || '');
+      if (user.whatsappGroupEnabled !== undefined) setWhatsappGroupEnabled(user.whatsappGroupEnabled);
+      if (user.sprayTankSizeL) setSprayTankSizeL(user.sprayTankSizeL);
+    }
+    if (status?.profile.sprayTankSizeL) {
+      setSprayTankSizeL(status.profile.sprayTankSizeL);
+    }
+  }, [user, status]);
 
   const handleGoBack = () => {
     if (router.canGoBack()) {
@@ -75,10 +79,10 @@ export default function FarmerProfileSetupScreen() {
       const payload = {
         name: trimmedName,
         sprayTankSizeL: selectedTankSize as SprayTankSizeL,
-        farmName: finalFarmName || undefined,
-        farmAddress: finalFarmAddress || undefined,
-        farmMobile: finalFarmMobile || undefined,
-        upiId: finalUpiId !== '' ? finalUpiId : undefined,
+        farmName: finalFarmName,
+        farmAddress: finalFarmAddress,
+        farmMobile: finalFarmMobile,
+        upiId: finalUpiId,
         whatsappGroupEnabled,
       };
 

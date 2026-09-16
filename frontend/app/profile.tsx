@@ -66,23 +66,27 @@ export default function ProfileScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (user) {
-        setName(user.name || '');
-        setEmail(user.email || '');
-        setFarmName(user.farmName || user.name || '');
-        setFarmAddress(user.farmAddress || [user.village, user.district, user.state].filter(Boolean).join(', ') || '');
-        setFarmMobile(user.farmMobile || user.mobile || '');
-        setUpiId(user.upiId || '');
-        if (user.whatsappGroupEnabled !== undefined) {
-          setWhatsappGroupEnabled(user.whatsappGroupEnabled);
-        }
-        if (user.pincode) setPincode(user.pincode);
-        if (user.postOffice) setPostOffice(user.postOffice);
-        if (user.district) setDistrict(user.district);
-        if (user.state) setState(user.state);
-      }
+      refreshUser();
     }, [])
   );
+
+  React.useEffect(() => {
+    if (user) {
+      setName(user.name || '');
+      setEmail(user.email || '');
+      setFarmName(user.farmName || user.name || '');
+      setFarmAddress(user.farmAddress || [user.village, user.district, user.state].filter(Boolean).join(', ') || '');
+      setFarmMobile(user.farmMobile || user.mobile || '');
+      setUpiId(user.upiId || '');
+      if (user.whatsappGroupEnabled !== undefined) {
+        setWhatsappGroupEnabled(user.whatsappGroupEnabled);
+      }
+      if (user.pincode) setPincode(user.pincode);
+      if (user.postOffice) setPostOffice(user.postOffice);
+      if (user.district) setDistrict(user.district);
+      if (user.state) setState(user.state);
+    }
+  }, [user]);
 
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);

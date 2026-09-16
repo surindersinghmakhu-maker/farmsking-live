@@ -1,5 +1,6 @@
 import { SoilType, WaterType } from '@prisma/client';
 export declare class UpdateFarmerProfileDto {
+    name?: string;
     photoUrl?: string;
     pincode?: string;
     postOffice?: string;
@@ -11,4 +12,8 @@ export declare class UpdateFarmerProfileDto {
     waterType?: WaterType;
     upiId?: string;
     billPrintingAddress?: string;
+    farmName?: string;
+    farmAddress?: string;
+    farmMobile?: string;
+    whatsappGroupEnabled?: boolean;
 }

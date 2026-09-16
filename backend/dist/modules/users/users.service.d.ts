@@ -1,3 +1,4 @@
+import { OnModuleInit } from '@nestjs/common';
 import { OperatorPermission, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { WalletService } from '../wallet/wallet.service';
@@ -11,11 +12,12 @@ import { UpdateMyAddressDto } from './dto/update-my-address.dto';
 import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
 import { WhatsAppGroupSyncService } from '../whatsapp/whatsapp-group-sync.service';
 import { AuthUser } from '../../common/types/auth-user.type';
-export declare class UsersService {
+export declare class UsersService implements OnModuleInit {
     private readonly prisma;
     private readonly walletService;
     private readonly whatsappGroupSyncService;
     constructor(prisma: PrismaService, walletService: WalletService, whatsappGroupSyncService: WhatsAppGroupSyncService);
+    onModuleInit(): Promise<void>;
     list(query: ListUsersQueryDto): Promise<{
         items: {
             id: string;
@@ -45,6 +47,9 @@ export declare class UsersService {
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
             upiId: string | null;
             billPrintingAddress: string | null;
+            farmName: string | null;
+            farmAddress: string | null;
+            farmMobile: string | null;
             operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
             referredById: string | null;
             createdAt: Date;
@@ -89,6 +94,9 @@ export declare class UsersService {
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
             upiId: string | null;
             billPrintingAddress: string | null;
+            farmName: string | null;
+            farmAddress: string | null;
+            farmMobile: string | null;
             operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
             referredById: string | null;
             createdAt: Date;
@@ -125,6 +133,9 @@ export declare class UsersService {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
         referredById: string | null;
         createdAt: Date;
@@ -173,6 +184,9 @@ export declare class UsersService {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
         referredById: string | null;
         createdAt: Date;
@@ -207,6 +221,9 @@ export declare class UsersService {
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
             upiId: string | null;
             billPrintingAddress: string | null;
+            farmName: string | null;
+            farmAddress: string | null;
+            farmMobile: string | null;
             operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
             referredById: string | null;
             createdAt: Date;
@@ -242,6 +259,9 @@ export declare class UsersService {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
         referredById: string | null;
         createdAt: Date;
@@ -275,6 +295,9 @@ export declare class UsersService {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
         referredById: string | null;
         createdAt: Date;
@@ -309,6 +332,9 @@ export declare class UsersService {
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
             upiId: string | null;
             billPrintingAddress: string | null;
+            farmName: string | null;
+            farmAddress: string | null;
+            farmMobile: string | null;
             operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
             referredById: string | null;
             createdAt: Date;
@@ -353,6 +379,9 @@ export declare class UsersService {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
         referredById: string | null;
         createdAt: Date;
@@ -386,6 +415,9 @@ export declare class UsersService {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
         referredById: string | null;
         createdAt: Date;
@@ -426,6 +458,9 @@ export declare class UsersService {
             profileTitle: string | null;
             upiId: string | null;
             billPrintingAddress: string | null;
+            farmName: string | null;
+            farmAddress: string | null;
+            farmMobile: string | null;
             panNumber: string | null;
             alternativeMobile: string | null;
             bankAccountNumber: string | null;
@@ -506,6 +541,9 @@ export declare class UsersService {
         profileTitle: string | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         panNumber: string | null;
         alternativeMobile: string | null;
         bankAccountNumber: string | null;
@@ -547,6 +585,9 @@ export declare class UsersService {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
         referredById: string | null;
         createdAt: Date;
@@ -580,6 +621,9 @@ export declare class UsersService {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
         referredById: string | null;
         createdAt: Date;
@@ -613,6 +657,9 @@ export declare class UsersService {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
         referredById: string | null;
         createdAt: Date;
@@ -646,6 +693,9 @@ export declare class UsersService {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
         referredById: string | null;
         createdAt: Date;
@@ -679,6 +729,9 @@ export declare class UsersService {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
         referredById: string | null;
         createdAt: Date;
@@ -727,6 +780,9 @@ export declare class UsersService {
         profileTitle: string | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         panNumber: string | null;
         alternativeMobile: string | null;
         bankAccountNumber: string | null;
@@ -781,6 +837,9 @@ export declare class UsersService {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         panNumber: string | null;
         alternativeMobile: string | null;
         bankAccountNumber: string | null;

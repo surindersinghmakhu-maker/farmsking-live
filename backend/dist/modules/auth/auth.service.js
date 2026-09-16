@@ -70,6 +70,10 @@ const SAFE_USER_SELECT = {
     soilType: true,
     waterType: true,
     preferredLanguage: true,
+    upiId: true,
+    billPrintingAddress: true,
+    printName: true,
+    printAddress: true,
     createdAt: true,
 };
 const whatsapp_service_1 = require("../whatsapp/whatsapp.service");
@@ -106,12 +110,16 @@ let AuthService = class AuthService {
         const passwordHash = await argon2.hash(dto.password);
         const kingId = await (0, king_id_util_1.generateUniqueKingId)(this.prisma);
         const securityAnswerHash = dto.securityAnswer ? await argon2.hash(dto.securityAnswer.trim().toLowerCase()) : undefined;
+        const defaultAddress = [dto.village, dto.district, dto.state].filter(Boolean).join(', ');
         const user = await this.prisma.user.create({
             data: {
                 kingId,
                 mobile: dto.mobile,
                 passwordHash,
                 name: dto.name,
+                farmName: dto.farmName || dto.name,
+                farmAddress: dto.farmAddress || defaultAddress || null,
+                farmMobile: dto.farmMobile || dto.mobile,
                 pincode: dto.pincode,
                 postOffice: dto.postOffice,
                 village: dto.village,

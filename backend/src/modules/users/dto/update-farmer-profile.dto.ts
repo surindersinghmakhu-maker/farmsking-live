@@ -54,11 +54,15 @@ export class UpdateFarmerProfileDto {
 
   @IsOptional()
   @IsString()
-  printName?: string;
+  farmName?: string;
 
   @IsOptional()
   @IsString()
-  printAddress?: string;
+  farmAddress?: string;
+
+  @IsOptional()
+  @IsString()
+  farmMobile?: string;
 
   @IsOptional()
   @IsBoolean()

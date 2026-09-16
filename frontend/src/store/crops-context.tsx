@@ -385,11 +385,11 @@ export function CropsProvider({ children }: { children: ReactNode }) {
     );
   }, [salesRecords, specialTreatments, customCropLocations, cropGpsDataMap, unlockedCropIds, isPersistLoaded]);
 
-  const farmerName = user?.printName || user?.name;
-  const farmerPhone = user?.mobile;
+  const farmerName = user?.farmName || user?.name;
+  const farmerPhone = user?.farmMobile || user?.mobile;
   const location = useMemo(
-    () => user?.printAddress || user?.billPrintingAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', '),
-    [user?.printAddress, user?.billPrintingAddress, user?.village, user?.district, user?.state]
+    () => user?.farmAddress || user?.printAddress || user?.billPrintingAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', '),
+    [user?.farmAddress, user?.printAddress, user?.billPrintingAddress, user?.village, user?.district, user?.state]
   );
 
   const activeCrops = useMemo(() => myCrops.filter((c) => c.status !== 'COMPLETED' && c.status !== 'FAILED'), [myCrops]);

@@ -28,4 +28,7 @@ export declare class AdminUpdateUserDto {
     bankIfsc?: string;
     bankAccountHolderName?: string;
     billPrintingAddress?: string;
+    farmName?: string;
+    farmAddress?: string;
+    farmMobile?: string;
 }

@@ -92,9 +92,9 @@ export function UniversalStatementModal({
 
   const appName = settings?.appName || 'FarmsKing';
   const tagline = settings?.tagline || 'Smart Farming, Better Future';
-  const farmerName = propFarmerName || user?.name || 'Farmer';
-  const farmerPhone = propFarmerPhone || user?.mobile || '';
-  const farmerVillage = propFarmerVillage || user?.village || '';
+  const farmerName = propFarmerName || user?.farmName || user?.name || 'Farmer';
+  const farmerPhone = propFarmerPhone || user?.farmMobile || user?.mobile || '';
+  const farmerVillage = propFarmerVillage || user?.farmAddress || user?.printAddress || user?.billPrintingAddress || user?.village || '';
 
   // Date Range Filters
   const [fromDate, setFromDate] = useState(() => thirtyDaysAgoIso());

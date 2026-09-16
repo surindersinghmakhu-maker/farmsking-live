@@ -57,13 +57,21 @@ export class UpdateMyAddressDto {
 
   @IsOptional()
   @IsString()
+  upiId?: string;
+
+  @IsOptional()
+  @IsString()
   billPrintingAddress?: string;
 
   @IsOptional()
   @IsString()
-  printName?: string;
+  farmName?: string;
 
   @IsOptional()
   @IsString()
-  printAddress?: string;
+  farmAddress?: string;
+
+  @IsOptional()
+  @IsString()
+  farmMobile?: string;
 }

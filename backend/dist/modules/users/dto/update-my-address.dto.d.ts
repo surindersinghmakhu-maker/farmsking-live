@@ -12,5 +12,9 @@ export declare class UpdateMyAddressDto {
     weatherAlertMinTempC?: number | null;
     weatherAlertMaxTempC?: number | null;
     weatherAlertRainEnabled?: boolean;
+    upiId?: string;
     billPrintingAddress?: string;
+    farmName?: string;
+    farmAddress?: string;
+    farmMobile?: string;
 }

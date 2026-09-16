@@ -796,9 +796,9 @@ function WorkerStatementModalInner({ workerId, onClose }: { workerId: string; on
   const timeline = statement?.timeline || [];
   const worker = statement?.worker;
 
-  const farmerName = user?.name || 'Farm Owner';
-  const farmerMobile = user?.mobile || '';
-  const farmerVillage = user?.village || '';
+  const farmerName = user?.farmName || user?.name || 'Farm Owner';
+  const farmerMobile = user?.farmMobile || user?.mobile || '';
+  const farmerVillage = user?.farmAddress || user?.printAddress || user?.billPrintingAddress || user?.village || '';
 
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
@@ -910,9 +910,9 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
 
   const ledgerRows = useMemo(() => buildPartyLedgerRows(entries), [entries]);
 
-  const farmerName = user?.name || 'Farm Owner';
-  const farmerMobile = user?.mobile || '';
-  const farmerVillage = user?.village || '';
+  const farmerName = user?.farmName || user?.name || 'Farm Owner';
+  const farmerMobile = user?.farmMobile || user?.mobile || '';
+  const farmerVillage = user?.farmAddress || user?.printAddress || user?.billPrintingAddress || user?.village || '';
 
   const handleOpenPreviewForLedgerRow = async (row: GroupedLedgerRow) => {
     tap();

@@ -300,10 +300,10 @@ export function MarketRatesCard() {
       ctx.strokeRect(24, 116, 284, 75);
       ctx.fillStyle = '#0f172a';
       ctx.font = 'bold 13px sans-serif';
-      ctx.fillText(user?.printName || user?.name || 'Surinder Agro Farm', 32, 158);
+      ctx.fillText(user?.farmName || user?.name || 'Surinder Agro Farm', 32, 158);
       ctx.fillStyle = '#475569';
       ctx.font = '11px sans-serif';
-      ctx.fillText(`📱 ${user?.mobile || 'Verified Farmer'}`, 32, 176);
+      ctx.fillText(`📱 ${user?.farmMobile || user?.mobile || 'Verified Farmer'}`, 32, 176);
 
       // Right Box (Red)
       ctx.fillStyle = '#dc2626';
@@ -320,7 +320,7 @@ export function MarketRatesCard() {
       ctx.fillText(`State: ${userState}`, 340, 158);
       ctx.fillStyle = '#475569';
       ctx.font = '11px sans-serif';
-      ctx.fillText(`📍 ${user?.printAddress || user?.billPrintingAddress || 'Punjab Mandi'}`, 340, 176);
+      ctx.fillText(`📍 ${user?.farmAddress || user?.printAddress || user?.billPrintingAddress || 'Punjab Mandi'}`, 340, 176);
 
       // Main Amount Box (Red Border)
       const mainRate = crop.localAvgRate ?? crop.nationalAvgRate ?? 0;
@@ -681,10 +681,10 @@ export function MarketRatesCard() {
                 </View>
                 <View style={styles.posterSideBoxBody}>
                   <Text style={styles.posterPartyNameBold} numberOfLines={1}>
-                    {user?.printName || user?.name || 'Surinder Agro Farm'}
+                    {user?.farmName || user?.name || 'Surinder Agro Farm'}
                   </Text>
                   <Text style={styles.posterPartySubText} numberOfLines={1}>
-                    📱 {user?.mobile || 'Verified Farmer'}
+                    📱 {user?.farmMobile || user?.mobile || 'Verified Farmer'}
                   </Text>
                 </View>
               </View>
@@ -699,7 +699,7 @@ export function MarketRatesCard() {
                     State: {userState}
                   </Text>
                   <Text style={styles.posterPartySubText} numberOfLines={1}>
-                    📍 {user?.printAddress || user?.billPrintingAddress || [user?.village, user?.district].filter(Boolean).join(', ') || 'Punjab Mandi'}
+                    📍 {user?.farmAddress || user?.printAddress || user?.billPrintingAddress || [user?.village, user?.district].filter(Boolean).join(', ') || 'Punjab Mandi'}
                   </Text>
                 </View>
               </View>

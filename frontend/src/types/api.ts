@@ -63,8 +63,9 @@ export interface User {
   waterType?: WaterType | null;
   upiId?: string | null;
   billPrintingAddress?: string | null;
-  printName?: string | null;
-  printAddress?: string | null;
+  farmName?: string | null;
+  farmAddress?: string | null;
+  farmMobile?: string | null;
   specialization?: string | null;
   bio?: string | null;
   yearsExperience?: number | null;

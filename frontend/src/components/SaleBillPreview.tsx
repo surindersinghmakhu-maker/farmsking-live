@@ -249,16 +249,16 @@ export function BillPreview({ inv }: { inv: SavedSaleInvoice }) {
           </View>
           <View style={billStyles.billPartyBody}>
             <Text style={billStyles.billPartyLine}>
-              Name: <Text style={billStyles.billPartyLineBold}>{user?.printName || inv.farmerName || user?.name}</Text>
+              Name: <Text style={billStyles.billPartyLineBold}>{user?.farmName || inv.farmerName || user?.name}</Text>
             </Text>
-            {user?.mobile ? (
+            {(user?.farmMobile || user?.mobile) ? (
               <Text style={billStyles.billPartyLine}>
-                Mobile: <Text style={billStyles.billPartyLineBold}>{user.mobile}</Text>
+                Mobile: <Text style={billStyles.billPartyLineBold}>{user?.farmMobile || user?.mobile}</Text>
               </Text>
             ) : null}
-            {user?.printAddress || user?.billPrintingAddress ? (
+            {user?.farmAddress || user?.printAddress || user?.billPrintingAddress ? (
               <Text style={billStyles.billPartyLine}>
-                Address: <Text style={billStyles.billPartyLineBold}>{user?.printAddress || user?.billPrintingAddress}</Text>
+                Address: <Text style={billStyles.billPartyLineBold}>{user?.farmAddress || user?.printAddress || user?.billPrintingAddress}</Text>
               </Text>
             ) : user?.village || user?.district ? (
               <Text style={billStyles.billPartyLine}>
@@ -833,9 +833,9 @@ export async function exportBillAsPdf(inv: SavedSaleInvoice, fileName?: string, 
             <div class="party-box">
               <div class="party-header">👨‍🌾 SELLER (FARMER)</div>
               <div class="party-body">
-                <strong>${user?.printName || inv.farmerName || user?.name}</strong><br/>
-                ${user?.mobile ? `Mobile: ${user.mobile}<br/>` : ''}
-                ${(user?.printAddress || user?.billPrintingAddress || user?.village) ? `Address: ${user?.printAddress || user?.billPrintingAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ')}<br/>` : ''}
+                <strong>${user?.farmName || inv.farmerName || user?.name}</strong><br/>
+                ${(user?.farmMobile || user?.mobile) ? `Mobile: ${user?.farmMobile || user?.mobile}<br/>` : ''}
+                ${(user?.farmAddress || user?.printAddress || user?.billPrintingAddress || user?.village) ? `Address: ${user?.farmAddress || user?.printAddress || user?.billPrintingAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ')}<br/>` : ''}
               </div>
             </div>
             <div class="party-box">

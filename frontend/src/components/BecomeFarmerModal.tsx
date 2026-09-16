@@ -41,10 +41,11 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
     (user as any)?.sprayTankSizeL ?? 20,
   );
   const [upiId, setUpiId] = useState<string>((user as any)?.upiId ?? '');
-  const [printName, setPrintName] = useState<string>(user?.printName || user?.name || '');
-  const [printAddress, setPrintAddress] = useState<string>(
-    user?.printAddress || user?.billPrintingAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || ''
+  const [farmName, setFarmName] = useState<string>(user?.farmName || user?.name || '');
+  const [farmAddress, setFarmAddress] = useState<string>(
+    user?.farmAddress || user?.printAddress || user?.billPrintingAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || ''
   );
+  const [farmMobile, setFarmMobile] = useState<string>(user?.farmMobile || user?.mobile || '');
   const [village, setVillage] = useState<string>(user?.village ?? '');
   const [district, setDistrict] = useState<string>(user?.district ?? '');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -57,15 +58,27 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
       setErrorMessage('ਕਿਰਪਾ ਕਰਕੇ Spray Tank ਦਾ ਸਾਈਜ਼ ਚੁਣੋ।');
       return;
     }
+    if (!farmName.trim()) {
+      setErrorMessage('ਕਿਰਪਾ ਕਰਕੇ ਫਰਮ ਦਾ ਨਾਮ (Farm Name) ਦਰਜ ਕਰੋ।');
+      return;
+    }
+    if (!farmAddress.trim()) {
+      setErrorMessage('ਕਿਰਪਾ ਕਰਕੇ ਫਰਮ ਦਾ ਪਤਾ (Farm Address) ਦਰਜ ਕਰੋ।');
+      return;
+    }
+    if (!farmMobile.trim()) {
+      setErrorMessage('ਕਿਰਪਾ ਕਰਕੇ ਫਰਮ ਦਾ ਮੋਬਾਈਲ ਨੰਬਰ (Farm Mobile) ਦਰਜ ਕਰੋ।');
+      return;
+    }
     setErrorMessage(null);
 
     try {
       const updatedUser = await becomeFarmer.mutateAsync({
         sprayTankSizeL: sprayTankSizeL!,
         upiId: upiId.trim() || undefined,
-        printName: printName.trim() || undefined,
-        printAddress: printAddress.trim() || undefined,
-        billPrintingAddress: printAddress.trim() || undefined,
+        farmName: farmName.trim(),
+        farmAddress: farmAddress.trim(),
+        farmMobile: farmMobile.trim(),
         village: village.trim() || undefined,
         district: district.trim() || undefined,
       });
@@ -146,65 +159,73 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
               </View>
             </View>
 
-            {/* UPI ID for Bill QR Code */}
-            <View style={[styles.fieldSection, styles.upiHighlightBox]}>
-              <View style={styles.upiHeaderRow}>
-                <Ionicons name="qr-code" size={18} color="#15803d" />
-                <Text style={[styles.label, { marginBottom: 0 }]}>
-                  Farmer UPI ID (ਬਿੱਲ ਵਿੱਚ Payment QR ਜਨਰੇਟ ਕਰਨ ਲਈ)
-                </Text>
-              </View>
-              <Text style={styles.upiHelpSub}>
-                ਆਪਣੀ GPay / PhonePe / Paytm ਦੀ UPI ID ਦਰਜ ਕਰੋ, ਇਸ ਨਾਲ ਬਿੱਲ ਉੱਤੇ ਆਟੋਮੈਟਿਕ QR Code ਲੱਗੇਗਾ।
-              </Text>
-              <View style={styles.inputContainer}>
-                <Ionicons name="card-outline" size={18} color="#15803d" />
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="e.g. 9876543210@paytm, name@oksbi"
-                  placeholderTextColor="#94a3b8"
-                  value={upiId}
-                  onChangeText={setUpiId}
-                  autoCapitalize="none"
-                />
-              </View>
-            </View>
-
             {/* Use in Printing Section */}
             <View style={[styles.fieldSection, { backgroundColor: '#f0fdf4', borderRadius: RADIUS.md, padding: 12, borderWidth: 1.5, borderColor: '#bbf7d0' }]}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
                 <Ionicons name="print" size={18} color="#15803d" />
                 <Text style={[styles.label, { color: '#15803d', marginBottom: 0 }]}>
                   Use in Printing
                 </Text>
               </View>
 
-              {/* Bill Printing Name */}
+              {/* Farm Name */}
               <View style={{ marginBottom: 10 }}>
-                <Text style={[styles.label, { fontSize: 12, color: '#0f172a' }]}>Bill Printing Name (Printed on Bill)</Text>
+                <Text style={[styles.label, { fontSize: 12, color: '#0f172a' }]}>Farm Name * (Printed on Bill/Voucher/Receipt)</Text>
                 <View style={[styles.inputContainer, { backgroundColor: '#ffffff' }]}>
                   <Ionicons name="business-outline" size={18} color="#64748b" />
                   <TextInput
                     style={styles.textInput}
-                    placeholder="e.g. Surinder Agro Farm / Farmer Name"
+                    placeholder="e.g. Surinder Agro Farm"
                     placeholderTextColor="#94a3b8"
-                    value={printName}
-                    onChangeText={setPrintName}
+                    value={farmName}
+                    onChangeText={setFarmName}
                   />
                 </View>
               </View>
 
-              {/* Bill Printing Address */}
-              <View>
-                <Text style={[styles.label, { fontSize: 12, color: '#0f172a' }]}>Bill Printing Address (Printed on Bill)</Text>
+              {/* Farm Address */}
+              <View style={{ marginBottom: 10 }}>
+                <Text style={[styles.label, { fontSize: 12, color: '#0f172a' }]}>Farm Address * (Printed on Bill/Voucher/Receipt)</Text>
                 <View style={[styles.inputContainer, { backgroundColor: '#ffffff' }]}>
-                  <Ionicons name="document-text-outline" size={18} color="#64748b" />
+                  <Ionicons name="location-outline" size={18} color="#64748b" />
                   <TextInput
                     style={styles.textInput}
                     placeholder="e.g. Grain Market, Shop No. 12, Phul"
                     placeholderTextColor="#94a3b8"
-                    value={printAddress}
-                    onChangeText={setPrintAddress}
+                    value={farmAddress}
+                    onChangeText={setFarmAddress}
+                  />
+                </View>
+              </View>
+
+              {/* Farm Mobile */}
+              <View style={{ marginBottom: 10 }}>
+                <Text style={[styles.label, { fontSize: 12, color: '#0f172a' }]}>Farm Mobile * (Printed on Bill/Voucher/Receipt)</Text>
+                <View style={[styles.inputContainer, { backgroundColor: '#ffffff' }]}>
+                  <Ionicons name="call-outline" size={18} color="#64748b" />
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="e.g. 9876543210"
+                    placeholderTextColor="#94a3b8"
+                    keyboardType="phone-pad"
+                    value={farmMobile}
+                    onChangeText={setFarmMobile}
+                  />
+                </View>
+              </View>
+
+              {/* UPI ID */}
+              <View>
+                <Text style={[styles.label, { fontSize: 12, color: '#0f172a' }]}>UPI ID (Optional - Printed for QR Code)</Text>
+                <View style={[styles.inputContainer, { backgroundColor: '#ffffff' }]}>
+                  <Ionicons name="qr-code-outline" size={18} color="#64748b" />
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="e.g. 9876543210@paytm, name@oksbi"
+                    placeholderTextColor="#94a3b8"
+                    value={upiId}
+                    onChangeText={setUpiId}
+                    autoCapitalize="none"
                   />
                 </View>
               </View>

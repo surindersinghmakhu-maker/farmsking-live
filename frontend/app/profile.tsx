@@ -54,11 +54,12 @@ export default function ProfileScreen() {
   // every role the account holds. Name/email/photo/address all write to the same User row on save.
   const [name, setName] = useState(user?.name ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
-  const [billPrintingAddress, setBillPrintingAddress] = useState(user?.billPrintingAddress ?? '');
-  const [printName, setPrintName] = useState(user?.printName || user?.name || '');
-  const [printAddress, setPrintAddress] = useState(
-    user?.printAddress || user?.billPrintingAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || ''
+  const [farmName, setFarmName] = useState(user?.farmName || user?.name || '');
+  const [farmAddress, setFarmAddress] = useState(
+    user?.farmAddress || user?.printAddress || user?.billPrintingAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || ''
   );
+  const [farmMobile, setFarmMobile] = useState(user?.farmMobile || user?.mobile || '');
+  const [upiId, setUpiId] = useState(user?.upiId || '');
   const [photoUrl, setPhotoUrl] = useState<string | null>(user?.photoUrl ?? null);
 
   const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState<boolean>(user?.whatsappGroupEnabled ?? true);
@@ -69,11 +70,12 @@ export default function ProfileScreen() {
       hasSeededFromUser.current = true;
       if (user.name) setName(user.name);
       if (user.email) setEmail(user.email);
-      if (user.printName) setPrintName(user.printName);
-      if (user.printAddress || user.billPrintingAddress) {
-        setPrintAddress(user.printAddress || user.billPrintingAddress || '');
-        setBillPrintingAddress(user.billPrintingAddress || user.printAddress || '');
+      if (user.farmName) setFarmName(user.farmName);
+      if (user.farmAddress || user.printAddress || user.billPrintingAddress) {
+        setFarmAddress(user.farmAddress || user.printAddress || user.billPrintingAddress || '');
       }
+      if (user.farmMobile || user.mobile) setFarmMobile(user.farmMobile || user.mobile || '');
+      if (user.upiId) setUpiId(user.upiId);
       if (user.whatsappGroupEnabled !== undefined) {
         setWhatsappGroupEnabled(user.whatsappGroupEnabled);
       }
@@ -156,14 +158,28 @@ export default function ProfileScreen() {
       setSaveError('❌ Please enter your full name.');
       return;
     }
+    if (!farmName.trim()) {
+      setSaveError('❌ Please enter Farm Name under Use in Printing.');
+      return;
+    }
+    if (!farmAddress.trim()) {
+      setSaveError('❌ Please enter Farm Address under Use in Printing.');
+      return;
+    }
+    if (!farmMobile.trim()) {
+      setSaveError('❌ Please enter Farm Mobile under Use in Printing.');
+      return;
+    }
     if (pincode && pincode.trim().length !== 6) {
       setPincodeStatus('❌ PIN Code must be exactly 6 digits.');
       return;
     }
     try {
       const trimmedName = name.trim();
-      const finalPrintName = printName.trim() || trimmedName;
-      const finalPrintAddress = printAddress.trim() || billPrintingAddress.trim() || '';
+      const finalFarmName = farmName.trim() || trimmedName;
+      const finalFarmAddress = farmAddress.trim();
+      const finalFarmMobile = farmMobile.trim();
+      const finalUpiId = upiId.trim();
 
       const updated = await updateAddress.mutateAsync({
         name: trimmedName,
@@ -173,9 +189,10 @@ export default function ProfileScreen() {
         postOffice: postOffice.trim() || undefined,
         district: district.trim() || undefined,
         state: state.trim() || undefined,
-        billPrintingAddress: finalPrintAddress || undefined,
-        printName: finalPrintName,
-        printAddress: finalPrintAddress,
+        farmName: finalFarmName,
+        farmAddress: finalFarmAddress,
+        farmMobile: finalFarmMobile,
+        upiId: finalUpiId || undefined,
         whatsappGroupEnabled,
       });
 
@@ -190,9 +207,10 @@ export default function ProfileScreen() {
           postOffice: postOffice.trim(),
           district: district.trim(),
           state: state.trim(),
-          billPrintingAddress: finalPrintAddress,
-          printName: finalPrintName,
-          printAddress: finalPrintAddress,
+          farmName: finalFarmName,
+          farmAddress: finalFarmAddress,
+          farmMobile: finalFarmMobile,
+          upiId: finalUpiId || undefined,
           whatsappGroupEnabled,
         });
       }
@@ -292,40 +310,69 @@ export default function ProfileScreen() {
 
           {/* Use in Printing Section */}
           <View style={styles.printingHeaderBox}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
               <Ionicons name="print" size={18} color={theme.primary} />
               <Text style={styles.printingTitle}>Use in Printing</Text>
             </View>
 
-            {/* Bill Printing Name */}
+            {/* Farm Name (Required) */}
             <View style={{ marginBottom: 10 }}>
-              <Text style={styles.printingLabel}>Bill Printing Name (Printed on Bill)</Text>
+              <Text style={styles.printingLabel}>Farm Name * (Printed on Bill/Voucher/Receipt)</Text>
               <View style={[styles.inputWrap, { backgroundColor: '#ffffff' }]}>
                 <Ionicons name="business-outline" size={16} color="#64748b" />
                 <TextInput
                   style={styles.input}
-                  placeholder="e.g. Surinder Agro Farm / Farmer Name"
+                  placeholder="e.g. Surinder Agro Farm"
                   placeholderTextColor="#94a3b8"
-                  value={printName}
-                  onChangeText={setPrintName}
+                  value={farmName}
+                  onChangeText={setFarmName}
                 />
               </View>
             </View>
 
-            {/* Bill Printing Address */}
-            <View>
-              <Text style={styles.printingLabel}>Bill Printing Address (Printed on Bill)</Text>
+            {/* Farm Address (Required) */}
+            <View style={{ marginBottom: 10 }}>
+              <Text style={styles.printingLabel}>Farm Address * (Printed on Bill/Voucher/Receipt)</Text>
               <View style={[styles.inputWrap, { backgroundColor: '#ffffff' }]}>
-                <Ionicons name="document-text-outline" size={16} color="#64748b" />
+                <Ionicons name="location-outline" size={16} color="#64748b" />
                 <TextInput
                   style={styles.input}
-                  placeholder="e.g. Grain Market, Shop No. 12, Phul"
+                  placeholder="e.g. Grain Market, Shop No. 12, Rampura Phul"
                   placeholderTextColor="#94a3b8"
-                  value={printAddress}
-                  onChangeText={(t) => {
-                    setPrintAddress(t);
-                    setBillPrintingAddress(t);
-                  }}
+                  value={farmAddress}
+                  onChangeText={setFarmAddress}
+                />
+              </View>
+            </View>
+
+            {/* Farm Mobile (Required) */}
+            <View style={{ marginBottom: 10 }}>
+              <Text style={styles.printingLabel}>Farm Mobile * (Printed on Bill/Voucher/Receipt)</Text>
+              <View style={[styles.inputWrap, { backgroundColor: '#ffffff' }]}>
+                <Ionicons name="call-outline" size={16} color="#64748b" />
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. 9876543210"
+                  placeholderTextColor="#94a3b8"
+                  keyboardType="phone-pad"
+                  value={farmMobile}
+                  onChangeText={setFarmMobile}
+                />
+              </View>
+            </View>
+
+            {/* UPI ID (Optional) */}
+            <View>
+              <Text style={styles.printingLabel}>UPI ID (Optional - Printed for QR Code)</Text>
+              <View style={[styles.inputWrap, { backgroundColor: '#ffffff' }]}>
+                <Ionicons name="qr-code-outline" size={16} color="#64748b" />
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. farmer@upi"
+                  placeholderTextColor="#94a3b8"
+                  autoCapitalize="none"
+                  value={upiId}
+                  onChangeText={setUpiId}
                 />
               </View>
             </View>

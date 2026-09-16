@@ -31,10 +31,12 @@ export default function FarmerProfileSetupScreen() {
 
   const [sprayTankSizeL, setSprayTankSizeL] = useState<SprayTankSizeL | null>(status?.profile.sprayTankSizeL ?? null);
   const [name, setName] = useState<string>(user?.name || '');
-  const [printName, setPrintName] = useState<string>(user?.printName || user?.name || '');
-  const [printAddress, setPrintAddress] = useState<string>(
-    user?.printAddress || user?.billPrintingAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || ''
+  const [farmName, setFarmName] = useState<string>(user?.farmName || user?.name || '');
+  const [farmAddress, setFarmAddress] = useState<string>(
+    user?.farmAddress || user?.billPrintingAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || ''
   );
+  const [farmMobile, setFarmMobile] = useState<string>(user?.farmMobile || user?.mobile || '');
+  const [upiId, setUpiId] = useState<string>(user?.upiId || '');
   const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState<boolean>(user?.whatsappGroupEnabled ?? true);
 
   const hasSeededFromUser = useRef(false);
@@ -42,10 +44,12 @@ export default function FarmerProfileSetupScreen() {
     if (user && !hasSeededFromUser.current) {
       hasSeededFromUser.current = true;
       if (user.name) setName(user.name);
-      setPrintName(user.printName || user.name || '');
-      setPrintAddress(
-        user.printAddress || user.billPrintingAddress || [user.village, user.district, user.state].filter(Boolean).join(', ') || ''
+      setFarmName(user.farmName || user.name || '');
+      setFarmAddress(
+        user.farmAddress || user.billPrintingAddress || [user.village, user.district, user.state].filter(Boolean).join(', ') || ''
       );
+      setFarmMobile(user.farmMobile || user.mobile || '');
+      if (user.upiId) setUpiId(user.upiId);
       if (user.whatsappGroupEnabled !== undefined) setWhatsappGroupEnabled(user.whatsappGroupEnabled);
     }
     if (status?.profile.sprayTankSizeL) {
@@ -53,7 +57,7 @@ export default function FarmerProfileSetupScreen() {
     }
   }, [status, user]);
 
-  const canSave = !!sprayTankSizeL;
+  const canSave = !!sprayTankSizeL && !!farmName.trim() && !!farmAddress.trim() && !!farmMobile.trim();
 
   const handleGoBack = () => {
     if (router.canGoBack()) {
@@ -68,15 +72,18 @@ export default function FarmerProfileSetupScreen() {
     tap();
     try {
       const trimmedName = name.trim() || user?.name || '';
-      const finalPrintName = printName.trim() || trimmedName;
-      const finalPrintAddress = printAddress.trim() || user?.billPrintingAddress || '';
+      const finalFarmName = farmName.trim() || trimmedName;
+      const finalFarmAddress = farmAddress.trim();
+      const finalFarmMobile = farmMobile.trim() || user?.mobile || '';
 
       const updatedUser = await updateProfile.mutateAsync({
         name: trimmedName,
         sprayTankSizeL: sprayTankSizeL!,
-        printName: finalPrintName,
-        printAddress: finalPrintAddress,
-        billPrintingAddress: finalPrintAddress,
+        farmName: finalFarmName,
+        farmAddress: finalFarmAddress,
+        farmMobile: finalFarmMobile,
+        upiId: upiId.trim() || undefined,
+        billPrintingAddress: finalFarmAddress,
         whatsappGroupEnabled,
       });
 
@@ -85,9 +92,11 @@ export default function FarmerProfileSetupScreen() {
       } else {
         await updateUser({
           name: trimmedName,
-          printName: finalPrintName,
-          printAddress: finalPrintAddress,
-          billPrintingAddress: finalPrintAddress,
+          farmName: finalFarmName,
+          farmAddress: finalFarmAddress,
+          farmMobile: finalFarmMobile,
+          upiId: upiId.trim() || undefined,
+          billPrintingAddress: finalFarmAddress,
           whatsappGroupEnabled,
         });
       }
@@ -124,8 +133,8 @@ export default function FarmerProfileSetupScreen() {
                 value={name}
                 onChangeText={(t) => {
                   setName(t);
-                  if (!printName || printName === user?.name) {
-                    setPrintName(t);
+                  if (!farmName || farmName === user?.name) {
+                    setFarmName(t);
                   }
                 }}
               />
@@ -158,32 +167,65 @@ export default function FarmerProfileSetupScreen() {
               <Text style={styles.printingTitle}>Use in Printing</Text>
             </View>
 
-            {/* Bill Printing Name */}
+            {/* Farm Name */}
             <View style={[styles.section, { marginTop: 10 }]}>
-              <Text style={styles.sectionLabel}>Bill Printing Name (Printed on Bill)</Text>
+              <Text style={styles.sectionLabel}>Farm Name *</Text>
               <View style={styles.selectField}>
                 <Ionicons name="business-outline" size={18} color="#64748b" style={{ marginRight: 8 }} />
                 <TextInput
                   style={{ flex: 1, fontSize: 14, fontFamily: FONT.medium, color: '#0f172a' }}
-                  placeholder="e.g. Surinder Agro Farm / Farmer Name"
+                  placeholder="e.g. Surinder Agro Farm"
                   placeholderTextColor="#94a3b8"
-                  value={printName}
-                  onChangeText={setPrintName}
+                  value={farmName}
+                  onChangeText={setFarmName}
                 />
               </View>
             </View>
 
-            {/* Bill Printing Address */}
+            {/* Farm Address */}
             <View style={[styles.section, { marginTop: 10 }]}>
-              <Text style={styles.sectionLabel}>Bill Printing Address (Printed on Bill)</Text>
+              <Text style={styles.sectionLabel}>Farm Address *</Text>
               <View style={styles.selectField}>
-                <Ionicons name="document-text-outline" size={18} color="#64748b" style={{ marginRight: 8 }} />
+                <Ionicons name="location-outline" size={18} color="#64748b" style={{ marginRight: 8 }} />
                 <TextInput
                   style={{ flex: 1, fontSize: 14, fontFamily: FONT.medium, color: '#0f172a' }}
                   placeholder="e.g. Grain Market, Shop No. 12, Phul"
                   placeholderTextColor="#94a3b8"
-                  value={printAddress}
-                  onChangeText={setPrintAddress}
+                  value={farmAddress}
+                  onChangeText={setFarmAddress}
+                />
+              </View>
+            </View>
+
+            {/* Farm Mobile */}
+            <View style={[styles.section, { marginTop: 10 }]}>
+              <Text style={styles.sectionLabel}>Farm Mobile *</Text>
+              <View style={styles.selectField}>
+                <Ionicons name="call-outline" size={18} color="#64748b" style={{ marginRight: 8 }} />
+                <TextInput
+                  style={{ flex: 1, fontSize: 14, fontFamily: FONT.medium, color: '#0f172a' }}
+                  placeholder="e.g. 98720XXXXX"
+                  placeholderTextColor="#94a3b8"
+                  keyboardType="phone-pad"
+                  maxLength={10}
+                  value={farmMobile}
+                  onChangeText={setFarmMobile}
+                />
+              </View>
+            </View>
+
+            {/* UPI ID (Optional) */}
+            <View style={[styles.section, { marginTop: 10 }]}>
+              <Text style={styles.sectionLabel}>UPI ID (Optional)</Text>
+              <View style={styles.selectField}>
+                <Ionicons name="qr-code-outline" size={18} color="#64748b" style={{ marginRight: 8 }} />
+                <TextInput
+                  style={{ flex: 1, fontSize: 14, fontFamily: FONT.medium, color: '#0f172a' }}
+                  placeholder="e.g. name@paytm, 9876543210@ybl"
+                  placeholderTextColor="#94a3b8"
+                  autoCapitalize="none"
+                  value={upiId}
+                  onChangeText={setUpiId}
                 />
               </View>
             </View>

@@ -17,4 +17,7 @@ export declare class RegisterDto {
     securityAnswer?: string;
     upiId?: string;
     referralCode?: string;
+    farmName?: string;
+    farmAddress?: string;
+    farmMobile?: string;
 }

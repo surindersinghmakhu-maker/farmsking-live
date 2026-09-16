@@ -1387,9 +1387,9 @@ function WorkerStatementModal({
   const totalPaid = statement?.totalPaid ?? 0;
   const pendingBalance = statement?.pendingBalance ?? 0;
 
-  const farmerName = user?.name || 'Farm Owner';
-  const farmerMobile = user?.mobile || '';
-  const farmerVillage = user?.village || '';
+  const farmerName = user?.farmName || user?.name || 'Farm Owner';
+  const farmerMobile = user?.farmMobile || user?.mobile || '';
+  const farmerVillage = user?.farmAddress || user?.printAddress || user?.billPrintingAddress || user?.village || '';
 
   // Sort timeline chronologically (latest entries properly processed)
   const timeline = useMemo(() => {

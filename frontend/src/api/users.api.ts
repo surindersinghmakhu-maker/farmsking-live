@@ -137,8 +137,9 @@ export interface AdminUpdateUserPayload {
   panNumber?: string;
   upiId?: string;
   billPrintingAddress?: string;
-  printName?: string;
-  printAddress?: string;
+  farmName?: string;
+  farmAddress?: string;
+  farmMobile?: string;
   bankAccountNumber?: string;
   bankIfsc?: string;
   bankAccountHolderName?: string;
@@ -164,6 +165,7 @@ export async function updateActiveRoles(id: string, activeRoles: Role[]): Promis
 }
 
 export interface UpdateFarmerProfilePayload {
+  name?: string;
   photoUrl?: string;
   sprayTankSizeL?: SprayTankSizeL;
   soilType?: SoilType;
@@ -175,8 +177,10 @@ export interface UpdateFarmerProfilePayload {
   state?: string;
   upiId?: string;
   billPrintingAddress?: string;
-  printName?: string;
-  printAddress?: string;
+  farmName?: string;
+  farmAddress?: string;
+  farmMobile?: string;
+  whatsappGroupEnabled?: boolean;
 }
 
 export async function getMyProfileStatus(): Promise<FarmerProfileStatus> {
@@ -219,9 +223,11 @@ export interface UpdateMyAddressPayload {
   village?: string;
   district?: string;
   state?: string;
+  upiId?: string;
   billPrintingAddress?: string;
-  printName?: string;
-  printAddress?: string;
+  farmName?: string;
+  farmAddress?: string;
+  farmMobile?: string;
   notificationsEnabled?: boolean;
   whatsappGroupEnabled?: boolean;
   /** Null clears the threshold (alert off); a number sets and enables it. */

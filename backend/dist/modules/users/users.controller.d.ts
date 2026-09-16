@@ -44,6 +44,9 @@ export declare class UsersController {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
         referredById: string | null;
         createdAt: Date;
@@ -96,6 +99,9 @@ export declare class UsersController {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
         referredById: string | null;
         createdAt: Date;
@@ -129,6 +135,9 @@ export declare class UsersController {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
         referredById: string | null;
         createdAt: Date;
@@ -162,6 +171,9 @@ export declare class UsersController {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
         referredById: string | null;
         createdAt: Date;
@@ -205,6 +217,9 @@ export declare class UsersController {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
         referredById: string | null;
         createdAt: Date;
@@ -243,6 +258,9 @@ export declare class UsersController {
         profileTitle: string | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         panNumber: string | null;
         alternativeMobile: string | null;
         bankAccountNumber: string | null;
@@ -297,6 +315,9 @@ export declare class UsersController {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         panNumber: string | null;
         alternativeMobile: string | null;
         bankAccountNumber: string | null;
@@ -349,6 +370,9 @@ export declare class UsersController {
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
             upiId: string | null;
             billPrintingAddress: string | null;
+            farmName: string | null;
+            farmAddress: string | null;
+            farmMobile: string | null;
             operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
             referredById: string | null;
             createdAt: Date;
@@ -399,6 +423,9 @@ export declare class UsersController {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
         referredById: string | null;
         createdAt: Date;
@@ -437,6 +464,9 @@ export declare class UsersController {
         profileTitle: string | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         panNumber: string | null;
         alternativeMobile: string | null;
         bankAccountNumber: string | null;
@@ -478,6 +508,9 @@ export declare class UsersController {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
         referredById: string | null;
         createdAt: Date;
@@ -512,6 +545,9 @@ export declare class UsersController {
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
             upiId: string | null;
             billPrintingAddress: string | null;
+            farmName: string | null;
+            farmAddress: string | null;
+            farmMobile: string | null;
             operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
             referredById: string | null;
             createdAt: Date;
@@ -548,6 +584,9 @@ export declare class UsersController {
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
             upiId: string | null;
             billPrintingAddress: string | null;
+            farmName: string | null;
+            farmAddress: string | null;
+            farmMobile: string | null;
             operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
             referredById: string | null;
             createdAt: Date;
@@ -584,6 +623,9 @@ export declare class UsersController {
             advisorType: import(".prisma/client").$Enums.AdvisorType | null;
             upiId: string | null;
             billPrintingAddress: string | null;
+            farmName: string | null;
+            farmAddress: string | null;
+            farmMobile: string | null;
             operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
             referredById: string | null;
             createdAt: Date;
@@ -626,6 +668,9 @@ export declare class UsersController {
             profileTitle: string | null;
             upiId: string | null;
             billPrintingAddress: string | null;
+            farmName: string | null;
+            farmAddress: string | null;
+            farmMobile: string | null;
             panNumber: string | null;
             alternativeMobile: string | null;
             bankAccountNumber: string | null;
@@ -701,6 +746,9 @@ export declare class UsersController {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
         referredById: string | null;
         createdAt: Date;
@@ -734,6 +782,9 @@ export declare class UsersController {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
         referredById: string | null;
         createdAt: Date;
@@ -767,6 +818,9 @@ export declare class UsersController {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
         referredById: string | null;
         createdAt: Date;
@@ -800,6 +854,9 @@ export declare class UsersController {
         advisorType: import(".prisma/client").$Enums.AdvisorType | null;
         upiId: string | null;
         billPrintingAddress: string | null;
+        farmName: string | null;
+        farmAddress: string | null;
+        farmMobile: string | null;
         operatorPermissions: import(".prisma/client").$Enums.OperatorPermission[];
         referredById: string | null;
         createdAt: Date;

@@ -55,8 +55,9 @@ const SAFE_USER_SELECT = {
   operatorPermissions: true,
   upiId: true,
   billPrintingAddress: true,
-  printName: true,
-  printAddress: true,
+  farmName: true,
+  farmAddress: true,
+  farmMobile: true,
   createdAt: true,
   deletedAt: true,
 } as const;
@@ -78,13 +79,15 @@ export class UsersService implements OnModuleInit {
     try {
       const usersToBackfill = await this.prisma.user.findMany({
         where: {
-          OR: [{ printName: null }, { printAddress: null }],
+          OR: [{ farmName: null }, { farmAddress: null }, { farmMobile: null }],
         },
         select: {
           id: true,
           name: true,
-          printName: true,
-          printAddress: true,
+          mobile: true,
+          farmName: true,
+          farmAddress: true,
+          farmMobile: true,
           billPrintingAddress: true,
           village: true,
           district: true,
@@ -93,20 +96,21 @@ export class UsersService implements OnModuleInit {
       });
 
       for (const u of usersToBackfill) {
-        const printName = u.printName || u.name;
-        const printAddress =
-          u.printAddress ||
+        const farmName = u.farmName || u.name;
+        const farmAddress =
+          u.farmAddress ||
           u.billPrintingAddress ||
           [u.village, u.district, u.state].filter((s) => s && s.trim().length > 0).join(', ') ||
           '';
+        const farmMobile = u.farmMobile || u.mobile;
 
         await this.prisma.user.update({
           where: { id: u.id },
-          data: { printName, printAddress },
+          data: { farmName, farmAddress, farmMobile },
         });
       }
     } catch (e) {
-      console.error('Failed to backfill user printName / printAddress:', e);
+      console.error('Failed to backfill user farmName / farmAddress / farmMobile:', e);
     }
   }
 
@@ -378,8 +382,9 @@ export class UsersService implements OnModuleInit {
       if (dto.district !== undefined) profileData.district = dto.district;
       if (dto.state !== undefined) profileData.state = dto.state;
       if (dto.billPrintingAddress !== undefined) profileData.billPrintingAddress = dto.billPrintingAddress;
-      if (dto.printName !== undefined) profileData.printName = dto.printName;
-      if (dto.printAddress !== undefined) profileData.printAddress = dto.printAddress;
+      if (dto.farmName !== undefined) profileData.farmName = dto.farmName;
+      if (dto.farmAddress !== undefined) profileData.farmAddress = dto.farmAddress;
+      if (dto.farmMobile !== undefined) profileData.farmMobile = dto.farmMobile;
     }
 
     const [updated] = await this.prisma.$transaction([
@@ -696,8 +701,9 @@ export class UsersService implements OnModuleInit {
         ...(dto.panNumber !== undefined ? { panNumber: dto.panNumber } : {}),
         ...(dto.upiId !== undefined ? { upiId: dto.upiId } : {}),
         ...(dto.billPrintingAddress !== undefined ? { billPrintingAddress: dto.billPrintingAddress } : {}),
-        ...(dto.printName !== undefined ? { printName: dto.printName } : {}),
-        ...(dto.printAddress !== undefined ? { printAddress: dto.printAddress } : {}),
+        ...(dto.farmName !== undefined ? { farmName: dto.farmName } : {}),
+        ...(dto.farmAddress !== undefined ? { farmAddress: dto.farmAddress } : {}),
+        ...(dto.farmMobile !== undefined ? { farmMobile: dto.farmMobile } : {}),
         ...(dto.bankAccountNumber !== undefined ? { bankAccountNumber: dto.bankAccountNumber } : {}),
         ...(dto.bankIfsc !== undefined ? { bankIfsc: dto.bankIfsc } : {}),
         ...(dto.bankAccountHolderName !== undefined ? { bankAccountHolderName: dto.bankAccountHolderName } : {}),
@@ -842,8 +848,10 @@ export class UsersService implements OnModuleInit {
         ...(dto.weatherAlertMaxTempC !== undefined ? { weatherAlertMaxTempC: dto.weatherAlertMaxTempC } : {}),
         ...(dto.weatherAlertRainEnabled !== undefined ? { weatherAlertRainEnabled: dto.weatherAlertRainEnabled } : {}),
         ...(dto.billPrintingAddress !== undefined ? { billPrintingAddress: dto.billPrintingAddress } : {}),
-        ...(dto.printName !== undefined ? { printName: dto.printName } : {}),
-        ...(dto.printAddress !== undefined ? { printAddress: dto.printAddress } : {}),
+        ...(dto.upiId !== undefined ? { upiId: dto.upiId } : {}),
+        ...(dto.farmName !== undefined ? { farmName: dto.farmName } : {}),
+        ...(dto.farmAddress !== undefined ? { farmAddress: dto.farmAddress } : {}),
+        ...(dto.farmMobile !== undefined ? { farmMobile: dto.farmMobile } : {}),
       },
       select: SAFE_USER_SELECT,
     });
@@ -872,9 +880,11 @@ export class UsersService implements OnModuleInit {
         ...(dto.village !== undefined ? { village: dto.village } : {}),
         ...(dto.district !== undefined ? { district: dto.district } : {}),
         ...(dto.state !== undefined ? { state: dto.state } : {}),
+        ...(dto.upiId !== undefined ? { upiId: dto.upiId } : {}),
         ...(dto.billPrintingAddress !== undefined ? { billPrintingAddress: dto.billPrintingAddress } : {}),
-        ...(dto.printName !== undefined ? { printName: dto.printName } : {}),
-        ...(dto.printAddress !== undefined ? { printAddress: dto.printAddress } : {}),
+        ...(dto.farmName !== undefined ? { farmName: dto.farmName } : {}),
+        ...(dto.farmAddress !== undefined ? { farmAddress: dto.farmAddress } : {}),
+        ...(dto.farmMobile !== undefined ? { farmMobile: dto.farmMobile } : {}),
         ...(dto.whatsappGroupEnabled !== undefined ? { whatsappGroupEnabled: dto.whatsappGroupEnabled } : {}),
       },
       select: SAFE_USER_SELECT,

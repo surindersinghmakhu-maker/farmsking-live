@@ -64,6 +64,8 @@ export default function ProfileScreen() {
 
   const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState<boolean>(user?.whatsappGroupEnabled ?? true);
 
+  const isInitializedRef = React.useRef(false);
+
   useFocusEffect(
     useCallback(() => {
       refreshUser();
@@ -71,7 +73,8 @@ export default function ProfileScreen() {
   );
 
   React.useEffect(() => {
-    if (user) {
+    if (user && !isInitializedRef.current) {
+      isInitializedRef.current = true;
       setName(user.name || '');
       setEmail(user.email || '');
       setFarmName(user.farmName || user.name || '');

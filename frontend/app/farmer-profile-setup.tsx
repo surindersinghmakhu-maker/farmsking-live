@@ -34,6 +34,8 @@ export default function FarmerProfileSetupScreen() {
   const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState<boolean>(user?.whatsappGroupEnabled ?? true);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
 
+  const isInitializedRef = React.useRef(false);
+
   useFocusEffect(
     useCallback(() => {
       refreshUser();
@@ -41,7 +43,8 @@ export default function FarmerProfileSetupScreen() {
   );
 
   React.useEffect(() => {
-    if (user) {
+    if (user && !isInitializedRef.current) {
+      isInitializedRef.current = true;
       setName(user.name || '');
       setFarmName(user.farmName || user.name || '');
       setFarmAddress(
@@ -52,7 +55,7 @@ export default function FarmerProfileSetupScreen() {
       if (user.whatsappGroupEnabled !== undefined) setWhatsappGroupEnabled(user.whatsappGroupEnabled);
       if (user.sprayTankSizeL) setSprayTankSizeL(user.sprayTankSizeL);
     }
-    if (status?.profile.sprayTankSizeL) {
+    if (status?.profile.sprayTankSizeL && !sprayTankSizeL) {
       setSprayTankSizeL(status.profile.sprayTankSizeL);
     }
   }, [user, status]);

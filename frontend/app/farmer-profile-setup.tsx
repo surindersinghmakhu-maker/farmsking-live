@@ -52,7 +52,7 @@ export default function FarmerProfileSetupScreen() {
     }
   }, [status, user]);
 
-  const canSave = !!name.trim() && !!sprayTankSizeL && !!farmName.trim() && !!farmAddress.trim() && !!farmMobile.trim();
+  const canSave = !!sprayTankSizeL && !!farmName.trim() && !!farmAddress.trim() && !!farmMobile.trim();
 
   const handleGoBack = () => {
     if (router.canGoBack()) {
@@ -64,12 +64,12 @@ export default function FarmerProfileSetupScreen() {
 
   const handleSave = async () => {
     if (!canSave) {
-      Alert.alert('Required Fields Missing', 'Please fill in Farmer Name, Spray Tank Size, Farm Name, Farm Address, and Farm Mobile.');
+      Alert.alert('Required Fields Missing', 'Please fill in Spray Tank Size, Farm Name, Farm Address, and Farm Mobile.');
       return;
     }
     tap();
     try {
-      const trimmedName = name.trim();
+      const trimmedName = name.trim() || user?.name || farmName.trim();
       const finalFarmName = farmName.trim();
       const finalFarmAddress = farmAddress.trim();
       const finalFarmMobile = farmMobile.trim();
@@ -146,47 +146,32 @@ export default function FarmerProfileSetupScreen() {
             </View>
           ) : null}
 
-          {/* SECTION 1: FARMER PERSONAL DETAILS TABLE */}
+          {/* SECTION 1: SPRAY TANK SIZE */}
           <View style={styles.tableCard}>
-
-            {/* Field: Farmer Name: full name */}
-            <View style={styles.tableRowField}>
-              <Text style={styles.fieldLabel}>Farmer Name: full name *</Text>
-              <View style={styles.inputWrap}>
-                <Ionicons name="person-outline" size={18} color="#64748b" style={{ marginRight: 8 }} />
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="e.g. Surinder Kumar"
-                  placeholderTextColor="#94a3b8"
-                  value={name}
-                  onChangeText={setName}
-                />
-              </View>
-            </View>
-
             {/* Field: Spray Tank Size */}
             <View style={[styles.tableRowField, { borderBottomWidth: 0 }]}>
               <Text style={styles.fieldLabel}>Spray Tank Size *</Text>
-              <View style={styles.chipRow}>
+              <View style={styles.radioRow}>
                 {SPRAY_TANK_SIZE_OPTIONS.map((size) => {
                   const isSelected = size === sprayTankSizeL;
                   return (
                     <TouchableOpacity
                       key={size}
-                      activeOpacity={0.8}
-                      style={[styles.chip, isSelected && styles.chipActive]}
+                      activeOpacity={0.75}
+                      style={[styles.radioButtonItem, isSelected && styles.radioButtonItemActive]}
                       onPress={() => {
                         tap();
                         setSprayTankSizeL(size);
                       }}
                     >
                       <Ionicons
-                        name="flask"
-                        size={15}
-                        color={isSelected ? '#ffffff' : '#15803d'}
-                        style={{ marginBottom: 2 }}
+                        name={isSelected ? 'radio-button-on' : 'radio-button-off'}
+                        size={19}
+                        color={isSelected ? '#16a34a' : '#94a3b8'}
                       />
-                      <Text style={[styles.chipText, isSelected && styles.chipTextActive]}>{size} Litre</Text>
+                      <Text style={[styles.radioLabel, isSelected && styles.radioLabelActive]}>
+                        {size} Litre
+                      </Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -400,24 +385,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 44,
   },
-  textInput: { flex: 1, fontSize: 14, fontFamily: FONT.medium, color: '#0f172a' },
-  chipRow: { flexDirection: 'row', gap: 10, marginTop: 4 },
-  chip: {
+  radioRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 4 },
+  radioButtonItem: {
     flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 6,
     paddingVertical: 10,
     borderRadius: RADIUS.md,
     borderWidth: 1.5,
     borderColor: '#cbd5e1',
     backgroundColor: '#f8fafc',
   },
-  chipActive: {
-    backgroundColor: '#16a34a',
-    borderColor: '#15803d',
+  radioButtonItemActive: {
+    borderColor: '#16a34a',
+    backgroundColor: '#f0fdf4',
   },
-  chipText: { fontSize: 13, fontFamily: FONT.bold, color: '#334155' },
-  chipTextActive: { color: '#ffffff' },
+  radioLabel: { fontSize: 13, fontFamily: FONT.medium, color: '#334155' },
+  radioLabelActive: { fontSize: 13, fontFamily: FONT.bold, color: '#15803d' },
   printingHeaderBox: {
     backgroundColor: '#f0fdf4',
     borderWidth: 1.5,

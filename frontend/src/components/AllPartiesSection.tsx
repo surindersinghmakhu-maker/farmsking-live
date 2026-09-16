@@ -798,7 +798,7 @@ function WorkerStatementModalInner({ workerId, onClose }: { workerId: string; on
 
   const farmerName = user?.farmName || user?.name || 'Farm Owner';
   const farmerMobile = user?.farmMobile || user?.mobile || '';
-  const farmerVillage = user?.farmAddress || user?.printAddress || user?.billPrintingAddress || user?.village || '';
+  const farmerVillage = user?.farmAddress || user?.village || '';
 
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
@@ -912,7 +912,7 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
 
   const farmerName = user?.farmName || user?.name || 'Farm Owner';
   const farmerMobile = user?.farmMobile || user?.mobile || '';
-  const farmerVillage = user?.farmAddress || user?.printAddress || user?.billPrintingAddress || user?.village || '';
+  const farmerVillage = user?.farmAddress || user?.village || '';
 
   const handleOpenPreviewForLedgerRow = async (row: GroupedLedgerRow) => {
     tap();

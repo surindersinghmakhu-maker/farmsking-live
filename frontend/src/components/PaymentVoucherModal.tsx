@@ -262,7 +262,7 @@ export function PaymentVoucherModal({
         date: voucherDate,
         farmerName: user?.farmName || user?.name || 'Farmer',
         farmerPhone: user?.farmMobile || user?.mobile || '',
-        farmerVillage: user?.farmAddress || user?.printAddress || user?.billPrintingAddress || user?.village || '',
+        farmerVillage: user?.farmAddress || user?.village || '',
         partyName: sourceParty.name,
         partyPhone: sourceParty.mobile || undefined,
         amount: numAmount,

@@ -485,7 +485,7 @@ function CropStatementModal({
 
   const farmerName = user?.farmName || user?.name || 'Farm Owner';
   const farmerMobile = user?.farmMobile || user?.mobile || '';
-  const farmerVillage = user?.farmAddress || user?.printAddress || user?.billPrintingAddress || user?.village || '';
+  const farmerVillage = user?.farmAddress || user?.village || '';
 
   // Filter sales, expenses and labour work entries for this crop
   const { timeline, totalIncome, totalExpense, netMargin } = useMemo(() => {

@@ -388,8 +388,8 @@ export function CropsProvider({ children }: { children: ReactNode }) {
   const farmerName = user?.farmName || user?.name;
   const farmerPhone = user?.farmMobile || user?.mobile;
   const location = useMemo(
-    () => user?.farmAddress || user?.printAddress || user?.billPrintingAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', '),
-    [user?.farmAddress, user?.printAddress, user?.billPrintingAddress, user?.village, user?.district, user?.state]
+    () => user?.farmAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', '),
+    [user?.farmAddress, user?.village, user?.district, user?.state]
   );
 
   const activeCrops = useMemo(() => myCrops.filter((c) => c.status !== 'COMPLETED' && c.status !== 'FAILED'), [myCrops]);

@@ -256,9 +256,9 @@ export function BillPreview({ inv }: { inv: SavedSaleInvoice }) {
                 Mobile: <Text style={billStyles.billPartyLineBold}>{user?.farmMobile || user?.mobile}</Text>
               </Text>
             ) : null}
-            {user?.farmAddress || user?.printAddress || user?.billPrintingAddress ? (
+            {user?.farmAddress ? (
               <Text style={billStyles.billPartyLine}>
-                Address: <Text style={billStyles.billPartyLineBold}>{user?.farmAddress || user?.printAddress || user?.billPrintingAddress}</Text>
+                Address: <Text style={billStyles.billPartyLineBold}>{user.farmAddress}</Text>
               </Text>
             ) : user?.village || user?.district ? (
               <Text style={billStyles.billPartyLine}>
@@ -835,7 +835,7 @@ export async function exportBillAsPdf(inv: SavedSaleInvoice, fileName?: string, 
               <div class="party-body">
                 <strong>${user?.farmName || inv.farmerName || user?.name}</strong><br/>
                 ${(user?.farmMobile || user?.mobile) ? `Mobile: ${user?.farmMobile || user?.mobile}<br/>` : ''}
-                ${(user?.farmAddress || user?.printAddress || user?.billPrintingAddress || user?.village) ? `Address: ${user?.farmAddress || user?.printAddress || user?.billPrintingAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ')}<br/>` : ''}
+                ${(user?.farmAddress || user?.village) ? `Address: ${user?.farmAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ')}<br/>` : ''}
               </div>
             </div>
             <div class="party-box">

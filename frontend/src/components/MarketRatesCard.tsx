@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Modal, Platform, Pressable, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Sharing from 'expo-sharing';
 import ViewShot, { captureRef } from 'react-native-view-shot';
 import { BrandLogo } from './BrandLogo';
 import { useMyCropRates } from '../hooks/useMarketRates';
@@ -320,7 +321,7 @@ export function MarketRatesCard() {
       ctx.fillText(`State: ${userState}`, 340, 158);
       ctx.fillStyle = '#475569';
       ctx.font = '11px sans-serif';
-      ctx.fillText(`📍 ${user?.farmAddress || user?.printAddress || user?.billPrintingAddress || 'Punjab Mandi'}`, 340, 176);
+      ctx.fillText(`📍 ${user?.farmAddress || 'Punjab Mandi'}`, 340, 176);
 
       // Main Amount Box (Red Border)
       const mainRate = crop.localAvgRate ?? crop.nationalAvgRate ?? 0;
@@ -699,7 +700,7 @@ export function MarketRatesCard() {
                     State: {userState}
                   </Text>
                   <Text style={styles.posterPartySubText} numberOfLines={1}>
-                    📍 {user?.farmAddress || user?.printAddress || user?.billPrintingAddress || [user?.village, user?.district].filter(Boolean).join(', ') || 'Punjab Mandi'}
+                    📍 {user?.farmAddress || [user?.village, user?.district].filter(Boolean).join(', ') || 'Punjab Mandi'}
                   </Text>
                 </View>
               </View>

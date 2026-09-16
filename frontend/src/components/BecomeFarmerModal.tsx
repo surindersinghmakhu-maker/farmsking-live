@@ -43,7 +43,7 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
   const [upiId, setUpiId] = useState<string>((user as any)?.upiId ?? '');
   const [farmName, setFarmName] = useState<string>(user?.farmName || user?.name || '');
   const [farmAddress, setFarmAddress] = useState<string>(
-    user?.farmAddress || user?.printAddress || user?.billPrintingAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || ''
+    user?.farmAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || ''
   );
   const [farmMobile, setFarmMobile] = useState<string>(user?.farmMobile || user?.mobile || '');
   const [village, setVillage] = useState<string>(user?.village ?? '');

@@ -94,7 +94,7 @@ export function UniversalStatementModal({
   const tagline = settings?.tagline || 'Smart Farming, Better Future';
   const farmerName = propFarmerName || user?.farmName || user?.name || 'Farmer';
   const farmerPhone = propFarmerPhone || user?.farmMobile || user?.mobile || '';
-  const farmerVillage = propFarmerVillage || user?.farmAddress || user?.printAddress || user?.billPrintingAddress || user?.village || '';
+  const farmerVillage = propFarmerVillage || user?.farmAddress || user?.village || '';
 
   // Date Range Filters
   const [fromDate, setFromDate] = useState(() => thirtyDaysAgoIso());

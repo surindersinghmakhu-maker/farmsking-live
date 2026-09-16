@@ -123,9 +123,9 @@ export interface AdminUser {
   alternativeMobile?: string | null;
   panNumber?: string | null;
   upiId?: string | null;
-  billPrintingAddress?: string | null;
-  printName?: string | null;
-  printAddress?: string | null;
+  farmName?: string | null;
+  farmAddress?: string | null;
+  farmMobile?: string | null;
   bankAccountNumber?: string | null;
   bankIfsc?: string | null;
   bankAccountHolderName?: string | null;

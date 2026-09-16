@@ -56,7 +56,7 @@ export default function ProfileScreen() {
   const [email, setEmail] = useState(user?.email ?? '');
   const [farmName, setFarmName] = useState(user?.farmName || user?.name || '');
   const [farmAddress, setFarmAddress] = useState(
-    user?.farmAddress || user?.printAddress || user?.billPrintingAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || ''
+    user?.farmAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || ''
   );
   const [farmMobile, setFarmMobile] = useState(user?.farmMobile || user?.mobile || '');
   const [upiId, setUpiId] = useState(user?.upiId || '');
@@ -71,9 +71,7 @@ export default function ProfileScreen() {
       if (user.name) setName(user.name);
       if (user.email) setEmail(user.email);
       if (user.farmName) setFarmName(user.farmName);
-      if (user.farmAddress || user.printAddress || user.billPrintingAddress) {
-        setFarmAddress(user.farmAddress || user.printAddress || user.billPrintingAddress || '');
-      }
+      if (user.farmAddress) setFarmAddress(user.farmAddress);
       if (user.farmMobile || user.mobile) setFarmMobile(user.farmMobile || user.mobile || '');
       if (user.upiId) setUpiId(user.upiId);
       if (user.whatsappGroupEnabled !== undefined) {

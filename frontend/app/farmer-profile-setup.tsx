@@ -191,7 +191,9 @@ export default function FarmerProfileSetupScreen() {
 
             {/* Farm Name */}
             <View style={styles.tableRowField}>
-              <Text style={styles.fieldLabel}>Farm Name *</Text>
+              <Text style={styles.fieldLabel}>
+                Farm Name * <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>(e.g. Surinder Agro Farm)</Text>
+              </Text>
               <View style={[styles.inputWrap, { backgroundColor: '#ffffff' }]}>
                 <Ionicons name="business-outline" size={18} color="#64748b" style={{ marginRight: 8 }} />
                 <TextInput

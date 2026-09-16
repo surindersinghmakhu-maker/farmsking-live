@@ -91,17 +91,25 @@ export default function FarmerProfileSetupScreen() {
         farmName: finalFarmName,
         farmAddress: finalFarmAddress,
         farmMobile: finalFarmMobile,
-        upiId: finalUpiId || undefined,
+        upiId: finalUpiId,
         whatsappGroupEnabled,
       };
 
       const updatedUser = await updateProfile.mutateAsync(payload);
 
-      await updateUser({
+      const mergedUser = {
+        ...(user || {}),
         ...(updatedUser || {}),
-        ...payload,
-      } as any);
+        name: trimmedName,
+        farmName: finalFarmName,
+        farmAddress: finalFarmAddress,
+        farmMobile: finalFarmMobile,
+        upiId: finalUpiId,
+        sprayTankSizeL: selectedTankSize,
+        whatsappGroupEnabled,
+      };
 
+      await updateUser(mergedUser as any);
       await refreshUser();
       setSaveSuccessMsg('✨ ਕਿਸਾਨ ਪ੍ਰੋਫਾਈਲ ਜਾਣਕਾਰੀ ਸਫ਼ਲਤਾਪੂਰਵਕ ਸੇਵ ਹੋ ਗਈ ਹੈ!');
       setTimeout(() => {

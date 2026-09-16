@@ -179,7 +179,7 @@ export default function ProfileScreen() {
       const finalFarmMobile = farmMobile.trim();
       const finalUpiId = upiId.trim();
 
-      const updated = await updateAddress.mutateAsync({
+      const payload = {
         name: trimmedName,
         email: email.trim() || undefined,
         photoUrl: photoUrl ?? undefined,
@@ -190,28 +190,19 @@ export default function ProfileScreen() {
         farmName: finalFarmName,
         farmAddress: finalFarmAddress,
         farmMobile: finalFarmMobile,
-        upiId: finalUpiId || undefined,
+        upiId: finalUpiId,
         whatsappGroupEnabled,
-      });
+      };
 
-      if (updated) {
-        await updateUser(updated as any);
-      } else {
-        await updateUser({
-          name: trimmedName,
-          email: email.trim(),
-          photoUrl: photoUrl ?? undefined,
-          pincode: pincode.trim(),
-          postOffice: postOffice.trim(),
-          district: district.trim(),
-          state: state.trim(),
-          farmName: finalFarmName,
-          farmAddress: finalFarmAddress,
-          farmMobile: finalFarmMobile,
-          upiId: finalUpiId || undefined,
-          whatsappGroupEnabled,
-        });
-      }
+      const updated = await updateAddress.mutateAsync(payload);
+
+      await updateUser({
+        ...(user || {}),
+        ...(updated || {}),
+        ...payload,
+        upiId: finalUpiId,
+      } as any);
+
       await refreshUser();
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2500);

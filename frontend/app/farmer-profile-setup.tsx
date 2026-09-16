@@ -1,20 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
 import { Stack, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
-import { PickerModal } from '@/src/components/PickerModal';
-import { SOIL_TYPE_OPTIONS, SPRAY_TANK_SIZE_OPTIONS, WATER_TYPE_OPTIONS } from '@/src/constants/farmerProfileOptions';
+import { SPRAY_TANK_SIZE_OPTIONS } from '@/src/constants/farmerProfileOptions';
 import { useFarmerProfileStatus, useUpdateFarmerProfile } from '@/src/hooks/useFarmerProfile';
-import { useUpdateMyAddress } from '@/src/hooks/useAdvisorProfile';
 import { useAuth } from '@/src/store/auth-context';
-import { uploadPhoto } from '@/src/api/uploads.api';
-import { resolveMediaUrl } from '@/src/api/client';
-import { SoilType, SprayTankSizeL, WaterType } from '@/src/types/api';
+import { SprayTankSizeL } from '@/src/types/api';
 
 const theme = RoleThemes.FARMER;
 
@@ -27,17 +22,17 @@ export default function FarmerProfileSetupScreen() {
   const { user, updateUser, refreshUser } = useAuth();
   const { data: status } = useFarmerProfileStatus();
   const updateProfile = useUpdateFarmerProfile();
-  const updateAddress = useUpdateMyAddress();
 
   const [sprayTankSizeL, setSprayTankSizeL] = useState<SprayTankSizeL | null>(status?.profile.sprayTankSizeL ?? null);
   const [name, setName] = useState<string>(user?.name || '');
   const [farmName, setFarmName] = useState<string>(user?.farmName || user?.name || '');
   const [farmAddress, setFarmAddress] = useState<string>(
-    user?.farmAddress || user?.billPrintingAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || ''
+    user?.farmAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || ''
   );
   const [farmMobile, setFarmMobile] = useState<string>(user?.farmMobile || user?.mobile || '');
   const [upiId, setUpiId] = useState<string>(user?.upiId || '');
   const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState<boolean>(user?.whatsappGroupEnabled ?? true);
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
 
   const hasSeededFromUser = useRef(false);
   useEffect(() => {
@@ -46,7 +41,7 @@ export default function FarmerProfileSetupScreen() {
       if (user.name) setName(user.name);
       setFarmName(user.farmName || user.name || '');
       setFarmAddress(
-        user.farmAddress || user.billPrintingAddress || [user.village, user.district, user.state].filter(Boolean).join(', ') || ''
+        user.farmAddress || [user.village, user.district, user.state].filter(Boolean).join(', ') || ''
       );
       setFarmMobile(user.farmMobile || user.mobile || '');
       if (user.upiId) setUpiId(user.upiId);
@@ -57,7 +52,7 @@ export default function FarmerProfileSetupScreen() {
     }
   }, [status, user]);
 
-  const canSave = !!sprayTankSizeL && !!farmName.trim() && !!farmAddress.trim() && !!farmMobile.trim();
+  const canSave = !!name.trim() && !!sprayTankSizeL && !!farmName.trim() && !!farmAddress.trim() && !!farmMobile.trim();
 
   const handleGoBack = () => {
     if (router.canGoBack()) {
@@ -68,13 +63,17 @@ export default function FarmerProfileSetupScreen() {
   };
 
   const handleSave = async () => {
-    if (!canSave) return;
+    if (!canSave) {
+      Alert.alert('Required Fields Missing', 'Please fill in Farmer Name, Spray Tank Size, Farm Name, Farm Address, and Farm Mobile.');
+      return;
+    }
     tap();
     try {
-      const trimmedName = name.trim() || user?.name || '';
-      const finalFarmName = farmName.trim() || trimmedName;
+      const trimmedName = name.trim();
+      const finalFarmName = farmName.trim();
       const finalFarmAddress = farmAddress.trim();
-      const finalFarmMobile = farmMobile.trim() || user?.mobile || '';
+      const finalFarmMobile = farmMobile.trim();
+      const finalUpiId = upiId.trim();
 
       const updatedUser = await updateProfile.mutateAsync({
         name: trimmedName,
@@ -82,8 +81,7 @@ export default function FarmerProfileSetupScreen() {
         farmName: finalFarmName,
         farmAddress: finalFarmAddress,
         farmMobile: finalFarmMobile,
-        upiId: upiId.trim() || undefined,
-        billPrintingAddress: finalFarmAddress,
+        upiId: finalUpiId || undefined,
         whatsappGroupEnabled,
       });
 
@@ -95,85 +93,123 @@ export default function FarmerProfileSetupScreen() {
           farmName: finalFarmName,
           farmAddress: finalFarmAddress,
           farmMobile: finalFarmMobile,
-          upiId: upiId.trim() || undefined,
-          billPrintingAddress: finalFarmAddress,
+          upiId: finalUpiId || undefined,
           whatsappGroupEnabled,
         });
       }
       await refreshUser();
-      handleGoBack();
-    } catch (error) {
-      Alert.alert('Could not save', 'Something went wrong while saving your details. Please try again.');
+      setSaveSuccessMsg('✨ ਕਿਸਾਨ ਪ੍ਰੋਫਾਈਲ ਜਾਣਕਾਰੀ ਸਫ਼ਲਤਾਪੂਰਵਕ ਸੇਵ ਹੋ ਗਈ ਹੈ!');
+      setTimeout(() => {
+        setSaveSuccessMsg(null);
+        handleGoBack();
+      }, 1200);
+    } catch (error: any) {
+      const msg = error?.response?.data?.message ?? 'Could not save farmer profile details. Please try again.';
+      Alert.alert('Error Saving Profile', typeof msg === 'string' ? msg : JSON.stringify(msg));
     }
   };
 
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
-      <LinearGradient colors={theme.gradient} style={styles.headerBar}>
+      <LinearGradient colors={['#059669', '#10b981', '#15803d']} style={styles.headerBar}>
         <TouchableOpacity style={styles.backBtn} activeOpacity={0.75} onPress={handleGoBack}>
           <Ionicons name="arrow-back" size={22} color="#ffffff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Farmer Special Profile</Text>
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <Text style={styles.headerTitle}>🌾 Farmer Profile Setup</Text>
+          <Text style={styles.headerSubtitle}>ਕਿਸਾਨ ਪ੍ਰੋਫਾਈਲ ਅਤੇ ਪ੍ਰਿੰਟਿੰਗ ਸੈਟਿੰਗਜ਼</Text>
+        </View>
         <View style={{ width: 34 }} />
       </LinearGradient>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
 
-          {/* Full Name */}
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Full Name / Account Name *</Text>
-            <View style={styles.selectField}>
-              <Ionicons name="person-outline" size={18} color="#64748b" style={{ marginRight: 8 }} />
-              <TextInput
-                style={{ flex: 1, fontSize: 14, fontFamily: FONT.medium, color: '#0f172a' }}
-                placeholder="Enter full name"
-                placeholderTextColor="#94a3b8"
-                value={name}
-                onChangeText={(t) => {
-                  setName(t);
-                  if (!farmName || farmName === user?.name) {
-                    setFarmName(t);
-                  }
-                }}
-              />
+          {/* King ID Badge Banner */}
+          <View style={styles.kingIdBanner}>
+            <Ionicons name="key" size={16} color="#15803d" />
+            <Text style={styles.kingIdBannerText}>
+              FarmsKing Account ID: <Text style={{ fontFamily: FONT.extraBold }}>{user?.kingId || '—'}</Text>
+            </Text>
+          </View>
+
+          {saveSuccessMsg ? (
+            <View style={styles.successBox}>
+              <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
+              <Text style={styles.successText}>{saveSuccessMsg}</Text>
+            </View>
+          ) : null}
+
+          {/* SECTION 1: FARMER PERSONAL DETAILS TABLE */}
+          <View style={styles.tableCard}>
+            <View style={styles.tableHeader}>
+              <Ionicons name="person" size={18} color="#15803d" />
+              <Text style={styles.tableHeaderTitle}>👨‍🌾 Farmer Personal Details</Text>
+            </View>
+
+            {/* Field: Farmer Name: full name */}
+            <View style={styles.tableRowField}>
+              <Text style={styles.fieldLabel}>Farmer Name: full name *</Text>
+              <View style={styles.inputWrap}>
+                <Ionicons name="person-outline" size={18} color="#64748b" style={{ marginRight: 8 }} />
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="e.g. Surinder Kumar"
+                  placeholderTextColor="#94a3b8"
+                  value={name}
+                  onChangeText={setName}
+                />
+              </View>
+            </View>
+
+            {/* Field: Spray Tank Size */}
+            <View style={[styles.tableRowField, { borderBottomWidth: 0 }]}>
+              <Text style={styles.fieldLabel}>Spray Tank Size *</Text>
+              <View style={styles.chipRow}>
+                {SPRAY_TANK_SIZE_OPTIONS.map((size) => {
+                  const isSelected = size === sprayTankSizeL;
+                  return (
+                    <TouchableOpacity
+                      key={size}
+                      activeOpacity={0.8}
+                      style={[styles.chip, isSelected && styles.chipActive]}
+                      onPress={() => {
+                        tap();
+                        setSprayTankSizeL(size);
+                      }}
+                    >
+                      <Ionicons
+                        name="flask"
+                        size={15}
+                        color={isSelected ? '#ffffff' : '#15803d'}
+                        style={{ marginBottom: 2 }}
+                      />
+                      <Text style={[styles.chipText, isSelected && styles.chipTextActive]}>{size} Litre</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
           </View>
 
-          {/* Spray Tank Size */}
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Spray Tank Size *</Text>
-            <View style={styles.chipRow}>
-              {SPRAY_TANK_SIZE_OPTIONS.map((size) => {
-                const isSelected = size === sprayTankSizeL;
-                return (
-                  <TouchableOpacity
-                    key={size}
-                    style={[styles.chip, isSelected && { backgroundColor: theme.primary, borderColor: theme.primary }]}
-                    onPress={() => setSprayTankSizeL(size)}
-                  >
-                    <Text style={[styles.chipText, isSelected && { color: '#ffffff' }]}>{size} Litre</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          {/* Use in Printing Section */}
+          {/* SECTION 2: USE IN PRINTING DETAILS */}
           <View style={styles.printingHeaderBox}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-              <Ionicons name="print" size={18} color={theme.primary} />
-              <Text style={styles.printingTitle}>Use in Printing</Text>
+            <View style={styles.tableHeader}>
+              <Ionicons name="print" size={18} color="#15803d" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.printingTitle}>🖨️ Use in Printing</Text>
+                <Text style={styles.printingSub}>ਬਿੱਲਾਂ, ਰਸੀਦਾਂ ਅਤੇ ਵਊਚਰਾਂ ਉੱਪਰ ਪ੍ਰਿੰਟ ਹੋਣ ਲਈ ਫਰਮ ਦੀ ਜਾਣਕਾਰੀ ਦਰਜ ਕਰੋ।</Text>
+              </View>
             </View>
 
             {/* Farm Name */}
-            <View style={[styles.section, { marginTop: 10 }]}>
-              <Text style={styles.sectionLabel}>Farm Name *</Text>
-              <View style={styles.selectField}>
+            <View style={styles.tableRowField}>
+              <Text style={styles.fieldLabel}>Farm Name *</Text>
+              <View style={[styles.inputWrap, { backgroundColor: '#ffffff' }]}>
                 <Ionicons name="business-outline" size={18} color="#64748b" style={{ marginRight: 8 }} />
                 <TextInput
-                  style={{ flex: 1, fontSize: 14, fontFamily: FONT.medium, color: '#0f172a' }}
+                  style={styles.textInput}
                   placeholder="e.g. Surinder Agro Farm"
                   placeholderTextColor="#94a3b8"
                   value={farmName}
@@ -183,12 +219,12 @@ export default function FarmerProfileSetupScreen() {
             </View>
 
             {/* Farm Address */}
-            <View style={[styles.section, { marginTop: 10 }]}>
-              <Text style={styles.sectionLabel}>Farm Address *</Text>
-              <View style={styles.selectField}>
+            <View style={styles.tableRowField}>
+              <Text style={styles.fieldLabel}>Farm Address *</Text>
+              <View style={[styles.inputWrap, { backgroundColor: '#ffffff' }]}>
                 <Ionicons name="location-outline" size={18} color="#64748b" style={{ marginRight: 8 }} />
                 <TextInput
-                  style={{ flex: 1, fontSize: 14, fontFamily: FONT.medium, color: '#0f172a' }}
+                  style={styles.textInput}
                   placeholder="e.g. Grain Market, Shop No. 12, Phul"
                   placeholderTextColor="#94a3b8"
                   value={farmAddress}
@@ -198,13 +234,13 @@ export default function FarmerProfileSetupScreen() {
             </View>
 
             {/* Farm Mobile */}
-            <View style={[styles.section, { marginTop: 10 }]}>
-              <Text style={styles.sectionLabel}>Farm Mobile *</Text>
-              <View style={styles.selectField}>
+            <View style={styles.tableRowField}>
+              <Text style={styles.fieldLabel}>Farm Mobile *</Text>
+              <View style={[styles.inputWrap, { backgroundColor: '#ffffff' }]}>
                 <Ionicons name="call-outline" size={18} color="#64748b" style={{ marginRight: 8 }} />
                 <TextInput
-                  style={{ flex: 1, fontSize: 14, fontFamily: FONT.medium, color: '#0f172a' }}
-                  placeholder="e.g. 98720XXXXX"
+                  style={styles.textInput}
+                  placeholder="e.g. 9501529971"
                   placeholderTextColor="#94a3b8"
                   keyboardType="phone-pad"
                   maxLength={10}
@@ -215,12 +251,12 @@ export default function FarmerProfileSetupScreen() {
             </View>
 
             {/* UPI ID (Optional) */}
-            <View style={[styles.section, { marginTop: 10 }]}>
-              <Text style={styles.sectionLabel}>UPI ID (Optional)</Text>
-              <View style={styles.selectField}>
+            <View style={[styles.tableRowField, { borderBottomWidth: 0 }]}>
+              <Text style={styles.fieldLabel}>UPI ID (Optional)</Text>
+              <View style={[styles.inputWrap, { backgroundColor: '#ffffff' }]}>
                 <Ionicons name="qr-code-outline" size={18} color="#64748b" style={{ marginRight: 8 }} />
                 <TextInput
-                  style={{ flex: 1, fontSize: 14, fontFamily: FONT.medium, color: '#0f172a' }}
+                  style={styles.textInput}
                   placeholder="e.g. name@paytm, 9876543210@ybl"
                   placeholderTextColor="#94a3b8"
                   autoCapitalize="none"
@@ -231,7 +267,7 @@ export default function FarmerProfileSetupScreen() {
             </View>
           </View>
 
-          {/* WhatsApp Group Toggle */}
+          {/* SECTION 3: WHATSAPP GROUP MEMBERSHIP */}
           <View style={styles.whatsappGroupToggleCard}>
             <View style={{ flex: 1, paddingRight: 10 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
@@ -255,15 +291,20 @@ export default function FarmerProfileSetupScreen() {
             />
           </View>
 
+          {/* SUBMIT BUTTON: Save Farmer Profile */}
           <TouchableOpacity
-            style={[styles.saveButton, premiumShadow(theme.primary, 'md'), !canSave && styles.saveButtonDisabled]}
+            style={[styles.saveButton, premiumShadow('#15803d', 'md'), !canSave && styles.saveButtonDisabled]}
             disabled={!canSave || updateProfile.isPending}
             onPress={handleSave}
+            activeOpacity={0.85}
           >
             {updateProfile.isPending ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
-              <Text style={styles.saveButtonText}>Save Details</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="checkmark-done-circle" size={20} color="#ffffff" />
+                <Text style={styles.saveButtonText}>Save Farmer Profile</Text>
+              </View>
             )}
           </TouchableOpacity>
         </View>
@@ -273,7 +314,7 @@ export default function FarmerProfileSetupScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: '#f1f5f9' },
   headerBar: {
     paddingTop: Platform.OS === 'web' ? 18 : 44,
     paddingHorizontal: 16,
@@ -281,37 +322,109 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    elevation: 4,
   },
   backBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   headerTitle: { color: '#ffffff', fontSize: 17, fontFamily: FONT.extraBold },
-  scrollContent: { padding: SPACING.md, paddingBottom: 32, alignItems: 'center' },
-  card: { width: '100%', maxWidth: 460, backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.lg, gap: 16, ...premiumShadow('#0f172a', 'sm') },
-  section: { gap: 8 },
-  sectionLabel: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
-  chipRow: { flexDirection: 'row', gap: 10 },
-  chip: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderRadius: RADIUS.md,
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
+  headerSubtitle: { color: '#e2e8f0', fontSize: 11, fontFamily: FONT.medium },
+  scrollContent: { padding: SPACING.md, paddingBottom: 40, alignItems: 'center' },
+  card: {
+    width: '100%',
+    maxWidth: 480,
     backgroundColor: '#ffffff',
+    borderRadius: RADIUS.xl,
+    padding: SPACING.lg,
+    gap: 16,
+    ...premiumShadow('#0f172a', 'md'),
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
-  chipText: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
-  selectField: {
+  kingIdBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 8,
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    borderRadius: RADIUS.md,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  kingIdBannerText: { fontSize: 12.5, fontFamily: FONT.bold, color: '#166534' },
+  successBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#dcfce7',
+    borderWidth: 1,
+    borderColor: '#86efac',
+    borderRadius: RADIUS.md,
+    padding: 10,
+  },
+  successText: { fontSize: 12.5, fontFamily: FONT.bold, color: '#15803d' },
+  tableCard: {
     backgroundColor: '#ffffff',
     borderRadius: RADIUS.lg,
     borderWidth: 1.5,
     borderColor: '#e2e8f0',
-    paddingVertical: 14,
-    paddingHorizontal: SPACING.md,
+    overflow: 'hidden',
   },
-  selectFieldText: { fontSize: 14, fontFamily: FONT.medium, color: '#0f172a' },
-  selectFieldPlaceholder: { color: '#94a3b8' },
+  tableHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#f8fafc',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  tableHeaderTitle: { fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' },
+  tableRowField: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    gap: 6,
+  },
+  fieldLabel: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
+  inputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: '#cbd5e1',
+    paddingHorizontal: 12,
+    height: 44,
+  },
+  textInput: { flex: 1, fontSize: 14, fontFamily: FONT.medium, color: '#0f172a' },
+  chipRow: { flexDirection: 'row', gap: 10, marginTop: 4 },
+  chip: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: '#cbd5e1',
+    backgroundColor: '#f8fafc',
+  },
+  chipActive: {
+    backgroundColor: '#16a34a',
+    borderColor: '#15803d',
+  },
+  chipText: { fontSize: 13, fontFamily: FONT.bold, color: '#334155' },
+  chipTextActive: { color: '#ffffff' },
+  printingHeaderBox: {
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1.5,
+    borderColor: '#bbf7d0',
+    borderRadius: RADIUS.lg,
+    overflow: 'hidden',
+  },
+  printingTitle: { fontSize: 14, fontFamily: FONT.extraBold, color: '#15803d' },
+  printingSub: { fontSize: 11, fontFamily: FONT.medium, color: '#166534', marginTop: 1 },
   whatsappGroupToggleCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -319,46 +432,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     borderWidth: 1.5,
     borderColor: '#e2e8f0',
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.lg,
     padding: 12,
-    marginTop: 4,
   },
-  whatsappGroupToggleTitle: {
-    fontSize: 13,
-    fontFamily: FONT.bold,
-    color: '#0f172a',
-  },
-  whatsappGroupToggleSubtitle: {
-    fontSize: 11,
-    fontFamily: FONT.medium,
-    color: '#64748b',
-  },
-  printingHeaderBox: {
-    backgroundColor: '#f0fdf4',
-    borderWidth: 1.5,
-    borderColor: '#bbf7d0',
-    borderRadius: RADIUS.md,
-    padding: 14,
-    gap: 4,
-  },
-  printingTitle: {
-    fontSize: 14,
-    fontFamily: FONT.bold,
-    color: '#15803d',
-  },
-  printingSub: {
-    fontSize: 11.5,
-    fontFamily: FONT.medium,
-    color: '#166534',
-    marginBottom: 4,
-  },
+  whatsappGroupToggleTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
+  whatsappGroupToggleSubtitle: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b' },
   saveButton: {
-    backgroundColor: theme.primary,
+    backgroundColor: '#16a34a',
     borderRadius: RADIUS.lg,
     paddingVertical: 14,
     alignItems: 'center',
-    marginTop: 8,
+    justifyContent: 'center',
+    marginTop: 4,
   },
-  saveButtonDisabled: { opacity: 0.5 },
+  saveButtonDisabled: { opacity: 0.5, backgroundColor: '#94a3b8' },
   saveButtonText: { fontSize: 15, fontFamily: FONT.bold, color: '#ffffff' },
 });

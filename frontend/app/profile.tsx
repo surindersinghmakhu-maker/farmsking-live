@@ -288,7 +288,7 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          <Text style={styles.inputLabel}>Full Name / Account Name *</Text>
+          <Text style={styles.inputLabel}>Farmer Name: full name *</Text>
           <View style={styles.inputWrap}>
             <Ionicons name="person-outline" size={16} color="#94a3b8" />
             <TextInput
@@ -528,7 +528,7 @@ export default function ProfileScreen() {
             {updateAddress.isPending ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
-              <Text style={styles.saveBtnText}>Save Profile Settings</Text>
+              <Text style={styles.saveBtnText}>Save Farmer Profile</Text>
             )}
           </TouchableOpacity>
         </View>

@@ -389,6 +389,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 44,
   },
+  textInput: { flex: 1, fontSize: 14, fontFamily: FONT.medium, color: '#0f172a' },
   radioInlineItem: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -64,7 +64,7 @@ export default function FarmerProfileSetupScreen() {
 
   const handleSave = async () => {
     if (!canSave) {
-      Alert.alert('Required Fields Missing', 'Please fill in Spray Tank Size, Farm Name, Farm Address, and Farm Mobile.');
+      Alert.alert('Required Fields Missing', 'Please fill in Spray Tank Capacity, Farm Name, Farm Address, and Farm Mobile.');
       return;
     }
     tap();
@@ -148,9 +148,9 @@ export default function FarmerProfileSetupScreen() {
 
           {/* SECTION 1: SPRAY TANK SIZE */}
           <View style={styles.tableCard}>
-            {/* Field: Spray Tank Size */}
+            {/* Field: Spray Tank Capacity */}
             <View style={[styles.tableRowField, { borderBottomWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }]}>
-              <Text style={[styles.fieldLabel, { marginTop: 0 }]}>Spray Tank Size *</Text>
+              <Text style={[styles.fieldLabel, { marginTop: 0 }]}>Spray Tank Capacity *</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 {SPRAY_TANK_SIZE_OPTIONS.map((size) => {
                   const isSelected = size === sprayTankSizeL;

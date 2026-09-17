@@ -898,6 +898,71 @@ function ECommerceSettingsPanel() {
   );
 }
 
+function OtpDeliveryChannelPanel() {
+  const { data: settings } = useAppSettings();
+  const update = useUpdateAppSettings();
+  const [selectedChannel, setSelectedChannel] = useState<string>((settings as any)?.otpDeliveryChannel ?? 'WHATSAPP');
+
+  useEffect(() => {
+    if ((settings as any)?.otpDeliveryChannel) {
+      setSelectedChannel((settings as any).otpDeliveryChannel);
+    }
+  }, [settings]);
+
+  const handleSelectChannel = async (channel: string) => {
+    setSelectedChannel(channel);
+    try {
+      await update.mutateAsync({ otpDeliveryChannel: channel } as any);
+      if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch {
+      alert('Failed to update OTP Delivery Channel');
+    }
+  };
+
+  const CHANNELS = [
+    { id: 'WHATSAPP', label: '💬 WhatsApp Direct', icon: 'logo-whatsapp', desc: 'Send OTP via WhatsApp Bot' },
+    { id: 'SMS', label: '📱 SMS Text Message', icon: 'chatbox-text-outline', desc: 'Send OTP via Mobile SMS' },
+    { id: 'EMAIL', label: '📧 Email OTP', icon: 'mail-outline', desc: 'Send OTP via User Email' },
+    { id: 'ALL', label: '⚡ All Channels', icon: 'flash-outline', desc: 'Send OTP across WhatsApp, SMS & Email simultaneously' },
+  ];
+
+  return (
+    <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#faf5ff', borderColor: '#e9d5ff', borderWidth: 1 }]}>
+      <View style={styles.cardHeader}>
+        <View style={[styles.iconCircle, { backgroundColor: '#9333ea' }]}>
+          <Ionicons name="key" size={20} color="#ffffff" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardTitle}>🔑 New User OTP Delivery Channel</Text>
+          <Text style={styles.cardSub}>Select channel to deliver OTP codes for registration & forgot password</Text>
+        </View>
+      </View>
+
+      <View style={{ gap: 8, marginTop: 8 }}>
+        {CHANNELS.map((ch) => {
+          const isSelected = selectedChannel === ch.id;
+          return (
+            <TouchableOpacity
+              key={ch.id}
+              style={[
+                styles.subToggleRow,
+                { paddingVertical: 10, paddingHorizontal: 12, borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: isSelected ? '#9333ea' : '#e9d5ff', backgroundColor: isSelected ? '#f3e8ff' : '#ffffff' }
+              ]}
+              onPress={() => handleSelectChannel(ch.id)}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: isSelected ? '#7e22ce' : '#334155' }}>{ch.label}</Text>
+                <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>{ch.desc}</Text>
+              </View>
+              <Ionicons name={isSelected ? 'checkmark-circle' : 'ellipse-outline'} size={22} color={isSelected ? '#9333ea' : '#cbd5e1'} />
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
 export default function SuperSettingsScreen() {
   const router = useRouter();
   const { data: settings, isLoading } = useAppSettings();
@@ -1181,6 +1246,9 @@ export default function SuperSettingsScreen() {
 
             {/* Dynamic Feature Switches Accordion */}
             <CategoryFeatureFlagPanel />
+
+            {/* OTP Delivery Channel Selector */}
+            <OtpDeliveryChannelPanel />
 
             {/* E-Commerce Global Settings Panel */}
             <ECommerceSettingsPanel />

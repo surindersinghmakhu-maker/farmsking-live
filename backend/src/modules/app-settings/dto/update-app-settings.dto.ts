@@ -52,5 +52,9 @@ export class UpdateAppSettingsDto {
   @IsOptional()
   @IsString()
   whatsappGroupJid?: string;
+
+  @IsOptional()
+  @IsString()
+  otpDeliveryChannel?: string;
 }
 

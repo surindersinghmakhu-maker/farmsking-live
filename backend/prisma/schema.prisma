@@ -400,6 +400,11 @@ model User {
   bankAccountNumber         String?
   bankIfsc                  String?
   bankAccountHolderName     String?
+  isSeniorDoctor            Boolean              @default(false)
+  seniorDoctorId            String?
+  seniorDoctor              User?                @relation("DoctorHierarchy", fields: [seniorDoctorId], references: [id], onDelete: SetNull)
+  juniorDoctors             User[]               @relation("DoctorHierarchy")
+  doctorConsultationFee     Decimal?             @db.Decimal(10, 2)
   operatorPermissions  OperatorPermission[] @default([])
   /// Who referred this account in — set once at signup (referral code) or by a Super Admin afterwards, never changed again.
   referredById              String?
@@ -1145,6 +1150,8 @@ model CropProblem {
   farmerRating       Int?
   farmerFeedback     String?
   followUpDate       DateTime?
+  forwardedToSeniorAt DateTime?
+  forwardedFromJuniorId String?
   resolvedAt         DateTime?
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
@@ -1795,6 +1802,7 @@ model AppSetting {
   whatsappAutoAddEnabled   Boolean @default(true)
   whatsappAutoRemoveEnabled Boolean @default(true)
   whatsappGroupJid      String?
+  otpDeliveryChannel    String   @default("WHATSAPP")
   featureFlags          Json?
   updatedAt             DateTime @updatedAt
   updatedById           String?
@@ -2010,6 +2018,8 @@ model FarmerPlanPricing {
   advisorGenerationCostPercent Decimal?               @db.Decimal(5, 2) // % of price debited from an Advisor's wallet the moment they're issued a coupon for this plan
   maxTotalCrops                Int?                   // null = unlimited
   maxActiveCrops               Int?                   // null = unlimited
+  maxDoctorCrops               Int?                   // Doctor care crops limit: e.g. 5 for Diamond, 10 for Royal
+  seniorDoctorShareValue       Decimal?               @db.Decimal(10, 2)
   advisorIncluded              Boolean                @default(true)
   chatEnabled                  Boolean                @default(true)
   weatherEnabled               Boolean                @default(true)

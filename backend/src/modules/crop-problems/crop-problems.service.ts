@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CropProblemStatus, NotificationType, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CropsService } from '../crops/crops.service';
@@ -67,10 +67,19 @@ export class CropProblemsService {
     });
   }
 
-  findAllForAdvisor(user: AuthUser) {
+  async findAllForAdvisor(user: AuthUser) {
+    const juniorDoctors = await this.prisma.user.findMany({
+      where: { seniorDoctorId: user.id, deletedAt: null },
+      select: { id: true },
+    });
+    const juniorIds = juniorDoctors.map((j) => j.id);
+
     return this.prisma.cropProblem.findMany({
       where: {
-        assignedAdvisorId: user.id,
+        OR: [
+          { assignedAdvisorId: user.id },
+          ...(juniorIds.length > 0 ? [{ forwardedFromJuniorId: { in: juniorIds } }] : []),
+        ],
         deletedAt: null,
       },
       include: DETAIL_INCLUDE,
@@ -269,6 +278,37 @@ export class CropProblemsService {
         { cropProblemId: id, rating: dto.rating },
       );
     }
+
+    return updated;
+  }
+
+  async forwardToSeniorDoctor(user: AuthUser, id: string) {
+    const problem = await this.findOneOrThrow(user, id);
+    const doctor = await this.prisma.user.findUnique({
+      where: { id: user.id },
+      select: { id: true, name: true, seniorDoctorId: true },
+    });
+    if (!doctor?.seniorDoctorId) {
+      throw new BadRequestException('You do not have a Senior Doctor assigned.');
+    }
+
+    const updated = await this.prisma.cropProblem.update({
+      where: { id },
+      data: {
+        assignedAdvisorId: doctor.seniorDoctorId,
+        forwardedFromJuniorId: doctor.id,
+        forwardedToSeniorAt: new Date(),
+      },
+      include: DETAIL_INCLUDE,
+    });
+
+    await this.notificationsService.create(
+      doctor.seniorDoctorId,
+      NotificationType.CROP_PROBLEM_UPDATE,
+      '🚨 Crop Problem Forwarded by Junior Doctor',
+      `Junior Doctor ${doctor.name} forwarded problem "${problem.title}" to you for resolution.`,
+      { cropProblemId: id, juniorDoctorId: doctor.id },
+    );
 
     return updated;
   }

@@ -17,7 +17,7 @@ import { FarmerProfileModal } from '@/src/components/FarmerProfileModal';
 import { useMySprayItemTemplates } from '@/src/hooks/useSprayItemTemplates';
 import { WeatherForecastModal } from '@/src/components/WeatherForecastModal';
 import { useUserWeather } from '@/src/hooks/useWeather';
-import { resolveMediaUrl } from '@/src/api/client';
+import { apiClient, resolveMediaUrl } from '@/src/api/client';
 import { CropProblem, SprayScheduleItem } from '@/src/types/api';
 
 type FarmSubTab = 'PLOTS' | 'PROBLEMS' | 'CALL_REQUESTS';
@@ -965,6 +965,25 @@ function ProblemCard({ problem }: { problem: CropProblem }) {
             >
               <Ionicons name="chatbubble-ellipses-outline" size={14} color={theme.primary} />
               <Text style={styles.respondBtnText}>{problem.advisorResponse ? 'Update Response' : 'Respond'}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.respondBtn, { backgroundColor: '#fef2f2', borderColor: '#fecaca' }]}
+              activeOpacity={0.85}
+              onPress={async () => {
+                tap();
+                try {
+                  await apiClient.post(`/crop-problems/${problem.id}/forward-to-senior`);
+                  const msg = 'Problem successfully forwarded to your Senior Doctor!';
+                  Platform.OS === 'web' ? alert(msg) : Alert.alert('Forwarded', msg);
+                } catch (err: any) {
+                  const msg = err?.response?.data?.message ?? 'Could not forward problem. Make sure a Senior Doctor is assigned to you.';
+                  Platform.OS === 'web' ? alert(msg) : Alert.alert('Error', msg);
+                }
+              }}
+            >
+              <Ionicons name="arrow-redo-outline" size={14} color="#dc2626" />
+              <Text style={[styles.respondBtnText, { color: '#dc2626' }]}>Forward to Senior Doctor</Text>
             </TouchableOpacity>
           </View>
         </>

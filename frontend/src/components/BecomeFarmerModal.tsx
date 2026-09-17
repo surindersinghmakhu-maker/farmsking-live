@@ -50,6 +50,15 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
   const [district, setDistrict] = useState<string>(user?.district ?? '');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  React.useEffect(() => {
+    if (user) {
+      setUpiId((user as any)?.upiId ?? '');
+      setFarmName(user.farmName || user.name || '');
+      setFarmAddress(user.farmAddress || [user.village, user.district, user.state].filter(Boolean).join(', ') || '');
+      setFarmMobile(user.farmMobile || user.mobile || '');
+    }
+  }, [user?.id, user?.upiId, user?.farmName, user?.farmAddress, user?.farmMobile, user?.name]);
+
   const isValid = !!sprayTankSizeL;
 
   const handleSubmit = async () => {

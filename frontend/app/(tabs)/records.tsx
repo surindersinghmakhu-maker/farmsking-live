@@ -1867,6 +1867,7 @@ export default function RecordsScreen() {
       const billPayload = {
         billNo: targetBillNo,
         farmerName: user?.name || 'Farmer',
+        farmerUpiId: user?.upiId || undefined,
         partyId: paymentMode === 'PARTY' ? selectedParty?.id : undefined,
         partyName: paymentMode === 'PARTY' && selectedParty ? selectedParty.name : cashName || 'Cash',
         partyMobile: paymentMode === 'PARTY' ? selectedParty?.mobile ?? undefined : cashBuyerMobile.trim() || undefined,

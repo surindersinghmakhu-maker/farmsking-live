@@ -143,6 +143,9 @@ export interface AdminUpdateUserPayload {
   bankAccountNumber?: string;
   bankIfsc?: string;
   bankAccountHolderName?: string;
+  isSeniorDoctor?: boolean;
+  seniorDoctorId?: string;
+  doctorConsultationFee?: number;
 }
 
 export async function adminUpdateUser(id: string, payload: AdminUpdateUserPayload): Promise<AdminUser> {

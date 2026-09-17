@@ -56,4 +56,10 @@ export class CropProblemsController {
   rate(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: { rating: number; feedback?: string }) {
     return this.cropProblemsService.rate(user, id, dto);
   }
+
+  @Roles(Role.ADVISOR)
+  @Post(':id/forward-to-senior')
+  forwardToSeniorDoctor(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.cropProblemsService.forwardToSeniorDoctor(user, id);
+  }
 }

@@ -133,4 +133,15 @@ export class AdminUpdateUserDto {
   @IsOptional()
   @IsString()
   farmMobile?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isSeniorDoctor?: boolean;
+
+  @IsOptional()
+  @IsString()
+  seniorDoctorId?: string | null;
+
+  @IsOptional()
+  doctorConsultationFee?: number | null;
 }

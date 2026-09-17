@@ -115,6 +115,9 @@ export interface AdminUser {
   yearsExperience?: number | null;
   qualification?: string | null;
   profileTitle?: string | null;
+  isSeniorDoctor?: boolean;
+  seniorDoctorId?: string | null;
+  doctorConsultationFee?: number | null;
   // Farmer-only
   sprayTankSizeL?: SprayTankSizeL | null;
   soilType?: SoilType | null;

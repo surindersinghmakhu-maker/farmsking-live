@@ -43,8 +43,7 @@ export default function FarmerProfileSetupScreen() {
   );
 
   React.useEffect(() => {
-    if (user && !isInitializedRef.current) {
-      isInitializedRef.current = true;
+    if (user) {
       setName(user.name || '');
       setFarmName(user.farmName || user.name || '');
       setFarmAddress(
@@ -58,7 +57,7 @@ export default function FarmerProfileSetupScreen() {
     if (status?.profile.sprayTankSizeL && !sprayTankSizeL) {
       setSprayTankSizeL(status.profile.sprayTankSizeL);
     }
-  }, [user, status]);
+  }, [user?.id, user?.upiId, user?.farmName, user?.farmAddress, user?.farmMobile, user?.name, user?.whatsappGroupEnabled, status]);
 
   const handleGoBack = () => {
     if (router.canGoBack()) {

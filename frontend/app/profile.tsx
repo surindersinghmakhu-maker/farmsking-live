@@ -73,8 +73,7 @@ export default function ProfileScreen() {
   );
 
   React.useEffect(() => {
-    if (user && !isInitializedRef.current) {
-      isInitializedRef.current = true;
+    if (user) {
       setName(user.name || '');
       setEmail(user.email || '');
       setFarmName(user.farmName || user.name || '');
@@ -89,7 +88,7 @@ export default function ProfileScreen() {
       if (user.district) setDistrict(user.district);
       if (user.state) setState(user.state);
     }
-  }, [user]);
+  }, [user?.id, user?.upiId, user?.farmName, user?.farmAddress, user?.farmMobile, user?.name, user?.email, user?.whatsappGroupEnabled]);
 
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);

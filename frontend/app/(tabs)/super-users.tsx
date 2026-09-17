@@ -97,6 +97,12 @@ export default function SuperUsersScreen() {
       else Alert.alert('Cannot Delete', msg);
       return;
     }
+    if (!targetUser.deletedAt) {
+      const msg = '⚠️ User must be deactivated first before permanent deletion. Please click "Deactivate" first.';
+      if (Platform.OS === 'web') alert(msg);
+      else Alert.alert('Deactivation Required', msg);
+      return;
+    }
     const message = `Are you sure you want to PERMANENTLY DELETE user record "${targetUser.name}" (${targetUser.mobile})?`;
     const confirmDelete = async () => {
       try {
@@ -392,6 +398,14 @@ function EditUserForm({ user, onDone }: { user: AdminUser; onDone: () => void })
   const [yearsExperience, setYearsExperience] = useState(user.yearsExperience != null ? String(user.yearsExperience) : '');
   const [qualification, setQualification] = useState(user.qualification ?? '');
   const [profileTitle, setProfileTitle] = useState(user.profileTitle ?? '');
+  const [isSeniorDoctor, setIsSeniorDoctor] = useState(user.isSeniorDoctor ?? false);
+  const [seniorDoctorId, setSeniorDoctorId] = useState(user.seniorDoctorId ?? '');
+  const [doctorConsultationFee, setDoctorConsultationFee] = useState(
+    user.doctorConsultationFee != null ? String(user.doctorConsultationFee) : ''
+  );
+
+  const { data: advisorsList } = useUsersList({ role: 'ADVISOR', limit: 100 });
+  const seniorDoctors = (advisorsList?.items ?? []).filter((a) => a.id !== user.id && (a.isSeniorDoctor || a.role === 'SUPER_ADMIN'));
 
   // Farmer-only
   const [soilType, setSoilType] = useState(user.soilType ?? '');
@@ -431,6 +445,9 @@ function EditUserForm({ user, onDone }: { user: AdminUser; onDone: () => void })
                 yearsExperience: yearsExperience.trim() ? Number(yearsExperience.trim()) : undefined,
                 qualification: qualification.trim() || undefined,
                 profileTitle: profileTitle.trim() || undefined,
+                isSeniorDoctor,
+                seniorDoctorId: seniorDoctorId.trim() || undefined,
+                doctorConsultationFee: doctorConsultationFee.trim() ? Number(doctorConsultationFee.trim()) : undefined,
               }
             : {}),
           ...(isFarmer
@@ -487,6 +504,34 @@ function EditUserForm({ user, onDone }: { user: AdminUser; onDone: () => void })
           <TextInput style={styles.input} value={bio} onChangeText={setBio} placeholder="Optional" placeholderTextColor="#94a3b8" multiline />
           <Text style={styles.label}>Years of Experience</Text>
           <TextInput style={styles.input} value={yearsExperience} onChangeText={setYearsExperience} keyboardType="number-pad" placeholder="Optional" placeholderTextColor="#94a3b8" />
+          <Text style={styles.label}>Doctor Consultation Fee (₹)</Text>
+          <TextInput style={styles.input} value={doctorConsultationFee} onChangeText={setDoctorConsultationFee} keyboardType="number-pad" placeholder="e.g. 500, 300" placeholderTextColor="#94a3b8" />
+
+          <TouchableOpacity style={styles.permissionRow} activeOpacity={0.8} onPress={() => setIsSeniorDoctor(!isSeniorDoctor)}>
+            <Ionicons name={isSeniorDoctor ? 'checkbox' : 'square-outline'} size={20} color={isSeniorDoctor ? theme.primary : '#94a3b8'} />
+            <Text style={styles.permissionRowText}>Is Senior Doctor (Can manage Junior Doctors & receive forwarded problems)</Text>
+          </TouchableOpacity>
+
+          {!isSeniorDoctor && seniorDoctors.length > 0 ? (
+            <>
+              <Text style={styles.label}>Assign Senior Doctor</Text>
+              <View style={{ gap: 6 }}>
+                {seniorDoctors.map((doc) => {
+                  const isSelected = seniorDoctorId === doc.id;
+                  return (
+                    <TouchableOpacity
+                      key={doc.id}
+                      style={[styles.permissionRow, isSelected && { borderColor: theme.primary, backgroundColor: '#f0fdf4' }]}
+                      onPress={() => setSeniorDoctorId(isSelected ? '' : doc.id)}
+                    >
+                      <Ionicons name={isSelected ? 'radio-button-on' : 'radio-button-off'} size={18} color={isSelected ? theme.primary : '#94a3b8'} />
+                      <Text style={styles.permissionRowText}>👴 {doc.name} ({doc.mobile})</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </>
+          ) : null}
         </>
       ) : null}
 

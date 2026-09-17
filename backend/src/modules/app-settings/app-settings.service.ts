@@ -100,6 +100,7 @@ export class AppSettingsService {
       'whatsappAutoAddEnabled',
       'whatsappAutoRemoveEnabled',
       'whatsappGroupJid',
+      'otpDeliveryChannel',
     ];
 
     for (const key of keys) {

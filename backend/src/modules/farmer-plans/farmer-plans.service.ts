@@ -21,7 +21,7 @@ import { ApplyCouponToFarmerDto } from './dto/apply-coupon-to-farmer.dto';
 
 /** Plan limits for FREE tier */
 export const FREE_PLAN_MAX_CROPS = 3;
-export const FREE_PLAN_MAX_ACTIVE_CROPS = 3;
+export const FREE_PLAN_MAX_ACTIVE_CROPS = 1;
 /** Plot creation itself is unlimited on every paid tier — STANDARD and PREMIUM instead cap how many crop
  * cycles a farmer can have under active advisor review (PENDING or ACCEPTED) at once. */
 export const STANDARD_PLAN_MAX_ADVISOR_CROPS = 5;
@@ -405,6 +405,25 @@ export class FarmerPlansService implements OnModuleInit {
               where: { id: coupon.id },
               data: { payoutAmount: proratedAmount, payoutRecipientId: advisorTargetId },
             });
+          }
+        }
+
+        const doctorUser = await this.prisma.user.findUnique({
+          where: { id: advisorTargetId },
+          select: { seniorDoctorId: true, name: true },
+        });
+        if (doctorUser?.seniorDoctorId) {
+          const seniorShare = pricing.seniorDoctorShareValue
+            ? Number(pricing.seniorDoctorShareValue)
+            : Math.round(Number(pricing.price) * 0.05);
+          const proratedSeniorAmount = Math.round(seniorShare * ratio * 100) / 100;
+          if (proratedSeniorAmount > 0) {
+            await this.walletService.credit(
+              doctorUser.seniorDoctorId,
+              proratedSeniorAmount,
+              `Senior Doctor share from Junior Doctor (${doctorUser.name}) for ${coupon.plan} plan coupon ${coupon.code}`,
+              { relatedUserId: farmerId },
+            );
           }
         }
       }

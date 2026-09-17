@@ -58,6 +58,9 @@ const SAFE_USER_SELECT = {
   farmName: true,
   farmAddress: true,
   farmMobile: true,
+  isSeniorDoctor: true,
+  seniorDoctorId: true,
+  doctorConsultationFee: true,
   createdAt: true,
   deletedAt: true,
 } as const;
@@ -382,6 +385,7 @@ export class UsersService implements OnModuleInit {
       if (dto.district !== undefined) profileData.district = dto.district;
       if (dto.state !== undefined) profileData.state = dto.state;
       if (dto.billPrintingAddress !== undefined) profileData.billPrintingAddress = dto.billPrintingAddress;
+      if (dto.upiId !== undefined) profileData.upiId = dto.upiId;
       if (dto.farmName !== undefined) profileData.farmName = dto.farmName;
       if (dto.farmAddress !== undefined) profileData.farmAddress = dto.farmAddress;
       if (dto.farmMobile !== undefined) profileData.farmMobile = dto.farmMobile;
@@ -707,6 +711,9 @@ export class UsersService implements OnModuleInit {
         ...(dto.bankAccountNumber !== undefined ? { bankAccountNumber: dto.bankAccountNumber } : {}),
         ...(dto.bankIfsc !== undefined ? { bankIfsc: dto.bankIfsc } : {}),
         ...(dto.bankAccountHolderName !== undefined ? { bankAccountHolderName: dto.bankAccountHolderName } : {}),
+        ...(dto.isSeniorDoctor !== undefined ? { isSeniorDoctor: dto.isSeniorDoctor } : {}),
+        ...(dto.seniorDoctorId !== undefined ? { seniorDoctorId: dto.seniorDoctorId } : {}),
+        ...(dto.doctorConsultationFee !== undefined ? { doctorConsultationFee: dto.doctorConsultationFee } : {}),
       },
       select: {
         ...SAFE_USER_SELECT,
@@ -1038,6 +1045,9 @@ export class UsersService implements OnModuleInit {
     }
     if (user.mobile === '9872066901') {
       throw new ConflictException('Primary Super Admin account 9872066901 cannot be deleted.');
+    }
+    if (!user.deletedAt) {
+      throw new BadRequestException('User must be deactivated before permanent deletion. Please deactivate the user first.');
     }
 
     await this.prisma.$transaction(

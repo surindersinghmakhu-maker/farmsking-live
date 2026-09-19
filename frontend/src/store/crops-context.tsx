@@ -69,12 +69,24 @@ export interface RegisteredCropField {
   plantCount?: number;
 }
 
+export interface CropCompletionReview {
+  farmskingRating: number;
+  farmskingBenefitAmount?: string;
+  farmskingFeedback?: string;
+  doctorRating?: number;
+  doctorGrade?: string;
+  doctorFeedback?: string;
+  doctorName?: string;
+  completedAt?: string;
+}
+
 export interface CropHistoryEntry extends RegisteredCropField {
   completedDate: string;
   soldQuantity?: string;
   soldRate?: string;
   buyerName?: string;
   totalRevenue?: number;
+  completionReview?: CropCompletionReview;
 }
 
 export interface CropSaleRecord {
@@ -171,6 +183,8 @@ interface CropsContextValue {
   unlockedCropIds: Record<string, boolean>;
   cropGpsDataMap: Record<string, CropGpsData>;
   gpsUnlockRequests: GpsUnlockRequest[];
+  completionReviews: Record<string, CropCompletionReview>;
+  recordCompletionReview: (cropId: string, review: CropCompletionReview) => Promise<void>;
   isLoading: boolean;
   addCrop: (values: CropFormValues) => Promise<void>;
   editCrop: (cropId: string, values: CropFormValues) => Promise<void>;
@@ -285,6 +299,7 @@ interface PersistedLocalState {
   customCropLocations?: Record<string, string>;
   cropGpsDataMap?: Record<string, CropGpsData>;
   unlockedCropIds?: Record<string, boolean>;
+  completionReviews?: Record<string, CropCompletionReview>;
 }
 
 const STORAGE_KEY = 'farmsking_crops_local_state_v1';
@@ -347,6 +362,7 @@ export function CropsProvider({ children }: { children: ReactNode }) {
   const [unlockedCropIds, setUnlockedCropIds] = useState<Record<string, boolean>>({});
   const [customCropLocations, setCustomCropLocations] = useState<Record<string, string>>({});
   const [cropGpsDataMap, setCropGpsDataMap] = useState<Record<string, CropGpsData>>({});
+  const [completionReviews, setCompletionReviews] = useState<Record<string, CropCompletionReview>>({});
   const [gpsUnlockRequests, setGpsUnlockRequests] = useState<GpsUnlockRequest[]>([]);
   const [isPersistLoaded, setIsPersistLoaded] = useState(false);
 
@@ -362,6 +378,7 @@ export function CropsProvider({ children }: { children: ReactNode }) {
           setCustomCropLocations(parsed.customCropLocations ?? {});
           setCropGpsDataMap(parsed.cropGpsDataMap ?? {});
           setUnlockedCropIds(parsed.unlockedCropIds ?? {});
+          setCompletionReviews(parsed.completionReviews ?? {});
         }
       } catch {
         // ignore, fallback to defaults
@@ -381,9 +398,10 @@ export function CropsProvider({ children }: { children: ReactNode }) {
         customCropLocations,
         cropGpsDataMap,
         unlockedCropIds,
+        completionReviews,
       })
     );
-  }, [salesRecords, specialTreatments, customCropLocations, cropGpsDataMap, unlockedCropIds, isPersistLoaded]);
+  }, [salesRecords, specialTreatments, customCropLocations, cropGpsDataMap, unlockedCropIds, completionReviews, isPersistLoaded]);
 
   const farmerName = user?.farmName || user?.name;
   const farmerPhone = user?.farmMobile || user?.mobile;
@@ -424,6 +442,7 @@ export function CropsProvider({ children }: { children: ReactNode }) {
         const latestSale = cropSales[0];
         const totalRev = cropSales.reduce((sum, s) => sum + (s.totalAmount || 0), 0);
         const totalQty = cropSales.reduce((sum, s) => sum + (Number(s.quantity) || 0), 0);
+        const review = (c.id ? completionReviews[c.id] : undefined) || (c.cropId ? completionReviews[c.cropId] : undefined);
         return {
           ...base,
           completedDate: latestSale?.saleDate ?? (c.actualHarvestDate ? formatDateDisplay(c.actualHarvestDate) : formatDateDisplay(c.updatedAt)),
@@ -431,10 +450,18 @@ export function CropsProvider({ children }: { children: ReactNode }) {
           soldRate: latestSale?.pricePerUnit,
           buyerName: latestSale?.buyerName,
           totalRevenue: totalRev > 0 ? totalRev : latestSale?.totalAmount,
+          completionReview: review,
         };
       }),
-    [completedCrops, salesRecords, farmerName, farmerPhone, location]
+    [completedCrops, salesRecords, farmerName, farmerPhone, location, completionReviews]
   );
+
+  const recordCompletionReview = async (cropId: string, review: CropCompletionReview) => {
+    setCompletionReviews((prev) => ({
+      ...prev,
+      [cropId]: review,
+    }));
+  };
 
   const invalidateCrops = () => queryClient.invalidateQueries({ queryKey: ['crops', 'mine'] });
 
@@ -719,9 +746,11 @@ export function CropsProvider({ children }: { children: ReactNode }) {
       unlockCropDirectly,
       lockCropGps,
       updateCropLocation,
+      completionReviews,
+      recordCompletionReview,
       saveCropGpsData,
     }),
-    [cropFields, cropHistory, salesRecords, specialTreatments, unlockedCropIds, cropGpsDataMap, gpsUnlockRequests, isLoading]
+    [cropFields, cropHistory, salesRecords, specialTreatments, unlockedCropIds, cropGpsDataMap, gpsUnlockRequests, completionReviews, isLoading]
   );
 
   return <CropsContext.Provider value={value}>{children}</CropsContext.Provider>;

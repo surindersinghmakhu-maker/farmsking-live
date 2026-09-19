@@ -51,7 +51,7 @@ export const PLAN_META: Record<FarmerPlanType, { label: string; emoji: string; c
     borderColor: '#bfdbfe',
   },
   SUPER: {
-    label: 'Super Advisor',
+    label: 'Super Advisor Membership',
     emoji: '⭐',
     color: '#b45309',
     bg: '#fef3c7',

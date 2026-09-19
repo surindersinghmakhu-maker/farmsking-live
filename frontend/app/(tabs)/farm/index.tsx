@@ -33,6 +33,8 @@ import { FarmLocationPickerModal } from '@/components/FarmLocationPickerModal';
 import { CropLocationGuideModal } from '@/components/CropLocationGuideModal';
 import { PaymentVoucherModal, VoucherType } from '@/src/components/PaymentVoucherModal';
 import { useLabourWorkers } from '@/src/hooks/useLabour';
+import { CropCompletionReviewModal } from '@/src/components/CropCompletionReviewModal';
+import { CropCompletionReview } from '@/src/store/crops-context';
 
 const theme = RoleThemes.FARMER;
 
@@ -73,7 +75,7 @@ export default function FarmListScreen() {
   const { user } = useAuth();
   const { role: currentRole } = useRole();
   const isAdminOrSuperAdmin = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN';
-  const { cropFields, cropHistory, salesRecords, cropGpsDataMap, unlockedCropIds, lockCropGps, unlockCropDirectly, addCrop, editCrop, removeCrop, updateCropStage, recordSale } = useCrops();
+  const { cropFields, cropHistory, salesRecords, cropGpsDataMap, unlockedCropIds, lockCropGps, unlockCropDirectly, addCrop, editCrop, removeCrop, updateCropStage, recordSale, recordCompletionReview } = useCrops();
   const { plan, limits } = useFarmerPlan();
   const isPaid = plan !== 'FREE';
 
@@ -84,6 +86,8 @@ export default function FarmListScreen() {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [selectedCropForGps, setSelectedCropForGps] = useState<RegisteredCropField | null>(null);
+  const [completionReviewModalVisible, setCompletionReviewModalVisible] = useState(false);
+  const [cropToComplete, setCropToComplete] = useState<RegisteredCropField | null>(null);
 
   // Quick Payment Voucher Modal State
   const [showPaymentVoucherModal, setShowPaymentVoucherModal] = useState(false);
@@ -311,8 +315,22 @@ export default function FarmListScreen() {
   const confirmCropStageChange = async () => {
     if (!pendingStageUpdate) return;
     tap();
+    const targetStage = pendingStageUpdate.targetStage;
+    const targetCropId = pendingStageUpdate.id;
+    setStageConfirmModalVisible(false);
+    setPendingStageUpdate(null);
+
+    if (targetStage === 'COMPLETED') {
+      const cropItem = cropFields.find((c) => c.id === targetCropId);
+      if (cropItem) {
+        setCropToComplete(cropItem);
+        setCompletionReviewModalVisible(true);
+        return;
+      }
+    }
+
     try {
-      await updateCropStage(pendingStageUpdate.id, pendingStageUpdate.targetStage);
+      await updateCropStage(targetCropId, targetStage);
     } catch (err: any) {
       const message = err?.response?.data?.message ?? 'Could not update crop stage. Please try again.';
       if (Platform.OS === 'web') {
@@ -321,8 +339,17 @@ export default function FarmListScreen() {
         Alert.alert('Could Not Update Stage', message);
       }
     }
-    setStageConfirmModalVisible(false);
-    setPendingStageUpdate(null);
+  };
+
+  const handleReviewSubmitted = async (cropId: string, review: CropCompletionReview) => {
+    try {
+      await recordCompletionReview(cropId, review);
+      await updateCropStage(cropId, 'COMPLETED');
+    } catch (err: any) {
+      const message = err?.response?.data?.message ?? 'Could not submit completion review.';
+      if (Platform.OS === 'web') alert(message);
+      else Alert.alert('Review Error', message);
+    }
   };
 
   const openSaleModal = (crop: RegisteredCropField, isFinalCompletion: boolean = false) => {
@@ -1039,6 +1066,44 @@ export default function FarmListScreen() {
                         </View>
                       </View>
 
+                      {/* Crop Completion Review & Doctor Grading Details */}
+                      {selectedHistoryCrop.completionReview ? (
+                        <View style={{ marginTop: 12, backgroundColor: '#f0fdf4', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#bbf7d0' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                            <Ionicons name="ribbon" size={16} color="#16a34a" />
+                            <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#16a34a' }}>
+                              Farmer Completion Audit & Rating
+                            </Text>
+                          </View>
+                          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>
+                            App Benefit Rating: {'⭐'.repeat(selectedHistoryCrop.completionReview.farmskingRating || 5)} ({selectedHistoryCrop.completionReview.farmskingRating || 5}/5 Stars)
+                          </Text>
+                          {selectedHistoryCrop.completionReview.farmskingBenefitAmount ? (
+                            <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#15803d', marginTop: 2 }}>
+                              Estimated Extra Profit / Benefit: <Text style={{ fontFamily: FONT.bold, color: '#16a34a' }}>{selectedHistoryCrop.completionReview.farmskingBenefitAmount}</Text>
+                            </Text>
+                          ) : null}
+                          {selectedHistoryCrop.completionReview.farmskingFeedback ? (
+                            <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#475569', marginTop: 4 }}>
+                              💬 "{selectedHistoryCrop.completionReview.farmskingFeedback}"
+                            </Text>
+                          ) : null}
+
+                          {selectedHistoryCrop.completionReview.doctorRating ? (
+                            <View style={{ marginTop: 10, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#dcfce7' }}>
+                              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0369a1' }}>
+                                🩺 Doctor Rating: {'⭐'.repeat(selectedHistoryCrop.completionReview.doctorRating)} (Grade: {selectedHistoryCrop.completionReview.doctorGrade || 'EXCELLENT'})
+                              </Text>
+                              {selectedHistoryCrop.completionReview.doctorFeedback ? (
+                                <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#334155', marginTop: 2 }}>
+                                  Doctor Review: "{selectedHistoryCrop.completionReview.doctorFeedback}"
+                                </Text>
+                              ) : null}
+                            </View>
+                          ) : null}
+                        </View>
+                      ) : null}
+
                       {/* Itemized Sale Audit Logs Breakdown for Subscribed Paid Farmers */}
                       <View style={styles.salesBreakdownWrap}>
                         <View style={styles.salesBreakdownHeaderRow}>
@@ -1187,6 +1252,17 @@ export default function FarmListScreen() {
         parties={parties}
         labourWorkers={labourWorkers}
         onClose={() => setShowPaymentVoucherModal(false)}
+      />
+
+      {/* Crop Completion Review & Doctor Grading Modal */}
+      <CropCompletionReviewModal
+        visible={completionReviewModalVisible}
+        crop={cropToComplete}
+        onClose={() => {
+          setCompletionReviewModalVisible(false);
+          setCropToComplete(null);
+        }}
+        onSubmitReview={handleReviewSubmitted}
       />
 
     </View>

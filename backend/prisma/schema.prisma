@@ -210,6 +210,7 @@ enum CouponKind {
 enum PlanCouponCategory {
   FARMER_PLAN
   ADVISOR_PLAN
+  DOCTOR_CONSULTATION
 }
 
 enum PartyType {
@@ -1987,6 +1988,12 @@ model FarmerPlanCoupon {
   usedByFarmer              User?                  @relation("FarmerPlanCouponsUsedBy", fields: [usedByFarmerId], references: [id], onDelete: SetNull)
   expiresAt                 DateTime? // coupon validity (optional)
   generationCostAmount      Decimal?               @db.Decimal(10, 2) // snapshot of what was debited from the assignee's wallet at creation time, if any
+  doctorFeeAmount           Decimal?               @db.Decimal(10, 2)
+  adminPlatformFeePercent   Decimal?               @db.Decimal(5, 2)
+  adminPlatformFeeAmount    Decimal?               @db.Decimal(10, 2)
+  includeMembership         Boolean                @default(false)
+  includedMembershipPlan    FarmerSubscriptionPlan?
+  includedMembershipDays    Int?
   createdById               String
   createdBy                 User                   @relation("FarmerPlanCouponsCreatedBy", fields: [createdById], references: [id])
   createdByRole             Role?

@@ -300,3 +300,25 @@ export async function deleteUserByAdmin(id: string): Promise<{ success: boolean;
   const { data } = await apiClient.delete<{ success: boolean; message: string }>(`/users/${id}`);
   return data;
 }
+
+export interface CreateAssistantDoctorPayload {
+  name: string;
+  mobile: string;
+  password?: string;
+  specialization?: string;
+  doctorConsultationFee?: number;
+  qualification?: string;
+  profileTitle?: string;
+  advisorType?: 'FARM' | 'GARDEN';
+}
+
+export async function createAssistantDoctor(payload: CreateAssistantDoctorPayload): Promise<{ user: AdminUser; tempPassword?: string }> {
+  const { data } = await apiClient.post<{ user: AdminUser; tempPassword?: string }>('/users/my-assistant-doctors', payload);
+  return data;
+}
+
+export async function getMyAssistantDoctors(): Promise<AdminUser[]> {
+  const { data } = await apiClient.get<AdminUser[]>('/users/my-assistant-doctors');
+  return data;
+}
+

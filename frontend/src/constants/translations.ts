@@ -40,7 +40,7 @@ export const translations = {
 
     tabCrops: 'Crops',
     tabRecords: 'Accounts',
-    tabMyAdvisor: 'My Advisor',
+    tabMyAdvisor: 'Crop Doctor',
     tabCategories: 'Categories',
     tabCart: 'Cart',
     tabOrders: 'Orders',
@@ -161,7 +161,7 @@ export const translations = {
 
     tabCrops: 'Crops',
     tabRecords: 'Accounts',
-    tabMyAdvisor: 'My Advisor',
+    tabMyAdvisor: 'Crop Doctor',
     tabCategories: 'Categories',
     tabCart: 'Cart',
     tabOrders: 'Orders',

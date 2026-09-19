@@ -9,6 +9,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthUser } from '../../common/types/auth-user.type';
 import { UsersService } from './users.service';
 import { CreateAdvisorDto } from './dto/create-advisor.dto';
+import { CreateAssistantDoctorDto } from './dto/create-assistant-doctor.dto';
 import { CreateStaffDto } from './dto/create-staff.dto';
 import { ListUsersQueryDto } from './dto/list-users-query.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
@@ -245,6 +246,19 @@ export class UsersController {
   createAdvisor(@Body() dto: CreateAdvisorDto) {
     return this.usersService.createAdvisor(dto);
   }
+
+  @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
+  @Post('my-assistant-doctors')
+  createAssistantDoctor(@CurrentUser() user: AuthUser, @Body() dto: CreateAssistantDoctorDto) {
+    return this.usersService.createAssistantDoctorBySenior(user, dto);
+  }
+
+  @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN)
+  @Get('my-assistant-doctors')
+  getMyAssistantDoctors(@CurrentUser() user: AuthUser) {
+    return this.usersService.getMyAssistantDoctors(user);
+  }
+
 
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Post('operators')

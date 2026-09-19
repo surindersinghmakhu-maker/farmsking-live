@@ -227,6 +227,9 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
         village: true,
         district: true,
         state: true,
+        isSeniorDoctor: true,
+        seniorDoctorId: true,
+        doctorConsultationFee: true,
         _count: { select: { advisorAssignmentsAsAdvisor: { where: { status: AdvisorAssignmentStatus.ACTIVE } } } },
       },
       orderBy: { createdAt: 'asc' },
@@ -420,13 +423,18 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
     if (amount <= 0) return;
 
     const farmer = await this.prisma.user.findUnique({ where: { id: farmerId }, select: { name: true, kingId: true } });
+    const advisor = await this.prisma.user.findUnique({ where: { id: advisorId }, select: { id: true, seniorDoctorId: true, name: true } });
+    const recipientId = advisor?.seniorDoctorId || advisorId;
     const farmerLabel = farmer ? `${farmer.name}${farmer.kingId ? ` (ID: ${farmer.kingId})` : ''}` : 'a farmer';
+    const advisorLabel = advisor?.seniorDoctorId ? ` (via Assistant Doctor ${advisor.name})` : '';
+
     await this.walletService.credit(
-      advisorId,
+      recipientId,
       amount,
-      `Advisor fee for ${plan.plan} plan — accepted ${farmerLabel} on ${new Date().toLocaleDateString('en-IN')}`,
+      `Advisor fee for ${plan.plan} plan — accepted ${farmerLabel}${advisorLabel} on ${new Date().toLocaleDateString('en-IN')}`,
       { relatedUserId: farmerId },
     );
+
   }
 
   /** Advisor rejects a PENDING hire request — the farmer can request another (or the same) advisor again afterwards. */

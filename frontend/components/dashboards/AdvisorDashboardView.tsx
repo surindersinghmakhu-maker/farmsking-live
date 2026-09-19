@@ -117,6 +117,9 @@ export const AdvisorDashboardView: React.FC = () => {
   const [problemResponseText, setProblemResponseText] = useState('');
   const [problemProductText, setProblemProductText] = useState('');
 
+  const [pendingFarmerToConfirm, setPendingFarmerToConfirm] = useState<any | null>(null);
+  const [selectedCropCareTier, setSelectedCropCareTier] = useState<'CROP_ADVISOR_5' | 'CROP_DOCTOR_5' | 'CROP_DOCTOR_10'>('CROP_ADVISOR_5');
+
   const RESOLVED_PAGE_SIZE = 10;
   const totalResolvedPages = Math.ceil(resolvedProblems.length / RESOLVED_PAGE_SIZE) || 1;
   const paginatedResolvedProblems = useMemo(() => {
@@ -567,10 +570,14 @@ export const AdvisorDashboardView: React.FC = () => {
                                 <TouchableOpacity
                                   style={[styles.acceptCropBtn, { paddingHorizontal: 14, height: 34 }]}
                                   disabled={acceptAssignment.isPending || rejectAssignment.isPending}
-                                  onPress={() => acceptAssignment.mutate(req.id)}
+                                  onPress={() => {
+                                    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                    setSelectedCropCareTier((user as any)?.isSeniorDoctor ? 'CROP_DOCTOR_5' : 'CROP_ADVISOR_5');
+                                    setPendingFarmerToConfirm(req);
+                                  }}
                                 >
                                   <Ionicons name="checkmark-circle" size={15} color="#ffffff" />
-                                  <Text style={styles.acceptCropBtnText}>Accept Farmer</Text>
+                                  <Text style={styles.acceptCropBtnText}>Confirm & Attach</Text>
                                 </TouchableOpacity>
                               </View>
                             </View>
@@ -719,6 +726,203 @@ export const AdvisorDashboardView: React.FC = () => {
           </View>
         </View>
       </ScrollView>
+
+      {/* CROP CARE COUPON ASSIGNMENT & FARMER CONFIRMATION MODAL */}
+      <Modal
+        visible={!!pendingFarmerToConfirm}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPendingFarmerToConfirm(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.proModalCard, { maxWidth: 460 }]}>
+            <LinearGradient colors={['#1e3a8a', '#1d4ed8']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.proModalHeaderBanner}>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={styles.proModalHeaderTag}>CROP CARE MEMBERSHIP PLAN</Text>
+                <Text style={styles.proModalHeaderTitle} numberOfLines={1}>
+                  🩺 Confirm & Attach Farmer
+                </Text>
+              </View>
+              <TouchableOpacity style={styles.proModalCloseBtn} onPress={() => setPendingFarmerToConfirm(null)}>
+                <Ionicons name="close" size={16} color="#ffffff" />
+              </TouchableOpacity>
+            </LinearGradient>
+
+            {pendingFarmerToConfirm ? (
+              <View style={{ padding: 16, gap: 14 }}>
+                {/* Farmer Highlight */}
+                <View style={[styles.proFarmerStrip, { backgroundColor: '#f8fafc', borderLeftWidth: 3, borderLeftColor: '#2563eb' }]}>
+                  <View style={{ flex: 1, gap: 2 }}>
+                    <Text style={styles.proFarmerName}>
+                      👨‍🌾 <Text style={{ fontFamily: FONT.extraBold, color: '#0f172a' }}>{pendingFarmerToConfirm.farmer?.name || 'Farmer'}</Text>
+                    </Text>
+                    <Text style={styles.proFarmerMeta} numberOfLines={1}>
+                      📞 {pendingFarmerToConfirm.farmer?.mobile || 'No Mobile'} {pendingFarmerToConfirm.farmer?.kingId ? `· King ID: ${pendingFarmerToConfirm.farmer.kingId}` : ''}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Plan Selection Header */}
+                <View style={{ gap: 4 }}>
+                  <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' }}>
+                    Select "Crop Care" Coupon Plan:
+                  </Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
+                    {(user as any)?.isSeniorDoctor
+                      ? 'As a Crop Doctor (Senior Specialist), you have 2 Crop Care plan options:'
+                      : 'As a Crop Advisor, assign the 5-Crop Crop Care plan:'}
+                  </Text>
+                </View>
+
+                {/* Plan Options */}
+                <View style={{ gap: 10 }}>
+                    {(user as any)?.isSeniorDoctor ? (
+                    <>
+                      {/* Option 1: Senior Doctor 5 Crops */}
+                      <TouchableOpacity
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 12,
+                          padding: 12,
+                          borderRadius: RADIUS.md,
+                          borderWidth: 2,
+                          borderColor: selectedCropCareTier === 'CROP_DOCTOR_5' ? '#2563eb' : '#e2e8f0',
+                          backgroundColor: selectedCropCareTier === 'CROP_DOCTOR_5' ? '#eff6ff' : '#ffffff',
+                        }}
+                        activeOpacity={0.85}
+                        onPress={() => setSelectedCropCareTier('CROP_DOCTOR_5')}
+                      >
+                        <Ionicons
+                          name={selectedCropCareTier === 'CROP_DOCTOR_5' ? 'radio-button-on' : 'radio-button-off'}
+                          size={20}
+                          color={selectedCropCareTier === 'CROP_DOCTOR_5' ? '#2563eb' : '#94a3b8'}
+                        />
+                        <View style={{ flex: 1, gap: 2 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#1e3a8a' }}>
+                              🩺 Crop Doctor (5 Crops)
+                            </Text>
+                            <View style={{ backgroundColor: '#fef08a', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6 }}>
+                              <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#854d0e' }}>PRO 5 CROPS</Text>
+                            </View>
+                          </View>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#475569' }}>
+                            Up to 5 active crops · Senior Doctor 1-on-1 Guidance
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+
+                      {/* Option 2: Senior Doctor 10 Crops */}
+                      <TouchableOpacity
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 12,
+                          padding: 12,
+                          borderRadius: RADIUS.md,
+                          borderWidth: 2,
+                          borderColor: selectedCropCareTier === 'CROP_DOCTOR_10' ? '#2563eb' : '#e2e8f0',
+                          backgroundColor: selectedCropCareTier === 'CROP_DOCTOR_10' ? '#eff6ff' : '#ffffff',
+                        }}
+                        activeOpacity={0.85}
+                        onPress={() => setSelectedCropCareTier('CROP_DOCTOR_10')}
+                      >
+                        <Ionicons
+                          name={selectedCropCareTier === 'CROP_DOCTOR_10' ? 'radio-button-on' : 'radio-button-off'}
+                          size={20}
+                          color={selectedCropCareTier === 'CROP_DOCTOR_10' ? '#2563eb' : '#94a3b8'}
+                        />
+                        <View style={{ flex: 1, gap: 2 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#1e3a8a' }}>
+                              👑 Crop Doctor (10 Crops)
+                            </Text>
+                            <View style={{ backgroundColor: '#fbcfe8', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6 }}>
+                              <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#9d174d' }}>VIP 10 CROPS</Text>
+                            </View>
+                          </View>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#475569' }}>
+                            Up to 10 active crops · 360° VIP Doctor Advisory Care
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    /* Crop Advisor Option */
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 12,
+                        padding: 12,
+                        borderRadius: RADIUS.md,
+                        borderWidth: 2,
+                        borderColor: '#16a34a',
+                        backgroundColor: '#f0fdf4',
+                      }}
+                      activeOpacity={1}
+                    >
+                      <Ionicons name="checkmark-circle" size={20} color="#16a34a" />
+                      <View style={{ flex: 1, gap: 2 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#14532d' }}>
+                            🌱 Crop Advisor (5 Crops)
+                          </Text>
+                          <View style={{ backgroundColor: '#bbf7d0', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6 }}>
+                            <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#15803d' }}>5 CROPS</Text>
+                          </View>
+                        </View>
+                        <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#166534' }}>
+                          Up to 5 active crops · Personalized Crop Advisor Support
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {/* Submit Confirmation Button */}
+                <TouchableOpacity
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    backgroundColor: '#16a34a',
+                    paddingVertical: 12,
+                    borderRadius: RADIUS.md,
+                    marginTop: 4,
+                  }}
+                  activeOpacity={0.85}
+                  disabled={acceptAssignment.isPending}
+                  onPress={() => {
+                    const reqId = pendingFarmerToConfirm.id;
+                    const farmerName = pendingFarmerToConfirm.farmer?.name || 'Farmer';
+                    acceptAssignment.mutate(reqId, {
+                      onSuccess: () => {
+                        setPendingFarmerToConfirm(null);
+                        const msg = `✅ ${farmerName} has been attached and assigned the Crop Care plan!`;
+                        Platform.OS === 'web' ? alert(msg) : Alert.alert('Farmer Attached ✅', msg);
+                      },
+                    });
+                  }}
+                >
+                  {acceptAssignment.isPending ? (
+                    <ActivityIndicator color="#ffffff" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="checkmark-done-circle" size={18} color="#ffffff" />
+                      <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>
+                        Confirm Attachment & Assign Crop Care Plan
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            ) : null}
+          </View>
+        </View>
+      </Modal>
 
       {/* Fullscreen Photo Preview Modal */}
       <Modal visible={!!selectedPreviewImage} transparent animationType="fade" onRequestClose={() => setSelectedPreviewImage(null)}>

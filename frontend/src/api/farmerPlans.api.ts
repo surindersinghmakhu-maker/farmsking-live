@@ -174,9 +174,14 @@ export async function listMineFarmerPlanCoupons(): Promise<FarmerPlanCoupon[]> {
 }
 
 export interface GenerateAdvisorCouponPayload {
+  category?: 'FARMER_PLAN' | 'ADVISOR_PLAN' | 'DOCTOR_CONSULTATION';
   plan: FarmerPlanType;
   daysGranted: number;
   quantity?: number;
+  doctorFeeAmount?: number;
+  includeMembership?: boolean;
+  includedMembershipPlan?: FarmerPlanType;
+  includedMembershipDays?: number;
   assignedFarmerId?: string;
   assignedBusinessPartnerId?: string;
 }

@@ -69,7 +69,7 @@ export class SubscriptionsService {
         farmerPlan.endDate > now
       );
       if (!isSoftwarePlanActive) {
-        throw new BadRequestException('You must have an active Paid Software Plan before hiring an Advisor.');
+        throw new BadRequestException('You must have an active Paid Software Membership before hiring an Advisor.');
       }
     }
 
@@ -82,7 +82,7 @@ export class SubscriptionsService {
 
     const plan = await this.prisma.advisorPlan.findFirst({ where: { id: dto.planId, isActive: true } });
     if (!plan) {
-      throw new NotFoundException('Advisor plan not found.');
+      throw new NotFoundException('Advisor membership not found.');
     }
 
     const now = new Date();

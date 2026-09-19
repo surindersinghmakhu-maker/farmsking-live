@@ -371,7 +371,7 @@ export function FarmerPlanUpgradeModal({
       <View style={styles.overlay}>
         <View style={styles.card}>
           <View style={styles.headerRow}>
-            <Text style={styles.title}>{tabMode === 'GET_COUPON' ? 'Get Plan Coupon' : 'Upgrade Plan'}</Text>
+            <Text style={styles.title}>{tabMode === 'GET_COUPON' ? 'Get Membership Coupon' : 'Upgrade Membership'}</Text>
             <TouchableOpacity onPress={closeAndReset}>
               <Ionicons name="close-circle" size={24} color="#64748b" />
             </TouchableOpacity>
@@ -403,7 +403,7 @@ export function FarmerPlanUpgradeModal({
               <View style={styles.successBox}>
                 <Ionicons name="checkmark-circle" size={20} color="#16a34a" />
                 <Text style={styles.successText}>
-                  {result.plan.plan} plan active! New expiry: {new Date(result.newEndDate).toLocaleDateString('en-IN')}
+                  {result.plan.plan} membership active! New expiry: {new Date(result.newEndDate).toLocaleDateString('en-IN')}
                   {result.advisorHired ? ' A Farm Advisor has been assigned to you.' : ''}
                   {selectedAdvisorId ? ' Your hire request has been sent to the selected advisor.' : ''}
                 </Text>
@@ -417,7 +417,7 @@ export function FarmerPlanUpgradeModal({
               <View style={styles.successBox}>
                 <Ionicons name="pricetag" size={20} color="#16a34a" />
                 <Text style={styles.successText}>
-                  This code activates the {previewResult.plan} plan for {previewResult.daysGranted} day(s). New expiry:{' '}
+                  This code activates the {previewResult.plan} membership for {previewResult.daysGranted} day(s). New expiry:{' '}
                   {new Date(previewResult.newEndDate).toLocaleDateString('en-IN')}.
                   {previewResult.includesAdvisor ? ' Includes a Farm Advisor.' : ''}
                 </Text>
@@ -444,9 +444,21 @@ export function FarmerPlanUpgradeModal({
                             onPress={() => setSelectedAdvisorId(isSelected ? null : advisor.id)}
                           >
                             <View style={{ flex: 1 }}>
-                              <Text style={styles.advisorPickName}>{advisor.name}</Text>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                <Text style={styles.advisorPickName}>{advisor.name}</Text>
+                                {advisor.isSeniorDoctor ? (
+                                  <View style={{ backgroundColor: '#fef3c7', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 10 }}>
+                                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#b45309' }}>👴 Senior Doctor</Text>
+                                  </View>
+                                ) : (
+                                  <View style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 10 }}>
+                                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#475569' }}>👨‍⚕️ Assistant Doctor</Text>
+                                  </View>
+                                )}
+                              </View>
                               <Text style={styles.advisorPickMeta}>
-                                {advisor.specialization || 'Farm Advisor'}
+                                🏷️ {advisor.specialization || 'General Crop Specialist'}
+                                {advisor.doctorConsultationFee ? ` · Fee: ₹${advisor.doctorConsultationFee}` : ''}
                                 {advisor.yearsExperience ? ` · ${advisor.yearsExperience} yrs exp` : ''} · {advisor.activeFarmerCount} farmers
                               </Text>
                             </View>
@@ -473,9 +485,9 @@ export function FarmerPlanUpgradeModal({
               </TouchableOpacity>
             </ScrollView>
           ) : tabMode === 'GET_COUPON' ? (
-            /* GET PLAN COUPON FLOW: Category + Sub-category Plan Selection + Generate UPI QR Code */
+            /* GET MEMBERSHIP COUPON FLOW: Category + Sub-category Plan Selection + Generate UPI QR Code */
             <View style={{ gap: 10 }}>
-              <Text style={styles.label}>Select Plan Category:</Text>
+              <Text style={styles.label}>Select Membership Category:</Text>
               <View style={styles.chipRow}>
                 {(['FARMER', 'ADVISOR'] as const).map((cat) => (
                   <TouchableOpacity
@@ -496,13 +508,13 @@ export function FarmerPlanUpgradeModal({
                     }}
                   >
                     <Text style={[styles.partnerChipText, planCategory === cat && { color: '#ffffff' }]}>
-                      {cat === 'FARMER' ? '🌾 Farmer Plan' : '🎓 Advisor Plan'}
+                      {cat === 'FARMER' ? '🌾 Farmer Membership' : '🎓 Advisor Membership'}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
-              <Text style={styles.label}>Select Plan Option:</Text>
+              <Text style={styles.label}>Select Membership Option:</Text>
               <View style={{ gap: 8 }}>
                 {(planCategory === 'FARMER'
                   ? [
@@ -641,9 +653,9 @@ export function FarmerPlanUpgradeModal({
               </TouchableOpacity>
             </View>
           ) : (
-            /* REDEEM CODE / UPGRADE PLAN FLOW: Enter Coupon Code */
+            /* REDEEM CODE / UPGRADE MEMBERSHIP FLOW: Enter Coupon Code */
             <View style={{ gap: 12 }}>
-              <Text style={styles.label}>Enter your plan coupon code to upgrade or extend your plan:</Text>
+              <Text style={styles.label}>Enter your membership coupon code to upgrade or extend your membership:</Text>
 
               <TextInput
                 ref={codeInputRef}
@@ -661,12 +673,12 @@ export function FarmerPlanUpgradeModal({
 
               <TouchableOpacity style={styles.seePlansBtn} onPress={() => setTabMode('GET_COUPON')}>
                 <Ionicons name="qr-code-outline" size={14} color={theme.primary} />
-                <Text style={styles.seePlansBtnText}>Don't have a coupon code? Get Plan Coupon via UPI</Text>
+                <Text style={styles.seePlansBtnText}>Don't have a coupon code? Get Membership Coupon via UPI</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.seePlansBtn} onPress={() => setShowChart((v) => !v)}>
                 <Ionicons name="stats-chart-outline" size={14} color={theme.primary} />
-                <Text style={styles.seePlansBtnText}>{showChart ? 'Hide Plan Features' : 'Compare Plan Features'}</Text>
+                <Text style={styles.seePlansBtnText}>{showChart ? 'Hide Membership Features' : 'Compare Membership Features'}</Text>
                 <Ionicons name={showChart ? 'chevron-up' : 'chevron-down'} size={14} color={theme.primary} />
               </TouchableOpacity>
 

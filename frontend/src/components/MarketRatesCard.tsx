@@ -288,40 +288,22 @@ export function MarketRatesCard() {
       ctx.fillText('🌾 MARKET CROP RATES CARD 🌾', 320, 92);
       ctx.textAlign = 'left';
 
-      // Issuer (Left) & Location (Right) Side-by-Side Boxes
-      // Left Box (Green)
-      ctx.fillStyle = '#16a34a';
-      ctx.fillRect(24, 116, 284, 24);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 11px sans-serif';
-      ctx.fillText('👨‍🌾 ISSUER (FARMER)', 32, 132);
-
-      ctx.strokeStyle = '#16a34a';
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(24, 116, 284, 75);
-      ctx.fillStyle = '#0f172a';
-      ctx.font = 'bold 13px sans-serif';
-      ctx.fillText(user?.farmName || user?.name || 'Surinder Agro Farm', 32, 158);
-      ctx.fillStyle = '#475569';
-      ctx.font = '11px sans-serif';
-      ctx.fillText(`📱 ${user?.farmMobile || user?.mobile || 'Verified Farmer'}`, 32, 176);
-
-      // Right Box (Red)
+      // Market / Location Full Width Box (Red)
       ctx.fillStyle = '#dc2626';
-      ctx.fillRect(332, 116, 284, 24);
+      ctx.fillRect(24, 116, 592, 24);
       ctx.fillStyle = '#ffffff';
       ctx.font = 'bold 11px sans-serif';
-      ctx.fillText('🏛️ MARKET / LOCATION', 340, 132);
+      ctx.fillText('🏛️ MARKET / LOCATION', 32, 132);
 
       ctx.strokeStyle = '#dc2626';
       ctx.lineWidth = 1.5;
-      ctx.strokeRect(332, 116, 284, 75);
+      ctx.strokeRect(24, 116, 592, 75);
       ctx.fillStyle = '#0f172a';
       ctx.font = 'bold 13px sans-serif';
-      ctx.fillText(`State: ${userState}`, 340, 158);
+      ctx.fillText(`State: ${userState}`, 32, 158);
       ctx.fillStyle = '#475569';
       ctx.font = '11px sans-serif';
-      ctx.fillText(`📍 ${user?.farmAddress || 'Punjab Mandi'}`, 340, 176);
+      ctx.fillText(`📍 ${user?.farmAddress || [user?.village, user?.district].filter(Boolean).join(', ') || 'Punjab Mandi'}`, 32, 176);
 
       // Main Amount Box (Red Border)
       const mainRate = crop.localAvgRate ?? crop.nationalAvgRate ?? 0;
@@ -673,24 +655,8 @@ export function MarketRatesCard() {
               <Text style={styles.posterRedPillText}>🌾 MARKET CROP RATES VOUCHER 🌾</Text>
             </View>
 
-            {/* Side-by-Side Issuer & Market Location Boxes */}
+            {/* Market Location Box */}
             <View style={styles.posterPartyGridRow}>
-              {/* Left Box: Issuer (Farmer) */}
-              <View style={[styles.posterSideBox, { borderColor: '#16a34a' }]}>
-                <View style={[styles.posterSideBoxHeader, { backgroundColor: '#16a34a' }]}>
-                  <Text style={styles.posterSideBoxHeaderTitle}>👨‍🌾 ISSUER (FARMER)</Text>
-                </View>
-                <View style={styles.posterSideBoxBody}>
-                  <Text style={styles.posterPartyNameBold} numberOfLines={1}>
-                    {user?.farmName || user?.name || 'Surinder Agro Farm'}
-                  </Text>
-                  <Text style={styles.posterPartySubText} numberOfLines={1}>
-                    📱 {user?.farmMobile || user?.mobile || 'Verified Farmer'}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Right Box: Market / Location */}
               <View style={[styles.posterSideBox, { borderColor: '#dc2626' }]}>
                 <View style={[styles.posterSideBoxHeader, { backgroundColor: '#dc2626' }]}>
                   <Text style={styles.posterSideBoxHeaderTitle}>🏛️ MARKET / LOCATION</Text>

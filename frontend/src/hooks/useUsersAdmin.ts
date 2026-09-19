@@ -122,3 +122,22 @@ export function useDeleteUser() {
     },
   });
 }
+
+export function useCreateAssistantDoctor() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: api.createAssistantDoctor,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-assistant-doctors'] });
+      queryClient.invalidateQueries({ queryKey: ['users', 'admin-list'] });
+    },
+  });
+}
+
+export function useMyAssistantDoctors() {
+  return useQuery({
+    queryKey: ['my-assistant-doctors'],
+    queryFn: api.getMyAssistantDoctors,
+  });
+}
+

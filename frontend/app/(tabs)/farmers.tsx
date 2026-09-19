@@ -6,6 +6,8 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
+import { useAuth } from '@/src/store/auth-context';
+import { useCreateAssistantDoctor, useMyAssistantDoctors } from '@/src/hooks/useUsersAdmin';
 import { useFarmersList, useFarmerDetails, useAcceptAssignment, useRejectAssignment } from '@/src/hooks/useAdvisorAssignments';
 import { useAssignedCropProblems, useRespondToCropProblem } from '@/src/hooks/useCropProblems';
 import { useMyCallRequests, useResolveCallRequest } from '@/src/hooks/useCallRequests';
@@ -20,7 +22,7 @@ import { useUserWeather } from '@/src/hooks/useWeather';
 import { apiClient, resolveMediaUrl } from '@/src/api/client';
 import { CropProblem, SprayScheduleItem } from '@/src/types/api';
 
-type FarmSubTab = 'PLOTS' | 'PROBLEMS' | 'CALL_REQUESTS';
+type FarmSubTab = 'PLOTS' | 'PROBLEMS' | 'CALL_REQUESTS' | 'ASSISTANTS';
 
 const theme = RoleThemes.FARM_ADVISOR;
 

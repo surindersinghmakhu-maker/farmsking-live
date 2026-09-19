@@ -60,3 +60,9 @@ export async function rateCropProblem(id: string, payload: RateCropProblemPayloa
   const { data } = await apiClient.patch<CropProblem>(`/crop-problems/${id}/rate`, payload);
   return data;
 }
+
+export async function forwardCropProblemToSeniorDoctor(id: string): Promise<CropProblem> {
+  const { data } = await apiClient.post<CropProblem>(`/crop-problems/${id}/forward-to-senior`);
+  return data;
+}
+

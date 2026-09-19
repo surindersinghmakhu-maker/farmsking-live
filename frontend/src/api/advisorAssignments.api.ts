@@ -40,7 +40,7 @@ export async function getMyAdvisor(): Promise<AdvisorAssignment | null> {
 }
 
 /** Farmer/Gardener: browse advisors of the matching type they could choose. */
-/** Advisor nudges a formerly-assigned (now inactive) farmer to renew their plan. */
+/** Advisor nudges a formerly-assigned (now inactive) farmer to renew their membership. */
 export async function sendRenewalReminder(farmerId: string): Promise<{ success: boolean }> {
   const { data } = await apiClient.post<{ success: boolean }>(`/advisor-assignments/farmers/${farmerId}/renewal-reminder`);
   return data;

@@ -89,7 +89,7 @@ export function RedeemForFarmerModal({ visible, onClose, theme }: { visible: boo
               <View style={styles.successBox}>
                 <Ionicons name="checkmark-circle" size={20} color="#16a34a" />
                 <Text style={styles.successText}>
-                  {result.plan.plan} plan active for {farmer?.name}! New expiry: {new Date(result.newEndDate).toLocaleDateString('en-IN')}
+                  {result.plan.plan} membership active for {farmer?.name}! New expiry: {new Date(result.newEndDate).toLocaleDateString('en-IN')}
                   {result.advisorHired ? ' A Farm Advisor has been assigned.' : ''}
                 </Text>
               </View>
@@ -103,8 +103,8 @@ export function RedeemForFarmerModal({ visible, onClose, theme }: { visible: boo
                 <Ionicons name="pricetag" size={20} color="#16a34a" />
                 <Text style={styles.successText}>
                   {previewResult.resultPlan !== previewResult.plan
-                    ? `This code adds ${previewResult.daysGranted} day(s) to ${farmer?.name}'s ${previewResult.resultPlan} plan.`
-                    : `This code activates the ${previewResult.plan} plan for ${farmer?.name}, ${previewResult.daysGranted} day(s).`}
+                    ? `This code adds ${previewResult.daysGranted} day(s) to ${farmer?.name}'s ${previewResult.resultPlan} membership.`
+                    : `This code activates the ${previewResult.plan} membership for ${farmer?.name}, ${previewResult.daysGranted} day(s).`}
                   {' '}New expiry: {new Date(previewResult.newEndDate).toLocaleDateString('en-IN')}.
                   {previewResult.includesAdvisor ? ' Includes a Farm Advisor.' : ''}
                 </Text>
@@ -113,14 +113,14 @@ export function RedeemForFarmerModal({ visible, onClose, theme }: { visible: boo
                 <View style={styles.warningBox}>
                   <Ionicons name="alert-circle" size={18} color="#b45309" />
                   <Text style={styles.warningText}>
-                    {farmer?.name} already has the {previewResult.resultPlan} plan active, higher than this {previewResult.plan} code — their plan won't be downgraded, this code's {previewResult.daysGranted} day(s) will just be added to their current {previewResult.resultPlan} plan.
+                    {farmer?.name} already has the {previewResult.resultPlan} membership active, higher than this {previewResult.plan} code — their membership won't be downgraded, this code's {previewResult.daysGranted} day(s) will just be added to their current {previewResult.resultPlan} membership.
                   </Text>
                 </View>
               ) : previewResult.plan === previewResult.currentPlan ? (
                 <View style={styles.warningBox}>
                   <Ionicons name="alert-circle" size={18} color="#b45309" />
                   <Text style={styles.warningText}>
-                    {farmer?.name} already has the {previewResult.plan} plan active — applying this code won't change their plan, it will just add {previewResult.daysGranted} day(s) to their current validity.
+                    {farmer?.name} already has the {previewResult.plan} membership active — applying this code won't change their membership, it will just add {previewResult.daysGranted} day(s) to their current validity.
                   </Text>
                 </View>
               ) : null}
@@ -138,7 +138,7 @@ export function RedeemForFarmerModal({ visible, onClose, theme }: { visible: boo
                   <Text style={[styles.changeText, { color: theme.primary }]}>Change</Text>
                 </TouchableOpacity>
               </View>
-              <Text style={styles.label}>Enter the plan coupon code</Text>
+              <Text style={styles.label}>Enter the membership coupon code</Text>
               <TextInput
                 style={styles.input}
                 placeholder="e.g. P738610"

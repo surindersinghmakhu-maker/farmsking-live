@@ -639,45 +639,89 @@ export default function MarketScreen() {
               No Farm Advisor is currently available. Please try again later.
             </Text>
           ) : (
-            <View style={{ gap: 10, paddingHorizontal: SPACING.lg }}>
-              {availableAdvisors.map((advisor) => (
-                <View key={advisor.id} style={[styles.advisorPickCard, premiumShadow(theme.primary, 'sm')]}>
-                  <View style={{ position: 'relative' }}>
-                    <Image source={{ uri: resolveMediaUrl(advisor.photoUrl) || FALLBACK_ADVISOR.avatarUrl }} style={styles.advisorAvatar} />
-                    <View style={{ position: 'absolute', bottom: -1, right: -1, backgroundColor: '#ffffff', borderRadius: 8, padding: 1 }}>
-                      <Ionicons name="checkmark-circle" size={15} color="#10b981" />
-                    </View>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={styles.advisorName}>{advisor.name}</Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: '#fef9c3', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 6 }}>
-                        <Ionicons name="star" size={10} color="#ca8a04" />
-                        <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#854d0e' }}>4.9 ★</Text>
+            <View style={{ gap: 12, paddingHorizontal: SPACING.lg }}>
+              {availableAdvisors.map((advisor) => {
+                const isSenior = !!advisor.isSeniorDoctor;
+                const designation = isSenior ? 'Crop Doctor' : 'Crop Advisor';
+                const designationIcon = isSenior ? 'medical' : 'leaf';
+                const buttonLabel = isSenior ? 'Hire Doctor' : 'Hire Advisor';
+                const feeText = advisor.doctorConsultationFee ? ` ₹${advisor.doctorConsultationFee}` : '';
+
+                return (
+                  <View key={advisor.id} style={[styles.advisorPickCard, premiumShadow(theme.primary, 'sm'), { padding: 12, borderRadius: RADIUS.md }]}>
+                    <View style={{ position: 'relative' }}>
+                      <Image source={{ uri: resolveMediaUrl(advisor.photoUrl) || FALLBACK_ADVISOR.avatarUrl }} style={styles.advisorAvatar} />
+                      <View style={{ position: 'absolute', bottom: -1, right: -1, backgroundColor: '#ffffff', borderRadius: 8, padding: 1 }}>
+                        <Ionicons name="checkmark-circle" size={15} color="#10b981" />
                       </View>
                     </View>
-                    <Text style={styles.advisorSpec} numberOfLines={1}>
-                      {advisor.specialization || FALLBACK_ADVISOR.specialization}
-                    </Text>
-                    <Text style={styles.advisorPickMeta}>
-                      {advisor.yearsExperience ? `${advisor.yearsExperience} yrs exp · ` : ''}
-                      {advisor.activeFarmerCount} farmers
-                    </Text>
+
+                    <View style={{ flex: 1, gap: 3 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <Text style={styles.advisorName}>{advisor.name}</Text>
+
+                        {/* Designation Badge */}
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 3,
+                            backgroundColor: isSenior ? '#eff6ff' : '#f0fdf4',
+                            paddingHorizontal: 6,
+                            paddingVertical: 2,
+                            borderRadius: 6,
+                            borderWidth: 1,
+                            borderColor: isSenior ? '#bfdbfe' : '#bbf7d0',
+                          }}
+                        >
+                          <Ionicons name={designationIcon} size={10} color={isSenior ? '#1d4ed8' : '#15803d'} />
+                          <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: isSenior ? '#1d4ed8' : '#15803d' }}>
+                            {designation}
+                          </Text>
+                        </View>
+
+                        {/* Rating Badge */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: '#fef9c3', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 6 }}>
+                          <Ionicons name="star" size={10} color="#ca8a04" />
+                          <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#854d0e' }}>4.9 ★</Text>
+                        </View>
+                      </View>
+
+                      {/* Specialization & Specs */}
+                      <Text style={styles.advisorSpec} numberOfLines={1}>
+                        🔬 {advisor.specialization || FALLBACK_ADVISOR.specialization}
+                      </Text>
+
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <Text style={styles.advisorPickMeta}>
+                          {advisor.yearsExperience ? `👨‍⚕️ ${advisor.yearsExperience} yrs exp · ` : ''}
+                          👨‍🌾 {advisor.activeFarmerCount} active farmers
+                          {feeText ? ` · 💳 Fee:${feeText}` : ''}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.choosePickBtn,
+                        { backgroundColor: isSenior ? '#2563eb' : theme.primary, paddingHorizontal: 12 },
+                      ]}
+                      activeOpacity={0.85}
+                      disabled={chooseAdvisor.isPending}
+                      onPress={() => handleChooseAdvisor(advisor.id)}
+                    >
+                      {chooseAdvisor.isPending ? (
+                        <ActivityIndicator color="#ffffff" size="small" />
+                      ) : (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                          <Ionicons name="person-add-outline" size={13} color="#ffffff" />
+                          <Text style={styles.choosePickBtnText}>{buttonLabel}</Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity
-                    style={[styles.choosePickBtn, { backgroundColor: theme.primary }]}
-                    activeOpacity={0.85}
-                    disabled={chooseAdvisor.isPending}
-                    onPress={() => handleChooseAdvisor(advisor.id)}
-                  >
-                    {chooseAdvisor.isPending ? (
-                      <ActivityIndicator color="#ffffff" size="small" />
-                    ) : (
-                      <Text style={styles.choosePickBtnText}>Choose</Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              ))}
+                );
+              })}
             </View>
           )}
         </ScrollView>

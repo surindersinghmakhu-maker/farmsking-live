@@ -5,6 +5,7 @@ import * as argon2 from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
 import { WalletService } from '../wallet/wallet.service';
 import { CreateAdvisorDto } from './dto/create-advisor.dto';
+import { CreateAssistantDoctorDto } from './dto/create-assistant-doctor.dto';
 import { CreateStaffDto } from './dto/create-staff.dto';
 import { ListUsersQueryDto } from './dto/list-users-query.dto';
 import { UpdateFarmerProfileDto } from './dto/update-farmer-profile.dto';
@@ -232,6 +233,58 @@ export class UsersService implements OnModuleInit {
 
     return { user, tempPassword };
   }
+
+  async createAssistantDoctorBySenior(currentUser: AuthUser, dto: CreateAssistantDoctorDto) {
+    const senior = await this.prisma.user.findUnique({
+      where: { id: currentUser.id },
+      select: { id: true, isSeniorDoctor: true, role: true, name: true },
+    });
+
+    if (currentUser.role !== Role.SUPER_ADMIN && currentUser.role !== Role.ADMIN && !senior?.isSeniorDoctor) {
+      throw new ForbiddenException('Only Senior Doctors can create Assistant Doctors.');
+    }
+
+    const existing = await this.prisma.user.findUnique({ where: { mobile: dto.mobile } });
+    if (existing) {
+      throw new ConflictException('An account with this mobile number already exists.');
+    }
+
+    const initialPassword = dto.password?.trim() || generateTempPassword();
+    const passwordHash = await argon2.hash(initialPassword);
+    const kingId = await generateUniqueKingId(this.prisma);
+
+    const user = await this.prisma.user.create({
+      data: {
+        kingId,
+        mobile: dto.mobile,
+        passwordHash,
+        name: dto.name,
+        role: Role.ADVISOR,
+        roles: [Role.ADVISOR, Role.CUSTOMER],
+        advisorType: dto.advisorType ?? 'FARM',
+        isSeniorDoctor: false,
+        seniorDoctorId: currentUser.id,
+        doctorConsultationFee: dto.doctorConsultationFee ?? 300,
+        specialization: dto.specialization || 'General Crop Care',
+        qualification: dto.qualification || 'Assistant Crop Doctor',
+        profileTitle: dto.profileTitle || 'Assistant Doctor',
+      },
+      select: SAFE_USER_SELECT,
+    });
+
+    await provisionInviteCoupon(this.prisma, user.id);
+
+    return { user, tempPassword: initialPassword };
+  }
+
+  async getMyAssistantDoctors(currentUser: AuthUser) {
+    return this.prisma.user.findMany({
+      where: { seniorDoctorId: currentUser.id, deletedAt: null },
+      select: SAFE_USER_SELECT,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
 
   private async createStaff(dto: CreateStaffDto, role: Role) {
     const existing = await this.prisma.user.findUnique({ where: { mobile: dto.mobile } });

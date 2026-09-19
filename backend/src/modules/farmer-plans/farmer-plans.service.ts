@@ -86,6 +86,11 @@ export class FarmerPlansService implements OnModuleInit {
       { plan: FarmerSubscriptionPlan.SUPER, price: 2699, billingPeriodDays: 90, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: null, advisorIncluded: true },
       { plan: FarmerSubscriptionPlan.SUPER, price: 4999, billingPeriodDays: 180, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: null, advisorIncluded: true },
       { plan: FarmerSubscriptionPlan.SUPER, price: 8999, billingPeriodDays: 365, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: null, advisorIncluded: true },
+
+      // 🩺 3-Tier Crop Care Plans
+      { plan: FarmerSubscriptionPlan.SILVER, price: 999, billingPeriodDays: 365, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: 5, maxDoctorCrops: 5, advisorIncluded: true },
+      { plan: FarmerSubscriptionPlan.GOLD, price: 1999, billingPeriodDays: 365, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: 5, maxDoctorCrops: 5, advisorIncluded: true },
+      { plan: FarmerSubscriptionPlan.ROYAL, price: 3499, billingPeriodDays: 365, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: 10, maxDoctorCrops: 10, advisorIncluded: true },
     ];
     for (const d of defaults) {
       const existing = await this.prisma.farmerPlanPricing.findUnique({
@@ -100,6 +105,7 @@ export class FarmerPlansService implements OnModuleInit {
             partnerShareType: d.partnerShareType,
             partnerShareValue: d.partnerShareValue,
             maxActiveCrops: d.maxActiveCrops,
+            maxDoctorCrops: d.maxDoctorCrops ?? null,
             advisorIncluded: d.advisorIncluded,
           },
         });
@@ -285,7 +291,29 @@ export class FarmerPlansService implements OnModuleInit {
 
   async redeemCoupon(user: AuthUser, dto: RedeemFarmerPlanCouponDto) {
     const { coupon, targetFarmerId } = await this.resolveCouponAndFarmer(user, dto.code, dto.farmerId);
-    const result = await this.applyPlanChange(targetFarmerId, coupon.plan, coupon.daysGranted, coupon.id, dto.advisorId);
+
+    let effectivePlan = coupon.plan;
+    let effectiveDays = coupon.daysGranted;
+
+    if (coupon.includeMembership && coupon.includedMembershipPlan) {
+      effectivePlan = coupon.includedMembershipPlan;
+      if (coupon.includedMembershipDays) {
+        effectiveDays = coupon.includedMembershipDays;
+      }
+    }
+
+    const result = await this.applyPlanChange(targetFarmerId, effectivePlan, effectiveDays, coupon.id, dto.advisorId);
+
+    // If it's a Doctor Consultation Coupon or Doctor assigned coupon, ensure Doctor assignment + 5-10 Care Crops capability
+    if (coupon.category === PlanCouponCategory.DOCTOR_CONSULTATION || coupon.assignedAdvisorId) {
+      const now = new Date();
+      const endDate = new Date(now.getTime() + (coupon.daysGranted || 30) * DAY_MS);
+      const targetAdvisorId = coupon.assignedAdvisorId ?? dto.advisorId;
+      if (targetAdvisorId) {
+        await this.ensurePremiumAdvisorHire(targetFarmerId, endDate, coupon.id, targetAdvisorId);
+        result.advisorHired = true;
+      }
+    }
 
     await this.prisma.farmerPlanCoupon.update({
       where: { id: coupon.id },
@@ -785,13 +813,44 @@ export class FarmerPlansService implements OnModuleInit {
 
     const quantity = dto.quantity && dto.quantity > 0 ? dto.quantity : 1;
 
+    const isDoctorCoupon = dto.category === PlanCouponCategory.DOCTOR_CONSULTATION || (dto.doctorFeeAmount != null && dto.doctorFeeAmount > 0);
+    const category = isDoctorCoupon
+      ? PlanCouponCategory.DOCTOR_CONSULTATION
+      : isAdvisor
+        ? PlanCouponCategory.ADVISOR_PLAN
+        : PlanCouponCategory.FARMER_PLAN;
+
+    let debitAmount = 0;
+    let doctorFeeAmount: number | null = null;
+    let adminPlatformFeePercent: number | null = null;
+    let adminPlatformFeeAmount: number | null = null;
+    let includeMembership = false;
+    let includedMembershipPlan: FarmerSubscriptionPlan | null = null;
+    let includedMembershipDays: number | null = null;
+
     const pricing = await this.prisma.farmerPlanPricing.findFirst({ where: { plan: dto.plan } });
     const ratio = pricing ? dto.daysGranted / pricing.billingPeriodDays : 0;
     const basePrice = pricing ? Number(pricing.price) * ratio : 0;
 
-    let debitAmount = 0;
+    if (isDoctorCoupon) {
+      doctorFeeAmount = dto.doctorFeeAmount ?? 500;
+      adminPlatformFeePercent = 10; // 10% admin platform fee on doctor fee
+      adminPlatformFeeAmount = Math.round((doctorFeeAmount * adminPlatformFeePercent) / 100);
+      debitAmount = adminPlatformFeeAmount;
 
-    if (pricing) {
+      if (dto.includeMembership) {
+        includeMembership = true;
+        includedMembershipPlan = dto.includedMembershipPlan ?? dto.plan ?? FarmerSubscriptionPlan.PRO;
+        includedMembershipDays = dto.includedMembershipDays ?? dto.daysGranted ?? 365;
+
+        const memPricing = await this.prisma.farmerPlanPricing.findFirst({ where: { plan: includedMembershipPlan } });
+        if (memPricing) {
+          const memRatio = includedMembershipDays / memPricing.billingPeriodDays;
+          const membershipCost = Math.round(Number(memPricing.price) * memRatio);
+          debitAmount += membershipCost;
+        }
+      }
+    } else if (pricing) {
       // Wallet debit for self-service coupon generation = Platform Fee (MRP minus Commission)
       let platformFee = pricing.adminShareValue != null ? Number(pricing.adminShareValue) * ratio : 0;
       if (platformFee <= 0) {
@@ -829,7 +888,7 @@ export class FarmerPlansService implements OnModuleInit {
       const coupon = await this.prisma.farmerPlanCoupon.create({
         data: {
           code,
-          category: isAdvisor ? PlanCouponCategory.ADVISOR_PLAN : PlanCouponCategory.FARMER_PLAN,
+          category,
           plan: dto.plan,
           daysGranted: dto.daysGranted,
           assignedFarmerId: dto.assignedFarmerId,
@@ -838,14 +897,24 @@ export class FarmerPlansService implements OnModuleInit {
           createdById: user.id,
           createdByRole: user.role,
           generationCostAmount: debitAmount > 0 ? debitAmount : null,
+          doctorFeeAmount: doctorFeeAmount != null ? doctorFeeAmount : null,
+          adminPlatformFeePercent: adminPlatformFeePercent != null ? adminPlatformFeePercent : null,
+          adminPlatformFeeAmount: adminPlatformFeeAmount != null ? adminPlatformFeeAmount : null,
+          includeMembership,
+          includedMembershipPlan,
+          includedMembershipDays,
         },
       });
 
       if (debitAmount > 0) {
+        const debitReason = isDoctorCoupon
+          ? `Generated Doctor Consultation coupon ${coupon.code} (Fee ₹${doctorFeeAmount}, Admin Fee ₹${adminPlatformFeeAmount}${includeMembership ? `, Membership ₹${debitAmount - (adminPlatformFeeAmount ?? 0)}` : ''})`
+          : `Generated ${dto.plan} plan coupon ${coupon.code}`;
+
         await this.walletService.debit(
           user.id,
           debitAmount,
-          `Generated ${dto.plan} plan coupon ${coupon.code}`,
+          debitReason,
         );
       }
 

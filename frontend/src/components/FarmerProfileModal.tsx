@@ -254,7 +254,7 @@ export function FarmerProfileModal({ visible, farmerId, assignmentId, onClose }:
                 {farmer.farmerPlan ? (
                   <View style={styles.infoRow}>
                     <Ionicons name="ribbon-outline" size={14} color="#64748b" />
-                    <Text style={styles.infoLabel}>Plan:</Text>
+                    <Text style={styles.infoLabel}>Membership:</Text>
                     <Text style={[styles.infoVal, { color: theme.primary, fontFamily: FONT.bold }]}>
                       {farmer.farmerPlan.plan}
                       {farmer.farmerPlan.endDate

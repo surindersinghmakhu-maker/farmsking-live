@@ -63,6 +63,7 @@ export interface User {
   waterType?: WaterType | null;
   upiId?: string | null;
   billPrintingAddress?: string | null;
+  isSeniorDoctor?: boolean | null;
   farmName?: string | null;
   farmAddress?: string | null;
   farmMobile?: string | null;
@@ -247,6 +248,9 @@ export interface AvailableAdvisor {
   district?: string | null;
   state?: string | null;
   activeFarmerCount: number;
+  isSeniorDoctor?: boolean | null;
+  seniorDoctorId?: string | null;
+  doctorConsultationFee?: number | null;
 }
 
 export interface AdvisorSubscription {
@@ -548,7 +552,7 @@ export interface WalletTransaction {
   amount: string;
   reason: string;
   createdAt: string;
-  /** The farmer whose action (e.g. a plan coupon redemption) triggered this transaction, when applicable. */
+  /** The farmer whose action (e.g. a membership coupon redemption) triggered this transaction, when applicable. */
   relatedUser?: { id: string; name: string; kingId: string | null; mobile: string } | null;
 }
 

@@ -43,7 +43,7 @@ export function useAvailableAdvisors(enabled: boolean = true) {
   });
 }
 
-/** Advisor nudges a formerly-assigned (now inactive) farmer to renew their plan. */
+/** Advisor nudges a formerly-assigned (now inactive) farmer to renew their membership. */
 export function useSendRenewalReminder() {
   return useMutation({
     mutationFn: (farmerId: string) => advisorAssignmentsApi.sendRenewalReminder(farmerId),

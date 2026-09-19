@@ -15,8 +15,8 @@ const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 };
 
-/** Shows the farmer's current plan expiry and a code-redeem flow to extend it. */
-export function RenewPlanCard() {
+/** Shows the farmer's current membership expiry and a code-redeem flow to extend it. */
+export function RenewMembershipCard() {
   const { data: subscription, isLoading } = useSubscriptionStatus();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -33,7 +33,7 @@ export function RenewPlanCard() {
           <Ionicons name="refresh-circle" size={22} color={isExpired ? '#dc2626' : theme.primary} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>{subscription.plan?.name ?? 'Advisor Plan'}</Text>
+          <Text style={styles.title}>{subscription.plan?.name ?? 'Advisor Membership'}</Text>
           {endDate ? (
             <Text style={[styles.subtitle, isExpired && { color: '#dc2626' }]}>
               {isExpired ? 'Expired' : `${daysRemaining} day(s) left`} · {endDate.toLocaleDateString('en-IN')}
@@ -59,7 +59,9 @@ export function RenewPlanCard() {
   );
 }
 
-/** Renew flow with two tabs: pay a fixed amount via UPI (then an admin verifies), or redeem a code from an admin. Reused for a farmer renewing their own plan and an advisor renewing on behalf of one of their farmers (pass `farmerId`). */
+export const RenewPlanCard = RenewMembershipCard;
+
+/** Renew flow with two tabs: pay a fixed amount via UPI (then an admin verifies), or redeem a code from an admin. Reused for a farmer renewing their own membership and an advisor renewing on behalf of one of their farmers (pass `farmerId`). */
 export function RenewModal({ visible, onClose, farmerId }: { visible: boolean; onClose: () => void; farmerId?: string }) {
   const [mode, setMode] = useState<'upi' | 'code'>('upi');
 
@@ -73,7 +75,7 @@ export function RenewModal({ visible, onClose, farmerId }: { visible: boolean; o
       <View style={styles.modalOverlay}>
         <View style={styles.modalCard}>
           <View style={styles.modalHeaderRow}>
-            <Text style={styles.modalTitle}>Renew {farmerId ? "Farmer's" : 'Your'} Plan</Text>
+            <Text style={styles.modalTitle}>Renew {farmerId ? "Farmer's" : 'Your'} Membership</Text>
             <TouchableOpacity onPress={closeAndReset}>
               <Ionicons name="close-circle" size={24} color="#64748b" />
             </TouchableOpacity>
@@ -95,7 +97,7 @@ export function RenewModal({ visible, onClose, farmerId }: { visible: boolean; o
   );
 }
 
-/** Generates a fixed-amount UPI link for the plan, opens the farmer's UPI app, then lets them mark it paid for admin verification. */
+/** Generates a fixed-amount UPI link for the membership, opens the farmer's UPI app, then lets them mark it paid for admin verification. */
 function UpiPaymentFlow({ farmerId, onDone }: { farmerId?: string; onDone: () => void }) {
   const initiate = useInitiatePlanPayment();
   const submit = useSubmitPlanPayment();
@@ -170,7 +172,7 @@ function UpiPaymentFlow({ farmerId, onDone }: { farmerId?: string; onDone: () =>
 
   return (
     <View style={{ gap: 10 }}>
-      <Text style={styles.label}>Pay the fixed plan amount via UPI. An admin verifies it and confirms your renewal.</Text>
+      <Text style={styles.label}>Pay the fixed membership amount via UPI. An admin verifies it and confirms your renewal.</Text>
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
       <TouchableOpacity style={styles.submitBtn} disabled={initiate.isPending} onPress={handleGenerate}>
         {initiate.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Get UPI Payment Link</Text>}
@@ -179,7 +181,7 @@ function UpiPaymentFlow({ farmerId, onDone }: { farmerId?: string; onDone: () =>
   );
 }
 
-/** Preview a code's plan/days/new-expiry first, then confirm to actually apply it. Works for BASIC/STANDARD/PREMIUM codes — STANDARD and PREMIUM also hire a Farm Advisor. */
+/** Preview a code's membership/days/new-expiry first, then confirm to actually apply it. Works for BASIC/STANDARD/PREMIUM codes — STANDARD and PREMIUM also hire a Farm Advisor. */
 function CodeRedeemFlow({ farmerId, onDone }: { farmerId?: string; onDone: () => void }) {
   const preview = usePreviewFarmerPlanCoupon();
   const redeem = useRedeemFarmerPlanCoupon();
@@ -190,7 +192,7 @@ function CodeRedeemFlow({ farmerId, onDone }: { farmerId?: string; onDone: () =>
 
   const handleCheckCode = async () => {
     if (!code.trim()) {
-      setError('Enter your plan code.');
+      setError('Enter your membership code.');
       return;
     }
     setError(null);
@@ -219,7 +221,7 @@ function CodeRedeemFlow({ farmerId, onDone }: { farmerId?: string; onDone: () =>
         <View style={styles.successBox}>
           <Ionicons name="checkmark-circle" size={20} color="#16a34a" />
           <Text style={styles.successText}>
-            {result.plan.plan} plan active! New expiry: {new Date(result.newEndDate).toLocaleDateString('en-IN')}
+            {result.plan.plan} membership active! New expiry: {new Date(result.newEndDate).toLocaleDateString('en-IN')}
             {result.advisorHired ? ' A Farm Advisor has been assigned.' : ''}
           </Text>
         </View>
@@ -239,8 +241,8 @@ function CodeRedeemFlow({ farmerId, onDone }: { farmerId?: string; onDone: () =>
           <Ionicons name="pricetag" size={20} color="#16a34a" />
           <Text style={styles.successText}>
             {isDowngradeKept
-              ? `This code adds ${previewResult.daysGranted} day(s) to your ${previewResult.resultPlan} plan.`
-              : `This code activates the ${previewResult.plan} plan for ${previewResult.daysGranted} day(s).`}
+              ? `This code adds ${previewResult.daysGranted} day(s) to your ${previewResult.resultPlan} membership.`
+              : `This code activates the ${previewResult.plan} membership for ${previewResult.daysGranted} day(s).`}
             {' '}New expiry will be {new Date(previewResult.newEndDate).toLocaleDateString('en-IN')}.
             {previewResult.includesAdvisor ? ' Includes a Farm Advisor.' : ''}
           </Text>
@@ -249,14 +251,14 @@ function CodeRedeemFlow({ farmerId, onDone }: { farmerId?: string; onDone: () =>
           <View style={styles.warningBox}>
             <Ionicons name="alert-circle" size={18} color="#b45309" />
             <Text style={styles.warningText}>
-              You already have the {previewResult.resultPlan} plan active, which is higher than this {previewResult.plan} code — your plan won't be downgraded, this code's {previewResult.daysGranted} day(s) will just be added to your current {previewResult.resultPlan} plan.
+              You already have the {previewResult.resultPlan} membership active, which is higher than this {previewResult.plan} code — your membership won't be downgraded, this code's {previewResult.daysGranted} day(s) will just be added to your current {previewResult.resultPlan} membership.
             </Text>
           </View>
         ) : isSamePlan ? (
           <View style={styles.warningBox}>
             <Ionicons name="alert-circle" size={18} color="#b45309" />
             <Text style={styles.warningText}>
-              You already have the {previewResult.plan} plan active — applying this code won't change your plan, it will just add {previewResult.daysGranted} day(s) to your current validity.
+              You already have the {previewResult.plan} membership active — applying this code won't change your membership, it will just add {previewResult.daysGranted} day(s) to your current validity.
             </Text>
           </View>
         ) : null}
@@ -270,7 +272,7 @@ function CodeRedeemFlow({ farmerId, onDone }: { farmerId?: string; onDone: () =>
 
   return (
     <>
-      <Text style={styles.label}>Enter the plan code {farmerId ? 'for this farmer' : 'your admin gave you'}</Text>
+      <Text style={styles.label}>Enter the membership code {farmerId ? 'for this farmer' : 'your admin gave you'}</Text>
       <TextInput
         style={styles.input}
         placeholder="e.g. P738610"

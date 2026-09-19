@@ -129,27 +129,17 @@ export class MarketRatesService {
     const since = new Date(Date.now() - ONE_DAY_MS);
     const sinceTime = since.getTime();
 
-    // 1. Fetch user's active crops in HARVESTING or ACTIVE stage
+    // 1. Fetch user's crops strictly in HARVESTING stage
     let cropCycles: any[] = [];
     if (user?.id) {
       cropCycles = await this.prisma.cropCycle.findMany({
         where: {
           deletedAt: null,
-          status: { in: ['HARVESTING', 'ACTIVE'] },
+          OR: [{ status: 'HARVESTING' }, { stage: 'HARVESTING' }],
           plot: { deletedAt: null, farm: { deletedAt: null, ownerId: user.id } },
         },
         select: { cropName: true, unit: true, pricePerUnit: true },
       });
-
-      if (cropCycles.length === 0) {
-        cropCycles = await this.prisma.cropCycle.findMany({
-          where: {
-            deletedAt: null,
-            plot: { deletedAt: null, farm: { deletedAt: null, ownerId: user.id } },
-          },
-          select: { cropName: true, unit: true, pricePerUnit: true },
-        });
-      }
     }
 
     // 2. Fetch all SaleItems recorded across the app in the last 24 hours

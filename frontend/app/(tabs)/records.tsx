@@ -1418,11 +1418,9 @@ export default function RecordsScreen() {
     ? editingPreviousBalance
     : livePartyBalance;
 
-  // ਸਿਰਫ਼ HARVESTING stage ਵਾਲੀਆਂ crops sale ਲਈ
+  // ਸਿਰਫ਼ HARVESTING stage ਵਾਲੀਆਂ crops sale ਲਈ (Strictly HARVESTING stage crops only)
   const harvestingCrops = useMemo(() => {
-    const harvesting = farmerCrops.filter((c) => c.stage === 'HARVESTING');
-    // ਜੇ HARVESTING ਵਾਲੀ ਕੋਈ ਨਹੀਂ ਤਾਂ ਸਾਰੀਆਂ active ਦਿਖਾਓ (fallback)
-    return harvesting.length > 0 ? harvesting : farmerCrops;
+    return farmerCrops.filter((c) => c.stage === 'HARVESTING' || c.status === 'HARVESTING');
   }, [farmerCrops]);
 
   // Keep the selected crop valid as the active crop list changes
@@ -2751,40 +2749,48 @@ export default function RecordsScreen() {
                                     padding: 4,
                                   }}>
                                     <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
-                                      {harvestingCrops.map((crop) => (
-                                        <TouchableOpacity
-                                          key={crop.id}
-                                          style={{
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                            justifyContent: 'space-between',
-                                            paddingHorizontal: 12,
-                                            paddingVertical: 9,
-                                            borderRadius: RADIUS.sm,
-                                            marginBottom: 3,
-                                            backgroundColor: crop.id === selectedCropId ? '#f0fdf4' : '#f8fafc',
-                                            borderWidth: 1,
-                                            borderColor: crop.id === selectedCropId ? '#bbf7d0' : '#e2e8f0',
-                                          }}
-                                          onPress={() => {
-                                            tap();
-                                            handleSelectFarmerCrop(crop.id);
-                                            setIsCropDropdownOpen(false);
-                                          }}
-                                        >
-                                          <View style={{ flex: 1 }}>
-                                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                              <Ionicons name="leaf-outline" size={15} color={crop.id === selectedCropId ? '#16a34a' : '#64748b'} />
-                                              <Text style={{ fontSize: 13, fontFamily: crop.id === selectedCropId ? FONT.bold : FONT.medium, color: crop.id === selectedCropId ? '#16a34a' : '#0f172a' }}>
-                                                {crop.cropName}
+                                      {harvestingCrops.length === 0 ? (
+                                        <View style={{ padding: 12, alignItems: 'center' }}>
+                                          <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#dc2626', textAlign: 'center' }}>
+                                            ⚠️ No crops in Harvesting stage available.
+                                          </Text>
+                                          <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center', marginTop: 2 }}>
+                                            Only crops currently set to "Harvesting" stage appear in sale items.
+                                          </Text>
+                                        </View>
+                                      ) : (
+                                        harvestingCrops.map((crop) => (
+                                          <TouchableOpacity
+                                            key={crop.id}
+                                            style={{
+                                              flexDirection: 'row',
+                                              alignItems: 'center',
+                                              justifyContent: 'space-between',
+                                              paddingHorizontal: 12,
+                                              paddingVertical: 9,
+                                              borderRadius: RADIUS.sm,
+                                              marginBottom: 3,
+                                              backgroundColor: crop.id === selectedCropId ? '#f0fdf4' : '#f8fafc',
+                                              borderWidth: 1,
+                                              borderColor: crop.id === selectedCropId ? '#bbf7d0' : '#e2e8f0',
+                                            }}
+                                            onPress={() => {
+                                              tap();
+                                              handleSelectFarmerCrop(crop.id);
+                                              setIsCropDropdownOpen(false);
+                                            }}
+                                          >
+                                            <View style={{ flex: 1 }}>
+                                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                                <Ionicons name="leaf-outline" size={15} color={crop.id === selectedCropId ? '#16a34a' : '#64748b'} />
+                                                <Text style={{ fontSize: 13, fontFamily: crop.id === selectedCropId ? FONT.bold : FONT.medium, color: crop.id === selectedCropId ? '#16a34a' : '#0f172a' }}>
+                                                  {crop.cropName}
+                                                </Text>
+                                              </View>
+                                              <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b', marginLeft: 21 }}>
+                                                {crop.area} • {crop.unit}/unit
                                               </Text>
                                             </View>
-                                            <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b', marginLeft: 21 }}>
-                                              {crop.area} • {crop.unit}/unit
-                                            </Text>
-                                          </View>
-                                          <View style={{ backgroundColor: '#eff6ff', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, maxWidth: 100 }}>
-                                            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#1d4ed8' }} numberOfLines={1}>🌱 {crop.fieldName}</Text>
                                           </View>
                                         </TouchableOpacity>
                                       ))}
@@ -2894,34 +2900,40 @@ export default function RecordsScreen() {
                                     shadowOffset: { width: 0, height: 3 },
                                   }}>
                                     <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
-                                      {harvestingCrops.map((crop) => (
-                                        <TouchableOpacity
-                                          key={crop.id}
-                                          style={{
-                                            paddingHorizontal: 10,
-                                            paddingVertical: 8,
-                                            borderBottomWidth: 1,
-                                            borderBottomColor: '#f1f5f9',
-                                            backgroundColor: crop.id === selectedCropId ? '#f0fdf4' : '#ffffff',
-                                          }}
-                                          onPress={() => {
-                                            tap();
-                                            handleSelectFarmerCrop(crop.id);
-                                            setIsCropDropdownOpen(false);
-                                          }}
-                                        >
-                                          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                                            <Text style={{ fontSize: 12, fontFamily: crop.id === selectedCropId ? FONT.bold : FONT.medium, color: crop.id === selectedCropId ? '#16a34a' : '#0f172a', flex: 1 }}>
-                                              🌾 {crop.cropName}
-                                            </Text>
-                                            <View style={{ backgroundColor: '#eff6ff', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5, marginLeft: 6 }}>
-                                              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#1d4ed8' }} numberOfLines={1}>🌱 {crop.fieldName}</Text>
-                                            </View>
-                                          </View>
-                                          <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 2 }}>
-                                            {crop.area} • {crop.unit}/unit
+                                      {harvestingCrops.length === 0 ? (
+                                        <View style={{ padding: 10, alignItems: 'center' }}>
+                                          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#dc2626', textAlign: 'center' }}>
+                                            ⚠️ No crops in Harvesting stage.
                                           </Text>
-                                        </TouchableOpacity>
+                                        </View>
+                                      ) : (
+                                        harvestingCrops.map((crop) => (
+                                          <TouchableOpacity
+                                            key={crop.id}
+                                            style={{
+                                              paddingHorizontal: 10,
+                                              paddingVertical: 8,
+                                              borderBottomWidth: 1,
+                                              borderBottomColor: '#f1f5f9',
+                                              backgroundColor: crop.id === selectedCropId ? '#f0fdf4' : '#ffffff',
+                                            }}
+                                            onPress={() => {
+                                              tap();
+                                              handleSelectFarmerCrop(crop.id);
+                                              setIsCropDropdownOpen(false);
+                                            }}
+                                          >
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                              <Text style={{ fontSize: 12, fontFamily: crop.id === selectedCropId ? FONT.bold : FONT.medium, color: crop.id === selectedCropId ? '#16a34a' : '#0f172a', flex: 1 }}>
+                                                🌾 {crop.cropName}
+                                              </Text>
+                                              <View style={{ backgroundColor: '#eff6ff', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5, marginLeft: 6 }}>
+                                                <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#1d4ed8' }} numberOfLines={1}>🌱 {crop.fieldName}</Text>
+                                              </View>
+                                            </View>
+                                            <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 2 }}>
+                                              {crop.area} • {crop.unit}/unit
+                                            </Text>
                                       ))}
                                     </ScrollView>
                                   </View>

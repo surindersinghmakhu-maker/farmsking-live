@@ -380,7 +380,7 @@ export default function TabLayout() {
             );
           })}
 
-          {/* Hidden tool screens — accessed via More tab and Dashboard shortcuts */}
+          {/* Hidden tool screens — accessed via More tab, navigation shortcuts, and direct links */}
           <Tabs.Screen
             name="crop-disease-scanner"
             options={{
@@ -389,6 +389,18 @@ export default function TabLayout() {
           />
           <Tabs.Screen
             name="satellite-map"
+            options={{
+              href: null,
+            }}
+          />
+          <Tabs.Screen
+            name="memberships"
+            options={{
+              href: null,
+            }}
+          />
+          <Tabs.Screen
+            name="coupons"
             options={{
               href: null,
             }}

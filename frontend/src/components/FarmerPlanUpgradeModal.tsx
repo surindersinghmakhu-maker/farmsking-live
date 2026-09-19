@@ -3,6 +3,7 @@ import { ActivityIndicator, Image, Linking, Modal, ScrollView, StyleSheet, Text,
 import { Ionicons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
 import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
 import { RoleThemes } from '../../constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '../../constants/theme';
 import { useFarmerPlan, useFarmerPlanPricing, usePreviewFarmerPlanCoupon, useRedeemFarmerPlanCoupon } from '../hooks/useFarmerPlan';
@@ -370,12 +371,17 @@ export function FarmerPlanUpgradeModal({
     <Modal visible={visible} transparent animationType="fade" onRequestClose={closeAndReset}>
       <View style={styles.overlay}>
         <View style={styles.card}>
-          <View style={styles.headerRow}>
-            <Text style={styles.title}>{tabMode === 'GET_COUPON' ? 'Get Membership Coupon' : 'Upgrade Membership'}</Text>
-            <TouchableOpacity onPress={closeAndReset}>
-              <Ionicons name="close-circle" size={24} color="#64748b" />
+          <LinearGradient colors={['#0f172a', '#1e293b']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.headerBanner}>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={styles.headerTagText}>👑 FARMSKING VIP</Text>
+              <Text style={styles.headerTitleText}>
+                {tabMode === 'GET_COUPON' ? 'Get Membership Coupon' : 'Upgrade Membership'}
+              </Text>
+            </View>
+            <TouchableOpacity onPress={closeAndReset} style={styles.closeBtnIcon}>
+              <Ionicons name="close" size={18} color="#ffffff" />
             </TouchableOpacity>
-          </View>
+          </LinearGradient>
 
           {mode === 'UPI' && pickedPlan ? (
             <UpiUpgradeFlow
@@ -1023,7 +1029,11 @@ function UpiUpgradeFlow({
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'center', alignItems: 'center', padding: SPACING.lg },
-  card: { width: '100%', maxWidth: 400, backgroundColor: '#ffffff', borderRadius: RADIUS.xl, padding: SPACING.lg, gap: 8, ...premiumShadow('#000000', 'lg') },
+  card: { width: '100%', maxWidth: 400, backgroundColor: '#ffffff', borderRadius: RADIUS.xl, padding: SPACING.lg, gap: 8, overflow: 'hidden', ...premiumShadow('#000000', 'lg') },
+  headerBanner: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, marginHorizontal: -SPACING.lg, marginTop: -SPACING.lg, marginBottom: 8 },
+  headerTagText: { fontSize: 10, fontFamily: FONT.extraBold, color: '#38bdf8', letterSpacing: 0.5 },
+  headerTitleText: { fontSize: 16, fontFamily: FONT.extraBold, color: '#ffffff' },
+  closeBtnIcon: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255, 255, 255, 0.15)', alignItems: 'center', justifyContent: 'center' },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
   title: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a' },
   label: { fontSize: 12, fontFamily: FONT.semiBold, color: '#64748b' },

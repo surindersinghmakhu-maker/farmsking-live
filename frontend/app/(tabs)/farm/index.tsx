@@ -33,6 +33,7 @@ import { FarmLocationPickerModal } from '@/components/FarmLocationPickerModal';
 import { CropLocationGuideModal } from '@/components/CropLocationGuideModal';
 import { PaymentVoucherModal, VoucherType } from '@/src/components/PaymentVoucherModal';
 import { useLabourWorkers } from '@/src/hooks/useLabour';
+import { useMyAdvisor } from '@/src/hooks/useAdvisorAssignments';
 import { CropCompletionReviewModal } from '@/src/components/CropCompletionReviewModal';
 import { CropCompletionReview } from '@/src/store/crops-context';
 

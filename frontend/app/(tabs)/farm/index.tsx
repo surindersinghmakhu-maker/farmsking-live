@@ -384,7 +384,7 @@ export default function FarmListScreen() {
   };
 
   const getCompletedCropSummary = (cropId: string, hItem: CropHistoryEntry) => {
-    const cropSales = salesRecords.filter((s) => s.cropId === cropId);
+    const cropSales = salesRecords.filter((s) => s.cropId === cropId || (hItem.cropId && s.cropId === hItem.cropId));
 
     let totalWeight = 0;
     let totalAmount = 0;

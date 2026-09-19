@@ -392,8 +392,14 @@ export function CropsProvider({ children }: { children: ReactNode }) {
     [user?.farmAddress, user?.village, user?.district, user?.state]
   );
 
-  const activeCrops = useMemo(() => myCrops.filter((c) => c.status !== 'COMPLETED' && c.status !== 'FAILED'), [myCrops]);
-  const completedCrops = useMemo(() => myCrops.filter((c) => c.status === 'COMPLETED'), [myCrops]);
+  const activeCrops = useMemo(
+    () => myCrops.filter((c) => c.stage !== 'COMPLETED' && c.status !== 'COMPLETED' && c.status !== 'FAILED'),
+    [myCrops]
+  );
+  const completedCrops = useMemo(
+    () => myCrops.filter((c) => c.stage === 'COMPLETED' || c.status === 'COMPLETED'),
+    [myCrops]
+  );
 
   const cropFields = useMemo(
     () =>
@@ -414,14 +420,17 @@ export function CropsProvider({ children }: { children: ReactNode }) {
     () =>
       completedCrops.map((c) => {
         const base = toRegisteredCropField(c, farmerName, farmerPhone, location);
-        const sale = salesRecords.find((s) => s.cropId === c.id);
+        const cropSales = salesRecords.filter((s) => s.cropId === c.id || (c.cropId && s.cropId === c.cropId));
+        const latestSale = cropSales[0];
+        const totalRev = cropSales.reduce((sum, s) => sum + (s.totalAmount || 0), 0);
+        const totalQty = cropSales.reduce((sum, s) => sum + (Number(s.quantity) || 0), 0);
         return {
           ...base,
-          completedDate: sale?.saleDate ?? (c.actualHarvestDate ? formatDateDisplay(c.actualHarvestDate) : formatDateDisplay(c.updatedAt)),
-          soldQuantity: sale?.quantity,
-          soldRate: sale?.pricePerUnit,
-          buyerName: sale?.buyerName,
-          totalRevenue: sale?.totalAmount,
+          completedDate: latestSale?.saleDate ?? (c.actualHarvestDate ? formatDateDisplay(c.actualHarvestDate) : formatDateDisplay(c.updatedAt)),
+          soldQuantity: totalQty > 0 ? String(totalQty) : latestSale?.quantity,
+          soldRate: latestSale?.pricePerUnit,
+          buyerName: latestSale?.buyerName,
+          totalRevenue: totalRev > 0 ? totalRev : latestSale?.totalAmount,
         };
       }),
     [completedCrops, salesRecords, farmerName, farmerPhone, location]

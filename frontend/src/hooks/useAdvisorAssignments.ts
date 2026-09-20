@@ -84,3 +84,16 @@ export function useRejectAssignment() {
     },
   });
 }
+
+export function useCancelPendingRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: advisorAssignmentsApi.cancelMyPendingRequest,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['advisor-assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      queryClient.invalidateQueries({ queryKey: ['farmerPlan'] });
+    },
+  });
+}
+

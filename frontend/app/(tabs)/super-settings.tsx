@@ -17,8 +17,8 @@ import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAppSettings, useUpdateAppSettings } from '@/src/hooks/useAppSettings';
 import { apiClient } from '@/src/api/client';
-import { useFarmerPlanPricing, useUpdateFarmerPlanPricing } from '@/src/hooks/useFarmerPlan';
-import { FarmerPlanPricing } from '@/src/api/farmerPlans.api';
+import { useFarmerPlanPricing, useUpdateFarmerPlanPricing, PLAN_META } from '@/src/hooks/useFarmerPlan';
+import { FarmerPlanPricing, FarmerPlanType } from '@/src/api/farmerPlans.api';
 import { Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -1042,21 +1042,31 @@ export default function SuperSettingsScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={theme.gradient} style={styles.hero}>
-        <View style={styles.heroHeaderRow}>
-          <Ionicons name="options-outline" size={24} color="#ffffff" />
-          <Text style={styles.heroTitle}>C-Panel — Control Center</Text>
+      <LinearGradient colors={['#0f172a', '#1e293b', '#0f172a']} style={styles.hero}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View style={{ flex: 1 }}>
+            <View style={styles.heroHeaderRow}>
+              <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: '#dc2626', alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="options" size={18} color="#ffffff" />
+              </View>
+              <Text style={styles.heroTitle}>⚡ C-Panel — Control Center</Text>
+            </View>
+            <Text style={styles.heroSubtitle}>System Feature Switches · Plan Pricing & Splits · Admin Tools</Text>
+          </View>
+          <View style={{ backgroundColor: '#1e293b', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#334155', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#22c55e' }} />
+            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#4ade80' }}>LIVE</Text>
+          </View>
         </View>
-        <Text style={styles.heroSubtitle}>Configure system switches, module modifications & admin tools</Text>
       </LinearGradient>
 
       <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
         {/* ── Sub-Tabs Navigation Bar ── */}
-        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 4 }}>
+        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 6 }}>
           {([
-            { id: 'SWITCHES',       label: '🔀 Switches',       icon: 'toggle' },
-            { id: 'MODIFICATIONS',  label: '✏️ Modifications',   icon: 'create' },
-            { id: 'OTHERS',         label: '📦 Others',          icon: 'grid' },
+            { id: 'SWITCHES',       label: '🔀 Switches',       sub: 'System Toggles', icon: 'toggle' },
+            { id: 'MODIFICATIONS',  label: '💰 Plans & Pricing',  sub: 'Pricing & Splits', icon: 'cash' },
+            { id: 'OTHERS',         label: '📦 Shortcuts',       sub: 'Admin Tools',    icon: 'grid' },
           ] as const).map((tab) => {
             const active = cpanelSubTab === tab.id;
             return (
@@ -1068,21 +1078,25 @@ export default function SuperSettingsScreen() {
                 }}
                 style={{
                   flex: 1,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6,
                   paddingVertical: 10,
-                  borderRadius: RADIUS.pill,
+                  paddingHorizontal: 8,
+                  borderRadius: RADIUS.lg,
                   backgroundColor: active ? '#dc2626' : '#ffffff',
                   borderWidth: 1.5,
                   borderColor: active ? '#dc2626' : '#e2e8f0',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   ...premiumShadow('#0f172a', 'sm'),
                 }}
               >
-                <Ionicons name={tab.icon as any} size={15} color={active ? '#ffffff' : '#475569'} />
-                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: active ? '#ffffff' : '#334155' }}>
-                  {tab.label}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons name={tab.icon as any} size={15} color={active ? '#ffffff' : '#475569'} />
+                  <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: active ? '#ffffff' : '#0f172a' }}>
+                    {tab.label}
+                  </Text>
+                </View>
+                <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: active ? 'rgba(255,255,255,0.85)' : '#64748b', marginTop: 2 }}>
+                  {tab.sub}
                 </Text>
               </TouchableOpacity>
             );
@@ -1503,84 +1517,167 @@ export function PlanPricingSection() {
   const { data: pricing, isLoading } = useFarmerPlanPricing();
   const [editing, setEditing] = useState<FarmerPlanPricing | null>(null);
 
-  const PLAN_ORDER = ['PRO', 'SMART', 'SUPER'];
+  const SOFTWARE_PLANS = ['PRO', 'SMART', 'SUPER'];
+  const CARE_PLANS = ['SILVER', 'GOLD', 'ROYAL'];
 
-  const groupedByPlan = PLAN_ORDER.map((planKey) => {
-    const items = (pricing ?? []).filter((p) => p.plan === planKey);
-    return { planKey, items };
-  }).filter((group) => group.items.length > 0);
+  const softwareGroups = SOFTWARE_PLANS.map((planKey) => ({
+    planKey,
+    items: (pricing ?? []).filter((p) => p.plan === planKey),
+  })).filter((group) => group.items.length > 0);
+
+  const careGroups = CARE_PLANS.map((planKey) => ({
+    planKey,
+    items: (pricing ?? []).filter((p) => p.plan === planKey),
+  })).filter((group) => group.items.length > 0);
 
   return (
-    <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm')]}>
-      <Text style={styles.sectionTitle}>Plan Pricing & Commission Splits</Text>
-      <Text style={styles.helperText}>
-        Each plan tier (Lite, Pro, Smart) has 1 configuration card.
-      </Text>
-
-      {isLoading ? (
-        <ActivityIndicator color={theme.primary} style={{ marginVertical: 16 }} />
-      ) : groupedByPlan.length === 0 ? (
-        <Text style={styles.emptyText}>No pricing configured yet.</Text>
-      ) : (
-        <View style={{ gap: 14, marginTop: 4 }}>
-          {groupedByPlan.map(({ planKey, items }) => {
-            const planColor = planKey === 'PRO' ? '#6d28d9' : planKey === 'SMART' ? '#1d4ed8' : '#b45309';
-            const sampleItem = items[0];
-
-            return (
-              <View key={planKey} style={[styles.planCardContainer, premiumShadow('#0f172a', 'sm')]}>
-                <View style={styles.planCardHeader}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-                    <Text style={{ fontSize: 24 }}>{planKey === 'PRO' ? '🌾' : planKey === 'SMART' ? '👑' : '🎓'}</Text>
-                    <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Text style={[styles.planCardTitle, { color: planColor }]}>
-                          {planKey === 'PRO' ? 'Lite Plan' : planKey === 'SMART' ? 'Pro Plan' : 'Smart Plan'}
-                        </Text>
-                        <Text style={styles.planCardBadge}>{planKey}</Text>
-                      </View>
-                      <Text style={styles.planCardSub}>{items.length} Duration Option(s)</Text>
-                    </View>
-                  </View>
-                </View>
-
-                <View style={styles.cardDivider} />
-
-                <View style={styles.cardSection}>
-                  <Text style={styles.cardSectionTitle}>💰 Pricing & Commission Splits</Text>
-                  <View style={{ gap: 6 }}>
-                    {items.map((p) => (
-                      <View key={p.id} style={styles.variantRow}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.variantTitle}>
-                            {p.billingPeriodDays === 365 ? '1 Year (365 Days)' : `${p.billingPeriodDays} Days`} —{' '}
-                            <Text style={{ color: '#16a34a', fontFamily: FONT.extraBold }}>₹{p.price}</Text>
-                          </Text>
-                          <Text style={styles.variantMeta}>
-                            Partner Cut: {p.partnerShareType === 'PERCENTAGE' ? `${p.partnerShareValue}%` : `₹${p.partnerShareValue}`}
-                            {p.advisorShareValue ? ` · Advisor Cut: ₹${p.advisorShareValue}` : ''}
-                            {p.adminShareValue ? ` · Admin Cut: ₹${p.adminShareValue}` : ''}
-                          </Text>
-                        </View>
-                        <TouchableOpacity
-                          style={[styles.variantEditBtn, { backgroundColor: planColor }]}
-                          activeOpacity={0.85}
-                          onPress={() => setEditing(p)}
-                        >
-                          <Ionicons name="create-outline" size={13} color="#ffffff" />
-                          <Text style={styles.variantEditBtnText}>Edit</Text>
-                        </TouchableOpacity>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-              </View>
-            );
-          })}
+    <View style={{ gap: 16 }}>
+      {/* Category 1: Farmer Software Membership Plans */}
+      <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderWidth: 1 }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+          <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#e0f2fe', alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name="apps" size={20} color="#0284c7" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.sectionTitle}>🌾 Farmer Software Membership Plans</Text>
+            <Text style={styles.helperText}>Configure subscription prices & commission cuts for Farmer App software features</Text>
+          </View>
         </View>
-      )}
+
+        {isLoading ? (
+          <ActivityIndicator color={theme.primary} style={{ marginVertical: 16 }} />
+        ) : softwareGroups.length === 0 ? (
+          <Text style={styles.emptyText}>No software plans configured yet.</Text>
+        ) : (
+          <View style={{ gap: 12, marginTop: 8 }}>
+            {softwareGroups.map(({ planKey, items }) => {
+              const meta = PLAN_META[planKey as FarmerPlanType] || { label: planKey, emoji: '🌾', color: '#0284c7' };
+              return (
+                <PlanCardGroup
+                  key={planKey}
+                  planKey={planKey}
+                  meta={meta}
+                  items={items}
+                  onEdit={setEditing}
+                />
+              );
+            })}
+          </View>
+        )}
+      </View>
+
+      {/* Category 2: Doctor Crop Care Advisory Plans (Care Plan Alag to Show) */}
+      <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#fffbeb', borderColor: '#fde68a', borderWidth: 1.5 }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+          <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#fef3c7', alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name="medical" size={20} color="#d97706" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={[styles.sectionTitle, { color: '#92400e' }]}>🩺 Doctor Crop Care Advisory Plans</Text>
+              <View style={{ backgroundColor: '#f59e0b', paddingHorizontal: 8, paddingVertical: 2, borderRadius: RADIUS.pill }}>
+                <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>CARE PLANS</Text>
+              </View>
+            </View>
+            <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#b45309', marginTop: 2 }}>
+              Dedicated Crop Doctor packages (Silver, Gold, Royal) with plot monitoring & spray schedules
+            </Text>
+          </View>
+        </View>
+
+        {isLoading ? (
+          <ActivityIndicator color="#d97706" style={{ marginVertical: 16 }} />
+        ) : careGroups.length === 0 ? (
+          <View style={{ padding: 14, backgroundColor: '#ffffff', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#fde68a' }}>
+            <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#92400e', textAlign: 'center' }}>
+              No Crop Care plans configured in database yet. (Silver: ₹999/yr, Gold: ₹1999/yr, Royal: ₹3499/yr)
+            </Text>
+          </View>
+        ) : (
+          <View style={{ gap: 12, marginTop: 8 }}>
+            {careGroups.map(({ planKey, items }) => {
+              const meta = PLAN_META[planKey as FarmerPlanType] || { label: planKey, emoji: '🩺', color: '#d97706' };
+              return (
+                <PlanCardGroup
+                  key={planKey}
+                  planKey={planKey}
+                  meta={meta}
+                  items={items}
+                  onEdit={setEditing}
+                />
+              );
+            })}
+          </View>
+        )}
+      </View>
 
       <EditPricingModal pricing={editing} onClose={() => setEditing(null)} />
+    </View>
+  );
+}
+
+function PlanCardGroup({
+  planKey,
+  meta,
+  items,
+  onEdit,
+}: {
+  planKey: string;
+  meta: { label: string; emoji: string; color: string };
+  items: FarmerPlanPricing[];
+  onEdit: (item: FarmerPlanPricing) => void;
+}) {
+  return (
+    <View style={[styles.planCardContainer, { borderColor: meta.color + '40', backgroundColor: '#ffffff' }, premiumShadow('#0f172a', 'sm')]}>
+      <View style={styles.planCardHeader}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+          <Text style={{ fontSize: 24 }}>{meta.emoji}</Text>
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={[styles.planCardTitle, { color: meta.color }]}>{meta.label}</Text>
+              <Text style={[styles.planCardBadge, { backgroundColor: meta.color + '15', color: meta.color }]}>{planKey}</Text>
+            </View>
+            <Text style={styles.planCardSub}>{items.length} Duration Option(s)</Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.cardDivider} />
+
+      <View style={styles.cardSection}>
+        <Text style={styles.cardSectionTitle}>💰 Pricing & Commission Splits</Text>
+        <View style={{ gap: 6 }}>
+          {items.map((p) => (
+            <View key={p.id} style={styles.variantRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.variantTitle}>
+                  {p.billingPeriodDays === 365 ? '1 Year (365 Days)' : `${p.billingPeriodDays} Days`} —{' '}
+                  <Text style={{ color: '#16a34a', fontFamily: FONT.extraBold }}>₹{p.price}</Text>
+                </Text>
+                <Text style={styles.variantMeta}>
+                  Partner Cut: {p.partnerShareType === 'PERCENTAGE' ? `${p.partnerShareValue}%` : `₹${p.partnerShareValue}`}
+                  {p.advisorShareValue ? ` · Advisor Cut: ₹${p.advisorShareValue}` : ''}
+                  {p.adminShareValue ? ` · Admin Cut: ₹${p.adminShareValue}` : ''}
+                </Text>
+                {(p.maxActiveCrops != null || p.maxDoctorCrops != null) ? (
+                  <Text style={{ fontSize: 10.5, fontFamily: FONT.semiBold, color: '#64748b', marginTop: 2 }}>
+                    Limits: {p.maxActiveCrops != null ? `Active Crops: ${p.maxActiveCrops}` : 'Unlimited Active Crops'}
+                    {p.maxDoctorCrops != null ? ` · Doctor Crops: ${p.maxDoctorCrops}` : ''}
+                  </Text>
+                ) : null}
+              </View>
+              <TouchableOpacity
+                style={[styles.variantEditBtn, { backgroundColor: meta.color }]}
+                activeOpacity={0.85}
+                onPress={() => onEdit(p)}
+              >
+                <Ionicons name="create-outline" size={13} color="#ffffff" />
+                <Text style={styles.variantEditBtnText}>Edit</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+      </View>
     </View>
   );
 }
@@ -1639,18 +1736,39 @@ function EditPricingModal({ pricing, onClose }: { pricing: FarmerPlanPricing | n
             </TouchableOpacity>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingVertical: 4 }}>
             <Text style={styles.label}>Price (₹)</Text>
             <TextInput style={styles.input} keyboardType="numeric" value={price} onChangeText={setPrice} />
 
             <Text style={styles.label}>Billing Period (days)</Text>
             <TextInput style={styles.input} keyboardType="numeric" value={billingPeriodDays} onChangeText={setBillingPeriodDays} />
 
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+              <Text style={styles.label}>Partner Share Type</Text>
+              <View style={{ flexDirection: 'row', gap: 6 }}>
+                <TouchableOpacity
+                  style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.sm, backgroundColor: partnerShareType === 'PERCENTAGE' ? '#0284c7' : '#e2e8f0' }}
+                  onPress={() => setPartnerShareType('PERCENTAGE')}
+                >
+                  <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: partnerShareType === 'PERCENTAGE' ? '#ffffff' : '#475569' }}>% Percent</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.sm, backgroundColor: partnerShareType === 'FIXED' ? '#0284c7' : '#e2e8f0' }}
+                  onPress={() => setPartnerShareType('FIXED')}
+                >
+                  <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: partnerShareType === 'FIXED' ? '#ffffff' : '#475569' }}>₹ Fixed Amount</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
             <Text style={styles.label}>Business Partner Share ({partnerShareType === 'FIXED' ? '₹' : '%'})</Text>
             <TextInput style={styles.input} keyboardType="numeric" value={partnerShareValue} onChangeText={setPartnerShareValue} />
 
-            <Text style={styles.label}>Advisor Share (₹, optional)</Text>
+            <Text style={styles.label}>Advisor Share Cut (₹, optional)</Text>
             <TextInput style={styles.input} keyboardType="numeric" value={advisorShareValue} onChangeText={setAdvisorShareValue} />
+
+            <Text style={styles.label}>Admin Share Cut (₹, optional)</Text>
+            <TextInput style={styles.input} keyboardType="numeric" value={adminShareValue} onChangeText={setAdminShareValue} />
 
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
 

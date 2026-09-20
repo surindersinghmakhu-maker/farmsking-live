@@ -55,3 +55,21 @@ export async function chooseAdvisor(advisorId: string): Promise<AdvisorAssignmen
   const { data } = await apiClient.post<AdvisorAssignment>(`/advisor-assignments/choose-advisor/${advisorId}`);
   return data;
 }
+
+export async function cancelMyPendingRequest(): Promise<AdvisorAssignment> {
+  try {
+    const { data } = await apiClient.post<AdvisorAssignment>('/advisor-assignments/cancel-pending', {});
+    return data;
+  } catch (err: any) {
+    if (err?.response?.status === 404) {
+      const pending = await getMyPendingRequest();
+      if (pending?.id) {
+        const { data } = await apiClient.post<AdvisorAssignment>(`/advisor-assignments/${pending.id}/revoke`, {});
+        return data;
+      }
+    }
+    throw err;
+  }
+}
+
+

@@ -22,32 +22,42 @@ export class FarmerPlansController {
   constructor(private readonly farmerPlansService: FarmerPlansService) {}
 
   /** Farmer: view their current active plan details */
-  @Roles(Role.FARMER)
+  @Roles(
+    Role.CUSTOMER,
+    Role.FARMER,
+    Role.GARDENER,
+    Role.ADVISOR,
+    Role.BUSINESS_PARTNER,
+    Role.ADMIN,
+    Role.SUPER_ADMIN,
+    Role.OPERATOR,
+  )
   @Get('my-plan')
   getMyPlan(@CurrentUser() user: AuthUser) {
     return this.farmerPlansService.getMyPlan(user);
   }
 
   /** Farmer, or an advisor/admin/business partner previewing on behalf of a farmer (?farmerId=) — shows what a code would grant, without consuming it */
-  @Roles(Role.FARMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.BUSINESS_PARTNER)
+  @Roles(Role.FARMER, Role.CUSTOMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.BUSINESS_PARTNER)
   @Get('coupon/:code/preview')
   previewCoupon(@CurrentUser() user: AuthUser, @Param('code') code: string, @Query('farmerId') farmerId?: string) {
     return this.farmerPlansService.previewCoupon(user, code, farmerId);
   }
 
   /** Farmer, or an advisor/admin/business partner redeeming on behalf of a farmer — activates BASIC/STANDARD/PREMIUM (new plan, extend, or renew) */
-  @Roles(Role.FARMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.BUSINESS_PARTNER)
+  @Roles(Role.FARMER, Role.CUSTOMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.BUSINESS_PARTNER)
   @Post('redeem')
   redeemCoupon(@CurrentUser() user: AuthUser, @Body() dto: RedeemFarmerPlanCouponDto) {
     return this.farmerPlansService.redeemCoupon(user, dto);
   }
 
   /** Farmer on STANDARD/PREMIUM: pick a specific Farm Advisor instead of the auto-assigned one. */
-  @Roles(Role.FARMER)
+  @Roles(Role.FARMER, Role.CUSTOMER, Role.GARDENER, Role.ADMIN, Role.SUPER_ADMIN)
   @Post('choose-advisor')
   chooseAdvisor(@CurrentUser() user: AuthUser, @Body() dto: ChooseAdvisorDto) {
     return this.farmerPlansService.chooseAdvisor(user, dto.advisorId);
   }
+
 
   /** Admin/Super Admin: create a BASIC or PREMIUM plan coupon — open, locked to a farmer, or issued to an advisor */
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)

@@ -33,31 +33,38 @@ export class AdvisorAssignmentController {
     return this.advisorAssignmentService.findFarmerDetail(user, farmerId);
   }
 
-  @Roles(Role.FARMER, Role.GARDENER)
+  @Roles(Role.FARMER, Role.GARDENER, Role.CUSTOMER, Role.ADMIN, Role.SUPER_ADMIN)
   @Get('my-advisor')
   findMyAdvisor(@CurrentUser() user: AuthUser) {
     return this.advisorAssignmentService.findMyAdvisor(user);
   }
 
   /** Farmer/Gardener: their most recent still-open hire request, awaiting the advisor's accept/reject. */
-  @Roles(Role.FARMER, Role.GARDENER)
+  @Roles(Role.FARMER, Role.GARDENER, Role.CUSTOMER, Role.ADMIN, Role.SUPER_ADMIN)
   @Get('my-pending-request')
   findMyPendingRequest(@CurrentUser() user: AuthUser) {
     return this.advisorAssignmentService.findMyPendingRequest(user);
   }
 
   /** Farmer/Gardener: browse the advisors they could choose (matching FARM/GARDEN type), to pick one when on STANDARD/PREMIUM. */
-  @Roles(Role.FARMER, Role.GARDENER)
+  @Roles(Role.FARMER, Role.GARDENER, Role.CUSTOMER, Role.ADMIN, Role.SUPER_ADMIN)
   @Get('available')
   listAvailableAdvisors(@CurrentUser() user: AuthUser) {
     return this.advisorAssignmentService.listAvailableAdvisors(user);
   }
 
-  @Roles(Role.FARMER, Role.GARDENER)
+  @Roles(Role.FARMER, Role.GARDENER, Role.CUSTOMER, Role.ADMIN, Role.SUPER_ADMIN)
   @Post('choose-advisor/:advisorId')
   requestSpecificAdvisor(@CurrentUser() user: AuthUser, @Param('advisorId') advisorId: string) {
     return this.advisorAssignmentService.requestSpecificAdvisor(user.id, advisorId);
   }
+
+  @Roles(Role.FARMER, Role.GARDENER, Role.CUSTOMER, Role.ADMIN, Role.SUPER_ADMIN)
+  @Post('cancel-pending')
+  cancelMyPendingRequest(@CurrentUser() user: AuthUser) {
+    return this.advisorAssignmentService.cancelMyPendingRequest(user);
+  }
+
 
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Post()
@@ -65,11 +72,12 @@ export class AdvisorAssignmentController {
     return this.advisorAssignmentService.create(user, dto);
   }
 
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.ADVISOR)
+  @Roles(Role.FARMER, Role.GARDENER, Role.CUSTOMER, Role.ADMIN, Role.SUPER_ADMIN, Role.ADVISOR)
   @Post(':id/revoke')
   revoke(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.advisorAssignmentService.revoke(user, id);
   }
+
 
   /** Advisor accepts a farmer's PENDING hire request. */
   @Roles(Role.ADVISOR)

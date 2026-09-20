@@ -10,7 +10,7 @@ import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useCrops, RegisteredCropField } from '@/src/store/crops-context';
 import { SOIL_TYPE_OPTIONS, WATER_TYPE_OPTIONS, SPRAY_TANK_SIZE_OPTIONS } from '@/src/constants/farmerProfileOptions';
 import { useSubscriptionStatus } from '@/src/hooks/useSubscriptionStatus';
-import { useMyAdvisor, useAvailableAdvisors, useMyPendingRequest } from '@/src/hooks/useAdvisorAssignments';
+import { useMyAdvisor, useAvailableAdvisors, useMyPendingRequest, useCancelPendingRequest } from '@/src/hooks/useAdvisorAssignments';
 import { useMyCrops, useSubmitCropToAdvisor, useCancelCropSubmission } from '@/src/hooks/useCrops';
 import { useCreateCropProblem, useMyCropProblems, useRateCropProblem } from '@/src/hooks/useCropProblems';
 import { uploadPhoto } from '@/src/api/uploads.api';
@@ -208,8 +208,24 @@ export default function MarketScreen() {
   const { data: subscription, isLoading: isLoadingSubscription } = useSubscriptionStatus();
   const { data: myAdvisor } = useMyAdvisor();
   const { data: myPendingRequest } = useMyPendingRequest();
+  const cancelPendingRequest = useCancelPendingRequest();
   const [isRenewModalOpen, setIsRenewModalOpen] = useState(false);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [isReviewSectionExpanded, setIsReviewSectionExpanded] = useState(false);
+
+  const handleCancelHireRequest = async () => {
+    tap();
+    try {
+      await cancelPendingRequest.mutateAsync();
+      if (Platform.OS === 'web') alert('✅ Hire request cancelled successfully.');
+      else Alert.alert('Cancelled', 'Your hire request has been cancelled.');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Could not cancel request.';
+      if (Platform.OS === 'web') alert(msg);
+      else Alert.alert('Error', msg);
+    }
+  };
+
 
   const { plan } = useFarmerPlan();
   const advisorIncluded = plan === 'PRO' || plan === 'SMART';
@@ -758,6 +774,33 @@ export default function MarketScreen() {
             <Ionicons name="time-outline" size={14} color="#b45309" />
             <Text style={styles.pendingChipText}>Awaiting Advisor's Response...</Text>
           </View>
+
+          <TouchableOpacity
+            style={{
+              marginTop: 16,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              backgroundColor: '#fef2f2',
+              borderWidth: 1,
+              borderColor: '#fecaca',
+              paddingVertical: 10,
+              paddingHorizontal: 20,
+              borderRadius: RADIUS.pill,
+            }}
+            disabled={cancelPendingRequest.isPending}
+            onPress={handleCancelHireRequest}
+          >
+            {cancelPendingRequest.isPending ? (
+              <ActivityIndicator size="small" color="#dc2626" />
+            ) : (
+              <>
+                <Ionicons name="close-circle" size={18} color="#dc2626" />
+                <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#dc2626' }}>❌ Cancel Request</Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
       )}
 
@@ -1075,83 +1118,102 @@ export default function MarketScreen() {
 
               {/* SHARE CROP FARMS WITH ADVISOR FOR SCHEDULE */}
               <View style={[styles.progressCard, premiumShadow('#0f172a', 'sm')]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                  <Text style={{ fontSize: 16, color: '#dc2626' }}>🔴</Text>
-                  <Text style={styles.progressTitle}>Crops Needing Advisor Review ({shareableCrops.length})</Text>
-                </View>
-                <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', marginBottom: 12 }}>
-                  Share crops with {FALLBACK_ADVISOR.name} to unlock advisory scheduling.
-                </Text>
-
-                {shareableCrops.length === 0 ? (
-                  <View style={{ padding: 12, backgroundColor: '#f0fdf4', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#bbf7d0', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
-                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#15803d', flex: 1 }}>
-                      All registered crop plots have been accepted by your advisor!
-                    </Text>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    tap();
+                    setIsReviewSectionExpanded((prev) => !prev);
+                  }}
+                  style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={{ fontSize: 16, color: '#dc2626' }}>🔴</Text>
+                    <Text style={styles.progressTitle}>Crops Needing Advisor Review ({shareableCrops.length})</Text>
                   </View>
-                ) : (
-                  shareableCrops.map((crop) => {
-                    const advStatus = crop.advisorReviewStatus || 'NONE';
-                    const label = `${crop.plot.name} (${crop.cropName})`;
+                  <Ionicons
+                    name={isReviewSectionExpanded ? 'chevron-up' : 'chevron-down'}
+                    size={20}
+                    color="#64748b"
+                  />
+                </TouchableOpacity>
 
-                    return (
-                      <View key={crop.id} style={styles.cropShareItem}>
-                        <View style={{ flex: 1 }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                            <Text style={styles.cropSharePlot}>
-                              📍 {crop.plot.name} <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>(ID: {crop.cropId || crop.id})</Text>
-                            </Text>
-                            <Text style={styles.cropShareName}>🌾 {crop.cropName}</Text>
-                          </View>
-                          {crop.area || crop.sowingDate ? (
-                            <Text style={styles.cropShareMeta}>
-                              {crop.area ? `📏 ${crop.area}` : ''}{crop.area && crop.sowingDate ? ' · ' : ''}{crop.sowingDate ? `📅 Sown: ${crop.sowingDate.replace(/\s*\([^)]*\)/g, '').trim()}` : ''}
-                            </Text>
-                          ) : null}
-                        </View>
+                {isReviewSectionExpanded && (
+                  <View style={{ marginTop: 10 }}>
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', marginBottom: 12 }}>
+                      Share crops with {FALLBACK_ADVISOR.name} to unlock advisory scheduling.
+                    </Text>
 
-                        {advStatus === 'NONE' && (
-                          <TouchableOpacity
-                            style={styles.shareBtn}
-                            activeOpacity={0.8}
-                            disabled={submittingCropId === crop.id}
-                            onPress={() => handleRequestAdvisorReview(crop.id, label)}
-                          >
-                            {submittingCropId === crop.id ? (
-                              <ActivityIndicator color="#ffffff" size="small" />
-                            ) : (
-                              <>
-                                <Ionicons name="person-add-outline" size={14} color="#ffffff" />
-                                <Text style={styles.shareBtnText}>Request Advisor</Text>
-                              </>
-                            )}
-                          </TouchableOpacity>
-                        )}
-
-                        {advStatus === 'PENDING' && (
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                            <View style={styles.pendingBadge}>
-                              <Ionicons name="time-outline" size={13} color="#d97706" />
-                              <Text style={styles.pendingBadgeText}>⏳ Pending</Text>
-                            </View>
-                            <TouchableOpacity
-                              style={styles.cancelPendingBtn}
-                              activeOpacity={0.8}
-                              disabled={cancellingCropId === crop.id}
-                              onPress={() => handleCancelAdvisorReview(crop.id)}
-                            >
-                              {cancellingCropId === crop.id ? (
-                                <ActivityIndicator color="#dc2626" size="small" />
-                              ) : (
-                                <Ionicons name="close" size={14} color="#dc2626" />
-                              )}
-                            </TouchableOpacity>
-                          </View>
-                        )}
+                    {shareableCrops.length === 0 ? (
+                      <View style={{ padding: 12, backgroundColor: '#f0fdf4', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#bbf7d0', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
+                        <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#15803d', flex: 1 }}>
+                          All registered crop plots have been accepted by your advisor!
+                        </Text>
                       </View>
-                    );
-                  })
+                    ) : (
+                      shareableCrops.map((crop) => {
+                        const advStatus = crop.advisorReviewStatus || 'NONE';
+                        const label = `${crop.plot.name} (${crop.cropName})`;
+
+                        return (
+                          <View key={crop.id} style={styles.cropShareItem}>
+                            <View style={{ flex: 1 }}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                <Text style={styles.cropSharePlot}>
+                                  📍 {crop.plot.name} <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>(ID: {crop.cropId || crop.id})</Text>
+                                </Text>
+                                <Text style={styles.cropShareName}>🌾 {crop.cropName}</Text>
+                              </View>
+                              {crop.area || crop.sowingDate ? (
+                                <Text style={styles.cropShareMeta}>
+                                  {crop.area ? `📏 ${crop.area}` : ''}{crop.area && crop.sowingDate ? ' · ' : ''}{crop.sowingDate ? `📅 Sown: ${crop.sowingDate.replace(/\s*\([^)]*\)/g, '').trim()}` : ''}
+                                </Text>
+                              ) : null}
+                            </View>
+
+                            {advStatus === 'NONE' && (
+                              <TouchableOpacity
+                                style={styles.shareBtn}
+                                activeOpacity={0.8}
+                                disabled={submittingCropId === crop.id}
+                                onPress={() => handleRequestAdvisorReview(crop.id, label)}
+                              >
+                                {submittingCropId === crop.id ? (
+                                  <ActivityIndicator color="#ffffff" size="small" />
+                                ) : (
+                                  <>
+                                    <Ionicons name="person-add-outline" size={14} color="#ffffff" />
+                                    <Text style={styles.shareBtnText}>Request Advisor</Text>
+                                  </>
+                                )}
+                              </TouchableOpacity>
+                            )}
+
+                            {advStatus === 'PENDING' && (
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                <View style={styles.pendingBadge}>
+                                  <Ionicons name="time-outline" size={13} color="#d97706" />
+                                  <Text style={styles.pendingBadgeText}>⏳ Pending</Text>
+                                </View>
+                                <TouchableOpacity
+                                  style={styles.cancelPendingBtn}
+                                  activeOpacity={0.8}
+                                  disabled={cancellingCropId === crop.id}
+                                  onPress={() => handleCancelAdvisorReview(crop.id)}
+                                >
+                                  {cancellingCropId === crop.id ? (
+                                    <ActivityIndicator color="#dc2626" size="small" />
+                                  ) : (
+                                    <Ionicons name="close" size={14} color="#dc2626" />
+                                  )}
+                                </TouchableOpacity>
+                              </View>
+                            )}
+                          </View>
+                        );
+                      })
+                    )}
+                  </View>
                 )}
               </View>
             </>

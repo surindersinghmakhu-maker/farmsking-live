@@ -551,11 +551,13 @@ export class UsersService implements OnModuleInit {
     }
 
     const isNewAdvisor = role === Role.ADVISOR && !user.roles.includes(Role.ADVISOR);
+    const newDeactivatedRoles = (user.deactivatedRoles ?? []).filter((r) => r !== role);
     const updated = await this.prisma.user.update({
       where: { id },
       data: {
         role,
         roles: user.roles.includes(role) ? undefined : { push: role },
+        deactivatedRoles: newDeactivatedRoles,
         ...(isNewAdvisor ? { specialization: null, bio: null, yearsExperience: null, advisorType: null } : {}),
       },
       select: SAFE_USER_SELECT,

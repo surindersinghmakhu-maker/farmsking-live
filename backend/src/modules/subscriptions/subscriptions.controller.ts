@@ -24,11 +24,12 @@ export class SubscriptionsController {
     return this.subscriptionsService.create(user, dto);
   }
 
-  @Roles(Role.FARMER)
+  @Roles(Role.FARMER, Role.CUSTOMER, Role.GARDENER, Role.ADVISOR, Role.BUSINESS_PARTNER, Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR)
   @Get('mine')
   findMine(@CurrentUser() user: AuthUser) {
     return this.subscriptionsService.findMine(user);
   }
+
 
   @Roles(Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN)
   @Post(':id/cancel')

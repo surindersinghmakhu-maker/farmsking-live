@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 
-export type FarmerPlanType = 'FREE' | 'PRO' | 'SMART' | 'SUPER';
+export type FarmerPlanType = 'FREE' | 'PRO' | 'SMART' | 'SUPER' | 'SILVER' | 'GOLD' | 'ROYAL';
 
 export interface MyFarmerPlanResponse {
   farmerId: string;

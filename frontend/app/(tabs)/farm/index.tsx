@@ -10,6 +10,8 @@ import {
   Modal,
   Platform,
   Alert,
+  ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -33,7 +35,8 @@ import { FarmLocationPickerModal } from '@/components/FarmLocationPickerModal';
 import { CropLocationGuideModal } from '@/components/CropLocationGuideModal';
 import { PaymentVoucherModal, VoucherType } from '@/src/components/PaymentVoucherModal';
 import { useLabourWorkers } from '@/src/hooks/useLabour';
-import { useMyAdvisor } from '@/src/hooks/useAdvisorAssignments';
+import { useMyAdvisor, useAvailableAdvisors, useChooseAdvisor, useMyPendingRequest, useCancelPendingRequest } from '@/src/hooks/useAdvisorAssignments';
+import { useSubmitCropToAdvisor, useCancelCropSubmission } from '@/src/hooks/useCrops';
 import { CropCompletionReviewModal } from '@/src/components/CropCompletionReviewModal';
 import { CropCompletionReview } from '@/src/store/crops-context';
 
@@ -80,10 +83,92 @@ export default function FarmListScreen() {
   const { plan, limits } = useFarmerPlan();
   const isPaid = plan !== 'FREE';
 
+  const [activeSubTab, setActiveSubTab] = useState<'CROPS' | 'CROP_CARE'>('CROPS');
+  const [isChoosingAdvisor, setIsChoosingAdvisor] = useState(false);
+  const { data: myAdvisorData } = useMyAdvisor();
+  const { data: availableAdvisors = [] } = useAvailableAdvisors();
+  const { data: myPendingRequest } = useMyPendingRequest();
+  const chooseAdvisor = useChooseAdvisor();
+  const cancelPendingRequest = useCancelPendingRequest();
+  const submitCropToAdvisor = useSubmitCropToAdvisor();
+  const cancelCropSubmission = useCancelCropSubmission();
+  const activeAdvisor = myAdvisorData?.advisor;
+  const [submittingCropId, setSubmittingCropId] = useState<string | null>(null);
+
+  const handleSubmitCropForAdoption = async (cropId: string, cropName: string) => {
+    tap();
+    if (!activeAdvisor) {
+      if (Platform.OS === 'web') {
+        alert('🩺 Please choose and assign a Crop Doctor first before submitting crops for Crop Care Plan adoption.');
+      } else {
+        Alert.alert('Assign Doctor First', 'Please choose and assign a Crop Doctor first before submitting crops for Crop Care Plan adoption.');
+      }
+      setIsChoosingAdvisor(true);
+      return;
+    }
+    setSubmittingCropId(cropId);
+    try {
+      await submitCropToAdvisor.mutateAsync(cropId);
+      if (Platform.OS === 'web') alert(`✅ Request sent to ${activeAdvisor.name} to adopt "${cropName}" under Crop Care Plan!`);
+      else Alert.alert('Request Sent', `Request sent to ${activeAdvisor.name} to adopt "${cropName}" under Crop Care Plan!`);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Could not submit crop for adoption.';
+      if (Platform.OS === 'web') alert(msg);
+      else Alert.alert('Error', msg);
+    } finally {
+      setSubmittingCropId(null);
+    }
+  };
+
+  const handleCancelCropAdoptionRequest = async (cropId: string, cropName: string) => {
+    tap();
+    setSubmittingCropId(cropId);
+    try {
+      await cancelCropSubmission.mutateAsync(cropId);
+      if (Platform.OS === 'web') alert(`✅ Adoption request for "${cropName}" cancelled.`);
+      else Alert.alert('Cancelled', `Adoption request for "${cropName}" cancelled.`);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Could not cancel request.';
+      if (Platform.OS === 'web') alert(msg);
+      else Alert.alert('Error', msg);
+    } finally {
+      setSubmittingCropId(null);
+    }
+  };
+
+  const handleCancelHireRequest = async () => {
+    tap();
+    try {
+      await cancelPendingRequest.mutateAsync();
+      if (Platform.OS === 'web') alert('✅ Hire request cancelled successfully.');
+      else Alert.alert('Cancelled', 'Your hire request has been cancelled.');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Could not cancel request.';
+      if (Platform.OS === 'web') alert(msg);
+      else Alert.alert('Error', msg);
+    }
+  };
+
+
+  const handleRequestAdvisor = async (advisorId: string) => {
+    tap();
+    try {
+      await chooseAdvisor.mutateAsync(advisorId);
+      setIsChoosingAdvisor(false);
+      if (Platform.OS === 'web') alert('✅ Hire request sent! Doctor will accept your hire request shortly.');
+      else Alert.alert('Success', 'Hire request sent! Doctor will accept your hire request shortly.');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Could not choose advisor.';
+      if (Platform.OS === 'web') alert(msg);
+      else Alert.alert('Error', msg);
+    }
+  };
+
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [editingCrop, setEditingCrop] = useState<RegisteredCropField | null>(null);
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
+  const [isCropAdoptionExpanded, setIsCropAdoptionExpanded] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [selectedCropForGps, setSelectedCropForGps] = useState<RegisteredCropField | null>(null);
@@ -485,306 +570,680 @@ export default function FarmListScreen() {
     [cropFields]
   );
 
+  const adoptedCropFields = useMemo(
+    () => activeCropFields.filter((crop) => crop.advisorStatus === 'ACCEPTED'),
+    [activeCropFields]
+  );
+
   return (
     <View style={styles.container}>
       {/* Header */}
       <LinearGradient colors={theme.gradient} style={styles.hero}>
         <View pointerEvents="none" style={[styles.glow, styles.glowTop]} />
         <View style={styles.heroTopRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.heroGreeting}>My Crops & Fields</Text>
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <TouchableOpacity
-              style={styles.topAddCropBtn}
-              activeOpacity={0.85}
-              onPress={handleOpenAddCropModal}
-            >
-              <Ionicons name="add-circle" size={16} color="#15803d" />
-              <Text style={styles.topAddCropBtnText}>+ Add Crop</Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.heroGreeting} numberOfLines={1}>🌾 My Crops & Doctor Advisory</Text>
+        </View>
+
+        {/* Sub-Tab Switcher: Active Crops vs Crop Doctor Care */}
+        <View style={styles.subTabBar}>
+          <TouchableOpacity
+            style={[styles.subTabItem, activeSubTab === 'CROPS' && styles.subTabItemActive]}
+            onPress={() => { tap(); setActiveSubTab('CROPS'); }}
+          >
+            <Ionicons name="leaf" size={14} color={activeSubTab === 'CROPS' ? '#ffffff' : '#cbd5e1'} />
+            <Text style={[styles.subTabText, activeSubTab === 'CROPS' && styles.subTabTextActive]}>
+              🌾 Active Crops ({activeCropFields.length})
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.subTabItem, activeSubTab === 'CROP_CARE' && styles.subTabItemActive]}
+            onPress={() => { tap(); setActiveSubTab('CROP_CARE'); }}
+          >
+            <Ionicons name="medical" size={14} color={activeSubTab === 'CROP_CARE' ? '#ffffff' : '#cbd5e1'} />
+            <Text style={[styles.subTabText, activeSubTab === 'CROP_CARE' && styles.subTabTextActive]}>
+              🩺 Crop Doctor Care
+            </Text>
+          </TouchableOpacity>
         </View>
       </LinearGradient>
 
-      {/* Main Active Crops & Completed History List */}
-      <FlatList
-        data={activeCropFields}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        ListHeaderComponent={
-          <View style={styles.marketCardWrap}>
-            <Text style={styles.sectionTitle}>Active Crops ({activeCropFields.length})</Text>
-          </View>
-        }
-        ListEmptyComponent={
-          <View style={styles.center}>
-            <Ionicons name="leaf-outline" size={36} color="#cbd5e1" />
-            <Text style={styles.emptyText}>No active crops right now.</Text>
-            <Text style={styles.emptySub}>Click "+ Add Crop" at the top to register new crop plots & unit rates.</Text>
-          </View>
-        }
-        renderItem={({ item }) => {
-          const isHarvestingReady = item.stage === 'HARVESTING';
-          const isEditableStage = item.stage === 'PLANTATION' || item.stage === 'SOWING' || isAdminOrSuperAdmin;
+      {activeSubTab === 'CROPS' ? (
+        /* Main Active Crops & Completed History List */
+        <FlatList
+          data={activeCropFields}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.list}
+          ListHeaderComponent={
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <Text style={styles.sectionTitle}>Active Crops ({activeCropFields.length})</Text>
+              <TouchableOpacity
+                style={[styles.topAddCropBtn, { backgroundColor: '#15803d' }]}
+                activeOpacity={0.85}
+                onPress={handleOpenAddCropModal}
+              >
+                <Ionicons name="add-circle" size={16} color="#ffffff" />
+                <Text style={[styles.topAddCropBtnText, { color: '#ffffff' }]}>+ Add Crop</Text>
+              </TouchableOpacity>
+            </View>
+          }
+          ListEmptyComponent={
+            <View style={styles.center}>
+              <Ionicons name="leaf-outline" size={36} color="#cbd5e1" />
+              <Text style={styles.emptyText}>No active crops right now.</Text>
+              <Text style={styles.emptySub}>Click "+ Add Crop" below to register new crop plots & unit rates.</Text>
+              <TouchableOpacity
+                style={{ backgroundColor: '#15803d', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 }}
+                activeOpacity={0.85}
+                onPress={handleOpenAddCropModal}
+              >
+                <Ionicons name="add-circle" size={18} color="#ffffff" />
+                <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 }}>+ Add Crop</Text>
+              </TouchableOpacity>
+            </View>
+          }
+          renderItem={({ item }) => {
+            const isHarvestingReady = item.stage === 'HARVESTING';
+            const isEditableStage = item.stage === 'PLANTATION' || item.stage === 'SOWING' || isAdminOrSuperAdmin;
 
-          return (
-            <View style={[styles.card, premiumShadow('#000000', 'sm')]}>
-              <View style={styles.cardHeader}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', flex: 1 }}>
-                  <Text style={styles.cardTitle} numberOfLines={1}>
-                    📍 {item.fieldName} <Text style={styles.cropIdSubText}>(ID: {item.cropId || item.id})</Text>
-                  </Text>
-                  <View style={styles.cropBadge}>
-                    <Text style={styles.cropBadgeText}>🌾 {item.cropName}</Text>
+            return (
+              <View style={[styles.card, premiumShadow('#000000', 'sm')]}>
+                <View style={styles.cardHeader}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', flex: 1 }}>
+                    <Text style={styles.cardTitle} numberOfLines={1}>
+                      📍 {item.fieldName} <Text style={styles.cropIdSubText}>(ID: {item.cropId || item.id})</Text>
+                    </Text>
+                    <View style={styles.cropBadge}>
+                      <Text style={styles.cropBadgeText}>🌾 {item.cropName}</Text>
+                    </View>
                   </View>
-                </View>
-                {isEditableStage && (
-                  <TouchableOpacity
-                    style={styles.editCropBadgeBtn}
-                    activeOpacity={0.8}
-                    onPress={() => {
-                      tap();
-                      setEditingCrop(item);
-                      setIsCropModalOpen(true);
-                    }}
-                  >
-                    <Ionicons name="pencil" size={13} color="#0284c7" />
-                    <Text style={styles.editCropBadgeText}>Edit</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-
-              <Text style={styles.cardMetaText}>
-                📏 {item.area}{item.sowingDate ? ` · 📅 ${item.sowingDate.replace(/\s*\([^)]*\)/g, '').trim()}` : ''}{item.variety ? ` · 🌱 ${item.variety}` : ''}{item.plantCount ? ` · 🪴 ${item.plantCount} Plants` : ''}
-              </Text>
-
-              {/* Crop GPS Location & Advisor Remote Sync Section — ALWAYS UNHIDDEN */}
-              <View style={{ marginTop: 6, gap: 6 }}>
-                {/* Row 1: 📍 Set Crop GPS Location + ❓ How Process Works */}
-                <View style={{ flexDirection: 'row', gap: 6 }}>
-                  <TouchableOpacity
-                    style={{
-                      flex: 1.3,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 4,
-                      backgroundColor: '#16a34a',
-                      paddingVertical: 7,
-                      paddingHorizontal: 8,
-                      borderRadius: 8,
-                    }}
-                    activeOpacity={0.85}
-                    onPress={() => {
-                      tap();
-                      unlockCropDirectly(item.id);
-                      setSelectedCropForGps(item);
-                      setShowLocationModal(true);
-                    }}
-                  >
-                    <Ionicons name="location" size={13} color="#ffffff" />
-                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>
-                      📍 Set Crop GPS Location
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={{
-                      flex: 1,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 4,
-                      backgroundColor: '#f0fdf4',
-                      borderWidth: 1,
-                      borderColor: '#bbf7d0',
-                      paddingVertical: 7,
-                      paddingHorizontal: 8,
-                      borderRadius: 8,
-                    }}
-                    activeOpacity={0.85}
-                    onPress={() => {
-                      tap();
-                      setShowGuideModal(true);
-                    }}
-                  >
-                    <Ionicons name="help-circle-outline" size={13} color="#166534" />
-                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#166534' }}>
-                      How Process Works
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-                {/* Row 2: 🛰️ Satellite Advisor */}
-                {(() => {
-                  const cropGps = cropGpsDataMap[item.id] || item.gpsData;
-                  const isGpsLocked = cropGps?.isLocked || false;
-
-                  return (
+                  {isEditableStage && (
                     <TouchableOpacity
-                      style={{
-                        width: '100%',
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 4,
-                        backgroundColor: isGpsLocked ? '#eff6ff' : '#fff7ed',
-                        borderWidth: 1,
-                        borderColor: isGpsLocked ? '#bfdbfe' : '#ffedd5',
-                        paddingVertical: 7,
-                        paddingHorizontal: 8,
-                        borderRadius: 8,
-                      }}
-                      activeOpacity={0.85}
+                      style={styles.editCropBadgeBtn}
+                      activeOpacity={0.8}
                       onPress={() => {
                         tap();
-                        if (!isGpsLocked) {
-                          Alert.alert(
-                            'Location Not Locked 🔒',
-                            'Please tap "📍 Set Crop GPS Location" to mark & lock 4 field corners first before accessing Satellite Advisor.'
-                          );
-                          return;
-                        }
-                        router.push({
-                          pathname: '/(tabs)/satellite-map',
-                          params: {
-                            cropId: item.id,
-                            cropName: item.cropName,
-                            farmerName: item.farmerName || user?.name,
-                            plotName: item.fieldName,
-                            area: item.area,
-                            location: cropGps?.locationText || item.location,
-                            lat: String(cropGps?.centerLat || ''),
-                            lng: String(cropGps?.centerLng || ''),
-                          },
-                        });
+                        setEditingCrop(item);
+                        setIsCropModalOpen(true);
                       }}
                     >
-                      <Ionicons name={isGpsLocked ? "planet" : "lock-closed"} size={13} color={isGpsLocked ? "#2563eb" : "#d97706"} />
-                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isGpsLocked ? "#2563eb" : "#b45309" }}>
-                        {isGpsLocked ? "🛰️ Satellite Advisor" : "🔒 Satellite Advisor (Lock Location First)"}
-                      </Text>
+                      <Ionicons name="pencil" size={13} color="#0284c7" />
+                      <Text style={styles.editCropBadgeText}>Edit</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                <Text style={styles.cardMetaText}>
+                  📏 {item.area}{item.sowingDate ? ` · 📅 ${item.sowingDate.replace(/\s*\([^)]*\)/g, '').trim()}` : ''}{item.variety ? ` · 🌱 ${item.variety}` : ''}{item.plantCount ? ` · 🪴 ${item.plantCount} Plants` : ''}
+                </Text>
+
+                {/* Crop GPS Location & Advisor Remote Sync Section — Dynamic based on GPS locked status */}
+                <View style={{ marginTop: 6, gap: 6 }}>
+                  {(() => {
+                    const cropGps = cropGpsDataMap[item.id] || item.gpsData;
+                    const isGpsLocked = cropGps?.isLocked || false;
+
+                    if (!isGpsLocked) {
+                      return (
+                        <>
+                          {/* Row 1: 📍 Set Crop GPS Location + ❓ How Process Works */}
+                          <View style={{ flexDirection: 'row', gap: 6 }}>
+                            <TouchableOpacity
+                              style={{
+                                flex: 1.3,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 4,
+                                backgroundColor: '#16a34a',
+                                paddingVertical: 7,
+                                paddingHorizontal: 8,
+                                borderRadius: 8,
+                              }}
+                              activeOpacity={0.85}
+                              onPress={() => {
+                                tap();
+                                unlockCropDirectly(item.id);
+                                setSelectedCropForGps(item);
+                                setShowLocationModal(true);
+                              }}
+                            >
+                              <Ionicons name="location" size={13} color="#ffffff" />
+                              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>
+                                📍 Set Crop GPS Location
+                              </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                              style={{
+                                flex: 1,
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 4,
+                                backgroundColor: '#f0fdf4',
+                                borderWidth: 1,
+                                borderColor: '#bbf7d0',
+                                paddingVertical: 7,
+                                paddingHorizontal: 8,
+                                borderRadius: 8,
+                              }}
+                              activeOpacity={0.85}
+                              onPress={() => {
+                                tap();
+                                setShowGuideModal(true);
+                              }}
+                            >
+                              <Ionicons name="help-circle-outline" size={13} color="#166534" />
+                              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#166534' }}>
+                                How Process Works
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+
+                          {/* Row 2: 🔒 Satellite Advisor (Lock Location First) */}
+                          <TouchableOpacity
+                            style={{
+                              width: '100%',
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: 4,
+                              backgroundColor: '#fff7ed',
+                              borderWidth: 1,
+                              borderColor: '#ffedd5',
+                              paddingVertical: 7,
+                              paddingHorizontal: 8,
+                              borderRadius: 8,
+                            }}
+                            activeOpacity={0.85}
+                            onPress={() => {
+                              tap();
+                              Alert.alert(
+                                'Location Not Locked 🔒',
+                                'Please tap "📍 Set Crop GPS Location" to mark & lock 4 field corners first before accessing Satellite Advisor.'
+                              );
+                            }}
+                          >
+                            <Ionicons name="lock-closed" size={13} color="#d97706" />
+                            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#b45309' }}>
+                              🔒 Satellite Advisor (Lock Location First)
+                            </Text>
+                          </TouchableOpacity>
+                        </>
+                      );
+                    } else {
+                      // GPS Locked: Show active Satellite Map action button + Edit GPS
+                      return (
+                        <View style={{ flexDirection: 'row', gap: 6 }}>
+                          <TouchableOpacity
+                            style={{
+                              flex: 1.8,
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: 6,
+                              backgroundColor: '#2563eb',
+                              paddingVertical: 8,
+                              paddingHorizontal: 10,
+                              borderRadius: 8,
+                            }}
+                            activeOpacity={0.85}
+                            onPress={() => {
+                              tap();
+                              router.push({
+                                pathname: '/(tabs)/satellite-map',
+                                params: {
+                                  cropId: item.id,
+                                  cropName: item.cropName,
+                                  farmerName: item.farmerName || user?.name,
+                                  plotName: item.fieldName,
+                                  area: item.area,
+                                  location: cropGps?.locationText || item.location,
+                                  lat: String(cropGps?.centerLat || ''),
+                                  lng: String(cropGps?.centerLng || ''),
+                                },
+                              });
+                            }}
+                          >
+                            <Ionicons name="planet" size={15} color="#ffffff" />
+                            <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' }}>
+                              🛰️ View Satellite Health Map
+                            </Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            style={{
+                              flex: 1,
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: 4,
+                              backgroundColor: '#f0fdf4',
+                              borderWidth: 1,
+                              borderColor: '#bbf7d0',
+                              paddingVertical: 8,
+                              paddingHorizontal: 8,
+                              borderRadius: 8,
+                            }}
+                            activeOpacity={0.85}
+                            onPress={() => {
+                              tap();
+                              setSelectedCropForGps(item);
+                              setShowLocationModal(true);
+                            }}
+                          >
+                            <Ionicons name="location-outline" size={13} color="#166534" />
+                            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#166534' }}>
+                              📍 Edit GPS
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    }
+                  })()}
+                </View>
+
+                <View style={styles.stageInlineRow}>
+                  {(() => {
+                    const st = STAGE_META[item.stage];
+                    return (
+                      <View style={[styles.stageChip, { backgroundColor: st.color, borderColor: st.color }]}>
+                        <Text style={[styles.stageChipText, { color: '#ffffff', fontFamily: FONT.bold }]}>
+                          {st.label}
+                        </Text>
+                      </View>
+                    );
+                  })()}
+                  {item.stage !== 'COMPLETED' && (
+                    <TouchableOpacity
+                      style={styles.updateStageBtn}
+                      activeOpacity={0.8}
+                      onPress={() => {
+                        tap();
+                        setStagePickerCrop(item);
+                        setStagePickerVisible(true);
+                      }}
+                    >
+                      <Ionicons name="repeat" size={12} color={theme.primary} />
+                      <Text style={styles.updateStageBtnText}>Update Stage</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            );
+          }}
+
+          /* COMPLETED CROPS HISTORY SECTION AT THE BOTTOM */
+          ListFooterComponent={
+            <View style={styles.historySectionContainer}>
+              <TouchableOpacity
+                style={styles.historySectionHeader}
+                activeOpacity={0.75}
+                onPress={() => {
+                  tap();
+                  setIsHistoryExpanded((v) => !v);
+                }}
+              >
+                <Ionicons name="time" size={18} color="#475569" />
+                <Text style={[styles.historySectionTitle, { flex: 1 }]}>
+                  Completed Crops History ({cropHistory.length})
+                </Text>
+                <Ionicons name={isHistoryExpanded ? 'chevron-up' : 'chevron-down'} size={16} color="#94a3b8" />
+              </TouchableOpacity>
+
+              {!isHistoryExpanded ? null : cropHistory.length > 0 ? (
+                cropHistory.map((hItem) => {
+                  const summary = getCompletedCropSummary(hItem.id, hItem);
+                  return (
+                    <TouchableOpacity
+                      key={hItem.id}
+                      style={[styles.historyCard, premiumShadow('#000000', 'sm')]}
+                      activeOpacity={0.8}
+                      onPress={() => openHistoryDetail(hItem)}
+                    >
+                      <View style={styles.historyCardHeader}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <Text style={styles.historyCropName}>
+                            📍 {hItem.fieldName} <Text style={styles.cropIdSubText}>(ID: {hItem.cropId || hItem.id})</Text>
+                          </Text>
+                          <View style={styles.completedBadge}>
+                            <Text style={styles.completedBadgeText}>🏁 COMPLETED</Text>
+                          </View>
+                        </View>
+                        <Text style={styles.historyDate}>{hItem.completedDate}</Text>
+                      </View>
+
+                      <Text style={styles.historyCropSub}>🌾 {hItem.cropName} · {hItem.categoryName}</Text>
+
+                      <View style={styles.historyRevenueBox}>
+                        <Ionicons name="cash" size={16} color="#16a34a" />
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.historyRevenueText}>
+                            Total Sale Weight: <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>{summary.totalWeight}</Text>
+                          </Text>
+                          <Text style={styles.historyRevenueText}>
+                            Total Sale Amount: <Text style={{ fontFamily: FONT.bold, color: '#16a34a' }}>{summary.totalAmount}</Text>
+                            {summary.count > 0 ? ` (${summary.count} sales logged)` : ''}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {isPaid ? (
+                        <View style={styles.historyViewMoreRow}>
+                          <Ionicons name="sparkles" size={13} color="#16a34a" />
+                          <Text style={[styles.historyViewMoreText, { color: '#16a34a', fontFamily: FONT.bold }]}>
+                            ✨ Tap to view full sales audit details
+                          </Text>
+                        </View>
+                      ) : (
+                        <View style={[styles.historyViewMoreRow, { backgroundColor: '#fff7ed', borderColor: '#ffedd5', borderWidth: 1, paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.xs }]}>
+                          <Ionicons name="lock-closed" size={13} color="#d97706" />
+                          <Text style={[styles.historyViewMoreText, { color: '#b45309', fontFamily: FONT.bold }]}>
+                            🔒 Full Details (Paid Users Only)
+                          </Text>
+                        </View>
+                      )}
                     </TouchableOpacity>
                   );
-                })()}
+                })
+              ) : (
+                <View style={styles.historyEmptyBox}>
+                  <Ionicons name="checkmark-done-circle-outline" size={32} color="#cbd5e1" />
+                  <Text style={styles.historyEmptyText}>No completed crops yet.</Text>
+                  <Text style={styles.historyEmptySub}>
+                    Completed crops will appear here with total sale weight and revenue summary.
+                  </Text>
+                </View>
+              )}
+            </View>
+          }
+        />
+      ) : (
+        /* CROP DOCTOR / CROP CARE ADVISORY SECTION */
+        <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+          {/* Active Assigned Doctor Card */}
+          <View style={[styles.doctorCard, premiumShadow('#0f172a', 'sm')]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <View style={styles.doctorAvatarCircle}>
+                <Ionicons name="medical" size={26} color="#0284c7" />
               </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.doctorCardSub}>HIRED CROP DOCTOR</Text>
+                <Text style={styles.doctorCardName}>
+                  {activeAdvisor ? activeAdvisor.name : 'No Doctor Hired Yet'}
+                </Text>
+                <Text style={styles.doctorCardSpec}>
+                  {activeAdvisor?.specialization || 'Specialized Farm & Crop Care Doctor'}
+                </Text>
+              </View>
+            </View>
 
-              <View style={styles.stageInlineRow}>
-                {(() => {
-                  const st = STAGE_META[item.stage];
-                  return (
+            {activeAdvisor ? (
+              <View style={styles.doctorActionsRow}>
+                <TouchableOpacity
+                  style={[styles.doctorActionBtn, { backgroundColor: '#e0f2fe' }]}
+                  onPress={() => router.push('/(tabs)/chat')}
+                >
+                  <Ionicons name="chatbubble-ellipses" size={15} color="#0284c7" />
+                  <Text style={[styles.doctorActionText, { color: '#0284c7' }]}>Chat Doctor</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.doctorActionBtn, { backgroundColor: '#dcfce7' }]}
+                  onPress={() => router.push('/(tabs)/market')}
+                >
+                  <Ionicons name="call" size={15} color="#16a34a" />
+                  <Text style={[styles.doctorActionText, { color: '#16a34a' }]}>Call Doctor</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.doctorActionBtn, { backgroundColor: '#f1f5f9' }]}
+                  onPress={() => setIsChoosingAdvisor(true)}
+                >
+                  <Ionicons name="swap-horizontal" size={15} color="#475569" />
+                  <Text style={[styles.doctorActionText, { color: '#475569' }]}>Change</Text>
+                </TouchableOpacity>
+              </View>
+            ) : myPendingRequest ? (
+              <View style={{ marginTop: 12, gap: 8 }}>
+                <View style={{ backgroundColor: '#fffbeb', borderWidth: 1, borderColor: '#fde68a', padding: 10, borderRadius: RADIUS.md }}>
+                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#b45309' }}>
+                    ⏳ Hire Request Sent to {myPendingRequest.advisor?.name || 'Doctor'}
+                  </Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#92400e', marginTop: 2 }}>
+                    Awaiting Doctor approval... You can cancel or choose another doctor anytime.
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.doctorActionBtn, { backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca' }]}
+                  disabled={cancelPendingRequest.isPending}
+                  onPress={handleCancelHireRequest}
+                >
+                  {cancelPendingRequest.isPending ? (
+                    <ActivityIndicator size="small" color="#dc2626" />
+                  ) : (
+                    <>
+                      <Ionicons name="close-circle" size={15} color="#dc2626" />
+                      <Text style={[styles.doctorActionText, { color: '#dc2626' }]}>Cancel Hire Request</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={[styles.assignDoctorBtn, { backgroundColor: '#0284c7', marginTop: 12 }]}
+                onPress={() => setIsChoosingAdvisor(true)}
+              >
+                <Text style={styles.assignDoctorBtnText}>+ Choose & Hire Crop Doctor 🩺</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Active Crops Advisory Recommendations (Only Adopted Crops) */}
+          <Text style={styles.sectionHeaderTitle}>FIELD CROP ADVISORY & SPRAY SCHEDULES</Text>
+
+          {adoptedCropFields.length === 0 ? (
+            <View style={styles.historyEmptyBox}>
+              <Ionicons name="medical-outline" size={32} color="#0284c7" />
+              <Text style={styles.historyEmptyText}>No Crops Adopted Under Crop Care Plan</Text>
+              <Text style={styles.historyEmptySub}>Submit your active crops below for Doctor adoption. Once accepted by your Crop Doctor, stage-wise advisory & spray schedules will appear here.</Text>
+            </View>
+          ) : (
+            adoptedCropFields.map((crop) => {
+              const st = STAGE_META[crop.stage];
+              return (
+                <View key={crop.id} style={[styles.card, premiumShadow('#000000', 'sm')]}>
+                  <View style={styles.cardHeader}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                      <Text style={styles.cardTitle} numberOfLines={1}>
+                        📍 {crop.fieldName}
+                      </Text>
+                      <View style={styles.cropBadge}>
+                        <Text style={styles.cropBadgeText}>🌾 {crop.cropName}</Text>
+                      </View>
+                    </View>
                     <View style={[styles.stageChip, { backgroundColor: st.color, borderColor: st.color }]}>
                       <Text style={[styles.stageChipText, { color: '#ffffff', fontFamily: FONT.bold }]}>
                         {st.label}
                       </Text>
                     </View>
-                  );
-                })()}
-                {item.stage !== 'COMPLETED' && (
-                  <TouchableOpacity
-                    style={styles.updateStageBtn}
-                    activeOpacity={0.8}
-                    onPress={() => {
-                      tap();
-                      setStagePickerCrop(item);
-                      setStagePickerVisible(true);
-                    }}
-                  >
-                    <Ionicons name="repeat" size={12} color={theme.primary} />
-                    <Text style={styles.updateStageBtnText}>Update Stage</Text>
-                  </TouchableOpacity>
-                )}
+                  </View>
+
+                  <View style={styles.advisoryRecommendationBox}>
+                    <Ionicons name="information-circle" size={18} color="#0284c7" style={{ marginTop: 2 }} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.advisoryStageTitle}>Doctor Recommended Action:</Text>
+                      <Text style={styles.advisoryStageText}>
+                        {crop.stage === 'PLANTATION' || crop.stage === 'SOWING'
+                          ? '🌱 Ensure adequate seed treatment and soil moisture. Apply basal fertilizer dose as advised by Doctor.'
+                          : crop.stage === 'VEGETATIVE' || crop.stage === 'GROWTH'
+                          ? '🌿 Monitor nitrogen intake, weed control, and check leaf underside for early pest/fungal symptoms.'
+                          : crop.stage === 'FLOWERING'
+                          ? '🌸 Critical Flowering Stage! Spray recommended micronutrients/fungicides. Maintain steady irrigation.'
+                          : crop.stage === 'HARVESTING'
+                          ? '🌾 Harvesting Stage Ready! Stop chemical sprays. Plan harvesting schedule and log crop sales.'
+                          : '🏁 Crop Cycle Completed.'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+                    <TouchableOpacity
+                      style={[styles.doctorActionBtn, { backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0' }]}
+                      onPress={() => router.push('/(tabs)/crop-disease-scanner')}
+                    >
+                      <Ionicons name="camera" size={14} color="#16a34a" />
+                      <Text style={[styles.doctorActionText, { color: '#16a34a' }]}>AI Disease Check</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.doctorActionBtn, { backgroundColor: '#e0f2fe', borderWidth: 1, borderColor: '#bae6fd' }]}
+                      onPress={() => router.push('/(tabs)/chat')}
+                    >
+                      <Ionicons name="medical" size={14} color="#0284c7" />
+                      <Text style={[styles.doctorActionText, { color: '#0284c7' }]}>Consult Doctor</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })
+          )}
+
+          {/* My Crops Crop Care Adoption Section (Collapsible & Below Advisory) */}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => {
+              tap();
+              setIsCropAdoptionExpanded((prev) => !prev);
+            }}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: 14,
+              marginBottom: 8,
+              paddingHorizontal: 2,
+            }}
+          >
+            <Text style={[styles.sectionHeaderTitle, { marginBottom: 0 }]}>
+              MY CROPS — CROP CARE PLAN ADOPTION ({activeCropFields.length})
+            </Text>
+            <Ionicons
+              name={isCropAdoptionExpanded ? 'chevron-up-circle' : 'chevron-down-circle'}
+              size={22}
+              color="#0284c7"
+            />
+          </TouchableOpacity>
+
+          {isCropAdoptionExpanded && (
+            activeCropFields.length === 0 ? (
+              <View style={styles.historyEmptyBox}>
+                <Ionicons name="leaf-outline" size={32} color="#cbd5e1" />
+                <Text style={styles.historyEmptyText}>No Active Crops Registered</Text>
+                <Text style={styles.historyEmptySub}>Register active crops first to send adoption requests to your Crop Doctor.</Text>
               </View>
-            </View>
-          );
-        }}
-
-        /* COMPLETED CROPS HISTORY SECTION AT THE BOTTOM */
-        ListFooterComponent={
-          <View style={styles.historySectionContainer}>
-            <TouchableOpacity
-              style={styles.historySectionHeader}
-              activeOpacity={0.75}
-              onPress={() => {
-                tap();
-                setIsHistoryExpanded((v) => !v);
-              }}
-            >
-              <Ionicons name="time" size={18} color="#475569" />
-              <Text style={[styles.historySectionTitle, { flex: 1 }]}>
-                Completed Crops History ({cropHistory.length})
-              </Text>
-              <Ionicons name={isHistoryExpanded ? 'chevron-up' : 'chevron-down'} size={16} color="#94a3b8" />
-            </TouchableOpacity>
-
-            {!isHistoryExpanded ? null : cropHistory.length > 0 ? (
-              cropHistory.map((hItem) => {
-                const summary = getCompletedCropSummary(hItem.id, hItem);
+            ) : (
+              activeCropFields.map((crop) => {
+                const isAccepted = crop.advisorStatus === 'ACCEPTED';
+                const isPending = crop.advisorStatus === 'PENDING';
                 return (
-                  <TouchableOpacity
-                    key={hItem.id}
-                    style={[styles.historyCard, premiumShadow('#000000', 'sm')]}
-                    activeOpacity={0.8}
-                    onPress={() => openHistoryDetail(hItem)}
-                  >
-                    <View style={styles.historyCardHeader}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                        <Text style={styles.historyCropName}>
-                          📍 {hItem.fieldName} <Text style={styles.cropIdSubText}>(ID: {hItem.cropId || hItem.id})</Text>
+                  <View key={`adopt-${crop.id}`} style={[styles.card, { padding: 12, marginBottom: 10 }, premiumShadow('#000000', 'sm')]}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <View style={{ flex: 1, paddingRight: 8 }}>
+                        <Text style={styles.cardTitle} numberOfLines={1}>📍 {crop.fieldName}</Text>
+                        <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 }}>
+                          🌾 {crop.cropName} · 📏 {crop.area}
                         </Text>
-                        <View style={styles.completedBadge}>
-                          <Text style={styles.completedBadgeText}>🏁 COMPLETED</Text>
-                        </View>
                       </View>
-                      <Text style={styles.historyDate}>{hItem.completedDate}</Text>
+                      <View style={{ alignItems: 'flex-end' }}>
+                        {isAccepted ? (
+                          <View style={{ backgroundColor: '#dcfce7', borderWidth: 1, borderColor: '#86efac', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }}>
+                            <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#16a34a' }}>✅ Adopted</Text>
+                          </View>
+                        ) : isPending ? (
+                          <TouchableOpacity
+                            style={{ backgroundColor: '#fffbeb', borderWidth: 1, borderColor: '#fde68a', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                            disabled={submittingCropId === crop.id}
+                            onPress={() => handleCancelCropAdoptionRequest(crop.id, crop.cropName)}
+                          >
+                            {submittingCropId === crop.id ? (
+                              <ActivityIndicator size="small" color="#d97706" />
+                            ) : (
+                              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#b45309' }}>⏳ Pending Approval (Cancel)</Text>
+                            )}
+                          </TouchableOpacity>
+                        ) : (
+                          <TouchableOpacity
+                            style={{ backgroundColor: '#0284c7', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                            disabled={submittingCropId === crop.id}
+                            onPress={() => handleSubmitCropForAdoption(crop.id, crop.cropName)}
+                          >
+                            {submittingCropId === crop.id ? (
+                              <ActivityIndicator size="small" color="#ffffff" />
+                            ) : (
+                              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' }}>+ Request Adoption 🩺</Text>
+                            )}
+                          </TouchableOpacity>
+                        )}
+                      </View>
                     </View>
-
-                    <Text style={styles.historyCropSub}>🌾 {hItem.cropName} · {hItem.categoryName}</Text>
-
-                    <View style={styles.historyRevenueBox}>
-                      <Ionicons name="cash" size={16} color="#16a34a" />
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.historyRevenueText}>
-                          Total Sale Weight: <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>{summary.totalWeight}</Text>
-                        </Text>
-                        <Text style={styles.historyRevenueText}>
-                          Total Sale Amount: <Text style={{ fontFamily: FONT.bold, color: '#16a34a' }}>{summary.totalAmount}</Text>
-                          {summary.count > 0 ? ` (${summary.count} sales logged)` : ''}
-                        </Text>
-                      </View>
-                    </View>
-
-                    {isPaid ? (
-                      <View style={styles.historyViewMoreRow}>
-                        <Ionicons name="sparkles" size={13} color="#16a34a" />
-                        <Text style={[styles.historyViewMoreText, { color: '#16a34a', fontFamily: FONT.bold }]}>
-                          ✨ Tap to view full sales audit details
-                        </Text>
-                      </View>
-                    ) : (
-                      <View style={[styles.historyViewMoreRow, { backgroundColor: '#fff7ed', borderColor: '#ffedd5', borderWidth: 1, paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.xs }]}>
-                        <Ionicons name="lock-closed" size={13} color="#d97706" />
-                        <Text style={[styles.historyViewMoreText, { color: '#b45309', fontFamily: FONT.bold }]}>
-                          🔒 Full Details (Paid Users Only)
-                        </Text>
-                      </View>
-                    )}
-                  </TouchableOpacity>
+                  </View>
                 );
               })
-            ) : (
-              <View style={styles.historyEmptyBox}>
-                <Ionicons name="checkmark-done-circle-outline" size={32} color="#cbd5e1" />
-                <Text style={styles.historyEmptyText}>No completed crops yet.</Text>
-                <Text style={styles.historyEmptySub}>
-                  Completed crops will appear here with total sale weight and revenue summary.
-                </Text>
+            )
+          )}
+
+          {/* Doctor Advisory Packages */}
+          <Text style={styles.sectionHeaderTitle}>DOCTOR CARE ADVISORY PACKAGES</Text>
+
+          {/* Package 1 */}
+          <View style={[styles.planCard, { borderColor: '#0284c7', borderWidth: 1.5 }, premiumShadow('#000000', 'sm')]}>
+            <View style={styles.planHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.planTitle, { color: '#0284c7' }]}>🩺 5-Crop Care Advisory</Text>
+                <Text style={styles.planPrice}>₹499 <Text style={styles.planPeriod}>/ Full Crop Season</Text></Text>
               </View>
-            )}
+            </View>
+            <View style={styles.featureList}>
+              <Text style={styles.featureItem}>✓ 1-on-1 Assigned Crop Care Doctor</Text>
+              <Text style={styles.featureItem}>✓ Up to 5 Crop Plots Monitored</Text>
+              <Text style={styles.featureItem}>✓ Stage-wise Spray & Fertilizer Schedules</Text>
+              <Text style={styles.featureItem}>✓ Direct Phone & Chat Advisory</Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.assignDoctorBtn, { backgroundColor: '#0284c7' }]}
+              onPress={() => setIsChoosingAdvisor(true)}
+            >
+              <Text style={styles.assignDoctorBtnText}>Subscribe 5-Crop Care Advisory 🩺</Text>
+            </TouchableOpacity>
           </View>
-        }
-      />
+
+          {/* Package 2 */}
+          <View style={[styles.planCard, { borderColor: '#7c3aed', borderWidth: 2 }, premiumShadow('#7c3aed', 'sm')]}>
+            <View style={[styles.vipTag, { backgroundColor: '#7c3aed' }]}>
+              <Text style={styles.vipTagText}>🌟 VIP FULL FARM ADVISORY</Text>
+            </View>
+            <View style={styles.planHeader}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.planTitle, { color: '#7c3aed' }]}>🩺 10-Crop VIP Advisory</Text>
+                <Text style={styles.planPrice}>₹999 <Text style={styles.planPeriod}>/ Full Crop Season</Text></Text>
+              </View>
+            </View>
+            <View style={styles.featureList}>
+              <Text style={styles.featureItem}>✓ Up to 10 Crop Plots Monitored Daily</Text>
+              <Text style={styles.featureItem}>✓ High-Resolution ISRO Satellite Health Sync</Text>
+              <Text style={styles.featureItem}>✓ Direct Audio/Video Doctor Calls</Text>
+              <Text style={styles.featureItem}>✓ Emergency Disease Diagnosis & Visit Support</Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.assignDoctorBtn, { backgroundColor: '#7c3aed' }]}
+              onPress={() => setIsChoosingAdvisor(true)}
+            >
+              <Text style={styles.assignDoctorBtnText}>Subscribe 10-Crop VIP Advisory 🌟</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      )}
 
       {/* STAGE CHANGE WARNING CONFIRMATION MODAL */}
       <Modal visible={stageConfirmModalVisible} transparent animationType="fade">
@@ -1265,6 +1724,44 @@ export default function FarmListScreen() {
         }}
         onSubmitReview={handleReviewSubmitted}
       />
+
+      {/* Choose Doctor Modal */}
+      <Modal visible={isChoosingAdvisor} transparent animationType="slide" onRequestClose={() => setIsChoosingAdvisor(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.advisorModalCard}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalHeaderTitle}>🩺 Available Crop Care Doctors</Text>
+              <TouchableOpacity onPress={() => setIsChoosingAdvisor(false)}>
+                <Ionicons name="close-circle" size={24} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingVertical: 8 }}>
+              {availableAdvisors.length === 0 ? (
+                <Text style={styles.emptyText}>No crop care doctors available right now.</Text>
+              ) : (
+                availableAdvisors.map((adv) => (
+                  <View key={adv.id} style={styles.advisorItemRow}>
+                    <View style={styles.doctorAvatarCircleSmall}>
+                      <Ionicons name="person" size={18} color="#0284c7" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.advisorName}>{adv.name}</Text>
+                      <Text style={styles.advisorSub}>{adv.specialization || 'Specialized Farm Doctor'} · 📍 {adv.district || 'Punjab'}</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.chooseBtn}
+                      disabled={chooseAdvisor.isPending}
+                      onPress={() => handleRequestAdvisor(adv.id)}
+                    >
+                      <Text style={styles.chooseBtnText}>Hire 🩺</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
     </View>
   );
@@ -1955,5 +2452,221 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     fontFamily: FONT.bold,
     color: '#0284c7',
+  },
+  subTabBar: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    padding: 3,
+    borderRadius: RADIUS.pill,
+    marginTop: 12,
+  },
+  subTabItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 7,
+    borderRadius: RADIUS.pill,
+  },
+  subTabItemActive: {
+    backgroundColor: theme.primary,
+  },
+  subTabText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#cbd5e1',
+  },
+  subTabTextActive: {
+    color: '#ffffff',
+  },
+  sectionHeaderTitle: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+    letterSpacing: 0.5,
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  doctorCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginBottom: 8,
+  },
+  doctorAvatarCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#e0f2fe',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  doctorCardSub: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#0284c7',
+    letterSpacing: 0.5,
+  },
+  doctorCardName: {
+    fontSize: 15,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+  },
+  doctorCardSpec: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  doctorActionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+  },
+  doctorActionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    borderRadius: RADIUS.md,
+  },
+  doctorActionText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+  },
+  assignDoctorBtn: {
+    height: 42,
+    borderRadius: RADIUS.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  assignDoctorBtnText: {
+    color: '#ffffff',
+    fontFamily: FONT.bold,
+    fontSize: 13,
+  },
+  advisoryRecommendationBox: {
+    flexDirection: 'row',
+    gap: 8,
+    backgroundColor: '#f0f9ff',
+    borderWidth: 1,
+    borderColor: '#bae6fd',
+    padding: 10,
+    borderRadius: RADIUS.md,
+    marginTop: 8,
+  },
+  advisoryStageTitle: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#0369a1',
+  },
+  advisoryStageText: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    color: '#0c4a6e',
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  planCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.xl,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginBottom: 10,
+  },
+  vipTag: {
+    position: 'absolute',
+    top: -10,
+    right: 16,
+    backgroundColor: '#10b981',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+  },
+  vipTagText: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    letterSpacing: 0.5,
+  },
+  planHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  planTitle: {
+    fontSize: 15,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+  },
+  planPrice: {
+    fontSize: 18,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+    marginTop: 2,
+  },
+  planPeriod: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  featureList: {
+    gap: 5,
+    marginBottom: 12,
+  },
+  featureItem: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#334155',
+  },
+  advisorModalCard: {
+    width: '100%',
+    maxWidth: 440,
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.xl,
+    padding: 16,
+    maxHeight: '80%',
+  },
+  advisorItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  doctorAvatarCircleSmall: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#e0f2fe',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  advisorName: {
+    fontSize: 13.5,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  advisorSub: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  chooseBtn: {
+    backgroundColor: '#0284c7',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: RADIUS.md,
+  },
+  chooseBtnText: {
+    color: '#ffffff',
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
   },
 });

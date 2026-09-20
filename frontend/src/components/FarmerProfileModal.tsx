@@ -92,10 +92,6 @@ export function FarmerProfileModal({ visible, farmerId, assignmentId, onClose }:
           // 1. EXCLUDE non-active / completed / deactivated crops
           if (isCompleted) return;
 
-          // 2. ONLY SHOW CROPS ACCEPTED BY ADVISOR
-          const isAcceptedByAdvisor = (cycle as any).advisorReviewStatus === 'ACCEPTED';
-          if (!isAcceptedByAdvisor) return;
-
           const cropNo = cycle.cropId || `CR-${cropCounter.toString().padStart(3, '0')}`;
           cropCounter++;
 
@@ -103,13 +99,16 @@ export function FarmerProfileModal({ visible, farmerId, assignmentId, onClose }:
             ? `${cycle.area} ${plot.areaUnit ?? 'Acre'}`
             : `${plot.area} ${plot.areaUnit ?? 'Acre'}`;
 
+          const reviewStatus = (cycle as any).advisorReviewStatus || 'NONE';
+          const statusLabel = reviewStatus === 'ACCEPTED' ? 'Adopted' : reviewStatus === 'PENDING' ? 'Pending Review' : 'Active';
+
           crops.push({
             id: cycle.id,
             cropNo,
             subcategory: cycle.cropName,
             variety: cycle.variety ?? '—',
             area: areaText,
-            status: 'Active',
+            status: statusLabel,
           });
         });
       });
@@ -289,9 +288,9 @@ export function FarmerProfileModal({ visible, farmerId, assignmentId, onClose }:
                         <Text style={[styles.tableTd, { flex: 1.3 }]} numberOfLines={1}>{c.variety}</Text>
                         <Text style={[styles.tableTd, { flex: 1.1 }]} numberOfLines={1}>{c.area}</Text>
                         <View style={{ flex: 1, alignItems: 'flex-start' }}>
-                          <View style={styles.activeStatusBadge}>
-                            <View style={styles.greenDot} />
-                            <Text style={styles.activeStatusText}>Active</Text>
+                          <View style={[styles.activeStatusBadge, c.status === 'Adopted' ? { backgroundColor: '#dcfce7' } : c.status === 'Pending Review' ? { backgroundColor: '#fffbeb' } : { backgroundColor: '#f1f5f9' }]}>
+                            <View style={[styles.greenDot, c.status === 'Adopted' ? { backgroundColor: '#16a34a' } : c.status === 'Pending Review' ? { backgroundColor: '#d97706' } : { backgroundColor: '#64748b' }]} />
+                            <Text style={[styles.activeStatusText, c.status === 'Adopted' ? { color: '#15803d' } : c.status === 'Pending Review' ? { color: '#b45309' } : { color: '#475569' }]}>{c.status}</Text>
                           </View>
                         </View>
                       </View>

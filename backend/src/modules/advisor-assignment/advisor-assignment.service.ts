@@ -295,10 +295,11 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
 
   /** FARMER needs a FARM advisor, GARDENER needs a GARDEN advisor — anything else can't be assigned. */
   private roleToAdvisorType(user: { role: Role; roles: Role[]; deactivatedRoles: Role[] }): AdvisorType {
-    if (hasActiveRole(user, Role.FARMER)) return AdvisorType.FARM;
     if (hasActiveRole(user, Role.GARDENER)) return AdvisorType.GARDEN;
-    throw new BadRequestException('Only farmers and gardeners can be assigned an advisor.');
+    return AdvisorType.FARM;
   }
+
+
 
   /**
    * Called by SubscriptionsService once a subscription is ACTIVE — auto-picks a matching-type advisor and
@@ -374,6 +375,21 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
       `${farmer.name} wants to hire you as their advisor. Review their profile and accept or reject.`,
     );
     return assignment;
+  }
+
+  /** Farmer/Gardener cancels their own pending hire request. */
+  async cancelMyPendingRequest(user: AuthUser) {
+    const pending = await this.prisma.advisorAssignment.findFirst({
+      where: { farmerId: user.id, status: AdvisorAssignmentStatus.PENDING, deletedAt: null },
+    });
+    if (!pending) {
+      throw new NotFoundException('No pending advisor request found.');
+    }
+    const updated = await this.prisma.advisorAssignment.update({
+      where: { id: pending.id },
+      data: { status: AdvisorAssignmentStatus.REVOKED, endDate: new Date(), notes: 'Cancelled by farmer' },
+    });
+    return updated;
   }
 
   /**

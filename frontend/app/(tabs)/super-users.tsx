@@ -51,7 +51,7 @@ const FILTERS_BY_GROUP: Record<UserGroup, { value: UserFilter; label: string; ic
   ],
   PARTNERS: [
     { value: 'BUSINESS_PARTNER', label: 'Business Partners', icon: 'briefcase-outline' },
-    { value: 'FARM_ADVISOR', label: 'Farm Advisors', icon: 'school-outline' },
+    { value: 'FARM_ADVISOR', label: 'Crop Doctors', icon: 'medical-outline' },
     { value: 'GARDEN_ADVISOR', label: 'Garden Advisors', icon: 'sunny-outline' },
   ],
   CLIENTS: [
@@ -126,7 +126,7 @@ export default function SuperUsersScreen() {
   };
 
   const items = (data?.items ?? []).filter((u) =>
-    filter === 'FARM_ADVISOR' ? u.advisorType === 'FARM' : filter === 'GARDEN_ADVISOR' ? u.advisorType === 'GARDEN' : true,
+    filter === 'FARM_ADVISOR' ? true : filter === 'GARDEN_ADVISOR' ? u.advisorType === 'GARDEN' : true,
   );
 
   useEffect(() => {
@@ -193,7 +193,7 @@ export default function SuperUsersScreen() {
             onPress={() => setIsAddAdvisorOpen(true)}
           >
             <Ionicons name="add-circle" size={16} color="#ffffff" />
-            <Text style={styles.addAdvisorBtnText}>Add {filter === 'FARM_ADVISOR' ? 'Farm' : 'Garden'} Advisor</Text>
+            <Text style={styles.addAdvisorBtnText}>Add {filter === 'FARM_ADVISOR' ? 'Crop Doctor' : 'Garden Advisor'}</Text>
           </TouchableOpacity>
         )}
 
@@ -970,7 +970,7 @@ function AddAdvisorModal({ visible, advisorType, onClose }: { visible: boolean; 
       <View style={styles.modalOverlay}>
         <View style={styles.modalCard}>
           <View style={styles.modalHeaderRow}>
-            <Text style={styles.modalTitle}>Add {advisorType === 'FARM' ? 'Farm' : 'Garden'} Advisor</Text>
+            <Text style={styles.modalTitle}>Add {advisorType === 'FARM' ? 'Crop Doctor' : 'Garden Advisor'}</Text>
             <TouchableOpacity onPress={() => { reset(); onClose(); }}>
               <Ionicons name="close-circle" size={24} color="#64748b" />
             </TouchableOpacity>
@@ -981,7 +981,7 @@ function AddAdvisorModal({ visible, advisorType, onClose }: { visible: boolean; 
               <View style={styles.successBox}>
                 <Ionicons name="checkmark-circle" size={20} color="#16a34a" />
                 <Text style={styles.successText}>
-                  Advisor created. Temporary password: <Text style={{ fontFamily: FONT.extraBold }}>{tempPasswordResult}</Text>
+                  Crop Doctor created. Temporary password: <Text style={{ fontFamily: FONT.extraBold }}>{tempPasswordResult}</Text>
                 </Text>
               </View>
               <TouchableOpacity style={styles.submitBtn} onPress={() => { reset(); onClose(); }}>

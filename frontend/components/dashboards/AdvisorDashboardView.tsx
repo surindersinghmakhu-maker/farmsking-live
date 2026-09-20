@@ -304,8 +304,8 @@ export const AdvisorDashboardView: React.FC = () => {
                 const chipTextColor = isActive
                   ? '#ffffff'
                   : isEmpty
-                  ? '#2563eb' // Blue text for empty items
-                  : '#dc2626'; // Red text for non-empty items
+                    ? '#2563eb' // Blue text for empty items
+                    : '#dc2626'; // Red text for non-empty items
 
                 const chipBgColor = isActive
                   ? isEmpty ? '#2563eb' : '#dc2626' // Blue if empty active, Red if items present active
@@ -951,7 +951,7 @@ export const AdvisorDashboardView: React.FC = () => {
 
                 {/* Plan Options */}
                 <View style={{ gap: 10 }}>
-                    {(user as any)?.isSeniorDoctor ? (
+                  {(user as any)?.isSeniorDoctor ? (
                     <>
                       {/* Option 1: Senior Doctor 5 Crops */}
                       <TouchableOpacity

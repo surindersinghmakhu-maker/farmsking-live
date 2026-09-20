@@ -28,12 +28,12 @@ const ACTIVITY_TYPES: { value: ActivityType; label: string; icon: keyof typeof I
 type RowStatus = 'DONE_ON_TIME' | 'DONE_LATE' | 'SKIPPED' | 'DELAYED' | 'TODAY' | 'UPCOMING';
 
 const STATUS_META: Record<RowStatus, { label: string; color: string; bg: string; border: string; icon: keyof typeof Ionicons.glyphMap }> = {
-  DONE_ON_TIME: { label: 'Done', color: '#15803d', bg: '#dcfce7', border: '#86efac', icon: 'checkmark-circle' },
-  DONE_LATE: { label: 'Delay', color: '#1d4ed8', bg: '#dbeafe', border: '#93c5fd', icon: 'time' },
-  SKIPPED: { label: 'Skipped', color: '#dc2626', bg: '#fee2e2', border: '#fca5a5', icon: 'close-circle' },
-  DELAYED: { label: 'Delayed', color: '#c2410c', bg: '#ffedd5', border: '#fdba74', icon: 'alert-circle' },
-  TODAY: { label: 'Today', color: '#7c3aed', bg: '#ede9fe', border: '#c4b5fd', icon: 'today' },
-  UPCOMING: { label: 'Upcoming', color: '#64748b', bg: '#f1f5f9', border: '#e2e8f0', icon: 'ellipse-outline' },
+  DONE_ON_TIME: { label: 'Completed', color: '#15803d', bg: '#f0fdf4', border: '#bbf7d0', icon: 'checkmark-circle' },
+  DONE_LATE: { label: 'Late', color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe', icon: 'time' },
+  SKIPPED: { label: 'Skipped', color: '#dc2626', bg: '#fef2f2', border: '#fecaca', icon: 'close-circle' },
+  DELAYED: { label: 'Late', color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe', icon: 'alert-circle' },
+  TODAY: { label: 'Today', color: '#0f172a', bg: '#f8fafc', border: '#cbd5e1', icon: 'today' },
+  UPCOMING: { label: 'Upcoming', color: '#0f172a', bg: '#f8fafc', border: '#cbd5e1', icon: 'ellipse-outline' },
 };
 
 function classify(task: CropActivitySchedule): RowStatus {

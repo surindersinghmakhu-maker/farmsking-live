@@ -17,9 +17,9 @@ export function pastSprayOutcome(item: SprayScheduleItem): { color: string; bg: 
   updated.setHours(0, 0, 0, 0);
   const diffDays = Math.round((updated.getTime() - scheduled.getTime()) / (1000 * 60 * 60 * 24));
   if (diffDays > 2) {
-    return { color: '#1d4ed8', bg: '#eff6ff', border: '#bfdbfe', label: 'Late' };
+    return { color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe', label: 'Late' };
   }
-  return { color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0', label: 'On Time' };
+  return { color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0', label: 'Completed' };
 }
 
 /** Two-card spray-schedule summary for one crop cycle: a "Previous Schedule" card (last completed/skipped

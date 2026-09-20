@@ -78,6 +78,66 @@ const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 };
 
+function getScheduleLineStyle(line: string): { color: string; bg: string; border: string; badgeLabel: string } {
+  const lower = line.toLowerCase();
+
+  if (lower.includes('completed') || lower.includes('done') || lower.includes('finished') || lower.includes('ਪੂਰਾ') || lower.includes('ਹੋ ਗਿਆ')) {
+    return { color: '#15803d', bg: '#f0fdf4', border: '#bbf7d0', badgeLabel: 'Completed' };
+  }
+  if (lower.includes('skipped') || lower.includes('skip') || lower.includes('ਛੱਡਿਆ')) {
+    return { color: '#dc2626', bg: '#fef2f2', border: '#fecaca', badgeLabel: 'Skipped' };
+  }
+  if (lower.includes('late') || lower.includes('delay') || lower.includes('delayed') || lower.includes('overdue') || lower.includes('ਲੇਟ') || lower.includes('ਪੱਛੜਿਆ')) {
+    return { color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe', badgeLabel: 'Late' };
+  }
+  // Default to Upcoming (BLACK color)
+  return { color: '#0f172a', bg: '#f8fafc', border: '#e2e8f0', badgeLabel: 'Upcoming' };
+}
+
+function renderColorCodedScheduleLines(scheduleText: string | undefined | null) {
+  if (!scheduleText || !scheduleText.trim()) return null;
+  const lines = scheduleText.split('\n').map((l) => l.trim()).filter(Boolean);
+
+  return lines.map((line, idx) => {
+    const style = getScheduleLineStyle(line);
+    return (
+      <View
+        key={idx}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          backgroundColor: style.bg,
+          borderColor: style.border,
+          borderWidth: 1,
+          borderRadius: 6,
+          paddingHorizontal: 8,
+          paddingVertical: 6,
+          gap: 6,
+        }}
+      >
+        <Text style={{ flex: 1, fontSize: 11.5, fontFamily: FONT.semiBold, color: style.color }}>
+          {line}
+        </Text>
+        <View
+          style={{
+            backgroundColor: '#ffffff',
+            paddingHorizontal: 6,
+            paddingVertical: 2,
+            borderRadius: 10,
+            borderWidth: 1,
+            borderColor: style.border,
+          }}
+        >
+          <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: style.color }}>
+            {style.badgeLabel}
+          </Text>
+        </View>
+      </View>
+    );
+  });
+}
+
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -1005,7 +1065,9 @@ export function ScheduleScreen() {
                         <Ionicons name="calendar" size={15} color="#16a34a" />
                         <View style={{ flex: 1 }}>
                           <Text style={styles.scheduleBoxTitle}>Assigned Advisory Schedule & Dates:</Text>
-                          <Text style={styles.scheduleBoxText}>{farm.assignedSchedule}</Text>
+                          <View style={{ gap: 6, marginTop: 4 }}>
+                            {renderColorCodedScheduleLines(farm.assignedSchedule)}
+                          </View>
                         </View>
                       </View>
                     </CollapsibleSection>

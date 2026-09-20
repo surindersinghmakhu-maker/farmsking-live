@@ -35,6 +35,7 @@ export function QuickAddDoseItemModal({
 
   const [item, setItem] = useState('');
   const [sprayType, setSprayType] = useState<SprayType | undefined>(undefined);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [dose, setDose] = useState('');
   const [doseUnit, setDoseUnit] = useState<DoseUnit>('ml');
   const [alt1, setAlt1] = useState('');
@@ -45,6 +46,7 @@ export function QuickAddDoseItemModal({
     if (!visible) return;
     setItem('');
     setSprayType(undefined);
+    setIsDropdownOpen(false);
     setDose('');
     setDoseUnit('ml');
     setAlt1('');
@@ -89,20 +91,39 @@ export function QuickAddDoseItemModal({
             <TextInput style={styles.modalInput} value={item} onChangeText={setItem} placeholder="e.g. Propiconazole 25% EC" placeholderTextColor="#94a3b8" />
 
             <Text style={styles.modalLabel}>Category (Spray Type)</Text>
-            <View style={styles.chipRow}>
-              {SPRAY_TYPE_OPTIONS.map((opt) => {
-                const isSelected = opt.key === sprayType;
-                return (
-                  <TouchableOpacity
-                    key={opt.key}
-                    style={[styles.chip, isSelected && { backgroundColor: themeColor, borderColor: themeColor }]}
-                    onPress={() => setSprayType(isSelected ? undefined : opt.key)}
-                  >
-                    <Text style={[styles.chipText, isSelected && { color: '#fff' }]}>{opt.label}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+            <TouchableOpacity
+              style={[styles.dropdownButton, sprayType && { borderColor: themeColor }]}
+              activeOpacity={0.8}
+              onPress={() => setIsDropdownOpen(!isDropdownOpen)}
+            >
+              <Text style={[styles.dropdownButtonText, !sprayType && { color: '#94a3b8' }]}>
+                {SPRAY_TYPE_OPTIONS.find((opt) => opt.key === sprayType)?.label ?? 'Select Category (Spray Type)'}
+              </Text>
+              <Ionicons name={isDropdownOpen ? 'chevron-up' : 'chevron-down'} size={18} color="#64748b" />
+            </TouchableOpacity>
+
+            {isDropdownOpen ? (
+              <View style={styles.dropdownMenu}>
+                {SPRAY_TYPE_OPTIONS.map((opt) => {
+                  const isSelected = opt.key === sprayType;
+                  return (
+                    <TouchableOpacity
+                      key={opt.key}
+                      style={[styles.dropdownItem, isSelected && { backgroundColor: themeColor + '15' }]}
+                      onPress={() => {
+                        setSprayType(isSelected ? undefined : opt.key);
+                        setIsDropdownOpen(false);
+                      }}
+                    >
+                      <Text style={[styles.dropdownItemText, isSelected && { color: themeColor, fontFamily: FONT.bold }]}>
+                        {opt.label}
+                      </Text>
+                      {isSelected ? <Ionicons name="checkmark-circle" size={18} color={themeColor} /> : null}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            ) : null}
 
             <Text style={styles.modalLabel}>Dose</Text>
             <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
@@ -166,6 +187,47 @@ const styles = StyleSheet.create({
   closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
   modalLabel: { fontSize: 12, fontFamily: FONT.bold, color: '#334155', marginTop: 10, marginBottom: 4 },
   modalInput: { borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13.5, color: '#0f172a', backgroundColor: '#f8fafc', fontFamily: FONT.medium },
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: '#f8fafc',
+    marginVertical: 4,
+  },
+  dropdownButtonText: {
+    fontSize: 13.5,
+    fontFamily: FONT.medium,
+    color: '#0f172a',
+  },
+  dropdownMenu: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    marginTop: 2,
+    marginBottom: 8,
+    overflow: 'hidden',
+    ...premiumShadow('#000000', 'sm'),
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  dropdownItemText: {
+    fontSize: 13,
+    fontFamily: FONT.medium,
+    color: '#334155',
+  },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 },
   chip: { paddingHorizontal: 10, paddingVertical: 7, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#f8fafc' },
   chipText: { fontSize: 11.5, fontFamily: FONT.semiBold, color: '#475569' },

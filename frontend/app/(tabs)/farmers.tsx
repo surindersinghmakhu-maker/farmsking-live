@@ -61,7 +61,7 @@ interface FarmerGroup {
   rows: PlotRow[];
 }
 
-type GroupByMode = 'FARMER_WISE' | 'CROP_WISE' | 'STATE_WISE' | 'DATE_WISE' | 'STAGE_WISE' | 'CHAT_WISE';
+type GroupByMode = 'FARMER_WISE' | 'CROP_WISE' | 'STATE_WISE' | 'DATE_WISE' | 'STAGE_WISE';
 
 const STAGE_RADIO_OPTIONS = [
   { key: 'ALL', label: 'All Stages', icon: 'apps-outline' },
@@ -364,14 +364,11 @@ export default function AdvisorFarmsScreen() {
 
   const { defaultTab } = useLocalSearchParams<{ defaultTab?: string }>();
   const [mainTab, setMainTab] = useState<'FARMS' | 'SCHEDULE'>(defaultTab === 'SCHEDULE' ? 'SCHEDULE' : 'FARMS');
-  const [groupByMode, setGroupByMode] = useState<GroupByMode>(defaultTab === 'CHAT' ? 'CHAT_WISE' : 'FARMER_WISE');
+  const [groupByMode, setGroupByMode] = useState<GroupByMode>('FARMER_WISE');
 
   useEffect(() => {
     if (defaultTab === 'SCHEDULE') {
       setMainTab('SCHEDULE');
-    } else if (defaultTab === 'CHAT') {
-      setMainTab('FARMS');
-      setGroupByMode('CHAT_WISE');
     }
   }, [defaultTab]);
 
@@ -630,26 +627,6 @@ export default function AdvisorFarmsScreen() {
                 <Text style={[styles.subGroupChipText, groupByMode === 'STAGE_WISE' && styles.subGroupChipTextActive]}>
                   🌱 Stage Wise
                 </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.subGroupChip,
-                  groupByMode === 'CHAT_WISE' && styles.subGroupChipActive,
-                  unreadChatCount > 0 && { borderColor: '#fca5a5', backgroundColor: groupByMode === 'CHAT_WISE' ? theme.primary : '#fff1f2' }
-                ]}
-                onPress={() => { tap(); setGroupByMode('CHAT_WISE'); }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                  <Text style={[styles.subGroupChipText, groupByMode === 'CHAT_WISE' && styles.subGroupChipTextActive]}>
-                    💬 Farmer Chats
-                  </Text>
-                  {unreadChatCount > 0 ? (
-                    <View style={{ backgroundColor: '#dc2626', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 10 }}>
-                      <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>{unreadChatCount}</Text>
-                    </View>
-                  ) : null}
-                </View>
               </TouchableOpacity>
             </ScrollView>
 
@@ -986,93 +963,6 @@ export default function AdvisorFarmsScreen() {
                       </View>
                     );
                   })()
-                )}
-              </View>
-            ) : null}
-
-            {/* CHAT WISE VIEW */}
-            {groupByMode === 'CHAT_WISE' ? (
-              <View style={{ gap: 10, marginTop: 4 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' }}>
-                    💬 Farmer Conversations ({conversationsList?.length ?? 0})
-                  </Text>
-                  {unreadChatCount > 0 ? (
-                    <View style={{ backgroundColor: '#fee2e2', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, borderWidth: 1, borderColor: '#fca5a5' }}>
-                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#dc2626' }}>{unreadChatCount} Unread</Text>
-                    </View>
-                  ) : null}
-                </View>
-
-                {isLoadingConversations ? (
-                  <ActivityIndicator size="small" color={theme.primary} style={{ marginVertical: 20 }} />
-                ) : !conversationsList || conversationsList.length === 0 ? (
-                  <View style={{ padding: 24, alignItems: 'center', backgroundColor: '#ffffff', borderRadius: RADIUS.lg, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                    <Ionicons name="chatbubbles-outline" size={36} color="#94a3b8" />
-                    <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: '#64748b', marginTop: 8 }}>No active farmer chats yet.</Text>
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8', textAlign: 'center', marginTop: 4 }}>
-                      Direct messages with your assigned farmers will appear here.
-                    </Text>
-                  </View>
-                ) : (
-                  conversationsList.map((conv) => {
-                    const partner = conv.partner;
-                    const lastMsg = conv.lastMessage;
-                    const hasUnread = conv.unreadCount > 0;
-
-                    return (
-                      <TouchableOpacity
-                        key={partner.id}
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          padding: 12,
-                          backgroundColor: hasUnread ? '#eff6ff' : '#ffffff',
-                          borderRadius: RADIUS.md,
-                          borderWidth: 1.5,
-                          borderColor: hasUnread ? '#bfdbfe' : '#e2e8f0',
-                          gap: 12,
-                        }}
-                        activeOpacity={0.8}
-                        onPress={() => {
-                          tap();
-                          router.push({
-                            pathname: '/chat-thread/[userId]',
-                            params: { userId: partner.id, name: partner.name },
-                          } as never);
-                        }}
-                      >
-                        <View style={{ position: 'relative' }}>
-                          <InitialsAvatar name={partner.name} size={42} />
-                          {conv.isOnline ? (
-                            <View style={{ position: 'absolute', bottom: 0, right: 0, width: 12, height: 12, borderRadius: 6, backgroundColor: '#22c55e', borderWidth: 2, borderColor: '#ffffff' }} />
-                          ) : null}
-                        </View>
-
-                        <View style={{ flex: 1, gap: 2 }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' }}>{partner.name}</Text>
-                            {lastMsg?.createdAt ? (
-                              <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' }}>
-                                {new Date(lastMsg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </Text>
-                            ) : null}
-                          </View>
-                          <Text style={{ fontSize: 11.5, fontFamily: hasUnread ? FONT.bold : FONT.regular, color: hasUnread ? '#1e40af' : '#64748b' }} numberOfLines={1}>
-                            {lastMsg?.content || 'Tap to open chat'}
-                          </Text>
-                        </View>
-
-                        {hasUnread ? (
-                          <View style={{ backgroundColor: '#2563eb', minWidth: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 }}>
-                            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#ffffff' }}>{conv.unreadCount}</Text>
-                          </View>
-                        ) : (
-                          <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })
                 )}
               </View>
             ) : null}

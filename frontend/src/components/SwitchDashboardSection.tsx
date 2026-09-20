@@ -36,6 +36,10 @@ type ExtraRow = { key: string; label: string; icon: keyof typeof Ionicons.glyphM
 export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] } = {}) {
   const { role, setRole, assignedRoles } = useRole();
   const { user, updateUser } = useAuth();
+
+  if (role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR') {
+    return null;
+  }
   const becomeFarmer = useBecomeFarmer();
   const becomeGardener = useBecomeGardener();
   const [pending, setPending] = useState<'FARMER' | 'GARDENER' | null>(null);

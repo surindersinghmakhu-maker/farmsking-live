@@ -137,40 +137,42 @@ export default function MoreScreen() {
         />
 
         {/* Dedicated App Parts: Memberships, Coupons, Accounts & Crops */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>👑 MEMBERSHIPS & COUPONS</Text>
-          <View style={styles.sectionCard}>
-            <TouchableOpacity
-              style={styles.row}
-              activeOpacity={0.7}
-              onPress={() => router.push('/(tabs)/memberships' as any)}
-            >
-              <View style={[styles.rowIconBg, { backgroundColor: '#fef3c7' }]}>
-                <Ionicons name="ribbon-outline" size={18} color="#d97706" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.rowLabel}>👑 Memberships (Farmer & Doctor)</Text>
-                <Text style={styles.rowSubLabel}>Farmer App Plans & Specialist Doctor Advisory</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-            </TouchableOpacity>
+        {role !== 'FARM_ADVISOR' && role !== 'GARDEN_ADVISOR' ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>👑 MEMBERSHIPS & COUPONS</Text>
+            <View style={styles.sectionCard}>
+              <TouchableOpacity
+                style={styles.row}
+                activeOpacity={0.7}
+                onPress={() => router.push('/(tabs)/memberships' as any)}
+              >
+                <View style={[styles.rowIconBg, { backgroundColor: '#fef3c7' }]}>
+                  <Ionicons name="ribbon-outline" size={18} color="#d97706" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowLabel}>👑 Memberships (Farmer & Doctor)</Text>
+                  <Text style={styles.rowSubLabel}>Farmer App Plans & Specialist Doctor Advisory</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.row, { borderBottomWidth: 0 }]}
-              activeOpacity={0.7}
-              onPress={() => router.push('/(tabs)/coupons' as any)}
-            >
-              <View style={[styles.rowIconBg, { backgroundColor: '#ecfdf5' }]}>
-                <Ionicons name="ticket-outline" size={18} color="#10b981" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.rowLabel}>🎟️ Coupon System</Text>
-                <Text style={styles.rowSubLabel}>Redeem Promo Keys & Browse Offer Discounts</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.row, { borderBottomWidth: 0 }]}
+                activeOpacity={0.7}
+                onPress={() => router.push('/(tabs)/coupons' as any)}
+              >
+                <View style={[styles.rowIconBg, { backgroundColor: '#ecfdf5' }]}>
+                  <Ionicons name="ticket-outline" size={18} color="#10b981" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowLabel}>🎟️ Coupon System</Text>
+                  <Text style={styles.rowSubLabel}>Redeem Promo Keys & Browse Offer Discounts</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        ) : null}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('accountSection')}</Text>
           <View style={styles.sectionCard}>
@@ -191,8 +193,8 @@ export default function MoreScreen() {
           </View>
         </View>
 
-        {/* Specialized Smart Tools Section — Hidden for Super Admin, Admin, Shopping (Customer) & Business Partner */}
-        {role !== 'SUPER_ADMIN' && role !== 'ADMIN' && role !== 'CUSTOMER' && role !== 'BUSINESS_PARTNER' ? (
+        {/* Specialized Smart Tools Section — Hidden for Super Admin, Admin, Shopping (Customer), Business Partner & Advisor */}
+        {role !== 'SUPER_ADMIN' && role !== 'ADMIN' && role !== 'CUSTOMER' && role !== 'BUSINESS_PARTNER' && role !== 'FARM_ADVISOR' && role !== 'GARDEN_ADVISOR' ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>🌟 SMART AI & SATELLITE TOOLS</Text>
             <View style={styles.sectionCard}>

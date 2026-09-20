@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Platform, 
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
@@ -22,6 +22,7 @@ import { useUserWeather } from '@/src/hooks/useWeather';
 import { useChatUnreadCount, useConversations, useConversationsPresenceSync } from '@/src/hooks/useChat';
 import { apiClient, resolveMediaUrl } from '@/src/api/client';
 import { CropProblem, SprayScheduleItem } from '@/src/types/api';
+import { ScheduleScreen } from './schedule';
 
 type FarmSubTab = 'PLOTS' | 'PROBLEMS' | 'CALL_REQUESTS' | 'ASSISTANTS';
 
@@ -361,7 +362,19 @@ export default function AdvisorFarmsScreen() {
   const unreadChatCount = chatUnreadData?.count ?? 0;
   const { data: conversationsList, isLoading: isLoadingConversations } = useConversations();
 
-  const [groupByMode, setGroupByMode] = useState<GroupByMode>('FARMER_WISE');
+  const { defaultTab } = useLocalSearchParams<{ defaultTab?: string }>();
+  const [mainTab, setMainTab] = useState<'FARMS' | 'SCHEDULE'>(defaultTab === 'SCHEDULE' ? 'SCHEDULE' : 'FARMS');
+  const [groupByMode, setGroupByMode] = useState<GroupByMode>(defaultTab === 'CHAT' ? 'CHAT_WISE' : 'FARMER_WISE');
+
+  useEffect(() => {
+    if (defaultTab === 'SCHEDULE') {
+      setMainTab('SCHEDULE');
+    } else if (defaultTab === 'CHAT') {
+      setMainTab('FARMS');
+      setGroupByMode('CHAT_WISE');
+    }
+  }, [defaultTab]);
+
   useConversationsPresenceSync(groupByMode === 'CHAT_WISE');
   const [selectedStageRadio, setSelectedStageRadio] = useState<string>('ALL');
   const [expandedGroupKeys, setExpandedGroupKeys] = useState<Record<string, boolean>>({});
@@ -540,8 +553,38 @@ export default function AdvisorFarmsScreen() {
         <Text style={styles.heroSubtitle}>Real-Time Farmer Plots, Crop Health & Advisory Schedules</Text>
       </LinearGradient>
 
-      <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
-        <View style={{ gap: 12 }}>
+      {/* Top Main Segmented Control: Farms & Crops vs Schedule & Calendar */}
+      <View style={styles.mainTabHeaderContainer}>
+        <TouchableOpacity
+          style={[styles.mainTabBtn, mainTab === 'FARMS' && styles.mainTabBtnActive]}
+          activeOpacity={0.85}
+          onPress={() => { tap(); setMainTab('FARMS'); }}
+        >
+          <Ionicons name="leaf" size={15} color={mainTab === 'FARMS' ? '#ffffff' : theme.primary} />
+          <Text style={[styles.mainTabBtnText, mainTab === 'FARMS' && styles.mainTabBtnTextActive]}>
+            🌾 Farms & Crops
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.mainTabBtn, mainTab === 'SCHEDULE' && styles.mainTabBtnActive]}
+          activeOpacity={0.85}
+          onPress={() => { tap(); setMainTab('SCHEDULE'); }}
+        >
+          <Ionicons name="calendar" size={15} color={mainTab === 'SCHEDULE' ? '#ffffff' : theme.primary} />
+          <Text style={[styles.mainTabBtnText, mainTab === 'SCHEDULE' && styles.mainTabBtnTextActive]}>
+            📅 Schedule & Calendar
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {mainTab === 'SCHEDULE' ? (
+        <View style={{ flex: 1 }}>
+          <ScheduleScreen />
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+          <View style={{ gap: 12 }}>
             {/* Sub-Group Navigation Tabs: Farmer Wise | Crop Wise | State Wise | Plantation Date Wise | Stage Wise */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 4 }}>
               <TouchableOpacity
@@ -1034,7 +1077,8 @@ export default function AdvisorFarmsScreen() {
               </View>
             ) : null}
           </View>
-      </ScrollView>
+        </ScrollView>
+      )}
 
       <RenewModal
         visible={!!renewingFarmerId}
@@ -1196,4 +1240,38 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a' },
   modalSub: { fontSize: 12, fontFamily: FONT.bold, color: theme.primary, marginTop: 2 },
   closeBtn: { width: 30, height: 30, borderRadius: 15, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
+  mainTabHeaderContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#ffffff',
+    padding: 5,
+    marginHorizontal: 12,
+    marginTop: 10,
+    marginBottom: 4,
+    borderRadius: RADIUS.lg,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    ...premiumShadow('#000000', 'sm'),
+  },
+  mainTabBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 9,
+    borderRadius: RADIUS.md,
+    backgroundColor: '#f8fafc',
+  },
+  mainTabBtnActive: {
+    backgroundColor: theme.primary,
+  },
+  mainTabBtnText: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#475569',
+  },
+  mainTabBtnTextActive: {
+    color: '#ffffff',
+  },
 });

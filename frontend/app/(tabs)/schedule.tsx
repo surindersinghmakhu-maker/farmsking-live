@@ -411,7 +411,7 @@ const formatDateStr = (dateObj: Date): string => {
   return dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
-export default function ScheduleScreen() {
+export function ScheduleScreen() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<ScheduleTab>('SCHEDULE');
 
@@ -1895,3 +1895,5 @@ const styles = StyleSheet.create({
     ...premiumShadow('#000000', 'lg'),
   },
 });
+
+export default ScheduleScreen;

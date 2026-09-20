@@ -63,6 +63,27 @@ interface FarmerGroup {
 
 type GroupByMode = 'FARMER_WISE' | 'CROP_WISE' | 'STATE_WISE' | 'DATE_WISE' | 'STAGE_WISE';
 
+interface GroupByDropdownOption {
+  key: string;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  groupByMode: GroupByMode;
+  stageRadio?: string;
+  isStageOption?: boolean;
+}
+
+const GROUP_BY_DROPDOWN_OPTIONS: GroupByDropdownOption[] = [
+  { key: 'FARMER_WISE', label: '👨‍🌾 Farmer Wise', icon: 'person-outline', groupByMode: 'FARMER_WISE' },
+  { key: 'CROP_WISE', label: '🌾 Crop Wise', icon: 'leaf-outline', groupByMode: 'CROP_WISE' },
+  { key: 'STATE_WISE', label: '📍 State Wise', icon: 'location-outline', groupByMode: 'STATE_WISE' },
+  { key: 'DATE_WISE', label: '📅 Plantation Date Wise', icon: 'calendar-outline', groupByMode: 'DATE_WISE' },
+  { key: 'STAGE_ALL', label: '🌱 Stage: All Stages', icon: 'apps-outline', groupByMode: 'STAGE_WISE', stageRadio: 'ALL', isStageOption: true },
+  { key: 'STAGE_PLANTATION', label: '🌱 Stage: Sowing / Plantation', icon: 'leaf-outline', groupByMode: 'STAGE_WISE', stageRadio: 'PLANTATION', isStageOption: true },
+  { key: 'STAGE_VEGETATIVE', label: '🌱 Stage: Vegetative Growth', icon: 'trending-up-outline', groupByMode: 'STAGE_WISE', stageRadio: 'VEGETATIVE', isStageOption: true },
+  { key: 'STAGE_FLOWERING', label: '🌱 Stage: Flowering & Budding', icon: 'flower-outline', groupByMode: 'STAGE_WISE', stageRadio: 'FLOWERING', isStageOption: true },
+  { key: 'STAGE_HARVESTING', label: '🌱 Stage: Fruiting & Harvest', icon: 'basket-outline', groupByMode: 'STAGE_WISE', stageRadio: 'HARVESTING', isStageOption: true },
+];
+
 const STAGE_RADIO_OPTIONS = [
   { key: 'ALL', label: 'All Stages', icon: 'apps-outline' },
   { key: 'PLANTATION', label: 'Sowing / Plantation 🌿', icon: 'leaf-outline' },
@@ -372,9 +393,19 @@ export default function AdvisorFarmsScreen() {
     }
   }, [defaultTab]);
 
-  useConversationsPresenceSync(groupByMode === 'CHAT_WISE');
+  useConversationsPresenceSync(false);
   const [selectedStageRadio, setSelectedStageRadio] = useState<string>('ALL');
+  const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [expandedGroupKeys, setExpandedGroupKeys] = useState<Record<string, boolean>>({});
+
+  const activeDropdownKey = useMemo(() => {
+    if (groupByMode !== 'STAGE_WISE') return groupByMode;
+    return `STAGE_${selectedStageRadio}`;
+  }, [groupByMode, selectedStageRadio]);
+
+  const currentOption = useMemo(() => {
+    return GROUP_BY_DROPDOWN_OPTIONS.find((opt) => opt.key === activeDropdownKey) || GROUP_BY_DROPDOWN_OPTIONS[0];
+  }, [activeDropdownKey]);
 
   const toggleGroupCollapse = (groupKey: string) => {
     tap();
@@ -582,88 +613,23 @@ export default function AdvisorFarmsScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
           <View style={{ gap: 12 }}>
-            {/* Sub-Group Navigation Tabs: Farmer Wise | Crop Wise | State Wise | Plantation Date Wise | Stage Wise */}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 4 }}>
+            {/* View & Grouping Dropdown Selector */}
+            <View style={styles.dropdownSelectorContainer}>
+              <Text style={styles.dropdownSelectorHeaderLabel}>View & Filter By:</Text>
               <TouchableOpacity
-                style={[styles.subGroupChip, groupByMode === 'FARMER_WISE' && styles.subGroupChipActive]}
-                onPress={() => { tap(); setGroupByMode('FARMER_WISE'); }}
+                style={styles.dropdownSelectorButton}
+                activeOpacity={0.8}
+                onPress={() => { tap(); setDropdownOpen(true); }}
               >
-                <Text style={[styles.subGroupChipText, groupByMode === 'FARMER_WISE' && styles.subGroupChipTextActive]}>
-                  👨‍🌾 Farmer Wise
-                </Text>
+                <View style={styles.dropdownSelectorLeft}>
+                  <Ionicons name={currentOption.icon} size={18} color={theme.primary} />
+                  <Text style={styles.dropdownSelectorText} numberOfLines={1}>
+                    {currentOption.label}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-down" size={18} color="#64748b" />
               </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.subGroupChip, groupByMode === 'CROP_WISE' && styles.subGroupChipActive]}
-                onPress={() => { tap(); setGroupByMode('CROP_WISE'); }}
-              >
-                <Text style={[styles.subGroupChipText, groupByMode === 'CROP_WISE' && styles.subGroupChipTextActive]}>
-                  🌾 Crop Wise
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.subGroupChip, groupByMode === 'STATE_WISE' && styles.subGroupChipActive]}
-                onPress={() => { tap(); setGroupByMode('STATE_WISE'); }}
-              >
-                <Text style={[styles.subGroupChipText, groupByMode === 'STATE_WISE' && styles.subGroupChipTextActive]}>
-                  📍 State Wise
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.subGroupChip, groupByMode === 'DATE_WISE' && styles.subGroupChipActive]}
-                onPress={() => { tap(); setGroupByMode('DATE_WISE'); }}
-              >
-                <Text style={[styles.subGroupChipText, groupByMode === 'DATE_WISE' && styles.subGroupChipTextActive]}>
-                  📅 Plantation Date Wise
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.subGroupChip, groupByMode === 'STAGE_WISE' && styles.subGroupChipActive]}
-                onPress={() => { tap(); setGroupByMode('STAGE_WISE'); }}
-              >
-                <Text style={[styles.subGroupChipText, groupByMode === 'STAGE_WISE' && styles.subGroupChipTextActive]}>
-                  🌱 Stage Wise
-                </Text>
-              </TouchableOpacity>
-            </ScrollView>
-
-            {/* Stage Tab Buttons if STAGE_WISE is selected */}
-            {groupByMode === 'STAGE_WISE' ? (
-              <View style={styles.stageTabContainer}>
-                <Text style={styles.stageTabHeaderTitle}>Select Growth Stage:</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginTop: 4, paddingVertical: 2 }}>
-                  {STAGE_RADIO_OPTIONS.map((opt) => {
-                    const isSelected = selectedStageRadio === opt.key;
-                    return (
-                      <TouchableOpacity
-                        key={opt.key}
-                        style={[
-                          styles.stageTabChip,
-                          isSelected && styles.stageTabChipActive,
-                        ]}
-                        activeOpacity={0.85}
-                        onPress={() => {
-                          tap();
-                          setSelectedStageRadio(opt.key);
-                        }}
-                      >
-                        <Ionicons
-                          name={opt.icon as any}
-                          size={13}
-                          color={isSelected ? '#ffffff' : theme.primary}
-                        />
-                        <Text style={[styles.stageTabChipText, isSelected && styles.stageTabChipTextActive]}>
-                          {opt.label}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
-              </View>
-            ) : null}
+            </View>
 
             {/* FARMER WISE VIEW */}
             {groupByMode === 'FARMER_WISE' ? (
@@ -999,15 +965,91 @@ export default function AdvisorFarmsScreen() {
         </View>
       </Modal>
 
-      <FarmerProfileModal
-        visible={!!profileModalFarmerId}
-        farmerId={profileModalFarmerId}
-        assignmentId={profileModalAssignmentId}
-        onClose={() => {
-          setProfileModalFarmerId(null);
-          setProfileModalAssignmentId(null);
-        }}
-      />
+      {/* Dropdown Options Modal */}
+      <Modal
+        visible={isDropdownOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDropdownOpen(false)}
+      >
+        <TouchableOpacity
+          style={styles.dropdownModalOverlay}
+          activeOpacity={1}
+          onPress={() => setDropdownOpen(false)}
+        >
+          <TouchableOpacity activeOpacity={1} style={styles.dropdownModalCard}>
+            <View style={styles.dropdownModalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="filter" size={18} color={theme.primary} />
+                <Text style={styles.dropdownModalTitle}>Select View & Filter</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.closeBtn}
+                onPress={() => setDropdownOpen(false)}
+              >
+                <Ionicons name="close" size={18} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.modalHeaderDivider} />
+
+            <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
+              <Text style={styles.dropdownSectionTitle}>GENERAL VIEWS</Text>
+              {GROUP_BY_DROPDOWN_OPTIONS.filter((o) => !o.isStageOption).map((opt) => {
+                const isSelected = activeDropdownKey === opt.key;
+                return (
+                  <TouchableOpacity
+                    key={opt.key}
+                    style={[styles.dropdownItem, isSelected && styles.dropdownItemActive]}
+                    onPress={() => {
+                      tap();
+                      setGroupByMode(opt.groupByMode);
+                      if (opt.stageRadio) setSelectedStageRadio(opt.stageRadio);
+                      setDropdownOpen(false);
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                      <Ionicons name={opt.icon} size={18} color={isSelected ? theme.primary : '#475569'} />
+                      <Text style={[styles.dropdownItemText, isSelected && styles.dropdownItemTextActive]}>
+                        {opt.label}
+                      </Text>
+                    </View>
+                    {isSelected ? (
+                      <Ionicons name="checkmark-circle" size={20} color={theme.primary} />
+                    ) : null}
+                  </TouchableOpacity>
+                );
+              })}
+
+              <Text style={[styles.dropdownSectionTitle, { marginTop: 14 }]}>GROWTH STAGE FILTERS</Text>
+              {GROUP_BY_DROPDOWN_OPTIONS.filter((o) => o.isStageOption).map((opt) => {
+                const isSelected = activeDropdownKey === opt.key;
+                return (
+                  <TouchableOpacity
+                    key={opt.key}
+                    style={[styles.dropdownItem, isSelected && styles.dropdownItemActive]}
+                    onPress={() => {
+                      tap();
+                      setGroupByMode(opt.groupByMode);
+                      if (opt.stageRadio) setSelectedStageRadio(opt.stageRadio);
+                      setDropdownOpen(false);
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                      <Ionicons name={opt.icon} size={18} color={isSelected ? theme.primary : '#475569'} />
+                      <Text style={[styles.dropdownItemText, isSelected && styles.dropdownItemTextActive]}>
+                        {opt.label}
+                      </Text>
+                    </View>
+                    {isSelected ? (
+                      <Ionicons name="checkmark-circle" size={20} color={theme.primary} />
+                    ) : null}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -1163,5 +1205,102 @@ const styles = StyleSheet.create({
   },
   mainTabBtnTextActive: {
     color: '#ffffff',
+  },
+  dropdownSelectorContainer: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    gap: 6,
+    ...premiumShadow('#000000', 'sm'),
+  },
+  dropdownSelectorHeaderLabel: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  dropdownSelectorButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: RADIUS.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  dropdownSelectorLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  dropdownSelectorText: {
+    fontSize: 13.5,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  dropdownModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.md,
+  },
+  dropdownModalCard: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.xl,
+    padding: SPACING.md,
+    gap: 4,
+    ...premiumShadow('#000000', 'lg'),
+  },
+  dropdownModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dropdownModalTitle: {
+    fontSize: 15,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+  },
+  dropdownSectionTitle: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    color: '#94a3b8',
+    letterSpacing: 0.8,
+    marginBottom: 6,
+    marginLeft: 4,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    borderRadius: RADIUS.sm,
+    marginBottom: 4,
+    backgroundColor: '#f8fafc',
+  },
+  dropdownItemActive: {
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+  },
+  dropdownItemText: {
+    fontSize: 13.5,
+    fontFamily: FONT.semibold,
+    color: '#334155',
+  },
+  dropdownItemTextActive: {
+    fontFamily: FONT.bold,
+    color: theme.primary,
   },
 });

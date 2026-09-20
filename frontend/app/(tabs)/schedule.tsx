@@ -614,7 +614,7 @@ export default function ScheduleScreen() {
       .sort((a, b) => (parseInt(a.dayNumber, 10) || 1) - (parseInt(b.dayNumber, 10) || 1));
 
     if (activeRows.length === 0) {
-      Alert.alert('Entries Required', 'Kripya kam se kam 1 schedule entry rakhein.');
+      Alert.alert('Entries Required', 'Please add at least 1 schedule entry.');
       return;
     }
 
@@ -667,13 +667,13 @@ export default function ScheduleScreen() {
       setTemplates((prev) => prev.filter((t) => t.id !== tplId));
     };
     if (Platform.OS === 'web') {
-      if (confirm(`"${tpl?.templateName}" template delete karein? Ye action undo nahi hoga.`)) {
+      if (confirm(`Delete template "${tpl?.templateName}"? This action cannot be undone.`)) {
         doDelete();
       }
     } else {
       Alert.alert(
         'Delete Template?',
-        `"${tpl?.templateName}" template delete karein? Ye action undo nahi hoga.`,
+        `Delete template "${tpl?.templateName}"? This action cannot be undone.`,
         [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Delete', style: 'destructive', onPress: doDelete },
@@ -697,7 +697,7 @@ export default function ScheduleScreen() {
 
   const handleSaveNewTemplate = () => {
     if (!newTemplateName.trim()) {
-      Alert.alert('Name Required', 'Kripya Template Name bharein.');
+      Alert.alert('Name Required', 'Please enter a template name.');
       return;
     }
 
@@ -712,7 +712,7 @@ export default function ScheduleScreen() {
       .sort((a, b) => a.dayNumber - b.dayNumber);
 
     if (parsedTasks.length === 0) {
-      Alert.alert('Tasks Required', 'Kripya kam se kam 1 Daywise task add karein.');
+      Alert.alert('Tasks Required', 'Please add at least 1 daywise task.');
       return;
     }
 
@@ -798,8 +798,8 @@ export default function ScheduleScreen() {
               setActiveTab('SCHEDULE');
             }}
           >
-            <Ionicons name="calendar-outline" size={12} color={activeTab === 'SCHEDULE' ? theme.primary : '#fff'} />
-            <Text style={[styles.tabChipText, activeTab === 'SCHEDULE' && { color: theme.primary }]}>
+            <Ionicons name="calendar-outline" size={13} color={activeTab === 'SCHEDULE' ? '#15803d' : '#ffffff'} />
+            <Text style={[styles.tabChipText, activeTab === 'SCHEDULE' && styles.tabChipTextActive]}>
               Schedule ({activeFarms.length})
             </Text>
           </TouchableOpacity>
@@ -812,8 +812,8 @@ export default function ScheduleScreen() {
               setActiveTab('TEMPLATES');
             }}
           >
-            <Ionicons name="bookmarks-outline" size={12} color={activeTab === 'TEMPLATES' ? theme.primary : '#fff'} />
-            <Text style={[styles.tabChipText, activeTab === 'TEMPLATES' && { color: theme.primary }]}>
+            <Ionicons name="bookmarks-outline" size={13} color={activeTab === 'TEMPLATES' ? '#15803d' : '#ffffff'} />
+            <Text style={[styles.tabChipText, activeTab === 'TEMPLATES' && styles.tabChipTextActive]}>
               Templates ({templates.length})
             </Text>
           </TouchableOpacity>
@@ -826,8 +826,8 @@ export default function ScheduleScreen() {
               setActiveTab('DOSE_ITEMS');
             }}
           >
-            <Ionicons name="flask-outline" size={12} color={activeTab === 'DOSE_ITEMS' ? theme.primary : '#fff'} />
-            <Text style={[styles.tabChipText, activeTab === 'DOSE_ITEMS' && { color: theme.primary }]}>
+            <Ionicons name="flask-outline" size={13} color={activeTab === 'DOSE_ITEMS' ? '#15803d' : '#ffffff'} />
+            <Text style={[styles.tabChipText, activeTab === 'DOSE_ITEMS' && styles.tabChipTextActive]}>
               Dose Items
             </Text>
           </TouchableOpacity>
@@ -915,7 +915,7 @@ export default function ScheduleScreen() {
                   <View style={styles.cardHeaderRow}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', flex: 1 }}>
                       <Text style={styles.plotTitle}>
-                        📍 {farm.fieldName} <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>(ID: {farm.cropId || farm.id})</Text>
+                        📍 {farm.fieldName} <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>(ID: {farm.cropId || (farm.id?.startsWith('CR-') ? farm.id : `CR-${farm.id?.slice(0, 6).toUpperCase()}`)})</Text>
                       </Text>
                       <View style={[styles.cropBadge, { backgroundColor: farm.categoryBg || '#f0fdf4' }]}>
                         <Text style={[styles.cropBadgeText, { color: farm.categoryColor || '#16a34a' }]}>
@@ -1013,7 +1013,7 @@ export default function ScheduleScreen() {
                     <View style={styles.noScheduleAlertBox}>
                       <Ionicons name="warning-outline" size={15} color="#b45309" />
                       <Text style={styles.noScheduleAlertText}>
-                        Is farm ke liye abhi koi advisory schedule assign nahi hai.
+                        No advisory schedule assigned for this farm yet.
                       </Text>
                     </View>
                   )}
@@ -1048,7 +1048,7 @@ export default function ScheduleScreen() {
               <View style={styles.infoBanner}>
                 <Ionicons name="information-circle" size={16} color="#15803d" />
                 <Text style={styles.infoBannerText}>
-                  Plantation Date (<Text style={{ fontFamily: FONT.bold }}>{selectedFarm?.sowingDate}</Text>) ko <Text style={{ fontFamily: FONT.bold }}>Day 1</Text> count karke dates calculate hongi. Aap koi bhi entry <Text style={{ fontFamily: FONT.bold }}>Edit</Text>, <Text style={{ fontFamily: FONT.bold }}>Add</Text> ya <Text style={{ fontFamily: FONT.bold }}>Remove</Text> kar sakte hain.
+                  Plantation Date (<Text style={{ fontFamily: FONT.bold }}>{selectedFarm?.sowingDate}</Text>) is counted as <Text style={{ fontFamily: FONT.bold }}>Day 1</Text>. Tasks scheduled on past dates (before today) are locked in <Text style={{ fontFamily: FONT.bold, color: '#dc2626' }}>🔒 Read-Only</Text> mode.
                 </Text>
               </View>
 
@@ -1090,26 +1090,40 @@ export default function ScheduleScreen() {
               </View>
 
               {editingScheduleItems.map((item, idx) => {
+                const todayZero = new Date();
+                todayZero.setHours(0, 0, 0, 0);
+
                 const plantDateObj = parsePlantationDate(selectedFarm?.sowingDate);
                 const dayNum = parseInt(item.dayNumber, 10) || 1;
-                const calcDateStr = formatDateStr(calculateTaskDateObj(plantDateObj, dayNum));
+                const taskDateObj = calculateTaskDateObj(plantDateObj, dayNum);
+                taskDateObj.setHours(0, 0, 0, 0);
+                const isPastDate = taskDateObj.getTime() < todayZero.getTime();
+                const calcDateStr = formatDateStr(taskDateObj);
                 const query = item.taskTitle.trim().toLowerCase();
                 const doseSuggestions = query
                   ? (itemTemplatesForSearch ?? []).filter((t) => t.item.toLowerCase().includes(query)).slice(0, 6)
                   : [];
 
                 return (
-                  <View key={item.id || idx} style={styles.entryRowCard}>
+                  <View key={item.id || idx} style={[styles.entryRowCard, isPastDate && { backgroundColor: '#f8fafc', borderColor: '#cbd5e1', opacity: 0.85 }]}>
+                    {isPastDate ? (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 6, backgroundColor: '#f1f5f9', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, alignSelf: 'flex-start' }}>
+                        <Ionicons name="lock-closed" size={11} color="#64748b" />
+                        <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>🔒 Read Only (Past Date - Cannot Edit)</Text>
+                      </View>
+                    ) : null}
+
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <View style={{ width: 52 }}>
                         <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>
                           Day #
                         </Text>
                         <TextInput
-                          style={[styles.singleLineInput, { textAlign: 'center', fontWeight: 'bold', color: theme.primary }]}
+                          style={[styles.singleLineInput, { textAlign: 'center', fontWeight: 'bold', color: isPastDate ? '#64748b' : theme.primary }, isPastDate && { backgroundColor: '#e2e8f0' }]}
                           value={item.dayNumber}
-                          onChangeText={(val) => handleUpdateScheduleEntryRow(item.id, 'dayNumber', val)}
+                          onChangeText={(val) => !isPastDate && handleUpdateScheduleEntryRow(item.id, 'dayNumber', val)}
                           keyboardType="numeric"
+                          editable={!isPastDate}
                         />
                       </View>
 
@@ -1118,14 +1132,15 @@ export default function ScheduleScreen() {
                           Task
                         </Text>
                         <TouchableOpacity
-                          style={styles.taskPickerBtn}
-                          activeOpacity={0.8}
-                          onPress={() => setActiveTaskPickerRow({ source: 'SCHEDULE', idOrIdx: item.id })}
+                          style={[styles.taskPickerBtn, isPastDate && { backgroundColor: '#e2e8f0', borderColor: '#cbd5e1' }]}
+                          activeOpacity={isPastDate ? 1 : 0.8}
+                          disabled={isPastDate}
+                          onPress={() => !isPastDate && setActiveTaskPickerRow({ source: 'SCHEDULE', idOrIdx: item.id })}
                         >
-                          <Text style={styles.taskPickerBtnText} numberOfLines={1}>
+                          <Text style={[styles.taskPickerBtnText, isPastDate && { color: '#64748b' }]} numberOfLines={1}>
                             {item.taskType || 'Select Task'}
                           </Text>
-                          <Ionicons name="chevron-down" size={12} color="#475569" />
+                          <Ionicons name="chevron-down" size={12} color={isPastDate ? '#94a3b8' : '#475569'} />
                         </TouchableOpacity>
                       </View>
 
@@ -1134,28 +1149,35 @@ export default function ScheduleScreen() {
                           <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b' }}>
                             Activity / Dose Item:
                           </Text>
-                          <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }}>
-                            📅 {calcDateStr}
+                          <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: isPastDate ? '#dc2626' : '#15803d' }}>
+                            📅 {calcDateStr} {isPastDate ? '(Past)' : ''}
                           </Text>
                         </View>
 
                         <TextInput
-                          style={styles.singleLineInput}
+                          style={[styles.singleLineInput, isPastDate && { backgroundColor: '#e2e8f0', color: '#64748b' }]}
                           value={item.taskTitle}
-                          onChangeText={(val) => handleUpdateScheduleEntryRow(item.id, 'taskTitle', val)}
-                          placeholder="Type to search Dose Items..."
+                          onChangeText={(val) => !isPastDate && handleUpdateScheduleEntryRow(item.id, 'taskTitle', val)}
+                          placeholder={isPastDate ? 'Locked (Past Date)' : 'Type to search Dose Items...'}
+                          editable={!isPastDate}
                         />
                       </View>
 
-                      <TouchableOpacity
-                        style={styles.removeEntryBtn}
-                        onPress={() => handleRemoveScheduleEntryRow(item.id)}
-                      >
-                        <Ionicons name="trash-outline" size={16} color="#dc2626" />
-                      </TouchableOpacity>
+                      {isPastDate ? (
+                        <View style={[styles.removeEntryBtn, { backgroundColor: '#e2e8f0' }]}>
+                          <Ionicons name="lock-closed" size={14} color="#94a3b8" />
+                        </View>
+                      ) : (
+                        <TouchableOpacity
+                          style={styles.removeEntryBtn}
+                          onPress={() => handleRemoveScheduleEntryRow(item.id)}
+                        >
+                          <Ionicons name="trash-outline" size={16} color="#dc2626" />
+                        </TouchableOpacity>
+                      )}
                     </View>
 
-                    {doseSuggestions.length > 0 ? (
+                    {!isPastDate && doseSuggestions.length > 0 ? (
                       <View style={styles.itemSuggestBox}>
                         {doseSuggestions.map((s) => (
                           <TouchableOpacity
@@ -1179,11 +1201,13 @@ export default function ScheduleScreen() {
                     {item.items.length > 0 ? (
                       <View style={styles.itemChipRow}>
                         {item.items.map((it, itemIdx) => (
-                          <View key={itemIdx} style={styles.itemChip}>
-                            <Text style={styles.itemChipText}>{it}</Text>
-                            <TouchableOpacity onPress={() => handleRemoveScheduleEntryItem(item.id, itemIdx)}>
-                              <Ionicons name="close-circle" size={14} color="#94a3b8" />
-                            </TouchableOpacity>
+                          <View key={itemIdx} style={[styles.itemChip, isPastDate && { backgroundColor: '#e2e8f0', borderColor: '#cbd5e1' }]}>
+                            <Text style={[styles.itemChipText, isPastDate && { color: '#64748b' }]}>{it}</Text>
+                            {!isPastDate ? (
+                              <TouchableOpacity onPress={() => handleRemoveScheduleEntryItem(item.id, itemIdx)}>
+                                <Ionicons name="close-circle" size={14} color="#94a3b8" />
+                              </TouchableOpacity>
+                            ) : null}
                           </View>
                         ))}
                       </View>
@@ -1496,42 +1520,53 @@ export default function ScheduleScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
-  hero: { paddingTop: 20, paddingBottom: 18, paddingHorizontal: SPACING.xxl },
-  heroTitle: { color: '#fff', fontSize: 20, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
-  heroSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 12, fontFamily: FONT.medium, marginTop: 2 },
+  hero: { paddingTop: 14, paddingBottom: 12, paddingHorizontal: SPACING.lg },
+  heroTitle: { color: '#fff', fontSize: 17, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
+  heroSubtitle: { color: 'rgba(255,255,255,0.85)', fontSize: 11, fontFamily: FONT.medium, marginTop: 1 },
   statRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: RADIUS.lg,
+    backgroundColor: 'rgba(0, 0, 0, 0.22)',
+    borderRadius: RADIUS.pill,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
-    paddingVertical: 11,
-    marginTop: 14,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    marginTop: 10,
   },
-  statCard: { flex: 1, alignItems: 'center', gap: 3 },
-  statDivider: { width: 1, height: 26, backgroundColor: 'rgba(255,255,255,0.2)' },
-  statValue: { color: '#fff', fontSize: 17, fontFamily: FONT.extraBold, letterSpacing: -0.3 },
-  statLabel: { color: 'rgba(255,255,255,0.75)', fontSize: 9.5, fontFamily: FONT.bold, textTransform: 'uppercase', letterSpacing: 0.2, marginTop: 1 },
-  tabRow: { flexDirection: 'row', gap: 5, marginTop: 12 },
+  statCard: { flex: 1, alignItems: 'center', gap: 1 },
+  statDivider: { width: 1, height: 20, backgroundColor: 'rgba(255,255,255,0.25)' },
+  statValue: { color: '#fff', fontSize: 14, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
+  statLabel: { color: 'rgba(255,255,255,0.85)', fontSize: 9.5, fontFamily: FONT.bold, textTransform: 'uppercase', letterSpacing: 0.2 },
+  tabRow: { flexDirection: 'row', gap: 6, marginTop: 10 },
   tabChip: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
+    gap: 4,
     paddingVertical: 7,
-    paddingHorizontal: 2,
+    paddingHorizontal: 4,
     borderRadius: RADIUS.pill,
-    backgroundColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: 'rgba(0, 0, 0, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
   },
-  tabChipActive: { backgroundColor: '#ffffff' },
-  tabChipText: { fontSize: 10.5, fontFamily: FONT.bold, color: '#ffffff' },
-  list: { padding: SPACING.lg, gap: 12, paddingBottom: SPACING.xxl },
-  emptyCenter: { alignItems: 'center', justifyContent: 'center', padding: 40, gap: 6 },
-  emptyTitle: { fontSize: 15, fontFamily: FONT.bold, color: '#334155', textAlign: 'center' },
-  emptySub: { fontSize: 12, fontFamily: FONT.medium, color: '#94a3b8', textAlign: 'center' },
-  card: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.md, gap: 8 },
+  tabChipActive: {
+    backgroundColor: '#ffffff',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  tabChipText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' },
+  tabChipTextActive: { color: '#14532d', fontFamily: FONT.bold },
+  list: { padding: SPACING.md, gap: 8, paddingBottom: SPACING.xl },
+  emptyCenter: { alignItems: 'center', justifyContent: 'center', padding: 30, gap: 6 },
+  emptyTitle: { fontSize: 14, fontFamily: FONT.bold, color: '#334155', textAlign: 'center' },
+  emptySub: { fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8', textAlign: 'center' },
+  card: { backgroundColor: '#ffffff', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', padding: 10, gap: 6 },
   cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   plotTitle: { fontSize: 14, fontFamily: FONT.bold, color: '#0f172a' },
   cropBadge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.xs },
@@ -1646,29 +1681,29 @@ const styles = StyleSheet.create({
   assignBtnText: { fontSize: 12, fontFamily: FONT.bold },
   templateHeaderCard: {
     backgroundColor: '#ffffff',
-    borderRadius: RADIUS.lg,
-    padding: SPACING.md,
+    borderRadius: RADIUS.md,
+    padding: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
-  templateHeaderTitle: { fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' },
+  templateHeaderTitle: { fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' },
   templateHeaderTag: {
     flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start',
     backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0',
-    borderRadius: RADIUS.pill, paddingHorizontal: 8, paddingVertical: 3, marginTop: 5,
+    borderRadius: RADIUS.pill, paddingHorizontal: 7, paddingVertical: 2, marginTop: 3,
   },
-  templateHeaderTagText: { fontSize: 10, fontFamily: FONT.bold, color: '#64748b' },
+  templateHeaderTagText: { fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b' },
   makeTemplateBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     backgroundColor: theme.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: RADIUS.md,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
   },
   makeTemplateBtnText: { color: '#ffffff', fontSize: 12, fontFamily: FONT.bold },
   tplName: { fontSize: 14, fontFamily: FONT.bold, color: '#0f172a' },

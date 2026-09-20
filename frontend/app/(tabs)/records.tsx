@@ -2150,7 +2150,7 @@ export default function RecordsScreen() {
     }
     if ((expensePaymentMode === 'CREDIT' || expenseRecipientType === 'SUPPLIER' || expenseRecipientType === 'LABOUR') && !expenseParty) {
       if (expenseRecipientType === 'SUPPLIER' || expenseRecipientType === 'LABOUR') {
-        setExpenseError('⚠️ Kripya party ya worker select karein.');
+        setExpenseError('⚠️ Please select a party or worker.');
         return;
       }
     }
@@ -4102,12 +4102,12 @@ export default function RecordsScreen() {
                     <Ionicons name="people-outline" size={36} color="#cbd5e1" />
                     <Text style={styles.emptyText}>
                       {accountSearchQuery
-                        ? 'Koi party ya worker nahi milya.'
+                        ? 'No matching party or worker found.'
                         : analysisSubTab === 'RECEIVABLE'
-                        ? 'Koi party/worker aapko amount nahi de raha.'
+                        ? 'No party or worker has outstanding amount to pay you.'
                         : analysisSubTab === 'PAYABLE'
-                        ? 'Aap kisi party/worker ko amount nahi dete.'
-                        : 'Koi party ya worker registered nahi hai.'}
+                        ? 'You do not owe any amount to parties or workers.'
+                        : 'No party or worker registered yet.'}
                     </Text>
                   </View>
                 }

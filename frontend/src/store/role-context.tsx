@@ -31,21 +31,36 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   const primaryRole = user ? toUserRole(user.role, user.advisorType) : 'CUSTOMER';
   const assignedRoles = useMemo<UserRole[]>(() => {
     if (!user) return ['CUSTOMER'];
+    const isAdminUser = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || (user.roles && (user.roles.includes('ADMIN') || user.roles.includes('SUPER_ADMIN')));
+
     const granted = user.roles && user.roles.length > 0 ? user.roles : [user.role];
     const deactivated = user.deactivatedRoles ?? [];
-    const activeRoles = granted.filter((r) => !deactivated.includes(r));
+    let activeRoles = granted.filter((r) => !deactivated.includes(r));
+
+    if (isAdminUser) {
+      activeRoles = activeRoles.filter((r) => r !== 'FARMER' && r !== 'CUSTOMER');
+    }
+
     const mapped = activeRoles.map((r) => toUserRole(r, user.advisorType));
     if (user.role === 'SUPER_ADMIN' || granted.includes('SUPER_ADMIN')) {
       if (!mapped.includes('ADMIN')) {
         mapped.push('ADMIN');
       }
     }
-    // De-dupe while keeping the primary role first.
-    return Array.from(new Set([primaryRole, ...mapped]));
+
+    let finalRoles = Array.from(new Set([primaryRole, ...mapped]));
+    if (isAdminUser) {
+      finalRoles = finalRoles.filter((r) => r !== 'FARMER' && r !== 'CUSTOMER');
+      if (finalRoles.length === 0) finalRoles = [primaryRole];
+    }
+    return finalRoles;
   }, [user, primaryRole]);
 
-  // Default initial role: If account is assigned FARMER role, default to FARMER tab first on app launch.
-  const defaultInitialRole = assignedRoles.includes('FARMER') ? 'FARMER' : primaryRole;
+  const isAdminUser = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+  const defaultInitialRole = isAdminUser
+    ? (user?.role as UserRole)
+    : (assignedRoles.includes('FARMER') ? 'FARMER' : primaryRole);
+
   const [role, setRoleState] = useState<UserRole>(defaultInitialRole);
 
   useEffect(() => {
@@ -54,7 +69,11 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Priority requirement: If account has FARMER role assigned, always open FARMER tab first by default
+    if (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN') {
+      setRoleState(user.role as UserRole);
+      return;
+    }
+
     if (assignedRoles.includes('FARMER')) {
       setRoleState('FARMER');
       return;
@@ -69,7 +88,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [user?.id, primaryRole, assignedRoles]);
+  }, [user?.id, user?.role, primaryRole, assignedRoles]);
 
   const setRole = (next: UserRole) => {
     if (assignedRoles.includes(next)) {

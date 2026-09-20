@@ -1035,7 +1035,7 @@ export default function MarketScreen() {
                           <View style={{ flex: 1 }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                               <Text style={styles.acceptedPlotTitle}>
-                                📍 {crop.plot.name} <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>(ID: {crop.cropId || crop.id})</Text>
+                                📍 {crop.plot.name} <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>(ID: {crop.cropId || (crop.id?.startsWith('CR-') ? crop.id : `CR-${crop.id?.slice(0, 6).toUpperCase()}`)})</Text>
                               </Text>
                               <View style={styles.cropBadgeMini}>
                                 <Text style={styles.cropBadgeMiniText}>🌾 {crop.cropName}</Text>
@@ -1160,7 +1160,7 @@ export default function MarketScreen() {
                             <View style={{ flex: 1 }}>
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                                 <Text style={styles.cropSharePlot}>
-                                  📍 {crop.plot.name} <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>(ID: {crop.cropId || crop.id})</Text>
+                                  📍 {crop.plot.name} <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>(ID: {crop.cropId || (crop.id?.startsWith('CR-') ? crop.id : `CR-${crop.id?.slice(0, 6).toUpperCase()}`)})</Text>
                                 </Text>
                                 <Text style={styles.cropShareName}>🌾 {crop.cropName}</Text>
                               </View>
@@ -1266,7 +1266,7 @@ export default function MarketScreen() {
                           }}
                         >
                           <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: isSelected ? '#dc2626' : '#0f172a', flex: 1 }}>
-                            📍 {crop.plot.name} (ID: {crop.cropId || crop.id}) · 🌾 {crop.cropName}
+                            📍 {crop.plot.name} (ID: {crop.cropId || (crop.id?.startsWith('CR-') ? crop.id : `CR-${crop.id?.slice(0, 6).toUpperCase()}`)}) · 🌾 {crop.cropName}
                           </Text>
                           {isSelected && <Ionicons name="checkmark-circle" size={16} color="#dc2626" />}
                         </TouchableOpacity>

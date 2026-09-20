@@ -254,10 +254,32 @@ export async function getAdminDocsList(): Promise<AdminDocItem[]> {
   return data;
 }
 
-export async function downloadAdminDocContent(docKey: string, lang: string = 'pa'): Promise<{ key: string; lang: string; title: string; fileName: string; content: string; htmlPdfContent: string }> {
-  const { data } = await apiClient.get(`/farmer-plans/admin/docs/download/${docKey}`, {
-    params: { lang },
-  });
+export interface FarmerPlanHistoryRecord {
+  id: string;
+  farmerId: string;
+  plan: FarmerPlanType;
+  status: 'ACTIVE' | 'SLEEP' | 'EXPIRED' | 'REVOKED';
+  daysGranted: number;
+  remainingDays: number | null;
+  startDate: string;
+  endDate: string | null;
+  sleptAt: string | null;
+  resumedAt: string | null;
+  notes: string | null;
+  coupon?: { code: string; category?: string } | null;
+  createdAt: string;
+}
+
+export interface FarmerPlanHistoryResponse {
+  currentPlan: { plan: FarmerPlanType; endDate: string | null } | null;
+  activeRecord?: FarmerPlanHistoryRecord | null;
+  sleepRecords: FarmerPlanHistoryRecord[];
+  pastRecords: FarmerPlanHistoryRecord[];
+  allHistory: FarmerPlanHistoryRecord[];
+}
+
+export async function getFarmerPlanHistory(farmerId?: string): Promise<FarmerPlanHistoryResponse> {
+  const { data } = await apiClient.get<FarmerPlanHistoryResponse>('/farmer-plans/history', { params: { farmerId } });
   return data;
 }
 

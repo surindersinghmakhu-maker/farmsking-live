@@ -18,6 +18,7 @@ import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAppSettings, useUpdateAppSettings } from '@/src/hooks/useAppSettings';
 import { apiClient } from '@/src/api/client';
 import { useFarmerPlanPricing, useUpdateFarmerPlanPricing, PLAN_META } from '@/src/hooks/useFarmerPlan';
+import { usePendingDoctorChanges, useAdminApproveDoctorChange, useAdminRejectDoctorChange } from '@/src/hooks/useAdvisorAssignments';
 import { FarmerPlanPricing, FarmerPlanType } from '@/src/api/farmerPlans.api';
 import { Platform } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -1311,6 +1312,9 @@ export default function SuperSettingsScreen() {
               </TouchableOpacity>
             </View>
 
+            {/* 🩺 Doctor Change Approvals Section */}
+            <PendingDoctorChangeApprovalsSection />
+
             {/* 💰 Farmer Plan Pricing Manager */}
             <PlanPricingSection />
           </View>
@@ -1512,6 +1516,70 @@ const styles = StyleSheet.create({
 });
 
 
+
+export function PendingDoctorChangeApprovalsSection() {
+  const { data: pendingRequests = [], isLoading } = usePendingDoctorChanges();
+  const approveMutation = useAdminApproveDoctorChange();
+  const rejectMutation = useAdminRejectDoctorChange();
+
+  if (isLoading || pendingRequests.length === 0) return null;
+
+  return (
+    <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#fffbeb', borderColor: '#fde68a', borderWidth: 1.5, marginBottom: 16 }]}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+        <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#fef3c7', alignItems: 'center', justifyContent: 'center' }}>
+          <Ionicons name="medical" size={20} color="#d97706" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.sectionTitle, { color: '#92400e' }]}>🩺 Doctor Change Approvals ({pendingRequests.length})</Text>
+          <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#b45309' }}>
+            Farmers requesting to change crop doctors. Inform current doctor before approving.
+          </Text>
+        </View>
+      </View>
+
+      <View style={{ gap: 10, marginTop: 6 }}>
+        {pendingRequests.map((req: any) => (
+          <View key={req.id} style={{ backgroundColor: '#ffffff', padding: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#fde68a' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View>
+                <Text style={{ fontSize: 14, fontFamily: FONT.bold, color: '#0f172a' }}>🧑‍🌾 {req.farmer?.name} ({req.farmer?.kingId || req.farmer?.mobile})</Text>
+                <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b' }}>📍 {req.farmer?.district}, {req.farmer?.state}</Text>
+              </View>
+              <View style={{ backgroundColor: '#fef3c7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill }}>
+                <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#d97706' }}>PENDING ADMIN</Text>
+              </View>
+            </View>
+
+            <View style={{ marginTop: 8, padding: 8, backgroundColor: '#f8fafc', borderRadius: RADIUS.sm, gap: 2 }}>
+              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>🩺 Requested Doctor: Dr. {req.advisor?.name}</Text>
+              {req.notes ? <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#dc2626' }}>{req.notes}</Text> : null}
+            </View>
+
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+              <TouchableOpacity
+                style={{ flex: 1, height: 36, backgroundColor: '#10b981', borderRadius: RADIUS.sm, alignItems: 'center', justifyContent: 'center' }}
+                disabled={approveMutation.isPending}
+                onPress={() => approveMutation.mutate(req.id)}
+              >
+                <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 12 }}>
+                  {approveMutation.isPending ? 'Approving...' : 'Approve & Forward to Doctor'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ flex: 1, height: 36, backgroundColor: '#ef4444', borderRadius: RADIUS.sm, alignItems: 'center', justifyContent: 'center' }}
+                disabled={rejectMutation.isPending}
+                onPress={() => rejectMutation.mutate({ id: req.id, reason: 'Doctor change request rejected by Super Admin' })}
+              >
+                <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 12 }}>Reject</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
 
 export function PlanPricingSection() {
   const { data: pricing, isLoading } = useFarmerPlanPricing();

@@ -6,10 +6,11 @@ import {
   NotFoundException,
   OnModuleInit,
 } from '@nestjs/common';
-import { AdvisorAssignmentStatus, AdvisorType, CropAdvisorReviewStatus, CropStatus, DiscountValueType, FarmerSubscriptionPlan, PlanCouponCategory, Role } from '@prisma/client';
+import { AdvisorAssignmentStatus, AdvisorType, CropAdvisorReviewStatus, CropStatus, DiscountValueType, FarmerPlanRecordStatus, FarmerSubscriptionPlan, NotificationType, PlanCouponCategory, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AdvisorAssignmentService } from '../advisor-assignment/advisor-assignment.service';
 import { WalletService } from '../wallet/wallet.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { hasActiveRole } from '../../common/utils/auth-user.util';
 import { CreateFarmerPlanCouponDto } from './dto/create-farmer-plan-coupon.dto';
@@ -66,6 +67,7 @@ export class FarmerPlansService implements OnModuleInit {
     private readonly prisma: PrismaService,
     private readonly advisorAssignmentService: AdvisorAssignmentService,
     private readonly walletService: WalletService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async onModuleInit() {
@@ -292,6 +294,21 @@ export class FarmerPlansService implements OnModuleInit {
   async redeemCoupon(user: AuthUser, dto: RedeemFarmerPlanCouponDto) {
     const { coupon, targetFarmerId } = await this.resolveCouponAndFarmer(user, dto.code, dto.farmerId);
 
+    // Check target farmer's active membership plan status
+    const farmerPlan = await this.prisma.farmerPlan.findUnique({ where: { farmerId: targetFarmerId } });
+    const isMembershipActive =
+      farmerPlan &&
+      farmerPlan.plan !== FarmerSubscriptionPlan.FREE &&
+      farmerPlan.endDate &&
+      farmerPlan.endDate > new Date();
+
+    const isCropCareOnly = coupon.category === PlanCouponCategory.DOCTOR_CONSULTATION && !coupon.includeMembership;
+    if (isCropCareOnly && !isMembershipActive) {
+      throw new BadRequestException(
+        'Active Membership Required! Farmer does not have an active Membership plan. Please get a Membership plan from Admin first, or ask your Doctor to generate a combined Membership + Crop Care Plan coupon.',
+      );
+    }
+
     let effectivePlan = coupon.plan;
     let effectiveDays = coupon.daysGranted;
 
@@ -325,39 +342,127 @@ export class FarmerPlansService implements OnModuleInit {
   }
 
   /**
-   * Applies a plan tier + day extension to a farmer — shared by coupon redemption and direct UPI plan
-   * payment confirmation. Never downgrades an active higher tier (see resolveResultPlan).
-   *
-   * Base date rule: only a same-tier RENEWAL extends on top of the current expiry (or continues from it
-   * if lapsed but within the renew window) — an UPGRADE to a genuinely higher tier always starts fresh
-   * from today, it never inherits the lower tier's remaining days.
+   * Applies a plan tier + day extension to a farmer.
+   * If farmer currently has an active plan:
+   *  - Same tier: extends the current plan's expiry date.
+   *  - Higher tier: puts the current lower tier plan into SLEEP MODE (saves remaining days), and activates the higher tier!
+   *  - Auto-resumes slept plan when higher tier finishes.
    */
   async applyPlanChange(farmerId: string, targetPlan: FarmerSubscriptionPlan, daysGranted: number, couponId?: string, selectedAdvisorId?: string) {
-    const resultPlan = await this.resolveResultPlan(farmerId, targetPlan);
     const now = new Date();
-
     const currentPlan = await this.prisma.farmerPlan.findUnique({ where: { farmerId } });
-    const isSameTierRenewal = currentPlan?.plan === resultPlan;
-    const baseDate = isSameTierRenewal ? this.renewalBaseDate(currentPlan, now) : now;
-    const extended = baseDate.getTime() !== now.getTime();
-    const newEndDate = new Date(baseDate.getTime() + daysGranted * DAY_MS);
-    const keptHigherPlan = resultPlan !== targetPlan;
 
-    const updatedPlan = await this.prisma.farmerPlan.upsert({
-      where: { farmerId },
-      create: { farmerId, plan: resultPlan, startDate: now, endDate: newEndDate, couponId },
-      update: {
-        plan: resultPlan,
-        startDate: extended && isSameTierRenewal ? currentPlan!.startDate : now,
-        endDate: newEndDate,
-        expiredAt: null,
-        ...(couponId ? { couponId } : {}),
-      },
-    });
+    const currentPlanType = currentPlan?.plan ?? FarmerSubscriptionPlan.FREE;
+    const currentRank = PLAN_RANK[currentPlanType] ?? 0;
+    const targetRank = PLAN_RANK[targetPlan] ?? 0;
+
+    const currentEndDate = currentPlan?.endDate;
+    const isCurrentActive = currentPlanType !== FarmerSubscriptionPlan.FREE && currentEndDate && currentEndDate > now;
+    const daysRemaining = isCurrentActive ? Math.ceil((currentEndDate.getTime() - now.getTime()) / DAY_MS) : 0;
+
+    let updatedPlan: any;
+    let extended = false;
+    let sleptPlanCreated = false;
+
+    // 1. Same Tier Renewal / Extension
+    if (isCurrentActive && targetRank === currentRank) {
+      const baseDate = currentEndDate > now ? currentEndDate : now;
+      extended = baseDate.getTime() !== now.getTime();
+      const newEndDate = new Date(baseDate.getTime() + daysGranted * DAY_MS);
+
+      updatedPlan = await this.prisma.farmerPlan.update({
+        where: { farmerId },
+        data: { plan: targetPlan, endDate: newEndDate, expiredAt: null, ...(couponId ? { couponId } : {}) },
+      });
+
+      await this.prisma.farmerPlanHistory.create({
+        data: {
+          farmerId,
+          plan: targetPlan,
+          status: FarmerPlanRecordStatus.ACTIVE,
+          daysGranted,
+          startDate: now,
+          endDate: newEndDate,
+          couponId,
+          notes: `Same-tier extension by ${daysGranted} days`,
+        },
+      });
+    }
+    // 2. Upgrade to Higher Tier Plan -> Put lower tier plan into SLEEP MODE!
+    else if (isCurrentActive && targetRank > currentRank && daysRemaining > 0) {
+      // Put lower tier plan to SLEEP mode
+      await this.prisma.farmerPlanHistory.create({
+        data: {
+          farmerId,
+          plan: currentPlanType,
+          status: FarmerPlanRecordStatus.SLEEP,
+          daysGranted: daysRemaining,
+          remainingDays: daysRemaining,
+          sleptAt: now,
+          notes: `Put into Sleep Mode with ${daysRemaining} remaining days upon upgrade to ${targetPlan}`,
+        },
+      });
+
+      // Mark previous ACTIVE history items as SLEEP
+      await this.prisma.farmerPlanHistory.updateMany({
+        where: { farmerId, status: FarmerPlanRecordStatus.ACTIVE },
+        data: { status: FarmerPlanRecordStatus.SLEEP, remainingDays: daysRemaining, sleptAt: now },
+      });
+
+      const newEndDate = new Date(now.getTime() + daysGranted * DAY_MS);
+      updatedPlan = await this.prisma.farmerPlan.upsert({
+        where: { farmerId },
+        create: { farmerId, plan: targetPlan, startDate: now, endDate: newEndDate, couponId },
+        update: { plan: targetPlan, startDate: now, endDate: newEndDate, expiredAt: null, ...(couponId ? { couponId } : {}) },
+      });
+
+      await this.prisma.farmerPlanHistory.create({
+        data: {
+          farmerId,
+          plan: targetPlan,
+          status: FarmerPlanRecordStatus.ACTIVE,
+          daysGranted,
+          startDate: now,
+          endDate: newEndDate,
+          couponId,
+          notes: `Upgraded to higher tier ${targetPlan}. Previous ${currentPlanType} plan put to Sleep Mode (${daysRemaining} days remaining).`,
+        },
+      });
+
+      sleptPlanCreated = true;
+      await this.notificationsService.create(
+        farmerId,
+        NotificationType.SYSTEM,
+        'Membership Upgraded! 👑',
+        `Your previous ${currentPlanType} plan (${daysRemaining} days remaining) has been placed in Sleep Mode. Your new ${targetPlan} plan is now active!`,
+      );
+    }
+    // 3. New Plan Activation (No previous active plan or fresh start)
+    else {
+      const newEndDate = new Date(now.getTime() + daysGranted * DAY_MS);
+      updatedPlan = await this.prisma.farmerPlan.upsert({
+        where: { farmerId },
+        create: { farmerId, plan: targetPlan, startDate: now, endDate: newEndDate, couponId },
+        update: { plan: targetPlan, startDate: now, endDate: newEndDate, expiredAt: null, ...(couponId ? { couponId } : {}) },
+      });
+
+      await this.prisma.farmerPlanHistory.create({
+        data: {
+          farmerId,
+          plan: targetPlan,
+          status: FarmerPlanRecordStatus.ACTIVE,
+          daysGranted,
+          startDate: now,
+          endDate: newEndDate,
+          couponId,
+          notes: `Activated ${targetPlan} plan for ${daysGranted} days.`,
+        },
+      });
+    }
 
     let advisorHired = false;
-    if (([FarmerSubscriptionPlan.SMART, FarmerSubscriptionPlan.SUPER] as FarmerSubscriptionPlan[]).includes(resultPlan)) {
-      advisorHired = await this.ensurePremiumAdvisorHire(farmerId, newEndDate, couponId, selectedAdvisorId);
+    if (([FarmerSubscriptionPlan.SMART, FarmerSubscriptionPlan.SUPER] as FarmerSubscriptionPlan[]).includes(targetPlan)) {
+      advisorHired = await this.ensurePremiumAdvisorHire(farmerId, updatedPlan.endDate ?? new Date(now.getTime() + daysGranted * DAY_MS), couponId, selectedAdvisorId);
     }
 
     await this.trimAdvisorCropsToCap(farmerId, null);
@@ -365,10 +470,40 @@ export class FarmerPlansService implements OnModuleInit {
     return {
       plan: updatedPlan,
       daysGranted,
-      newEndDate,
+      newEndDate: updatedPlan.endDate,
       extended,
       advisorHired,
-      keptHigherPlan,
+      sleptPlanCreated,
+    };
+  }
+
+  /** Fetches full membership history records including active, sleep mode, and past plans */
+  async getPlanHistory(user: AuthUser, farmerId?: string) {
+    const targetFarmerId = farmerId ?? (hasActiveRole(user, Role.FARMER) ? user.id : undefined);
+    if (!targetFarmerId) throw new BadRequestException('Farmer ID is required.');
+
+    // Trigger effective plan check to auto-resume slept plan if active expired
+    await this.getEffectivePlan(targetFarmerId);
+
+    const [currentPlan, history] = await Promise.all([
+      this.prisma.farmerPlan.findUnique({ where: { farmerId: targetFarmerId } }),
+      this.prisma.farmerPlanHistory.findMany({
+        where: { farmerId: targetFarmerId },
+        include: { coupon: { select: { code: true, category: true } } },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
+
+    const activeRecord = history.find((h) => h.status === FarmerPlanRecordStatus.ACTIVE);
+    const sleepRecords = history.filter((h) => h.status === FarmerPlanRecordStatus.SLEEP);
+    const pastRecords = history.filter((h) => h.status === FarmerPlanRecordStatus.EXPIRED || h.status === FarmerPlanRecordStatus.REVOKED);
+
+    return {
+      currentPlan,
+      activeRecord,
+      sleepRecords,
+      pastRecords,
+      allHistory: history,
     };
   }
 
@@ -625,7 +760,11 @@ export class FarmerPlansService implements OnModuleInit {
     }
 
     const advisor = await this.prisma.user.findFirst({
-      where: { id: advisorId, roles: { has: Role.ADVISOR }, advisorType: AdvisorType.FARM, deletedAt: null },
+      where: {
+        id: advisorId,
+        OR: [{ role: Role.ADVISOR }, { roles: { has: Role.ADVISOR } }],
+        deletedAt: null,
+      },
     });
     if (!advisor) {
       throw new NotFoundException('Advisor not found.');
@@ -673,6 +812,22 @@ export class FarmerPlansService implements OnModuleInit {
   /** Advisor / Admin: apply any generated coupon code directly to a target farmer. */
   async applyCouponToFarmerDirectly(user: AuthUser, dto: ApplyCouponToFarmerDto) {
     const { coupon, targetFarmerId } = await this.resolveCouponAndFarmer(user, dto.code, dto.farmerId);
+
+    // Check target farmer's active membership plan status
+    const farmerPlan = await this.prisma.farmerPlan.findUnique({ where: { farmerId: targetFarmerId } });
+    const isMembershipActive =
+      farmerPlan &&
+      farmerPlan.plan !== FarmerSubscriptionPlan.FREE &&
+      farmerPlan.endDate &&
+      farmerPlan.endDate > new Date();
+
+    const isCropCareOnly = coupon.category === PlanCouponCategory.DOCTOR_CONSULTATION && !coupon.includeMembership;
+    if (isCropCareOnly && !isMembershipActive) {
+      throw new BadRequestException(
+        'Active Membership Required! Farmer does not have an active Membership plan. Please get a Membership plan from Admin first, or ask your Doctor to generate a combined Membership + Crop Care Plan coupon.',
+      );
+    }
+
     const result = await this.applyPlanChange(
       targetFarmerId,
       coupon.plan,

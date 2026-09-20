@@ -14,7 +14,7 @@ import {
   useAdvisorTodaySchedule,
   useRemindSchedule,
 } from '@/src/hooks/useCropActivitySchedules';
-import { useAcceptCropByAdvisor, useRejectCropByAdvisor, usePendingCropsForAdvisor } from '@/src/hooks/useCrops';
+import { useAcceptCropByAdvisor, useRejectCropByAdvisor, usePendingCropsForAdvisor, useAcceptedCropsForAdvisor } from '@/src/hooks/useCrops';
 import { useMyCallRequests, useResolveCallRequest } from '@/src/hooks/useCallRequests';
 import { useAdvisorWeatherAlerts } from '@/src/hooks/useWeather';
 import { useAssignedCropProblems, useRespondToCropProblem } from '@/src/hooks/useCropProblems';
@@ -26,7 +26,37 @@ import { CropActivitySchedule, AdvisorReviewCropCycle, CropProblem } from '@/src
 import { useGroupVoiceCall } from '@/src/hooks/useGroupVoiceCall';
 import { GroupVoiceCallModal } from '@/src/components/chat/GroupVoiceCallModal';
 
-type TabKey = 'SUBMISSIONS' | 'DELAYED' | 'TODAY' | 'WEATHER';
+type TabKey = 'SUBMISSIONS' | 'DELAYED' | 'TODAY' | 'WEATHER' | 'NO_SCHEDULE' | 'PROBLEMS';
+
+function isScheduleFinishedOrMissing(crop: AdvisorReviewCropCycle): boolean {
+  if (!crop.assignedSchedule || !crop.assignedSchedule.trim()) {
+    return true;
+  }
+  const scheduleStr = crop.assignedSchedule;
+  if (scheduleStr.toLowerCase().includes('completed') || scheduleStr.toLowerCase().includes('finished')) {
+    return true;
+  }
+  const dateRegex = /\b(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4}|\d{4}-\d{2}-\d{2})\b/g;
+  const matches = [...scheduleStr.matchAll(dateRegex)];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (matches.length > 0) {
+    let hasFutureDate = false;
+    for (const match of matches) {
+      const parsedDate = new Date(match[0]);
+      if (!isNaN(parsedDate.getTime())) {
+        parsedDate.setHours(0, 0, 0, 0);
+        if (parsedDate.getTime() >= today.getTime()) {
+          hasFutureDate = true;
+          break;
+        }
+      }
+    }
+    if (!hasFutureDate) return true;
+  }
+  return false;
+}
 
 const SOIL_TYPE_LABELS: Record<string, string> = {
   ALLUVIAL: '🌾 Alluvial Soil',
@@ -59,12 +89,14 @@ function formatWater(water?: string | null): string {
 }
 
 const TAB_META: Record<TabKey, { label: string; icon: keyof typeof Ionicons.glyphMap; color: string; bg: string; border: string }> = {
-  SUBMISSIONS: { label: 'Submissions', icon: 'cloud-upload-outline', color: '#1d4ed8', bg: '#eff6ff', border: '#bfdbfe' },
+  SUBMISSIONS: { label: 'Requests', icon: 'cloud-upload-outline', color: '#1d4ed8', bg: '#eff6ff', border: '#bfdbfe' },
   DELAYED: { label: 'Delayed', icon: 'alert-circle', color: '#dc2626', bg: '#fef2f2', border: '#fecaca' },
   TODAY: { label: 'Today', icon: 'today', color: '#b45309', bg: '#fffbeb', border: '#fde68a' },
   WEATHER: { label: 'Weather Alerts', icon: 'rainy-outline', color: '#0284c7', bg: '#eff6ff', border: '#bae6fd' },
+  NO_SCHEDULE: { label: 'No Schedule Crops ⚠️', icon: 'warning-outline', color: '#b45309', bg: '#fff7ed', border: '#fed7aa' },
+  PROBLEMS: { label: 'Problem Reports', icon: 'medkit-outline', color: '#e11d48', bg: '#ffe4e6', border: '#fecdd3' },
 };
-const TAB_ORDER: TabKey[] = ['SUBMISSIONS', 'DELAYED', 'TODAY', 'WEATHER'];
+const TAB_ORDER: TabKey[] = ['SUBMISSIONS', 'DELAYED', 'TODAY', 'WEATHER', 'NO_SCHEDULE', 'PROBLEMS'];
 
 const theme = RoleThemes.FARM_ADVISOR;
 
@@ -77,11 +109,14 @@ export const AdvisorDashboardView: React.FC = () => {
   const { data: todaySchedule, isLoading: isLoadingToday } = useAdvisorTodaySchedule();
   const { data: delayedSchedule, isLoading: isLoadingDelayed } = useAdvisorDelayedSchedule();
   const { data: pendingCrops, isLoading: isLoadingPendingCrops } = usePendingCropsForAdvisor();
+  const { data: acceptedCrops, isLoading: isLoadingAcceptedCrops } = useAcceptedCropsForAdvisor();
   const acceptCrop = useAcceptCropByAdvisor();
   const rejectCrop = useRejectCropByAdvisor();
   const { data: callRequests, isLoading: isLoadingCallRequests } = useMyCallRequests();
   const pendingCallRequests = (callRequests ?? []).filter((r) => r.status === 'PENDING');
   const { data: weatherAlerts, isLoading: isLoadingWeatherAlerts } = useAdvisorWeatherAlerts();
+
+  const noScheduleCrops = useMemo(() => (acceptedCrops ?? []).filter(isScheduleFinishedOrMissing), [acceptedCrops]);
 
   const { data: pendingFarmersList, isLoading: isLoadingPendingFarmers } = useFarmersList('PENDING');
   const { data: assignedProblems, isLoading: isLoadingProblems } = useAssignedCropProblems();
@@ -134,12 +169,16 @@ export const AdvisorDashboardView: React.FC = () => {
     DELAYED: delayedSchedule?.length ?? 0,
     TODAY: todaySchedule?.length ?? 0,
     WEATHER: weatherAlerts?.length ?? 0,
+    NO_SCHEDULE: noScheduleCrops.length,
+    PROBLEMS: pendingProblems.length,
   };
   const isLoadingByTab: Record<TabKey, boolean> = {
     SUBMISSIONS: isLoadingPendingCrops || isLoadingCallRequests || isLoadingPendingFarmers || isLoadingProblems,
     DELAYED: isLoadingDelayed,
     TODAY: isLoadingToday,
     WEATHER: isLoadingWeatherAlerts,
+    NO_SCHEDULE: isLoadingAcceptedCrops,
+    PROBLEMS: isLoadingProblems,
   };
 
   const defaultTab = useMemo<TabKey>(() => TAB_ORDER.find((k) => counts[k] > 0) ?? 'TODAY', []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -181,17 +220,17 @@ export const AdvisorDashboardView: React.FC = () => {
 
             <View style={styles.rosterMetricsGroup}>
               <TouchableOpacity style={styles.rosterStatChip} activeOpacity={0.85} onPress={() => router.push('/(tabs)/farmers')}>
-                <Text style={styles.rosterStatVal}>{stats.total}</Text>
+                <Text style={[styles.rosterStatVal, { color: stats.total === 0 ? '#60a5fa' : '#ef4444' }]}>{stats.total}</Text>
                 <Text style={styles.rosterStatLbl}>Total</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.rosterStatChip} activeOpacity={0.85} onPress={() => router.push('/(tabs)/farmers')}>
-                <Text style={[styles.rosterStatVal, { color: '#86efac' }]}>{stats.active}</Text>
+                <Text style={[styles.rosterStatVal, { color: stats.active === 0 ? '#60a5fa' : '#ef4444' }]}>{stats.active}</Text>
                 <Text style={styles.rosterStatLbl}>Active</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.rosterStatChip} activeOpacity={0.85} onPress={() => router.push('/(tabs)/farmers')}>
-                <Text style={[styles.rosterStatVal, { color: '#fca5a5' }]}>{stats.inactive}</Text>
+                <Text style={[styles.rosterStatVal, { color: stats.inactive === 0 ? '#60a5fa' : '#fca5a5' }]}>{stats.inactive}</Text>
                 <Text style={styles.rosterStatLbl}>Inactive</Text>
               </TouchableOpacity>
             </View>
@@ -200,7 +239,6 @@ export const AdvisorDashboardView: React.FC = () => {
               <Ionicons name="chevron-forward" size={13} color="#ffffff" />
             </TouchableOpacity>
           </LinearGradient>
-
 
           {/* Group Voice Call Start Button */}
           {isGroupVoiceCallEnabled || voiceCallHook.activeCall ? (
@@ -254,23 +292,35 @@ export const AdvisorDashboardView: React.FC = () => {
             isHostOrAdmin={true}
           />
 
-
-
           {/* Single tabbed card replaces 4 stacked sections — one clear focus at a time */}
           <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm')]}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabRow}>
               {TAB_ORDER.map((key) => {
                 const meta = TAB_META[key];
                 const isActive = activeTab === key;
-                const isSubmissionPending = key === 'SUBMISSIONS' && counts.SUBMISSIONS > 0;
+                const count = counts[key] ?? 0;
+                const isEmpty = count === 0;
+
+                const chipTextColor = isActive
+                  ? '#ffffff'
+                  : isEmpty
+                  ? '#2563eb' // Blue text for empty items
+                  : '#dc2626'; // Red text for non-empty items
+
+                const chipBgColor = isActive
+                  ? isEmpty ? '#2563eb' : '#dc2626' // Blue if empty active, Red if items present active
+                  : isEmpty ? '#eff6ff' : '#fef2f2'; // Light blue if empty, Light red if items present
+
+                const chipBorderColor = isActive
+                  ? isEmpty ? '#1d4ed8' : '#b91c1c'
+                  : isEmpty ? '#bfdbfe' : '#fca5a5';
 
                 return (
                   <TouchableOpacity
                     key={key}
                     style={[
                       styles.tabChip,
-                      isActive && { backgroundColor: meta.color, borderColor: meta.color },
-                      isSubmissionPending && !isActive && styles.submissionPulseTabChip,
+                      { backgroundColor: chipBgColor, borderColor: chipBorderColor, borderWidth: 1 },
                     ]}
                     activeOpacity={0.85}
                     onPress={() => {
@@ -279,29 +329,26 @@ export const AdvisorDashboardView: React.FC = () => {
                     }}
                   >
                     <Ionicons
-                      name={isSubmissionPending ? 'notifications' : meta.icon}
+                      name={isEmpty ? meta.icon : 'alert-circle'}
                       size={13}
-                      color={isActive ? '#ffffff' : isSubmissionPending ? '#dc2626' : meta.color}
+                      color={chipTextColor}
                     />
                     <Text
                       style={[
                         styles.tabChipText,
-                        { color: isActive ? '#ffffff' : isSubmissionPending ? '#dc2626' : meta.color },
+                        { color: chipTextColor, fontFamily: FONT.bold },
                       ]}
                     >
                       {meta.label}
                     </Text>
-                    {counts[key] > 0 ? (
-                      <View
-                        style={[
-                          styles.tabChipCount,
-                          isActive && styles.tabChipCountActive,
-                          key === 'SUBMISSIONS' && { backgroundColor: isActive ? 'rgba(255,255,255,0.3)' : '#dc2626' },
-                        ]}
-                      >
-                        <Text style={[styles.tabChipCountText, { color: '#ffffff' }]}>{counts[key]}</Text>
-                      </View>
-                    ) : null}
+                    <View
+                      style={[
+                        styles.tabChipCount,
+                        { backgroundColor: isEmpty ? '#2563eb' : '#dc2626' },
+                      ]}
+                    >
+                      <Text style={[styles.tabChipCountText, { color: '#ffffff' }]}>{count}</Text>
+                    </View>
                   </TouchableOpacity>
                 );
               })}
@@ -715,6 +762,134 @@ export const AdvisorDashboardView: React.FC = () => {
                 </View>
               ) : activeTab === 'WEATHER' ? (
                 <WeatherAlertsList alerts={weatherAlerts} meta={activeMeta} />
+              ) : activeTab === 'NO_SCHEDULE' ? (
+                noScheduleCrops.length === 0 ? (
+                  <Text style={styles.emptyText}>All active crops have valid upcoming schedules! 🎉</Text>
+                ) : (
+                  <View style={{ gap: 10 }}>
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#b45309', backgroundColor: '#fff7ed', padding: 8, borderRadius: 8, borderWidth: 1, borderColor: '#fed7aa' }}>
+                      ⚠️ Alert: The following crops currently have no active schedule assigned or their existing schedule has expired/finished. Please allocate a schedule.
+                    </Text>
+                    {noScheduleCrops.map((crop) => {
+                      const farmer = crop.plot?.farm?.owner;
+                      const locationStr = [farmer?.village, farmer?.district, farmer?.state].filter(Boolean).join(', ');
+                      const isMissing = !crop.assignedSchedule || !crop.assignedSchedule.trim();
+
+                      return (
+                        <View key={crop.id} style={[styles.reviewCard, { borderColor: '#fed7aa', backgroundColor: '#fffbf5' }]}>
+                          <View style={styles.reviewCardHeader}>
+                            <View style={{ flex: 1, gap: 2 }}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                <Text style={styles.reviewCropTitle}>
+                                  🌾 {crop.cropName}{' '}
+                                  <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#1d4ed8' }}>
+                                    (ID: {crop.cropId || (crop.id.startsWith('CR-') ? crop.id : `CR-${crop.id.slice(0, 6).toUpperCase()}`)})
+                                  </Text>
+                                </Text>
+                                {crop.variety ? <Text style={styles.reviewCropVariety}>({crop.variety})</Text> : null}
+                                <View style={[styles.pendingBadge, { backgroundColor: '#fee2e2', borderColor: '#fca5a5' }]}>
+                                  <Ionicons name="alert-circle" size={10} color="#dc2626" />
+                                  <Text style={[styles.pendingBadgeText, { color: '#dc2626' }]}>
+                                    {isMissing ? 'NO SCHEDULE ALOTTED' : 'SCHEDULE FINISHED / EXPIRED'}
+                                  </Text>
+                                </View>
+                              </View>
+                              <Text style={styles.reviewCropCategory}>
+                                📂 {crop.category || 'General Crop'} {crop.sowingDate ? `· 📅 Sown: ${new Date(crop.sowingDate).toLocaleDateString('en-IN')}` : ''}
+                              </Text>
+                            </View>
+                          </View>
+
+                          <View style={styles.submissionFarmerHighlight}>
+                            <Text style={styles.submissionFarmerText}>
+                              👨‍🌾 Farmer: <Text style={{ fontFamily: FONT.bold, color: '#1e40af' }}>{farmer?.name || 'Farmer'}</Text>
+                              {farmer?.mobile ? ` (📞 ${farmer.mobile})` : ''}
+                            </Text>
+                            {crop.plot?.name ? (
+                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#475569', marginTop: 2 }}>
+                                📍 Plot: {crop.plot.name} {locationStr ? `· ${locationStr}` : ''}
+                              </Text>
+                            ) : null}
+                          </View>
+
+                          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 6 }}>
+                            <TouchableOpacity
+                              style={[styles.acceptCropBtn, { backgroundColor: theme.primary, paddingHorizontal: 14, height: 34 }]}
+                              onPress={() => router.push('/(tabs)/schedule')}
+                            >
+                              <Ionicons name="calendar-outline" size={15} color="#ffffff" />
+                              <Text style={styles.acceptCropBtnText}>Assign / Update Schedule 📅</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )
+              ) : activeTab === 'PROBLEMS' ? (
+                <View style={{ gap: 10 }}>
+                  {pendingProblems.length === 0 ? (
+                    <Text style={styles.emptyText}>No active pending crop problem reports. All caught up!</Text>
+                  ) : (
+                    <View style={{ gap: 10 }}>
+                      {pendingProblems.map((prob) => {
+                        const isHigh = prob.severity === 'HIGH' || prob.severity === 'CRITICAL';
+                        const isExpanded = expandedProblemId === prob.id;
+                        const photoCount = prob.photos?.length ?? 0;
+
+                        return (
+                          <View key={prob.id} style={[styles.reviewCard, isHigh && { borderColor: '#fca5a5', backgroundColor: '#fff5f5' }]}>
+                            <TouchableOpacity
+                              style={styles.reviewCardHeader}
+                              activeOpacity={0.75}
+                              onPress={() => {
+                                if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                setExpandedProblemId((curr) => (curr === prob.id ? null : prob.id));
+                              }}
+                            >
+                              <View style={{ flex: 1, gap: 2 }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                  <Text style={styles.reviewCropTitle}>⚠️ {prob.title}</Text>
+                                  <View style={[styles.pendingBadge, { backgroundColor: isHigh ? '#fef2f2' : '#eff6ff', borderColor: isHigh ? '#fecaca' : '#bfdbfe' }]}>
+                                    <Text style={[styles.pendingBadgeText, { color: isHigh ? '#dc2626' : '#1d4ed8' }]}>
+                                      {prob.severity || 'REPORTED'}
+                                    </Text>
+                                  </View>
+                                </View>
+                                <Text style={styles.reviewCropCategory}>
+                                  👨‍🌾 {prob.reportedBy?.name || 'Farmer'} · 🌾 {prob.cropCycle?.cropName || 'Crop Issue'} · 📅 {new Date(prob.createdAt).toLocaleDateString('en-IN')}
+                                  {photoCount > 0 ? ` · 📷 ${photoCount} Photo${photoCount > 1 ? 's' : ''}` : ''}
+                                </Text>
+                              </View>
+                              <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={18} color="#64748b" />
+                            </TouchableOpacity>
+
+                            {isExpanded ? (
+                              <>
+                                <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#334155', marginVertical: 4 }}>
+                                  {prob.description}
+                                </Text>
+                                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 6 }}>
+                                  <TouchableOpacity
+                                    style={[styles.acceptCropBtn, { backgroundColor: '#e11d48', paddingHorizontal: 14, height: 34 }]}
+                                    onPress={() => {
+                                      setSelectedProblemToRespond(prob);
+                                      setProblemResponseText(prob.advisorResponse || '');
+                                      setProblemProductText(prob.recommendedProduct || '');
+                                    }}
+                                  >
+                                    <Ionicons name="chatbox-ellipses" size={15} color="#ffffff" />
+                                    <Text style={styles.acceptCropBtnText}>Provide Advice & Remedy</Text>
+                                  </TouchableOpacity>
+                                </View>
+                              </>
+                            ) : null}
+                          </View>
+                        );
+                      })}
+                    </View>
+                  )}
+                </View>
               ) : (
                 <ScheduleList
                   items={activeTab === 'DELAYED' ? delayedSchedule : todaySchedule}

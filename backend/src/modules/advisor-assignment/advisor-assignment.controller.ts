@@ -93,6 +93,24 @@ export class AdvisorAssignmentController {
     return this.advisorAssignmentService.reject(user, id, dto.reason);
   }
 
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Get('pending-doctor-changes')
+  findPendingDoctorChangeRequests() {
+    return this.advisorAssignmentService.findPendingDoctorChangeRequests();
+  }
+
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Post(':id/admin-approve-change')
+  adminApproveDoctorChange(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.advisorAssignmentService.adminApproveDoctorChange(user, id);
+  }
+
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Post(':id/admin-reject-change')
+  adminRejectDoctorChange(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() body: { reason?: string }) {
+    return this.advisorAssignmentService.adminRejectDoctorChange(user, id, body?.reason);
+  }
+
   @Roles(Role.ADVISOR)
   @Post('farmers/:farmerId/renewal-reminder')
   sendRenewalReminder(@CurrentUser() user: AuthUser, @Param('farmerId') farmerId: string) {

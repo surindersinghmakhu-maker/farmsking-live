@@ -54,7 +54,7 @@ export function QuickAddDoseItemModal({
 
   const handleSave = async () => {
     if (!item.trim()) {
-      setError('Kripya item ka naam bharein.');
+      setError('Please enter item name.');
       return;
     }
     const doseStr = dose.trim() ? `${dose.trim()} ${doseUnit}` : undefined;
@@ -69,7 +69,7 @@ export function QuickAddDoseItemModal({
       onCreated?.({ item: item.trim(), dose: doseStr });
       onClose();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Save nahi ho saka, dobara try karein.');
+      setError(err?.response?.data?.message ?? 'Could not save, please try again.');
     }
   };
 

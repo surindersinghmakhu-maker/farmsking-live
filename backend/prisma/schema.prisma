@@ -135,6 +135,7 @@ enum MachineryOwnership {
 
 enum AdvisorAssignmentStatus {
   PENDING
+  ADMIN_APPROVAL_PENDING
   ACTIVE
   REVOKED
 }
@@ -507,6 +508,7 @@ model User {
 
   // Farmer Plan (3-tier)
   farmerPlan                                 FarmerPlan?
+  farmerPlanHistory                          FarmerPlanHistory[]  @relation("FarmerPlanHistoryFarmer")
   farmerPlanCouponsCreated                   FarmerPlanCoupon[]   @relation("FarmerPlanCouponsCreatedBy")
   farmerPlanCouponsAssigned                  FarmerPlanCoupon[]   @relation("FarmerPlanCouponsAssignedFarmer")
   farmerPlanCouponsAssignedAsAdvisor         FarmerPlanCoupon[]   @relation("FarmerPlanCouponsAssignedAdvisor")
@@ -1955,6 +1957,37 @@ model FarmerPlan {
   @@map("farmer_plans")
 }
 
+enum FarmerPlanRecordStatus {
+  ACTIVE
+  SLEEP
+  EXPIRED
+  REVOKED
+}
+
+/// Detailed history of all farmer plan purchases, extensions, and sleep-mode paused plans.
+model FarmerPlanHistory {
+  id            String                 @id @default(uuid())
+  farmerId      String
+  farmer        User                   @relation("FarmerPlanHistoryFarmer", fields: [farmerId], references: [id], onDelete: Cascade)
+  plan          FarmerSubscriptionPlan
+  status        FarmerPlanRecordStatus @default(ACTIVE)
+  daysGranted   Int
+  remainingDays Int? // Remaining days saved when plan was placed in SLEEP mode
+  startDate     DateTime               @default(now())
+  endDate       DateTime?
+  sleptAt       DateTime? // Timestamp when plan entered SLEEP mode
+  resumedAt     DateTime? // Timestamp when plan resumed from SLEEP mode
+  couponId      String?
+  coupon        FarmerPlanCoupon?      @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  notes         String?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+
+  @@index([farmerId])
+  @@index([status])
+  @@map("farmer_plan_history")
+}
+
 /// Advisor ki current active plan record (LITE or PLUS).
 model AdvisorTierPlan {
   id        String                  @id @default(uuid())
@@ -2001,7 +2034,8 @@ model FarmerPlanCoupon {
   payoutRecipientId         String?
   createdAt                 DateTime               @default(now())
 
-  farmerPlans FarmerPlan[]
+  farmerPlans         FarmerPlan[]
+  farmerPlanHistories FarmerPlanHistory[]
 
   @@index([assignedFarmerId])
   @@index([assignedBusinessPartnerId])

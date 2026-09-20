@@ -590,7 +590,7 @@ export default function FarmListScreen() {
             style={[styles.subTabItem, activeSubTab === 'CROPS' && styles.subTabItemActive]}
             onPress={() => { tap(); setActiveSubTab('CROPS'); }}
           >
-            <Ionicons name="leaf" size={14} color={activeSubTab === 'CROPS' ? '#ffffff' : '#cbd5e1'} />
+            <Ionicons name="leaf" size={14} color={activeSubTab === 'CROPS' ? '#15803d' : '#ffffff'} />
             <Text style={[styles.subTabText, activeSubTab === 'CROPS' && styles.subTabTextActive]}>
               🌾 Active Crops ({activeCropFields.length})
             </Text>
@@ -600,7 +600,7 @@ export default function FarmListScreen() {
             style={[styles.subTabItem, activeSubTab === 'CROP_CARE' && styles.subTabItemActive]}
             onPress={() => { tap(); setActiveSubTab('CROP_CARE'); }}
           >
-            <Ionicons name="medical" size={14} color={activeSubTab === 'CROP_CARE' ? '#ffffff' : '#cbd5e1'} />
+            <Ionicons name="medical" size={14} color={activeSubTab === 'CROP_CARE' ? '#15803d' : '#ffffff'} />
             <Text style={[styles.subTabText, activeSubTab === 'CROP_CARE' && styles.subTabTextActive]}>
               🩺 Crop Doctor Care
             </Text>
@@ -651,7 +651,7 @@ export default function FarmListScreen() {
                 <View style={styles.cardHeader}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', flex: 1 }}>
                     <Text style={styles.cardTitle} numberOfLines={1}>
-                      📍 {item.fieldName} <Text style={styles.cropIdSubText}>(ID: {item.cropId || item.id})</Text>
+                      📍 {item.fieldName} <Text style={styles.cropIdSubText}>(ID: {item.cropId || (item.id?.startsWith('CR-') ? item.id : `CR-${item.id?.slice(0, 6).toUpperCase()}`)})</Text>
                     </Text>
                     <View style={styles.cropBadge}>
                       <Text style={styles.cropBadgeText}>🌾 {item.cropName}</Text>
@@ -905,7 +905,7 @@ export default function FarmListScreen() {
                       <View style={styles.historyCardHeader}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                           <Text style={styles.historyCropName}>
-                            📍 {hItem.fieldName} <Text style={styles.cropIdSubText}>(ID: {hItem.cropId || hItem.id})</Text>
+                            📍 {hItem.fieldName} <Text style={styles.cropIdSubText}>(ID: {hItem.cropId || (hItem.id?.startsWith('CR-') ? hItem.id : `CR-${hItem.id?.slice(0, 6).toUpperCase()}`)})</Text>
                           </Text>
                           <View style={styles.completedBadge}>
                             <Text style={styles.completedBadgeText}>🏁 COMPLETED</Text>
@@ -2455,7 +2455,9 @@ const styles = StyleSheet.create({
   },
   subTabBar: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(0, 0, 0, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
     padding: 3,
     borderRadius: RADIUS.pill,
     marginTop: 12,
@@ -2466,19 +2468,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 7,
+    paddingVertical: 8,
     borderRadius: RADIUS.pill,
   },
   subTabItemActive: {
-    backgroundColor: theme.primary,
+    backgroundColor: '#ffffff',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 2,
   },
   subTabText: {
-    fontSize: 12,
+    fontSize: 12.5,
     fontFamily: FONT.bold,
-    color: '#cbd5e1',
+    color: '#ffffff',
   },
   subTabTextActive: {
-    color: '#ffffff',
+    color: '#14532d',
+    fontFamily: FONT.bold,
   },
   sectionHeaderTitle: {
     fontSize: 11.5,

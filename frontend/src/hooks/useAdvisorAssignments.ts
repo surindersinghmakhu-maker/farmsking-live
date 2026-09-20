@@ -97,3 +97,30 @@ export function useCancelPendingRequest() {
   });
 }
 
+export function usePendingDoctorChanges() {
+  return useQuery({
+    queryKey: ['advisor-assignments', 'pending-doctor-changes'],
+    queryFn: advisorAssignmentsApi.getPendingDoctorChanges,
+  });
+}
+
+export function useAdminApproveDoctorChange() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => advisorAssignmentsApi.adminApproveDoctorChange(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['advisor-assignments'] });
+    },
+  });
+}
+
+export function useAdminRejectDoctorChange() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason?: string }) => advisorAssignmentsApi.adminRejectDoctorChange(id, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['advisor-assignments'] });
+    },
+  });
+}
+

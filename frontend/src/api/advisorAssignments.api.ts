@@ -72,4 +72,19 @@ export async function cancelMyPendingRequest(): Promise<AdvisorAssignment> {
   }
 }
 
+export async function getPendingDoctorChanges(): Promise<AdvisorAssignment[]> {
+  const { data } = await apiClient.get<AdvisorAssignment[]>('/advisor-assignments/pending-doctor-changes');
+  return data;
+}
+
+export async function adminApproveDoctorChange(id: string): Promise<AdvisorAssignment> {
+  const { data } = await apiClient.post<AdvisorAssignment>(`/advisor-assignments/${id}/admin-approve-change`, {});
+  return data;
+}
+
+export async function adminRejectDoctorChange(id: string, reason?: string): Promise<AdvisorAssignment> {
+  const { data } = await apiClient.post<AdvisorAssignment>(`/advisor-assignments/${id}/admin-reject-change`, { reason });
+  return data;
+}
+
 

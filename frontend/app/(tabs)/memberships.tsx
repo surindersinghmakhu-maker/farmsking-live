@@ -17,11 +17,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
-import { useFarmerPlan, useFarmerPlanPricing } from '@/src/hooks/useFarmerPlan';
-import { useMyAdvisor, useAvailableAdvisors, useChooseAdvisor } from '@/src/hooks/useAdvisorAssignments';
+import { useFarmerPlan, useFarmerPlanPricing, useRedeemFarmerPlanCoupon } from '@/src/hooks/useFarmerPlan';
+import { useMyAdvisor, useAvailableAdvisors, useChooseAdvisor, useMyPendingRequest } from '@/src/hooks/useAdvisorAssignments';
 import { useCrops } from '@/src/store/crops-context';
 import { useAuth } from '@/src/store/auth-context';
 import { CopyButton } from '@/src/components/CopyButton';
+import { DoctorChangeDisclaimerModal } from '@/src/components/DoctorChangeDisclaimerModal';
 
 const theme = RoleThemes.FARMER;
 
@@ -36,40 +37,58 @@ export default function MembershipsScreen() {
   const { data: allPricing = [], isLoading: isLoadingPricing } = useFarmerPlanPricing();
   const { data: myAdvisorData } = useMyAdvisor();
   const { data: availableAdvisors = [] } = useAvailableAdvisors();
+  const { data: pendingRequest } = useMyPendingRequest();
   const chooseAdvisor = useChooseAdvisor();
+  const redeemCouponMutation = useRedeemFarmerPlanCoupon();
   const { cropFields } = useCrops();
 
   const [activeTab, setActiveTab] = useState<'FARMER_SOFTWARE' | 'CROP_CARE'>('FARMER_SOFTWARE');
   const [couponCodeInput, setCouponCodeInput] = useState('');
   const [appliedCouponNotice, setAppliedCouponNotice] = useState<string | null>(null);
   const [isChoosingAdvisor, setIsChoosingAdvisor] = useState(false);
+  const [disclaimerModalVisible, setDisclaimerModalVisible] = useState(false);
+  const [targetAdvisorToRequest, setTargetAdvisorToRequest] = useState<{ id: string; name: string } | null>(null);
 
   const activeAdvisor = myAdvisorData?.advisor;
   const activeCropsCount = cropFields.filter((c) => c.status === 'ACTIVE').length;
 
-  const handleApplyCoupon = () => {
+  const handleApplyCoupon = async () => {
     if (!couponCodeInput.trim()) {
       setAppliedCouponNotice('⚠️ Please enter a coupon code.');
       return;
     }
     tap();
     const code = couponCodeInput.trim().toUpperCase();
-    if (code === 'FARMS2026' || code === 'VIPFARMER' || code === 'CROPCARE50') {
-      setAppliedCouponNotice(`🎉 Coupon "${code}" Applied Successfully! Discount enabled for your next upgrade.`);
-    } else {
-      setAppliedCouponNotice(`❌ Invalid or expired coupon code "${code}". Try "FARMS2026".`);
+    try {
+      const res = await redeemCouponMutation.mutateAsync({ code });
+      setAppliedCouponNotice(`🎉 Coupon "${code}" Redeemed Successfully! Your plan / doctor care has been updated.`);
+      setCouponCodeInput('');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || `Invalid or expired coupon code "${code}".`;
+      setAppliedCouponNotice(`❌ ${msg}`);
     }
   };
 
-  const handleRequestAdvisor = async (advisorId: string) => {
+  const handleInitiateAdvisorRequest = (adv: { id: string; name: string }) => {
     tap();
+    setTargetAdvisorToRequest(adv);
+    if (activeAdvisor) {
+      setDisclaimerModalVisible(true);
+    } else {
+      executeAdvisorRequest(adv.id);
+    }
+  };
+
+  const executeAdvisorRequest = async (advisorId: string) => {
     try {
       await chooseAdvisor.mutateAsync(advisorId);
       setIsChoosingAdvisor(false);
-      if (Platform.OS === 'web') alert('✅ Request sent! Doctor will approve your crop care assignment shortly.');
-      else Alert.alert('Success', 'Request sent! Doctor will approve your crop care assignment shortly.');
+      setDisclaimerModalVisible(false);
+      setTargetAdvisorToRequest(null);
+      if (Platform.OS === 'web') alert('✅ Request submitted! Super Admin will review doctor change request and notify your doctor.');
+      else Alert.alert('Success', 'Request submitted! Super Admin will review doctor change request and notify your doctor.');
     } catch (err: any) {
-      const msg = err?.response?.data?.message || 'Could not choose advisor.';
+      const msg = err?.response?.data?.message || 'Could not request doctor.';
       if (Platform.OS === 'web') alert(msg);
       else Alert.alert('Error', msg);
     }
@@ -251,6 +270,41 @@ export default function MembershipsScreen() {
         ) : (
           /* 2. DOCTOR CROP CARE MEMBERSHIPS PART */
           <View style={{ gap: 14 }}>
+            {/* Pending Doctor Change Request Status Banner */}
+            {pendingRequest ? (
+              pendingRequest.status === 'ADMIN_APPROVAL_PENDING' ? (
+                <View style={[styles.statusCard, { backgroundColor: '#fffbeb', borderColor: '#fde68a', borderWidth: 1.5 }, premiumShadow('#000000', 'sm')]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <Ionicons name="time" size={22} color="#d97706" />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: '#92400e' }}>⏳ Doctor Change Under Admin Review</Text>
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#b45309', marginTop: 2 }}>
+                        Your request to switch doctor to Dr. {pendingRequest.advisor?.name} is submitted to Super Admin. Admin will inform your previous doctor before approving.
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              ) : (
+                <View style={[styles.statusCard, { backgroundColor: '#f0f9ff', borderColor: '#bae6fd', borderWidth: 1.5 }, premiumShadow('#000000', 'sm')]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <Ionicons name="checkmark-circle" size={24} color="#0284c7" />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0369a1' }}>🎉 Doctor Approved Your Request!</Text>
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#0284c7', marginTop: 2 }}>
+                        Dr. {pendingRequest.advisor?.name} has approved your request! Enter the coupon code provided by your doctor, OR share your King ID with your doctor/admin to assign coupon directly.
+                      </Text>
+                    </View>
+                  </View>
+                  {user?.kingId ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, padding: 10, backgroundColor: '#ffffff', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#bae6fd' }}>
+                      <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>King ID: {user.kingId}</Text>
+                      <CopyButton textToCopy={user.kingId} label="Copy King ID" />
+                    </View>
+                  ) : null}
+                </View>
+              )
+            ) : null}
+
             {/* Active Doctor Status Card */}
             <View style={[styles.doctorCard, premiumShadow('#0f172a', 'sm')]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -269,20 +323,29 @@ export default function MembershipsScreen() {
               </View>
 
               {activeAdvisor ? (
-                <View style={styles.doctorActionsRow}>
+                <View style={{ gap: 8, marginTop: 12 }}>
+                  <View style={styles.doctorActionsRow}>
+                    <TouchableOpacity
+                      style={[styles.doctorActionBtn, { backgroundColor: '#e0f2fe' }]}
+                      onPress={() => router.push('/(tabs)/chat')}
+                    >
+                      <Ionicons name="chatbubble-ellipses" size={16} color="#0284c7" />
+                      <Text style={[styles.doctorActionText, { color: '#0284c7' }]}>Chat Doctor</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.doctorActionBtn, { backgroundColor: '#dcfce7' }]}
+                      onPress={() => router.push('/(tabs)/market')}
+                    >
+                      <Ionicons name="call" size={16} color="#16a34a" />
+                      <Text style={[styles.doctorActionText, { color: '#16a34a' }]}>Call Doctor</Text>
+                    </TouchableOpacity>
+                  </View>
                   <TouchableOpacity
-                    style={[styles.doctorActionBtn, { backgroundColor: '#e0f2fe' }]}
-                    onPress={() => router.push('/(tabs)/chat')}
+                    style={[styles.doctorActionBtn, { backgroundColor: '#fef3c7', borderWidth: 1, borderColor: '#fde68a' }]}
+                    onPress={() => setIsChoosingAdvisor(true)}
                   >
-                    <Ionicons name="chatbubble-ellipses" size={16} color="#0284c7" />
-                    <Text style={[styles.doctorActionText, { color: '#0284c7' }]}>Chat Doctor</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.doctorActionBtn, { backgroundColor: '#dcfce7' }]}
-                    onPress={() => router.push('/(tabs)/market')}
-                  >
-                    <Ionicons name="call" size={16} color="#16a34a" />
-                    <Text style={[styles.doctorActionText, { color: '#16a34a' }]}>Call Doctor</Text>
+                    <Ionicons name="swap-horizontal" size={16} color="#d97706" />
+                    <Text style={[styles.doctorActionText, { color: '#d97706' }]}>Change Crop Doctor 🩺</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
@@ -374,7 +437,7 @@ export default function MembershipsScreen() {
                     <TouchableOpacity
                       style={styles.chooseBtn}
                       disabled={chooseAdvisor.isPending}
-                      onPress={() => handleRequestAdvisor(adv.id)}
+                      onPress={() => handleInitiateAdvisorRequest(adv)}
                     >
                       <Text style={styles.chooseBtnText}>Assign 🩺</Text>
                     </TouchableOpacity>
@@ -385,6 +448,16 @@ export default function MembershipsScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Doctor Change Disclaimer & Terms Modal */}
+      <DoctorChangeDisclaimerModal
+        visible={disclaimerModalVisible}
+        onClose={() => setDisclaimerModalVisible(false)}
+        onConfirm={() => targetAdvisorToRequest && executeAdvisorRequest(targetAdvisorToRequest.id)}
+        currentDoctorName={activeAdvisor?.name}
+        newDoctorName={targetAdvisorToRequest?.name}
+        isLoading={chooseAdvisor.isPending}
+      />
     </View>
   );
 }

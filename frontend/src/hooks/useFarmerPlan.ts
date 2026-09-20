@@ -24,6 +24,7 @@ import {
   chooseAdvisor,
   getAdminDocsList,
   downloadAdminDocContent,
+  getFarmerPlanHistory,
 } from '../api/farmerPlans.api';
 
 
@@ -123,10 +124,18 @@ export function useRedeemFarmerPlanCoupon() {
       redeemFarmerPlanCoupon(code, farmerId, advisorId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['farmerPlan'] });
+      queryClient.invalidateQueries({ queryKey: ['farmerPlanHistory'] });
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
       queryClient.invalidateQueries({ queryKey: ['advisor-assignments'] });
       queryClient.invalidateQueries({ queryKey: ['farmer-plan-coupons'] });
     },
+  });
+}
+
+export function useFarmerPlanHistory(farmerId?: string) {
+  return useQuery({
+    queryKey: ['farmerPlanHistory', farmerId ?? 'mine'],
+    queryFn: () => getFarmerPlanHistory(farmerId),
   });
 }
 

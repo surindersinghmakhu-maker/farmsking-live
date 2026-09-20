@@ -147,6 +147,12 @@ export function AdvisorScheduleTimeline({ cropCycleId, cropName, farmerName }: A
             .map((task) => {
               const status = classify(task);
               const meta = STATUS_META[status];
+              const todayZero = new Date();
+              todayZero.setHours(0, 0, 0, 0);
+              const taskDate = new Date(task.scheduledDate);
+              taskDate.setHours(0, 0, 0, 0);
+              const isPastTask = taskDate.getTime() < todayZero.getTime() || task.status === 'COMPLETED';
+
               return (
                 <View key={task.id} style={[styles.tableRow, { backgroundColor: meta.bg }]}>
                   <View style={styles.dateCol}>
@@ -155,7 +161,15 @@ export function AdvisorScheduleTimeline({ cropCycleId, cropName, farmerName }: A
                     </Text>
                   </View>
                   <View style={styles.taskCol}>
-                    <Text style={styles.taskTitle}>{task.title}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <Text style={styles.taskTitle}>{task.title}</Text>
+                      {isPastTask ? (
+                        <View style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 4, paddingVertical: 1, borderRadius: 4, flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+                          <Ionicons name="lock-closed" size={9} color="#64748b" />
+                          <Text style={{ fontSize: 8.5, fontFamily: FONT.bold, color: '#64748b' }}>Read Only</Text>
+                        </View>
+                      ) : null}
+                    </View>
                     {task.status === 'COMPLETED' && task.completedAt ? (
                       <Text style={styles.metaText}>
                         Completed {new Date(task.completedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}

@@ -86,7 +86,7 @@ export function ItemTemplatesSection({ themeColor }: { themeColor: string }) {
 
   const handleSave = async () => {
     if (!item.trim()) {
-      setError('Kripya item ka naam bharein.');
+      setError('Please enter item name.');
       return;
     }
     const payload = {
@@ -105,7 +105,7 @@ export function ItemTemplatesSection({ themeColor }: { themeColor: string }) {
       setIsModalOpen(false);
       setEditingId(null);
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Save nahi ho saka, dobara try karein.');
+      setError(err?.response?.data?.message ?? 'Could not save, please try again.');
     }
   };
 
@@ -114,7 +114,7 @@ export function ItemTemplatesSection({ themeColor }: { themeColor: string }) {
     if (Platform.OS === 'web') {
       if (confirm(`Delete template "${tpl.item}"?`)) doDelete();
     } else {
-      Alert.alert('Delete Template?', `"${tpl.item}" template hata diya jayega.`, [
+      Alert.alert('Delete Template?', `Template "${tpl.item}" will be deleted.`, [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Delete', style: 'destructive', onPress: doDelete },
       ]);
@@ -128,7 +128,7 @@ export function ItemTemplatesSection({ themeColor }: { themeColor: string }) {
       <View style={itemTplStyles.headerRow}>
         <View style={{ flex: 1 }}>
           <Text style={itemTplStyles.headerTitle}>Dose Items</Text>
-          <Text style={itemTplStyles.headerSub}>Item, Dose aur Alternatives ki quick-fill library.</Text>
+          <Text style={itemTplStyles.headerSub}>Quick-fill library for items, doses, and alternatives.</Text>
         </View>
         <TouchableOpacity style={[itemTplStyles.addBtn, { backgroundColor: themeColor }]} activeOpacity={0.85} onPress={openNew}>
           <Ionicons name="add-circle" size={16} color="#ffffff" />
@@ -139,7 +139,7 @@ export function ItemTemplatesSection({ themeColor }: { themeColor: string }) {
       {isLoading ? (
         <ActivityIndicator color={themeColor} style={{ marginVertical: 16 }} />
       ) : (templates ?? []).length === 0 ? (
-        <Text style={itemTplStyles.emptyText}>Abhi koi dose item nahi hai. "+ Add Item" se banayein.</Text>
+        <Text style={itemTplStyles.emptyText}>No dose items added yet. Click "+ Add Item" to create.</Text>
       ) : (
         <View style={itemTplStyles.compactList}>
           {(templates ?? []).map((tpl, idx) => (
@@ -265,15 +265,17 @@ export function ItemTemplatesSection({ themeColor }: { themeColor: string }) {
 const itemTplStyles = StyleSheet.create({
   card: {
     backgroundColor: '#ffffff',
-    borderRadius: RADIUS.lg,
-    padding: SPACING.md,
+    borderRadius: RADIUS.md,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
     ...premiumShadow('#0f172a', 'sm'),
   },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  headerTitle: { fontSize: 14.5, fontFamily: FONT.extraBold, color: '#0f172a' },
-  headerSub: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 },
-  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 8, borderRadius: RADIUS.md },
-  addBtnText: { color: '#ffffff', fontSize: 12, fontFamily: FONT.bold },
+  headerTitle: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#0f172a' },
+  headerSub: { fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
+  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: RADIUS.pill },
+  addBtnText: { color: '#ffffff', fontSize: 11.5, fontFamily: FONT.bold },
   emptyText: { fontSize: 12.5, fontFamily: FONT.medium, color: '#94a3b8', textAlign: 'center', paddingVertical: 20 },
   groupHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6, paddingHorizontal: 2 },
   groupHeaderText: { fontSize: 12, fontFamily: FONT.bold },

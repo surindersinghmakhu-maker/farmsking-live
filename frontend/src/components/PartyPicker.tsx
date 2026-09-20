@@ -87,7 +87,7 @@ export function PartyPicker({
   const handleSendOtp = () => {
     const cleaned = newMobile.trim().replace(/\D/g, '');
     if (cleaned.length < 10) {
-      setOtpNotice('⚠️ Kripya 10-digit mobile number enter karein.');
+      setOtpNotice('⚠️ Please enter a 10-digit mobile number.');
       return;
     }
     tap();
@@ -97,7 +97,7 @@ export function PartyPicker({
 
   const handleConfirmOtp = () => {
     if (!otpCode.trim()) {
-      setOtpNotice('⚠️ Kripya OTP code enter karein.');
+      setOtpNotice('⚠️ Please enter the OTP code.');
       return;
     }
     tap();

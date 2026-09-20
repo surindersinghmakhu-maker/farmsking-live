@@ -29,10 +29,10 @@ export const translations = {
 
     // Bottom Tabs
     tabHome: 'Home',
-    tabFarmerHome: 'Kisaan Home',
+    tabFarmerHome: 'Farmer Home',
     tabGardenerHome: 'Gardener Home',
     tabCustomerHome: 'Store',
-    tabAdvisorHome: 'Crop Doctor Home',
+    tabAdvisorHome: 'Doctor Home',
     tabPartnerHome: 'Partner Home',
     tabAdminHome: 'Admin Home',
     tabSuperAdminHome: 'Super Admin',
@@ -153,7 +153,7 @@ export const translations = {
     tabFarmerHome: 'Farmer Home',
     tabGardenerHome: 'Gardener Home',
     tabCustomerHome: 'Store',
-    tabAdvisorHome: 'Crop Doctor Home',
+    tabAdvisorHome: 'Doctor Home',
     tabPartnerHome: 'Partner Home',
     tabAdminHome: 'Admin Home',
     tabSuperAdminHome: 'Super Admin',

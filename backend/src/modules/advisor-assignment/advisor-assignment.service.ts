@@ -133,16 +133,7 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
     });
   }
 
-  /** The logged-in farmer/gardener's most recent still-open hire request — awaiting the advisor's accept/reject. */
-  findMyPendingRequest(user: AuthUser) {
-    return this.prisma.advisorAssignment.findFirst({
-      where: { farmerId: user.id, status: AdvisorAssignmentStatus.PENDING, deletedAt: null },
-      include: {
-        advisor: { select: { id: true, name: true, photoUrl: true, specialization: true } },
-      },
-      orderBy: { startDate: 'desc' },
-    });
-  }
+
 
   /** Full detail for one farmer this advisor is (or was) assigned to — profile, subscription, and farm/plot/crop data. */
   async findFarmerDetail(user: AuthUser, farmerId: string) {
@@ -333,22 +324,38 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
     return assignment;
   }
 
+  /** The logged-in farmer/gardener's most recent still-open hire request — awaiting admin approval or advisor's accept/reject. */
+  findMyPendingRequest(user: AuthUser) {
+    return this.prisma.advisorAssignment.findFirst({
+      where: {
+        farmerId: user.id,
+        status: { in: [AdvisorAssignmentStatus.PENDING, AdvisorAssignmentStatus.ADMIN_APPROVAL_PENDING] },
+        deletedAt: null,
+      },
+      include: {
+        advisor: { select: { id: true, name: true, photoUrl: true, specialization: true } },
+      },
+      orderBy: { startDate: 'desc' },
+    });
+  }
+
   /**
-   * Farmer explicitly picks a specific advisor (STANDARD/PREMIUM "Choose Your Advisor" screen) — creates
-   * a PENDING request for that advisor to accept/reject, same lifecycle as the auto-hire above. Blocks a
-   * second open request while one is already pending or active; a rejected request can always try again.
+   * Farmer explicitly picks a specific advisor.
+   * If farmer already has an ACTIVE advisor, requirement requires Super Admin approval first (status: ADMIN_APPROVAL_PENDING)
+   * so Super Admin can notify current doctor.
+   * If farmer has NO active advisor, creates a direct PENDING request for the new doctor.
    */
   async requestSpecificAdvisor(farmerId: string, advisorId: string) {
-    const openRequest = await this.prisma.advisorAssignment.findFirst({
-      where: { farmerId, status: { in: [AdvisorAssignmentStatus.PENDING, AdvisorAssignmentStatus.ACTIVE] }, deletedAt: null },
+    const existingSame = await this.prisma.advisorAssignment.findFirst({
+      where: {
+        farmerId,
+        advisorId,
+        status: { in: [AdvisorAssignmentStatus.PENDING, AdvisorAssignmentStatus.ADMIN_APPROVAL_PENDING, AdvisorAssignmentStatus.ACTIVE] },
+        deletedAt: null,
+      },
     });
-    if (openRequest) {
-      if (openRequest.advisorId === advisorId) return openRequest;
-      throw new ConflictException(
-        openRequest.status === AdvisorAssignmentStatus.ACTIVE
-          ? 'You already have an active advisor.'
-          : 'You already have a pending advisor request — wait for a response before requesting another.',
-      );
+    if (existingSame) {
+      return existingSame;
     }
 
     const farmer = await this.prisma.user.findFirst({ where: { id: farmerId, deletedAt: null } });
@@ -356,25 +363,159 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
       throw new NotFoundException('User not found.');
     }
 
+    // Check if farmer currently has an active advisor assignment with another doctor
+    const currentActive = await this.prisma.advisorAssignment.findFirst({
+      where: { farmerId, status: AdvisorAssignmentStatus.ACTIVE, deletedAt: null },
+      include: { advisor: { select: { id: true, name: true, mobile: true } } },
+    });
+
+    // Automatically revoke any previous PENDING request for a different doctor
+    await this.prisma.advisorAssignment.updateMany({
+      where: { farmerId, status: AdvisorAssignmentStatus.PENDING, deletedAt: null },
+      data: { status: AdvisorAssignmentStatus.REVOKED, endDate: new Date(), notes: 'Replaced by new doctor hire request' },
+    });
+
+    const isDoctorChange = !!currentActive && currentActive.advisorId !== advisorId;
+    const initialStatus = isDoctorChange
+      ? AdvisorAssignmentStatus.ADMIN_APPROVAL_PENDING
+      : AdvisorAssignmentStatus.PENDING;
+
     const assignment = await this.prisma.advisorAssignment.create({
       data: {
         advisorId,
         farmerId,
-        status: AdvisorAssignmentStatus.PENDING,
+        status: initialStatus,
         assignedById: farmerId,
         startDate: new Date(),
+        notes: isDoctorChange ? `Doctor Change Request from Dr. ${currentActive.advisor.name}` : undefined,
       },
       include: {
         advisor: { select: { id: true, name: true, mobile: true, photoUrl: true, specialization: true, bio: true, yearsExperience: true } },
       },
     });
+
+    if (isDoctorChange) {
+      // Notify Admins to review doctor change request before contacting doctor
+      const admins = await this.prisma.user.findMany({
+        where: { roles: { hasSome: [Role.ADMIN, Role.SUPER_ADMIN] }, deletedAt: null },
+        select: { id: true },
+      });
+      for (const admin of admins) {
+        await this.notificationsService.create(
+          admin.id,
+          NotificationType.SYSTEM,
+          'Doctor Change Request Pending Review',
+          `Farmer ${farmer.name} requested to switch doctor from Dr. ${currentActive.advisor.name} to Dr. ${assignment.advisor.name}. Admin review required.`,
+        );
+      }
+      await this.notificationsService.create(
+        farmerId,
+        NotificationType.SYSTEM,
+        'Doctor Change Request Submitted',
+        'Your request to change crop doctor has been submitted to Admin for approval. Admin will notify your current doctor.',
+      );
+    } else {
+      // Direct request to new doctor
+      await this.notificationsService.create(
+        advisorId,
+        NotificationType.SYSTEM,
+        'New farmer hire request',
+        `${farmer.name} wants to hire you as their advisor. Review their profile and accept or reject.`,
+      );
+    }
+
+    return assignment;
+  }
+
+  /** Super Admin list all pending doctor change requests requiring approval. */
+  async findPendingDoctorChangeRequests() {
+    return this.prisma.advisorAssignment.findMany({
+      where: { status: AdvisorAssignmentStatus.ADMIN_APPROVAL_PENDING, deletedAt: null },
+      include: {
+        farmer: { select: { id: true, name: true, mobile: true, kingId: true, state: true, district: true } },
+        advisor: { select: { id: true, name: true, mobile: true, photoUrl: true, specialization: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /** Super Admin approves doctor change request — forwards request to new doctor & notifies current doctor. */
+  async adminApproveDoctorChange(adminUser: AuthUser, assignmentId: string) {
+    const assignment = await this.prisma.advisorAssignment.findFirst({
+      where: { id: assignmentId, status: AdvisorAssignmentStatus.ADMIN_APPROVAL_PENDING, deletedAt: null },
+      include: {
+        farmer: { select: { id: true, name: true, mobile: true } },
+        advisor: { select: { id: true, name: true, mobile: true } },
+      },
+    });
+    if (!assignment) {
+      throw new NotFoundException('Pending Doctor Change Request not found.');
+    }
+
+    // Find current active doctor to send courtesy notification
+    const currentActive = await this.prisma.advisorAssignment.findFirst({
+      where: { farmerId: assignment.farmerId, status: AdvisorAssignmentStatus.ACTIVE, deletedAt: null },
+      include: { advisor: { select: { id: true, name: true } } },
+    });
+
+    if (currentActive) {
+      await this.notificationsService.create(
+        currentActive.advisorId,
+        NotificationType.SYSTEM,
+        'Farmer Doctor Change Notice',
+        `Farmer ${assignment.farmer.name} is changing their crop doctor. Admin has approved the request.`,
+      );
+    }
+
+    // Advance assignment status to PENDING for the new doctor to accept/reject
+    const updated = await this.prisma.advisorAssignment.update({
+      where: { id: assignmentId },
+      data: { status: AdvisorAssignmentStatus.PENDING },
+    });
+
     await this.notificationsService.create(
-      advisorId,
+      assignment.advisorId,
       NotificationType.SYSTEM,
       'New farmer hire request',
-      `${farmer.name} wants to hire you as their advisor. Review their profile and accept or reject.`,
+      `${assignment.farmer.name} wants to hire you as their advisor. Review their profile and accept or reject.`,
     );
-    return assignment;
+
+    await this.notificationsService.create(
+      assignment.farmerId,
+      NotificationType.SYSTEM,
+      'Doctor Change Request Approved by Admin',
+      `Admin approved your doctor change request! Request has been forwarded to Dr. ${assignment.advisor.name}.`,
+    );
+
+    return updated;
+  }
+
+  /** Super Admin rejects doctor change request. */
+  async adminRejectDoctorChange(adminUser: AuthUser, assignmentId: string, reason?: string) {
+    const assignment = await this.prisma.advisorAssignment.findFirst({
+      where: { id: assignmentId, status: AdvisorAssignmentStatus.ADMIN_APPROVAL_PENDING, deletedAt: null },
+    });
+    if (!assignment) {
+      throw new NotFoundException('Pending Doctor Change Request not found.');
+    }
+
+    const updated = await this.prisma.advisorAssignment.update({
+      where: { id: assignmentId },
+      data: {
+        status: AdvisorAssignmentStatus.REVOKED,
+        endDate: new Date(),
+        notes: `Doctor change rejected by Admin: ${reason || 'No reason specified'}`,
+      },
+    });
+
+    await this.notificationsService.create(
+      assignment.farmerId,
+      NotificationType.SYSTEM,
+      'Doctor Change Request Update',
+      `Your doctor change request was not approved by Admin${reason ? `: ${reason}` : '.'}`,
+    );
+
+    return updated;
   }
 
   /** Farmer/Gardener cancels their own pending hire request. */
@@ -411,6 +552,17 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
     const updated = await this.prisma.advisorAssignment.update({
       where: { id },
       data: { status: AdvisorAssignmentStatus.ACTIVE, startDate: new Date() },
+    });
+
+    // Revoke any previous active or pending assignments for this farmer so the new doctor takes over
+    await this.prisma.advisorAssignment.updateMany({
+      where: {
+        farmerId: assignment.farmerId,
+        id: { not: assignment.id },
+        status: { in: [AdvisorAssignmentStatus.ACTIVE, AdvisorAssignmentStatus.PENDING] },
+        deletedAt: null,
+      },
+      data: { status: AdvisorAssignmentStatus.REVOKED, endDate: new Date(), notes: 'Replaced by new doctor acceptance' },
     });
     await this.payoutAdvisorShareOnAccept(assignment.farmerId, user.id);
     await this.notificationsService.create(

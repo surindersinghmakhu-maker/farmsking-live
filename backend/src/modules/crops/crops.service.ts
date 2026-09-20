@@ -131,10 +131,13 @@ export class CropsService {
 
   /** Farmer: every active crop cycle across all their own farms/plots (for pickers that need a real crop, not a per-plot list). */
   listMineForFarmer(user: AuthUser) {
+    const isGlobalAdmin = user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN;
     return this.prisma.cropCycle.findMany({
       where: {
         deletedAt: null,
-        plot: { farm: { ownerId: user.id, deletedAt: null } },
+        plot: isGlobalAdmin
+          ? { deletedAt: null, farm: { deletedAt: null } }
+          : { deletedAt: null, farm: { ownerId: user.id, deletedAt: null } },
       },
       include: { plot: { select: { id: true, name: true, farmId: true, area: true, areaUnit: true, irrigationType: true } } },
       orderBy: { createdAt: 'desc' },

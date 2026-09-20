@@ -311,16 +311,16 @@ function toRegisteredCropField(
   location: string | undefined
 ): RegisteredCropField {
   const realCategory = crop.category ?? 'OTHER';
-  const catInfo = REAL_CATEGORY_DISPLAY[realCategory];
-  const areaUnit = crop.plot.areaUnit ?? 'ACRE';
-  let displayUnit = REAL_AREA_UNIT_LABEL[areaUnit];
+  const catInfo = REAL_CATEGORY_DISPLAY[realCategory] || REAL_CATEGORY_DISPLAY.OTHER;
+  const areaUnit = crop.plot?.areaUnit ?? 'ACRE';
+  let displayUnit = REAL_AREA_UNIT_LABEL[areaUnit] || 'Acre';
   if (crop.notes && crop.notes.includes('[UNIT:')) {
     const match = crop.notes.match(/\[UNIT:(.*?)\]/);
     if (match && match[1]) {
       displayUnit = match[1];
     }
   }
-  const areaText = crop.plot.area != null ? `${crop.plot.area} ${displayUnit}` : '';
+  const areaText = crop.plot?.area != null ? `${crop.plot.area} ${displayUnit}` : (crop.area != null ? `${crop.area} ${displayUnit}` : '');
   const sowingDateDisplay = (crop.notes ? crop.notes.replace(/\s*\[UNIT:.*?\]/g, '').replace(/\s*\([^)]*\)/g, '').trim() : '') || (crop.sowingDate ? formatDateDisplay(crop.sowingDate) : '');
 
   return {
@@ -330,14 +330,14 @@ function toRegisteredCropField(
     categoryName: catInfo.name,
     categoryColor: catInfo.color,
     categoryBg: catInfo.bg,
-    fieldName: crop.plot.name,
+    fieldName: crop.plot?.name || 'Field Plot',
     area: areaText,
     sowingDate: sowingDateDisplay,
     variety: crop.variety ?? undefined,
     minPricePerUnit: (crop as any).minPrice ? String((crop as any).minPrice) : undefined,
     maxPricePerUnit: (crop as any).maxPrice ? String((crop as any).maxPrice) : undefined,
     unit: (crop.unit as CropUnit) ?? 'KG',
-    pricePerUnit: crop.pricePerUnit ?? '',
+    pricePerUnit: crop.pricePerUnit ? String(crop.pricePerUnit) : '',
     stage: crop.stage,
     status: crop.stage === 'COMPLETED' ? 'INACTIVE' : 'ACTIVE',
     advisorStatus: crop.advisorReviewStatus ?? 'NONE',
@@ -346,7 +346,7 @@ function toRegisteredCropField(
     farmerPhone,
     location,
     harvestType: crop.harvestType,
-    irrigationType: (crop.plot.irrigationType as IrrigationType | null) ?? undefined,
+    irrigationType: (crop.plot?.irrigationType as IrrigationType | null) ?? undefined,
     plantCount: crop.plantCount ?? undefined,
   };
 }

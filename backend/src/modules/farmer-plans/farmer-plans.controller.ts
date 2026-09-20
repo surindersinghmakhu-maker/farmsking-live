@@ -37,6 +37,22 @@ export class FarmerPlansController {
     return this.farmerPlansService.getMyPlan(user);
   }
 
+  /** Farmer / Advisor / Admin: fetch membership and care plan history including active, sleep mode, and past plans */
+  @Roles(
+    Role.CUSTOMER,
+    Role.FARMER,
+    Role.GARDENER,
+    Role.ADVISOR,
+    Role.BUSINESS_PARTNER,
+    Role.ADMIN,
+    Role.SUPER_ADMIN,
+    Role.OPERATOR,
+  )
+  @Get('history')
+  getPlanHistory(@CurrentUser() user: AuthUser, @Query('farmerId') farmerId?: string) {
+    return this.farmerPlansService.getPlanHistory(user, farmerId);
+  }
+
   /** Farmer, or an advisor/admin/business partner previewing on behalf of a farmer (?farmerId=) — shows what a code would grant, without consuming it */
   @Roles(Role.FARMER, Role.CUSTOMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.BUSINESS_PARTNER)
   @Get('coupon/:code/preview')

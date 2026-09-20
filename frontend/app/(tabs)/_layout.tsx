@@ -160,11 +160,11 @@ export default function TabLayout() {
 
   const getHomeTitle = (userRole: UserRole): string => {
     switch (userRole) {
-      case 'FARMER': return t('tabFarmerHome', 'Kisaan Home');
+      case 'FARMER': return t('tabFarmerHome', 'Farmer Home');
       case 'GARDENER': return t('tabGardenerHome', 'Gardener Home');
       case 'CUSTOMER': return t('tabCustomerHome', 'Store');
       case 'FARM_ADVISOR':
-      case 'GARDEN_ADVISOR': return t('tabAdvisorHome', 'Advisor Home');
+      case 'GARDEN_ADVISOR': return t('tabAdvisorHome', 'Doctor Home');
       case 'BUSINESS_PARTNER': return t('tabPartnerHome', 'Partner Home');
       case 'ADMIN': return t('tabAdminHome', 'Admin Home');
       case 'SUPER_ADMIN': return t('tabSuperAdminHome', 'Super Admin');
@@ -338,7 +338,9 @@ export default function TabLayout() {
                     title: isGardenAdvisor ? t('tabGardens', 'Gardens') : t('tabFarmers', 'Farmers'),
                     href: isShown ? undefined : null,
                     tabBarIcon: ({ color, focused }) => (
-                      <Ionicons size={23} name={focused ? 'leaf' : 'leaf-outline'} color={color} />
+                      <TabIconWithUnreadDot showDot={hasUnreadChat}>
+                        <Ionicons size={23} name={focused ? 'leaf' : 'leaf-outline'} color={color} />
+                      </TabIconWithUnreadDot>
                     ),
                   }}
                 />

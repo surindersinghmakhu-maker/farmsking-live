@@ -31,6 +31,13 @@ try {
   console.log('⚡ Running Expo Export...');
   execSync('npx expo export -p web', { cwd: targetDir, env: { ...process.env, EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK: '1', CI: '1' }, stdio: 'inherit' });
 
+  const publicDir = path.join(targetDir, 'public');
+  const distDir = path.join(targetDir, 'dist');
+  if (fs.existsSync(publicDir) && fs.existsSync(distDir)) {
+    console.log('📂 Copying static assets from public to dist...');
+    fs.cpSync(publicDir, distDir, { recursive: true });
+  }
+
   console.log('✅ Expo Web build completed successfully!');
 } catch (err) {
   console.error('❌ Build failed:', err.message);

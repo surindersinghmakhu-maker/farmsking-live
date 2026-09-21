@@ -152,12 +152,17 @@ export default function LoginScreen() {
             </LinearGradient>
           </TouchableOpacity>
 
-          {/* Footer Register Link */}
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Don't have an account? </Text>
-            <Link href="/(auth)/register" style={styles.link}>
-              Register Now
-            </Link>
+          {/* Prominent Highlighted Register Button Box for Farmers */}
+          <View style={styles.registerHighlightCard}>
+            <Text style={styles.registerHighlightText}>New to FarmsKing?</Text>
+            <TouchableOpacity
+              style={styles.registerHighlightBtn}
+              onPress={() => router.push('/(auth)/register')}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="person-add" size={18} color="#ffffff" />
+              <Text style={styles.registerHighlightBtnText}>Create New Account / Register Now ✨</Text>
+            </TouchableOpacity>
           </View>
 
         </View>
@@ -168,154 +173,182 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
-  scroll: { flexGrow: 1, paddingBottom: 40 },
+  scroll: { flexGrow: 1, paddingBottom: 24 },
   heroBanner: {
-    paddingTop: Platform.OS === 'web' ? 24 : 50,
-    paddingBottom: 45,
-    paddingHorizontal: SPACING.lg,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    paddingTop: Platform.OS === 'web' ? 18 : 40,
+    paddingBottom: 28,
+    paddingHorizontal: SPACING.md,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
     alignItems: 'center',
   },
   heroHeaderRow: {
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   serverPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
     backgroundColor: 'rgba(255, 255, 255, 0.22)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.35)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: RADIUS.pill,
   },
   serverPillText: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: FONT.bold,
     color: '#ffffff',
   },
   brandBox: {
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 2,
   },
   brandIconWrap: {
-    width: 60,
-    height: 60,
-    borderRadius: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 16,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderWidth: 1.5,
     borderColor: 'rgba(255, 255, 255, 0.4)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: 6,
   },
   brandName: {
-    fontSize: 26,
+    fontSize: 22,
     fontFamily: FONT.extraBold,
     color: '#ffffff',
     letterSpacing: 0.5,
   },
   brandTagline: {
-    fontSize: 12.5,
+    fontSize: 11.5,
     fontFamily: FONT.medium,
     color: 'rgba(255, 255, 255, 0.85)',
-    marginTop: 2,
+    marginTop: 1,
   },
   card: {
     backgroundColor: '#ffffff',
-    marginHorizontal: SPACING.lg,
-    marginTop: -25,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.xl,
+    marginHorizontal: 12,
+    marginTop: -16,
+    borderRadius: RADIUS.lg,
+    padding: 14,
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
-  title: { fontSize: 22, fontFamily: FONT.extraBold, color: '#0f172a', letterSpacing: -0.3 },
-  subtitle: { fontSize: 13, color: '#64748b', fontFamily: FONT.medium, marginBottom: 20, marginTop: 3 },
-  label: { fontSize: 12.5, color: '#334155', fontFamily: FONT.bold, marginBottom: 6, marginTop: 12 },
+  title: { fontSize: 18, fontFamily: FONT.extraBold, color: '#0f172a', letterSpacing: -0.3 },
+  subtitle: { fontSize: 11.5, color: '#64748b', fontFamily: FONT.medium, marginBottom: 10, marginTop: 2 },
+  label: { fontSize: 11.5, color: '#334155', fontFamily: FONT.bold, marginBottom: 4, marginTop: 8 },
   inputWrap: {
     width: '100%',
+    height: 40,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
     borderColor: '#e2e8f0',
     borderRadius: RADIUS.md,
     backgroundColor: '#f8fafc',
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
   },
   inputWrapFocused: {
     borderColor: '#16a34a',
     backgroundColor: '#ffffff',
   },
-  inputIcon: { marginRight: 10 },
-  input: { flex: 1, paddingVertical: 12, fontSize: 14.5, fontFamily: FONT.medium, color: '#0f172a' },
-  forgotLink: { alignSelf: 'flex-end', marginTop: 10 },
-  forgotText: { color: '#16a34a', fontSize: 12.5, fontFamily: FONT.bold },
+  inputIcon: { marginRight: 8 },
+  input: { flex: 1, paddingVertical: 6, fontSize: 13.5, fontFamily: FONT.medium, color: '#0f172a' },
+  forgotLink: { alignSelf: 'flex-end', marginTop: 6 },
+  forgotText: { color: '#16a34a', fontSize: 11.5, fontFamily: FONT.bold },
   errorBox: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    marginTop: 14,
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 10,
     width: '100%',
     backgroundColor: '#fef2f2',
     borderWidth: 1,
     borderColor: '#fecaca',
-    padding: 12,
+    padding: 10,
     borderRadius: RADIUS.md,
   },
-  error: { color: '#dc2626', fontFamily: FONT.medium, fontSize: 12.5, lineHeight: 17 },
+  error: { color: '#dc2626', fontFamily: FONT.medium, fontSize: 11.5, lineHeight: 15 },
   configErrorBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: 6,
+    marginTop: 4,
     alignSelf: 'flex-start',
   },
   configErrorBtnText: {
     color: '#15803d',
     fontFamily: FONT.bold,
-    fontSize: 12,
+    fontSize: 11.5,
   },
   button: {
     width: '100%',
-    marginTop: 22,
+    marginTop: 14,
     borderRadius: RADIUS.md,
     overflow: 'hidden',
   },
   gradientBtn: {
-    paddingVertical: 14,
+    paddingVertical: 11,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  buttonText: { color: '#ffffff', fontSize: 15.5, fontFamily: FONT.bold },
-  dividerRow: { flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 20, gap: 10 },
+  buttonText: { color: '#ffffff', fontSize: 14, fontFamily: FONT.bold },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 14, gap: 8 },
   dividerLine: { flex: 1, height: 1, backgroundColor: '#e2e8f0' },
-  dividerText: { color: '#94a3b8', fontSize: 11, fontFamily: FONT.bold, letterSpacing: 0.5 },
+  dividerText: { color: '#94a3b8', fontSize: 10.5, fontFamily: FONT.bold, letterSpacing: 0.5 },
   demoRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
     justifyContent: 'center',
   },
   demoChip: {
     backgroundColor: '#f1f5f9',
     borderWidth: 1,
     borderColor: '#cbd5e1',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: RADIUS.pill,
   },
   demoChipText: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: FONT.semiBold,
     color: '#334155',
   },
-  footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 24 },
-  footerText: { color: '#64748b', fontFamily: FONT.medium, fontSize: 13 },
-  link: { color: '#16a34a', fontFamily: FONT.bold, fontSize: 13 },
+  registerHighlightCard: {
+    marginTop: 12,
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1.5,
+    borderColor: '#86efac',
+    borderRadius: RADIUS.md,
+    padding: 10,
+    alignItems: 'center',
+    gap: 6,
+  },
+  registerHighlightText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#166534',
+  },
+  registerHighlightBtn: {
+    width: '100%',
+    backgroundColor: '#16a34a',
+    paddingVertical: 9,
+    borderRadius: RADIUS.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  registerHighlightBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+  },
 });

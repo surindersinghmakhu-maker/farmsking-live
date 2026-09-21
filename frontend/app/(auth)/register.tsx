@@ -54,6 +54,8 @@ export default function RegisterScreen() {
 
   const [values, setValues] = useState({ name: '', mobile: '', password: '', confirmPassword: '' });
   const [postOffice, setPostOffice] = useState('');
+  const [allOffices, setAllOffices] = useState<string[]>([]);
+  const [isPostOfficePickerOpen, setIsPostOfficePickerOpen] = useState(false);
   const [district, setDistrict] = useState('');
   const [state, setState] = useState('');
   const [isFetchingPincode, setIsFetchingPincode] = useState(false);
@@ -77,10 +79,16 @@ export default function RegisterScreen() {
     setIsFetchingPincode(true);
     try {
       const result = await lookupPincode(targetPin);
+      const officeNames = (result.offices || []).map((o) => o.name);
+      setAllOffices(officeNames);
       setPostOffice(result.postOffice);
       setDistrict(result.district);
       setState(result.state);
+      if (officeNames.length > 1) {
+        setIsPostOfficePickerOpen(true);
+      }
     } catch (err: any) {
+      setAllOffices([]);
       setPostOffice('');
       setDistrict('');
       setState('');
@@ -172,10 +180,10 @@ export default function RegisterScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <BrandLogo size={52} useHdQuality style={{ marginBottom: 8 }} />
+        <BrandLogo size={46} useHdQuality style={{ marginBottom: 6 }} />
         <Text style={styles.brandName}>FarmsKing</Text>
 
-        <Text style={styles.title}>Create Customer Account</Text>
+        <Text style={styles.title}>Create Account</Text>
         <Text style={styles.subtitle}>Join FarmsKing Today</Text>
 
         {FIELDS.slice(0, 2).map((f) => (
@@ -228,7 +236,21 @@ export default function RegisterScreen() {
 
         {district && state ? (
           <View style={styles.readonlyBox}>
-            <Text style={styles.readonlyRow}>Post Office: <Text style={styles.readonlyValue}>{postOffice}</Text></Text>
+            <TouchableOpacity
+              style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+              onPress={() => allOffices.length > 1 && setIsPostOfficePickerOpen(true)}
+              activeOpacity={allOffices.length > 1 ? 0.7 : 1}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={styles.readonlyRow}>Post Office Branch: <Text style={styles.readonlyValue}>{postOffice}</Text></Text>
+                {allOffices.length > 1 ? (
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#16a34a', marginTop: 2 }}>
+                    👇 {allOffices.length} Branches Available (Tap to Choose Branch)
+                  </Text>
+                ) : null}
+              </View>
+              {allOffices.length > 1 ? <Ionicons name="chevron-down-circle" size={20} color="#16a34a" /> : null}
+            </TouchableOpacity>
             <Text style={styles.readonlyRow}>District: <Text style={styles.readonlyValue}>{district}</Text></Text>
             <Text style={styles.readonlyRow}>State: <Text style={styles.readonlyValue}>{state}</Text></Text>
           </View>
@@ -285,11 +307,17 @@ export default function RegisterScreen() {
           {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Register</Text>}
         </TouchableOpacity>
 
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Already have an account? </Text>
-          <Link href="/(auth)/login" style={styles.link}>
-            Login
-          </Link>
+        {/* Prominent Highlighted Login Button Box for Existing Users */}
+        <View style={styles.loginHighlightCard}>
+          <Text style={styles.loginHighlightText}>Already have an account?</Text>
+          <TouchableOpacity
+            style={styles.loginHighlightBtn}
+            onPress={() => router.push('/(auth)/login')}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="log-in" size={18} color="#ffffff" />
+            <Text style={styles.loginHighlightBtnText}>Login Now ✨</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -300,141 +328,179 @@ export default function RegisterScreen() {
         onVerifySuccess={handleCompleteRegistration}
         onClose={() => setShowOtpModal(false)}
       />
+
+      <PickerModal
+        visible={isPostOfficePickerOpen}
+        title="Select Post Office Branch"
+        options={allOffices.map((name) => ({ value: name, label: name }))}
+        selectedValue={postOffice}
+        onSelect={(val) => setPostOffice(val)}
+        onClose={() => setIsPostOfficePickerOpen(false)}
+      />
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
-  scroll: { padding: SPACING.xxl, paddingTop: Platform.OS === 'web' ? 36 : 56, alignItems: 'center' },
+  scroll: { padding: SPACING.md, paddingTop: Platform.OS === 'web' ? 18 : 36, paddingBottom: 24, alignItems: 'center' },
   topHeader: {
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   serverPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
     backgroundColor: '#f0fdf4',
     borderWidth: 1,
     borderColor: '#bbf7d0',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: RADIUS.lg,
   },
   serverPillText: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: FONT.bold,
     color: '#15803d',
   },
   brandBadge: {
-    width: 52, height: 52, borderRadius: RADIUS.md, backgroundColor: theme.primary,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 10,
+    width: 46, height: 46, borderRadius: RADIUS.md, backgroundColor: theme.primary,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 8,
   },
-  brandName: { fontSize: 18, fontFamily: FONT.extraBold, color: theme.primary, letterSpacing: 0.2, marginBottom: 22 },
-  title: { fontSize: 22, fontFamily: FONT.extraBold, color: '#0f172a', alignSelf: 'flex-start', letterSpacing: -0.3 },
-  subtitle: { fontSize: 14, color: '#64748b', fontFamily: FONT.medium, alignSelf: 'flex-start', marginBottom: 20, marginTop: 4 },
-  label: { fontSize: 13, color: '#334155', fontFamily: FONT.bold, marginBottom: 7, marginTop: 14 },
+  brandName: { fontSize: 16, fontFamily: FONT.extraBold, color: theme.primary, letterSpacing: 0.2, marginBottom: 12 },
+  title: { fontSize: 20, fontFamily: FONT.extraBold, color: '#0f172a', alignSelf: 'flex-start', letterSpacing: -0.3 },
+  subtitle: { fontSize: 12, color: '#64748b', fontFamily: FONT.medium, alignSelf: 'flex-start', marginBottom: 12, marginTop: 2 },
+  label: { fontSize: 11.5, color: '#334155', fontFamily: FONT.bold, marginBottom: 4, marginTop: 8 },
   inputWrap: {
+    height: 40,
     flexDirection: 'row', alignItems: 'center',
     borderWidth: 1.5, borderColor: '#eef2f6', borderRadius: RADIUS.md,
-    backgroundColor: '#f8fafc', paddingHorizontal: 14,
+    backgroundColor: '#f8fafc', paddingHorizontal: 10,
   },
-  inputIcon: { marginRight: 10 },
-  input: { flex: 1, paddingVertical: 13, fontSize: 15.5, fontFamily: FONT.medium, color: '#0f172a' },
+  inputIcon: { marginRight: 8 },
+  input: { flex: 1, paddingVertical: 6, fontSize: 13.5, fontFamily: FONT.medium, color: '#0f172a' },
   fetchBtn: {
     backgroundColor: theme.primary,
     borderRadius: RADIUS.md,
-    paddingHorizontal: 18,
+    paddingHorizontal: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  fetchBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 14 },
-  fieldError: { color: '#dc2626', fontFamily: FONT.medium, fontSize: 12, marginTop: 6 },
+  fetchBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 12 },
+  fieldError: { color: '#dc2626', fontFamily: FONT.medium, fontSize: 11.5, marginTop: 4 },
   readonlyBox: {
     width: '100%',
     backgroundColor: '#f0fdf4',
     borderWidth: 1,
     borderColor: '#bbf7d0',
     borderRadius: RADIUS.md,
-    padding: 10,
-    marginTop: 10,
-    gap: 3,
+    padding: 8,
+    marginTop: 8,
+    gap: 2,
   },
-  readonlyRow: { fontSize: 12.5, fontFamily: FONT.medium, color: '#64748b' },
+  readonlyRow: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
   readonlyValue: { fontFamily: FONT.bold, color: '#0f172a' },
-  accountTypeRow: { flexDirection: 'row', gap: 8, width: '100%' },
+  accountTypeRow: { flexDirection: 'row', gap: 6, width: '100%' },
   accountTypeChip: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 12,
+    gap: 4,
+    paddingVertical: 9,
     borderRadius: RADIUS.md,
     borderWidth: 1.5,
     borderColor: '#e2e8f0',
     backgroundColor: '#f8fafc',
   },
-  accountTypeChipText: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
-  accountTypeHint: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 6, alignSelf: 'flex-start' },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  farmerCardBox: { width: '100%', backgroundColor: '#f0fdf4', borderWidth: 1.5, borderColor: '#bbf7d0', borderRadius: RADIUS.md, padding: 12, marginTop: 10, gap: 4 },
-  farmerCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
-  farmerCardTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#16a34a' },
-  farmerChipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  farmerChip: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: '#cbd5e1', backgroundColor: '#ffffff' },
-  farmerChipText: { fontSize: 12, fontFamily: FONT.bold, color: '#334155' },
-  farmerLabel: { fontSize: 12, fontFamily: FONT.bold, color: '#334155', marginTop: 10, marginBottom: 4 },
-  farmerSelectField: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#ffffff' },
-  farmerSelectText: { fontSize: 13, fontFamily: FONT.medium, color: '#0f172a' },
+  accountTypeChipText: { fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' },
+  accountTypeHint: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 4, alignSelf: 'flex-start' },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  farmerCardBox: { width: '100%', backgroundColor: '#f0fdf4', borderWidth: 1.5, borderColor: '#bbf7d0', borderRadius: RADIUS.md, padding: 10, marginTop: 8, gap: 3 },
+  farmerCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 2 },
+  farmerCardTitle: { fontSize: 12, fontFamily: FONT.bold, color: '#16a34a' },
+  farmerChipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
+  farmerChip: { paddingVertical: 5, paddingHorizontal: 10, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: '#cbd5e1', backgroundColor: '#ffffff' },
+  farmerChipText: { fontSize: 11, fontFamily: FONT.bold, color: '#334155' },
+  farmerLabel: { fontSize: 11.5, fontFamily: FONT.bold, color: '#334155', marginTop: 8, marginBottom: 3 },
+  farmerSelectField: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 8, backgroundColor: '#ffffff' },
+  farmerSelectText: { fontSize: 12.5, fontFamily: FONT.medium, color: '#0f172a' },
   placeholder: { color: '#94a3b8' },
   chip: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
     borderRadius: RADIUS.pill,
     borderWidth: 1.5,
     borderColor: '#e2e8f0',
     backgroundColor: '#ffffff',
   },
-  chipText: { fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' },
+  chipText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' },
   errorBox: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    marginTop: 14,
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 10,
     width: '100%',
     backgroundColor: '#fef2f2',
     borderWidth: 1,
     borderColor: '#fecaca',
-    padding: 10,
+    padding: 8,
     borderRadius: RADIUS.md,
   },
-  error: { color: '#dc2626', fontFamily: FONT.medium, fontSize: 12.5, lineHeight: 17 },
+  error: { color: '#dc2626', fontFamily: FONT.medium, fontSize: 11.5, lineHeight: 15 },
   configErrorBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: 6,
+    marginTop: 4,
     alignSelf: 'flex-start',
   },
   configErrorBtnText: {
     color: '#15803d',
     fontFamily: FONT.bold,
-    fontSize: 12,
+    fontSize: 11.5,
   },
   button: {
     width: '100%',
     backgroundColor: theme.primary,
     borderRadius: RADIUS.md,
-    paddingVertical: 15,
+    paddingVertical: 12,
     alignItems: 'center',
-    marginTop: 22,
+    marginTop: 16,
   },
-  buttonText: { color: '#fff', fontSize: 16, fontFamily: FONT.bold },
-  footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 20 },
-  footerText: { color: '#64748b', fontFamily: FONT.medium },
-  link: { color: theme.primary, fontFamily: FONT.bold },
+  buttonText: { color: '#fff', fontSize: 14.5, fontFamily: FONT.bold },
+  loginHighlightCard: {
+    width: '100%',
+    marginTop: 14,
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1.5,
+    borderColor: '#86efac',
+    borderRadius: RADIUS.md,
+    padding: 10,
+    alignItems: 'center',
+    gap: 6,
+  },
+  loginHighlightText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#166534',
+  },
+  loginHighlightBtn: {
+    width: '100%',
+    backgroundColor: theme.primary,
+    paddingVertical: 9,
+    borderRadius: RADIUS.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  loginHighlightBtnText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+  },
 });

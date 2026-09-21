@@ -91,16 +91,16 @@ type TabName =
   | 'operator-orders';
 
 const ROLE_TABS: Record<UserRole, { tabs: TabName[] }> = {
-  FARMER: { tabs: ['index', 'shop', 'farm', 'records', 'more'] },
-  GARDENER: { tabs: ['index', 'shop', 'farm', 'records', 'more'] },
-  CUSTOMER: { tabs: ['shop', 'more'] },
+  FARMER: { tabs: ['index', 'shop', 'farm', 'records', 'wallet', 'more'] },
+  GARDENER: { tabs: ['index', 'shop', 'farm', 'records', 'wallet', 'more'] },
+  CUSTOMER: { tabs: ['shop', 'wallet', 'more'] },
   FARM_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
   GARDEN_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
   BUSINESS_PARTNER: { tabs: ['index', 'shop', 'referrals', 'wallet', 'more'] },
   ADMIN: { tabs: ['index', 'shop', 'super-users', 'super-settings', 'super-coupons', 'super-accounts', 'more'] },
   SUPER_ADMIN: { tabs: ['index', 'shop', 'super-users', 'super-coupons', 'super-accounts', 'super-settings', 'more'] },
   OPERATOR: { tabs: ['index', 'shop', 'operator-orders', 'more'] },
-  LABOUR: { tabs: ['index', 'shop', 'more'] },
+  LABOUR: { tabs: ['index', 'shop', 'wallet', 'more'] },
 };
 
 const TAB_META: Record<Exclude<TabName, 'index' | 'more'>, { key: TranslationKey; title: string; icon: keyof typeof Ionicons.glyphMap; iconFilled: keyof typeof Ionicons.glyphMap }> = {

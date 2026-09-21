@@ -198,6 +198,19 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
               <Ionicons name="arrow-up-circle" size={15} color="#ffffff" />
               <Text style={styles.quickAccountsBtnText}>💸 Payment Out</Text>
             </TouchableOpacity>
+
+            {/* Button 5: 👛 Wallet */}
+            <TouchableOpacity
+              style={[styles.quickAccountsBtn, { backgroundColor: '#b45309' }]}
+              activeOpacity={0.85}
+              onPress={() => {
+                tap();
+                router.push('/(tabs)/wallet');
+              }}
+            >
+              <Ionicons name="wallet" size={15} color="#ffffff" />
+              <Text style={styles.quickAccountsBtnText}>👛 Wallet</Text>
+            </TouchableOpacity>
           </View>
         </View>
 

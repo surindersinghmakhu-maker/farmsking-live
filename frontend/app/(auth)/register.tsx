@@ -67,15 +67,16 @@ export default function RegisterScreen() {
   const selectedSoilLabel = SOIL_TYPE_OPTIONS.find((o) => o.value === soilType)?.label;
   const selectedWaterLabel = WATER_TYPE_OPTIONS.find((o) => o.value === waterType)?.label;
 
-  const onFetchPincode = async () => {
+  const onFetchPincode = async (codeToFetch?: string) => {
     setPincodeError(null);
-    if (pincode.trim().length !== 6) {
-      setPincodeError('Enter a valid 6-digit PIN code first.');
+    const targetPin = (codeToFetch ?? pincode).trim();
+    if (targetPin.length !== 6) {
+      setPincodeError('Enter a valid 6-digit Postal PIN code.');
       return;
     }
     setIsFetchingPincode(true);
     try {
-      const result = await lookupPincode(pincode.trim());
+      const result = await lookupPincode(targetPin);
       setPostOffice(result.postOffice);
       setDistrict(result.district);
       setState(result.state);
@@ -83,7 +84,7 @@ export default function RegisterScreen() {
       setPostOffice('');
       setDistrict('');
       setState('');
-      setPincodeError(err?.message ?? 'Could not fetch details for this PIN code.');
+      setPincodeError(err?.message ?? 'Could not fetch details for this Postal PIN code.');
     } finally {
       setIsFetchingPincode(false);
     }
@@ -196,14 +197,14 @@ export default function RegisterScreen() {
           </View>
         ))}
 
-        {/* PIN code + Fetch */}
-        <Text style={styles.label}>PIN Code * (Compulsory)</Text>
+        {/* Postal PIN Code + Auto Check */}
+        <Text style={styles.label}>Postal PIN Code * (Compulsory)</Text>
         <View style={{ flexDirection: 'row', gap: 8, width: '100%' }}>
           <View style={[styles.inputWrap, { flex: 1 }]}>
             <Ionicons name="navigate-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="6-digit PIN Code"
+              placeholder="6-digit Postal PIN Code"
               placeholderTextColor="#94a3b8"
               keyboardType="numeric"
               maxLength={6}
@@ -213,11 +214,14 @@ export default function RegisterScreen() {
                 setPostOffice('');
                 setDistrict('');
                 setState('');
+                if (t.trim().length === 6) {
+                  onFetchPincode(t.trim());
+                }
               }}
             />
           </View>
-          <TouchableOpacity style={styles.fetchBtn} onPress={onFetchPincode} disabled={isFetchingPincode}>
-            {isFetchingPincode ? <ActivityIndicator size="small" color="#ffffff" /> : <Text style={styles.fetchBtnText}>Fetch</Text>}
+          <TouchableOpacity style={styles.fetchBtn} onPress={() => onFetchPincode()} disabled={isFetchingPincode}>
+            {isFetchingPincode ? <ActivityIndicator size="small" color="#ffffff" /> : <Text style={styles.fetchBtnText}>🔍 Auto Check</Text>}
           </TouchableOpacity>
         </View>
         {pincodeError ? <Text style={styles.fieldError}>{pincodeError}</Text> : null}

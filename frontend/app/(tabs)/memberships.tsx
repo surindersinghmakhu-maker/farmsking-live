@@ -272,7 +272,7 @@ export default function MembershipsScreen() {
           <View style={{ gap: 14 }}>
             {/* Pending Doctor Change Request Status Banner */}
             {pendingRequest ? (
-              pendingRequest.status === 'ADMIN_APPROVAL_PENDING' ? (
+              pendingRequest.status === 'PENDING' ? (
                 <View style={[styles.statusCard, { backgroundColor: '#fffbeb', borderColor: '#fde68a', borderWidth: 1.5 }, premiumShadow('#000000', 'sm')]}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                     <Ionicons name="time" size={22} color="#d97706" />
@@ -298,7 +298,7 @@ export default function MembershipsScreen() {
                   {user?.kingId ? (
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, padding: 10, backgroundColor: '#ffffff', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#bae6fd' }}>
                       <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>King ID: {user.kingId}</Text>
-                      <CopyButton textToCopy={user.kingId} label="Copy King ID" />
+                      <CopyButton value={user.kingId} />
                     </View>
                   ) : null}
                 </View>

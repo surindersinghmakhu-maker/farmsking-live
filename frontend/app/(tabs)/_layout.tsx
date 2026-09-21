@@ -94,6 +94,7 @@ const ROLE_TABS: Record<UserRole, { tabs: TabName[] }> = {
   FARMER: { tabs: ['index', 'shop', 'farm', 'records', 'wallet', 'more'] },
   GARDENER: { tabs: ['index', 'shop', 'farm', 'records', 'wallet', 'more'] },
   CUSTOMER: { tabs: ['shop', 'wallet', 'more'] },
+  ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
   FARM_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
   GARDEN_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
   BUSINESS_PARTNER: { tabs: ['index', 'shop', 'referrals', 'wallet', 'more'] },
@@ -275,7 +276,7 @@ export default function TabLayout() {
             tabBarInactiveTintColor: '#94a3b8',
             tabBarLabelStyle: { fontFamily: FONT.bold, fontSize: 10.5 },
             headerShown: false,
-            tabBarButton: HapticTab,
+            tabBarButton: (props: any) => <HapticTab {...props} />,
             tabBarBackground: TabBarBackground,
             tabBarStyle: Platform.select({
               ios: {

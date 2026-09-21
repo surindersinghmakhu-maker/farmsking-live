@@ -1998,10 +1998,10 @@ function PlanCardGroup({
                   {p.advisorShareValue ? ` · Advisor Cut: ₹${p.advisorShareValue}` : ''}
                   {p.adminShareValue ? ` · Admin Cut: ₹${p.adminShareValue}` : ''}
                 </Text>
-                {(p.maxActiveCrops != null || p.maxDoctorCrops != null) ? (
+                {(p.maxActiveCrops != null || (p as any).maxDoctorCrops != null) ? (
                   <Text style={{ fontSize: 10.5, fontFamily: FONT.semiBold, color: '#64748b', marginTop: 2 }}>
                     Limits: {p.maxActiveCrops != null ? `Active Crops: ${p.maxActiveCrops}` : 'Unlimited Active Crops'}
-                    {p.maxDoctorCrops != null ? ` · Doctor Crops: ${p.maxDoctorCrops}` : ''}
+                    {(p as any).maxDoctorCrops != null ? ` · Doctor Crops: ${(p as any).maxDoctorCrops}` : ''}
                   </Text>
                 ) : null}
               </View>

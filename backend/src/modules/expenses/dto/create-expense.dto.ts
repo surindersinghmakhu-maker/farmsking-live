@@ -10,10 +10,10 @@ export class CreateExpenseDto {
   plotId?: string;
 
   @IsOptional()
-  @IsUUID()
+  @IsString()
   cropCycleId?: string;
 
-  @IsUUID()
+  @IsString()
   categoryId: string;
 
   @IsNumber({ maxDecimalPlaces: 2 })
@@ -28,7 +28,7 @@ export class CreateExpenseDto {
   paymentMode?: PaymentMode;
 
   @IsOptional()
-  @IsUUID()
+  @IsString()
   partyId?: string;
 
   @IsOptional()

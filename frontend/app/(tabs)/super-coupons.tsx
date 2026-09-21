@@ -3219,7 +3219,7 @@ function AdminUserGuidesSection() {
   const handleDownloadPdf = async (docKey: string) => {
     tap();
     try {
-      const result = await downloadDoc.mutateAsync({ docKey, lang: selectedLang });
+      const result: any = await downloadDoc.mutateAsync({ docKey, lang: selectedLang });
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         const printWindow = window.open('', '_blank');
         if (printWindow) {

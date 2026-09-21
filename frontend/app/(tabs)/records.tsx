@@ -228,7 +228,7 @@ export default function RecordsScreen() {
 
   // Combine categories: use api categories if available, else fall back to COMBINED_EXPENSE_CATEGORIES
   const displayCategories = useMemo(() => {
-    if (apiCategories && apiCategories.length > 0 && apiCategories.length <= 8) {
+    if (apiCategories && apiCategories.length > 0) {
       return apiCategories;
     }
     return COMBINED_EXPENSE_CATEGORIES;

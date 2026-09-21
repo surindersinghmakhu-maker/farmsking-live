@@ -15,12 +15,15 @@ import type { InitiateFarmerPlanPaymentResponse } from '../api/farmerPlanPayment
 
 const theme = RoleThemes.FARMER;
 
-const PLAN_RANK: Record<FarmerPlanType, number> = { FREE: 0, PRO: 1, SMART: 2, SUPER: 3 };
+const PLAN_RANK: Record<FarmerPlanType, number> = { FREE: 0, PRO: 1, SMART: 2, SUPER: 3, SILVER: 1, GOLD: 2, ROYAL: 3 };
 const PLAN_COLUMN_META: Record<FarmerPlanType, { label: string; emoji: string; color: string; price: string }> = {
   FREE: { label: 'Free', emoji: '🌱', color: '#166534', price: '₹0' },
   PRO: { label: 'Lite', emoji: '🌾', color: '#6d28d9', price: '₹299/yr' },
   SMART: { label: 'Pro', emoji: '👑', color: '#1d4ed8', price: '₹499/yr' },
   SUPER: { label: 'Smart', emoji: '🎓', color: '#b45309', price: '₹999/30d' },
+  SILVER: { label: 'Silver', emoji: '🥈', color: '#64748b', price: '₹199/yr' },
+  GOLD: { label: 'Gold', emoji: '🥇', color: '#eab308', price: '₹399/yr' },
+  ROYAL: { label: 'Royal', emoji: '👑', color: '#8b5cf6', price: '₹799/yr' },
 };
 
 interface PlanRow {
@@ -29,16 +32,16 @@ interface PlanRow {
 }
 
 const PLAN_ROWS: PlanRow[] = [
-  { label: 'Bookkeeping Logs', values: { FREE: 'Basic', PRO: '✓ All', SMART: '✓ All', SUPER: '✓ All' } },
-  { label: 'Total Crop Cycles', values: { FREE: 'Max 3', PRO: 'Unlimited', SMART: 'Unlimited', SUPER: 'Unlimited' } },
-  { label: 'Crop History', values: { FREE: 'Summary', PRO: 'Full', SMART: 'Full', SUPER: 'Full' } },
-  { label: 'Weather Report', values: { FREE: '✓', PRO: '✓', SMART: '✓', SUPER: '✓' } },
-  { label: 'Labour Record', values: { FREE: '—', PRO: '—', SMART: '✓ Included', SUPER: '✓ Included' } },
-  { label: 'Worker Login', values: { FREE: '—', PRO: '—', SMART: '✓ Enabled', SUPER: '✓ Enabled' } },
-  { label: 'Dedicated Farm Advisor', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '✓ Included' } },
-  { label: 'Advisor Chat', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '✓ Enabled' } },
-  { label: 'Advisor Call Request', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '✓ Enabled' } },
-  { label: 'Mandi AI Predictions', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '✓ Included' } },
+  { label: 'Bookkeeping Logs', values: { FREE: 'Basic', PRO: '✓ All', SMART: '✓ All', SUPER: '✓ All', SILVER: '✓ All', GOLD: '✓ All', ROYAL: '✓ All' } },
+  { label: 'Total Crop Cycles', values: { FREE: 'Max 3', PRO: 'Unlimited', SMART: 'Unlimited', SUPER: 'Unlimited', SILVER: 'Unlimited', GOLD: 'Unlimited', ROYAL: 'Unlimited' } },
+  { label: 'Crop History', values: { FREE: 'Summary', PRO: 'Full', SMART: 'Full', SUPER: 'Full', SILVER: 'Full', GOLD: 'Full', ROYAL: 'Full' } },
+  { label: 'Weather Report', values: { FREE: '✓', PRO: '✓', SMART: '✓', SUPER: '✓', SILVER: '✓', GOLD: '✓', ROYAL: '✓' } },
+  { label: 'Labour Record', values: { FREE: '—', PRO: '—', SMART: '✓ Included', SUPER: '✓ Included', SILVER: '—', GOLD: '✓ Included', ROYAL: '✓ Included' } },
+  { label: 'Worker Login', values: { FREE: '—', PRO: '—', SMART: '✓ Enabled', SUPER: '✓ Enabled', SILVER: '—', GOLD: '✓ Enabled', ROYAL: '✓ Enabled' } },
+  { label: 'Dedicated Farm Advisor', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '✓ Included', SILVER: '—', GOLD: '—', ROYAL: '✓ Included' } },
+  { label: 'Advisor Chat', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '✓ Enabled', SILVER: '—', GOLD: '—', ROYAL: '✓ Enabled' } },
+  { label: 'Advisor Call Request', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '✓ Enabled', SILVER: '—', GOLD: '—', ROYAL: '✓ Enabled' } },
+  { label: 'Mandi AI Predictions', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '✓ Included', SILVER: '—', GOLD: '—', ROYAL: '✓ Included' } },
 ];
 
 

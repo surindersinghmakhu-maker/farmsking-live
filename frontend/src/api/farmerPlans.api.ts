@@ -254,6 +254,11 @@ export async function getAdminDocsList(): Promise<AdminDocItem[]> {
   return data;
 }
 
+export async function downloadAdminDocContent(docKey: string, lang: string = 'pa'): Promise<{ title: string; fileName: string; content: string; htmlPdfContent?: string }> {
+  const { data } = await apiClient.get<{ title: string; fileName: string; content: string; htmlPdfContent?: string }>(`/farmer-plans/admin/docs/${docKey}/download`, { params: { lang } });
+  return data;
+}
+
 export interface FarmerPlanHistoryRecord {
   id: string;
   farmerId: string;

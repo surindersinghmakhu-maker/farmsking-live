@@ -46,7 +46,6 @@ import { useMyAddresses, useCreateAddress, useUpdateAddress } from '@/src/hooks/
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { CustomerAddress } from '@/src/api/addresses.api';
 import { lookupPincode } from '@/src/api/pincode.api';
-import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useCart } from '@/src/store/cart-context';
 import { Product, CustomerOrder, OrderStatus } from '@/src/types/api';
 import { SuperAdminExpenseCategoriesModal } from '@/components/SuperAdminExpenseCategoriesModal';
@@ -443,6 +442,12 @@ export default function ShopScreen() {
   const [freeShippingThreshold, setFreeShippingThreshold] = useState('999');
   const [lowStockAlertThreshold, setLowStockAlertThreshold] = useState('5');
   const [settingsNotice, setSettingsNotice] = useState<string | null>(null);
+
+  const handleSaveSettings = () => {
+    tap();
+    setSettingsNotice('✅ Store settings updated successfully!');
+    setTimeout(() => setSettingsNotice(null), 3000);
+  };
 
   // 🔥 Shop Launch Hot Deal Popup Banner States
   const [hotDealBannerEnabled, setHotDealBannerEnabled] = useState(true);

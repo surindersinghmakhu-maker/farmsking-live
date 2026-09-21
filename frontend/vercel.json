@@ -2,6 +2,42 @@
   "version": 2,
   "buildCommand": "node build.js",
   "outputDirectory": "dist",
+  "headers": [
+    {
+      "source": "/download/(.*)",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/vnd.android.package-archive"
+        },
+        {
+          "key": "Content-Disposition",
+          "value": "attachment; filename=\"farmsking.apk\""
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)\\.apk",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/vnd.android.package-archive"
+        },
+        {
+          "key": "Content-Disposition",
+          "value": "attachment; filename=\"farmsking.apk\""
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
+    }
+  ],
   "rewrites": [
     {
       "source": "/((?!download/|.*\\.apk|.*\\.html|.*\\.pdf|.*\\.png|.*\\.jpg|.*\\.ico).*)",

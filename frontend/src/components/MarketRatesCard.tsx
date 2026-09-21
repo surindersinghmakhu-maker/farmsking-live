@@ -86,23 +86,36 @@ export function MarketRatesCard() {
 
   const userState = user?.state || data?.state || 'Punjab';
 
-  // Calculate 24h Min, Max & Avg for State level and National level for all market rate crops.
+  // Calculate 24h Min, Max & Avg for State level and National level for crops currently in HARVESTING stage.
   const subcategoryRates = useMemo(() => {
     if (!data?.rates || data.rates.length === 0) {
       return [];
     }
 
-    // Map user's registered crop units for target unit conversion
+    // Filter to user crops that are currently in HARVESTING stage
+    const harvestingCropNames = new Set<string>();
     const userCropUnitMap = new Map<string, string>();
+
     (cropFields || []).forEach((c) => {
-      let baseName = c.cropName.split('(')[0].trim();
-      if (c.variety && baseName.toLowerCase().includes(c.variety.toLowerCase())) {
-        baseName = baseName.replace(new RegExp(c.variety, 'gi'), '').trim();
+      if (c.stage === 'HARVESTING' || (c as any).status === 'HARVESTING') {
+        let baseName = c.cropName.split('(')[0].trim();
+        if (c.variety && baseName.toLowerCase().includes(c.variety.toLowerCase())) {
+          baseName = baseName.replace(new RegExp(c.variety, 'gi'), '').trim();
+        }
+        harvestingCropNames.add(baseName.toLowerCase());
+        userCropUnitMap.set(baseName.toLowerCase(), c.unit || 'KG');
       }
-      userCropUnitMap.set(baseName.toLowerCase(), c.unit || 'KG');
     });
 
-    return data.rates.map((r) => {
+    // Only process rates for crops that are currently in HARVESTING stage
+    const ratesToProcess = harvestingCropNames.size > 0
+      ? data.rates.filter((r) => {
+          const cropKey = r.cropName.split('(')[0].trim().toLowerCase();
+          return harvestingCropNames.has(cropKey);
+        })
+      : [];
+
+    return ratesToProcess.map((r) => {
       const cropKey = r.cropName.split('(')[0].trim().toLowerCase();
       const userUnit = userCropUnitMap.get(cropKey);
       const sourceUnit = r.unit || 'KG';

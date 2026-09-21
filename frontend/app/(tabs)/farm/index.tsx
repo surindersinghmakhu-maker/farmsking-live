@@ -530,13 +530,13 @@ export default function FarmListScreen() {
       plan === 'PRO' ? 'Lite Plan' : plan === 'SMART' ? 'Pro Plan' : plan === 'SUPER' ? 'Smart Plan' : 'Free Plan';
 
     if (maxTotalCrops != null && maxTotalCrops > 0 && totalCropsCount >= maxTotalCrops) {
-      const message = `Your current plan (${planDisplayName}) allows adding a maximum of ${maxTotalCrops} crop(s). Please upgrade your plan to add more crops.`;
+      const message = `⚠️ Crop Limit Reached!\nYour current plan (${planDisplayName}) allows a maximum of ${maxTotalCrops} total crop(s).\n\nPlease upgrade your plan OR complete an old crop to register a new crop.\n(ਤੁਹਾਡੇ ਪਲਾਨ ਦੀ ਲਿਮਿਟ ਪੂਰੀ ਹੋ ਗਈ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਪਲਾਨ ਅੱਪਗ੍ਰੇਡ ਕਰੋ ਜਾਂ ਪੁਰਾਣੀ ਫਸਲ ਕੰਪਲੀਟ ਕਰੋ।)`;
       if (Platform.OS === 'web') {
-        if (confirm(`🔒 Upgrade Your Plan\n\n${message}\n\nWould you like to view plan comparison table & upgrade now?`)) {
+        if (confirm(`🔒 Crop Limit Reached!\n\n${message}\n\nWould you like to view plan comparison table & upgrade now?`)) {
           setIsUpgradeModalOpen(true);
         }
       } else {
-        Alert.alert('🔒 Upgrade Your Plan', message, [
+        Alert.alert('🔒 Crop Limit Reached!', message, [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Upgrade Plan 👑', onPress: () => setIsUpgradeModalOpen(true) },
         ]);
@@ -547,13 +547,13 @@ export default function FarmListScreen() {
     if (maxActiveCrops != null && maxActiveCrops > 0) {
       const activeCropsCount = cropFields.filter((c) => c.status === 'ACTIVE').length;
       if (activeCropsCount >= maxActiveCrops) {
-        const message = `Your current plan (${planDisplayName}) allows a maximum of ${maxActiveCrops} active crop(s) at a time. Please upgrade your plan to add more active crops.`;
+        const message = `⚠️ Active Crop Limit Reached!\nYour current plan (${planDisplayName}) allows a maximum of ${maxActiveCrops} active crop(s) at a time (${activeCropsCount}/${maxActiveCrops}).\n\nPlease upgrade your plan OR complete an old crop to register a new crop.\n(ਤੁਹਾਡੇ ਪਲਾਨ ਦੀ ਲਿਮਿਟ ਪੂਰੀ ਹੋ ਗਈ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਪਲਾਨ ਅੱਪਗ੍ਰੇਡ ਕਰੋ ਜਾਂ ਪੁਰਾਣੀ ਫਸਲ ਕੰਪਲੀਟ ਕਰੋ।)`;
         if (Platform.OS === 'web') {
-          if (confirm(`🔒 Upgrade Your Plan\n\n${message}\n\nWould you like to view plan comparison table & upgrade now?`)) {
+          if (confirm(`🔒 Active Crop Limit Reached!\n\n${message}\n\nWould you like to view plan comparison table & upgrade now?`)) {
             setIsUpgradeModalOpen(true);
           }
         } else {
-          Alert.alert('🔒 Upgrade Your Plan', message, [
+          Alert.alert('🔒 Active Crop Limit Reached!', message, [
             { text: 'Cancel', style: 'cancel' },
             { text: 'Upgrade Plan 👑', onPress: () => setIsUpgradeModalOpen(true) },
           ]);

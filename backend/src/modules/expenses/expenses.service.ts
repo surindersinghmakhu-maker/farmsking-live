@@ -89,11 +89,14 @@ export class ExpensesService {
   private async resolveCategoryId(categoryId?: string): Promise<string> {
     if (!categoryId) {
       const first = await this.prisma.expenseCategory.findFirst({ where: { isActive: true } });
-      return first ? first.id : categoryId as string;
+      return first ? first.id : (categoryId as string);
     }
 
-    const byId = await this.prisma.expenseCategory.findUnique({ where: { id: categoryId } });
-    if (byId) return byId.id;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(categoryId);
+    if (isUuid) {
+      const byId = await this.prisma.expenseCategory.findUnique({ where: { id: categoryId } });
+      if (byId) return byId.id;
+    }
 
     const cleanKey = categoryId.replace(/^cat_/, '').toLowerCase();
     const byKey = await this.prisma.expenseCategory.findFirst({

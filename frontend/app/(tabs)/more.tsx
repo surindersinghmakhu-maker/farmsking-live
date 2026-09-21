@@ -53,6 +53,39 @@ const SUPER_ADMIN_ITEMS: { key: TranslationKey | 'workspace'; label: string; ico
   { key: 'superEditCrop', label: 'Edit Crop by Crop ID', icon: 'leaf-outline', href: '/(tabs)/super-crop-edit' },
 ];
 
+function AppDownloadRow() {
+  const { data: settings } = useAppSettings();
+  const downloadUrl = settings?.appDownloadUrl || 'https://farmsking-1.vercel.app/download/farmsking.apk';
+  const version = settings?.latestAppVersion || '1.0.0';
+
+  const handleDownload = async () => {
+    try {
+      await Linking.openURL(downloadUrl);
+    } catch {
+      alert('Could not open download link.');
+    }
+  };
+
+  return (
+    <TouchableOpacity
+      style={styles.row}
+      activeOpacity={0.7}
+      onPress={handleDownload}
+    >
+      <View style={[styles.rowIconBg, { backgroundColor: '#e0f2fe' }]}>
+        <Ionicons name="logo-android" size={18} color="#0284c7" />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.rowLabel}>📲 Download FarmsKing App (APK)</Text>
+        <Text style={styles.rowSubLabel}>Version {version} · Direct App Download</Text>
+      </View>
+      <View style={{ backgroundColor: '#0284c7', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill }}>
+        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Download</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 export default function MoreScreen() {
   const { user, logout } = useAuth();
   const { role } = useRole();
@@ -102,7 +135,8 @@ export default function MoreScreen() {
         : [MY_PROFILE_ITEM, MY_ADDRESSES_ITEM];
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <LinearGradient colors={theme.gradient} style={styles.hero}>
         <View style={styles.avatarCircle}>
           {isAdminRole && brandLogoUri ? (
@@ -501,6 +535,9 @@ export default function MoreScreen() {
               </TouchableOpacity>
             ) : null}
 
+            {/* App Download Row */}
+            <AppDownloadRow />
+
             {/* User Guides & PDF Manuals Row */}
             <TouchableOpacity
               style={styles.row}
@@ -544,10 +581,11 @@ export default function MoreScreen() {
           <Text style={styles.logoutText}>{t('logout')}</Text>
         </TouchableOpacity>
       </View>
+    </ScrollView>
 
-      <LanguagePickerModal visible={showLanguageModal} onClose={() => setShowLanguageModal(false)} />
+    <LanguagePickerModal visible={showLanguageModal} onClose={() => setShowLanguageModal(false)} />
 
-      <UserGuidesModal visible={showGuidesModal} onClose={() => setShowGuidesModal(false)} />
+    <UserGuidesModal visible={showGuidesModal} onClose={() => setShowGuidesModal(false)} />
 
       <SuperAdminWorkspaceModal visible={showWorkspaceModal} onClose={() => setShowWorkspaceModal(false)} />
 
@@ -644,7 +682,7 @@ export default function MoreScreen() {
           </View>
         </View>
       </Modal>
-    </ScrollView>
+    </>
   );
 }
 
@@ -813,7 +851,7 @@ export function UserGuidesModal({ visible, onClose }: { visible: boolean; onClos
 
   const handleDownloadPdf = async (docKey: string) => {
     try {
-      const result = await downloadDoc.mutateAsync({ docKey, lang: selectedLang });
+      const result: any = await downloadDoc.mutateAsync({ docKey, lang: selectedLang });
       const rawHtml = result.htmlPdfContent || `<!DOCTYPE html><html><head><meta charset="utf-8"/><title>${result.title}</title><style>body { font-family: system-ui, sans-serif; padding: 25px; line-height: 1.6; color: #0f172a; } h1 { color: #16a34a; } pre { white-space: pre-wrap; word-break: break-word; font-family: inherit; font-size: 14px; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0; }</style></head><body><h1>${result.title}</h1><pre>${result.content}</pre></body></html>`;
 
       if (Platform.OS === 'web' && typeof window !== 'undefined') {

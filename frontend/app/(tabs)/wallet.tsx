@@ -157,6 +157,7 @@ function ReferralInviteCard({ theme, kingId }: { theme: RoleTheme; kingId: strin
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
+  const referralBonusAmount = appSettings?.referralSignupBonusAmount ?? 10;
   const welcomeRewardAmount = appSettings?.newUserSignupBonusAmount ?? 10;
   const inviteLink = `https://farmsking-1.vercel.app/register?ref=${kingId}`;
 
@@ -176,7 +177,7 @@ function ReferralInviteCard({ theme, kingId }: { theme: RoleTheme; kingId: strin
 
   const handleShareWhatsApp = async () => {
     tap();
-    const shareMessage = `🌾 *Join FarmsKing Platform!* 🙏✨\n\nRegister using my referral link or Coupon Code *${kingId}* to get ₹${welcomeRewardAmount} Welcome Reward bonus in your wallet!\n\n👉 *Click to Register:* ${inviteLink}`;
+    const shareMessage = `🌾 *Join FarmsKing Platform!* 🙏✨\n\nRegister using my referral link or Coupon Code *${kingId}*!\nYou will get ₹${referralBonusAmount} Referral Bonus & New user will get ₹${welcomeRewardAmount} Welcome Bonus in wallet!\n\n👉 *Click to Register:* ${inviteLink}`;
 
     if (Platform.OS === 'web') {
       const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`;
@@ -204,11 +205,11 @@ function ReferralInviteCard({ theme, kingId }: { theme: RoleTheme; kingId: strin
           <View style={{ flex: 1 }}>
             <Text style={styles.refTitle}>🎁 Invite Friends & Earn Rewards</Text>
             <Text style={styles.refSub}>
-              Share your Referral Code / Link & get bonus on every signup!
+              You get ₹{referralBonusAmount} Referral Bonus & New user gets ₹{welcomeRewardAmount} Welcome Bonus!
             </Text>
           </View>
           <View style={styles.rewardBadge}>
-            <Text style={styles.rewardBadgeText}>₹{welcomeRewardAmount} Welcome Bonus</Text>
+            <Text style={styles.rewardBadgeText}>₹{referralBonusAmount} + ₹{welcomeRewardAmount} Bonus</Text>
           </View>
         </View>
 

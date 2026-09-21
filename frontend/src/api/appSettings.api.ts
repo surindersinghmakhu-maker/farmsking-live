@@ -14,6 +14,8 @@ export interface AppSettings {
   whatsappGroupJid?: string | null;
   referralSignupBonusAmount?: number;
   newUserSignupBonusAmount?: number;
+  appDownloadUrl?: string | null;
+  latestAppVersion?: string | null;
   updatedAt: string;
   updatedById: string | null;
 }
@@ -34,6 +36,8 @@ export interface UpdateAppSettingsPayload {
   whatsappGroupJid?: string;
   referralSignupBonusAmount?: number;
   newUserSignupBonusAmount?: number;
+  appDownloadUrl?: string;
+  latestAppVersion?: string;
 }
 
 export async function getAppSettings(): Promise<AppSettings> {

@@ -104,6 +104,8 @@ export class AppSettingsService {
       'otpDeliveryChannel',
       'referralSignupBonusAmount',
       'newUserSignupBonusAmount',
+      'appDownloadUrl',
+      'latestAppVersion',
     ];
 
     for (const key of keys) {

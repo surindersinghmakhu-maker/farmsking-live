@@ -62,5 +62,13 @@ export class UpdateAppSettingsDto {
 
   @IsOptional()
   newUserSignupBonusAmount?: number;
+
+  @IsOptional()
+  @IsString()
+  appDownloadUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  latestAppVersion?: string;
 }
 

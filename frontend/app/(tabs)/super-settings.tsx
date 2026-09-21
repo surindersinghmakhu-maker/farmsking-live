@@ -1086,6 +1086,122 @@ function ReferralBonusSettingsPanel() {
   );
 }
 
+function AppDownloadSettingsPanel() {
+  const { data: settings } = useAppSettings();
+  const update = useUpdateAppSettings();
+  const [downloadUrl, setDownloadUrl] = useState<string>('');
+  const [version, setVersion] = useState<string>('1.0.0');
+  const [saving, setSaving] = useState(false);
+  const [savedNotice, setSavedNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (settings) {
+      setDownloadUrl(settings.appDownloadUrl || 'https://farmsking-1.vercel.app/download/farmsking.apk');
+      setVersion(settings.latestAppVersion || '1.0.0');
+    }
+  }, [settings]);
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      await update.mutateAsync({
+        appDownloadUrl: downloadUrl.trim(),
+        latestAppVersion: version.trim(),
+      });
+      if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setSavedNotice('✅ App Download Link & Latest Version updated successfully!');
+      setTimeout(() => setSavedNotice(null), 3500);
+    } catch {
+      alert('❌ Failed to update App Download settings.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#f0f9ff', borderColor: '#bae6fd', borderWidth: 1.5 }]}>
+      <View style={styles.cardHeader}>
+        <View style={[styles.iconCircle, { backgroundColor: '#0284c7' }]}>
+          <Ionicons name="logo-android" size={20} color="#ffffff" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardTitle}>📱 App Download & In-App Auto Update Link</Text>
+        </View>
+      </View>
+
+      <View style={{ gap: 12, marginTop: 10 }}>
+        <View style={{ gap: 4 }}>
+          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0369a1' }}>
+            🔗 App APK / Play Store Download Link
+          </Text>
+          <TextInput
+            style={{
+              borderWidth: 1.5,
+              borderColor: '#7dd3fc',
+              borderRadius: RADIUS.md,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              fontSize: 13,
+              fontFamily: FONT.medium,
+              color: '#0f172a',
+              backgroundColor: '#ffffff',
+            }}
+            value={downloadUrl}
+            onChangeText={setDownloadUrl}
+            placeholder="https://..."
+            autoCapitalize="none"
+          />
+        </View>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+          <Text style={{ flex: 1, fontSize: 13, fontFamily: FONT.bold, color: '#0369a1' }}>
+            🏷️ Latest App Version (e.g. 1.0.1)
+          </Text>
+          <TextInput
+            style={{
+              width: 110,
+              borderWidth: 1.5,
+              borderColor: '#7dd3fc',
+              borderRadius: RADIUS.md,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              fontSize: 14,
+              fontFamily: FONT.bold,
+              color: '#0f172a',
+              backgroundColor: '#ffffff',
+              textAlign: 'center',
+            }}
+            value={version}
+            onChangeText={setVersion}
+            placeholder="1.0.0"
+          />
+        </View>
+
+        {savedNotice ? (
+          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#16a34a', textAlign: 'center' }}>
+            {savedNotice}
+          </Text>
+        ) : null}
+
+        <TouchableOpacity
+          style={[wStyles.btn, { backgroundColor: '#0284c7' }]}
+          onPress={handleSave}
+          disabled={saving}
+        >
+          {saving ? (
+            <ActivityIndicator color="#ffffff" size="small" />
+          ) : (
+            <>
+              <Ionicons name="save-outline" size={16} color="#ffffff" />
+              <Text style={wStyles.btnText}>💾 Save App Download & Update Settings</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
 export default function SuperSettingsScreen() {
   const router = useRouter();
   const { data: settings, isLoading } = useAppSettings();
@@ -1396,6 +1512,9 @@ export default function SuperSettingsScreen() {
           <View style={{ gap: 14 }}>
             {/* 🎁 Referral & Signup Wallet Bonus Options */}
             <ReferralBonusSettingsPanel />
+
+            {/* 📱 App Download & APK Update Link Panel */}
+            <AppDownloadSettingsPanel />
 
             {/* 🏷️ Expense Categories Manager */}
             <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#fef2f2', borderColor: '#fecaca', borderWidth: 1 }]}>

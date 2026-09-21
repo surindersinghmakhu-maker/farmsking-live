@@ -19,7 +19,7 @@ export default function HomeScreen() {
   const { role: currentRole } = useRole();
   const [showAdminChatModal, setShowAdminChatModal] = useState(false);
 
-  const theme = RoleThemes[currentRole];
+  const theme = RoleThemes[currentRole] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER;
 
   if (currentRole === 'CUSTOMER') {
     return <Redirect href="/(tabs)/shop" />;
@@ -29,6 +29,7 @@ export default function HomeScreen() {
     switch (currentRole) {
       case 'FARMER':
         return <FarmerDashboardView onOpenAdminChat={() => setShowAdminChatModal(true)} />;
+      case 'ADVISOR':
       case 'FARM_ADVISOR':
         return <AdvisorDashboardView />;
       case 'GARDEN_ADVISOR':

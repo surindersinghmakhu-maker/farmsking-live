@@ -34,7 +34,7 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
   avatarUrl,
   planBadge,
 }) => {
-  const theme = RoleThemes[currentRole];
+  const theme = RoleThemes[currentRole] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER;
   const router = useRouter();
   const greeting = getTimeBasedGreeting();
   const { data: unreadData } = useUnreadNotificationCount();

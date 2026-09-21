@@ -44,7 +44,7 @@ function couponPlanAmount(pricing: FarmerPlanPricing[], plan: FarmerPlanType, da
 export default function WalletScreen() {
   const { user } = useAuth();
   const { role: currentRole } = useRole();
-  const theme = RoleThemes[currentRole];
+  const theme = RoleThemes[currentRole] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER;
   const { data: wallet, isLoading: isLoadingWallet } = useMyWallet();
   const { data: withdrawals } = useMyWithdrawals();
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);

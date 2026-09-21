@@ -1,5 +1,6 @@
 export type UserRole =
   | 'FARMER'
+  | 'ADVISOR'
   | 'FARM_ADVISOR'
   | 'GARDEN_ADVISOR'
   | 'GARDENER'
@@ -50,6 +51,17 @@ export const RoleThemes: Record<UserRole, {
     primary: '#16a34a',
     primaryLight: '#dcfce7',
     accent: '#22c55e',
+  },
+  ADVISOR: {
+    ...SURFACE,
+    name: 'Advisor Dashboard',
+    badge: 'Guide, monitor & support farmers',
+    headerBg: '#1d4ed8',
+    gradient: ['#1d4ed8', '#2563eb'],
+    heroGradient: ['#ffffff', '#eff6ff'],
+    primary: '#2563eb',
+    primaryLight: '#dbeafe',
+    accent: '#3b82f6',
   },
   FARM_ADVISOR: {
     ...SURFACE,

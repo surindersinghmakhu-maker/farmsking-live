@@ -126,10 +126,10 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
 
   if (assignedRoles.length <= 1 && !extraRows?.length) return null;
 
-  const roleLabels = assignedRoles.map((r) => RoleThemes[r].name).join(', ');
+  const roleLabels = assignedRoles.map((r) => (RoleThemes[r] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER).name).join(', ');
   const rowCount = assignedRoles.length + (extraRows?.length ?? 0);
 
-  const activeTheme = RoleThemes[role];
+  const activeTheme = RoleThemes[role] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER;
 
   return (
     <View style={styles.section}>
@@ -158,7 +158,7 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
       {isDropdownOpen ? (
         <View style={styles.dropdownMenu}>
           {assignedRoles.map((r) => {
-            const theme = RoleThemes[r];
+            const theme = RoleThemes[r] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER;
             const isActive = r === role;
             return (
               <TouchableOpacity

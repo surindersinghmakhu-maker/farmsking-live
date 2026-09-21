@@ -566,31 +566,31 @@ export function MarketRatesCard() {
             subcategoryRates.map((rate) => {
               const hasLocal = rate.localAvgRate != null && rate.localAvgRate > 0;
               const hasNational = rate.nationalAvgRate != null && rate.nationalAvgRate > 0;
-              const unitTag = ` / ${rate.unit}`;
 
               return (
                 <View key={rate.displayTitle} style={styles.row}>
-                  {/* 1. Crop Name */}
+                  {/* 1. Crop Name & Unit */}
                   <View style={styles.cropColumn}>
                     <Text style={styles.cropName} numberOfLines={1}>
                       {rate.displayTitle}
                     </Text>
+                    <Text style={styles.cropUnitSub}>Per {rate.unit}</Text>
                   </View>
 
-                  {/* 2. Local (State) Rate Box with units */}
+                  {/* 2. Local (State) Rate Box */}
                   <View style={styles.rateColumn}>
                     {hasLocal ? (
                       <View style={styles.rateDetailBox}>
                         <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 2 }}>
                           <Text style={styles.rateLabelPrefix}>Avg: </Text>
-                          <Text style={styles.rateValueAvg}>{formatInr(rate.localAvgRate!)}{unitTag}</Text>
+                          <Text style={styles.rateValueAvg}>{formatInr(rate.localAvgRate!)}</Text>
                         </View>
                         <View style={styles.minMaxRow}>
                           <Text style={styles.minText}>
-                            Min: <Text style={{ fontFamily: FONT.bold }}>{formatInr(rate.localMinRate!)}{unitTag}</Text>
+                            Min: <Text style={{ fontFamily: FONT.bold }}>{formatInr(rate.localMinRate!)}</Text>
                           </Text>
                           <Text style={styles.maxText}>
-                            Max: <Text style={{ fontFamily: FONT.bold }}>{formatInr(rate.localMaxRate!)}{unitTag}</Text>
+                            Max: <Text style={{ fontFamily: FONT.bold }}>{formatInr(rate.localMaxRate!)}</Text>
                           </Text>
                         </View>
                       </View>
@@ -599,20 +599,20 @@ export function MarketRatesCard() {
                     )}
                   </View>
 
-                  {/* 3. National Rate Box with units */}
+                  {/* 3. National Rate Box */}
                   <View style={styles.rateColumn}>
                     {hasNational ? (
                       <View style={styles.rateDetailBox}>
                         <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 2 }}>
                           <Text style={styles.rateLabelPrefix}>Avg: </Text>
-                          <Text style={[styles.rateValueAvg, { color: '#0f172a' }]}>{formatInr(rate.nationalAvgRate!)}{unitTag}</Text>
+                          <Text style={[styles.rateValueAvg, { color: '#0f172a' }]}>{formatInr(rate.nationalAvgRate!)}</Text>
                         </View>
                         <View style={styles.minMaxRow}>
                           <Text style={styles.minText}>
-                            Min: <Text style={{ fontFamily: FONT.bold }}>{formatInr(rate.nationalMinRate!)}{unitTag}</Text>
+                            Min: <Text style={{ fontFamily: FONT.bold }}>{formatInr(rate.nationalMinRate!)}</Text>
                           </Text>
                           <Text style={styles.maxText}>
-                            Max: <Text style={{ fontFamily: FONT.bold }}>{formatInr(rate.nationalMaxRate!)}{unitTag}</Text>
+                            Max: <Text style={{ fontFamily: FONT.bold }}>{formatInr(rate.nationalMaxRate!)}</Text>
                           </Text>
                         </View>
                       </View>
@@ -636,24 +636,19 @@ export function MarketRatesCard() {
         </>
       )}
 
-      {/* App Update Banner in UI Card (English + Hindi) */}
+      {/* App Update Banner in UI Card */}
       <View style={styles.uiCtaBanner}>
-        <Ionicons name="phone-portrait-outline" size={14} color="#166534" />
-        <View style={{ flex: 1 }}>
-          <Text style={styles.uiCtaTextEnglish} numberOfLines={1}>
-            Use FarmsKing App to stay updated with your crop's live market prices!
-          </Text>
-          <Text style={styles.uiCtaTextHindi} numberOfLines={1}>
-            अपनी फसल के लाइव मार्केट भाव से अपडेट रहने के लिए FarmsKing App का उपयोग करें!
-          </Text>
-        </View>
+        <Ionicons name="phone-portrait-outline" size={13} color="#166534" />
+        <Text style={styles.uiCtaText} numberOfLines={1}>
+          Tuhadi crop da live market price naal update rehan lyi FarmsKing app use kro!
+        </Text>
       </View>
 
-      {/* Referral Voucher Box in UI Card (English + Hindi) */}
+      {/* Referral Voucher Box in UI Card */}
       <View style={styles.uiReferralBox}>
-        <View style={{ flex: 1, gap: 1 }}>
-          <Text style={styles.uiReferralLabelEng}>🎁 Use this code for Welcome Bonus in wallet:</Text>
-          <Text style={styles.uiReferralLabelHindi}>वेलकम बोनस प्राप्त करने के लिए यह रेफरल कोड दर्ज करें:</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <Text style={{ fontSize: 13 }}>🎁</Text>
+          <Text style={styles.uiReferralLabel}>Welcome bonus lyi eh code use kro:</Text>
         </View>
         <View style={styles.uiCodeBadge}>
           <Text style={styles.uiCodeBadgeText}>{userRefCode}</Text>
@@ -1035,6 +1030,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#bbf7d0',
   },
+  uiCtaText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#166534',
+    flex: 1,
+  },
   uiCtaTextEnglish: {
     fontSize: 9.5,
     fontFamily: FONT.bold,
@@ -1057,6 +1058,11 @@ const styles = StyleSheet.create({
     marginTop: 4,
     borderWidth: 1,
     borderColor: '#fde68a',
+  },
+  uiReferralLabel: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#92400e',
   },
   uiReferralLabelEng: {
     fontSize: 9.5,

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
-import { useBulkCreateSchedules, useSchedulesForCropCycle } from '@/src/hooks/useCropActivitySchedules';
+import { useBulkCreateSchedules, useDeleteSchedule, useSchedulesForCropCycle, useUpdateSchedule } from '@/src/hooks/useCropActivitySchedules';
 import { useMySprayItemTemplates } from '@/src/hooks/useSprayItemTemplates';
 import { QuickAddDoseItemModal } from '@/src/components/QuickAddDoseItemModal';
 import { ActivityType, CropActivitySchedule } from '@/src/types/api';
@@ -61,13 +61,18 @@ interface AdvisorScheduleTimelineProps {
   sowingDate?: string | null;
 }
 
-/** "Full Plot Timeline & Activity Audit" — real CropActivitySchedule rows, color-coded, plus a quick add-task form. */
+/** "Full Plot Timeline & Activity Audit" — real CropActivitySchedule rows, color-coded, plus quick add & edit task options. */
 export function AdvisorScheduleTimeline({ cropCycleId, cropName, farmerName }: AdvisorScheduleTimelineProps) {
   const { data: tasks, isLoading } = useSchedulesForCropCycle(cropCycleId);
   const bulkCreate = useBulkCreateSchedules();
+  const updateSchedule = useUpdateSchedule();
+  const deleteSchedule = useDeleteSchedule();
   const { data: itemTemplatesForSearch } = useMySprayItemTemplates();
 
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<CropActivitySchedule | null>(null);
+
   const [isQuickAddDoseOpen, setIsQuickAddDoseOpen] = useState(false);
   const [activityType, setActivityType] = useState<ActivityType>('SPRAY');
   const [title, setTitle] = useState('');
@@ -109,6 +114,64 @@ export function AdvisorScheduleTimeline({ cropCycleId, cropName, farmerName }: A
     }
   };
 
+  const openEditTask = (task: CropActivitySchedule) => {
+    setEditingTask(task);
+    setActivityType(task.activityType || 'SPRAY');
+    setTitle(task.title || '');
+    setDescription(task.description || '');
+    setScheduledDate(new Date(task.scheduledDate).toISOString().slice(0, 10));
+    setError(null);
+    setIsEditOpen(true);
+  };
+
+  const handleSaveEditedTask = async () => {
+    if (!editingTask) return;
+    if (!title.trim()) {
+      setError('Enter a Task / Activity title.');
+      return;
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(scheduledDate)) {
+      setError('Enter the date as YYYY-MM-DD.');
+      return;
+    }
+    try {
+      await updateSchedule.mutateAsync({
+        id: editingTask.id,
+        payload: { activityType, title: title.trim(), description: description.trim() || undefined, scheduledDate },
+      });
+      setIsEditOpen(false);
+      setEditingTask(null);
+      resetForm();
+    } catch (err: any) {
+      setError(err?.response?.data?.message ?? 'Could not update the task.');
+    }
+  };
+
+  const handleDeleteTask = async () => {
+    if (!editingTask) return;
+    const doDelete = async () => {
+      try {
+        await deleteSchedule.mutateAsync(editingTask.id);
+        setIsEditOpen(false);
+        setEditingTask(null);
+        resetForm();
+      } catch (err: any) {
+        setError(err?.response?.data?.message ?? 'Could not delete the task.');
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (confirm(`Delete task "${editingTask.title}"?`)) {
+        await doDelete();
+      }
+    } else {
+      Alert.alert('Delete Task', `Are you sure you want to delete "${editingTask.title}"?`, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: doDelete },
+      ]);
+    }
+  };
+
   return (
     <View style={styles.wrap}>
       <View style={styles.headerRow}>
@@ -122,6 +185,7 @@ export function AdvisorScheduleTimeline({ cropCycleId, cropName, farmerName }: A
             activeOpacity={0.85}
             onPress={() => {
               tap();
+              resetForm();
               setIsAddOpen(true);
             }}
           >
@@ -140,7 +204,7 @@ export function AdvisorScheduleTimeline({ cropCycleId, cropName, farmerName }: A
           <View style={styles.tableHeaderRow}>
             <Text style={[styles.tableHeaderCell, styles.dateCol]}>Date</Text>
             <Text style={[styles.tableHeaderCell, styles.taskCol]}>Task / Activity</Text>
-            <Text style={[styles.tableHeaderCell, styles.remarksCol]}>Remarks</Text>
+            <Text style={[styles.tableHeaderCell, styles.remarksCol]}>Remarks & Actions</Text>
           </View>
           {[...tasks]
             .sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime())
@@ -174,11 +238,29 @@ export function AdvisorScheduleTimeline({ cropCycleId, cropName, farmerName }: A
                       <Text style={styles.metaText}>
                         Completed {new Date(task.completedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                       </Text>
+                    ) : task.description ? (
+                      <Text style={styles.metaText} numberOfLines={1}>{task.description}</Text>
                     ) : null}
                   </View>
-                  <View style={[styles.remarksCol, styles.remarksBadge, { borderColor: meta.border }]}>
-                    <Ionicons name={meta.icon} size={12} color={meta.color} />
-                    <Text style={[styles.remarksText, { color: meta.color }]}>{meta.label}</Text>
+                  <View style={[styles.remarksCol, { flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
+                    <View style={[styles.remarksBadge, { borderColor: meta.border }]}>
+                      <Ionicons name={meta.icon} size={11} color={meta.color} />
+                      <Text style={[styles.remarksText, { color: meta.color }]}>{meta.label}</Text>
+                    </View>
+
+                    {!isPastTask ? (
+                      <TouchableOpacity
+                        style={styles.editChipBtn}
+                        activeOpacity={0.8}
+                        onPress={() => {
+                          tap();
+                          openEditTask(task);
+                        }}
+                      >
+                        <Ionicons name="pencil" size={11} color="#0284c7" />
+                        <Text style={styles.editChipBtnText}>Edit</Text>
+                      </TouchableOpacity>
+                    ) : null}
                   </View>
                 </View>
               );
@@ -300,6 +382,138 @@ export function AdvisorScheduleTimeline({ cropCycleId, cropName, farmerName }: A
         </View>
       </Modal>
 
+      {/* Edit Task Modal */}
+      <Modal visible={isEditOpen} transparent animationType="slide" onRequestClose={() => setIsEditOpen(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeaderRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.modalTitle}>✏️ Edit Upcoming Task</Text>
+                <Text style={styles.modalSub}>
+                  {editingTask?.title}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setIsEditOpen(false)}>
+                <Ionicons name="close-circle" size={24} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingVertical: 6 }}>
+              <Text style={styles.label}>Activity Type</Text>
+              <View style={styles.chipRow}>
+                {ACTIVITY_TYPES.map((t) => {
+                  const isSelected = t.value === activityType;
+                  return (
+                    <TouchableOpacity
+                      key={t.value}
+                      style={[styles.chip, isSelected && { backgroundColor: theme.primary, borderColor: theme.primary }]}
+                      onPress={() => setActivityType(t.value)}
+                    >
+                      <Ionicons name={t.icon} size={13} color={isSelected ? '#ffffff' : theme.primary} />
+                      <Text style={[styles.chipText, isSelected && { color: '#ffffff' }]}>{t.label}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <View style={styles.labelHeaderRow}>
+                <Text style={styles.label}>Task / Activity</Text>
+                <TouchableOpacity
+                  style={styles.quickAddDoseBtn}
+                  activeOpacity={0.8}
+                  onPress={() => setIsQuickAddDoseOpen(true)}
+                >
+                  <Ionicons name="add-circle" size={13} color={theme.primary} />
+                  <Text style={styles.quickAddDoseBtnText}>+ Add New Dose Item</Text>
+                </TouchableOpacity>
+              </View>
+
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. Imidacloprid Foliar Spray or Dose Item"
+                placeholderTextColor="#94a3b8"
+                value={title}
+                onChangeText={setTitle}
+              />
+
+              {doseSuggestions.length > 0 ? (
+                <View style={styles.itemSuggestBox}>
+                  {doseSuggestions.map((s) => (
+                    <TouchableOpacity
+                      key={s.id}
+                      style={styles.itemSuggestRow}
+                      onPress={() => {
+                        tap();
+                        const composed = s.dose ? `${s.item} (${s.dose})` : s.item;
+                        setTitle(composed);
+                      }}
+                    >
+                      <Ionicons name="flask-outline" size={14} color={theme.primary} />
+                      <Text style={styles.itemSuggestText}>
+                        {s.item}
+                        {s.dose ? <Text style={styles.itemSuggestDose}> · {s.dose}</Text> : null}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ) : null}
+
+              <Text style={styles.label}>Description (optional)</Text>
+              <TextInput
+                style={[styles.input, { minHeight: 60, textAlignVertical: 'top' }]}
+                placeholder="Dosage, method, notes..."
+                placeholderTextColor="#94a3b8"
+                value={description}
+                onChangeText={setDescription}
+                multiline
+              />
+
+              <Text style={styles.label}>Scheduled Date</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor="#94a3b8"
+                value={scheduledDate}
+                onChangeText={setScheduledDate}
+              />
+
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 6 }}>
+                <TouchableOpacity
+                  style={[styles.deleteBtn, { flex: 1 }]}
+                  activeOpacity={0.85}
+                  disabled={deleteSchedule.isPending || updateSchedule.isPending}
+                  onPress={handleDeleteTask}
+                >
+                  {deleteSchedule.isPending ? (
+                    <ActivityIndicator color="#dc2626" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="trash-outline" size={15} color="#dc2626" />
+                      <Text style={styles.deleteBtnText}>Delete</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.submitBtn, { flex: 2, marginTop: 0 }, premiumShadow(theme.primary, 'md')]}
+                  activeOpacity={0.85}
+                  disabled={updateSchedule.isPending || deleteSchedule.isPending}
+                  onPress={handleSaveEditedTask}
+                >
+                  {updateSchedule.isPending ? (
+                    <ActivityIndicator color="#ffffff" />
+                  ) : (
+                    <Text style={styles.submitBtnText}>Save Changes</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
       {/* Quick Add Dose Item Modal */}
       <QuickAddDoseItemModal
         visible={isQuickAddDoseOpen}
@@ -350,7 +564,39 @@ const styles = StyleSheet.create({
   },
   dateCol: { width: 56 },
   taskCol: { flex: 1, paddingRight: 6 },
-  remarksCol: { width: 74 },
+  remarksCol: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  editChipBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#e0f2fe',
+    borderColor: '#bae6fd',
+    borderWidth: 1,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+  },
+  editChipBtnText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#0284c7',
+  },
+  deleteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fca5a5',
+    borderRadius: RADIUS.md,
+    paddingVertical: 12,
+  },
+  deleteBtnText: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#dc2626',
+  },
   dateText: { fontSize: 11, fontFamily: FONT.bold, color: '#0f172a' },
   taskTitle: { fontSize: 11.5, fontFamily: FONT.semiBold, color: '#0f172a' },
   metaText: { fontSize: 9, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },

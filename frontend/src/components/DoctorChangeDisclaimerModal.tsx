@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(15, 23, 42, 0.65)',
-    justify: 'center',
+    justifyContent: 'center',
     alignItems: 'center',
     padding: SPACING.md,
   },
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#cbd5e1',
     alignItems: 'center',
-    justify: 'center',
+    justifyContent: 'center',
     backgroundColor: '#ffffff',
   },
   cancelBtnText: {
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md,
     backgroundColor: '#0284c7',
     alignItems: 'center',
-    justify: 'center',
+    justifyContent: 'center',
   },
   confirmBtnText: {
     fontSize: 13,

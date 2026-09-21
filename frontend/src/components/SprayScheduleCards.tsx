@@ -68,12 +68,12 @@ export function SprayScheduleCards({
     : '';
   const upcomingPendingLabel =
     upcoming?.status === 'OVERDUE'
-      ? `${Math.abs(upcomingDiffDays)} din overdue`
+      ? `${Math.abs(upcomingDiffDays)} Days Overdue`
       : upcomingDiffDays === 0
-        ? 'Aaj'
+        ? 'Today'
         : upcomingDiffDays < 0
-          ? `${Math.abs(upcomingDiffDays)} din overdue`
-          : `${upcomingDiffDays} din baaki`;
+          ? `${Math.abs(upcomingDiffDays)} Days Overdue`
+          : `${upcomingDiffDays} Days Left`;
 
   const previousOutcome = previous ? pastSprayOutcome(previous) : null;
   const previousDateLabel = previous ? new Date(previous.scheduledDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '';
@@ -92,27 +92,50 @@ export function SprayScheduleCards({
           style={[styles.sprayCard, styles.sprayCardHighlighted, { backgroundColor: accentColor, borderColor: accentColor, ...premiumShadow(accentColor, 'sm') }]}
         >
           <View style={styles.sprayCardHeaderRow}>
-            <Text style={[styles.sprayCardEyebrow, { color: '#ffffff' }]}>Upcoming Schedule</Text>
+            <TouchableOpacity
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, paddingRight: 6 }}
+              activeOpacity={hasAlt ? 0.7 : 1}
+              disabled={!hasAlt}
+              onPress={() => setIsAltRevealed((v) => !v)}
+              {...webHoverProps}
+            >
+              <Text style={[styles.sprayCardEyebrow, { color: '#ffffff' }]}>Upcoming Schedule:</Text>
+              <Text style={[styles.sprayCardProductInline, { color: '#ffffff' }]} numberOfLines={1}>
+                {upcoming.recommendedProduct || 'Spray Item'}
+              </Text>
+              {hasAlt ? <Ionicons name="information-circle-outline" size={13} color="rgba(255,255,255,0.9)" /> : null}
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.detailBtn} activeOpacity={0.8} onPress={() => onViewDetail(upcoming)}>
               <Text style={styles.detailBtnText}>Detail</Text>
               <Ionicons name="chevron-forward" size={12} color="#ffffff" />
             </TouchableOpacity>
           </View>
+
           <TouchableOpacity
             activeOpacity={hasAlt ? 0.7 : 1}
             disabled={!hasAlt}
             onPress={() => setIsAltRevealed((v) => !v)}
             {...webHoverProps}
           >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Text style={[styles.sprayCardProduct, { color: '#ffffff' }]} numberOfLines={1}>
-                {upcoming.recommendedProduct || 'Spray Item'}
-              </Text>
-              {hasAlt ? <Ionicons name="information-circle-outline" size={13} color="rgba(255,255,255,0.85)" /> : null}
+            <View style={styles.highlightBadge}>
+              <View style={styles.dateContrastBox}>
+                <Ionicons name="calendar" size={12} color="#ca8a04" />
+                <Text style={styles.dateContrastText}>{upcomingDateLabel}</Text>
+              </View>
+              <View style={styles.pendingContrastBox}>
+                <Ionicons name="time-outline" size={12} color="#ffffff" />
+                <Text style={styles.pendingContrastText}>{upcomingPendingLabel}</Text>
+              </View>
             </View>
-            <Text style={[styles.sprayCardMeta, { color: 'rgba(255,255,255,0.85)' }]}>
-              📅 {upcomingDateLabel} · {upcomingPendingLabel}
-            </Text>
+            {upcoming.dosageInstructions ? (
+              <View style={styles.doseRow}>
+                <Ionicons name="flask-outline" size={12} color="#ffffff" />
+                <Text style={styles.doseText} numberOfLines={1}>
+                  Dose: {upcoming.dosageInstructions}
+                </Text>
+              </View>
+            ) : null}
             {hasAlt && isAltRevealed ? (
               <Text style={[styles.sprayCardAlt, { color: 'rgba(255,255,255,0.9)' }]} numberOfLines={2}>
                 Alt: {altText}
@@ -183,8 +206,64 @@ const styles = StyleSheet.create({
   detailBtnText: { fontSize: 10, fontFamily: FONT.bold, color: '#ffffff' },
   outcomeDot: { width: 7, height: 7, borderRadius: 3.5 },
   sprayCardProduct: { fontSize: 12.5, fontFamily: FONT.bold, marginTop: 5 },
+  sprayCardProductInline: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    flexShrink: 1,
+  },
   sprayCardMeta: { fontSize: 10.5, fontFamily: FONT.semiBold, marginTop: 2 },
   sprayCardAlt: { fontSize: 9.5, fontFamily: FONT.medium, marginTop: 2 },
+  highlightBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    marginTop: 6,
+  },
+  dateContrastBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#fef9c3',
+    borderWidth: 1,
+    borderColor: '#fef08a',
+    borderRadius: RADIUS.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  dateContrastText: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    color: '#854d0e',
+  },
+  pendingContrastBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+    borderRadius: RADIUS.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  pendingContrastText: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+  },
+  doseRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+  },
+  doseText: {
+    fontSize: 11,
+    fontFamily: FONT.semiBold,
+    color: 'rgba(255, 255, 255, 0.95)',
+    flexShrink: 1,
+  },
   sprayCardCollapsed: {
     borderRadius: RADIUS.md,
     borderWidth: 1,

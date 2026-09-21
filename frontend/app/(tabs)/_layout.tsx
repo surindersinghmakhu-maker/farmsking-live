@@ -91,8 +91,8 @@ type TabName =
   | 'operator-orders';
 
 const ROLE_TABS: Record<UserRole, { tabs: TabName[] }> = {
-  FARMER: { tabs: ['index', 'shop', 'farm', 'records', 'market', 'more'] },
-  GARDENER: { tabs: ['index', 'shop', 'farm', 'records', 'market', 'more'] },
+  FARMER: { tabs: ['index', 'shop', 'farm', 'records', 'more'] },
+  GARDENER: { tabs: ['index', 'shop', 'farm', 'records', 'more'] },
   CUSTOMER: { tabs: ['shop', 'more'] },
   FARM_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
   GARDEN_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
@@ -115,7 +115,7 @@ const TAB_META: Record<Exclude<TabName, 'index' | 'more'>, { key: TranslationKey
   schedule: { key: 'tabSchedule', title: 'Schedule', icon: 'calendar-outline', iconFilled: 'calendar' },
   chat: { key: 'tabChat', title: 'Chat', icon: 'chatbubble-outline', iconFilled: 'chatbubble' },
   referrals: { key: 'tabReferrals', title: 'Referrals', icon: 'people-outline', iconFilled: 'people' },
-  wallet: { key: 'tabMyBusiness', title: 'My Business', icon: 'wallet-outline', iconFilled: 'wallet' },
+  wallet: { key: 'tabMyBusiness', title: 'Wallet', icon: 'wallet-outline', iconFilled: 'wallet' },
   'admin-orders': { key: 'tabOrders', title: 'Orders', icon: 'receipt-outline', iconFilled: 'receipt' },
   'admin-products': { key: 'tabProducts', title: 'Products', icon: 'cube-outline', iconFilled: 'cube' },
   'super-users': { key: 'tabUsers', title: 'Users', icon: 'people-outline', iconFilled: 'people' },

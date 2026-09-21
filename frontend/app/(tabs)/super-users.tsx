@@ -90,6 +90,8 @@ export default function SuperUsersScreen() {
   const reactivate = useReactivateUser();
   const deleteUser = useDeleteUser();
 
+  const [deleteVerificationTarget, setDeleteVerificationTarget] = useState<AdminUser | null>(null);
+
   const handleDeleteUser = (targetUser: AdminUser) => {
     if (targetUser.mobile === '9872066901') {
       const msg = 'Primary Super Admin account 9872066901 cannot be deleted.';
@@ -103,26 +105,7 @@ export default function SuperUsersScreen() {
       else Alert.alert('Deactivation Required', msg);
       return;
     }
-    const message = `Are you sure you want to PERMANENTLY DELETE user record "${targetUser.name}" (${targetUser.mobile})?`;
-    const confirmDelete = async () => {
-      try {
-        await deleteUser.mutateAsync(targetUser.id);
-        if (Platform.OS === 'web') alert('User deleted successfully!');
-        else Alert.alert('Deleted', 'User record deleted successfully.');
-      } catch (err: any) {
-        const msg = err?.response?.data?.message || 'Could not delete user record.';
-        if (Platform.OS === 'web') alert(msg);
-        else Alert.alert('Error', msg);
-      }
-    };
-    if (Platform.OS === 'web') {
-      if (confirm(message)) confirmDelete();
-    } else {
-      Alert.alert('Delete User Record', message, [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: confirmDelete },
-      ]);
-    }
+    setDeleteVerificationTarget(targetUser);
   };
 
   const items = (data?.items ?? []).filter((u) =>
@@ -279,7 +262,106 @@ export default function SuperUsersScreen() {
       <OperatorPermissionsModal target={permissionsTarget} onClose={() => setPermissionsTarget(null)} />
       <EditRolesModal target={rolesTarget} onClose={() => setRolesTarget(null)} />
       <UserDetailModal userId={detailTargetId} onClose={() => setDetailTargetId(null)} />
+      <DeleteUserSecurityModal target={deleteVerificationTarget} onClose={() => setDeleteVerificationTarget(null)} />
     </View>
+  );
+}
+
+function DeleteUserSecurityModal({ target, onClose }: { target: AdminUser | null; onClose: () => void }) {
+  const deleteUser = useDeleteUser();
+  const [confirmInput, setConfirmInput] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setConfirmInput('');
+    setError(null);
+  }, [target]);
+
+  if (!target) return null;
+
+  const expectedMobile = target.mobile.trim();
+  const isMatch = confirmInput.trim() === expectedMobile || confirmInput.trim().toUpperCase() === 'DELETE';
+
+  const handleConfirmDelete = async () => {
+    if (!isMatch) {
+      setError(`Verification failed. Please type "${expectedMobile}" or "DELETE" to confirm.`);
+      return;
+    }
+    setError(null);
+    try {
+      await deleteUser.mutateAsync(target.id);
+      if (Platform.OS === 'web') alert(`Account for ${target.name} permanently deleted.`);
+      else Alert.alert('Account Deleted', `Account for ${target.name} deleted successfully.`);
+      onClose();
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err?.message || 'Could not delete user account.');
+    }
+  };
+
+  return (
+    <Modal visible={!!target} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.modalOverlay}>
+        <View style={[styles.modalCard, { borderColor: '#fca5a5', borderWidth: 1.5 }]}>
+          <View style={styles.modalHeaderRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+              <Ionicons name="shield-checkmark" size={20} color="#dc2626" />
+              <Text style={[styles.modalTitle, { color: '#dc2626' }]}>Security Verification</Text>
+            </View>
+            <TouchableOpacity onPress={onClose}>
+              <Ionicons name="close-circle" size={24} color="#64748b" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={{ backgroundColor: '#fef2f2', padding: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#fecaca', marginVertical: 6 }}>
+            <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#991b1b' }}>
+              ⚠️ Anti-Hacker & Accidental Protection Safeguard
+            </Text>
+            <Text style={{ fontSize: 11.5, fontFamily: FONT.regular, color: '#7f1d1d', marginTop: 4, lineHeight: 16 }}>
+              You are about to permanently delete <Text style={{ fontFamily: FONT.bold }}>{target.name}</Text> ({target.mobile}). All associated data will be removed.
+            </Text>
+          </View>
+
+          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#334155', marginTop: 8 }}>
+            Type user's mobile number <Text style={{ color: '#dc2626' }}>{expectedMobile}</Text> or <Text style={{ color: '#dc2626' }}>DELETE</Text> to verify:
+          </Text>
+
+          <TextInput
+            style={[
+              styles.input,
+              { marginTop: 6, borderColor: isMatch ? '#16a34a' : '#cbd5e1', borderWidth: 1.5, fontFamily: FONT.bold, color: '#0f172a' },
+            ]}
+            value={confirmInput}
+            onChangeText={setConfirmInput}
+            placeholder={`Enter ${expectedMobile} or DELETE`}
+            placeholderTextColor="#94a3b8"
+            autoCapitalize="characters"
+          />
+
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+          <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+            <TouchableOpacity style={[styles.submitBtn, { flex: 1, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#cbd5e1' }]} onPress={onClose}>
+              <Text style={[styles.submitBtnText, { color: '#475569' }]}>Cancel</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.submitBtn,
+                { flex: 1.4, backgroundColor: isMatch ? '#dc2626' : '#cbd5e1' },
+              ]}
+              disabled={!isMatch || deleteUser.isPending}
+              onPress={handleConfirmDelete}
+            >
+              {deleteUser.isPending ? (
+                <ActivityIndicator color="#ffffff" size="small" />
+              ) : (
+                <Text style={styles.submitBtnText}>🛑 Verify & Delete</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
   );
 }
 

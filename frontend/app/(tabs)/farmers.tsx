@@ -346,7 +346,17 @@ export default function AdvisorFarmsScreen() {
   const [profileModalAssignmentId, setProfileModalAssignmentId] = useState<string | null>(null);
 
   const { data: activeAssignments, isLoading: isLoadingAssignments } = useFarmersList('ACTIVE');
-  const farmerIds = useMemo(() => (activeAssignments ?? []).map((a) => a.farmerId), [activeAssignments]);
+
+  const activeCarePlanAssignments = useMemo(() => {
+    return (activeAssignments ?? []).filter((a) => {
+      if (a.status !== 'ACTIVE') return false;
+      const endDate = a.subscription?.endDate ? new Date(a.subscription.endDate) : null;
+      if (endDate && endDate.getTime() < Date.now()) return false;
+      return true;
+    });
+  }, [activeAssignments]);
+
+  const farmerIds = useMemo(() => activeCarePlanAssignments.map((a) => a.farmerId), [activeCarePlanAssignments]);
   const farmerDetailQueries = useFarmerDetails(farmerIds);
   const isLoadingDetails = farmerDetailQueries.some((q) => q.isLoading);
 
@@ -421,6 +431,9 @@ export default function AdvisorFarmsScreen() {
         farm.plots.forEach((plot) => {
           plot.cropCycles.forEach((cropCycle) => {
             if (cropCycle.stage === 'COMPLETED' || cropCycle.status === 'COMPLETED' || cropCycle.status === 'FAILED') return;
+            // Only show crops adopted (accepted) by the doctor under Crop Care Plan
+            if (cropCycle.advisorReviewStatus !== 'ACCEPTED') return;
+
             rows.push({
               key: cropCycle.id,
               farmerId: detail.farmer.id,
@@ -525,7 +538,7 @@ export default function AdvisorFarmsScreen() {
   const farmerGroups = useMemo<FarmerGroup[]>(() => {
     const map = new Map<string, FarmerGroup>();
 
-    (activeAssignments ?? []).forEach((assignment) => {
+    activeCarePlanAssignments.forEach((assignment) => {
       const f = assignment.farmer;
       if (f && !map.has(f.id)) {
         map.set(f.id, {
@@ -556,7 +569,7 @@ export default function AdvisorFarmsScreen() {
       map.get(row.farmerId)!.rows.push(row);
     });
     return Array.from(map.values());
-  }, [activeAssignments, plotRows, farmerProfileById]);
+  }, [activeCarePlanAssignments, plotRows, farmerProfileById]);
 
   const toggleExpand = (cropCycleId: string) => {
     tap();
@@ -680,7 +693,7 @@ export default function AdvisorFarmsScreen() {
                           disabled={rejectAssignment.isPending}
                           onPress={() => {
                             tap();
-                            rejectAssignment.mutate(a.id);
+                            rejectAssignment.mutate({ id: a.id });
                           }}
                         >
                           <Ionicons name="close-circle" size={14} color="#dc2626" />
@@ -720,8 +733,8 @@ export default function AdvisorFarmsScreen() {
                           </Text>
                           <View
                             style={{
-                              backgroundColor: group.rows.length === 0 ? '#eff6ff' : '#fef2f2',
-                              borderColor: group.rows.length === 0 ? '#93c5fd' : '#fca5a5',
+                              backgroundColor: group.rows.length === 0 ? '#eff6ff' : '#f0fdf4',
+                              borderColor: group.rows.length === 0 ? '#93c5fd' : '#86efac',
                               borderWidth: 1,
                               paddingHorizontal: 7,
                               paddingVertical: 3,
@@ -734,10 +747,10 @@ export default function AdvisorFarmsScreen() {
                               style={{
                                 fontSize: 10.5,
                                 fontFamily: FONT.extraBold,
-                                color: group.rows.length === 0 ? '#2563eb' : '#dc2626',
+                                color: group.rows.length === 0 ? '#2563eb' : '#15803d',
                               }}
                             >
-                              {group.rows.length === 0 ? '🟦 0 Active Crops (Empty Roster)' : `🟥 ${group.rows.length} Active Crop${group.rows.length !== 1 ? 's' : ''}`}
+                              {group.rows.length === 0 ? '🟦 0 Adopted Crops' : `🟩 ${group.rows.length} Adopted Crop${group.rows.length !== 1 ? 's' : ''}`}
                             </Text>
                           </View>
                         </View>
@@ -749,7 +762,7 @@ export default function AdvisorFarmsScreen() {
                         <View style={{ gap: 10, marginTop: 10 }}>
                           {group.rows.length === 0 ? (
                             <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#94a3b8', fontStyle: 'italic', paddingHorizontal: 12 }}>
-                              No active plots or crop cycles listed for this farmer.
+                              No adopted crops listed for this farmer under your Crop Care Plan.
                             </Text>
                           ) : (
                             group.rows.map((row) => (
@@ -1296,7 +1309,7 @@ const styles = StyleSheet.create({
   },
   dropdownItemText: {
     fontSize: 13.5,
-    fontFamily: FONT.semibold,
+    fontFamily: FONT.semiBold,
     color: '#334155',
   },
   dropdownItemTextActive: {

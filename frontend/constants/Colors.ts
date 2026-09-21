@@ -97,7 +97,7 @@ export const RoleThemes: Record<UserRole, {
   },
   BUSINESS_PARTNER: {
     ...SURFACE,
-    name: 'My Business',
+    name: 'Wallet',
     badge: 'Promote, earn & grow together',
     headerBg: '#b45309',
     gradient: ['#b45309', '#d97706'],

@@ -118,12 +118,24 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
         ? AdvisorAssignmentStatus.PENDING
         : { in: [AdvisorAssignmentStatus.ACTIVE, AdvisorAssignmentStatus.REVOKED, AdvisorAssignmentStatus.PENDING] };
 
+    const activeClause =
+      status === 'ACTIVE'
+        ? {
+            OR: [
+              { subscriptionId: null },
+              { subscription: { endDate: null } },
+              { subscription: { endDate: { gt: new Date() } } },
+            ],
+          }
+        : {};
+
     return this.prisma.advisorAssignment.findMany({
       where: {
         advisorId: user.id,
         status: statusFilter,
         deletedAt: null,
         farmer: { deletedAt: null },
+        ...activeClause,
       },
       include: {
         farmer: { select: this.FARMER_BASIC_SELECT },

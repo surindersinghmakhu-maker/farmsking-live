@@ -52,3 +52,24 @@ export function useRemindSchedule() {
     mutationFn: (id: string) => api.remindSchedule(id),
   });
 }
+
+export function useUpdateSchedule() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: api.UpdateActivitySchedulePayload }) =>
+      api.updateSchedule(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crop-activity-schedules'] });
+    },
+  });
+}
+
+export function useDeleteSchedule() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.deleteSchedule(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crop-activity-schedules'] });
+    },
+  });
+}

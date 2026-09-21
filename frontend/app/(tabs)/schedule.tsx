@@ -831,23 +831,6 @@ export function ScheduleScreen() {
         <Text style={styles.heroTitle}>Advisory Schedules & Templates</Text>
         <Text style={styles.heroSubtitle}>Crop-wise schedules & reusable item/dose templates</Text>
 
-        <View style={styles.statRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{activeFarms.length}</Text>
-            <Text style={styles.statLabel}>Active Farms</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{activeFarms.filter((f) => !!f.assignedSchedule).length}</Text>
-            <Text style={styles.statLabel}>Scheduled</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{templates.length}</Text>
-            <Text style={styles.statLabel}>Templates</Text>
-          </View>
-        </View>
-
         {/* 3 Sub-Tabs Row: Schedule | Templates | Dose Items */}
         <View style={styles.tabRow}>
           <TouchableOpacity

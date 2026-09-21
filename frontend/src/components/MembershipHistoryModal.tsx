@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     borderRadius: 21,
     backgroundColor: '#e0f2fe',
     alignItems: 'center',
-    justify: 'center',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 16,
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     alignItems: 'center',
-    justify: 'center',
+    justifyContent: 'center',
   },
   historyPlanName: {
     fontSize: 13,

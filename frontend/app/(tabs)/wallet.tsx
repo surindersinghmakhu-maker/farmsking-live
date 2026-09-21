@@ -192,24 +192,111 @@ function ReferralInviteCard({ theme, kingId }: { theme: RoleTheme; kingId: strin
     }
   };
 
+  const handleDownloadJpgCoupon = () => {
+    tap();
+    try {
+      if (Platform.OS === 'web' && typeof document !== 'undefined') {
+        const canvas = document.createElement('canvas');
+        canvas.width = 720;
+        canvas.height = 420;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Background Gradient
+        const grad = ctx.createLinearGradient(0, 0, 720, 420);
+        grad.addColorStop(0, '#064e3b');
+        grad.addColorStop(0.5, '#047857');
+        grad.addColorStop(1, '#10b981');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 720, 420);
+
+        // Gold Decorative Border
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 6;
+        ctx.strokeRect(12, 12, 696, 396);
+
+        // Inner Dashed Coupon Border
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 6]);
+        ctx.strokeRect(20, 20, 680, 380);
+        ctx.setLineDash([]);
+
+        // Header Brand Title
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 26px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('🌾 FarmsKing Official Referral Voucher 🎁', 360, 60);
+
+        // Subtitle
+        ctx.fillStyle = '#fde68a';
+        ctx.font = 'bold 15px sans-serif';
+        ctx.fillText('Invite Friends & Earn Instant Wallet Rewards!', 360, 92);
+
+        // Reward Gold Banner Box
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillRect(50, 115, 620, 50);
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'bold 15px sans-serif';
+        ctx.fillText(`You get ₹${referralBonusAmount} Referral Bonus & New user gets ₹${welcomeRewardAmount} Welcome Bonus!`, 360, 146);
+
+        // Coupon Code Box
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(160, 185, 400, 75);
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(160, 185, 400, 75);
+
+        ctx.fillStyle = '#64748b';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillText('YOUR REFERRAL / COUPON CODE', 360, 210);
+        ctx.fillStyle = '#047857';
+        ctx.font = 'bold 30px monospace';
+        ctx.fillText(kingId, 360, 246);
+
+        // Link Box
+        ctx.fillStyle = '#ecfdf5';
+        ctx.fillRect(80, 280, 560, 40);
+        ctx.fillStyle = '#065f46';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillText(`Register Link: ${inviteLink}`, 360, 305);
+
+        // Footer Tagline
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'italic 12px sans-serif';
+        ctx.fillText('FarmsKing Agriculture Platform · Smart Farming, Better Future', 360, 365);
+
+        // Download PNG / JPG File
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        const link = document.createElement('a');
+        link.download = `farmsking-referral-coupon-${kingId}.jpg`;
+        link.href = dataUrl;
+        link.click();
+      } else {
+        alert('Referral Coupon Code: ' + kingId + '\nUse code during registration to earn rewards!');
+      }
+    } catch {
+      alert('Could not generate JPG coupon.');
+    }
+  };
+
   if (!kingId) return null;
 
   return (
     <View style={[styles.referralCard, premiumShadow('#16a34a', 'sm')]}>
       <LinearGradient colors={['#f0fdf4', '#dcfce7']} style={styles.referralGradient}>
-        {/* Card Header */}
+        {/* Card Header — Same Row Title & Bonus Wording */}
         <View style={styles.refHeader}>
           <View style={styles.refIconCircle}>
             <Ionicons name="gift" size={20} color="#16a34a" />
           </View>
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
             <Text style={styles.refTitle}>🎁 Invite Friends & Earn Rewards</Text>
-            <Text style={styles.refSub}>
-              You get ₹{referralBonusAmount} Referral Bonus & New user gets ₹{welcomeRewardAmount} Welcome Bonus!
-            </Text>
-          </View>
-          <View style={styles.rewardBadge}>
-            <Text style={styles.rewardBadgeText}>₹{referralBonusAmount} + ₹{welcomeRewardAmount} Bonus</Text>
+            <View style={styles.rewardBadge}>
+              <Text style={styles.rewardBadgeText}>
+                You get ₹{referralBonusAmount} Referral Bonus & New user gets ₹{welcomeRewardAmount} Welcome Bonus!
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -253,12 +340,23 @@ function ReferralInviteCard({ theme, kingId }: { theme: RoleTheme; kingId: strin
           </TouchableOpacity>
 
           <TouchableOpacity
+            style={[styles.refShareLinkBtn, { backgroundColor: '#fef3c7', borderColor: '#fde68a' }]}
+            onPress={handleDownloadJpgCoupon}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="image-outline" size={16} color="#b45309" />
+            <Text style={[styles.refShareLinkBtnText, { color: '#b45309' }]}>
+              JPG Coupon
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={styles.refWaBtn}
             onPress={handleShareWhatsApp}
             activeOpacity={0.85}
           >
             <Ionicons name="logo-whatsapp" size={18} color="#ffffff" />
-            <Text style={styles.refWaBtnText}>Share on WhatsApp</Text>
+            <Text style={styles.refWaBtnText}>Share</Text>
           </TouchableOpacity>
         </View>
       </LinearGradient>

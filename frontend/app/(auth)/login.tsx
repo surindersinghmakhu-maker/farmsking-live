@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -17,16 +17,19 @@ import { useAuth } from '@/src/store/auth-context';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { BrandLogo } from '@/src/components/BrandLogo';
+import { CaptchaChallenge, CaptchaRef } from '@/src/components/CaptchaChallenge';
 
 const theme = RoleThemes.FARMER;
 
 export default function LoginScreen() {
   const { login } = useAuth();
   const router = useRouter();
+  const captchaRef = useRef<CaptchaRef>(null);
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
+  const [captchaInput, setCaptchaInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [focusedField, setFocusedField] = useState<'mobile' | 'password' | null>(null);
+  const [focusedField, setFocusedField] = useState<'mobile' | 'password' | 'captcha' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -40,11 +43,16 @@ export default function LoginScreen() {
       setError('Please enter your password.');
       return;
     }
+    if (captchaRef.current && !captchaRef.current.validate()) {
+      setError('Invalid Captcha security code! Please enter the correct 4-character code shown below.');
+      return;
+    }
     setIsSubmitting(true);
     try {
       await login({ mobile: mobile.trim(), password: password.trim() });
       router.replace('/(tabs)');
     } catch (err: any) {
+      captchaRef.current?.refresh();
       const isNetworkErr = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
       if (isNetworkErr) {
         setError('Network error! Could not connect to backend server. Please check your internet connection.');
@@ -55,7 +63,6 @@ export default function LoginScreen() {
       setIsSubmitting(false);
     }
   };
-
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -89,6 +96,8 @@ export default function LoginScreen() {
               onChangeText={setMobile}
               onFocus={() => setFocusedField('mobile')}
               onBlur={() => setFocusedField(null)}
+              returnKeyType="next"
+              onSubmitEditing={onSubmit}
             />
           </View>
 
@@ -105,11 +114,16 @@ export default function LoginScreen() {
               onChangeText={setPassword}
               onFocus={() => setFocusedField('password')}
               onBlur={() => setFocusedField(null)}
+              returnKeyType="done"
+              onSubmitEditing={onSubmit}
             />
             <TouchableOpacity onPress={() => setShowPassword((v) => !v)} style={{ padding: 4 }}>
               <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#64748b" />
             </TouchableOpacity>
           </View>
+
+          {/* Security Captcha Challenge */}
+          <CaptchaChallenge ref={captchaRef} onValueChange={setCaptchaInput} onSubmitEditing={onSubmit} />
 
           {/* Forgot Password Link */}
           <TouchableOpacity style={styles.forgotLink} activeOpacity={0.7} onPress={() => router.push('/(auth)/forgot-password')}>

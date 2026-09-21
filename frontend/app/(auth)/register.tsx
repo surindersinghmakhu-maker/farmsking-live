@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -21,6 +21,7 @@ import { OtpVerificationModal } from '@/src/components/OtpVerificationModal';
 import { PickerModal } from '@/src/components/PickerModal';
 import { SOIL_TYPE_OPTIONS, SPRAY_TANK_SIZE_OPTIONS, WATER_TYPE_OPTIONS } from '@/src/constants/farmerProfileOptions';
 import { SoilType, SprayTankSizeL, WaterType } from '@/src/types/api';
+import { CaptchaChallenge, CaptchaRef } from '@/src/components/CaptchaChallenge';
 
 const theme = RoleThemes.FARMER;
 
@@ -39,6 +40,7 @@ const ACCOUNT_TYPES: { value: 'CUSTOMER' | 'FARMER' | 'GARDENER'; label: string;
 export default function RegisterScreen() {
   const { register } = useAuth();
   const router = useRouter();
+  const captchaRef = useRef<CaptchaRef>(null);
   const { ref: refParam } = useLocalSearchParams<{ ref?: string }>();
   const referredViaLink = typeof refParam === 'string' && refParam.trim().length > 0;
   const [accountType, setAccountType] = useState<'CUSTOMER' | 'FARMER' | 'GARDENER'>('CUSTOMER');
@@ -120,6 +122,11 @@ export default function RegisterScreen() {
     }
     if (values.password.length < 8) {
       setError('Password must be at least 8 characters.');
+      return;
+    }
+
+    if (captchaRef.current && !captchaRef.current.validate()) {
+      setError('Invalid Captcha security code! Please enter the correct 4-character code.');
       return;
     }
 
@@ -259,6 +266,9 @@ export default function RegisterScreen() {
         {referredViaLink ? (
           <Text style={styles.accountTypeHint}>Applied from your invite link — you'll get a welcome discount coupon after signup.</Text>
         ) : null}
+
+        {/* Security Captcha Challenge */}
+        <CaptchaChallenge ref={captchaRef} onSubmitEditing={onSubmit} />
 
         {error ? (
           <View style={styles.errorBox}>

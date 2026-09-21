@@ -22,8 +22,8 @@ export default function ReferralsScreen() {
 
   const handleShare = async () => {
     tap();
-    const link = network?.inviteUrl || `https://farmsking.com/invite?ref=${kingId}`;
-    const message = `Join FarmsKing! (My King ID: ${kingId})\nFor agriculture management, mandi accounts, and advisor plan features click the link:\n${link}`;
+    const link = network?.inviteUrl || `https://farmsking-1.vercel.app/register?ref=${kingId}`;
+    const message = `🌾 *Join FarmsKing Platform!* 🙏✨\n\nRegister using my link or Referral Code \`${kingId}\` to get Welcome Reward bonus in your wallet!\n👉 ${link}`;
     if (Platform.OS === 'web') {
       await Clipboard.setStringAsync(message);
       alert('Invite link copied to clipboard!');

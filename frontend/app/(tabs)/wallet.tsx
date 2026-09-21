@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Modal, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import * as Clipboard from 'expo-clipboard';
 import ViewShot from 'react-native-view-shot';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useMyWallet } from '@/src/hooks/useWallet';
+import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useCreateWithdrawal, useMyWithdrawals } from '@/src/hooks/useWithdrawals';
 import { useCouponRedemptions, useMyCoupons } from '@/src/hooks/useCoupons';
 import { useMineFarmerPlanCoupons, useMinePartnerFarmerPlanCoupons, useGenerateOwnFarmerPlanCoupon, useFarmerPlanPricing } from '@/src/hooks/useFarmerPlan';
@@ -100,6 +102,9 @@ export default function WalletScreen() {
           </TouchableOpacity>
         </LinearGradient>
 
+        {/* 🎁 Referral Coupon & Invite Link Card */}
+        <ReferralInviteCard theme={theme} kingId={user?.kingId || ''} />
+
         <Text style={styles.sectionTitle}>My Discount & Referral Coupons</Text>
         {isLoadingCoupons ? (
           <ActivityIndicator color={theme.primary} />
@@ -143,6 +148,119 @@ export default function WalletScreen() {
 
       <WithdrawModal visible={isWithdrawOpen} balance={wallet?.balance ?? 0} onClose={() => setIsWithdrawOpen(false)} />
       <RedeemForFarmerModal visible={isRedeemForFarmerOpen} onClose={() => setIsRedeemForFarmerOpen(false)} theme={theme} />
+    </View>
+  );
+}
+
+function ReferralInviteCard({ theme, kingId }: { theme: RoleTheme; kingId: string }) {
+  const { data: appSettings } = useAppSettings();
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const welcomeRewardAmount = appSettings?.newUserSignupBonusAmount ?? 10;
+  const inviteLink = `https://farmsking-1.vercel.app/register?ref=${kingId}`;
+
+  const handleCopyCode = async () => {
+    tap();
+    await Clipboard.setStringAsync(kingId);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 3000);
+  };
+
+  const handleCopyLink = async () => {
+    tap();
+    await Clipboard.setStringAsync(inviteLink);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 3000);
+  };
+
+  const handleShareWhatsApp = async () => {
+    tap();
+    const shareMessage = `🌾 *Join FarmsKing Platform!* 🙏✨\n\nRegister using my referral link or Coupon Code *${kingId}* to get ₹${welcomeRewardAmount} Welcome Reward bonus in your wallet!\n\n👉 *Click to Register:* ${inviteLink}`;
+
+    if (Platform.OS === 'web') {
+      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`;
+      window.open(whatsappUrl, '_blank');
+      return;
+    }
+
+    try {
+      await Share.share({ message: shareMessage });
+    } catch {
+      // share dismissed
+    }
+  };
+
+  if (!kingId) return null;
+
+  return (
+    <View style={[styles.referralCard, premiumShadow('#16a34a', 'sm')]}>
+      <LinearGradient colors={['#f0fdf4', '#dcfce7']} style={styles.referralGradient}>
+        {/* Card Header */}
+        <View style={styles.refHeader}>
+          <View style={styles.refIconCircle}>
+            <Ionicons name="gift" size={20} color="#16a34a" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.refTitle}>🎁 Invite Friends & Earn Rewards</Text>
+            <Text style={styles.refSub}>
+              Share your Referral Code / Link & get bonus on every signup!
+            </Text>
+          </View>
+          <View style={styles.rewardBadge}>
+            <Text style={styles.rewardBadgeText}>₹{welcomeRewardAmount} Welcome Bonus</Text>
+          </View>
+        </View>
+
+        {/* Code & Coupon Box */}
+        <View style={styles.refCodeBox}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.refCodeLabel}>YOUR REFERRAL / COUPON CODE</Text>
+            <Text style={styles.refCodeValue}>{kingId}</Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.refBtn, copiedCode ? styles.refBtnSuccess : null]}
+            onPress={handleCopyCode}
+            activeOpacity={0.8}
+          >
+            <Ionicons name={copiedCode ? 'checkmark' : 'copy-outline'} size={14} color={copiedCode ? '#15803d' : '#ffffff'} />
+            <Text style={[styles.refBtnText, copiedCode ? { color: '#15803d' } : null]}>
+              {copiedCode ? 'Copied!' : 'Copy Code'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Invite Link Box */}
+        <View style={styles.refLinkBox}>
+          <Text style={styles.refLinkLabel}>YOUR UNIQUE SHAREABLE LINK</Text>
+          <Text style={styles.refLinkText} numberOfLines={1}>
+            {inviteLink}
+          </Text>
+        </View>
+
+        {/* Action Buttons Row */}
+        <View style={styles.refActionsRow}>
+          <TouchableOpacity
+            style={styles.refShareLinkBtn}
+            onPress={handleCopyLink}
+            activeOpacity={0.8}
+          >
+            <Ionicons name={copiedLink ? 'checkmark-circle' : 'link-outline'} size={16} color="#0f172a" />
+            <Text style={styles.refShareLinkBtnText}>
+              {copiedLink ? 'Link Copied!' : 'Copy Link'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.refWaBtn}
+            onPress={handleShareWhatsApp}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="logo-whatsapp" size={18} color="#ffffff" />
+            <Text style={styles.refWaBtnText}>Share on WhatsApp</Text>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
     </View>
   );
 }
@@ -1018,4 +1136,26 @@ const styles = StyleSheet.create({
   generateBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 },
   costPreviewBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fffbeb', borderRadius: RADIUS.md, padding: 10, borderWidth: 1, borderColor: '#fde68a' },
   costPreviewText: { flex: 1, fontSize: 11.5, fontFamily: FONT.medium, color: '#92400e' },
+  referralCard: { borderRadius: RADIUS.xl, marginTop: 14, overflow: 'hidden' },
+  referralGradient: { padding: 14, borderRadius: RADIUS.xl, borderWidth: 1.5, borderColor: '#bbf7d0', gap: 10 },
+  refHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  refIconCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center' },
+  refTitle: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#14532d' },
+  refSub: { fontSize: 10.5, fontFamily: FONT.medium, color: '#166534', marginTop: 1 },
+  rewardBadge: { backgroundColor: '#16a34a', paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.pill },
+  rewardBadgeText: { fontSize: 10, fontFamily: FONT.extraBold, color: '#ffffff' },
+  refCodeBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ffffff', padding: 10, borderRadius: RADIUS.lg, borderWidth: 1, borderColor: '#86efac' },
+  refCodeLabel: { fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b', letterSpacing: 0.3 },
+  refCodeValue: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a', letterSpacing: 1, marginTop: 2 },
+  refBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#16a34a', paddingHorizontal: 12, paddingVertical: 8, borderRadius: RADIUS.md },
+  refBtnSuccess: { backgroundColor: '#dcfce7', borderWidth: 1, borderColor: '#86efac' },
+  refBtnText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' },
+  refLinkBox: { backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', gap: 2 },
+  refLinkLabel: { fontSize: 9, fontFamily: FONT.bold, color: '#94a3b8', letterSpacing: 0.3 },
+  refLinkText: { fontSize: 11, fontFamily: FONT.semiBold, color: '#0f172a' },
+  refActionsRow: { flexDirection: 'row', gap: 8, marginTop: 2 },
+  refShareLinkBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#ffffff', borderWidth: 1.5, borderColor: '#cbd5e1', paddingVertical: 10, borderRadius: RADIUS.md },
+  refShareLinkBtnText: { fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' },
+  refWaBtn: { flex: 1.2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#25d366', paddingVertical: 10, borderRadius: RADIUS.md },
+  refWaBtnText: { fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' },
 });

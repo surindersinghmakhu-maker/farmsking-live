@@ -177,14 +177,22 @@ export function MarketRatesCard() {
         ? `• Avg Rate: ${formatInr(crop.nationalAvgRate)}\n• Min Rate: ${formatInr(crop.nationalMinRate!)}  |  Max Rate: ${formatInr(crop.nationalMaxRate!)}`
         : '• No sales recorded in last 24h (-)';
 
+    const userRefCode = user?.kingId ? user.kingId : '';
+    const shareLink = userRefCode
+      ? `https://farmsking-1.vercel.app/register?ref=${userRefCode}`
+      : `https://farmsking-1.vercel.app`;
+
+    const referralInfoStr = userRefCode
+      ? `🎁 *Register on FarmsKing using this link or Referral Coupon \`${userRefCode}\` to get Welcome Reward bonus in your wallet!*\n👉 ${shareLink}`
+      : `📲 *Use FarmsKing App to check real-time crop market rates:*\n👉 ${shareLink}`;
+
     const textMessage =
       `🌾 *FarmsKing — Live Market Rates (24h)* 📊\n` +
       `🌱 *Crop:* ${crop.displayTitle} (Per ${crop.unit})\n` +
       `📅 *Date & Time:* ${todayDateStr}, ${currentTimeStr}\n\n` +
       `🏛️ *LOCAL RATES:*\n${localStr}\n\n` +
       `🇮🇳 *NATIONAL RATES:*\n${nationalStr}\n\n` +
-      `📲 *Use FarmsKing App to check real-time crop market rates:*\n` +
-      `👉 https://farmsking-1.vercel.app`;
+      `${referralInfoStr}`;
 
     try {
       const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(textMessage)}`;

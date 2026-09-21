@@ -56,5 +56,11 @@ export class UpdateAppSettingsDto {
   @IsOptional()
   @IsString()
   otpDeliveryChannel?: string;
+
+  @IsOptional()
+  referralSignupBonusAmount?: number;
+
+  @IsOptional()
+  newUserSignupBonusAmount?: number;
 }
 

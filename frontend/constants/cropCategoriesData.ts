@@ -1,4 +1,4 @@
-export type CropUnit = 'KG' | 'Quintal' | 'Pieces' | 'Bunch' | 'Dozen' | 'Box / Crate';
+export type CropUnit = 'KG' | 'Quintal' | 'Pieces' | 'Bunch' | 'Dozen' | 'Box / Crate' | 'Set';
 
 export interface CropUnitInfo {
   unit: CropUnit;
@@ -14,6 +14,7 @@ export const CROP_UNITS: CropUnitInfo[] = [
   { unit: 'Bunch', label: 'Bunch', hindiLabel: 'Bunch', icon: 'flower' },
   { unit: 'Dozen', label: 'Dozen (12 Pcs)', hindiLabel: 'Dozen (12 Pcs)', icon: 'grid' },
   { unit: 'Box / Crate', label: 'Box / Crate', hindiLabel: 'Box / Crate', icon: 'archive' },
+  { unit: 'Set', label: 'Set (Kit / Pack)', hindiLabel: 'Set (Kit / Pack)', icon: 'briefcase' },
 ];
 
 export type LandAreaUnit = 'Killa (Acre)' | 'Kanal' | 'Marla' | 'Bigha' | 'Biswa' | 'Hectare' | 'Sq Ft / Gaj';

@@ -49,13 +49,14 @@ export class AppSettingsService {
       logoUrl,
       upiId: settings.upiId || 'surindersinghmakhu-5@oksbi',
       upiPayeeName: settings.upiPayeeName || 'Surinder Singh',
+      referralSignupBonusAmount: (settings as any).referralSignupBonusAmount ?? 10,
+      newUserSignupBonusAmount: (settings as any).newUserSignupBonusAmount ?? 10,
     };
 
     this.cache = { data: result, timestamp: now };
     return result;
   }
 
-  /** Real contact details for the "Support"/"Contact Us" screens — pulled from the live Super Admin (or Admin) account. */
   /** Real contact details for the "Support"/"Contact Us" screens — pulled from AppSetting or live Super Admin account. */
   async getSupportContact() {
     const settings = await this.get();
@@ -101,6 +102,8 @@ export class AppSettingsService {
       'whatsappAutoRemoveEnabled',
       'whatsappGroupJid',
       'otpDeliveryChannel',
+      'referralSignupBonusAmount',
+      'newUserSignupBonusAmount',
     ];
 
     for (const key of keys) {

@@ -416,10 +416,8 @@ export class UsersService implements OnModuleInit {
     const isPartnerDeactivated = currentDeactivated.includes(Role.BUSINESS_PARTNER);
     const isSuperAdminMobile = existingUser.mobile === '9872066901';
     const rolesToAdd = isSuperAdminMobile
-      ? [Role.SUPER_ADMIN, Role.ADMIN, Role.FARMER, Role.BUSINESS_PARTNER]
-      : isPartnerDeactivated
-        ? [Role.FARMER]
-        : [Role.FARMER, Role.BUSINESS_PARTNER];
+      ? [Role.SUPER_ADMIN, Role.ADMIN, Role.FARMER]
+      : [Role.FARMER];
 
     const newRoles = Array.from(new Set([...currentRoles, ...rolesToAdd]));
     const newDeactivated = currentDeactivated.filter((r) => r !== Role.FARMER && r !== Role.SUPER_ADMIN);
@@ -461,9 +459,6 @@ export class UsersService implements OnModuleInit {
         update: {},
       }),
     ]);
-    if (!isPartnerDeactivated) {
-      await provisionPartnerReferralCoupon(this.prisma, user.id, user.id);
-    }
     return updated;
   }
 
@@ -477,8 +472,7 @@ export class UsersService implements OnModuleInit {
     const currentRoles = existingUser.roles ?? [];
     const currentDeactivated = existingUser.deactivatedRoles ?? [];
 
-    const isPartnerDeactivated = currentDeactivated.includes(Role.BUSINESS_PARTNER);
-    const rolesToAdd = isPartnerDeactivated ? [Role.GARDENER] : [Role.GARDENER, Role.BUSINESS_PARTNER];
+    const rolesToAdd = [Role.GARDENER];
 
     const newRoles = Array.from(new Set([...currentRoles, ...rolesToAdd]));
     const newDeactivated = currentDeactivated.filter((r) => r !== Role.GARDENER);
@@ -499,9 +493,6 @@ export class UsersService implements OnModuleInit {
         update: {},
       }),
     ]);
-    if (!isPartnerDeactivated) {
-      await provisionPartnerReferralCoupon(this.prisma, user.id, user.id);
-    }
     return updated;
   }
 

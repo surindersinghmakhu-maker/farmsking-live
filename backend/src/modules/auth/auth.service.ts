@@ -48,6 +48,9 @@ interface ForgotPasswordOtpStore {
   verified: boolean;
 }
 
+import { AppSettingsService } from '../app-settings/app-settings.service';
+import { WalletService } from '../wallet/wallet.service';
+
 @Injectable()
 export class AuthService {
   private readonly otpStore = new Map<string, ForgotPasswordOtpStore>();
@@ -57,6 +60,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly whatsappBotService: WhatsappBotService,
     private readonly whatsappGroupSyncService: WhatsAppGroupSyncService,
+    private readonly appSettingsService: AppSettingsService,
+    private readonly walletService: WalletService,
   ) {}
 
   async sendWhatsAppOtp(mobile: string, otpCode: string) {
@@ -78,9 +83,17 @@ export class AuthService {
 
     let referrer: { id: string } | null = null;
     if (dto.referralCode?.trim()) {
-      referrer = await this.prisma.user.findUnique({ where: { kingId: dto.referralCode.trim() }, select: { id: true } });
+      const cleanCode = dto.referralCode.trim();
+      referrer = await this.prisma.user.findUnique({ where: { kingId: cleanCode }, select: { id: true } });
       if (!referrer) {
-        throw new BadRequestException('Invalid referral code.');
+        const coupon = await this.prisma.coupon.findUnique({ where: { code: cleanCode }, select: { createdById: true, businessPartnerId: true } });
+        const ownerId = coupon?.createdById || coupon?.businessPartnerId;
+        if (ownerId) {
+          referrer = { id: ownerId };
+        }
+      }
+      if (!referrer) {
+        throw new BadRequestException('Invalid referral code or coupon code.');
       }
     }
 
@@ -118,8 +131,31 @@ export class AuthService {
     });
 
     await provisionInviteCoupon(this.prisma, user.id);
+
     if (referrer) {
       await provisionReferralWelcomeCoupon(this.prisma, user.id, referrer.id);
+
+      const appSettings = await this.appSettingsService.get();
+      const referralBonus = Number(appSettings.referralSignupBonusAmount ?? 10);
+      const newUserBonus = Number(appSettings.newUserSignupBonusAmount ?? 10);
+
+      if (referralBonus > 0) {
+        await this.walletService.credit(
+          referrer.id,
+          referralBonus,
+          `🎉 Referral Income (New user joined: ${user.name || user.kingId})`,
+          { relatedUserId: user.id },
+        );
+      }
+
+      if (newUserBonus > 0) {
+        await this.walletService.credit(
+          user.id,
+          newUserBonus,
+          `🎁 Welcome Offer Bonus (Referral Signup)`,
+          { relatedUserId: referrer.id },
+        );
+      }
     }
 
     const finalUser = await this.applyAccountType(user.id, dto.accountType);
@@ -139,32 +175,30 @@ export class AuthService {
   }
 
   /**
-   * Farmer/Gardener signup also grants BUSINESS_PARTNER (they can refer customers and earn commission)
-   * on top of the CUSTOMER role every account already has — plus their FREE plan record.
+   * Farmer/Gardener signup grants FARMER or GARDENER role plus FREE plan record.
+   * NOTE: Role.BUSINESS_PARTNER is NOT automatically assigned. Only Super Admin/Admin can assign BUSINESS_PARTNER.
    */
   private async applyAccountType(userId: string, accountType?: 'CUSTOMER' | 'FARMER' | 'GARDENER') {
     if (accountType === 'FARMER') {
       const [updated] = await this.prisma.$transaction([
         this.prisma.user.update({
           where: { id: userId },
-          data: { role: Role.FARMER, roles: { push: [Role.FARMER, Role.BUSINESS_PARTNER] } },
+          data: { role: Role.FARMER, roles: { push: [Role.FARMER] } },
           select: SAFE_USER_SELECT,
         }),
         this.prisma.farmerPlan.upsert({ where: { farmerId: userId }, create: { farmerId: userId }, update: {} }),
       ]);
-      await provisionPartnerReferralCoupon(this.prisma, userId, userId);
       return updated;
     }
     if (accountType === 'GARDENER') {
       const [updated] = await this.prisma.$transaction([
         this.prisma.user.update({
           where: { id: userId },
-          data: { role: Role.GARDENER, roles: { push: [Role.GARDENER, Role.BUSINESS_PARTNER] } },
+          data: { role: Role.GARDENER, roles: { push: [Role.GARDENER] } },
           select: SAFE_USER_SELECT,
         }),
         this.prisma.gardenerPlan.upsert({ where: { gardenerId: userId }, create: { gardenerId: userId }, update: {} }),
       ]);
-      await provisionPartnerReferralCoupon(this.prisma, userId, userId);
       return updated;
     }
     return null;

@@ -691,9 +691,6 @@ function CategoryFeatureFlagPanel() {
                       <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff' }}>
                         {category.nameEn}
                       </Text>
-                      <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#94a3b8' }}>
-                        ({category.namePa})
-                      </Text>
                     </View>
                     <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: category.enabled ? '#38bdf8' : '#f43f5e' }}>
                       {category.enabled ? `● ON (${activeSubCount}/${subCount} Active)` : '○ Category Disabled'}
@@ -732,9 +729,6 @@ function CategoryFeatureFlagPanel() {
                           <View style={{ flex: 1 }}>
                             <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#f1f5f9' }}>
                               {subItem.nameEn}
-                            </Text>
-                            <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b' }}>
-                              {subItem.namePa}
                             </Text>
                           </View>
 
@@ -959,6 +953,134 @@ function OtpDeliveryChannelPanel() {
             </TouchableOpacity>
           );
         })}
+      </View>
+    </View>
+  );
+}
+
+function ReferralBonusSettingsPanel() {
+  const { data: settings } = useAppSettings();
+  const update = useUpdateAppSettings();
+  const [referralBonus, setReferralBonus] = useState<string>('10');
+  const [newUserBonus, setNewUserBonus] = useState<string>('10');
+  const [saving, setSaving] = useState(false);
+  const [savedNotice, setSavedNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (settings) {
+      setReferralBonus(String(settings.referralSignupBonusAmount ?? 10));
+      setNewUserBonus(String(settings.newUserSignupBonusAmount ?? 10));
+    }
+  }, [settings]);
+
+  const handleSave = async () => {
+    const refVal = parseFloat(referralBonus);
+    const newVal = parseFloat(newUserBonus);
+    if (isNaN(refVal) || refVal < 0 || isNaN(newVal) || newVal < 0) {
+      alert('Please enter valid non-negative bonus amounts.');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      await update.mutateAsync({
+        referralSignupBonusAmount: refVal,
+        newUserSignupBonusAmount: newVal,
+      });
+      if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setSavedNotice('✅ Referral & Signup Wallet Bonus amounts saved successfully!');
+      setTimeout(() => setSavedNotice(null), 3500);
+    } catch {
+      alert('❌ Failed to update referral bonus settings.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1.5 }]}>
+      <View style={styles.cardHeader}>
+        <View style={[styles.iconCircle, { backgroundColor: '#16a34a' }]}>
+          <Ionicons name="gift" size={20} color="#ffffff" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardTitle}>🎁 Referral & welcome Bonus</Text>
+        </View>
+      </View>
+
+      <View style={{ gap: 12, marginTop: 10 }}>
+        {/* Referrer Signup Bonus Amount */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+          <Text style={{ flex: 1, fontSize: 13, fontFamily: FONT.bold, color: '#166534' }}>
+            🤝 Referrer Signup Bonus (₹)
+          </Text>
+          <TextInput
+            style={{
+              width: 100,
+              borderWidth: 1.5,
+              borderColor: '#86efac',
+              borderRadius: RADIUS.md,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              fontSize: 14,
+              fontFamily: FONT.bold,
+              color: '#0f172a',
+              backgroundColor: '#ffffff',
+              textAlign: 'center',
+            }}
+            keyboardType="numeric"
+            value={referralBonus}
+            onChangeText={setReferralBonus}
+            placeholder="10"
+          />
+        </View>
+
+        {/* New User Signup Bonus Amount */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+          <Text style={{ flex: 1, fontSize: 13, fontFamily: FONT.bold, color: '#166534' }}>
+            🎉 New User Welcome Offer Bonus (₹)
+          </Text>
+          <TextInput
+            style={{
+              width: 100,
+              borderWidth: 1.5,
+              borderColor: '#86efac',
+              borderRadius: RADIUS.md,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              fontSize: 14,
+              fontFamily: FONT.bold,
+              color: '#0f172a',
+              backgroundColor: '#ffffff',
+              textAlign: 'center',
+            }}
+            keyboardType="numeric"
+            value={newUserBonus}
+            onChangeText={setNewUserBonus}
+            placeholder="10"
+          />
+        </View>
+
+        {savedNotice ? (
+          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#16a34a', textAlign: 'center' }}>
+            {savedNotice}
+          </Text>
+        ) : null}
+
+        <TouchableOpacity
+          style={[wStyles.btn, { backgroundColor: '#16a34a' }]}
+          onPress={handleSave}
+          disabled={saving}
+        >
+          {saving ? (
+            <ActivityIndicator color="#ffffff" size="small" />
+          ) : (
+            <>
+              <Ionicons name="save-outline" size={16} color="#ffffff" />
+              <Text style={wStyles.btnText}>💾 Save Referral Bonus Settings</Text>
+            </>
+          )}
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -1272,6 +1394,9 @@ export default function SuperSettingsScreen() {
         /* ── 2. MODIFICATIONS Tab ── */
         ) : cpanelSubTab === 'MODIFICATIONS' ? (
           <View style={{ gap: 14 }}>
+            {/* 🎁 Referral & Signup Wallet Bonus Options */}
+            <ReferralBonusSettingsPanel />
+
             {/* 🏷️ Expense Categories Manager */}
             <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#fef2f2', borderColor: '#fecaca', borderWidth: 1 }]}>
               <View style={styles.cardHeader}>

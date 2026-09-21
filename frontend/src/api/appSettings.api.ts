@@ -12,6 +12,8 @@ export interface AppSettings {
   whatsappAutoAddEnabled?: boolean;
   whatsappAutoRemoveEnabled?: boolean;
   whatsappGroupJid?: string | null;
+  referralSignupBonusAmount?: number;
+  newUserSignupBonusAmount?: number;
   updatedAt: string;
   updatedById: string | null;
 }
@@ -30,6 +32,8 @@ export interface UpdateAppSettingsPayload {
   whatsappAutoAddEnabled?: boolean;
   whatsappAutoRemoveEnabled?: boolean;
   whatsappGroupJid?: string;
+  referralSignupBonusAmount?: number;
+  newUserSignupBonusAmount?: number;
 }
 
 export async function getAppSettings(): Promise<AppSettings> {

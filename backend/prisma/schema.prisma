@@ -1806,6 +1806,8 @@ model AppSetting {
   whatsappAutoRemoveEnabled Boolean @default(true)
   whatsappGroupJid      String?
   otpDeliveryChannel    String   @default("WHATSAPP")
+  referralSignupBonusAmount Float @default(10)
+  newUserSignupBonusAmount Float @default(10)
   featureFlags          Json?
   updatedAt             DateTime @updatedAt
   updatedById           String?

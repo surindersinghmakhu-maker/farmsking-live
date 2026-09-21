@@ -8,10 +8,15 @@ import { JwtStrategy } from './jwt.strategy';
 
 import { WhatsappBotModule } from '../whatsapp/whatsapp.module';
 
+import { AppSettingsModule } from '../app-settings/app-settings.module';
+import { WalletModule } from '../wallet/wallet.module';
+
 @Module({
   imports: [
     PassportModule,
     WhatsappBotModule,
+    AppSettingsModule,
+    WalletModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

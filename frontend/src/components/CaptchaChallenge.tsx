@@ -48,20 +48,22 @@ export const CaptchaChallenge = forwardRef<CaptchaRef, CaptchaChallengeProps>(({
       <Text style={styles.label}>🛡️ Security Verification (Captcha)</Text>
       
       <View style={styles.captchaRow}>
-        {/* Visual Captcha Box */}
-        <View style={styles.captchaBadge}>
-          <Text style={styles.captchaText}>{code.split('').join(' ')}</Text>
-        </View>
+        <View style={styles.captchaBadgeWrap}>
+          {/* Visual Captcha Box */}
+          <View style={styles.captchaBadge}>
+            <Text style={styles.captchaText}>{code.split('').join(' ')}</Text>
+          </View>
 
-        {/* Refresh Button */}
-        <TouchableOpacity style={styles.refreshBtn} onPress={refreshCaptcha} activeOpacity={0.7}>
-          <Ionicons name="refresh" size={20} color="#16a34a" />
-        </TouchableOpacity>
+          {/* Refresh Button */}
+          <TouchableOpacity style={styles.refreshBtn} onPress={refreshCaptcha} activeOpacity={0.7}>
+            <Ionicons name="refresh" size={18} color="#16a34a" />
+          </TouchableOpacity>
+        </View>
 
         {/* Input Box */}
         <TextInput
           style={styles.input}
-          placeholder="Enter Captcha"
+          placeholder="Code"
           placeholderTextColor="#94a3b8"
           autoCapitalize="characters"
           maxLength={4}
@@ -77,11 +79,12 @@ export const CaptchaChallenge = forwardRef<CaptchaRef, CaptchaChallengeProps>(({
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 14,
+    width: '100%',
+    marginTop: 12,
     marginBottom: 4,
   },
   label: {
-    fontSize: 12.5,
+    fontSize: 12,
     color: '#334155',
     fontFamily: FONT.bold,
     marginBottom: 6,
@@ -90,28 +93,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    width: '100%',
+  },
+  captchaBadgeWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   captchaBadge: {
     backgroundColor: '#0f172a',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
     borderRadius: RADIUS.md,
     borderWidth: 1.5,
     borderColor: '#334155',
     justifyContent: 'center',
     alignItems: 'center',
+    minWidth: 85,
   },
   captchaText: {
-    fontSize: 18,
+    fontSize: 15,
     fontFamily: FONT.extraBold,
     color: '#38bdf8',
-    letterSpacing: 4,
+    letterSpacing: 2,
     fontStyle: 'italic',
     textDecorationLine: 'line-through',
   },
   refreshBtn: {
-    width: 42,
-    height: 42,
+    width: 38,
+    height: 38,
     borderRadius: RADIUS.md,
     backgroundColor: '#dcfce7',
     borderWidth: 1.5,
@@ -121,16 +131,16 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    height: 42,
+    height: 38,
     borderWidth: 1.5,
     borderColor: '#e2e8f0',
     borderRadius: RADIUS.md,
     backgroundColor: '#f8fafc',
-    paddingHorizontal: 12,
-    fontSize: 14,
+    paddingHorizontal: 8,
+    fontSize: 13,
     fontFamily: FONT.bold,
     color: '#0f172a',
     textAlign: 'center',
-    letterSpacing: 2,
+    letterSpacing: 1,
   },
 });

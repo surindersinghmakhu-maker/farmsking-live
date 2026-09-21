@@ -84,10 +84,51 @@ export default function SuperUsersScreen() {
     setFilter(FILTERS_BY_GROUP[g][0].value);
   };
 
+  const { data: allUsersData } = useUsersList({ limit: 1000 });
   const { data, isLoading } = useUsersList({ role: filterToBackendRole(filter), search: search.trim() || undefined, limit: 100 });
   const deactivate = useDeactivateUser();
   const reactivate = useReactivateUser();
   const deleteUser = useDeleteUser();
+
+  const allUsersList = allUsersData?.items ?? [];
+
+  const getSubCategoryCount = (subFilter: UserFilter): number => {
+    return allUsersList.filter((u) => {
+      const roles: string[] = Array.isArray(u.roles) && u.roles.length > 0 ? u.roles : [u.role];
+      const activeRoles = roles.filter((r) => !(u.deactivatedRoles ?? []).includes(r as any));
+      if (subFilter === 'SUPER_ADMIN') return activeRoles.includes('SUPER_ADMIN') || u.role === 'SUPER_ADMIN';
+      if (subFilter === 'OPERATOR') return activeRoles.includes('OPERATOR') || u.role === 'OPERATOR';
+      if (subFilter === 'BUSINESS_PARTNER') return activeRoles.includes('BUSINESS_PARTNER') || u.role === 'BUSINESS_PARTNER';
+      if (subFilter === 'FARM_ADVISOR') return (activeRoles.includes('ADVISOR') || u.role === 'ADVISOR') && u.advisorType !== 'GARDEN';
+      if (subFilter === 'GARDEN_ADVISOR') return (activeRoles.includes('ADVISOR') || u.role === 'ADVISOR') && u.advisorType === 'GARDEN';
+      if (subFilter === 'CUSTOMER') return activeRoles.includes('CUSTOMER') || u.role === 'CUSTOMER';
+      if (subFilter === 'FARMER') return activeRoles.includes('FARMER') || u.role === 'FARMER';
+      if (subFilter === 'GARDENER') return activeRoles.includes('GARDENER') || u.role === 'GARDENER';
+      return false;
+    }).length;
+  };
+
+  const getGroupCount = (groupKey: UserGroup): number => {
+    const filters = FILTERS_BY_GROUP[groupKey];
+    const uniqueUserIds = new Set<string>();
+    filters.forEach((f) => {
+      allUsersList.forEach((u) => {
+        const roles: string[] = Array.isArray(u.roles) && u.roles.length > 0 ? u.roles : [u.role];
+        const activeRoles = roles.filter((r) => !(u.deactivatedRoles ?? []).includes(r as any));
+        let matches = false;
+        if (f.value === 'SUPER_ADMIN' && (activeRoles.includes('SUPER_ADMIN') || u.role === 'SUPER_ADMIN')) matches = true;
+        if (f.value === 'OPERATOR' && (activeRoles.includes('OPERATOR') || u.role === 'OPERATOR')) matches = true;
+        if (f.value === 'BUSINESS_PARTNER' && (activeRoles.includes('BUSINESS_PARTNER') || u.role === 'BUSINESS_PARTNER')) matches = true;
+        if (f.value === 'FARM_ADVISOR' && (activeRoles.includes('ADVISOR') || u.role === 'ADVISOR') && u.advisorType !== 'GARDEN') matches = true;
+        if (f.value === 'GARDEN_ADVISOR' && (activeRoles.includes('ADVISOR') || u.role === 'ADVISOR') && u.advisorType === 'GARDEN') matches = true;
+        if (f.value === 'CUSTOMER' && (activeRoles.includes('CUSTOMER') || u.role === 'CUSTOMER')) matches = true;
+        if (f.value === 'FARMER' && (activeRoles.includes('FARMER') || u.role === 'FARMER')) matches = true;
+        if (f.value === 'GARDENER' && (activeRoles.includes('GARDENER') || u.role === 'GARDENER')) matches = true;
+        if (matches) uniqueUserIds.add(u.id);
+      });
+    });
+    return uniqueUserIds.size;
+  };
 
   const [deleteVerificationTarget, setDeleteVerificationTarget] = useState<AdminUser | null>(null);
 
@@ -136,34 +177,44 @@ export default function SuperUsersScreen() {
         </View>
 
         <View style={styles.groupRow}>
-          {GROUPS.map((g) => (
-            <TouchableOpacity
-              key={g.value}
-              style={[styles.groupChip, group === g.value && styles.groupChipActive]}
-              activeOpacity={0.8}
-              onPress={() => selectGroup(g.value)}
-            >
-              <Ionicons name={g.icon} size={14} color={group === g.value ? theme.primary : '#fff'} />
-              <Text style={[styles.groupChipText, group === g.value && { color: theme.primary }]}>{g.label}</Text>
-            </TouchableOpacity>
-          ))}
+          {GROUPS.map((g) => {
+            const groupCount = getGroupCount(g.value);
+            return (
+              <TouchableOpacity
+                key={g.value}
+                style={[styles.groupChip, group === g.value && styles.groupChipActive]}
+                activeOpacity={0.8}
+                onPress={() => selectGroup(g.value)}
+              >
+                <Ionicons name={g.icon} size={14} color={group === g.value ? theme.primary : '#fff'} />
+                <Text style={[styles.groupChipText, group === g.value && { color: theme.primary }]}>
+                  {g.label} ({groupCount})
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 10 }} contentContainerStyle={{ gap: 8 }}>
-          {FILTERS_BY_GROUP[group].map((f) => (
-            <TouchableOpacity
-              key={f.value}
-              style={[styles.filterChip, filter === f.value && styles.filterChipActive]}
-              activeOpacity={0.8}
-              onPress={() => {
-                tap();
-                setFilter(f.value);
-              }}
-            >
-              <Ionicons name={f.icon} size={13} color={filter === f.value ? theme.primary : '#fff'} />
-              <Text style={[styles.filterChipText, filter === f.value && { color: theme.primary }]}>{f.label}</Text>
-            </TouchableOpacity>
-          ))}
+          {FILTERS_BY_GROUP[group].map((f) => {
+            const subCount = getSubCategoryCount(f.value);
+            return (
+              <TouchableOpacity
+                key={f.value}
+                style={[styles.filterChip, filter === f.value && styles.filterChipActive]}
+                activeOpacity={0.8}
+                onPress={() => {
+                  tap();
+                  setFilter(f.value);
+                }}
+              >
+                <Ionicons name={f.icon} size={13} color={filter === f.value ? theme.primary : '#fff'} />
+                <Text style={[styles.filterChipText, filter === f.value && { color: theme.primary }]}>
+                  {f.label} ({subCount})
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       </LinearGradient>
 

@@ -754,6 +754,8 @@ function CategoryFeatureFlagPanel() {
 }
 
 function ECommerceSettingsPanel() {
+  const { data: settings } = useAppSettings();
+  const updateSettings = useUpdateAppSettings();
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [gstEnabled, setGstEnabled] = useState(true);
   const [codEnabled, setCodEnabled] = useState(true);
@@ -762,10 +764,35 @@ function ECommerceSettingsPanel() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
 
-  const handleSaveEcomSettings = () => {
+  useEffect(() => {
+    if (settings) {
+      setMaintenanceMode(!!settings.storefrontMaintenanceMode);
+    }
+  }, [settings]);
+
+  const handleToggleMaintenance = async (value: boolean) => {
+    setMaintenanceMode(value);
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSavedNotice('✅ E-Commerce Settings & GST Controls Saved!');
-    setTimeout(() => setSavedNotice(null), 3000);
+    try {
+      await updateSettings.mutateAsync({ storefrontMaintenanceMode: value });
+      setSavedNotice(value ? '🔒 Storefront Maintenance Mode ENABLED!' : '✅ Storefront Maintenance Mode DISABLED!');
+      setTimeout(() => setSavedNotice(null), 3000);
+    } catch {
+      setSavedNotice('❌ Could not save settings.');
+      setTimeout(() => setSavedNotice(null), 3000);
+    }
+  };
+
+  const handleSaveEcomSettings = async () => {
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      await updateSettings.mutateAsync({ storefrontMaintenanceMode: maintenanceMode });
+      setSavedNotice('✅ E-Commerce Settings & Maintenance Mode Saved!');
+      setTimeout(() => setSavedNotice(null), 3000);
+    } catch {
+      setSavedNotice('❌ Could not save settings.');
+      setTimeout(() => setSavedNotice(null), 3000);
+    }
   };
 
   return (
@@ -868,14 +895,14 @@ function ECommerceSettingsPanel() {
             </View>
             <Switch
               value={maintenanceMode}
-              onValueChange={setMaintenanceMode}
+              onValueChange={handleToggleMaintenance}
               trackColor={{ false: '#cbd5e1', true: '#dc2626' }}
               thumbColor="#ffffff"
             />
           </View>
 
           {savedNotice ? (
-            <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#16a34a', textAlign: 'center' }}>
+            <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: maintenanceMode ? '#dc2626' : '#16a34a', textAlign: 'center' }}>
               {savedNotice}
             </Text>
           ) : null}

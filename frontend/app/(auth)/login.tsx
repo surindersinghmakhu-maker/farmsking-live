@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   ScrollView,
   StyleSheet,
@@ -14,6 +15,7 @@ import { Link, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@/src/store/auth-context';
+import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { BrandLogo } from '@/src/components/BrandLogo';
@@ -23,6 +25,7 @@ const theme = RoleThemes.FARMER;
 
 export default function LoginScreen() {
   const { login } = useAuth();
+  const { data: appSettings } = useAppSettings();
   const router = useRouter();
   const captchaRef = useRef<CaptchaRef>(null);
   const [mobile, setMobile] = useState('');
@@ -164,6 +167,51 @@ export default function LoginScreen() {
               <Text style={styles.registerHighlightBtnText}>Create New Account / Register Now ✨</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Download Android App Button Box at Bottom of Login Page */}
+          <TouchableOpacity
+            style={styles.downloadAppBtn}
+            onPress={async () => {
+              const url = appSettings?.appDownloadUrl || 'https://farmsking-1.vercel.app/download/farmsking.apk';
+              try {
+                if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.setAttribute('download', 'farmsking.apk');
+                  link.setAttribute('target', '_self');
+                  link.setAttribute('rel', 'noopener noreferrer');
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  return;
+                }
+                const can = await Linking.canOpenURL(url);
+                if (can) {
+                  await Linking.openURL(url);
+                } else {
+                  window.location.href = url;
+                }
+              } catch {
+                if (typeof window !== 'undefined') {
+                  window.location.href = url;
+                } else {
+                  alert('Could not open download link.');
+                }
+              }
+            }}
+            activeOpacity={0.85}
+          >
+            <View style={styles.downloadIconCircle}>
+              <Ionicons name="logo-android" size={20} color="#0284c7" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.downloadAppTitle}>📲 Download Android App (APK)</Text>
+              <Text style={styles.downloadAppSub}>Install FarmsKing App on your phone</Text>
+            </View>
+            <View style={styles.downloadBadge}>
+              <Text style={styles.downloadBadgeText}>Download</Text>
+            </View>
+          </TouchableOpacity>
 
         </View>
       </ScrollView>
@@ -350,5 +398,46 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 13,
     fontFamily: FONT.extraBold,
+  },
+  downloadAppBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#f0f9ff',
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: '#bae6fd',
+    padding: 10,
+    marginTop: 10,
+  },
+  downloadIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#e0f2fe',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  downloadAppTitle: {
+    fontSize: 12.5,
+    fontFamily: FONT.extraBold,
+    color: '#0369a1',
+  },
+  downloadAppSub: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: '#0284c7',
+    marginTop: 1,
+  },
+  downloadBadge: {
+    backgroundColor: '#0284c7',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIUS.pill,
+  },
+  downloadBadgeText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
   },
 });

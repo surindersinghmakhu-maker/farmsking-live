@@ -51,6 +51,7 @@ export class AppSettingsService {
       upiPayeeName: settings.upiPayeeName || 'Surinder Singh',
       referralSignupBonusAmount: (settings as any).referralSignupBonusAmount ?? 10,
       newUserSignupBonusAmount: (settings as any).newUserSignupBonusAmount ?? 10,
+      storefrontMaintenanceMode: (settings as any).storefrontMaintenanceMode ?? false,
     };
 
     this.cache = { data: result, timestamp: now };
@@ -106,6 +107,7 @@ export class AppSettingsService {
       'newUserSignupBonusAmount',
       'appDownloadUrl',
       'latestAppVersion',
+      'storefrontMaintenanceMode',
     ];
 
     for (const key of keys) {

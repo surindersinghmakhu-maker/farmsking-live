@@ -70,5 +70,9 @@ export class UpdateAppSettingsDto {
   @IsOptional()
   @IsString()
   latestAppVersion?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  storefrontMaintenanceMode?: boolean;
 }
 

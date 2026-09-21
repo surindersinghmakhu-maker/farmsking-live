@@ -16,6 +16,7 @@ export interface AppSettings {
   newUserSignupBonusAmount?: number;
   appDownloadUrl?: string | null;
   latestAppVersion?: string | null;
+  storefrontMaintenanceMode?: boolean;
   updatedAt: string;
   updatedById: string | null;
 }
@@ -38,6 +39,7 @@ export interface UpdateAppSettingsPayload {
   newUserSignupBonusAmount?: number;
   appDownloadUrl?: string;
   latestAppVersion?: string;
+  storefrontMaintenanceMode?: boolean;
 }
 
 export async function getAppSettings(): Promise<AppSettings> {

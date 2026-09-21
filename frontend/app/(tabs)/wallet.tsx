@@ -196,84 +196,113 @@ function ReferralInviteCard({ theme, kingId }: { theme: RoleTheme; kingId: strin
     tap();
     try {
       if (Platform.OS === 'web' && typeof document !== 'undefined') {
-        const canvas = document.createElement('canvas');
-        canvas.width = 720;
-        canvas.height = 420;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
+        const logoUrl = appSettings?.logoUrl;
 
-        // Background Gradient
-        const grad = ctx.createLinearGradient(0, 0, 720, 420);
-        grad.addColorStop(0, '#064e3b');
-        grad.addColorStop(0.5, '#047857');
-        grad.addColorStop(1, '#10b981');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 720, 420);
+        const renderAndDownload = (imgElement?: HTMLImageElement) => {
+          const canvas = document.createElement('canvas');
+          canvas.width = 720;
+          canvas.height = 420;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
 
-        // Gold Decorative Border
-        ctx.strokeStyle = '#f59e0b';
-        ctx.lineWidth = 6;
-        ctx.strokeRect(12, 12, 696, 396);
+          // Background Gradient
+          const grad = ctx.createLinearGradient(0, 0, 720, 420);
+          grad.addColorStop(0, '#064e3b');
+          grad.addColorStop(0.5, '#047857');
+          grad.addColorStop(1, '#10b981');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, 720, 420);
 
-        // Inner Dashed Coupon Border
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([8, 6]);
-        ctx.strokeRect(20, 20, 680, 380);
-        ctx.setLineDash([]);
+          // Gold Decorative Border
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 6;
+          ctx.strokeRect(12, 12, 696, 396);
 
-        // Header Brand Title
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 26px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('🌾 FarmsKing Official Referral Voucher 🎁', 360, 60);
+          // Inner Dashed Coupon Border
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([8, 6]);
+          ctx.strokeRect(20, 20, 680, 380);
+          ctx.setLineDash([]);
 
-        // Subtitle
-        ctx.fillStyle = '#fde68a';
-        ctx.font = 'bold 15px sans-serif';
-        ctx.fillText('Invite Friends & Earn Instant Wallet Rewards!', 360, 92);
+          // Draw FarmsKing Brand Logo Image if loaded
+          if (imgElement) {
+            try {
+              ctx.save();
+              ctx.beginPath();
+              ctx.arc(60, 55, 26, 0, Math.PI * 2, true);
+              ctx.closePath();
+              ctx.clip();
+              ctx.drawImage(imgElement, 34, 29, 52, 52);
+              ctx.restore();
+            } catch {
+              // fallback if image clip fails
+            }
+          }
 
-        // Reward Gold Banner Box
-        ctx.fillStyle = '#f59e0b';
-        ctx.fillRect(50, 115, 620, 50);
-        ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 15px sans-serif';
-        ctx.fillText(`You get ₹${referralBonusAmount} Referral Bonus & New user gets ₹${welcomeRewardAmount} Welcome Bonus!`, 360, 146);
+          // Header Brand Title
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 26px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('👑 FarmsKing Welcome Bonus Voucher 🎁', 370, 58);
 
-        // Coupon Code Box
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(160, 185, 400, 75);
-        ctx.strokeStyle = '#10b981';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(160, 185, 400, 75);
+          // Subtitle
+          ctx.fillStyle = '#fde68a';
+          ctx.font = 'bold 14px sans-serif';
+          ctx.fillText('New User Registration Offer', 370, 88);
 
-        ctx.fillStyle = '#64748b';
-        ctx.font = 'bold 12px sans-serif';
-        ctx.fillText('YOUR REFERRAL / COUPON CODE', 360, 210);
-        ctx.fillStyle = '#047857';
-        ctx.font = 'bold 30px monospace';
-        ctx.fillText(kingId, 360, 246);
+          // Reward Gold Banner Box — ONLY NEW USER WELCOME BONUS AMOUNT
+          ctx.fillStyle = '#f59e0b';
+          ctx.fillRect(50, 112, 620, 52);
+          ctx.fillStyle = '#0f172a';
+          ctx.font = 'bold 17px sans-serif';
+          ctx.fillText(`🎉 New User Welcome Bonus: Get ₹${welcomeRewardAmount} Free Bonus on Signup!`, 360, 145);
 
-        // Link Box
-        ctx.fillStyle = '#ecfdf5';
-        ctx.fillRect(80, 280, 560, 40);
-        ctx.fillStyle = '#065f46';
-        ctx.font = 'bold 12px sans-serif';
-        ctx.fillText(`Register Link: ${inviteLink}`, 360, 305);
+          // Coupon Code Box
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(160, 185, 400, 75);
+          ctx.strokeStyle = '#10b981';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(160, 185, 400, 75);
 
-        // Footer Tagline
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'italic 12px sans-serif';
-        ctx.fillText('FarmsKing Agriculture Platform · Smart Farming, Better Future', 360, 365);
+          ctx.fillStyle = '#64748b';
+          ctx.font = 'bold 12px sans-serif';
+          ctx.fillText('YOUR WELCOME COUPON CODE', 360, 210);
+          ctx.fillStyle = '#047857';
+          ctx.font = 'bold 30px monospace';
+          ctx.fillText(kingId, 360, 246);
 
-        // Download PNG / JPG File
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-        const link = document.createElement('a');
-        link.download = `farmsking-referral-coupon-${kingId}.jpg`;
-        link.href = dataUrl;
-        link.click();
+          // Link Box
+          ctx.fillStyle = '#ecfdf5';
+          ctx.fillRect(80, 280, 560, 40);
+          ctx.fillStyle = '#065f46';
+          ctx.font = 'bold 12px sans-serif';
+          ctx.fillText(`Register Link: ${inviteLink}`, 360, 305);
+
+          // Footer Tagline
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'italic 12px sans-serif';
+          ctx.fillText('FarmsKing Agriculture Platform · Smart Farming, Better Future', 360, 365);
+
+          // Download PNG / JPG File
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+          const link = document.createElement('a');
+          link.download = `farmsking-welcome-coupon-${kingId}.jpg`;
+          link.href = dataUrl;
+          link.click();
+        };
+
+        if (logoUrl) {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => renderAndDownload(img);
+          img.onerror = () => renderAndDownload();
+          img.src = logoUrl;
+        } else {
+          renderAndDownload();
+        }
       } else {
-        alert('Referral Coupon Code: ' + kingId + '\nUse code during registration to earn rewards!');
+        alert('Welcome Coupon Code: ' + kingId + '\nGet ₹' + welcomeRewardAmount + ' Welcome Bonus when you register!');
       }
     } catch {
       alert('Could not generate JPG coupon.');

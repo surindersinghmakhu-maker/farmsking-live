@@ -180,32 +180,34 @@ export function MarketRatesCard() {
       hour12: true,
     });
 
-    const localStr =
-      crop.localAvgRate != null
-        ? `• Avg Rate: ${formatInr(crop.localAvgRate)}\n• Min Rate: ${formatInr(crop.localMinRate!)}  |  Max Rate: ${formatInr(crop.localMaxRate!)}`
-        : '• No sales recorded in last 24h (-)';
-
-    const nationalStr =
-      crop.nationalAvgRate != null
-        ? `• Avg Rate: ${formatInr(crop.nationalAvgRate)}\n• Min Rate: ${formatInr(crop.nationalMinRate!)}  |  Max Rate: ${formatInr(crop.nationalMaxRate!)}`
-        : '• No sales recorded in last 24h (-)';
-
-    const userRefCode = user?.kingId ? user.kingId : '';
+    const userRefCode = user?.kingId ? user.kingId : 'FARMSKING';
     const shareLink = userRefCode
       ? `https://farmsking-1.vercel.app/register?ref=${userRefCode}`
       : `https://farmsking-1.vercel.app`;
 
-    const referralInfoStr = userRefCode
-      ? `🎁 *Register on FarmsKing using this link or Referral Coupon \`${userRefCode}\` to get Welcome Reward bonus in your wallet!*\n👉 ${shareLink}`
-      : `📲 *Use FarmsKing App to check real-time crop market rates:*\n👉 ${shareLink}`;
+    const localMinStr = crop.localMinRate != null ? formatInr(crop.localMinRate) : '-';
+    const localMaxStr = crop.localMaxRate != null ? formatInr(crop.localMaxRate) : '-';
+    const localAvgStr = crop.localAvgRate != null ? formatInr(crop.localAvgRate) : '-';
+
+    const natMinStr = crop.nationalMinRate != null ? formatInr(crop.nationalMinRate) : '-';
+    const natMaxStr = crop.nationalMaxRate != null ? formatInr(crop.nationalMaxRate) : '-';
+    const natAvgStr = crop.nationalAvgRate != null ? formatInr(crop.nationalAvgRate) : '-';
 
     const textMessage =
-      `🌾 *FarmsKing — Live Market Rates (24h)* 📊\n` +
-      `🌱 *Crop:* ${crop.displayTitle} (Per ${crop.unit})\n` +
+      `🌾 *FarmsKing — Live Market Price Card* 📊\n` +
+      `🌱 *Crop Name:* ${crop.displayTitle} (Per ${crop.unit})\n` +
       `📅 *Date & Time:* ${todayDateStr}, ${currentTimeStr}\n\n` +
-      `🏛️ *LOCAL RATES:*\n${localStr}\n\n` +
-      `🇮🇳 *NATIONAL RATES:*\n${nationalStr}\n\n` +
-      `${referralInfoStr}`;
+      `🏛️ *LOCAL PRICE (${userState}):*\n` +
+      `• Minimum: ${localMinStr}\n` +
+      `• Maximum: ${localMaxStr}\n` +
+      `• Average: ${localAvgStr}\n\n` +
+      `🇮🇳 *NATIONAL PRICE (All India):*\n` +
+      `• Minimum: ${natMinStr}\n` +
+      `• Maximum: ${natMaxStr}\n` +
+      `• Average: ${natAvgStr}\n\n` +
+      `📲 *Tuhadi crop da live market price naal update rehan lyi FarmsKing App use kro!*\n\n` +
+      `🎁 *Welcome bonus lyi eh referral code use kro:* \`${userRefCode}\`\n` +
+      `👉 Register Link: ${shareLink}`;
 
     try {
       const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(textMessage)}`;
@@ -234,7 +236,7 @@ export function MarketRatesCard() {
     const min = String(now.getMinutes()).padStart(2, '0');
     const timeStr = `${hh}${min}`;
 
-    return `${cleanCropName}_${dateStr}_${timeStr}.png`;
+    return `${cleanCropName}_PriceCard_${dateStr}_${timeStr}.png`;
   };
 
   // Helper for generating high quality image card poster on Web browsers
@@ -243,31 +245,35 @@ export function MarketRatesCard() {
       const now = new Date();
       const todayDateStr = now.toISOString().split('T')[0];
       const canvas = document.createElement('canvas');
+      const userRefCode = user?.kingId ? user.kingId : 'FARMSKING';
+
       canvas.width = 640;
-      canvas.height = 460;
+      canvas.height = 580;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
       // Card background
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, 640, 460);
+      ctx.fillRect(0, 0, 640, 580);
 
       // Outer Border
-      ctx.strokeStyle = '#cbd5e1';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(0, 0, 640, 460);
+      ctx.strokeStyle = '#16a34a';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(0, 0, 640, 580);
 
-      // Top Red Stripe Accent
+      // Top Green & Red Stripe Accent
+      ctx.fillStyle = '#16a34a';
+      ctx.fillRect(0, 0, 480, 6);
       ctx.fillStyle = '#dc2626';
-      ctx.fillRect(0, 0, 640, 6);
+      ctx.fillRect(480, 0, 160, 6);
 
       // Tiled Anti-Crop Watermark Grid
       ctx.save();
-      ctx.globalAlpha = 0.12;
+      ctx.globalAlpha = 0.08;
       ctx.fillStyle = '#166534';
       ctx.font = 'bold 22px sans-serif';
       ctx.rotate((-15 * Math.PI) / 180);
-      for (let y = -100; y < 650; y += 80) {
+      for (let y = -100; y < 750; y += 80) {
         for (let x = -200; x < 800; x += 190) {
           ctx.fillText('👑 FarmsKing', x, y);
         }
@@ -276,11 +282,11 @@ export function MarketRatesCard() {
 
       // Header Row: Left VCH/Date
       ctx.fillStyle = '#0f172a';
-      ctx.font = 'bold 13px sans-serif';
-      ctx.fillText('PRC-253978', 24, 34);
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillText('PRC-' + Math.floor(100000 + Math.random() * 899999), 24, 34);
       ctx.fillStyle = '#64748b';
       ctx.font = '11px sans-serif';
-      ctx.fillText(todayDateStr, 24, 52);
+      ctx.fillText(todayDateStr, 24, 50);
 
       // Header Center: Brand Logo + FarmsKing + Tagline
       ctx.fillStyle = '#16a34a';
@@ -289,97 +295,161 @@ export function MarketRatesCard() {
       ctx.fillText('👑 FarmsKing', 320, 36);
       ctx.fillStyle = '#64748b';
       ctx.font = '11px sans-serif';
-      ctx.fillText('Smart Farming, Better Future', 320, 54);
+      ctx.fillText('Smart Farming, Live Mandi Rates', 320, 54);
       ctx.textAlign = 'left';
 
       // Header Right: OFFICIAL Pill
-      ctx.strokeStyle = '#dc2626';
+      ctx.strokeStyle = '#16a34a';
       ctx.lineWidth = 1.5;
       ctx.strokeRect(530, 24, 84, 24);
-      ctx.fillStyle = '#dc2626';
+      ctx.fillStyle = '#16a34a';
       ctx.font = 'bold 11px sans-serif';
-      ctx.fillText('OFFICIAL', 545, 40);
+      ctx.fillText('VERIFIED', 542, 40);
 
-      // Red Pill Banner
-      ctx.fillStyle = '#dc2626';
-      ctx.fillRect(170, 72, 300, 30);
+      // Green Pill Banner
+      ctx.fillStyle = '#16a34a';
+      ctx.fillRect(140, 72, 360, 32);
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 13px sans-serif';
+      ctx.font = 'bold 14px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('🌾 MARKET CROP RATES CARD 🌾', 320, 92);
+      ctx.fillText('🌾 LIVE CROP MARKET PRICE CARD 🌾', 320, 93);
       ctx.textAlign = 'left';
 
-      // Market / Location Full Width Box (Red)
-      ctx.fillStyle = '#dc2626';
-      ctx.fillRect(24, 116, 592, 24);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 11px sans-serif';
-      ctx.fillText('🏛️ MARKET / LOCATION', 32, 132);
-
-      ctx.strokeStyle = '#dc2626';
+      // Crop & Mandi Info Header Box
+      ctx.fillStyle = '#f8fafc';
+      ctx.strokeStyle = '#e2e8f0';
       ctx.lineWidth = 1.5;
-      ctx.strokeRect(24, 116, 592, 75);
-      ctx.fillStyle = '#0f172a';
-      ctx.font = 'bold 13px sans-serif';
-      ctx.fillText(`State: ${userState}`, 32, 158);
-      ctx.fillStyle = '#475569';
-      ctx.font = '11px sans-serif';
-      ctx.fillText(`📍 ${user?.farmAddress || [user?.village, user?.district].filter(Boolean).join(', ') || 'Punjab Mandi'}`, 32, 176);
-
-      // Main Amount Box (Red Border)
-      const mainRate = crop.localAvgRate ?? crop.nationalAvgRate ?? 0;
-      ctx.fillStyle = '#ffffff';
-      ctx.strokeStyle = '#dc2626';
-      ctx.lineWidth = 1.5;
-      ctx.fillRect(24, 205, 592, 175);
-      ctx.strokeRect(24, 205, 592, 175);
+      ctx.fillRect(24, 116, 592, 42);
+      ctx.strokeRect(24, 116, 592, 42);
 
       ctx.fillStyle = '#0f172a';
       ctx.font = 'bold 15px sans-serif';
-      ctx.fillText('Market Average Rate:', 40, 236);
-
-      ctx.fillStyle = '#dc2626';
-      ctx.font = 'bold 26px sans-serif';
+      ctx.fillText(`🌱 Crop Name: ${crop.displayTitle} (Per ${crop.unit})`, 36, 142);
+      ctx.fillStyle = '#64748b';
+      ctx.font = '12px sans-serif';
       ctx.textAlign = 'right';
-      ctx.fillText(`₹${mainRate.toLocaleString('en-IN')}`, 596, 238);
+      ctx.fillText(`📍 State: ${userState}`, 600, 142);
       ctx.textAlign = 'left';
 
-      ctx.fillStyle = '#475569';
-      ctx.font = '12px sans-serif';
-      ctx.fillText(`📝 Crop: ${crop.displayTitle} (Per ${crop.unit})`, 40, 268);
+      // Local Price Box (State Level)
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = '#16a34a';
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(24, 172, 592, 105);
+      ctx.strokeRect(24, 172, 592, 105);
+
+      ctx.fillStyle = '#16a34a';
+      ctx.fillRect(24, 172, 592, 24);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillText(`🏛️ LOCAL PRICE (${userState})`, 36, 189);
+
+      const localAvg = crop.localAvgRate != null ? `₹${crop.localAvgRate.toLocaleString('en-IN')}` : '-';
+      const localMin = crop.localMinRate != null ? `₹${crop.localMinRate.toLocaleString('en-IN')}` : '-';
+      const localMax = crop.localMaxRate != null ? `₹${crop.localMaxRate.toLocaleString('en-IN')}` : '-';
+
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 13px sans-serif';
+      ctx.fillText('Average Price:', 36, 222);
+      ctx.fillStyle = '#16a34a';
+      ctx.font = 'bold 22px sans-serif';
+      ctx.fillText(localAvg, 150, 224);
 
       ctx.fillStyle = '#64748b';
       ctx.font = '12px sans-serif';
-      ctx.fillText(`Local State Range (${userState}):`, 40, 300);
-      ctx.fillStyle = '#0f172a';
-      ctx.font = 'bold 12px sans-serif';
-      ctx.textAlign = 'right';
-      ctx.fillText(crop.localAvgRate != null ? `Min: ₹${crop.localMinRate}  |  Max: ₹${crop.localMaxRate}` : 'No Local Sales', 596, 300);
-      ctx.textAlign = 'left';
+      ctx.fillText(`Minimum Price: `, 36, 258);
+      ctx.fillStyle = '#15803d';
+      ctx.font = 'bold 13px sans-serif';
+      ctx.fillText(localMin, 130, 258);
 
-      // Divider line
-      ctx.strokeStyle = '#fecaca';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(40, 318);
-      ctx.lineTo(596, 318);
-      ctx.stroke();
-
+      ctx.fillStyle = '#64748b';
+      ctx.font = '12px sans-serif';
+      ctx.fillText(`Maximum Price: `, 340, 258);
       ctx.fillStyle = '#dc2626';
       ctx.font = 'bold 13px sans-serif';
-      ctx.fillText('National Average Rate (All India):', 40, 345);
-      ctx.textAlign = 'right';
-      ctx.fillText(crop.nationalAvgRate != null ? `₹${crop.nationalAvgRate} (Verified)` : '-', 596, 345);
+      ctx.fillText(localMax, 435, 258);
+
+      // National Price Box (All India)
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(24, 290, 592, 105);
+      ctx.strokeRect(24, 290, 592, 105);
+
+      ctx.fillStyle = '#0284c7';
+      ctx.fillRect(24, 290, 592, 24);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillText('🇮🇳 NATIONAL PRICE (All India)', 36, 307);
+
+      const natAvg = crop.nationalAvgRate != null ? `₹${crop.nationalAvgRate.toLocaleString('en-IN')}` : '-';
+      const natMin = crop.nationalMinRate != null ? `₹${crop.nationalMinRate.toLocaleString('en-IN')}` : '-';
+      const natMax = crop.nationalMaxRate != null ? `₹${crop.nationalMaxRate.toLocaleString('en-IN')}` : '-';
+
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 13px sans-serif';
+      ctx.fillText('Average Price:', 36, 340);
+      ctx.fillStyle = '#0284c7';
+      ctx.font = 'bold 22px sans-serif';
+      ctx.fillText(natAvg, 150, 342);
+
+      ctx.fillStyle = '#64748b';
+      ctx.font = '12px sans-serif';
+      ctx.fillText(`Minimum Price: `, 36, 376);
+      ctx.fillStyle = '#15803d';
+      ctx.font = 'bold 13px sans-serif';
+      ctx.fillText(natMin, 130, 376);
+
+      ctx.fillStyle = '#64748b';
+      ctx.font = '12px sans-serif';
+      ctx.fillText(`Maximum Price: `, 340, 376);
+      ctx.fillStyle = '#dc2626';
+      ctx.font = 'bold 13px sans-serif';
+      ctx.fillText(natMax, 435, 376);
+
+      // App Update Call To Action Banner
+      ctx.fillStyle = '#f0fdf4';
+      ctx.strokeStyle = '#bbf7d0';
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(24, 408, 592, 34);
+      ctx.strokeRect(24, 408, 592, 34);
+
+      ctx.fillStyle = '#166534';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('📲 Tuhadi crop da live market price naal update rehan lyi FarmsKing app use kro!', 320, 430);
+      ctx.textAlign = 'left';
+
+      // Bottom Referral Voucher Box
+      ctx.fillStyle = '#fffbe6';
+      ctx.strokeStyle = '#d97706';
+      ctx.lineWidth = 2;
+      ctx.fillRect(24, 452, 592, 85);
+      ctx.strokeRect(24, 452, 592, 85);
+
+      ctx.fillStyle = '#d97706';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.fillText('🎁 REFERRAL WELCOME VOUCHER 🎟️', 36, 474);
+
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 13px sans-serif';
+      ctx.fillText('Welcome bonus lyi eh code use kro:', 36, 504);
+
+      // Code Pill Badge Box
+      ctx.fillStyle = '#16a34a';
+      ctx.fillRect(400, 482, 200, 36);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 16px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(userRefCode, 500, 505);
       ctx.textAlign = 'left';
 
       // Bottom Footer
       ctx.fillStyle = '#64748b';
-      ctx.font = 'bold 11px sans-serif';
+      ctx.font = 'bold 10px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('Computer Generated Official Rate Card - FarmsKing Platform', 320, 415);
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '10px sans-serif';
-      ctx.fillText('Verified Digital Record', 320, 432);
+      ctx.fillText('Computer Generated Official Rate Card - FarmsKing Platform', 320, 558);
+      ctx.textAlign = 'left';
 
       const dataUrl = canvas.toDataURL('image/png');
       const fileName = getCropRateFileName(crop.displayTitle);
@@ -391,7 +461,7 @@ export function MarketRatesCard() {
       link.click();
       document.body.removeChild(link);
 
-      Alert.alert('Success 🖼️', `${crop.displayTitle} Professional Price Poster downloaded as ${fileName}! You can now share it on WhatsApp.`);
+      Alert.alert('Success 🖼️', `${crop.displayTitle} Compact Price Poster downloaded as ${fileName}! You can now share it on WhatsApp.`);
     } catch (err) {
       console.error('Web Canvas image generation error:', err);
       Alert.alert('Error', 'Failed to generate web image card.');
@@ -410,7 +480,6 @@ export function MarketRatesCard() {
     }
 
     try {
-      // Small timeout to allow ViewShot poster ref to render cleanly on mobile
       setTimeout(async () => {
         try {
           if (!posterRef.current) {
@@ -432,7 +501,7 @@ export function MarketRatesCard() {
           if (isSharingAvailable) {
             await Sharing.shareAsync(uri, {
               mimeType: 'image/png',
-              dialogTitle: `Share ${crop.displayTitle} Market Rates (${fileName})`,
+              dialogTitle: `Share ${crop.displayTitle} Price Card (${fileName})`,
               UTI: 'public.png',
             });
           } else {
@@ -451,6 +520,8 @@ export function MarketRatesCard() {
       setSelectedCropForShare(null);
     }
   };
+
+  const userRefCode = user?.kingId ? user.kingId : 'FARMSKING';
 
   return (
     <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
@@ -563,6 +634,25 @@ export function MarketRatesCard() {
         </>
       )}
 
+      {/* App Update Banner in UI Card */}
+      <View style={styles.uiCtaBanner}>
+        <Ionicons name="phone-portrait-outline" size={13} color="#166534" />
+        <Text style={styles.uiCtaText} numberOfLines={1}>
+          Tuhadi crop da live market price naal update rehan lyi FarmsKing app use kro!
+        </Text>
+      </View>
+
+      {/* Bottom Referral Voucher Box in UI Card */}
+      <View style={styles.uiReferralBox}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <Text style={{ fontSize: 13 }}>🎁</Text>
+          <Text style={styles.uiReferralLabel}>Welcome bonus lyi eh code use kro:</Text>
+        </View>
+        <View style={styles.uiCodeBadge}>
+          <Text style={styles.uiCodeBadgeText}>{userRefCode}</Text>
+        </View>
+      </View>
+
       {/* Share Options Modal (Text vs Image Card) */}
       <Modal
         visible={selectedCropForShare !== null}
@@ -575,14 +665,14 @@ export function MarketRatesCard() {
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Text style={{ fontSize: 18 }}>🌾</Text>
-                <Text style={styles.modalTitle}>Share {selectedCropForShare?.displayTitle} Rates</Text>
+                <Text style={styles.modalTitle}>Share {selectedCropForShare?.displayTitle} Price Card</Text>
               </View>
               <TouchableOpacity onPress={() => setSelectedCropForShare(null)}>
                 <Ionicons name="close" size={20} color="#64748b" />
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.modalSub}>How would you like to share these market rates?</Text>
+            <Text style={styles.modalSub}>How would you like to share this compact price card?</Text>
 
             {/* Share as Text Option */}
             <TouchableOpacity
@@ -595,7 +685,7 @@ export function MarketRatesCard() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.optionTitle}>💬 Share as Text Message</Text>
-                <Text style={styles.optionSub}>Share formatted text message with app link on WhatsApp</Text>
+                <Text style={styles.optionSub}>Formatted text with Min, Max & Avg prices + Referral Voucher</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
             </TouchableOpacity>
@@ -616,7 +706,7 @@ export function MarketRatesCard() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.optionTitle}>🖼️ Share as Image Poster</Text>
-                <Text style={styles.optionSub}>Share branded FarmsKing crop price poster card</Text>
+                <Text style={styles.optionSub}>Compact branded FarmsKing price card image with Referral Voucher</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
             </TouchableOpacity>
@@ -628,12 +718,12 @@ export function MarketRatesCard() {
       {selectedCropForShare && (
         <View style={styles.offscreenContainer}>
           <ViewShot ref={posterRef} options={{ format: 'png', quality: 0.95 }} style={styles.posterCard}>
-            {/* Top Red Stripe Accent */}
-            <View style={styles.posterTopRedStripe} />
+            {/* Top Green & Red Stripe Accent */}
+            <View style={styles.posterTopGreenStripe} />
 
             {/* Tiled Anti-Crop Background Watermark Grid */}
             <View style={styles.posterWatermarkGridContainer} pointerEvents="none">
-              {Array.from({ length: 8 }).map((_, rowIndex) => (
+              {Array.from({ length: 9 }).map((_, rowIndex) => (
                 <View key={rowIndex} style={styles.posterWatermarkRow}>
                   {Array.from({ length: 3 }).map((_, colIndex) => (
                     <View key={colIndex} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginHorizontal: 4 }}>
@@ -661,69 +751,98 @@ export function MarketRatesCard() {
                   <BrandLogo size={28} useGoldRing />
                   <Text style={styles.posterVchBrandTitle}>FarmsKing</Text>
                 </View>
-                <Text style={styles.posterVchBrandSub}>Smart Farming, Better Future</Text>
+                <Text style={styles.posterVchBrandSub}>Smart Farming, Live Mandi Rates</Text>
               </View>
 
               <View style={{ flex: 1, alignItems: 'flex-end' }}>
                 <View style={styles.posterOfficialPill}>
-                  <Text style={styles.posterOfficialText}>OFFICIAL</Text>
+                  <Text style={styles.posterOfficialText}>VERIFIED</Text>
                 </View>
               </View>
             </View>
 
-            {/* Red Pill Title Banner */}
+            {/* Title Banner */}
             <View style={styles.posterRedPillBanner}>
-              <Text style={styles.posterRedPillText}>🌾 MARKET CROP RATES VOUCHER 🌾</Text>
+              <Text style={styles.posterRedPillText}>🌾 LIVE CROP MARKET PRICE CARD 🌾</Text>
             </View>
 
-            {/* Market Location Box */}
-            <View style={styles.posterPartyGridRow}>
-              <View style={[styles.posterSideBox, { borderColor: '#dc2626' }]}>
-                <View style={[styles.posterSideBoxHeader, { backgroundColor: '#dc2626' }]}>
-                  <Text style={styles.posterSideBoxHeaderTitle}>🏛️ MARKET / LOCATION</Text>
-                </View>
-                <View style={styles.posterSideBoxBody}>
-                  <Text style={styles.posterPartyNameBold} numberOfLines={1}>
-                    State: {userState}
-                  </Text>
-                  <Text style={styles.posterPartySubText} numberOfLines={1}>
-                    📍 {user?.farmAddress || [user?.village, user?.district].filter(Boolean).join(', ') || 'Punjab Mandi'}
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Total Voucher Amount Main Crop Card (Red Border Box) */}
-            <View style={styles.posterMainCropAmountBox}>
-              <View style={styles.posterMainCropHeaderRow}>
-                <Text style={styles.posterMainCropTitleLabel}>
-                  Market Average Rate:
-                </Text>
-                <Text style={styles.posterMainCropPriceValue}>
-                  {formatInr(selectedCropForShare.localAvgRate ?? selectedCropForShare.nationalAvgRate ?? 0)}
-                </Text>
-              </View>
-
-              <Text style={styles.posterMemoText}>
-                📝 Memo: <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>{selectedCropForShare.displayTitle}</Text> (Per {selectedCropForShare.unit})
+            {/* Crop & Location Grid Header */}
+            <View style={styles.posterCropHeaderBox}>
+              <Text style={styles.posterCropTitleText}>
+                🌱 Crop: <Text style={{ fontFamily: FONT.extraBold, color: '#16a34a' }}>{selectedCropForShare.displayTitle}</Text> (Per {selectedCropForShare.unit})
               </Text>
+              <Text style={styles.posterCropSubText}>
+                📍 Mandi/State: {userState}
+              </Text>
+            </View>
 
-              <View style={styles.posterBalanceLine}>
-                <Text style={styles.posterBalanceLabel}>Local State Range ({userState}):</Text>
-                <Text style={styles.posterBalanceValue}>
-                  {selectedCropForShare.localAvgRate != null
-                    ? `Min: ${formatInr(selectedCropForShare.localMinRate!)}  |  Max: ${formatInr(selectedCropForShare.localMaxRate!)}`
-                    : 'No Local Sales'}
-                </Text>
+            {/* LOCAL PRICE BOX (State Level) */}
+            <View style={styles.posterPriceSectionBox}>
+              <View style={styles.posterSectionHeaderGreen}>
+                <Text style={styles.posterSectionHeaderText}>🏛️ LOCAL PRICE ({userState})</Text>
               </View>
+              <View style={styles.posterPriceBoxBody}>
+                <View style={styles.posterPriceRowAvg}>
+                  <Text style={styles.posterPriceLabel}>Average Price:</Text>
+                  <Text style={styles.posterPriceValGreen}>
+                    {selectedCropForShare.localAvgRate != null ? formatInr(selectedCropForShare.localAvgRate) : '-'}
+                  </Text>
+                </View>
+                <View style={styles.posterMinMaxSplitRow}>
+                  <Text style={styles.posterMinValText}>
+                    Minimum: <Text style={{ fontFamily: FONT.bold, color: '#15803d' }}>{selectedCropForShare.localMinRate != null ? formatInr(selectedCropForShare.localMinRate) : '-'}</Text>
+                  </Text>
+                  <Text style={styles.posterMaxValText}>
+                    Maximum: <Text style={{ fontFamily: FONT.bold, color: '#dc2626' }}>{selectedCropForShare.localMaxRate != null ? formatInr(selectedCropForShare.localMaxRate) : '-'}</Text>
+                  </Text>
+                </View>
+              </View>
+            </View>
 
-              <View style={[styles.posterBalanceLine, styles.posterNetLine]}>
-                <Text style={styles.posterNetLabel}>National Average Rate (All India):</Text>
-                <Text style={styles.posterNetValue}>
-                  {selectedCropForShare.nationalAvgRate != null
-                    ? `${formatInr(selectedCropForShare.nationalAvgRate)} (Verified)`
-                    : '-'}
+            {/* NATIONAL PRICE BOX (All India) */}
+            <View style={[styles.posterPriceSectionBox, { borderColor: '#0284c7' }]}>
+              <View style={[styles.posterSectionHeaderGreen, { backgroundColor: '#0284c7' }]}>
+                <Text style={styles.posterSectionHeaderText}>🇮🇳 NATIONAL PRICE (All India)</Text>
+              </View>
+              <View style={styles.posterPriceBoxBody}>
+                <View style={styles.posterPriceRowAvg}>
+                  <Text style={styles.posterPriceLabel}>Average Price:</Text>
+                  <Text style={[styles.posterPriceValGreen, { color: '#0284c7' }]}>
+                    {selectedCropForShare.nationalAvgRate != null ? formatInr(selectedCropForShare.nationalAvgRate) : '-'}
+                  </Text>
+                </View>
+                <View style={styles.posterMinMaxSplitRow}>
+                  <Text style={styles.posterMinValText}>
+                    Minimum: <Text style={{ fontFamily: FONT.bold, color: '#15803d' }}>{selectedCropForShare.nationalMinRate != null ? formatInr(selectedCropForShare.nationalMinRate) : '-'}</Text>
+                  </Text>
+                  <Text style={styles.posterMaxValText}>
+                    Maximum: <Text style={{ fontFamily: FONT.bold, color: '#dc2626' }}>{selectedCropForShare.nationalMaxRate != null ? formatInr(selectedCropForShare.nationalMaxRate) : '-'}</Text>
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* App CTA Text Banner */}
+            <View style={styles.posterAppCtaBox}>
+              <Text style={styles.posterAppCtaText}>
+                📲 Tuhadi crop da live market price naal update rehan lyi FarmsKing app use kro!
+              </Text>
+            </View>
+
+            {/* Bottom Referral Voucher Card */}
+            <View style={styles.posterVoucherCardBox}>
+              <View style={styles.posterVoucherTopRow}>
+                <Text style={{ fontSize: 13 }}>🎁</Text>
+                <Text style={styles.posterVoucherTitle}>REFERRAL WELCOME VOUCHER</Text>
+                <Text style={{ fontSize: 13 }}>🎟️</Text>
+              </View>
+              <View style={styles.posterVoucherBodyRow}>
+                <Text style={styles.posterVoucherText}>
+                  Welcome bonus lyi eh code use kro:
                 </Text>
+                <View style={styles.posterVoucherCodeBadge}>
+                  <Text style={styles.posterVoucherCodeText}>{userRefCode}</Text>
+                </View>
               </View>
             </View>
 
@@ -887,6 +1006,53 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: 4,
   },
+  uiCtaBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#f0fdf4',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: RADIUS.sm,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+  },
+  uiCtaText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#166534',
+    flex: 1,
+  },
+  uiReferralBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#fffbe6',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: RADIUS.sm,
+    marginTop: 4,
+    borderWidth: 1,
+    borderColor: '#fde68a',
+  },
+  uiReferralLabel: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#92400e',
+  },
+  uiCodeBadge: {
+    backgroundColor: '#16a34a',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+  },
+  uiCodeBadgeText: {
+    fontSize: 10.5,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    letterSpacing: 0.5,
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(15, 23, 42, 0.55)',
@@ -956,10 +1122,10 @@ const styles = StyleSheet.create({
     width: 340,
     backgroundColor: '#ffffff',
     borderRadius: RADIUS.lg,
-    padding: 14,
-    borderWidth: 1.5,
-    borderColor: '#cbd5e1',
-    gap: 10,
+    padding: 12,
+    borderWidth: 2,
+    borderColor: '#16a34a',
+    gap: 8,
     position: 'relative',
     overflow: 'hidden',
   },
@@ -971,7 +1137,7 @@ const styles = StyleSheet.create({
     right: -50,
     flexDirection: 'column',
     justifyContent: 'space-around',
-    opacity: 0.12,
+    opacity: 0.08,
     transform: [{ rotate: '-15deg' }],
   },
   posterWatermarkRow: {
@@ -985,13 +1151,13 @@ const styles = StyleSheet.create({
     color: '#166534',
     marginHorizontal: 4,
   },
-  posterTopRedStripe: {
+  posterTopGreenStripe: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     height: 4,
-    backgroundColor: '#dc2626',
+    backgroundColor: '#16a34a',
   },
   posterVoucherHeader: {
     flexDirection: 'row',
@@ -999,7 +1165,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: '#ffffff',
     paddingTop: 4,
-    paddingBottom: 8,
+    paddingBottom: 6,
     borderBottomWidth: 1.5,
     borderBottomColor: '#e2e8f0',
   },
@@ -1026,7 +1192,7 @@ const styles = StyleSheet.create({
   },
   posterOfficialPill: {
     borderWidth: 1.5,
-    borderColor: '#dc2626',
+    borderColor: '#16a34a',
     borderRadius: RADIUS.pill,
     paddingHorizontal: 7,
     paddingVertical: 2,
@@ -1034,146 +1200,170 @@ const styles = StyleSheet.create({
   posterOfficialText: {
     fontSize: 8.5,
     fontFamily: FONT.extraBold,
-    color: '#dc2626',
+    color: '#16a34a',
     letterSpacing: 0.5,
   },
   posterRedPillBanner: {
-    backgroundColor: '#dc2626',
-    paddingHorizontal: 14,
-    paddingVertical: 5,
+    backgroundColor: '#16a34a',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderRadius: RADIUS.pill,
     alignSelf: 'center',
     marginVertical: 2,
   },
   posterRedPillText: {
-    fontSize: 10.5,
+    fontSize: 10,
     fontFamily: FONT.extraBold,
     color: '#ffffff',
     letterSpacing: 0.4,
   },
-  posterPartyGridRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginVertical: 2,
-  },
-  posterSideBox: {
-    flex: 1,
-    borderWidth: 1.5,
+  posterCropHeaderBox: {
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
     borderRadius: RADIUS.md,
-    overflow: 'hidden',
-    backgroundColor: '#ffffff',
-  },
-  posterSideBoxHeader: {
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    alignItems: 'center',
-  },
-  posterSideBoxHeaderTitle: {
-    fontSize: 8.5,
-    fontFamily: FONT.extraBold,
-    color: '#ffffff',
-    letterSpacing: 0.3,
-  },
-  posterSideBoxBody: {
-    padding: 6,
+    padding: 8,
     gap: 2,
   },
-  posterPartyNameBold: {
-    fontSize: 11,
+  posterCropTitleText: {
+    fontSize: 12,
     fontFamily: FONT.bold,
     color: '#0f172a',
   },
-  posterPartySubText: {
-    fontSize: 9.5,
-    fontFamily: FONT.medium,
-    color: '#475569',
-  },
-  posterMainCropAmountBox: {
-    backgroundColor: '#ffffff',
-    borderWidth: 1.5,
-    borderColor: '#dc2626',
-    borderRadius: RADIUS.md,
-    padding: 10,
-    gap: 4,
-    marginVertical: 2,
-  },
-  posterMainCropHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#fecaca',
-    paddingBottom: 6,
-    marginBottom: 4,
-  },
-  posterMainCropTitleLabel: {
-    fontSize: 13,
-    fontFamily: FONT.bold,
-    color: '#0f172a',
-  },
-  posterMainCropPriceValue: {
-    fontSize: 22,
-    fontFamily: FONT.extraBold,
-    color: '#dc2626',
-  },
-  posterMemoText: {
-    fontSize: 10.5,
-    fontFamily: FONT.medium,
-    color: '#475569',
-    marginBottom: 4,
-  },
-  posterBalanceLine: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 2,
-  },
-  posterBalanceLabel: {
+  posterCropSubText: {
     fontSize: 10,
     fontFamily: FONT.medium,
     color: '#64748b',
   },
-  posterBalanceValue: {
-    fontSize: 10.5,
+  posterPriceSectionBox: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1.5,
+    borderColor: '#16a34a',
+    borderRadius: RADIUS.md,
+    overflow: 'hidden',
+  },
+  posterSectionHeaderGreen: {
+    backgroundColor: '#16a34a',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  posterSectionHeaderText: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    letterSpacing: 0.3,
+  },
+  posterPriceBoxBody: {
+    padding: 8,
+    gap: 4,
+  },
+  posterPriceRowAvg: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+  },
+  posterPriceLabel: {
+    fontSize: 11,
     fontFamily: FONT.bold,
     color: '#0f172a',
   },
-  posterNetLine: {
+  posterPriceValGreen: {
+    fontSize: 18,
+    fontFamily: FONT.extraBold,
+    color: '#16a34a',
+  },
+  posterMinMaxSplitRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: '#fecaca',
+    borderTopColor: '#f1f5f9',
     paddingTop: 4,
     marginTop: 2,
   },
-  posterNetLabel: {
-    fontSize: 10.5,
-    fontFamily: FONT.bold,
-    color: '#dc2626',
+  posterMinValText: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#475569',
   },
-  posterNetValue: {
+  posterMaxValText: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#475569',
+  },
+  posterAppCtaBox: {
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    borderRadius: RADIUS.md,
+    padding: 6,
+    alignItems: 'center',
+  },
+  posterAppCtaText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#166534',
+    textAlign: 'center',
+  },
+  posterVoucherCardBox: {
+    backgroundColor: '#fffbe6',
+    borderWidth: 1.5,
+    borderColor: '#d97706',
+    borderStyle: 'dashed',
+    borderRadius: RADIUS.md,
+    padding: 8,
+    gap: 4,
+  },
+  posterVoucherTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  posterVoucherTitle: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    color: '#b45309',
+    letterSpacing: 0.3,
+  },
+  posterVoucherBodyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  posterVoucherText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  posterVoucherCodeBadge: {
+    backgroundColor: '#16a34a',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+  },
+  posterVoucherCodeText: {
     fontSize: 11,
     fontFamily: FONT.extraBold,
-    color: '#dc2626',
+    color: '#ffffff',
+    letterSpacing: 0.6,
   },
   posterFooterVoucherNote: {
     alignItems: 'center',
-    marginTop: 4,
-    paddingTop: 6,
+    marginTop: 2,
+    paddingTop: 4,
     borderTopWidth: 1,
     borderTopColor: '#f1f5f9',
   },
   posterFooterVoucherText: {
-    fontSize: 9,
+    fontSize: 8.5,
     fontFamily: FONT.bold,
     color: '#64748b',
   },
   posterFooterVoucherSub: {
-    fontSize: 8.5,
+    fontSize: 8,
     fontFamily: FONT.medium,
     color: '#94a3b8',
   },
-  posterDash: {
-    fontSize: 18,
-    fontFamily: FONT.bold,
-    color: '#94a3b8',
-  },
 });
+

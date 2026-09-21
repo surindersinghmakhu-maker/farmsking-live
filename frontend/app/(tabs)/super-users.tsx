@@ -46,7 +46,6 @@ type UserFilter =
 const FILTERS_BY_GROUP: Record<UserGroup, { value: UserFilter; label: string; icon: keyof typeof Ionicons.glyphMap }[]> = {
   ADMINS: [
     { value: 'SUPER_ADMIN', label: 'Super Admin', icon: 'shield-half-outline' },
-    { value: 'ADMIN', label: 'Admin', icon: 'shield-checkmark-outline' },
     { value: 'OPERATOR', label: 'Operator', icon: 'print-outline' },
   ],
   PARTNERS: [

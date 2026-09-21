@@ -42,11 +42,6 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     }
 
     const mapped = activeRoles.map((r) => toUserRole(r, user.advisorType));
-    if (user.role === 'SUPER_ADMIN' || granted.includes('SUPER_ADMIN')) {
-      if (!mapped.includes('ADMIN')) {
-        mapped.push('ADMIN');
-      }
-    }
 
     let finalRoles = Array.from(new Set([primaryRole, ...mapped]));
     if (isAdminUser) {

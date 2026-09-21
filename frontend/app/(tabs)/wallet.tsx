@@ -47,9 +47,7 @@ export default function WalletScreen() {
   const theme = RoleThemes[currentRole];
   const { data: wallet, isLoading: isLoadingWallet } = useMyWallet();
   const { data: withdrawals } = useMyWithdrawals();
-  const { data: coupons, isLoading: isLoadingCoupons } = useMyCoupons();
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
-  const [expandedCouponId, setExpandedCouponId] = useState<string | null>(null);
   const [isRedeemForFarmerOpen, setIsRedeemForFarmerOpen] = useState(false);
   const [expandedTxId, setExpandedTxId] = useState<string | null>(null);
 
@@ -81,7 +79,7 @@ export default function WalletScreen() {
           {isLoadingWallet ? (
             <ActivityIndicator color="#ffffff" style={{ marginTop: 10 }} />
           ) : (
-            <Text style={styles.balanceValue}>₹{(wallet?.balance ?? 0).toLocaleString('en-IN')}</Text>
+            <Text style={styles.balanceValue} adjustsFontSizeToFit numberOfLines={1}>₹{(wallet?.balance ?? 0).toLocaleString('en-IN')}</Text>
           )}
 
           {pendingWithdrawals.length > 0 ? (
@@ -101,28 +99,6 @@ export default function WalletScreen() {
             <Text style={[styles.withdrawText, { color: theme.primary }]}>Withdraw</Text>
           </TouchableOpacity>
         </LinearGradient>
-
-        {/* 🎁 Referral Coupon & Invite Link Card */}
-        <ReferralInviteCard theme={theme} kingId={user?.kingId || ''} />
-
-        <Text style={styles.sectionTitle}>My Discount & Referral Coupons</Text>
-        {isLoadingCoupons ? (
-          <ActivityIndicator color={theme.primary} />
-        ) : !coupons || coupons.length === 0 ? (
-          <View style={[styles.txCard, premiumShadow('#0f172a', 'sm')]}>
-            <Text style={styles.emptyText}>No discount coupons issued to you yet.</Text>
-          </View>
-        ) : (
-          coupons.map((c) => (
-            <MyCouponCard
-              key={c.id}
-              coupon={c}
-              theme={theme}
-              isExpanded={expandedCouponId === c.id}
-              onToggle={() => setExpandedCouponId((cur) => (cur === c.id ? null : c.id))}
-            />
-          ))
-        )}
 
         {/* Unified Plan Coupons Hub for Advisors & Business Partners */}
         {isAdvisorOrPartner ? <MyUnifiedPlanCouponsSection theme={theme} /> : null}
@@ -440,17 +416,17 @@ function TransactionRow({
         <View style={[styles.txDetailBox, isLast && { marginBottom: 0 }]}>
           <View style={styles.txDetailRow}>
             <Text style={styles.txDetailLabel}>Type</Text>
-            <Text style={styles.txDetailValue}>{positive ? 'Credit (Money In)' : 'Debit (Money Out)'}</Text>
+            <Text style={[styles.txDetailValue, { flex: 1, textAlign: 'right' }]}>{positive ? 'Credit (Money In)' : 'Debit (Money Out)'}</Text>
           </View>
           <View style={styles.txDetailRow}>
             <Text style={styles.txDetailLabel}>Date & Time</Text>
-            <Text style={styles.txDetailValue}>
+            <Text style={[styles.txDetailValue, { flex: 1, textAlign: 'right' }]}>
               {created.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} · {created.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
             </Text>
           </View>
           <View style={styles.txDetailRow}>
             <Text style={styles.txDetailLabel}>Amount</Text>
-            <Text style={styles.txDetailValue}>₹{Number(tx.amount).toLocaleString('en-IN')}</Text>
+            <Text style={[styles.txDetailValue, { flex: 1, textAlign: 'right' }]}>₹{Number(tx.amount).toLocaleString('en-IN')}</Text>
           </View>
           <View style={styles.txDetailRow}>
             <Text style={styles.txDetailLabel}>Reason</Text>
@@ -467,7 +443,7 @@ function TransactionRow({
           ) : null}
           <View style={styles.txDetailRow}>
             <Text style={styles.txDetailLabel}>Transaction ID</Text>
-            <Text style={[styles.txDetailValue, { fontSize: 9.5 }]} numberOfLines={1}>{tx.id}</Text>
+            <Text style={[styles.txDetailValue, { flex: 1, textAlign: 'right', fontSize: 9.5 }]} numberOfLines={1} ellipsizeMode="middle">{tx.id}</Text>
           </View>
         </View>
       ) : null}
@@ -1213,43 +1189,43 @@ function WithdrawModal({ visible, balance, onClose }: { visible: boolean; balanc
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: staticTheme.bg },
-  hero: { paddingTop: 20, paddingBottom: 16, paddingHorizontal: SPACING.xxl, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  hero: { paddingTop: 20, paddingBottom: 16, paddingHorizontal: 16, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   heroTitle: { fontSize: 19, fontFamily: FONT.extraBold, color: '#0f172a' },
-  kingIdBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
-  kingIdText: { fontSize: 11.5, fontFamily: FONT.bold, color: staticTheme.primary, letterSpacing: 0.3 },
-  body: { padding: SPACING.xxl },
-  balanceCard: { borderRadius: RADIUS.xl, padding: SPACING.xl },
+  kingIdBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6, flexWrap: 'wrap' },
+  kingIdText: { fontSize: 11.5, fontFamily: FONT.bold, color: staticTheme.primary, letterSpacing: 0.3, flexShrink: 1 },
+  body: { paddingHorizontal: 16, paddingVertical: 16, maxWidth: 480, alignSelf: 'center', width: '100%' },
+  balanceCard: { borderRadius: RADIUS.xl, padding: 16, width: '100%' },
   balanceLabel: { color: 'rgba(255,255,255,0.75)', fontSize: 13, fontFamily: FONT.medium },
-  balanceValue: { color: '#fff', fontSize: 34, fontFamily: FONT.extraBold, marginTop: 6, letterSpacing: -0.6 },
-  pendingNote: { color: 'rgba(255,255,255,0.85)', fontSize: 12, fontFamily: FONT.semiBold, marginTop: 8 },
-  withdrawButton: { backgroundColor: '#ffffff', borderRadius: RADIUS.md, paddingVertical: 13, alignItems: 'center', marginTop: 20 },
-  withdrawText: { color: staticTheme.primary, fontSize: 15, fontFamily: FONT.bold },
-  sectionTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#64748b', marginTop: 24, marginBottom: 10 },
-  txCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.lg },
+  balanceValue: { color: '#fff', fontSize: 32, fontFamily: FONT.extraBold, marginTop: 6, letterSpacing: -0.6, flexShrink: 1 },
+  pendingNote: { color: 'rgba(255,255,255,0.85)', fontSize: 12, fontFamily: FONT.semiBold, marginTop: 8, flexShrink: 1 },
+  withdrawButton: { backgroundColor: '#ffffff', borderRadius: RADIUS.md, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center', marginTop: 16 },
+  withdrawText: { color: staticTheme.primary, fontSize: 14, fontFamily: FONT.bold },
+  sectionTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#64748b', marginTop: 20, marginBottom: 8 },
+  txCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 14, width: '100%' },
   applyCouponBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1.5, borderRadius: RADIUS.lg, paddingVertical: 12, marginTop: 12 },
   applyCouponBtnText: { fontSize: 13, fontFamily: FONT.bold },
   txRowWrap: { borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  txRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11 },
-  txIconBg: { width: 34, height: 34, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  txInfo: { flex: 1, marginLeft: 12 },
-  txLabel: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
-  txDate: { fontSize: 11.5, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
-  txAmount: { fontSize: 13.5, fontFamily: FONT.extraBold },
-  txDetailBox: { backgroundColor: '#f8fafc', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', padding: 10, marginBottom: 10, gap: 6 },
-  txDetailRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
-  txDetailLabel: { fontSize: 10.5, fontFamily: FONT.bold, color: '#94a3b8' },
-  txDetailValue: { fontSize: 11.5, fontFamily: FONT.semiBold, color: '#0f172a' },
-  emptyText: { fontSize: 12.5, fontFamily: FONT.medium, color: '#94a3b8' },
-  couponCode: { fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a', letterSpacing: 0.4 },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill },
+  txRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11, width: '100%' },
+  txIconBg: { width: 34, height: 34, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  txInfo: { flex: 1, marginLeft: 10, flexShrink: 1 },
+  txLabel: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a', flexShrink: 1 },
+  txDate: { fontSize: 11, color: '#64748b', fontFamily: FONT.medium, marginTop: 2, flexShrink: 1 },
+  txAmount: { fontSize: 13.5, fontFamily: FONT.extraBold, flexShrink: 0 },
+  txDetailBox: { backgroundColor: '#f8fafc', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', padding: 10, marginBottom: 10, gap: 6, width: '100%' },
+  txDetailRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, width: '100%' },
+  txDetailLabel: { fontSize: 10.5, fontFamily: FONT.bold, color: '#94a3b8', flexShrink: 0 },
+  txDetailValue: { fontSize: 11.5, fontFamily: FONT.semiBold, color: '#0f172a', flex: 1, textAlign: 'right', flexWrap: 'wrap' },
+  emptyText: { fontSize: 12.5, fontFamily: FONT.medium, color: '#94a3b8', flexShrink: 1 },
+  couponCode: { fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a', letterSpacing: 0.4, flexShrink: 1 },
+  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill, flexShrink: 0 },
   statusBadgeText: { fontSize: 10, fontFamily: FONT.bold },
   viewUsageBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
   viewUsageBtnText: { fontSize: 12, fontFamily: FONT.bold, color: staticTheme.primary },
-  usageRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#f8fafc', borderRadius: RADIUS.sm, padding: 8 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'center', alignItems: 'center', padding: SPACING.lg },
-  modalCard: { width: '100%', maxWidth: 420, backgroundColor: '#ffffff', borderRadius: RADIUS.xl, padding: SPACING.lg, gap: 8, ...premiumShadow('#000000', 'lg') },
+  usageRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#f8fafc', borderRadius: RADIUS.sm, padding: 8, width: '100%' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'center', alignItems: 'center', padding: 16 },
+  modalCard: { width: '100%', maxWidth: 420, backgroundColor: '#ffffff', borderRadius: RADIUS.xl, padding: 16, gap: 8, ...premiumShadow('#000000', 'lg') },
   modalHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  modalTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a' },
+  modalTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a', flexShrink: 1 },
   label: { fontSize: 12, fontFamily: FONT.semiBold, color: '#64748b' },
   input: { borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, fontFamily: FONT.medium, backgroundColor: '#f8fafc', color: '#0f172a' },
   errorText: { color: '#dc2626', fontFamily: FONT.semiBold, fontSize: 12 },

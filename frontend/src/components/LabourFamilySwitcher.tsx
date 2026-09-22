@@ -18,6 +18,7 @@ import { Avatar } from '@/src/components/Avatar';
 import { LabourWorker } from '@/src/types/api';
 import { formatInr } from '@/src/utils/formatInr';
 import { uploadPhoto } from '@/src/api/uploads.api';
+import { useAuth } from '@/src/store/auth-context';
 import { useCreateLabourWorker, useUpdateLabourWorker } from '@/src/hooks/useLabour';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 
@@ -69,6 +70,7 @@ export function LabourFamilySwitcher({
   showAddButton = true,
   openEditSignal,
 }: LabourFamilySwitcherProps) {
+  const { user } = useAuth();
   const createWorker = useCreateLabourWorker();
   const updateWorker = useUpdateLabourWorker();
 
@@ -102,7 +104,7 @@ export function LabourFamilySwitcher({
     setEditingWorker(targetWorker);
     setEditName(targetWorker.name || '');
     setEditRelation(targetWorker.relation || 'Head / Self');
-    setEditMobile(targetWorker.mobile || '');
+    setEditMobile(targetWorker.mobile || (targetWorker.relation === 'Head / Self' ? user?.mobile || '' : ''));
     setEditPhotoUrl(targetWorker.photoUrl || null);
     setEditDefaultRate(targetWorker.defaultRate ? String(targetWorker.defaultRate) : '');
     setEditDefaultUnit(targetWorker.defaultUnit || 'Days');
@@ -145,13 +147,15 @@ export function LabourFamilySwitcher({
       return;
     }
 
+    const effectiveMobile = editMobile.trim() || (editRelation === 'Head / Self' || editingWorker.relation === 'Head / Self' ? user?.mobile : undefined);
+
     try {
       await updateWorker.mutateAsync({
         id: editingWorker.id,
         payload: {
           name: editName.trim(),
           relation: editRelation,
-          mobile: editMobile.trim() || undefined,
+          mobile: effectiveMobile,
           photoUrl: editPhotoUrl || undefined,
           defaultRate: editDefaultRate ? Number(editDefaultRate) : undefined,
           defaultUnit: editDefaultUnit.trim() || 'Days',
@@ -257,11 +261,13 @@ export function LabourFamilySwitcher({
       return;
     }
 
+    const effectiveMobile = mobile.trim() || (relation === 'Head / Self' ? user?.mobile : undefined);
+
     try {
       const newWorker = await createWorker.mutateAsync({
         name: name.trim(),
         relation,
-        mobile: mobile.trim() || undefined,
+        mobile: effectiveMobile,
         photoUrl: photoUrl || undefined,
         defaultRate: defaultRate ? Number(defaultRate) : undefined,
         defaultUnit: defaultUnit.trim() || 'Days',

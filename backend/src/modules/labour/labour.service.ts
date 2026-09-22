@@ -218,36 +218,41 @@ export class LabourService {
     }
 
     let userId = existing.userId;
-    if (dto.mobile?.trim() && dto.mobile.trim() !== existing.mobile) {
-      const cleanMobile = dto.mobile.trim();
-      let linkedUser = await this.prisma.user.findUnique({ where: { mobile: cleanMobile } });
+    const cleanMobile = dto.mobile !== undefined ? (dto.mobile?.trim() || null) : existing.mobile;
+    const effectiveMobile = cleanMobile || (existing.userId === user.id ? user.mobile : null);
+
+    if (effectiveMobile) {
+      let linkedUser = await this.prisma.user.findUnique({ where: { mobile: effectiveMobile } });
       if (!linkedUser) {
-        const passwordHash = await argon2.hash(cleanMobile);
+        const passwordHash = await argon2.hash(effectiveMobile);
         const kingId = await generateUniqueKingId(this.prisma);
         linkedUser = await this.prisma.user.create({
           data: {
             kingId,
-            mobile: cleanMobile,
+            mobile: effectiveMobile,
             passwordHash,
             name: dto.name || existing.name,
             role: Role.LABOUR,
             roles: [Role.LABOUR],
           },
         });
+      } else {
+        await this.prisma.user.update({
+          where: { id: linkedUser.id },
+          data: {
+            ...(dto.name && { name: dto.name.trim() }),
+            ...(dto.photoUrl !== undefined && { photoUrl: dto.photoUrl?.trim() || null }),
+          },
+        }).catch(() => null);
       }
-      const existingWorkerWithUser = await this.prisma.labourWorker.findFirst({
-        where: { userId: linkedUser.id },
-      });
-      if (!existingWorkerWithUser || existingWorkerWithUser.id === existing.id) {
-        userId = linkedUser.id;
-      }
+      userId = linkedUser.id;
     }
 
     const updatedWorker = await this.prisma.labourWorker.update({
       where: { id },
       data: {
         userId,
-        ...(dto.name && { name: dto.name }),
+        ...(dto.name && { name: dto.name.trim() }),
         ...(dto.mobile !== undefined && { mobile: dto.mobile?.trim() || null }),
         ...(dto.address !== undefined && { address: dto.address?.trim() || null }),
         ...(dto.photoUrl !== undefined && { photoUrl: dto.photoUrl?.trim() || null }),
@@ -257,16 +262,18 @@ export class LabourService {
         ...(dto.notes !== undefined && { notes: dto.notes?.trim() || null }),
       },
       include: {
-        user: { select: { id: true, mobile: true } },
+        user: { select: { id: true, mobile: true, kingId: true, name: true, photoUrl: true } },
       },
     });
 
-    // Also sync photoUrl to User table if user account is linked or matches user
-    const targetUserId = userId || (existing.mobile === user.mobile ? user.id : null);
-    if (targetUserId && dto.photoUrl) {
+    const targetUserId = userId || existing.userId || (existing.mobile === user.mobile ? user.id : null);
+    if (targetUserId) {
       await this.prisma.user.update({
         where: { id: targetUserId },
-        data: { photoUrl: dto.photoUrl.trim() },
+        data: {
+          ...(dto.name && { name: dto.name.trim() }),
+          ...(dto.photoUrl !== undefined && { photoUrl: dto.photoUrl?.trim() || null }),
+        },
       }).catch(() => null);
     }
 

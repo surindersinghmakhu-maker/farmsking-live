@@ -14,6 +14,7 @@ export function useCreateLabourWorker() {
     mutationFn: labourApi.createLabourWorker,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['labour-workers'] });
+      queryClient.invalidateQueries({ queryKey: ['labour-dashboard'] });
     },
   });
 }
@@ -25,6 +26,7 @@ export function useUpdateLabourWorker() {
       labourApi.updateLabourWorker(id, payload),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['labour-workers'] });
+      queryClient.invalidateQueries({ queryKey: ['labour-dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['labour-worker-statement', variables.id] });
     },
   });
@@ -36,6 +38,7 @@ export function useDeleteLabourWorker() {
     mutationFn: labourApi.deleteLabourWorker,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['labour-workers'] });
+      queryClient.invalidateQueries({ queryKey: ['labour-dashboard'] });
     },
   });
 }

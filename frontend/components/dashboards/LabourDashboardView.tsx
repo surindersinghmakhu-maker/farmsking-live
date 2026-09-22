@@ -373,7 +373,7 @@ export const LabourDashboardView: React.FC = () => {
                 </View>
               ) : (
                 <View style={{ gap: 10 }}>
-                  {workEntries.map((w) => (
+                  {workEntries.map((w: any) => (
                     <View key={w.id} style={[styles.itemCard, premiumShadow('#0f172a', 'sm')]}>
                       <View style={styles.itemHeader}>
                         <View style={styles.itemTypeBadge}>
@@ -402,7 +402,7 @@ export const LabourDashboardView: React.FC = () => {
               </View>
             ) : (
               <View style={{ gap: 10 }}>
-                {payments.map((p) => (
+                {payments.map((p: any) => (
                   <View key={p.id} style={[styles.itemCard, premiumShadow('#0f172a', 'sm')]}>
                     <View style={styles.itemHeader}>
                       <View style={[styles.itemTypeBadge, { backgroundColor: '#dcfce7' }]}>

@@ -480,35 +480,34 @@ export function LabourFamilySwitcher({
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={{ maxHeight: 440 }} showsVerticalScrollIndicator={false}>
-              {/* Photo Upload Box */}
-              <View style={{ alignItems: 'center', marginVertical: 10 }}>
+            <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
+              {/* TOP ROW: AVATAR PICKER (LEFT) + MEMBER NAME INPUT (RIGHT) */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 6 }}>
                 <TouchableOpacity
-                  style={styles.formAvatarWrap}
+                  style={styles.compactFormAvatarWrap}
                   activeOpacity={0.8}
                   onPress={pickPhotoForForm}
                 >
-                  <Avatar uri={photoUrl} size={64} />
-                  <View style={styles.formCameraOverlay}>
-                    <Ionicons name="camera" size={14} color="#ffffff" />
+                  <Avatar uri={photoUrl} size={56} />
+                  <View style={styles.compactCameraOverlay}>
+                    <Ionicons name="camera" size={12} color="#ffffff" />
                   </View>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={pickPhotoForForm} style={{ marginTop: 6 }}>
-                  <Text style={styles.uploadPhotoLink}>📷 Upload Photo for Illiterate Identification</Text>
-                </TouchableOpacity>
+
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.label}>Member Name *</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="e.g. Suman Devi / Jeet Singh"
+                    placeholderTextColor="#94a3b8"
+                    value={name}
+                    onChangeText={setName}
+                  />
+                </View>
               </View>
 
-              <Text style={styles.label}>Member Name *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. Suman Devi / Jeet Singh"
-                placeholderTextColor="#94a3b8"
-                value={name}
-                onChangeText={setName}
-              />
-
-              <Text style={styles.label}>Family Relation / Rishta</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginBottom: 12 }}>
+              <Text style={styles.label}>Family Relation</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginBottom: 8 }}>
                 {RELATION_OPTIONS.map((r) => {
                   const isSelected = relation === r.key;
                   return (
@@ -525,19 +524,23 @@ export function LabourFamilySwitcher({
                 })}
               </ScrollView>
 
-              <Text style={styles.label}>Mobile Number (Optional)</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="10-digit mobile number"
-                placeholderTextColor="#94a3b8"
-                keyboardType="phone-pad"
-                value={mobile}
-                onChangeText={setMobile}
-              />
+              <View style={{ flexDirection: 'row', gap: 8, zIndex: 100, marginTop: 4 }}>
+                {/* 1. Mobile Number */}
+                <View style={{ flex: 1.2 }}>
+                  <Text style={styles.label} numberOfLines={1}>Mobile (Optional)</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="10-digit mobile"
+                    placeholderTextColor="#94a3b8"
+                    keyboardType="phone-pad"
+                    value={mobile}
+                    onChangeText={setMobile}
+                  />
+                </View>
 
-              <View style={{ flexDirection: 'row', gap: 10, zIndex: 100 }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.label}>Default Daily Rate (₹)</Text>
+                {/* 2. Rate */}
+                <View style={{ flex: 0.9 }}>
+                  <Text style={styles.label} numberOfLines={1}>Daily Rate (₹)</Text>
                   <TextInput
                     style={styles.input}
                     placeholder="e.g. 500"
@@ -547,8 +550,10 @@ export function LabourFamilySwitcher({
                     onChangeText={setDefaultRate}
                   />
                 </View>
-                <View style={{ flex: 1.2, position: 'relative' }}>
-                  <Text style={styles.label}>Working Unit *</Text>
+
+                {/* 3. Working Unit */}
+                <View style={{ flex: 1.1, position: 'relative' }}>
+                  <Text style={styles.label} numberOfLines={1}>Working Unit *</Text>
                   <TouchableOpacity
                     style={{
                       flexDirection: 'row',
@@ -557,17 +562,17 @@ export function LabourFamilySwitcher({
                       borderWidth: 1,
                       borderColor: isUnitDropdownOpen ? '#16a34a' : '#cbd5e1',
                       borderRadius: RADIUS.md,
-                      paddingHorizontal: 8,
+                      paddingHorizontal: 6,
                       height: 40,
                       backgroundColor: '#f8fafc',
                     }}
                     activeOpacity={0.8}
                     onPress={() => setIsUnitDropdownOpen((prev) => !prev)}
                   >
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
                       {defaultUnit}
                     </Text>
-                    <Ionicons name={isUnitDropdownOpen ? 'chevron-up' : 'chevron-down'} size={14} color="#64748b" />
+                    <Ionicons name={isUnitDropdownOpen ? 'chevron-up' : 'chevron-down'} size={12} color="#64748b" />
                   </TouchableOpacity>
 
                   {/* Dropdown Options */}
@@ -592,14 +597,14 @@ export function LabourFamilySwitcher({
                     >
                       <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
                         {[
-                          'Days (ਦਿਨ / ਡੇਲੀ)',
-                          'Hours (ਘੰਟੇ / ਪਰ ਘੰਟਾ)',
-                          'Monthly (ਮਹੀਨਾਵਾਰ)',
-                          'Fixed Contract / Lumpsum (ਫਿਕਸ / ਠੇਕਾ)',
-                          'Acre / Kila (ਏਕੜ / ਕਿੱਲਾ)',
-                          'Bags / Catt (ਬੋਰੀਆਂ / ਕੱਟੇ)',
-                          'Quintal / Kg (ਕੁਇੰਟਲ / ਕਿੱਲੋ)',
-                          'Trips (ਗੇੜੇ / ਟ੍ਰਿਪ)',
+                          'Days',
+                          'Hours',
+                          'Monthly',
+                          'Fixed Contract / Lumpsum',
+                          'Acre / Kila',
+                          'Bags / Packets',
+                          'Quintal / Kg',
+                          'Trips',
                         ].map((u) => (
                           <TouchableOpacity
                             key={u}
@@ -660,35 +665,34 @@ export function LabourFamilySwitcher({
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={{ maxHeight: 440 }} showsVerticalScrollIndicator={false}>
-              {/* Photo Upload Box */}
-              <View style={{ alignItems: 'center', marginVertical: 10 }}>
+            <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
+              {/* TOP ROW: AVATAR PICKER (LEFT) + MEMBER NAME INPUT (RIGHT) */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 6 }}>
                 <TouchableOpacity
-                  style={styles.formAvatarWrap}
+                  style={styles.compactFormAvatarWrap}
                   activeOpacity={0.8}
                   onPress={pickPhotoForEditForm}
                 >
-                  <Avatar uri={editPhotoUrl} size={72} />
-                  <View style={styles.formCameraOverlay}>
-                    <Ionicons name="camera" size={14} color="#ffffff" />
+                  <Avatar uri={editPhotoUrl} size={56} />
+                  <View style={styles.compactCameraOverlay}>
+                    <Ionicons name="camera" size={12} color="#ffffff" />
                   </View>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={pickPhotoForEditForm} style={{ marginTop: 6 }}>
-                  <Text style={styles.uploadPhotoLink}>📷 Change Profile Photo</Text>
-                </TouchableOpacity>
+
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.label}>Member Name *</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="e.g. Suman Devi / Jeet Singh"
+                    placeholderTextColor="#94a3b8"
+                    value={editName}
+                    onChangeText={setEditName}
+                  />
+                </View>
               </View>
 
-              <Text style={styles.label}>Member Name *</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. Suman Devi / Jeet Singh"
-                placeholderTextColor="#94a3b8"
-                value={editName}
-                onChangeText={setEditName}
-              />
-
-              <Text style={styles.label}>Family Relation / Rishta</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginBottom: 12 }}>
+              <Text style={styles.label}>Family Relation</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginBottom: 8 }}>
                 {RELATION_OPTIONS.map((r) => {
                   const isSelected = editRelation === r.key;
                   return (
@@ -705,19 +709,23 @@ export function LabourFamilySwitcher({
                 })}
               </ScrollView>
 
-              <Text style={styles.label}>Mobile Number (Optional)</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="10-digit mobile number"
-                placeholderTextColor="#94a3b8"
-                keyboardType="phone-pad"
-                value={editMobile}
-                onChangeText={setEditMobile}
-              />
+              <View style={{ flexDirection: 'row', gap: 8, zIndex: 100, marginTop: 4 }}>
+                {/* 1. Mobile Number */}
+                <View style={{ flex: 1.2 }}>
+                  <Text style={styles.label} numberOfLines={1}>Mobile (Optional)</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="10-digit mobile"
+                    placeholderTextColor="#94a3b8"
+                    keyboardType="phone-pad"
+                    value={editMobile}
+                    onChangeText={setEditMobile}
+                  />
+                </View>
 
-              <View style={{ flexDirection: 'row', gap: 10, zIndex: 100 }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.label}>Default Daily Rate (₹)</Text>
+                {/* 2. Rate */}
+                <View style={{ flex: 0.9 }}>
+                  <Text style={styles.label} numberOfLines={1}>Daily Rate (₹)</Text>
                   <TextInput
                     style={styles.input}
                     placeholder="e.g. 500"
@@ -727,8 +735,10 @@ export function LabourFamilySwitcher({
                     onChangeText={setEditDefaultRate}
                   />
                 </View>
-                <View style={{ flex: 1.2, position: 'relative' }}>
-                  <Text style={styles.label}>Working Unit *</Text>
+
+                {/* 3. Working Unit */}
+                <View style={{ flex: 1.1, position: 'relative' }}>
+                  <Text style={styles.label} numberOfLines={1}>Working Unit *</Text>
                   <TouchableOpacity
                     style={{
                       flexDirection: 'row',
@@ -737,17 +747,17 @@ export function LabourFamilySwitcher({
                       borderWidth: 1,
                       borderColor: isEditUnitDropdownOpen ? '#16a34a' : '#cbd5e1',
                       borderRadius: RADIUS.md,
-                      paddingHorizontal: 8,
+                      paddingHorizontal: 6,
                       height: 40,
                       backgroundColor: '#f8fafc',
                     }}
                     activeOpacity={0.8}
                     onPress={() => setIsEditUnitDropdownOpen((prev) => !prev)}
                   >
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
                       {editDefaultUnit}
                     </Text>
-                    <Ionicons name={isEditUnitDropdownOpen ? 'chevron-up' : 'chevron-down'} size={14} color="#64748b" />
+                    <Ionicons name={isEditUnitDropdownOpen ? 'chevron-up' : 'chevron-down'} size={12} color="#64748b" />
                   </TouchableOpacity>
 
                   {/* Dropdown Options */}
@@ -772,14 +782,14 @@ export function LabourFamilySwitcher({
                     >
                       <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
                         {[
-                          'Days (ਦਿਨ / ਡੇਲੀ)',
-                          'Hours (ਘੰਟੇ / ਪਰ ਘੰਟਾ)',
-                          'Monthly (ਮਹੀਨਾਵਾਰ)',
-                          'Fixed Contract / Lumpsum (ਫਿਕਸ / ਠੇਕਾ)',
-                          'Acre / Kila (ਏਕੜ / ਕਿੱਲਾ)',
-                          'Bags / Catt (ਬੋਰੀਆਂ / ਕੱਟੇ)',
-                          'Quintal / Kg (ਕੁਇੰਟਲ / ਕਿੱਲੋ)',
-                          'Trips (ਗੇੜੇ / ਟ੍ਰਿਪ)',
+                          'Days',
+                          'Hours',
+                          'Monthly',
+                          'Fixed Contract / Lumpsum',
+                          'Acre / Kila',
+                          'Bags / Packets',
+                          'Quintal / Kg',
+                          'Trips',
                         ].map((u) => (
                           <TouchableOpacity
                             key={u}

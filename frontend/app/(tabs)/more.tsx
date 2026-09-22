@@ -111,8 +111,11 @@ export default function MoreScreen() {
   const [isSecurityVerified, setIsSecurityVerified] = useState(false);
   const [contactModalMode, setContactModalMode] = useState<'SUPPORT' | 'CONTACT' | null>(null);
 
+  const [deletePincodeInput, setDeletePincodeInput] = useState('');
+
   const handleOpenDeleteModal = () => {
     setDeleteKingIdInput('');
+    setDeletePincodeInput('');
     setDeleteCaptchaError(null);
     setIsSecurityVerified(false);
     setShowDeleteConfirmModal(true);
@@ -123,16 +126,29 @@ export default function MoreScreen() {
     const expectedKingId = (user?.kingId || user?.mobile || '').trim().toLowerCase();
     const inputKingId = deleteKingIdInput.trim().toLowerCase();
 
+    // 1. King ID Check
     if (!inputKingId) {
       setDeleteCaptchaError('Kripya apni King ID ja Mobile Number darj karo.');
       return;
     }
-
     if (inputKingId !== expectedKingId) {
       setDeleteCaptchaError(`King ID / Mobile Number match nahi karda! Expected: ${user?.kingId || user?.mobile}`);
       return;
     }
 
+    // 2. Postal PIN Code Check
+    const expectedPincode = (user?.pincode || '').trim();
+    const inputPincode = deletePincodeInput.trim();
+    if (!inputPincode || inputPincode.length !== 6) {
+      setDeleteCaptchaError('Kripya 6-digit Postal PIN Code darj karo.');
+      return;
+    }
+    if (expectedPincode && inputPincode !== expectedPincode) {
+      setDeleteCaptchaError(`Postal PIN Code match nahi karda! Expected: ${expectedPincode}`);
+      return;
+    }
+
+    // 3. Captcha Security Code Check
     if (captchaRef.current && !captchaRef.current.validate()) {
       setDeleteCaptchaError('Invalid Captcha code! Screen te ditta 4-character code sahi darj karo.');
       return;
@@ -682,12 +698,12 @@ export default function MoreScreen() {
                 Account Deletion Security
               </Text>
               <Text style={{ fontSize: 11.5, color: '#64748b', fontFamily: FONT.medium, textAlign: 'center', marginTop: 2 }}>
-                King ID & Captcha verification required
+                3-Step Security Check: King ID, PIN Code & Captcha
               </Text>
             </View>
 
             {!isSecurityVerified ? (
-              <View style={{ gap: 10, width: '100%' }}>
+              <View style={{ gap: 9, width: '100%' }}>
                 {/* Expected User Info */}
                 <View style={{ backgroundColor: '#f8fafc', borderRadius: RADIUS.md, padding: 8, borderWidth: 1, borderColor: '#e2e8f0' }}>
                   <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569' }}>
@@ -696,12 +712,17 @@ export default function MoreScreen() {
                   <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#16a34a', marginTop: 1 }}>
                     Expected King ID / Mobile: <Text style={{ color: '#15803d' }}>{user?.kingId || user?.mobile}</Text>
                   </Text>
+                  {user?.pincode ? (
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0284c7', marginTop: 1 }}>
+                      Registered PIN Code: <Text style={{ color: '#0369a1' }}>{user.pincode}</Text>
+                    </Text>
+                  ) : null}
                 </View>
 
-                {/* Input King ID */}
+                {/* 1. Input King ID */}
                 <View>
-                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#334155', marginBottom: 4 }}>
-                    Enter King ID / Mobile Number *
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#334155', marginBottom: 3 }}>
+                    1. Enter King ID / Mobile Number *
                   </Text>
                   <View style={{ height: 38, flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, backgroundColor: '#ffffff', paddingHorizontal: 10 }}>
                     <Ionicons name="card-outline" size={17} color="#94a3b8" style={{ marginRight: 6 }} />
@@ -716,8 +737,32 @@ export default function MoreScreen() {
                   </View>
                 </View>
 
-                {/* Captcha Security Challenge */}
-                <CaptchaChallenge ref={captchaRef} onSubmitEditing={handleVerifyDeleteSecurity} />
+                {/* 2. Input Postal PIN Code */}
+                <View>
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#334155', marginBottom: 3 }}>
+                    2. Enter Postal PIN Code *
+                  </Text>
+                  <View style={{ height: 38, flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, backgroundColor: '#ffffff', paddingHorizontal: 10 }}>
+                    <Ionicons name="location-outline" size={17} color="#94a3b8" style={{ marginRight: 6 }} />
+                    <TextInput
+                      style={{ flex: 1, fontSize: 13, fontFamily: FONT.medium, color: '#0f172a' }}
+                      placeholder="6-digit Postal PIN Code"
+                      placeholderTextColor="#94a3b8"
+                      keyboardType="numeric"
+                      maxLength={6}
+                      value={deletePincodeInput}
+                      onChangeText={setDeletePincodeInput}
+                    />
+                  </View>
+                </View>
+
+                {/* 3. Captcha Security Challenge */}
+                <View>
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#334155', marginBottom: 3 }}>
+                    3. Security Captcha *
+                  </Text>
+                  <CaptchaChallenge ref={captchaRef} onSubmitEditing={handleVerifyDeleteSecurity} />
+                </View>
 
                 {deleteCaptchaError ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca', padding: 7, borderRadius: RADIUS.md }}>
@@ -739,7 +784,7 @@ export default function MoreScreen() {
                     onPress={handleVerifyDeleteSecurity}
                   >
                     <Ionicons name="shield-checkmark" size={16} color="#ffffff" />
-                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>Verify Security</Text>
+                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>Verify 3 Checks</Text>
                   </TouchableOpacity>
                 </View>
               </View>

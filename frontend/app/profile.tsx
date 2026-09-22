@@ -289,32 +289,6 @@ export default function ProfileScreen() {
         )}
 
         <View style={styles.card}>
-          <View style={styles.avatarSection}>
-            <TouchableOpacity style={styles.avatarRingBig} activeOpacity={0.85} onPress={() => setIsPhotoModalOpen(true)}>
-              <Avatar uri={photoUrl} size={50} />
-              <View style={styles.cameraBadge}>
-                <Ionicons name="camera" size={12} color="#ffffff" />
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setIsPhotoModalOpen(true)}>
-              <Text style={styles.changePhotoText}>📷 Update Profile Photo</Text>
-            </TouchableOpacity>
-
-            <View style={styles.singleMetaRow}>
-              <Text style={styles.metaNameText}>{name || user?.name || 'Farmer'}</Text>
-              <Text style={styles.metaDot}>·</Text>
-              <Ionicons name="key-outline" size={12} color={theme.primary} />
-              <Text style={[styles.metaKingIdText, { color: theme.primary }]}>King ID: {user?.kingId || '—'}</Text>
-              {user?.mobile ? (
-                <>
-                  <Text style={styles.metaDot}>·</Text>
-                  <Ionicons name="call-outline" size={12} color="#475569" />
-                  <Text style={styles.metaMobileText}>{user.mobile}</Text>
-                </>
-              ) : null}
-            </View>
-          </View>
-
           <Text style={styles.inputLabel}>Farmer Name: full name *</Text>
           <View style={styles.inputWrap}>
             <Ionicons name="person-outline" size={16} color="#94a3b8" />

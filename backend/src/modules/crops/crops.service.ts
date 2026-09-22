@@ -142,32 +142,28 @@ export class CropsService {
     if (!user?.id) return [];
     try {
       const isGlobalAdmin = user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN;
+
+      // 1. Fetch all plot IDs for farms owned by this user (or all plots if global admin)
+      const userFarms = await this.prisma.farm.findMany({
+        where: isGlobalAdmin ? { deletedAt: null } : { ownerId: user.id, deletedAt: null },
+        select: { id: true, plots: { where: { deletedAt: null }, select: { id: true } } },
+      });
+
+      const plotIds = userFarms.flatMap((f) => f.plots.map((p) => p.id));
+      if (plotIds.length === 0) return [];
+
+      // 2. Fetch all crop cycles for these plots
       return await this.prisma.cropCycle.findMany({
         where: {
           deletedAt: null,
-          plot: isGlobalAdmin
-            ? { deletedAt: null, farm: { deletedAt: null } }
-            : { deletedAt: null, farm: { ownerId: user.id, deletedAt: null } },
+          plotId: { in: plotIds },
         },
         include: { plot: { select: { id: true, name: true, farmId: true, area: true, areaUnit: true, irrigationType: true } } },
         orderBy: { createdAt: 'desc' },
       });
     } catch (err: any) {
-      console.error('[CropsService.listMineForFarmer] Database query error, trying simple query:', err);
-      try {
-        // Fallback simple query for farmer's crop cycles
-        return await this.prisma.cropCycle.findMany({
-          where: {
-            deletedAt: null,
-            plot: { farm: { ownerId: user.id } },
-          },
-          include: { plot: { select: { id: true, name: true, farmId: true, area: true, areaUnit: true, irrigationType: true } } },
-          orderBy: { createdAt: 'desc' },
-        });
-      } catch (fallbackErr: any) {
-        console.error('[CropsService.listMineForFarmer] Fallback query failed:', fallbackErr);
-        return [];
-      }
+      console.error('[CropsService.listMineForFarmer] Database query error:', err);
+      return [];
     }
   }
 

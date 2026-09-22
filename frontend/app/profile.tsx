@@ -162,17 +162,19 @@ export default function ProfileScreen() {
       setSaveError('❌ Please enter your full name.');
       return;
     }
-    if (!farmName.trim()) {
-      setSaveError('❌ Please enter Farm Name under Use in Printing.');
-      return;
-    }
-    if (!farmAddress.trim()) {
-      setSaveError('❌ Please enter Farm Address under Use in Printing.');
-      return;
-    }
-    if (!farmMobile.trim()) {
-      setSaveError('❌ Please enter Farm Mobile under Use in Printing.');
-      return;
+    if (user?.role !== 'LABOUR') {
+      if (!farmName.trim()) {
+        setSaveError('❌ Please enter Farm Name under Use in Printing.');
+        return;
+      }
+      if (!farmAddress.trim()) {
+        setSaveError('❌ Please enter Farm Address under Use in Printing.');
+        return;
+      }
+      if (!farmMobile.trim()) {
+        setSaveError('❌ Please enter Farm Mobile under Use in Printing.');
+        return;
+      }
     }
     if (pincode && pincode.trim().length !== 6) {
       setPincodeStatus('❌ PIN Code must be exactly 6 digits.');
@@ -303,75 +305,77 @@ export default function ProfileScreen() {
             <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="you@example.com" placeholderTextColor="#94a3b8" />
           </View>
 
-          {/* Use in Printing Section */}
-          <View style={styles.printingHeaderBox}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-              <Ionicons name="print" size={18} color={theme.primary} />
-              <Text style={styles.printingTitle}>Use in Printing</Text>
-            </View>
+          {/* Use in Printing Section (Only for Farmers / Advisors / Traders who print bills) */}
+          {user?.role !== 'LABOUR' ? (
+            <View style={styles.printingHeaderBox}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                <Ionicons name="print" size={18} color={theme.primary} />
+                <Text style={styles.printingTitle}>Use in Printing</Text>
+              </View>
 
-            {/* Farm Name (Required) */}
-            <View style={{ marginBottom: 10 }}>
-              <Text style={styles.printingLabel}>Farm Name * (Printed on Bill/Voucher/Receipt)</Text>
-              <View style={[styles.inputWrap, { backgroundColor: '#ffffff' }]}>
-                <Ionicons name="business-outline" size={16} color="#64748b" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g. Surinder Agro Farm"
-                  placeholderTextColor="#94a3b8"
-                  value={farmName}
-                  onChangeText={setFarmName}
-                />
+              {/* Farm Name (Required) */}
+              <View style={{ marginBottom: 10 }}>
+                <Text style={styles.printingLabel}>Farm Name * (Printed on Bill/Voucher/Receipt)</Text>
+                <View style={[styles.inputWrap, { backgroundColor: '#ffffff' }]}>
+                  <Ionicons name="business-outline" size={16} color="#64748b" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="e.g. Surinder Agro Farm"
+                    placeholderTextColor="#94a3b8"
+                    value={farmName}
+                    onChangeText={setFarmName}
+                  />
+                </View>
+              </View>
+
+              {/* Farm Address (Required) */}
+              <View style={{ marginBottom: 10 }}>
+                <Text style={styles.printingLabel}>Farm Address * (Printed on Bill/Voucher/Receipt)</Text>
+                <View style={[styles.inputWrap, { backgroundColor: '#ffffff' }]}>
+                  <Ionicons name="location-outline" size={16} color="#64748b" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="e.g. Grain Market, Shop No. 12, Rampura Phul"
+                    placeholderTextColor="#94a3b8"
+                    value={farmAddress}
+                    onChangeText={setFarmAddress}
+                  />
+                </View>
+              </View>
+
+              {/* Farm Mobile (Required) */}
+              <View style={{ marginBottom: 10 }}>
+                <Text style={styles.printingLabel}>Farm Mobile * (Printed on Bill/Voucher/Receipt)</Text>
+                <View style={[styles.inputWrap, { backgroundColor: '#ffffff' }]}>
+                  <Ionicons name="call-outline" size={16} color="#64748b" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="e.g. 9876543210"
+                    placeholderTextColor="#94a3b8"
+                    keyboardType="phone-pad"
+                    value={farmMobile}
+                    onChangeText={setFarmMobile}
+                  />
+                </View>
+              </View>
+
+              {/* UPI ID (Optional) */}
+              <View>
+                <Text style={styles.printingLabel}>UPI ID (Optional - Printed for QR Code)</Text>
+                <View style={[styles.inputWrap, { backgroundColor: '#ffffff' }]}>
+                  <Ionicons name="qr-code-outline" size={16} color="#64748b" />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="e.g. farmer@upi"
+                    placeholderTextColor="#94a3b8"
+                    autoCapitalize="none"
+                    value={upiId}
+                    onChangeText={setUpiId}
+                  />
+                </View>
               </View>
             </View>
-
-            {/* Farm Address (Required) */}
-            <View style={{ marginBottom: 10 }}>
-              <Text style={styles.printingLabel}>Farm Address * (Printed on Bill/Voucher/Receipt)</Text>
-              <View style={[styles.inputWrap, { backgroundColor: '#ffffff' }]}>
-                <Ionicons name="location-outline" size={16} color="#64748b" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g. Grain Market, Shop No. 12, Rampura Phul"
-                  placeholderTextColor="#94a3b8"
-                  value={farmAddress}
-                  onChangeText={setFarmAddress}
-                />
-              </View>
-            </View>
-
-            {/* Farm Mobile (Required) */}
-            <View style={{ marginBottom: 10 }}>
-              <Text style={styles.printingLabel}>Farm Mobile * (Printed on Bill/Voucher/Receipt)</Text>
-              <View style={[styles.inputWrap, { backgroundColor: '#ffffff' }]}>
-                <Ionicons name="call-outline" size={16} color="#64748b" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g. 9876543210"
-                  placeholderTextColor="#94a3b8"
-                  keyboardType="phone-pad"
-                  value={farmMobile}
-                  onChangeText={setFarmMobile}
-                />
-              </View>
-            </View>
-
-            {/* UPI ID (Optional) */}
-            <View>
-              <Text style={styles.printingLabel}>UPI ID (Optional - Printed for QR Code)</Text>
-              <View style={[styles.inputWrap, { backgroundColor: '#ffffff' }]}>
-                <Ionicons name="qr-code-outline" size={16} color="#64748b" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g. farmer@upi"
-                  placeholderTextColor="#94a3b8"
-                  autoCapitalize="none"
-                  value={upiId}
-                  onChangeText={setUpiId}
-                />
-              </View>
-            </View>
-          </View>
+          ) : null}
 
           <Text style={styles.inputLabel}>Postal PIN Code</Text>
           <View style={styles.pincodeRow}>

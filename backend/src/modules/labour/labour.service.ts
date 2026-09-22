@@ -368,51 +368,72 @@ export class LabourService {
   }
 
   /**
-   * Labour Dashboard Data for logged-in Labour User account.
+   * Labour Dashboard Data for logged-in Labour User account (supports multiple worker profiles under 1 mobile number).
    */
   async getLabourDashboard(userId: string) {
-    const worker = await this.prisma.labourWorker.findFirst({
-      where: { userId, deletedAt: null },
-      include: {
-        farmer: { select: { id: true, name: true, mobile: true, village: true, photoUrl: true } },
-      },
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, mobile: true, name: true, photoUrl: true },
     });
 
-    if (!worker) {
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const workers = await this.prisma.labourWorker.findMany({
+      where: {
+        OR: [
+          { userId },
+          ...(user.mobile ? [{ mobile: user.mobile }] : []),
+        ],
+        deletedAt: null,
+      },
+      include: {
+        farmer: { select: { id: true, name: true, mobile: true, village: true, photoUrl: true } },
+        workEntries: { where: { deletedAt: null }, orderBy: { workDate: 'desc' } },
+        payments: { where: { deletedAt: null }, orderBy: { paymentDate: 'desc' } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (workers.length === 0) {
       throw new NotFoundException('No Labour profile associated with this account.');
     }
 
-    const workEntries = await this.prisma.labourWorkEntry.findMany({
-      where: { workerId: worker.id, deletedAt: null },
-      orderBy: { workDate: 'desc' },
+    const profiles = workers.map((worker) => {
+      const totalEarned = worker.workEntries.reduce((sum, e) => sum + Number(e.totalAmount), 0);
+      const totalPaid = worker.payments.reduce((sum, p) => sum + Number(p.amount), 0);
+      const pendingBalance = totalEarned - totalPaid;
+
+      return {
+        worker: {
+          id: worker.id,
+          name: worker.name,
+          mobile: worker.mobile,
+          address: worker.address,
+          defaultRate: worker.defaultRate,
+          defaultUnit: worker.defaultUnit,
+          farmer: worker.farmer,
+        },
+        summary: {
+          totalEarned,
+          totalPaid,
+          pendingBalance,
+        },
+        workEntries: worker.workEntries,
+        payments: worker.payments,
+      };
     });
 
-    const payments = await this.prisma.labourPayment.findMany({
-      where: { workerId: worker.id, deletedAt: null },
-      orderBy: { paymentDate: 'desc' },
-    });
-
-    const totalEarned = workEntries.reduce((sum, e) => sum + Number(e.totalAmount), 0);
-    const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount), 0);
-    const pendingBalance = totalEarned - totalPaid;
+    // Main primary profile (first worker profile) for backward compatibility
+    const primary = profiles[0];
 
     return {
-      worker: {
-        id: worker.id,
-        name: worker.name,
-        mobile: worker.mobile,
-        address: worker.address,
-        defaultRate: worker.defaultRate,
-        defaultUnit: worker.defaultUnit,
-        farmer: worker.farmer,
-      },
-      summary: {
-        totalEarned,
-        totalPaid,
-        pendingBalance,
-      },
-      workEntries,
-      payments,
+      worker: primary.worker,
+      summary: primary.summary,
+      workEntries: primary.workEntries,
+      payments: primary.payments,
+      profiles,
     };
   }
 }

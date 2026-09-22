@@ -32,16 +32,32 @@ export const LabourDashboardView: React.FC = () => {
 
   const router = useRouter();
 
-  const summary = data?.summary || { totalEarned: 0, totalPaid: 0, pendingBalance: 0 };
-  const worker = data?.worker;
+  const [selectedWorkerId, setSelectedWorkerId] = useState<string | null>(null);
+
+  const profiles = (data as any)?.profiles || [];
+
+  // Active profile selection (multi-worker support)
+  const activeProfile = useMemo(() => {
+    if (profiles && profiles.length > 0) {
+      if (selectedWorkerId) {
+        const found = profiles.find((p: any) => p.worker.id === selectedWorkerId);
+        if (found) return found;
+      }
+      return profiles[0];
+    }
+    return null;
+  }, [profiles, selectedWorkerId]);
+
+  const summary = activeProfile?.summary || data?.summary || { totalEarned: 0, totalPaid: 0, pendingBalance: 0 };
+  const worker = activeProfile?.worker || data?.worker;
   const farmer = worker?.farmer;
-  const workEntries = data?.workEntries || [];
-  const payments = data?.payments || [];
+  const workEntries = activeProfile?.workEntries || data?.workEntries || [];
+  const payments = activeProfile?.payments || data?.payments || [];
 
   // Compute Double Entry Ledger Timeline with Running Balance
   const doubleEntryLedger = useMemo(() => {
     const combined = [
-      ...workEntries.map((w) => ({
+      ...workEntries.map((w: any) => ({
         id: w.id,
         type: 'WORK' as const,
         date: w.workDate,
@@ -50,7 +66,7 @@ export const LabourDashboardView: React.FC = () => {
         debit: 0,
         notes: w.notes,
       })),
-      ...payments.map((p) => ({
+      ...payments.map((p: any) => ({
         id: p.id,
         type: 'PAYMENT' as const,
         date: p.paymentDate,
@@ -85,14 +101,62 @@ export const LabourDashboardView: React.FC = () => {
       {/* Header */}
       <RoleHeader
         currentRole="LABOUR"
-        profileName={user?.name || worker?.name || 'Labourer'}
-        subtitle="Labour Worker Account"
+        profileName={worker?.name || user?.name || 'Worker'}
+        subtitle="Worker Account"
         avatarUrl={user?.photoUrl || undefined}
       />
 
-
-
       <View style={styles.content}>
+        {/* Multi-Worker Visual Profile Switcher Banner */}
+        {profiles.length > 1 ? (
+          <View style={[styles.profileSwitcherCard, premiumShadow('#0f172a', 'sm')]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={{ fontSize: 16 }}>👤</Text>
+                <Text style={styles.switcherHeaderTitle}>Select Worker Profile ({profiles.length})</Text>
+              </View>
+              <Text style={styles.switcherHeaderSub}>Tap photo to switch</Text>
+            </View>
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 4 }}>
+              {profiles.map((p: any) => {
+                const isSelected = (activeProfile?.worker?.id === p.worker.id);
+                return (
+                  <TouchableOpacity
+                    key={p.worker.id}
+                    activeOpacity={0.85}
+                    style={[
+                      styles.profilePillCard,
+                      isSelected && styles.profilePillCardActive,
+                    ]}
+                    onPress={() => setSelectedWorkerId(p.worker.id)}
+                  >
+                    <Avatar uri={p.worker.farmer?.photoUrl} size={38} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.profilePillName, isSelected && { color: '#ffffff' }]} numberOfLines={1}>
+                        {p.worker.name}
+                      </Text>
+                      <Text style={[styles.profilePillFarmer, isSelected && { color: '#ffedd5' }]} numberOfLines={1}>
+                        🌾 {p.worker.farmer?.name || 'Farmer'}
+                      </Text>
+                    </View>
+
+                    <View style={[styles.profilePillBalanceBadge, isSelected && { backgroundColor: '#ffffff' }]}>
+                      <Text style={[styles.profilePillBalanceText, isSelected && { color: '#c2410c' }]}>
+                        {formatInr(p.summary.pendingBalance)}
+                      </Text>
+                    </View>
+
+                    {isSelected ? (
+                      <Ionicons name="checkmark-circle" size={18} color="#ffffff" />
+                    ) : null}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        ) : null}
+
         {/* 1. Employer / Farmer Profile Banner - Prominent at TOP */}
         {farmer ? (
           <View style={[styles.farmerTopCard, premiumShadow('#0f172a', 'sm')]}>
@@ -571,4 +635,59 @@ const styles = StyleSheet.create({
   itemQtyRate: { fontSize: 14, fontFamily: FONT.semiBold, color: '#334155' },
   itemAmount: { fontSize: 16, fontFamily: FONT.extraBold, color: '#ea580c' },
   itemNotes: { fontSize: 12, color: '#64748b', fontFamily: FONT.medium, marginTop: 6 },
+  profileSwitcherCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    padding: 10,
+    borderWidth: 1.5,
+    borderColor: '#fed7aa',
+  },
+  switcherHeaderTitle: {
+    fontSize: 12.5,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+  },
+  switcherHeaderSub: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: '#ea580c',
+  },
+  profilePillCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1.5,
+    borderColor: '#cbd5e1',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    minWidth: 170,
+  },
+  profilePillCardActive: {
+    backgroundColor: '#ea580c',
+    borderColor: '#c2410c',
+  },
+  profilePillName: {
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+  },
+  profilePillFarmer: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    marginTop: 1,
+  },
+  profilePillBalanceBadge: {
+    backgroundColor: '#ffedd5',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+  },
+  profilePillBalanceText: {
+    fontSize: 10.5,
+    fontFamily: FONT.extraBold,
+    color: '#ea580c',
+  },
 });

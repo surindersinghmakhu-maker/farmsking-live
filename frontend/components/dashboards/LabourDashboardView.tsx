@@ -47,15 +47,20 @@ export const LabourDashboardView: React.FC = () => {
 
   // Active profile selection (multi-worker & farmer support)
   const activeProfile = useMemo(() => {
+    if (selectedWorkerId) {
+      const foundInFiltered = (filteredProfiles || []).find((p: any) => p.worker?.id === selectedWorkerId);
+      if (foundInFiltered) return foundInFiltered;
+      const foundInAll = (profiles || []).find((p: any) => p.worker?.id === selectedWorkerId);
+      if (foundInAll) return foundInAll;
+    }
     if (filteredProfiles && filteredProfiles.length > 0) {
-      if (selectedWorkerId) {
-        const found = filteredProfiles.find((p: any) => p.worker.id === selectedWorkerId);
-        if (found) return found;
-      }
       return filteredProfiles[0];
     }
+    if (profiles && profiles.length > 0) {
+      return profiles[0];
+    }
     return null;
-  }, [filteredProfiles, selectedWorkerId]);
+  }, [filteredProfiles, profiles, selectedWorkerId]);
 
   const summary = activeProfile?.summary || data?.summary || { totalEarned: 0, totalPaid: 0, pendingBalance: 0 };
   const worker = activeProfile?.worker || data?.worker;

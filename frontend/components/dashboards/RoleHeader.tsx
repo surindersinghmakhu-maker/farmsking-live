@@ -122,7 +122,7 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
                 </View>
               </TouchableOpacity>
               <Text style={styles.secondaryAvatarName} numberOfLines={1}>
-                {secondaryName ? secondaryName.split(' ')[0] : 'Farmer'}
+                {secondaryName || 'Farmer'}
               </Text>
             </View>
           ) : planBadge ? (
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT.extraBold,
     color: '#ffffff',
     marginTop: 2,
-    maxWidth: 55,
+    maxWidth: 80,
     textAlign: 'center',
   },
 });

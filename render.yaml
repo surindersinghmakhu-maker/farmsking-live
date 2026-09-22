@@ -4,8 +4,8 @@ services:
     runtime: node
     plan: free
     rootDir: backend
-    buildCommand: npm install --legacy-peer-deps && npx prisma generate && npm run build
-    startCommand: npx prisma migrate deploy && npx prisma db seed && npm run start:prod
+    buildCommand: npm install --legacy-peer-deps && npx prisma@6.4.0 generate && npm run build
+    startCommand: npx prisma@6.4.0 migrate deploy && npx prisma@6.4.0 db seed && npm run start:prod
     envVars:
       - key: NODE_ENV
         value: production

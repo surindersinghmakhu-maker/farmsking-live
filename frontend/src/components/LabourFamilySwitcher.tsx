@@ -293,21 +293,34 @@ export function LabourFamilySwitcher({
 
   return (
     <View style={styles.container}>
-      {/* 1. FARMER SWITCHER CARD (DISTINCT GREEN/EMERALD BACKGROUND) */}
-      {!hideFarmerSwitcher && availableFarmers.length > 0 && (
-        <View style={styles.farmerCardContainer}>
-          <View style={styles.cardHeaderRow}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={{ fontSize: 15 }}>🌾</Text>
-              <Text style={styles.farmerCardTitle}>Select Farmer / Kheti Malik</Text>
-            </View>
-            <View style={styles.farmerRoleBadge}>
-              <Text style={styles.farmerRoleBadgeText}>Employer / Landowner</Text>
-            </View>
+      {/* UNIFIED FARMER & FAMILY MEMBER PROFILES SWITCHER CARD (SINGLE ROW CONTAINER) */}
+      <View style={[styles.workerCardContainer, premiumShadow('#0f172a', 'sm')]}>
+        <View style={styles.cardHeaderRow}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Ionicons name="people" size={17} color="#15803d" />
+            <Text style={styles.workerCardTitle}>Profiles Switcher</Text>
           </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.avatarScrollContainer}>
-            {availableFarmers.map((f) => {
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            {!hideFarmerSwitcher && availableFarmers.length > 0 && (
+              <View style={styles.farmerRoleBadge}>
+                <Text style={styles.farmerRoleBadgeText}>🌾 Farmer</Text>
+              </View>
+            )}
+            <View style={styles.countBadge}>
+              <Text style={styles.countBadgeText}>👷 {displayWorkers.length} Members</Text>
+            </View>
+          </View>
+        </View>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.avatarScrollContainer}
+        >
+          {/* 1. FARMERS FIRST IN ROW */}
+          {!hideFarmerSwitcher &&
+            availableFarmers.map((f) => {
               const isSelected = activeFarmerId === f.id;
               return (
                 <TouchableOpacity
@@ -320,7 +333,7 @@ export function LabourFamilySwitcher({
                   }}
                 >
                   <View style={[styles.avatarRing, isSelected && styles.farmerRingActive]}>
-                    <Avatar uri={f.photoUrl} size={54} />
+                    <Avatar uri={f.photoUrl} size={50} />
                     {isSelected && (
                       <View style={styles.farmerActiveBadge}>
                         <Ionicons name="checkmark" size={10} color="#ffffff" />
@@ -331,33 +344,18 @@ export function LabourFamilySwitcher({
                     {f.name}
                   </Text>
                   <Text style={styles.farmerSubText} numberOfLines={1}>
-                    {f.village ? `📍 ${f.village}` : '🌾 Farmer'}
+                    🌾 Farmer
                   </Text>
                 </TouchableOpacity>
               );
             })}
-          </ScrollView>
-        </View>
-      )}
 
-      {/* 2. FAMILY WORKER PROFILE SWITCHER CARD (DISTINCT SLATE/BLUE BACKGROUND) */}
-      <View style={styles.workerCardContainer}>
-        <View style={styles.cardHeaderRow}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Ionicons name="people" size={18} color="#15803d" />
-            <Text style={styles.workerCardTitle}>Family Profiles</Text>
-            <View style={styles.countBadge}>
-              <Text style={styles.countBadgeText}>{displayWorkers.length} Members</Text>
-            </View>
-          </View>
-          <Text style={styles.workerRoleTag}>Workers / Labour</Text>
-        </View>
+          {/* Vertical Separator line if farmers exist */}
+          {!hideFarmerSwitcher && availableFarmers.length > 0 && displayWorkers.length > 0 && (
+            <View style={styles.avatarRowDivider} />
+          )}
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.avatarScrollContainer}
-        >
+          {/* 2. FAMILY WORKERS NEXT IN SAME ROW */}
           {displayWorkers.map((w) => {
             const isSelected = activeWorker?.id === w.id;
 
@@ -372,7 +370,7 @@ export function LabourFamilySwitcher({
                 }}
               >
                 <View style={[styles.avatarRing, isSelected && styles.avatarRingActive]}>
-                  <Avatar uri={w.photoUrl} size={54} />
+                  <Avatar uri={w.photoUrl} size={50} />
                   {isSelected && (
                     <View style={styles.activeBadge}>
                       <Ionicons name="checkmark" size={10} color="#ffffff" />
@@ -930,6 +928,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
+  },
+  avatarRowDivider: {
+    width: 1.5,
+    height: 48,
+    backgroundColor: '#cbd5e1',
+    alignSelf: 'center',
+    marginHorizontal: 4,
   },
   cardHeaderRow: {
     flexDirection: 'row',

@@ -318,75 +318,87 @@ export function LabourFamilySwitcher({
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.avatarScrollContainer}
         >
-          {/* 1. FARMERS FIRST IN ROW */}
-          {!hideFarmerSwitcher &&
-            availableFarmers.map((f) => {
-              const isSelected = activeFarmerId === f.id;
-              return (
-                <TouchableOpacity
-                  key={`farmer-${f.id}`}
-                  style={[styles.avatarCard, isSelected && styles.avatarCardActive]}
-                  activeOpacity={0.85}
-                  onPress={() => {
-                    tap();
-                    if (onSelectFarmer) onSelectFarmer(f.id);
-                  }}
-                >
-                  <View style={[styles.avatarRing, isSelected && styles.farmerRingActive]}>
-                    <Avatar uri={f.photoUrl} size={50} />
-                    {isSelected && (
-                      <View style={styles.farmerActiveBadge}>
-                        <Ionicons name="checkmark" size={10} color="#ffffff" />
+          {/* 1. FARMERS SECTION (DISTINCT EMERALD GREEN BACKGROUND) */}
+          {!hideFarmerSwitcher && availableFarmers.length > 0 && (
+            <View style={styles.farmerSectionWrapper}>
+              <View style={styles.sectionHeaderLabel}>
+                <Text style={styles.farmerSectionLabelText}>🌾 Farmers</Text>
+              </View>
+              <View style={{ flexDirection: 'row', gap: 6 }}>
+                {availableFarmers.map((f) => {
+                  const isSelected = activeFarmerId === f.id;
+                  return (
+                    <TouchableOpacity
+                      key={`farmer-${f.id}`}
+                      style={[styles.farmerChipCard, isSelected && styles.farmerChipCardActive]}
+                      activeOpacity={0.85}
+                      onPress={() => {
+                        tap();
+                        if (onSelectFarmer) onSelectFarmer(f.id);
+                      }}
+                    >
+                      <View style={[styles.avatarRing, isSelected && styles.farmerRingActive]}>
+                        <Avatar uri={f.photoUrl} size={46} />
+                        {isSelected && (
+                          <View style={styles.farmerActiveBadge}>
+                            <Ionicons name="checkmark" size={9} color="#ffffff" />
+                          </View>
+                        )}
                       </View>
-                    )}
-                  </View>
-                  <Text style={[styles.avatarName, isSelected && styles.farmerNameActive]} numberOfLines={1}>
-                    {f.name}
-                  </Text>
-                  <Text style={styles.farmerSubText} numberOfLines={1}>
-                    🌾 Farmer
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-
-          {/* Vertical Separator line if farmers exist */}
-          {!hideFarmerSwitcher && availableFarmers.length > 0 && displayWorkers.length > 0 && (
-            <View style={styles.avatarRowDivider} />
+                      <Text style={[styles.avatarName, isSelected && styles.farmerNameActive]} numberOfLines={1}>
+                        {f.name}
+                      </Text>
+                      <Text style={styles.farmerSubText} numberOfLines={1}>
+                        Farmer
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
           )}
 
-          {/* 2. FAMILY WORKERS NEXT IN SAME ROW */}
-          {displayWorkers.map((w) => {
-            const isSelected = activeWorker?.id === w.id;
+          {/* 2. FAMILY WORKERS SECTION (DISTINCT SLATE/BLUE BACKGROUND) */}
+          {displayWorkers.length > 0 && (
+            <View style={styles.workerSectionWrapper}>
+              <View style={styles.sectionHeaderLabel}>
+                <Text style={styles.workerSectionLabelText}>👷 Workers</Text>
+              </View>
+              <View style={{ flexDirection: 'row', gap: 6 }}>
+                {displayWorkers.map((w) => {
+                  const isSelected = activeWorker?.id === w.id;
 
-            return (
-              <TouchableOpacity
-                key={`worker-${w.id}`}
-                style={[styles.avatarCard, isSelected && styles.avatarCardActive]}
-                activeOpacity={0.85}
-                onPress={() => {
-                  tap();
-                  onSelectWorker(w);
-                }}
-              >
-                <View style={[styles.avatarRing, isSelected && styles.avatarRingActive]}>
-                  <Avatar uri={w.photoUrl} size={50} />
-                  {isSelected && (
-                    <View style={styles.activeBadge}>
-                      <Ionicons name="checkmark" size={10} color="#ffffff" />
-                    </View>
-                  )}
-                </View>
+                  return (
+                    <TouchableOpacity
+                      key={`worker-${w.id}`}
+                      style={[styles.workerChipCard, isSelected && styles.workerChipCardActive]}
+                      activeOpacity={0.85}
+                      onPress={() => {
+                        tap();
+                        onSelectWorker(w);
+                      }}
+                    >
+                      <View style={[styles.avatarRing, isSelected && styles.avatarRingActive]}>
+                        <Avatar uri={w.photoUrl} size={46} />
+                        {isSelected && (
+                          <View style={styles.activeBadge}>
+                            <Ionicons name="checkmark" size={9} color="#ffffff" />
+                          </View>
+                        )}
+                      </View>
 
-                <Text style={[styles.avatarName, isSelected && styles.avatarNameActive]} numberOfLines={1}>
-                  {w.name}
-                </Text>
-                <Text style={styles.avatarRelation} numberOfLines={1}>
-                  {w.relation || 'Member'}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+                      <Text style={[styles.avatarName, isSelected && styles.avatarNameActive]} numberOfLines={1}>
+                        {w.name}
+                      </Text>
+                      <Text style={styles.avatarRelation} numberOfLines={1}>
+                        {w.relation || 'Member'}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          )}
         </ScrollView>
       </View>
 
@@ -928,6 +940,66 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
+  },
+  farmerSectionWrapper: {
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1.5,
+    borderColor: '#bbf7d0',
+    borderRadius: RADIUS.md,
+    padding: 6,
+    paddingHorizontal: 8,
+  },
+  workerSectionWrapper: {
+    backgroundColor: '#f8fafc',
+    borderWidth: 1.5,
+    borderColor: '#cbd5e1',
+    borderRadius: RADIUS.md,
+    padding: 6,
+    paddingHorizontal: 8,
+  },
+  sectionHeaderLabel: {
+    marginBottom: 4,
+    paddingHorizontal: 2,
+  },
+  farmerSectionLabelText: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    color: '#15803d',
+    textTransform: 'uppercase',
+  },
+  workerSectionLabelText: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    color: '#475569',
+    textTransform: 'uppercase',
+  },
+  farmerChipCard: {
+    alignItems: 'center',
+    width: 68,
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.md,
+    paddingVertical: 5,
+    paddingHorizontal: 3,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+  },
+  farmerChipCardActive: {
+    borderColor: '#16a34a',
+    backgroundColor: '#dcfce7',
+  },
+  workerChipCard: {
+    alignItems: 'center',
+    width: 68,
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.md,
+    paddingVertical: 5,
+    paddingHorizontal: 3,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  workerChipCardActive: {
+    borderColor: '#16a34a',
+    backgroundColor: '#f0fdf4',
   },
   avatarRowDivider: {
     width: 1.5,

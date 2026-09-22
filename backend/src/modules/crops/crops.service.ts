@@ -141,7 +141,10 @@ export class CropsService {
   async listMineForFarmer(user: AuthUser) {
     if (!user?.id) return [];
     try {
-      const isGlobalAdmin = user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN;
+      const isGlobalAdmin =
+        user.role === Role.ADMIN ||
+        user.role === Role.SUPER_ADMIN ||
+        (Array.isArray(user.roles) && (user.roles.includes(Role.ADMIN) || user.roles.includes(Role.SUPER_ADMIN)));
 
       // 1. Fetch all plot IDs for farms owned by this user (or all plots if global admin)
       const userFarms = await this.prisma.farm.findMany({
@@ -152,8 +155,8 @@ export class CropsService {
       const plotIds = userFarms.flatMap((f) => f.plots.map((p) => p.id));
       if (plotIds.length === 0) return [];
 
-      // 2. Fetch all crop cycles for these plots
-      return await this.prisma.cropCycle.findMany({
+      // 2. Fetch all crop cycles for these plots directly by plotIds
+      const crops = await this.prisma.cropCycle.findMany({
         where: {
           deletedAt: null,
           plotId: { in: plotIds },
@@ -161,8 +164,10 @@ export class CropsService {
         include: { plot: { select: { id: true, name: true, farmId: true, area: true, areaUnit: true, irrigationType: true } } },
         orderBy: { createdAt: 'desc' },
       });
+
+      return crops || [];
     } catch (err: any) {
-      console.error('[CropsService.listMineForFarmer] Database query error:', err);
+      console.error('[CropsService.listMineForFarmer] Safe fallback catch:', err);
       return [];
     }
   }

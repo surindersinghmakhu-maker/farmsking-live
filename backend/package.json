@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "postinstall": "npx prisma@6.4.0 generate",
-    "build": "npx prisma generate && node --max-old-space-size=2048 node_modules/@nestjs/cli/bin/nest.js build",
+    "build": "npx rimraf dist && npx prisma generate && node --max-old-space-size=2048 node_modules/@nestjs/cli/bin/nest.js build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "ts-node --transpile-only src/main.ts",

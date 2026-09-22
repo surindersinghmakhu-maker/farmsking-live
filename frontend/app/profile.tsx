@@ -286,14 +286,14 @@ export default function ProfileScreen() {
 
           <View style={styles.familyHeadMetaRow}>
             <View style={styles.familyHeadMetaItem}>
-              <Ionicons name="key-outline" size={14} color="#15803d" />
+              <Ionicons name="key-outline" size={13} color="#15803d" />
               <Text style={styles.familyHeadMetaLabel}>King ID:</Text>
               <Text style={styles.familyHeadMetaValue}>{user?.kingId || '—'}</Text>
             </View>
 
             {user?.mobile ? (
               <View style={styles.familyHeadMetaItem}>
-                <Ionicons name="call-outline" size={14} color="#475569" />
+                <Ionicons name="call-outline" size={13} color="#475569" />
                 <Text style={styles.familyHeadMetaLabel}>Mobile:</Text>
                 <Text style={styles.familyHeadMetaValue}>{user.mobile}</Text>
               </View>
@@ -303,7 +303,7 @@ export default function ProfileScreen() {
 
         {/* Labour Family Member & Farmer Switcher Section */}
         {labourWorkersList.length > 0 && (
-          <View style={{ marginBottom: 16 }}>
+          <View style={{ marginBottom: 10, width: '100%', maxWidth: 460 }}>
             <LabourFamilySwitcher
               workers={labourWorkersList}
               selectedWorkerId={selectedLabourWorkerId}
@@ -321,7 +321,7 @@ export default function ProfileScreen() {
         {/* SAVE WORKERS PROFILES BUTTON */}
         {isSaved && (
           <View style={styles.savedNotice}>
-            <Ionicons name="checkmark-circle" size={16} color="#16a34a" />
+            <Ionicons name="checkmark-circle" size={15} color="#16a34a" />
             <Text style={styles.savedNoticeText}>Workers Profiles Saved Successfully!</Text>
           </View>
         )}
@@ -329,7 +329,7 @@ export default function ProfileScreen() {
         {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
 
         <TouchableOpacity
-          style={[styles.saveBtn, { backgroundColor: '#16a34a', marginTop: 12, marginBottom: 20 }]}
+          style={[styles.saveBtn, { backgroundColor: '#16a34a', marginTop: 8, marginBottom: 12, paddingVertical: 10, width: '100%', maxWidth: 460 }]}
           onPress={async () => {
             tap();
             await refetchLabour();
@@ -341,7 +341,7 @@ export default function ProfileScreen() {
             <ActivityIndicator color="#ffffff" />
           ) : (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Ionicons name="checkmark-done-circle-outline" size={18} color="#ffffff" />
+              <Ionicons name="checkmark-done-circle-outline" size={17} color="#ffffff" />
               <Text style={styles.saveBtnText}>Save Workers Profiles</Text>
             </View>
           )}
@@ -744,7 +744,7 @@ const styles = StyleSheet.create({
   addressMeta: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b' },
   tagChip: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#f8fafc' },
   tagChipText: { fontSize: 11, fontFamily: FONT.bold, color: '#64748b' },
-  scrollContent: { padding: SPACING.md, paddingBottom: 32, alignItems: 'center' },
+  scrollContent: { padding: 10, paddingBottom: 20, alignItems: 'center' },
   card: { width: '100%', maxWidth: 460, backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.lg, ...premiumShadow('#0f172a', 'sm') },
   avatarSection: { alignItems: 'center', marginBottom: 8 },
   singleMetaRow: {
@@ -917,55 +917,60 @@ const styles = StyleSheet.create({
   saveBtn: { marginTop: 18, borderRadius: RADIUS.md, paddingVertical: 12, alignItems: 'center' },
   saveBtnText: { color: '#ffffff', fontSize: 14.5, fontFamily: FONT.bold },
   familyHeadSummaryCard: {
+    width: '100%',
+    maxWidth: 460,
     backgroundColor: '#f0fdf4',
     borderWidth: 1.5,
     borderColor: '#bbf7d0',
     borderRadius: RADIUS.md,
-    padding: SPACING.md,
-    marginTop: 16,
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+    marginTop: 4,
+    marginBottom: 8,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 6,
   },
   familyHeadBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
+    gap: 6,
   },
   familyHeadNameText: {
-    fontSize: 15,
+    fontSize: 13.5,
     fontFamily: FONT.extraBold,
     color: '#0f172a',
   },
   familyHeadTag: {
     backgroundColor: '#16a34a',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
     borderRadius: RADIUS.pill,
   },
   familyHeadTagText: {
-    fontSize: 10.5,
+    fontSize: 9.5,
     fontFamily: FONT.bold,
     color: '#ffffff',
   },
   familyHeadMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    flexWrap: 'wrap',
-    justifyContent: 'center',
+    gap: 10,
   },
   familyHeadMetaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
   },
   familyHeadMetaLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: FONT.medium,
     color: '#64748b',
   },
   familyHeadMetaValue: {
-    fontSize: 12.5,
+    fontSize: 11.5,
     fontFamily: FONT.bold,
     color: '#0f172a',
   },

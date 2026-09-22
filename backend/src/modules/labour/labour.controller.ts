@@ -31,21 +31,25 @@ export class LabourController {
 
   /** Worker Management Endpoints (Available to all authenticated users) */
   @Post('workers')
+  @Roles(Role.LABOUR, Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN, Role.CUSTOMER, Role.GARDENER, Role.ADVISOR, Role.BUSINESS_PARTNER, Role.OPERATOR)
   createWorker(@CurrentUser() user: AuthUser, @Body() dto: CreateLabourWorkerDto) {
     return this.labourService.createWorker(user, dto);
   }
 
   @Get('workers')
+  @Roles(Role.LABOUR, Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN, Role.CUSTOMER, Role.GARDENER, Role.ADVISOR, Role.BUSINESS_PARTNER, Role.OPERATOR)
   getWorkers(@CurrentUser() user: AuthUser) {
     return this.labourService.getWorkersForFarmer(user);
   }
 
   @Put('workers/:id')
+  @Roles(Role.LABOUR, Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN, Role.CUSTOMER, Role.GARDENER, Role.ADVISOR, Role.BUSINESS_PARTNER, Role.OPERATOR)
   updateWorker(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: UpdateLabourWorkerDto) {
     return this.labourService.updateWorker(user, id, dto);
   }
 
   @Delete('workers/:id')
+  @Roles(Role.LABOUR, Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN, Role.CUSTOMER, Role.GARDENER, Role.ADVISOR, Role.BUSINESS_PARTNER, Role.OPERATOR)
   deleteWorker(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.labourService.deleteWorker(user, id);
   }

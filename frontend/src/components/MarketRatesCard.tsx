@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Modal, Platform, Pressable, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Linking, Modal, Platform, Pressable, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Sharing from 'expo-sharing';
 import ViewShot, { captureRef } from 'react-native-view-shot';
@@ -268,17 +268,26 @@ export function MarketRatesCard() {
       });
 
       const logoImg = new window.Image();
-      logoImg.crossOrigin = 'anonymous';
-      logoImg.src = require('../../assets/images/farmsking_logo_hd.png');
-
-      await new Promise((resolve) => {
-        if (logoImg.complete && logoImg.naturalWidth > 0) {
-          resolve(null);
-        } else {
-          logoImg.onload = () => resolve(null);
-          logoImg.onerror = () => resolve(null);
+      try {
+        const rawLogo = require('../../assets/images/farmsking_logo_hd.png');
+        const resolvedUri = Image.resolveAssetSource ? Image.resolveAssetSource(rawLogo)?.uri : null;
+        const logoSrc = resolvedUri || (typeof rawLogo === 'string' ? rawLogo : rawLogo?.default || rawLogo?.uri);
+        if (logoSrc) {
+          logoImg.crossOrigin = 'anonymous';
+          logoImg.src = logoSrc;
+          await new Promise((resolve) => {
+            if (logoImg.complete && logoImg.naturalWidth > 0) {
+              resolve(null);
+            } else {
+              logoImg.onload = () => resolve(null);
+              logoImg.onerror = () => resolve(null);
+              setTimeout(resolve, 500);
+            }
+          });
         }
-      });
+      } catch {
+        // Fallback: Proceed with text logo
+      }
 
       const canvas = document.createElement('canvas');
       const userRefCode = user?.kingId ? user.kingId : 'FARMSKING';
@@ -679,17 +688,29 @@ export function MarketRatesCard() {
       }
       ctx.restore();
 
-      const dataUrl = canvas.toDataURL('image/png');
       const fileName = getCropRateFileName(crop.displayTitle);
-
-      const link = document.createElement('a');
-      link.download = fileName;
-      link.href = dataUrl;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      Alert.alert('Success 🖼️', `${crop.displayTitle} Price Card poster saved as ${fileName}! You can now share it on WhatsApp.`);
+      if (typeof canvas.toBlob === 'function') {
+        canvas.toBlob((blob) => {
+          const downloadUrl = blob ? URL.createObjectURL(blob) : canvas.toDataURL('image/png');
+          const link = document.createElement('a');
+          link.download = fileName;
+          link.href = downloadUrl;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          if (blob) setTimeout(() => URL.revokeObjectURL(downloadUrl), 10000);
+          Alert.alert('Success 🖼️', `${crop.displayTitle} Price Card poster saved as ${fileName}! You can now share it on WhatsApp.`);
+        }, 'image/png');
+      } else {
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = fileName;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        Alert.alert('Success 🖼️', `${crop.displayTitle} Price Card poster saved as ${fileName}! You can now share it on WhatsApp.`);
+      }
     } catch (err) {
       console.error('Web Canvas image generation error:', err);
       Alert.alert('Error', 'Failed to generate web image card.');

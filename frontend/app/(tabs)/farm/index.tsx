@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-// Updated Farm & Crop Registration Screen with Mandatory Sale Entry for Crop Completion & Completed History Section
+// Farm & Crop Advisory Dashboard — Vercel Deploy Sync v2.0
 import {
   FlatList,
   StyleSheet,

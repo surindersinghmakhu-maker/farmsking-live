@@ -273,6 +273,34 @@ export default function ProfileScreen() {
         <AddressesTab theme={theme} />
       ) : (
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* FAMILY HEAD ACCOUNT DETAILS SUMMARY CARD AT VERY TOP */}
+        <View style={styles.familyHeadSummaryCard}>
+          <View style={styles.familyHeadBadgeRow}>
+            <Text style={styles.familyHeadNameText}>
+              👨‍🌾 {user?.name || 'Family Head'}
+            </Text>
+            <View style={styles.familyHeadTag}>
+              <Text style={styles.familyHeadTagText}>Family Head</Text>
+            </View>
+          </View>
+
+          <View style={styles.familyHeadMetaRow}>
+            <View style={styles.familyHeadMetaItem}>
+              <Ionicons name="key-outline" size={14} color="#15803d" />
+              <Text style={styles.familyHeadMetaLabel}>King ID:</Text>
+              <Text style={styles.familyHeadMetaValue}>{user?.kingId || '—'}</Text>
+            </View>
+
+            {user?.mobile ? (
+              <View style={styles.familyHeadMetaItem}>
+                <Ionicons name="call-outline" size={14} color="#475569" />
+                <Text style={styles.familyHeadMetaLabel}>Mobile:</Text>
+                <Text style={styles.familyHeadMetaValue}>{user.mobile}</Text>
+              </View>
+            ) : null}
+          </View>
+        </View>
+
         {/* Labour Family Member & Farmer Switcher Section */}
         {isLabour && labourWorkersList.length > 0 && (
           <View style={{ marginBottom: 12 }}>
@@ -534,34 +562,6 @@ export default function ProfileScreen() {
               <Text style={styles.saveBtnText}>Save Farmer Profile</Text>
             )}
           </TouchableOpacity>
-
-          {/* FAMILY HEAD ACCOUNT DETAILS SUMMARY CARD AT BOTTOM */}
-          <View style={styles.familyHeadSummaryCard}>
-            <View style={styles.familyHeadBadgeRow}>
-              <Text style={styles.familyHeadNameText}>
-                👨‍🌾 {user?.name || 'Family Head'}
-              </Text>
-              <View style={styles.familyHeadTag}>
-                <Text style={styles.familyHeadTagText}>Family Head</Text>
-              </View>
-            </View>
-
-            <View style={styles.familyHeadMetaRow}>
-              <View style={styles.familyHeadMetaItem}>
-                <Ionicons name="key-outline" size={14} color="#15803d" />
-                <Text style={styles.familyHeadMetaLabel}>King ID:</Text>
-                <Text style={styles.familyHeadMetaValue}>{user?.kingId || '—'}</Text>
-              </View>
-
-              {user?.mobile ? (
-                <View style={styles.familyHeadMetaItem}>
-                  <Ionicons name="call-outline" size={14} color="#475569" />
-                  <Text style={styles.familyHeadMetaLabel}>Mobile:</Text>
-                  <Text style={styles.familyHeadMetaValue}>{user.mobile}</Text>
-                </View>
-              ) : null}
-            </View>
-          </View>
         </View>
       </ScrollView>
       )}

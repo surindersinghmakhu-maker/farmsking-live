@@ -480,24 +480,30 @@ export function LabourFamilySwitcher({
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
-              {/* TOP ROW: AVATAR PICKER (LEFT) + MEMBER NAME INPUT (RIGHT) */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 6 }}>
-                <TouchableOpacity
-                  style={styles.compactFormAvatarWrap}
-                  activeOpacity={0.8}
-                  onPress={pickPhotoForForm}
-                >
-                  <Avatar uri={photoUrl} size={56} />
-                  <View style={styles.compactCameraOverlay}>
-                    <Ionicons name="camera" size={12} color="#ffffff" />
-                  </View>
-                </TouchableOpacity>
+            <ScrollView
+              style={{ maxHeight: 420 }}
+              contentContainerStyle={{ paddingBottom: isUnitDropdownOpen ? 180 : 16 }}
+              nestedScrollEnabled
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              {/* TOP ROW: MEMBER NAME LABEL + (AVATAR PICKER + TEXTINPUT ALIGNED SIDE-BY-SIDE) */}
+              <View style={{ marginBottom: 6 }}>
+                <Text style={styles.label}>Member Name *</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <TouchableOpacity
+                    style={styles.compactFormAvatarWrap}
+                    activeOpacity={0.85}
+                    onPress={pickPhotoForForm}
+                  >
+                    <Avatar uri={photoUrl} size={44} />
+                    <View style={styles.compactCameraOverlay}>
+                      <Ionicons name="camera" size={10} color="#ffffff" />
+                    </View>
+                  </TouchableOpacity>
 
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.label}>Member Name *</Text>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { flex: 1, marginTop: 0 }]}
                     placeholder="e.g. Suman Devi / Jeet Singh"
                     placeholderTextColor="#94a3b8"
                     value={name}
@@ -524,7 +530,7 @@ export function LabourFamilySwitcher({
                 })}
               </ScrollView>
 
-              <View style={{ flexDirection: 'row', gap: 8, zIndex: 100, marginTop: 4 }}>
+              <View style={{ flexDirection: 'row', gap: 8, zIndex: 9999, elevation: 20, marginTop: 4 }}>
                 {/* 1. Mobile Number */}
                 <View style={{ flex: 1.2 }}>
                   <Text style={styles.label} numberOfLines={1}>Mobile (Optional)</Text>
@@ -552,7 +558,7 @@ export function LabourFamilySwitcher({
                 </View>
 
                 {/* 3. Working Unit */}
-                <View style={{ flex: 1.1, position: 'relative' }}>
+                <View style={{ flex: 1.1, position: 'relative', zIndex: 9999, elevation: 20 }}>
                   <Text style={styles.label} numberOfLines={1}>Working Unit *</Text>
                   <TouchableOpacity
                     style={{
@@ -580,19 +586,20 @@ export function LabourFamilySwitcher({
                     <View
                       style={{
                         position: 'absolute',
-                        top: 62,
+                        top: 64,
                         left: 0,
                         right: 0,
-                        zIndex: 1000,
+                        zIndex: 10000,
                         backgroundColor: '#ffffff',
                         borderRadius: RADIUS.md,
                         borderWidth: 1.5,
-                        borderColor: '#cbd5e1',
+                        borderColor: '#16a34a',
                         maxHeight: 180,
-                        elevation: 10,
+                        elevation: 25,
                         shadowColor: '#000',
-                        shadowOpacity: 0.2,
-                        shadowRadius: 8,
+                        shadowOpacity: 0.25,
+                        shadowRadius: 10,
+                        shadowOffset: { width: 0, height: 4 },
                       }}
                     >
                       <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
@@ -610,7 +617,7 @@ export function LabourFamilySwitcher({
                             key={u}
                             style={{
                               paddingHorizontal: 10,
-                              paddingVertical: 8,
+                              paddingVertical: 9,
                               borderBottomWidth: 1,
                               borderBottomColor: '#f1f5f9',
                               backgroundColor: defaultUnit === u ? '#f0fdf4' : '#ffffff',
@@ -665,24 +672,30 @@ export function LabourFamilySwitcher({
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
-              {/* TOP ROW: AVATAR PICKER (LEFT) + MEMBER NAME INPUT (RIGHT) */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 6 }}>
-                <TouchableOpacity
-                  style={styles.compactFormAvatarWrap}
-                  activeOpacity={0.8}
-                  onPress={pickPhotoForEditForm}
-                >
-                  <Avatar uri={editPhotoUrl} size={56} />
-                  <View style={styles.compactCameraOverlay}>
-                    <Ionicons name="camera" size={12} color="#ffffff" />
-                  </View>
-                </TouchableOpacity>
+            <ScrollView
+              style={{ maxHeight: 420 }}
+              contentContainerStyle={{ paddingBottom: isEditUnitDropdownOpen ? 180 : 16 }}
+              nestedScrollEnabled
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              {/* TOP ROW: MEMBER NAME LABEL + (AVATAR PICKER + TEXTINPUT ALIGNED SIDE-BY-SIDE) */}
+              <View style={{ marginBottom: 6 }}>
+                <Text style={styles.label}>Member Name *</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <TouchableOpacity
+                    style={styles.compactFormAvatarWrap}
+                    activeOpacity={0.85}
+                    onPress={pickPhotoForEditForm}
+                  >
+                    <Avatar uri={editPhotoUrl} size={44} />
+                    <View style={styles.compactCameraOverlay}>
+                      <Ionicons name="camera" size={10} color="#ffffff" />
+                    </View>
+                  </TouchableOpacity>
 
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.label}>Member Name *</Text>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { flex: 1, marginTop: 0 }]}
                     placeholder="e.g. Suman Devi / Jeet Singh"
                     placeholderTextColor="#94a3b8"
                     value={editName}
@@ -709,7 +722,7 @@ export function LabourFamilySwitcher({
                 })}
               </ScrollView>
 
-              <View style={{ flexDirection: 'row', gap: 8, zIndex: 100, marginTop: 4 }}>
+              <View style={{ flexDirection: 'row', gap: 8, zIndex: 9999, elevation: 20, marginTop: 4 }}>
                 {/* 1. Mobile Number */}
                 <View style={{ flex: 1.2 }}>
                   <Text style={styles.label} numberOfLines={1}>Mobile (Optional)</Text>
@@ -737,7 +750,7 @@ export function LabourFamilySwitcher({
                 </View>
 
                 {/* 3. Working Unit */}
-                <View style={{ flex: 1.1, position: 'relative' }}>
+                <View style={{ flex: 1.1, position: 'relative', zIndex: 9999, elevation: 20 }}>
                   <Text style={styles.label} numberOfLines={1}>Working Unit *</Text>
                   <TouchableOpacity
                     style={{
@@ -765,19 +778,20 @@ export function LabourFamilySwitcher({
                     <View
                       style={{
                         position: 'absolute',
-                        top: 62,
+                        top: 64,
                         left: 0,
                         right: 0,
-                        zIndex: 1000,
+                        zIndex: 10000,
                         backgroundColor: '#ffffff',
                         borderRadius: RADIUS.md,
                         borderWidth: 1.5,
-                        borderColor: '#cbd5e1',
+                        borderColor: '#16a34a',
                         maxHeight: 180,
-                        elevation: 10,
+                        elevation: 25,
                         shadowColor: '#000',
-                        shadowOpacity: 0.2,
-                        shadowRadius: 8,
+                        shadowOpacity: 0.25,
+                        shadowRadius: 10,
+                        shadowOffset: { width: 0, height: 4 },
                       }}
                     >
                       <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
@@ -795,7 +809,7 @@ export function LabourFamilySwitcher({
                             key={u}
                             style={{
                               paddingHorizontal: 10,
-                              paddingVertical: 8,
+                              paddingVertical: 9,
                               borderBottomWidth: 1,
                               borderBottomColor: '#f1f5f9',
                               backgroundColor: editDefaultUnit === u ? '#f0fdf4' : '#ffffff',
@@ -1218,6 +1232,24 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+  },
+  compactFormAvatarWrap: {
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  compactCameraOverlay: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    backgroundColor: '#16a34a',
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,

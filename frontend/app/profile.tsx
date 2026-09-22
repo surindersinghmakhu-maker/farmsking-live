@@ -171,7 +171,8 @@ export default function ProfileScreen() {
     tap();
     setSaveError(null);
     setIsSaved(false);
-    if (!name.trim()) {
+    const trimmedName = (name || user?.name || 'User').trim();
+    if (!trimmedName) {
       setSaveError('❌ Please enter your full name.');
       return;
     }
@@ -194,7 +195,6 @@ export default function ProfileScreen() {
       return;
     }
     try {
-      const trimmedName = name.trim();
       const finalFarmName = farmName.trim() || trimmedName;
       const finalFarmAddress = farmAddress.trim();
       const finalFarmMobile = farmMobile.trim();
@@ -317,18 +317,6 @@ export default function ProfileScreen() {
         )}
 
         <View style={styles.card}>
-          <Text style={styles.inputLabel}>Farmer Name: full name *</Text>
-          <View style={styles.inputWrap}>
-            <Ionicons name="person-outline" size={16} color="#94a3b8" />
-            <TextInput
-              style={styles.input}
-              value={name}
-              onChangeText={setName}
-              placeholder="Enter full name"
-              placeholderTextColor="#94a3b8"
-            />
-          </View>
-
           <Text style={styles.inputLabel}>Email Address (Optional)</Text>
           <View style={styles.inputWrap}>
             <Ionicons name="mail-outline" size={16} color="#94a3b8" />
@@ -559,7 +547,7 @@ export default function ProfileScreen() {
             {updateAddress.isPending ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
-              <Text style={styles.saveBtnText}>Save Farmer Profile</Text>
+              <Text style={styles.saveBtnText}>Save Workers Profiles</Text>
             )}
           </TouchableOpacity>
         </View>

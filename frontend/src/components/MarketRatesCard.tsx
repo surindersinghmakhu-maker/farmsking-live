@@ -302,29 +302,11 @@ export function MarketRatesCard() {
       ctx.lineWidth = 4;
       ctx.strokeRect(0, 0, W, H);
 
-      // 3. Dual Top Stripe Accent (Green 75%, Red 25%)
+      // 4. Dual Top Stripe Accent (Green 75%, Red 25%)
       ctx.fillStyle = '#16a34a';
       ctx.fillRect(0, 0, 480, 6);
       ctx.fillStyle = '#dc2626';
       ctx.fillRect(480, 0, 160, 6);
-
-      // 4. Ultra-Subtle Watermark Grid (FarmsKing Logo + Text)
-      ctx.save();
-      ctx.globalAlpha = 0.06;
-      ctx.fillStyle = '#166534';
-      ctx.font = 'bold 18px sans-serif';
-      ctx.rotate((-15 * Math.PI) / 180);
-      for (let y = -100; y < 850; y += 85) {
-        for (let x = -200; x < 850; x += 190) {
-          if (logoImg.naturalWidth > 0) {
-            ctx.drawImage(logoImg, x, y - 16, 20, 20);
-            ctx.fillText('FarmsKing', x + 24, y);
-          } else {
-            ctx.fillText('👑 FarmsKing', x, y);
-          }
-        }
-      }
-      ctx.restore();
 
       // 5. Header Row (Date & Time Pill on Left)
       ctx.fillStyle = '#f0fdf4';
@@ -679,6 +661,24 @@ export function MarketRatesCard() {
       ctx.fillText('✓ VERIFIED DIGITAL RECORD', 320, ftrY + 26);
       ctx.textAlign = 'left';
 
+      // 12. Top-Layer Watermark Overlay across Rates & Content (Visible over table boxes)
+      ctx.save();
+      ctx.globalAlpha = 0.08;
+      ctx.fillStyle = '#166534';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.rotate((-15 * Math.PI) / 180);
+      for (let y = -100; y < 850; y += 80) {
+        for (let x = -200; x < 850; x += 185) {
+          if (logoImg.naturalWidth > 0) {
+            ctx.drawImage(logoImg, x, y - 16, 20, 20);
+            ctx.fillText('FarmsKing', x + 24, y);
+          } else {
+            ctx.fillText('👑 FarmsKing', x, y);
+          }
+        }
+      }
+      ctx.restore();
+
       const dataUrl = canvas.toDataURL('image/png');
       const fileName = getCropRateFileName(crop.displayTitle);
 
@@ -944,20 +944,6 @@ export function MarketRatesCard() {
             {/* Top Green & Red Stripe Accent */}
             <View style={styles.posterTopGreenStripe} />
 
-            {/* Tiled Anti-Crop Background Watermark Grid */}
-            <View style={styles.posterWatermarkGridContainer} pointerEvents="none">
-              {Array.from({ length: 9 }).map((_, rowIndex) => (
-                <View key={rowIndex} style={styles.posterWatermarkRow}>
-                  {Array.from({ length: 3 }).map((_, colIndex) => (
-                    <View key={colIndex} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginHorizontal: 4 }}>
-                      <BrandLogo size={16} useGoldRing />
-                      <Text style={styles.posterWatermarkTileText}>FarmsKing</Text>
-                    </View>
-                  ))}
-                </View>
-              ))}
-            </View>
-
             {/* Voucher Header Row (Date formatted as DD/MM/YY + current time highlighted) */}
             {(() => {
               const posterNow = new Date();
@@ -1109,6 +1095,20 @@ export function MarketRatesCard() {
                 <BrandLogo size={14} useGoldRing useHdQuality />
                 <Text style={styles.posterOfficialText}>✓ VERIFIED DIGITAL RECORD</Text>
               </View>
+            </View>
+
+            {/* Top-Layer Overlay Watermark Grid across Rates & Card Content */}
+            <View style={styles.posterWatermarkGridContainer} pointerEvents="none">
+              {Array.from({ length: 9 }).map((_, rowIndex) => (
+                <View key={rowIndex} style={styles.posterWatermarkRow}>
+                  {Array.from({ length: 3 }).map((_, colIndex) => (
+                    <View key={colIndex} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginHorizontal: 4 }}>
+                      <BrandLogo size={16} useGoldRing />
+                      <Text style={styles.posterWatermarkTileText}>FarmsKing</Text>
+                    </View>
+                  ))}
+                </View>
+              ))}
             </View>
           </ViewShot>
         </View>

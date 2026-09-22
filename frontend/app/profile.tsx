@@ -26,6 +26,8 @@ import { uploadPhoto } from '@/src/api/uploads.api';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { Avatar } from '@/src/components/Avatar';
+import { LabourFamilySwitcher } from '@/src/components/LabourFamilySwitcher';
+import { useLabourDashboard } from '@/src/hooks/useLabour';
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -63,6 +65,17 @@ export default function ProfileScreen() {
   const [photoUrl, setPhotoUrl] = useState<string | null>(user?.photoUrl ?? null);
 
   const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState<boolean>(user?.whatsappGroupEnabled ?? true);
+
+  // Labour Family Profile Switcher state (when logged in as Labour role)
+  const isLabour = user?.role === 'LABOUR';
+  const { data: labourData, refetch: refetchLabour } = useLabourDashboard();
+  const [selectedLabourWorkerId, setSelectedLabourWorkerId] = useState<string | null>(null);
+  const [selectedFarmerId, setSelectedFarmerId] = useState<string | null>(null);
+
+  const labourWorkersList = useMemo(() => {
+    if (!labourData?.profiles) return [];
+    return labourData.profiles.map((p) => p.worker);
+  }, [labourData]);
 
   const isInitializedRef = React.useRef(false);
 
@@ -260,6 +273,20 @@ export default function ProfileScreen() {
         <AddressesTab theme={theme} />
       ) : (
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Labour Family Member & Farmer Switcher Section */}
+        {isLabour && labourWorkersList.length > 0 && (
+          <View style={{ marginBottom: 12 }}>
+            <LabourFamilySwitcher
+              workers={labourWorkersList}
+              selectedWorkerId={selectedLabourWorkerId}
+              onSelectWorker={(w) => setSelectedLabourWorkerId(w.id)}
+              selectedFarmerId={selectedFarmerId}
+              onSelectFarmer={(fId) => setSelectedFarmerId(fId)}
+              onRefresh={refetchLabour}
+            />
+          </View>
+        )}
+
         <View style={styles.card}>
           <View style={styles.avatarSection}>
             <TouchableOpacity style={styles.avatarRingBig} activeOpacity={0.85} onPress={() => setIsPhotoModalOpen(true)}>

@@ -12,6 +12,8 @@ export interface CreateLabourWorkerPayload {
   name: string;
   mobile?: string;
   address?: string;
+  photoUrl?: string;
+  relation?: string;
   defaultRate?: number;
   defaultUnit?: string;
   notes?: string;
@@ -22,6 +24,8 @@ export interface UpdateLabourWorkerPayload {
   name?: string;
   mobile?: string;
   address?: string;
+  photoUrl?: string;
+  relation?: string;
   defaultRate?: number;
   defaultUnit?: string;
   notes?: string;
@@ -98,5 +102,36 @@ export async function getWorkerStatement(workerId: string): Promise<LabourStatem
 
 export async function getLabourDashboard(): Promise<LabourDashboardData> {
   const { data } = await apiClient.get<LabourDashboardData>('/labour/my-dashboard');
+  return data;
+}
+
+export interface MobileSearchResult {
+  exists: boolean;
+  user: {
+    id: string;
+    kingId: string;
+    mobile: string;
+    name: string;
+    photoUrl?: string | null;
+    village?: string | null;
+    district?: string | null;
+    state?: string | null;
+  } | null;
+  profiles: {
+    id: string;
+    name: string;
+    relation?: string | null;
+    mobile?: string | null;
+    address?: string | null;
+    photoUrl?: string | null;
+    defaultRate?: number | null;
+    defaultUnit?: string | null;
+  }[];
+}
+
+export async function searchWorkersByMobile(mobile: string): Promise<MobileSearchResult> {
+  const { data } = await apiClient.get<MobileSearchResult>('/labour/search-mobile', {
+    params: { mobile },
+  });
   return data;
 }

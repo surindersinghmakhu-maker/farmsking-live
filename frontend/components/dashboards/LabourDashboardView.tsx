@@ -19,6 +19,7 @@ import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
 import { useLabourDashboard } from '@/src/hooks/useLabour';
 import { formatInr } from '@/src/utils/formatInr';
+import { LabourFamilySwitcher } from '@/src/components/LabourFamilySwitcher';
 
 export const LabourDashboardView: React.FC = () => {
   const theme = RoleThemes.LABOUR;
@@ -33,20 +34,28 @@ export const LabourDashboardView: React.FC = () => {
   const router = useRouter();
 
   const [selectedWorkerId, setSelectedWorkerId] = useState<string | null>(null);
+  const [selectedFarmerId, setSelectedFarmerId] = useState<string | null>(null);
 
   const profiles = (data as any)?.profiles || [];
+  const workersList = useMemo(() => profiles.map((p: any) => p.worker), [profiles]);
 
-  // Active profile selection (multi-worker support)
+  // Filter profiles by selected Farmer
+  const filteredProfiles = useMemo(() => {
+    if (!selectedFarmerId) return profiles;
+    return profiles.filter((p: any) => p.worker?.farmer?.id === selectedFarmerId);
+  }, [profiles, selectedFarmerId]);
+
+  // Active profile selection (multi-worker & farmer support)
   const activeProfile = useMemo(() => {
-    if (profiles && profiles.length > 0) {
+    if (filteredProfiles && filteredProfiles.length > 0) {
       if (selectedWorkerId) {
-        const found = profiles.find((p: any) => p.worker.id === selectedWorkerId);
+        const found = filteredProfiles.find((p: any) => p.worker.id === selectedWorkerId);
         if (found) return found;
       }
-      return profiles[0];
+      return filteredProfiles[0];
     }
     return null;
-  }, [profiles, selectedWorkerId]);
+  }, [filteredProfiles, selectedWorkerId]);
 
   const summary = activeProfile?.summary || data?.summary || { totalEarned: 0, totalPaid: 0, pendingBalance: 0 };
   const worker = activeProfile?.worker || data?.worker;
@@ -107,59 +116,16 @@ export const LabourDashboardView: React.FC = () => {
       />
 
       <View style={styles.content}>
-        {/* Multi-Worker Visual Profile Switcher Banner */}
-        {profiles.length > 1 ? (
-          <View style={[styles.profileSwitcherCard, premiumShadow('#0f172a', 'sm')]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={{ fontSize: 16 }}>👤</Text>
-                <Text style={styles.switcherHeaderTitle}>Select Worker Profile ({profiles.length})</Text>
-              </View>
-              <Text style={styles.switcherHeaderSub}>Photo 'te click karke profile badlo</Text>
-            </View>
-
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingVertical: 4 }}>
-              {profiles.map((p: any) => {
-                const isSelected = activeProfile?.worker?.id === p.worker.id;
-                return (
-                  <TouchableOpacity
-                    key={p.worker.id}
-                    activeOpacity={0.85}
-                    style={[
-                      styles.profilePillCard,
-                      isSelected && styles.profilePillCardActive,
-                    ]}
-                    onPress={() => setSelectedWorkerId(p.worker.id)}
-                  >
-                    <View style={{ position: 'relative' }}>
-                      <Avatar uri={p.worker.photoUrl || p.worker.farmer?.photoUrl} size={42} />
-                      {isSelected ? (
-                        <View style={{ position: 'absolute', bottom: -2, right: -2, backgroundColor: '#16a34a', borderRadius: 9, width: 18, height: 18, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#ffffff' }}>
-                          <Ionicons name="checkmark" size={12} color="#ffffff" />
-                        </View>
-                      ) : null}
-                    </View>
-
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.profilePillName, isSelected && { color: '#ffffff' }]} numberOfLines={1}>
-                        {p.worker.name}
-                      </Text>
-                      <Text style={[styles.profilePillFarmer, isSelected && { color: '#ffedd5' }]} numberOfLines={1}>
-                        🌾 {p.worker.farmer?.name || 'Farmer'}
-                      </Text>
-                    </View>
-
-                    <View style={[styles.profilePillBalanceBadge, isSelected && { backgroundColor: '#ffffff' }]}>
-                      <Text style={[styles.profilePillBalanceText, isSelected && { color: '#c2410c' }]}>
-                        {formatInr(p.summary.pendingBalance)}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-        ) : null}
+        {/* Farmer & Family Member Profile Switchers Bar */}
+        {workersList.length > 0 && (
+          <LabourFamilySwitcher
+            workers={workersList}
+            selectedWorkerId={selectedWorkerId}
+            onSelectWorker={(w) => setSelectedWorkerId(w.id)}
+            selectedFarmerId={selectedFarmerId}
+            onSelectFarmer={(fId) => setSelectedFarmerId(fId)}
+          />
+        )}
 
         {/* 1. Employer / Farmer Profile Banner - Prominent at TOP */}
         {farmer ? (

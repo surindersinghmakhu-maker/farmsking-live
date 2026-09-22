@@ -689,6 +689,8 @@ export interface LabourWorker {
   name: string;
   mobile?: string | null;
   address?: string | null;
+  photoUrl?: string | null;
+  relation?: string | null;
   defaultRate?: number | null;
   defaultUnit?: string | null; // HOURLY, DAILY, LUMPSUM
   notes?: string | null;
@@ -702,7 +704,7 @@ export interface LabourWorkEntry {
   id: string;
   farmerId: string;
   workerId: string;
-  worker?: { id: string; name: string; mobile?: string | null };
+  worker?: { id: string; name: string; mobile?: string | null; photoUrl?: string | null };
   farmId?: string | null;
   plotId?: string | null;
   cropCycleId?: string | null;
@@ -720,7 +722,7 @@ export interface LabourPayment {
   id: string;
   farmerId: string;
   workerId: string;
-  worker?: { id: string; name: string };
+  worker?: { id: string; name: string; photoUrl?: string | null };
   paymentDate: string;
   amount: number;
   paymentMode?: PaymentMode | null;
@@ -755,6 +757,8 @@ export interface LabourDashboardData {
     name: string;
     mobile?: string | null;
     address?: string | null;
+    photoUrl?: string | null;
+    relation?: string | null;
     defaultRate?: number | null;
     defaultUnit?: string | null;
     farmer?: { id: string; name: string; mobile: string; village?: string | null; photoUrl?: string | null } | null;
@@ -766,6 +770,12 @@ export interface LabourDashboardData {
   };
   workEntries: LabourWorkEntry[];
   payments: LabourPayment[];
+  profiles?: {
+    worker: LabourWorker;
+    summary: { totalEarned: number; totalPaid: number; pendingBalance: number };
+    workEntries: LabourWorkEntry[];
+    payments: LabourPayment[];
+  }[];
 }
 
 export interface AdminChatMessage {

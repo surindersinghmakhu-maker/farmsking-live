@@ -429,7 +429,7 @@ model User {
   paymentsRecorded              Payment[]
   labourEntriesRecorded         LabourEntry[]
   labourWorkersCreated          LabourWorker[]       @relation("FarmerLabourWorkers")
-  labourWorkerUser              LabourWorker?        @relation("LabourWorkerUser")
+  labourWorkerUser              LabourWorker[]       @relation("LabourWorkerUser")
   labourWorkEntriesRecorded     LabourWorkEntry[]    @relation("WorkEntriesRecordedBy")
   labourWorkEntriesAsFarmer     LabourWorkEntry[]    @relation("FarmerWorkEntries")
   labourPaymentsRecorded        LabourPayment[]      @relation("LabourPaymentsRecordedBy")
@@ -903,11 +903,13 @@ model LabourWorker {
   farmer           User      @relation("FarmerLabourWorkers", fields: [farmerId], references: [id], onDelete: Cascade)
   farmId           String?
   farm             Farm?     @relation(fields: [farmId], references: [id], onDelete: SetNull)
-  userId           String?   @unique
+  userId           String?
   user             User?     @relation("LabourWorkerUser", fields: [userId], references: [id], onDelete: SetNull)
   name             String
   mobile           String?
   address          String?
+  photoUrl         String?
+  relation         String?
   defaultDailyWage Decimal?  @db.Decimal(12, 2)
   defaultRate      Decimal?  @db.Decimal(12, 2)
   defaultUnit      String?   @default("DAILY")

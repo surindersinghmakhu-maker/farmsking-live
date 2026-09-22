@@ -12,15 +12,79 @@ export class LabourService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
+   * Search registered worker profiles & user account by 10-digit mobile number.
+   */
+  async searchByMobile(mobile: string) {
+    const cleanMobile = mobile ? mobile.trim() : '';
+    if (!cleanMobile || cleanMobile.length !== 10) {
+      return { exists: false, user: null, profiles: [] };
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { mobile: cleanMobile },
+      select: {
+        id: true,
+        kingId: true,
+        mobile: true,
+        name: true,
+        photoUrl: true,
+        village: true,
+        district: true,
+        state: true,
+      },
+    });
+
+    const profiles = await this.prisma.labourWorker.findMany({
+      where: {
+        OR: [{ mobile: cleanMobile }, ...(user ? [{ userId: user.id }] : [])],
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        name: true,
+        relation: true,
+        mobile: true,
+        address: true,
+        photoUrl: true,
+        defaultRate: true,
+        defaultUnit: true,
+      },
+    });
+
+    return {
+      exists: !!user || profiles.length > 0,
+      user,
+      profiles,
+    };
+  }
+
+  /**
    * Create a new Labour worker.
-   * If a mobile number is provided, automatically creates/links a User account with role LABOUR
-   * where the password is set to the mobile number for Labour login!
+   * If a mobile number is provided, automatically links/creates 1 single User account with role LABOUR (1 King ID per mobile number).
+   * Enforces duplicate name prevention under the same mobile number.
    */
   async createWorker(farmerId: string, dto: CreateLabourWorkerDto) {
     let userId: string | undefined = undefined;
+    let sharedAddress = dto.address?.trim() || null;
 
     if (dto.mobile?.trim()) {
       const cleanMobile = dto.mobile.trim();
+
+      // Duplicate Name Check for the same mobile number
+      const duplicateNameWorker = await this.prisma.labourWorker.findFirst({
+        where: {
+          farmerId,
+          mobile: cleanMobile,
+          name: { equals: dto.name.trim(), mode: 'insensitive' },
+          deletedAt: null,
+        },
+      });
+      if (duplicateNameWorker) {
+        throw new BadRequestException(
+          `Worker "${dto.name}" is already registered under mobile ${cleanMobile}. Duplicate names are not allowed.`
+        );
+      }
+
       let user = await this.prisma.user.findUnique({ where: { mobile: cleanMobile } });
 
       if (!user) {
@@ -45,12 +109,16 @@ export class LabourService {
         }
       }
 
-      // Check if user account is already linked to a LabourWorker to avoid unique constraint error
-      const existingWorkerWithUser = await this.prisma.labourWorker.findFirst({
-        where: { userId: user.id },
-      });
-      if (!existingWorkerWithUser) {
-        userId = user.id;
+      userId = user.id;
+
+      // Share address from existing worker under same mobile if available
+      if (!sharedAddress) {
+        const existingWithAddress = await this.prisma.labourWorker.findFirst({
+          where: { mobile: cleanMobile, address: { not: null } },
+        });
+        if (existingWithAddress?.address) {
+          sharedAddress = existingWithAddress.address;
+        }
       }
     }
 
@@ -62,6 +130,8 @@ export class LabourService {
         name: dto.name,
         mobile: dto.mobile?.trim() || null,
         address: dto.address?.trim() || null,
+        photoUrl: dto.photoUrl?.trim() || null,
+        relation: dto.relation?.trim() || null,
         defaultDailyWage: dto.defaultRate !== undefined ? dto.defaultRate : null,
         defaultRate: dto.defaultRate !== undefined ? dto.defaultRate : null,
         defaultUnit: dto.defaultUnit || 'DAILY',
@@ -142,6 +212,8 @@ export class LabourService {
         ...(dto.name && { name: dto.name }),
         ...(dto.mobile !== undefined && { mobile: dto.mobile?.trim() || null }),
         ...(dto.address !== undefined && { address: dto.address?.trim() || null }),
+        ...(dto.photoUrl !== undefined && { photoUrl: dto.photoUrl?.trim() || null }),
+        ...(dto.relation !== undefined && { relation: dto.relation?.trim() || null }),
         ...(dto.defaultRate !== undefined && { defaultRate: dto.defaultRate }),
         ...(dto.defaultUnit && { defaultUnit: dto.defaultUnit }),
         ...(dto.notes !== undefined && { notes: dto.notes?.trim() || null }),
@@ -411,6 +483,8 @@ export class LabourService {
           name: worker.name,
           mobile: worker.mobile,
           address: worker.address,
+          photoUrl: worker.photoUrl,
+          relation: worker.relation,
           defaultRate: worker.defaultRate,
           defaultUnit: worker.defaultUnit,
           farmer: worker.farmer,

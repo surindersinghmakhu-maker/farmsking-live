@@ -22,6 +22,13 @@ export class LabourController {
     return this.labourService.getLabourDashboard(user.id);
   }
 
+  /** Search worker/user by 10-digit mobile number */
+  @Get('search-mobile')
+  @Roles(Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN, Role.LABOUR)
+  searchByMobile(@Query('mobile') mobile: string) {
+    return this.labourService.searchByMobile(mobile);
+  }
+
   /** Farmer Endpoints */
   @Post('workers')
   @Roles(Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN)

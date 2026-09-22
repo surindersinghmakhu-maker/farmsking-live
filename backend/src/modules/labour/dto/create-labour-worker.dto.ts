@@ -13,6 +13,14 @@ export class CreateLabourWorkerDto {
   @IsOptional()
   address?: string;
 
+  @IsString()
+  @IsOptional()
+  photoUrl?: string;
+
+  @IsString()
+  @IsOptional()
+  relation?: string;
+
   @IsNumber()
   @Min(0)
   @IsOptional()
@@ -43,6 +51,14 @@ export class UpdateLabourWorkerDto {
   @IsString()
   @IsOptional()
   address?: string;
+
+  @IsString()
+  @IsOptional()
+  photoUrl?: string;
+
+  @IsString()
+  @IsOptional()
+  relation?: string;
 
   @IsNumber()
   @Min(0)

@@ -28,6 +28,7 @@ import {
   useCreateLabourPayment,
   useLabourPayments,
   useLabourWorkerStatement,
+  useSearchWorkersByMobile,
 } from '@/src/hooks/useLabour';
 import { LabourWorker, LabourWorkEntry, LabourPayment, PaymentMode } from '@/src/types/api';
 import { formatInr } from '@/src/utils/formatInr';
@@ -36,6 +37,7 @@ import { Avatar } from '@/src/components/Avatar';
 import { useMyCrops } from '@/src/hooks/useCrops';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { useAuth } from '@/src/store/auth-context';
+import { LabourFamilySwitcher } from '@/src/components/LabourFamilySwitcher';
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -67,15 +69,22 @@ export function LabourManagementSection() {
   const [showAddWorkModal, setShowAddWorkModal] = useState(false);
   const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
   const [selectedStatementWorkerId, setSelectedStatementWorkerId] = useState<string | null>(null);
+  const [selectedWorkerId, setSelectedWorkerId] = useState<string | null>(null);
+  const [selectedFarmerId, setSelectedFarmerId] = useState<string | null>(null);
 
   // Form States - Worker
   const [workerName, setWorkerName] = useState('');
   const [workerMobile, setWorkerMobile] = useState('');
+  const [workerRelation, setWorkerRelation] = useState('Head / Self');
   const [workerAddress, setWorkerAddress] = useState('');
   const [workerDefaultRate, setWorkerDefaultRate] = useState('');
   const [workerDefaultUnit, setWorkerDefaultUnit] = useState('Days');
   const [workerNotes, setWorkerNotes] = useState('');
   const [workerError, setWorkerError] = useState<string | null>(null);
+  const [isAddUnitDropdownOpen, setIsAddUnitDropdownOpen] = useState(false);
+
+  // Auto-search worker profiles by 10-digit mobile number
+  const { data: searchMobileResult, isLoading: isSearchingMobile } = useSearchWorkersByMobile(workerMobile);
 
   // Form States - Work Entry
   const { data: myCrops = [] } = useMyCrops();
@@ -140,6 +149,7 @@ export function LabourManagementSection() {
   const resetWorkerForm = () => {
     setWorkerName('');
     setWorkerMobile('');
+    setWorkerRelation('Head / Self');
     setWorkerAddress('');
     setWorkerDefaultRate('');
     setWorkerDefaultUnit('Days');
@@ -159,6 +169,7 @@ export function LabourManagementSection() {
     setEditingWorker(w);
     setWorkerName(w.name);
     setWorkerMobile(w.mobile || '');
+    setWorkerRelation(w.relation || 'Head / Self');
     setWorkerAddress(w.address || '');
     setWorkerDefaultRate(w.defaultRate ? String(w.defaultRate) : '');
     setWorkerDefaultUnit(w.defaultUnit || 'Days');
@@ -180,6 +191,7 @@ export function LabourManagementSection() {
           id: editingWorker.id,
           payload: {
             name: workerName.trim(),
+            relation: workerRelation,
             mobile: workerMobile.trim() || undefined,
             address: workerAddress.trim() || undefined,
             defaultRate: workerDefaultRate ? Number(workerDefaultRate) : undefined,
@@ -190,6 +202,7 @@ export function LabourManagementSection() {
       } else {
         await createWorker.mutateAsync({
           name: workerName.trim(),
+          relation: workerRelation,
           mobile: workerMobile.trim() || undefined,
           address: workerAddress.trim() || undefined,
           defaultRate: workerDefaultRate ? Number(workerDefaultRate) : undefined,
@@ -428,7 +441,16 @@ export function LabourManagementSection() {
           </View>
         ) : (
           <View style={{ gap: 10 }}>
-            {workers.map((w) => {
+            <LabourFamilySwitcher
+              workers={workers}
+              selectedWorkerId={selectedWorkerId}
+              onSelectWorker={(w) => setSelectedWorkerId(w.id)}
+              selectedFarmerId={selectedFarmerId}
+              onSelectFarmer={(fId) => setSelectedFarmerId(fId)}
+            />
+            {workers
+              .filter((w) => !selectedFarmerId || (w as any).farmerId === selectedFarmerId || (w as any).farmer?.id === selectedFarmerId)
+              .map((w) => {
               const pending = w.pendingBalance ?? 0;
               return (
                 <View key={w.id} style={[styles.workerCard, premiumShadow('#0f172a', 'sm')]}>
@@ -612,8 +634,79 @@ export function LabourManagementSection() {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
-              <Text style={styles.label}>Worker Name *</Text>
+            <ScrollView style={{ maxHeight: 460 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              {/* FIELD 1: MOBILE NUMBER FIRST */}
+              <Text style={styles.label}>Mobile Number (10 Digits) *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter 10-digit mobile number"
+                placeholderTextColor="#94a3b8"
+                keyboardType="phone-pad"
+                maxLength={10}
+                value={workerMobile}
+                onChangeText={(text) => {
+                  setWorkerMobile(text);
+                }}
+              />
+
+              {/* AUTO SEARCH SPINNER / AUTO SUGGESTED REGISTERED PROFILES */}
+              {isSearchingMobile ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginVertical: 6 }}>
+                  <ActivityIndicator size="small" color="#16a34a" />
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#16a34a' }}>
+                    Searching registered workers & King ID...
+                  </Text>
+                </View>
+              ) : searchMobileResult?.exists ? (
+                <View style={{ backgroundColor: '#f0fdf4', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#bbf7d0', marginVertical: 8 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 4 }}>
+                    <Ionicons name="checkmark-circle" size={14} color="#16a34a" />
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#15803d' }}>
+                      King ID Found: {searchMobileResult.user?.kingId || 'Registered Account'}
+                    </Text>
+                  </View>
+                  {searchMobileResult.profiles.length > 0 ? (
+                    <>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#475569', marginBottom: 4 }}>
+                        Registered Family Profiles under this number (Tap to select):
+                      </Text>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+                        {searchMobileResult.profiles.map((p) => (
+                          <TouchableOpacity
+                            key={p.id}
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              gap: 6,
+                              backgroundColor: '#ffffff',
+                              paddingHorizontal: 8,
+                              paddingVertical: 4,
+                              borderRadius: RADIUS.full,
+                              borderWidth: 1,
+                              borderColor: '#cbd5e1',
+                            }}
+                            onPress={() => {
+                              tap();
+                              setWorkerName(p.name);
+                              if (p.relation) setWorkerRelation(p.relation);
+                              if (p.address) setWorkerAddress(p.address);
+                              if (p.defaultRate) setWorkerDefaultRate(String(p.defaultRate));
+                              if (p.defaultUnit) setWorkerDefaultUnit(p.defaultUnit);
+                            }}
+                          >
+                            <Avatar uri={p.photoUrl} size={18} />
+                            <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>{p.name}</Text>
+                            {p.relation && <Text style={{ fontSize: 10, color: '#64748b' }}>({p.relation})</Text>}
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </>
+                  ) : null}
+                </View>
+              ) : null}
+
+              {/* FIELD 2: WORKER NAME */}
+              <Text style={styles.label}>Worker / Member Name *</Text>
               <TextInput
                 style={styles.input}
                 placeholder="e.g. Ramesh Kumar / Gurpreet Singh"
@@ -622,19 +715,39 @@ export function LabourManagementSection() {
                 onChangeText={setWorkerName}
               />
 
-              <Text style={styles.label}>Mobile Number</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="10-digit mobile number"
-                placeholderTextColor="#94a3b8"
-                keyboardType="phone-pad"
-                value={workerMobile}
-                onChangeText={setWorkerMobile}
-              />
+              {/* FIELD 3: RELATION / RISHTA */}
+              <Text style={styles.label}>Family Relation / Rishta</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginBottom: 8 }}>
+                {[
+                  { key: 'Head / Self', label: '👨‍🌾 Head / Self' },
+                  { key: 'Spouse / Wife', label: '👩‍🌾 Wife / Spouse' },
+                  { key: 'Son', label: '👨‍🦱 Son' },
+                  { key: 'Daughter', label: '👩‍🦱 Daughter' },
+                  { key: 'Brother', label: '👨‍👦 Brother' },
+                  { key: 'Other', label: '👷 Member' },
+                ].map((r) => {
+                  const isSelected = workerRelation === r.key;
+                  return (
+                    <TouchableOpacity
+                      key={r.key}
+                      style={[
+                        { paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.full, borderWidth: 1, borderColor: '#cbd5e1', backgroundColor: '#f8fafc' },
+                        isSelected && { backgroundColor: '#16a34a', borderColor: '#16a34a' },
+                      ]}
+                      onPress={() => setWorkerRelation(r.key)}
+                    >
+                      <Text style={[{ fontSize: 11.5, fontFamily: FONT.medium, color: '#475569' }, isSelected && { color: '#ffffff', fontFamily: FONT.bold }]}>
+                        {r.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
 
-              <View style={{ flexDirection: 'row', gap: 10 }}>
+              {/* FIELD 4: DEFAULT RATE & WORKING UNIT DROPDOWN */}
+              <View style={{ flexDirection: 'row', gap: 10, zIndex: 100 }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.label}>Default Daily Rate (₹)</Text>
+                  <Text style={styles.label}>Default Wage Rate (₹)</Text>
                   <TextInput
                     style={styles.input}
                     placeholder="e.g. 500"
@@ -645,15 +758,83 @@ export function LabourManagementSection() {
                   />
                 </View>
 
-                <View style={{ width: 120 }}>
-                  <Text style={styles.label}>Unit</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Days / Hours"
-                    placeholderTextColor="#94a3b8"
-                    value={workerDefaultUnit}
-                    onChangeText={setWorkerDefaultUnit}
-                  />
+                {/* WORKING UNIT DROPDOWN LIST */}
+                <View style={{ flex: 1.2, position: 'relative' }}>
+                  <Text style={styles.label}>Working Unit *</Text>
+                  <TouchableOpacity
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      borderWidth: 1,
+                      borderColor: isAddUnitDropdownOpen ? '#16a34a' : '#cbd5e1',
+                      borderRadius: RADIUS.md,
+                      paddingHorizontal: 8,
+                      height: 40,
+                      backgroundColor: '#f8fafc',
+                    }}
+                    activeOpacity={0.8}
+                    onPress={() => setIsAddUnitDropdownOpen((prev) => !prev)}
+                  >
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
+                      {workerDefaultUnit}
+                    </Text>
+                    <Ionicons name={isAddUnitDropdownOpen ? 'chevron-up' : 'chevron-down'} size={14} color="#64748b" />
+                  </TouchableOpacity>
+
+                  {/* Dropdown Options */}
+                  {isAddUnitDropdownOpen && (
+                    <View
+                      style={{
+                        position: 'absolute',
+                        top: 62,
+                        left: 0,
+                        right: 0,
+                        zIndex: 1000,
+                        backgroundColor: '#ffffff',
+                        borderRadius: RADIUS.md,
+                        borderWidth: 1.5,
+                        borderColor: '#cbd5e1',
+                        maxHeight: 180,
+                        elevation: 10,
+                        shadowColor: '#000',
+                        shadowOpacity: 0.2,
+                        shadowRadius: 8,
+                      }}
+                    >
+                      <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
+                        {[
+                          'Days (ਦਿਨ / ਡੇਲੀ)',
+                          'Hours (ਘੰਟੇ / ਪਰ ਘੰਟਾ)',
+                          'Monthly (ਮਹੀਨਾਵਾਰ)',
+                          'Fixed Contract / Lumpsum (ਫਿਕਸ / ਠੇਕਾ)',
+                          'Acre / Kila (ਏਕੜ / ਕਿੱਲਾ)',
+                          'Bags / Catt (ਬੋਰੀਆਂ / ਕੱਟੇ)',
+                          'Quintal / Kg (ਕੁਇੰਟਲ / ਕਿੱਲੋ)',
+                          'Trips (ਗੇੜੇ / ਟ੍ਰਿਪ)',
+                        ].map((u) => (
+                          <TouchableOpacity
+                            key={u}
+                            style={{
+                              paddingHorizontal: 10,
+                              paddingVertical: 8,
+                              borderBottomWidth: 1,
+                              borderBottomColor: '#f1f5f9',
+                              backgroundColor: workerDefaultUnit === u ? '#f0fdf4' : '#ffffff',
+                            }}
+                            onPress={() => {
+                              setWorkerDefaultUnit(u);
+                              setIsAddUnitDropdownOpen(false);
+                            }}
+                          >
+                            <Text style={{ fontSize: 11.5, fontFamily: workerDefaultUnit === u ? FONT.bold : FONT.regular, color: workerDefaultUnit === u ? '#16a34a' : '#334155' }}>
+                              {u}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  )}
                 </View>
               </View>
 

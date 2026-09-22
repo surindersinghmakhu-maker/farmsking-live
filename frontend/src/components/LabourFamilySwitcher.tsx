@@ -276,16 +276,25 @@ export function LabourFamilySwitcher({
 
   return (
     <View style={styles.container}>
-      {/* 1. FARMER SWITCHER BAR (Visual circular photo avatars + name below) */}
+      {/* 1. FARMER SWITCHER CARD (DISTINCT GREEN/EMERALD BACKGROUND) */}
       {!hideFarmerSwitcher && availableFarmers.length > 0 && (
-        <View style={styles.farmerSwitcherBox}>
-          <Text style={styles.farmerSwitcherTitle}>🌾 Select Farmer / Kheti Malik:</Text>
+        <View style={styles.farmerCardContainer}>
+          <View style={styles.cardHeaderRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={{ fontSize: 15 }}>🌾</Text>
+              <Text style={styles.farmerCardTitle}>Select Farmer / Kheti Malik</Text>
+            </View>
+            <View style={styles.farmerRoleBadge}>
+              <Text style={styles.farmerRoleBadgeText}>Employer / Landowner</Text>
+            </View>
+          </View>
+
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.avatarScrollContainer}>
             {availableFarmers.map((f) => {
               const isSelected = activeFarmerId === f.id;
               return (
                 <TouchableOpacity
-                  key={f.id}
+                  key={`farmer-${f.id}`}
                   style={[styles.avatarCard, isSelected && styles.avatarCardActive]}
                   activeOpacity={0.85}
                   onPress={() => {
@@ -293,19 +302,19 @@ export function LabourFamilySwitcher({
                     if (onSelectFarmer) onSelectFarmer(f.id);
                   }}
                 >
-                  <View style={[styles.avatarRing, isSelected && styles.avatarRingActive]}>
+                  <View style={[styles.avatarRing, isSelected && styles.farmerRingActive]}>
                     <Avatar uri={f.photoUrl} size={54} />
                     {isSelected && (
-                      <View style={styles.activeBadge}>
+                      <View style={styles.farmerActiveBadge}>
                         <Ionicons name="checkmark" size={10} color="#ffffff" />
                       </View>
                     )}
                   </View>
-                  <Text style={[styles.avatarName, isSelected && styles.avatarNameActive]} numberOfLines={1}>
+                  <Text style={[styles.avatarName, isSelected && styles.farmerNameActive]} numberOfLines={1}>
                     {f.name}
                   </Text>
-                  <Text style={styles.avatarRelation} numberOfLines={1}>
-                    {f.village ? `📍 ${f.village}` : 'Farmer'}
+                  <Text style={styles.farmerSubText} numberOfLines={1}>
+                    {f.village ? `📍 ${f.village}` : '🌾 Farmer'}
                   </Text>
                 </TouchableOpacity>
               );
@@ -314,59 +323,57 @@ export function LabourFamilySwitcher({
         </View>
       )}
 
-      {/* 2. FAMILY MEMBER / WORKER SWITCHER HEADER */}
-      <View style={styles.switcherHeaderRow}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Ionicons name="people" size={18} color="#15803d" />
-          <Text style={styles.switcherHeaderTitle}>Family Profile Switcher</Text>
-          <Text style={styles.switcherHeaderSub}>
-            ({displayWorkers.length} Member{displayWorkers.length === 1 ? '' : 's'})
-          </Text>
+      {/* 2. FAMILY WORKER PROFILE SWITCHER CARD (DISTINCT SLATE/BLUE BACKGROUND) */}
+      <View style={styles.workerCardContainer}>
+        <View style={styles.cardHeaderRow}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Ionicons name="people" size={18} color="#15803d" />
+            <Text style={styles.workerCardTitle}>Family Profiles</Text>
+            <View style={styles.countBadge}>
+              <Text style={styles.countBadgeText}>{displayWorkers.length} Members</Text>
+            </View>
+          </View>
+          <Text style={styles.workerRoleTag}>Workers / Labour</Text>
         </View>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.avatarScrollContainer}
+        >
+          {displayWorkers.map((w) => {
+            const isSelected = activeWorker?.id === w.id;
+
+            return (
+              <TouchableOpacity
+                key={`worker-${w.id}`}
+                style={[styles.avatarCard, isSelected && styles.avatarCardActive]}
+                activeOpacity={0.85}
+                onPress={() => {
+                  tap();
+                  onSelectWorker(w);
+                }}
+              >
+                <View style={[styles.avatarRing, isSelected && styles.avatarRingActive]}>
+                  <Avatar uri={w.photoUrl} size={54} />
+                  {isSelected && (
+                    <View style={styles.activeBadge}>
+                      <Ionicons name="checkmark" size={10} color="#ffffff" />
+                    </View>
+                  )}
+                </View>
+
+                <Text style={[styles.avatarName, isSelected && styles.avatarNameActive]} numberOfLines={1}>
+                  {w.name}
+                </Text>
+                <Text style={styles.avatarRelation} numberOfLines={1}>
+                  {w.relation || 'Member'}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       </View>
-
-      {/* 3. ILLITERATE-FRIENDLY PHOTO AVATARS SCROLL BAR (PURE PROFILE SWITCHER) */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.avatarScrollContainer}
-      >
-        {displayWorkers.map((w) => {
-          const isSelected = activeWorker?.id === w.id;
-
-          return (
-            <TouchableOpacity
-              key={w.id}
-              style={[styles.avatarCard, isSelected && styles.avatarCardActive]}
-              activeOpacity={0.85}
-              onPress={() => {
-                tap();
-                onSelectWorker(w);
-              }}
-            >
-              {/* Photo Avatar Ring */}
-              <View style={[styles.avatarRing, isSelected && styles.avatarRingActive]}>
-                <Avatar uri={w.photoUrl} size={54} />
-
-                {/* Selected Checkmark Badge */}
-                {isSelected && (
-                  <View style={styles.activeBadge}>
-                    <Ionicons name="checkmark" size={10} color="#ffffff" />
-                  </View>
-                )}
-              </View>
-
-              {/* Name & Relation Label */}
-              <Text style={[styles.avatarName, isSelected && styles.avatarNameActive]} numberOfLines={1}>
-                {w.name}
-              </Text>
-              <Text style={styles.avatarRelation} numberOfLines={1}>
-                {w.relation || 'Member'}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
 
       {/* 4. ACTIVE PROFILE CARD WITH PHOTO EDIT ON TAP */}
       {showActiveCard && activeWorker && (
@@ -856,52 +863,110 @@ const styles = StyleSheet.create({
     padding: SPACING.sm,
     marginBottom: SPACING.sm,
   },
-  farmerSwitcherTitle: {
-    fontSize: 12,
-    fontFamily: FONT.bold,
-    color: '#166534',
-    marginBottom: 6,
+  farmerCardContainer: {
+    backgroundColor: '#f0fdf4',
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: '#bbf7d0',
+    padding: SPACING.sm,
+    marginBottom: 10,
+    elevation: 2,
+    shadowColor: '#16a34a',
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
   },
-  farmerChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: RADIUS.pill,
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
+  workerCardContainer: {
+    backgroundColor: '#f8fafc',
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
     borderColor: '#cbd5e1',
+    padding: SPACING.sm,
+    marginBottom: SPACING.sm,
+    elevation: 2,
+    shadowColor: '#0f172a',
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
   },
-  farmerChipActive: {
-    backgroundColor: '#16a34a',
-    borderColor: '#16a34a',
-  },
-  farmerChipText: {
-    fontSize: 12,
-    fontFamily: FONT.medium,
-    color: '#334155',
-  },
-  farmerChipTextActive: {
-    color: '#ffffff',
-    fontFamily: FONT.bold,
-  },
-  switcherHeaderRow: {
+  cardHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 8,
-    paddingHorizontal: 4,
+    paddingHorizontal: 2,
   },
-  switcherHeaderTitle: {
-    fontSize: 14,
+  farmerCardTitle: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#166534',
+  },
+  farmerRoleBadge: {
+    backgroundColor: '#dcfce7',
+    borderWidth: 1,
+    borderColor: '#86efac',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+  },
+  farmerRoleBadgeText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#15803d',
+  },
+  workerCardTitle: {
+    fontSize: 13,
     fontFamily: FONT.bold,
     color: '#0f172a',
   },
-  switcherHeaderSub: {
-    fontSize: 12,
+  countBadge: {
+    backgroundColor: '#e2e8f0',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: RADIUS.xs,
+  },
+  countBadgeText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#475569',
+  },
+  workerRoleTag: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+  },
+  farmerRingActive: {
+    borderColor: '#16a34a',
+    backgroundColor: '#f0fdf4',
+  },
+  farmerActiveBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: '#16a34a',
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+  },
+  farmerNameActive: {
+    fontFamily: FONT.bold,
+    color: '#16a34a',
+  },
+  farmerSubText: {
+    fontSize: 9.5,
     fontFamily: FONT.medium,
     color: '#64748b',
+    textAlign: 'center',
   },
   addMemberBtn: {
     flexDirection: 'row',
@@ -926,7 +991,7 @@ const styles = StyleSheet.create({
   },
   avatarCard: {
     alignItems: 'center',
-    width: 76,
+    width: 74,
   },
   avatarCardActive: {
     opacity: 1,

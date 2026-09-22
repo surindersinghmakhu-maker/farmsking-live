@@ -384,18 +384,18 @@ export class PartiesService {
     return this.getStatement(user, partyId);
   }
 
-  private async nextReceiptNo(isReceived: boolean): Promise<string> {
+  private async nextReceiptNo(farmerId: string): Promise<string> {
     const now = new Date();
     const yy = String(now.getFullYear()).slice(-2);
     const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const prefix = isReceived ? `R${yy}${mm}` : `Pay${yy}${mm}`;
+    const prefix = `${yy}${mm}`;
 
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
     const countThisMonth = await this.prisma.paymentReceipt.count({
       where: {
-        isReceived,
+        farmerId,
         createdAt: {
           gte: startOfMonth,
           lte: endOfMonth,
@@ -405,14 +405,18 @@ export class PartiesService {
 
     let nextSeq = countThisMonth + 1;
     let paddedSeq = String(nextSeq).padStart(2, '0');
-    let candidate = `${prefix}${paddedSeq}`;
+    let candidate = `${prefix}-${paddedSeq}`;
 
-    let exists = await this.prisma.paymentReceipt.findFirst({ where: { receiptNo: candidate } });
+    let exists = await this.prisma.paymentReceipt.findFirst({
+      where: { farmerId, receiptNo: candidate },
+    });
     while (exists) {
       nextSeq++;
       paddedSeq = String(nextSeq).padStart(2, '0');
-      candidate = `${prefix}${paddedSeq}`;
-      exists = await this.prisma.paymentReceipt.findFirst({ where: { receiptNo: candidate } });
+      candidate = `${prefix}-${paddedSeq}`;
+      exists = await this.prisma.paymentReceipt.findFirst({
+        where: { farmerId, receiptNo: candidate },
+      });
     }
 
     return candidate;
@@ -433,7 +437,7 @@ export class PartiesService {
     const receipt = await this.prisma.paymentReceipt.create({
       data: {
         farmerId: user.id,
-        receiptNo: await this.nextReceiptNo(true),
+        receiptNo: await this.nextReceiptNo(user.id),
         partyId,
         partyName: before.party.name,
         isReceived: true,
@@ -462,7 +466,7 @@ export class PartiesService {
     const receipt = await this.prisma.paymentReceipt.create({
       data: {
         farmerId: user.id,
-        receiptNo: await this.nextReceiptNo(false),
+        receiptNo: await this.nextReceiptNo(user.id),
         partyId,
         partyName: before.party.name,
         isReceived: false,

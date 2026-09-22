@@ -103,7 +103,9 @@ export function UniversalVoucherSlipModal({ visible, data, onClose }: UniversalV
     : '📜 ACCOUNT STATEMENT SLIP';
 
   const titleText = data.title || defaultTitle;
-  const voucherNoText = data.voucherNo || `FK-${Math.floor(100000 + Math.random() * 900000)}`;
+  const now = new Date();
+  const defaultSeqNo = `${String(now.getFullYear()).slice(-2)}${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+  const voucherNoText = data.voucherNo || defaultSeqNo;
 
   // Download / Share image as JPG
   const handleDownloadJpg = async () => {

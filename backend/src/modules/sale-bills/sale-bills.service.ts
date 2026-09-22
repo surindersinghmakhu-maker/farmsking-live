@@ -11,7 +11,7 @@ export class SaleBillsService {
     private readonly chatGateway: ChatGateway,
   ) {}
 
-  private async nextBillNo(): Promise<string> {
+  private async nextBillNo(user: AuthUser): Promise<string> {
     const now = new Date();
     const fullYear = now.getFullYear();
     const yy = String(fullYear).slice(-2); // e.g. "26" for 2026
@@ -21,9 +21,10 @@ export class SaleBillsService {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
-    // Count sale bills created in current calendar month
+    // Count sale bills created by THIS FARMER in current calendar month
     const countThisMonth = await this.prisma.saleBill.count({
       where: {
+        farmerId: user.id,
         createdAt: {
           gte: startOfMonth,
           lte: endOfMonth,
@@ -32,16 +33,20 @@ export class SaleBillsService {
     });
 
     let nextSeq = countThisMonth + 1;
-    let paddedSeq = String(nextSeq).padStart(3, '0');
-    let candidate = `FK-${prefix}-${paddedSeq}`;
+    let paddedSeq = String(nextSeq).padStart(2, '0');
+    let candidate = `${prefix}-${paddedSeq}`;
 
-    // Guarantee 100% Unique Bill Number across concurrent requests
-    let exists = await this.prisma.saleBill.findFirst({ where: { billNo: candidate } });
+    // Guarantee 100% Unique Bill Number per farmer across concurrent requests
+    let exists = await this.prisma.saleBill.findFirst({
+      where: { farmerId: user.id, billNo: candidate },
+    });
     while (exists) {
       nextSeq++;
-      paddedSeq = String(nextSeq).padStart(3, '0');
-      candidate = `FK-${prefix}-${paddedSeq}`;
-      exists = await this.prisma.saleBill.findFirst({ where: { billNo: candidate } });
+      paddedSeq = String(nextSeq).padStart(2, '0');
+      candidate = `${prefix}-${paddedSeq}`;
+      exists = await this.prisma.saleBill.findFirst({
+        where: { farmerId: user.id, billNo: candidate },
+      });
     }
 
     return candidate;
@@ -57,7 +62,7 @@ export class SaleBillsService {
       }
     }
 
-    const billNo = dto.billNo ? dto.billNo : await this.nextBillNo();
+    const billNo = dto.billNo ? dto.billNo : await this.nextBillNo(user);
     const nowIso = new Date().toISOString();
 
     // Attach exact timestamp to each sale item in JSON array

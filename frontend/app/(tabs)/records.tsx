@@ -366,7 +366,7 @@ export default function RecordsScreen() {
 
   const renderSaleRowItem = (item: CropSaleRecord, idx: number) => {
     const matchedBill = item.billId ? saleBillsMap.get(item.billId) : (item.billNo ? saleBillsMap.get(item.billNo) : null);
-    const formattedBillNo = matchedBill?.billNo || item.billNo || (item.billId ? `FK-${item.billId.slice(-4).toUpperCase()}` : 'FK-SALE');
+    const formattedBillNo = matchedBill?.billNo || item.billNo || (item.billId ? `${item.billId.slice(-4).toUpperCase()}` : 'SALE-01');
     
     const billTotal = matchedBill ? Number(matchedBill.totalAmount) : item.totalAmount;
     const isCashSale = !item.partyId || item.buyerName === 'Cash Sale' || item.buyerName === 'Direct / Cash';
@@ -572,12 +572,12 @@ export default function RecordsScreen() {
     }, 0);
   }, [activeSalesList, saleBillsMap]);
 
-  // Automatically calculate next bill number adhering to standard FK-YYMM-XXX sequential rules
+  // Automatically calculate next bill number adhering to standard YYMM-01 sequential rules
   const nextSuggestedBillNo = useMemo(() => {
     const now = new Date();
     const yy = String(now.getFullYear()).slice(-2);
     const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const prefix = `FK-${yy}${mm}-`;
+    const prefix = `${yy}${mm}-`;
 
     let maxSeq = 0;
     const checkBillNo = (bNo?: string | null) => {
@@ -586,7 +586,7 @@ export default function RecordsScreen() {
       const match = cleanStr.match(/\d+$/);
       if (match) {
         const num = parseInt(match[0], 10);
-        if (!isNaN(num) && num > maxSeq && num < 99999) {
+        if (!isNaN(num) && num > maxSeq && num < 9999) {
           maxSeq = num;
         }
       }
@@ -599,7 +599,7 @@ export default function RecordsScreen() {
     });
 
     const nextSeq = maxSeq + 1;
-    const padded = String(nextSeq).padStart(3, '0');
+    const padded = String(nextSeq).padStart(2, '0');
     return `${prefix}${padded}`;
   }, [rawSaleBillsList, allSalesRecords]);
 
@@ -691,7 +691,7 @@ export default function RecordsScreen() {
     const partyObj = foundParty || (isParty ? ({ id: item.partyId || `party-${Date.now()}`, name: item.buyerName || 'Party', mobile: item.partyMobile || '' } as Party) : null);
 
     let loadedItems: Array<{ id: string; cropId: string; cropName: string; unit: string; qty: number; rate: number; amount: number }> = [];
-    let billNoToUse = item.billNo || (item.billId ? `FK-${item.billId.slice(-4).toUpperCase()}` : (item.id ? `FK-${item.id.slice(-4).toUpperCase()}` : 'FK-SALE'));
+    let billNoToUse = item.billNo || (item.billId ? `${item.billId.slice(-4).toUpperCase()}` : (item.id ? `${item.id.slice(-4).toUpperCase()}` : 'SALE-01'));
     let realBillIdToUse = item.billId || item.id;
     let loadedAmountReceived: string | null = null;
     let loadedPreviousBalance: number | null = null;

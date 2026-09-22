@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -16,7 +17,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFarm } from '@/src/hooks/useFarms';
 import { useCreatePlot, usePlotsForFarm } from '@/src/hooks/usePlots';
-import { useCreateCrop } from '@/src/hooks/useCrops';
+import { useCreateCrop, useMyCrops } from '@/src/hooks/useCrops';
+import { useFarmerPlan } from '@/src/hooks/useFarmerPlan';
+import { FarmerPlanUpgradeModal } from '@/src/components/FarmerPlanUpgradeModal';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { CROP_CATEGORIES } from '@/src/constants/cropCategories';
@@ -34,8 +37,11 @@ export default function FarmDetailScreen() {
   const router = useRouter();
   const { data: farm } = useFarm(farmId);
   const { data: plots, isLoading, refetch, isRefetching } = usePlotsForFarm(farmId);
+  const { data: myCrops } = useMyCrops();
   const createPlot = useCreatePlot();
   const createCrop = useCreateCrop();
+  const { plan, limits, refetch: refetchPlan } = useFarmerPlan();
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
   const [showForm, setShowForm] = useState(false);
   const [plotName, setPlotName] = useState('');
@@ -47,6 +53,54 @@ export default function FarmDetailScreen() {
   const [plantationDate, setPlantationDate] = useState(todayIso());
   const [remarks, setRemarks] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  const handleOpenAddCropForm = async () => {
+    const freshPlanRes = await refetchPlan();
+    const effectivePlan = freshPlanRes.data?.plan ?? plan;
+    const effectiveLimits = freshPlanRes.data?.limits ?? limits;
+
+    const maxTotalCrops = effectiveLimits?.maxTotalCrops;
+    const maxActiveCrops = effectiveLimits?.maxActiveCrops;
+    const totalCropsCount = myCrops?.length ?? 0;
+
+    const planDisplayName =
+      effectivePlan === 'PRO' ? 'Lite Plan' : effectivePlan === 'SMART' ? 'Pro Plan' : effectivePlan === 'SUPER' ? 'Smart Plan' : 'Free Plan';
+
+    if (maxTotalCrops != null && maxTotalCrops > 0 && totalCropsCount >= maxTotalCrops) {
+      const message = `Your current plan (${planDisplayName}) allows adding a maximum of ${maxTotalCrops} crop(s). Please upgrade your plan to add more crops.`;
+      if (Platform.OS === 'web') {
+        if (confirm(`🔒 Upgrade Your Plan\n\n${message}\n\nWould you like to view plan comparison table & upgrade now?`)) {
+          setIsUpgradeModalOpen(true);
+        }
+      } else {
+        Alert.alert('🔒 Upgrade Your Plan', message, [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Upgrade Plan 👑', onPress: () => setIsUpgradeModalOpen(true) },
+        ]);
+      }
+      return;
+    }
+
+    if (maxActiveCrops != null && maxActiveCrops > 0) {
+      const activeCropsCount = (myCrops ?? []).filter((c: any) => c.status === 'ACTIVE' || c.status === 'PLANNED' || c.status === 'HARVESTING').length;
+      if (activeCropsCount >= maxActiveCrops) {
+        const message = `Your current plan (${planDisplayName}) allows a maximum of ${maxActiveCrops} active crop(s) at a time. Please upgrade your plan to add more active crops.`;
+        if (Platform.OS === 'web') {
+          if (confirm(`🔒 Upgrade Your Plan\n\n${message}\n\nWould you like to view plan comparison table & upgrade now?`)) {
+            setIsUpgradeModalOpen(true);
+          }
+        } else {
+          Alert.alert('🔒 Upgrade Your Plan', message, [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Upgrade Plan 👑', onPress: () => setIsUpgradeModalOpen(true) },
+          ]);
+        }
+        return;
+      }
+    }
+
+    setShowForm(true);
+  };
 
   const selectedCategory = CROP_CATEGORIES.find((c) => c.value === category)!;
   const isSaving = createPlot.isPending || createCrop.isPending;
@@ -253,7 +307,28 @@ export default function FarmDetailScreen() {
                 multiline
               />
 
-              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+              {error ? (
+                <View style={{ gap: 6, marginBottom: 8, alignItems: 'center' }}>
+                  <Text style={styles.errorText}>{error}</Text>
+                  {error.toLowerCase().includes('upgrade') ? (
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: '#16a34a',
+                        paddingHorizontal: 14,
+                        paddingVertical: 8,
+                        borderRadius: RADIUS.md,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 6,
+                      }}
+                      onPress={() => setIsUpgradeModalOpen(true)}
+                    >
+                      <Ionicons name="sparkles" size={15} color="#ffffff" />
+                      <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 }}>Upgrade Plan Now 👑</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+              ) : null}
 
               <View style={styles.formActions}>
                 <TouchableOpacity
@@ -274,13 +349,15 @@ export default function FarmDetailScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       ) : (
-        <TouchableOpacity style={styles.fabWrap} onPress={() => setShowForm(true)} activeOpacity={0.85}>
+        <TouchableOpacity style={styles.fabWrap} onPress={handleOpenAddCropForm} activeOpacity={0.85}>
           <LinearGradient colors={theme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.fab}>
             <Ionicons name="add" size={20} color="#fff" />
             <Text style={styles.fabText}>Add Crop</Text>
           </LinearGradient>
         </TouchableOpacity>
       )}
+
+      <FarmerPlanUpgradeModal visible={isUpgradeModalOpen} onClose={() => setIsUpgradeModalOpen(false)} />
     </View>
   );
 }

@@ -85,7 +85,7 @@ export function useFarmerPlan() {
   const query = useQuery<MyFarmerPlanResponse>({
     queryKey: ['farmerPlan', 'mine'],
     queryFn: getMyFarmerPlan,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 10 * 1000, // 10s staleTime ensures instant plan upgrade updates
     retry: 1,
   });
 

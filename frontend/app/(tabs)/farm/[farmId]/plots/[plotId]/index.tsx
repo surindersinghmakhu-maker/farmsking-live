@@ -19,7 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { usePlot } from '@/src/hooks/usePlots';
-import { useCreateCrop, useCropsForPlot, useSubmitCropToAdvisor } from '@/src/hooks/useCrops';
+import { useCreateCrop, useCropsForPlot, useMyCrops, useSubmitCropToAdvisor } from '@/src/hooks/useCrops';
 import { useCreateCropProblem } from '@/src/hooks/useCropProblems';
 import { uploadPhoto } from '@/src/api/uploads.api';
 import { useFarmerPlan } from '@/src/hooks/useFarmerPlan';
@@ -49,18 +49,23 @@ export default function PlotDetailScreen() {
   const router = useRouter();
   const { data: plot } = usePlot(plotId);
   const { data: crops, isLoading, refetch, isRefetching } = useCropsForPlot(plotId);
+  const { data: myCrops } = useMyCrops();
   const createCrop = useCreateCrop();
   const submitToAdvisor = useSubmitCropToAdvisor();
-  const { plan, limits } = useFarmerPlan();
+  const { plan, limits, refetch: refetchPlan } = useFarmerPlan();
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
-  const handleOpenAddCropForm = () => {
-    const maxTotalCrops = limits?.maxTotalCrops;
-    const maxActiveCrops = limits?.maxActiveCrops;
-    const totalCropsCount = crops?.length ?? 0;
+  const handleOpenAddCropForm = async () => {
+    const freshPlanRes = await refetchPlan();
+    const effectivePlan = freshPlanRes.data?.plan ?? plan;
+    const effectiveLimits = freshPlanRes.data?.limits ?? limits;
+
+    const maxTotalCrops = effectiveLimits?.maxTotalCrops;
+    const maxActiveCrops = effectiveLimits?.maxActiveCrops;
+    const totalCropsCount = myCrops?.length ?? 0;
 
     const planDisplayName =
-      plan === 'PRO' ? 'Lite Plan' : plan === 'SMART' ? 'Pro Plan' : plan === 'SUPER' ? 'Smart Plan' : 'Free Plan';
+      effectivePlan === 'PRO' ? 'Lite Plan' : effectivePlan === 'SMART' ? 'Pro Plan' : effectivePlan === 'SUPER' ? 'Smart Plan' : 'Free Plan';
 
     if (maxTotalCrops != null && maxTotalCrops > 0 && totalCropsCount >= maxTotalCrops) {
       const message = `Your current plan (${planDisplayName}) allows adding a maximum of ${maxTotalCrops} crop(s). Please upgrade your plan to add more crops.`;
@@ -78,7 +83,7 @@ export default function PlotDetailScreen() {
     }
 
     if (maxActiveCrops != null && maxActiveCrops > 0) {
-      const activeCropsCount = (crops ?? []).filter((c: any) => c.status === 'ACTIVE' || c.status === 'PLANNED' || c.status === 'HARVESTING').length;
+      const activeCropsCount = (myCrops ?? []).filter((c: any) => c.status === 'ACTIVE' || c.status === 'PLANNED' || c.status === 'HARVESTING').length;
       if (activeCropsCount >= maxActiveCrops) {
         const message = `Your current plan (${planDisplayName}) allows a maximum of ${maxActiveCrops} active crop(s) at a time. Please upgrade your plan to add more active crops.`;
         if (Platform.OS === 'web') {

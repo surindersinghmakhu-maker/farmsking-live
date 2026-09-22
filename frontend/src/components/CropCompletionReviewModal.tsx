@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { RegisteredCropField, CropCompletionReview } from '@/src/store/crops-context';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
+import { useMyAdvisor } from '@/src/hooks/useAdvisorAssignments';
 
 interface CropCompletionReviewModalProps {
   visible: boolean;
@@ -23,11 +24,11 @@ interface CropCompletionReviewModalProps {
 }
 
 const DOCTOR_GRADES = [
-  { key: 'EXCELLENT', label: '🏅 Excellent (5★)', color: '#16a34a', bg: '#f0fdf4' },
-  { key: 'GOOD', label: '🎖️ Good (4★)', color: '#0284c7', bg: '#f0f9ff' },
-  { key: 'AVERAGE', label: '👍 Average (3★)', color: '#d97706', bg: '#fffbe finished' },
-  { key: 'NEEDS_IMPROVEMENT', label: '⚠️ Needs Improvement (2★)', color: '#ea580c', bg: '#fff7ed' },
-  { key: 'POOR', label: '❌ Poor (1★)', color: '#dc2626', bg: '#fef2f2' },
+  { key: 'EXCELLENT', label: '🏅 Excellent', color: '#15803d', bg: '#f0fdf4', border: '#86efac' },
+  { key: 'GOOD', label: '🎖️ Good', color: '#0369a1', bg: '#f0f9ff', border: '#7dd3fc' },
+  { key: 'AVERAGE', label: '👍 Average', color: '#b45309', bg: '#fefce8', border: '#fde047' },
+  { key: 'NEEDS_IMPROVEMENT', label: '⚠️ Needs Work', color: '#c2410c', bg: '#fff7ed', border: '#fdba74' },
+  { key: 'POOR', label: '❌ Poor', color: '#b91c1c', bg: '#fef2f2', border: '#fca5a5' },
 ];
 
 export function CropCompletionReviewModal({
@@ -36,6 +37,8 @@ export function CropCompletionReviewModal({
   onClose,
   onSubmitReview,
 }: CropCompletionReviewModalProps) {
+  const { data: myAdvisor } = useMyAdvisor();
+
   const [farmskingRating, setFarmskingRating] = useState<number>(5);
   const [benefitAmount, setBenefitAmount] = useState<string>('');
   const [farmskingFeedback, setFarmskingFeedback] = useState<string>('');
@@ -48,8 +51,14 @@ export function CropCompletionReviewModal({
 
   if (!crop) return null;
 
-  const hasAssignedDoctor = crop.advisorStatus !== 'NONE' || Boolean(crop.assignedSchedule);
-  const doctorName = crop.assignedSchedule ? 'Dr. Assigned Advisor' : 'Crop Doctor / Advisor';
+  // Doctor rating section ONLY shows if this specific crop was adopted/assigned by a doctor
+  const hasAssignedDoctor =
+    (crop.advisorStatus && crop.advisorStatus !== 'NONE') ||
+    Boolean(crop.assignedSchedule);
+
+  const doctorName = myAdvisor?.name
+    ? `Dr. ${myAdvisor.name}`
+    : 'Assigned Crop Doctor';
 
   const tap = () => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -94,37 +103,32 @@ export function CropCompletionReviewModal({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={[styles.card, premiumShadow('#000000', 'lg')]}>
           {/* Header */}
-          <LinearGradient colors={['#16a34a', '#15803d']} style={styles.header}>
+          <LinearGradient colors={['#15803d', '#166534']} style={styles.header}>
             <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={styles.headerBadge}>🏁 CROP COMPLETION & REVIEW</Text>
+              <View style={styles.headerBadgeWrap}>
+                <Ionicons name="checkmark-done-circle" size={14} color="#86efac" />
+                <Text style={styles.headerBadge}>CROP COMPLETION REVIEW</Text>
               </View>
               <Text style={styles.cropTitle} numberOfLines={1}>
-                {crop.cropName} ({crop.fieldName})
-              </Text>
-              <Text style={styles.headerSub}>
-                ਫਸਲ ਪੂਰੀ ਹੋਣ 'ਤੇ ਆਪਣਾ ਅਨੁਭਵ ਅਤੇ ਡਾਕਟਰ ਦੀ ਗ੍ਰੇਡਿੰਗ ਦਿਓ
+                {crop.cropName} <Text style={styles.fieldSub}>({crop.fieldName})</Text>
               </Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={20} color="#ffffff" />
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.8}>
+              <Ionicons name="close" size={18} color="#ffffff" />
             </TouchableOpacity>
           </LinearGradient>
 
-          <ScrollView style={styles.body} contentContainerStyle={{ paddingBottom: 24 }} keyboardShouldPersistTaps="handled">
+          <ScrollView style={styles.body} contentContainerStyle={{ gap: 12, paddingBottom: 16 }} keyboardShouldPersistTaps="handled">
             {/* SECTION 1: FARMSKING APP BENEFIT & RATING */}
             <View style={styles.sectionBox}>
               <View style={styles.sectionHeader}>
-                <Ionicons name="sparkles" size={18} color="#16a34a" />
-                <Text style={styles.sectionTitle}>1. FarmsKing App Benefit & Rating</Text>
+                <Ionicons name="sparkles" size={16} color="#16a34a" />
+                <Text style={styles.sectionTitle}>App Rating & Extra Profit</Text>
               </View>
-              <Text style={styles.questionText}>
-                FarmsKing App ਨਾਲ ਇਸ ਫਸਲ ਵਿੱਚ ਤੁਹਾਨੂੰ ਕਿੰਨਾ ਫਾਇਦਾ ਹੋਇਆ?
-              </Text>
 
               {/* Star Rating Bar */}
               <View style={styles.starRow}>
@@ -137,16 +141,16 @@ export function CropCompletionReviewModal({
                   >
                     <Ionicons
                       name={star <= farmskingRating ? 'star' : 'star-outline'}
-                      size={28}
+                      size={24}
                       color={star <= farmskingRating ? '#f59e0b' : '#cbd5e1'}
                     />
                   </TouchableOpacity>
                 ))}
-                <Text style={styles.starLabel}>{farmskingRating} / 5 Stars</Text>
+                <Text style={styles.starLabel}>{farmskingRating}/5</Text>
               </View>
 
-              {/* Profit / Benefit Input */}
-              <Text style={styles.fieldLabel}>ਮੁਨਾਫਾ / ਬਚਤ (Estimated Extra Profit / Benefit ₹):</Text>
+              {/* Profit Input */}
+              <Text style={styles.fieldLabel}>Estimated Extra Profit / Savings (₹)</Text>
               <View style={styles.inputWrap}>
                 <Text style={styles.currencySymbol}>₹</Text>
                 <TextInput
@@ -160,38 +164,28 @@ export function CropCompletionReviewModal({
               </View>
 
               {/* Feedback Input */}
-              <Text style={styles.fieldLabel}>ਤੁਹਾਡਾ ਅਨੁਭਵ / ਸੁਝਾਅ (Feedback Comments):</Text>
+              <Text style={styles.fieldLabel}>App Feedback (Optional)</Text>
               <TextInput
                 style={[styles.textInput, styles.multilineInput]}
-                placeholder="FarmsKing app ਨਾਲ ਤੁਹਾਡਾ ਅਨੁਭਵ ਕਿਵੇਂ ਰਿਹਾ? ਸੁਝਾਅ ਲਿਖੋ..."
+                placeholder="Share your experience with FarmsKing..."
                 placeholderTextColor="#94a3b8"
                 multiline
-                numberOfLines={3}
+                numberOfLines={2}
                 value={farmskingFeedback}
                 onChangeText={setFarmskingFeedback}
               />
             </View>
 
-            {/* SECTION 2: DOCTOR / ADVISOR GRADING & RATING */}
+            {/* SECTION 2: DOCTOR / ADVISOR GRADING & RATING (ONLY IF DOCTOR ADOPTED/ASSIGNED THIS CROP) */}
             {hasAssignedDoctor && (
               <View style={[styles.sectionBox, styles.doctorSectionBox]}>
                 <View style={styles.sectionHeader}>
-                  <Ionicons name="medical" size={18} color="#0284c7" />
-                  <Text style={[styles.sectionTitle, { color: '#0369a1' }]}>
-                    2. Crop Doctor / Advisor Rating & Grading
-                  </Text>
-                </View>
-                <View style={styles.doctorInfoCard}>
-                  <Ionicons name="person-circle-outline" size={24} color="#0284c7" />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.doctorNameText}>{doctorName}</Text>
-                    <Text style={styles.doctorSubText}>Assigned Advisor for {crop.cropName}</Text>
+                  <Ionicons name="medical" size={16} color="#0284c7" />
+                  <Text style={[styles.sectionTitle, { color: '#0369a1' }]}>Doctor Rating & Grading</Text>
+                  <View style={styles.doctorBadge}>
+                    <Text style={styles.doctorBadgeText}>{doctorName}</Text>
                   </View>
                 </View>
-
-                <Text style={styles.questionText}>
-                  ਤੁਹਾਡੇ Doctor ਦੀ ਸਲਾਹ ਅਤੇ ਗਾਈਡੈਂਸ ਕਿਵੇਂ ਰਹੀ? (Doctor Rating):
-                </Text>
 
                 {/* Doctor Star Rating Bar */}
                 <View style={styles.starRow}>
@@ -204,16 +198,16 @@ export function CropCompletionReviewModal({
                     >
                       <Ionicons
                         name={star <= doctorRating ? 'star' : 'star-outline'}
-                        size={26}
+                        size={24}
                         color={star <= doctorRating ? '#f59e0b' : '#cbd5e1'}
                       />
                     </TouchableOpacity>
                   ))}
-                  <Text style={styles.starLabel}>{doctorRating} / 5 Stars</Text>
+                  <Text style={styles.starLabel}>{doctorRating}/5</Text>
                 </View>
 
                 {/* Doctor Grade Pills */}
-                <Text style={styles.fieldLabel}>Doctor Grading Tag:</Text>
+                <Text style={styles.fieldLabel}>Doctor Performance Tag</Text>
                 <View style={styles.gradeGrid}>
                   {DOCTOR_GRADES.map((g) => {
                     const isSelected = doctorGrade === g.key;
@@ -222,8 +216,8 @@ export function CropCompletionReviewModal({
                         key={g.key}
                         style={[
                           styles.gradePill,
-                          { backgroundColor: g.bg, borderColor: isSelected ? g.color : '#e2e8f0' },
-                          isSelected && { borderWidth: 2 },
+                          { backgroundColor: g.bg, borderColor: isSelected ? g.color : g.border },
+                          isSelected && { borderWidth: 1.5 },
                         ]}
                         activeOpacity={0.8}
                         onPress={() => {
@@ -238,10 +232,10 @@ export function CropCompletionReviewModal({
                 </View>
 
                 {/* Doctor Feedback Comment */}
-                <Text style={styles.fieldLabel}>Doctor Feedback Comment:</Text>
+                <Text style={styles.fieldLabel}>Doctor Feedback (Optional)</Text>
                 <TextInput
                   style={[styles.textInput, styles.multilineInput]}
-                  placeholder="Doctor ਦੀਆਂ ਦਿੱਤੀਆਂ ਸਲਾਹਾਂ ਬਾਰੇ ਆਪਣੀ ਰਾਇ ਦੱਸੋ..."
+                  placeholder="Feedback for advisor guidance..."
                   placeholderTextColor="#94a3b8"
                   multiline
                   numberOfLines={2}
@@ -259,9 +253,9 @@ export function CropCompletionReviewModal({
               disabled={isSubmitting}
             >
               <LinearGradient colors={['#16a34a', '#15803d']} style={styles.submitGradient}>
-                <Ionicons name="checkmark-circle" size={20} color="#ffffff" />
+                <Ionicons name="checkmark-circle" size={18} color="#ffffff" />
                 <Text style={styles.submitBtnText}>
-                  {isSubmitting ? 'Submitting...' : 'Complete Crop & Submit Review 🏁'}
+                  {isSubmitting ? 'Submitting...' : 'Submit & Complete Crop 🏁'}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -275,45 +269,52 @@ export function CropCompletionReviewModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
     justifyContent: 'center',
     padding: SPACING.md,
   },
   card: {
     backgroundColor: '#ffffff',
     borderRadius: RADIUS.xl,
-    maxHeight: '90%',
+    maxHeight: '88%',
+    maxWidth: 480,
+    alignSelf: 'center',
+    width: '100%',
     overflow: 'hidden',
   },
   header: {
     paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
+    paddingVertical: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
+  },
+  headerBadgeWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
   },
   headerBadge: {
     fontSize: 10,
     fontFamily: FONT.bold,
-    color: '#dcfce7',
+    color: '#86efac',
     letterSpacing: 0.5,
   },
   cropTitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontFamily: FONT.bold,
     color: '#ffffff',
-    marginTop: 2,
   },
-  headerSub: {
-    fontSize: 11.5,
+  fieldSub: {
+    fontSize: 13,
     fontFamily: FONT.medium,
-    color: '#f0fdf4',
-    marginTop: 2,
+    color: '#dcfce7',
   },
   closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -323,9 +324,8 @@ const styles = StyleSheet.create({
   },
   sectionBox: {
     backgroundColor: '#f8fafc',
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.lg,
     padding: SPACING.md,
-    marginBottom: SPACING.md,
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
@@ -340,36 +340,42 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontFamily: FONT.bold,
     color: '#15803d',
+    flex: 1,
   },
-  questionText: {
-    fontSize: 12.5,
+  doctorBadge: {
+    backgroundColor: '#e0f2fe',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+  },
+  doctorBadgeText: {
+    fontSize: 11,
     fontFamily: FONT.bold,
-    color: '#0f172a',
-    marginBottom: 8,
+    color: '#0369a1',
   },
   starRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 12,
+    gap: 4,
+    marginBottom: 6,
   },
   starBtn: {
-    padding: 2,
+    padding: 1,
   },
   starLabel: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontFamily: FONT.bold,
-    color: '#f59e0b',
-    marginLeft: 8,
+    color: '#d97706',
+    marginLeft: 6,
   },
   fieldLabel: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontFamily: FONT.bold,
     color: '#475569',
-    marginTop: 8,
+    marginTop: 6,
     marginBottom: 4,
   },
   inputWrap: {
@@ -378,15 +384,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderWidth: 1,
     borderColor: '#cbd5e1',
-    borderRadius: RADIUS.sm,
+    borderRadius: RADIUS.md,
     paddingHorizontal: 10,
-    height: 40,
+    height: 38,
   },
   currencySymbol: {
-    fontSize: 15,
+    fontSize: 14,
     fontFamily: FONT.bold,
     color: '#16a34a',
-    marginRight: 6,
+    marginRight: 4,
   },
   textInput: {
     flex: 1,
@@ -398,42 +404,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderWidth: 1,
     borderColor: '#cbd5e1',
-    borderRadius: RADIUS.sm,
+    borderRadius: RADIUS.md,
     padding: 8,
-    height: 64,
+    height: 48,
     textAlignVertical: 'top',
-  },
-  doctorInfoCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#ffffff',
-    padding: 8,
-    borderRadius: RADIUS.sm,
-    borderWidth: 1,
-    borderColor: '#e0f2fe',
-    marginBottom: 10,
-  },
-  doctorNameText: {
-    fontSize: 13,
-    fontFamily: FONT.bold,
-    color: '#0369a1',
-  },
-  doctorSubText: {
-    fontSize: 10.5,
-    fontFamily: FONT.medium,
-    color: '#64748b',
   },
   gradeGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
-    marginVertical: 6,
+    gap: 5,
+    marginVertical: 4,
   },
   gradePill: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: RADIUS.sm,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
     borderWidth: 1,
   },
   gradePillText: {
@@ -450,10 +435,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
-    gap: 8,
+    gap: 6,
   },
   submitBtnText: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontFamily: FONT.bold,
     color: '#ffffff',
   },

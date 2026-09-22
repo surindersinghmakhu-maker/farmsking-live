@@ -19,28 +19,26 @@ export class CreateCropDto {
 
   @IsOptional()
   @IsNumber()
-  @IsPositive()
   area?: number;
 
   @IsOptional()
   @IsInt()
-  @IsPositive()
   plantCount?: number;
 
   @IsOptional()
-  @IsDateString()
+  @IsString()
   sowingDate?: string;
 
   @IsOptional()
-  @IsDateString()
+  @IsString()
   transplantDate?: string;
 
   @IsOptional()
-  @IsDateString()
+  @IsString()
   expectedHarvestDate?: string;
 
   @IsOptional()
-  @IsDateString()
+  @IsString()
   actualHarvestDate?: string;
 
   @IsOptional()
@@ -54,11 +52,6 @@ export class CreateCropDto {
   @IsOptional()
   @IsString()
   unit?: string;
-
-  @IsOptional()
-  @IsNumber()
-  @IsPositive()
-  pricePerUnit?: number;
 
   @IsOptional()
   @IsEnum(CropHarvestType)

@@ -91,8 +91,6 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
   const [selectedSeason, setSelectedSeason] = useState<string>('Rabi (Winter)');
   const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
   const [selectedUnit, setSelectedUnit] = useState<CropUnit>('KG');
-  const [minPricePerUnit, setMinPricePerUnit] = useState('40');
-  const [maxPricePerUnit, setMaxPricePerUnit] = useState('60');
   const [errorNotice, setErrorNotice] = useState<string | null>(null);
 
   const [customCropName, setCustomCropName] = useState('');
@@ -124,9 +122,6 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
       setPlantCount(editingCrop.plantCount ? String(editingCrop.plantCount) : '');
       if (editingCrop.sowingDate) setSowingDate(editingCrop.sowingDate);
       if (editingCrop.unit) setSelectedUnit(editingCrop.unit);
-      if (editingCrop.minPricePerUnit) setMinPricePerUnit(editingCrop.minPricePerUnit);
-      if (editingCrop.maxPricePerUnit) setMaxPricePerUnit(editingCrop.maxPricePerUnit);
-      else if (editingCrop.pricePerUnit) setMaxPricePerUnit(editingCrop.pricePerUnit);
       if (editingCrop.stage) setCropStage(editingCrop.stage);
       if (editingCrop.irrigationType) setSelectedIrrigation(editingCrop.irrigationType);
       if (editingCrop.harvestType) setCustomHarvestType(editingCrop.harvestType);
@@ -206,9 +201,6 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
     }
     setSelectedUnit(crop.defaultUnit || 'KG');
     setVarietyName(crop.variety || '');
-    const defPrice = crop.defaultPrice || 50;
-    setMaxPricePerUnit(String(Math.round(defPrice)));
-    setMinPricePerUnit(String(Math.round(defPrice)));
   };
 
   const handleFormSubmit = () => {
@@ -224,7 +216,6 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
       ...baseCrop,
       variety: varietyName.trim() || undefined,
     };
-    const maxP = parseFloat(maxPricePerUnit) > 0 ? parseFloat(maxPricePerUnit) : (cropToSave.defaultPrice || 50);
     const finalFieldName = fieldName.trim() ? fieldName.trim() : `${cropToSave.name || 'Crop'} Plot 1`;
 
     onSaveCropForm({
@@ -235,9 +226,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
       areaUnit: selectedAreaUnit,
       sowingDate: sowingDate,
       unit: selectedUnit || 'KG',
-      pricePerUnit: String(maxP),
-      minPricePerUnit: String(maxP),
-      maxPricePerUnit: String(maxP),
+      pricePerUnit: '',
       stage: cropStage,
       harvestType: cropToSave.harvestType || 'CONTINUOUS',
       irrigationType: selectedIrrigation,
@@ -533,35 +522,16 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
               </View>
             </View>
 
-            {/* 7. Dedicated Sale / Market Information Card */}
+            {/* 7. Dedicated Crop Measurement Unit Card */}
             <View style={styles.saleInfoCard}>
               <View style={styles.saleCardHeader}>
-                <Ionicons name="pricetag" size={14} color="#16a34a" />
-                <Text style={styles.saleCardTitle}>Sale / Market Information (Estimated Max Price)</Text>
-              </View>
-
-              {/* Estimated max price per Unit */}
-              <View style={{ marginBottom: 4 }}>
-                <Text style={styles.inputLabelCompact}>Estimated max price / {selectedUnit} (₹) *</Text>
-                <View style={styles.priceWrap}>
-                  <Text style={styles.currencySymbol}>₹</Text>
-                  <TextInput
-                    style={styles.priceInput}
-                    placeholder="Estimated max price ₹"
-                    placeholderTextColor="#94a3b8"
-                    keyboardType="numeric"
-                    value={maxPricePerUnit}
-                    onChangeText={(val) => {
-                      setMaxPricePerUnit(val);
-                      setMinPricePerUnit(val);
-                    }}
-                  />
-                </View>
+                <Ionicons name="scale" size={14} color="#16a34a" />
+                <Text style={styles.saleCardTitle}>Crop Measurement Unit (ਮਾਪ ਇਕਾਈ)</Text>
               </View>
 
               {/* Crop Measurement Unit Selector */}
-              <Text style={[styles.inputLabelCompact, { marginTop: 6 }]}>Crop Unit *</Text>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 2 }}>
+              <Text style={styles.inputLabelCompact}>Crop Measurement Unit *</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
                 {CROP_UNITS.map((u) => {
                   const isSelected = u.unit === selectedUnit;
                   return (

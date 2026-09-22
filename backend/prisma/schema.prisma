@@ -621,7 +621,6 @@ model CropCycle {
   status               CropStatus              @default(PLANNED)
   stage                CropCycleStage          @default(PLANTATION)
   unit                 String?
-  pricePerUnit         Decimal?                @db.Decimal(10, 2)
   harvestType          CropHarvestType         @default(CONTINUOUS)
   notes                String?
   assignedSchedule     String?                 @db.Text

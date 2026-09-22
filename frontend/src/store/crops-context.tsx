@@ -259,6 +259,11 @@ function normalizeStage(stage: CropStage): 'PLANTATION' | 'VEGETATIVE' | 'FLOWER
   return stage;
 }
 
+const MONTH_NAME_MAP: Record<string, number> = {
+  jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+  jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+};
+
 /** The mock's sowingDate is a free-text display string (optionally with a season suffix) — best-effort parse to ISO for the real date column. */
 function parseSowingDateToISO(display: string): string | undefined {
   if (!display) return new Date().toISOString();
@@ -277,6 +282,17 @@ function parseSowingDateToISO(display: string): string | undefined {
     const [, day, month, year] = dmYMatch;
     const d = new Date(Number(year), Number(month) - 1, Number(day));
     return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+  }
+
+  // Handle DD-MMM-YYYY or DD MMM YYYY (e.g. 22-Sep-2026)
+  const dMmmYMatch = datePart.match(/^(\d{1,2})[-/\s]+([a-zA-Z]{3})[-/\s]+(\d{4})/);
+  if (dMmmYMatch) {
+    const [, day, monStr, year] = dMmmYMatch;
+    const monthIdx = MONTH_NAME_MAP[monStr.toLowerCase()];
+    if (monthIdx !== undefined) {
+      const d = new Date(Number(year), monthIdx, Number(day));
+      return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+    }
   }
 
   const parsed = new Date(datePart);
@@ -509,7 +525,6 @@ export function CropsProvider({ children }: { children: ReactNode }) {
       variety: values.crop?.variety || undefined,
       sowingDate: parseSowingDateToISO(values.sowingDate),
       unit: values.unit || 'KG',
-      pricePerUnit: values.pricePerUnit && values.pricePerUnit.trim() ? Number(values.pricePerUnit) : undefined,
       stage: normalizeStage(values.stage),
       harvestType: values.harvestType || 'CONTINUOUS',
       plantCount: values.plantCount ? Number(values.plantCount) : undefined,
@@ -528,7 +543,6 @@ export function CropsProvider({ children }: { children: ReactNode }) {
       variety: values.crop.variety,
       sowingDate: parseSowingDateToISO(values.sowingDate),
       unit: values.unit,
-      pricePerUnit: values.pricePerUnit.trim() ? Number(values.pricePerUnit) : undefined,
       stage: normalizeStage(values.stage),
       harvestType: values.harvestType,
       plantCount: values.plantCount ? Number(values.plantCount) : undefined,

@@ -37,7 +37,10 @@ function toDateFields<T extends Partial<Record<(typeof DATE_FIELDS)[number], str
   for (const field of DATE_FIELDS) {
     const value = dto[field];
     if (value) {
-      result[field] = new Date(value);
+      const d = new Date(value);
+      if (!isNaN(d.getTime())) {
+        result[field] = d;
+      }
     }
   }
   return result;
@@ -116,17 +119,22 @@ export class CropsService {
     }
     // ── End dynamic plan enforcement ───────────────────────────────────────
 
-    const { plotId, sowingDate, transplantDate, expectedHarvestDate, actualHarvestDate, ...rest } = dto;
-    const cropId = await generateUniqueCropId(this.prisma);
-    return this.prisma.cropCycle.create({
-      data: {
-        ...rest,
-        cropId,
-        plotId,
-        status: dto.status ?? (dto.stage ? statusForStage(dto.stage) : undefined),
-        ...toDateFields(dto),
-      },
-    });
+    try {
+      const { plotId, sowingDate, transplantDate, expectedHarvestDate, actualHarvestDate, ...rest } = dto;
+      const cropId = await generateUniqueCropId(this.prisma);
+      return await this.prisma.cropCycle.create({
+        data: {
+          ...rest,
+          cropId,
+          plotId,
+          status: dto.status ?? (dto.stage ? statusForStage(dto.stage) : undefined),
+          ...toDateFields(dto),
+        },
+      });
+    } catch (err: any) {
+      console.error('[CropsService.create] Database error:', err);
+      throw new BadRequestException(`Failed to create crop cycle: ${err?.message || 'Database error'}`);
+    }
   }
 
   /** Farmer: every active crop cycle across all their own farms/plots (for pickers that need a real crop, not a per-plot list). */

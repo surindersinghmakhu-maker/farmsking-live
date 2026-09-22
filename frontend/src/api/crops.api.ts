@@ -15,7 +15,6 @@ export interface CreateCropPayload {
   status?: CropStatus;
   stage?: 'PLANTATION' | 'VEGETATIVE' | 'FLOWERING' | 'HARVESTING' | 'COMPLETED';
   unit?: string;
-  pricePerUnit?: number;
   harvestType?: 'ONE_TIME' | 'CONTINUOUS';
   notes?: string;
 }

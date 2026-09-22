@@ -309,7 +309,6 @@ export interface CropCycle {
   status: CropStatus;
   stage: 'PLANTATION' | 'VEGETATIVE' | 'FLOWERING' | 'HARVESTING' | 'COMPLETED';
   unit?: string | null;
-  pricePerUnit?: string | null;
   harvestType?: 'ONE_TIME' | 'CONTINUOUS';
   notes?: string | null;
   assignedSchedule?: string | null;

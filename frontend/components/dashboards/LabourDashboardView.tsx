@@ -135,8 +135,8 @@ export const LabourDashboardView: React.FC = () => {
             selectedFarmerId={selectedFarmerId}
             onSelectFarmer={(fId) => setSelectedFarmerId(fId)}
             hideFarmerSwitcher={false}
-            showActiveCard={true}
-            showAddButton={true}
+            showActiveCard={false}
+            showAddButton={false}
             openEditSignal={openEditSignal}
           />
         )}

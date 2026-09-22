@@ -161,7 +161,7 @@ export class CropsService {
           deletedAt: null,
           plotId: { in: plotIds },
         },
-        include: { plot: { select: { id: true, name: true, farmId: true, area: true, areaUnit: true, irrigationType: true } } },
+        include: { plot: true },
         orderBy: { createdAt: 'desc' },
       });
 

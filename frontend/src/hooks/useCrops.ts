@@ -25,7 +25,7 @@ export function useCrop(id: string | undefined) {
   });
 }
 
-/** Admin/Super Admin: resolve a Crop ID (e.g. "CR-482910") to its full record — used to look up a crop before editing it. */
+/** Admin/Super Admin: resolve a Crop ID (e.g. "C-482910") to its full record — used to look up a crop before editing it. */
 export function useLookupCropByCropId() {
   return useMutation({
     mutationFn: (cropId: string) => cropsApi.lookupCropByCropId(cropId),

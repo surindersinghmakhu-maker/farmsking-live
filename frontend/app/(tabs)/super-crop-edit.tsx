@@ -146,7 +146,7 @@ export default function SuperCropEditScreen() {
           <Ionicons name="search" size={16} color="rgba(255,255,255,0.8)" />
           <TextInput
             style={styles.searchInput}
-            placeholder="Enter Crop ID (e.g. CR-482910)..."
+            placeholder="Enter Crop ID (e.g. C-482910)..."
             placeholderTextColor="rgba(255,255,255,0.6)"
             value={cropIdInput}
             onChangeText={setCropIdInput}

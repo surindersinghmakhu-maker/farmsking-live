@@ -1,10 +1,10 @@
 import { randomBytes } from 'crypto';
 import { PrismaClient } from '@prisma/client';
 
-/** A short, human-shareable public identifier for a crop cycle (e.g. "CR-482910") — used for support/reference. */
+/** A short, human-shareable public identifier for a crop cycle (e.g. "C-482910") — used for support/reference. */
 function generateCropIdCandidate(): string {
   const digits = randomBytes(4).readUInt32BE(0) % 1_000_000;
-  return `CR-${digits.toString().padStart(6, '0')}`;
+  return `C-${digits.toString().padStart(6, '0')}`;
 }
 
 /** Generates a Crop ID guaranteed not to collide with an existing one. */

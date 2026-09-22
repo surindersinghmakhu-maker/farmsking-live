@@ -652,7 +652,7 @@ export default function FarmListScreen() {
                 <View style={styles.cardHeader}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', flex: 1 }}>
                     <Text style={styles.cardTitle} numberOfLines={1}>
-                      📍 {item.fieldName} <Text style={styles.cropIdSubText}>(ID: {item.cropId || (item.id?.startsWith('CR-') ? item.id : `CR-${item.id?.slice(0, 6).toUpperCase()}`)})</Text>
+                      📍 {item.fieldName} <Text style={styles.cropIdSubText}>(ID: {item.cropId || (item.id?.startsWith('C-') ? item.id : `C-${item.id?.slice(0, 6).toUpperCase()}`)})</Text>
                     </Text>
                     <View style={styles.cropBadge}>
                       <Text style={styles.cropBadgeText}>🌾 {item.cropName}</Text>
@@ -906,7 +906,7 @@ export default function FarmListScreen() {
                       <View style={styles.historyCardHeader}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                           <Text style={styles.historyCropName}>
-                            📍 {hItem.fieldName} <Text style={styles.cropIdSubText}>(ID: {hItem.cropId || (hItem.id?.startsWith('CR-') ? hItem.id : `CR-${hItem.id?.slice(0, 6).toUpperCase()}`)})</Text>
+                            📍 {hItem.fieldName} <Text style={styles.cropIdSubText}>(ID: {hItem.cropId || (hItem.id?.startsWith('C-') ? hItem.id : `C-${hItem.id?.slice(0, 6).toUpperCase()}`)})</Text>
                           </Text>
                           <View style={styles.completedBadge}>
                             <Text style={styles.completedBadgeText}>🏁 COMPLETED</Text>

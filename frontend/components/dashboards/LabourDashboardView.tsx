@@ -99,6 +99,8 @@ export const LabourDashboardView: React.FC = () => {
     return calculated.reverse();
   }, [workEntries, payments]);
 
+  const [openEditSignal, setOpenEditSignal] = useState(0);
+
   const callFarmer = () => {
     if (farmer?.mobile) {
       Linking.openURL(`tel:${farmer.mobile}`);
@@ -112,7 +114,8 @@ export const LabourDashboardView: React.FC = () => {
         currentRole="LABOUR"
         profileName={worker?.name || user?.name || 'Worker'}
         subtitle="Worker Account"
-        avatarUrl={user?.photoUrl || undefined}
+        avatarUrl={worker?.photoUrl || user?.photoUrl || undefined}
+        onAvatarPress={() => setOpenEditSignal((prev) => prev + 1)}
       />
 
       <View style={styles.content}>
@@ -124,40 +127,12 @@ export const LabourDashboardView: React.FC = () => {
             onSelectWorker={(w) => setSelectedWorkerId(w.id)}
             selectedFarmerId={selectedFarmerId}
             onSelectFarmer={(fId) => setSelectedFarmerId(fId)}
+            hideFarmerSwitcher={false}
+            showActiveCard={false}
+            showAddButton={false}
+            openEditSignal={openEditSignal}
           />
         )}
-
-        {/* 1. Employer / Farmer Profile Banner - Prominent at TOP */}
-        {farmer ? (
-          <View style={[styles.farmerTopCard, premiumShadow('#0f172a', 'sm')]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              {/* Farmer Profile Picture */}
-              <Avatar uri={farmer.photoUrl} size={48} />
-
-              {/* Farmer Info */}
-              <View style={{ flex: 1 }}>
-                <Text style={styles.farmerLabel}>Employer / Farmer</Text>
-                <Text style={styles.farmerName}>{farmer.name}</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 3 }}>
-                  {farmer.mobile ? (
-                    <Text style={styles.farmerMetaText}>📱 {farmer.mobile}</Text>
-                  ) : null}
-                  {farmer.village ? (
-                    <Text style={styles.farmerMetaText}>📍 {farmer.village}</Text>
-                  ) : null}
-                </View>
-              </View>
-
-              {/* Call Farmer Button */}
-              {farmer.mobile ? (
-                <TouchableOpacity style={styles.callBtn} activeOpacity={0.8} onPress={callFarmer}>
-                  <Ionicons name="call" size={16} color="#ffffff" />
-                  <Text style={styles.callBtnText}>Call</Text>
-                </TouchableOpacity>
-              ) : null}
-            </View>
-          </View>
-        ) : null}
 
         {/* 2. Top Balance Card - Ultra Compact & Vividly Highlighted */}
         <View

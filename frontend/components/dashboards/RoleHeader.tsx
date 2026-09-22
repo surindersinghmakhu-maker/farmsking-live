@@ -17,6 +17,7 @@ interface RoleHeaderProps {
   avatarUrl?: string;
   /** Optional badge to render below the subtitle (e.g. plan name pill) */
   planBadge?: React.ReactNode;
+  onAvatarPress?: () => void;
 }
 
 function getTimeBasedGreeting(): string {
@@ -33,6 +34,7 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
   subtitle,
   avatarUrl,
   planBadge,
+  onAvatarPress,
 }) => {
   const theme = RoleThemes[currentRole] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER;
   const router = useRouter();
@@ -82,7 +84,7 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
               style={styles.avatarRing}
               activeOpacity={currentRole === 'ADMIN' ? 1 : 0.8}
               disabled={currentRole === 'ADMIN'}
-              onPress={() => router.push('/profile')}
+              onPress={onAvatarPress || (() => router.push('/profile'))}
             >
               <Avatar uri={avatarUrl} size={56} />
             </TouchableOpacity>

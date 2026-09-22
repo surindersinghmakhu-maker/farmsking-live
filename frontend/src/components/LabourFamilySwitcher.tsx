@@ -47,10 +47,13 @@ interface LabourFamilySwitcherProps {
   selectedWorkerId: string | null;
   onSelectWorker: (worker: LabourWorker) => void;
   onRefresh?: () => void;
-  /** Optional list of farmers when accessed by a Labour user working for multiple farmers */
   farmerList?: FarmerGroup[];
   selectedFarmerId?: string | null;
   onSelectFarmer?: (farmerId: string | null) => void;
+  hideFarmerSwitcher?: boolean;
+  showActiveCard?: boolean;
+  showAddButton?: boolean;
+  openEditSignal?: number;
 }
 
 export function LabourFamilySwitcher({
@@ -61,6 +64,10 @@ export function LabourFamilySwitcher({
   farmerList = [],
   selectedFarmerId,
   onSelectFarmer,
+  hideFarmerSwitcher = false,
+  showActiveCard = true,
+  showAddButton = true,
+  openEditSignal,
 }: LabourFamilySwitcherProps) {
   const createWorker = useCreateLabourWorker();
   const updateWorker = useUpdateLabourWorker();
@@ -189,11 +196,20 @@ export function LabourFamilySwitcher({
     return workers.filter((w) => (w as any).farmerId === activeFarmerId || (w as any).farmer?.id === activeFarmerId);
   }, [workers, activeFarmerId]);
 
+  const displayWorkers = hideFarmerSwitcher ? workers : filteredWorkersByFarmer;
+
   // Active Worker Object
   const activeWorker = useMemo(() => {
-    if (!selectedWorkerId && filteredWorkersByFarmer.length > 0) return filteredWorkersByFarmer[0];
-    return filteredWorkersByFarmer.find((w) => w.id === selectedWorkerId) || filteredWorkersByFarmer[0] || null;
-  }, [filteredWorkersByFarmer, selectedWorkerId]);
+    if (!selectedWorkerId && displayWorkers.length > 0) return displayWorkers[0];
+    return displayWorkers.find((w) => w.id === selectedWorkerId) || displayWorkers[0] || null;
+  }, [displayWorkers, selectedWorkerId]);
+
+  // Trigger external edit modal signal
+  React.useEffect(() => {
+    if (openEditSignal && openEditSignal > 0 && activeWorker) {
+      openEditModal(activeWorker);
+    }
+  }, [openEditSignal, activeWorker]);
 
   // Handle Pick Photo in Add Form
   const pickPhotoForForm = async () => {
@@ -260,26 +276,36 @@ export function LabourFamilySwitcher({
 
   return (
     <View style={styles.container}>
-      {/* 1. FARMER SWITCHER BAR (Shown when farmers exist or handler supplied) */}
-      {availableFarmers.length > 0 && (
+      {/* 1. FARMER SWITCHER BAR (Visual circular photo avatars + name below) */}
+      {!hideFarmerSwitcher && availableFarmers.length > 0 && (
         <View style={styles.farmerSwitcherBox}>
           <Text style={styles.farmerSwitcherTitle}>🌾 Select Farmer / Kheti Malik:</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.avatarScrollContainer}>
             {availableFarmers.map((f) => {
               const isSelected = activeFarmerId === f.id;
               return (
                 <TouchableOpacity
                   key={f.id}
-                  style={[styles.farmerChip, isSelected && styles.farmerChipActive]}
-                  activeOpacity={0.8}
+                  style={[styles.avatarCard, isSelected && styles.avatarCardActive]}
+                  activeOpacity={0.85}
                   onPress={() => {
                     tap();
                     if (onSelectFarmer) onSelectFarmer(f.id);
                   }}
                 >
-                  <Avatar uri={f.photoUrl} size={20} />
-                  <Text style={[styles.farmerChipText, isSelected && styles.farmerChipTextActive]}>
-                    {f.name} {f.village ? `(${f.village})` : ''}
+                  <View style={[styles.avatarRing, isSelected && styles.avatarRingActive]}>
+                    <Avatar uri={f.photoUrl} size={54} />
+                    {isSelected && (
+                      <View style={styles.activeBadge}>
+                        <Ionicons name="checkmark" size={10} color="#ffffff" />
+                      </View>
+                    )}
+                  </View>
+                  <Text style={[styles.avatarName, isSelected && styles.avatarNameActive]} numberOfLines={1}>
+                    {f.name}
+                  </Text>
+                  <Text style={styles.avatarRelation} numberOfLines={1}>
+                    {f.village ? `📍 ${f.village}` : 'Farmer'}
                   </Text>
                 </TouchableOpacity>
               );
@@ -294,7 +320,7 @@ export function LabourFamilySwitcher({
           <Ionicons name="people" size={18} color="#15803d" />
           <Text style={styles.switcherHeaderTitle}>Family Profile Switcher</Text>
           <Text style={styles.switcherHeaderSub}>
-            ({filteredWorkersByFarmer.length} Member{filteredWorkersByFarmer.length === 1 ? '' : 's'})
+            ({displayWorkers.length} Member{displayWorkers.length === 1 ? '' : 's'})
           </Text>
         </View>
       </View>
@@ -305,7 +331,7 @@ export function LabourFamilySwitcher({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.avatarScrollContainer}
       >
-        {filteredWorkersByFarmer.map((w) => {
+        {displayWorkers.map((w) => {
           const isSelected = activeWorker?.id === w.id;
 
           return (
@@ -343,7 +369,7 @@ export function LabourFamilySwitcher({
       </ScrollView>
 
       {/* 4. ACTIVE PROFILE CARD WITH PHOTO EDIT ON TAP */}
-      {activeWorker && (
+      {showActiveCard && activeWorker && (
         <View style={[styles.activeProfileCard, premiumShadow('#0f172a', 'sm')]}>
           <View style={styles.activeProfileHeader}>
             <TouchableOpacity
@@ -421,18 +447,20 @@ export function LabourFamilySwitcher({
       )}
 
       {/* 5. ADD FAMILY MEMBER BUTTON BELOW ACTIVE PROFILE CARD */}
-      <TouchableOpacity
-        style={styles.addFamilyMemberBarBtn}
-        activeOpacity={0.85}
-        onPress={() => {
-          tap();
-          resetForm();
-          setIsAddModalOpen(true);
-        }}
-      >
-        <Ionicons name="person-add-outline" size={16} color="#15803d" />
-        <Text style={styles.addFamilyMemberBarBtnText}>+ Add Family Member Profile</Text>
-      </TouchableOpacity>
+      {showAddButton && (
+        <TouchableOpacity
+          style={styles.addFamilyMemberBarBtn}
+          activeOpacity={0.85}
+          onPress={() => {
+            tap();
+            resetForm();
+            setIsAddModalOpen(true);
+          }}
+        >
+          <Ionicons name="person-add-outline" size={16} color="#15803d" />
+          <Text style={styles.addFamilyMemberBarBtnText}>+ Add Family Member Profile</Text>
+        </TouchableOpacity>
+      )}
 
       {/* 5. ADD FAMILY MEMBER MODAL */}
       <Modal visible={isAddModalOpen} transparent animationType="slide" onRequestClose={() => setIsAddModalOpen(false)}>

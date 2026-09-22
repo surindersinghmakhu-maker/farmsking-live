@@ -54,7 +54,7 @@ export interface CropLookupResult extends CropCycle {
   };
 }
 
-/** Admin/Super Admin: resolve a crop's short public Crop ID (e.g. "CR-482910") to its full record, for support/edit lookups. */
+/** Admin/Super Admin: resolve a crop's short public Crop ID (e.g. "C-482910") to its full record, for support/edit lookups. */
 export async function lookupCropByCropId(cropId: string): Promise<CropLookupResult> {
   const { data } = await apiClient.get<CropLookupResult>(`/crops/lookup/${encodeURIComponent(cropId)}`);
   return data;

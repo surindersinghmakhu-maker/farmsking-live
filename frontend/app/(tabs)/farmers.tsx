@@ -257,7 +257,7 @@ function CropCardItem({
         <View style={{ flex: 1, gap: 2 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
             <Text style={styles.cropCardTitle} numberOfLines={1}>
-              📍 {row.plotName} · 🌾 {row.cropName} <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#1d4ed8' }}>(ID: {row.cropCode || (row.cropCycleId.startsWith('CR-') ? row.cropCycleId : `CR-${row.cropCycleId.slice(0, 6).toUpperCase()}`)})</Text>
+              📍 {row.plotName} · 🌾 {row.cropName} <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#1d4ed8' }}>(ID: {(row.cropCode || (row.cropCycleId.startsWith('C-') ? row.cropCycleId : `C-${row.cropCycleId.slice(0, 6).toUpperCase()}`))})</Text>
             </Text>
             <View style={{ backgroundColor: '#ecfdf5', borderColor: '#a7f3d0', borderWidth: 1, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6 }}>
               <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#047857' }}>{stageDisplay}</Text>
@@ -446,7 +446,7 @@ export default function AdvisorFarmsScreen() {
               cropCategory: cropCycle.category ?? '—',
               variety: cropCycle.variety ?? '—',
               cropCycleId: cropCycle.id,
-              cropCode: cropCycle.cropId || (cropCycle.id.startsWith('CR-') ? cropCycle.id : `CR-${cropCycle.id.slice(0, 6).toUpperCase()}`),
+              cropCode: cropCycle.cropId || (cropCycle.id.startsWith('C-') ? cropCycle.id : `C-${cropCycle.id.slice(0, 6).toUpperCase()}`),
               cropName: cropCycle.cropName,
               stage: cropCycle.stage,
               area: cropCycle.area,

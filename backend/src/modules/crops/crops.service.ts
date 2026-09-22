@@ -181,7 +181,7 @@ export class CropsService {
     );
   }
 
-  /** Admin/Super Admin: resolve a crop's short public Crop ID (e.g. "CR-482910") to its full record, for support/edit lookups. */
+  /** Admin/Super Admin: resolve a crop's short public Crop ID (e.g. "C-482910") to its full record, for support/edit lookups. */
   async lookupByCropId(cropId: string) {
     const cropCycle = await this.prisma.cropCycle.findFirst({
       where: { cropId: cropId.toUpperCase(), deletedAt: null },

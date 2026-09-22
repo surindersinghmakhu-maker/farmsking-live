@@ -652,38 +652,59 @@ export default function MoreScreen() {
       {/* ── Privacy Policy Modal ───────────────────────────────── */}
       <Modal visible={showPrivacyModal} transparent animationType="slide" onRequestClose={() => setShowPrivacyModal(false)}>
         <View style={pModalStyles.overlay}>
-          <View style={[pModalStyles.card, { maxHeight: '85%' }]}>
+          <View style={[pModalStyles.card, { maxHeight: '88%', maxWidth: 460 }]}>
             <View style={pModalStyles.header}>
-              <Text style={pModalStyles.title}>🛡️ Privacy Policy & Data Protection</Text>
+              <View style={{ flex: 1, paddingRight: 8 }}>
+                <Text style={pModalStyles.title}>🛡️ Privacy Policy & Data Security</Text>
+                <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 }}>
+                  Updated September 2026 · Google Play Developer Policy Compliant
+                </Text>
+              </View>
               <TouchableOpacity onPress={() => setShowPrivacyModal(false)}>
                 <Ionicons name="close-circle" size={24} color="#64748b" />
               </TouchableOpacity>
             </View>
+
             <ScrollView showsVerticalScrollIndicator={false} style={{ marginVertical: 10 }}>
-              <Text style={pModalStyles.pHead}>1. Information We Collect</Text>
+              <Text style={pModalStyles.pHead}>1. Account & Profile Information We Collect</Text>
               <Text style={pModalStyles.pBody}>
-                FarmsKing collects user profile details including Mobile Number, Name, Preferred Language, Location (District & Village for weather alerts), Crop Photos (for AI disease diagnosis), and Audio (for live group advisor voice calls).
+                FarmsKing collects essential account information required to provide smart farming services:{"\n"}
+                • Account Credentials: Mobile Number, Full Name, Unique King ID, Password Hash.{"\n"}
+                • Location & Region: Postal PIN Code, Post Office Branch, District, State, and Village for localized weather alerts & mandi rates.{"\n"}
+                • Farming Details: Soil Type, Water Source (Borewell/Canal), Spray Tank Capacity (Liters), Farm Area & Plot Boundaries.{"\n"}
+                • Labour & Worker Management: Worker Names, Mobile Numbers, Daily Attendance, Work Entries & Payment Ledgers.
               </Text>
 
-              <Text style={pModalStyles.pHead}>2. How We Use Your Information</Text>
+              <Text style={pModalStyles.pHead}>2. Media, Camera, Audio & AI Data</Text>
               <Text style={pModalStyles.pBody}>
-                Your data is exclusively used to provide personalized agricultural advisory, localized weather alerts, spray schedule tracking, and order fulfillment. We do not sell your personal data to third parties.
+                • Camera & Photo Library: Crop photos uploaded for AI Disease Scanner diagnosis, disease treatments, and profile avatars.{"\n"}
+                • Microphone & Audio: Real-time audio stream used strictly during active Live Group Doctor Voice Calls. Audio is never recorded in the background.{"\n"}
+                • Satellite Coordinates: Field boundary markers used solely for ISRO/Satellite Heatmap & Soil Moisture monitoring.
               </Text>
 
-              <Text style={pModalStyles.pHead}>3. Permissions & Security</Text>
+              <Text style={pModalStyles.pHead}>3. How We Use & Protect Your Data</Text>
               <Text style={pModalStyles.pBody}>
-                - Camera & Storage: Used only when uploading crop disease photos.{"\n"}
-                - Microphone: Used only during active live group voice calls.{"\n"}
-                - All data transmissions are encrypted over secure HTTPS protocols.
+                Your data is exclusively used for AI crop disease diagnosis, localized weather warnings, spray schedule tracking, e-commerce order fulfillment, and wallet transaction credits.{"\n"}
+                • End-to-End Encryption: All transmissions use 256-bit SSL/TLS HTTPS protocols.{"\n"}
+                • Zero Data Sale: FarmsKing strictly DOES NOT sell or monetize your personal data to ad networks or third-party data brokers.
               </Text>
 
-              <Text style={pModalStyles.pHead}>4. Account & Data Deletion Rights</Text>
+              <Text style={pModalStyles.pHead}>4. Account & Personal Data Deletion Rights</Text>
               <Text style={pModalStyles.pBody}>
-                Under Google Play Developer Policy, you have the right to request full deletion of your account and associated personal data at any time directly in the app via "Delete Account" or by contacting support at support@farmsking.com.
+                In strict compliance with Google Play Developer Policy, you have full control over your personal data:{"\n"}
+                • In-App Instant Deletion: You can initiate complete account and personal data deletion directly in the app via "Account Settings & Profiles" ➔ "Delete Account".{"\n"}
+                • 3-Step Verification: For security, deletion requires King ID, Postal PIN Code & Security Captcha verification.{"\n"}
+                • Data Removal: Upon confirmation, your active profile, wallet records, and farm data are soft-deleted immediately and permanently purged from server nodes. You can also request deletion by emailing support@farmsking.com.
+              </Text>
+
+              <Text style={pModalStyles.pHead}>5. Third-Party Integrations</Text>
+              <Text style={pModalStyles.pBody}>
+                Data is shared strictly with authorized partners solely for service delivery: PhonePe Payment Gateway (for UPI transactions) and WhatsApp OTP SMS services for secure login verification.
               </Text>
             </ScrollView>
+
             <TouchableOpacity style={pModalStyles.closeBtn} onPress={() => setShowPrivacyModal(false)}>
-              <Text style={pModalStyles.closeBtnText}>Close</Text>
+              <Text style={pModalStyles.closeBtnText}>I Understand & Accept</Text>
             </TouchableOpacity>
           </View>
         </View>

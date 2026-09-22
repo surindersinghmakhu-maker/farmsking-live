@@ -386,41 +386,24 @@ export function LabourFamilySwitcher({
         </ScrollView>
       </View>
 
-      {/* 4. ACTIVE PROFILE CARD WITH DUAL PHOTOS (WORKER TAP TO EDIT + FARMER PHOTO) */}
+      {/* 4. ACTIVE PROFILE CARD WITH PHOTO EDIT ON TAP */}
       {showActiveCard && activeWorker && (
         <View style={[styles.activeProfileCard, premiumShadow('#0f172a', 'sm')]}>
           <View style={styles.activeProfileHeader}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              {/* 1. Selected Worker Photo (Tap to Edit Profile) */}
-              <TouchableOpacity
-                style={styles.activePhotoWrap}
-                activeOpacity={0.85}
-                onPress={() => openEditModal(activeWorker)}
-              >
-                <Avatar uri={activeWorker.photoUrl} size={50} />
-                <View style={styles.activeCameraOverlay}>
-                  <Ionicons name="camera" size={10} color="#ffffff" />
-                </View>
-              </TouchableOpacity>
-
-              {/* 2. Linked Farmer Photo */}
-              {activeFarmer && (
-                <View style={{ alignItems: 'center' }}>
-                  <View style={styles.farmerPhotoWrap}>
-                    <Avatar uri={activeFarmer.photoUrl} size={38} />
-                    <View style={styles.farmerBadgeIcon}>
-                      <Text style={{ fontSize: 8 }}>🌾</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.farmerAvatarTagText} numberOfLines={1}>
-                    {activeFarmer.name ? activeFarmer.name.split(' ')[0] : 'Farmer'}
-                  </Text>
-                </View>
-              )}
-            </View>
+            {/* Selected Worker Photo (Tap to Edit Profile) */}
+            <TouchableOpacity
+              style={styles.activePhotoWrap}
+              activeOpacity={0.85}
+              onPress={() => openEditModal(activeWorker)}
+            >
+              <Avatar uri={activeWorker.photoUrl} size={54} />
+              <View style={styles.activeCameraOverlay}>
+                <Ionicons name="camera" size={11} color="#ffffff" />
+              </View>
+            </TouchableOpacity>
 
             <TouchableOpacity
-              style={{ flex: 1, marginLeft: 2 }}
+              style={{ flex: 1 }}
               activeOpacity={0.85}
               onPress={() => openEditModal(activeWorker)}
             >

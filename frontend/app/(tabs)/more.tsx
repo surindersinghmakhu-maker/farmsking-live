@@ -273,7 +273,7 @@ export default function MoreScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.rowLabel}>👤 Account Settings & Profiles</Text>
-                <Text style={styles.rowSubLabel}>{accountItems.length} profile options available</Text>
+                <Text style={styles.rowSubLabel}>{accountItems.length + (isAdminRole ? 1 : 2)} profile & security options available</Text>
               </View>
               <Ionicons
                 name={isAccountExpanded ? 'chevron-up' : 'chevron-down'}
@@ -285,14 +285,10 @@ export default function MoreScreen() {
             {/* Collapsible Sub-Items */}
             {isAccountExpanded && (
               <View style={{ backgroundColor: '#f8fafc', borderTopWidth: 1, borderTopColor: '#e2e8f0' }}>
-                {accountItems.map((item, idx) => (
+                {accountItems.map((item) => (
                   <TouchableOpacity
                     key={item.key}
-                    style={[
-                      styles.row,
-                      { paddingLeft: 18 },
-                      idx === accountItems.length - 1 && { borderBottomWidth: 0 },
-                    ]}
+                    style={[styles.row, { paddingLeft: 18 }]}
                     activeOpacity={0.7}
                     onPress={() => item.href && router.push(item.href as any)}
                   >
@@ -303,6 +299,43 @@ export default function MoreScreen() {
                     <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
                   </TouchableOpacity>
                 ))}
+
+                {/* 🌐 App Language Switcher Row */}
+                <TouchableOpacity
+                  style={[styles.row, { paddingLeft: 18 }, isAdminRole && { borderBottomWidth: 0 }]}
+                  activeOpacity={0.7}
+                  onPress={() => setShowLanguageModal(true)}
+                >
+                  <View style={[styles.rowIconBg, { backgroundColor: '#fef3c7' }]}>
+                    <Ionicons name="language-outline" size={18} color="#d97706" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.rowLabel}>{t('languageSwitchLabel')}</Text>
+                    <Text style={styles.rowSubLabel}>{t('languageSwitchSub')}</Text>
+                  </View>
+                  <View style={styles.switchBadgeContainer}>
+                    <Text style={styles.langBadgeTextActive}>{currentLanguageName}</Text>
+                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                  </View>
+                </TouchableOpacity>
+
+                {/* 🗑️ Delete Account Row (Hidden for Admin & Super Admin) */}
+                {!isAdminRole ? (
+                  <TouchableOpacity
+                    style={[styles.row, { paddingLeft: 18, borderBottomWidth: 0 }]}
+                    activeOpacity={0.7}
+                    onPress={handleOpenDeleteModal}
+                  >
+                    <View style={[styles.rowIconBg, { backgroundColor: '#fef2f2' }]}>
+                      <Ionicons name="trash-outline" size={18} color="#dc2626" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.rowLabel, { color: '#dc2626' }]}>🗑️ Delete Account</Text>
+                      <Text style={styles.rowSubLabel}>Permanently remove profile & account data</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                  </TouchableOpacity>
+                ) : null}
               </View>
             )}
           </View>
@@ -489,30 +522,6 @@ export default function MoreScreen() {
                 <Text style={styles.rowLabel}>🧾 Sales Orders</Text>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
-
-            </View>
-          </View>
-        ) : null}
-
-        {/* Shopping Section */}
-        {showShopSection ? (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('shoppingSection')}</Text>
-            <View style={styles.sectionCard}>
-              {SHOP_ITEMS.map((item, idx) => (
-                <TouchableOpacity
-                  key={item.key}
-                  style={[styles.row, idx === SHOP_ITEMS.length - 1 && { borderBottomWidth: 0 }]}
-                  activeOpacity={0.7}
-                  onPress={() => item.href && router.push(item.href as any)}
-                >
-                  <View style={styles.rowIconBg}>
-                    <Ionicons name={item.icon} size={18} color={theme.primary} />
-                  </View>
-                  <Text style={styles.rowLabel}>{t(item.key, item.label)}</Text>
-                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                </TouchableOpacity>
-              ))}
             </View>
           </View>
         ) : null}
@@ -598,30 +607,12 @@ export default function MoreScreen() {
               <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
             </TouchableOpacity>
 
-            {/* Delete Account Row (Hidden for Admin & Super Admin) */}
-            {!isAdminRole ? (
-              <TouchableOpacity
-                style={styles.row}
-                activeOpacity={0.7}
-                onPress={handleOpenDeleteModal}
-              >
-                <View style={[styles.rowIconBg, { backgroundColor: '#fef2f2' }]}>
-                  <Ionicons name="trash-outline" size={18} color="#dc2626" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.rowLabel, { color: '#dc2626' }]}>🗑️ Delete Account</Text>
-                  <Text style={styles.rowSubLabel}>Permanently remove profile & account data</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-              </TouchableOpacity>
-            ) : null}
-
             {/* App Download Row */}
             <AppDownloadRow />
 
             {/* User Guides & PDF Manuals Row */}
             <TouchableOpacity
-              style={styles.row}
+              style={[styles.row, { borderBottomWidth: 0 }]}
               activeOpacity={0.7}
               onPress={() => setShowGuidesModal(true)}
             >
@@ -633,26 +624,6 @@ export default function MoreScreen() {
                 <Text style={styles.rowSubLabel}>Punjabi, English & Hindi PDF Manuals</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-            </TouchableOpacity>
-
-            {/* Language Row — under Developer & Support */}
-            <TouchableOpacity
-              style={[styles.row, { borderBottomWidth: 0 }]}
-              activeOpacity={0.7}
-              onPress={() => setShowLanguageModal(true)}
-            >
-
-              <View style={[styles.rowIconBg, { backgroundColor: '#fef3c7' }]}>
-                <Ionicons name="language-outline" size={18} color="#d97706" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.rowLabel}>{t('languageSwitchLabel')}</Text>
-                <Text style={styles.rowSubLabel}>{t('languageSwitchSub')}</Text>
-              </View>
-              <View style={styles.switchBadgeContainer}>
-                <Text style={styles.langBadgeTextActive}>{currentLanguageName}</Text>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-              </View>
             </TouchableOpacity>
           </View>
         </View>

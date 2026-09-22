@@ -132,7 +132,7 @@ export default function MoreScreen() {
       return;
     }
     if (inputKingId !== expectedKingId) {
-      setDeleteCaptchaError(`King ID / Mobile Number match nahi karda! Expected: ${user?.kingId || user?.mobile}`);
+      setDeleteCaptchaError('King ID / Mobile Number incorrect hai!');
       return;
     }
 
@@ -144,7 +144,7 @@ export default function MoreScreen() {
       return;
     }
     if (expectedPincode && inputPincode !== expectedPincode) {
-      setDeleteCaptchaError(`Postal PIN Code match nahi karda! Expected: ${expectedPincode}`);
+      setDeleteCaptchaError('Postal PIN Code incorrect hai!');
       return;
     }
 
@@ -704,20 +704,6 @@ export default function MoreScreen() {
 
             {!isSecurityVerified ? (
               <View style={{ gap: 9, width: '100%' }}>
-                {/* Expected User Info */}
-                <View style={{ backgroundColor: '#f8fafc', borderRadius: RADIUS.md, padding: 8, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                  <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569' }}>
-                    Account Name: <Text style={{ color: '#0f172a' }}>{user?.name || 'User'}</Text>
-                  </Text>
-                  <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#16a34a', marginTop: 1 }}>
-                    Expected King ID / Mobile: <Text style={{ color: '#15803d' }}>{user?.kingId || user?.mobile}</Text>
-                  </Text>
-                  {user?.pincode ? (
-                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0284c7', marginTop: 1 }}>
-                      Registered PIN Code: <Text style={{ color: '#0369a1' }}>{user.pincode}</Text>
-                    </Text>
-                  ) : null}
-                </View>
 
                 {/* 1. Input King ID */}
                 <View>

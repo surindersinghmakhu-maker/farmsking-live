@@ -66,7 +66,8 @@ export function LabourFamilySwitcher({
   const updateWorker = useUpdateLabourWorker();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editingPhotoWorker, setEditingPhotoWorker] = useState<LabourWorker | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingWorker, setEditingWorker] = useState<LabourWorker | null>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   // Form state for adding family member
@@ -78,6 +79,84 @@ export function LabourFamilySwitcher({
   const [defaultUnit, setDefaultUnit] = useState('Days');
   const [formError, setFormError] = useState<string | null>(null);
   const [isUnitDropdownOpen, setIsUnitDropdownOpen] = useState(false);
+
+  // Form state for editing active profile
+  const [editName, setEditName] = useState('');
+  const [editRelation, setEditRelation] = useState('Head / Self');
+  const [editMobile, setEditMobile] = useState('');
+  const [editPhotoUrl, setEditPhotoUrl] = useState<string | null>(null);
+  const [editDefaultRate, setEditDefaultRate] = useState('');
+  const [editDefaultUnit, setEditDefaultUnit] = useState('Days');
+  const [editFormError, setEditFormError] = useState<string | null>(null);
+  const [isEditUnitDropdownOpen, setIsEditUnitDropdownOpen] = useState(false);
+
+  const openEditModal = (targetWorker: LabourWorker) => {
+    tap();
+    setEditingWorker(targetWorker);
+    setEditName(targetWorker.name || '');
+    setEditRelation(targetWorker.relation || 'Head / Self');
+    setEditMobile(targetWorker.mobile || '');
+    setEditPhotoUrl(targetWorker.photoUrl || null);
+    setEditDefaultRate(targetWorker.defaultRate ? String(targetWorker.defaultRate) : '');
+    setEditDefaultUnit(targetWorker.defaultUnit || 'Days');
+    setEditFormError(null);
+    setIsEditModalOpen(true);
+  };
+
+  const pickPhotoForEditForm = async () => {
+    tap();
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permission needed', 'Please allow photo access to select a picture.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+      allowsEditing: true,
+      aspect: [1, 1],
+    });
+
+    if (result.canceled || !result.assets[0]) return;
+
+    setIsUploadingPhoto(true);
+    try {
+      const uploaded = await uploadPhoto(result.assets[0].uri);
+      setEditPhotoUrl(uploaded.fileUrl);
+    } catch {
+      Alert.alert('Upload Failed', 'Could not upload photo. Please try again.');
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  const handleSaveEditProfile = async () => {
+    if (!editingWorker) return;
+    setEditFormError(null);
+    if (!editName.trim()) {
+      setEditFormError('Member Name is required.');
+      return;
+    }
+
+    try {
+      await updateWorker.mutateAsync({
+        id: editingWorker.id,
+        payload: {
+          name: editName.trim(),
+          relation: editRelation,
+          mobile: editMobile.trim() || undefined,
+          photoUrl: editPhotoUrl || undefined,
+          defaultRate: editDefaultRate ? Number(editDefaultRate) : undefined,
+          defaultUnit: editDefaultUnit.trim() || 'Days',
+        },
+      });
+      setIsEditModalOpen(false);
+      setEditingWorker(null);
+      if (onRefresh) onRefresh();
+    } catch (err: any) {
+      setEditFormError(err?.response?.data?.message || 'Could not update profile.');
+    }
+  };
 
   // Filter workers by selected farmer (defaults to first available farmer)
   const activeFarmerId = useMemo(() => {
@@ -253,22 +332,9 @@ export function LabourFamilySwitcher({
             ({filteredWorkersByFarmer.length} Member{filteredWorkersByFarmer.length === 1 ? '' : 's'})
           </Text>
         </View>
-
-        <TouchableOpacity
-          style={styles.addMemberBtn}
-          activeOpacity={0.8}
-          onPress={() => {
-            tap();
-            resetForm();
-            setIsAddModalOpen(true);
-          }}
-        >
-          <Ionicons name="person-add-outline" size={14} color="#15803d" />
-          <Text style={styles.addMemberBtnText}>+ Add Family Member</Text>
-        </TouchableOpacity>
       </View>
 
-      {/* 3. ILLITERATE-FRIENDLY PHOTO AVATARS SCROLL BAR */}
+      {/* 3. ILLITERATE-FRIENDLY PHOTO AVATARS SCROLL BAR (PURE PROFILE SWITCHER) */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -276,7 +342,6 @@ export function LabourFamilySwitcher({
       >
         {filteredWorkersByFarmer.map((w) => {
           const isSelected = activeWorker?.id === w.id;
-          const isUploadingThis = isUploadingPhoto && editingPhotoWorker?.id === w.id;
 
           return (
             <TouchableOpacity
@@ -290,11 +355,7 @@ export function LabourFamilySwitcher({
             >
               {/* Photo Avatar Ring */}
               <View style={[styles.avatarRing, isSelected && styles.avatarRingActive]}>
-                {isUploadingThis ? (
-                  <ActivityIndicator size="small" color="#16a34a" />
-                ) : (
-                  <Avatar uri={w.photoUrl} size={54} />
-                )}
+                <Avatar uri={w.photoUrl} size={54} />
 
                 {/* Selected Checkmark Badge */}
                 {isSelected && (
@@ -302,19 +363,6 @@ export function LabourFamilySwitcher({
                     <Ionicons name="checkmark" size={10} color="#ffffff" />
                   </View>
                 )}
-
-                {/* Direct Camera Button on Avatar for Illiterate users */}
-                <TouchableOpacity
-                  style={styles.cameraBadgeBtn}
-                  activeOpacity={0.7}
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    pickPhotoForWorker(w);
-                  }}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <Ionicons name="camera" size={11} color="#ffffff" />
-                </TouchableOpacity>
               </View>
 
               {/* Name & Relation Label */}
@@ -327,40 +375,28 @@ export function LabourFamilySwitcher({
             </TouchableOpacity>
           );
         })}
-
-        {/* Quick Add Card */}
-        <TouchableOpacity
-          style={styles.quickAddCard}
-          activeOpacity={0.8}
-          onPress={() => {
-            tap();
-            resetForm();
-            setIsAddModalOpen(true);
-          }}
-        >
-          <View style={styles.quickAddCircle}>
-            <Ionicons name="add" size={24} color="#16a34a" />
-          </View>
-          <Text style={styles.quickAddText}>New Photo</Text>
-        </TouchableOpacity>
       </ScrollView>
 
-      {/* 4. ACTIVE PROFILE STATS BANNER */}
+      {/* 4. ACTIVE PROFILE CARD WITH PHOTO EDIT ON TAP */}
       {activeWorker && (
         <View style={[styles.activeProfileCard, premiumShadow('#0f172a', 'sm')]}>
           <View style={styles.activeProfileHeader}>
             <TouchableOpacity
               style={styles.activePhotoWrap}
               activeOpacity={0.85}
-              onPress={() => pickPhotoForWorker(activeWorker)}
+              onPress={() => openEditModal(activeWorker)}
             >
-              <Avatar uri={activeWorker.photoUrl} size={44} />
+              <Avatar uri={activeWorker.photoUrl} size={54} />
               <View style={styles.activeCameraOverlay}>
-                <Ionicons name="camera" size={11} color="#ffffff" />
+                <Ionicons name="camera" size={12} color="#ffffff" />
               </View>
             </TouchableOpacity>
 
-            <View style={{ flex: 1 }}>
+            <TouchableOpacity
+              style={{ flex: 1 }}
+              activeOpacity={0.85}
+              onPress={() => openEditModal(activeWorker)}
+            >
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                 <Text style={styles.activeName}>{activeWorker.name}</Text>
                 {activeWorker.relation && (
@@ -373,15 +409,18 @@ export function LabourFamilySwitcher({
                 {activeWorker.mobile ? `📱 ${activeWorker.mobile}` : 'Labour Member Profile'}
                 {activeWorker.defaultRate ? ` · ₹${activeWorker.defaultRate}/${activeWorker.defaultUnit || 'Day'}` : ''}
               </Text>
-            </View>
+              <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#16a34a', marginTop: 3 }}>
+                📷 Tap profile photo to edit profile / change photo
+              </Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.updatePhotoCta}
               activeOpacity={0.8}
-              onPress={() => pickPhotoForWorker(activeWorker)}
+              onPress={() => openEditModal(activeWorker)}
             >
-              <Ionicons name="image-outline" size={13} color="#16a34a" />
-              <Text style={styles.updatePhotoCtaText}>Change Photo</Text>
+              <Ionicons name="pencil" size={13} color="#16a34a" />
+              <Text style={styles.updatePhotoCtaText}>Edit Profile</Text>
             </TouchableOpacity>
           </View>
 
@@ -415,6 +454,20 @@ export function LabourFamilySwitcher({
           </View>
         </View>
       )}
+
+      {/* 5. ADD FAMILY MEMBER BUTTON BELOW ACTIVE PROFILE CARD */}
+      <TouchableOpacity
+        style={styles.addFamilyMemberBarBtn}
+        activeOpacity={0.85}
+        onPress={() => {
+          tap();
+          resetForm();
+          setIsAddModalOpen(true);
+        }}
+      >
+        <Ionicons name="person-add-outline" size={16} color="#15803d" />
+        <Text style={styles.addFamilyMemberBarBtnText}>+ Add Family Member Profile</Text>
+      </TouchableOpacity>
 
       {/* 5. ADD FAMILY MEMBER MODAL */}
       <Modal visible={isAddModalOpen} transparent animationType="slide" onRequestClose={() => setIsAddModalOpen(false)}>
@@ -595,11 +648,210 @@ export function LabourFamilySwitcher({
           </View>
         </View>
       </Modal>
+
+      {/* 6. EDIT FAMILY MEMBER / WORKER PROFILE MODAL */}
+      <Modal visible={isEditModalOpen} transparent animationType="slide" onRequestClose={() => setIsEditModalOpen(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Member Profile / Photo</Text>
+              <TouchableOpacity onPress={() => setIsEditModalOpen(false)}>
+                <Ionicons name="close" size={22} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ maxHeight: 440 }} showsVerticalScrollIndicator={false}>
+              {/* Photo Upload Box */}
+              <View style={{ alignItems: 'center', marginVertical: 10 }}>
+                <TouchableOpacity
+                  style={styles.formAvatarWrap}
+                  activeOpacity={0.8}
+                  onPress={pickPhotoForEditForm}
+                >
+                  <Avatar uri={editPhotoUrl} size={72} />
+                  <View style={styles.formCameraOverlay}>
+                    <Ionicons name="camera" size={14} color="#ffffff" />
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={pickPhotoForEditForm} style={{ marginTop: 6 }}>
+                  <Text style={styles.uploadPhotoLink}>📷 Change Profile Photo</Text>
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.label}>Member Name *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. Suman Devi / Jeet Singh"
+                placeholderTextColor="#94a3b8"
+                value={editName}
+                onChangeText={setEditName}
+              />
+
+              <Text style={styles.label}>Family Relation / Rishta</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginBottom: 12 }}>
+                {RELATION_OPTIONS.map((r) => {
+                  const isSelected = editRelation === r.key;
+                  return (
+                    <TouchableOpacity
+                      key={r.key}
+                      style={[styles.relationChip, isSelected && styles.relationChipActive]}
+                      onPress={() => setEditRelation(r.key)}
+                    >
+                      <Text style={[styles.relationChipText, isSelected && styles.relationChipTextActive]}>
+                        {r.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+
+              <Text style={styles.label}>Mobile Number (Optional)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="10-digit mobile number"
+                placeholderTextColor="#94a3b8"
+                keyboardType="phone-pad"
+                value={editMobile}
+                onChangeText={setEditMobile}
+              />
+
+              <View style={{ flexDirection: 'row', gap: 10, zIndex: 100 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.label}>Default Daily Rate (₹)</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="e.g. 500"
+                    placeholderTextColor="#94a3b8"
+                    keyboardType="numeric"
+                    value={editDefaultRate}
+                    onChangeText={setEditDefaultRate}
+                  />
+                </View>
+                <View style={{ flex: 1.2, position: 'relative' }}>
+                  <Text style={styles.label}>Working Unit *</Text>
+                  <TouchableOpacity
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      borderWidth: 1,
+                      borderColor: isEditUnitDropdownOpen ? '#16a34a' : '#cbd5e1',
+                      borderRadius: RADIUS.md,
+                      paddingHorizontal: 8,
+                      height: 40,
+                      backgroundColor: '#f8fafc',
+                    }}
+                    activeOpacity={0.8}
+                    onPress={() => setIsEditUnitDropdownOpen((prev) => !prev)}
+                  >
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
+                      {editDefaultUnit}
+                    </Text>
+                    <Ionicons name={isEditUnitDropdownOpen ? 'chevron-up' : 'chevron-down'} size={14} color="#64748b" />
+                  </TouchableOpacity>
+
+                  {/* Dropdown Options */}
+                  {isEditUnitDropdownOpen && (
+                    <View
+                      style={{
+                        position: 'absolute',
+                        top: 62,
+                        left: 0,
+                        right: 0,
+                        zIndex: 1000,
+                        backgroundColor: '#ffffff',
+                        borderRadius: RADIUS.md,
+                        borderWidth: 1.5,
+                        borderColor: '#cbd5e1',
+                        maxHeight: 180,
+                        elevation: 10,
+                        shadowColor: '#000',
+                        shadowOpacity: 0.2,
+                        shadowRadius: 8,
+                      }}
+                    >
+                      <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
+                        {[
+                          'Days (ਦਿਨ / ਡੇਲੀ)',
+                          'Hours (ਘੰਟੇ / ਪਰ ਘੰਟਾ)',
+                          'Monthly (ਮਹੀਨਾਵਾਰ)',
+                          'Fixed Contract / Lumpsum (ਫਿਕਸ / ਠੇਕਾ)',
+                          'Acre / Kila (ਏਕੜ / ਕਿੱਲਾ)',
+                          'Bags / Catt (ਬੋਰੀਆਂ / ਕੱਟੇ)',
+                          'Quintal / Kg (ਕੁਇੰਟਲ / ਕਿੱਲੋ)',
+                          'Trips (ਗੇੜੇ / ਟ੍ਰਿਪ)',
+                        ].map((u) => (
+                          <TouchableOpacity
+                            key={u}
+                            style={{
+                              paddingHorizontal: 10,
+                              paddingVertical: 8,
+                              borderBottomWidth: 1,
+                              borderBottomColor: '#f1f5f9',
+                              backgroundColor: editDefaultUnit === u ? '#f0fdf4' : '#ffffff',
+                            }}
+                            onPress={() => {
+                              setEditDefaultUnit(u);
+                              setIsEditUnitDropdownOpen(false);
+                            }}
+                          >
+                            <Text style={{ fontSize: 11.5, fontFamily: editDefaultUnit === u ? FONT.bold : FONT.regular, color: editDefaultUnit === u ? '#16a34a' : '#334155' }}>
+                              {u}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  )}
+                </View>
+              </View>
+            </ScrollView>
+
+            {editFormError ? <Text style={styles.errorText}>{editFormError}</Text> : null}
+
+            <View style={styles.modalActionRow}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setIsEditModalOpen(false)}>
+                <Text style={styles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.saveBtn}
+                onPress={handleSaveEditProfile}
+                disabled={updateWorker.isPending || isUploadingPhoto}
+              >
+                {updateWorker.isPending || isUploadingPhoto ? (
+                  <ActivityIndicator color="#ffffff" />
+                ) : (
+                  <Text style={styles.saveBtnText}>Save Profile Changes</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  addFamilyMemberBarBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1.5,
+    borderColor: '#bbf7d0',
+    borderRadius: RADIUS.md,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  addFamilyMemberBarBtnText: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#15803d',
+  },
   container: {
     marginVertical: SPACING.sm,
   },

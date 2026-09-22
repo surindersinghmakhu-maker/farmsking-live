@@ -283,6 +283,7 @@ export default function ProfileScreen() {
               selectedFarmerId={selectedFarmerId}
               onSelectFarmer={(fId) => setSelectedFarmerId(fId)}
               onRefresh={refetchLabour}
+              hideFarmerSwitcher={true}
             />
           </View>
         )}

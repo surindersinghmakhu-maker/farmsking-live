@@ -29,29 +29,29 @@ export class LabourController {
     return this.labourService.searchByMobile(mobile);
   }
 
-  /** Farmer Endpoints */
+  /** Farmer & Worker Endpoints */
   @Post('workers')
-  @Roles(Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN, Role.LABOUR)
   createWorker(@CurrentUser() user: AuthUser, @Body() dto: CreateLabourWorkerDto) {
-    return this.labourService.createWorker(user.id, dto);
+    return this.labourService.createWorker(user, dto);
   }
 
   @Get('workers')
-  @Roles(Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN, Role.LABOUR)
   getWorkers(@CurrentUser() user: AuthUser) {
-    return this.labourService.getWorkersForFarmer(user.id);
+    return this.labourService.getWorkersForFarmer(user);
   }
 
   @Put('workers/:id')
-  @Roles(Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN, Role.LABOUR)
   updateWorker(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: UpdateLabourWorkerDto) {
-    return this.labourService.updateWorker(user.id, id, dto);
+    return this.labourService.updateWorker(user, id, dto);
   }
 
   @Delete('workers/:id')
-  @Roles(Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.FARMER, Role.ADMIN, Role.SUPER_ADMIN, Role.LABOUR)
   deleteWorker(@CurrentUser() user: AuthUser, @Param('id') id: string) {
-    return this.labourService.deleteWorker(user.id, id);
+    return this.labourService.deleteWorker(user, id);
   }
 
   @Post('work-entries')

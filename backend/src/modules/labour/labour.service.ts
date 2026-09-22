@@ -1,6 +1,7 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaymentMode, Role } from '@prisma/client';
+import type { AuthUser } from '../../common/types/auth-user.type';
 import * as argon2 from 'argon2';
 import { generateUniqueKingId } from '../../common/utils/king-id.util';
 import { CreateLabourWorkerDto, UpdateLabourWorkerDto } from './dto/create-labour-worker.dto';
@@ -63,7 +64,28 @@ export class LabourService {
    * If a mobile number is provided, automatically links/creates 1 single User account with role LABOUR (1 King ID per mobile number).
    * Enforces duplicate name prevention under the same mobile number.
    */
-  async createWorker(farmerId: string, dto: CreateLabourWorkerDto) {
+  /**
+   * Create a new Labour worker.
+   * If a mobile number is provided, automatically links/creates 1 single User account with role LABOUR (1 King ID per mobile number).
+   * Enforces duplicate name prevention under the same mobile number.
+   */
+  async createWorker(user: AuthUser, dto: CreateLabourWorkerDto) {
+    let farmerId = user.id;
+    if (user.role === Role.LABOUR) {
+      const myWorkerRecord = await this.prisma.labourWorker.findFirst({
+        where: {
+          OR: [
+            { userId: user.id },
+            ...(user.mobile ? [{ mobile: user.mobile }] : []),
+          ],
+          deletedAt: null,
+        },
+      });
+      if (myWorkerRecord?.farmerId) {
+        farmerId = myWorkerRecord.farmerId;
+      }
+    }
+
     let userId: string | undefined = undefined;
     let sharedAddress = dto.address?.trim() || null;
 
@@ -85,12 +107,12 @@ export class LabourService {
         );
       }
 
-      let user = await this.prisma.user.findUnique({ where: { mobile: cleanMobile } });
+      let linkedUser = await this.prisma.user.findUnique({ where: { mobile: cleanMobile } });
 
-      if (!user) {
+      if (!linkedUser) {
         const passwordHash = await argon2.hash(cleanMobile);
         const kingId = await generateUniqueKingId(this.prisma);
-        user = await this.prisma.user.create({
+        linkedUser = await this.prisma.user.create({
           data: {
             kingId,
             mobile: cleanMobile,
@@ -101,15 +123,15 @@ export class LabourService {
           },
         });
       } else {
-        if (!user.roles.includes(Role.LABOUR)) {
+        if (!linkedUser.roles.includes(Role.LABOUR)) {
           await this.prisma.user.update({
-            where: { id: user.id },
+            where: { id: linkedUser.id },
             data: { roles: { push: Role.LABOUR } },
           });
         }
       }
 
-      userId = user.id;
+      userId = linkedUser.id;
 
       // Share address from existing worker under same mobile if available
       if (!sharedAddress) {
@@ -146,7 +168,23 @@ export class LabourService {
   }
 
   /** Get list of workers created by the farmer with calculated financial balances. */
-  async getWorkersForFarmer(farmerId: string) {
+  async getWorkersForFarmer(user: AuthUser) {
+    let farmerId = user.id;
+    if (user.role === Role.LABOUR) {
+      const myWorkerRecord = await this.prisma.labourWorker.findFirst({
+        where: {
+          OR: [
+            { userId: user.id },
+            ...(user.mobile ? [{ mobile: user.mobile }] : []),
+          ],
+          deletedAt: null,
+        },
+      });
+      if (myWorkerRecord?.farmerId) {
+        farmerId = myWorkerRecord.farmerId;
+      }
+    }
+
     const workers = await this.prisma.labourWorker.findMany({
       where: { farmerId, deletedAt: null },
       include: {
@@ -171,22 +209,48 @@ export class LabourService {
   }
 
   /** Update worker details */
-  async updateWorker(farmerId: string, id: string, dto: UpdateLabourWorkerDto) {
+  async updateWorker(user: AuthUser, id: string, dto: UpdateLabourWorkerDto) {
     const existing = await this.prisma.labourWorker.findFirst({
-      where: { id, farmerId, deletedAt: null },
+      where: { id, deletedAt: null },
     });
     if (!existing) {
       throw new NotFoundException('Worker not found');
     }
 
+    const isOwnerFarmer = existing.farmerId === user.id;
+    const isLinkedWorkerUser = existing.userId === user.id;
+    const isSameMobile = Boolean(existing.mobile && user.mobile && existing.mobile.trim() === user.mobile.trim());
+
+    let isFamilyMember = false;
+    if (user.mobile && !isOwnerFarmer && !isLinkedWorkerUser && !isSameMobile) {
+      const myWorkerRecord = await this.prisma.labourWorker.findFirst({
+        where: { mobile: user.mobile, deletedAt: null },
+      });
+      if (myWorkerRecord) {
+        isFamilyMember = myWorkerRecord.farmerId === existing.farmerId || (Boolean(existing.mobile) && existing.mobile === user.mobile);
+      }
+    }
+
+    const isAuthorized =
+      isOwnerFarmer ||
+      isLinkedWorkerUser ||
+      isSameMobile ||
+      isFamilyMember ||
+      user.role === Role.ADMIN ||
+      user.role === Role.SUPER_ADMIN;
+
+    if (!isAuthorized) {
+      throw new ForbiddenException('You do not have permission to update this worker profile');
+    }
+
     let userId = existing.userId;
     if (dto.mobile?.trim() && dto.mobile.trim() !== existing.mobile) {
       const cleanMobile = dto.mobile.trim();
-      let user = await this.prisma.user.findUnique({ where: { mobile: cleanMobile } });
-      if (!user) {
+      let linkedUser = await this.prisma.user.findUnique({ where: { mobile: cleanMobile } });
+      if (!linkedUser) {
         const passwordHash = await argon2.hash(cleanMobile);
         const kingId = await generateUniqueKingId(this.prisma);
-        user = await this.prisma.user.create({
+        linkedUser = await this.prisma.user.create({
           data: {
             kingId,
             mobile: cleanMobile,
@@ -198,14 +262,14 @@ export class LabourService {
         });
       }
       const existingWorkerWithUser = await this.prisma.labourWorker.findFirst({
-        where: { userId: user.id },
+        where: { userId: linkedUser.id },
       });
       if (!existingWorkerWithUser || existingWorkerWithUser.id === existing.id) {
-        userId = user.id;
+        userId = linkedUser.id;
       }
     }
 
-    return this.prisma.labourWorker.update({
+    const updatedWorker = await this.prisma.labourWorker.update({
       where: { id },
       data: {
         userId,
@@ -218,17 +282,42 @@ export class LabourService {
         ...(dto.defaultUnit && { defaultUnit: dto.defaultUnit }),
         ...(dto.notes !== undefined && { notes: dto.notes?.trim() || null }),
       },
+      include: {
+        user: { select: { id: true, mobile: true } },
+      },
     });
+
+    // Also sync photoUrl to User table if user account is linked
+    if (userId && dto.photoUrl) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { photoUrl: dto.photoUrl.trim() },
+      }).catch(() => null);
+    }
+
+    return updatedWorker;
   }
 
   /** Delete worker */
-  async deleteWorker(farmerId: string, id: string) {
+  async deleteWorker(user: AuthUser, id: string) {
     const existing = await this.prisma.labourWorker.findFirst({
-      where: { id, farmerId, deletedAt: null },
+      where: { id, deletedAt: null },
     });
     if (!existing) {
       throw new NotFoundException('Worker not found');
     }
+
+    const isAuthorized =
+      existing.farmerId === user.id ||
+      existing.userId === user.id ||
+      (Boolean(existing.mobile) && Boolean(user.mobile) && existing.mobile === user.mobile) ||
+      user.role === Role.ADMIN ||
+      user.role === Role.SUPER_ADMIN;
+
+    if (!isAuthorized) {
+      throw new ForbiddenException('You do not have permission to delete this worker profile');
+    }
+
     return this.prisma.labourWorker.update({
       where: { id },
       data: { deletedAt: new Date() },

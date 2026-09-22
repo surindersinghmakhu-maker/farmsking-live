@@ -210,8 +210,8 @@ export function LabourFamilySwitcher({
 
   return (
     <View style={styles.container}>
-      {/* 1. FARMER SWITCHER BAR (Shown when multiple farmers exist or handler supplied) */}
-      {availableFarmers.length > 1 && (
+      {/* 1. FARMER SWITCHER BAR (Shown when farmers exist or handler supplied) */}
+      {availableFarmers.length > 0 && (
         <View style={styles.farmerSwitcherBox}>
           <Text style={styles.farmerSwitcherTitle}>🌾 Select Farmer / Kheti Malik:</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>

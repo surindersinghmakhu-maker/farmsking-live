@@ -469,7 +469,29 @@ export class LabourService {
     });
 
     if (workers.length === 0) {
-      throw new NotFoundException('No Labour profile associated with this account.');
+      const fallbackProfile = {
+        worker: {
+          id: user.id,
+          name: user.name,
+          mobile: user.mobile,
+          address: null,
+          photoUrl: user.photoUrl,
+          relation: 'Head / Self',
+          defaultRate: null,
+          defaultUnit: 'Days',
+          farmer: null,
+        },
+        summary: { totalEarned: 0, totalPaid: 0, pendingBalance: 0 },
+        workEntries: [],
+        payments: [],
+      };
+      return {
+        worker: fallbackProfile.worker,
+        summary: fallbackProfile.summary,
+        workEntries: [],
+        payments: [],
+        profiles: [fallbackProfile],
+      };
     }
 
     const profiles = workers.map((worker) => {

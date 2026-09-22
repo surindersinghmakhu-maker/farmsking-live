@@ -175,24 +175,6 @@ export const LabourDashboardView: React.FC = () => {
                 Total Balance Summary
               </Text>
             </View>
-
-            {/* Total Pending Balance Highlight Pill */}
-            {isLoading ? (
-              <ActivityIndicator color={theme.primary} size="small" />
-            ) : (
-              <View
-                style={{
-                  backgroundColor: summary.pendingBalance > 0 ? '#dc2626' : '#16a34a',
-                  paddingHorizontal: 10,
-                  paddingVertical: 3,
-                  borderRadius: RADIUS.pill,
-                }}
-              >
-                <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>
-                  {formatInr(summary.pendingBalance)}
-                </Text>
-              </View>
-            )}
           </View>
 
           {/* 3-Column Vivid Metrics Row: Total Earned, Received Payment, Pending Balance */}

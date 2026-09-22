@@ -100,6 +100,7 @@ export function useSearchWorkersByMobile(mobile: string) {
   return useQuery({
     queryKey: ['labour-search-mobile', mobile],
     queryFn: () => labourApi.searchWorkersByMobile(mobile),
-    enabled: !!mobile && mobile.trim().length === 10,
+    enabled: !!mobile && mobile.trim().length >= 3,
   });
 }
+

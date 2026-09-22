@@ -71,9 +71,6 @@ export class AuthService {
 
   async register(dto: RegisterDto) {
     const existing = await this.prisma.user.findUnique({ where: { mobile: dto.mobile } });
-    if (existing) {
-      throw new ConflictException('An account with this mobile number already exists.');
-    }
 
     if (dto.accountType === 'FARMER') {
       if (!dto.sprayTankSizeL || !dto.soilType || !dto.waterType) {
@@ -98,41 +95,76 @@ export class AuthService {
     }
 
     const passwordHash = await argon2.hash(dto.password);
-    const kingId = await generateUniqueKingId(this.prisma);
     const securityAnswerHash = dto.securityAnswer ? await argon2.hash(dto.securityAnswer.trim().toLowerCase()) : undefined;
-
     const defaultAddress = [dto.village, dto.district, dto.state].filter(Boolean).join(', ');
-    const user = await this.prisma.user.create({
-      data: {
-        kingId,
-        mobile: dto.mobile,
-        passwordHash,
-        name: dto.name,
-        farmName: dto.farmName || dto.name,
-        farmAddress: dto.farmAddress || defaultAddress || null,
-        farmMobile: dto.farmMobile || dto.mobile,
-        pincode: dto.pincode,
-        postOffice: dto.postOffice,
-        village: dto.village,
-        district: dto.district,
-        state: dto.state,
-        preferredLanguage: dto.preferredLanguage ?? 'en',
-        sprayTankSizeL: dto.sprayTankSizeL,
-        soilType: dto.soilType,
-        waterType: dto.waterType,
-        upiId: dto.upiId,
-        role: Role.CUSTOMER,
-        roles: [Role.CUSTOMER],
-        securityQuestion: dto.securityQuestion,
-        securityAnswerHash,
-        referredById: referrer?.id,
-      },
-      select: SAFE_USER_SELECT,
-    });
+
+    let user: any;
+
+    if (existing) {
+      // Existing User Account (e.g. created as worker with King ID) -> Update details & apply selected role to SAME King ID!
+      const targetRole = dto.accountType === 'FARMER' ? Role.FARMER : dto.accountType === 'GARDENER' ? Role.GARDENER : Role.CUSTOMER;
+      const updatedRoles = Array.from(new Set([...(existing.roles || []), targetRole, Role.CUSTOMER]));
+
+      user = await this.prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          passwordHash,
+          name: dto.name || existing.name,
+          farmName: dto.farmName || dto.name || existing.farmName,
+          farmAddress: dto.farmAddress || defaultAddress || existing.farmAddress,
+          farmMobile: dto.farmMobile || dto.mobile,
+          pincode: dto.pincode || existing.pincode,
+          postOffice: dto.postOffice || existing.postOffice,
+          village: dto.village || existing.village,
+          district: dto.district || existing.district,
+          state: dto.state || existing.state,
+          preferredLanguage: dto.preferredLanguage ?? existing.preferredLanguage ?? 'en',
+          sprayTankSizeL: dto.sprayTankSizeL || existing.sprayTankSizeL,
+          soilType: dto.soilType || existing.soilType,
+          waterType: dto.waterType || existing.waterType,
+          upiId: dto.upiId || existing.upiId,
+          role: targetRole,
+          roles: updatedRoles,
+          ...(securityAnswerHash && { securityQuestion: dto.securityQuestion, securityAnswerHash }),
+          ...(referrer && !existing.referredById && { referredById: referrer.id }),
+        },
+        select: SAFE_USER_SELECT,
+      });
+    } else {
+      // New User -> Create User with generated King ID
+      const kingId = await generateUniqueKingId(this.prisma);
+      user = await this.prisma.user.create({
+        data: {
+          kingId,
+          mobile: dto.mobile,
+          passwordHash,
+          name: dto.name,
+          farmName: dto.farmName || dto.name,
+          farmAddress: dto.farmAddress || defaultAddress || null,
+          farmMobile: dto.farmMobile || dto.mobile,
+          pincode: dto.pincode,
+          postOffice: dto.postOffice,
+          village: dto.village,
+          district: dto.district,
+          state: dto.state,
+          preferredLanguage: dto.preferredLanguage ?? 'en',
+          sprayTankSizeL: dto.sprayTankSizeL,
+          soilType: dto.soilType,
+          waterType: dto.waterType,
+          upiId: dto.upiId,
+          role: Role.CUSTOMER,
+          roles: [Role.CUSTOMER],
+          securityQuestion: dto.securityQuestion,
+          securityAnswerHash,
+          referredById: referrer?.id,
+        },
+        select: SAFE_USER_SELECT,
+      });
+    }
 
     await provisionInviteCoupon(this.prisma, user.id);
 
-    if (referrer) {
+    if (referrer && !existing) {
       await provisionReferralWelcomeCoupon(this.prisma, user.id, referrer.id);
 
       const appSettings = await this.appSettingsService.get();
@@ -161,10 +193,10 @@ export class AuthService {
     const finalUser = await this.applyAccountType(user.id, dto.accountType);
 
     // Send WhatsApp Welcome & Registration message directly to mobile via WhatsApp Bot
-    const welcomeMsg = `🌾 *Welcome to FarmsKing!* 🙏✨\n\nHello *${dto.name}* ji,\nYour FarmsKing account has been created successfully!\n\n🔑 *King ID:* ${kingId}\n📱 *Registered Mobile:* ${dto.mobile}\n\nThank you for choosing FarmsKing!`;
+    const welcomeMsg = `🌾 *Welcome to FarmsKing!* 🙏✨\n\nHello *${dto.name || user.name}* ji,\nYour FarmsKing account has been registered successfully!\n\n🔑 *King ID:* ${user.kingId}\n📱 *Registered Mobile:* ${dto.mobile}\n\nThank you for choosing FarmsKing!`;
     this.whatsappBotService.sendDirectTextMessage(dto.mobile, welcomeMsg).catch(() => {});
 
-    // 🆕 Auto-add new user to WhatsApp group immediately after signup (non-blocking)
+    // Auto-add new user to WhatsApp group immediately after signup (non-blocking)
     this.whatsappGroupSyncService.autoAddNewUser(
       user.id,
       dto.mobile,

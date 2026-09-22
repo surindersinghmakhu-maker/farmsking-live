@@ -204,6 +204,17 @@ export function LabourFamilySwitcher({
     return displayWorkers.find((w) => w.id === selectedWorkerId) || displayWorkers[0] || null;
   }, [displayWorkers, selectedWorkerId]);
 
+  // Active Farmer Object (Landowner / Employer)
+  const activeFarmer = useMemo(() => {
+    if (activeWorker && (activeWorker as any).farmer) {
+      return (activeWorker as any).farmer;
+    }
+    if (activeFarmerId && availableFarmers.length > 0) {
+      return availableFarmers.find((f) => f.id === activeFarmerId) || availableFarmers[0];
+    }
+    return availableFarmers[0] || null;
+  }, [activeWorker, activeFarmerId, availableFarmers]);
+
   // Trigger external edit modal signal
   React.useEffect(() => {
     if (openEditSignal && openEditSignal > 0 && activeWorker) {
@@ -375,23 +386,41 @@ export function LabourFamilySwitcher({
         </ScrollView>
       </View>
 
-      {/* 4. ACTIVE PROFILE CARD WITH PHOTO EDIT ON TAP */}
+      {/* 4. ACTIVE PROFILE CARD WITH DUAL PHOTOS (WORKER TAP TO EDIT + FARMER PHOTO) */}
       {showActiveCard && activeWorker && (
         <View style={[styles.activeProfileCard, premiumShadow('#0f172a', 'sm')]}>
           <View style={styles.activeProfileHeader}>
-            <TouchableOpacity
-              style={styles.activePhotoWrap}
-              activeOpacity={0.85}
-              onPress={() => openEditModal(activeWorker)}
-            >
-              <Avatar uri={activeWorker.photoUrl} size={54} />
-              <View style={styles.activeCameraOverlay}>
-                <Ionicons name="camera" size={12} color="#ffffff" />
-              </View>
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              {/* 1. Selected Worker Photo (Tap to Edit Profile) */}
+              <TouchableOpacity
+                style={styles.activePhotoWrap}
+                activeOpacity={0.85}
+                onPress={() => openEditModal(activeWorker)}
+              >
+                <Avatar uri={activeWorker.photoUrl} size={50} />
+                <View style={styles.activeCameraOverlay}>
+                  <Ionicons name="camera" size={10} color="#ffffff" />
+                </View>
+              </TouchableOpacity>
+
+              {/* 2. Linked Farmer Photo */}
+              {activeFarmer && (
+                <View style={{ alignItems: 'center' }}>
+                  <View style={styles.farmerPhotoWrap}>
+                    <Avatar uri={activeFarmer.photoUrl} size={38} />
+                    <View style={styles.farmerBadgeIcon}>
+                      <Text style={{ fontSize: 8 }}>🌾</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.farmerAvatarTagText} numberOfLines={1}>
+                    {activeFarmer.name ? activeFarmer.name.split(' ')[0] : 'Farmer'}
+                  </Text>
+                </View>
+              )}
+            </View>
 
             <TouchableOpacity
-              style={{ flex: 1 }}
+              style={{ flex: 1, marginLeft: 2 }}
               activeOpacity={0.85}
               onPress={() => openEditModal(activeWorker)}
             >
@@ -408,7 +437,7 @@ export function LabourFamilySwitcher({
                 {activeWorker.defaultRate ? ` · ₹${activeWorker.defaultRate}/${activeWorker.defaultUnit || 'Day'}` : ''}
               </Text>
               <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#16a34a', marginTop: 3 }}>
-                📷 Tap profile photo to edit profile / change photo
+                📷 Tap worker photo to edit profile / change photo
               </Text>
             </TouchableOpacity>
 
@@ -1125,6 +1154,35 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#ffffff',
+  },
+  farmerPhotoWrap: {
+    position: 'relative',
+    borderWidth: 1.5,
+    borderColor: '#bbf7d0',
+    borderRadius: 20,
+    padding: 1,
+    backgroundColor: '#f0fdf4',
+  },
+  farmerBadgeIcon: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    backgroundColor: '#ffffff',
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#16a34a',
+  },
+  farmerAvatarTagText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#15803d',
+    marginTop: 2,
+    maxWidth: 45,
+    textAlign: 'center',
   },
   activeName: {
     fontSize: 15,

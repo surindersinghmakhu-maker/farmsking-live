@@ -14,16 +14,18 @@ export class LabourService {
 
   /**
    * Search registered worker profiles & user account by 10-digit mobile number.
-   * Collects all registered names across the entire database for this mobile number.
+   * Collects all registered names created by ANY farmer across the entire database.
    */
   async searchByMobile(mobile: string) {
-    const cleanMobile = mobile ? mobile.trim() : '';
+    const rawDigits = mobile ? mobile.replace(/\D/g, '') : '';
+    const cleanMobile = rawDigits.slice(-10);
     if (!cleanMobile || cleanMobile.length !== 10) {
       return { exists: false, user: null, profiles: [] };
     }
 
-    const user = await this.prisma.user.findUnique({
-      where: { mobile: cleanMobile },
+    // Search ALL users matching the 10-digit mobile number
+    const users = await this.prisma.user.findMany({
+      where: { mobile: { contains: cleanMobile } },
       select: {
         id: true,
         kingId: true,
@@ -36,42 +38,44 @@ export class LabourService {
       },
     });
 
+    const userIds = users.map((u) => u.id);
+    const primaryUser = users[0] || null;
+
+    // Search ALL labourWorker profiles in the ENTIRE database matching mobile or linked user IDs
     const dbProfiles = await this.prisma.labourWorker.findMany({
       where: {
-        OR: [{ mobile: cleanMobile }, ...(user ? [{ userId: user.id }] : [])],
+        OR: [
+          { mobile: { contains: cleanMobile } },
+          ...(userIds.length > 0 ? [{ userId: { in: userIds } }] : []),
+        ],
         deletedAt: null,
       },
-      select: {
-        id: true,
-        name: true,
-        relation: true,
-        mobile: true,
-        address: true,
-        photoUrl: true,
-        defaultRate: true,
-        defaultUnit: true,
+      include: {
+        farmer: { select: { id: true, name: true, village: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
 
     const profileMap = new Map<string, any>();
 
-    // 1. If User account exists with a name, include it as primary account profile
-    if (user && user.name?.trim()) {
-      const key = user.name.trim().toLowerCase();
-      profileMap.set(key, {
-        id: `user-${user.id}`,
-        name: user.name.trim(),
-        relation: 'Head / Self',
-        mobile: user.mobile,
-        address: [user.village, user.district, user.state].filter(Boolean).join(', ') || null,
-        photoUrl: user.photoUrl,
-        defaultRate: null,
-        defaultUnit: 'Days',
-      });
+    // 1. Add User account names
+    for (const u of users) {
+      if (u.name?.trim()) {
+        const key = u.name.trim().toLowerCase();
+        profileMap.set(key, {
+          id: `user-${u.id}`,
+          name: u.name.trim(),
+          relation: 'Head / Self',
+          mobile: u.mobile,
+          address: [u.village, u.district, u.state].filter(Boolean).join(', ') || null,
+          photoUrl: u.photoUrl,
+          defaultRate: null,
+          defaultUnit: 'Days',
+        });
+      }
     }
 
-    // 2. Add all labourWorker profiles registered across the entire database
+    // 2. Add ALL labourWorker profiles created by ANY farmer across the ENTIRE database
     for (const p of dbProfiles) {
       if (!p.name?.trim()) continue;
       const key = p.name.trim().toLowerCase();
@@ -85,6 +89,7 @@ export class LabourService {
           photoUrl: p.photoUrl,
           defaultRate: p.defaultRate,
           defaultUnit: p.defaultUnit || 'Days',
+          farmerName: p.farmer?.name || null,
         });
       }
     }
@@ -92,8 +97,8 @@ export class LabourService {
     const profiles = Array.from(profileMap.values());
 
     return {
-      exists: !!user || profiles.length > 0,
-      user,
+      exists: users.length > 0 || profiles.length > 0,
+      user: primaryUser,
       profiles,
     };
   }

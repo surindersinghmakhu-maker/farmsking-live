@@ -110,17 +110,17 @@ export const LabourDashboardView: React.FC = () => {
         {/* Multi-Worker Visual Profile Switcher Banner */}
         {profiles.length > 1 ? (
           <View style={[styles.profileSwitcherCard, premiumShadow('#0f172a', 'sm')]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Text style={{ fontSize: 16 }}>👤</Text>
                 <Text style={styles.switcherHeaderTitle}>Select Worker Profile ({profiles.length})</Text>
               </View>
-              <Text style={styles.switcherHeaderSub}>Tap photo to switch</Text>
+              <Text style={styles.switcherHeaderSub}>Photo 'te click karke profile badlo</Text>
             </View>
 
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 4 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingVertical: 4 }}>
               {profiles.map((p: any) => {
-                const isSelected = (activeProfile?.worker?.id === p.worker.id);
+                const isSelected = activeProfile?.worker?.id === p.worker.id;
                 return (
                   <TouchableOpacity
                     key={p.worker.id}
@@ -131,7 +131,15 @@ export const LabourDashboardView: React.FC = () => {
                     ]}
                     onPress={() => setSelectedWorkerId(p.worker.id)}
                   >
-                    <Avatar uri={p.worker.farmer?.photoUrl} size={38} />
+                    <View style={{ position: 'relative' }}>
+                      <Avatar uri={p.worker.photoUrl || p.worker.farmer?.photoUrl} size={42} />
+                      {isSelected ? (
+                        <View style={{ position: 'absolute', bottom: -2, right: -2, backgroundColor: '#16a34a', borderRadius: 9, width: 18, height: 18, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#ffffff' }}>
+                          <Ionicons name="checkmark" size={12} color="#ffffff" />
+                        </View>
+                      ) : null}
+                    </View>
+
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.profilePillName, isSelected && { color: '#ffffff' }]} numberOfLines={1}>
                         {p.worker.name}
@@ -146,10 +154,6 @@ export const LabourDashboardView: React.FC = () => {
                         {formatInr(p.summary.pendingBalance)}
                       </Text>
                     </View>
-
-                    {isSelected ? (
-                      <Ionicons name="checkmark-circle" size={18} color="#ffffff" />
-                    ) : null}
                   </TouchableOpacity>
                 );
               })}

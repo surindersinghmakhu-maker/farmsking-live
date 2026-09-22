@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Modal, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -93,12 +93,22 @@ export default function WalletScreen() {
             activeOpacity={0.85}
             onPress={() => {
               tap();
-              setIsWithdrawOpen(true);
+              if (Platform.OS === 'web') {
+                alert('Coming Soon! 🚀 Direct Bank & UPI payouts will be available soon.');
+              } else {
+                Alert.alert(
+                  'Coming Soon 🚀',
+                  'Direct Bank & UPI wallet payouts will be available soon! Payout processing is being automated.'
+                );
+              }
             }}
           >
             <Text style={[styles.withdrawText, { color: theme.primary }]}>Withdraw</Text>
           </TouchableOpacity>
         </LinearGradient>
+
+        {/* Referral & Welcome Voucher Invitation Card (Visible to All Logged In Users) */}
+        {user?.kingId ? <ReferralInviteCard theme={theme} kingId={user.kingId} /> : null}
 
         {/* Unified Plan Coupons Hub for Advisors & Business Partners */}
         {isAdvisorOrPartner ? <MyUnifiedPlanCouponsSection theme={theme} /> : null}

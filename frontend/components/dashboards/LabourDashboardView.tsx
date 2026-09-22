@@ -104,8 +104,6 @@ export const LabourDashboardView: React.FC = () => {
     return calculated.reverse();
   }, [workEntries, payments]);
 
-  const [openEditSignal, setOpenEditSignal] = useState(0);
-
   const callFarmer = () => {
     if (farmer?.mobile) {
       Linking.openURL(`tel:${farmer.mobile}`);
@@ -122,7 +120,7 @@ export const LabourDashboardView: React.FC = () => {
         avatarUrl={worker?.photoUrl || (worker?.relation === 'Head / Self' ? user?.photoUrl : undefined)}
         secondaryAvatarUrl={farmer?.photoUrl || undefined}
         secondaryName={farmer?.name || 'Farmer'}
-        onAvatarPress={() => setOpenEditSignal((prev) => prev + 1)}
+        onAvatarPress={() => router.push('/profile' as never)}
       />
 
       <View style={styles.content}>
@@ -137,7 +135,6 @@ export const LabourDashboardView: React.FC = () => {
             hideFarmerSwitcher={false}
             showActiveCard={false}
             showAddButton={false}
-            openEditSignal={openEditSignal}
           />
         )}
 

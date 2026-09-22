@@ -208,10 +208,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: 4,
   },
   userInfoLeftBlock: {
-    flex: 1.4,
+    flex: 1,
     justifyContent: 'center',
   },
   greetingText: {
@@ -221,15 +221,15 @@ const styles = StyleSheet.create({
   },
   nameText: {
     color: '#ffffff',
-    fontSize: 17,
+    fontSize: 16,
     fontFamily: FONT.extraBold,
     letterSpacing: -0.3,
-    lineHeight: 22,
+    lineHeight: 21,
     marginVertical: 0.5,
   },
   subtitleText: {
     color: 'rgba(255,255,255,0.95)',
-    fontSize: 11.5,
+    fontSize: 11,
     fontFamily: FONT.bold,
   },
   avatarContainer: {
@@ -256,6 +256,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   planRightBlock: {
+    flex: 1,
     alignItems: 'flex-end',
     justifyContent: 'center',
   },
@@ -273,7 +274,8 @@ const styles = StyleSheet.create({
     borderColor: '#ffffff',
   },
   secondaryAvatarBlock: {
-    alignItems: 'center',
+    flex: 1,
+    alignItems: 'flex-end',
     justifyContent: 'center',
   },
   secondaryAvatarRing: {

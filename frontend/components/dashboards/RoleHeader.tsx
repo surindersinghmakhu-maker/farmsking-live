@@ -15,9 +15,12 @@ interface RoleHeaderProps {
   profileName: string;
   subtitle?: string;
   avatarUrl?: string;
+  secondaryAvatarUrl?: string;
+  secondaryName?: string;
   /** Optional badge to render below the subtitle (e.g. plan name pill) */
   planBadge?: React.ReactNode;
   onAvatarPress?: () => void;
+  onSecondaryAvatarPress?: () => void;
 }
 
 function getTimeBasedGreeting(): string {
@@ -33,8 +36,11 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
   profileName,
   subtitle,
   avatarUrl,
+  secondaryAvatarUrl,
+  secondaryName,
   planBadge,
   onAvatarPress,
+  onSecondaryAvatarPress,
 }) => {
   const theme = RoleThemes[currentRole] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER;
   const router = useRouter();
@@ -78,7 +84,7 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
             {subtitle ? <Text style={styles.subtitleText}>{subtitle}</Text> : null}
           </View>
 
-          {/* Center Block: Elevated Profile Photo Avatar */}
+          {/* Center Block: Selected Worker Profile Photo Avatar */}
           <View style={styles.avatarContainer}>
             <TouchableOpacity
               style={styles.avatarRing}
@@ -86,7 +92,12 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
               disabled={currentRole === 'ADMIN'}
               onPress={onAvatarPress || (() => router.push('/profile'))}
             >
-              <Avatar uri={avatarUrl} size={56} />
+              <Avatar uri={avatarUrl} size={54} />
+              {currentRole === 'LABOUR' && (
+                <View style={styles.cameraIconBadge}>
+                  <Ionicons name="camera" size={9} color="#ffffff" />
+                </View>
+              )}
             </TouchableOpacity>
 
             {/* Verified Symbol Badge attached to Profile Photo */}
@@ -97,8 +108,24 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
             ) : null}
           </View>
 
-          {/* Right Block: Renew/Upgrade Plan Badge */}
-          {planBadge ? (
+          {/* Right Block: Selected Farmer Profile Photo (Avatar) */}
+          {secondaryAvatarUrl !== undefined || secondaryName ? (
+            <View style={styles.secondaryAvatarBlock}>
+              <TouchableOpacity
+                style={styles.secondaryAvatarRing}
+                activeOpacity={0.85}
+                onPress={onSecondaryAvatarPress}
+              >
+                <Avatar uri={secondaryAvatarUrl} size={46} />
+                <View style={styles.farmerCropBadge}>
+                  <Text style={{ fontSize: 8 }}>🌾</Text>
+                </View>
+              </TouchableOpacity>
+              <Text style={styles.secondaryAvatarName} numberOfLines={1}>
+                {secondaryName ? secondaryName.split(' ')[0] : 'Farmer'}
+              </Text>
+            </View>
+          ) : planBadge ? (
             <View style={styles.planRightBlock}>
               {planBadge}
             </View>
@@ -231,5 +258,53 @@ const styles = StyleSheet.create({
   planRightBlock: {
     alignItems: 'flex-end',
     justifyContent: 'center',
+  },
+  cameraIconBadge: {
+    position: 'absolute',
+    bottom: -1,
+    right: -1,
+    backgroundColor: '#16a34a',
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+  },
+  secondaryAvatarBlock: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  secondaryAvatarRing: {
+    position: 'relative',
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    padding: 2,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  farmerCropBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    backgroundColor: '#ffffff',
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#16a34a',
+  },
+  secondaryAvatarName: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    marginTop: 2,
+    maxWidth: 55,
+    textAlign: 'center',
   },
 });

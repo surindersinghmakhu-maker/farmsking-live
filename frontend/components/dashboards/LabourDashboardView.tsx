@@ -118,8 +118,10 @@ export const LabourDashboardView: React.FC = () => {
       <RoleHeader
         currentRole="LABOUR"
         profileName={worker?.name || user?.name || 'Worker'}
-        subtitle="Worker Account"
+        subtitle={worker?.relation ? `${worker.relation} · Worker` : 'Worker Account'}
         avatarUrl={worker?.photoUrl || user?.photoUrl || undefined}
+        secondaryAvatarUrl={farmer?.photoUrl || undefined}
+        secondaryName={farmer?.name || 'Farmer'}
         onAvatarPress={() => setOpenEditSignal((prev) => prev + 1)}
       />
 

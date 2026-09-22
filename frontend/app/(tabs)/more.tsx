@@ -110,6 +110,7 @@ export default function MoreScreen() {
   const [deleteCaptchaError, setDeleteCaptchaError] = useState<string | null>(null);
   const [isSecurityVerified, setIsSecurityVerified] = useState(false);
   const [contactModalMode, setContactModalMode] = useState<'SUPPORT' | 'CONTACT' | null>(null);
+  const [isAccountExpanded, setIsAccountExpanded] = useState(false);
 
   const [deletePincodeInput, setDeletePincodeInput] = useState('');
 
@@ -261,20 +262,49 @@ export default function MoreScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('accountSection')}</Text>
           <View style={styles.sectionCard}>
-            {accountItems.map((item, idx) => (
-              <TouchableOpacity
-                key={item.key}
-                style={[styles.row, idx === accountItems.length - 1 && { borderBottomWidth: 0 }]}
-                activeOpacity={0.7}
-                onPress={() => item.href && router.push(item.href as any)}
-              >
-                <View style={styles.rowIconBg}>
-                  <Ionicons name={item.icon} size={18} color={theme.primary} />
-                </View>
-                <Text style={styles.rowLabel}>{t(item.key, item.label)}</Text>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-              </TouchableOpacity>
-            ))}
+            {/* Main Account Accordion Toggle Button */}
+            <TouchableOpacity
+              style={[styles.row, !isAccountExpanded && { borderBottomWidth: 0 }]}
+              activeOpacity={0.75}
+              onPress={() => setIsAccountExpanded((prev) => !prev)}
+            >
+              <View style={[styles.rowIconBg, { backgroundColor: '#f0fdf4' }]}>
+                <Ionicons name="person-circle-outline" size={20} color={theme.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.rowLabel}>👤 Account Settings & Profiles</Text>
+                <Text style={styles.rowSubLabel}>{accountItems.length} profile options available</Text>
+              </View>
+              <Ionicons
+                name={isAccountExpanded ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color={theme.primary}
+              />
+            </TouchableOpacity>
+
+            {/* Collapsible Sub-Items */}
+            {isAccountExpanded && (
+              <View style={{ backgroundColor: '#f8fafc', borderTopWidth: 1, borderTopColor: '#e2e8f0' }}>
+                {accountItems.map((item, idx) => (
+                  <TouchableOpacity
+                    key={item.key}
+                    style={[
+                      styles.row,
+                      { paddingLeft: 18 },
+                      idx === accountItems.length - 1 && { borderBottomWidth: 0 },
+                    ]}
+                    activeOpacity={0.7}
+                    onPress={() => item.href && router.push(item.href as any)}
+                  >
+                    <View style={styles.rowIconBg}>
+                      <Ionicons name={item.icon} size={18} color={theme.primary} />
+                    </View>
+                    <Text style={styles.rowLabel}>{t(item.key, item.label)}</Text>
+                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </View>
         </View>
 

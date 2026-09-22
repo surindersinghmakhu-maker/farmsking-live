@@ -38,6 +38,7 @@ export function useCreateCrop() {
     mutationFn: cropsApi.createCrop,
     onSuccess: (crop) => {
       queryClient.invalidateQueries({ queryKey: ['crops', 'plot', crop.plotId] });
+      queryClient.invalidateQueries({ queryKey: ['crops', 'mine'] });
     },
   });
 }
@@ -50,6 +51,7 @@ export function useUpdateCrop() {
     onSuccess: (crop) => {
       queryClient.invalidateQueries({ queryKey: ['crops', 'plot', crop.plotId] });
       queryClient.invalidateQueries({ queryKey: ['crops', crop.id] });
+      queryClient.invalidateQueries({ queryKey: ['crops', 'mine'] });
     },
   });
 }
@@ -60,6 +62,7 @@ export function useDeleteCrop() {
     mutationFn: ({ id }: { id: string; plotId: string }) => cropsApi.deleteCrop(id),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['crops', 'plot', variables.plotId] });
+      queryClient.invalidateQueries({ queryKey: ['crops', 'mine'] });
     },
   });
 }

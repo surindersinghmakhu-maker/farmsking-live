@@ -54,7 +54,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   const isAdminUser = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
   const defaultInitialRole = isAdminUser
     ? (user?.role as UserRole)
-    : (assignedRoles.includes('FARMER') ? 'FARMER' : primaryRole);
+    : (user?.role === 'LABOUR' ? 'LABOUR' : (assignedRoles.includes('FARMER') ? 'FARMER' : primaryRole));
 
   const [role, setRoleState] = useState<UserRole>(defaultInitialRole);
 
@@ -66,6 +66,11 @@ export function RoleProvider({ children }: { children: ReactNode }) {
 
     if (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN') {
       setRoleState(user.role as UserRole);
+      return;
+    }
+
+    if (user.role === 'LABOUR') {
+      setRoleState('LABOUR');
       return;
     }
 

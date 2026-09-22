@@ -1,5 +1,5 @@
 import { BrandLogo } from '@/src/components/BrandLogo';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, Linking, ActivityIndicator, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +22,7 @@ import { uploadPhoto } from '@/src/api/uploads.api';
 import { apiClient } from '@/src/api/client';
 import { deleteMyAccount } from '@/src/api/users.api';
 import { SuperAdminExpenseCategoriesModal } from '@/components/SuperAdminExpenseCategoriesModal';
+import { CaptchaChallenge, CaptchaRef } from '@/src/components/CaptchaChallenge';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 
@@ -104,7 +105,41 @@ export default function MoreScreen() {
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const captchaRef = useRef<CaptchaRef>(null);
+  const [deleteKingIdInput, setDeleteKingIdInput] = useState('');
+  const [deleteCaptchaError, setDeleteCaptchaError] = useState<string | null>(null);
+  const [isSecurityVerified, setIsSecurityVerified] = useState(false);
   const [contactModalMode, setContactModalMode] = useState<'SUPPORT' | 'CONTACT' | null>(null);
+
+  const handleOpenDeleteModal = () => {
+    setDeleteKingIdInput('');
+    setDeleteCaptchaError(null);
+    setIsSecurityVerified(false);
+    setShowDeleteConfirmModal(true);
+  };
+
+  const handleVerifyDeleteSecurity = () => {
+    setDeleteCaptchaError(null);
+    const expectedKingId = (user?.kingId || user?.mobile || '').trim().toLowerCase();
+    const inputKingId = deleteKingIdInput.trim().toLowerCase();
+
+    if (!inputKingId) {
+      setDeleteCaptchaError('Kripya apni King ID ja Mobile Number darj karo.');
+      return;
+    }
+
+    if (inputKingId !== expectedKingId) {
+      setDeleteCaptchaError(`King ID / Mobile Number match nahi karda! Expected: ${user?.kingId || user?.mobile}`);
+      return;
+    }
+
+    if (captchaRef.current && !captchaRef.current.validate()) {
+      setDeleteCaptchaError('Invalid Captcha code! Screen te ditta 4-character code sahi darj karo.');
+      return;
+    }
+
+    setIsSecurityVerified(true);
+  };
 
   const handleConfirmDeleteAccount = async () => {
     setIsDeletingAccount(true);
@@ -522,7 +557,7 @@ export default function MoreScreen() {
               <TouchableOpacity
                 style={styles.row}
                 activeOpacity={0.7}
-                onPress={() => setShowDeleteConfirmModal(true)}
+                onPress={handleOpenDeleteModal}
               >
                 <View style={[styles.rowIconBg, { backgroundColor: '#fef2f2' }]}>
                   <Ionicons name="trash-outline" size={18} color="#dc2626" />
@@ -635,50 +670,122 @@ export default function MoreScreen() {
         </View>
       </Modal>
 
-      {/* ── Delete Account Confirmation Modal ───────────────────────────────── */}
+      {/* ── Delete Account Security & Confirmation Modal ───────────────────────────────── */}
       <Modal visible={showDeleteConfirmModal} transparent animationType="fade" onRequestClose={() => setShowDeleteConfirmModal(false)}>
         <View style={pModalStyles.overlay}>
-          <View style={[pModalStyles.card, { borderColor: '#fecaca', borderWidth: 2 }]}>
-            <View style={{ alignItems: 'center', marginBottom: 12 }}>
-              <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: '#fee2e2', justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
-                <Ionicons name="warning" size={28} color="#dc2626" />
+          <View style={[pModalStyles.card, { borderColor: '#fecaca', borderWidth: 2, maxWidth: 440 }]}>
+            <View style={{ alignItems: 'center', marginBottom: 10 }}>
+              <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#fee2e2', justifyContent: 'center', alignItems: 'center', marginBottom: 6 }}>
+                <Ionicons name="shield-checkmark-outline" size={24} color="#dc2626" />
               </View>
-              <Text style={{ fontSize: 18, fontWeight: '700', color: '#991b1b', textAlign: 'center' }}>
-                Delete Your Account?
+              <Text style={{ fontSize: 17, fontFamily: FONT.extraBold, color: '#991b1b', textAlign: 'center' }}>
+                Account Deletion Security
               </Text>
-              <Text style={{ fontSize: 12, color: '#dc2626', fontWeight: '600', marginTop: 2 }}>
-                (Account will be permanently deleted)
+              <Text style={{ fontSize: 11.5, color: '#64748b', fontFamily: FONT.medium, textAlign: 'center', marginTop: 2 }}>
+                King ID & Captcha verification required
               </Text>
             </View>
 
-            <Text style={{ fontSize: 13, color: '#475569', lineHeight: 18, textAlign: 'center', marginBottom: 16 }}>
-              Are you sure you want to delete your FarmsKing account? Your active advisor plans, wallet data, and profile will be soft-deleted. You will be logged out immediately.
-            </Text>
+            {!isSecurityVerified ? (
+              <View style={{ gap: 10, width: '100%' }}>
+                {/* Expected User Info */}
+                <View style={{ backgroundColor: '#f8fafc', borderRadius: RADIUS.md, padding: 8, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569' }}>
+                    Account Name: <Text style={{ color: '#0f172a' }}>{user?.name || 'User'}</Text>
+                  </Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#16a34a', marginTop: 1 }}>
+                    Expected King ID / Mobile: <Text style={{ color: '#15803d' }}>{user?.kingId || user?.mobile}</Text>
+                  </Text>
+                </View>
 
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              <TouchableOpacity
-                style={{ flex: 1, paddingVertical: 12, borderRadius: RADIUS.md, backgroundColor: '#f1f5f9', alignItems: 'center' }}
-                onPress={() => setShowDeleteConfirmModal(false)}
-                disabled={isDeletingAccount}
-              >
-                <Text style={{ fontSize: 14, fontWeight: '600', color: '#475569' }}>Cancel</Text>
-              </TouchableOpacity>
+                {/* Input King ID */}
+                <View>
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#334155', marginBottom: 4 }}>
+                    Enter King ID / Mobile Number *
+                  </Text>
+                  <View style={{ height: 38, flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, backgroundColor: '#ffffff', paddingHorizontal: 10 }}>
+                    <Ionicons name="card-outline" size={17} color="#94a3b8" style={{ marginRight: 6 }} />
+                    <TextInput
+                      style={{ flex: 1, fontSize: 13, fontFamily: FONT.medium, color: '#0f172a' }}
+                      placeholder="e.g. FK100234 or Mobile Number"
+                      placeholderTextColor="#94a3b8"
+                      value={deleteKingIdInput}
+                      onChangeText={setDeleteKingIdInput}
+                      autoCapitalize="characters"
+                    />
+                  </View>
+                </View>
 
-              <TouchableOpacity
-                style={{ flex: 1, paddingVertical: 12, borderRadius: RADIUS.md, backgroundColor: '#dc2626', alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 6 }}
-                onPress={handleConfirmDeleteAccount}
-                disabled={isDeletingAccount}
-              >
-                {isDeletingAccount ? (
-                  <ActivityIndicator color="#ffffff" size="small" />
-                ) : (
-                  <>
-                    <Ionicons name="trash" size={16} color="#ffffff" />
-                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#ffffff' }}>Delete Account</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
+                {/* Captcha Security Challenge */}
+                <CaptchaChallenge ref={captchaRef} onSubmitEditing={handleVerifyDeleteSecurity} />
+
+                {deleteCaptchaError ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca', padding: 7, borderRadius: RADIUS.md }}>
+                    <Ionicons name="alert-circle" size={16} color="#dc2626" />
+                    <Text style={{ color: '#dc2626', fontFamily: FONT.medium, fontSize: 11, flex: 1 }}>{deleteCaptchaError}</Text>
+                  </View>
+                ) : null}
+
+                <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+                  <TouchableOpacity
+                    style={{ flex: 1, paddingVertical: 10, borderRadius: RADIUS.md, backgroundColor: '#f1f5f9', alignItems: 'center' }}
+                    onPress={() => setShowDeleteConfirmModal(false)}
+                  >
+                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#475569' }}>Cancel</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={{ flex: 1.3, paddingVertical: 10, borderRadius: RADIUS.md, backgroundColor: '#0284c7', alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 4 }}
+                    onPress={handleVerifyDeleteSecurity}
+                  >
+                    <Ionicons name="shield-checkmark" size={16} color="#ffffff" />
+                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>Verify Security</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <View style={{ gap: 12, width: '100%' }}>
+                {/* Security Verified Success Badge */}
+                <View style={{ backgroundColor: '#f0fdf4', borderWidth: 1.5, borderColor: '#86efac', padding: 8, borderRadius: RADIUS.md, alignItems: 'center' }}>
+                  <Ionicons name="checkmark-circle" size={20} color="#16a34a" />
+                  <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: '#15803d', marginTop: 2 }}>
+                    ✨ Security Verified Successfully!
+                  </Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>
+                    Verified King ID: {user?.kingId || user?.mobile}
+                  </Text>
+                </View>
+
+                <Text style={{ fontSize: 12.5, color: '#475569', lineHeight: 18, textAlign: 'center' }}>
+                  Are you sure you want to permanently delete your FarmsKing account? Your active advisor plans, wallet data, and profile will be soft-deleted. You will be logged out immediately.
+                </Text>
+
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+                  <TouchableOpacity
+                    style={{ flex: 1, paddingVertical: 11, borderRadius: RADIUS.md, backgroundColor: '#f1f5f9', alignItems: 'center' }}
+                    onPress={() => setShowDeleteConfirmModal(false)}
+                    disabled={isDeletingAccount}
+                  >
+                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#475569' }}>Cancel</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={{ flex: 1.4, paddingVertical: 11, borderRadius: RADIUS.md, backgroundColor: '#dc2626', alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 6 }}
+                    onPress={handleConfirmDeleteAccount}
+                    disabled={isDeletingAccount}
+                  >
+                    {isDeletingAccount ? (
+                      <ActivityIndicator color="#ffffff" size="small" />
+                    ) : (
+                      <>
+                        <Ionicons name="trash" size={16} color="#ffffff" />
+                        <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff' }}>Delete Account Now</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
           </View>
         </View>
       </Modal>

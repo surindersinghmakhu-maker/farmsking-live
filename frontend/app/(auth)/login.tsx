@@ -169,49 +169,63 @@ export default function LoginScreen() {
           </View>
 
           {/* Download Android App Button Box at Bottom of Login Page */}
-          <TouchableOpacity
-            style={styles.downloadAppBtn}
-            onPress={async () => {
-              const url = appSettings?.appDownloadUrl || 'https://farmsking-1.vercel.app/download/farmsking.apk';
-              try {
-                if (Platform.OS === 'web' && typeof window !== 'undefined') {
-                  const link = document.createElement('a');
-                  link.href = url;
-                  link.setAttribute('download', 'farmsking.apk');
-                  link.setAttribute('target', '_self');
-                  link.setAttribute('rel', 'noopener noreferrer');
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
-                  return;
+          <View style={{ marginTop: 10 }}>
+            <TouchableOpacity
+              style={styles.downloadAppBtn}
+              onPress={async () => {
+                const url = appSettings?.appDownloadUrl || 'https://farmsking-1.vercel.app/download/farmsking.apk';
+                try {
+                  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.setAttribute('download', 'farmsking.apk');
+                    link.setAttribute('target', '_self');
+                    link.setAttribute('rel', 'noopener noreferrer');
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    return;
+                  }
+                  const can = await Linking.canOpenURL(url);
+                  if (can) {
+                    await Linking.openURL(url);
+                  } else {
+                    window.location.href = url;
+                  }
+                } catch {
+                  if (typeof window !== 'undefined') {
+                    window.location.href = url;
+                  } else {
+                    alert('Could not open download link.');
+                  }
                 }
-                const can = await Linking.canOpenURL(url);
-                if (can) {
-                  await Linking.openURL(url);
-                } else {
-                  window.location.href = url;
-                }
-              } catch {
-                if (typeof window !== 'undefined') {
-                  window.location.href = url;
-                } else {
-                  alert('Could not open download link.');
-                }
-              }
-            }}
-            activeOpacity={0.85}
-          >
-            <View style={styles.downloadIconCircle}>
-              <Ionicons name="logo-android" size={20} color="#0284c7" />
+              }}
+              activeOpacity={0.85}
+            >
+              <View style={styles.downloadIconCircle}>
+                <Ionicons name="logo-android" size={20} color="#0284c7" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.downloadAppTitle}>📲 Download Android App (APK)</Text>
+                <Text style={styles.downloadAppSub}>Install FarmsKing App on your phone</Text>
+              </View>
+              <View style={styles.downloadBadge}>
+                <Text style={styles.downloadBadgeText}>Download</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* APK File Memory Size & Direct Link */}
+            <View style={styles.apkMetaCard}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Ionicons name="hardware-chip" size={13} color="#0369a1" />
+                <Text style={styles.apkMetaTitle}>⚡ APK Memory Size: ~8.5 MB</Text>
+              </View>
+              <Text style={styles.apkMetaSub}>Direct Download • Fast Installation • Auto-Updating Engine</Text>
+              <Text style={styles.apkMetaLink} selectTextOnPress numberOfLines={1}>
+                🔗 Direct Link: {appSettings?.appDownloadUrl || 'https://farmsking-1.vercel.app/download/farmsking.apk'}
+              </Text>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.downloadAppTitle}>📲 Download Android App (APK)</Text>
-              <Text style={styles.downloadAppSub}>Install FarmsKing App on your phone</Text>
-            </View>
-            <View style={styles.downloadBadge}>
-              <Text style={styles.downloadBadgeText}>Download</Text>
-            </View>
-          </TouchableOpacity>
+          </View>
 
         </View>
       </ScrollView>

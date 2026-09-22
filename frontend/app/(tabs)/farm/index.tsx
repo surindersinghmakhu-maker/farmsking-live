@@ -1466,7 +1466,9 @@ export default function FarmListScreen() {
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.advisorName}>{adv.name}</Text>
-                      <Text style={styles.advisorSub}>{adv.specialization || 'Specialized Farm Doctor'} · 📍 {adv.district || 'Punjab'}</Text>
+                      <Text style={styles.advisorSub}>
+                        {adv.specialization || 'Specialized Farm Doctor'} · ⭐ {adv.ratingLabel || (adv.rating ? `${adv.rating} ★ (${adv.ratingCount || 1})` : 'No rating till now')} · 📍 {adv.district || 'Punjab'}
+                      </Text>
                     </View>
                     <TouchableOpacity
                       style={styles.chooseBtn}

@@ -189,9 +189,38 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
     return { farmer: { ...farmer, farms: (farmer as any).farms ?? [] }, assignment, isExpired };
   }
 
+  private async getDoctorRatingStats(advisorIds: string[]) {
+    if (!advisorIds.length) return new Map<string, { rating: number | null; ratingCount: number; ratingLabel: string }>();
+
+    const stats = await this.prisma.cropProblem.groupBy({
+      by: ['assignedAdvisorId'],
+      where: {
+        assignedAdvisorId: { in: advisorIds },
+        farmerRating: { not: null },
+        deletedAt: null,
+      },
+      _avg: { farmerRating: true },
+      _count: { farmerRating: true },
+    });
+
+    const map = new Map<string, { rating: number | null; ratingCount: number; ratingLabel: string }>();
+    for (const stat of stats) {
+      if (stat.assignedAdvisorId && stat._count.farmerRating > 0 && stat._avg.farmerRating !== null) {
+        const avg = Math.round(stat._avg.farmerRating * 10) / 10;
+        const count = stat._count.farmerRating;
+        map.set(stat.assignedAdvisorId, {
+          rating: avg,
+          ratingCount: count,
+          ratingLabel: `${avg} ★ (${count})`,
+        });
+      }
+    }
+    return map;
+  }
+
   /** The logged-in farmer's active advisor, if any. */
-  findMyAdvisor(user: AuthUser) {
-    return this.prisma.advisorAssignment.findFirst({
+  async findMyAdvisor(user: AuthUser) {
+    const assignment = await this.prisma.advisorAssignment.findFirst({
       where: { farmerId: user.id, status: AdvisorAssignmentStatus.ACTIVE, deletedAt: null },
       include: {
         advisor: {
@@ -211,6 +240,19 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
       },
       orderBy: { startDate: 'desc' },
     });
+
+    if (!assignment || !assignment.advisor) return assignment;
+
+    const ratingMap = await this.getDoctorRatingStats([assignment.advisor.id]);
+    const rStats = ratingMap.get(assignment.advisor.id) ?? { rating: null, ratingCount: 0, ratingLabel: 'No rating till now' };
+
+    return {
+      ...assignment,
+      advisor: {
+        ...assignment.advisor,
+        ...rStats,
+      },
+    };
   }
 
   /** Farmer/Gardener: every advisor of the matching type they could choose (STANDARD/PREMIUM only — enforced in FarmerPlansService.chooseAdvisor). */
@@ -237,7 +279,17 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
       },
       orderBy: { createdAt: 'asc' },
     });
-    return advisors.map(({ _count, ...advisor }) => ({ ...advisor, activeFarmerCount: _count.advisorAssignmentsAsAdvisor }));
+
+    const ratingMap = await this.getDoctorRatingStats(advisors.map((a) => a.id));
+
+    return advisors.map(({ _count, ...advisor }) => {
+      const rStats = ratingMap.get(advisor.id) ?? { rating: null, ratingCount: 0, ratingLabel: 'No rating till now' };
+      return {
+        ...advisor,
+        activeFarmerCount: _count.advisorAssignmentsAsAdvisor,
+        ...rStats,
+      };
+    });
   }
 
   /** Confirms this advisor currently has an ACTIVE, non-expired assignment to this farmer — used by schedule/problem modules. */

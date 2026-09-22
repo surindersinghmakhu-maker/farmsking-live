@@ -26,14 +26,14 @@ export const CropAdvisoryPromoCard: React.FC<CropAdvisoryPromoCardProps> = ({
   const sharePromoWhatsApp = () => {
     tap();
     const promoText =
-      `🌾 *FarmsKing ਕਿਸਾਨ ਫ਼ਸਲ ਸਲਾਹ ਸੇਵਾ (Crop Advisory)* 🌾\n\n` +
-      `ਕੀ ਤੁਸੀਂ ਆਪਣੀ ਫ਼ਸਲ ਦਾ 2x ਤੋਂ 3x ਵੱਧ ਮੰਡੀ ਰੇਟ ਲੈਣਾ ਚਾਹੁੰਦੇ ਹੋ?\n\n` +
-      `🔥 *ਮੁੱਖ ਫਾਇਦੇ (Key Features):*\n` +
-      `1️⃣ *ਤਿਉਹਾਰੀ ਮੰਗ ਅਤੇ ਬੀਜਾਈ ਸਮਾਂ*: ਨਵਰਾਤਰੇ, ਦਿਵਾਲੀ, ਛੱਠ ਅਤੇ ਰਮਜ਼ਾਨ ਅਨੁਸਾਰ ਸਹੀ ਬੀਜਾਈ ਸਲਾਹ।\n` +
-      `2️⃣ *AI ਬੀਮਾਰੀ ਸਕੈਨਰ*: ਪੱਤੇ ਦੀ ਫੋਟੋ ਖਿੱਚੋ ਅਤੇ 1 ਸਕਿੰਟ ਵਿੱਚ ਪੱਕਾ ਇਲਾਜ ਪਾਓ।\n` +
-      `3️⃣ *ਲਾਈਵ ਮਾਹਰ ਸਲਾਹਕਾਰ*: 4.9★ ਵੈਰੀਫਾਈਡ ਖੇਤੀ ਮਾਹਰਾਂ ਨਾਲ ਡਾਇਰੈਕਟ ਕਾਲ 'ਤੇ ਗੱਲ ਕਰੋ।\n` +
-      `4️⃣ *ਸੈਟੇਲਾਈਟ ਖੇਤ ਨਿਗਰਾਨੀ*: ਘਰ ਬੈਠੇ ਆਪਣੇ ਖੇਤਾਂ ਦੀ ਹਰਿਆਲੀ (NDVI) ਦੇਖੋ।\n\n` +
-      `📲 *ਅੱਜ ਹੀ FarmsKing ਐਪ ਡਾਊਨਲੋਡ ਕਰੋ ਅਤੇ ਮੁਫ਼ਤ ਸਲਾਹ ਲਓ!*`;
+      `🌾 *FarmsKing Crop Advisory Service* 🌾\n\n` +
+      `Want to get 2x to 3x higher mandi prices for your crops?\n\n` +
+      `🔥 *Key Features:*\n` +
+      `1️⃣ *Festival Demand & Sowing Timing*: Timely sowing advice based on Navratri, Diwali, Chhath, and Ramadan.\n` +
+      `2️⃣ *AI Disease Scanner*: Take a leaf photo and get instant diagnostic advice.\n` +
+      `3️⃣ *Live Doctor Consultation*: Direct phone/voice consultation with verified crop experts.\n` +
+      `4️⃣ *Satellite Field Monitoring*: Monitor crop health (NDVI heatmaps) remotely.\n\n` +
+      `📲 *Download FarmsKing App today for free crop advisory!*`;
 
     const url = `whatsapp://send?text=${encodeURIComponent(promoText)}`;
     Linking.openURL(url).catch(() => {
@@ -48,57 +48,16 @@ export const CropAdvisoryPromoCard: React.FC<CropAdvisoryPromoCardProps> = ({
         <View style={styles.topBadgeRow}>
           <View style={styles.badgePill}>
             <Ionicons name="sparkles" size={12} color="#facc15" />
-            <Text style={styles.badgeText}>
-              {lang === 'pa' ? '📢 ਮੁਫ਼ਤ ਕਿਸਾਨ ਫ਼ਸਲ ਸਲਾਹ' : lang === 'hi' ? '📢 मुफ्त फसल सलाह सेवा' : '📢 Free Crop Advisory'}
-            </Text>
-          </View>
-
-          {/* Lang Selector */}
-          <View style={styles.langSelectorRow}>
-            <TouchableOpacity
-              style={[styles.langBtn, lang === 'pa' && styles.langBtnActive]}
-              onPress={() => {
-                tap();
-                setLang('pa');
-              }}
-            >
-              <Text style={[styles.langBtnText, lang === 'pa' && styles.langBtnTextActive]}>ਪੰਜਾਬੀ</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.langBtn, lang === 'hi' && styles.langBtnActive]}
-              onPress={() => {
-                tap();
-                setLang('hi');
-              }}
-            >
-              <Text style={[styles.langBtnText, lang === 'hi' && styles.langBtnTextActive]}>हिंदी</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.langBtn, lang === 'en' && styles.langBtnActive]}
-              onPress={() => {
-                tap();
-                setLang('en');
-              }}
-            >
-              <Text style={[styles.langBtnText, lang === 'en' && styles.langBtnTextActive]}>ENG</Text>
-            </TouchableOpacity>
+            <Text style={styles.badgeText}>📢 Free Crop Advisory</Text>
           </View>
         </View>
 
         <Text style={styles.promoTitle}>
-          {lang === 'pa'
-            ? '🌾 ਕਿਸਾਨ ਫ਼ਸਲ ਸਲਾਹ - ਸਹੀ ਸਮੇਂ ਬੀਜੋ, 2x-3x ਵੱਧ ਰੇਟ ਲਓ!'
-            : lang === 'hi'
-            ? '🌾 किसान फसल सलाह - सही समय बोएं, 2x-3x अधिक दाम पाएं!'
-            : '🌾 Smart Crop Advisory - Sow Right, Earn 2x-3x Higher Price!'}
+          🌾 Smart Crop Advisory - Sow Right, Earn 2x-3x Higher Price!
         </Text>
 
         <Text style={styles.promoSub}>
-          {lang === 'pa'
-            ? 'ਤਿਉਹਾਰੀ ਮੰਗ, ਸੈਟੇਲਾਈਟ ਖੇਤ ਰਿਪੋਰਟ ਅਤੇ ਏ.ਆਈ. ਬੀਮਾਰੀ ਸਕੈਨ ਨਾਲ ਬਣਾਓ ਆਪਣੀ ਖੇਤੀ ਨੂੰ ਲਾਹੇਵੰਦ।'
-            : lang === 'hi'
-            ? 'त्योहारों की मांग, सैटेलाइट रिपोर्ट और एआई बीमारी स्कैनर से खेती को बनाएं अधिक लाभदायक।'
-            : 'Plan crops by festive demand, satellite health scans & AI disease diagnostics.'}
+          Plan crops by festive demand, satellite health scans & AI disease diagnostics.
         </Text>
       </LinearGradient>
 
@@ -109,16 +68,10 @@ export const CropAdvisoryPromoCard: React.FC<CropAdvisoryPromoCardProps> = ({
             <Ionicons name="trending-up" size={18} color="#b45309" />
           </View>
           <View style={styles.featureTextGroup}>
-            <Text style={styles.featureTitle}>
-              {lang === 'pa' ? '📈 2x-3x ਮੰਡੀ ਰੇਟ ਸਲਾਹ' : lang === 'hi' ? '📈 2x-3x मंडी रेट सलाह' : '📈 2x-3x Mandi Rate Strategy'}
-            </Text>
+            <Text style={styles.featureTitle}>📈 2x-3x Mandi Rate Strategy</Text>
 
             <Text style={styles.featureSub}>
-              {lang === 'pa'
-                ? 'ਨਵਰਾਤਰੇ, ਦਿਵਾਲੀ, ਛੱਠ ਅਤੇ ਰਮਜ਼ਾਨ ਦੇ ਮਿਤੀਆਂ ਅਨੁਸਾਰ ਅਗੇਤੀ ਬੀਜਾਈ ਕਰਕੇ ਵੱਧ ਕਮਾਈ ਕਰੋ।'
-                : lang === 'hi'
-                ? 'नवरात्रि, दिवाली, छठ और रमजान की तारीखों के अनुसार अगेती बुवाई से अधिक कमाएं।'
-                : 'Align sowing & harvest with high-demand festival dates for peak mandi rates.'}
+              Align sowing & harvest with high-demand festival dates for peak mandi rates.
             </Text>
           </View>
         </View>
@@ -129,16 +82,10 @@ export const CropAdvisoryPromoCard: React.FC<CropAdvisoryPromoCardProps> = ({
           </View>
 
           <View style={styles.featureTextGroup}>
-            <Text style={styles.featureTitle}>
-              {lang === 'pa' ? '🔬 AI ਫ਼ਸਲ ਬੀਮਾਰੀ ਸਕੈਨਰ' : lang === 'hi' ? '🔬 AI बीमारी स्कैनर' : '🔬 Instant AI Disease Scan'}
-            </Text>
+            <Text style={styles.featureTitle}>🔬 Instant AI Disease Scan</Text>
 
             <Text style={styles.featureSub}>
-              {lang === 'pa'
-                ? 'ਖਰਾਬ ਪੱਤੇ ਦੀ ਫੋਟੋ ਅਪਲੋਡ ਕਰੋ ਅਤੇ 1 ਸਕਿੰਟ ਵਿੱਚ ਪੂਰੀ ਬੀਮਾਰੀ ਦਾ ਇਲਾਜ ਤੇ ਸਪਰੇਅ ਪਤਾ ਕਰੋ।'
-                : lang === 'hi'
-                ? 'खराब पत्ते की फोटो अपलोड करें और 1 सेकंड में बीमारी का सटीक इलाज पाएं।'
-                : 'Snap leaf photo to get instant diagnostic analysis and spray guidance.'}
+              Snap leaf photo to get instant diagnostic analysis and spray guidance.
             </Text>
           </View>
         </View>
@@ -149,16 +96,10 @@ export const CropAdvisoryPromoCard: React.FC<CropAdvisoryPromoCardProps> = ({
           </View>
 
           <View style={styles.featureTextGroup}>
-            <Text style={styles.featureTitle}>
-              {lang === 'pa' ? '🎙️ ਵੈਰੀਫਾਈਡ ਮਾਹਰਾਂ ਨਾਲ ਲਾਈਵ ਗੱਲਬਾਤ' : lang === 'hi' ? '🎙️ कृषि विशेषज्ञों से लाइव बातचीत' : '🎙️ Live 4.9★ Expert Consultation'}
-            </Text>
+            <Text style={styles.featureTitle}>🎙️ Live Expert Consultation</Text>
 
             <Text style={styles.featureSub}>
-              {lang === 'pa'
-                ? '4.9★ ਰੇਟਿਡ ਖੇਤੀ ਮਾਹਰਾਂ ਨਾਲ ਡਾਇਰੈਕਟ ਗਰੁੱਪ ਵੋਇਸ ਕਾਲ ਵਿੱਚ ਜੁੜ ਕੇ ਸਵਾਲ ਪੁੱਛੋ।'
-                : lang === 'hi'
-                ? '4.9★ कृषि विशेषज्ञों से लाइव वॉइस कॉल पर सीधे सलाह और जवाब पाएं।'
-                : 'Join live group voice calls with top certified agricultural experts.'}
+              Join live group voice calls with top certified agricultural experts.
             </Text>
           </View>
         </View>

@@ -235,6 +235,9 @@ export interface FarmerBasic {
   soilType?: SoilType | null;
   waterType?: WaterType | null;
   farmerPlan?: { plan: 'FREE' | 'BASIC' | 'STANDARD' | 'PREMIUM'; endDate: string | null; expiredAt: string | null } | null;
+  rating?: number | null;
+  ratingCount?: number;
+  ratingLabel?: string;
 }
 
 export interface AvailableAdvisor {
@@ -251,6 +254,9 @@ export interface AvailableAdvisor {
   isSeniorDoctor?: boolean | null;
   seniorDoctorId?: string | null;
   doctorConsultationFee?: number | null;
+  rating?: number | null;
+  ratingCount?: number;
+  ratingLabel?: string;
 }
 
 export interface AdvisorSubscription {

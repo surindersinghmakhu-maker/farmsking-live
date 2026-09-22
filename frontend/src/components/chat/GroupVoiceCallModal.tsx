@@ -273,7 +273,9 @@ export const GroupVoiceCallModal: React.FC<GroupVoiceCallModalProps> = ({
                   {item.role === 'HOST' || item.role === 'SPEAKER' ? (
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 2 }}>
                       <Ionicons name="star" size={10} color="#fde047" />
-                      <Text style={{ fontSize: 10, color: '#94a3b8', fontWeight: '700' }}>4.9 ★ (52)</Text>
+                      <Text style={{ fontSize: 10, color: '#94a3b8', fontWeight: '700' }}>
+                        {item.user?.ratingLabel || (item.user?.rating ? `${item.user.rating} ★ (${item.user.ratingCount || 1})` : 'No rating till now')}
+                      </Text>
                     </View>
                   ) : null}
                 </View>

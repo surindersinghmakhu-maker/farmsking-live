@@ -126,7 +126,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
                   <Text style={styles.livePulseText}>LIVE</Text>
                 </View>
                 <Text style={styles.activeCallSub} numberOfLines={1}>
-                  Hosted by {voiceCallHook.activeCall.host?.name || 'Advisor'} (4.9 ★ Verified Advisor) · Tap to join
+                  Hosted by {voiceCallHook.activeCall.host?.name || 'Advisor'} ({voiceCallHook.activeCall.host?.ratingLabel || (voiceCallHook.activeCall.host?.rating ? `${voiceCallHook.activeCall.host.rating} ★` : 'No rating till now')}) · Tap to join
                 </Text>
               </View>
             </View>

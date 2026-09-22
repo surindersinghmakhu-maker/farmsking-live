@@ -436,7 +436,9 @@ export function CropDoctorCareView() {
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: '#fef9c3', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 6 }}>
                           <Ionicons name="star" size={10} color="#ca8a04" />
-                          <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#854d0e' }}>4.9 ★</Text>
+                          <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#854d0e' }}>
+                            {advisor.ratingLabel || (advisor.rating ? `${advisor.rating} ★ (${advisor.ratingCount || 1})` : 'No rating till now')}
+                          </Text>
                         </View>
                       </View>
 
@@ -554,7 +556,9 @@ export function CropDoctorCareView() {
                   </View>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#fef9c3', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8, borderWidth: 1, borderColor: '#fef08a' }}>
                     <Ionicons name="star" size={11} color="#ca8a04" />
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: '#854d0e' }}>4.9 ★ (52)</Text>
+                    <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: '#854d0e' }}>
+                      {myAdvisor?.advisor?.ratingLabel || (myAdvisor?.advisor?.rating ? `${myAdvisor.advisor.rating} ★ (${myAdvisor.advisor.ratingCount || 1})` : 'No rating till now')}
+                    </Text>
                   </View>
                 </View>
               </View>

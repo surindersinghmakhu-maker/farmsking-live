@@ -317,7 +317,7 @@ export default function MembershipsScreen() {
                     {activeAdvisor ? activeAdvisor.name : 'No Doctor Assigned Yet'}
                   </Text>
                   <Text style={styles.doctorCardSpec}>
-                    {activeAdvisor?.specialization || 'Specialized Farm & Crop Care Doctor'}
+                    {activeAdvisor?.specialization || 'Specialized Farm & Crop Care Doctor'} · ⭐ {activeAdvisor?.ratingLabel || (activeAdvisor?.rating ? `${activeAdvisor.rating} ★ (${activeAdvisor.ratingCount || 1})` : 'No rating till now')}
                   </Text>
                 </View>
               </View>
@@ -432,7 +432,9 @@ export default function MembershipsScreen() {
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.advisorName}>{adv.name}</Text>
-                      <Text style={styles.advisorSub}>{adv.specialization || 'Specialized Farm Doctor'} · 📍 {adv.district || 'Punjab'}</Text>
+                      <Text style={styles.advisorSub}>
+                        {adv.specialization || 'Specialized Farm Doctor'} · ⭐ {adv.ratingLabel || (adv.rating ? `${adv.rating} ★ (${adv.ratingCount || 1})` : 'No rating till now')} · 📍 {adv.district || 'Punjab'}
+                      </Text>
                     </View>
                     <TouchableOpacity
                       style={styles.chooseBtn}

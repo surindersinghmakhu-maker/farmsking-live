@@ -560,6 +560,34 @@ export default function ProfileScreen() {
               <Text style={styles.saveBtnText}>Save Farmer Profile</Text>
             )}
           </TouchableOpacity>
+
+          {/* FAMILY HEAD ACCOUNT DETAILS SUMMARY CARD AT BOTTOM */}
+          <View style={styles.familyHeadSummaryCard}>
+            <View style={styles.familyHeadBadgeRow}>
+              <Text style={styles.familyHeadNameText}>
+                👨‍🌾 {user?.name || 'Family Head'}
+              </Text>
+              <View style={styles.familyHeadTag}>
+                <Text style={styles.familyHeadTagText}>Family Head</Text>
+              </View>
+            </View>
+
+            <View style={styles.familyHeadMetaRow}>
+              <View style={styles.familyHeadMetaItem}>
+                <Ionicons name="key-outline" size={14} color="#15803d" />
+                <Text style={styles.familyHeadMetaLabel}>King ID:</Text>
+                <Text style={styles.familyHeadMetaValue}>{user?.kingId || '—'}</Text>
+              </View>
+
+              {user?.mobile ? (
+                <View style={styles.familyHeadMetaItem}>
+                  <Ionicons name="call-outline" size={14} color="#475569" />
+                  <Text style={styles.familyHeadMetaLabel}>Mobile:</Text>
+                  <Text style={styles.familyHeadMetaValue}>{user.mobile}</Text>
+                </View>
+              ) : null}
+            </View>
+          </View>
         </View>
       </ScrollView>
       )}
@@ -1130,6 +1158,59 @@ const styles = StyleSheet.create({
   errorText: { color: '#dc2626', fontFamily: FONT.semiBold, fontSize: 12.5, marginTop: 8 },
   saveBtn: { marginTop: 18, borderRadius: RADIUS.md, paddingVertical: 12, alignItems: 'center' },
   saveBtnText: { color: '#ffffff', fontSize: 14.5, fontFamily: FONT.bold },
+  familyHeadSummaryCard: {
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1.5,
+    borderColor: '#bbf7d0',
+    borderRadius: RADIUS.md,
+    padding: SPACING.md,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  familyHeadBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  familyHeadNameText: {
+    fontSize: 15,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+  },
+  familyHeadTag: {
+    backgroundColor: '#16a34a',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+  },
+  familyHeadTagText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  familyHeadMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  familyHeadMetaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  familyHeadMetaLabel: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  familyHeadMetaValue: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
   savedNotice: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f0fdf4', padding: 8, borderRadius: RADIUS.md, marginTop: 10 },
   savedNoticeText: { color: '#16a34a', fontSize: 12, fontFamily: FONT.bold },
   modalOverlay: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(15, 23, 42, 0.55)', justifyContent: 'center', alignItems: 'center', padding: 20, zIndex: 999 },

@@ -79,11 +79,17 @@ export function LabourFamilySwitcher({
   const [formError, setFormError] = useState<string | null>(null);
   const [isUnitDropdownOpen, setIsUnitDropdownOpen] = useState(false);
 
-  // Filter workers by selected farmer (if farmer filter is enabled)
+  // Filter workers by selected farmer (defaults to first available farmer)
+  const activeFarmerId = useMemo(() => {
+    if (selectedFarmerId) return selectedFarmerId;
+    if (availableFarmers.length > 0) return availableFarmers[0].id;
+    return null;
+  }, [selectedFarmerId, availableFarmers]);
+
   const filteredWorkersByFarmer = useMemo(() => {
-    if (!selectedFarmerId) return workers;
-    return workers.filter((w) => (w as any).farmerId === selectedFarmerId || (w as any).farmer?.id === selectedFarmerId);
-  }, [workers, selectedFarmerId]);
+    if (!activeFarmerId) return workers;
+    return workers.filter((w) => (w as any).farmerId === activeFarmerId || (w as any).farmer?.id === activeFarmerId);
+  }, [workers, activeFarmerId]);
 
   // Derived list of distinct farmers from workers if farmerList not provided
   const availableFarmers = useMemo(() => {
@@ -215,22 +221,8 @@ export function LabourFamilySwitcher({
         <View style={styles.farmerSwitcherBox}>
           <Text style={styles.farmerSwitcherTitle}>🌾 Select Farmer / Kheti Malik:</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-            <TouchableOpacity
-              style={[styles.farmerChip, !selectedFarmerId && styles.farmerChipActive]}
-              activeOpacity={0.8}
-              onPress={() => {
-                tap();
-                if (onSelectFarmer) onSelectFarmer(null);
-              }}
-            >
-              <Ionicons name="apps" size={14} color={!selectedFarmerId ? '#ffffff' : '#15803d'} />
-              <Text style={[styles.farmerChipText, !selectedFarmerId && styles.farmerChipTextActive]}>
-                All Farmers ({workers.length})
-              </Text>
-            </TouchableOpacity>
-
             {availableFarmers.map((f) => {
-              const isSelected = selectedFarmerId === f.id;
+              const isSelected = activeFarmerId === f.id;
               return (
                 <TouchableOpacity
                   key={f.id}

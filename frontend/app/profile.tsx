@@ -302,8 +302,8 @@ export default function ProfileScreen() {
         </View>
 
         {/* Labour Family Member & Farmer Switcher Section */}
-        {isLabour && labourWorkersList.length > 0 && (
-          <View style={{ marginBottom: 12 }}>
+        {labourWorkersList.length > 0 && (
+          <View style={{ marginBottom: 16 }}>
             <LabourFamilySwitcher
               workers={labourWorkersList}
               selectedWorkerId={selectedLabourWorkerId}
@@ -312,9 +312,40 @@ export default function ProfileScreen() {
               onSelectFarmer={(fId) => setSelectedFarmerId(fId)}
               onRefresh={refetchLabour}
               hideFarmerSwitcher={true}
+              showActiveCard={true}
+              showAddButton={true}
             />
           </View>
         )}
+
+        {/* SAVE WORKERS PROFILES BUTTON */}
+        {isSaved && (
+          <View style={styles.savedNotice}>
+            <Ionicons name="checkmark-circle" size={16} color="#16a34a" />
+            <Text style={styles.savedNoticeText}>Workers Profiles Saved Successfully!</Text>
+          </View>
+        )}
+
+        {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
+
+        <TouchableOpacity
+          style={[styles.saveBtn, { backgroundColor: '#16a34a', marginTop: 12, marginBottom: 20 }]}
+          onPress={async () => {
+            tap();
+            await refetchLabour();
+            await saveProfile();
+          }}
+          disabled={updateAddress.isPending}
+        >
+          {updateAddress.isPending ? (
+            <ActivityIndicator color="#ffffff" />
+          ) : (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Ionicons name="checkmark-done-circle-outline" size={18} color="#ffffff" />
+              <Text style={styles.saveBtnText}>Save Workers Profiles</Text>
+            </View>
+          )}
+        </TouchableOpacity>
 
       </ScrollView>
       )}

@@ -435,18 +435,6 @@ export function LabourFamilySwitcher({
                 {activeWorker.mobile ? `📱 ${activeWorker.mobile}` : 'Labour Member Profile'}
                 {activeWorker.defaultRate ? ` · ₹${activeWorker.defaultRate}/${activeWorker.defaultUnit || 'Day'}` : ''}
               </Text>
-              <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#16a34a', marginTop: 3 }}>
-                📷 Tap worker photo to edit profile / change photo
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.updatePhotoCta}
-              activeOpacity={0.8}
-              onPress={() => openEditModal(activeWorker)}
-            >
-              <Ionicons name="pencil" size={13} color="#16a34a" />
-              <Text style={styles.updatePhotoCtaText}>Edit Profile</Text>
             </TouchableOpacity>
           </View>
 

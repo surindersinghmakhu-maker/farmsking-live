@@ -15,14 +15,20 @@ export class FarmsService {
     });
   }
 
-  findAll(user: AuthUser) {
-    return this.prisma.farm.findMany({
-      where: {
-        deletedAt: null,
-        ...(user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN ? {} : { ownerId: user.id }),
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+  async findAll(user: AuthUser) {
+    if (!user?.id) return [];
+    try {
+      return await this.prisma.farm.findMany({
+        where: {
+          deletedAt: null,
+          ...(user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN ? {} : { ownerId: user.id }),
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+    } catch (err: any) {
+      console.error('[FarmsService.findAll] Error:', err);
+      return [];
+    }
   }
 
   async findOneOrThrow(user: AuthUser, id: string) {

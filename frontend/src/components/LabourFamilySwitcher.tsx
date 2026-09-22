@@ -158,18 +158,6 @@ export function LabourFamilySwitcher({
     }
   };
 
-  // Filter workers by selected farmer (defaults to first available farmer)
-  const activeFarmerId = useMemo(() => {
-    if (selectedFarmerId) return selectedFarmerId;
-    if (availableFarmers.length > 0) return availableFarmers[0].id;
-    return null;
-  }, [selectedFarmerId, availableFarmers]);
-
-  const filteredWorkersByFarmer = useMemo(() => {
-    if (!activeFarmerId) return workers;
-    return workers.filter((w) => (w as any).farmerId === activeFarmerId || (w as any).farmer?.id === activeFarmerId);
-  }, [workers, activeFarmerId]);
-
   // Derived list of distinct farmers from workers if farmerList not provided
   const availableFarmers = useMemo(() => {
     if (farmerList.length > 0) return farmerList;
@@ -189,46 +177,23 @@ export function LabourFamilySwitcher({
     return Array.from(map.values());
   }, [farmerList, workers]);
 
+  // Filter workers by selected farmer (defaults to first available farmer)
+  const activeFarmerId = useMemo(() => {
+    if (selectedFarmerId) return selectedFarmerId;
+    if (availableFarmers.length > 0) return availableFarmers[0].id;
+    return null;
+  }, [selectedFarmerId, availableFarmers]);
+
+  const filteredWorkersByFarmer = useMemo(() => {
+    if (!activeFarmerId) return workers;
+    return workers.filter((w) => (w as any).farmerId === activeFarmerId || (w as any).farmer?.id === activeFarmerId);
+  }, [workers, activeFarmerId]);
+
   // Active Worker Object
   const activeWorker = useMemo(() => {
     if (!selectedWorkerId && filteredWorkersByFarmer.length > 0) return filteredWorkersByFarmer[0];
     return filteredWorkersByFarmer.find((w) => w.id === selectedWorkerId) || filteredWorkersByFarmer[0] || null;
   }, [filteredWorkersByFarmer, selectedWorkerId]);
-
-  // Pick Photo for direct update
-  const pickPhotoForWorker = async (targetWorker: LabourWorker) => {
-    tap();
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Permission needed', 'Please allow photo access to select a picture.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.7,
-      allowsEditing: true,
-      aspect: [1, 1],
-    });
-
-    if (result.canceled || !result.assets[0]) return;
-
-    setIsUploadingPhoto(true);
-    setEditingPhotoWorker(targetWorker);
-
-    try {
-      const uploaded = await uploadPhoto(result.assets[0].uri);
-      await updateWorker.mutateAsync({
-        id: targetWorker.id,
-        payload: { photoUrl: uploaded.fileUrl },
-      });
-      if (onRefresh) onRefresh();
-    } catch {
-      Alert.alert('Upload Failed', 'Could not upload photo. Please try again.');
-    } finally {
-      setIsUploadingPhoto(false);
-      setEditingPhotoWorker(null);
-    }
-  };
 
   // Handle Pick Photo in Add Form
   const pickPhotoForForm = async () => {
@@ -875,7 +840,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: RADIUS.full,
+    borderRadius: RADIUS.pill,
     backgroundColor: '#ffffff',
     borderWidth: 1,
     borderColor: '#cbd5e1',
@@ -1180,7 +1145,7 @@ const styles = StyleSheet.create({
   relationChip: {
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: RADIUS.full,
+    borderRadius: RADIUS.pill,
     borderWidth: 1,
     borderColor: '#cbd5e1',
     backgroundColor: '#f8fafc',

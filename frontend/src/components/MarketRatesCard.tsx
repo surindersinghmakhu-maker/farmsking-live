@@ -308,15 +308,20 @@ export function MarketRatesCard() {
       ctx.fillStyle = '#dc2626';
       ctx.fillRect(480, 0, 160, 6);
 
-      // 4. Ultra-Subtle Watermark Grid (5% opacity for professional look)
+      // 4. Ultra-Subtle Watermark Grid (FarmsKing Logo + Text)
       ctx.save();
-      ctx.globalAlpha = 0.05;
+      ctx.globalAlpha = 0.06;
       ctx.fillStyle = '#166534';
-      ctx.font = 'bold 20px sans-serif';
+      ctx.font = 'bold 18px sans-serif';
       ctx.rotate((-15 * Math.PI) / 180);
       for (let y = -100; y < 850; y += 85) {
         for (let x = -200; x < 850; x += 190) {
-          ctx.fillText('👑 FarmsKing', x, y);
+          if (logoImg.naturalWidth > 0) {
+            ctx.drawImage(logoImg, x, y - 16, 20, 20);
+            ctx.fillText('FarmsKing', x + 24, y);
+          } else {
+            ctx.fillText('👑 FarmsKing', x, y);
+          }
         }
       }
       ctx.restore();
@@ -747,7 +752,21 @@ export function MarketRatesCard() {
   const userRefCode = user?.kingId ? user.kingId : 'FARMSKING';
 
   return (
-    <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
+    <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { position: 'relative', overflow: 'hidden' }]}>
+      {/* Subtle Background Watermark Grid */}
+      <View style={styles.posterWatermarkGridContainer} pointerEvents="none">
+        {Array.from({ length: 6 }).map((_, rowIndex) => (
+          <View key={rowIndex} style={styles.posterWatermarkRow}>
+            {Array.from({ length: 3 }).map((_, colIndex) => (
+              <View key={colIndex} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginHorizontal: 4 }}>
+                <BrandLogo size={14} useGoldRing />
+                <Text style={styles.posterWatermarkTileText}>FarmsKing</Text>
+              </View>
+            ))}
+          </View>
+        ))}
+      </View>
+
       {/* Compact Header with LIVE Indicator */}
       <View style={styles.header}>
         <View style={styles.titleRow}>

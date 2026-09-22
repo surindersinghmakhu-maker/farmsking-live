@@ -2,26 +2,19 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function main() {
-  const u = await prisma.user.findFirst({ where: { kingId: '54211886' } });
-  console.log('USER:', u.id, u.name, u.role, u.roles);
-
-  const authUser = {
-    id: u.id,
-    role: u.role || 'FARMER',
-    roles: u.roles || ['FARMER'],
-  };
-
+  const isGlobalAdmin = true;
   const crops = await prisma.cropCycle.findMany({
     where: {
       deletedAt: null,
-      plot: { deletedAt: null, farm: { ownerId: authUser.id, deletedAt: null } },
+      plot: isGlobalAdmin
+        ? { deletedAt: null, farm: { deletedAt: null } }
+        : { deletedAt: null, farm: { ownerId: 'c7d07121-991a-4ff4-9618-0147870d2747', deletedAt: null } },
     },
     include: { plot: { select: { id: true, name: true, farmId: true, area: true, areaUnit: true, irrigationType: true } } },
     orderBy: { createdAt: 'desc' },
   });
 
-  console.log('CROPS COUNT FOR USER 54211886:', crops.length);
-  crops.forEach((c) => console.log('Crop:', c.id, c.cropId, c.cropName, c.status, c.stage, c.plot?.name));
+  console.log('ADMIN CROPS COUNT:', crops.length);
 }
 
 main().catch(console.error).finally(() => prisma.$disconnect());

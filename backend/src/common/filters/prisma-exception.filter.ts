@@ -23,13 +23,14 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
 
     const status = STATUS_BY_CODE[exception.code] ?? HttpStatus.INTERNAL_SERVER_ERROR;
-    const message = MESSAGE_BY_CODE[exception.code] ?? 'An unexpected database error occurred.';
+    const message = MESSAGE_BY_CODE[exception.code] ?? `Database error (${exception.code}): ${exception.message}`;
 
     this.logger.error(`Prisma error ${exception.code}: ${exception.message}`);
 
     response.status(status).json({
       statusCode: status,
       message,
+      code: exception.code,
     });
   }
 }

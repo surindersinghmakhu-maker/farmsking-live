@@ -142,6 +142,7 @@ export const LabourDashboardView: React.FC = () => {
         )}
 
         {/* 2. Top Balance Card - Ultra Compact & Vividly Highlighted */}
+        {/* 2. Top Balance Card - Ultra Compact & Vividly Highlighted */}
         <View
           style={[
             {
@@ -154,14 +155,14 @@ export const LabourDashboardView: React.FC = () => {
             premiumShadow('#ea580c', 'sm'),
           ]}
         >
-          {/* Highlight Header */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          {/* Highlight Header Row */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <View
                 style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 14,
+                  width: 26,
+                  height: 26,
+                  borderRadius: 13,
                   backgroundColor: summary.pendingBalance > 0 ? '#fff7ed' : '#f0fdf4',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -169,69 +170,109 @@ export const LabourDashboardView: React.FC = () => {
               >
                 <Ionicons
                   name="wallet-outline"
-                  size={15}
+                  size={14}
                   color={summary.pendingBalance > 0 ? '#c2410c' : '#166534'}
                 />
               </View>
-              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#334155' }}>
-                Total Balance:
+              <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' }}>
+                Total Balance Summary
               </Text>
             </View>
 
-            {/* Highlighted Vivid Pill */}
+            {/* Total Pending Balance Highlight Pill */}
             {isLoading ? (
               <ActivityIndicator color={theme.primary} size="small" />
             ) : (
               <View
                 style={{
                   backgroundColor: summary.pendingBalance > 0 ? '#dc2626' : '#16a34a',
-                  paddingHorizontal: 12,
-                  paddingVertical: 4,
+                  paddingHorizontal: 10,
+                  paddingVertical: 3,
                   borderRadius: RADIUS.pill,
                 }}
               >
-                <Text style={{ fontSize: 14.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>
+                <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>
                   {formatInr(summary.pendingBalance)}
                 </Text>
               </View>
             )}
           </View>
 
-          {/* Compact 2-column metrics */}
-          <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
+          {/* 3-Column Vivid Metrics Row: Total Earned, Received Payment, Pending Balance */}
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            {/* 1. Total Earned */}
             <View
               style={{
                 flex: 1,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
                 backgroundColor: '#fff7ed',
-                paddingHorizontal: 8,
-                paddingVertical: 5,
+                borderWidth: 1.5,
+                borderColor: '#ffedd5',
+                paddingHorizontal: 6,
+                paddingVertical: 6,
                 borderRadius: RADIUS.md,
+                alignItems: 'center',
               }}
             >
-              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#9a3412' }}>Total Earned</Text>
-              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#c2410c' }}>
+              <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#9a3412', marginBottom: 2 }}>
+                Total Earned
+              </Text>
+              <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#c2410c' }}>
                 {formatInr(summary.totalEarned)}
               </Text>
             </View>
 
+            {/* 2. Received Payment */}
             <View
               style={{
                 flex: 1,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
                 backgroundColor: '#f0fdf4',
-                paddingHorizontal: 8,
-                paddingVertical: 5,
+                borderWidth: 1.5,
+                borderColor: '#bbf7d0',
+                paddingHorizontal: 6,
+                paddingVertical: 6,
                 borderRadius: RADIUS.md,
+                alignItems: 'center',
               }}
             >
-              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#166534' }}>Received Payment</Text>
-              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#166534' }}>
+              <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#166534', marginBottom: 2 }}>
+                Received Payment
+              </Text>
+              <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#15803d' }}>
                 {formatInr(summary.totalPaid)}
+              </Text>
+            </View>
+
+            {/* 3. Pending Balance */}
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: summary.pendingBalance > 0 ? '#fef2f2' : '#f0fdf4',
+                borderWidth: 1.5,
+                borderColor: summary.pendingBalance > 0 ? '#fecaca' : '#bbf7d0',
+                paddingHorizontal: 6,
+                paddingVertical: 6,
+                borderRadius: RADIUS.md,
+                alignItems: 'center',
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 9.5,
+                  fontFamily: FONT.bold,
+                  color: summary.pendingBalance > 0 ? '#991b1b' : '#166534',
+                  marginBottom: 2,
+                }}
+              >
+                Pending Bal
+              </Text>
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontFamily: FONT.extraBold,
+                  color: summary.pendingBalance > 0 ? '#dc2626' : '#16a34a',
+                }}
+              >
+                {formatInr(summary.pendingBalance)}
               </Text>
             </View>
           </View>

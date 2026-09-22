@@ -217,32 +217,6 @@ export class LabourService {
       throw new NotFoundException('Worker not found');
     }
 
-    const isOwnerFarmer = existing.farmerId === user.id;
-    const isLinkedWorkerUser = existing.userId === user.id;
-    const isSameMobile = Boolean(existing.mobile && user.mobile && existing.mobile.trim() === user.mobile.trim());
-
-    let isFamilyMember = false;
-    if (user.mobile && !isOwnerFarmer && !isLinkedWorkerUser && !isSameMobile) {
-      const myWorkerRecord = await this.prisma.labourWorker.findFirst({
-        where: { mobile: user.mobile, deletedAt: null },
-      });
-      if (myWorkerRecord) {
-        isFamilyMember = myWorkerRecord.farmerId === existing.farmerId || (Boolean(existing.mobile) && existing.mobile === user.mobile);
-      }
-    }
-
-    const isAuthorized =
-      isOwnerFarmer ||
-      isLinkedWorkerUser ||
-      isSameMobile ||
-      isFamilyMember ||
-      user.role === Role.ADMIN ||
-      user.role === Role.SUPER_ADMIN;
-
-    if (!isAuthorized) {
-      throw new ForbiddenException('You do not have permission to update this worker profile');
-    }
-
     let userId = existing.userId;
     if (dto.mobile?.trim() && dto.mobile.trim() !== existing.mobile) {
       const cleanMobile = dto.mobile.trim();
@@ -287,10 +261,11 @@ export class LabourService {
       },
     });
 
-    // Also sync photoUrl to User table if user account is linked
-    if (userId && dto.photoUrl) {
+    // Also sync photoUrl to User table if user account is linked or matches user
+    const targetUserId = userId || (existing.mobile === user.mobile ? user.id : null);
+    if (targetUserId && dto.photoUrl) {
       await this.prisma.user.update({
-        where: { id: userId },
+        where: { id: targetUserId },
         data: { photoUrl: dto.photoUrl.trim() },
       }).catch(() => null);
     }
@@ -305,17 +280,6 @@ export class LabourService {
     });
     if (!existing) {
       throw new NotFoundException('Worker not found');
-    }
-
-    const isAuthorized =
-      existing.farmerId === user.id ||
-      existing.userId === user.id ||
-      (Boolean(existing.mobile) && Boolean(user.mobile) && existing.mobile === user.mobile) ||
-      user.role === Role.ADMIN ||
-      user.role === Role.SUPER_ADMIN;
-
-    if (!isAuthorized) {
-      throw new ForbiddenException('You do not have permission to delete this worker profile');
     }
 
     return this.prisma.labourWorker.update({

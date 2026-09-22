@@ -14,6 +14,7 @@ export class LabourService {
 
   /**
    * Search registered worker profiles & user account by 10-digit mobile number.
+   * Collects all registered names across the entire database for this mobile number.
    */
   async searchByMobile(mobile: string) {
     const cleanMobile = mobile ? mobile.trim() : '';
@@ -35,7 +36,7 @@ export class LabourService {
       },
     });
 
-    const profiles = await this.prisma.labourWorker.findMany({
+    const dbProfiles = await this.prisma.labourWorker.findMany({
       where: {
         OR: [{ mobile: cleanMobile }, ...(user ? [{ userId: user.id }] : [])],
         deletedAt: null,
@@ -50,7 +51,45 @@ export class LabourService {
         defaultRate: true,
         defaultUnit: true,
       },
+      orderBy: { createdAt: 'desc' },
     });
+
+    const profileMap = new Map<string, any>();
+
+    // 1. If User account exists with a name, include it as primary account profile
+    if (user && user.name?.trim()) {
+      const key = user.name.trim().toLowerCase();
+      profileMap.set(key, {
+        id: `user-${user.id}`,
+        name: user.name.trim(),
+        relation: 'Head / Self',
+        mobile: user.mobile,
+        address: [user.village, user.district, user.state].filter(Boolean).join(', ') || null,
+        photoUrl: user.photoUrl,
+        defaultRate: null,
+        defaultUnit: 'Days',
+      });
+    }
+
+    // 2. Add all labourWorker profiles registered across the entire database
+    for (const p of dbProfiles) {
+      if (!p.name?.trim()) continue;
+      const key = p.name.trim().toLowerCase();
+      if (!profileMap.has(key)) {
+        profileMap.set(key, {
+          id: p.id,
+          name: p.name.trim(),
+          relation: p.relation || 'Member',
+          mobile: p.mobile || cleanMobile,
+          address: p.address,
+          photoUrl: p.photoUrl,
+          defaultRate: p.defaultRate,
+          defaultUnit: p.defaultUnit || 'Days',
+        });
+      }
+    }
+
+    const profiles = Array.from(profileMap.values());
 
     return {
       exists: !!user || profiles.length > 0,

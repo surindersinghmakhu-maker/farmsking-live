@@ -19,7 +19,7 @@ import { LabourWorker } from '@/src/types/api';
 import { formatInr } from '@/src/utils/formatInr';
 import { uploadPhoto } from '@/src/api/uploads.api';
 import { useAuth } from '@/src/store/auth-context';
-import { useCreateLabourWorker, useUpdateLabourWorker } from '@/src/hooks/useLabour';
+import { useCreateLabourWorker, useUpdateLabourWorker, useSearchWorkersByMobile } from '@/src/hooks/useLabour';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 
 const tap = () => {
@@ -83,6 +83,7 @@ export function LabourFamilySwitcher({
   const [name, setName] = useState('');
   const [relation, setRelation] = useState('Head / Self');
   const [mobile, setMobile] = useState('');
+  const { data: searchMobileResult, isLoading: isSearchingMobile } = useSearchWorkersByMobile(mobile);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [defaultRate, setDefaultRate] = useState('');
   const [defaultUnit, setDefaultUnit] = useState('Days');
@@ -503,6 +504,52 @@ export function LabourFamilySwitcher({
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
             >
+              {/* AUTO SEARCH SPINNER / AUTO SUGGESTED REGISTERED PROFILES FROM DB */}
+              {isSearchingMobile ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginVertical: 4 }}>
+                  <ActivityIndicator size="small" color="#16a34a" />
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#16a34a' }}>
+                    Searching database for registered names...
+                  </Text>
+                </View>
+              ) : searchMobileResult?.exists && searchMobileResult.profiles.length > 0 ? (
+                <View style={{ backgroundColor: '#f0fdf4', padding: 6, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#bbf7d0', marginBottom: 8 }}>
+                  <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#15803d', marginBottom: 3 }}>
+                    Registered Names in Database (Tap to select):
+                  </Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+                    {searchMobileResult.profiles.map((p: any) => (
+                      <TouchableOpacity
+                        key={p.id}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 4,
+                          backgroundColor: '#ffffff',
+                          paddingHorizontal: 8,
+                          paddingVertical: 3,
+                          borderRadius: RADIUS.pill,
+                          borderWidth: 1,
+                          borderColor: '#cbd5e1',
+                        }}
+                        onPress={() => {
+                          tap();
+                          setName(p.name);
+                          if (p.relation) setRelation(p.relation);
+                          if (p.photoUrl) setPhotoUrl(p.photoUrl);
+                          if (p.defaultRate) setDefaultRate(String(p.defaultRate));
+                          if (p.defaultUnit) setDefaultUnit(p.defaultUnit);
+                        }}
+                      >
+                        <Avatar uri={p.photoUrl} size={16} />
+                        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0f172a' }}>{p.name}</Text>
+                        {p.relation && <Text style={{ fontSize: 9.5, color: '#64748b' }}>({p.relation})</Text>}
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              ) : null}
+
               {/* TOP ROW: MEMBER NAME LABEL + (AVATAR PICKER + TEXTINPUT ALIGNED SIDE-BY-SIDE) */}
               <View style={{ marginBottom: 6 }}>
                 <Text style={styles.label}>Member Name *</Text>

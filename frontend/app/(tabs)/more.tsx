@@ -562,22 +562,6 @@ export default function MoreScreen() {
               </TouchableOpacity>
             ) : null}
 
-            <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => setContactModalMode('SUPPORT')}>
-              <View style={styles.rowIconBg}>
-                <Ionicons name="help-circle-outline" size={18} color={theme.primary} />
-              </View>
-              <Text style={styles.rowLabel}>Support</Text>
-              <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => setContactModalMode('CONTACT')}>
-              <View style={styles.rowIconBg}>
-                <Ionicons name="call-outline" size={18} color={theme.primary} />
-              </View>
-              <Text style={styles.rowLabel}>Contact Us</Text>
-              <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-            </TouchableOpacity>
-
             {/* Notifications & Weather Preferences Row */}
             <TouchableOpacity
               style={styles.row}
@@ -612,7 +596,7 @@ export default function MoreScreen() {
 
             {/* User Guides & PDF Manuals Row */}
             <TouchableOpacity
-              style={[styles.row, { borderBottomWidth: 0 }]}
+              style={styles.row}
               activeOpacity={0.7}
               onPress={() => setShowGuidesModal(true)}
             >
@@ -623,6 +607,24 @@ export default function MoreScreen() {
                 <Text style={styles.rowLabel}>📘 Download User Guides & PDFs</Text>
                 <Text style={styles.rowSubLabel}>Punjabi, English & Hindi PDF Manuals</Text>
               </View>
+              <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+            </TouchableOpacity>
+
+            {/* Support Row */}
+            <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => setContactModalMode('SUPPORT')}>
+              <View style={styles.rowIconBg}>
+                <Ionicons name="help-circle-outline" size={18} color={theme.primary} />
+              </View>
+              <Text style={styles.rowLabel}>Support</Text>
+              <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+            </TouchableOpacity>
+
+            {/* Contact Us Row (At the very bottom) */}
+            <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} activeOpacity={0.7} onPress={() => setContactModalMode('CONTACT')}>
+              <View style={styles.rowIconBg}>
+                <Ionicons name="call-outline" size={18} color={theme.primary} />
+              </View>
+              <Text style={styles.rowLabel}>Contact Us</Text>
               <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
             </TouchableOpacity>
           </View>

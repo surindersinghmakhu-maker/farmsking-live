@@ -17,7 +17,7 @@ const theme = RoleThemes.FARMER;
 
 const PLAN_RANK: Record<FarmerPlanType, number> = { FREE: 0, PRO: 1, SMART: 2, SUPER: 3, SILVER: 1, GOLD: 2, ROYAL: 3 };
 const PLAN_COLUMN_META: Record<FarmerPlanType, { label: string; emoji: string; color: string; price: string }> = {
-  FREE: { label: 'Free', emoji: '🌱', color: '#166534', price: '₹0' },
+  FREE: { label: 'Free Membership', emoji: '🌱', color: '#166534', price: '₹0' },
   PRO: { label: 'Basic', emoji: '⚡', color: '#0284c7', price: '₹199/yr' },
   SMART: { label: 'Pro', emoji: '👑', color: '#1d4ed8', price: '₹499/yr' },
   SUPER: { label: 'Super', emoji: '⭐', color: '#b45309', price: '₹999/30d' },

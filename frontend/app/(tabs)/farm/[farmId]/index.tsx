@@ -64,7 +64,7 @@ export default function FarmDetailScreen() {
     const totalCropsCount = myCrops?.length ?? 0;
 
     const planDisplayName =
-      effectivePlan === 'PRO' ? 'Lite Plan' : effectivePlan === 'SMART' ? 'Pro Plan' : effectivePlan === 'SUPER' ? 'Smart Plan' : 'Free Plan';
+      effectivePlan === 'PRO' ? 'Basic Membership' : effectivePlan === 'SMART' ? 'Pro Membership' : effectivePlan === 'SUPER' ? 'Super Membership' : 'Free Membership';
 
     if (maxTotalCrops != null && maxTotalCrops > 0 && totalCropsCount >= maxTotalCrops) {
       const message = `Your current plan (${planDisplayName}) allows adding a maximum of ${maxTotalCrops} crop(s). Please upgrade your plan to add more crops.`;

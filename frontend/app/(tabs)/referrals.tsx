@@ -22,7 +22,7 @@ export default function ReferralsScreen() {
 
   const handleShare = async () => {
     tap();
-    const link = network?.inviteUrl || `https://farmsking-1.vercel.app/register?ref=${kingId}`;
+    const link = network?.inviteUrl || `https://farmsking.tech/register?ref=${kingId}`;
     const message = `🌾 *Join FarmsKing Platform!* 🙏✨\n\nRegister using my link or Referral Code \`${kingId}\` to get Welcome Reward bonus in your wallet!\n👉 ${link}`;
     if (Platform.OS === 'web') {
       await Clipboard.setStringAsync(message);

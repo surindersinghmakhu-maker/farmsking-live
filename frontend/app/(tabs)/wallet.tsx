@@ -145,7 +145,7 @@ function ReferralInviteCard({ theme, kingId }: { theme: RoleTheme; kingId: strin
 
   const referralBonusAmount = appSettings?.referralSignupBonusAmount ?? 10;
   const welcomeRewardAmount = appSettings?.newUserSignupBonusAmount ?? 10;
-  const inviteLink = `https://farmsking-1.vercel.app/register?ref=${kingId}`;
+  const inviteLink = `https://farmsking.tech/register?ref=${kingId}`;
 
   const handleCopyCode = async () => {
     tap();
@@ -309,7 +309,7 @@ function ReferralInviteCard({ theme, kingId }: { theme: RoleTheme; kingId: strin
             <Text style={styles.refTitle}>🎁 Invite Friends & Earn Rewards</Text>
             <View style={styles.rewardBadge}>
               <Text style={styles.rewardBadgeText}>
-                You get ₹{referralBonusAmount} Referral Bonus & New user gets ₹{welcomeRewardAmount} Welcome Bonus!
+                You get ₹{referralBonusAmount} & New user gets ₹{welcomeRewardAmount} Welcome Bonus!
               </Text>
             </View>
           </View>

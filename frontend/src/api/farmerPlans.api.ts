@@ -288,4 +288,10 @@ export async function getFarmerPlanHistory(farmerId?: string): Promise<FarmerPla
   return data;
 }
 
+export async function activateTrial(): Promise<{ success: boolean; message: string; plan: FarmerPlanType; endDate: string }> {
+  const { data } = await apiClient.post<{ success: boolean; message: string; plan: FarmerPlanType; endDate: string }>('/farmer-plans/activate-trial');
+  return data;
+}
+
+
 

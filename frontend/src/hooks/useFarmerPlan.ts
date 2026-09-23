@@ -25,6 +25,7 @@ import {
   getAdminDocsList,
   downloadAdminDocContent,
   getFarmerPlanHistory,
+  activateTrial,
 } from '../api/farmerPlans.api';
 
 
@@ -52,7 +53,7 @@ export const PLAN_META: Record<FarmerPlanType, { label: string; emoji: string; c
     borderColor: '#bfdbfe',
   },
   SUPER: {
-    label: 'Super Advisor Plan',
+    label: 'All features Plan (FREE)',
     emoji: '⭐',
     color: '#b45309',
     bg: '#fef3c7',
@@ -250,6 +251,19 @@ export function useDownloadAdminDoc() {
     mutationFn: ({ docKey, lang }: { docKey: string; lang?: string }) => downloadAdminDocContent(docKey, lang || 'pa'),
   });
 }
+
+export function useActivateTrial() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: activateTrial,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['farmerPlan'] });
+      queryClient.invalidateQueries({ queryKey: ['farmerPlanHistory'] });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+    },
+  });
+}
+
 
 
 

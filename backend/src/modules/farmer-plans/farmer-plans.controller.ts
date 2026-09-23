@@ -179,6 +179,23 @@ export class FarmerPlansController {
     return this.farmerPlansService.grantDaysDirectly(dto);
   }
 
+  /** Farmer / Authenticated User: Activate free trial till 30/9/2026 with Super Advisor Plan */
+  @Roles(
+    Role.CUSTOMER,
+    Role.FARMER,
+    Role.GARDENER,
+    Role.ADVISOR,
+    Role.BUSINESS_PARTNER,
+    Role.ADMIN,
+    Role.SUPER_ADMIN,
+    Role.OPERATOR,
+  )
+  @Post('activate-trial')
+  activateTrial(@CurrentUser() user: AuthUser) {
+    return this.farmerPlansService.activateTrial(user);
+  }
+
+
   /** Any authenticated user role: list all available user guide documentation books */
   @Roles(
     Role.CUSTOMER,

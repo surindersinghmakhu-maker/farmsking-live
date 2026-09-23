@@ -809,6 +809,53 @@ export class FarmerPlansService implements OnModuleInit {
     return result;
   }
 
+  /** Self-serve or Admin: Activate trial till 30/9/2026 with Super Advisor Plan */
+  async activateTrial(user: AuthUser) {
+    const farmerId = user.id;
+    const now = new Date();
+    const targetEndDate = new Date('2026-09-30T23:59:59.999Z');
+
+    const updatedPlan = await this.prisma.farmerPlan.upsert({
+      where: { farmerId },
+      create: {
+        farmerId,
+        plan: FarmerSubscriptionPlan.SUPER,
+        startDate: now,
+        endDate: targetEndDate,
+        expiredAt: null,
+      },
+      update: {
+        plan: FarmerSubscriptionPlan.SUPER,
+        endDate: targetEndDate,
+        expiredAt: null,
+      },
+    });
+
+    const daysGranted = Math.max(1, Math.ceil((targetEndDate.getTime() - now.getTime()) / DAY_MS));
+
+    await this.prisma.farmerPlanHistory.create({
+      data: {
+        farmerId,
+        plan: FarmerSubscriptionPlan.SUPER,
+        status: FarmerPlanRecordStatus.ACTIVE,
+        daysGranted,
+        startDate: now,
+        endDate: targetEndDate,
+        notes: 'Trial activated till 30/9/2026 with Super Advisor Plan',
+      },
+    });
+
+    await this.ensurePremiumAdvisorHire(farmerId, targetEndDate);
+
+    return {
+      success: true,
+      message: 'you app trial is activated till 30/9/2026',
+      plan: updatedPlan.plan,
+      endDate: updatedPlan.endDate,
+    };
+  }
+
+
   /** Advisor / Admin: apply any generated coupon code directly to a target farmer. */
   async applyCouponToFarmerDirectly(user: AuthUser, dto: ApplyCouponToFarmerDto) {
     const { coupon, targetFarmerId } = await this.resolveCouponAndFarmer(user, dto.code, dto.farmerId);

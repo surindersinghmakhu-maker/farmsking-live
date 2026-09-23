@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Platform } from 'react-native';
+import { ActivityIndicator, View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Platform, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
@@ -10,7 +10,7 @@ import { MarketRatesCard } from '@/src/components/MarketRatesCard';
 import { FarmerPlanUpgradeModal } from '@/src/components/FarmerPlanUpgradeModal';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
-import { useFarmerPlan, useFarmerPlanPricing, PLAN_META, usePreviewFarmerPlanCoupon, useRedeemFarmerPlanCoupon } from '@/src/hooks/useFarmerPlan';
+import { useFarmerPlan, useFarmerPlanPricing, PLAN_META, usePreviewFarmerPlanCoupon, useRedeemFarmerPlanCoupon, useActivateTrial } from '@/src/hooks/useFarmerPlan';
 import { formatInr } from '@/src/utils/formatInr';
 import { useReminderAlertOnLoad } from '@/src/hooks/useNotifications';
 import { useGroupVoiceCall } from '@/src/hooks/useGroupVoiceCall';
@@ -37,7 +37,24 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
   const { user } = useAuth();
   const { plan, meta, startDate, endDate, isExpired, inGrace, daysUntilExpiry } = useFarmerPlan();
   const { data: pricing } = useFarmerPlanPricing();
+  const activateTrialMutation = useActivateTrial();
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+
+  const isTrialActive =
+    plan === 'SUPER' &&
+    Boolean(endDate && new Date(endDate).getTime() >= new Date('2026-09-30T00:00:00.000Z').getTime());
+
+  const handleActivateTrial = async () => {
+    tap();
+    try {
+      const res = await activateTrialMutation.mutateAsync();
+      Alert.alert('Trial Activated', res.message || 'you app trial is activated till 30/9/2026');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Failed to activate trial';
+      Alert.alert('Error', msg);
+    }
+  };
+
   const voiceCallHook = useGroupVoiceCall();
   const [showVoiceCallModal, setShowVoiceCallModal] = useState(false);
   useReminderAlertOnLoad(true);
@@ -141,7 +158,56 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         {/* Live Open-Meteo Weather Card */}
         <OpenMeteoWeatherCard />
 
+        {/* ⭐ Super Advisor Free Trial Activation Banner */}
+        <View style={[styles.trialBannerCard, premiumShadow('#b45309', 'sm')]}>
+          <View style={styles.trialBannerHeader}>
+            <View style={styles.trialIconContainer}>
+              <Ionicons name="sparkles" size={18} color="#d97706" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 4 }}>
+                <Text style={styles.trialBannerTitle}>⭐ All features Plan (FREE)</Text>
+                <View style={styles.trialBadgePill}>
+                  <Text style={styles.trialBadgePillText}>FREE TILL 30/9/2026</Text>
+                </View>
+              </View>
+              <Text style={styles.trialBannerSub}>
+                {isTrialActive
+                  ? 'Your All features Plan (FREE) trial is ACTIVE till 30/9/2026!'
+                  : 'Unlock all app features & dedicated advisor free till 30/9/2026'}
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={[
+              styles.activateTrialBtn,
+              (isTrialActive || activateTrialMutation.isPending) && styles.activateTrialBtnDisabled,
+            ]}
+            activeOpacity={0.8}
+            disabled={isTrialActive || activateTrialMutation.isPending}
+            onPress={handleActivateTrial}
+          >
+            {activateTrialMutation.isPending ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+            ) : (
+              <>
+                <Ionicons
+                  name={isTrialActive ? 'checkmark-circle' : 'flash'}
+                  size={15}
+                  color="#ffffff"
+                />
+                <Text style={styles.activateTrialBtnText}>
+                  {isTrialActive ? '✓ Trial Activated (Till 30/9/2026)' : '⚡ Activate Free Trial Now'}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+
+
         {/* Quick Accounts & Payments Action Grid */}
+
         <View style={styles.quickAccountsCard}>
           <Text style={styles.quickAccountsTitle}>📊 Quick Accounts & Payments</Text>
           <View style={styles.quickAccountsGrid}>
@@ -644,4 +710,75 @@ const styles = StyleSheet.create({
     fontFamily: FONT.bold,
     color: '#1e40af',
   },
+  trialBannerCard: {
+    backgroundColor: '#fffbeb',
+    borderRadius: RADIUS.lg,
+    padding: 12,
+    borderWidth: 1.5,
+    borderColor: '#fde68a',
+    gap: 10,
+  },
+  trialBannerHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  trialIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#fef3c7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#fcd34d',
+    marginTop: 2,
+  },
+  trialBannerTitle: {
+    fontSize: 13.5,
+    fontFamily: FONT.extraBold,
+    color: '#92400e',
+  },
+  trialBadgePill: {
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: RADIUS.xs,
+    borderWidth: 1,
+    borderColor: '#fcd34d',
+  },
+  trialBadgePillText: {
+    fontSize: 9,
+    fontFamily: FONT.extraBold,
+    color: '#b45309',
+  },
+  trialBannerSub: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#b45309',
+    marginTop: 2,
+    lineHeight: 15,
+  },
+  activateTrialBtn: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#d97706',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: RADIUS.md,
+  },
+  activateTrialBtnDisabled: {
+    backgroundColor: '#94a3b8',
+    opacity: 0.8,
+  },
+  activateTrialBtnText: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
 });
+
+

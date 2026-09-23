@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pan-India Perpetual Kisan Crop & Historical Mandi Intelligence Engine 🌾</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0284c7;
+      --bg: #0f172a;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 16px 10px;
+    }
+
+    .engine-container {
+      width: 100%;
+      max-width: 820px;
+    }
+
+    .main-engine-card {
+      background: #ffffff;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 2.5px solid #0284c7;
+      box-shadow: 0 15px 35px -5px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header-banner {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      padding: 18px;
+      color: #ffffff;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .header-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(2, 132, 199, 0.2);
+      border: 1px solid #38bdf8;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #38bdf8;
+      text-transform: uppercase;
+    }
+
+    .lang-pills {
+      display: flex;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 3px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      gap: 3px;
+    }
+
+    .lang-btn {
+      background: transparent;
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      padding: 4px 10px;
+      border-radius: 14px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .lang-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+    }
+
+    .app-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .app-sub {
+      font-size: 11.5px;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+
+    /* 🌟 2 MAIN TABS BAR */
+    .main-tabs-bar {
+      display: flex;
+      background: #0f172a;
+      padding: 6px;
+      gap: 6px;
+    }
+
+    .main-tab-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      background: #1e293b;
+      color: #94a3b8;
+      border: none;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    .main-tab-btn.active-a {
+      background: #d97706;
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4);
+    }
+
+    .main-tab-btn.active-b {
+      background: #16a34a;
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
+    }
+
+    /* ⚙️ TOP CONTROL DROPDOWNS BAR */
+    .top-controls-bar {
+      background: #f8fafc;
+      padding: 14px;
+      border-bottom: 1.5px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .dropdown-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .dropdown-label { font-size: 11px; font-weight: 800; color: #0369a1; }
+    .dropdown-label.green { color: #15803d; }
+    .dropdown-label.amber { color: #b45309; }
+
+    .styled-select {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1.5px solid #0284c7;
+      background: #ffffff;
+      color: #0369a1;
+      font-size: 12.5px;
+      font-weight: 800;
+      outline: none;
+      cursor: pointer;
+    }
+    .styled-select.green-select { border-color: #16a34a; color: #14532d; }
+    .styled-select.amber-select { border-color: #d97706; color: #78350f; }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    /* 📊 CARDS BODY AREA */
+    .body-area {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .crop-card {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 14px;
+      border: 1.5px solid;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    .crop-card.tab-a { border-color: #f59e0b; }
+    .crop-card.tab-b { border-color: #16a34a; }
+
+    /* 📅 DATES BOX HIGHLIGHTED AT TOP LEFT */
+    .dates-box-left {
+      background: #f0f9ff;
+      border-radius: 10px;
+      padding: 10px 12px;
+      border: 1.5px solid #0284c7;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .date-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+    }
+
+    .date-lbl { font-weight: 800; color: #0369a1; min-width: 150px; }
+    .date-val { font-weight: 800; color: #0f172a; }
+    .date-val.green { color: #15803d; }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .fest-name {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .surge-pill {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid;
+    }
+    .surge-pill.tab-a { background: #fef3c7; color: #b45309; border-color: #f59e0b; }
+    .surge-pill.tab-b { background: #dcfce7; color: #15803d; border-color: #16a34a; }
+
+    .crop-banner {
+      background: #f8fafc;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .crop-title { font-size: 13px; font-weight: 800; color: #15803d; }
+    .crop-states { font-size: 11px; font-weight: 600; color: #475569; }
+    .crop-lang-names { font-size: 10.5px; font-weight: 800; color: #0284c7; }
+
+    .direct-advice {
+      padding: 10px;
+      border-radius: 10px;
+      border: 1.5px solid;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .direct-advice.tab-a { background: #fffbe8; border-color: #f59e0b; color: #451a03; }
+    .direct-advice.tab-b { background: #f0fdf4; border-color: #16a34a; color: #064e3b; }
+
+    .advice-head { font-size: 11.5px; font-weight: 800; }
+    .advice-head.tab-a { color: #92400e; }
+    .advice-head.tab-b { color: #14532d; }
+
+    .advice-body { font-size: 12px; font-weight: 700; line-height: 1.5; }
+
+    /* 📊 5-YEAR HISTORICAL MANDI TREND BOX */
+    .mandi-trend-box {
+      background: #fdf2f8;
+      border-radius: 8px;
+      padding: 10px;
+      border: 1px solid #f472b6;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .mandi-trend-head { font-size: 11px; font-weight: 800; color: #9d174d; }
+    .mandi-trend-txt { font-size: 11px; font-weight: 600; color: #831843; line-height: 1.4; }
+
+    .whatsapp-btn {
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #ffffff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .whatsapp-btn.tab-a { background: #d97706; }
+    .whatsapp-btn.tab-b { background: #16a34a; }
+
+    .empty-state { text-align: center; padding: 20px; font-size: 12px; color: #94a3b8; font-weight: 600; }
+
+    @media (max-width: 600px) {
+      .grid-3 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="engine-container">
+    <div class="main-engine-card">
+      <div class="header-banner">
+        <div class="header-top-row">
+          <span class="brand-badge">⚡ KISAN CROP INTELLIGENCE</span>
+          <div class="lang-pills">
+            <button class="lang-btn active" id="btnPa" onclick="changeLang('pa')">ਪੰਜਾਬੀ</button>
+            <button class="lang-btn" id="btnHi" onclick="changeLang('hi')">हिंदी</button>
+            <button class="lang-btn" id="btnEn" onclick="changeLang('en')">ENG</button>
+          </div>
+        </div>
+        <h1 class="app-title" id="appTitleText">Farmer Crop Demand & 5-Year Mandi Record Engine</h1>
+        <p class="app-sub" id="appSubText">Dynamic crop advisory and 5-year historical mandi trends aligned with festival dates for 2x-3x profits.</p>
+      </div>
+
+      <!-- 🌟 2 MAIN TABS BAR -->
+      <div class="main-tabs-bar">
+        <button class="main-tab-btn active-a" id="tabBtnA" onclick="switchMainTab('DEMAND_PRICE')">
+          1. 📊 Mandi Demand & Price
+        </button>
+        <button class="main-tab-btn" id="tabBtnB" onclick="switchMainTab('SOWING_PLANNING')">
+          2. 🌱 Sowing & Planning
+        </button>
+      </div>
+
+      <!-- ⚙️ TOP CONTROL DROPDOWNS BAR -->
+      <div class="top-controls-bar">
+        <div class="grid-3">
+          <!-- 1. State/Region Dropdown -->
+          <div class="dropdown-group">
+            <label class="dropdown-label green" id="lblState">🗺️ Select State / Region:</label>
+            <select class="styled-select green-select" id="stateDropdown" onchange="changeStateRegion(this.value)">
+              <option value="ALL_INDIA" selected>📍 All India</option>
+              <option value="NORTH">📍 North (PB / HR / HP)</option>
+              <option value="UP_CENTRAL">📍 Central (UP / BR / MP)</option>
+              <option value="WEST">📍 West (MH / GJ / RJ)</option>
+              <option value="EAST">📍 East (WB / AS / OD)</option>
+              <option value="SOUTH">📍 South (TN / AP / KA)</option>
+            </select>
+          </div>
+
+          <!-- 2. Crop Select Dropdown -->
+          <div class="dropdown-group">
+            <label class="dropdown-label green" id="lblCrop">🌾 Select Crops:</label>
+            <select class="styled-select green-select" id="cropDropdown" onchange="changeCropFilter(this.value)">
+              <option value="MY_CROPS" selected>🌟 My Saved Crops</option>
+              <option value="ALL">🌐 All Crops</option>
+              <option value="VEG">🥬 Vegetables (Tomato/Potato)</option>
+              <option value="FLOWERS">🌸 Flowers (Year-Round)</option>
+              <option value="GRAINS_CASH">🌾 Grains & Commercial</option>
+              <option value="FRUITS">🍉 Fruits (Watermelon)</option>
+              <option value="FODDER">🌿 Green Fodder</option>
+            </select>
+          </div>
+
+          <!-- 3. Days Filter Dropdown -->
+          <div class="dropdown-group">
+            <label class="dropdown-label amber" id="lblDays">📅 Days Filter (Next Days):</label>
+            <select class="styled-select amber-select" id="daysDropdown" onchange="changeDays(this.value)">
+              <option value="30">📅 Next 30 Days</option>
+              <option value="60">📅 Next 60 Days</option>
+              <option value="90">📅 Next 90 Days</option>
+              <option value="120">📅 Next 120 Days</option>
+              <option value="999" selected>🌟 All Days</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 📊 BODY DISPLAY AREA -->
+      <div class="body-area" id="bodyArea">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const UI_TRANSLATIONS = {
+      en: {
+        appTitle: "Farmer Crop Demand & 5-Year Mandi Record Engine",
+        appSub: "Dynamic crop advisory and 5-year historical mandi trends aligned with festival dates for 2x-3x profits.",
+        tabA: "1. 📊 Mandi Demand & Price",
+        tabB: "2. 🌱 Sowing & Planning",
+        lblState: "🗺️ Select State / Region:",
+        lblCrop: "🌾 Select Crops:",
+        lblDays: "📅 Days Filter (Next Days):",
+        eventDateLbl: "📅 Festival / Demand Dates:",
+        sowDatesLbl: "⏱️ Sowing / Harvesting Window:",
+        adviceHeader: "💡 Direct Actionable Farmer Advice:",
+        mandiHeader: "📊 5-Year Historical Mandi Trend Record:",
+        cropLbl: "🌾 Crop:",
+        stateLbl: "📍 States:",
+        localLangLbl: "🌐 Regional Name:",
+        shareBtn: "📲 Share Dates & Advice on WhatsApp",
+        emptyText: "No crops match your selected filters. Please adjust State or Crop filters above!"
+      },
+      pa: {
+        appTitle: "ਭਾਰਤ ਕਿਸਾਨ ਫ਼ਸਲ ਮੰਗ & 5-ਸਾਲਾ ਮੰਡੀ ਰਿਕਾਰਡ ਇੰਜਣ",
+        appSub: "ਤਿਉਹਾਰੀ ਮੰਗ ਅਤੇ 5-ਸਾਲਾ ਮੰਡੀ ਰਿਕਾਰਡ ਅਨੁਸਾਰ 2x-3x ਰੇਟ ਲੈਣ ਲਈ ਬੀਜਾਈ ਤੇ ਵਢਾਈ ਸਲਾਹ।",
+        tabA: "1. 📊 ਮੰਡੀ ਮੰਗ & ਰੇਟ",
+        tabB: "2. 🌱 ਬੀਜਾਈ & ਯੋਜਨਾ",
+        lblState: "🗺️ ਰਾਜ / ਖੇਤਰ ਚੋਣ:",
+        lblCrop: "🌾 ਫ਼ਸਲ ਚੋਣ:",
+        lblDays: "📅 ਦਿਨਾਂ ਦਾ ਫਿਲਟਰ:",
+        eventDateLbl: "📅 ਤਿਉਹਾਰ / ਮੰਗ ਮਿਤੀ:",
+        sowDatesLbl: "⏱️ ਬੀਜਾਈ / ਵਢਾਈ ਮਿਤੀ:",
+        adviceHeader: "💡 ਕਿਸਾਨ ਲਈ ਸਿੱਧੀ ਸਲਾਹ:",
+        mandiHeader: "📊 5-ਸਾਲਾ ਮੰਡੀ ਰਿਕਾਰਡ & ਅਸਰ:",
+        cropLbl: "🌾 ਫ਼ਸਲ:",
+        stateLbl: "📍 ਰਾਜ:",
+        localLangLbl: "🌐 ਸਥਾਨਕ ਨਾਮ:",
+        shareBtn: "📲 ਵਟਸਐਪ 'ਤੇ ਮਿਤੀਆਂ ਅਤੇ ਸਲਾਹ ਸ਼ੇਅਰ ਕਰੋ",
+        emptyText: "ਇਸ ਟੈਬ ਵਿੱਚ ਕੋਈ ਫ਼ਸਲ ਮੇਲ ਨਹੀਂ ਖਾਂਦੀ। ਉੱਪਰ ਰਾਜ ਜਾਂ ਫ਼ਸਲ ਚੋਣ ਬਦਲੋ!"
+      },
+      hi: {
+        appTitle: "किसान फस�    // Unified Crop Dataset with English Base Properties and Full Translations
+    const CROP_INTELLIGENCE_DATA = [
+      {
+        cropName: {
+          en: "Flowers (🌸 Rose, Marigold, Jasmine, Tuberose, Gladiolus, Lotus - Year-Round Commercial Floriculture)",
+          pa: "ਫੁੱਲ (🌸 ਗੁਲਾਬ, ਗੈਂਦਾ, ਚਮੇਲੀ, ਰਜਨੀਗੰਧਾ, ਗਲੇਡੀਓਲਸ - ਸਾਰਾ ਸਾਲ commercial ਫੁੱਲ)",
+          hi: "फूल (🌸 गुलाब, गेंदा, चमेली, रजनीगंधा, ग्लेडियोलस - बारहमासी व्यावसायिक फूल)"
+        },
+        tabType: "DEMAND_PRICE",
+        category: "FLOWERS",
+        stateRegion: "ALL_INDIA",
+        statesListText: {
+          en: "Punjab, Maharashtra, UP, West Bengal, Tamil Nadu, Karnataka, MP",
+          pa: "ਪੰਜਾਬ, ਮਹਾਰਾਸ਼ਟਰ, ਉੱਤਰ ਪ੍ਰਦੇਸ਼, ਪੱਛਮੀ ਬੰਗਾਲ, ਤਾਮਿਲਨਾਡੂ, ਕਰਨਾਟਕ",
+          hi: "पंजाब, महाराष्ट्र, उत्तर प्रदेश, पश्चिम बंगाल, तमिलनाडु, कर्नाटक"
+        },
+        localLangName: "Flowers / ਫੁੱਲ (PB) / फूल (HI) / പൂക്കൾ (ML) / பூக்கள் (TN)",
+        daysToEvent: 37,
+        eventDate: {
+          en: "Oct 11 - Oct 19 (Sharad Navratri & Durga Puja)",
+          pa: "11 ਓਕਤੂਬਰ - 19 ਓਕਤੂਬਰ (ਨਵਰਾਤਰੇ & ਦੁਰਗਾ ਪੂਜਾ)",
+          hi: "11 अक्टूबर - 19 अक्टूबर (नवरात्रि व दुर्गा पूजा)"
+        },
+        sowWindow: { en: "⏳ Hold plucking 4 days", pa: "⏳ ਤੋੜਾਈ 4 ਦਿਨ ਰੋਕੋ", hi: "⏳ तुड़ाई 4 दिन रोकें" },
+        sowDates: { en: "Harvest Window: Oct 08 - Oct 18", pa: "ਤੋੜਾਈ ਮਿਤੀ: 08 ਓਕਤੂਬਰ - 18 ਓਕਤੂਬਰ", hi: "तुड़ाई तिथि: 08 अक्टूबर - 18 अक्टूबर" },
+        priceChange: { en: "▲ +200% Surge (3x Multiplier)", pa: "▲ +200% ਰੇਟ ਵਾਧਾ (3 ਗੁਣਾ ਮੰਡੀ ਰੇਟ)", hi: "▲ +200% रेट वृद्धि (3 गुना मंडी भाव)" },
+        festivalName: {
+          en: "🛕 Sharad Navratri, Durga Puja & Wedding Season",
+          pa: "🛕 ਸ਼ਾਰਦ ਨਵਰਾਤਰੇ, ਦੁਰਗਾ ਪੂਜਾ & ਵਿਆਹ ਸੀਜ਼ਨ",
+          hi: "🛕 शरद नवरात्रि, दुर्गा पूजा व शादी सीजन"
+        },
+        farmerAdvice: {
+          en: "🌹 Hold flower plucking for 4 days before Navratri & Durga Puja! Mandi demand for fresh loose & garland flowers commands +200% surge (3x normal rates).",
+          pa: "🌹 ਫੁੱਲ ਤੋੜਨ ਦਾ ਕੰਮ 4 ਦਿਨ ਰੋਕੋ! ਨਵਰਾਤਰੇ ਅਤੇ ਦੁਰਗਾ ਪੂਜਾ ਦੌਰਾਨ ਮੰਦਿਰਾਂ ਤੇ ਮੰਡਪਾਂ ਵਿੱਚ ਫੁੱਲਾਂ ਦੀ ਮੰਗ ਨਾਲ +200% ਵਾਧਾ (3 ਗੁਣਾ ਮੰਡੀ ਰੇਟ) ਮਿਲੇਗਾ।",
+          hi: "🌹 नवरात्रि व दुर्गा पूजा से 4 दिन पहले तुड़ाई रोकें! मंदिरों व सजावट के लिए फूलों के दाम में +200% की वृद्धि (3 गुना मंडी भाव) मिलेगी।"
+        },
+        historicalMandiTrend: {
+          en: "📊 5-Year Mandi Record (2021-2025): Flowers command +200% to +300% price surge during Navratri & Diwali compared to off-season rates.",
+          pa: "📊 ਪਿਛਲੇ 5 ਸਾਲਾਂ (2021-2025) ਦਾ ਰਿਕਾਰਡ: ਨਵਰਾਤਰੇ ਅਤੇ ਦਿਵਾਲੀ ਵੇਲੇ ਫੁੱਲਾਂ ਦੇ ਥੋਕ ਮੰਡੀ ਭਾਅ +200% ਤੋਂ +300% ਤੱਕ ਚੜ੍ਹੇ (ਆਮ ਦਿਨਾਂ ਤੋਂ 3-4 ਗੁਣਾ ਵੱਧ)।",
+          hi: "📊 पिछले 5 वर्षों का रिकॉर्ड: नवरात्रि व दिवाली पर फूलों के थोक दाम +200% से +300% बढ़े (सामान्य से 3-4 गुना अधिक)।"
+        }
+      },
+      {
+        cropName: { en: "Tomato (Solanum lycopersicum)", pa: "ਟਮਾਟਰ (Tomato)", hi: "टमाटर (Tomato)" },
+        tabType: "DEMAND_PRICE",
+        category: "VEG",
+        stateRegion: "SOUTH",
+        statesListText: {
+          en: "Andhra Pradesh, Karnataka, Maharashtra, Punjab, UP, MP",
+          pa: "ਆਂਧਰਾ ਪ੍ਰਦੇਸ਼, ਕਰਨਾਟਕ, ਮਹਾਰਾਸ਼ਟਰ, ਪੰਜਾਬ, ਉੱਤਰ ਪ੍ਰਦੇਸ਼, ਐਮ.ਪੀ.",
+          hi: "आंध्र प्रदेश, कर्नाटक, महाराष्ट्र, पंजाब, उत्तर प्रदेश, एमपी"
+        },
+        localLangName: "ਟਮਾਟਰ (PB) | टमाटर (HI) | टोमॅटो (MR) | தக்காளி (TN)",
+        daysToEvent: 37,
+        eventDate: {
+          en: "Oct 11 - Oct 19 (Navratri Festive Kitchens)",
+          pa: "11 ਓਕਤੂਬਰ - 19 ਓਕਤੂਬਰ (ਨਵਰਾਤਰੇ & ਪੂਜਾ ਸੀਜ਼ਨ)",
+          hi: "11 अक्टूबर - 19 अक्टूबर (नवरात्रि व पूजा सीजन)"
+        },
+        sowWindow: { en: "⏳ Time harvest with market surge", pa: "⏳ ਤੋੜਾਈ ਰੇਟ ਅਨੁਸਾਰ ਕਰੋ", hi: "⏳ तुड़ाई रेट अनुसार करें" },
+        sowDates: { en: "Harvest Window: Oct 09 - Oct 25", pa: "ਤੋੜਾਈ ਮਿਤੀ: 09 ਓਕਤੂਬਰ - 25 ਓਕਤੂਬਰ", hi: "तुड़ाई तिथि: 09 अक्टूबर - 25 अक्टूबर" },
+        priceChange: { en: "▲ +45% Mandi Surge", pa: "▲ +45% ਮੰਡੀ ਮੰਗ ਵਾਧਾ", hi: "▲ +45% मंडी मांग वृद्धि" },
+        festivalName: { en: "🛕 Navratri & Dussehra Festive Kitchens", pa: "🛕 ਨਵਰਾਤਰੇ & ਦੁਸ਼ਹਿਰਾ ਤਿਉਹਾਰੀ ਰਸੋਈ", hi: "🛕 नवरात्रि व दशहरा त्योहारी रसोई" },
+        farmerAdvice: {
+          en: "🍅 Start tomato harvesting 2 days before Navratri. High demand for festive kitchens and wedding caterings drives +45% price surge.",
+          pa: "🍅 ਟਮਾਟਰ ਦੀ ਤੋੜਾਈ ਨਵਰਾਤਰਿਆਂ ਤੋਂ 2 ਦਿਨ ਪਹਿਲਾਂ ਸ਼ੁਰੂ ਕਰੋ। ਤਿਉਹਾਰੀ ਰਸੋਈਆਂ ਅਤੇ ਵਿਆਹਾਂ ਕਾਰਨ ਟਮਾਟਰ +45% ਮੰਡੀ ਵਾਧੇ ਨਾਲ ਵਿਕੇਗਾ।",
+          hi: "🍅 टमाटर की तुड़ाई नवरात्रि से 2 दिन पहले शुरू करें। त्योहारी रसोई व शादियों में टमाटर +45% मंडी तेजी से बिकेगा।"
+        },
+        historicalMandiTrend: {
+          en: "📊 5-Year Mandi Trend: Festival & wedding catering in Oct-Nov consistently drives +45% to +60% price surge for firm red tomatoes.",
+          pa: "📊 ਪਿਛਲੇ 5 ਸਾਲਾਂ ਦਾ ਰਿਕਾਰਡ: ਅਕਤੂਬਰ-ਨਵੰਬਰ ਤਿਉਹਾਰੀ ਅਤੇ ਵਿਆਹ ਸੀਜ਼ਨ ਵਿੱਚ ਮੰਡੀਆਂ ਵਿੱਚ ਟਮਾਟਰ ਦੀ ਮੰਗ +45% ਵਧਦੀ ਆਈ ਹੈ।",
+          hi: "📊 पिछले 5 वर्षों का रिकॉर्ड: अक्टू-नवं त्योहारों व शादियों में टमाटर +45% तेजी से बिका।"
+        }
+      },
+      {
+        cropName: { en: "Potato (Solanum tuberosum)", pa: "ਆਲੂ (Potato)", hi: "आलू (Potato)" },
+        tabType: "DEMAND_PRICE",
+        category: "VEG",
+        stateRegion: "UP_CENTRAL",
+        statesListText: {
+          en: "Uttar Pradesh, West Bengal, Punjab, Bihar, MP, Gujarat",
+          pa: "ਉੱਤਰ ਪ੍ਰਦੇਸ਼, ਪੱਛਮੀ ਬੰਗਾਲ, ਪੰਜਾਬ, ਬਿਹਾਰ, ਮੱਧ ਪ੍ਰਦੇਸ਼, ਗੁਜਰਾਤ",
+          hi: "उत्तर प्रदेश, पश्चिम बंगाल, पंजाब, बिहार, मध्य प्रदेश, गुजरात"
+        },
+        localLangName: "ਆਲੂ (PB) | आलू (HI) | आलू (MR) | உருளைக்கிழங்கு (TN)",
+        daysToEvent: 37,
+        eventDate: { en: "Oct 11 - Oct 19 (Sharad Navratri Fasting)", pa: "11 ਓਕਤੂਬਰ - 19 ਓਕਤੂਬਰ (ਸ਼ਾਰਦ ਨਵਰਾਤਰੇ)", hi: "11 अक्टूबर - 19 अक्टूबर (शरद नवरात्रि)" },
+        sowWindow: { en: "⏳ Release cold storage Oct 08", pa: "⏳ ਕੋਲਡ ਸਟੋਰਜ਼ ਤੋਂ ਨਿਕਾਸੀ 08 ਓਕਤੂਬਰ ਨੂੰ ਕਰੋ", hi: "⏳ कोल्ड स्टोर से निकासी 08 अक्टूबर को करें" },
+        sowDates: { en: "Dispatch Window: Oct 08 - Oct 18", pa: "ਵਿਕਰੀ ਮਿਤੀ: 08 ਓਕਤੂਬਰ - 18 ਓਕਤੂਬਰ", hi: "बिक्री तिथि: 08 अक्टूबर - 18 अक्टूबर" },
+        priceChange: { en: "▲ +30% Fasting Surge", pa: "▲ +30% ਫਲਾਹਾਰੀ ਬਰਤ ਮੰਗ", hi: "▲ +30% फलाहारी व्रत मांग" },
+        festivalName: { en: "🛕 Sharad Navratri Fasting Demand", pa: "🛕 ਸ਼ਾਰਦ ਨਵਰਾਤਰੇ ਫਲਾਹਾਰੀ ਬਰਤ", hi: "🛕 शरद नवरात्रि फलाहारी व्रत" },
+        farmerAdvice: {
+          en: "🥔 Release cold storage potatoes on Oct 08. Absence of onion/garlic during Navratri fasting pushes potato demand to +30% surge.",
+          pa: "🥔 ਆਲੂ ਕੋਲਡ ਸਟੋਰ ਤੋਂ 08 ਓਕਤੂਬਰ ਨੂੰ ਮੰਡੀ ਲਿਆਓ! ਨਵਰਾਤਰਿਆਂ ਵਿੱਚ ਪਿਆਜ਼-ਲਸਣ ਬੰਦ ਹੋਣ ਕਰਕੇ ਆਲੂ ਫਲਾਹਾਰ ਮੰਗ +30% ਵਧੇਗੀ।",
+          hi: "🥔 आलू कोल्ड स्टोर से 08 अक्टूबर को मंडी लाएं! नवरात्रि में लहसुन-प्याज बंद होने से आलू +30% तेजी देगा।"
+        },
+        historicalMandiTrend: {
+          en: "📊 5-Year Mandi Trend: Fasting demand pushes cold storage potato prices up by +30% to +35% every Navratri in Agra & Jalandhar.",
+          pa: "📊 ਪਿਛਲੇ 5 ਸਾਲਾਂ ਦਾ ਰਿਕਾਰਡ: ਨਵਰਾਤਰਿਆਂ ਦੇ ਬਰਤਾਂ ਵਿੱਚ ਆਲੂ ਫਲਾਹਾਰ ਦੀ ਮੰਗ ਨਾਲ ਆਗਰਾ ਤੇ ਜਲੰਧਰ ਕੋਲਡ ਸਟੋਰ ਆਲੂ ਦਾ ਭਾਅ +30-35% ਵਧਦਾ ਆਇਆ ਹੈ।",
+          hi: "📊 पिछले 5 वर्षों का रिकॉर्ड: नवरात्रि फलाहार से आगरा व जालंधर मंडी में आलू 30-35% तेज बिकता है।"
+        }
+      },
+      {
+        cropName: { en: "Onion (Allium cepa)", pa: "ਪਿਆਜ਼ (Onion)", hi: "प्याज (Onion)" },
+        tabType: "DEMAND_PRICE",
+        category: "VEG",
+        stateRegion: "WEST",
+        statesListText: {
+          en: "Maharashtra (Nashik), Gujarat, MP, Rajasthan, Punjab",
+          pa: "ਮਹਾਰਾਸ਼ਟਰ (ਨਾਸਿਕ), ਗੁਜਰਾਤ, ਮੱਧ ਪ੍ਰਦੇਸ਼, ਰਾਜਸਥਾਨ, ਪੰਜਾਬ",
+          hi: "महाराष्ट्र (नासिक), गुजरात, मध्य प्रदेश, राजस्थान, पंजाब"
+        },
+        localLangName: "ਪਿਆਜ਼ (PB) | प्याज (HI) | कांदा (MR) | পেঁয়াজ (BN)",
+        daysToEvent: 63,
+        eventDate: { en: "Nov 06 - Nov 25 (Diwali & Wedding Season)", pa: "06 ਨਵੰਬਰ - 25 ਨਵੰਬਰ (ਦਿਵਾਲੀ & ਵਿਆਹ ਸੀਜ਼ਨ)", hi: "06 नवंबर - 25 नवंबर (दिवाली व शादी सीजन)" },
+        sowWindow: { en: "⏳ Sell post-Navratri", pa: "⏳ ਨਵਰਾਤਰੇ ਤੋਂ ਬਾਅਦ ਵੇਚੋ", hi: "⏳ नवरात्रि के बाद बेचें" },
+        sowDates: { en: "Dispatch Window: Oct 21 - Nov 15", pa: "ਵਿਕਰੀ ਮਿਤੀ: 21 ਓਕਤੂਬਰ - 15 ਨਵੰਬਰ", hi: "बिक्री तिथि: 21 अक्टूबर - 15 नवंबर" },
+        priceChange: { en: "▲ +50% Festive Demand", pa: "▲ +50% ਦਿਵਾਲੀ ਮੰਗ ਵਾਧਾ", hi: "▲ +50% दिवाली मांग वृद्धि" },
+        festivalName: { en: "🪔 Diwali & Winter Marriage Caterings", pa: "🪔 ਦਿਵਾਲੀ & ਸਰਦੀਆਂ ਦੇ ਸ਼ਾਹੀ ਵਿਆਹ", hi: "🪔 दिवाली व सर्दियों की शाही शादियां" },
+        farmerAdvice: {
+          en: "🧅 Bring onions to market starting Oct 21 right after Navratri. Diwali and wedding caterings drive prices to +50% surge.",
+          pa: "🧅 ਨਵਰਾਤਰੇ ਖਤਮ ਹੁੰਦੇ ਹੀ 21 ਓਕਤੂਬਰ ਤੋਂ ਪਿਆਜ਼ ਮੰਡੀ ਲਿਆਓ! ਦਿਵਾਲੀ ਅਤੇ ਵਿਆਹਾਂ ਵਿੱਚ ਪਿਆਜ਼ ਦਾ ਭਾਅ +50% ਵਾਧੇ ਨਾਲ ਚੜ੍ਹੇਗਾ।",
+          hi: "🧅 नवरात्रि खत्म होते ही 21 अक्टूबर से प्याज मंडी लाएं! दिवाली व शादियों में प्याज +50% तेजी से चढ़ेगा।"
+        },
+        historicalMandiTrend: {
+          en: "📊 5-Year Mandi Trend: Post-Navratri & Diwali wedding catering drives Nashik onion rates to +50% surge.",
+          pa: "📊 ਪਿਛਲੇ 5 ਸਾਲਾਂ ਦਾ ਰਿਕਾਰਡ: ਨਵਰਾਤਰਿਆਂ ਤੋਂ ਬਾਅਦ ਦਿਵਾਲੀ ਅਤੇ ਵਿਆਹਾਂ ਵੇਲੇ ਨਾਸਿਕ ਮੰਡੀ ਵਿੱਚ ਪਿਆਜ਼ ਦਾ ਥੋਕ ਰੇਟ +50% ਵਧਿਆ।",
+          hi: "📊 पिछले 5 वर्षों का रिकॉर्ड: नवरात्रि के बाद दिवाली व शादी सीजन में प्याज +50% तेज बिका।"
+        }
+      },
+      {
+        cropName: { en: "Green Chili & Garlic", pa: "ਹਰੀ ਮਿਰਚ & ਲਸਣ (Chili & Garlic)", hi: "हरी मिर्च व लहसुन (Chili & Garlic)" },
+        tabType: "DEMAND_PRICE",
+        category: "VEG",
+        stateRegion: "ALL_INDIA",
+        statesListText: {
+          en: "Madhya Pradesh, Rajasthan, AP, Punjab, Maharashtra",
+          pa: "ਮੱਧ ਪ੍ਰਦੇਸ਼, ਰਾਜਸਥਾਨ, ਆਂਧਰਾ ਪ੍ਰਦੇਸ਼, ਪੰਜਾਬ, ਮਹਾਰਾਸ਼ਟਰ",
+          hi: "मध्य प्रदेश, राजस्थान, आंध्र प्रदेश, पंजाब, महाराष्ट्र"
+        },
+        localLangName: "ਹਰੀ ਮਿਰਚ/ਲਸਣ (PB) | मिर्च/लहसुन (HI) | लसूण/मिरची (MR)",
+        daysToEvent: 63,
+        eventDate: { en: "Nov 06 - Nov 30 (Diwali & Pickle Season)", pa: "06 ਨਵੰਬਰ - 30 ਨਵੰਬਰ (ਦਿਵਾਲੀ & ਅਚਾਰ)", hi: "06 नवंबर - 30 नवंबर (दिवाली व अचार)" },
+        sowWindow: { en: "⏳ Harvest from Oct 25", pa: "⏳ 25 ਓਕਤੂਬਰ ਤੋਂ ਵੇਚੋ", hi: "⏳ 25 अक्टूबर से बेचें" },
+        sowDates: { en: "Harvest Window: Oct 25 - Nov 15", pa: "ਵਿਕਰੀ ਮਿਤੀ: 25 ਓਕਤੂਬਰ - 15 ਨਵੰਬਰ", hi: "बिक्री तिथि: 25 अक्टूबर - 15 नवंबर" },
+        priceChange: { en: "▲ +40% Spice Demand", pa: "▲ +40% ਮਸਾਲਾ ਮੰਗ ਵਾਧਾ", hi: "▲ +40% मसाला मांग वृद्धि" },
+        festivalName: { en: "🪔 Diwali & Chhath Puja Spice Season", pa: "🪔 ਦਿਵਾਲੀ & ਛੱਠ ਪੂਜਾ ਅਚਾਰ ਸੀਜ਼ਨ", hi: "🪔 दिवाली व छठ पूजा अचार सीजन" },
+        farmerAdvice: {
+          en: "🌶️ 🧄 Start harvesting Garlic & Chili on Oct 25. Festive spice usage drives garlic and green chili to +40% price surge.",
+          pa: "🌶️ 🧄 ਲਸਣ ਤੇ ਮਿਰਚ ਦੀ ਤੋੜਾਈ 25 ਓਕਤੂਬਰ ਤੋਂ ਸ਼ੁਰੂ ਕਰੋ। ਦਿਵਾਲੀ ਤੇ ਛੱਠ ਪੂਜਾ ਲਈ ਲਸਣ ਅਤੇ ਹਰੀ ਮਿਰਚ +40% ਵਾਧੇ ਨਾਲ ਵਿਕੇਗੀ।",
+          hi: "🌶️ 🧄 लहसुन व मिर्च की तुड़ाई 25 अक्टूबर से करें। दिवाली व छठ पूजा हेतु लहसुन व हरी मिर्च +40% तेजी से बिकेगी।"
+        },
+        historicalMandiTrend: {
+          en: "📊 5-Year Mandi Trend: Mandsaur & Neemuch spice mandis see garlic command +40% premium during Nov festival season.",
+          pa: "📊 ਪਿਛਲੇ 5 ਸਾਲਾਂ ਦਾ ਰਿਕਾਰਡ: ਨੀਮਚ ਤੇ ਮੰਦਸੌਰ ਮਸਾਲਾ ਮੰਡੀਆਂ ਵਿੱਚ ਦਿਵਾਲੀ-ਛੱਠ ਪੂਜਾ ਵੇਲੇ ਲਸਣ ਤੇ ਹਰੀ ਮਿਰਚ +40% ਤੇਜ਼ ਵਿਕਦੀ ਆਈ ਹੈ।",
+          hi: "📊 पिछले 5 वर्षों का रिकॉर्ड: नीमच व मंदसौर मंडी में दिवाली-छठ पर लहसुन व मिर्च +40% तेज बिकता है।"
+        }
+      },
+      {
+        cropName: { en: "Cotton (Gossypium)", pa: "ਨਰਮਾ & ਕਪਾਹ (Cotton)", hi: "कपास (Cotton)" },
+        tabType: "SOWING_PLANNING",
+        category: "GRAINS_CASH",
+        stateRegion: "NORTH",
+        statesListText: {
+          en: "Punjab, Haryana, Rajasthan, Gujarat, Maharashtra, Telangana",
+          pa: "ਪੰਜਾਬ, ਹਰਿਆਣਾ, ਰਾਜਸਥਾਨ, ਗੁਜਰਾਤ, ਮਹਾਰਾਸ਼ਟਰ, ਤੇਲੰਗਾਨਾ",
+          hi: "पंजाब, हरियाणा, राजस्थान, गुजरात, महाराष्ट्र, तेलंगाना"
+        },
+        localLangName: "ਨਰਮਾ/ਕਪਾਹ (PB) | कपास (HI) | कापूस (MR) | பருத்தி (TN)",
+        daysToEvent: 63,
+        eventDate: { en: "Nov 01 - Dec 31 (Textile Mill Procurement)", pa: "01 ਨਵੰਬਰ - 31 ਦਸੰਬਰ (ਟੈਕਸਟਾਈਲ ਮੰਡੀ)", hi: "01 नवंबर - 31 दिसंबर (टेक्सटाइल मंडी)" },
+        sowWindow: { en: "🌱 Harvest clean grade", pa: "🌱 ਚੁਣਾਈ ਮਾਰਕਿਟ ਰੇਟ ਅਨੁਸਾਰ", hi: "🌱 चुनाई मार्केट रेट अनुसार" },
+        sowDates: { en: "Picking Window: Oct 15 - Nov 30", pa: "ਚੁਣਾਈ ਮਿਤੀ: 15 ਓਕਤੂਬਰ - 30 ਨਵੰਬਰ", hi: "चुनाई तिथि: 15 अक्टूबर - 30 नवंबर" },
+        priceChange: { en: "▲ +35% Mill Surge", pa: "▲ +35% ਮਿਲ ਖਰੀਦ ਵਾਧਾ", hi: "▲ +35% मिल खरीद वृद्धि" },
+        festivalName: { en: "🪔 Post-Diwali Mill Procurement Season", pa: "🪔 ਦਿਵਾਲੀ ਮਿਲ ਖਰੀਦ ਸੀਜ਼ਨ", hi: "🪔 दिवाली मिल खरीद सीजन" },
+        farmerAdvice: {
+          en: "☁️ Perform clean pink bollworm-free picking in late Oct. Post-Diwali textile mill demand offers +35% rate surge above MSP.",
+          pa: "☁️ ਨਰਮੇ ਦੀ ਪਹਿਲੀ ਚੁਣਾਈ ਅਕਤੂਬਰ ਦੇ ਆਖਰੀ ਹਫ਼ਤੇ ਸਾਫ਼ ਕਰੋ। ਦਿਵਾਲੀ ਤੋਂ ਬਾਅਦ ਮਿੱਲਾਂ ਵੱਲੋਂ MSP ਤੋਂ +35% ਵੱਧ ਭਾਅ ਮਿਲੇਗਾ।",
+          hi: "☁️ कपास की पहली चुनाई अक्टूबर अंतिम सप्ताह में करें। दिवाली के बाद मिलों से MSP से +35% अधिक भाव मिलेगा।"
+        },
+        historicalMandiTrend: {
+          en: "📊 5-Year Mandi Trend: Post-Diwali mill procurement drives Abohar & Sirsa cotton prices +35% above MSP.",
+          pa: "📊 ਪਿਛਲੇ 5 ਸਾਲਾਂ ਦਾ ਰਿਕਾਰਡ: ਦਿਵਾਲੀ ਤੋਂ ਬਾਅਦ ਟੈਕਸਟਾਈਲ ਮਿੱਲਾਂ ਵੱਲੋਂ ਖਰੀਦ ਤੇਜ਼ ਹੋਣ 'ਤੇ ਅਬੋਹਰ ਤੇ ਸਿਰਸਾ ਵਿੱਚ ਨਰਮਾ MSP ਤੋਂ +20-35% ਉੱਪਰ ਵਿਕਦਾ ਹੈ।",
+          hi: "📊 पिछले 5 वर्षों का रिकॉर्ड: दिवाली बाद मिल खरीद से कपास MSP से +20-35% ऊपर बिकता है।"
+        }
+      },
+      {
+        cropName: { en: "Mustard (Brassica juncea)", pa: "ਸਰ੍ਹੋਂ / ਰਾਇਆ (Mustard)", hi: "सरसों (Mustard)" },
+        tabType: "SOWING_PLANNING",
+        category: "GRAINS_CASH",
+        stateRegion: "NORTH",
+        statesListText: {
+          en: "Rajasthan, Haryana, Punjab, Uttar Pradesh, MP",
+          pa: "ਰਾਜਸਥਾਨ, ਹਰਿਆਣਾ, ਪੰਜਾਬ, ਉੱਤਰ ਪ੍ਰਦੇਸ਼, ਮੱਧ ਪ੍ਰਦੇਸ਼",
+          hi: "राजस्थान, हरियाणा, पंजाब, उत्तर प्रदेश, मध्य प्रदेश"
+        },
+        localLangName: "ਸਰ੍ਹੋਂ (PB) | सरसों (HI) | मोहरी (MR) | கடுகு (TN)",
+        daysToEvent: 45,
+        eventDate: { en: "Oct 01 - Oct 25 (Ideal Sowing Period)", pa: "01 ਓਕਤੂਬਰ - 25 ਓਕਤੂਬਰ (ਬੀਜਾਈ ਸਮਾਂ)", hi: "01 अक्टूबर - 25 अक्टूबर (बुवाई समय)" },
+        sowWindow: { en: "🌱 Sow Today", pa: "🌱 ਅੱਜ ਹੀ ਬੀਜੋ (Sow Today)", hi: "🌱 आज ही बोएं (Sow Today)" },
+        sowDates: { en: "Sowing Window: Oct 01 - Oct 20", pa: "ਬੀਜਾਈ ਮਿਤੀ: 01 ਓਕਤੂਬਰ - 20 ਓਕਤੂਬਰ", hi: "बुवाई तिथि: 01 अक्टूबर - 20 अक्टूबर" },
+        priceChange: { en: "▲ +25% Mandi Rate Gain", pa: "▲ +25% ਮੰਡੀ ਰੇਟ ਫਾਇਦਾ", hi: "▲ +25% मंडी रेट फायदा" },
+        festivalName: { en: "❄️ Winter Oil Surge & Makar Sankranti", pa: "❄️ ਸਰਦੀਆਂ ਦੀ ਤੇਲ ਮੰਗ & ਮਕਰ ਸੰਕ੍ਰਾਂਤੀ", hi: "❄️ सर्दियों की तेल मांग व मकर संक्रांति" },
+        farmerAdvice: {
+          en: "🌱 Sow mustard between Oct 01-20. Early sowing prevents aphid attacks and commands peak March rate of +25% higher returns.",
+          pa: "🌱 ਸਰ੍ਹੋਂ ਦੀ ਬੀਜਾਈ 01 ਤੋਂ 20 ਓਕਤੂਬਰ ਦਰਮਿਆਨ ਪੂਰੀ ਕਰੋ। ਸਹੀ ਸਮੇਂ ਬੀਜਣ ਨਾਲ ਚੇਪਾ ਨਹੀਂ ਲੱਗਦਾ ਅਤੇ ਮਾਰਚ ਮੰਡੀ ਵਿੱਚ +25% ਰੇਟ ਮਿਲਦਾ ਹੈ।",
+          hi: "🌱 सरसों की बुवाई 01 से 20 अक्टूबर के बीच पूरी करें। सही समय बुवाई से चेपा नहीं लगता और मार्च मंडी में +25% लाभ मिलता है।"
+        },
+        historicalMandiTrend: {
+          en: "📊 5-Year Mandi Trend: Early Oct sown mustard with 42% oil content fetches +25% higher returns in Bharatpur & Hisar mandis.",
+          pa: "📊 ਪਿਛਲੇ 5 ਸਾਲਾਂ ਦਾ ਰਿਕਾਰਡ: 01-20 ਅਕਤੂਬਰ ਬੀਜੀ ਸਰ੍ਹੋਂ ਮਾਰਚ ਵਿੱਚ ਚੇਪਾ ਰਹਿਤ 42% ਤੇਲ ਨਾਲ +25% ਦਾ ਚੋਟੀ ਦਾ ਭਾਅ ਦਿੰਦੀ ਹੈ।",
+          hi: "📊 पिछले 5 वर्षों का रिकॉर्ड: अक्टू मध्य बुवाई वाली सरसों मार्च में +25% अधिक भाव देती है।"
+        }
+      },
+      {
+        cropName: { en: "Paddy & Basmati Rice", pa: "ਝੋਨਾ & ਬਾਸਮਤੀ (Paddy & Basmati)", hi: "धान व बासमती (Paddy & Basmati)" },
+        tabType: "SOWING_PLANNING",
+        category: "GRAINS_CASH",
+        stateRegion: "ALL_INDIA",
+        statesListText: {
+          en: "Punjab, Haryana, West Bengal, UP, AP, Odisha, Tamil Nadu",
+          pa: "ਪੰਜਾਬ, ਹਰਿਆਣਾ, ਪੱਛਮੀ ਬੰਗਾਲ, ਉੱਤਰ ਪ੍ਰਦੇਸ਼, ਆਂਧਰਾ, ਓਡੀਸ਼ਾ, ਤਾਮਿਲਨਾਡੂ",
+          hi: "पंजाब, हरियाणा, पश्चिम बंगाल, उत्तर प्रदेश, आंध्र, ओडिशा, तमिलनाडु"
+        },
+        localLangName: "ਝੋਨਾ/ਚਾਵਲ (PB) | धान/चावल (HI) | भात (MR) | அரிசி (TN)",
+        daysToEvent: 50,
+        eventDate: { en: "Oct 01 - Nov 15 (Govt Procurement & Basmati)", pa: "01 ਓਕਤੂਬਰ - 15 ਨਵੰਬਰ (ਸਰਕਾਰੀ ਖਰੀਦ)", hi: "01 अक्टूबर - 15 नवंबर (सरकारी खरीद)" },
+        sowWindow: { en: "🌾 Bring below 17% moisture", pa: "🌾 ਨਮੀ ਘਟਾ ਕੇ ਮੰਡੀ ਲਿਆਓ", hi: "🌾 नमी घटाकर मंडी लाएं" },
+        sowDates: { en: "Harvest Window: Oct 01 - Nov 10", pa: "ਵਢਾਈ ਮਿਤੀ: 01 ਓਕਤੂਬਰ - 10 ਨਵੰਬਰ", hi: "कटाई तिथि: 01 अक्टूबर - 10 नवंबर" },
+        priceChange: { en: "▲ +40% Export Surge", pa: "▲ +40% ਐਕਸਪੋਰਟ ਮੰਗ", hi: "▲ +40% एक्सपोर्ट मांग" },
+        festivalName: { en: "🪔 Diwali Bhog & Pongal Procurement", pa: "🪔 ਦਿਵਾਲੀ ਭੋਗ & ਪੋਂਗਲ ਖਰੀਦ", hi: "🪔 दिवाली भोग व पोंगल खरीद" },
+        farmerAdvice: {
+          en: "🌾 Harvest Paddy below 17% moisture. Bring Basmati 1121/1509 in 2nd week of Oct for export buyer rates of +40% premium.",
+          pa: "🌾 ਝੋਨੇ ਦੀ ਵਢਾਈ 17% ਤੋਂ ਘੱਟ ਨਮੀ ’ਤੇ ਕਰੋ! ਬਾਸਮਤੀ 1121 ਤੇ 1509 ਨੂੰ ਅਕਤੂਬਰ ਦੇ ਦੂਜੇ ਹਫ਼ਤੇ ਮੰਡੀ ਲਿਆਓ ਤਾਂ ਜੋ +40% ਦਾ ਐਕਸਪੋਰਟ ਭਾਅ ਮਿਲ ਸਕੇ।",
+          hi: "🌾 धान की कटाई 17% से कम नमी पर करें! बासमती 1121 व 1509 को अक्टूबर दूसरे सप्ताह लाएं ताकि +40% निर्यात भाव मिले।"
+        },
+        historicalMandiTrend: {
+          en: "📊 5-Year Mandi Trend: Basmati 1121/1509 commands +40% premium export rates in Karnal & Tarn Taran mandis.",
+          pa: "📊 ਪਿਛਲੇ 5 ਸਾਲਾਂ ਦਾ ਰਿਕਾਰਡ: ਅਕਤੂਬਰ ਦੇ ਦੂਜੇ ਹਫ਼ਤੇ ਮੰਡੀ ਆਈ ਬਾਸਮਤੀ 1121 ਤੇ 1509 +40% ਦੇ ਐਕਸਪੋਰਟ ਭਾਅ ਵਿਕਦੀ ਹੈ।",
+          hi: "📊 पिछले 5 वर्षों का रिकॉर्ड: अक्टू दूसरे सप्ताह की बासमती +40% निर्यात रेट देती है।"
+        }
+      },
+      {
+        cropName: { en: "Wheat (Triticum aestivum)", pa: "ਕਣਕ (Wheat)", hi: "गेहूं (Wheat)" },
+        tabType: "SOWING_PLANNING",
+        category: "GRAINS_CASH",
+        stateRegion: "NORTH",
+        statesListText: {
+          en: "Punjab, Haryana, UP, MP, Rajasthan, Bihar",
+          pa: "ਪੰਜਾਬ, ਹਰਿਆਣਾ, ਉੱਤਰ ਪ੍ਰਦੇਸ਼, ਮੱਧ ਪ੍ਰਦੇਸ਼, ਰਾਜਸਥਾਨ, ਬਿਹਾਰ",
+          hi: "पंजाब, हरियाणा, उत्तर प्रदेश, मध्य प्रदेश, राजस्थान, बिहार"
+        },
+        localLangName: "ਕਣਕ (PB) | गेहूं (HI) | गहू (MR) | गोधुमा (TE)",
+        daysToEvent: 70,
+        eventDate: { en: "Oct 25 - Nov 15 (Golden Sowing Window)", pa: "25 ਓਕਤੂਬਰ - 15 ਨਵੰਬਰ (ਬੀਜਾਈ ਸਮਾਂ)", hi: "25 अक्टूबर - 15 नवंबर (बुवाई समय)" },
+        sowWindow: { en: "🌱 Sow with Super Seeder", pa: "🌱 ਸੁਪਰ ਸੀਡਰ ਨਾਲ ਬੀਜੋ", hi: "🌱 सुपर सीडर से बोएं" },
+        sowDates: { en: "Sowing Window: Oct 25 - Nov 15", pa: "ਬੀਜਾਈ ਮਿਤੀ: 25 ਓਕਤੂਬਰ - 15 ਨਵੰਬਰ", hi: "बुवाई तिथि: 25 अक्टूबर - 15 नवंबर" },
+        priceChange: { en: "▲ +18% Yield & Bonus Surge", pa: "▲ +18% ਝਾੜ & ਬੋਨਸ ਫਾਇਦਾ", hi: "▲ +18% पैदावार व बोनस फायदा" },
+        festivalName: { en: "🌾 Baisakhi & Chaitra Navratri Harvest", pa: "🌾 ਬੈਸਾਖੀ & ਚੇਤ ਨਵਰਾਤਰੇ ਫਸਲ", hi: "🌾 बैसाखी व चैत्र नवरात्रि फसल" },
+        farmerAdvice: {
+          en: "🌾 Sow wheat Oct 25 - Nov 15 with Super Seeder using PBW 826 / DBW 303 seeds for +18% higher yield & bonus returns.",
+          pa: "🌾 ਕਣਕ ਦੀ ਬੀਜਾਈ 25 ਓਕਤੂਬਰ ਤੋਂ 15 ਨਵੰਬਰ ਦਰਮਿਆਨ ਸੁਪਰ ਸੀਡਰ ਨਾਲ ਕਰੋ। PBW 826 / DBW 303 ਬੀਜ ਵਰਤਣ ਨਾਲ +18% ਵੱਧ ਝਾੜ ਮਿਲੇਗਾ।",
+          hi: "🌾 गेहूं की बुवाई 25 अक्टूबर से 15 नवंबर के बीच सुपर सीडर से करें। PBW 826 / DBW 303 बीज से +18% अधिक पैदावार मिलेगी।"
+        },
+        historicalMandiTrend: {
+          en: "📊 5-Year Mandi Trend: Wheat sown Oct 25-Nov 15 avoids terminal heat stress in March delivering peak +18% yield surge.",
+          pa: "📊 ਪਿਛਲੇ 5 ਸਾਲਾਂ ਦਾ ਰਿਕਾਰਡ: 25 ਅਕਤੂਬਰ - 15 ਨਵੰਬਰ ਬੀਜੀ ਕਣਕ ਮਾਰਚ ਦੀ ਗਰਮੀ ਤੋਂ ਬਚ ਕੇ +18% ਰਿਕਾਰਡ ਝਾੜ ਦਿੰਦੀ ਹੈ।",
+          hi: "📊 पिछले 5 वर्षों का रिकॉर्ड: 25 अक्टू - 15 नवं बोया गेहूं +18% रिकॉर्ड पैदावार देता है।"
+        }
+      },
+      {
+        cropName: { en: "Early Green Peas", pa: "ਅਗੇਤੇ ਮਟਰ (Green Peas)", hi: "अगेती मटर (Green Peas)" },
+        tabType: "SOWING_PLANNING",
+        category: "VEG",
+        stateRegion: "NORTH",
+        statesListText: {
+          en: "Punjab, Himachal, UP, MP, Karnataka",
+          pa: "ਪੰਜਾਬ, ਹਿਮਾਚਲ, ਉੱਤਰ ਪ੍ਰਦੇਸ਼, ਮੱਧ ਪ੍ਰਦੇਸ਼, ਕਰਨਾਟਕ",
+          hi: "पंजाब, हिमाचल, उत्तर प्रदेश, मध्य प्रदेश, कर्नाटक"
+        },
+        localLangName: "ਮਟਰ (PB) | मटर (HI) | मटार (MR) | பட்டாணி (TN)",
+        daysToEvent: 63,
+        eventDate: { en: "Nov 06 - Dec 31 (Diwali & Wedding Season)", pa: "06 ਨਵੰਬਰ - 31 ਦਸੰਬਰ (ਦਿਵਾਲੀ & ਵਿਆਹ)", hi: "06 नवंबर - 31 दिसंबर (दिवाली व शादी)" },
+        sowWindow: { en: "🌱 Sow Today", pa: "🌱 ਅੱਜ ਹੀ ਬੀਜੋ (Sow Today)", hi: "🌱 आज ही बोएं (Sow Today)" },
+        sowDates: { en: "Sowing Window: Sep 05 - Sep 20", pa: "ਬੀਜਾਈ ਮਿਤੀ: 05 ਸਤੰਬਰ - 20 ਸਤੰਬਰ", hi: "बुवाई तिथि: 05 सितंबर - 20 सितंबर" },
+        priceChange: { en: "▲ +150% Early Premium", pa: "▲ +150% ਅਗੇਤੀ ਮੰਡੀ ਰੇਟ", hi: "▲ +150% अगेती मंडी भाव" },
+        festivalName: { en: "🪔 Diwali & Winter Marriage Catering", pa: "🪔 ਦਿਵਾਲੀ ਅਤੇ ਸਰਦੀਆਂ ਦੇ ਵਿਆਹ", hi: "🪔 दिवाली व सर्दियों की शादियां" },
+        farmerAdvice: {
+          en: "🌱 Sow early peas Sep 05-20. Harvest commands +150% premium surge for Diwali and winter wedding catering.",
+          pa: "🌱 ਅਗੇਤੇ ਮਟਰਾਂ ਦੀ ਬੀਜਾਈ 05 ਤੋਂ 20 ਸਤੰਬਰ ਦਰਮਿਆਨ ਕਰੋ। 06-08 ਨਵੰਬਰ ਦਿਵਾਲੀ ਅਤੇ ਸਰਦੀਆਂ ਦੇ ਵਿਆਹਾਂ ਵਿੱਚ ਮਟਰ +150% ਅਗੇਤਾ ਰੇਟ ਦੇਣਗੇ।",
+          hi: "🌱 अगेती मटर की बुवाई 05 से 20 सितंबर के बीच करें। 08 नवंबर दिवाली व शादियों में मटर +150% अगेता रेट देगी।"
+        },
+        historicalMandiTrend: {
+          en: "📊 5-Year Mandi Trend: Early peas sown Sep 05-20 fetch +150% premium rates for Diwali catering compared to peak Jan glut.",
+          pa: "📊 ਪਿਛਲੇ 5 ਸਾਲਾਂ ਦਾ ਰਿਕਾਰਡ: ਸਤੰਬਰ ਵਿੱਚ ਬੀਜੇ ਅਗੇਤੇ ਮਟਰ ਦਿਵਾਲੀ ਤੇ ਵਿਆਹਾਂ ਵਿੱਚ +150% ਥੋਕ ਵਾਧੇ ਨਾਲ ਵਿਕਦੇ ਹਨ।",
+          hi: "📊 पिछले 5 वर्षों का रिकॉर्ड: सितंबर बुवाई वाले अगेती मटर दिवाली पर +150% तेजी से बिकते हैं।"
+        }
+      },
+      {
+        cropName: { en: "Red Sugarcane", pa: "ਲਾਲ ਪੱਤਿਆਂ ਵਾਲਾ ਗੰਨਾ (Sugarcane)", hi: "लाल पत्ते वाला गन्ना (Sugarcane)" },
+        tabType: "SOWING_PLANNING",
+        category: "FLOWERS",
+        stateRegion: "UP_CENTRAL",
+        statesListText: {
+          en: "Uttar Pradesh, Bihar, Punjab, Tamil Nadu, Maharashtra",
+          pa: "ਉੱਤਰ ਪ੍ਰਦੇਸ਼, ਬਿਹਾਰ, ਪੰਜਾਬ, ਤਾਮਿਲਨਾਡੂ, ਮਹਾਰਾਸ਼ਟਰ",
+          hi: "उत्तर प्रदेश, बिहार, पंजाब, तमिलनाडु, महाराष्ट्र"
+        },
+        localLangName: "ਗੰਨਾ (PB) | गन्ना (HI) | ऊस (MR) | கரும்பு (TN)",
+        daysToEvent: 70,
+        eventDate: { en: "Nov 13 - Nov 16 (Chhath Puja Arghya)", pa: "13 ਨਵੰਬਰ - 16 ਨਵੰਬਰ (ਛੱਠ ਪੂਜਾ ਅਰਘ)", hi: "13 नवंबर - 16 नवंबर (छठ पूजा अर्घ्य)" },
+        sowWindow: { en: "🌱 Early September Planting", pa: "🌱 ਅਗੇਤੀ ਲਵਾਈ ਕਰੋ", hi: "🌱 अगेती रोपाई करें" },
+        sowDates: { en: "Planting Window: Sep 05 - Sep 25", pa: "ਬੀਜਾਈ ਮਿਤੀ: 05 ਸਤੰਬਰ - 25 ਸਤੰਬਰ", hi: "बुवाई तिथि: 05 सितंबर - 25 सितंबर" },
+        priceChange: { en: "▲ +200% Sacred Offering Surge", pa: "▲ +200% ਅਰਘ ਪੂਜਾ ਮੰਗ", hi: "▲ +200% अर्घ्य पूजा मांग" },
+        festivalName: { en: "☀️ Chhath Puja Mahaparv & Pongal", pa: "☀️ ਛੱਠ ਪੂਜਾ ਮਹਾਪੁਰਬ & ਪੋਂਗਲ", hi: "☀️ छठ पूजा महापर्व व पोंगल" },
+        farmerAdvice: {
+          en: "🌱 Plant whole red sugarcane in Sep. Devotees buy whole standing stalks with leaves for +200% surge during Nov 13-16 Chhath.",
+          pa: "🌱 ਲਾਲ ਗੰਨੇ ਦੀ ਲਵਾਈ ਸਤੰਬਰ ਵਿੱਚ ਕਰੋ। 13 ਤੋਂ 16 ਨਵੰਬਰ ਛੱਠ ਪੂਜਾ ਦੇ ਅਰਘ ਸਮੇਂ ਪੱਤਿਆਂ ਵਾਲਾ ਗੰਨਾ +200% ਮੰਗ ਵਾਧੇ ਨਾਲ ਵਿਕਦਾ ਹੈ।",
+          hi: "🌱 लाल गन्ने की बुवाई सितंबर में करें। 13 से 16 नवंबर छठ पूजा पर पत्तों वाला गन्ना +200% मांग तेजी में बिकता है।"
+        },
+        historicalMandiTrend: {
+          en: "📊 5-Year Mandi Trend: Whole red sugarcane stalks command +200% price surge directly from retail devotees during Chhath.",
+          pa: "📊 ਪਿਛਲੇ 5 ਸਾਲਾਂ ਦਾ ਰਿਕਾਰਡ: ਛੱਠ ਪੂਜਾ ਵੇਲੇ ਪੱਤਿਆਂ ਵਾਲਾ ਗੰਨਾ ਥੋਕ ਮੰਡੀ ਨਾਲੋਂ +200% ਵੱਧ ਪ੍ਰਚੂਨ ਸ਼ਰਧਾਲੂਆਂ ਨੂੰ ਸਿੱਧਾ ਵਿਕਦਾ ਹੈ।",
+          hi: "📊 पिछले 5 वर्षों का रिकॉर्ड: छठ पूजा पर पत्तों वाला गन्ना +200% तेजी पर बिकता है।"
+        }
+      },
+      {
+        cropName: { en: "Watermelon & Cucumber", pa: "ਤਰਬੂਜ਼ & ਖੀਰਾ (Watermelon & Cucumber)", hi: "तरबूज व खीरा (Watermelon & Cucumber)" },
+        tabType: "SOWING_PLANNING",
+        category: "FRUITS",
+        stateRegion: "ALL_INDIA",
+        statesListText: {
+          en: "MP, UP, Maharashtra, Karnataka, AP, Punjab",
+          pa: "ਮੱਧ ਪ੍ਰਦੇਸ਼, ਉੱਤਰ ਪ੍ਰਦੇਸ਼, ਮਹਾਰਾਸ਼ਟਰ, ਕਰਨਾਟਕ, ਆਂਧਰਾ, ਪੰਜਾਬ",
+          hi: "मध्य प्रदेश, उत्तर प्रदेश, महाराष्ट्र, कर्नाटक, आंध्र, पंजाब"
+        },
+        localLangName: "ਤਰਬੂਜ਼ (PB) | तरबूज (HI) | कलिंगड (MR) | तरमुज (BN)",
+        daysToEvent: 165,
+        eventDate: { en: "Feb 17 - Mar 19 (Holy Ramadan & Eid)", pa: "17 ਫਰਵਰੀ - 19 ਮਾਰਚ (ਪਵਿੱਤਰ ਰਮਜ਼ਾਨ & ਈਦ)", hi: "17 फरवरी - 19 मार्च (पवित्र रमजान व ईद)" },
+        sowWindow: { en: "🌱 Sow Dec - Jan", pa: "🌱 ਦਸੰਬਰ-ਜਨਵਰੀ ਵਿੱਚ ਬੀਜੋ", hi: "🌱 दिसंबर-जनवरी में बोएं" },
+        sowDates: { en: "Sowing Window: Dec 15 - Jan 10", pa: "ਬੀਜਾਈ ਮਿਤੀ: 15 ਦਸੰਬਰ - 10 ਜਨਵਰੀ", hi: "बुवाई तिथि: 15 दिसंबर - 10 जनवरी" },
+        priceChange: { en: "▲ +200% Iftar Demand Surge (3x)", pa: "▲ +200% ਇਫ਼ਤਾਰ ਮੰਗ (3 ਗੁਣਾ ਰੇਟ)", hi: "▲ +200% इफ्तार मांग (3 गुना भाव)" },
+        festivalName: { en: "🌙 Holy Ramadan Fasting Month", pa: "🌙 ਪਵਿੱਤਰ ਰਮਜ਼ਾਨ ਮਹੀਨਾ", hi: "🌙 पवित्र रमजान महीना" },
+        farmerAdvice: {
+          en: "🌱 Sow watermelon Dec 15 - Jan 10. Harvest ready for Feb-Mar Ramadan Iftar commands +200% surge (3x market rates).",
+          pa: "🌱 ਰਮਜ਼ਾਨ ਇਫ਼ਤਾਰ ਮੰਡੀ ਲਈ 15 ਦਸੰਬਰ ਤੋਂ 10 ਜਨਵਰੀ ਦਰਮਿਆਨ ਤਰਬੂਜ਼ ਤੇ ਖੀਰੇ ਦੀ ਬੀਜਾਈ ਕਰੋ। ਫਰਵਰੀ-ਮਾਰਚ ਵਿੱਚ +200% (3 ਗੁਣਾ ਰੇਟ) ਮਿਲੇਗਾ।",
+          hi: "🌱 रमजान इफ्तार मंडी के लिए 15 दिसंबर से 10 जनवरी के बीच तरबूज की बुवाई करें। फरवरी-मार्च में +200% (3 गुना भाव) मिलेगा।"
+        },
+        historicalMandiTrend: {
+          en: "📊 5-Year Mandi Trend: Watermelons command +200% surge (3x rates) during the 30-day month of Ramadan every year.",
+          pa: "📊 ਪਿਛਲੇ 5 ਸਾਲਾਂ ਦਾ ਰਿਕਾਰਡ: ਰਮਜ਼ਾਨ ਇਫ਼ਤਾਰੀ ਦੇ 30 ਦਿਨਾਂ ਵਿੱਚ ਤਰਬੂਜ਼ ਤੇ ਤਾਜ਼ੇ ਫਲਾਂ ਦਾ ਭਾਅ ਆਮ ਦਿਨਾਂ ਨਾਲੋਂ +200% (3 ਗੁਣਾ) ਵੱਧ ਰਹਿੰਦਾ ਹੈ।",
+          hi: "📊 पिछले 5 वर्षों का रिकॉर्ड: रमजान के महीने में तरबूज और ताजे फलों के दाम +200% (3 गुना) रहते हैं।"
+        }
+      },
+      {
+        cropName: { en: "Green Fodder (Barseem/Maize)", pa: "ਹਰਾ ਚਾਰਾ (Green Fodder)", hi: "हरा चारा (Green Fodder)" },
+        tabType: "SOWING_PLANNING",
+        category: "FODDER",
+        stateRegion: "ALL_INDIA",
+        statesListText: {
+          en: "Punjab, Haryana, Rajasthan, UP, Gujarat, Maharashtra",
+          pa: "ਪੰਜਾਬ, ਹਰਿਆਣਾ, ਰਾਜਸਥਾਨ, ਉੱਤਰ ਪ੍ਰਦੇਸ਼, ਗੁਜਰਾਤ, ਮਹਾਰਾਸ਼ਟਰ",
+          hi: "पंजाब, हरियाणा, राजस्थान, उत्तर प्रदेश, गुजरात, महाराष्ट्र"
+        },
+        localLangName: "ਹਰਾ ਚਾਰਾ (PB) | हरा चारा (HI) | हिरवा चारा (MR)",
+        daysToEvent: 265,
+        eventDate: { en: "May 27 - May 28 (Bakrid Livestock Market)", pa: "27 ਮਈ - 28 ਮਈ (ਈਦ-ਉਲ-ਜ਼ੁਹਾ / ਬਕਰਈਦ)", hi: "27 मई - 28 मई (ईद-उल-जुहा / बकरीद)" },
+        sowWindow: { en: "🌱 Sow Feb - Mar", pa: "🌱 ਫਰਵਰੀ-ਮਾਰਚ ਵਿੱਚ ਬੀਜੋ", hi: "🌱 फरवरी-मार्च में बोएं" },
+        sowDates: { en: "Sowing Window: Feb 15 - Mar 15", pa: "ਬੀਜਾਈ ਮਿਤੀ: 15 ਫਰਵਰੀ - 15 ਮਾਰਚ", hi: "बुवाई तिथि: 15 फरवरी - 15 मार्च" },
+        priceChange: { en: "▲ +150% Animal Feed Surge (2.5x)", pa: "▲ +150% ਚਾਰੇ ਦਾ ਰੇਟ (2.5 ਗੁਣਾ)", hi: "▲ +150% चारे का भाव (2.5 गुना)" },
+        festivalName: { en: "🐐 Eid-ul-Zuha (Bakrid Livestock Feed)", pa: "🐐 ਈਦ-ਉਲ-ਜ਼ੁਹਾ - ਬਕਰਈਦ", hi: "🐐 ईद-उल-जुहा - बकरीद" },
+        farmerAdvice: {
+          en: "🌱 Sow Barseem or Maize fodder Feb 15 - Mar 15. Livestock feeding demand prior to May 27-28 Bakrid offers +150% surge (2.5x rate).",
+          pa: "🌱 ਬਕਰਈਦ ਪਸ਼ੂ ਮੰਡੀ ਲਈ 15 ਫਰਵਰੀ ਤੋਂ 15 ਮਾਰਚ ਦਰਮਿਆਨ ਬਰਸੀਮ/ਮੱਕੀ ਬੀਜੋ। 27-28 ਮਈ ਵੇਲੇ +150% (2.5 ਗੁਣਾ ਵੱਧ) ਰੇਟ ਮਿਲੇਗਾ।",
+          hi: "🌱 बकरीद मंडी के लिए 15 फरवरी से 15 मार्च के बीच बरसीम/मक्का बोएं। 27-28 मई पर +150% (2.5 गुना) रेट मिलेगा।"
+        },
+        historicalMandiTrend: {
+          en: "📊 5-Year Mandi Trend: Green fodder commands +150% price surge (2.5x rates) in animal mandis before Bakrid every year.",
+          pa: "📊 ਪਿਛਲੇ 5 ਸਾਲਾਂ ਦਾ ਰਿਕਾਰਡ: ਬਕਰਈਦ ਤੋਂ 15 ਦਿਨ ਪਹਿਲਾਂ ਪਸ਼ੂ ਮੰਡੀਆਂ ਵਿੱਚ ਬਰਸੀਮ/ਮੱਕੀ ਦਾ ਚਾਰਾ +150% (2.5 ਗੁਣਾ) ਮਹਿੰਗਾ ਵਿਕਦਾ ਹੈ।",
+          hi: "📊 पिछले 5 वर्षों का रिकॉर्ड: बकरीद से पहले पशु मंडियों में हरा चारा +150% (2.5 गुना) महंगा बिकता है।"
+        }
+      }
+    ];ारी खरीद)" },
+        sowWindow: { en: "🌾 Bring below 17% moisture", pa: "🌾 ਨਮੀ ਘਟਾ ਕੇ ਮੰਡੀ ਲਿਆਓ", hi: "🌾 नमी घटाकर मंडी लाएं" },
+        sowDates: { en: "Harvest Window: Oct 01 - Nov 10", pa: "ਵਢਾਈ ਮਿਤੀ: 01 ਓਕਤੂਬਰ - 10 ਨਵੰਬਰ", hi: "कटाई तिथि: 01 अक्टूबर - 10 नवंबर" },
+        priceChange: { en: "▲ +40% Export Surge", pa: "▲ +40% ਐਕਸਪੋਰਟ ਮੰਗ", hi: "▲ +40% एक्सपोर्ट मांग" },
+        festivalName: { en: "🪔 Diwali Bhog & Pongal Procurement", pa: "🪔 ਦਿਵਾਲੀ ਭੋਗ & ਪੋਂਗਲ ਖਰੀਦ", hi: "🪔 दिवाली भोग व पोंगल खरीद" },
+        farmerAdvice: {
+          hi: "🌾 धान की कटाई 17% से कम नमी पर करें! बासमती 1121 व 1509 को अक्टूबर दूसरे सप्ताह लाएं ताकि ₹3,800-₹4,500/क्विंटल निर्यात भाव मिले।"
+        },
+        historicalMandiTrend: {
+          en: "📊 5-Year Mandi Trend: Basmati 1121/1509 commands ₹3,800-₹4,500/qtl export rates in Karnal & Tarn Taran mandis.",
+          pa: "📊 ਪਿਛਲੇ 5 ਸਾਲਾਂ ਦਾ ਰਿਕਾਰਡ: ਅਕਤੂਬਰ ਦੇ ਦੂਜੇ ਹਫ਼ਤੇ ਮੰਡੀ ਆਈ ਬਾਸਮਤੀ 1121 ਤੇ 1509 ₹3,800-₹4,500/ਕੁਇੰਟਲ ਦੇ ਐਕਸਪੋਰਟ ਭਾਅ ਵਿਕਦੀ ਹੈ।",
+          hi: "📊 पिछले 5 वर्षों का रिकॉर्ड: अक्टू दूसरे सप्ताह की बासमती ₹3,800-₹4,500/क्विंटल निर्यात रेट देती है।"
+        }
+      },
+      {
+        cropName: { en: "Wheat (Triticum aestivum)", pa: "ਕਣਕ (Wheat)", hi: "गेहूं (Wheat)" },
+        tabType: "SOWING_PLANNING",
+        category: "GRAINS_CASH",
+        stateRegion: "NORTH",
+        statesListText: {
+          en: "Punjab, Haryana, UP, MP, Rajasthan, Bihar",
+          pa: "ਪੰਜਾਬ, ਹਰਿਆਣਾ, ਉੱਤਰ ਪ੍ਰਦੇਸ਼, ਮੱਧ ਪ੍ਰਦੇਸ਼, ਰਾਜਸਥਾਨ, ਬਿਹਾਰ",
+          hi: "पंजाब, हरियाणा, उत्तर प्रदेश, मध्य प्रदेश, राजस्थान, बिहार"
+        },
+        localLangName: "ਕਣਕ (PB) | गेहूं (HI) | गहू (MR) | गोधुमा (TE)",
+        daysToEvent: 70,
+        eventDate: { en: "Oct 25 - Nov 15 (Golden Sowing Window)", pa: "25 ਓਕਤੂਬਰ - 15 ਨਵੰਬਰ (ਬੀਜਾਈ ਸਮਾਂ)", hi: "25 अक्टूबर - 15 नवंबर (बुवाई समय)" },
+        sowWindow: { en: "🌱 Sow with Super Seeder", pa: "🌱 ਸੁਪਰ ਸੀਡਰ ਨਾਲ ਬੀਜੋ", hi: "🌱 सुपर सीडर से बोएं" },
+        sowDates: { en: "Sowing Window: Oct 25 - Nov 15", pa: "ਬੀਜਾਈ ਮਿਤੀ: 25 ਓਕਤੂਬਰ - 15 ਨਵੰਬਰ", hi: "बुवाई तिथि: 25 अक्टूबर - 15 नवंबर" },
+        priceChange: { en: "💰 ₹2,425/quintal MSP", pa: "💰 ₹2,425/ਕੁਇੰਟਲ MSP", hi: "💰 ₹2,425/क्विंटल MSP" },
+        festivalName: { en: "🌾 Baisakhi & Chaitra Navratri Harvest", pa: "🌾 ਬੈਸਾਖੀ & ਚੇਤ ਨਵਰਾਤਰੇ ਫਸਲ", hi: "🌾 बैसाखी व चैत्र नवरात्रि फसल" },
+        farmerAdvice: {
+          en: "🌾 Sow wheat Oct 25 - Nov 15 with Super Seeder using PBW 826 / DBW 303 seeds for 26-28 quintals/acre yield.",
+          pa: "🌾 ਕਣਕ ਦੀ ਬੀਜਾਈ 25 ਓਕਤੂਬਰ ਤੋਂ 15 ਨਵੰਬਰ ਦਰਮਿਆਨ ਸੁਪਰ ਸੀਡਰ ਨਾਲ ਕਰੋ। PBW 826 / DBW 303 ਬੀਜ ਵਰਤਣ ਨਾਲ 26-28 ਕੁਇੰਟਲ ਪ੍ਰਤੀ ਏਕੜ ਝਾੜ ਮਿਲੇਗਾ।",
+          hi: "🌾 गेहूं की बुवाई 25 अक्टूबर से 15 नवंबर के बीच सुपर सीडर से करें। PBW 826 / DBW 303 बीज से 26-28 क्विंटल प्रति एकड़ पैदावार मिलेगी।"
+        },
+        historicalMandiTrend: {
+          en: "📊 5-Year Mandi Trend: Wheat sown Oct 25-Nov 15 avoids terminal heat stress in March delivering peak 26-28 qtl/acre yield.",
+          pa: "📊 ਪਿਛਲੇ 5 ਸਾਲਾਂ ਦਾ ਰਿਕਾਰਡ: 25 ਅਕਤੂਬਰ - 15 ਨਵੰਬਰ ਬੀਜੀ ਕਣਕ ਮਾਰਚ ਦੀ ਗਰਮੀ ਤੋਂ ਬਚ ਕੇ 26-28 ਕੁਇੰਟਲ/ਏਕੜ ਰਿਕਾਰਡ ਝਾੜ ਦਿੰਦੀ ਹੈ।",
+          hi: "📊 पिछले 5 वर्षों का रिकॉर्ड: 25 अक्टू - 15 नवं बोया गेहूं 26-28 क्विंटल/एकड़ रिकॉर्ड पैदावार देता है।"
+        }
+      },
+      {
+        cropName: { en: "Early Green Peas", pa: "ਅਗੇਤੇ ਮਟਰ (Green Peas)", hi: "अगेती मटर (Green Peas)" },
+        tabType: "SOWING_PLANNING",
+        category: "VEG",
+        stateRegion: "NORTH",
+        statesListText: {
+          en: "Punjab, Himachal, UP, MP, Karnataka",
+          pa: "ਪੰਜਾਬ, ਹਿਮਾਚਲ, ਉੱਤਰ ਪ੍ਰਦੇਸ਼, ਮੱਧ ਪ੍ਰਦੇਸ਼, ਕਰਨਾਟਕ",
+          hi: "पंजाब, हिमाचल, उत्तर प्रदेश, मध्य प्रदेश, कर्नाटक"
+        },
+        localLangName: "ਮਟਰ (PB) | मटर (HI) | मटार (MR) | பட்டாணி (TN)",
+        daysToEvent: 63,
+        eventDate: { en: "Nov 06 - Dec 31 (Diwali & Wedding Season)", pa: "06 ਨਵੰਬਰ - 31 ਦਸੰਬਰ (ਦਿਵਾਲੀ & ਵਿਆਹ)", hi: "06 नवंबर - 31 दिसंबर (दिवाली व शादी)" },
+        sowWindow: { en: "🌱 Sow Today", pa: "🌱 ਅੱਜ ਹੀ ਬੀਜੋ (Sow Today)", hi: "🌱 आज ही बोएं (Sow Today)" },
+        sowDates: { en: "Sowing Window: Sep 05 - Sep 20", pa: "ਬੀਜਾਈ ਮਿਤੀ: 05 ਸਤੰਬਰ - 20 ਸਤੰਬਰ", hi: "बुवाई तिथि: 05 सितंबर - 20 सितंबर" },
+        priceChange: { en: "💰 ₹80-₹120/kg Wholesale", pa: "💰 ₹80-₹120/ਕਿਲੋ ਥੋਕ ਭਾਅ", hi: "💰 ₹80-₹120/किग्रा थोक भाव" },
+        festivalName: { en: "🪔 Diwali & Winter Marriage Catering", pa: "🪔 ਦਿਵਾਲੀ ਅਤੇ ਸਰਦੀਆਂ ਦੇ ਵਿਆਹ", hi: "🪔 दिवाली व सर्दियों की शादियां" },
+        farmerAdvice: {
+          en: "🌱 Sow early peas Sep 05-20. Harvest commands ₹80-₹120/kg for Diwali and winter wedding catering.",
+          pa: "🌱 ਅਗੇਤੇ ਮਟਰਾਂ ਦੀ ਬੀਜਾਈ 05 ਤੋਂ 20 ਸਤੰਬਰ ਦਰਮਿਆਨ ਕਰੋ। 06-08 ਨਵੰਬਰ ਦਿਵਾਲੀ ਅਤੇ ਸਰਦੀਆਂ ਦੇ ਵਿਆਹਾਂ ਵਿੱਚ ਮਟਰ ₹80-₹120/ਕਿਲੋ ਰੇਟ ਦੇਣਗੇ।",
+          hi: "🌱 अगेती मटर की बुवाई 05 से 20 सितंबर के बीच करें। 08 नवंबर दिवाली व शादियों में मटर ₹80-₹120/किग्रा रेट देगी।"
+        },
+        historicalMandiTrend: {
+          en: "📊 5-Year Mandi Trend: Early peas sown Sep 05-20 fetch ₹80-₹120/kg for Diwali catering compared to ₹20-₹25/kg in peak Jan.",
+          pa: "📊 ਪਿਛਲੇ 5 ਸਾਲਾਂ ਦਾ ਰਿਕਾਰਡ: ਸਤੰਬਰ ਵਿੱਚ ਬੀਜੇ ਅਗੇਤੇ ਮਟਰ ਦਿਵਾਲੀ ਤੇ ਵਿਆਹਾਂ ਵਿੱਚ ₹80-₹120/ਕਿਲੋ ਥੋਕ ਵਿਕਦੇ ਹਨ।",
+          hi: "📊 पिछले 5 वर्षों का रिकॉर्ड: सितंबर बुवाई वाले अगेती मटर दिवाली पर ₹80-₹120/किग्रा बिकते हैं।"
+        }
+      },
+      {
+        cropName: { en: "Red Sugarcane", pa: "ਲਾਲ ਪੱਤਿਆਂ ਵਾਲਾ ਗੰਨਾ (Sugarcane)", hi: "लाल पत्ते वाला गन्ना (Sugarcane)" },
+        tabType: "SOWING_PLANNING",
+        category: "FLOWERS",
+        stateRegion: "UP_CENTRAL",
+        statesListText: {
+          en: "Uttar Pradesh, Bihar, Punjab, Tamil Nadu, Maharashtra",
+          pa: "ਉੱਤਰ ਪ੍ਰਦੇਸ਼, ਬਿਹਾਰ, ਪੰਜਾਬ, ਤਾਮਿਲਨਾਡੂ, ਮਹਾਰਾਸ਼ਟਰ",
+          hi: "उत्तर प्रदेश, बिहार, पंजाब, तमिलनाडु, महाराष्ट्र"
+        },
+        localLangName: "ਗੰਨਾ (PB) | गन्ना (HI) | ऊस (MR) | கரும்பு (TN)",
+        daysToEvent: 70,
+        eventDate: { en: "Nov 13 - Nov 16 (Chhath Puja Arghya)", pa: "13 ਨਵੰਬਰ - 16 ਨਵੰਬਰ (ਛੱਠ ਪੂਜਾ ਅਰਘ)", hi: "13 नवंबर - 16 नवंबर (छठ पूजा अर्घ्य)" },
+        sowWindow: { en: "🌱 Early September Planting", pa: "🌱 ਅਗੇਤੀ ਲਵਾਈ ਕਰੋ", hi: "🌱 अगेती रोपाई करें" },
+        sowDates: { en: "Planting Window: Sep 05 - Sep 25", pa: "ਬੀਜਾਈ ਮਿਤੀ: 05 ਸਤੰਬਰ - 25 ਸਤੰਬਰ", hi: "बुवाई तिथि: 05 सितंबर - 25 सितंबर" },
+        priceChange: { en: "💰 ₹150-₹200 Per Stalk", pa: "💰 ₹150-₹200 ਪ੍ਰਤੀ ਗੰਨਾ", hi: "💰 ₹150-₹200 प्रति गन्ना" },
+        festivalName: { en: "☀️ Chhath Puja Mahaparv & Pongal", pa: "☀️ ਛੱਠ ਪੂਜਾ ਮਹਾਪੁਰਬ & ਪੋਂਗਲ", hi: "☀️ छठ पूजा महापर्व व पोंगल" },
+        farmerAdvice: {
+          en: "🌱 Plant whole red sugarcane in Sep. Devotees buy whole standing stalks with leaves for ₹150-₹200 during Nov 13-16 Chhath.",
+          pa: "🌱 ਲਾਲ ਗੰਨੇ ਦੀ ਲਵਾਈ ਸਤੰਬਰ ਵਿੱਚ ਕਰੋ। 13 ਤੋਂ 16 ਨਵੰਬਰ ਛੱਠ ਪੂਜਾ ਦੇ ਅਰਘ ਸਮੇਂ ਪੱਤਿਆਂ ਵਾਲਾ ਗੰਨਾ ₹150-₹200 ਵਿੱਚ ਵਿਕਦਾ ਹੈ।",
+          hi: "🌱 लाल गन्ने की बुवाई सितंबर में करें। 13 से 16 नवंबर छठ पूजा पर पत्तों वाला गन्ना ₹150-₹200 में बिकता है।"
+        },
+        historicalMandiTrend: {
+          en: "📊 5-Year Mandi Trend: Whole red sugarcane stalks command ₹150-₹200 per stalk directly from retail devotees during Chhath.",
+          pa: "📊 ਪਿਛਲੇ 5 ਸਾਲਾਂ ਦਾ ਰਿਕਾਰਡ: ਛੱਠ ਪੂਜਾ ਵੇਲੇ ਪੱਤਿਆਂ ਵਾਲਾ ਗੰਨਾ ਥੋਕ ਮੰਡੀ ਨਾਲੋਂ ₹150-₹200 ਪ੍ਰਤੀ ਗੰਨਾ ਪ੍ਰਚੂਨ ਸ਼ਰਧਾਲੂਆਂ ਨੂੰ ਸਿੱਧਾ ਵਿਕਦਾ ਹੈ।",
+          hi: "📊 पिछले 5 वर्षों का रिकॉर्ड: छठ पूजा पर पत्तों वाला गन्ना ₹150-₹200 प्रति गन्ना बिकता है।"
+        }
+      },
+      {
+        cropName: { en: "Watermelon & Cucumber", pa: "ਤਰਬੂਜ਼ & ਖੀਰਾ (Watermelon & Cucumber)", hi: "तरबूज व खीरा (Watermelon & Cucumber)" },
+        tabType: "SOWING_PLANNING",
+        category: "FRUITS",
+        stateRegion: "ALL_INDIA",
+        statesListText: {
+          en: "MP, UP, Maharashtra, Karnataka, AP, Punjab",
+          pa: "ਮੱਧ ਪ੍ਰਦੇਸ਼, ਉੱਤਰ ਪ੍ਰਦੇਸ਼, ਮਹਾਰਾਸ਼ਟਰ, ਕਰਨਾਟਕ, ਆਂਧਰਾ, ਪੰਜਾਬ",
+          hi: "मध्य प्रदेश, उत्तर प्रदेश, महाराष्ट्र, कर्नाटक, आंध्र, पंजाब"
+        },
+        localLangName: "ਤਰਬੂਜ਼ (PB) | तरबूज (HI) | कलिंगड (MR) | तरमुज (BN)",
+        daysToEvent: 165,
+        eventDate: { en: "Feb 17 - Mar 19 (Holy Ramadan & Eid)", pa: "17 ਫਰਵਰੀ - 19 ਮਾਰਚ (ਪਵਿੱਤਰ ਰਮਜ਼ਾਨ & ਈਦ)", hi: "17 फरवरी - 19 मार्च (पवित्र रमजान व ईद)" },
+        sowWindow: { en: "🌱 Sow Dec - Jan", pa: "🌱 ਦਸੰਬਰ-ਜਨਵਰੀ ਵਿੱਚ ਬੀਜੋ", hi: "🌱 दिसंबर-जनवरी में बोएं" },
+        sowDates: { en: "Sowing Window: Dec 15 - Jan 10", pa: "ਬੀਜਾਈ ਮਿਤੀ: 15 ਦਸੰਬਰ - 10 ਜਨਵਰੀ", hi: "बुवाई तिथि: 15 दिसंबर - 10 जनवरी" },
+        priceChange: { en: "💰 3x Iftar Demand Surge", pa: "💰 3 ਗੁਣਾ ਇਫ਼ਤਾਰ ਮੰਗ (3x Rate)", hi: "💰 3 गुना इफ्तार मांग (3x Rate)" },
+        festivalName: { en: "🌙 Holy Ramadan Fasting Month", pa: "🌙 ਪਵਿੱਤਰ ਰਮਜ਼ਾਨ ਮਹੀਨਾ", hi: "🌙 पवित्र रमजान महीना" },
+        farmerAdvice: {
+          en: "🌱 Sow watermelon Dec 15 - Jan 10. Harvest ready for Feb-Mar Ramadan Iftar commands 3x market rates.",
+          pa: "🌱 ਰਮਜ਼ਾਨ ਇਫ਼ਤਾਰ ਮੰਡੀ ਲਈ 15 ਦਸੰਬਰ ਤੋਂ 10 ਜਨਵਰੀ ਦਰਮਿਆਨ ਤਰਬੂਜ਼ ਤੇ ਖੀਰੇ ਦੀ ਬੀਜਾਈ ਕਰੋ। ਫਰਵਰੀ-ਮਾਰਚ ਵਿੱਚ 3 ਗੁਣਾ ਰੇਟ ਮਿਲੇਗਾ।",
+          hi: "🌱 रमजान इफ्तार मंडी के लिए 15 दिसंबर से 10 जनवरी के बीच तरबूज की बुवाई करें। फरवरी-मार्च में 3 गुना भाव मिलेगा।"
+        },
+        historicalMandiTrend: {
+          en: "📊 5-Year Mandi Trend: Watermelons command 3x rates during the 30-day month of Ramadan every year.",
+          pa: "📊 ਪਿਛਲੇ 5 ਸਾਲਾਂ ਦਾ ਰਿਕਾਰਡ: ਰਮਜ਼ਾਨ ਇਫ਼ਤਾਰੀ ਦੇ 30 ਦਿਨਾਂ ਵਿੱਚ ਤਰਬੂਜ਼ ਤੇ ਤਾਜ਼ੇ ਫਲਾਂ ਦਾ ਭਾਅ ਆਮ ਦਿਨਾਂ ਨਾਲੋਂ 3 ਗੁਣਾ ਵੱਧ ਰਹਿੰਦਾ ਹੈ।",
+          hi: "📊 पिछले 5 वर्षों का रिकॉर्ड: रमजान के महीने में तरबूज और ताजे फलों के दाम 3 गुना रहते हैं।"
+        }
+      },
+      {
+        cropName: { en: "Green Fodder (Barseem/Maize)", pa: "ਹਰਾ ਚਾਰਾ (Green Fodder)", hi: "हरा चारा (Green Fodder)" },
+        tabType: "SOWING_PLANNING",
+        category: "FODDER",
+        stateRegion: "ALL_INDIA",
+        statesListText: {
+          en: "Punjab, Haryana, Rajasthan, UP, Gujarat, Maharashtra",
+          pa: "ਪੰਜਾਬ, ਹਰਿਆਣਾ, ਰਾਜਸਥਾਨ, ਉੱਤਰ ਪ੍ਰਦੇਸ਼, ਗੁਜਰਾਤ, ਮਹਾਰਾਸ਼ਟਰ",
+          hi: "पंजाब, हरियाणा, राजस्थान, उत्तर प्रदेश, गुजरात, महाराष्ट्र"
+        },
+        localLangName: "ਹਰਾ ਚਾਰਾ (PB) | हरा चारा (HI) | हिरवा चारा (MR)",
+        daysToEvent: 265,
+        eventDate: { en: "May 27 - May 28 (Bakrid Livestock Market)", pa: "27 ਮਈ - 28 ਮਈ (ਈਦ-ਉਲ-ਜ਼ੁਹਾ / ਬਕਰਈਦ)", hi: "27 मई - 28 मई (ईद-उल-जुहा / बकरीद)" },
+        sowWindow: { en: "🌱 Sow Feb - Mar", pa: "🌱 ਫਰਵਰੀ-ਮਾਰਚ ਵਿੱਚ ਬੀਜੋ", hi: "🌱 फरवरी-मार्च में बोएं" },
+        sowDates: { en: "Sowing Window: Feb 15 - Mar 15", pa: "ਬੀਜਾਈ ਮਿਤੀ: 15 ਫਰਵਰੀ - 15 ਮਾਰਚ", hi: "बुवाई तिथि: 15 फरवरी - 15 मार्च" },
+        priceChange: { en: "💰 2.5x Animal Feed Surge", pa: "💰 2.5 ਗੁਣਾ ਚਾਰੇ ਦਾ ਰੇਟ", hi: "💰 2.5 गुना चारे का रेट" },
+        festivalName: { en: "🐐 Eid-ul-Zuha (Bakrid Livestock Feed)", pa: "🐐 ਈਦ-ਉਲ-ਜ਼ੁਹਾ - ਬਕਰਈਦ", hi: "🐐 ईद-उल-जुहा - बकरीद" },
+        farmerAdvice: {
+          en: "🌱 Sow Barseem or Maize fodder Feb 15 - Mar 15. Livestock feeding demand prior to May 27-28 Bakrid offers 2.5x rate.",
+          pa: "🌱 ਬਕਰਈਦ ਪਸ਼ੂ ਮੰਡੀ ਲਈ 15 ਫਰਵਰੀ ਤੋਂ 15 ਮਾਰਚ ਦਰਮਿਆਨ ਬਰਸੀਮ/ਮੱਕੀ ਬੀਜੋ। 27-28 ਮਈ ਵੇਲੇ 2.5 ਗੁਣਾ ਵੱਧ ਰੇਟ ਮਿਲੇਗਾ।",
+          hi: "🌱 बकरीद मंडी के लिए 15 फरवरी से 15 मार्च के बीच बरसीम/मक्का बोएं। 27-28 मई पर 2.5 गुना रेट मिलेगा।"
+        },
+        historicalMandiTrend: {
+          en: "📊 5-Year Mandi Trend: Green fodder commands 2.5x price surge in animal mandis before Bakrid every year.",
+          pa: "📊 ਪਿਛਲੇ 5 ਸਾਲਾਂ ਦਾ ਰਿਕਾਰਡ: ਬਕਰਈਦ ਤੋਂ 15 ਦਿਨ ਪਹਿਲਾਂ ਪਸ਼ੂ ਮੰਡੀਆਂ ਵਿੱਚ ਬਰਸੀਮ/ਮੱਕੀ ਦਾ ਚਾਰਾ 2.5 ਗੁਣਾ ਮਹਿੰਗਾ ਵਿਕਦਾ ਹੈ।",
+          hi: "📊 पिछले 5 वर्षों का रिकॉर्ड: बकरीद से पहले पशु मंडियों में हरा चारा 2.5 गुना महंगा बिकता है।"
+        }
+      }
+    ];
+
+    let activeMainTab = 'DEMAND_PRICE';
+    let currentLang = 'pa';
+    let currentStateRegion = 'ALL_INDIA';
+    let currentCropFilter = 'MY_CROPS';
+    let currentDays = 999;
+    let farmerCrops = ['Flowers', 'Tomato', 'Potato', 'Onion', 'Chili', 'Garlic', 'Cotton', 'Mustard', 'Paddy', 'Wheat', 'Peas', 'Sugarcane', 'Watermelon'];
+
+    function switchMainTab(tab) {
+      activeMainTab = tab;
+      document.getElementById('tabBtnA').classList.toggle('active-a', tab === 'DEMAND_PRICE');
+      document.getElementById('tabBtnB').classList.toggle('active-b', tab === 'SOWING_PLANNING');
+      renderAll();
+    }
+
+    function changeLang(val) { 
+      currentLang = val; 
+      document.getElementById('btnPa').classList.toggle('active', val === 'pa');
+      document.getElementById('btnHi').classList.toggle('active', val === 'hi');
+      document.getElementById('btnEn').classList.toggle('active', val === 'en');
+      
+      const t = UI_TRANSLATIONS[val] || UI_TRANSLATIONS.en;
+      document.getElementById('appTitleText').innerText = t.appTitle;
+      document.getElementById('appSubText').innerText = t.appSub;
+      document.getElementById('tabBtnA').innerText = t.tabA;
+      document.getElementById('tabBtnB').innerText = t.tabB;
+      document.getElementById('lblState').innerText = t.lblState;
+      document.getElementById('lblCrop').innerText = t.lblCrop;
+      document.getElementById('lblDays').innerText = t.lblDays;
+
+      renderAll(); 
+    }
+
+    function changeStateRegion(val) { currentStateRegion = val; renderAll(); }
+    function changeCropFilter(val) { currentCropFilter = val; renderAll(); }
+    function changeDays(val) { currentDays = parseInt(val, 10); renderAll(); }
+
+    function renderAll() {
+      const container = document.getElementById('bodyArea');
+      const t = UI_TRANSLATIONS[currentLang] || UI_TRANSLATIONS.en;
+
+      let list = CROP_INTELLIGENCE_DATA.filter(item => item.tabType === activeMainTab);
+
+      if (currentDays !== 999) {
+        list = list.filter(item => item.daysToEvent <= currentDays);
+      }
+
+      if (currentStateRegion !== 'ALL_INDIA') {
+        list = list.filter(item => item.stateRegion === 'ALL_INDIA' || item.stateRegion === currentStateRegion);
+      }
+
+      if (currentCropFilter === 'MY_CROPS') {
+        list = list.filter(item => {
+          const nameEn = item.cropName.en.toLowerCase();
+          return farmerCrops.some(fc => nameEn.includes(fc.toLowerCase()));
+        });
+      } else if (currentCropFilter === 'VEG') {
+        list = list.filter(item => item.category === 'VEG');
+      } else if (currentCropFilter === 'FLOWERS') {
+        list = list.filter(item => item.category === 'FLOWERS');
+      } else if (currentCropFilter === 'GRAINS_CASH') {
+        list = list.filter(item => item.category === 'GRAINS_CASH');
+      } else if (currentCropFilter === 'FRUITS') {
+        list = list.filter(item => item.category === 'FRUITS');
+      } else if (currentCropFilter === 'FODDER') {
+        list = list.filter(item => item.category === 'FODDER');
+      }
+
+      if (list.length === 0) {
+        container.innerHTML = `<div class="empty-state">${t.emptyText}</div>`;
+        return;
+      }
+
+      const isTabA = activeMainTab === 'DEMAND_PRICE';
+
+      container.innerHTML = list.map((item) => {
+        const cropTitle = item.cropName[currentLang] || item.cropName.en;
+        const festName = item.festivalName[currentLang] || item.festivalName.en;
+        const priceTag = item.priceChange[currentLang] || item.priceChange.en;
+        const eventDateStr = item.eventDate[currentLang] || item.eventDate.en;
+        const sowDatesStr = item.sowDates[currentLang] || item.sowDates.en;
+        const sowWinStr = item.sowWindow[currentLang] || item.sowWindow.en;
+        const statesStr = item.statesListText[currentLang] || item.statesListText.en;
+        const advice = item.farmerAdvice[currentLang] || item.farmerAdvice.en;
+        const mandiTrend = item.historicalMandiTrend[currentLang] || item.historicalMandiTrend.en;
+
+        return `
+          <div class="crop-card ${isTabA ? 'tab-a' : 'tab-b'}">
+            
+            <!-- 🌟 DATES BOX HIGHLIGHTED FIRST ON THE LEFT / TOP -->
+            <div class="dates-box-left">
+              <div class="date-row">
+                <span class="date-lbl">${t.eventDateLbl}</span>
+                <span class="date-val">${eventDateStr}</span>
+              </div>
+              <div class="date-row">
+                <span class="date-lbl">${t.sowDatesLbl}</span>
+                <span class="date-val green">${sowDatesStr} (${sowWinStr})</span>
+              </div>
+            </div>
+
+            <div class="card-top">
+              <span class="fest-name">${festName}</span>
+              <span class="surge-pill ${isTabA ? 'tab-a' : 'tab-b'}">${priceTag}</span>
+            </div>
+
+            <div class="crop-banner">
+              <div class="crop-title">${t.cropLbl} ${cropTitle}</div>
+              <div class="crop-states">${t.stateLbl} ${statesStr}</div>
+              <div class="crop-lang-names">${t.localLangLbl} ${item.localLangName}</div>
+            </div>
+
+            <div class="direct-advice ${isTabA ? 'tab-a' : 'tab-b'}">
+              <span class="advice-head ${isTabA ? 'tab-a' : 'tab-b'}">${t.adviceHeader}</span>
+              <span class="advice-body">${advice}</span>
+            </div>
+
+            <div class="mandi-trend-box">
+              <div class="mandi-trend-head">${t.mandiHeader}</div>
+              <div class="mandi-trend-txt">${mandiTrend}</div>
+            </div>
+          </div>
+        `;
+      }).join('') + `
+        <button class="whatsapp-btn ${isTabA ? 'tab-a' : 'tab-b'}" onclick="shareWhatsApp()">
+          ${t.shareBtn}
+        </button>
+      `;
+    }
+
+    function shareWhatsApp() {
+      const t = UI_TRANSLATIONS[currentLang] || UI_TRANSLATIONS.en;
+      let list = CROP_INTELLIGENCE_DATA.filter(item => item.tabType === activeMainTab);
+      if (currentDays !== 999) list = list.filter(item => item.daysToEvent <= currentDays);
+      if (currentStateRegion !== 'ALL_INDIA') list = list.filter(item => item.stateRegion === 'ALL_INDIA' || item.stateRegion === currentStateRegion);
+
+      const titleText = activeMainTab === 'DEMAND_PRICE' ? t.tabA : t.tabB;
+      const text = `🌾 *${titleText}*\n\n` + 
+        list.map(c => `• ${c.cropName[currentLang] || c.cropName.en} (${c.priceChange[currentLang] || c.priceChange.en})\n  📅 Dates (Left First): ${c.eventDate[currentLang] || c.eventDate.en} | Sowing: ${c.sowDates[currentLang] || c.sowDates.en}\n  States: ${c.statesListText[currentLang] || c.statesListText.en}\n  Advice: ${c.farmerAdvice[currentLang] || c.farmerAdvice.en}`).join('\n\n') +
+        `\n\n📲 Download FarmsKing App!`;
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    // Init
+    changeLang('pa');
+  </script>
+</body>
+</html>

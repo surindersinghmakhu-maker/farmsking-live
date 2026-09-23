@@ -1,0 +1,12 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Serve files directly from frontend/dist if they exist
+  RewriteCond %{DOCUMENT_ROOT}/frontend/dist%{REQUEST_URI} -f [OR]
+  RewriteCond %{DOCUMENT_ROOT}/frontend/dist%{REQUEST_URI} -d
+  RewriteRule ^(.*)$ frontend/dist/$1 [L]
+
+  # Fallback all SPA routing to frontend/dist/index.html
+  RewriteRule . frontend/dist/index.html [L]
+</IfModule>

@@ -12,8 +12,8 @@ backend/generated/prisma/
 backend/coverage/
 
 # Frontend (Expo/React Native)
+# frontend/dist/ (tracked for direct Hostinger deployment)
 frontend/.expo/
-frontend/dist/
 frontend/web-build/
 frontend/*.jks
 frontend/*.p8

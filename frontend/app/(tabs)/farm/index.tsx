@@ -34,7 +34,9 @@ import { FarmerPlanUpgradeModal } from '@/src/components/FarmerPlanUpgradeModal'
 import { FarmLocationPickerModal } from '@/components/FarmLocationPickerModal';
 import { CropLocationGuideModal } from '@/components/CropLocationGuideModal';
 import { PaymentVoucherModal, VoucherType } from '@/src/components/PaymentVoucherModal';
-import { useLabourWorkers } from '@/src/hooks/useLabour';
+import { useLabourWorkers, useLabourWorkEntries, useLabourPayments } from '@/src/hooks/useLabour';
+import { useFarms } from '@/src/hooks/useFarms';
+import { useExpensesForFarm } from '@/src/hooks/useExpenses';
 import { useMyAdvisor, useAvailableAdvisors, useChooseAdvisor, useMyPendingRequest, useCancelPendingRequest } from '@/src/hooks/useAdvisorAssignments';
 import { useSubmitCropToAdvisor, useCancelCropSubmission } from '@/src/hooks/useCrops';
 import { CropCompletionReviewModal } from '@/src/components/CropCompletionReviewModal';
@@ -95,6 +97,13 @@ export default function FarmListScreen() {
   const cancelCropSubmission = useCancelCropSubmission();
   const activeAdvisor = myAdvisorData?.advisor;
   const [submittingCropId, setSubmittingCropId] = useState<string | null>(null);
+
+  // Financial & Labour hooks for Crop History Metrics
+  const { data: farms = [] } = useFarms();
+  const firstFarmId = farms[0]?.id;
+  const { data: expenses = [] } = useExpensesForFarm(firstFarmId);
+  const { data: labourWorkEntries = [] } = useLabourWorkEntries();
+  const { data: labourPayments = [] } = useLabourPayments();
 
   const handleSubmitCropForAdoption = async (cropId: string, cropName: string) => {
     tap();
@@ -500,23 +509,81 @@ export default function FarmListScreen() {
   const getCompletedCropSummary = (cropId: string, hItem: CropHistoryEntry) => {
     const cropSales = salesRecords.filter((s) => s.cropId === cropId || (hItem.cropId && s.cropId === hItem.cropId));
 
-    let totalWeight = 0;
-    let totalAmount = 0;
+    let totalWeightNum = 0;
+    let totalSalesAmountNum = 0;
 
     if (cropSales.length > 0) {
-      totalWeight = cropSales.reduce((sum, s) => sum + (Number(s.quantity) || 0), 0);
-      totalAmount = cropSales.reduce((sum, s) => sum + (s.totalAmount || 0), 0);
+      totalWeightNum = cropSales.reduce((sum, s) => sum + (Number(s.quantity) || 0), 0);
+      totalSalesAmountNum = cropSales.reduce((sum, s) => sum + (Number(s.totalAmount) || 0), 0);
     } else if (hItem.soldQuantity) {
-      totalWeight = Number(hItem.soldQuantity) || 0;
-      totalAmount = hItem.totalRevenue || 0;
+      totalWeightNum = Number(hItem.soldQuantity) || 0;
+      totalSalesAmountNum = Number(hItem.totalRevenue) || 0;
     }
 
     const count = cropSales.length || (hItem.soldQuantity ? 1 : 0);
 
+    // Expenses linked to this crop
+    const cropExpenses = (expenses || []).filter(
+      (e) =>
+        e.cropCycleId === hItem.id ||
+        e.cropCycleId === hItem.cropId ||
+        (e.plotId && e.plotId === hItem.id) ||
+        (e.description && e.description.toLowerCase().includes((hItem.cropName || '').toLowerCase()))
+    );
+    const totalExpensesNum = cropExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+
+    // Labour linked to this crop
+    const cropLabourWork = (labourWorkEntries || []).filter(
+      (l) => l.cropCycleId === hItem.id || l.cropCycleId === hItem.cropId || l.plotId === hItem.id
+    );
+    const totalLabourWorkNum = cropLabourWork.reduce((sum, l) => sum + (Number(l.totalAmount) || 0), 0);
+
+    const cropLabourPay = (labourPayments || []).filter(
+      (p) => (p as any).cropCycleId === hItem.id || (p as any).cropCycleId === hItem.cropId
+    );
+    const totalLabourPayNum = cropLabourPay.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+
+    const totalLabourNum = totalLabourWorkNum > 0 ? totalLabourWorkNum : totalLabourPayNum;
+
+    const netProfitOrLossNum = totalSalesAmountNum - (totalExpensesNum + totalLabourNum);
+
+    // Advisor status check
+    const isAdvisorHired =
+      hItem.advisorStatus === 'ACCEPTED' ||
+      !!hItem.completionReview?.doctorName ||
+      (activeAdvisor && hItem.advisorStatus !== 'NONE');
+
+    const advisorName =
+      hItem.completionReview?.doctorName ||
+      (hItem.advisorStatus === 'ACCEPTED' ? activeAdvisor?.name : null) ||
+      (isAdvisorHired ? activeAdvisor?.name || 'Assigned Doctor' : null);
+
+    // Completion date format
+    const completionDateStr =
+      hItem.completedDate ||
+      (hItem.completionReview?.completedAt
+        ? new Date(hItem.completionReview.completedAt).toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+          })
+        : 'Completed');
+
     return {
-      totalWeight: `${totalWeight.toLocaleString('en-IN')} ${hItem.unit}`,
-      totalAmount: `₹${totalAmount.toLocaleString('en-IN')}`,
+      totalWeight: `${totalWeightNum.toLocaleString('en-IN')} ${hItem.unit}`,
+      totalAmount: `₹${totalSalesAmountNum.toLocaleString('en-IN')}`,
+      totalSalesAmountNum,
+      totalExpensesNum,
+      totalLabourNum,
+      netProfitOrLossNum,
       count,
+      isAdvisorHired,
+      advisorName,
+      completionDateStr,
+      cropSales,
+      cropExpenses,
+      cropLabourWork,
+      cropLabourPay,
     };
   };
 
@@ -896,6 +963,8 @@ export default function FarmListScreen() {
               {!isHistoryExpanded ? null : cropHistory.length > 0 ? (
                 cropHistory.map((hItem) => {
                   const summary = getCompletedCropSummary(hItem.id, hItem);
+                  const isProfit = summary.netProfitOrLossNum >= 0;
+
                   return (
                     <TouchableOpacity
                       key={hItem.id}
@@ -904,7 +973,7 @@ export default function FarmListScreen() {
                       onPress={() => openHistoryDetail(hItem)}
                     >
                       <View style={styles.historyCardHeader}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', flex: 1 }}>
                           <Text style={styles.historyCropName}>
                             📍 {hItem.fieldName} <Text style={styles.cropIdSubText}>(ID: {hItem.cropId || (hItem.id?.startsWith('C-') ? hItem.id : `C-${hItem.id?.slice(0, 6).toUpperCase()}`)})</Text>
                           </Text>
@@ -912,20 +981,78 @@ export default function FarmListScreen() {
                             <Text style={styles.completedBadgeText}>🏁 COMPLETED</Text>
                           </View>
                         </View>
-                        <Text style={styles.historyDate}>{hItem.completedDate}</Text>
                       </View>
 
-                      <Text style={styles.historyCropSub}>🌾 {hItem.cropName} · {hItem.categoryName}</Text>
+                      {/* Date & Advisor Status Badges */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                        <Text style={styles.historyCropSub}>
+                          🌾 {hItem.cropName} · {hItem.categoryName}
+                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          {/* Completion Date */}
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f1f5f9', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
+                            <Ionicons name="calendar-outline" size={11} color="#64748b" />
+                            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#334155' }}>
+                              📅 {summary.completionDateStr}
+                            </Text>
+                          </View>
 
-                      <View style={styles.historyRevenueBox}>
-                        <Ionicons name="cash" size={16} color="#16a34a" />
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.historyRevenueText}>
-                            Total Sale Weight: <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>{summary.totalWeight}</Text>
+                          {/* Advisor Status */}
+                          {summary.isAdvisorHired ? (
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#dcfce7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12, borderWidth: 1, borderColor: '#bbf7d0' }}>
+                              <Ionicons name="medical" size={11} color="#15803d" />
+                              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#15803d' }}>
+                                🩺 Hired {summary.advisorName ? `(${summary.advisorName})` : ''}
+                              </Text>
+                            </View>
+                          ) : (
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f1f5f9', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                              <Ionicons name="person-outline" size={11} color="#64748b" />
+                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
+                                🩺 Self-Managed
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      </View>
+
+                      {/* Financial Summary Breakdown (Sales, Expenses, Labour, Net Profit/Loss) */}
+                      <View style={styles.metricsGridContainer}>
+                        <View style={[styles.metricBadgeBox, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}>
+                          <Text style={[styles.metricBadgeLabel, { color: '#166534' }]}>💰 Sales ({summary.totalWeight})</Text>
+                          <Text style={[styles.metricBadgeValue, { color: '#15803d' }]}>
+                            ₹{summary.totalSalesAmountNum.toLocaleString('en-IN')}
                           </Text>
-                          <Text style={styles.historyRevenueText}>
-                            Total Sale Amount: <Text style={{ fontFamily: FONT.bold, color: '#16a34a' }}>{summary.totalAmount}</Text>
-                            {summary.count > 0 ? ` (${summary.count} sales logged)` : ''}
+                        </View>
+
+                        <View style={[styles.metricBadgeBox, { backgroundColor: '#fff7ed', borderColor: '#ffedd5' }]}>
+                          <Text style={[styles.metricBadgeLabel, { color: '#9a3412' }]}>💸 Expenses</Text>
+                          <Text style={[styles.metricBadgeValue, { color: '#c2410c' }]}>
+                            ₹{summary.totalExpensesNum.toLocaleString('en-IN')}
+                          </Text>
+                        </View>
+
+                        <View style={[styles.metricBadgeBox, { backgroundColor: '#f0f9ff', borderColor: '#bae6fd' }]}>
+                          <Text style={[styles.metricBadgeLabel, { color: '#075985' }]}>👷 Labour</Text>
+                          <Text style={[styles.metricBadgeValue, { color: '#0284c7' }]}>
+                            ₹{summary.totalLabourNum.toLocaleString('en-IN')}
+                          </Text>
+                        </View>
+
+                        <View
+                          style={[
+                            styles.metricBadgeBox,
+                            {
+                              backgroundColor: isProfit ? '#ecfdf5' : '#fef2f2',
+                              borderColor: isProfit ? '#a7f3d0' : '#fecaca',
+                            },
+                          ]}
+                        >
+                          <Text style={[styles.metricBadgeLabel, { color: isProfit ? '#065f46' : '#991b1b' }]}>
+                            {isProfit ? '📈 Net Profit' : '📉 Net Loss'}
+                          </Text>
+                          <Text style={[styles.metricBadgeValue, { color: isProfit ? '#047857' : '#dc2626' }]}>
+                            {isProfit ? '+' : '-'}₹{Math.abs(summary.netProfitOrLossNum).toLocaleString('en-IN')}
                           </Text>
                         </View>
                       </View>
@@ -934,14 +1061,14 @@ export default function FarmListScreen() {
                         <View style={styles.historyViewMoreRow}>
                           <Ionicons name="sparkles" size={13} color="#16a34a" />
                           <Text style={[styles.historyViewMoreText, { color: '#16a34a', fontFamily: FONT.bold }]}>
-                            ✨ Tap to view full sales audit details
+                            ✨ Tap to view full statement (Description & Comments)
                           </Text>
                         </View>
                       ) : (
                         <View style={[styles.historyViewMoreRow, { backgroundColor: '#fff7ed', borderColor: '#ffedd5', borderWidth: 1, paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.xs }]}>
                           <Ionicons name="lock-closed" size={13} color="#d97706" />
                           <Text style={[styles.historyViewMoreText, { color: '#b45309', fontFamily: FONT.bold }]}>
-                            🔒 Full Details (Paid Users Only)
+                            🔒 Full Paid Statement (Paid Users Only)
                           </Text>
                         </View>
                       )}
@@ -1173,160 +1300,264 @@ export default function FarmListScreen() {
             </View>
 
             {selectedHistoryCrop ? (
-              <View style={styles.detailListWrap}>
-                <View style={styles.completedBadge}>
-                  <Text style={styles.completedBadgeText}>🏁 COMPLETED · {selectedHistoryCrop.completedDate}</Text>
-                </View>
-
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>📍 Field</Text>
-                  <Text style={styles.detailValue}>
-                    {selectedHistoryCrop.fieldName} <Text style={{ fontSize: 12, color: '#64748b', fontFamily: FONT.medium }}>(ID: {selectedHistoryCrop.cropId || selectedHistoryCrop.id})</Text>
-                  </Text>
-                </View>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>🌾 Crop</Text>
-                  <Text style={styles.detailValue}>{selectedHistoryCrop.cropName}</Text>
-                </View>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>🗂 Category</Text>
-                  <Text style={styles.detailValue}>{selectedHistoryCrop.categoryName}</Text>
-                </View>
-                {selectedHistoryCrop.variety ? (
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>🌱 Variety</Text>
-                    <Text style={styles.detailValue}>{selectedHistoryCrop.variety}</Text>
-                  </View>
-                ) : null}
-                {selectedHistoryCrop.season ? (
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>🗓 Season</Text>
-                    <Text style={styles.detailValue}>{selectedHistoryCrop.season}</Text>
-                  </View>
-                ) : null}
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>📏 Area</Text>
-                  <Text style={styles.detailValue}>{selectedHistoryCrop.area}</Text>
-                </View>
-                {selectedHistoryCrop.sowingDate ? (
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>📅 Sown On</Text>
-                    <Text style={styles.detailValue}>{selectedHistoryCrop.sowingDate}</Text>
-                  </View>
-                ) : null}
-                {selectedHistoryCrop.irrigationType ? (
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>💧 Irrigation</Text>
-                    <Text style={styles.detailValue}>{selectedHistoryCrop.irrigationType}</Text>
-                  </View>
-                ) : null}
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>🔄 Harvest Type</Text>
-                  <Text style={styles.detailValue}>
-                    {(selectedHistoryCrop.harvestType || 'CONTINUOUS') === 'CONTINUOUS' ? 'Daily / Continuous' : 'One-Time'}
-                  </Text>
-                </View>
-
-                {(() => {
-                  const summary = getCompletedCropSummary(selectedHistoryCrop.id, selectedHistoryCrop);
-                  const cropSales = salesRecords.filter((s) => s.cropId === selectedHistoryCrop.id);
-
-                  return (
-                    <View style={{ marginTop: 12 }}>
-                      <View style={styles.historyRevenueBox}>
-                        <Ionicons name="cash" size={18} color="#16a34a" />
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.historyRevenueText}>
-                            Total Sale Weight: <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>{summary.totalWeight}</Text>
-                          </Text>
-                          <Text style={styles.historyRevenueText}>
-                            Total Sale Amount: <Text style={{ fontFamily: FONT.bold, color: '#16a34a' }}>{summary.totalAmount}</Text>
-                            {summary.count > 0 ? ` (${summary.count} sales logged)` : ''}
-                          </Text>
-                        </View>
+              <ScrollView style={{ maxHeight: '85%' }} contentContainerStyle={{ paddingBottom: 20 }} nestedScrollEnabled>
+                <View style={styles.detailListWrap}>
+                  {/* Modal Summary Header Card */}
+                  <View style={styles.modalSummaryHeaderCard}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                      <View style={styles.completedBadge}>
+                        <Text style={styles.completedBadgeText}>🏁 COMPLETED</Text>
                       </View>
-
-                      {/* Crop Completion Review & Doctor Grading Details */}
-                      {selectedHistoryCrop.completionReview ? (
-                        <View style={{ marginTop: 12, backgroundColor: '#f0fdf4', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#bbf7d0' }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                            <Ionicons name="ribbon" size={16} color="#16a34a" />
-                            <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#16a34a' }}>
-                              Farmer Completion Audit & Rating
-                            </Text>
-                          </View>
-                          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>
-                            App Benefit Rating: {'⭐'.repeat(selectedHistoryCrop.completionReview.farmskingRating || 5)} ({selectedHistoryCrop.completionReview.farmskingRating || 5}/5 Stars)
-                          </Text>
-                          {selectedHistoryCrop.completionReview.farmskingBenefitAmount ? (
-                            <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#15803d', marginTop: 2 }}>
-                              Estimated Extra Profit / Benefit: <Text style={{ fontFamily: FONT.bold, color: '#16a34a' }}>{selectedHistoryCrop.completionReview.farmskingBenefitAmount}</Text>
-                            </Text>
-                          ) : null}
-                          {selectedHistoryCrop.completionReview.farmskingFeedback ? (
-                            <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#475569', marginTop: 4 }}>
-                              💬 "{selectedHistoryCrop.completionReview.farmskingFeedback}"
-                            </Text>
-                          ) : null}
-
-                          {selectedHistoryCrop.completionReview.doctorRating ? (
-                            <View style={{ marginTop: 10, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#dcfce7' }}>
-                              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0369a1' }}>
-                                🩺 Doctor Rating: {'⭐'.repeat(selectedHistoryCrop.completionReview.doctorRating)} (Grade: {selectedHistoryCrop.completionReview.doctorGrade || 'EXCELLENT'})
-                              </Text>
-                              {selectedHistoryCrop.completionReview.doctorFeedback ? (
-                                <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#334155', marginTop: 2 }}>
-                                  Doctor Review: "{selectedHistoryCrop.completionReview.doctorFeedback}"
-                                </Text>
-                              ) : null}
-                            </View>
-                          ) : null}
-                        </View>
-                      ) : null}
-
-                      {/* Itemized Sale Audit Logs Breakdown for Subscribed Paid Farmers */}
-                      <View style={styles.salesBreakdownWrap}>
-                        <View style={styles.salesBreakdownHeaderRow}>
-                          <Text style={styles.salesBreakdownTitle}>
-                            📋 Recorded Sale Audit Log ({cropSales.length})
-                          </Text>
-                          <View style={styles.paidBadge}>
-                            <Ionicons name="star" size={11} color="#b45309" />
-                            <Text style={styles.paidBadgeText}>PAID USER</Text>
-                          </View>
-                        </View>
-
-                        {cropSales.length > 0 ? (
-                          cropSales.map((entry, idx) => (
-                            <View key={entry.id || idx} style={styles.saleEntryCard}>
-                              <View style={styles.saleEntryTopRow}>
-                                <Text style={styles.saleEntryDate}>📅 {entry.saleDate}</Text>
-                                <Text style={styles.saleEntryAmount}>₹{entry.totalAmount.toLocaleString('en-IN')}</Text>
-                              </View>
-                              <View style={styles.saleEntryMetaRow}>
-                                <Text style={styles.saleEntryDetail}>
-                                  📦 {entry.quantity} {entry.unit} @ ₹{entry.pricePerUnit} / {entry.unit}
-                                </Text>
-                                <Text style={styles.saleEntryBuyer}>👤 {entry.buyerName || 'Local Trader'}</Text>
-                              </View>
-                              <TouchableOpacity style={styles.shareBillBtn} activeOpacity={0.8} onPress={() => openBillPreviewForSale(entry)}>
-                                <Ionicons name="download-outline" size={13} color="#16a34a" />
-                                <Text style={styles.shareBillBtnText}>Download Bill</Text>
-                              </TouchableOpacity>
-                            </View>
-                          ))
-                        ) : (
-                          <View style={{ padding: 10, backgroundColor: '#f8fafc', borderRadius: 8, marginTop: 4 }}>
-                            <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#64748b' }}>
-                              No detailed individual sales entries logged for this crop.
-                            </Text>
-                          </View>
-                        )}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f1f5f9', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
+                        <Ionicons name="calendar-outline" size={12} color="#64748b" />
+                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#334155' }}>
+                          Completion Date: {selectedHistoryCrop.completedDate || '23 Sep 2026'}
+                        </Text>
                       </View>
                     </View>
-                  );
-                })()}
-              </View>
+
+                    {/* Basic details */}
+                    <View style={{ marginTop: 8, gap: 4 }}>
+                      <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: '#0f172a' }}>
+                        📍 {selectedHistoryCrop.fieldName} — 🌾 {selectedHistoryCrop.cropName}
+                      </Text>
+                      <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#64748b' }}>
+                        Category: {selectedHistoryCrop.categoryName} · Area: {selectedHistoryCrop.area}
+                        {selectedHistoryCrop.sowingDate ? ` · Sown: ${selectedHistoryCrop.sowingDate}` : ''}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {(() => {
+                    const summary = getCompletedCropSummary(selectedHistoryCrop.id, selectedHistoryCrop);
+                    const isProfit = summary.netProfitOrLossNum >= 0;
+
+                    // Build Total Paid Statement Entries
+                    const statement: Array<{
+                      id: string;
+                      date: string;
+                      category: string;
+                      type: 'INCOME' | 'EXPENSE';
+                      amount: number;
+                      description: string;
+                      comments: string;
+                      entryData?: CropSaleRecord;
+                    }> = [];
+
+                    // 1. Paid Sales (Income)
+                    summary.cropSales.forEach((s, idx) => {
+                      statement.push({
+                        id: `sale-${s.id || idx}`,
+                        date: s.saleDate || summary.completionDateStr,
+                        category: '🌾 Crop Sale',
+                        type: 'INCOME',
+                        amount: Number(s.totalAmount) || 0,
+                        description: `Buyer: ${s.buyerName || 'Cash / Local Mandi Trader'}`,
+                        comments: `Qty: ${s.quantity} ${s.unit} @ ₹${s.pricePerUnit}/${s.unit}${s.amountReceivedMode ? ` | Mode: ${s.amountReceivedMode}` : ''}`,
+                        entryData: s,
+                      });
+                    });
+
+                    // 2. Paid Expenses (Outflow)
+                    summary.cropExpenses.forEach((e, idx) => {
+                      statement.push({
+                        id: `exp-${e.id || idx}`,
+                        date: e.expenseDate
+                          ? new Date(e.expenseDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                          : 'Expense Date',
+                        category: `💸 ${e.category?.labelEn || 'Farm Input Expense'}`,
+                        type: 'EXPENSE',
+                        amount: Number(e.amount) || 0,
+                        description: e.vendorName ? `Vendor: ${e.vendorName}` : e.description || 'Farm Expense',
+                        comments: e.notes || e.description || `Paid Expense | Mode: ${e.paymentMode || 'CASH'}`,
+                      });
+                    });
+
+                    // 3. Paid Labour (Outflow)
+                    if (summary.cropLabourWork.length > 0) {
+                      summary.cropLabourWork.forEach((l, idx) => {
+                        statement.push({
+                          id: `lab-w-${l.id || idx}`,
+                          date: l.workDate
+                            ? new Date(l.workDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                            : 'Work Date',
+                          category: `👷 Labour Work (${l.workType || 'Field Work'})`,
+                          type: 'EXPENSE',
+                          amount: Number(l.totalAmount) || 0,
+                          description: `Worker: ${l.worker?.name || 'Farm Labourer'}`,
+                          comments: l.notes || `${l.quantity} ${l.unit} @ ₹${l.rate}/${l.unit}`,
+                        });
+                      });
+                    } else {
+                      summary.cropLabourPay.forEach((p, idx) => {
+                        statement.push({
+                          id: `lab-p-${p.id || idx}`,
+                          date: p.paymentDate
+                            ? new Date(p.paymentDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                            : 'Payment Date',
+                          category: `👷 Labour Wages Paid`,
+                          type: 'EXPENSE',
+                          amount: Number(p.amount) || 0,
+                          description: `Worker: ${p.worker?.name || 'Farm Labourer'}`,
+                          comments: p.notes || `Paid via ${p.paymentMode || 'CASH'}`,
+                        });
+                      });
+                    }
+
+                    return (
+                      <View style={{ marginTop: 8 }}>
+                        {/* Advisor Hired Status Row */}
+                        <View style={styles.detailRow}>
+                          <Text style={styles.detailLabel}>🩺 Advisor Status</Text>
+                          <Text style={[styles.detailValue, { color: summary.isAdvisorHired ? '#15803d' : '#64748b' }]}>
+                            {summary.isAdvisorHired ? `Hired (${summary.advisorName || 'Crop Doctor'})` : 'Not Hired (Self-Managed)'}
+                          </Text>
+                        </View>
+
+                        {/* Financial Summary 4 Grid Badges */}
+                        <View style={styles.metricsGridContainer}>
+                          <View style={[styles.metricBadgeBox, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}>
+                            <Text style={[styles.metricBadgeLabel, { color: '#166534' }]}>💰 Sales ({summary.totalWeight})</Text>
+                            <Text style={[styles.metricBadgeValue, { color: '#15803d' }]}>
+                              ₹{summary.totalSalesAmountNum.toLocaleString('en-IN')}
+                            </Text>
+                          </View>
+
+                          <View style={[styles.metricBadgeBox, { backgroundColor: '#fff7ed', borderColor: '#ffedd5' }]}>
+                            <Text style={[styles.metricBadgeLabel, { color: '#9a3412' }]}>💸 Expenses</Text>
+                            <Text style={[styles.metricBadgeValue, { color: '#c2410c' }]}>
+                              ₹{summary.totalExpensesNum.toLocaleString('en-IN')}
+                            </Text>
+                          </View>
+
+                          <View style={[styles.metricBadgeBox, { backgroundColor: '#f0f9ff', borderColor: '#bae6fd' }]}>
+                            <Text style={[styles.metricBadgeLabel, { color: '#075985' }]}>👷 Labour</Text>
+                            <Text style={[styles.metricBadgeValue, { color: '#0284c7' }]}>
+                              ₹{summary.totalLabourNum.toLocaleString('en-IN')}
+                            </Text>
+                          </View>
+
+                          <View
+                            style={[
+                              styles.metricBadgeBox,
+                              {
+                                backgroundColor: isProfit ? '#ecfdf5' : '#fef2f2',
+                                borderColor: isProfit ? '#a7f3d0' : '#fecaca',
+                              },
+                            ]}
+                          >
+                            <Text style={[styles.metricBadgeLabel, { color: isProfit ? '#065f46' : '#991b1b' }]}>
+                              {isProfit ? '📈 Net Profit' : '📉 Net Loss'}
+                            </Text>
+                            <Text style={[styles.metricBadgeValue, { color: isProfit ? '#047857' : '#dc2626' }]}>
+                              {isProfit ? '+' : '-'}₹{Math.abs(summary.netProfitOrLossNum).toLocaleString('en-IN')}
+                            </Text>
+                          </View>
+                        </View>
+
+                        {/* Completion Audit & Rating */}
+                        {selectedHistoryCrop.completionReview ? (
+                          <View style={{ marginTop: 12, backgroundColor: '#f0fdf4', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#bbf7d0' }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                              <Ionicons name="ribbon" size={16} color="#16a34a" />
+                              <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#16a34a' }}>
+                                Farmer Completion Audit & Rating
+                              </Text>
+                            </View>
+                            <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>
+                              App Benefit Rating: {'⭐'.repeat(selectedHistoryCrop.completionReview.farmskingRating || 5)} ({selectedHistoryCrop.completionReview.farmskingRating || 5}/5 Stars)
+                            </Text>
+                            {selectedHistoryCrop.completionReview.farmskingBenefitAmount ? (
+                              <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#15803d', marginTop: 2 }}>
+                                Estimated Extra Profit / Benefit: <Text style={{ fontFamily: FONT.bold, color: '#16a34a' }}>{selectedHistoryCrop.completionReview.farmskingBenefitAmount}</Text>
+                              </Text>
+                            ) : null}
+                            {selectedHistoryCrop.completionReview.farmskingFeedback ? (
+                              <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#475569', marginTop: 4 }}>
+                                💬 "{selectedHistoryCrop.completionReview.farmskingFeedback}"
+                              </Text>
+                            ) : null}
+
+                            {selectedHistoryCrop.completionReview.doctorRating ? (
+                              <View style={{ marginTop: 10, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#dcfce7' }}>
+                                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0369a1' }}>
+                                  🩺 Doctor Rating: {'⭐'.repeat(selectedHistoryCrop.completionReview.doctorRating)} (Grade: {selectedHistoryCrop.completionReview.doctorGrade || 'EXCELLENT'})
+                                </Text>
+                                {selectedHistoryCrop.completionReview.doctorFeedback ? (
+                                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#334155', marginTop: 2 }}>
+                                    Doctor Review: "{selectedHistoryCrop.completionReview.doctorFeedback}"
+                                  </Text>
+                                ) : null}
+                              </View>
+                            ) : null}
+                          </View>
+                        ) : null}
+
+                        {/* TOTAL PAID FINANCIAL STATEMENT TABLE WITH DESCRIPTION & COMMENTS */}
+                        <View style={styles.statementSectionWrap}>
+                          <View style={styles.statementHeaderRow}>
+                            <Ionicons name="document-text" size={16} color="#15803d" />
+                            <Text style={styles.statementTitle}>🧾 Total Paid Financial Statement</Text>
+                            <View style={styles.paidBadge}>
+                              <Ionicons name="star" size={10} color="#b45309" />
+                              <Text style={styles.paidBadgeText}>PAID ONLY</Text>
+                            </View>
+                          </View>
+
+                          {statement.length > 0 ? (
+                            statement.map((item, idx) => (
+                              <View key={item.id || idx} style={styles.statementRowCard}>
+                                <View style={styles.statementRowTop}>
+                                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', flex: 1 }}>
+                                    <Text style={styles.statementDate}>📅 {item.date}</Text>
+                                    <View style={[styles.statementCatBadge, { backgroundColor: item.type === 'INCOME' ? '#dcfce7' : '#f1f5f9' }]}>
+                                      <Text style={[styles.statementCatText, { color: item.type === 'INCOME' ? '#15803d' : '#475569' }]}>
+                                        {item.category}
+                                      </Text>
+                                    </View>
+                                  </View>
+                                  <Text style={[styles.statementAmount, { color: item.type === 'INCOME' ? '#16a34a' : '#dc2626' }]}>
+                                    {item.type === 'INCOME' ? '+' : '-'}₹{item.amount.toLocaleString('en-IN')}
+                                  </Text>
+                                </View>
+
+                                <Text style={styles.statementDesc}>📝 Description: {item.description}</Text>
+
+                                {item.comments ? (
+                                  <View style={styles.statementCommentBox}>
+                                    <Ionicons name="chatbubble-ellipses-outline" size={12} color="#475569" />
+                                    <Text style={styles.statementCommentText}>
+                                      💬 Comments & Notes: <Text style={{ fontFamily: FONT.medium, color: '#334155' }}>{item.comments}</Text>
+                                    </Text>
+                                  </View>
+                                ) : null}
+
+                                {item.entryData ? (
+                                  <TouchableOpacity
+                                    style={styles.shareBillBtn}
+                                    activeOpacity={0.8}
+                                    onPress={() => openBillPreviewForSale(item.entryData!)}
+                                  >
+                                    <Ionicons name="download-outline" size={13} color="#16a34a" />
+                                    <Text style={styles.shareBillBtnText}>Download Sale Bill</Text>
+                                  </TouchableOpacity>
+                                ) : null}
+                              </View>
+                            ))
+                          ) : (
+                            <View style={{ padding: 14, backgroundColor: '#f8fafc', borderRadius: 8, marginTop: 6, alignItems: 'center' }}>
+                              <Ionicons name="receipt-outline" size={26} color="#94a3b8" />
+                              <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#64748b', marginTop: 4 }}>
+                                No paid financial transactions recorded for this crop cycle.
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      </View>
+                    );
+                  })()}
+                </View>
+              </ScrollView>
             ) : null}
           </View>
         </View>
@@ -2398,5 +2629,111 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 11.5,
     fontFamily: FONT.bold,
+  },
+  metricsGridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 8,
+  },
+  metricBadgeBox: {
+    flex: 1,
+    minWidth: '47%',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+  },
+  metricBadgeLabel: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+  },
+  metricBadgeValue: {
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+    marginTop: 2,
+  },
+  modalSummaryHeaderCard: {
+    backgroundColor: '#f8fafc',
+    borderRadius: RADIUS.lg,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginBottom: 6,
+  },
+  statementSectionWrap: {
+    marginTop: 12,
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  statementHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
+  statementTitle: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+    flex: 1,
+  },
+  statementRowCard: {
+    backgroundColor: '#f8fafc',
+    borderRadius: RADIUS.md,
+    padding: 10,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  statementRowTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  statementDate: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+  },
+  statementCatBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+  },
+  statementCatText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+  },
+  statementAmount: {
+    fontSize: 13.5,
+    fontFamily: FONT.extraBold,
+  },
+  statementDesc: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#1e293b',
+    marginTop: 2,
+  },
+  statementCommentBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 4,
+    backgroundColor: '#ffffff',
+    padding: 6,
+    borderRadius: RADIUS.xs,
+    marginTop: 6,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  statementCommentText: {
+    fontSize: 11,
+    fontFamily: FONT.semiBold,
+    color: '#475569',
+    flex: 1,
   },
 });

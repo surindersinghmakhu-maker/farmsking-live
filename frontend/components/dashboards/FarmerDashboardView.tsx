@@ -31,6 +31,16 @@ interface FarmerDashboardViewProps {
   onOpenAdminChat?: () => void;
 }
 
+const PLAN_ICON_MAP: Record<string, { icon: keyof typeof Ionicons.glyphMap; color: string }> = {
+  FREE: { icon: 'leaf', color: '#15803d' },
+  PRO: { icon: 'flash', color: '#0284c7' },
+  SMART: { icon: 'star', color: '#1d4ed8' },
+  SUPER: { icon: 'star', color: '#d97706' },
+  SILVER: { icon: 'medical', color: '#475569' },
+  GOLD: { icon: 'ribbon', color: '#d97706' },
+  ROYAL: { icon: 'crown', color: '#7c3aed' },
+};
+
 export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpenAdminChat }) => {
   const theme = RoleThemes.FARMER;
   const router = useRouter();
@@ -39,6 +49,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
   const { data: pricing } = useFarmerPlanPricing();
   const activateTrialMutation = useActivateTrial();
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const currentPlanMeta = PLAN_ICON_MAP[plan] || { icon: 'crown', color: '#d97706' };
 
   const isTrialActive =
     plan === 'SUPER' &&
@@ -74,7 +85,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
     : null;
   const planPrice = pricing?.find((p) => p.plan === plan)?.price;
 
-  const planActionLabel = 'Renew/Upgrade';
+  const planActionLabel = 'Membership Pass';
 
   const [modalInitialMode, setModalInitialMode] = useState<'GET_COUPON' | 'REDEEM_CODE'>('GET_COUPON');
 
@@ -89,7 +100,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         planBadge={
           <View style={{ alignItems: 'flex-end', gap: 3 }}>
             <View style={styles.highlightPlanBadge}>
-              <Ionicons name="crown" size={13} color="#d97706" />
+              <Ionicons name={currentPlanMeta.icon} size={13} color={currentPlanMeta.color} />
               <Text style={styles.highlightPlanBadgeText} numberOfLines={1}>
                 {meta.label}
               </Text>
@@ -110,8 +121,8 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
                 setIsPlanModalOpen(true);
               }}
             >
-              <Ionicons name="sparkles" size={11} color="#ffffff" />
-              <Text style={styles.planActionBtnText} numberOfLines={1}>Renew / Upgrade 👑</Text>
+              <Ionicons name={currentPlanMeta.icon} size={12} color={currentPlanMeta.color} />
+              <Text style={styles.planActionBtnText} numberOfLines={1}>Membership Pass</Text>
             </TouchableOpacity>
           </View>
         }
@@ -158,25 +169,27 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         {/* Live Open-Meteo Weather Card */}
         <OpenMeteoWeatherCard />
 
-        {/* ⭐ Super Advisor Free Trial Activation Banner — Compact Row with Button on Right */}
+        {/* ⭐ Super Advisor Free Trial Activation Banner — 2 Rows Layout */}
         <View style={[styles.compactTrialBannerCard, premiumShadow('#b45309', 'sm')]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+          {/* Row 1: Header Title + Star Icon + Free Till Badge */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 6 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
               <View style={styles.compactTrialIconContainer}>
-                <Ionicons name="sparkles" size={15} color="#d97706" />
+                <Ionicons name="sparkles" size={14} color="#d97706" />
               </View>
-              <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                  <Text style={styles.compactTrialBannerTitle}>⭐ Super Membership Trial</Text>
-                  <View style={styles.trialBadgePill}>
-                    <Text style={styles.trialBadgePillText}>FREE TILL 30/9/2026</Text>
-                  </View>
-                </View>
-                <Text style={styles.compactTrialBannerSub} numberOfLines={1}>
-                  {isTrialActive ? 'ACTIVE till 30/9/2026' : 'Unlock all app features free'}
-                </Text>
-              </View>
+              <Ionicons name="star" size={14} color="#d97706" />
+              <Text style={styles.compactTrialBannerTitle}>Super Membership Trial</Text>
             </View>
+            <View style={styles.trialBadgePill}>
+              <Text style={styles.trialBadgePillText}>FREE TILL 30/9/2026</Text>
+            </View>
+          </View>
+
+          {/* Row 2: Subtitle text on Left + Action Button on Right */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <Text style={[styles.compactTrialBannerSub, { flex: 1 }]} numberOfLines={1}>
+              Unlock all app features free
+            </Text>
 
             <TouchableOpacity
               style={[
@@ -772,12 +785,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#15803d',
+    backgroundColor: '#ffffff',
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 4.5,
     borderRadius: RADIUS.pill,
-    borderWidth: 1,
-    borderColor: '#22c55e',
+    borderWidth: 1.5,
+    borderColor: '#f59e0b',
+    ...premiumShadow('#000000', 'sm'),
+  },
+  planActionBtnText: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    color: '#92400e',
+    letterSpacing: 0.2,
   },
   compactTrialBannerCard: {
     backgroundColor: '#fffbeb',

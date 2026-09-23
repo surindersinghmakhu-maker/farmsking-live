@@ -381,7 +381,7 @@ export function FarmerPlanUpgradeModal({
                 <Text style={styles.highlightVipLabelText}>👑 FARMSKING VIP MEMBERSHIP</Text>
               </View>
               <Text style={styles.headerTitleText}>
-                {tabMode === 'GET_COUPON' ? 'Renew & Upgrade Membership 🚀' : 'Redeem Coupon Code 🎟️'}
+                {tabMode === 'GET_COUPON' ? 'Membership Pass' : 'Redeem Coupon Code 🎟️'}
               </Text>
             </View>
             <TouchableOpacity onPress={closeAndReset} style={styles.closeBtnIcon}>
@@ -530,14 +530,14 @@ export function FarmerPlanUpgradeModal({
               <View style={{ gap: 8 }}>
                 {(planCategory === 'FARMER'
                   ? [
-                      { id: 'FARMER_BASIC', key: 'PRO', label: 'Basic Membership', emoji: '⚡', color: '#0284c7', sub: '⚡ Bookkeeping & Expense Logs + Voice AI Mic (No Doctor)' },
-                      { id: 'FARMER_PRO', key: 'SMART', label: 'Pro Membership', emoji: '👑', color: '#1d4ed8', sub: '👑 All Bookkeeping + Labour Record & Worker Login (No Doctor)' },
-                      { id: 'FARMER_SUPER', key: 'SUPER', label: 'Super Membership', emoji: '⭐', color: '#b45309', sub: '⭐ Unlimited Crops, Weather Reports & Mandi AI (No Doctor)' },
+                      { id: 'FARMER_BASIC', key: 'PRO', label: 'Basic Membership', iconName: 'flash', color: '#0284c7', sub: 'Bookkeeping & Expense Logs + Voice AI Mic (No Doctor)' },
+                      { id: 'FARMER_PRO', key: 'SMART', label: 'Pro Membership', iconName: 'crown', color: '#1d4ed8', sub: 'All Bookkeeping + Labour Record & Worker Login (No Doctor)' },
+                      { id: 'FARMER_SUPER', key: 'SUPER', label: 'Super Membership', iconName: 'star', color: '#b45309', sub: 'Unlimited Crops, Weather Reports & Mandi AI (No Doctor)' },
                     ]
                   : [
-                      { id: 'CARE_SILVER', key: 'SILVER', label: 'Doctor Silver Care', emoji: '🩺', color: '#64748b', sub: '🩺 5 Crops Supervision + Soil Health & Leaf Scan' },
-                      { id: 'CARE_GOLD', key: 'GOLD', label: 'Doctor Gold Care', emoji: '🥇', color: '#d97706', sub: '🥇 5 Crops Priority Doctor Care + Advisor Chat & Call Requests' },
-                      { id: 'CARE_ROYAL', key: 'ROYAL', label: 'Doctor Royal Care', emoji: '👑', color: '#7c3aed', sub: '👑 10 Crops Full Senior Doctor Supervision & Custom Spray Schedule' },
+                      { id: 'CARE_SILVER', key: 'SILVER', label: 'Doctor Silver Care', iconName: 'medical', color: '#64748b', sub: '5 Crops Supervision + Soil Health & Leaf Scan' },
+                      { id: 'CARE_GOLD', key: 'GOLD', label: 'Doctor Gold Care', iconName: 'ribbon', color: '#d97706', sub: '5 Crops Priority Doctor Care + Advisor Chat & Call Requests' },
+                      { id: 'CARE_ROYAL', key: 'ROYAL', label: 'Doctor Royal Care', iconName: 'shield-checkmark', color: '#7c3aed', sub: '10 Crops Full Senior Doctor Supervision & Custom Spray Schedule' },
                     ]
                 ).map((item) => {
                   const p = item.key as FarmerPlanType;
@@ -570,8 +570,9 @@ export function FarmerPlanUpgradeModal({
                     >
                       <View style={{ flex: 1 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Ionicons name={item.iconName as any} size={15} color={item.color} />
                           <Text style={[styles.advisorPickName, { color: item.color }]}>
-                            {item.emoji} {item.label}
+                            {item.label}
                           </Text>
                         </View>
                         <Text style={[styles.advisorPickMeta, { color: '#475569', fontWeight: '700' }]}>

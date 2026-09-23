@@ -1373,30 +1373,74 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
     return (
       <View style={styles.maintenanceContainer}>
         <ScrollView contentContainerStyle={styles.maintenanceContent} showsVerticalScrollIndicator={false}>
-          <Image
-            source={require('@/assets/images/store_maintenance.png')}
-            style={styles.maintenanceImg}
-            resizeMode="contain"
-          />
-
-          <View style={styles.maintenanceBadge}>
-            <Ionicons name="lock-closed" size={14} color="#dc2626" />
-            <Text style={styles.maintenanceBadgeText}>STORE UNDER MAINTENANCE</Text>
+          {/* Header Image Poster Banner */}
+          <View style={styles.maintenanceHeaderBanner}>
+            <Image
+              source={require('@/assets/images/store_maintenance.png')}
+              style={styles.maintenanceImg}
+              resizeMode="contain"
+            />
           </View>
 
-          <Text style={styles.maintenanceTitle}>🌾 FarmsKing Storefront Under Maintenance</Text>
+          {/* Glowing Animated Coming Soon Badge */}
+          <View style={styles.maintenanceBadge}>
+            <Ionicons name="sparkles" size={14} color="#dc2626" />
+            <Text style={styles.maintenanceBadgeText}>🚀 COMING SOON • STORE UNDER MAINTENANCE</Text>
+          </View>
+
+          {/* Headline Title */}
+          <Text style={styles.maintenanceTitle}>🌾 FarmsKing Storefront Coming Soon!</Text>
+
+          {/* Punjabi & English Subtitle */}
+          <Text style={styles.maintenanceSubPunjabi}>
+            ਸਾਡਾ ਨਵਾਂ ਐਗਰੀ ਸਟੋਰ ਬਹੁਤ ਜਲਦ ਸ਼ਾਨਦਾਰ ਨਵੇਂ ਆਫਰਜ਼, ਸਰਟੀਫਾਈਡ ਬੀਜ ਅਤੇ 100% ਔਰਗੈਨਿਕ ਪ੍ਰੋਡਕਟਸ ਨਾਲ ਲਾਈਵ ਹੋ ਰਿਹਾ ਹੈ!
+          </Text>
           <Text style={styles.maintenanceSub}>
-            We are currently updating our agricultural products & inventory to bring you fresh stock.
-            New buyer orders are temporarily paused. Please check back shortly!
+            We are currently updating our agricultural product catalog, inventory & VIP discount coupon system. Buyer shopping features will automatically resume shortly!
           </Text>
 
+          {/* Feature Teasers Card Stack */}
+          <View style={styles.teaserStack}>
+            <View style={styles.teaserItem}>
+              <View style={[styles.teaserIconCircle, { backgroundColor: '#dcfce7' }]}>
+                <Ionicons name="leaf" size={20} color="#16a34a" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.teaserTitle}>🌱 Certified Seeds & Agri Inputs</Text>
+                <Text style={styles.teaserSub}>Direct factory price with official quality guarantee</Text>
+              </View>
+            </View>
+
+            <View style={styles.teaserItem}>
+              <View style={[styles.teaserIconCircle, { backgroundColor: '#fef3c7' }]}>
+                <Ionicons name="nutrition" size={20} color="#d97706" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.teaserTitle}>🍯 Pure Organic Farmer Made Foods</Text>
+                <Text style={styles.teaserSub}>Desi Ghee, Organic Jaggery, Mustard Oil & Honey</Text>
+              </View>
+            </View>
+
+            <View style={styles.teaserItem}>
+              <View style={[styles.teaserIconCircle, { backgroundColor: '#e0f2fe' }]}>
+                <Ionicons name="car" size={20} color="#0284c7" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.teaserTitle}>⚡ Direct Village Doorstep Delivery</Text>
+                <Text style={styles.teaserSub}>Fast delivery directly to your home or farm location</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Live Upgrade Status Box */}
           <View style={styles.maintenanceBox}>
-            <Ionicons name="time-outline" size={20} color="#0284c7" />
+            <View style={styles.pulseDot} />
             <Text style={styles.maintenanceBoxText}>
-              Estimated completion: In a few minutes. Store features will automatically resume when update completes.
+              <Text style={{ fontFamily: FONT.extraBold, color: '#0369a1' }}>🛠️ Current Status:</Text> Upgrade in progress. Store features will automatically unlock when launch finishes.
             </Text>
           </View>
 
+          {/* Action Buttons Row */}
           <View style={styles.maintenanceBtnRow}>
             <TouchableOpacity
               style={styles.maintenanceRefreshBtn}
@@ -1406,7 +1450,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                 if (typeof window !== 'undefined') window.location.reload();
               }}
             >
-              <Ionicons name="refresh" size={16} color="#ffffff" />
+              <Ionicons name="refresh" size={18} color="#ffffff" />
               <Text style={styles.maintenanceRefreshBtnText}>Refresh Status</Text>
             </TouchableOpacity>
 
@@ -1415,11 +1459,11 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
               activeOpacity={0.85}
               onPress={() => {
                 tap();
-                Linking.openURL('https://api.whatsapp.com/send?phone=919577622000&text=Hello%20FarmsKing%20Support%2C%20I%20have%20an%20inquiry%20regarding%20store%20maintenance.').catch(() => {});
+                Linking.openURL('https://api.whatsapp.com/send?phone=919577622000&text=Hello%20FarmsKing%20Support%2C%20I%20have%20an%20inquiry%20regarding%20store%20launch.').catch(() => {});
               }}
             >
-              <Ionicons name="logo-whatsapp" size={16} color="#15803d" />
-              <Text style={styles.maintenanceSupportBtnText}>Contact Support</Text>
+              <Ionicons name="logo-whatsapp" size={18} color="#15803d" />
+              <Text style={styles.maintenanceSupportBtnText}>WhatsApp Support</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -5857,20 +5901,28 @@ const styles = StyleSheet.create({
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill },
   badgeText: { fontSize: 9, fontFamily: FONT.extraBold },
 
-  maintenanceContainer: { flex: 1, backgroundColor: '#ffffff', justifyContent: 'center', alignItems: 'center' },
-  maintenanceContent: { padding: 24, alignItems: 'center', maxWidth: 480, width: '100%', gap: 12 },
-  maintenanceImg: { width: '100%', height: 240, marginBottom: 8 },
-  maintenanceBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#fef2f2', borderWidth: 1.5, borderColor: '#fca5a5', paddingHorizontal: 12, paddingVertical: 5, borderRadius: RADIUS.pill },
-  maintenanceBadgeText: { fontSize: 11.5, fontFamily: FONT.extraBold, color: '#dc2626', letterSpacing: 0.5 },
-  maintenanceTitle: { fontSize: 20, fontFamily: FONT.extraBold, color: '#0f172a', textAlign: 'center', letterSpacing: -0.3 },
-  maintenanceSub: { fontSize: 13, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center', lineHeight: 20 },
-  maintenanceBox: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#f0f9ff', borderWidth: 1, borderColor: '#bae6fd', borderRadius: RADIUS.md, padding: 12, marginTop: 4 },
-  maintenanceBoxText: { flex: 1, fontSize: 12, fontFamily: FONT.medium, color: '#0369a1', lineHeight: 17 },
-  maintenanceBtnRow: { flexDirection: 'row', gap: 10, marginTop: 12, width: '100%' },
-  maintenanceRefreshBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#16a34a', paddingVertical: 12, borderRadius: RADIUS.md },
-  maintenanceRefreshBtnText: { fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' },
-  maintenanceSupportBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#dcfce7', borderWidth: 1.5, borderColor: '#86efac', paddingVertical: 12, borderRadius: RADIUS.md },
-  maintenanceSupportBtnText: { fontSize: 13, fontFamily: FONT.bold, color: '#15803d' },
+  maintenanceContainer: { flex: 1, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center' },
+  maintenanceContent: { paddingHorizontal: 20, paddingVertical: 32, alignItems: 'center', maxWidth: 520, width: '100%', gap: 14 },
+  maintenanceHeaderBanner: { width: '100%', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f0fdf4', borderRadius: RADIUS.xl, padding: 16, borderWidth: 1.5, borderColor: '#bbf7d0' },
+  maintenanceImg: { width: '100%', height: 210 },
+  maintenanceBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#fef2f2', borderWidth: 1.5, borderColor: '#fca5a5', paddingHorizontal: 14, paddingVertical: 6, borderRadius: RADIUS.pill },
+  maintenanceBadgeText: { fontSize: 11, fontFamily: FONT.extraBold, color: '#dc2626', letterSpacing: 0.6 },
+  maintenanceTitle: { fontSize: 22, fontFamily: FONT.extraBold, color: '#0f172a', textAlign: 'center', letterSpacing: -0.4 },
+  maintenanceSubPunjabi: { fontSize: 14, fontFamily: FONT.extraBold, color: '#15803d', textAlign: 'center', lineHeight: 21, backgroundColor: '#dcfce7', paddingHorizontal: 14, paddingVertical: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#86efac' },
+  maintenanceSub: { fontSize: 12.5, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center', lineHeight: 19 },
+  teaserStack: { width: '100%', gap: 10, marginVertical: 4 },
+  teaserItem: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#ffffff', padding: 12, borderRadius: RADIUS.lg, borderWidth: 1, borderColor: '#e2e8f0', ...premiumShadow('#0f172a', 'sm') },
+  teaserIconCircle: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  teaserTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
+  teaserSub: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
+  maintenanceBox: { width: '100%', flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#f0f9ff', borderWidth: 1.5, borderColor: '#bae6fd', borderRadius: RADIUS.lg, padding: 12, marginTop: 4 },
+  pulseDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#0284c7' },
+  maintenanceBoxText: { flex: 1, fontSize: 12, fontFamily: FONT.medium, color: '#0369a1', lineHeight: 18 },
+  maintenanceBtnRow: { flexDirection: 'row', gap: 10, marginTop: 10, width: '100%' },
+  maintenanceRefreshBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#16a34a', paddingVertical: 13, borderRadius: RADIUS.md, ...premiumShadow('#16a34a', 'sm') },
+  maintenanceRefreshBtnText: { fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' },
+  maintenanceSupportBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#dcfce7', borderWidth: 1.5, borderColor: '#86efac', paddingVertical: 13, borderRadius: RADIUS.md },
+  maintenanceSupportBtnText: { fontSize: 13.5, fontFamily: FONT.bold, color: '#15803d' },
 });
 
 

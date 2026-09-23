@@ -54,11 +54,18 @@ const RENEW_CUTOFF_MS = RENEW_HISTORY_MONTHS * 30 * DAY_MS;
 
 const ALPHANUMERIC_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
-/** Unique King Coupon Number format: KC-LITE-XXXXXX, KC-PRO-XXXXXX, KC-SUPER-XXXXXX */
+/** Unique King Coupon Number format: FB123456 (Basic), FP123456 (Pro), FS123456 (Super) */
 function generateCode(plan: FarmerSubscriptionPlan): string {
-  const prefix = plan === FarmerSubscriptionPlan.PRO ? 'KC-LITE' : plan === FarmerSubscriptionPlan.SMART ? 'KC-PRO' : plan === FarmerSubscriptionPlan.SUPER ? 'KC-SUPER' : 'KC-FREE';
+  let prefix = 'FB';
+  if (plan === FarmerSubscriptionPlan.PRO || plan === FarmerSubscriptionPlan.BASIC || plan === FarmerSubscriptionPlan.FREE) {
+    prefix = 'FB';
+  } else if (plan === FarmerSubscriptionPlan.SMART || plan === FarmerSubscriptionPlan.SILVER || plan === FarmerSubscriptionPlan.GOLD) {
+    prefix = 'FP';
+  } else if (plan === FarmerSubscriptionPlan.SUPER || plan === FarmerSubscriptionPlan.PLATINUM || plan === FarmerSubscriptionPlan.DIAMOND || plan === FarmerSubscriptionPlan.ROYAL) {
+    prefix = 'FS';
+  }
   const digits = randomBytes(4).readUInt32BE(0) % 1_000_000;
-  return `${prefix}-${digits.toString().padStart(6, '0')}`;
+  return `${prefix}${digits.toString().padStart(6, '0')}`;
 }
 
 @Injectable()

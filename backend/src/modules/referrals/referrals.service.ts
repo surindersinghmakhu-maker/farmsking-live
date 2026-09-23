@@ -138,8 +138,9 @@ export class ReferralsService {
       });
       if (!superAdmin) return;
 
-      const prefix = planTier === FarmerSubscriptionPlan.PRO ? 'KC-LITE' : planTier === FarmerSubscriptionPlan.SMART ? 'KC-PRO' : 'KC-FREE';
-      const code = `${prefix}-${Math.floor(100000 + Math.random() * 900000)}`;
+      const prefix = planTier === FarmerSubscriptionPlan.PRO ? 'FB' : planTier === FarmerSubscriptionPlan.SMART ? 'FP' : 'FS';
+      const digits = Math.floor(100000 + Math.random() * 900000);
+      const code = `${prefix}${digits}`;
 
       return this.prisma.farmerPlanCoupon.create({
         data: {

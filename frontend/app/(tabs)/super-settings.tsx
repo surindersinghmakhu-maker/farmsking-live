@@ -776,10 +776,13 @@ function ECommerceSettingsPanel() {
     try {
       await updateSettings.mutateAsync({ storefrontMaintenanceMode: value });
       setSavedNotice(value ? '🔒 Storefront Maintenance Mode ENABLED!' : '✅ Storefront Maintenance Mode DISABLED!');
-      setTimeout(() => setSavedNotice(null), 3000);
-    } catch {
-      setSavedNotice('❌ Could not save settings.');
-      setTimeout(() => setSavedNotice(null), 3000);
+      setTimeout(() => setSavedNotice(null), 3500);
+    } catch (err: any) {
+      const errMsg = Array.isArray(err?.response?.data?.message)
+        ? err.response.data.message.join(', ')
+        : (err?.response?.data?.message || err?.message || 'Could not save settings.');
+      setSavedNotice(`❌ ${errMsg}`);
+      setTimeout(() => setSavedNotice(null), 4000);
     }
   };
 

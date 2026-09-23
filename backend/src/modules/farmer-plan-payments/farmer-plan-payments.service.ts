@@ -158,9 +158,9 @@ export class FarmerPlanPaymentsService {
       throw new BadRequestException('Only submitted payment requests can be confirmed.');
     }
 
-    const prefix = request.targetPlan === FarmerSubscriptionPlan.PRO ? 'KC-LITE' : request.targetPlan === FarmerSubscriptionPlan.SMART ? 'KC-PRO' : request.targetPlan === FarmerSubscriptionPlan.SUPER ? 'KC-SUPER' : 'KC-FREE';
-    const digits = Math.floor(Math.random() * 1000000);
-    const code = `${prefix}-${digits.toString().padStart(6, '0')}`;
+    const prefix = request.targetPlan === FarmerSubscriptionPlan.PRO ? 'FB' : request.targetPlan === FarmerSubscriptionPlan.SMART ? 'FP' : 'FS';
+    const digits = Math.floor(100000 + Math.random() * 900000);
+    const code = `${prefix}${digits}`;
 
     const isAdvisorPlan = (request.targetPlan === FarmerSubscriptionPlan.SMART || request.targetPlan === FarmerSubscriptionPlan.SUPER);
     const coupon = await this.prisma.farmerPlanCoupon.create({

@@ -12,7 +12,8 @@ const PRICE_PER_DAY = 2;
 const PARTNER_RATE = 0.9;
 
 function generateCode(): string {
-  return `BASIC-${randomBytes(3).toString('hex').toUpperCase()}`;
+  const digits = randomBytes(4).readUInt32BE(0) % 1_000_000;
+  return `FB${digits.toString().padStart(6, '0')}`;
 }
 
 const LIST_SELECT = {

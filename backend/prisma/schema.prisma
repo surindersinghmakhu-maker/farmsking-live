@@ -1809,8 +1809,9 @@ model AppSetting {
   otpDeliveryChannel    String   @default("WHATSAPP")
   referralSignupBonusAmount Float @default(10)
   newUserSignupBonusAmount Float @default(10)
-  appDownloadUrl         String?  @default("https://farmsking-1.vercel.app/download/farmsking.apk")
+  appDownloadUrl         String?  @default("https://farmsking.tech/download/farmsking.apk")
   latestAppVersion       String?  @default("1.0.0")
+  storefrontMaintenanceMode Boolean @default(false)
   featureFlags          Json?
   updatedAt             DateTime @updatedAt
   updatedById           String?

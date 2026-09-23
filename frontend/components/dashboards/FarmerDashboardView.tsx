@@ -88,9 +88,9 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         avatarUrl={user?.photoUrl || undefined}
         planBadge={
           <View style={{ alignItems: 'flex-end', gap: 3 }}>
-            <View style={styles.planBadge}>
-              <View style={[styles.planDot, { backgroundColor: meta.color }]} />
-              <Text style={styles.planBadgeText} numberOfLines={1}>
+            <View style={styles.highlightPlanBadge}>
+              <Ionicons name="crown" size={13} color="#d97706" />
+              <Text style={styles.highlightPlanBadgeText} numberOfLines={1}>
                 {meta.label}
               </Text>
             </View>
@@ -102,16 +102,16 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
             ) : null}
 
             <TouchableOpacity
-              style={styles.planActionBtn}
+              style={styles.highlightPlanActionBtn}
               activeOpacity={0.85}
               onPress={() => {
                 tap();
-                setModalInitialMode('REDEEM_CODE');
+                setModalInitialMode('GET_COUPON');
                 setIsPlanModalOpen(true);
               }}
             >
-              <Text style={styles.planActionBtnText} numberOfLines={1}>{planActionLabel}</Text>
-              <Ionicons name="chevron-forward" size={10} color="#166534" />
+              <Ionicons name="sparkles" size={11} color="#ffffff" />
+              <Text style={styles.planActionBtnText} numberOfLines={1}>Renew / Upgrade 👑</Text>
             </TouchableOpacity>
           </View>
         }
@@ -158,51 +158,51 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         {/* Live Open-Meteo Weather Card */}
         <OpenMeteoWeatherCard />
 
-        {/* ⭐ Super Advisor Free Trial Activation Banner */}
-        <View style={[styles.trialBannerCard, premiumShadow('#b45309', 'sm')]}>
-          <View style={styles.trialBannerHeader}>
-            <View style={styles.trialIconContainer}>
-              <Ionicons name="sparkles" size={18} color="#d97706" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 4 }}>
-                <Text style={styles.trialBannerTitle}>⭐ Super Membership Trial</Text>
-                <View style={styles.trialBadgePill}>
-                  <Text style={styles.trialBadgePillText}>FREE TILL 30/9/2026</Text>
-                </View>
+        {/* ⭐ Super Advisor Free Trial Activation Banner — Compact Row with Button on Right */}
+        <View style={[styles.compactTrialBannerCard, premiumShadow('#b45309', 'sm')]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+              <View style={styles.compactTrialIconContainer}>
+                <Ionicons name="sparkles" size={15} color="#d97706" />
               </View>
-              <Text style={styles.trialBannerSub}>
-                {isTrialActive
-                  ? 'Your Super Membership trial is ACTIVE till 30/9/2026!'
-                  : 'Unlock all app features free till 30/9/2026'}
-              </Text>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            style={[
-              styles.activateTrialBtn,
-              (isTrialActive || activateTrialMutation.isPending) && styles.activateTrialBtnDisabled,
-            ]}
-            activeOpacity={0.8}
-            disabled={isTrialActive || activateTrialMutation.isPending}
-            onPress={handleActivateTrial}
-          >
-            {activateTrialMutation.isPending ? (
-              <ActivityIndicator size="small" color="#ffffff" />
-            ) : (
-              <>
-                <Ionicons
-                  name={isTrialActive ? 'checkmark-circle' : 'flash'}
-                  size={15}
-                  color="#ffffff"
-                />
-                <Text style={styles.activateTrialBtnText}>
-                  {isTrialActive ? '✓ Trial Activated (Till 30/9/2026)' : '⚡ Activate Free Trial Now'}
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <Text style={styles.compactTrialBannerTitle}>⭐ Super Membership Trial</Text>
+                  <View style={styles.trialBadgePill}>
+                    <Text style={styles.trialBadgePillText}>FREE TILL 30/9/2026</Text>
+                  </View>
+                </View>
+                <Text style={styles.compactTrialBannerSub} numberOfLines={1}>
+                  {isTrialActive ? 'ACTIVE till 30/9/2026' : 'Unlock all app features free'}
                 </Text>
-              </>
-            )}
-          </TouchableOpacity>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.activateTrialBtnRight,
+                (isTrialActive || activateTrialMutation.isPending) && styles.activateTrialBtnDisabled,
+              ]}
+              activeOpacity={0.8}
+              disabled={isTrialActive || activateTrialMutation.isPending}
+              onPress={handleActivateTrial}
+            >
+              {activateTrialMutation.isPending ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <>
+                  <Ionicons
+                    name={isTrialActive ? 'checkmark-circle' : 'flash'}
+                    size={12}
+                    color="#ffffff"
+                  />
+                  <Text style={styles.activateTrialBtnRightText}>
+                    {isTrialActive ? 'Trial Activated' : 'Activate Trial'}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
 
 
@@ -752,32 +752,78 @@ const styles = StyleSheet.create({
     fontFamily: FONT.extraBold,
     color: '#b45309',
   },
-  trialBannerSub: {
-    fontSize: 11,
-    fontFamily: FONT.medium,
-    color: '#b45309',
-    marginTop: 2,
-    lineHeight: 15,
-  },
-  activateTrialBtn: {
-    width: '100%',
+  highlightPlanBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: '#d97706',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    gap: 4,
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1.5,
+    borderColor: '#fcd34d',
+  },
+  highlightPlanBadgeText: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    color: '#92400e',
+  },
+  highlightPlanActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#15803d',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#22c55e',
+  },
+  compactTrialBannerCard: {
+    backgroundColor: '#fffbeb',
     borderRadius: RADIUS.md,
+    padding: 10,
+    borderWidth: 1.5,
+    borderColor: '#fde68a',
+  },
+  compactTrialIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#fef3c7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#fcd34d',
+  },
+  compactTrialBannerTitle: {
+    fontSize: 12.5,
+    fontFamily: FONT.extraBold,
+    color: '#92400e',
+  },
+  compactTrialBannerSub: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: '#b45309',
+    marginTop: 1,
+  },
+  activateTrialBtnRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#d97706',
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+    borderRadius: RADIUS.md,
+  },
+  activateTrialBtnRightText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
   },
   activateTrialBtnDisabled: {
     backgroundColor: '#94a3b8',
     opacity: 0.8,
-  },
-  activateTrialBtnText: {
-    fontSize: 12.5,
-    fontFamily: FONT.bold,
-    color: '#ffffff',
   },
 });
 

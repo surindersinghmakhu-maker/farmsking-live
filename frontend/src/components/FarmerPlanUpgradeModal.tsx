@@ -374,11 +374,14 @@ export function FarmerPlanUpgradeModal({
     <Modal visible={visible} transparent animationType="fade" onRequestClose={closeAndReset}>
       <View style={styles.overlay}>
         <View style={styles.card}>
-          <LinearGradient colors={['#0f172a', '#1e293b']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.headerBanner}>
-            <View style={{ flex: 1, gap: 2 }}>
-              <Text style={styles.headerTagText}>👑 FARMSKING VIP</Text>
+          <LinearGradient colors={['#022c22', '#065f46', '#0f172a']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.headerBanner}>
+            <View style={{ flex: 1, gap: 4 }}>
+              <View style={styles.highlightVipLabelWrap}>
+                <Ionicons name="sparkles" size={13} color="#f59e0b" />
+                <Text style={styles.highlightVipLabelText}>👑 FARMSKING VIP MEMBERSHIP</Text>
+              </View>
               <Text style={styles.headerTitleText}>
-                {tabMode === 'GET_COUPON' ? 'Get Membership Coupon' : 'Upgrade Membership'}
+                {tabMode === 'GET_COUPON' ? 'Renew & Upgrade Membership 🚀' : 'Redeem Coupon Code 🎟️'}
               </Text>
             </View>
             <TouchableOpacity onPress={closeAndReset} style={styles.closeBtnIcon}>
@@ -1035,9 +1038,10 @@ function UpiUpgradeFlow({
 const styles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'center', alignItems: 'center', padding: SPACING.lg },
   card: { width: '100%', maxWidth: 400, backgroundColor: '#ffffff', borderRadius: RADIUS.xl, padding: SPACING.lg, gap: 8, overflow: 'hidden', ...premiumShadow('#000000', 'lg') },
-  headerBanner: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, marginHorizontal: -SPACING.lg, marginTop: -SPACING.lg, marginBottom: 8 },
-  headerTagText: { fontSize: 10, fontFamily: FONT.extraBold, color: '#38bdf8', letterSpacing: 0.5 },
-  headerTitleText: { fontSize: 16, fontFamily: FONT.extraBold, color: '#ffffff' },
+  headerBanner: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, marginHorizontal: -SPACING.lg, marginTop: -SPACING.lg, marginBottom: 8, borderBottomWidth: 1.5, borderBottomColor: '#10b981' },
+  highlightVipLabelWrap: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#fef3c7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill, alignSelf: 'flex-start', borderWidth: 1, borderColor: '#fde68a' },
+  highlightVipLabelText: { fontSize: 10, fontFamily: FONT.extraBold, color: '#92400e', letterSpacing: 0.5 },
+  headerTitleText: { fontSize: 15, fontFamily: FONT.extraBold, color: '#ffffff' },
   closeBtnIcon: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255, 255, 255, 0.15)', alignItems: 'center', justifyContent: 'center' },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
   title: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a' },

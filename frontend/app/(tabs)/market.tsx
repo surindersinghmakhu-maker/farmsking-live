@@ -10,8 +10,8 @@ import { Ionicons } from '@expo/vector-icons';
 const theme = RoleThemes.FARMER;
 
 export default function MarketScreen() {
-  const { plan } = useFarmerPlan();
-  const advisorIncluded = plan === 'PRO' || plan === 'SMART' || plan === 'SUPER';
+  const { plan, meta, limits } = useFarmerPlan();
+  const advisorIncluded = limits?.advisorIncluded ?? (plan === 'SILVER' || plan === 'GOLD' || plan === 'ROYAL');
 
   return (
     <View style={styles.container}>
@@ -21,7 +21,7 @@ export default function MarketScreen() {
           {advisorIncluded ? (
             <View style={styles.planBadge}>
               <Ionicons name="ribbon-outline" size={12} color="#ffffff" />
-              <Text style={styles.planBadgeText}>Pro</Text>
+              <Text style={styles.planBadgeText}>{meta.label}</Text>
             </View>
           ) : null}
         </View>

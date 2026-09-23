@@ -76,8 +76,8 @@ export function CropDoctorCareView() {
     }
   };
 
-  const { plan } = useFarmerPlan();
-  const advisorIncluded = plan === 'PRO' || plan === 'SMART' || plan === 'SUPER';
+  const { plan, limits } = useFarmerPlan();
+  const advisorIncluded = limits?.advisorIncluded ?? (plan === 'SILVER' || plan === 'GOLD' || plan === 'ROYAL');
 
   const hireStatus: HireStatus = myAdvisor
     ? 'ACTIVE'

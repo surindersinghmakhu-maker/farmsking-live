@@ -76,20 +76,11 @@ export class FarmerPlansService implements OnModuleInit {
 
   private async ensureDefaultPricing() {
     const defaults = [
-      { plan: FarmerSubscriptionPlan.PRO, price: 199, billingPeriodDays: 180, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: null, advisorIncluded: false },
-      { plan: FarmerSubscriptionPlan.PRO, price: 299, billingPeriodDays: 365, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: null, advisorIncluded: false },
+      { plan: FarmerSubscriptionPlan.PRO, price: 199, billingPeriodDays: 365, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: null, advisorIncluded: false },
+      { plan: FarmerSubscriptionPlan.SMART, price: 499, billingPeriodDays: 365, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: null, advisorIncluded: false },
+      { plan: FarmerSubscriptionPlan.SUPER, price: 999, billingPeriodDays: 365, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: null, advisorIncluded: false },
 
-      { plan: FarmerSubscriptionPlan.SMART, price: 499, billingPeriodDays: 30, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: 5, advisorIncluded: true },
-      { plan: FarmerSubscriptionPlan.SMART, price: 1299, billingPeriodDays: 90, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: 5, advisorIncluded: true },
-      { plan: FarmerSubscriptionPlan.SMART, price: 2299, billingPeriodDays: 180, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: 5, advisorIncluded: true },
-      { plan: FarmerSubscriptionPlan.SMART, price: 3999, billingPeriodDays: 365, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: 5, advisorIncluded: true },
-
-      { plan: FarmerSubscriptionPlan.SUPER, price: 999, billingPeriodDays: 30, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: null, advisorIncluded: true },
-      { plan: FarmerSubscriptionPlan.SUPER, price: 2699, billingPeriodDays: 90, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: null, advisorIncluded: true },
-      { plan: FarmerSubscriptionPlan.SUPER, price: 4999, billingPeriodDays: 180, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: null, advisorIncluded: true },
-      { plan: FarmerSubscriptionPlan.SUPER, price: 8999, billingPeriodDays: 365, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: null, advisorIncluded: true },
-
-      // 🩺 3-Tier Crop Care Plans
+      // 🩺 3-Tier Doctor Crop Care Plans
       { plan: FarmerSubscriptionPlan.SILVER, price: 999, billingPeriodDays: 365, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: 5, maxDoctorCrops: 5, advisorIncluded: true },
       { plan: FarmerSubscriptionPlan.GOLD, price: 1999, billingPeriodDays: 365, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: 5, maxDoctorCrops: 5, advisorIncluded: true },
       { plan: FarmerSubscriptionPlan.ROYAL, price: 3499, billingPeriodDays: 365, partnerShareType: DiscountValueType.PERCENTAGE, partnerShareValue: 10, maxActiveCrops: 10, maxDoctorCrops: 10, advisorIncluded: true },
@@ -241,7 +232,7 @@ export class FarmerPlansService implements OnModuleInit {
         maxActiveCrops,
         maxAdvisorCrops: null,
         fullCompletedCropDetails: effective.plan !== FarmerSubscriptionPlan.FREE,
-        advisorIncluded: planPricing?.advisorIncluded ?? (effective.plan === FarmerSubscriptionPlan.SMART || effective.plan === FarmerSubscriptionPlan.SUPER),
+        advisorIncluded: planPricing?.advisorIncluded ?? (effective.plan === FarmerSubscriptionPlan.SILVER || effective.plan === FarmerSubscriptionPlan.GOLD || effective.plan === FarmerSubscriptionPlan.ROYAL),
       },
     };
   }

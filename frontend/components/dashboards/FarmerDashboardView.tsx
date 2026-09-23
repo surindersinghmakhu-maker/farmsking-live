@@ -166,15 +166,15 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
             </View>
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 4 }}>
-                <Text style={styles.trialBannerTitle}>⭐ Super Advisor Plan</Text>
+                <Text style={styles.trialBannerTitle}>⭐ Super Membership Trial</Text>
                 <View style={styles.trialBadgePill}>
                   <Text style={styles.trialBadgePillText}>FREE TILL 30/9/2026</Text>
                 </View>
               </View>
               <Text style={styles.trialBannerSub}>
                 {isTrialActive
-                  ? 'Your Super Advisor trial is ACTIVE till 30/9/2026!'
-                  : 'Unlock all app features & dedicated advisor free till 30/9/2026'}
+                  ? 'Your Super Membership trial is ACTIVE till 30/9/2026!'
+                  : 'Unlock all app features free till 30/9/2026'}
               </Text>
             </View>
           </View>

@@ -179,12 +179,17 @@ export default function MoreScreen() {
   const showAdvisorBusinessSection = role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR';
 
 
-  const accountItems: AccountItem[] =
-    role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR'
-      ? [MY_PROFILE_ITEM, MY_ADDRESSES_ITEM, ADVISOR_PROFILE_ITEM]
-      : role === 'FARMER' || role === 'GARDENER'
-        ? [MY_PROFILE_ITEM, MY_ADDRESSES_ITEM, FARMER_ONLY_ITEM, LABOUR_ITEM]
-        : [MY_PROFILE_ITEM, MY_ADDRESSES_ITEM];
+  const isFarmerRole = role === 'FARMER' || user?.role === 'FARMER';
+  const isAdvisorRole = role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR' || user?.role === 'FARM_ADVISOR' || user?.role === 'GARDEN_ADVISOR';
+  const isLabourRole = role === 'LABOUR' || role === 'OPERATOR' || user?.role === 'LABOUR' || user?.role === 'OPERATOR';
+
+  const accountItems: AccountItem[] = [
+    MY_PROFILE_ITEM,
+    MY_ADDRESSES_ITEM,
+    ...(isFarmerRole ? [FARMER_ONLY_ITEM] : []),
+    ...(isAdvisorRole ? [ADVISOR_PROFILE_ITEM] : []),
+    ...(isLabourRole ? [LABOUR_ITEM] : []),
+  ];
 
   return (
     <>
@@ -222,13 +227,13 @@ export default function MoreScreen() {
           }
         />
 
-        {/* Dedicated App Parts: Memberships, Coupons, Accounts & Crops */}
+        {/* Dedicated App Parts: Memberships */}
         {role !== 'FARM_ADVISOR' && role !== 'GARDEN_ADVISOR' ? (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>👑 MEMBERSHIPS & COUPONS</Text>
+            <Text style={styles.sectionTitle}>👑 MEMBERSHIPS</Text>
             <View style={styles.sectionCard}>
               <TouchableOpacity
-                style={styles.row}
+                style={[styles.row, { borderBottomWidth: 0 }]}
                 activeOpacity={0.7}
                 onPress={() => router.push('/(tabs)/memberships' as any)}
               >
@@ -238,21 +243,6 @@ export default function MoreScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.rowLabel}>👑 Memberships (Farmer & Doctor)</Text>
                   <Text style={styles.rowSubLabel}>Farmer App Plans & Specialist Doctor Advisory</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.row, { borderBottomWidth: 0 }]}
-                activeOpacity={0.7}
-                onPress={() => router.push('/(tabs)/coupons' as any)}
-              >
-                <View style={[styles.rowIconBg, { backgroundColor: '#ecfdf5' }]}>
-                  <Ionicons name="ticket-outline" size={18} color="#10b981" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>🎟️ Coupon System</Text>
-                  <Text style={styles.rowSubLabel}>Redeem Promo Keys & Browse Offer Discounts</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>

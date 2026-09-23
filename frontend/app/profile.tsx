@@ -241,6 +241,9 @@ export default function ProfileScreen() {
     }
   };
 
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+  const isWorker = user?.role === 'LABOUR' || user?.role === 'OPERATOR';
+
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -249,149 +252,470 @@ export default function ProfileScreen() {
           <Ionicons name="arrow-back" size={22} color="#ffffff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
-          {user?.role === 'ADVISOR' ? 'Advisor Account Profile' : 'Farmer Account Profile'}
+          {activeTab === 'ADDRESSES'
+            ? 'My Registered Addresses'
+            : isAdmin
+            ? 'System Admin Profile'
+            : isWorker
+            ? 'Worker & Labour Profile'
+            : 'My Account Profile'}
         </Text>
         <View style={{ width: 36 }} />
       </LinearGradient>
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'PROFILE' && styles.activeTabBtn]}
-          onPress={() => { tap(); setActiveTab('PROFILE'); }}
-        >
-          <Ionicons name="person-outline" size={17} color={activeTab === 'PROFILE' ? theme.primary : '#64748b'} />
-          <Text style={[styles.tabText, activeTab === 'PROFILE' && { color: theme.primary }]}>My Details</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'ADDRESSES' && styles.activeTabBtn]}
-          onPress={() => { tap(); setActiveTab('ADDRESSES'); }}
-        >
-          <Ionicons name="location-outline" size={17} color={activeTab === 'ADDRESSES' ? theme.primary : '#64748b'} />
-          <Text style={[styles.tabText, activeTab === 'ADDRESSES' && { color: theme.primary }]}>Addresses</Text>
-        </TouchableOpacity>
-      </View>
 
       {activeTab === 'ADDRESSES' ? (
         <AddressesTab theme={theme} />
       ) : (
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* FAMILY HEAD ACCOUNT DETAILS SUMMARY CARD AT VERY TOP */}
-        <View style={styles.familyHeadSummaryCard}>
-          <View style={styles.familyHeadBadgeRow}>
-            <Text style={styles.familyHeadNameText}>
-              👨‍🌾 {user?.name || 'Family Head'}
-            </Text>
-            <View style={styles.familyHeadTag}>
-              <Text style={styles.familyHeadTagText}>Family Head</Text>
-            </View>
-          </View>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          {/* ─── ROLE TYPE 1: SYSTEM ADMIN PROFILE (NO PHOTO) ─── */}
+          {isAdmin ? (
+            <View style={{ width: '100%', maxWidth: 460, gap: 12 }}>
+              <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: '#eff6ff', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="shield-checkmark" size={18} color="#2563eb" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#1e293b' }}>
+                      🛡️ System Admin Profile
+                    </Text>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
+                      Official Admin Credentials & Contact Information
+                    </Text>
+                  </View>
+                </View>
 
-          <View style={styles.familyHeadMetaRow}>
-            <View style={styles.familyHeadMetaItem}>
-              <Ionicons name="key-outline" size={13} color="#15803d" />
-              <Text style={styles.familyHeadMetaLabel}>King ID:</Text>
-              <Text style={styles.familyHeadMetaValue}>{user?.kingId || '—'}</Text>
-            </View>
+                {/* Badges Row */}
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                  <View style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569' }}>
+                      🔑 King ID: {user?.kingId || '—'}
+                    </Text>
+                  </View>
+                  {user?.mobile ? (
+                    <View style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569' }}>
+                        📞 Mobile: {user.mobile}
+                      </Text>
+                    </View>
+                  ) : null}
+                  <View style={{ backgroundColor: '#eff6ff', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#bfdbfe' }}>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#1d4ed8' }}>
+                      👑 Role: {user?.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Admin'}
+                    </Text>
+                  </View>
+                </View>
 
-            {user?.mobile ? (
-              <View style={styles.familyHeadMetaItem}>
-                <Ionicons name="call-outline" size={13} color="#475569" />
-                <Text style={styles.familyHeadMetaLabel}>Mobile:</Text>
-                <Text style={styles.familyHeadMetaValue}>{user.mobile}</Text>
+                <Text style={styles.inputLabel}>Admin Full Name *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="System Administrator Name"
+                  placeholderTextColor="#94a3b8"
+                />
+
+                <Text style={[styles.inputLabel, { marginTop: 10 }]}>Official Email Address</Text>
+                <TextInput
+                  style={styles.input}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="admin@farmsking.tech"
+                  placeholderTextColor="#94a3b8"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
               </View>
-            ) : null}
-          </View>
-        </View>
 
-        {/* Labour Family Member & Farmer Switcher Section */}
-        {labourWorkersList.length > 0 && (
-          <View style={{ marginBottom: 10, width: '100%', maxWidth: 460 }}>
-            <LabourFamilySwitcher
-              workers={labourWorkersList}
-              selectedWorkerId={selectedLabourWorkerId}
-              onSelectWorker={(w) => setSelectedLabourWorkerId(w.id)}
-              selectedFarmerId={selectedFarmerId}
-              onSelectFarmer={(fId) => setSelectedFarmerId(fId)}
-              onRefresh={refetchLabour}
-              hideFarmerSwitcher={true}
-              showActiveCard={true}
-              showAddButton={true}
-            />
-          </View>
-        )}
+              {isSaved && (
+                <View style={styles.savedNotice}>
+                  <Ionicons name="checkmark-circle" size={15} color="#16a34a" />
+                  <Text style={styles.savedNoticeText}>Admin Profile Saved Successfully!</Text>
+                </View>
+              )}
+              {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
 
-        {/* SAVE WORKERS PROFILES BUTTON */}
-        {isSaved && (
-          <View style={styles.savedNotice}>
-            <Ionicons name="checkmark-circle" size={15} color="#16a34a" />
-            <Text style={styles.savedNoticeText}>Workers Profiles Saved Successfully!</Text>
-          </View>
-        )}
+              <TouchableOpacity
+                style={[styles.saveBtn, { backgroundColor: theme.primary, marginTop: 4 }]}
+                onPress={saveProfile}
+                disabled={updateAddress.isPending}
+              >
+                {updateAddress.isPending ? (
+                  <ActivityIndicator color="#ffffff" />
+                ) : (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="checkmark-done-circle-outline" size={18} color="#ffffff" />
+                    <Text style={styles.saveBtnText}>Save Admin Profile</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
+          ) : isWorker ? (
+            /* ─── ROLE TYPE 2: WORKER PROFILE ─── */
+            <View style={{ width: '100%', maxWidth: 460, gap: 12 }}>
+              {/* Photo Avatar */}
+              <View style={styles.avatarSection}>
+                <TouchableOpacity style={styles.avatarWrap} activeOpacity={0.85} onPress={() => setIsPhotoModalOpen(true)}>
+                  <Avatar uri={photoUrl ?? undefined} size={88} />
+                  <View style={styles.photoEditBadge}>
+                    <Ionicons name="camera" size={13} color="#ffffff" />
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.changePhotoBtn} onPress={() => setIsPhotoModalOpen(true)}>
+                  <Text style={styles.changePhotoText}>Change Profile Photo</Text>
+                </TouchableOpacity>
+              </View>
 
-        {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
+              {/* Worker Personal Details Card */}
+              <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
+                <Text style={styles.inputLabel}>Worker Full Name *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Full Name"
+                  placeholderTextColor="#94a3b8"
+                />
 
-        <TouchableOpacity
-          style={[styles.saveBtn, { backgroundColor: '#16a34a', marginTop: 8, marginBottom: 12, paddingVertical: 10, width: '100%', maxWidth: 460 }]}
-          onPress={async () => {
-            tap();
-            await refetchLabour();
-            await saveProfile();
-          }}
-          disabled={updateAddress.isPending}
-        >
-          {updateAddress.isPending ? (
-            <ActivityIndicator color="#ffffff" />
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+                  <View style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569' }}>
+                      🔑 King ID: {user?.kingId || '—'}
+                    </Text>
+                  </View>
+                  {user?.mobile ? (
+                    <View style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569' }}>
+                        📞 Mobile: {user.mobile}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+              </View>
+
+              {/* Labour Family Member & Farmer Switcher Section */}
+              {labourWorkersList.length > 0 && (
+                <View style={{ width: '100%' }}>
+                  <LabourFamilySwitcher
+                    workers={labourWorkersList}
+                    selectedWorkerId={selectedLabourWorkerId}
+                    onSelectWorker={(w) => setSelectedLabourWorkerId(w.id)}
+                    selectedFarmerId={selectedFarmerId}
+                    onSelectFarmer={(fId) => setSelectedFarmerId(fId)}
+                    onRefresh={refetchLabour}
+                    hideFarmerSwitcher={true}
+                    showActiveCard={true}
+                    showAddButton={true}
+                  />
+                </View>
+              )}
+
+              {isSaved && (
+                <View style={styles.savedNotice}>
+                  <Ionicons name="checkmark-circle" size={15} color="#16a34a" />
+                  <Text style={styles.savedNoticeText}>Workers Profiles Saved Successfully!</Text>
+                </View>
+              )}
+              {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
+
+              <TouchableOpacity
+                style={[styles.saveBtn, { backgroundColor: '#16a34a', marginTop: 4 }]}
+                onPress={async () => {
+                  tap();
+                  await refetchLabour();
+                  await saveProfile();
+                }}
+                disabled={updateAddress.isPending}
+              >
+                {updateAddress.isPending ? (
+                  <ActivityIndicator color="#ffffff" />
+                ) : (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="checkmark-done-circle-outline" size={17} color="#ffffff" />
+                    <Text style={styles.saveBtnText}>Save Workers Profiles</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
           ) : (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Ionicons name="checkmark-done-circle-outline" size={17} color="#ffffff" />
-              <Text style={styles.saveBtnText}>Save Workers Profiles</Text>
+            /* ─── ROLE TYPE 3: REGULAR USER PROFILE (FARMER, ADVISOR, CUSTOMER, GARDENER) ─── */
+            <View style={{ width: '100%', maxWidth: 460, gap: 12 }}>
+              {/* Photo Avatar */}
+              <View style={styles.avatarSection}>
+                <TouchableOpacity style={styles.avatarWrap} activeOpacity={0.85} onPress={() => setIsPhotoModalOpen(true)}>
+                  <Avatar uri={photoUrl ?? undefined} size={88} />
+                  <View style={styles.photoEditBadge}>
+                    <Ionicons name="camera" size={13} color="#ffffff" />
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.changePhotoBtn} onPress={() => setIsPhotoModalOpen(true)}>
+                  <Text style={styles.changePhotoText}>Change Profile Photo</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Personal Details Card */}
+              <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
+                <Text style={styles.sectionHeaderTitle}>👤 Personal Details</Text>
+
+                <Text style={styles.inputLabel}>Full Name *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Your Full Name"
+                  placeholderTextColor="#94a3b8"
+                />
+
+                <Text style={[styles.inputLabel, { marginTop: 10 }]}>Email Address</Text>
+                <TextInput
+                  style={styles.input}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="yourname@domain.com"
+                  placeholderTextColor="#94a3b8"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+                  <View style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569' }}>
+                      🔑 King ID: {user?.kingId || '—'}
+                    </Text>
+                  </View>
+                  {user?.mobile ? (
+                    <View style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569' }}>
+                        📞 Mobile: {user.mobile}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+              </View>
+
+              {/* Printing & Farm Details Card */}
+              <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
+                <Text style={styles.sectionHeaderTitle}>🌾 Farm & Printing Details</Text>
+
+                <Text style={styles.inputLabel}>Farm Name (Printed on Bills/Receipts) *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={farmName}
+                  onChangeText={setFarmName}
+                  placeholder="e.g. Makhu Organic Agri Farm"
+                  placeholderTextColor="#94a3b8"
+                />
+
+                <Text style={[styles.inputLabel, { marginTop: 10 }]}>Farm Address *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={farmAddress}
+                  onChangeText={setFarmAddress}
+                  placeholder="e.g. Village Makhu, Distt. Ferozepur"
+                  placeholderTextColor="#94a3b8"
+                />
+
+                <Text style={[styles.inputLabel, { marginTop: 10 }]}>Farm Contact Mobile *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={farmMobile}
+                  onChangeText={setFarmMobile}
+                  placeholder="10-digit mobile"
+                  placeholderTextColor="#94a3b8"
+                  keyboardType="phone-pad"
+                  maxLength={10}
+                />
+
+                <Text style={[styles.inputLabel, { marginTop: 10 }]}>UPI ID (For Payments/Receipts)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={upiId}
+                  onChangeText={setUpiId}
+                  placeholder="e.g. farmer@upi"
+                  placeholderTextColor="#94a3b8"
+                  autoCapitalize="none"
+                />
+              </View>
+
+              {/* Location & Address Details Card */}
+              <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
+                <Text style={styles.sectionHeaderTitle}>📍 Location & Address</Text>
+
+                <Text style={styles.inputLabel}>Postal PIN Code</Text>
+                <View style={styles.pincodeRow}>
+                  <View style={[styles.inputWrap, { flex: 1, backgroundColor: '#f8fafc' }]}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="6-digit PIN"
+                      placeholderTextColor="#94a3b8"
+                      keyboardType="numeric"
+                      maxLength={6}
+                      value={pincode}
+                      onChangeText={(t) => {
+                        setPincode(t);
+                        if (t.length === 6) fetchLocationFromPincode(t);
+                      }}
+                    />
+                  </View>
+                  <TouchableOpacity
+                    style={[styles.fetchBtn, { backgroundColor: theme.primary }]}
+                    activeOpacity={0.8}
+                    disabled={isPincodeLoading || pincode.length !== 6}
+                    onPress={() => fetchLocationFromPincode(pincode)}
+                  >
+                    {isPincodeLoading ? <ActivityIndicator size="small" color="#ffffff" /> : <Text style={styles.fetchBtnText}>Fetch</Text>}
+                  </TouchableOpacity>
+                </View>
+
+                {pincodeStatus ? (
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: pincodeStatus.includes('❌') ? '#dc2626' : '#16a34a', marginVertical: 4 }}>
+                    {pincodeStatus}
+                  </Text>
+                ) : null}
+
+                <Text style={[styles.inputLabel, { marginTop: 8 }]}>Post Office / Locality</Text>
+                {officeOptions.length > 0 ? (
+                  postOffice && !isPostOfficeExpanded ? (
+                    <TouchableOpacity
+                      style={[styles.selectedOfficeCard, { borderColor: theme.primary, backgroundColor: '#f0fdf4' }]}
+                      activeOpacity={0.85}
+                      onPress={() => { tap(); setIsPostOfficeExpanded(true); }}
+                    >
+                      <Ionicons name="checkmark-circle" size={18} color={theme.primary} />
+                      <Text style={[styles.selectedOfficeText, { color: theme.primary }]} numberOfLines={1}>
+                        {postOffice} ({district})
+                      </Text>
+                      <View style={[styles.changePill, { borderColor: theme.primary }]}>
+                        <Text style={[styles.changePillText, { color: theme.primary }]}>Change</Text>
+                        <Ionicons name="chevron-down" size={12} color={theme.primary} />
+                      </View>
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={styles.expandedOfficeList}>
+                      {officeOptions.map((off) => {
+                        const isSel = off.Name === postOffice;
+                        return (
+                          <TouchableOpacity
+                            key={off.Name}
+                            style={[styles.officeOptionRow, isSel && { backgroundColor: '#f0fdf4', borderColor: theme.primary }]}
+                            onPress={() => {
+                              tap();
+                              setPostOffice(off.Name);
+                              setIsPostOfficeExpanded(false);
+                            }}
+                          >
+                            <Ionicons name={isSel ? 'radio-button-on' : 'radio-button-off'} size={15} color={isSel ? theme.primary : '#94a3b8'} />
+                            <Text style={[styles.officeOptionText, isSel && { fontFamily: FONT.bold, color: theme.primary }]}>
+                              {off.Name} ({off.BranchType})
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  )
+                ) : (
+                  <TextInput
+                    style={styles.input}
+                    value={postOffice}
+                    onChangeText={setPostOffice}
+                    placeholder="Post Office Name"
+                    placeholderTextColor="#94a3b8"
+                  />
+                )}
+
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>District</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={district}
+                      onChangeText={setDistrict}
+                      placeholder="District"
+                      placeholderTextColor="#94a3b8"
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>State</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={state}
+                      onChangeText={setState}
+                      placeholder="State"
+                      placeholderTextColor="#94a3b8"
+                    />
+                  </View>
+                </View>
+              </View>
+
+              {isSaved && (
+                <View style={styles.savedNotice}>
+                  <Ionicons name="checkmark-circle" size={15} color="#16a34a" />
+                  <Text style={styles.savedNoticeText}>Profile Saved Successfully!</Text>
+                </View>
+              )}
+              {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
+
+              <TouchableOpacity
+                style={[styles.saveBtn, { backgroundColor: theme.primary, marginTop: 4 }]}
+                onPress={saveProfile}
+                disabled={updateAddress.isPending}
+              >
+                {updateAddress.isPending ? (
+                  <ActivityIndicator color="#ffffff" />
+                ) : (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="checkmark-done-circle-outline" size={18} color="#ffffff" />
+                    <Text style={styles.saveBtnText}>Save Profile</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
             </View>
           )}
-        </TouchableOpacity>
 
-        {/* APK Download Card */}
-        <TouchableOpacity
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 10,
-            backgroundColor: '#f0f9ff',
-            borderRadius: RADIUS.lg,
-            borderWidth: 1.5,
-            borderColor: '#bae6fd',
-            padding: 12,
-            marginBottom: 16,
-            width: '100%',
-            maxWidth: 460,
-          }}
-          onPress={() => {
-            tap();
-            const url = 'https://farmsking.tech/download/farmsking.apk';
-            if (Platform.OS === 'web' && typeof window !== 'undefined') {
-              const link = document.createElement('a');
-              link.href = url;
-              link.setAttribute('download', 'farmsking.apk');
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-              return;
-            }
-            Linking.openURL(url).catch(() => {});
-          }}
-          activeOpacity={0.85}
-        >
-          <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#e0f2fe', alignItems: 'center', justifyContent: 'center' }}>
-            <Ionicons name="logo-android" size={20} color="#0284c7" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0369a1' }}>📲 Download FarmsKing App (APK)</Text>
-            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0284c7', marginTop: 1 }}>⚡ APK Memory Size: ~18.5 MB</Text>
-          </View>
-          <View style={{ backgroundColor: '#0284c7', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill }}>
-            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Download</Text>
-          </View>
-        </TouchableOpacity>
-
-      </ScrollView>
+          {/* APK Download Card */}
+          <TouchableOpacity
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+              backgroundColor: '#f0f9ff',
+              borderRadius: RADIUS.lg,
+              borderWidth: 1.5,
+              borderColor: '#bae6fd',
+              padding: 12,
+              marginTop: 12,
+              marginBottom: 20,
+              width: '100%',
+              maxWidth: 460,
+            }}
+            onPress={() => {
+              tap();
+              const url = 'https://farmsking.tech/download/farmsking.apk';
+              if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', 'farmsking.apk');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                return;
+              }
+              Linking.openURL(url).catch(() => {});
+            }}
+            activeOpacity={0.85}
+          >
+            <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#e0f2fe', alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name="logo-android" size={20} color="#0284c7" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0369a1' }}>📲 Download FarmsKing App (APK)</Text>
+              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0284c7', marginTop: 1 }}>⚡ APK Memory Size: ~18.5 MB</Text>
+            </View>
+            <View style={{ backgroundColor: '#0284c7', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill }}>
+              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Download</Text>
+            </View>
+          </TouchableOpacity>
+        </ScrollView>
       )}
 
       {isPhotoModalOpen && (

@@ -1373,7 +1373,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
     return (
       <View style={styles.maintenanceContainer}>
         <ScrollView contentContainerStyle={styles.maintenanceContent} showsVerticalScrollIndicator={false}>
-          {/* Header Image Poster Banner */}
+          {/* Brand-Free Maintenance Illustration Banner */}
           <View style={styles.maintenanceHeaderBanner}>
             <Image
               source={require('@/assets/images/store_maintenance.png')}
@@ -1382,61 +1382,17 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
             />
           </View>
 
-          {/* Glowing Animated Coming Soon Badge */}
+          {/* Clean Status Badge */}
           <View style={styles.maintenanceBadge}>
-            <Ionicons name="sparkles" size={14} color="#dc2626" />
-            <Text style={styles.maintenanceBadgeText}>🚀 COMING SOON • STORE UNDER MAINTENANCE</Text>
-          </View>
-
-          {/* Headline Title */}
-          <Text style={styles.maintenanceTitle}>🌾 FarmsKing Storefront Coming Soon!</Text>
-
-          {/* Punjabi & English Subtitle */}
-          <Text style={styles.maintenanceSubPunjabi}>
-            ਸਾਡਾ ਨਵਾਂ ਐਗਰੀ ਸਟੋਰ ਬਹੁਤ ਜਲਦ ਸ਼ਾਨਦਾਰ ਨਵੇਂ ਆਫਰਜ਼, ਸਰਟੀਫਾਈਡ ਬੀਜ ਅਤੇ 100% ਔਰਗੈਨਿਕ ਪ੍ਰੋਡਕਟਸ ਨਾਲ ਲਾਈਵ ਹੋ ਰਿਹਾ ਹੈ!
-          </Text>
-          <Text style={styles.maintenanceSub}>
-            We are currently updating our agricultural product catalog, inventory & VIP discount coupon system. Buyer shopping features will automatically resume shortly!
-          </Text>
-
-          {/* Feature Teasers Card Stack */}
-          <View style={styles.teaserStack}>
-            <View style={styles.teaserItem}>
-              <View style={[styles.teaserIconCircle, { backgroundColor: '#dcfce7' }]}>
-                <Ionicons name="leaf" size={20} color="#16a34a" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.teaserTitle}>🌱 Certified Seeds & Agri Inputs</Text>
-                <Text style={styles.teaserSub}>Direct factory price with official quality guarantee</Text>
-              </View>
-            </View>
-
-            <View style={styles.teaserItem}>
-              <View style={[styles.teaserIconCircle, { backgroundColor: '#fef3c7' }]}>
-                <Ionicons name="nutrition" size={20} color="#d97706" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.teaserTitle}>🍯 Pure Organic Farmer Made Foods</Text>
-                <Text style={styles.teaserSub}>Desi Ghee, Organic Jaggery, Mustard Oil & Honey</Text>
-              </View>
-            </View>
-
-            <View style={styles.teaserItem}>
-              <View style={[styles.teaserIconCircle, { backgroundColor: '#e0f2fe' }]}>
-                <Ionicons name="car" size={20} color="#0284c7" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.teaserTitle}>⚡ Direct Village Doorstep Delivery</Text>
-                <Text style={styles.teaserSub}>Fast delivery directly to your home or farm location</Text>
-              </View>
-            </View>
+            <Ionicons name="cog-outline" size={16} color="#dc2626" />
+            <Text style={styles.maintenanceBadgeText}>⚙️ STORE UNDER MAINTENANCE • WORK IN PROGRESS</Text>
           </View>
 
           {/* Live Upgrade Status Box */}
           <View style={styles.maintenanceBox}>
             <View style={styles.pulseDot} />
             <Text style={styles.maintenanceBoxText}>
-              <Text style={{ fontFamily: FONT.extraBold, color: '#0369a1' }}>🛠️ Current Status:</Text> Upgrade in progress. Store features will automatically unlock when launch finishes.
+              <Text style={{ fontFamily: FONT.extraBold, color: '#0369a1' }}>🛠️ Current Status:</Text> System update in progress. Shopping features will automatically resume shortly.
             </Text>
           </View>
 

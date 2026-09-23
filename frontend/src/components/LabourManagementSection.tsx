@@ -804,14 +804,14 @@ export function LabourManagementSection() {
                     >
                       <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
                         {[
-                          'Days (ਦਿਨ / ਡੇਲੀ)',
-                          'Hours (ਘੰਟੇ / ਪਰ ਘੰਟਾ)',
-                          'Monthly (ਮਹੀਨਾਵਾਰ)',
-                          'Fixed Contract / Lumpsum (ਫਿਕਸ / ਠੇਕਾ)',
-                          'Acre / Kila (ਏਕੜ / ਕਿੱਲਾ)',
-                          'Bags / Catt (ਬੋਰੀਆਂ / ਕੱਟੇ)',
-                          'Quintal / Kg (ਕੁਇੰਟਲ / ਕਿੱਲੋ)',
-                          'Trips (ਗੇੜੇ / ਟ੍ਰਿਪ)',
+                          'Days',
+                          'Hours',
+                          'Monthly',
+                          'Fixed Contract / Lumpsum',
+                          'Acre / Kila',
+                          'Bags / Catt',
+                          'Quintal / Kg',
+                          'Trips',
                         ].map((u) => (
                           <TouchableOpacity
                             key={u}
@@ -1122,15 +1122,15 @@ export function LabourManagementSection() {
                   >
                     <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
                       {[
-                        'Sowing / Plantation (ਬਿਜਾਈ / ਲਵਾਈ)',
-                        'Harvesting & Cutting (ਵਾਢੀ / ਕਟਾਈ)',
-                        'Spraying & Fertilizers (ਸਪਰੇਅ / ਖਾਦ)',
-                        'Weeding & Cleaning (ਗੋਡੀ / ਨਦੀਨ)',
-                        'Tractor Driving & Tillage (ਟਰੈਕਟਰ / ਵਾਹੀ)',
-                        'Irrigation & Watering (ਪਾਣੀ / ਸਿੰਚਾਈ)',
-                        'Loading, Unloading & Mandi (ਲੋਡਿੰਗ / ਮੰਡੀ)',
-                        'General Labour Work (ਆਮ ਮਜ਼ਦੂਰੀ)',
-                        'Other Farm Work (ਹੋਰ ਕੰਮ)',
+                        'Sowing / Plantation',
+                        'Harvesting & Cutting',
+                        'Spraying & Fertilizers',
+                        'Weeding & Cleaning',
+                        'Tractor Driving & Tillage',
+                        'Irrigation & Watering',
+                        'Loading, Unloading & Mandi',
+                        'General Labour Work',
+                        'Other Farm Work',
                       ].map((t) => {
                         const isSelected = workType === t;
                         return (
@@ -1225,13 +1225,13 @@ export function LabourManagementSection() {
                     >
                       <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
                         {[
-                          'Days (ਦਿਨ / ਡੇਲੀ)',
-                          'Hours (ਘੰਟੇ)',
-                          'Acre / Kila (ਏਕੜ / ਕਿੱਲਾ)',
-                          'Bags / Catt (ਬੋਰੀਆਂ / ਕੱਟੇ)',
-                          'Quintal / Kg (ਕੁਇੰਟਲ / ਕਿੱਲੋ)',
-                          'Trips (ਗੇੜੇ / ਟ੍ਰਿਪ)',
-                          'Fixed Contract (ਫਿਕਸ / ਠੇਕਾ)',
+                          'Days',
+                          'Hours',
+                          'Acre / Kila',
+                          'Bags / Catt',
+                          'Quintal / Kg',
+                          'Trips',
+                          'Fixed Contract',
                         ].map((u) => {
                           const isSelected = workUnit === u;
                           return (

@@ -85,7 +85,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
     : null;
   const planPrice = pricing?.find((p) => p.plan === plan)?.price;
 
-  const planActionLabel = 'Membership Pass';
+  const planActionLabel = 'Farmer Pass';
 
   const [modalInitialMode, setModalInitialMode] = useState<'GET_COUPON' | 'REDEEM_CODE'>('GET_COUPON');
 
@@ -121,8 +121,8 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
                 setIsPlanModalOpen(true);
               }}
             >
-              <Ionicons name={currentPlanMeta.icon} size={12} color={currentPlanMeta.color} />
-              <Text style={styles.planActionBtnText} numberOfLines={1}>Membership Pass</Text>
+              <Ionicons name={currentPlanMeta.icon} size={12} color="#facc15" />
+              <Text style={styles.planActionBtnText} numberOfLines={1}>Farmer Pass</Text>
             </TouchableOpacity>
           </View>
         }

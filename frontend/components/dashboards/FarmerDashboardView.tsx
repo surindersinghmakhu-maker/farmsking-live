@@ -91,7 +91,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
             <View style={styles.planBadge}>
               <View style={[styles.planDot, { backgroundColor: meta.color }]} />
               <Text style={styles.planBadgeText} numberOfLines={1}>
-                Plan: {meta.label}
+                {meta.label}
               </Text>
             </View>
 

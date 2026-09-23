@@ -220,9 +220,6 @@ export default function LoginScreen() {
                   <Text style={styles.apkMetaTitle}>⚡ APK Memory Size: ~18.5 MB</Text>
                 </View>
                 <Text style={styles.apkMetaSub}>Direct Download • Fast Installation • Auto-Updating Engine</Text>
-                <Text style={styles.apkMetaLink} selectTextOnPress numberOfLines={1}>
-                  🔗 Direct Link: https://farmsking.tech/download/farmsking.apk
-                </Text>
               </View>
           </View>
 

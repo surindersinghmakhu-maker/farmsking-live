@@ -56,7 +56,7 @@ const SUPER_ADMIN_ITEMS: { key: TranslationKey | 'workspace'; label: string; ico
 
 function AppDownloadRow() {
   const { data: settings } = useAppSettings();
-  const downloadUrl = settings?.appDownloadUrl || 'https://farmsking-1.vercel.app/download/farmsking.apk';
+  const downloadUrl = settings?.appDownloadUrl || 'https://farmsking.tech/download/farmsking.apk';
   const version = settings?.latestAppVersion || '1.0.0';
 
   const handleDownload = async () => {
@@ -78,7 +78,7 @@ function AppDownloadRow() {
       </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.rowLabel}>📲 Download FarmsKing App (APK)</Text>
-        <Text style={styles.rowSubLabel}>Version {version} · Direct App Download</Text>
+        <Text style={styles.rowSubLabel}>Version {version} · ⚡ APK Size: ~18.5 MB</Text>
       </View>
       <View style={{ backgroundColor: '#0284c7', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill }}>
         <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Download</Text>

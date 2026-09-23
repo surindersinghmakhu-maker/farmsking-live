@@ -195,8 +195,8 @@ export function MarketRatesCard() {
 
     const userRefCode = user?.kingId ? user.kingId : 'FARMSKING';
     const shareLink = userRefCode
-      ? `https://farmsking-1.vercel.app/register?ref=${userRefCode}`
-      : `https://farmsking-1.vercel.app`;
+      ? `https://farmsking.tech/register?ref=${userRefCode}`
+      : `https://farmsking.tech`;
 
     const unitTag = crop.unit ? ` / ${crop.unit}` : '';
     const localMinStr = crop.localMinRate != null ? `${formatInr(crop.localMinRate)}${unitTag}` : '-';

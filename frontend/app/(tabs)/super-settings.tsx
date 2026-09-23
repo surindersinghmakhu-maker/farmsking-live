@@ -1139,7 +1139,7 @@ function AppDownloadSettingsPanel() {
 
   useEffect(() => {
     if (settings) {
-      setDownloadUrl(settings.appDownloadUrl || 'https://farmsking-1.vercel.app/download/farmsking.apk');
+      setDownloadUrl(settings.appDownloadUrl || 'https://farmsking.tech/download/farmsking.apk');
       setVersion(settings.latestAppVersion || '1.0.0');
     }
   }, [settings]);

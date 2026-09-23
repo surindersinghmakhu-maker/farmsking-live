@@ -173,7 +173,7 @@ export default function LoginScreen() {
             <TouchableOpacity
               style={styles.downloadAppBtn}
               onPress={async () => {
-                const url = appSettings?.appDownloadUrl || 'https://farmsking-1.vercel.app/download/farmsking.apk';
+                const url = appSettings?.appDownloadUrl || 'https://farmsking.tech/download/farmsking.apk';
                 try {
                   if (Platform.OS === 'web' && typeof window !== 'undefined') {
                     const link = document.createElement('a');
@@ -214,17 +214,16 @@ export default function LoginScreen() {
               </View>
             </TouchableOpacity>
 
-            {/* APK File Memory Size & Direct Link */}
-            <View style={styles.apkMetaCard}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <Ionicons name="hardware-chip" size={13} color="#0369a1" />
-                <Text style={styles.apkMetaTitle}>⚡ APK Memory Size: ~8.5 MB</Text>
+              <View style={styles.apkMetaCard}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Ionicons name="hardware-chip" size={13} color="#0369a1" />
+                  <Text style={styles.apkMetaTitle}>⚡ APK Memory Size: ~18.5 MB</Text>
+                </View>
+                <Text style={styles.apkMetaSub}>Direct Download • Fast Installation • Auto-Updating Engine</Text>
+                <Text style={styles.apkMetaLink} selectTextOnPress numberOfLines={1}>
+                  🔗 Direct Link: https://farmsking.tech/download/farmsking.apk
+                </Text>
               </View>
-              <Text style={styles.apkMetaSub}>Direct Download • Fast Installation • Auto-Updating Engine</Text>
-              <Text style={styles.apkMetaLink} selectTextOnPress numberOfLines={1}>
-                🔗 Direct Link: {appSettings?.appDownloadUrl || 'https://farmsking-1.vercel.app/download/farmsking.apk'}
-              </Text>
-            </View>
           </View>
 
         </View>

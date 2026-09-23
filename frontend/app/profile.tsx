@@ -11,6 +11,7 @@ import {
   Alert,
   ActivityIndicator,
   Switch,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -345,6 +346,49 @@ export default function ProfileScreen() {
               <Text style={styles.saveBtnText}>Save Workers Profiles</Text>
             </View>
           )}
+        </TouchableOpacity>
+
+        {/* APK Download Card */}
+        <TouchableOpacity
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10,
+            backgroundColor: '#f0f9ff',
+            borderRadius: RADIUS.lg,
+            borderWidth: 1.5,
+            borderColor: '#bae6fd',
+            padding: 12,
+            marginBottom: 16,
+            width: '100%',
+            maxWidth: 460,
+          }}
+          onPress={() => {
+            tap();
+            const url = 'https://farmsking.tech/download/farmsking.apk';
+            if (Platform.OS === 'web' && typeof window !== 'undefined') {
+              const link = document.createElement('a');
+              link.href = url;
+              link.setAttribute('download', 'farmsking.apk');
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              return;
+            }
+            Linking.openURL(url).catch(() => {});
+          }}
+          activeOpacity={0.85}
+        >
+          <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#e0f2fe', alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name="logo-android" size={20} color="#0284c7" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0369a1' }}>📲 Download FarmsKing App (APK)</Text>
+            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0284c7', marginTop: 1 }}>⚡ APK Memory Size: ~18.5 MB</Text>
+          </View>
+          <View style={{ backgroundColor: '#0284c7', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill }}>
+            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Download</Text>
+          </View>
         </TouchableOpacity>
 
       </ScrollView>

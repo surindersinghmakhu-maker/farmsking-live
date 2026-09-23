@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   ScrollView,
   StyleSheet,
@@ -463,6 +464,36 @@ export default function RegisterScreen() {
               <Text style={styles.loginHighlightBtnText}>Login Now</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Download Android App Box */}
+          <TouchableOpacity
+            style={styles.downloadAppBtn}
+            onPress={() => {
+              const url = 'https://farmsking.tech/download/farmsking.apk';
+              if (Platform.OS === 'web' && typeof window !== 'undefined') {
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', 'farmsking.apk');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                return;
+              }
+              Linking.openURL(url).catch(() => {});
+            }}
+            activeOpacity={0.85}
+          >
+            <View style={styles.downloadIconCircle}>
+              <Ionicons name="logo-android" size={20} color="#0284c7" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.downloadAppTitle}>📲 Download Android App (APK)</Text>
+              <Text style={styles.downloadAppSub}>⚡ APK Memory Size: ~18.5 MB</Text>
+            </View>
+            <View style={styles.downloadBadge}>
+              <Text style={styles.downloadBadgeText}>Download</Text>
+            </View>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -691,5 +722,47 @@ const styles = StyleSheet.create({
     color: '#16a34a',
     fontSize: 11.5,
     fontFamily: FONT.bold,
+  },
+  downloadAppBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#f0f9ff',
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: '#bae6fd',
+    padding: 10,
+    marginTop: 10,
+    width: '100%',
+  },
+  downloadIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#e0f2fe',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  downloadAppTitle: {
+    fontSize: 12.5,
+    fontFamily: FONT.extraBold,
+    color: '#0369a1',
+  },
+  downloadAppSub: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: '#0284c7',
+    marginTop: 1,
+  },
+  downloadBadge: {
+    backgroundColor: '#0284c7',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIUS.pill,
+  },
+  downloadBadgeText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
   },
 });

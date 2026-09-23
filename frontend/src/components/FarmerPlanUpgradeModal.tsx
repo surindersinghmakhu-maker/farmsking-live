@@ -21,9 +21,9 @@ const PLAN_COLUMN_META: Record<FarmerPlanType, { label: string; emoji: string; c
   PRO: { label: 'Basic', emoji: '⚡', color: '#0284c7', price: '₹199/yr' },
   SMART: { label: 'Pro', emoji: '👑', color: '#1d4ed8', price: '₹499/yr' },
   SUPER: { label: 'Super', emoji: '⭐', color: '#b45309', price: '₹999/30d' },
-  SILVER: { label: 'Doctor Silver', emoji: '🩺', color: '#64748b', price: '₹999/yr' },
-  GOLD: { label: 'Doctor Gold', emoji: '🥇', color: '#d97706', price: '₹1999/yr' },
-  ROYAL: { label: 'Doctor Royal', emoji: '👑', color: '#7c3aed', price: '₹3499/yr' },
+  SILVER: { label: 'Doctor Advisor', emoji: '🩺', color: '#64748b', price: '₹999/yr' },
+  GOLD: { label: 'Crop Care Plan', emoji: '🌾', color: '#d97706', price: '₹1999/yr' },
+  ROYAL: { label: 'Doctor VIP', emoji: '👑', color: '#7c3aed', price: '₹3499/yr' },
 };
 
 interface PlanRow {

@@ -787,11 +787,14 @@ function ECommerceSettingsPanel() {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
       await updateSettings.mutateAsync({ storefrontMaintenanceMode: maintenanceMode });
-      setSavedNotice('✅ E-Commerce Settings & Maintenance Mode Saved!');
+      setSavedNotice('✅ E-Commerce Settings Saved!');
       setTimeout(() => setSavedNotice(null), 3000);
-    } catch {
-      setSavedNotice('❌ Could not save settings.');
-      setTimeout(() => setSavedNotice(null), 3000);
+    } catch (err: any) {
+      const errMsg = Array.isArray(err?.response?.data?.message)
+        ? err.response.data.message.join(', ')
+        : (err?.response?.data?.message || err?.message || 'Could not save settings.');
+      setSavedNotice(`❌ ${errMsg}`);
+      setTimeout(() => setSavedNotice(null), 4000);
     }
   };
 
@@ -924,6 +927,7 @@ function OtpDeliveryChannelPanel() {
   const { data: settings } = useAppSettings();
   const update = useUpdateAppSettings();
   const [selectedChannel, setSelectedChannel] = useState<string>((settings as any)?.otpDeliveryChannel ?? 'WHATSAPP');
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   useEffect(() => {
     if ((settings as any)?.otpDeliveryChannel) {
@@ -950,7 +954,11 @@ function OtpDeliveryChannelPanel() {
 
   return (
     <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#faf5ff', borderColor: '#e9d5ff', borderWidth: 1 }]}>
-      <View style={styles.cardHeader}>
+      <TouchableOpacity
+        style={styles.cardHeader}
+        onPress={() => setIsCollapsed((prev) => !prev)}
+        activeOpacity={0.7}
+      >
         <View style={[styles.iconCircle, { backgroundColor: '#9333ea' }]}>
           <Ionicons name="key" size={20} color="#ffffff" />
         </View>
@@ -958,29 +966,37 @@ function OtpDeliveryChannelPanel() {
           <Text style={styles.cardTitle}>🔑 New User OTP Delivery Channel</Text>
           <Text style={styles.cardSub}>Select channel to deliver OTP codes for registration & forgot password</Text>
         </View>
-      </View>
+        <Ionicons
+          name={isCollapsed ? 'chevron-down-outline' : 'chevron-up-outline'}
+          size={22}
+          color="#64748b"
+          style={{ marginLeft: 6 }}
+        />
+      </TouchableOpacity>
 
-      <View style={{ gap: 8, marginTop: 8 }}>
-        {CHANNELS.map((ch) => {
-          const isSelected = selectedChannel === ch.id;
-          return (
-            <TouchableOpacity
-              key={ch.id}
-              style={[
-                styles.subToggleRow,
-                { paddingVertical: 10, paddingHorizontal: 12, borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: isSelected ? '#9333ea' : '#e9d5ff', backgroundColor: isSelected ? '#f3e8ff' : '#ffffff' }
-              ]}
-              onPress={() => handleSelectChannel(ch.id)}
-            >
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: isSelected ? '#7e22ce' : '#334155' }}>{ch.label}</Text>
-                <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>{ch.desc}</Text>
-              </View>
-              <Ionicons name={isSelected ? 'checkmark-circle' : 'ellipse-outline'} size={22} color={isSelected ? '#9333ea' : '#cbd5e1'} />
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+      {!isCollapsed && (
+        <View style={{ gap: 8, marginTop: 8 }}>
+          {CHANNELS.map((ch) => {
+            const isSelected = selectedChannel === ch.id;
+            return (
+              <TouchableOpacity
+                key={ch.id}
+                style={[
+                  styles.subToggleRow,
+                  { paddingVertical: 10, paddingHorizontal: 12, borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: isSelected ? '#9333ea' : '#e9d5ff', backgroundColor: isSelected ? '#f3e8ff' : '#ffffff' }
+                ]}
+                onPress={() => handleSelectChannel(ch.id)}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: isSelected ? '#7e22ce' : '#334155' }}>{ch.label}</Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>{ch.desc}</Text>
+                </View>
+                <Ionicons name={isSelected ? 'checkmark-circle' : 'ellipse-outline'} size={22} color={isSelected ? '#9333ea' : '#cbd5e1'} />
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
     </View>
   );
 }
@@ -1855,6 +1871,7 @@ export function PendingDoctorChangeApprovalsSection() {
 export function PlanPricingSection() {
   const { data: pricing, isLoading } = useFarmerPlanPricing();
   const [editing, setEditing] = useState<FarmerPlanPricing | null>(null);
+  const [isSoftwareCollapsed, setIsSoftwareCollapsed] = useState(true);
 
   const SOFTWARE_PLANS = ['PRO', 'SMART', 'SUPER'];
   const CARE_PLANS = ['SILVER', 'GOLD', 'ROYAL'];
@@ -1873,7 +1890,11 @@ export function PlanPricingSection() {
     <View style={{ gap: 16 }}>
       {/* Category 1: Farmer Software Membership Plans */}
       <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderWidth: 1 }]}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+        <TouchableOpacity
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 }}
+          onPress={() => setIsSoftwareCollapsed((prev) => !prev)}
+          activeOpacity={0.7}
+        >
           <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#e0f2fe', alignItems: 'center', justifyContent: 'center' }}>
             <Ionicons name="apps" size={20} color="#0284c7" />
           </View>
@@ -1881,27 +1902,35 @@ export function PlanPricingSection() {
             <Text style={styles.sectionTitle}>🌾 Farmer Software Membership Plans</Text>
             <Text style={styles.helperText}>Configure subscription prices & commission cuts for Farmer App software features</Text>
           </View>
-        </View>
+          <Ionicons
+            name={isSoftwareCollapsed ? 'chevron-down-outline' : 'chevron-up-outline'}
+            size={22}
+            color="#64748b"
+            style={{ marginLeft: 6 }}
+          />
+        </TouchableOpacity>
 
-        {isLoading ? (
-          <ActivityIndicator color={theme.primary} style={{ marginVertical: 16 }} />
-        ) : softwareGroups.length === 0 ? (
-          <Text style={styles.emptyText}>No software plans configured yet.</Text>
-        ) : (
-          <View style={{ gap: 12, marginTop: 8 }}>
-            {softwareGroups.map(({ planKey, items }) => {
-              const meta = PLAN_META[planKey as FarmerPlanType] || { label: planKey, emoji: '🌾', color: '#0284c7' };
-              return (
-                <PlanCardGroup
-                  key={planKey}
-                  planKey={planKey}
-                  meta={meta}
-                  items={items}
-                  onEdit={setEditing}
-                />
-              );
-            })}
-          </View>
+        {!isSoftwareCollapsed && (
+          isLoading ? (
+            <ActivityIndicator color={theme.primary} style={{ marginVertical: 16 }} />
+          ) : softwareGroups.length === 0 ? (
+            <Text style={styles.emptyText}>No software plans configured yet.</Text>
+          ) : (
+            <View style={{ gap: 12, marginTop: 8 }}>
+              {softwareGroups.map(({ planKey, items }) => {
+                const meta = PLAN_META[planKey as FarmerPlanType] || { label: planKey, emoji: '🌾', color: '#0284c7' };
+                return (
+                  <PlanCardGroup
+                    key={planKey}
+                    planKey={planKey}
+                    meta={meta}
+                    items={items}
+                    onEdit={setEditing}
+                  />
+                );
+              })}
+            </View>
+          )
         )}
       </View>
 

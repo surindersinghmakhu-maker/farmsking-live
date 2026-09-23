@@ -53,7 +53,7 @@ export const PLAN_META: Record<FarmerPlanType, { label: string; emoji: string; c
     borderColor: '#bfdbfe',
   },
   SUPER: {
-    label: 'All features Plan (FREE)',
+    label: 'Super Advisor Plan',
     emoji: '⭐',
     color: '#b45309',
     bg: '#fef3c7',

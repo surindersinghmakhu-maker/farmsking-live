@@ -1032,9 +1032,9 @@ export default function FarmListScreen() {
                           </Text>
                         </View>
 
-                        <View style={[styles.metricBadgeBox, { backgroundColor: '#f0f9ff', borderColor: '#bae6fd' }]}>
-                          <Text style={[styles.metricBadgeLabel, { color: '#075985' }]}>👷 Labour</Text>
-                          <Text style={[styles.metricBadgeValue, { color: '#0284c7' }]}>
+                        <View style={[styles.metricBadgeBox, { backgroundColor: '#fff7ed', borderColor: '#ffedd5' }]}>
+                          <Text style={[styles.metricBadgeLabel, { color: '#9a3412' }]}>👷 Labour</Text>
+                          <Text style={[styles.metricBadgeValue, { color: '#c2410c' }]}>
                             ₹{summary.totalLabourNum.toLocaleString('en-IN')}
                           </Text>
                         </View>
@@ -1430,9 +1430,9 @@ export default function FarmListScreen() {
                             </Text>
                           </View>
 
-                          <View style={[styles.metricBadgeBox, { backgroundColor: '#f0f9ff', borderColor: '#bae6fd' }]}>
-                            <Text style={[styles.metricBadgeLabel, { color: '#075985' }]}>👷 Labour</Text>
-                            <Text style={[styles.metricBadgeValue, { color: '#0284c7' }]}>
+                          <View style={[styles.metricBadgeBox, { backgroundColor: '#fff7ed', borderColor: '#ffedd5' }]}>
+                            <Text style={[styles.metricBadgeLabel, { color: '#9a3412' }]}>👷 Labour</Text>
+                            <Text style={[styles.metricBadgeValue, { color: '#c2410c' }]}>
                               ₹{summary.totalLabourNum.toLocaleString('en-IN')}
                             </Text>
                           </View>
@@ -2633,39 +2633,39 @@ const styles = StyleSheet.create({
   metricsGridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 8,
+    gap: 4,
+    marginTop: 6,
   },
   metricBadgeBox: {
     flex: 1,
     minWidth: '47%',
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: RADIUS.md,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: RADIUS.xs,
     borderWidth: 1,
   },
   metricBadgeLabel: {
-    fontSize: 10.5,
+    fontSize: 10,
     fontFamily: FONT.bold,
   },
   metricBadgeValue: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontFamily: FONT.extraBold,
-    marginTop: 2,
+    marginTop: 1,
   },
   modalSummaryHeaderCard: {
     backgroundColor: '#f8fafc',
-    borderRadius: RADIUS.lg,
-    padding: 12,
+    borderRadius: RADIUS.md,
+    padding: 10,
     borderWidth: 1,
     borderColor: '#e2e8f0',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   statementSectionWrap: {
-    marginTop: 12,
+    marginTop: 8,
     backgroundColor: '#ffffff',
-    borderRadius: RADIUS.lg,
-    padding: 10,
+    borderRadius: RADIUS.md,
+    padding: 8,
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
@@ -2673,19 +2673,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   statementTitle: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontFamily: FONT.bold,
     color: '#0f172a',
     flex: 1,
   },
   statementRowCard: {
     backgroundColor: '#f8fafc',
-    borderRadius: RADIUS.md,
-    padding: 10,
-    marginBottom: 8,
+    borderRadius: RADIUS.xs,
+    padding: 8,
+    marginBottom: 6,
     borderWidth: 1,
     borderColor: '#f1f5f9',
   },
@@ -2693,45 +2693,45 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 3,
   },
   statementDate: {
-    fontSize: 11.5,
+    fontSize: 11,
     fontFamily: FONT.bold,
     color: '#64748b',
   },
   statementCatBadge: {
-    paddingHorizontal: 7,
+    paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: RADIUS.pill,
   },
   statementCatText: {
-    fontSize: 10.5,
+    fontSize: 10,
     fontFamily: FONT.bold,
   },
   statementAmount: {
-    fontSize: 13.5,
+    fontSize: 12.5,
     fontFamily: FONT.extraBold,
   },
   statementDesc: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontFamily: FONT.medium,
     color: '#1e293b',
-    marginTop: 2,
+    marginTop: 1,
   },
   statementCommentBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 4,
     backgroundColor: '#ffffff',
-    padding: 6,
+    padding: 5,
     borderRadius: RADIUS.xs,
-    marginTop: 6,
+    marginTop: 4,
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
   statementCommentText: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontFamily: FONT.semiBold,
     color: '#475569',
     flex: 1,

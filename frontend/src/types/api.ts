@@ -243,6 +243,8 @@ export interface FarmerBasic {
 export interface AvailableAdvisor {
   id: string;
   name: string;
+  kingId?: string | null;
+  role?: Role;
   photoUrl?: string | null;
   specialization?: string | null;
   bio?: string | null;

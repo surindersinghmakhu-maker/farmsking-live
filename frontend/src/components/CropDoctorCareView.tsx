@@ -30,6 +30,7 @@ import { uploadPhoto } from '@/src/api/uploads.api';
 import { RenewModal } from '@/src/components/RenewPlanCard';
 import { useFarmerPlan, useChooseAdvisor } from '@/src/hooks/useFarmerPlan';
 import { FarmerPlanUpgradeModal } from '@/src/components/FarmerPlanUpgradeModal';
+import { CropCarePlanModal } from '@/src/components/CropCarePlanModal';
 import { resolveMediaUrl } from '@/src/api/client';
 import { AvailableAdvisor, CropProblem, SprayScheduleItem } from '@/src/types/api';
 import { useChatUnreadCount } from '@/src/hooks/useChat';
@@ -61,6 +62,7 @@ export function CropDoctorCareView() {
   const cancelPendingRequest = useCancelPendingRequest();
   const [isRenewModalOpen, setIsRenewModalOpen] = useState(false);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [isCropCareModalOpen, setIsCropCareModalOpen] = useState(false);
   const [isReviewSectionExpanded, setIsReviewSectionExpanded] = useState(false);
 
   const handleCancelHireRequest = async () => {
@@ -617,6 +619,40 @@ export function CropDoctorCareView() {
             </View>
 
             {callRequestError ? <Text style={styles.callRequestError}>{callRequestError}</Text> : null}
+
+            {/* Crops Care Plan & Coupon Button */}
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                backgroundColor: '#f0fdf4',
+                borderWidth: 1.5,
+                borderColor: '#86efac',
+                borderRadius: RADIUS.lg,
+                padding: 12,
+                marginTop: 10,
+                ...premiumShadow('#059669', 'sm'),
+              }}
+              activeOpacity={0.88}
+              onPress={() => {
+                tap();
+                setIsCropCareModalOpen(true);
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#dcfce7', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="medical" size={20} color="#16a34a" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: '#166534' }}>🩺 Crops Care Plan & Coupon</Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#15803d', marginTop: 1 }}>
+                    View Crop Care features, 5/10 crop advisory & buy/redeem coupon
+                  </Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#16a34a" />
+            </TouchableOpacity>
           </View>
 
           {/* RENEWAL ALERT BANNER */}
@@ -1308,6 +1344,7 @@ export function CropDoctorCareView() {
       </Modal>
 
       <FarmerPlanUpgradeModal visible={isUpgradeModalOpen} onClose={() => setIsUpgradeModalOpen(false)} tiers={['PRO']} />
+      <CropCarePlanModal visible={isCropCareModalOpen} onClose={() => setIsCropCareModalOpen(false)} />
     </View>
   );
 }

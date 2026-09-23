@@ -1248,6 +1248,156 @@ function AppDownloadSettingsPanel() {
   );
 }
 
+function FreeTrialSettingsPanel() {
+  const { data: settings } = useAppSettings();
+  const update = useUpdateAppSettings();
+  const [enabled, setEnabled] = useState<boolean>(true);
+  const [days, setDays] = useState<string>('14');
+  const [targetPlan, setTargetPlan] = useState<'PRO' | 'SMART' | 'SUPER'>('SUPER');
+  const [saving, setSaving] = useState(false);
+  const [savedNotice, setSavedNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (settings) {
+      setEnabled(settings.freeTrialEnabled ?? true);
+      setDays(String(settings.freeTrialDays ?? 14));
+      setTargetPlan(settings.freeTrialPlan ?? 'SUPER');
+    }
+  }, [settings]);
+
+  const handleSave = async () => {
+    const numDays = parseInt(days, 10);
+    if (isNaN(numDays) || numDays <= 0) {
+      alert('Please enter valid trial days.');
+      return;
+    }
+    try {
+      setSaving(true);
+      await update.mutateAsync({
+        freeTrialEnabled: enabled,
+        freeTrialDays: numDays,
+        freeTrialPlan: targetPlan,
+      });
+      if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setSavedNotice('✅ Free Trial Settings updated successfully!');
+      setTimeout(() => setSavedNotice(null), 3500);
+    } catch {
+      alert('❌ Failed to update Free Trial settings.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#fdf4ff', borderColor: '#f5d0fe', borderWidth: 1.5 }]}>
+      <View style={styles.cardHeader}>
+        <View style={[styles.iconCircle, { backgroundColor: '#c026d3' }]}>
+          <Ionicons name="gift-outline" size={20} color="#ffffff" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardTitle}>🎁 Free Membership Trial Settings</Text>
+          <Text style={styles.cardSub}>Control ON/OFF status, duration (days), and target membership tier granted to farmers on free trial</Text>
+        </View>
+      </View>
+
+      <View style={{ gap: 12, marginTop: 10 }}>
+        {/* Enable / Disable Free Trial Switch */}
+        <View style={styles.subToggleRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.subToggleTitle}>🎁 Enable Free Trial Button for Farmers</Text>
+            <Text style={styles.subToggleDesc}>Show "Get [X] Days Free Trial" button on free membership cards</Text>
+          </View>
+          <Switch
+            value={enabled}
+            onValueChange={setEnabled}
+            trackColor={{ false: '#cbd5e1', true: '#c026d3' }}
+            thumbColor="#ffffff"
+          />
+        </View>
+
+        {/* Duration in Days */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+          <Text style={{ flex: 1, fontSize: 13, fontFamily: FONT.bold, color: '#86198f' }}>
+            ⏳ Free Trial Duration (Days)
+          </Text>
+          <TextInput
+            style={{
+              width: 100,
+              borderWidth: 1.5,
+              borderColor: '#f5d0fe',
+              borderRadius: RADIUS.md,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              fontSize: 14,
+              fontFamily: FONT.bold,
+              color: '#0f172a',
+              backgroundColor: '#ffffff',
+              textAlign: 'center',
+            }}
+            keyboardType="numeric"
+            value={days}
+            onChangeText={setDays}
+            placeholder="14"
+          />
+        </View>
+
+        {/* Target Plan Tier */}
+        <View style={{ gap: 4 }}>
+          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#86198f' }}>
+            👑 Select Trial Membership Plan Tier:
+          </Text>
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            {(['PRO', 'SMART', 'SUPER'] as const).map((p) => {
+              const isSelected = targetPlan === p;
+              const labels = { PRO: 'Basic ⚡', SMART: 'Pro 👑', SUPER: 'Super ⭐' };
+              return (
+                <TouchableOpacity
+                  key={p}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 8,
+                    borderRadius: RADIUS.md,
+                    borderWidth: 1.5,
+                    borderColor: isSelected ? '#c026d3' : '#e2e8f0',
+                    backgroundColor: isSelected ? '#c026d3' : '#ffffff',
+                    alignItems: 'center',
+                  }}
+                  onPress={() => setTargetPlan(p)}
+                >
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isSelected ? '#ffffff' : '#334155' }}>
+                    {labels[p]}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {savedNotice ? (
+          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#c026d3', textAlign: 'center' }}>
+            {savedNotice}
+          </Text>
+        ) : null}
+
+        <TouchableOpacity
+          style={[wStyles.btn, { backgroundColor: '#c026d3' }]}
+          onPress={handleSave}
+          disabled={saving}
+        >
+          {saving ? (
+            <ActivityIndicator color="#ffffff" size="small" />
+          ) : (
+            <>
+              <Ionicons name="save-outline" size={16} color="#ffffff" />
+              <Text style={wStyles.btnText}>💾 Save Free Trial Settings</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
 export default function SuperSettingsScreen() {
   const router = useRouter();
   const { data: settings, isLoading } = useAppSettings();
@@ -1562,6 +1712,9 @@ export default function SuperSettingsScreen() {
             {/* 📱 App Download & APK Update Link Panel */}
             <AppDownloadSettingsPanel />
 
+            {/* 🎁 Free Membership Trial Settings Panel */}
+            <FreeTrialSettingsPanel />
+
             {/* 🏷️ Expense Categories Manager */}
             <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#fef2f2', borderColor: '#fecaca', borderWidth: 1 }]}>
               <View style={styles.cardHeader}>
@@ -1873,8 +2026,9 @@ export function PendingDoctorChangeApprovalsSection() {
 
 export function PlanPricingSection() {
   const { data: pricing, isLoading } = useFarmerPlanPricing();
-  const [editing, setEditing] = useState<FarmerPlanPricing | null>(null);
-  const [isSoftwareCollapsed, setIsSoftwareCollapsed] = useState(true);
+  const removePricing = useDeleteFarmerPlanPricing();
+  const [editingPlanKey, setEditingPlanKey] = useState<string | null>(null);
+  const [isSoftwareCollapsed, setIsSoftwareCollapsed] = useState(false);
 
   const SOFTWARE_PLANS = ['PRO', 'SMART', 'SUPER'];
   const CARE_PLANS = ['SILVER', 'GOLD', 'ROYAL'];
@@ -1882,12 +2036,14 @@ export function PlanPricingSection() {
   const softwareGroups = SOFTWARE_PLANS.map((planKey) => ({
     planKey,
     items: (pricing ?? []).filter((p) => p.plan === planKey),
-  })).filter((group) => group.items.length > 0);
+  }));
 
   const careGroups = CARE_PLANS.map((planKey) => ({
     planKey,
     items: (pricing ?? []).filter((p) => p.plan === planKey),
-  })).filter((group) => group.items.length > 0);
+  }));
+
+  const editingItems = editingPlanKey ? (pricing ?? []).filter((p) => p.plan === editingPlanKey) : [];
 
   return (
     <View style={{ gap: 16 }}>
@@ -1902,8 +2058,8 @@ export function PlanPricingSection() {
             <Ionicons name="apps" size={20} color="#0284c7" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.sectionTitle}>🌾 Farmer Software Membership Plans</Text>
-            <Text style={styles.helperText}>Configure subscription prices & commission cuts for Farmer App software features</Text>
+            <Text style={styles.sectionTitle}>🎫 Farmer Pass Membership Plans</Text>
+            <Text style={styles.helperText}>Add, edit & delete software membership plans, MRP, discounted prices, duration days & commission splits</Text>
           </View>
           <Ionicons
             name={isSoftwareCollapsed ? 'chevron-down-outline' : 'chevron-up-outline'}
@@ -1916,8 +2072,6 @@ export function PlanPricingSection() {
         {!isSoftwareCollapsed && (
           isLoading ? (
             <ActivityIndicator color={theme.primary} style={{ marginVertical: 16 }} />
-          ) : softwareGroups.length === 0 ? (
-            <Text style={styles.emptyText}>No software plans configured yet.</Text>
           ) : (
             <View style={{ gap: 12, marginTop: 8 }}>
               {softwareGroups.map(({ planKey, items }) => {
@@ -1928,7 +2082,8 @@ export function PlanPricingSection() {
                     planKey={planKey}
                     meta={meta}
                     items={items}
-                    onEdit={setEditing}
+                    onEditTier={() => setEditingPlanKey(planKey)}
+                    onDeleteItem={(id) => removePricing.mutate(id)}
                   />
                 );
               })}
@@ -1958,12 +2113,6 @@ export function PlanPricingSection() {
 
         {isLoading ? (
           <ActivityIndicator color="#d97706" style={{ marginVertical: 16 }} />
-        ) : careGroups.length === 0 ? (
-          <View style={{ padding: 14, backgroundColor: '#ffffff', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#fde68a' }}>
-            <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#92400e', textAlign: 'center' }}>
-              No Crop Care plans configured in database yet. (Silver: ₹999/yr, Gold: ₹1999/yr, Royal: ₹3499/yr)
-            </Text>
-          </View>
         ) : (
           <View style={{ gap: 12, marginTop: 8 }}>
             {careGroups.map(({ planKey, items }) => {
@@ -1974,7 +2123,8 @@ export function PlanPricingSection() {
                   planKey={planKey}
                   meta={meta}
                   items={items}
-                  onEdit={setEditing}
+                  onEditTier={() => setEditingPlanKey(planKey)}
+                  onDeleteItem={(id) => removePricing.mutate(id)}
                 />
               );
             })}
@@ -1982,7 +2132,11 @@ export function PlanPricingSection() {
         )}
       </View>
 
-      <EditPricingModal pricing={editing} onClose={() => setEditing(null)} />
+      <EditPricingModal
+        planKey={editingPlanKey}
+        pricingItems={editingItems}
+        onClose={() => setEditingPlanKey(null)}
+      />
     </View>
   );
 }
@@ -1991,12 +2145,14 @@ function PlanCardGroup({
   planKey,
   meta,
   items,
-  onEdit,
+  onEditTier,
+  onDeleteItem,
 }: {
   planKey: string;
   meta: { label: string; emoji: string; color: string };
   items: FarmerPlanPricing[];
-  onEdit: (item: FarmerPlanPricing) => void;
+  onEditTier: () => void;
+  onDeleteItem: (id: string) => void;
 }) {
   return (
     <View style={[styles.planCardContainer, { borderColor: meta.color + '40', backgroundColor: '#ffffff' }, premiumShadow('#0f172a', 'sm')]}>
@@ -2011,140 +2167,345 @@ function PlanCardGroup({
             <Text style={styles.planCardSub}>{items.length} Duration Option(s)</Text>
           </View>
         </View>
+
+        <TouchableOpacity
+          style={[styles.variantEditBtn, { backgroundColor: meta.color }]}
+          activeOpacity={0.85}
+          onPress={onEditTier}
+        >
+          <Ionicons name="create-outline" size={14} color="#ffffff" />
+          <Text style={styles.variantEditBtnText}>Edit All Plans</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.cardDivider} />
 
       <View style={styles.cardSection}>
-        <Text style={styles.cardSectionTitle}>💰 Pricing & Commission Splits</Text>
-        <View style={{ gap: 6 }}>
-          {items.map((p) => (
-            <View key={p.id} style={styles.variantRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.variantTitle}>
-                  {p.billingPeriodDays === 365 ? '1 Year (365 Days)' : `${p.billingPeriodDays} Days`} —{' '}
-                  <Text style={{ color: '#16a34a', fontFamily: FONT.extraBold }}>₹{p.price}</Text>
-                </Text>
-                <Text style={styles.variantMeta}>
-                  Partner Cut: {p.partnerShareType === 'PERCENTAGE' ? `${p.partnerShareValue}%` : `₹${p.partnerShareValue}`}
-                  {p.advisorShareValue ? ` · Advisor Cut: ₹${p.advisorShareValue}` : ''}
-                  {p.adminShareValue ? ` · Admin Cut: ₹${p.adminShareValue}` : ''}
-                </Text>
-                {(p.maxActiveCrops != null || (p as any).maxDoctorCrops != null) ? (
-                  <Text style={{ fontSize: 10.5, fontFamily: FONT.semiBold, color: '#64748b', marginTop: 2 }}>
-                    Limits: {p.maxActiveCrops != null ? `Active Crops: ${p.maxActiveCrops}` : 'Unlimited Active Crops'}
-                    {(p as any).maxDoctorCrops != null ? ` · Doctor Crops: ${(p as any).maxDoctorCrops}` : ''}
+        <Text style={styles.cardSectionTitle}>💰 Duration Plans, Prices & Cuts</Text>
+        {items.length === 0 ? (
+          <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8', fontStyle: 'italic' }}>
+            No duration options added yet. Click "Edit All Plans" above to add 30-day, 90-day, or 365-day plans.
+          </Text>
+        ) : (
+          <View style={{ gap: 8 }}>
+            {items.map((p) => (
+              <View key={p.id} style={styles.variantRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.variantTitle}>
+                    {p.billingPeriodDays === 365 ? '1 Year (365 Days)' : `${p.billingPeriodDays} Days`} —{' '}
+                    {p.mrp && Number(p.mrp) > Number(p.price) ? (
+                      <Text style={{ textDecorationLine: 'line-through', color: '#94a3b8', fontSize: 12 }}>
+                        ₹{p.mrp}{' '}
+                      </Text>
+                    ) : null}
+                    <Text style={{ color: '#16a34a', fontFamily: FONT.extraBold }}>₹{p.price}</Text>
                   </Text>
-                ) : null}
+                  <Text style={styles.variantMeta}>
+                    Partner Share: {p.partnerShareType === 'PERCENTAGE' ? `${p.partnerShareValue}%` : `₹${p.partnerShareValue}`}
+                    {p.advisorShareValue ? ` · Advisor Cut: ₹${p.advisorShareValue}` : ''}
+                    {p.adminShareValue ? ` · Platform Fee: ₹${p.adminShareValue}` : ''}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={{ padding: 6, borderRadius: RADIUS.sm, backgroundColor: '#fef2f2' }}
+                  onPress={() => onDeleteItem(p.id)}
+                >
+                  <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                style={[styles.variantEditBtn, { backgroundColor: meta.color }]}
-                activeOpacity={0.85}
-                onPress={() => onEdit(p)}
-              >
-                <Ionicons name="create-outline" size={13} color="#ffffff" />
-                <Text style={styles.variantEditBtnText}>Edit</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        )}
       </View>
     </View>
   );
 }
 
-function EditPricingModal({ pricing, onClose }: { pricing: FarmerPlanPricing | null; onClose: () => void }) {
+function EditPricingModal({
+  planKey,
+  pricingItems,
+  onClose,
+}: {
+  planKey: string | null;
+  pricingItems: FarmerPlanPricing[];
+  onClose: () => void;
+}) {
   const update = useUpdateFarmerPlanPricing();
-  const [price, setPrice] = useState('');
-  const [billingPeriodDays, setBillingPeriodDays] = useState('');
-  const [partnerShareType, setPartnerShareType] = useState<'PERCENTAGE' | 'FIXED'>('FIXED');
-  const [partnerShareValue, setPartnerShareValue] = useState('');
-  const [advisorShareValue, setAdvisorShareValue] = useState('');
-  const [adminShareValue, setAdminShareValue] = useState('');
+  const remove = useDeleteFarmerPlanPricing();
+
+  const [formItems, setFormItems] = useState<any[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   React.useEffect(() => {
-    if (pricing) {
-      setPrice(String(pricing.price));
-      setBillingPeriodDays(String(pricing.billingPeriodDays));
-      setPartnerShareType(pricing.partnerShareType);
-      setPartnerShareValue(String(pricing.partnerShareValue));
-      setAdvisorShareValue(pricing.advisorShareValue ? String(pricing.advisorShareValue) : '');
-      setAdminShareValue(pricing.adminShareValue ? String(pricing.adminShareValue) : '');
+    if (planKey) {
+      if (pricingItems.length > 0) {
+        setFormItems(
+          pricingItems.map((item) => ({
+            id: item.id,
+            mrp: String(item.mrp ?? item.price ?? ''),
+            price: String(item.price ?? ''),
+            billingPeriodDays: String(item.billingPeriodDays ?? 365),
+            partnerShareType: item.partnerShareType ?? 'PERCENTAGE',
+            partnerShareValue: String(item.partnerShareValue ?? 10),
+            advisorShareValue: item.advisorShareValue ? String(item.advisorShareValue) : '',
+            adminShareValue: item.adminShareValue ? String(item.adminShareValue) : '',
+          }))
+        );
+      } else {
+        // Default new entry
+        setFormItems([
+          {
+            id: `new_${Date.now()}`,
+            mrp: '1999',
+            price: '999',
+            billingPeriodDays: '365',
+            partnerShareType: 'PERCENTAGE',
+            partnerShareValue: '10',
+            advisorShareValue: '100',
+            adminShareValue: '',
+          },
+        ]);
+      }
       setError(null);
     }
-  }, [pricing]);
+  }, [planKey, pricingItems]);
 
-  if (!pricing) return null;
+  if (!planKey) return null;
 
-  const handleSave = async () => {
+  const handleAddDurationRow = () => {
+    setFormItems((prev) => [
+      ...prev,
+      {
+        id: `new_${Date.now()}`,
+        mrp: '499',
+        price: '299',
+        billingPeriodDays: '30',
+        partnerShareType: 'PERCENTAGE',
+        partnerShareValue: '10',
+        advisorShareValue: '50',
+        adminShareValue: '',
+      },
+    ]);
+  };
+
+  const handleRemoveDurationRow = async (index: number, itemId?: string) => {
+    if (itemId && !itemId.startsWith('new_')) {
+      try {
+        await remove.mutateAsync(itemId);
+      } catch {
+        // ignore
+      }
+    }
+    setFormItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateItemField = (index: number, field: string, value: any) => {
+    setFormItems((prev) => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], [field]: value };
+      return copy;
+    });
+  };
+
+  const handleSaveAll = async () => {
+    if (formItems.length === 0) {
+      onClose();
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
     try {
-      await update.mutateAsync({
-        plan: pricing.plan,
-        payload: {
-          price: Number(price),
-          billingPeriodDays: Number(billingPeriodDays),
-          partnerShareType,
-          partnerShareValue: Number(partnerShareValue),
-          advisorShareValue: advisorShareValue ? Number(advisorShareValue) : undefined,
-          adminShareValue: adminShareValue ? Number(adminShareValue) : undefined,
-        },
-      });
+      for (const item of formItems) {
+        await update.mutateAsync({
+          plan: planKey,
+          payload: {
+            mrp: Number(item.mrp || item.price),
+            price: Number(item.price),
+            billingPeriodDays: Number(item.billingPeriodDays),
+            partnerShareType: item.partnerShareType,
+            partnerShareValue: Number(item.partnerShareValue),
+            advisorShareValue: item.advisorShareValue ? Number(item.advisorShareValue) : undefined,
+            adminShareValue: item.adminShareValue ? Number(item.adminShareValue) : undefined,
+          },
+        });
+      }
       onClose();
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Could not save pricing.');
+      setError(err?.response?.data?.message ?? 'Could not save pricing plan.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <Modal visible={!!pricing} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={!!planKey} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
-        <View style={styles.modalCard}>
+        <View style={[styles.modalCard, { maxWidth: 520, maxHeight: '92%' }]}>
           <View style={styles.modalHeaderRow}>
-            <Text style={styles.modalTitle}>{pricing.plan} Plan Pricing</Text>
+            <View>
+              <Text style={styles.modalTitle}>Manage {planKey} Membership Plans</Text>
+              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
+                Edit all duration plans (30 days, 365 days), prices & splits in one go
+              </Text>
+            </View>
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close-circle" size={24} color="#64748b" />
             </TouchableOpacity>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingVertical: 4 }}>
-            <Text style={styles.label}>Price (₹)</Text>
-            <TextInput style={styles.input} keyboardType="numeric" value={price} onChangeText={setPrice} />
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 14, paddingVertical: 10 }}>
+            {formItems.map((item, idx) => (
+              <View
+                key={item.id || idx}
+                style={{
+                  backgroundColor: '#f8fafc',
+                  borderRadius: RADIUS.lg,
+                  padding: 12,
+                  borderWidth: 1.5,
+                  borderColor: '#e2e8f0',
+                  gap: 8,
+                }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: '#0284c7' }}>
+                    Plan Duration #{idx + 1}
+                  </Text>
+                  <TouchableOpacity
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, backgroundColor: '#fef2f2', borderRadius: RADIUS.sm }}
+                    onPress={() => handleRemoveDurationRow(idx, item.id)}
+                  >
+                    <Ionicons name="trash-outline" size={13} color="#ef4444" />
+                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#ef4444' }}>Delete Option</Text>
+                  </TouchableOpacity>
+                </View>
 
-            <Text style={styles.label}>Billing Period (days)</Text>
-            <TextInput style={styles.input} keyboardType="numeric" value={billingPeriodDays} onChangeText={setBillingPeriodDays} />
+                {/* Duration Days */}
+                <Text style={styles.label}>Billing Period (Days e.g. 30, 90, 365)</Text>
+                <TextInput
+                  style={styles.input}
+                  keyboardType="numeric"
+                  value={item.billingPeriodDays}
+                  onChangeText={(val) => handleUpdateItemField(idx, 'billingPeriodDays', val)}
+                />
 
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
-              <Text style={styles.label}>Partner Share Type</Text>
-              <View style={{ flexDirection: 'row', gap: 6 }}>
-                <TouchableOpacity
-                  style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.sm, backgroundColor: partnerShareType === 'PERCENTAGE' ? '#0284c7' : '#e2e8f0' }}
-                  onPress={() => setPartnerShareType('PERCENTAGE')}
-                >
-                  <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: partnerShareType === 'PERCENTAGE' ? '#ffffff' : '#475569' }}>% Percent</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.sm, backgroundColor: partnerShareType === 'FIXED' ? '#0284c7' : '#e2e8f0' }}
-                  onPress={() => setPartnerShareType('FIXED')}
-                >
-                  <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: partnerShareType === 'FIXED' ? '#ffffff' : '#475569' }}>₹ Fixed Amount</Text>
-                </TouchableOpacity>
+                {/* MRP & Discounted Selling Price */}
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.label}>Plan Price / MRP (₹)</Text>
+                    <TextInput
+                      style={styles.input}
+                      keyboardType="numeric"
+                      placeholder="e.g. 1999"
+                      value={item.mrp}
+                      onChangeText={(val) => handleUpdateItemField(idx, 'mrp', val)}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.label}>Selling Price (₹)</Text>
+                    <TextInput
+                      style={styles.input}
+                      keyboardType="numeric"
+                      placeholder="e.g. 999"
+                      value={item.price}
+                      onChangeText={(val) => handleUpdateItemField(idx, 'price', val)}
+                    />
+                  </View>
+                </View>
+
+                {/* Partner Share Type & Value */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
+                  <Text style={styles.label}>Partner Share Type</Text>
+                  <View style={{ flexDirection: 'row', gap: 6 }}>
+                    <TouchableOpacity
+                      style={{
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        borderRadius: RADIUS.sm,
+                        backgroundColor: item.partnerShareType === 'PERCENTAGE' ? '#0284c7' : '#e2e8f0',
+                      }}
+                      onPress={() => handleUpdateItemField(idx, 'partnerShareType', 'PERCENTAGE')}
+                    >
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: item.partnerShareType === 'PERCENTAGE' ? '#ffffff' : '#475569' }}>
+                        % Percent
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        borderRadius: RADIUS.sm,
+                        backgroundColor: item.partnerShareType === 'FIXED' ? '#0284c7' : '#e2e8f0',
+                      }}
+                      onPress={() => handleUpdateItemField(idx, 'partnerShareType', 'FIXED')}
+                    >
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: item.partnerShareType === 'FIXED' ? '#ffffff' : '#475569' }}>
+                        ₹ Fixed Amount
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <Text style={styles.label}>Business Partner Share ({item.partnerShareType === 'FIXED' ? '₹' : '%'})</Text>
+                <TextInput
+                  style={styles.input}
+                  keyboardType="numeric"
+                  value={item.partnerShareValue}
+                  onChangeText={(val) => handleUpdateItemField(idx, 'partnerShareValue', val)}
+                />
+
+                {/* Advisor Cut & Platform Fee Cut */}
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.label}>Advisor Cut (₹)</Text>
+                    <TextInput
+                      style={styles.input}
+                      keyboardType="numeric"
+                      placeholder="e.g. 100"
+                      value={item.advisorShareValue}
+                      onChangeText={(val) => handleUpdateItemField(idx, 'advisorShareValue', val)}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.label}>Platform Fee / Admin Cut (₹)</Text>
+                    <TextInput
+                      style={styles.input}
+                      keyboardType="numeric"
+                      placeholder="Auto / Custom"
+                      value={item.adminShareValue}
+                      onChangeText={(val) => handleUpdateItemField(idx, 'adminShareValue', val)}
+                    />
+                  </View>
+                </View>
               </View>
-            </View>
+            ))}
 
-            <Text style={styles.label}>Business Partner Share ({partnerShareType === 'FIXED' ? '₹' : '%'})</Text>
-            <TextInput style={styles.input} keyboardType="numeric" value={partnerShareValue} onChangeText={setPartnerShareValue} />
-
-            <Text style={styles.label}>Advisor Share Cut (₹, optional)</Text>
-            <TextInput style={styles.input} keyboardType="numeric" value={advisorShareValue} onChangeText={setAdvisorShareValue} />
-
-            <Text style={styles.label}>Admin Share Cut (₹, optional)</Text>
-            <TextInput style={styles.input} keyboardType="numeric" value={adminShareValue} onChangeText={setAdminShareValue} />
+            {/* + Add Duration Plan Button */}
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                paddingVertical: 10,
+                borderWidth: 1.5,
+                borderColor: '#0284c7',
+                borderStyle: 'dashed',
+                borderRadius: RADIUS.lg,
+                backgroundColor: '#f0f9ff',
+              }}
+              onPress={handleAddDurationRow}
+            >
+              <Ionicons name="add-circle" size={18} color="#0284c7" />
+              <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0284c7' }}>
+                + Add Another Duration Plan (e.g. 30 Days)
+              </Text>
+            </TouchableOpacity>
 
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-            <TouchableOpacity style={styles.submitBtn} disabled={update.isPending} onPress={handleSave}>
-              {update.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Save Pricing</Text>}
+            <TouchableOpacity style={styles.submitBtn} disabled={isSubmitting} onPress={handleSaveAll}>
+              {isSubmitting ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Save All {planKey} Plans</Text>}
             </TouchableOpacity>
           </ScrollView>
         </View>

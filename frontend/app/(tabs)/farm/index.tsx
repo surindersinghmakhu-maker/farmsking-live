@@ -42,6 +42,7 @@ import { useSubmitCropToAdvisor, useCancelCropSubmission } from '@/src/hooks/use
 import { CropCompletionReviewModal } from '@/src/components/CropCompletionReviewModal';
 import { CropCompletionReview } from '@/src/store/crops-context';
 import { CropDoctorCareView } from '@/src/components/CropDoctorCareView';
+import { CropCarePlanModal } from '@/src/components/CropCarePlanModal';
 
 const theme = RoleThemes.FARMER;
 
@@ -670,7 +671,7 @@ export default function FarmListScreen() {
           >
             <Ionicons name="medical" size={14} color={activeSubTab === 'CROP_CARE' ? '#15803d' : '#ffffff'} />
             <Text style={[styles.subTabText, activeSubTab === 'CROP_CARE' && styles.subTabTextActive]}>
-              🩺 Crop Doctor Care
+              🩺 Crops Care
             </Text>
           </TouchableOpacity>
         </View>

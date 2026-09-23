@@ -17,6 +17,9 @@ export interface AppSettings {
   appDownloadUrl?: string | null;
   latestAppVersion?: string | null;
   storefrontMaintenanceMode?: boolean;
+  freeTrialEnabled?: boolean;
+  freeTrialDays?: number;
+  freeTrialPlan?: 'PRO' | 'SMART' | 'SUPER';
   updatedAt: string;
   updatedById: string | null;
 }
@@ -40,6 +43,9 @@ export interface UpdateAppSettingsPayload {
   appDownloadUrl?: string;
   latestAppVersion?: string;
   storefrontMaintenanceMode?: boolean;
+  freeTrialEnabled?: boolean;
+  freeTrialDays?: number;
+  freeTrialPlan?: 'PRO' | 'SMART' | 'SUPER';
 }
 
 export async function getAppSettings(): Promise<AppSettings> {

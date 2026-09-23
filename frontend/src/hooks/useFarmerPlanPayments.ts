@@ -12,8 +12,24 @@ export function usePendingFarmerPlanPayments() {
 
 export function useInitiateFarmerPlanPayment() {
   return useMutation({
-    mutationFn: ({ targetPlan, billingPeriodDays, farmerId }: { targetPlan: FarmerPlanType; billingPeriodDays?: number; farmerId?: string }) =>
-      api.initiateFarmerPlanPayment(targetPlan, billingPeriodDays, farmerId),
+    mutationFn: ({
+      targetPlan,
+      billingPeriodDays,
+      farmerId,
+      selectedDoctorId,
+      selectedAdvisorId,
+      doctorKingId,
+      advisorKingId,
+    }: {
+      targetPlan: FarmerPlanType;
+      billingPeriodDays?: number;
+      farmerId?: string;
+      selectedDoctorId?: string;
+      selectedAdvisorId?: string;
+      doctorKingId?: string;
+      advisorKingId?: string;
+    }) =>
+      api.initiateFarmerPlanPayment(targetPlan, billingPeriodDays, farmerId, selectedDoctorId, selectedAdvisorId, doctorKingId, advisorKingId),
   });
 }
 

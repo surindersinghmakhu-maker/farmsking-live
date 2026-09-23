@@ -45,6 +45,14 @@ export class GenerateAdvisorCouponDto {
   @IsUUID()
   assignedBusinessPartnerId?: string;
 
+  /** Target recipient mode: 'SELF' or 'ADVISOR' */
+  @IsOptional()
+  targetType?: 'SELF' | 'ADVISOR';
+
+  /** Optional Advisor King ID if coupon is assigned to an Advisor registered by Admin */
+  @IsOptional()
+  advisorKingId?: string;
+
   /** How many coupons to generate at once (default 1) */
   @IsOptional()
   @IsInt()

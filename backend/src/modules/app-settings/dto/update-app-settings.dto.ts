@@ -74,5 +74,16 @@ export class UpdateAppSettingsDto {
   @IsOptional()
   @IsBoolean()
   storefrontMaintenanceMode?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  freeTrialEnabled?: boolean;
+
+  @IsOptional()
+  freeTrialDays?: number;
+
+  @IsOptional()
+  @IsString()
+  freeTrialPlan?: string;
 }
 

@@ -32,6 +32,10 @@ export interface FarmerPlanCouponPreview {
   newEndDate: string;
   extendsExisting: boolean;
   includesAdvisor: boolean;
+  price?: number;
+  doctor?: { name: string; specialization: string; kingId?: string } | null;
+  advisor?: { name: string; specialization: string; kingId?: string } | null;
+  features?: string[];
 }
 
 export interface FarmerPlanCouponRedeemResult {
@@ -47,19 +51,21 @@ export interface FarmerPlanCouponRedeemResult {
 export interface FarmerPlanCoupon {
   id: string;
   code: string;
-  category?: 'FARMER_PLAN' | 'ADVISOR_PLAN';
+  category?: 'FARMER_PLAN' | 'ADVISOR_PLAN' | 'DOCTOR_CONSULTATION';
   plan: FarmerPlanType;
   daysGranted: number;
   assignedFarmerId: string | null;
-  assignedFarmer?: { id: string; name: string; mobile: string } | null;
+  assignedFarmer?: { id: string; name: string; mobile: string; kingId?: string } | null;
   assignedAdvisorId: string | null;
-  assignedAdvisor?: { id: string; name: string; mobile: string } | null;
+  assignedAdvisor?: { id: string; name: string; mobile: string; kingId?: string; specialization?: string } | null;
   assignedBusinessPartnerId: string | null;
   assignedBusinessPartner?: { id: string; name: string; mobile: string } | null;
+  doctorKingId?: string | null;
+  advisorKingId?: string | null;
   isUsed: boolean;
   usedAt: string | null;
   usedByFarmerId?: string | null;
-  usedByFarmer?: { id: string; name: string; mobile: string } | null;
+  usedByFarmer?: { id: string; name: string; mobile: string; kingId?: string } | null;
   expiresAt: string | null;
   generationCostAmount: string | null;
   payoutAmount?: string | null;
@@ -67,7 +73,7 @@ export interface FarmerPlanCoupon {
   createdAt: string;
   createdById: string;
   createdByRole?: string | null;
-  createdBy?: { id: string; name: string } | null;
+  createdBy?: { id: string; name: string; specialization?: string; kingId?: string } | null;
 }
 
 export interface CouponFinancialSummary {
@@ -99,6 +105,7 @@ export interface CreateFarmerPlanCouponPayload {
 export interface FarmerPlanPricing {
   id: string;
   plan: FarmerPlanType;
+  mrp?: string | null;
   price: string;
   billingPeriodDays: number;
   partnerShareType: 'PERCENTAGE' | 'FIXED';
@@ -118,6 +125,7 @@ export interface FarmerPlanPricing {
 }
 
 export interface UpdateFarmerPlanPricingPayload {
+  mrp?: number;
   price?: number;
   billingPeriodDays?: number;
   partnerShareType?: 'PERCENTAGE' | 'FIXED';
@@ -178,6 +186,8 @@ export interface GenerateAdvisorCouponPayload {
   plan: FarmerPlanType;
   daysGranted: number;
   quantity?: number;
+  targetType?: 'SELF' | 'ADVISOR';
+  advisorKingId?: string;
   doctorFeeAmount?: number;
   includeMembership?: boolean;
   includedMembershipPlan?: FarmerPlanType;

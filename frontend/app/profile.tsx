@@ -258,10 +258,41 @@ export default function ProfileScreen() {
             ? 'System Admin Profile'
             : isWorker
             ? 'Worker & Labour Profile'
-            : 'My Account Profile'}
+            : 'Personal Profile'}
         </Text>
         <View style={{ width: 36 }} />
       </LinearGradient>
+
+      {/* Top Tab Navigation: Personal Profile & Addresses */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tabBtn, activeTab === 'PROFILE' && styles.activeTabBtn]}
+          activeOpacity={0.8}
+          onPress={() => {
+            tap();
+            setActiveTab('PROFILE');
+          }}
+        >
+          <Ionicons name="person-outline" size={16} color={activeTab === 'PROFILE' ? theme.primary : '#64748b'} />
+          <Text style={[styles.tabText, activeTab === 'PROFILE' && { color: theme.primary, fontFamily: FONT.bold }]}>
+            Personal Profile
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.tabBtn, activeTab === 'ADDRESSES' && styles.activeTabBtn]}
+          activeOpacity={0.8}
+          onPress={() => {
+            tap();
+            setActiveTab('ADDRESSES');
+          }}
+        >
+          <Ionicons name="location-outline" size={16} color={activeTab === 'ADDRESSES' ? theme.primary : '#64748b'} />
+          <Text style={[styles.tabText, activeTab === 'ADDRESSES' && { color: theme.primary, fontFamily: FONT.bold }]}>
+            Addresses
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {activeTab === 'ADDRESSES' ? (
         <AddressesTab theme={theme} />

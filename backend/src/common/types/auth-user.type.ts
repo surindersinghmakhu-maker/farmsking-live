@@ -9,4 +9,7 @@ export interface AuthUser {
   /** Roles the admin has deactivated — still listed in `roles` for history, but not usable until reactivated. */
   deactivatedRoles: Role[];
   name: string;
+  kingId?: string | null;
+  isSeniorDoctor?: boolean;
 }
+

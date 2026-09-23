@@ -38,11 +38,12 @@ const PLAN_ROWS: PlanRow[] = [
   { label: 'Weather Report', values: { FREE: '✓', PRO: '✓', SMART: '✓', SUPER: '✓', SILVER: '✓', GOLD: '✓', ROYAL: '✓' } },
   { label: 'Labour Record', values: { FREE: '—', PRO: '—', SMART: '✓ Included', SUPER: '✓ Included', SILVER: '—', GOLD: '✓ Included', ROYAL: '✓ Included' } },
   { label: 'Worker Login', values: { FREE: '—', PRO: '—', SMART: '✓ Enabled', SUPER: '✓ Enabled', SILVER: '—', GOLD: '✓ Enabled', ROYAL: '✓ Enabled' } },
-  { label: 'Dedicated Farm Advisor', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '✓ Included', SILVER: '—', GOLD: '—', ROYAL: '✓ Included' } },
-  { label: 'Advisor Chat', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '✓ Enabled', SILVER: '—', GOLD: '—', ROYAL: '✓ Enabled' } },
-  { label: 'Advisor Call Request', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '✓ Enabled', SILVER: '—', GOLD: '—', ROYAL: '✓ Enabled' } },
+  { label: 'Dedicated Farm Advisor', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '—', SILVER: '—', GOLD: '—', ROYAL: '✓ Included' } },
+  { label: 'Advisor Chat', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '—', SILVER: '—', GOLD: '—', ROYAL: '✓ Enabled' } },
+  { label: 'Advisor Call Request', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '—', SILVER: '—', GOLD: '—', ROYAL: '✓ Enabled' } },
   { label: 'Mandi AI Predictions', values: { FREE: '—', PRO: '—', SMART: '—', SUPER: '✓ Included', SILVER: '—', GOLD: '—', ROYAL: '✓ Included' } },
 ];
+
 
 
 /** 100% Single-Screen Responsive Plan Comparison Chart — fits perfectly on one screen without horizontal scrolling */
@@ -520,7 +521,7 @@ export function FarmerPlanUpgradeModal({
                     }}
                   >
                     <Text style={[styles.partnerChipText, planCategory === cat && { color: '#ffffff' }]}>
-                      {cat === 'FARMER' ? '🌾 Farmer Software Memberships' : '🩺 Doctor Crop Care Plans'}
+                      {cat === 'FARMER' ? '🎫 Farmer Pass' : '🩺 Hire Doctor'}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -530,9 +531,9 @@ export function FarmerPlanUpgradeModal({
               <View style={{ gap: 8 }}>
                 {(planCategory === 'FARMER'
                   ? [
-                      { id: 'FARMER_BASIC', key: 'PRO', label: 'Basic Membership', iconName: 'flash', color: '#0284c7', sub: 'Bookkeeping & Expense Logs + Voice AI Mic (No Doctor)' },
-                      { id: 'FARMER_PRO', key: 'SMART', label: 'Pro Membership', iconName: 'crown', color: '#1d4ed8', sub: 'All Bookkeeping + Labour Record & Worker Login (No Doctor)' },
-                      { id: 'FARMER_SUPER', key: 'SUPER', label: 'Super Membership', iconName: 'star', color: '#b45309', sub: 'Unlimited Crops, Weather Reports & Mandi AI (No Doctor)' },
+                      { id: 'FARMER_BASIC', key: 'PRO', label: '⚡ Basic Membership', iconName: 'flash', color: '#0284c7', sub: 'Bookkeeping & Expense Logs + Voice AI Mic (No Doctor)' },
+                      { id: 'FARMER_PRO', key: 'SMART', label: '👑 Pro Membership', iconName: 'sparkles', color: '#1d4ed8', sub: 'All Bookkeeping + Labour Record & Worker Login (No Doctor)' },
+                      { id: 'FARMER_SUPER', key: 'SUPER', label: '⭐ Super Membership', iconName: 'star', color: '#b45309', sub: 'Unlimited Crops, Weather Reports & Mandi AI (No Doctor)' },
                     ]
                   : [
                       { id: 'CARE_SILVER', key: 'SILVER', label: 'Doctor Silver Care', iconName: 'medical', color: '#64748b', sub: '5 Crops Supervision + Soil Health & Leaf Scan' },

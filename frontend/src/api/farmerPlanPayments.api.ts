@@ -27,10 +27,14 @@ export async function initiateFarmerPlanPayment(
   targetPlan: FarmerPlanType,
   billingPeriodDays?: number,
   farmerId?: string,
+  selectedDoctorId?: string,
+  selectedAdvisorId?: string,
+  doctorKingId?: string,
+  advisorKingId?: string,
 ): Promise<InitiateFarmerPlanPaymentResponse> {
   const { data } = await apiClient.post<InitiateFarmerPlanPaymentResponse>(
     '/farmer-plan-payments',
-    { targetPlan, billingPeriodDays },
+    { targetPlan, billingPeriodDays, selectedDoctorId, selectedAdvisorId, doctorKingId, advisorKingId },
     { params: farmerId ? { farmerId } : {} },
   );
   return data;

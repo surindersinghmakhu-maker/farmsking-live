@@ -38,7 +38,7 @@ const PLAN_ICON_MAP: Record<string, { icon: keyof typeof Ionicons.glyphMap; colo
   SUPER: { icon: 'star', color: '#d97706' },
   SILVER: { icon: 'medical', color: '#475569' },
   GOLD: { icon: 'ribbon', color: '#d97706' },
-  ROYAL: { icon: 'crown', color: '#7c3aed' },
+  ROYAL: { icon: 'sparkles', color: '#7c3aed' },
 };
 
 export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpenAdminChat }) => {
@@ -99,6 +99,13 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         avatarUrl={user?.photoUrl || undefined}
         planBadge={
           <View style={{ alignItems: 'flex-end', gap: 3 }}>
+            {isTrialActive ? (
+              <View style={styles.topTrialPill}>
+                <Ionicons name="sparkles" size={10} color="#ffffff" />
+                <Text style={styles.topTrialPillText}>FREE TRIAL ACTIVE</Text>
+              </View>
+            ) : null}
+
             <View style={styles.highlightPlanBadge}>
               <Ionicons name={currentPlanMeta.icon} size={13} color={currentPlanMeta.color} />
               <Text style={styles.highlightPlanBadgeText} numberOfLines={1}>
@@ -154,7 +161,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
                   <Text style={styles.livePulseText}>LIVE</Text>
                 </View>
                 <Text style={styles.activeCallSub} numberOfLines={1}>
-                  Hosted by {voiceCallHook.activeCall.host?.name || 'Advisor'} ({voiceCallHook.activeCall.host?.ratingLabel || (voiceCallHook.activeCall.host?.rating ? `${voiceCallHook.activeCall.host.rating} ★` : 'No rating till now')}) · Tap to join
+                  Hosted by {voiceCallHook.activeCall.host?.name || 'Advisor'} · Tap to join
                 </Text>
               </View>
             </View>
@@ -169,54 +176,6 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         {/* Live Open-Meteo Weather Card */}
         <OpenMeteoWeatherCard />
 
-        {/* ⭐ Super Advisor Free Trial Activation Banner — 2 Rows Layout */}
-        <View style={[styles.compactTrialBannerCard, premiumShadow('#b45309', 'sm')]}>
-          {/* Row 1: Header Title + Star Icon + Free Till Badge */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 6 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-              <View style={styles.compactTrialIconContainer}>
-                <Ionicons name="sparkles" size={14} color="#d97706" />
-              </View>
-              <Ionicons name="star" size={14} color="#d97706" />
-              <Text style={styles.compactTrialBannerTitle}>Super Membership Trial</Text>
-            </View>
-            <View style={styles.trialBadgePill}>
-              <Text style={styles.trialBadgePillText}>FREE TILL 30/9/2026</Text>
-            </View>
-          </View>
-
-          {/* Row 2: Subtitle text on Left + Action Button on Right */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-            <Text style={[styles.compactTrialBannerSub, { flex: 1 }]} numberOfLines={1}>
-              Unlock all app features free
-            </Text>
-
-            <TouchableOpacity
-              style={[
-                styles.activateTrialBtnRight,
-                (isTrialActive || activateTrialMutation.isPending) && styles.activateTrialBtnDisabled,
-              ]}
-              activeOpacity={0.8}
-              disabled={isTrialActive || activateTrialMutation.isPending}
-              onPress={handleActivateTrial}
-            >
-              {activateTrialMutation.isPending ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <>
-                  <Ionicons
-                    name={isTrialActive ? 'checkmark-circle' : 'flash'}
-                    size={12}
-                    color="#ffffff"
-                  />
-                  <Text style={styles.activateTrialBtnRightText}>
-                    {isTrialActive ? 'Trial Activated' : 'Activate Trial'}
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
 
 
         {/* Quick Accounts & Payments Action Grid */}
@@ -355,31 +314,6 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
           </TouchableOpacity>
         </View>
 
-        {/* 📊 Kisan Unified Crop & Sowing Intelligence Engine Launcher Card */}
-        <TouchableOpacity
-          style={[styles.intelligenceLauncherCard, premiumShadow('#0f172a', 'md')]}
-          activeOpacity={0.88}
-          onPress={() => {
-            tap();
-            router.push('/crop-intelligence');
-          }}
-        >
-          <LinearGradient colors={['#0f172a', '#1e293b']} style={styles.launcherBannerHeader}>
-            <View style={styles.launcherHeaderLeft}>
-              <View style={styles.launcherIconBadge}>
-                <Ionicons name="analytics" size={22} color="#38bdf8" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                  <Text style={styles.launcherTitle}>📈 Crop Engine (Demand & Sowing)</Text>
-                  <View style={styles.livePulsePill}>
-                    <Text style={styles.livePulsePillText}>🔴 LIVE</Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          </LinearGradient>
-        </TouchableOpacity>
       </View>
 
       <GroupVoiceCallModal
@@ -793,12 +727,6 @@ const styles = StyleSheet.create({
     borderColor: '#f59e0b',
     ...premiumShadow('#000000', 'sm'),
   },
-  planActionBtnText: {
-    fontSize: 11,
-    fontFamily: FONT.extraBold,
-    color: '#92400e',
-    letterSpacing: 0.2,
-  },
   compactTrialBannerCard: {
     backgroundColor: '#fffbeb',
     borderRadius: RADIUS.md,
@@ -845,6 +773,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#94a3b8',
     opacity: 0.8,
   },
+  topTrialPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#d97706',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+    marginBottom: 2,
+  },
+  topTrialPillText: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    letterSpacing: 0.3,
+  },
 });
+
 
 

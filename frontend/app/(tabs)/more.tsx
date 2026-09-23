@@ -227,13 +227,13 @@ export default function MoreScreen() {
           }
         />
 
-        {/* Dedicated App Parts: Memberships */}
+        {/* Dedicated App Parts: Memberships & Crops Care */}
         {role !== 'FARM_ADVISOR' && role !== 'GARDEN_ADVISOR' ? (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>👑 MEMBERSHIPS</Text>
+            <Text style={styles.sectionTitle}>👑 MEMBERSHIPS & CROPS CARE</Text>
             <View style={styles.sectionCard}>
               <TouchableOpacity
-                style={[styles.row, { borderBottomWidth: 0 }]}
+                style={styles.row}
                 activeOpacity={0.7}
                 onPress={() => router.push('/(tabs)/memberships' as any)}
               >
@@ -241,8 +241,23 @@ export default function MoreScreen() {
                   <Ionicons name="ribbon-outline" size={18} color="#d97706" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>👑 Memberships (Farmer & Doctor)</Text>
+                  <Text style={styles.rowLabel}>👑 Memberships & Crops Care</Text>
                   <Text style={styles.rowSubLabel}>Farmer App Plans & Specialist Doctor Advisory</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.row, { borderBottomWidth: 0 }]}
+                activeOpacity={0.7}
+                onPress={() => router.push('/(tabs)/memberships' as any)}
+              >
+                <View style={[styles.rowIconBg, { backgroundColor: '#dcfce7' }]}>
+                  <Ionicons name="medical-outline" size={18} color="#16a34a" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowLabel}>🩺 Crops Care Plan</Text>
+                  <Text style={styles.rowSubLabel}>Specialist Doctor Advisory & Coupon Offers</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>

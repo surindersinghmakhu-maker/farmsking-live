@@ -237,11 +237,6 @@ export default function TabLayout() {
 
           {/* Right Header Actions */}
           <View style={desktopStyles.headerRight}>
-            <TouchableOpacity style={desktopStyles.headerActionBtn} onPress={() => router.push('/crop-intelligence')}>
-              <Ionicons name="analytics" size={18} color="#38bdf8" />
-              <Text style={desktopStyles.headerActionBtnText}>Crop Engine</Text>
-            </TouchableOpacity>
-
             <View style={desktopStyles.langSwitcherBox}>
               <TouchableOpacity
                 style={[desktopStyles.langBtn, language === 'pa' && desktopStyles.langBtnActive]}

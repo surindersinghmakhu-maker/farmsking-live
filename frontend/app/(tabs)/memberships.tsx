@@ -17,12 +17,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
-import { useFarmerPlan, useFarmerPlanPricing, useRedeemFarmerPlanCoupon } from '@/src/hooks/useFarmerPlan';
+import { useFarmerPlan, useFarmerPlanPricing, useRedeemFarmerPlanCoupon, useActivateTrial } from '@/src/hooks/useFarmerPlan';
+import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useMyAdvisor, useAvailableAdvisors, useChooseAdvisor, useMyPendingRequest } from '@/src/hooks/useAdvisorAssignments';
 import { useCrops } from '@/src/store/crops-context';
 import { useAuth } from '@/src/store/auth-context';
 import { CopyButton } from '@/src/components/CopyButton';
 import { DoctorChangeDisclaimerModal } from '@/src/components/DoctorChangeDisclaimerModal';
+import { CropCarePlanModal } from '@/src/components/CropCarePlanModal';
 
 const theme = RoleThemes.FARMER;
 
@@ -34,6 +36,8 @@ export default function MembershipsScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { plan, limits, endDate, isExpired } = useFarmerPlan();
+  const { data: settings } = useAppSettings();
+  const activateTrialMutation = useActivateTrial();
   const { data: allPricing = [], isLoading: isLoadingPricing } = useFarmerPlanPricing();
   const { data: myAdvisorData } = useMyAdvisor();
   const { data: availableAdvisors = [] } = useAvailableAdvisors();
@@ -46,11 +50,31 @@ export default function MembershipsScreen() {
   const [couponCodeInput, setCouponCodeInput] = useState('');
   const [appliedCouponNotice, setAppliedCouponNotice] = useState<string | null>(null);
   const [isChoosingAdvisor, setIsChoosingAdvisor] = useState(false);
+  const [isCropCareModalOpen, setIsCropCareModalOpen] = useState(false);
   const [disclaimerModalVisible, setDisclaimerModalVisible] = useState(false);
   const [targetAdvisorToRequest, setTargetAdvisorToRequest] = useState<{ id: string; name: string } | null>(null);
 
   const activeAdvisor = myAdvisorData?.advisor;
   const activeCropsCount = cropFields.filter((c) => c.status === 'ACTIVE').length;
+
+  const freeTrialEnabled = settings?.freeTrialEnabled ?? true;
+  const freeTrialDays = settings?.freeTrialDays ?? 14;
+
+  const handleActivateFreeTrial = async () => {
+    tap();
+    try {
+      const res = await activateTrialMutation.mutateAsync();
+      const msg = `🎉 Free Trial Activated! You have received free trial access for ${freeTrialDays} days.`;
+      setAppliedCouponNotice(msg);
+      if (Platform.OS === 'web') alert(msg);
+      else Alert.alert('Free Trial Activated', msg);
+    } catch (err: any) {
+      const errMsg = err?.response?.data?.message || 'Could not activate free trial.';
+      setAppliedCouponNotice(`❌ ${errMsg}`);
+      if (Platform.OS === 'web') alert(errMsg);
+      else Alert.alert('Error', errMsg);
+    }
+  };
 
   const handleApplyCoupon = async () => {
     if (!couponCodeInput.trim()) {
@@ -114,9 +138,9 @@ export default function MembershipsScreen() {
             style={[styles.tabItem, activeTab === 'FARMER_SOFTWARE' && styles.tabItemActive]}
             onPress={() => { tap(); setActiveTab('FARMER_SOFTWARE'); }}
           >
-            <Ionicons name="apps" size={15} color={activeTab === 'FARMER_SOFTWARE' ? '#ffffff' : '#94a3b8'} />
+            <Ionicons name="ticket" size={15} color={activeTab === 'FARMER_SOFTWARE' ? '#ffffff' : '#94a3b8'} />
             <Text style={[styles.tabText, activeTab === 'FARMER_SOFTWARE' && styles.tabTextActive]}>
-              🌾 Farmer Software
+              🎫 Farmer Pass
             </Text>
           </TouchableOpacity>
 
@@ -126,14 +150,14 @@ export default function MembershipsScreen() {
           >
             <Ionicons name="medical" size={15} color={activeTab === 'CROP_CARE' ? '#ffffff' : '#94a3b8'} />
             <Text style={[styles.tabText, activeTab === 'CROP_CARE' && styles.tabTextActive]}>
-              🩺 Crop Care Advisory
+              🩺 Hire Doctor
             </Text>
           </TouchableOpacity>
         </View>
       </LinearGradient>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* 1. FARMER SOFTWARE MEMBERSHIPS PART */}
+        {/* 1. FARMER PASS MEMBERSHIPS PART */}
         {activeTab === 'FARMER_SOFTWARE' ? (
           <View style={{ gap: 14 }}>
             {/* Current Active Plan Status */}
@@ -144,15 +168,17 @@ export default function MembershipsScreen() {
                     <Ionicons name="ribbon" size={20} color="#16a34a" />
                   </View>
                   <View>
-                    <Text style={styles.statusLabel}>CURRENT SOFTWARE PLAN</Text>
+                    <Text style={styles.statusLabel}>CURRENT FARMER PASS</Text>
                     <Text style={styles.statusPlanName}>
-                      {plan === 'PRO' ? 'Lite VIP Plan 👑' : plan === 'SMART' ? 'Pro VIP Plan 👑' : 'Free Trial Plan'}
+                      {!isExpired && plan !== 'FREE'
+                        ? `${plan === 'PRO' ? 'Lite VIP Plan 👑' : plan === 'SMART' ? 'Pro VIP Plan 👑' : 'Super VIP Plan 👑'} (Free Trial)`
+                        : plan === 'PRO' ? 'Lite VIP Plan 👑' : plan === 'SMART' ? 'Pro VIP Plan 👑' : 'Free Starter Plan'}
                     </Text>
                   </View>
                 </View>
                 <View style={[styles.activePill, { backgroundColor: isExpired ? '#fef2f2' : '#ecfdf5' }]}>
                   <Text style={[styles.activePillText, { color: isExpired ? '#dc2626' : '#059669' }]}>
-                    {isExpired ? 'EXPIRED' : 'ACTIVE'}
+                    {isExpired ? 'EXPIRED' : plan !== 'FREE' ? 'Free Trial' : 'ACTIVE'}
                   </Text>
                 </View>
               </View>
@@ -196,7 +222,7 @@ export default function MembershipsScreen() {
             </View>
 
             {/* Software Plan Pricing Cards */}
-            <Text style={styles.sectionHeaderTitle}>SELECT FARMER SOFTWARE PLAN</Text>
+            <Text style={styles.sectionHeaderTitle}>SELECT FARMER PASS PLAN</Text>
 
             {/* Plan 1: Free Plan */}
             <View style={[styles.planCard, premiumShadow('#000000', 'sm')]}>
@@ -214,6 +240,19 @@ export default function MembershipsScreen() {
                 <Text style={styles.featureItem}>✕ No Satellite NDVI Field Heatmaps</Text>
                 <Text style={styles.featureItem}>✕ No Dedicated Doctor Advisory</Text>
               </View>
+
+              {/* Free Trial Button */}
+              {freeTrialEnabled && (plan === 'FREE' || isExpired) ? (
+                <TouchableOpacity
+                  style={[styles.upgradeBtn, { backgroundColor: '#c026d3', marginTop: 6 }]}
+                  disabled={activateTrialMutation.isPending}
+                  onPress={handleActivateFreeTrial}
+                >
+                  <Text style={styles.upgradeBtnText}>
+                    {activateTrialMutation.isPending ? 'Activating Trial...' : `Get ${freeTrialDays} Days Free Trial 🎁`}
+                  </Text>
+                </TouchableOpacity>
+              ) : null}
             </View>
 
             {/* Plan 2: Lite Plan */}
@@ -340,21 +379,38 @@ export default function MembershipsScreen() {
                       <Text style={[styles.doctorActionText, { color: '#16a34a' }]}>Call Doctor</Text>
                     </TouchableOpacity>
                   </View>
-                  <TouchableOpacity
-                    style={[styles.doctorActionBtn, { backgroundColor: '#fef3c7', borderWidth: 1, borderColor: '#fde68a' }]}
-                    onPress={() => setIsChoosingAdvisor(true)}
-                  >
-                    <Ionicons name="swap-horizontal" size={16} color="#d97706" />
-                    <Text style={[styles.doctorActionText, { color: '#d97706' }]}>Change Crop Doctor 🩺</Text>
-                  </TouchableOpacity>
+                  <View style={styles.doctorActionsRow}>
+                    <TouchableOpacity
+                      style={[styles.doctorActionBtn, { backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0' }]}
+                      onPress={() => setIsCropCareModalOpen(true)}
+                    >
+                      <Ionicons name="medical" size={16} color="#16a34a" />
+                      <Text style={[styles.doctorActionText, { color: '#16a34a' }]}>Crops Care Plan 🩺</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.doctorActionBtn, { backgroundColor: '#fef3c7', borderWidth: 1, borderColor: '#fde68a' }]}
+                      onPress={() => setIsChoosingAdvisor(true)}
+                    >
+                      <Ionicons name="swap-horizontal" size={16} color="#d97706" />
+                      <Text style={[styles.doctorActionText, { color: '#d97706' }]}>Change Doctor 🩺</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               ) : (
-                <TouchableOpacity
-                  style={[styles.upgradeBtn, { backgroundColor: '#0284c7', marginTop: 12 }]}
-                  onPress={() => setIsChoosingAdvisor(true)}
-                >
-                  <Text style={styles.upgradeBtnText}>+ Choose & Assign Crop Doctor 🩺</Text>
-                </TouchableOpacity>
+                <View style={{ gap: 8, marginTop: 12 }}>
+                  <TouchableOpacity
+                    style={[styles.upgradeBtn, { backgroundColor: '#16a34a' }]}
+                    onPress={() => setIsCropCareModalOpen(true)}
+                  >
+                    <Text style={styles.upgradeBtnText}>Crops Care Plan & Coupon 🩺</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.upgradeBtn, { backgroundColor: '#0284c7' }]}
+                    onPress={() => setIsChoosingAdvisor(true)}
+                  >
+                    <Text style={styles.upgradeBtnText}>+ Choose & Assign Crop Doctor 🩺</Text>
+                  </TouchableOpacity>
+                </View>
               )}
             </View>
 
@@ -377,7 +433,7 @@ export default function MembershipsScreen() {
               </View>
               <TouchableOpacity
                 style={[styles.upgradeBtn, { backgroundColor: '#0284c7' }]}
-                onPress={() => setIsChoosingAdvisor(true)}
+                onPress={() => setIsCropCareModalOpen(true)}
               >
                 <Text style={styles.upgradeBtnText}>Subscribe 5-Crop Care Advisory 🩺</Text>
               </TouchableOpacity>
@@ -402,7 +458,7 @@ export default function MembershipsScreen() {
               </View>
               <TouchableOpacity
                 style={[styles.upgradeBtn, { backgroundColor: '#7c3aed' }]}
-                onPress={() => setIsChoosingAdvisor(true)}
+                onPress={() => setIsCropCareModalOpen(true)}
               >
                 <Text style={styles.upgradeBtnText}>Subscribe 10-Crop VIP Advisory 🌟</Text>
               </TouchableOpacity>
@@ -459,6 +515,12 @@ export default function MembershipsScreen() {
         currentDoctorName={activeAdvisor?.name}
         newDoctorName={targetAdvisorToRequest?.name}
         isLoading={chooseAdvisor.isPending}
+      />
+
+      {/* Crops Care Plan & Coupon Modal */}
+      <CropCarePlanModal
+        visible={isCropCareModalOpen}
+        onClose={() => setIsCropCareModalOpen(false)}
       />
     </View>
   );

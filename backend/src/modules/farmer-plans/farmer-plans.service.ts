@@ -265,6 +265,33 @@ export class FarmerPlansService implements OnModuleInit {
     const baseDate = isSameTierRenewal ? this.renewalBaseDate(currentPlan, now) : now;
     const newEndDate = new Date(baseDate.getTime() + coupon.daysGranted * DAY_MS);
 
+    // Get pricing for display
+    const pricing = await this.prisma.farmerPlanPricing.findFirst({ where: { plan: coupon.plan } });
+    const price = pricing ? Number(pricing.price) : 1999;
+
+    // Resolve Doctor Details (displaying Name and Specialization only)
+    let doctor: { name: string; specialization: string } | null = null;
+    if (coupon.createdBy) {
+      doctor = {
+        name: coupon.createdBy.name || 'Senior Crop Doctor',
+        specialization: coupon.createdBy.specialization || 'Crop Protection & Advisory Specialist',
+      };
+    } else {
+      doctor = {
+        name: 'FarmsKing Senior Specialist Doctor',
+        specialization: 'Crop Care & Agricultural Specialist',
+      };
+    }
+
+    // Resolve Advisor Details (displaying Name and Specialization only)
+    let advisor: { name: string; specialization: string } | null = null;
+    if (coupon.assignedAdvisor) {
+      advisor = {
+        name: coupon.assignedAdvisor.name || 'Crop Advisor',
+        specialization: coupon.assignedAdvisor.specialization || 'Farm Field Advisor',
+      };
+    }
+
     return {
       code: coupon.code,
       plan: coupon.plan,
@@ -274,6 +301,16 @@ export class FarmerPlansService implements OnModuleInit {
       newEndDate,
       extendsExisting: baseDate.getTime() !== now.getTime(),
       includesAdvisor: resultPlan !== FarmerSubscriptionPlan.FREE,
+      price,
+      doctor,
+      advisor,
+      features: [
+        '360° VIP Specialist Doctor Advisory',
+        'Direct Phone & Chat Advisory with Doctor',
+        'Customized Crop Spray & Fertilization Schedules',
+        'Disease Diagnostic Prescriptions & Remedies',
+        'Soil, Water & Seasonal Weather Guidance',
+      ],
     };
   }
 
@@ -605,6 +642,7 @@ export class FarmerPlansService implements OnModuleInit {
         create: {
           plan,
           billingPeriodDays: days,
+          mrp: dto.mrp ?? dto.price ?? 0,
           price: dto.price ?? 0,
           partnerShareType: dto.partnerShareType ?? DiscountValueType.PERCENTAGE,
           partnerShareValue: dto.partnerShareValue ?? 10,
@@ -621,6 +659,7 @@ export class FarmerPlansService implements OnModuleInit {
           updatedById: admin.id,
         },
         update: {
+          ...(dto.mrp !== undefined ? { mrp: dto.mrp } : {}),
           ...(dto.price !== undefined ? { price: dto.price } : {}),
           ...(dto.partnerShareType !== undefined ? { partnerShareType: dto.partnerShareType } : {}),
           ...(dto.partnerShareValue !== undefined ? { partnerShareValue: dto.partnerShareValue } : {}),
@@ -643,6 +682,7 @@ export class FarmerPlansService implements OnModuleInit {
     await this.prisma.farmerPlanPricing.updateMany({
       where: { plan },
       data: {
+        ...(dto.mrp !== undefined ? { mrp: dto.mrp } : {}),
         ...(dto.price !== undefined ? { price: dto.price } : {}),
         ...(dto.partnerShareType !== undefined ? { partnerShareType: dto.partnerShareType } : {}),
         ...(dto.partnerShareValue !== undefined ? { partnerShareValue: dto.partnerShareValue } : {}),
@@ -807,47 +847,56 @@ export class FarmerPlansService implements OnModuleInit {
     return result;
   }
 
-  /** Self-serve or Admin: Activate trial till 30/9/2026 with Super Advisor Plan */
+  /** Self-serve or Admin: Activate configurable free trial */
   async activateTrial(user: AuthUser) {
     const farmerId = user.id;
     const now = new Date();
-    const targetEndDate = new Date('2026-09-30T23:59:59.999Z');
+    const appSetting = await this.prisma.appSetting.findUnique({ where: { id: 'default' } });
+
+    const freeTrialEnabled = (appSetting as any)?.freeTrialEnabled ?? true;
+    if (!freeTrialEnabled) {
+      throw new BadRequestException('Free trial is currently disabled by Admin.');
+    }
+
+    const freeTrialDays = (appSetting as any)?.freeTrialDays ?? 14;
+    const planName = ((appSetting as any)?.freeTrialPlan as FarmerSubscriptionPlan) || FarmerSubscriptionPlan.SUPER;
+    const targetEndDate = new Date(now.getTime() + freeTrialDays * DAY_MS);
 
     const updatedPlan = await this.prisma.farmerPlan.upsert({
       where: { farmerId },
       create: {
         farmerId,
-        plan: FarmerSubscriptionPlan.SUPER,
+        plan: planName,
         startDate: now,
         endDate: targetEndDate,
         expiredAt: null,
       },
       update: {
-        plan: FarmerSubscriptionPlan.SUPER,
+        plan: planName,
         endDate: targetEndDate,
         expiredAt: null,
       },
     });
 
-    const daysGranted = Math.max(1, Math.ceil((targetEndDate.getTime() - now.getTime()) / DAY_MS));
-
     await this.prisma.farmerPlanHistory.create({
       data: {
         farmerId,
-        plan: FarmerSubscriptionPlan.SUPER,
+        plan: planName,
         status: FarmerPlanRecordStatus.ACTIVE,
-        daysGranted,
+        daysGranted: freeTrialDays,
         startDate: now,
         endDate: targetEndDate,
-        notes: 'Trial activated till 30/9/2026 with Super Advisor Plan',
+        notes: `Free trial activated for ${freeTrialDays} days (${planName} plan)`,
       },
     });
 
-    await this.ensurePremiumAdvisorHire(farmerId, targetEndDate);
+    if (planName === FarmerSubscriptionPlan.SMART || planName === FarmerSubscriptionPlan.SUPER) {
+      await this.ensurePremiumAdvisorHire(farmerId, targetEndDate);
+    }
 
     return {
       success: true,
-      message: 'you app trial is activated till 30/9/2026',
+      message: `Free trial activated for ${freeTrialDays} days!`,
       plan: updatedPlan.plan,
       endDate: updatedPlan.endDate,
     };
@@ -995,11 +1044,22 @@ export class FarmerPlansService implements OnModuleInit {
       throw new BadRequestException('Cannot create a coupon for the FREE plan.');
     }
 
+    const dbUser = await this.prisma.user.findUnique({ where: { id: user.id } });
     const userRoles = Array.isArray(user.roles) && user.roles.length > 0 ? user.roles : [user.role];
     const userDeactivated = user.deactivatedRoles ?? [];
     const activeRoles = userRoles.filter((r) => !userDeactivated.includes(r));
 
-    const isAdvisor = activeRoles.includes(Role.ADVISOR) || activeRoles.includes(Role.ADMIN) || activeRoles.includes(Role.SUPER_ADMIN);
+    const isDoctor = !!dbUser?.isSeniorDoctor || activeRoles.includes(Role.ADMIN) || activeRoles.includes(Role.SUPER_ADMIN);
+    const isPureAdvisor = activeRoles.includes(Role.ADVISOR) && !isDoctor;
+
+    // Rule: Junior Advisor cannot generate coupons directly
+    if (isPureAdvisor) {
+      throw new ForbiddenException(
+        'Advisors cannot generate coupons directly. Only Senior Doctors or Admins can issue coupons for Advisors.',
+      );
+    }
+
+    const isAdvisor = activeRoles.includes(Role.ADVISOR) || isDoctor;
     const isPartnerOnly = activeRoles.includes(Role.BUSINESS_PARTNER) && !isAdvisor;
 
     // Business Partner restriction: ONLY Lite (PRO) and Pro (SMART) plans allowed
@@ -1009,6 +1069,34 @@ export class FarmerPlansService implements OnModuleInit {
           'Business Partners can generate Lite (PRO) and Pro (SMART) plan coupons only. Please upgrade to Advisor or contact Admin for Smart (SUPER) plan coupons.',
         );
       }
+    }
+
+    // Resolve Target Advisor if Doctor is issuing coupon for an Advisor
+    let targetAdvisorId: string | null = null;
+    let targetAdvisorKingId: string | null = null;
+
+    if (dto.targetType === 'ADVISOR' || (dto.advisorKingId && dto.advisorKingId.trim() !== '')) {
+      const trimmedKingId = dto.advisorKingId?.trim().toUpperCase();
+      if (!trimmedKingId) {
+        throw new BadRequestException('Please enter the Advisor King ID.');
+      }
+
+      const targetAdvisor = await this.prisma.user.findFirst({
+        where: {
+          kingId: trimmedKingId,
+          OR: [{ role: Role.ADVISOR }, { roles: { has: Role.ADVISOR } }],
+          deletedAt: null,
+        },
+      });
+
+      if (!targetAdvisor) {
+        throw new BadRequestException(
+          `Advisor with King ID "${trimmedKingId}" was not found or is not registered as an Advisor by Admin.`,
+        );
+      }
+
+      targetAdvisorId = targetAdvisor.id;
+      targetAdvisorKingId = targetAdvisor.kingId;
     }
 
     const quantity = dto.quantity && dto.quantity > 0 ? dto.quantity : 1;
@@ -1073,7 +1161,7 @@ export class FarmerPlansService implements OnModuleInit {
       const balance = await this.walletService.getBalance(user.id);
       if (balance < totalDebit) {
         throw new BadRequestException(
-          `Insufficient Wallet Balance — ${quantity} coupon(s) generate ਕਰਨ ਦੀ ਕੁੱਲ ਲਾਗਤ ₹${totalDebit.toLocaleString('en-IN')} (₹${debitAmount} x ${quantity}) ਹੈ, ਤੁਹਾਡੇ ਵਾਲਿਟ ਵਿੱਚ ₹${balance.toLocaleString('en-IN')} ਹਨ। ਵਾਲਿਟ ਰੀਚਾਰਜ ਕਰੋ।`,
+          `Insufficient Wallet Balance — Generating ${quantity} coupon(s) costs ₹${totalDebit.toLocaleString('en-IN')} (₹${debitAmount} x ${quantity}), but your wallet balance is ₹${balance.toLocaleString('en-IN')}. Please top up your wallet.`,
         );
       }
     }
@@ -1092,8 +1180,10 @@ export class FarmerPlansService implements OnModuleInit {
           plan: dto.plan,
           daysGranted: dto.daysGranted,
           assignedFarmerId: dto.assignedFarmerId,
-          assignedAdvisorId: isAdvisor ? user.id : undefined,
+          assignedAdvisorId: targetAdvisorId ?? (isAdvisor ? user.id : undefined),
           assignedBusinessPartnerId: isPartnerOnly ? user.id : dto.assignedBusinessPartnerId,
+          doctorKingId: user.kingId ?? dbUser?.kingId ?? null,
+          advisorKingId: targetAdvisorKingId ?? null,
           createdById: user.id,
           createdByRole: user.role,
           generationCostAmount: debitAmount > 0 ? debitAmount : null,
@@ -1138,10 +1228,34 @@ export class FarmerPlansService implements OnModuleInit {
 
   // ─── Admin/Super Admin: list all coupons ──────────────────────────────────
 
-  /** The advisor's own wallet of plan coupons issued to them, to apply to any of their assigned farmers. */
-  listMineForAdvisor(user: AuthUser) {
+  /** The advisor/doctor's wallet of plan coupons generated or assigned to them or their advisors. */
+  async listMineForAdvisor(user: AuthUser) {
+    const dbUser = await this.prisma.user.findUnique({ where: { id: user.id } });
+    const userRoles = Array.isArray(user.roles) && user.roles.length > 0 ? user.roles : [user.role];
+    const userDeactivated = user.deactivatedRoles ?? [];
+    const activeRoles = userRoles.filter((r) => !userDeactivated.includes(r));
+    const isDoctor = !!dbUser?.isSeniorDoctor || activeRoles.includes(Role.ADMIN) || activeRoles.includes(Role.SUPER_ADMIN);
+
+    const userKingId = user.kingId ?? dbUser?.kingId;
+    const orConditions: any[] = [
+      { assignedAdvisorId: user.id },
+      { createdById: user.id },
+    ];
+    if (userKingId) {
+      orConditions.push({ advisorKingId: userKingId });
+      if (isDoctor) {
+        orConditions.push({ doctorKingId: userKingId });
+      }
+    }
+
     return this.prisma.farmerPlanCoupon.findMany({
-      where: { assignedAdvisorId: user.id },
+      where: { OR: orConditions },
+      include: {
+        assignedFarmer: { select: { id: true, name: true, mobile: true, kingId: true } },
+        assignedAdvisor: { select: { id: true, name: true, mobile: true, kingId: true, specialization: true } },
+        usedByFarmer: { select: { id: true, name: true, mobile: true, kingId: true } },
+        createdBy: { select: { id: true, name: true, specialization: true, kingId: true } },
+      },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -1233,6 +1347,10 @@ export class FarmerPlansService implements OnModuleInit {
   private async resolveCouponAndFarmer(user: AuthUser, code: string, farmerId?: string) {
     const coupon = await this.prisma.farmerPlanCoupon.findUnique({
       where: { code: code.toUpperCase() },
+      include: {
+        createdBy: { select: { id: true, name: true, specialization: true, kingId: true } },
+        assignedAdvisor: { select: { id: true, name: true, specialization: true, kingId: true } },
+      },
     });
     if (!coupon) throw new NotFoundException('Invalid coupon code.');
     if (coupon.isUsed) throw new BadRequestException('This coupon has already been used.');

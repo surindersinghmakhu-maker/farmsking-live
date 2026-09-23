@@ -9,5 +9,17 @@ export class InitiateFarmerPlanPaymentDto {
   @IsInt()
   @Min(1)
   billingPeriodDays?: number;
+
+  @IsOptional()
+  selectedDoctorId?: string;
+
+  @IsOptional()
+  selectedAdvisorId?: string;
+
+  @IsOptional()
+  doctorKingId?: string;
+
+  @IsOptional()
+  advisorKingId?: string;
 }
 

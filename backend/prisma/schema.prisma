@@ -1455,6 +1455,10 @@ model FarmerPlanPaymentRequest {
   confirmedAt     DateTime?
   confirmedById   String?
   confirmedBy     User?                  @relation("FarmerPlanPaymentConfirmedBy", fields: [confirmedById], references: [id], onDelete: SetNull)
+  selectedDoctorId  String?
+  selectedAdvisorId String?
+  doctorKingId      String?
+  advisorKingId     String?
   rejectedAt      DateTime?
   rejectionReason String?
 
@@ -2038,6 +2042,8 @@ model FarmerPlanCoupon {
   createdByRole             Role?
   payoutAmount              Decimal?               @db.Decimal(10, 2)
   payoutRecipientId         String?
+  doctorKingId              String?
+  advisorKingId             String?
   createdAt                 DateTime               @default(now())
 
   farmerPlans         FarmerPlan[]
@@ -2055,6 +2061,7 @@ model FarmerPlanCoupon {
 model FarmerPlanPricing {
   id                           String                 @id @default(uuid())
   plan                         FarmerSubscriptionPlan
+  mrp                          Decimal?               @db.Decimal(10, 2)
   price                        Decimal                @db.Decimal(10, 2)
   billingPeriodDays            Int // e.g. 365 for a yearly plan, 30 for a monthly one
   partnerShareType             DiscountValueType // PERCENTAGE (e.g. BASIC's 10%) or FIXED (e.g. STANDARD/PREMIUM's flat ₹ cut)

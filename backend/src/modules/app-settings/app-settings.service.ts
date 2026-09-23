@@ -52,6 +52,9 @@ export class AppSettingsService {
       referralSignupBonusAmount: (settings as any).referralSignupBonusAmount ?? 10,
       newUserSignupBonusAmount: (settings as any).newUserSignupBonusAmount ?? 10,
       storefrontMaintenanceMode: (settings as any).storefrontMaintenanceMode ?? false,
+      freeTrialEnabled: (settings as any).freeTrialEnabled ?? true,
+      freeTrialDays: (settings as any).freeTrialDays ?? 14,
+      freeTrialPlan: (settings as any).freeTrialPlan ?? 'SUPER',
     };
 
     this.cache = { data: result, timestamp: now };
@@ -108,6 +111,9 @@ export class AppSettingsService {
       'appDownloadUrl',
       'latestAppVersion',
       'storefrontMaintenanceMode',
+      'freeTrialEnabled',
+      'freeTrialDays',
+      'freeTrialPlan',
     ];
 
     for (const key of keys) {

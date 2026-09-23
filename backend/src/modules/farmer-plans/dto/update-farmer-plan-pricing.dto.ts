@@ -5,6 +5,11 @@ export class UpdateFarmerPlanPricingDto {
   @IsOptional()
   @IsNumber()
   @Min(0)
+  mrp?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
   price?: number;
 
   @IsOptional()

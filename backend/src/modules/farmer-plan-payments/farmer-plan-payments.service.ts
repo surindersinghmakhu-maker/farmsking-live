@@ -12,6 +12,8 @@ import { InitiateFarmerPlanPaymentDto } from './dto/initiate-farmer-plan-payment
 import { SubmitFarmerPlanPaymentDto } from './dto/submit-farmer-plan-payment.dto';
 import { RejectFarmerPlanPaymentDto } from './dto/reject-farmer-plan-payment.dto';
 
+import { WalletService } from '../wallet/wallet.service';
+
 const DETAIL_INCLUDE = {
   farmer: { select: { id: true, name: true, mobile: true, kingId: true } },
 } as const;
@@ -24,6 +26,7 @@ export class FarmerPlanPaymentsService {
     private readonly notificationsService: NotificationsService,
     private readonly appSettingsService: AppSettingsService,
     private readonly farmerPlansService: FarmerPlansService,
+    private readonly walletService: WalletService,
   ) {}
 
   /** Farmer (or their advisor) taps "Upgrade" and picks BASIC/STANDARD/PREMIUM — generates a fixed-amount UPI link and opens a pending payment claim. */
@@ -67,7 +70,16 @@ export class FarmerPlanPaymentsService {
     const daysGranted = pricing.billingPeriodDays;
 
     const request = await this.prisma.farmerPlanPaymentRequest.create({
-      data: { farmerId: targetFarmerId, targetPlan: dto.targetPlan, amount, daysGranted },
+      data: {
+        farmerId: targetFarmerId,
+        targetPlan: dto.targetPlan,
+        amount,
+        daysGranted,
+        selectedDoctorId: dto.selectedDoctorId ?? null,
+        selectedAdvisorId: dto.selectedAdvisorId ?? null,
+        doctorKingId: dto.doctorKingId ?? null,
+        advisorKingId: dto.advisorKingId ?? null,
+      },
       include: DETAIL_INCLUDE,
     });
 
@@ -148,7 +160,7 @@ export class FarmerPlanPaymentsService {
     });
   }
 
-  /** Admin has verified the UPI payment manually and confirms it — applies the plan upgrade/extension and generates assigned coupon. */
+  /** Admin has verified the UPI payment manually and confirms it — applies the plan upgrade/extension, generates assigned coupon, and splits revenue. */
   async confirm(admin: AuthUser, id: string) {
     const request = await this.prisma.farmerPlanPaymentRequest.findUnique({ where: { id }, include: DETAIL_INCLUDE });
     if (!request) {
@@ -162,15 +174,18 @@ export class FarmerPlanPaymentsService {
     const digits = Math.floor(100000 + Math.random() * 900000);
     const code = `${prefix}${digits}`;
 
-    const isAdvisorPlan = (request.targetPlan === FarmerSubscriptionPlan.SMART || request.targetPlan === FarmerSubscriptionPlan.SUPER);
+    const isAdvisorPlan = (request.targetPlan === FarmerSubscriptionPlan.SMART || request.targetPlan === FarmerSubscriptionPlan.SUPER || request.targetPlan === FarmerSubscriptionPlan.GOLD || request.targetPlan === FarmerSubscriptionPlan.ROYAL);
     const coupon = await this.prisma.farmerPlanCoupon.create({
       data: {
         code,
-        category: isAdvisorPlan ? PlanCouponCategory.ADVISOR_PLAN : PlanCouponCategory.FARMER_PLAN,
+        category: isAdvisorPlan ? PlanCouponCategory.DOCTOR_CONSULTATION : PlanCouponCategory.FARMER_PLAN,
         plan: request.targetPlan,
         daysGranted: request.daysGranted,
         assignedFarmerId: request.farmerId,
-        createdById: admin.id,
+        assignedAdvisorId: request.selectedAdvisorId ?? undefined,
+        doctorKingId: request.doctorKingId ?? null,
+        advisorKingId: request.advisorKingId ?? null,
+        createdById: request.selectedDoctorId ?? admin.id,
         createdByRole: admin.role,
         isUsed: true,
         usedAt: new Date(),
@@ -180,6 +195,22 @@ export class FarmerPlanPaymentsService {
     });
 
     const result = await this.farmerPlansService.applyPlanChange(request.farmerId, request.targetPlan, request.daysGranted);
+
+    // Revenue sharing credits
+    const totalAmount = Number(request.amount || 0);
+    if (totalAmount > 0) {
+      const platformFee = Math.round(totalAmount * 0.10); // 10% platform fee to admin
+      const netShare = totalAmount - platformFee;
+
+      if (request.selectedDoctorId && request.selectedAdvisorId) {
+        const advisorCut = Math.round(netShare * 0.50);
+        const doctorCut = netShare - advisorCut;
+        await this.walletService.credit(request.selectedAdvisorId, advisorCut, `Advisor commission for ${request.targetPlan} plan by ${request.farmer.name}`);
+        await this.walletService.credit(request.selectedDoctorId, doctorCut, `Senior Doctor share for ${request.targetPlan} plan by ${request.farmer.name}`);
+      } else if (request.selectedDoctorId) {
+        await this.walletService.credit(request.selectedDoctorId, netShare, `Doctor share for ${request.targetPlan} plan by ${request.farmer.name}`);
+      }
+    }
 
     const updated = await this.prisma.farmerPlanPaymentRequest.update({
       where: { id },
@@ -191,7 +222,7 @@ export class FarmerPlanPaymentsService {
       request.farmerId,
       NotificationType.SYSTEM,
       'Payment confirmed',
-      `Your payment of ₹${request.amount} was confirmed! Coupon ${coupon.code} has been assigned & redeemed for your account. ${result.plan.plan} plan is active until ${result.newEndDate.toLocaleDateString('en-IN')}.${isAdvisorPlan ? ' Please select your preferred Farm Advisor in the Advisor section.' : ''}`,
+      `Your payment of ₹${request.amount} was confirmed! Coupon ${coupon.code} has been assigned & redeemed for your account. ${result.plan.plan} plan is active until ${result.newEndDate.toLocaleDateString('en-IN')}.${isAdvisorPlan ? ' Your Crop Doctor / Advisor supervision is now active.' : ''}`,
       { farmerPlanPaymentRequestId: id, couponCode: coupon.code },
     );
 

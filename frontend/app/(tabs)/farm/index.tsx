@@ -748,6 +748,8 @@ export default function FarmListScreen() {
           renderItem={({ item }) => {
             const isHarvestingReady = item.stage === 'HARVESTING';
             const isEditableStage = item.stage === 'PLANTATION' || item.stage === 'SOWING' || isAdminOrSuperAdmin;
+            const isAdvisorHired = item.advisorStatus === 'ACCEPTED' || (activeAdvisor && item.advisorStatus !== 'NONE');
+            const advisorName = (item.advisorStatus === 'ACCEPTED' ? activeAdvisor?.name : null) || (isAdvisorHired ? activeAdvisor?.name || 'Assigned Doctor' : null);
 
             return (
               <View style={[styles.card, premiumShadow('#000000', 'sm')]}>
@@ -760,6 +762,27 @@ export default function FarmListScreen() {
                       <Text style={styles.cropBadgeText}>🌾 {item.cropName}</Text>
                     </View>
                   </View>
+
+                  {/* Advisor Hired Status Badge */}
+                  {isAdvisorHired ? (
+                    <TouchableOpacity
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#ecfdf5', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: '#a7f3d0' }}
+                      activeOpacity={0.8}
+                      onPress={() => handleOpenDoctorDialog(item, advisorName)}
+                    >
+                      <Ionicons name="medical" size={9.5} color="#15803d" />
+                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }} numberOfLines={1}>
+                        🩺 Doctor Hired
+                      </Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#f8fafc', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                      <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b' }} numberOfLines={1}>
+                        🩺 Self-Managed
+                      </Text>
+                    </View>
+                  )}
+
                   {isEditableStage && (
                     <TouchableOpacity
                       style={styles.editCropBadgeBtn}
@@ -776,9 +799,25 @@ export default function FarmListScreen() {
                   )}
                 </View>
 
-                <Text style={styles.cardMetaText}>
-                  📏 {item.area}{item.sowingDate ? ` · 📅 ${item.sowingDate.replace(/\s*\([^)]*\)/g, '').trim()}` : ''}{item.variety ? ` · 🌱 ${item.variety}` : ''}{item.plantCount ? ` · 🪴 ${item.plantCount} Plants` : ''}
-                </Text>
+                <View style={{ gap: 2 }}>
+                  <Text style={styles.cardMetaText}>
+                    📏 {item.area}{item.sowingDate ? ` · 📅 ${item.sowingDate.replace(/\s*\([^)]*\)/g, '').trim()}` : ''}{item.variety ? ` · 🌱 ${item.variety}` : ''}{item.plantCount ? ` · 🪴 ${item.plantCount} Plants` : ''}
+                  </Text>
+
+                  {/* Doctor Name under Plant Count / Specs */}
+                  {isAdvisorHired ? (
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() => handleOpenDoctorDialog(item, advisorName)}
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 1 }}
+                    >
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0369a1' }}>
+                        🩺 Doctor: <Text style={{ fontFamily: FONT.extraBold, color: '#0284c7' }}>{advisorName || 'Dr. Preet Singh'}</Text>
+                      </Text>
+                      <Ionicons name="information-circle-outline" size={13} color="#0284c7" />
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
 
                 {/* Crop GPS Location & Advisor Remote Sync Section — Dynamic based on GPS locked status */}
                 <View style={{ marginTop: 6, gap: 6 }}>
@@ -789,60 +828,32 @@ export default function FarmListScreen() {
                     if (!isGpsLocked) {
                       return (
                         <>
-                          {/* Row 1: 📍 Set Crop GPS Location + ❓ How Process Works */}
-                          <View style={{ flexDirection: 'row', gap: 6 }}>
-                            <TouchableOpacity
-                              style={{
-                                flex: 1.3,
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: 4,
-                                backgroundColor: '#16a34a',
-                                paddingVertical: 7,
-                                paddingHorizontal: 8,
-                                borderRadius: 8,
-                              }}
-                              activeOpacity={0.85}
-                              onPress={() => {
-                                tap();
-                                unlockCropDirectly(item.id);
-                                setSelectedCropForGps(item);
-                                setShowLocationModal(true);
-                              }}
-                            >
-                              <Ionicons name="location" size={13} color="#ffffff" />
-                              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>
-                                📍 Set Crop GPS Location
-                              </Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                              style={{
-                                flex: 1,
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: 4,
-                                backgroundColor: '#f0fdf4',
-                                borderWidth: 1,
-                                borderColor: '#bbf7d0',
-                                paddingVertical: 7,
-                                paddingHorizontal: 8,
-                                borderRadius: 8,
-                              }}
-                              activeOpacity={0.85}
-                              onPress={() => {
-                                tap();
-                                setShowGuideModal(true);
-                              }}
-                            >
-                              <Ionicons name="help-circle-outline" size={13} color="#166534" />
-                              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#166534' }}>
-                                How Process Works
-                              </Text>
-                            </TouchableOpacity>
-                          </View>
+                          {/* Row 1: 📍 Set Crop GPS Location (Full Width) */}
+                          <TouchableOpacity
+                            style={{
+                              width: '100%',
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: 4,
+                              backgroundColor: '#16a34a',
+                              paddingVertical: 7,
+                              paddingHorizontal: 8,
+                              borderRadius: 8,
+                            }}
+                            activeOpacity={0.85}
+                            onPress={() => {
+                              tap();
+                              unlockCropDirectly(item.id);
+                              setSelectedCropForGps(item);
+                              setShowLocationModal(true);
+                            }}
+                          >
+                            <Ionicons name="location" size={13} color="#ffffff" />
+                            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>
+                              📍 Set Crop GPS Location
+                            </Text>
+                          </TouchableOpacity>
 
                           {/* Row 2: 🔒 Satellite Advisor (Lock Location First) */}
                           <TouchableOpacity
@@ -870,7 +881,7 @@ export default function FarmListScreen() {
                           >
                             <Ionicons name="lock-closed" size={13} color="#d97706" />
                             <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#b45309' }}>
-                              🔒 Satellite Advisor (Lock Location First)
+                              🔒 Satellite Advisor
                             </Text>
                           </TouchableOpacity>
                         </>

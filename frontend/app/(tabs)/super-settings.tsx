@@ -2145,7 +2145,7 @@ export function PlanPricingSection() {
           </View>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={[styles.sectionTitle, { color: '#92400e' }]}>🩺 Doctor Crop Care Advisory Plans</Text>
+              <Text style={[styles.sectionTitle, { color: '#92400e' }]}>🩺 Crop Care Plans</Text>
               <View style={{ backgroundColor: '#f59e0b', paddingHorizontal: 8, paddingVertical: 2, borderRadius: RADIUS.pill }}>
                 <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>CARE PLANS</Text>
               </View>
@@ -2280,7 +2280,8 @@ function PlanCardGroup({
   );
 }
 
-const ALL_PLAN_KEYS = ['PRO', 'SMART', 'SUPER', 'SILVER', 'GOLD', 'ROYAL'] as const;
+const SOFTWARE_PLAN_KEYS = ['PRO', 'SMART', 'SUPER'] as const;
+const CARE_PLAN_KEYS = ['SILVER', 'GOLD', 'ROYAL'] as const;
 
 function UnifiedPlanManagerModal({
   initialPlanKey,
@@ -2298,6 +2299,9 @@ function UnifiedPlanManagerModal({
   const [formItems, setFormItems] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isCareCategory = initialPlanKey ? (CARE_PLAN_KEYS as readonly string[]).includes(initialPlanKey) : false;
+  const activePlanTabs = isCareCategory ? CARE_PLAN_KEYS : SOFTWARE_PLAN_KEYS;
 
   // Plan Feature Switches state
   const [features, setFeatures] = useState<Record<string, boolean>>({
@@ -2444,10 +2448,12 @@ function UnifiedPlanManagerModal({
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.modalTitle, { color: '#0f172a', fontSize: 15 }]}>
-                  Edit {planMeta?.label} ({activeTab})
+                  {isCareCategory ? '🩺 Crop Care Plan' : '🎫 Farmer Membership Plan'} — {planMeta?.label} ({activeTab})
                 </Text>
                 <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
-                  MRP, Selling Price, Active Offers, Platform Fees & Commission Cuts
+                  {isCareCategory
+                    ? 'Doctor Fees, Platform Fees, MRP, Offers & Duration Options'
+                    : 'Membership Prices, MRP, Platform Fees, Partner Cuts & Special Offers'}
                 </Text>
               </View>
             </View>
@@ -2456,9 +2462,9 @@ function UnifiedPlanManagerModal({
             </TouchableOpacity>
           </View>
 
-          {/* Unified Plan Tabs Bar */}
+          {/* Separate Plan Category Tabs Bar */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingBottom: 10 }}>
-            {ALL_PLAN_KEYS.map((key) => {
+            {activePlanTabs.map((key) => {
               const meta = PLAN_META[key as FarmerPlanType] || { label: key, emoji: '🌾', color: '#0284c7' };
               const isSelected = activeTab === key;
               return (
@@ -2468,7 +2474,7 @@ function UnifiedPlanManagerModal({
                     flexDirection: 'row',
                     alignItems: 'center',
                     gap: 5,
-                    paddingHorizontal: 12,
+                    paddingHorizontal: 14,
                     paddingVertical: 7,
                     borderRadius: RADIUS.pill,
                     borderWidth: 1.5,

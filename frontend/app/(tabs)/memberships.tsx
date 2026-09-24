@@ -177,8 +177,8 @@ export default function MembershipsScreen() {
                   </View>
                 </View>
                 <View style={[styles.activePill, { backgroundColor: isExpired ? '#fef2f2' : '#ecfdf5' }]}>
-                  <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={[styles.activePillText, { color: isExpired ? '#dc2626' : '#059669' }]}>
-                    {isExpired ? 'EXPIRED' : plan !== 'FREE' ? 'Free Trial Activated' : 'ACTIVE'}
+                  <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6} style={[styles.activePillText, { color: isExpired ? '#dc2626' : '#059669' }]}>
+                    {isExpired ? 'EXPIRED' : plan !== 'FREE' ? '✨ Trial Active' : 'ACTIVE'}
                   </Text>
                 </View>
               </View>
@@ -542,8 +542,8 @@ const styles = StyleSheet.create({
   statusBadgeIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#dcfce7', alignItems: 'center', justifyContent: 'center' },
   statusLabel: { fontSize: 10, fontFamily: FONT.bold, color: '#64748b', letterSpacing: 0.5 },
   statusPlanName: { fontSize: 15, fontFamily: FONT.extraBold, color: '#0f172a' },
-  activePill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill },
-  activePillText: { fontSize: 10, fontFamily: FONT.extraBold },
+  activePill: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: RADIUS.pill, maxWidth: 95 },
+  activePillText: { fontSize: 9, fontFamily: FONT.extraBold },
   statusMetricsRow: { flexDirection: 'row', alignItems: 'center', marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#f1f5f9' },
   metricItem: { flex: 1, alignItems: 'center' },
   metricValue: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },

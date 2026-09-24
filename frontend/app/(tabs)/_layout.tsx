@@ -159,19 +159,8 @@ export default function TabLayout() {
   const hasUnreadChat = (chatUnreadData?.count ?? 0) > 0;
   const { itemCount: cartItemCount } = useCart();
 
-  const getHomeTitle = (userRole: UserRole): string => {
-    switch (userRole) {
-      case 'FARMER': return t('tabFarmerHome', 'Farmer Home');
-      case 'GARDENER': return t('tabGardenerHome', 'Gardener Home');
-      case 'CUSTOMER': return t('tabCustomerHome', 'Store');
-      case 'FARM_ADVISOR':
-      case 'GARDEN_ADVISOR': return t('tabAdvisorHome', 'Doctor Home');
-      case 'BUSINESS_PARTNER': return t('tabPartnerHome', 'Partner Home');
-      case 'ADMIN': return t('tabAdminHome', 'Admin Home');
-      case 'SUPER_ADMIN': return t('tabSuperAdminHome', 'Super Admin');
-      case 'OPERATOR': return t('tabOperatorHome', 'Operator Home');
-      default: return t('tabHome', 'Home');
-    }
+  const getHomeTitle = (_userRole: UserRole): string => {
+    return t('tabHome', 'Home');
   };
 
   const getTabTitle = (name: TabName): string => {

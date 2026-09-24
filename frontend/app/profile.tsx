@@ -474,6 +474,19 @@ export default function ProfileScreen() {
           ) : (
             /* ─── ROLE TYPE 3: REGULAR USER PROFILE (FARMER, ADVISOR, CUSTOMER, GARDENER) ─── */
             <View style={{ width: '100%', maxWidth: 460, gap: 12 }}>
+              {/* Photo Avatar */}
+              <View style={styles.avatarSection}>
+                <TouchableOpacity style={styles.avatarWrap} activeOpacity={0.85} onPress={() => setIsPhotoModalOpen(true)}>
+                  <Avatar uri={photoUrl ?? undefined} size={88} />
+                  <View style={styles.photoEditBadge}>
+                    <Ionicons name="camera" size={13} color="#ffffff" />
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.changePhotoBtn} onPress={() => setIsPhotoModalOpen(true)}>
+                  <Text style={styles.changePhotoText}>Change Profile Photo</Text>
+                </TouchableOpacity>
+              </View>
+
               {/* Personal Details Card */}
               <View style={[styles.card, { borderRadius: RADIUS.xl, padding: 14, backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderWidth: 1 }, premiumShadow('#0f172a', 'sm')]}>
                 {/* 1. Header Title */}

@@ -78,7 +78,7 @@ export default function ProfileScreen() {
     return labourData.profiles.map((p) => p.worker);
   }, [labourData]);
 
-  const isInitializedRef = React.useRef(false);
+  const isUserInteractingRef = React.useRef(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -87,7 +87,7 @@ export default function ProfileScreen() {
   );
 
   React.useEffect(() => {
-    if (user) {
+    if (user && !isUploadingPhoto && !isUserInteractingRef.current) {
       setName(user.name || '');
       setEmail(user.email || '');
       setFarmName(user.farmName || user.name || '');
@@ -103,7 +103,7 @@ export default function ProfileScreen() {
       if (user.state) setState(user.state);
       if (user.photoUrl !== undefined) setPhotoUrl(user.photoUrl ?? null);
     }
-  }, [user?.id, user?.upiId, user?.farmName, user?.farmAddress, user?.farmMobile, user?.name, user?.email, user?.whatsappGroupEnabled, user?.photoUrl]);
+  }, [user?.id, user?.upiId, user?.farmName, user?.farmAddress, user?.farmMobile, user?.name, user?.email, user?.whatsappGroupEnabled, user?.photoUrl, isUploadingPhoto]);
 
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
@@ -135,6 +135,7 @@ export default function ProfileScreen() {
     if (result.canceled || !result.assets[0]) return;
 
     const selectedUri = result.assets[0].uri;
+    isUserInteractingRef.current = true;
     setPhotoUrl(selectedUri);
     setIsUploadingPhoto(true);
     try {
@@ -159,6 +160,9 @@ export default function ProfileScreen() {
       Alert.alert('Upload failed', err?.response?.data?.message ?? err?.message ?? 'Could not upload your photo. Please try again.');
     } finally {
       setIsUploadingPhoto(false);
+      setTimeout(() => {
+        isUserInteractingRef.current = false;
+      }, 1000);
     }
   };
 
@@ -192,6 +196,11 @@ export default function ProfileScreen() {
     const trimmedName = (name || user?.name || 'User').trim();
     if (!trimmedName) {
       setSaveError('❌ Please enter your full name.');
+      return;
+    }
+    if (!photoUrl) {
+      setSaveError('⚠️ Profile photo is mandatory! Please upload a photo from your device to complete profile.');
+      setIsPhotoModalOpen(true);
       return;
     }
     if (user?.role !== 'LABOUR') {

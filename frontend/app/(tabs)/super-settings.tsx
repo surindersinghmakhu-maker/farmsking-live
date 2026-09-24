@@ -17,7 +17,7 @@ import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAppSettings, useUpdateAppSettings } from '@/src/hooks/useAppSettings';
 import { apiClient } from '@/src/api/client';
-import { useFarmerPlanPricing, useUpdateFarmerPlanPricing, PLAN_META } from '@/src/hooks/useFarmerPlan';
+import { useFarmerPlanPricing, useUpdateFarmerPlanPricing, useDeleteFarmerPlanPricing, PLAN_META } from '@/src/hooks/useFarmerPlan';
 import { usePendingDoctorChanges, useAdminApproveDoctorChange, useAdminRejectDoctorChange } from '@/src/hooks/useAdvisorAssignments';
 import { FarmerPlanPricing, FarmerPlanType } from '@/src/api/farmerPlans.api';
 import { Platform } from 'react-native';

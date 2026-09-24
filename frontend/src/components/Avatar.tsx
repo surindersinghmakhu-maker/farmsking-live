@@ -12,39 +12,24 @@ interface AvatarProps {
   showBadge?: boolean;
 }
 
-const FALLBACK_URI = AVATAR_PRESET_URLS[0];
-
-/** Profile photo with a small FarmsKing logo badge — shown on preset avatars only, never on a real uploaded photo. */
-export function Avatar({ uri, size = 52, showBadge }: AvatarProps) {
-  const resolvedUri = resolveMediaUrl(uri) || FALLBACK_URI;
-  const isPreset = showBadge ?? AVATAR_PRESET_URLS.includes(resolvedUri);
-  const badgeSize = Math.max(14, Math.round(size * 0.32));
+export function Avatar({ uri, size = 52 }: AvatarProps) {
+  const resolvedUri = uri ? resolveMediaUrl(uri) : undefined;
 
   return (
     <View style={{ width: size, height: size, position: 'relative' }}>
       <View style={{ width: size, height: size, borderRadius: size / 2, overflow: 'hidden', backgroundColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center' }}>
-        <Image
-          source={{ uri: resolvedUri }}
-          style={{ width: '100%', height: '100%', borderRadius: size / 2 }}
-          resizeMode="cover"
-        />
+        {resolvedUri ? (
+          <Image
+            source={{ uri: resolvedUri }}
+            style={{ width: '100%', height: '100%', borderRadius: size / 2 }}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={{ width: '100%', height: '100%', backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name="person" size={Math.round(size * 0.52)} color="#94a3b8" />
+          </View>
+        )}
       </View>
-      {isPreset ? (
-        <View
-          style={[
-            styles.badge,
-            {
-              width: badgeSize,
-              height: badgeSize,
-              borderRadius: badgeSize / 2,
-              right: -badgeSize * 0.12,
-              bottom: -badgeSize * 0.12,
-            },
-          ]}
-        >
-          <Ionicons name="leaf" size={badgeSize * 0.6} color={RoleThemes.FARMER.primary} />
-        </View>
-      ) : null}
     </View>
   );
 }

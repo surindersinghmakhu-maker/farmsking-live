@@ -199,6 +199,31 @@ export default function FarmListScreen() {
   const [billPreviewVisible, setBillPreviewVisible] = useState(false);
   const [isLoadingBillPreview, setIsLoadingBillPreview] = useState(false);
 
+  // Read-only Doctor Info Modal state
+  const [viewingDoctorInfo, setViewingDoctorInfo] = useState<{
+    name: string;
+    specialization?: string;
+    rating?: string;
+    ratingCount?: number;
+    feedback?: string;
+  } | null>(null);
+
+  const handleOpenDoctorDialog = (hItem: RegisteredCropField, advisorName?: string | null) => {
+    tap();
+    const docName = advisorName || hItem.completionReview?.doctorName || activeAdvisor?.name || 'Dr. Preet Singh';
+    const spec = activeAdvisor?.specialization || 'Crop Protection & Plant Pathology Specialist';
+    const rating = activeAdvisor?.ratingLabel || (activeAdvisor?.rating ? `${activeAdvisor.rating} ★` : '4.9 ★');
+    const feedback = hItem.completionReview?.doctorFeedback || hItem.completionReview?.farmskingFeedback || 'Doctor provided full spray schedule & crop protection advice for this crop cycle.';
+
+    setViewingDoctorInfo({
+      name: docName,
+      specialization: spec,
+      rating,
+      ratingCount: activeAdvisor?.ratingCount || 18,
+      feedback,
+    });
+  };
+
   // FREE plan share limit — 50 bills, then prompt to upgrade.
   const FREE_SHARE_LIMIT = 50;
   const { data: billCountData } = useMySaleBillCount();
@@ -1000,12 +1025,19 @@ export default function FarmListScreen() {
 
                         {/* Advisor Status Badge in Top Right */}
                         {summary.isAdvisorHired ? (
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#ecfdf5', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: '#a7f3d0' }}>
+                          <TouchableOpacity
+                            style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#ecfdf5', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: '#a7f3d0' }}
+                            activeOpacity={0.8}
+                            onPress={(e) => {
+                              e.stopPropagation();
+                              handleOpenDoctorDialog(hItem, summary.advisorName);
+                            }}
+                          >
                             <Ionicons name="medical" size={9.5} color="#15803d" />
                             <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }} numberOfLines={1}>
-                              🩺 Hired
+                              🩺 Doctor Hired
                             </Text>
-                          </View>
+                          </TouchableOpacity>
                         ) : (
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#f8fafc', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
                             <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b' }} numberOfLines={1}>
@@ -1017,11 +1049,7 @@ export default function FarmListScreen() {
 
                       {/* Row 2: Crop Period Timeline Strip (Under Farm/Plot Name) */}
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f8fafc', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                          <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>
-                            Crop Period:
-                          </Text>
-
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f8fafc', paddingHorizontal: 6, paddingVertical: 2.5, borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0' }}>
                           {/* Sown Date Badge */}
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: '#fff7ed', paddingHorizontal: 5, paddingVertical: 1.5, borderRadius: 5, borderWidth: 1, borderColor: '#ffedd5' }}>
                             <Ionicons name="leaf" size={10} color="#d97706" />
@@ -1043,19 +1071,38 @@ export default function FarmListScreen() {
                       </View>
 
                       {/* Row 3: Crop Name, Variety, Area & Plant Count */}
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
-                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#15803d' }}>
-                          🌾 {hItem.cropName} {hItem.variety ? `· ${hItem.variety}` : ''}
-                        </Text>
-                        {hItem.area ? (
-                          <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#334155' }}>
-                            · 📐 {hItem.area}
+                      <View style={{ gap: 2, marginTop: 4 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                          <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#15803d' }}>
+                            🌾 {hItem.cropName} {hItem.variety ? `· ${hItem.variety}` : ''}
                           </Text>
-                        ) : null}
-                        {hItem.plantCount ? (
-                          <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#334155' }}>
-                            · 🪴 {hItem.plantCount} Plants
-                          </Text>
+                          {hItem.area ? (
+                            <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#334155' }}>
+                              · 📐 {hItem.area}
+                            </Text>
+                          ) : null}
+                          {hItem.plantCount ? (
+                            <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#334155' }}>
+                              · 🪴 {hItem.plantCount} Plants
+                            </Text>
+                          ) : null}
+                        </View>
+
+                        {/* Under number of plants, show doctor name if doctor is hired */}
+                        {summary.isAdvisorHired ? (
+                          <TouchableOpacity
+                            activeOpacity={0.8}
+                            onPress={(e) => {
+                              e.stopPropagation();
+                              handleOpenDoctorDialog(hItem, summary.advisorName);
+                            }}
+                            style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 1 }}
+                          >
+                            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0369a1' }}>
+                              🩺 Doctor: <Text style={{ fontFamily: FONT.extraBold, color: '#0284c7' }}>{summary.advisorName || 'Dr. Preet Singh'}</Text>
+                            </Text>
+                            <Ionicons name="information-circle-outline" size={13} color="#0284c7" />
+                          </TouchableOpacity>
                         ) : null}
                       </View>
 
@@ -1352,31 +1399,163 @@ export default function FarmListScreen() {
             {selectedHistoryCrop ? (
               <ScrollView style={{ maxHeight: '85%' }} contentContainerStyle={{ paddingBottom: 20 }} nestedScrollEnabled>
                 <View style={styles.detailListWrap}>
-                  {/* Modal Summary Header Card */}
-                  <View style={styles.modalSummaryHeaderCard}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
-                      <View style={styles.completedBadge}>
-                        <Text style={styles.completedBadgeText}>🏁 COMPLETED</Text>
-                      </View>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f1f5f9', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
-                        <Ionicons name="calendar-outline" size={12} color="#64748b" />
-                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#334155' }}>
-                          Completion Date: {selectedHistoryCrop.completedDate || '23 Sep 2026'}
-                        </Text>
-                      </View>
-                    </View>
+                  {(() => {
+                    const summary = getCompletedCropSummary(selectedHistoryCrop.id, selectedHistoryCrop);
+                    const isProfit = summary.netProfitOrLossNum >= 0;
 
-                    {/* Basic details */}
-                    <View style={{ marginTop: 8, gap: 4 }}>
-                      <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: '#0f172a' }}>
-                        📍 {selectedHistoryCrop.fieldName} — 🌾 {selectedHistoryCrop.cropName}
-                      </Text>
-                      <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#64748b' }}>
-                        Category: {selectedHistoryCrop.categoryName} · Area: {selectedHistoryCrop.area}
-                        {selectedHistoryCrop.sowingDate ? ` · Sown: ${selectedHistoryCrop.sowingDate}` : ''}
-                      </Text>
-                    </View>
-                  </View>
+                    return (
+                      <View
+                        style={[
+                          styles.historyCard,
+                          {
+                            backgroundColor: '#ffffff',
+                            borderRadius: 14,
+                            padding: 10,
+                            marginBottom: 10,
+                            borderWidth: 1,
+                            borderColor: '#cbd5e1',
+                            overflow: 'hidden',
+                          },
+                          premiumShadow('#000000', 'sm'),
+                        ]}
+                      >
+                        {/* Top Bar: Plot Name + Crop ID + Doctor Hired Badge */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, overflow: 'hidden' }}>
+                            <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: '#0f172a' }} numberOfLines={1}>
+                              📍 {selectedHistoryCrop.fieldName}
+                            </Text>
+                            <View style={{ backgroundColor: '#e0f2fe', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 5, borderWidth: 1, borderColor: '#bae6fd' }}>
+                              <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#0369a1' }}>
+                                ID: {selectedHistoryCrop.cropId || (selectedHistoryCrop.id?.startsWith('C-') ? selectedHistoryCrop.id : `C-${selectedHistoryCrop.id?.slice(0, 5).toUpperCase()}`)}
+                              </Text>
+                            </View>
+                          </View>
+
+                          {summary.isAdvisorHired ? (
+                            <TouchableOpacity
+                              style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#ecfdf5', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: '#a7f3d0' }}
+                              activeOpacity={0.8}
+                              onPress={() => handleOpenDoctorDialog(selectedHistoryCrop, summary.advisorName)}
+                            >
+                              <Ionicons name="medical" size={9.5} color="#15803d" />
+                              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }} numberOfLines={1}>
+                                🩺 Doctor Hired
+                              </Text>
+                            </TouchableOpacity>
+                          ) : (
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#f8fafc', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                              <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b' }} numberOfLines={1}>
+                                🩺 Self-Managed
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+
+                        {/* Row 2: Crop Period Timeline Strip */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f8fafc', paddingHorizontal: 6, paddingVertical: 2.5, borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: '#fff7ed', paddingHorizontal: 5, paddingVertical: 1.5, borderRadius: 5, borderWidth: 1, borderColor: '#ffedd5' }}>
+                              <Ionicons name="leaf" size={10} color="#d97706" />
+                              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#b45309' }}>
+                                Sown: {selectedHistoryCrop.sowingDate ? selectedHistoryCrop.sowingDate.replace(/\s*\([^)]*\)/g, '').trim() : 'Sown'}
+                              </Text>
+                            </View>
+
+                            <Ionicons name="arrow-forward-sharp" size={10} color="#94a3b8" />
+
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: '#ecfdf5', paddingHorizontal: 5, paddingVertical: 1.5, borderRadius: 5, borderWidth: 1, borderColor: '#a7f3d0' }}>
+                              <Ionicons name="flag" size={9.5} color="#15803d" />
+                              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }}>
+                                Completed: {summary.completionDateStr}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+
+                        {/* Row 3: Crop Details + Doctor Name under Plant Count */}
+                        <View style={{ gap: 2, marginTop: 4 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                            <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#15803d' }}>
+                              🌾 {selectedHistoryCrop.cropName} {selectedHistoryCrop.variety ? `· ${selectedHistoryCrop.variety}` : ''}
+                            </Text>
+                            {selectedHistoryCrop.area ? (
+                              <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#334155' }}>
+                                · 📐 {selectedHistoryCrop.area}
+                              </Text>
+                            ) : null}
+                            {selectedHistoryCrop.plantCount ? (
+                              <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#334155' }}>
+                                · 🪴 {selectedHistoryCrop.plantCount} Plants
+                              </Text>
+                            ) : null}
+                          </View>
+
+                          {summary.isAdvisorHired ? (
+                            <TouchableOpacity
+                              activeOpacity={0.8}
+                              onPress={() => handleOpenDoctorDialog(selectedHistoryCrop, summary.advisorName)}
+                              style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 1 }}
+                            >
+                              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0369a1' }}>
+                                🩺 Doctor: <Text style={{ fontFamily: FONT.extraBold, color: '#0284c7' }}>{summary.advisorName || 'Dr. Preet Singh'}</Text>
+                              </Text>
+                              <Ionicons name="information-circle-outline" size={13} color="#0284c7" />
+                            </TouchableOpacity>
+                          ) : null}
+                        </View>
+
+                        {/* Row 4: 4 Financial Breakdown Boxes */}
+                        <View style={{ flexDirection: 'row', gap: 4, marginTop: 7 }}>
+                          <View style={{ flex: 1, backgroundColor: '#f0fdf4', paddingHorizontal: 6, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#bbf7d0' }}>
+                            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#166534' }} numberOfLines={1}>
+                              💰 Sales ({summary.totalWeight})
+                            </Text>
+                            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#15803d', marginTop: 1 }}>
+                              ₹{summary.totalSalesAmountNum.toLocaleString('en-IN')}
+                            </Text>
+                          </View>
+
+                          <View style={{ flex: 1, backgroundColor: '#fff7ed', paddingHorizontal: 6, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#ffedd5' }}>
+                            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#9a3412' }} numberOfLines={1}>
+                              💸 Inputs
+                            </Text>
+                            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#c2410c', marginTop: 1 }}>
+                              ₹{summary.totalExpensesNum.toLocaleString('en-IN')}
+                            </Text>
+                          </View>
+
+                          <View style={{ flex: 1, backgroundColor: '#fff7ed', paddingHorizontal: 6, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#ffedd5' }}>
+                            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#9a3412' }} numberOfLines={1}>
+                              👷 Labour
+                            </Text>
+                            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#c2410c', marginTop: 1 }}>
+                              ₹{summary.totalLabourNum.toLocaleString('en-IN')}
+                            </Text>
+                          </View>
+
+                          <View
+                            style={{
+                              flex: 1.1,
+                              backgroundColor: isProfit ? '#ecfdf5' : '#fef2f2',
+                              paddingHorizontal: 6,
+                              paddingVertical: 5,
+                              borderRadius: 8,
+                              borderWidth: 1,
+                              borderColor: isProfit ? '#a7f3d0' : '#fecaca',
+                            }}
+                          >
+                            <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isProfit ? '#065f46' : '#991b1b' }} numberOfLines={1}>
+                              {isProfit ? '📈 Net Profit' : '📉 Net Loss'}
+                            </Text>
+                            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: isProfit ? '#047857' : '#dc2626', marginTop: 1 }}>
+                              {isProfit ? '+' : '-'}₹{Math.abs(summary.netProfitOrLossNum).toLocaleString('en-IN')}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    );
+                  })()}
 
                   {(() => {
                     const summary = getCompletedCropSummary(selectedHistoryCrop.id, selectedHistoryCrop);
@@ -1455,55 +1634,7 @@ export default function FarmListScreen() {
                     }
 
                     return (
-                      <View style={{ marginTop: 8 }}>
-                        {/* Advisor Hired Status Row */}
-                        <View style={styles.detailRow}>
-                          <Text style={styles.detailLabel}>🩺 Advisor Status</Text>
-                          <Text style={[styles.detailValue, { color: summary.isAdvisorHired ? '#15803d' : '#64748b' }]}>
-                            {summary.isAdvisorHired ? `Hired (${summary.advisorName || 'Crop Doctor'})` : 'Not Hired (Self-Managed)'}
-                          </Text>
-                        </View>
-
-                        {/* Financial Summary 4 Grid Badges */}
-                        <View style={styles.metricsGridContainer}>
-                          <View style={[styles.metricBadgeBox, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}>
-                            <Text style={[styles.metricBadgeLabel, { color: '#166534' }]}>💰 Sales ({summary.totalWeight})</Text>
-                            <Text style={[styles.metricBadgeValue, { color: '#15803d' }]}>
-                              ₹{summary.totalSalesAmountNum.toLocaleString('en-IN')}
-                            </Text>
-                          </View>
-
-                          <View style={[styles.metricBadgeBox, { backgroundColor: '#fff7ed', borderColor: '#ffedd5' }]}>
-                            <Text style={[styles.metricBadgeLabel, { color: '#9a3412' }]}>💸 Expenses</Text>
-                            <Text style={[styles.metricBadgeValue, { color: '#c2410c' }]}>
-                              ₹{summary.totalExpensesNum.toLocaleString('en-IN')}
-                            </Text>
-                          </View>
-
-                          <View style={[styles.metricBadgeBox, { backgroundColor: '#fff7ed', borderColor: '#ffedd5' }]}>
-                            <Text style={[styles.metricBadgeLabel, { color: '#9a3412' }]}>👷 Labour</Text>
-                            <Text style={[styles.metricBadgeValue, { color: '#c2410c' }]}>
-                              ₹{summary.totalLabourNum.toLocaleString('en-IN')}
-                            </Text>
-                          </View>
-
-                          <View
-                            style={[
-                              styles.metricBadgeBox,
-                              {
-                                backgroundColor: isProfit ? '#ecfdf5' : '#fef2f2',
-                                borderColor: isProfit ? '#a7f3d0' : '#fecaca',
-                              },
-                            ]}
-                          >
-                            <Text style={[styles.metricBadgeLabel, { color: isProfit ? '#065f46' : '#991b1b' }]}>
-                              {isProfit ? '📈 Net Profit' : '📉 Net Loss'}
-                            </Text>
-                            <Text style={[styles.metricBadgeValue, { color: isProfit ? '#047857' : '#dc2626' }]}>
-                              {isProfit ? '+' : '-'}₹{Math.abs(summary.netProfitOrLossNum).toLocaleString('en-IN')}
-                            </Text>
-                          </View>
-                        </View>
+                      <View style={{ marginTop: 2 }}>
 
                         {/* Completion Audit & Rating */}
                         {selectedHistoryCrop.completionReview ? (
@@ -1762,6 +1893,75 @@ export default function FarmListScreen() {
                 ))
               )}
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Read-Only Doctor Card Dialog / Modal */}
+      <Modal
+        visible={!!viewingDoctorInfo}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setViewingDoctorInfo(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.saleModalCard, { maxWidth: 420, padding: 16 }]}>
+            <View style={styles.modalHeaderRow}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#ecfdf5', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="medical" size={16} color="#15803d" />
+                </View>
+                <Text style={styles.modalHeaderTitle}>Crop Care Doctor Profile</Text>
+              </View>
+              <TouchableOpacity onPress={() => setViewingDoctorInfo(null)}>
+                <Ionicons name="close" size={20} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ alignItems: 'center', marginVertical: 10, gap: 4 }}>
+              <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: '#e0f2fe', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#bae6fd' }}>
+                <Ionicons name="person" size={28} color="#0284c7" />
+              </View>
+              <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a', textAlign: 'center' }}>
+                {viewingDoctorInfo?.name}
+              </Text>
+              <View style={{ backgroundColor: '#ecfdf5', paddingHorizontal: 10, paddingVertical: 2, borderRadius: 12, borderWidth: 1, borderColor: '#a7f3d0' }}>
+                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#15803d' }}>🩺 Hired Crop Doctor</Text>
+              </View>
+            </View>
+
+            <View style={{ gap: 8, marginTop: 4 }}>
+              {/* Speciality */}
+              <View style={{ backgroundColor: '#f8fafc', padding: 10, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0', gap: 2 }}>
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#64748b' }}>👨‍⚕️ DOCTOR SPECIALITY</Text>
+                <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#334155' }}>
+                  {viewingDoctorInfo?.specialization || 'Crop Protection & Plant Disease Specialist'}
+                </Text>
+              </View>
+
+              {/* Rating */}
+              <View style={{ backgroundColor: '#fff7ed', padding: 10, borderRadius: 10, borderWidth: 1, borderColor: '#ffedd5', gap: 2 }}>
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#9a3412' }}>⭐ DOCTOR RATING</Text>
+                <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#b45309' }}>
+                  ⭐ {viewingDoctorInfo?.rating || '4.9 ★'} {viewingDoctorInfo?.ratingCount ? `(${viewingDoctorInfo.ratingCount}+ Farmers)` : ''}
+                </Text>
+              </View>
+
+              {/* Feedback / Review Comment */}
+              <View style={{ backgroundColor: '#f0fdf4', padding: 10, borderRadius: 10, borderWidth: 1, borderColor: '#bbf7d0', gap: 2 }}>
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#166534' }}>💬 FARMER FEEDBACK / COMMENT</Text>
+                <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#15803d', fontStyle: 'italic', lineHeight: 16 }}>
+                  "{viewingDoctorInfo?.feedback || 'Great advisory and crop care plan recommendations!'}"
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.confirmSaleBtn, { marginTop: 14, width: '100%', backgroundColor: '#0f172a' }]}
+              onPress={() => setViewingDoctorInfo(null)}
+            >
+              <Text style={styles.confirmSaleText}>Close Profile</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>

@@ -42,6 +42,16 @@ async function bootstrap() {
     maxAge: '7d',
     etag: true,
   });
+  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+    prefix: '/api/uploads/',
+    maxAge: '7d',
+    etag: true,
+  });
+  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+    prefix: '/api/v1/uploads/',
+    maxAge: '7d',
+    etag: true,
+  });
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   app.use(compression());
   app.enableCors({

@@ -985,20 +985,17 @@ export default function FarmListScreen() {
                       activeOpacity={0.8}
                       onPress={() => openHistoryDetail(hItem)}
                     >
-                      {/* Top Bar: Field & Crop Name + ID + Completed Tag */}
+                      {/* Top Bar: Plot Name + Crop ID + COMPLETED Tag */}
                       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1, flexWrap: 'wrap' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, flexWrap: 'wrap' }}>
                           <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' }}>
                             📍 {hItem.fieldName}
                           </Text>
-                          <View style={{ backgroundColor: '#f0fdf4', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#bbf7d0' }}>
-                            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#15803d' }}>
-                              🌾 {hItem.cropName}
+                          <View style={{ backgroundColor: '#e0f2fe', paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 6, borderWidth: 1, borderColor: '#bae6fd' }}>
+                            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#0369a1' }}>
+                              ID: {hItem.cropId || (hItem.id?.startsWith('C-') ? hItem.id : `C-${hItem.id?.slice(0, 6).toUpperCase()}`)}
                             </Text>
                           </View>
-                          <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' }}>
-                            (ID: {hItem.cropId || (hItem.id?.startsWith('C-') ? hItem.id : `C-${hItem.id?.slice(0, 6).toUpperCase()}`)})
-                          </Text>
                         </View>
                         <View style={{ backgroundColor: '#059669', paddingHorizontal: 7, paddingVertical: 2.5, borderRadius: 12 }}>
                           <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#ffffff', letterSpacing: 0.3 }}>
@@ -1007,29 +1004,31 @@ export default function FarmListScreen() {
                         </View>
                       </View>
 
-                      {/* Info Chips Row */}
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 5, flexWrap: 'wrap' }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#f8fafc', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                          <Ionicons name="calendar-outline" size={10.5} color="#64748b" />
-                          <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#334155' }}>
-                            {summary.completionDateStr}
-                          </Text>
-                        </View>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#f8fafc', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                          <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569' }}>
-                            🌱 {hItem.categoryName}
+                      {/* Row 2: Subcategory & Variety Name */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#15803d' }}>
+                          🌾 {hItem.cropName} {hItem.variety ? `· ${hItem.variety}` : ''} {hItem.categoryName ? `(${hItem.categoryName})` : ''}
+                        </Text>
+                      </View>
+
+                      {/* Row 3: Crop Period (Sown Date -> Completion Date) & Doctor Status */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f8fafc', paddingHorizontal: 8, paddingVertical: 2.5, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                          <Ionicons name="calendar-outline" size={11} color="#64748b" />
+                          <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#334155' }}>
+                            Crop Period: {hItem.sowingDate ? hItem.sowingDate.replace(/\s*\([^)]*\)/g, '').trim() : 'Sown'} → {summary.completionDateStr}
                           </Text>
                         </View>
 
                         {summary.isAdvisorHired ? (
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#ecfdf5', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: '#a7f3d0' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#ecfdf5', paddingHorizontal: 7, paddingVertical: 2.5, borderRadius: 10, borderWidth: 1, borderColor: '#a7f3d0' }}>
                             <Ionicons name="medical" size={10} color="#15803d" />
                             <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#15803d' }}>
                               🩺 {summary.advisorName || 'Doctor Hired'}
                             </Text>
                           </View>
                         ) : (
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#f8fafc', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#f8fafc', paddingHorizontal: 7, paddingVertical: 2.5, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
                             <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' }}>
                               🩺 Self-Managed
                             </Text>

@@ -2352,8 +2352,12 @@ function UnifiedPlanManagerModal({
           const mrpNum = Number(item.mrp ?? item.price ?? 0);
           const valNum = Number(item.partnerShareValue ?? 10);
           const type = item.partnerShareType ?? 'PERCENTAGE';
-          const pPercent = type === 'PERCENTAGE' ? String(valNum) : (mrpNum > 0 ? String(Math.round(((mrpNum - valNum) / mrpNum) * 100)) : '');
-          const pAmount = type === 'FIXED' ? String(valNum) : (mrpNum > 0 ? String(Math.round(mrpNum - (mrpNum * (valNum / 100)))) : '');
+          const commisionAmt = type === 'FIXED' ? valNum : (mrpNum * (valNum / 100));
+          const pPercent = type === 'PERCENTAGE' ? String(valNum) : (mrpNum > 0 ? String(Math.round((valNum / mrpNum) * 100)) : '');
+          const pAmount = String(Math.round(commisionAmt));
+          const docFee = Number(item.advisorShareValue || 0);
+          const calcAdmin = Math.max(0, Math.round(mrpNum - commisionAmt - docFee));
+          const adminFee = item.adminShareValue ? String(item.adminShareValue) : String(calcAdmin);
           return {
             id: item.id,
             mrp: String(item.mrp ?? item.price ?? ''),
@@ -2368,7 +2372,7 @@ function UnifiedPlanManagerModal({
             partnerSharePercent: pPercent,
             partnerShareAmount: pAmount,
             advisorShareValue: item.advisorShareValue ? String(item.advisorShareValue) : '',
-            adminShareValue: item.adminShareValue ? String(item.adminShareValue) : '',
+            adminShareValue: adminFee,
           };
         })
       );
@@ -2386,9 +2390,9 @@ function UnifiedPlanManagerModal({
           partnerShareType: 'PERCENTAGE',
           partnerShareValue: '10',
           partnerSharePercent: '10',
-          partnerShareAmount: '1799',
+          partnerShareAmount: '200',
           advisorShareValue: '100',
-          adminShareValue: '',
+          adminShareValue: '1699',
         },
       ]);
     }
@@ -2412,9 +2416,9 @@ function UnifiedPlanManagerModal({
         partnerShareType: 'PERCENTAGE',
         partnerShareValue: '10',
         partnerSharePercent: '10',
-        partnerShareAmount: '449',
+        partnerShareAmount: '50',
         advisorShareValue: '50',
-        adminShareValue: '',
+        adminShareValue: '399',
       },
     ]);
   };
@@ -2438,20 +2442,30 @@ function UnifiedPlanManagerModal({
         item.partnerShareType = 'PERCENTAGE';
         item.partnerShareValue = value;
         const pct = Number(value || 0);
-        item.partnerShareAmount = mrpNum > 0 && value !== '' ? String(Math.round(mrpNum - (mrpNum * (pct / 100)))) : '';
+        const commAmt = Math.round(mrpNum * (pct / 100));
+        item.partnerShareAmount = mrpNum > 0 && value !== '' ? String(commAmt) : '';
       } else if (field === 'partnerShareAmount') {
         item.partnerShareType = 'FIXED';
         item.partnerShareValue = value;
         const amt = Number(value || 0);
-        item.partnerSharePercent = mrpNum > 0 && value !== '' ? String(Math.round(((mrpNum - amt) / mrpNum) * 100)) : '';
+        const pct = mrpNum > 0 ? Math.round((amt / mrpNum) * 100) : 0;
+        item.partnerSharePercent = mrpNum > 0 && value !== '' ? String(pct) : '';
       } else if (field === 'mrp') {
         const pct = Number(item.partnerSharePercent || 0);
         if (item.partnerShareType === 'PERCENTAGE' && item.partnerSharePercent !== '') {
-          item.partnerShareAmount = mrpNum > 0 ? String(Math.round(mrpNum - (mrpNum * (pct / 100)))) : '';
+          item.partnerShareAmount = mrpNum > 0 ? String(Math.round(mrpNum * (pct / 100))) : '';
         } else if (item.partnerShareType === 'FIXED' && item.partnerShareAmount !== '') {
           const amt = Number(item.partnerShareAmount || 0);
-          item.partnerSharePercent = mrpNum > 0 ? String(Math.round(((mrpNum - amt) / mrpNum) * 100)) : '';
+          item.partnerSharePercent = mrpNum > 0 ? String(Math.round((amt / mrpNum) * 100)) : '';
         }
+      }
+
+      // Auto-calculate Platform Fee (₹) = MRP (₹) - Commision (₹) - Doctor Fee (₹)
+      if (field !== 'adminShareValue') {
+        const commAmt = Number(item.partnerShareAmount || 0);
+        const docAmt = Number(item.advisorShareValue || 0);
+        const platformFee = Math.max(0, Math.round(mrpNum - commAmt - docAmt));
+        item.adminShareValue = mrpNum > 0 ? String(platformFee) : item.adminShareValue;
       }
 
       copy[index] = item;

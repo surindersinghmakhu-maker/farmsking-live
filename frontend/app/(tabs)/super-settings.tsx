@@ -2448,7 +2448,7 @@ function UnifiedPlanManagerModal({
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.modalTitle, { color: '#0f172a', fontSize: 15 }]}>
-                  {isCareCategory ? '🩺 Crop Care Plan' : '🎫 Farmer Membership Plan'} — {planMeta?.label} ({activeTab})
+                  {isCareCategory ? '🩺 Crop Care Plan' : '🎫 Membership Plan'} — {planMeta?.label} ({activeTab})
                 </Text>
                 <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
                   {isCareCategory

@@ -2348,27 +2348,36 @@ function UnifiedPlanManagerModal({
     const currentTabItems = allPricingItems.filter((p) => p.plan === activeTab);
     if (currentTabItems.length > 0) {
       setFormItems(
-        currentTabItems.map((item) => ({
-          id: item.id,
-          mrp: String(item.mrp ?? item.price ?? ''),
-          price: String(item.price ?? ''),
-          billingPeriodDays: String(item.billingPeriodDays ?? 365),
-          isOffer: !!item.isOffer,
-          offerName: item.offerName || '',
-          offerPrice: item.offerPrice ? String(item.offerPrice) : '',
-          offerValidTill: item.offerValidTill ? formatToDDMMYY(item.offerValidTill) : '',
-          partnerShareType: item.partnerShareType ?? 'PERCENTAGE',
-          partnerShareValue: String(item.partnerShareValue ?? 10),
-          advisorShareValue: item.advisorShareValue ? String(item.advisorShareValue) : '',
-          adminShareValue: item.adminShareValue ? String(item.adminShareValue) : '',
-        }))
+        currentTabItems.map((item) => {
+          const mrpNum = Number(item.mrp ?? item.price ?? 0);
+          const valNum = Number(item.partnerShareValue ?? 10);
+          const type = item.partnerShareType ?? 'PERCENTAGE';
+          const pPercent = type === 'PERCENTAGE' ? String(valNum) : (mrpNum > 0 ? String(Math.round(((mrpNum - valNum) / mrpNum) * 100)) : '');
+          const pAmount = type === 'FIXED' ? String(valNum) : (mrpNum > 0 ? String(Math.round(mrpNum - (mrpNum * (valNum / 100)))) : '');
+          return {
+            id: item.id,
+            mrp: String(item.mrp ?? item.price ?? ''),
+            price: String(item.price ?? ''),
+            billingPeriodDays: String(item.billingPeriodDays ?? 365),
+            isOffer: !!item.isOffer,
+            offerName: item.offerName || '',
+            offerPrice: item.offerPrice ? String(item.offerPrice) : '',
+            offerValidTill: item.offerValidTill ? formatToDDMMYY(item.offerValidTill) : '',
+            partnerShareType: type,
+            partnerShareValue: String(valNum),
+            partnerSharePercent: pPercent,
+            partnerShareAmount: pAmount,
+            advisorShareValue: item.advisorShareValue ? String(item.advisorShareValue) : '',
+            adminShareValue: item.adminShareValue ? String(item.adminShareValue) : '',
+          };
+        })
       );
     } else {
       setFormItems([
         {
           id: `new_${Date.now()}`,
           mrp: '1999',
-          price: '999',
+          price: '1999',
           billingPeriodDays: '365',
           isOffer: false,
           offerName: '',
@@ -2376,6 +2385,8 @@ function UnifiedPlanManagerModal({
           offerValidTill: '',
           partnerShareType: 'PERCENTAGE',
           partnerShareValue: '10',
+          partnerSharePercent: '10',
+          partnerShareAmount: '1799',
           advisorShareValue: '100',
           adminShareValue: '',
         },
@@ -2400,6 +2411,8 @@ function UnifiedPlanManagerModal({
         offerValidTill: '',
         partnerShareType: 'PERCENTAGE',
         partnerShareValue: '10',
+        partnerSharePercent: '10',
+        partnerShareAmount: '449',
         advisorShareValue: '50',
         adminShareValue: '',
       },
@@ -2418,7 +2431,30 @@ function UnifiedPlanManagerModal({
   const handleUpdateItemField = (index: number, field: string, value: any) => {
     setFormItems((prev) => {
       const copy = [...prev];
-      copy[index] = { ...copy[index], [field]: value };
+      const item = { ...copy[index], [field]: value };
+      const mrpNum = Number(field === 'mrp' ? value : item.mrp || 0);
+
+      if (field === 'partnerSharePercent') {
+        item.partnerShareType = 'PERCENTAGE';
+        item.partnerShareValue = value;
+        const pct = Number(value || 0);
+        item.partnerShareAmount = mrpNum > 0 && value !== '' ? String(Math.round(mrpNum - (mrpNum * (pct / 100)))) : '';
+      } else if (field === 'partnerShareAmount') {
+        item.partnerShareType = 'FIXED';
+        item.partnerShareValue = value;
+        const amt = Number(value || 0);
+        item.partnerSharePercent = mrpNum > 0 && value !== '' ? String(Math.round(((mrpNum - amt) / mrpNum) * 100)) : '';
+      } else if (field === 'mrp') {
+        const pct = Number(item.partnerSharePercent || 0);
+        if (item.partnerShareType === 'PERCENTAGE' && item.partnerSharePercent !== '') {
+          item.partnerShareAmount = mrpNum > 0 ? String(Math.round(mrpNum - (mrpNum * (pct / 100)))) : '';
+        } else if (item.partnerShareType === 'FIXED' && item.partnerShareAmount !== '') {
+          const amt = Number(item.partnerShareAmount || 0);
+          item.partnerSharePercent = mrpNum > 0 ? String(Math.round(((mrpNum - amt) / mrpNum) * 100)) : '';
+        }
+      }
+
+      copy[index] = item;
       return copy;
     });
   };
@@ -2622,20 +2658,11 @@ function UnifiedPlanManagerModal({
                     />
                   </View>
 
-                  {/* Partner Commission / Advisor Fee */}
-                  <View style={{ flex: 1.2 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-                      <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#334155' }} numberOfLines={1}>
-                        {isCareCategory ? '🤝 Advisor Fee' : '🤝 Commision'}
-                      </Text>
-                      <TouchableOpacity
-                        onPress={() => handleUpdateItemField(idx, 'partnerShareType', item.partnerShareType === 'PERCENTAGE' ? 'FIXED' : 'PERCENTAGE')}
-                      >
-                        <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#0284c7' }}>
-                          {item.partnerShareType === 'PERCENTAGE' ? '%' : '₹'}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
+                  {/* Partner Commission / Advisor Fee - 2 Boxes (% and Amount) */}
+                  <View style={{ flex: 0.9 }}>
+                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }} numberOfLines={1}>
+                      {isCareCategory ? '🤝 Advisor %' : '🤝 Commision %'}
+                    </Text>
                     <TextInput
                       style={{
                         height: 34,
@@ -2649,9 +2676,32 @@ function UnifiedPlanManagerModal({
                         backgroundColor: '#ffffff',
                       }}
                       keyboardType="numeric"
-                      placeholder="10"
-                      value={item.partnerShareValue}
-                      onChangeText={(val) => handleUpdateItemField(idx, 'partnerShareValue', val)}
+                      placeholder="10%"
+                      value={item.partnerSharePercent}
+                      onChangeText={(val) => handleUpdateItemField(idx, 'partnerSharePercent', val)}
+                    />
+                  </View>
+
+                  <View style={{ flex: 1.1 }}>
+                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }} numberOfLines={1}>
+                      {isCareCategory ? '🤝 Advisor (₹)' : '🤝 Commision (₹)'}
+                    </Text>
+                    <TextInput
+                      style={{
+                        height: 34,
+                        borderWidth: 1,
+                        borderColor: '#cbd5e1',
+                        borderRadius: RADIUS.sm,
+                        paddingHorizontal: 6,
+                        fontSize: 11.5,
+                        fontFamily: FONT.bold,
+                        color: '#0f172a',
+                        backgroundColor: '#ffffff',
+                      }}
+                      keyboardType="numeric"
+                      placeholder="₹ Amount"
+                      value={item.partnerShareAmount}
+                      onChangeText={(val) => handleUpdateItemField(idx, 'partnerShareAmount', val)}
                     />
                   </View>
 

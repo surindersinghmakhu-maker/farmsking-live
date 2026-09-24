@@ -103,6 +103,7 @@ export function useSearchWorkersByMobile(mobile: string) {
     queryFn: () => labourApi.searchWorkersByMobile(cleanMobile),
     enabled: cleanMobile.length === 10,
     staleTime: 1000 * 60 * 5,
+    retry: 1,
   });
 }
 

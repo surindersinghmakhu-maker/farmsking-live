@@ -55,7 +55,7 @@ export default function RegisterScreen() {
   const [pincode, setPincode] = useState('');
 
   const [values, setValues] = useState({ name: '', mobile: '', password: '', confirmPassword: '' });
-  const { data: searchMobileResult, isLoading: isSearchingMobile } = useSearchWorkersByMobile(values.mobile);
+  const { data: searchMobileResult, isFetching: isSearchingMobile } = useSearchWorkersByMobile(values.mobile);
 
   // Auto-fill registered name if King ID user account is found and name is empty
   useEffect(() => {

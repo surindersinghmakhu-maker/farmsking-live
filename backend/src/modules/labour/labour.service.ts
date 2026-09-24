@@ -23,9 +23,15 @@ export class LabourService {
       return { exists: false, user: null, profiles: [] };
     }
 
-    // Search ALL users matching the 10-digit mobile number
+    // Search ALL users matching the 10-digit mobile number using fast indexed lookups
     const users = await this.prisma.user.findMany({
-      where: { mobile: { contains: cleanMobile } },
+      where: {
+        OR: [
+          { mobile: cleanMobile },
+          { mobile: `+91${cleanMobile}` },
+          { mobile: { endsWith: cleanMobile } },
+        ],
+      },
       select: {
         id: true,
         kingId: true,
@@ -36,6 +42,7 @@ export class LabourService {
         district: true,
         state: true,
       },
+      take: 5,
     });
 
     const userIds = users.map((u) => u.id);
@@ -45,7 +52,9 @@ export class LabourService {
     const dbProfiles = await this.prisma.labourWorker.findMany({
       where: {
         OR: [
-          { mobile: { contains: cleanMobile } },
+          { mobile: cleanMobile },
+          { mobile: `+91${cleanMobile}` },
+          { mobile: { endsWith: cleanMobile } },
           ...(userIds.length > 0 ? [{ userId: { in: userIds } }] : []),
         ],
         deletedAt: null,
@@ -54,6 +63,7 @@ export class LabourService {
         farmer: { select: { id: true, name: true, village: true } },
       },
       orderBy: { createdAt: 'desc' },
+      take: 20,
     });
 
     const profileMap = new Map<string, any>();

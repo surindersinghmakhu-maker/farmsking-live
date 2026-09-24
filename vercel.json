@@ -1,11 +1,11 @@
 {
   "version": 2,
-  "buildCommand": "node build.js",
-  "outputDirectory": "frontend/dist",
-  "rewrites": [
+  "redirects": [
     {
       "source": "/(.*)",
-      "destination": "/index.html"
+      "destination": "https://farmsking.tech/$1",
+      "permanent": true
     }
   ]
 }
+

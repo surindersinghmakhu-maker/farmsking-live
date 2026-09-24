@@ -203,8 +203,10 @@ export default function FarmListScreen() {
   const [viewingDoctorInfo, setViewingDoctorInfo] = useState<{
     name: string;
     specialization?: string;
-    rating?: string;
+    overallRating?: string;
     ratingCount?: number;
+    cropDoctorRating?: string;
+    cropName?: string;
     feedback?: string;
   } | null>(null);
 
@@ -212,15 +214,22 @@ export default function FarmListScreen() {
     tap();
     const docName = advisorName || hItem.completionReview?.doctorName || activeAdvisor?.name || 'Dr. Preet Singh';
     const spec = activeAdvisor?.specialization || 'Crop Protection & Plant Pathology Specialist';
-    const rating = activeAdvisor?.ratingLabel || (activeAdvisor?.rating ? `${activeAdvisor.rating} ★` : '4.9 ★');
-    const feedback = hItem.completionReview?.doctorFeedback || hItem.completionReview?.farmskingFeedback || 'Doctor provided full spray schedule & crop protection advice for this crop cycle.';
+    const overallRating = activeAdvisor?.ratingLabel || (activeAdvisor?.rating ? `${activeAdvisor.rating} ★` : '4.9 ★');
+
+    const cropRatingNum = hItem.completionReview?.doctorRating || 5;
+    const cropRatingGrade = hItem.completionReview?.doctorGrade || 'EXCELLENT';
+    const cropDoctorRating = `${'⭐'.repeat(Math.min(5, Math.max(1, cropRatingNum)))} ${cropRatingNum}/5 Stars (Grade: ${cropRatingGrade})`;
+
+    const cropFeedback = hItem.completionReview?.doctorFeedback || hItem.completionReview?.farmskingFeedback || 'Doctor provided full spray schedule & crop protection advice for this crop cycle.';
 
     setViewingDoctorInfo({
       name: docName,
       specialization: spec,
-      rating,
+      overallRating,
       ratingCount: activeAdvisor?.ratingCount || 18,
-      feedback,
+      cropDoctorRating,
+      cropName: hItem.cropName,
+      feedback: cropFeedback,
     });
   };
 
@@ -1925,6 +1934,12 @@ export default function FarmListScreen() {
               <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a', textAlign: 'center' }}>
                 {viewingDoctorInfo?.name}
               </Text>
+
+              {/* Star Rating Under Doctor Name */}
+              <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: '#b45309' }}>
+                ⭐ {viewingDoctorInfo?.overallRating || '4.9 ★'} {viewingDoctorInfo?.ratingCount ? `(${viewingDoctorInfo.ratingCount}+ Farmers)` : '(Top Rated Advisor)'}
+              </Text>
+
               <View style={{ backgroundColor: '#ecfdf5', paddingHorizontal: 10, paddingVertical: 2, borderRadius: 12, borderWidth: 1, borderColor: '#a7f3d0' }}>
                 <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#15803d' }}>🩺 Hired Crop Doctor</Text>
               </View>
@@ -1939,19 +1954,21 @@ export default function FarmListScreen() {
                 </Text>
               </View>
 
-              {/* Rating */}
+              {/* Doctor Rating for THIS Crop */}
               <View style={{ backgroundColor: '#fff7ed', padding: 10, borderRadius: 10, borderWidth: 1, borderColor: '#ffedd5', gap: 2 }}>
-                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#9a3412' }}>⭐ DOCTOR RATING</Text>
-                <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#b45309' }}>
-                  ⭐ {viewingDoctorInfo?.rating || '4.9 ★'} {viewingDoctorInfo?.ratingCount ? `(${viewingDoctorInfo.ratingCount}+ Farmers)` : ''}
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#9a3412' }}>
+                  ⭐ DOCTOR RATING FOR THIS CROP {viewingDoctorInfo?.cropName ? `(${viewingDoctorInfo.cropName})` : ''}
+                </Text>
+                <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: '#b45309' }}>
+                  {viewingDoctorInfo?.cropDoctorRating || '⭐⭐⭐⭐⭐ 5.0 / 5.0 Stars (Grade: EXCELLENT)'}
                 </Text>
               </View>
 
-              {/* Feedback / Review Comment */}
+              {/* Feedback / Comment for THIS Crop */}
               <View style={{ backgroundColor: '#f0fdf4', padding: 10, borderRadius: 10, borderWidth: 1, borderColor: '#bbf7d0', gap: 2 }}>
-                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#166534' }}>💬 FARMER FEEDBACK / COMMENT</Text>
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#166534' }}>💬 FARMER FEEDBACK FOR THIS CROP</Text>
                 <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#15803d', fontStyle: 'italic', lineHeight: 16 }}>
-                  "{viewingDoctorInfo?.feedback || 'Great advisory and crop care plan recommendations!'}"
+                  "{viewingDoctorInfo?.feedback || 'Doctor provided full spray schedule & crop protection advice for this crop cycle.'}"
                 </Text>
               </View>
             </View>

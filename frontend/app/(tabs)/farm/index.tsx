@@ -933,9 +933,14 @@ export default function FarmListScreen() {
                             activeOpacity={0.85}
                             onPress={() => {
                               tap();
-                              unlockCropDirectly(item.id);
-                              setSelectedCropForGps(item);
-                              setShowLocationModal(true);
+                              if (Platform.OS === 'web') {
+                                alert('📍 Set GPS Location - Coming Soon...\n\nSatellite field GPS coordinate mapping feature is currently under final testing and will be enabled in the upcoming update!');
+                              } else {
+                                Alert.alert(
+                                  'Coming Soon... 📍',
+                                  'Satellite field GPS coordinate mapping feature is currently under final testing and will be enabled in the upcoming update!'
+                                );
+                              }
                             }}
                           >
                             <Ionicons name="location" size={13} color="#ffffff" />

@@ -1,8 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { creditWallet, debitWallet, getMyWallet, getWalletForUser } from '../api/wallet.api';
+import { creditWallet, debitWallet, getMyWallet, getReferralStatement, getWalletForUser } from '../api/wallet.api';
 
 export function useMyWallet() {
   return useQuery({ queryKey: ['wallet', 'mine'], queryFn: getMyWallet });
+}
+
+export function useReferralStatement() {
+  return useQuery({
+    queryKey: ['wallet', 'referral-statement'],
+    queryFn: getReferralStatement,
+  });
 }
 
 /** Admin: view any partner/advisor's full wallet ledger. */

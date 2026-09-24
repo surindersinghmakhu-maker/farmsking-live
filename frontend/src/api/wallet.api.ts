@@ -18,8 +18,42 @@ export async function creditWallet(userId: string, amount: number, reason?: stri
   return data;
 }
 
-/** Admin/Super Admin: manually deduct balance from any user's wallet. */
-export async function debitWallet(userId: string, amount: number, reason?: string): Promise<MyWallet> {
-  const { data } = await apiClient.post<MyWallet>(`/wallet/admin/${userId}/debit`, { amount, reason });
+export interface RefereeStatementItem {
+  refereeId: string;
+  refereeName: string;
+  refereeKingId: string;
+  registrationDate: string;
+  issuedAmount: number;
+  signupBonusIssued: number;
+  planBonusIssued: number;
+  pendingAmount: number;
+  status: 'PENDING' | 'SUCCESS';
+  referenceCodeUsed: string;
+}
+
+export interface MyReferralInfo {
+  referredByName: string;
+  referredByKingId: string;
+  referenceCode: string;
+  welcomeBonusIssued: number;
+  planBonusPending: number;
+  status: 'PENDING' | 'SUCCESS';
+}
+
+export interface ReferralStatementResponse {
+  summary: {
+    totalReferees: number;
+    totalIssuedBonus: number;
+    totalPendingBonus: number;
+    signupBonusAmount: number;
+    welcomeBonusAmount: number;
+    planUpgradeBonusAmount: number;
+  };
+  myReferralInfo: MyReferralInfo | null;
+  referees: RefereeStatementItem[];
+}
+
+export async function getReferralStatement(): Promise<ReferralStatementResponse> {
+  const { data } = await apiClient.get<ReferralStatementResponse>('/wallet/referral-statement');
   return data;
 }

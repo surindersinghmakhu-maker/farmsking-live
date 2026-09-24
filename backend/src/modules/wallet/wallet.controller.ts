@@ -15,10 +15,14 @@ import { CreditWalletDto } from './dto/credit-wallet.dto';
 export class WalletController {
   constructor(private readonly walletService: WalletService) {}
 
-  @Roles(Role.BUSINESS_PARTNER, Role.ADVISOR)
   @Get('mine')
   getMyWallet(@CurrentUser() user: AuthUser) {
     return this.walletService.getMyWallet(user);
+  }
+
+  @Get('referral-statement')
+  getReferralStatement(@CurrentUser() user: AuthUser) {
+    return this.walletService.getReferralStatement(user.id);
   }
 
   /** Admin/Super Admin (or Operator with VIEW_WALLETS): full transaction ledger for any partner/advisor's wallet. */

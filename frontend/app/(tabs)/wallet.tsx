@@ -7,7 +7,7 @@ import * as Clipboard from 'expo-clipboard';
 import ViewShot from 'react-native-view-shot';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
-import { useMyWallet } from '@/src/hooks/useWallet';
+import { useMyWallet, useReferralStatement } from '@/src/hooks/useWallet';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useCreateWithdrawal, useMyWithdrawals } from '@/src/hooks/useWithdrawals';
 import { useCouponRedemptions, useMyCoupons } from '@/src/hooks/useCoupons';
@@ -109,6 +109,9 @@ export default function WalletScreen() {
 
         {/* Referral & Welcome Voucher Invitation Card (Visible to All Logged In Users) */}
         {user?.kingId ? <ReferralInviteCard theme={theme} kingId={user.kingId} /> : null}
+
+        {/* Detailed Referral & Bonus Statement Table */}
+        <ReferralStatementTable theme={theme} />
 
         {/* Unified Plan Coupons Hub for Advisors & Business Partners */}
         {isAdvisorOrPartner ? <MyUnifiedPlanCouponsSection theme={theme} /> : null}
@@ -375,6 +378,129 @@ function ReferralInviteCard({ theme, kingId }: { theme: RoleTheme; kingId: strin
           </TouchableOpacity>
         </View>
       </LinearGradient>
+    </View>
+  );
+}
+
+function ReferralStatementTable({ theme }: { theme: RoleTheme }) {
+  const { data: referralData, isLoading } = useReferralStatement();
+
+  if (isLoading) {
+    return (
+      <View style={{ marginTop: 16, alignItems: 'center', padding: 20 }}>
+        <ActivityIndicator color={theme.primary} />
+      </View>
+    );
+  }
+
+  if (!referralData) return null;
+
+  const { summary, myReferralInfo, referees } = referralData;
+
+  return (
+    <View style={{ marginTop: 16, width: '100%' }}>
+      <Text style={styles.sectionTitle}>Referral & Bonus Statement 📊</Text>
+
+      {/* Header Summary Cards */}
+      <View style={styles.refSummaryCard}>
+        <View style={styles.refSummaryCol}>
+          <Text style={styles.refSummaryLabel}>Total Referees</Text>
+          <Text style={styles.refSummaryVal}>{summary.totalReferees}</Text>
+        </View>
+        <View style={styles.refSummaryDivider} />
+        <View style={styles.refSummaryCol}>
+          <Text style={styles.refSummaryLabel}>Issued Bonus</Text>
+          <Text style={[styles.refSummaryVal, { color: '#16a34a' }]}>₹{summary.totalIssuedBonus}</Text>
+        </View>
+        <View style={styles.refSummaryDivider} />
+        <View style={styles.refSummaryCol}>
+          <Text style={styles.refSummaryLabel}>Pending Bonus</Text>
+          <Text style={[styles.refSummaryVal, { color: '#d97706' }]}>₹{summary.totalPendingBonus}</Text>
+        </View>
+      </View>
+
+      {/* My Referrer Info Card if referred by someone */}
+      {myReferralInfo ? (
+        <View style={styles.mySponsorCard}>
+          <View style={styles.mySponsorHeader}>
+            <Ionicons name="person-circle-outline" size={20} color="#0284c7" />
+            <Text style={styles.mySponsorTitle}>Referred By (Sponsor)</Text>
+            <View style={[styles.statusBadge, { backgroundColor: myReferralInfo.status === 'SUCCESS' ? '#dcfce7' : '#fef3c7' }]}>
+              <Text style={[styles.statusBadgeText, { color: myReferralInfo.status === 'SUCCESS' ? '#15803d' : '#b45309' }]}>
+                {myReferralInfo.status === 'SUCCESS' ? 'SUCCESS ✅' : 'PENDING ⏳'}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.mySponsorBody}>
+            <Text style={styles.mySponsorName}>{myReferralInfo.referredByName} (King ID: {myReferralInfo.referredByKingId})</Text>
+            <Text style={styles.mySponsorSub}>Reference Code: {myReferralInfo.referenceCode}</Text>
+            <View style={{ flexDirection: 'row', gap: 12, marginTop: 4, flexWrap: 'wrap' }}>
+              <Text style={styles.mySponsorBonusText}>Welcome Bonus: <Text style={{ color: '#16a34a', fontFamily: FONT.bold }}>₹{myReferralInfo.welcomeBonusIssued}</Text></Text>
+              <Text style={styles.mySponsorBonusText}>Plan Upgrade Bonus: <Text style={{ color: myReferralInfo.status === 'SUCCESS' ? '#16a34a' : '#d97706', fontFamily: FONT.bold }}>₹{myReferralInfo.planBonusPending}</Text></Text>
+            </View>
+          </View>
+        </View>
+      ) : null}
+
+      {/* Referees Table Card */}
+      <View style={[styles.txCard, premiumShadow('#0f172a', 'sm'), { marginTop: 10 }]}>
+        <View style={styles.tableHeaderRow}>
+          <Text style={[styles.tableHeadCell, { flex: 1.4 }]}>Referee / King ID</Text>
+          <Text style={[styles.tableHeadCell, { flex: 1 }]}>Reg Date</Text>
+          <Text style={[styles.tableHeadCell, { flex: 0.9, textAlign: 'right' }]}>Issued</Text>
+          <Text style={[styles.tableHeadCell, { flex: 0.9, textAlign: 'right' }]}>Pending</Text>
+          <Text style={[styles.tableHeadCell, { flex: 1, textAlign: 'center' }]}>Status</Text>
+        </View>
+
+        {referees.length === 0 ? (
+          <Text style={[styles.emptyText, { paddingVertical: 14, textAlign: 'center' }]}>
+            No referred users yet. Share your referral code or link to earn rewards! 🎁
+          </Text>
+        ) : (
+          referees.map((item, idx) => {
+            const isLast = idx === referees.length - 1;
+            const regDateStr = new Date(item.registrationDate).toLocaleDateString('en-IN', {
+              day: '2-digit',
+              month: 'short',
+              year: '2-digit',
+            });
+
+            return (
+              <View key={item.refereeId} style={[styles.tableRow, !isLast && styles.tableRowBorder]}>
+                <View style={{ flex: 1.4 }}>
+                  <Text style={styles.tableNameText} numberOfLines={1}>{item.refereeName}</Text>
+                  <Text style={styles.tableSubText}>ID: {item.refereeKingId}</Text>
+                  {item.referenceCodeUsed ? (
+                    <Text style={styles.tableCodeText}>Code: {item.referenceCodeUsed}</Text>
+                  ) : null}
+                </View>
+
+                <View style={{ flex: 1, justifyContent: 'center' }}>
+                  <Text style={styles.tableDateText}>{regDateStr}</Text>
+                </View>
+
+                <View style={{ flex: 0.9, justifyContent: 'center', alignItems: 'flex-end' }}>
+                  <Text style={[styles.tableAmountText, { color: '#16a34a' }]}>₹{item.issuedAmount}</Text>
+                </View>
+
+                <View style={{ flex: 0.9, justifyContent: 'center', alignItems: 'flex-end' }}>
+                  <Text style={[styles.tableAmountText, { color: item.pendingAmount > 0 ? '#d97706' : '#94a3b8' }]}>
+                    ₹{item.pendingAmount}
+                  </Text>
+                </View>
+
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                  <View style={[styles.statusBadge, { backgroundColor: item.status === 'SUCCESS' ? '#dcfce7' : '#fef3c7' }]}>
+                    <Text style={[styles.statusBadgeText, { color: item.status === 'SUCCESS' ? '#15803d' : '#b45309' }]}>
+                      {item.status === 'SUCCESS' ? 'SUCCESS ✅' : 'PENDING ⏳'}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            );
+          })
+        )}
+      </View>
     </View>
   );
 }
@@ -1272,4 +1398,25 @@ const styles = StyleSheet.create({
   refShareLinkBtnText: { fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' },
   refWaBtn: { flex: 1.2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#25d366', paddingVertical: 10, borderRadius: RADIUS.md },
   refWaBtnText: { fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' },
+  refSummaryCard: { flexDirection: 'row', backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 14, alignItems: 'center', justifyContent: 'space-around', borderWidth: 1, borderColor: '#e2e8f0', marginTop: 4 },
+  refSummaryCol: { flex: 1, alignItems: 'center' },
+  refSummaryLabel: { fontSize: 10.5, fontFamily: FONT.bold, color: '#64748b' },
+  refSummaryVal: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a', marginTop: 2 },
+  refSummaryDivider: { width: 1, height: 24, backgroundColor: '#cbd5e1' },
+  mySponsorCard: { backgroundColor: '#f0f9ff', borderRadius: RADIUS.lg, padding: 12, borderWidth: 1, borderColor: '#bae6fd', marginTop: 10 },
+  mySponsorHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+  mySponsorTitle: { fontSize: 12.5, fontFamily: FONT.bold, color: '#0369a1', flex: 1 },
+  mySponsorBody: { marginTop: 2 },
+  mySponsorName: { fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' },
+  mySponsorSub: { fontSize: 11, fontFamily: FONT.medium, color: '#475569', marginTop: 1 },
+  mySponsorBonusText: { fontSize: 11, fontFamily: FONT.medium, color: '#334155' },
+  tableHeaderRow: { flexDirection: 'row', alignItems: 'center', paddingBottom: 8, borderBottomWidth: 1.5, borderBottomColor: '#e2e8f0' },
+  tableHeadCell: { fontSize: 10.5, fontFamily: FONT.bold, color: '#64748b', textTransform: 'uppercase' },
+  tableRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
+  tableRowBorder: { borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  tableNameText: { fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' },
+  tableSubText: { fontSize: 10, fontFamily: FONT.medium, color: '#64748b' },
+  tableCodeText: { fontSize: 9.5, fontFamily: FONT.bold, color: staticTheme.primary },
+  tableDateText: { fontSize: 10.5, fontFamily: FONT.medium, color: '#475569' },
+  tableAmountText: { fontSize: 12, fontFamily: FONT.extraBold },
 });

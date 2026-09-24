@@ -512,6 +512,10 @@ export class FarmerPlansService implements OnModuleInit {
 
     await this.trimAdvisorCropsToCap(farmerId, null);
 
+    if (targetPlan !== FarmerSubscriptionPlan.FREE) {
+      await this.walletService.processPaidPlanReferralBonus(farmerId);
+    }
+
     return {
       plan: updatedPlan,
       daysGranted,

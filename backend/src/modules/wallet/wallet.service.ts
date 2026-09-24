@@ -132,4 +132,185 @@ export class WalletService {
     await this.debit(userId, amount, reason?.trim() || `Manual debit by admin (${admin.id})`);
     return this.getWalletForUser(userId);
   }
+
+  /**
+   * Called when a referred user purchases/activates a paid plan.
+   * Credits the pending referral plan bonus (default ₹50) to the referrer's wallet.
+   */
+  async processPaidPlanReferralBonus(referredUserId: string) {
+    try {
+      const dbUser = await this.prisma.user.findUnique({
+        where: { id: referredUserId },
+        select: { id: true, name: true, kingId: true, referredById: true },
+      });
+
+      if (!dbUser || !dbUser.referredById) return;
+
+      const referrerId = dbUser.referredById;
+
+      // Check if plan bonus was already credited to referrer for this referee
+      const existingPlanBonus = await this.prisma.walletTransaction.findFirst({
+        where: {
+          userId: referrerId,
+          type: WalletTransactionType.CREDIT,
+          relatedUserId: referredUserId,
+          reason: { contains: 'Plan Bonus' },
+        },
+      });
+
+      if (existingPlanBonus) return;
+
+      const settings = await this.prisma.appSetting.findUnique({ where: { id: 'default' } });
+      const planUpgradeBonusAmount = Number((settings as any)?.referralPlanUpgradeBonusAmount ?? 50);
+
+      if (planUpgradeBonusAmount > 0) {
+        await this.credit(
+          referrerId,
+          planUpgradeBonusAmount,
+          `👑 Referral Paid Plan Bonus (Referee upgraded plan: ${dbUser.name || dbUser.kingId || 'User'})`,
+          { relatedUserId: referredUserId },
+        );
+      }
+    } catch (e) {
+      console.warn('Failed to process paid plan referral bonus:', e);
+    }
+  }
+
+  /**
+   * Generates a detailed statement of referrals and bonuses:
+   * - Shows referees, their King IDs, signup date, issued bonus, pending plan bonus, and status (PENDING / SUCCESS).
+   * - If the requesting user was referred by someone, includes reference info & welcome bonus statement.
+   */
+  async getReferralStatement(userId: string) {
+    await this.ensureWelcomeBonus(userId);
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        kingId: true,
+        referredById: true,
+        referredBy: {
+          select: {
+            id: true,
+            name: true,
+            kingId: true,
+            mobile: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found.');
+    }
+
+    const settings = await this.prisma.appSetting.findUnique({ where: { id: 'default' } });
+    const signupBonusAmount = Number((settings as any)?.referralSignupBonusAmount ?? 10);
+    const welcomeBonusAmount = Number((settings as any)?.newUserSignupBonusAmount ?? 10);
+    const planUpgradeBonusAmount = Number((settings as any)?.referralPlanUpgradeBonusAmount ?? 50);
+
+    // Fetch referees (users referred by this user)
+    const referees = await this.prisma.user.findMany({
+      where: { referredById: userId, deletedAt: null },
+      select: {
+        id: true,
+        name: true,
+        kingId: true,
+        createdAt: true,
+        farmerPlan: {
+          select: {
+            plan: true,
+            startDate: true,
+          },
+        },
+        farmerPlanHistory: {
+          select: {
+            id: true,
+            plan: true,
+          },
+          take: 1,
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Fetch wallet transactions for these referees
+    const refereeIds = referees.map((r) => r.id);
+    const walletTxs = await this.prisma.walletTransaction.findMany({
+      where: {
+        userId,
+        type: WalletTransactionType.CREDIT,
+        relatedUserId: { in: refereeIds },
+      },
+      select: {
+        amount: true,
+        reason: true,
+        relatedUserId: true,
+        createdAt: true,
+      },
+    });
+
+    const refereeStatement = referees.map((referee) => {
+      const refereeTxs = walletTxs.filter((tx) => tx.relatedUserId === referee.id);
+      const signupTx = refereeTxs.find((tx) => tx.reason.includes('Referral Income') || tx.reason.includes('joined'));
+      const planTx = refereeTxs.find((tx) => tx.reason.includes('Plan Bonus'));
+
+      const hasPaidPlan =
+        (referee.farmerPlan && referee.farmerPlan.plan !== 'FREE') ||
+        Boolean(planTx) ||
+        referee.farmerPlanHistory.some((h) => h.plan !== 'FREE');
+
+      const signupBonusIssued = signupTx ? Number(signupTx.amount) : signupBonusAmount;
+      const planBonusIssued = planTx ? Number(planTx.amount) : (hasPaidPlan ? planUpgradeBonusAmount : 0);
+      const issuedAmount = signupBonusIssued + planBonusIssued;
+      const pendingAmount = hasPaidPlan || planTx ? 0 : planUpgradeBonusAmount;
+      const status = hasPaidPlan || planTx ? 'SUCCESS' : 'PENDING';
+
+      return {
+        refereeId: referee.id,
+        refereeName: referee.name || 'User',
+        refereeKingId: referee.kingId || 'N/A',
+        registrationDate: referee.createdAt.toISOString(),
+        issuedAmount,
+        signupBonusIssued,
+        planBonusIssued,
+        pendingAmount,
+        status,
+        referenceCodeUsed: referee.kingId ? `REF-${referee.kingId}` : 'DIRECT',
+      };
+    });
+
+    let myReferralInfo: any = null;
+    if (user.referredBy) {
+      const myPlanRecord = await this.prisma.farmerPlan.findUnique({
+        where: { farmerId: userId },
+        select: { plan: true },
+      });
+      const hasPaidPlan = myPlanRecord && myPlanRecord.plan !== 'FREE';
+
+      myReferralInfo = {
+        referredByName: user.referredBy.name || 'Sponsor',
+        referredByKingId: user.referredBy.kingId || 'N/A',
+        referenceCode: user.referredBy.kingId ? `REF-${user.referredBy.kingId}` : 'DIRECT',
+        welcomeBonusIssued: welcomeBonusAmount,
+        planBonusPending: hasPaidPlan ? 0 : planUpgradeBonusAmount,
+        status: hasPaidPlan ? 'SUCCESS' : 'PENDING',
+      };
+    }
+
+    return {
+      summary: {
+        totalReferees: refereeStatement.length,
+        totalIssuedBonus: refereeStatement.reduce((sum, r) => sum + r.issuedAmount, 0),
+        totalPendingBonus: refereeStatement.reduce((sum, r) => sum + r.pendingAmount, 0),
+        signupBonusAmount,
+        welcomeBonusAmount,
+        planUpgradeBonusAmount,
+      },
+      myReferralInfo,
+      referees: refereeStatement,
+    };
+  }
 }

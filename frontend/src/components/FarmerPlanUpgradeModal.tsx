@@ -280,8 +280,10 @@ export function FarmerPlanUpgradeModal({
   tiers?: FarmerPlanType[];
   initialMode?: 'GET_COUPON' | 'REDEEM_CODE';
 }) {
-  const { plan: currentPlan, isExpired, inGrace } = useFarmerPlan();
+  const { plan: currentPlan, isExpired, inGrace, hasUsedTrial } = useFarmerPlan();
   const { data: pricingList = [] } = useFarmerPlanPricing();
+  const isTrialEligible = !hasUsedTrial && currentPlan === 'FREE';
+
   const plans: FarmerPlanType[] = ['FREE', ...tiers];
   const preview = usePreviewFarmerPlanCoupon();
   const redeem = useRedeemFarmerPlanCoupon();
@@ -293,7 +295,7 @@ export function FarmerPlanUpgradeModal({
   const [result, setResult] = useState<Awaited<ReturnType<typeof redeem.mutateAsync>> | null>(null);
   const [showChart, setShowChart] = useState(false);
   const [pickedPlan, setPickedPlan] = useState<FarmerPlanType | null>(null);
-  const [selectedOptionId, setSelectedOptionId] = useState<string>('FARMER_FREE');
+  const [selectedOptionId, setSelectedOptionId] = useState<string>(isTrialEligible ? 'FARMER_FREE' : 'FARMER_BASIC');
   const [planCategory, setPlanCategory] = useState<'FARMER' | 'ADVISOR'>('FARMER');
   const [mode, setMode] = useState<'CODE' | 'UPI'>('CODE');
   const [tabMode, setTabMode] = useState<'GET_COUPON' | 'REDEEM_CODE'>(initialMode);
@@ -301,12 +303,16 @@ export function FarmerPlanUpgradeModal({
   const [selectedDaysMap, setSelectedDaysMap] = useState<Record<string, number>>({});
   const codeInputRef = useRef<TextInput>(null);
 
-  // Sync initialMode when modal becomes visible
+  // Sync initialMode & option selection when modal becomes visible
   React.useEffect(() => {
     if (visible) {
       setTabMode(initialMode);
+      if (!isTrialEligible && selectedOptionId === 'FARMER_FREE') {
+        setSelectedOptionId('FARMER_BASIC');
+        setPickedPlan('PRO');
+      }
     }
-  }, [visible, initialMode]);
+  }, [visible, initialMode, isTrialEligible]);
 
   // Only a genuinely fresh advisor plan needs the farmer to pick one here — if they already have an
   // active advisor, a same-tier renewal just extends their days and keeps that advisor as-is.
@@ -556,7 +562,7 @@ export function FarmerPlanUpgradeModal({
               <View style={{ gap: 8 }}>
                 {(planCategory === 'FARMER'
                   ? [
-                      { id: 'FARMER_FREE', key: 'FREE', label: '🌱 Free Membership Trial', iconName: 'leaf', color: '#166534', sub: 'Full Super Plan Access (10-Day Free Demo Trial)' },
+                      ...(isTrialEligible ? [{ id: 'FARMER_FREE', key: 'FREE', label: '🌱 Free Membership Trial', iconName: 'leaf', color: '#166534', sub: 'Full Super Plan Access (10-Day Free Demo Trial)' }] : []),
                       { id: 'FARMER_BASIC', key: 'PRO', label: '⚡ Basic Membership', iconName: 'flash', color: '#0284c7', sub: 'Bookkeeping & Expense Logs + Voice AI Mic' },
                       { id: 'FARMER_PRO', key: 'SMART', label: '👑 Pro Membership', iconName: 'sparkles', color: '#1d4ed8', sub: 'All Bookkeeping + Labour Record & Worker Login' },
                       { id: 'FARMER_SUPER', key: 'SUPER', label: '⭐ Super Membership', iconName: 'star', color: '#b45309', sub: 'Unlimited Crops, Weather Reports & Mandi AI' },

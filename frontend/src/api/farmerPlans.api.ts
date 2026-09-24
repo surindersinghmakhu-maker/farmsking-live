@@ -11,6 +11,7 @@ export interface MyFarmerPlanResponse {
   inGrace: boolean;
   expiringSoon: boolean;
   daysUntilExpiry: number | null;
+  hasUsedTrial?: boolean;
   limits: {
     maxTotalCrops: number | null;
     maxActiveCrops: number | null;

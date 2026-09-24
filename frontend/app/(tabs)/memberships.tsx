@@ -35,7 +35,7 @@ const tap = () => {
 export default function MembershipsScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const { plan, limits, endDate, isExpired } = useFarmerPlan();
+  const { plan, limits, endDate, isExpired, hasUsedTrial } = useFarmerPlan();
   const { data: settings } = useAppSettings();
   const activateTrialMutation = useActivateTrial();
   const { data: allPricing = [], isLoading: isLoadingPricing } = useFarmerPlanPricing();
@@ -241,7 +241,7 @@ export default function MembershipsScreen() {
               </View>
 
               {/* Free Trial Button */}
-              {freeTrialEnabled && (plan === 'FREE' || isExpired) ? (
+              {freeTrialEnabled && !hasUsedTrial && plan === 'FREE' ? (
                 <TouchableOpacity
                   style={[styles.upgradeBtn, { backgroundColor: '#166534', marginTop: 6 }]}
                   disabled={activateTrialMutation.isPending}

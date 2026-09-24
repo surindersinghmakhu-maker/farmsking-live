@@ -231,9 +231,19 @@ export class FarmerPlansService implements OnModuleInit {
     const maxTotalCrops = planPricing?.maxTotalCrops ?? (effective.plan === FarmerSubscriptionPlan.FREE ? FREE_PLAN_MAX_CROPS : null);
     const maxActiveCrops = planPricing?.maxActiveCrops ?? (effective.plan === FarmerSubscriptionPlan.FREE ? FREE_PLAN_MAX_ACTIVE_CROPS : null);
 
+    const trialHistory = await this.prisma.farmerPlanHistory.findFirst({
+      where: {
+        farmerId: user.id,
+        notes: { contains: 'TRIAL', mode: 'insensitive' },
+      },
+    });
+
+    const hasUsedTrial = !!trialHistory || (effective.plan !== FarmerSubscriptionPlan.FREE);
+
     return {
       farmerId: user.id,
       ...effective,
+      hasUsedTrial,
       limits: {
         maxTotalCrops,
         maxActiveCrops,
@@ -856,6 +866,23 @@ export class FarmerPlansService implements OnModuleInit {
     const freeTrialEnabled = (appSetting as any)?.freeTrialEnabled ?? true;
     if (!freeTrialEnabled) {
       throw new BadRequestException('Free trial is currently disabled by Admin.');
+    }
+
+    // Check if user has already used their trial before
+    const existingHistory = await this.prisma.farmerPlanHistory.findFirst({
+      where: {
+        farmerId,
+        notes: { contains: 'TRIAL', mode: 'insensitive' },
+      },
+    });
+
+    if (existingHistory) {
+      throw new BadRequestException('You have already used your 10-day Free Trial once on this account.');
+    }
+
+    const currentFarmerPlan = await this.prisma.farmerPlan.findUnique({ where: { farmerId } });
+    if (currentFarmerPlan && currentFarmerPlan.plan !== FarmerSubscriptionPlan.FREE && currentFarmerPlan.endDate && currentFarmerPlan.endDate > now) {
+      throw new BadRequestException('Free trial cannot be activated while an active plan is running.');
     }
 
     const freeTrialDays = (appSetting as any)?.freeTrialDays ?? 10;

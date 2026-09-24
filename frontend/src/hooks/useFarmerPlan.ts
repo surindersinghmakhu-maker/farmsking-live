@@ -102,6 +102,7 @@ export function useFarmerPlan() {
     meta,
     hasActiveSoftwarePlan,
     canHireAdvisor,
+    hasUsedTrial: query.data?.hasUsedTrial ?? (plan !== 'FREE'),
     startDate: query.data?.startDate ?? null,
     endDate: query.data?.endDate ?? null,
     isExpired: query.data?.isExpired ?? false,

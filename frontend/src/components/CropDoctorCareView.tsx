@@ -1326,7 +1326,7 @@ export function CropDoctorCareView() {
           <View style={styles.tableModalCard}>
             <View style={styles.modalHeaderRow}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.modalTitle}>🧪 Spray Schedule Detail</Text>
+                <Text style={styles.modalTitle}>🧪 Schedule Detail</Text>
                 <Text style={styles.modalSub}>{sprayDetailTitle}</Text>
               </View>
               <TouchableOpacity style={styles.closeBtn} onPress={() => setSprayDetailItem(null)}>

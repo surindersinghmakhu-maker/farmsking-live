@@ -2071,10 +2071,14 @@ model FarmerPlanPricing {
   mrp                          Decimal?               @db.Decimal(10, 2)
   price                        Decimal                @db.Decimal(10, 2)
   billingPeriodDays            Int // e.g. 365 for a yearly plan, 30 for a monthly one
+  isOffer                      Boolean                @default(false)
+  offerName                    String?
+  offerPrice                   Decimal?               @db.Decimal(10, 2)
+  offerValidTill               DateTime?
   partnerShareType             DiscountValueType // PERCENTAGE (e.g. BASIC's 10%) or FIXED (e.g. STANDARD/PREMIUM's flat ₹ cut)
   partnerShareValue            Decimal                @db.Decimal(10, 2)
   advisorShareValue            Decimal?               @db.Decimal(10, 2) // null when the plan has no advisor (e.g. BASIC)
-  adminShareValue              Decimal?               @db.Decimal(10, 2) // informational — platform's own cut, for display only
+  adminShareValue              Decimal?               @db.Decimal(10, 2) // informational — platform's own cut / fee
   partnerGenerationCostPercent Decimal?               @db.Decimal(5, 2) // % of price debited from a Business Partner's wallet the moment they're issued a coupon for this plan
   advisorGenerationCostPercent Decimal?               @db.Decimal(5, 2) // % of price debited from an Advisor's wallet the moment they're issued a coupon for this plan
   maxTotalCrops                Int?                   // null = unlimited

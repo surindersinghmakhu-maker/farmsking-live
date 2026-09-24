@@ -109,6 +109,10 @@ export interface FarmerPlanPricing {
   mrp?: string | null;
   price: string;
   billingPeriodDays: number;
+  isOffer?: boolean;
+  offerName?: string | null;
+  offerPrice?: string | null;
+  offerValidTill?: string | null;
   partnerShareType: 'PERCENTAGE' | 'FIXED';
   partnerShareValue: string;
   advisorShareValue: string | null;
@@ -129,6 +133,10 @@ export interface UpdateFarmerPlanPricingPayload {
   mrp?: number;
   price?: number;
   billingPeriodDays?: number;
+  isOffer?: boolean;
+  offerName?: string;
+  offerPrice?: number;
+  offerValidTill?: string;
   partnerShareType?: 'PERCENTAGE' | 'FIXED';
   partnerShareValue?: number;
   advisorShareValue?: number;

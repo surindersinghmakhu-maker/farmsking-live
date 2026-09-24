@@ -18,6 +18,21 @@ export class UpdateFarmerPlanPricingDto {
   billingPeriodDays?: number;
 
   @IsOptional()
+  @IsBoolean()
+  isOffer?: boolean;
+
+  @IsOptional()
+  offerName?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  offerPrice?: number;
+
+  @IsOptional()
+  offerValidTill?: string;
+
+  @IsOptional()
   @IsEnum(DiscountValueType)
   partnerShareType?: DiscountValueType;
 

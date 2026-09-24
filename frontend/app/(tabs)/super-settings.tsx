@@ -2252,6 +2252,12 @@ function PlanCardGroup({
                       </Text>
                     ) : null}
                     <Text style={{ color: '#16a34a', fontFamily: FONT.extraBold }}>₹{p.price}</Text>
+                    {p.isOffer && (
+                      <Text style={{ color: '#d97706', fontSize: 11, fontFamily: FONT.bold }}>
+                        {' '}🔥 Offer: {p.offerName || 'Special'} @ ₹{p.offerPrice || p.price}
+                        {p.offerValidTill ? ` (Till ${String(p.offerValidTill).slice(0, 10)})` : ''}
+                      </Text>
+                    )}
                   </Text>
                   <Text style={styles.variantMeta}>
                     Partner Share: {p.partnerShareType === 'PERCENTAGE' ? `${p.partnerShareValue}%` : `₹${p.partnerShareValue}`}
@@ -2319,6 +2325,10 @@ function UnifiedPlanManagerModal({
           mrp: String(item.mrp ?? item.price ?? ''),
           price: String(item.price ?? ''),
           billingPeriodDays: String(item.billingPeriodDays ?? 365),
+          isOffer: !!item.isOffer,
+          offerName: item.offerName || '',
+          offerPrice: item.offerPrice ? String(item.offerPrice) : '',
+          offerValidTill: item.offerValidTill ? String(item.offerValidTill).slice(0, 10) : '',
           partnerShareType: item.partnerShareType ?? 'PERCENTAGE',
           partnerShareValue: String(item.partnerShareValue ?? 10),
           advisorShareValue: item.advisorShareValue ? String(item.advisorShareValue) : '',
@@ -2332,6 +2342,10 @@ function UnifiedPlanManagerModal({
           mrp: '1999',
           price: '999',
           billingPeriodDays: '365',
+          isOffer: false,
+          offerName: '',
+          offerPrice: '',
+          offerValidTill: '',
           partnerShareType: 'PERCENTAGE',
           partnerShareValue: '10',
           advisorShareValue: '100',
@@ -2352,6 +2366,10 @@ function UnifiedPlanManagerModal({
         mrp: '499',
         price: '299',
         billingPeriodDays: '30',
+        isOffer: false,
+        offerName: '',
+        offerPrice: '',
+        offerValidTill: '',
         partnerShareType: 'PERCENTAGE',
         partnerShareValue: '10',
         advisorShareValue: '50',
@@ -2392,6 +2410,10 @@ function UnifiedPlanManagerModal({
             mrp: Number(item.mrp || item.price),
             price: Number(item.price),
             billingPeriodDays: Number(item.billingPeriodDays),
+            isOffer: !!item.isOffer,
+            offerName: item.offerName || undefined,
+            offerPrice: item.offerPrice ? Number(item.offerPrice) : undefined,
+            offerValidTill: item.offerValidTill || undefined,
             partnerShareType: item.partnerShareType,
             partnerShareValue: Number(item.partnerShareValue),
             advisorShareValue: item.advisorShareValue ? Number(item.advisorShareValue) : undefined,
@@ -2425,7 +2447,7 @@ function UnifiedPlanManagerModal({
                   Edit {planMeta?.label} ({activeTab})
                 </Text>
                 <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
-                  Compact pricing, commission cuts & feature toggles
+                  MRP, Selling Price, Active Offers, Platform Fees & Commission Cuts
                 </Text>
               </View>
             </View>
@@ -2514,7 +2536,7 @@ function UnifiedPlanManagerModal({
                   borderRadius: RADIUS.lg,
                   padding: 10,
                   borderWidth: 1.5,
-                  borderColor: '#e2e8f0',
+                  borderColor: item.isOffer ? '#fde68a' : '#e2e8f0',
                   gap: 8,
                   ...premiumShadow('#0f172a', 'sm'),
                 }}
@@ -2522,7 +2544,7 @@ function UnifiedPlanManagerModal({
                 {/* Compact Row 1: Duration, MRP, Selling Price & Remove */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   {/* Days */}
-                  <View style={{ width: 80 }}>
+                  <View style={{ width: 75 }}>
                     <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#475569', marginBottom: 2 }}>
                       📅 Days
                     </Text>
@@ -2533,7 +2555,7 @@ function UnifiedPlanManagerModal({
                         borderColor: '#cbd5e1',
                         borderRadius: RADIUS.sm,
                         paddingHorizontal: 8,
-                        fontSize: 12.5,
+                        fontSize: 12,
                         fontFamily: FONT.bold,
                         color: '#0f172a',
                         backgroundColor: '#f8fafc',
@@ -2558,7 +2580,7 @@ function UnifiedPlanManagerModal({
                         borderColor: '#cbd5e1',
                         borderRadius: RADIUS.sm,
                         paddingHorizontal: 8,
-                        fontSize: 12.5,
+                        fontSize: 12,
                         fontFamily: FONT.bold,
                         color: '#64748b',
                         backgroundColor: '#f8fafc',
@@ -2582,7 +2604,7 @@ function UnifiedPlanManagerModal({
                         borderColor: '#86efac',
                         borderRadius: RADIUS.sm,
                         paddingHorizontal: 8,
-                        fontSize: 12.5,
+                        fontSize: 12,
                         fontFamily: FONT.extraBold,
                         color: '#16a34a',
                         backgroundColor: '#f0fdf4',
@@ -2637,9 +2659,9 @@ function UnifiedPlanManagerModal({
                     />
                   </View>
 
-                  {/* Advisor Cut */}
+                  {/* Doctor / Advisor Cut */}
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }}>🩺 Advisor (₹)</Text>
+                    <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }}>🩺 Doctor Fee (₹)</Text>
                     <TextInput
                       style={{
                         height: 32,
@@ -2659,9 +2681,9 @@ function UnifiedPlanManagerModal({
                     />
                   </View>
 
-                  {/* Fee Cut */}
+                  {/* Platform Fee */}
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }}>⚡ Fee (₹)</Text>
+                    <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }}>⚡ Platform Fee (₹)</Text>
                     <TextInput
                       style={{
                         height: 32,
@@ -2675,11 +2697,72 @@ function UnifiedPlanManagerModal({
                         backgroundColor: '#ffffff',
                       }}
                       keyboardType="numeric"
-                      placeholder="Auto"
+                      placeholder="Platform Fee"
                       value={item.adminShareValue}
                       onChangeText={(val) => handleUpdateItemField(idx, 'adminShareValue', val)}
                     />
                   </View>
+                </View>
+
+                {/* Compact Row 3: Special Offer (isOffer, offerName, offerPrice, offerValidTill) */}
+                <View style={{ backgroundColor: item.isOffer ? '#fffbeb' : '#f8fafc', padding: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: item.isOffer ? '#fde68a' : '#e2e8f0', gap: 6 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: item.isOffer ? '#b45309' : '#475569' }}>
+                        🎁 Special Offer Active
+                      </Text>
+                    </View>
+                    <Switch
+                      value={item.isOffer}
+                      onValueChange={(val) => handleUpdateItemField(idx, 'isOffer', val)}
+                      trackColor={{ false: '#cbd5e1', true: '#f59e0b' }}
+                      thumbColor="#ffffff"
+                    />
+                  </View>
+
+                  {item.isOffer && (
+                    <View style={{ flexDirection: 'row', gap: 6, marginTop: 2 }}>
+                      <View style={{ flex: 1.5 }}>
+                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#b45309', marginBottom: 2 }}>Offer Name</Text>
+                        <TextInput
+                          style={{
+                            height: 30, borderWidth: 1, borderColor: '#fde68a', borderRadius: RADIUS.sm,
+                            paddingHorizontal: 6, fontSize: 11, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#ffffff',
+                          }}
+                          placeholder="e.g. Festival Offer"
+                          value={item.offerName}
+                          onChangeText={(val) => handleUpdateItemField(idx, 'offerName', val)}
+                        />
+                      </View>
+
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#b45309', marginBottom: 2 }}>Offer Price (₹)</Text>
+                        <TextInput
+                          style={{
+                            height: 30, borderWidth: 1, borderColor: '#fde68a', borderRadius: RADIUS.sm,
+                            paddingHorizontal: 6, fontSize: 11, fontFamily: FONT.bold, color: '#16a34a', backgroundColor: '#ffffff',
+                          }}
+                          keyboardType="numeric"
+                          placeholder="e.g. 499"
+                          value={item.offerPrice}
+                          onChangeText={(val) => handleUpdateItemField(idx, 'offerPrice', val)}
+                        />
+                      </View>
+
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#b45309', marginBottom: 2 }}>Valid Till</Text>
+                        <TextInput
+                          style={{
+                            height: 30, borderWidth: 1, borderColor: '#fde68a', borderRadius: RADIUS.sm,
+                            paddingHorizontal: 6, fontSize: 11, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#ffffff',
+                          }}
+                          placeholder="YYYY-MM-DD"
+                          value={item.offerValidTill}
+                          onChangeText={(val) => handleUpdateItemField(idx, 'offerValidTill', val)}
+                        />
+                      </View>
+                    </View>
+                  )}
                 </View>
               </View>
             ))}

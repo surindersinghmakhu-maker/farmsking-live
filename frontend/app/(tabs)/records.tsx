@@ -1741,13 +1741,13 @@ export default function RecordsScreen() {
       .filter((r) => r > 0);
 
     const ownRate = Number(userSetPrice || 0);
-    const allRates = [...cropRates, ...salesRates, ownRate];
+    const validRates = [...cropRates, ...salesRates, ownRate].filter((r) => r > 0);
 
     // Highest rate across all farmers
-    const highestFarmerRate = allRates.length > 0 ? Math.max(...allRates) : 100;
+    const highestFarmerRate = validRates.length > 0 ? Math.max(...validRates) : 0;
 
-    // Allowed rate is at most 10% above the highest rate across all farmers
-    const maxAllowedRate = Math.round((highestFarmerRate > 0 ? highestFarmerRate : 100) * 1.10);
+    // Allow farmers to record any valid selling rate (up to 1,00,00,000)
+    const maxAllowedRate = 10000000;
 
     return {
       highestFarmerRate,

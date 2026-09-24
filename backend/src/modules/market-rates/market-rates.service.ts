@@ -198,62 +198,26 @@ export class MarketRatesService {
       },
     });
 
-    // Collect ONLY this farmer's crops from HARVESTING or ACTIVE crop cycles.
-    // We do NOT show other farmers' crops or default crops.
-    const distinctCropMap = new Map<string, { cropName: string; unit?: string | null }>();
+    // Collect ONLY this farmer's crops from HARVESTING or ACTIVE crop cycles,
+    // grouping by crop name AND measurement unit so that piece-based and kilo-based rates are calculated separately.
+    const distinctCropMap = new Map<string, { cropName: string; unit: string }>();
 
     for (const c of cropCycles) {
       if (c.cropName) {
         const englishName = toEnglishCropName(c.cropName);
-        const key = englishName.toLowerCase();
+        const rawUnit = (c.unit || 'KG').trim().toUpperCase();
+        const displayUnit = getNormalizedDisplayUnit(rawUnit);
+        const key = `${englishName.toLowerCase()}_${displayUnit.toLowerCase()}`;
         if (!distinctCropMap.has(key)) {
-          distinctCropMap.set(key, { cropName: englishName, unit: c.unit });
+          distinctCropMap.set(key, { cropName: englishName, unit: displayUnit });
         }
       }
     }
 
     const distinctCrops = Array.from(distinctCropMap.values());
 
-function normalizeToPerKg(rawRate: number, rawUnit?: string | null): number {
-  if (isNaN(rawRate) || rawRate <= 0) return 0;
-  const u = (rawUnit || 'KG').toUpperCase();
-  if (u.includes('QUINTAL') || u.includes('QTL')) {
-    return rawRate / 100;
-  }
-  if (u.includes('50') || u.includes('BAG_50')) {
-    return rawRate / 50;
-  }
-  if (u.includes('35') || u.includes('BAG_35')) {
-    return rawRate / 35;
-  }
-  if (u.includes('40') || u.includes('MANN')) {
-    return rawRate / 40;
-  }
-  if (u.includes('TON')) {
-    return rawRate / 1000;
-  }
-  if (u.includes('GRAM') || u.includes('GM')) {
-    return rawRate * 1000;
-  }
-  return rawRate;
-}
-
-const CROP_SYNONYMS: Record<string, string[]> = {
-  rose: ['rose', 'gulab', 'ਗੁਲਾਬ', 'गुलाब'],
-  marigold: ['marigold', 'genda', 'ਗੈਂਦਾ', 'गेंदा'],
-  wheat: ['wheat', 'kanak', 'gehu', 'ਕਣਕ', 'गेहूं'],
-  paddy: ['paddy', 'rice', 'jona', 'dhan', 'ਝੋਨਾ', 'ਚਾਵਲ', 'धान'],
-  tomato: ['tomato', 'tamatar', 'ਟਮਾਟਰ', 'टमाटर'],
-  potato: ['potato', 'aloo', 'ਆਲੂ', 'आलू'],
-  onion: ['onion', 'pyaz', 'ਪਿਆਜ਼', 'प्याज'],
-  mustard: ['mustard', 'sarson', 'ਸਰ੍ਹੋਂ', 'सरसों'],
-  cotton: ['cotton', 'narma', 'kapas', 'ਨਰਮਾ', 'ਕਪਾਹ', 'कपास'],
-  maize: ['maize', 'makki', 'ਮੱਕੀ', 'मक्का'],
-  sugarcane: ['sugarcane', 'ganna', 'kamaad', 'ਗੰਨਾ', 'ਕਮਾਦ', 'गन्ना'],
-};
-
     const rates = await Promise.all(
-      distinctCrops.map(async ({ cropName, unit: cropUnit }) => {
+      distinctCrops.map(async ({ cropName, unit: targetUnit }) => {
         const cropKey = cropName.toLowerCase().split('(')[0].trim();
 
         const localRatePool: number[] = [];
@@ -290,11 +254,11 @@ const CROP_SYNONYMS: Record<string, string[]> = {
         // A) Process SaleItems (recorded within last 24h)
         for (const item of recentSaleItems) {
           if (matchesCrop(item.productName) && isWithin24h(item.createdAt)) {
-            const perKg = normalizeToPerKg(Number(item.pricePerUnit), item.unit);
-            if (perKg > 0) {
-              nationalRatePool.push(perKg);
+            const normalizedRate = normalizeToTargetUnit(Number(item.pricePerUnit), item.unit, targetUnit);
+            if (normalizedRate !== null && normalizedRate > 0) {
+              nationalRatePool.push(normalizedRate);
               if (isUserState(item.sale?.recordedBy?.state)) {
-                localRatePool.push(perKg);
+                localRatePool.push(normalizedRate);
               }
             }
           }
@@ -308,11 +272,11 @@ const CROP_SYNONYMS: Record<string, string[]> = {
               if (matchesCrop(it.cropName || it.productName)) {
                 const itemTime = it.timestamp || it.createdAt || bill.createdAt;
                 if (isWithin24h(itemTime)) {
-                  const perKg = normalizeToPerKg(Number(it.rate || it.pricePerUnit), it.unit);
-                  if (perKg > 0) {
-                    nationalRatePool.push(perKg);
+                  const normalizedRate = normalizeToTargetUnit(Number(it.rate || it.pricePerUnit), it.unit, targetUnit);
+                  if (normalizedRate !== null && normalizedRate > 0) {
+                    nationalRatePool.push(normalizedRate);
                     if (isUserState(bill.farmer?.state)) {
-                      localRatePool.push(perKg);
+                      localRatePool.push(normalizedRate);
                     }
                   }
                 }
@@ -327,18 +291,22 @@ const CROP_SYNONYMS: Record<string, string[]> = {
             continue;
           }
           if (matchesCrop(mr.cropName) && isWithin24h(mr.rateDate)) {
-            const avgPerKg = normalizeToPerKg(Number(mr.modalPrice ?? mr.minPrice ?? mr.maxPrice), mr.unit);
+            const normalizedRate = normalizeToTargetUnit(
+              Number(mr.modalPrice ?? mr.minPrice ?? mr.maxPrice),
+              mr.unit,
+              targetUnit
+            );
 
-            if (avgPerKg > 0) {
-              nationalRatePool.push(avgPerKg);
+            if (normalizedRate !== null && normalizedRate > 0) {
+              nationalRatePool.push(normalizedRate);
               if (isUserState(mr.state)) {
-                localRatePool.push(avgPerKg);
+                localRatePool.push(normalizedRate);
               }
             }
           }
         }
 
-        // Compute State (Local) Level Min, Max, Avg rates (per-KG)
+        // Compute State (Local) Level Min, Max, Avg rates
         let localMinRate: number | null = null;
         let localMaxRate: number | null = null;
         let localAvgRate: number | null = null;
@@ -350,7 +318,7 @@ const CROP_SYNONYMS: Record<string, string[]> = {
           localAvgRate = Math.round((localSum / localRatePool.length) * 100) / 100;
         }
 
-        // Compute National Level Min, Max, Avg rates (per-KG)
+        // Compute National Level Min, Max, Avg rates
         let nationalMinRate: number | null = null;
         let nationalMaxRate: number | null = null;
         let nationalAvgRate: number | null = null;
@@ -364,7 +332,7 @@ const CROP_SYNONYMS: Record<string, string[]> = {
 
         return {
           cropName,
-          unit: 'KG',
+          unit: targetUnit,
           localMinRate,
           localMaxRate,
           localAvgRate,
@@ -380,3 +348,143 @@ const CROP_SYNONYMS: Record<string, string[]> = {
     return { state: userState, rates };
   }
 }
+
+/** Unit family helper: categorizes unit string into COUNT (piece), WEIGHT, DOZEN, or OTHER */
+function getUnitFamily(rawUnit?: string | null): 'COUNT' | 'WEIGHT' | 'DOZEN' | string {
+  if (!rawUnit) return 'WEIGHT';
+  const u = rawUnit.trim().toUpperCase();
+  if (['PIECE', 'PIECES', 'PCS', 'PC', 'NUM', 'NO', 'FLOWER', 'FLOWERS'].includes(u)) {
+    return 'COUNT';
+  }
+  if (['DOZEN', 'DZ'].includes(u)) {
+    return 'DOZEN';
+  }
+  if (
+    [
+      'KG',
+      'KILOGRAM',
+      'KILO',
+      'QUINTAL',
+      'QTL',
+      'QNTL',
+      'TON',
+      'TONNE',
+      'MANN',
+      'MON',
+      'GRAM',
+      'GM',
+      'BAG_50',
+      'BAG_35',
+      'BAG',
+    ].some((w) => u.includes(w))
+  ) {
+    return 'WEIGHT';
+  }
+  return u;
+}
+
+/** Returns standardized display unit (e.g. KG, QUINTAL, PIECE, DOZEN, BOX) */
+function getNormalizedDisplayUnit(rawUnit?: string | null): string {
+  if (!rawUnit) return 'KG';
+  const u = rawUnit.trim().toUpperCase();
+  if (['PIECE', 'PIECES', 'PCS', 'PC', 'NUM', 'NO', 'FLOWER', 'FLOWERS'].includes(u)) {
+    return 'PIECE';
+  }
+  if (['DOZEN', 'DZ'].includes(u)) {
+    return 'DOZEN';
+  }
+  if (u.includes('QUINTAL') || u.includes('QTL')) {
+    return 'QUINTAL';
+  }
+  if (u.includes('TON')) {
+    return 'TON';
+  }
+  if (u.includes('MANN') || u.includes('MON')) {
+    return 'MANN';
+  }
+  if (u.includes('GRAM') || u.includes('GM')) {
+    return 'GRAM';
+  }
+  if (u.includes('KG') || u.includes('KILO')) {
+    return 'KG';
+  }
+  return u;
+}
+
+/** Converts raw rate in itemUnit to targetUnit if they belong to the same unit family. Returns null if families differ. */
+function normalizeToTargetUnit(rawRate: number, itemUnit?: string | null, targetUnit: string = 'KG'): number | null {
+  if (isNaN(rawRate) || rawRate <= 0) return null;
+
+  const itemFamily = getUnitFamily(itemUnit);
+  const targetFamily = getUnitFamily(targetUnit);
+
+  // If families don't match (e.g., piece vs weight), do NOT cross-calculate!
+  if (itemFamily !== targetFamily) {
+    return null;
+  }
+
+  // Count / Piece family: direct 1-to-1 match per piece
+  if (itemFamily === 'COUNT') {
+    return rawRate;
+  }
+
+  // Dozen family: direct match
+  if (itemFamily === 'DOZEN') {
+    return rawRate;
+  }
+
+  // Weight family: normalize to per-KG first, then scale to target unit (KG, QUINTAL, TON, MANN)
+  if (itemFamily === 'WEIGHT') {
+    const itemU = (itemUnit || 'KG').trim().toUpperCase();
+    let perKg = rawRate;
+
+    if (itemU.includes('QUINTAL') || itemU.includes('QTL')) {
+      perKg = rawRate / 100;
+    } else if (itemU.includes('50') || itemU.includes('BAG_50')) {
+      perKg = rawRate / 50;
+    } else if (itemU.includes('35') || itemU.includes('BAG_35')) {
+      perKg = rawRate / 35;
+    } else if (itemU.includes('40') || itemU.includes('MANN') || itemU.includes('MON')) {
+      perKg = rawRate / 40;
+    } else if (itemU.includes('TON')) {
+      perKg = rawRate / 1000;
+    } else if (itemU.includes('GRAM') || itemU.includes('GM')) {
+      perKg = rawRate * 1000;
+    }
+
+    const targetU = targetUnit.trim().toUpperCase();
+    if (targetU.includes('QUINTAL') || targetU.includes('QTL')) {
+      return Math.round(perKg * 100 * 100) / 100;
+    }
+    if (targetU.includes('TON')) {
+      return Math.round(perKg * 1000 * 100) / 100;
+    }
+    if (targetU.includes('MANN') || targetU.includes('MON')) {
+      return Math.round(perKg * 40 * 100) / 100;
+    }
+    if (targetU.includes('GRAM') || targetU.includes('GM')) {
+      return Math.round((perKg / 1000) * 100) / 100;
+    }
+    return Math.round(perKg * 100) / 100;
+  }
+
+  // Custom unit (e.g. BOX, BUNDLE): exact match
+  const normItem = (itemUnit || '').trim().toUpperCase();
+  const normTarget = targetUnit.trim().toUpperCase();
+  return normItem === normTarget ? rawRate : null;
+}
+
+const CROP_SYNONYMS: Record<string, string[]> = {
+  rose: ['rose', 'gulab', 'ਗੁਲਾਬ', 'गुलाब'],
+  marigold: ['marigold', 'genda', 'ਗੈਂਦਾ', 'गेंda'],
+  wheat: ['wheat', 'kanak', 'gehu', 'ਕਣਕ', 'गेहूं'],
+  paddy: ['paddy', 'rice', 'jona', 'dhan', 'ਝੋਨਾ', 'ਚਾਵਲ', 'धान'],
+  tomato: ['tomato', 'tamatar', 'ਟਮਾਟਰ', 'टमाटर'],
+  potato: ['potato', 'aloo', 'ਆਲੂ', 'आलू'],
+  onion: ['onion', 'pyaz', 'ਪਿਆਜ਼', 'प्याज'],
+  mustard: ['mustard', 'sarson', 'ਸਰ੍ਹੋਂ', 'सरसों'],
+  cotton: ['cotton', 'narma', 'kapas', 'ਨਰਮਾ', 'ਕਪਾਹ', 'कपास'],
+  maize: ['maize', 'makki', 'ਮੱਕੀ', 'मक्का'],
+  sugarcane: ['sugarcane', 'ganna', 'kamaad', 'ਗੰਨਾ', 'ਕਮਾਦ', 'गन्ना'],
+};
+

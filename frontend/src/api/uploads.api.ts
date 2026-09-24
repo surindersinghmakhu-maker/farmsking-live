@@ -31,8 +31,6 @@ export async function uploadPhoto(localUri: string): Promise<UploadResponse> {
     } as unknown as Blob);
   }
 
-  const { data } = await apiClient.post<UploadResponse>('/uploads', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  const { data } = await apiClient.post<UploadResponse>('/uploads', formData);
   return data;
 }

@@ -2571,11 +2571,11 @@ function UnifiedPlanManagerModal({
                   ...premiumShadow('#0f172a', 'sm'),
                 }}
               >
-                {/* Compact Row 1: Duration, MRP, Selling Price & Remove */}
+                {/* Single Combined Row for Days, MRP, Commission/Advisor Fee, Doctor Fee & Platform Fee */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   {/* Days */}
-                  <View style={{ width: 75 }}>
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#475569', marginBottom: 2 }}>
+                  <View style={{ width: 62 }}>
+                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#475569', marginBottom: 2 }} numberOfLines={1}>
                       📅 Days
                     </Text>
                     <TextInput
@@ -2584,8 +2584,8 @@ function UnifiedPlanManagerModal({
                         borderWidth: 1,
                         borderColor: '#cbd5e1',
                         borderRadius: RADIUS.sm,
-                        paddingHorizontal: 8,
-                        fontSize: 12,
+                        paddingHorizontal: 6,
+                        fontSize: 11.5,
                         fontFamily: FONT.bold,
                         color: '#0f172a',
                         backgroundColor: '#f8fafc',
@@ -2600,7 +2600,7 @@ function UnifiedPlanManagerModal({
 
                   {/* MRP */}
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#475569', marginBottom: 2 }}>
+                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#475569', marginBottom: 2 }} numberOfLines={1}>
                       🏷️ MRP (₹)
                     </Text>
                     <TextInput
@@ -2609,11 +2609,11 @@ function UnifiedPlanManagerModal({
                         borderWidth: 1,
                         borderColor: '#cbd5e1',
                         borderRadius: RADIUS.sm,
-                        paddingHorizontal: 8,
-                        fontSize: 12,
+                        paddingHorizontal: 6,
+                        fontSize: 11.5,
                         fontFamily: FONT.bold,
-                        color: '#64748b',
-                        backgroundColor: '#f8fafc',
+                        color: '#0f172a',
+                        backgroundColor: '#ffffff',
                       }}
                       keyboardType="numeric"
                       placeholder="1999"
@@ -2622,41 +2622,28 @@ function UnifiedPlanManagerModal({
                     />
                   </View>
 
-
-                  {/* Remove Button */}
-                  <TouchableOpacity
-                    style={{ padding: 6, borderRadius: RADIUS.sm, backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca', marginTop: 14 }}
-                    onPress={() => handleRemoveDurationRow(idx, item.id)}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="trash-outline" size={15} color="#ef4444" />
-                  </TouchableOpacity>
-                </View>
-
-                {/* Compact Row 2: Partner Share, Advisor Cut & Platform Fee */}
-                <View style={{ flexDirection: 'row', gap: 6, backgroundColor: '#f8fafc', padding: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#e2e8f0', alignItems: 'center' }}>
-                  {/* Partner Share */}
+                  {/* Partner Commission / Advisor Fee */}
                   <View style={{ flex: 1.2 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#334155' }}>
-                        {isCareCategory ? '🤝 Advisor Fee' : '🤝 Partner Commission'}
+                      <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#334155' }} numberOfLines={1}>
+                        {isCareCategory ? '🤝 Advisor Fee' : '🤝 Commision'}
                       </Text>
                       <TouchableOpacity
                         onPress={() => handleUpdateItemField(idx, 'partnerShareType', item.partnerShareType === 'PERCENTAGE' ? 'FIXED' : 'PERCENTAGE')}
                       >
-                        <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#0284c7' }}>
+                        <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#0284c7' }}>
                           {item.partnerShareType === 'PERCENTAGE' ? '%' : '₹'}
                         </Text>
                       </TouchableOpacity>
                     </View>
                     <TextInput
                       style={{
-                        height: 32,
+                        height: 34,
                         borderWidth: 1,
                         borderColor: '#cbd5e1',
                         borderRadius: RADIUS.sm,
-                        paddingHorizontal: 8,
-                        fontSize: 12,
+                        paddingHorizontal: 6,
+                        fontSize: 11.5,
                         fontFamily: FONT.bold,
                         color: '#0f172a',
                         backgroundColor: '#ffffff',
@@ -2671,15 +2658,17 @@ function UnifiedPlanManagerModal({
                   {/* Doctor Fee (only for Crop Care plans) */}
                   {isCareCategory && (
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }}>🩺 Doctor Fee (₹)</Text>
+                      <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }} numberOfLines={1}>
+                        🩺 Doctor Fee (₹)
+                      </Text>
                       <TextInput
                         style={{
-                          height: 32,
+                          height: 34,
                           borderWidth: 1,
                           borderColor: '#cbd5e1',
                           borderRadius: RADIUS.sm,
-                          paddingHorizontal: 8,
-                          fontSize: 12,
+                          paddingHorizontal: 6,
+                          fontSize: 11.5,
                           fontFamily: FONT.bold,
                           color: '#0f172a',
                           backgroundColor: '#ffffff',
@@ -2694,15 +2683,17 @@ function UnifiedPlanManagerModal({
 
                   {/* Platform Fee */}
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }}>⚡ Platform Fee (₹)</Text>
+                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }} numberOfLines={1}>
+                      ⚡ Platform Fee (₹)
+                    </Text>
                     <TextInput
                       style={{
-                        height: 32,
+                        height: 34,
                         borderWidth: 1,
                         borderColor: '#cbd5e1',
                         borderRadius: RADIUS.sm,
-                        paddingHorizontal: 8,
-                        fontSize: 12,
+                        paddingHorizontal: 6,
+                        fontSize: 11.5,
                         fontFamily: FONT.bold,
                         color: '#0f172a',
                         backgroundColor: '#ffffff',
@@ -2713,6 +2704,15 @@ function UnifiedPlanManagerModal({
                       onChangeText={(val) => handleUpdateItemField(idx, 'adminShareValue', val)}
                     />
                   </View>
+
+                  {/* Remove Button */}
+                  <TouchableOpacity
+                    style={{ padding: 6, borderRadius: RADIUS.sm, backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca', marginTop: 14 }}
+                    onPress={() => handleRemoveDurationRow(idx, item.id)}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="trash-outline" size={15} color="#ef4444" />
+                  </TouchableOpacity>
                 </View>
 
                 {/* Compact Row 3: Special Offer (isOffer, offerName, offerPrice, offerValidTill) */}

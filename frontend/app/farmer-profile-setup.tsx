@@ -263,30 +263,6 @@ export default function FarmerProfileSetupScreen() {
             </View>
           </View>
 
-          {/* SECTION 3: WHATSAPP GROUP MEMBERSHIP */}
-          <View style={styles.whatsappGroupToggleCard}>
-            <View style={{ flex: 1, paddingRight: 10 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                <Ionicons name="logo-whatsapp" size={18} color="#25D366" />
-                <Text style={styles.whatsappGroupToggleTitle}>WhatsApp Group Membership</Text>
-              </View>
-              <Text style={styles.whatsappGroupToggleSubtitle}>
-                {whatsappGroupEnabled
-                  ? 'ON (Default): Auto-added to official WhatsApp group'
-                  : 'OFF: Immediately removed from official WhatsApp group'}
-              </Text>
-            </View>
-            <Switch
-              value={whatsappGroupEnabled}
-              onValueChange={(val) => {
-                tap();
-                setWhatsappGroupEnabled(val);
-              }}
-              trackColor={{ false: '#cbd5e1', true: '#86efac' }}
-              thumbColor={whatsappGroupEnabled ? '#16a34a' : '#f8fafc'}
-            />
-          </View>
-
           {/* SUBMIT BUTTON: Save Farmer Profile */}
           <TouchableOpacity
             style={[styles.saveButton, premiumShadow('#15803d', 'md')]}

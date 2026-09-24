@@ -117,32 +117,6 @@ export default function NotificationSettingsScreen() {
           </View>
         </View>
 
-        {/* ── WhatsApp Advisor Group Consent Switch (ON by Default) ── */}
-        <View style={styles.card}>
-          <View style={styles.rowBetween}>
-            <View style={[styles.rowIconBg, { backgroundColor: '#dcfce7' }]}>
-              <Ionicons name="logo-whatsapp" size={16} color="#25d366" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.rowLabel}>WhatsApp Advisor Group (ਜੋੜੋ / ਸ਼ਾਮਲ ਹੋਵੋ)</Text>
-              <Text style={styles.rowSubLabel}>
-                {whatsappGroupEnabled
-                  ? 'Auto-join official Advisor WhatsApp group for live advice & updates'
-                  : 'Opted out. You will be removed from the WhatsApp group'}
-              </Text>
-            </View>
-            <Switch
-              value={whatsappGroupEnabled}
-              onValueChange={(val) => {
-                tap();
-                setWhatsappGroupEnabled(val);
-              }}
-              trackColor={{ false: '#cbd5e1', true: '#25d366' }}
-              thumbColor="#ffffff"
-            />
-          </View>
-        </View>
-
         <View style={styles.card}>
           <View style={styles.sectionHeaderRow}>
             <Ionicons name="partly-sunny-outline" size={18} color={theme.primary} />

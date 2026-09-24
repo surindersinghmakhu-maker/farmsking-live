@@ -167,7 +167,6 @@ export default function RegisterScreen() {
         farmAddress: accountType === 'FARMER' && farmAddress.trim() ? farmAddress.trim() : undefined,
         farmMobile: accountType === 'FARMER' && farmMobile.trim() ? farmMobile.trim() : undefined,
         upiId: accountType === 'FARMER' && upiId.trim() ? upiId.trim() : undefined,
-        whatsappGroupEnabled: accountType === 'FARMER' ? whatsappGroupEnabled : undefined,
         pincode: pincode.trim(),
         postOffice: postOffice || undefined,
         district: district || undefined,
@@ -357,24 +356,6 @@ export default function RegisterScreen() {
                 </View>
               </View>
 
-              {/* 3. WhatsApp Group Membership Toggle */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#bbf7d0' }}>
-                <View style={{ flex: 1, paddingRight: 8 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                    <Ionicons name="logo-whatsapp" size={16} color="#25D366" />
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>WhatsApp Group</Text>
-                  </View>
-                  <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 }}>
-                    {whatsappGroupEnabled ? 'Auto-added to official WhatsApp group' : 'Opted out of official WhatsApp group'}
-                  </Text>
-                </View>
-                <Switch
-                  value={whatsappGroupEnabled}
-                  onValueChange={setWhatsappGroupEnabled}
-                  trackColor={{ false: '#cbd5e1', true: '#86efac' }}
-                  thumbColor={whatsappGroupEnabled ? '#16a34a' : '#f8fafc'}
-                />
-              </View>
             </View>
           )}
 

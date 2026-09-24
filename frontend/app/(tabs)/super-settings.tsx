@@ -2227,7 +2227,7 @@ function PlanCardGroup({
           onPress={onEditTier}
         >
           <Ionicons name="create-outline" size={14} color="#ffffff" />
-          <Text style={styles.variantEditBtnText}>Edit {planKey} ({meta.label})</Text>
+          <Text style={styles.variantEditBtnText}>Edit {planKey} Plan</Text>
         </TouchableOpacity>
       </View>
 
@@ -2237,7 +2237,7 @@ function PlanCardGroup({
         <Text style={styles.cardSectionTitle}>💰 Duration Plans, Prices & Cuts</Text>
         {items.length === 0 ? (
           <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8', fontStyle: 'italic' }}>
-            No duration options added yet. Click "Edit {planKey} ({meta.label})" above to add duration plans.
+            No duration options added yet. Click "Edit {planKey} Plan" above to add duration plans.
           </Text>
         ) : (
           <View style={{ gap: 8 }}>
@@ -2422,7 +2422,7 @@ function UnifiedPlanManagerModal({
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.modalTitle, { color: '#0f172a', fontSize: 15 }]}>
-                  Edit {activeTab} — {planMeta?.label}
+                  Edit {activeTab} Plan
                 </Text>
                 <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
                   Compact pricing, commission cuts & feature toggles

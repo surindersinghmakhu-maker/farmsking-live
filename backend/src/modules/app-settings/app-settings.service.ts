@@ -194,6 +194,7 @@ export class AppSettingsService {
       'otpDeliveryChannel',
       'referralSignupBonusAmount',
       'newUserSignupBonusAmount',
+      'referralPaidPlanBonusAmount',
       'appDownloadUrl',
       'latestAppVersion',
       'storefrontMaintenanceMode',

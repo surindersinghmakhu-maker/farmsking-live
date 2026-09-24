@@ -233,23 +233,39 @@ export default function RegisterScreen() {
               />
             </View>
 
-            {/* King ID Found Badge */}
-            {isSearchingMobile ? (
-              <View style={styles.statusBadgeRow}>
-                <ActivityIndicator size="small" color="#16a34a" />
-                <Text style={styles.statusBadgeText}>Checking King ID & existing account...</Text>
-              </View>
-            ) : searchMobileResult?.user?.kingId ? (
-              <View style={styles.kingIdBadge}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                  <Ionicons name="checkmark-circle" size={15} color="#16a34a" />
-                  <Text style={styles.kingIdTitle}>✨ King ID Found: {searchMobileResult.user.kingId}</Text>
+            {/* King ID & Account Status Badge */}
+            {values.mobile.trim().replace(/\D/g, '').length === 10 ? (
+              isSearchingMobile ? (
+                <View style={styles.statusBadgeRow}>
+                  <ActivityIndicator size="small" color="#16a34a" />
+                  <Text style={styles.statusBadgeText}>Checking King ID & existing account...</Text>
                 </View>
-                {searchMobileResult.user.name ? (
-                  <Text style={styles.kingIdSub}>Name: {searchMobileResult.user.name}</Text>
-                ) : null}
-                <Text style={styles.kingIdHint}>Your new account will link to this same King ID!</Text>
-              </View>
+              ) : searchMobileResult?.user?.kingId || searchMobileResult?.exists ? (
+                <View style={styles.kingIdBadgeExisting}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                    <Ionicons name="information-circle" size={16} color="#d97706" />
+                    <Text style={[styles.kingIdTitle, { color: '#b45309' }]}>
+                      ⚠️ Mobile Already Registered! (King ID: {searchMobileResult.user?.kingId || 'Existing Account'})
+                    </Text>
+                  </View>
+                  {searchMobileResult.user?.name ? (
+                    <Text style={styles.kingIdSub}>Name: {searchMobileResult.user.name}</Text>
+                  ) : null}
+                  <Text style={[styles.kingIdHint, { color: '#92400e' }]}>
+                    ਇਹ ਮੋਬਾਈਲ ਨੰਬਰ ਪਹਿਲਾਂ ਤੋਂ ਰਜਿਸਟਰਡ ਹੈ। ਨਵਾਂ ਅਕਾਊਂਟ ਇਸੇ King ID ਨਾਲ ਲਿੰਕ ਹੋ ਜਾਵੇਗਾ।
+                  </Text>
+                </View>
+              ) : searchMobileResult ? (
+                <View style={styles.kingIdBadgeNew}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                    <Ionicons name="sparkles" size={15} color="#16a34a" />
+                    <Text style={styles.kingIdTitle}>✨ New Mobile Number! (ਨਵਾਂ ਮੋਬਾਈਲ ਨੰਬਰ)</Text>
+                  </View>
+                  <Text style={styles.kingIdHint}>
+                    ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਪੂਰੀ ਹੋਣ 'ਤੇ ਤੁਹਾਡੀ ਇੱਕ ਬਿਲਕੁਲ ਨਵੀਂ King ID ਤਿਆਰ ਹੋ ਜਾਵੇਗੀ।
+                  </Text>
+                </View>
+              ) : null
             ) : null}
           </View>
 
@@ -613,6 +629,22 @@ const styles = StyleSheet.create({
   statusBadgeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
   statusBadgeText: { fontSize: 11, fontFamily: FONT.medium, color: '#16a34a' },
   kingIdBadge: {
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1.5,
+    borderColor: '#86efac',
+    padding: 8,
+    borderRadius: RADIUS.md,
+    marginTop: 6,
+  },
+  kingIdBadgeExisting: {
+    backgroundColor: '#fefce8',
+    borderWidth: 1.5,
+    borderColor: '#fde047',
+    padding: 8,
+    borderRadius: RADIUS.md,
+    marginTop: 6,
+  },
+  kingIdBadgeNew: {
     backgroundColor: '#f0fdf4',
     borderWidth: 1.5,
     borderColor: '#86efac',

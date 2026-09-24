@@ -1015,30 +1015,48 @@ export default function FarmListScreen() {
                         )}
                       </View>
 
-                      {/* Row 2: Crop Info (Variety, Area, Plants) & Crop Period (Sown -> Completion) */}
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
-                          <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#15803d' }}>
-                            🌾 {hItem.cropName} {hItem.variety ? `· ${hItem.variety}` : ''}
+                      {/* Row 2: Crop Period Timeline Strip (Under Farm/Plot Name) */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f8fafc', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                          <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>
+                            Crop Period:
                           </Text>
-                          {hItem.area ? (
-                            <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#334155' }}>
-                              · 📐 {hItem.area}
-                            </Text>
-                          ) : null}
-                          {hItem.plantCount ? (
-                            <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#334155' }}>
-                              · 🪴 {hItem.plantCount} Plants
-                            </Text>
-                          ) : null}
-                        </View>
 
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#f8fafc', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                          <Ionicons name="calendar-outline" size={10.5} color="#64748b" />
-                          <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#334155' }}>
-                            Crop Period: {hItem.sowingDate ? hItem.sowingDate.replace(/\s*\([^)]*\)/g, '').trim() : 'Sown'} → {summary.completionDateStr}
-                          </Text>
+                          {/* Sown Date Badge */}
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: '#fff7ed', paddingHorizontal: 5, paddingVertical: 1.5, borderRadius: 5, borderWidth: 1, borderColor: '#ffedd5' }}>
+                            <Ionicons name="leaf" size={10} color="#d97706" />
+                            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#b45309' }}>
+                              Sown: {hItem.sowingDate ? hItem.sowingDate.replace(/\s*\([^)]*\)/g, '').trim() : 'Sown'}
+                            </Text>
+                          </View>
+
+                          <Ionicons name="arrow-forward-sharp" size={10} color="#94a3b8" />
+
+                          {/* Completion Date Badge */}
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, backgroundColor: '#ecfdf5', paddingHorizontal: 5, paddingVertical: 1.5, borderRadius: 5, borderWidth: 1, borderColor: '#a7f3d0' }}>
+                            <Ionicons name="flag" size={9.5} color="#15803d" />
+                            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }}>
+                              Completed: {summary.completionDateStr}
+                            </Text>
+                          </View>
                         </View>
+                      </View>
+
+                      {/* Row 3: Crop Name, Variety, Area & Plant Count */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
+                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#15803d' }}>
+                          🌾 {hItem.cropName} {hItem.variety ? `· ${hItem.variety}` : ''}
+                        </Text>
+                        {hItem.area ? (
+                          <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#334155' }}>
+                            · 📐 {hItem.area}
+                          </Text>
+                        ) : null}
+                        {hItem.plantCount ? (
+                          <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#334155' }}>
+                            · 🪴 {hItem.plantCount} Plants
+                          </Text>
+                        ) : null}
                       </View>
 
                       {/* Compact Financial Summary Breakdown Grid (4 Badges) */}

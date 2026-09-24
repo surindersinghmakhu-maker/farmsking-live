@@ -586,9 +586,9 @@ export default function ProfileScreen() {
               <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
                 <Text style={styles.sectionHeaderTitle}>📍 Location & Address</Text>
 
-                <Text style={styles.inputLabel}>Postal PIN Code</Text>
+                <Text style={styles.inputLabel}>Postal PIN Code *</Text>
                 <View style={styles.pincodeRow}>
-                  <View style={[styles.inputWrap, { flex: 1, backgroundColor: '#f8fafc' }]}>
+                  <View style={[styles.inputWrap, { flex: 1, backgroundColor: '#ffffff' }]}>
                     <TextInput
                       style={styles.input}
                       placeholder="6-digit PIN"
@@ -618,24 +618,10 @@ export default function ProfileScreen() {
                   </Text>
                 ) : null}
 
-                <Text style={[styles.inputLabel, { marginTop: 8 }]}>Post Office / Locality</Text>
-                {officeOptions.length > 0 ? (
-                  postOffice && !isPostOfficeExpanded ? (
-                    <TouchableOpacity
-                      style={[styles.selectedOfficeCard, { borderColor: theme.primary, backgroundColor: '#f0fdf4' }]}
-                      activeOpacity={0.85}
-                      onPress={() => { tap(); setIsPostOfficeExpanded(true); }}
-                    >
-                      <Ionicons name="checkmark-circle" size={18} color={theme.primary} />
-                      <Text style={[styles.selectedOfficeText, { color: theme.primary }]} numberOfLines={1}>
-                        {postOffice} ({district})
-                      </Text>
-                      <View style={[styles.changePill, { borderColor: theme.primary }]}>
-                        <Text style={[styles.changePillText, { color: theme.primary }]}>Change</Text>
-                        <Ionicons name="chevron-down" size={12} color={theme.primary} />
-                      </View>
-                    </TouchableOpacity>
-                  ) : (
+                {/* Read-Only Information Labels for Post Office, District & State */}
+                <View style={{ gap: 8, marginTop: 6 }}>
+                  <Text style={styles.inputLabel}>Post Office / Locality</Text>
+                  {officeOptions.length > 0 && isPostOfficeExpanded ? (
                     <View style={styles.expandedOfficeList}>
                       {officeOptions.map((off) => {
                         const isSel = off.name === postOffice;
@@ -657,37 +643,63 @@ export default function ProfileScreen() {
                         );
                       })}
                     </View>
-                  )
-                ) : (
-                  <TextInput
-                    style={styles.input}
-                    value={postOffice}
-                    onChangeText={setPostOffice}
-                    placeholder="Post Office Name"
-                    placeholderTextColor="#94a3b8"
-                  />
-                )}
+                  ) : (
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justify: 'space-between',
+                        backgroundColor: '#f8fafc',
+                        paddingHorizontal: 12,
+                        paddingVertical: 10,
+                        borderRadius: RADIUS.md,
+                        borderWidth: 1,
+                        borderColor: '#e2e8f0',
+                      }}
+                      activeOpacity={officeOptions.length > 0 ? 0.8 : 1}
+                      onPress={() => {
+                        if (officeOptions.length > 0) {
+                          tap();
+                          setIsPostOfficeExpanded(true);
+                        }
+                      }}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                        <Ionicons name="mail-outline" size={16} color="#64748b" />
+                        <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: postOffice ? '#0f172a' : '#94a3b8' }} numberOfLines={1}>
+                          {postOffice || 'Auto-fetched from PIN Code'}
+                        </Text>
+                      </View>
+                      {officeOptions.length > 0 && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+                          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: theme.primary }}>Select</Text>
+                          <Ionicons name="chevron-down" size={13} color={theme.primary} />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  )}
 
-                <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.inputLabel}>District</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={district}
-                      onChangeText={setDistrict}
-                      placeholder="District"
-                      placeholderTextColor="#94a3b8"
-                    />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.inputLabel}>State</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={state}
-                      onChangeText={setState}
-                      placeholder="State"
-                      placeholderTextColor="#94a3b8"
-                    />
+                  {/* District & State Labels */}
+                  <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.inputLabel}>District</Text>
+                      <View style={{ backgroundColor: '#f8fafc', paddingHorizontal: 12, paddingVertical: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Ionicons name="business-outline" size={15} color="#64748b" />
+                        <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: district ? '#0f172a' : '#94a3b8' }} numberOfLines={1}>
+                          {district || '—'}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.inputLabel}>State</Text>
+                      <View style={{ backgroundColor: '#f8fafc', paddingHorizontal: 12, paddingVertical: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Ionicons name="map-outline" size={15} color="#64748b" />
+                        <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: state ? '#0f172a' : '#94a3b8' }} numberOfLines={1}>
+                          {state || '—'}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
                 </View>
               </View>

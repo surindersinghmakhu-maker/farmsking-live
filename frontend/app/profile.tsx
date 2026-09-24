@@ -66,6 +66,8 @@ export default function ProfileScreen() {
   const [photoUrl, setPhotoUrl] = useState<string | null>(user?.photoUrl ?? null);
 
   const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState<boolean>(user?.whatsappGroupEnabled ?? true);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   // Labour Family Profile Switcher state (when logged in as Labour role)
   const isLabour = user?.role === 'LABOUR';
@@ -104,9 +106,6 @@ export default function ProfileScreen() {
       if (user.photoUrl !== undefined) setPhotoUrl(user.photoUrl ?? null);
     }
   }, [user?.id, user?.upiId, user?.farmName, user?.farmAddress, user?.farmMobile, user?.name, user?.email, user?.whatsappGroupEnabled, user?.photoUrl, isUploadingPhoto]);
-
-  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   const [pincode, setPincode] = useState(user?.pincode ?? '');
   const [postOffice, setPostOffice] = useState(user?.postOffice ?? '');

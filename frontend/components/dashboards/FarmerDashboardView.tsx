@@ -98,7 +98,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         subtitle={user?.village ? `🌾 ${user.village}` : 'Farmer Profile'}
         avatarUrl={user?.photoUrl || undefined}
         planBadge={
-          <View style={{ alignItems: 'flex-end', gap: 3 }}>
+          <View style={{ alignItems: 'flex-end', gap: 4 }}>
             {isTrialActive ? (
               <View style={styles.topTrialPill}>
                 <Ionicons name="sparkles" size={10} color="#ffffff" />
@@ -107,14 +107,14 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
             ) : null}
 
             <View style={styles.highlightPlanBadge}>
-              <Ionicons name={currentPlanMeta.icon} size={13} color={currentPlanMeta.color} />
+              <Ionicons name={currentPlanMeta.icon} size={13} color="#d97706" />
               <Text style={styles.highlightPlanBadgeText} numberOfLines={1}>
                 {meta.label}
               </Text>
             </View>
 
             {plan !== 'FREE' && !isExpired && daysUntilExpiry !== null ? (
-              <Text style={[styles.planDaysLeftText, { fontSize: 10, textAlign: 'right' }]}>
+              <Text style={[styles.planDaysLeftText, { fontSize: 10.5, color: '#fef08a', textAlign: 'right', fontFamily: FONT.bold }]}>
                 ⏳ {daysUntilExpiry}d left{formattedExpiry ? ` (Till: ${formattedExpiry})` : ''}
               </Text>
             ) : null}
@@ -128,11 +128,12 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
                 setIsPlanModalOpen(true);
               }}
             >
-              <Ionicons name={currentPlanMeta.icon} size={12} color="#facc15" />
+              <Ionicons name={currentPlanMeta.icon} size={12} color="#f59e0b" />
               <Text style={styles.planActionBtnText} numberOfLines={1}>Farmer Pass</Text>
             </TouchableOpacity>
           </View>
         }
+
       />
 
       <FarmerPlanUpgradeModal
@@ -702,13 +703,14 @@ const styles = StyleSheet.create({
   highlightPlanBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#fef3c7',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    gap: 5,
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 9,
+    paddingVertical: 3.5,
     borderRadius: RADIUS.pill,
     borderWidth: 1.5,
-    borderColor: '#fcd34d',
+    borderColor: '#fde68a',
+    ...premiumShadow('#000000', 'xs'),
   },
   highlightPlanBadgeText: {
     fontSize: 11,
@@ -777,19 +779,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#d97706',
-    paddingHorizontal: 8,
+    backgroundColor: '#b45309',
+    paddingHorizontal: 9,
     paddingVertical: 3,
     borderRadius: RADIUS.pill,
-    marginBottom: 2,
+    borderWidth: 1,
+    borderColor: '#f59e0b',
+    marginBottom: 1,
   },
   topTrialPillText: {
     fontSize: 9.5,
     fontFamily: FONT.extraBold,
     color: '#ffffff',
-    letterSpacing: 0.3,
+    letterSpacing: 0.4,
   },
 });
+
 
 
 

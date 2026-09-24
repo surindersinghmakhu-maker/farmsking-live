@@ -2350,14 +2350,17 @@ function UnifiedPlanManagerModal({
       setFormItems(
         currentTabItems.map((item) => {
           const mrpNum = Number(item.mrp ?? item.price ?? 0);
-          const valNum = Number(item.partnerShareValue ?? 10);
-          const type = item.partnerShareType ?? 'PERCENTAGE';
-          const commisionAmt = type === 'FIXED' ? valNum : (mrpNum * (valNum / 100));
-          const pPercent = type === 'PERCENTAGE' ? String(valNum) : (mrpNum > 0 ? String(Math.round((valNum / mrpNum) * 100)) : '');
-          const pAmount = String(Math.round(commisionAmt));
-          const docFee = Number(item.advisorShareValue || 0);
-          const calcAdmin = Math.max(0, Math.round(mrpNum - commisionAmt - docFee));
-          const adminFee = item.adminShareValue ? String(item.adminShareValue) : String(calcAdmin);
+          const defaultPlat = Math.round(mrpNum * 0.10);
+          const adminFee = item.adminShareValue ? String(item.adminShareValue) : String(defaultPlat);
+          const platNum = Number(adminFee || 0);
+          const docFeeNum = Number(item.advisorShareValue || 0);
+          
+          const valNum = Number(item.partnerShareValue ?? 0);
+          const type = item.partnerShareType ?? 'FIXED';
+          const calculatedAdvisorFee = Math.max(0, Math.round(mrpNum - platNum - docFeeNum));
+          const pAmount = item.partnerShareValue ? String(valNum) : String(calculatedAdvisorFee);
+          const pPercent = mrpNum > 0 ? String(Math.round((Number(pAmount) / mrpNum) * 100)) : '0';
+
           return {
             id: item.id,
             mrp: String(item.mrp ?? item.price ?? ''),
@@ -2368,7 +2371,7 @@ function UnifiedPlanManagerModal({
             offerPrice: item.offerPrice ? String(item.offerPrice) : '',
             offerValidTill: item.offerValidTill ? formatToDDMMYY(item.offerValidTill) : '',
             partnerShareType: type,
-            partnerShareValue: String(valNum),
+            partnerShareValue: pAmount,
             partnerSharePercent: pPercent,
             partnerShareAmount: pAmount,
             advisorShareValue: item.advisorShareValue ? String(item.advisorShareValue) : '',
@@ -2387,12 +2390,12 @@ function UnifiedPlanManagerModal({
           offerName: '',
           offerPrice: '',
           offerValidTill: '',
-          partnerShareType: 'PERCENTAGE',
-          partnerShareValue: '10',
-          partnerSharePercent: '10',
-          partnerShareAmount: '200',
+          partnerShareType: 'FIXED',
+          partnerShareValue: '1699',
+          partnerSharePercent: '85',
+          partnerShareAmount: '1699',
           advisorShareValue: '100',
-          adminShareValue: '1699',
+          adminShareValue: '200',
         },
       ]);
     }
@@ -2413,12 +2416,12 @@ function UnifiedPlanManagerModal({
         offerName: '',
         offerPrice: '',
         offerValidTill: '',
-        partnerShareType: 'PERCENTAGE',
-        partnerShareValue: '10',
-        partnerSharePercent: '10',
-        partnerShareAmount: '50',
+        partnerShareType: 'FIXED',
+        partnerShareValue: '399',
+        partnerSharePercent: '80',
+        partnerShareAmount: '399',
         advisorShareValue: '50',
-        adminShareValue: '399',
+        adminShareValue: '50',
       },
     ]);
   };
@@ -2438,34 +2441,50 @@ function UnifiedPlanManagerModal({
       const item = { ...copy[index], [field]: value };
       const mrpNum = Number(field === 'mrp' ? value : item.mrp || 0);
 
-      if (field === 'partnerSharePercent') {
-        item.partnerShareType = 'PERCENTAGE';
-        item.partnerShareValue = value;
-        const pct = Number(value || 0);
-        const commAmt = Math.round(mrpNum * (pct / 100));
-        item.partnerShareAmount = mrpNum > 0 && value !== '' ? String(commAmt) : '';
+      if (field === 'mrp') {
+        const platFee = Math.round(mrpNum * 0.10);
+        item.adminShareValue = mrpNum > 0 ? String(platFee) : '';
+        const docFee = Number(item.advisorShareValue || 0);
+        const advisorFee = Math.max(0, Math.round(mrpNum - platFee - docFee));
+        item.partnerShareAmount = mrpNum > 0 ? String(advisorFee) : '';
+        if (mrpNum > 0 && advisorFee > 0) {
+          item.partnerSharePercent = String(Math.round((advisorFee / mrpNum) * 100));
+        }
+      } else if (field === 'adminShareValue') {
+        const platFee = Number(value || 0);
+        const docFee = Number(item.advisorShareValue || 0);
+        const advisorFee = Math.max(0, Math.round(mrpNum - platFee - docFee));
+        item.partnerShareAmount = mrpNum > 0 ? String(advisorFee) : '';
+        if (mrpNum > 0 && advisorFee > 0) {
+          item.partnerSharePercent = String(Math.round((advisorFee / mrpNum) * 100));
+        }
+      } else if (field === 'advisorShareValue') {
+        const docFee = Number(value || 0);
+        const platFee = Number(item.adminShareValue || Math.round(mrpNum * 0.10));
+        const advisorFee = Math.max(0, Math.round(mrpNum - platFee - docFee));
+        item.partnerShareAmount = mrpNum > 0 ? String(advisorFee) : '';
+        if (mrpNum > 0 && advisorFee > 0) {
+          item.partnerSharePercent = String(Math.round((advisorFee / mrpNum) * 100));
+        }
       } else if (field === 'partnerShareAmount') {
         item.partnerShareType = 'FIXED';
         item.partnerShareValue = value;
-        const amt = Number(value || 0);
-        const pct = mrpNum > 0 ? Math.round((amt / mrpNum) * 100) : 0;
-        item.partnerSharePercent = mrpNum > 0 && value !== '' ? String(pct) : '';
-      } else if (field === 'mrp') {
-        const pct = Number(item.partnerSharePercent || 0);
-        if (item.partnerShareType === 'PERCENTAGE' && item.partnerSharePercent !== '') {
-          item.partnerShareAmount = mrpNum > 0 ? String(Math.round(mrpNum * (pct / 100))) : '';
-        } else if (item.partnerShareType === 'FIXED' && item.partnerShareAmount !== '') {
-          const amt = Number(item.partnerShareAmount || 0);
-          item.partnerSharePercent = mrpNum > 0 ? String(Math.round((amt / mrpNum) * 100)) : '';
+        const advFee = Number(value || 0);
+        const platFee = Number(item.adminShareValue || Math.round(mrpNum * 0.10));
+        const docFee = Math.max(0, Math.round(mrpNum - platFee - advFee));
+        item.advisorShareValue = mrpNum > 0 ? String(docFee) : item.advisorShareValue;
+        if (mrpNum > 0) {
+          item.partnerSharePercent = String(Math.round((advFee / mrpNum) * 100));
         }
-      }
-
-      // Auto-calculate Platform Fee (₹) = MRP (₹) - Commision (₹) - Doctor Fee (₹)
-      if (field !== 'adminShareValue') {
-        const commAmt = Number(item.partnerShareAmount || 0);
-        const docAmt = Number(item.advisorShareValue || 0);
-        const platformFee = Math.max(0, Math.round(mrpNum - commAmt - docAmt));
-        item.adminShareValue = mrpNum > 0 ? String(platformFee) : item.adminShareValue;
+      } else if (field === 'partnerSharePercent') {
+        item.partnerShareType = 'PERCENTAGE';
+        item.partnerShareValue = value;
+        const pct = Number(value || 0);
+        const advFee = Math.round(mrpNum * (pct / 100));
+        item.partnerShareAmount = mrpNum > 0 && value !== '' ? String(advFee) : '';
+        const platFee = Number(item.adminShareValue || Math.round(mrpNum * 0.10));
+        const docFee = Math.max(0, Math.round(mrpNum - platFee - advFee));
+        item.advisorShareValue = mrpNum > 0 ? String(docFee) : item.advisorShareValue;
       }
 
       copy[index] = item;
@@ -2621,11 +2640,11 @@ function UnifiedPlanManagerModal({
                   ...premiumShadow('#0f172a', 'sm'),
                 }}
               >
-                {/* Single Combined Row for Days, MRP, Commission/Advisor Fee, Doctor Fee & Platform Fee */}
+                {/* Single Combined Row: Days -> MRP -> Platform Fee -> Doctor Fee -> Advisor Fee -> Trash */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  {/* Days */}
-                  <View style={{ width: 62 }}>
-                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#475569', marginBottom: 2 }} numberOfLines={1}>
+                  {/* 1. Days */}
+                  <View style={{ width: 60 }}>
+                    <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#475569', marginBottom: 2 }} numberOfLines={1}>
                       📅 Days
                     </Text>
                     <TextInput
@@ -2634,8 +2653,8 @@ function UnifiedPlanManagerModal({
                         borderWidth: 1,
                         borderColor: '#cbd5e1',
                         borderRadius: RADIUS.sm,
-                        paddingHorizontal: 6,
-                        fontSize: 11.5,
+                        paddingHorizontal: 4,
+                        fontSize: 11,
                         fontFamily: FONT.bold,
                         color: '#0f172a',
                         backgroundColor: '#f8fafc',
@@ -2648,9 +2667,9 @@ function UnifiedPlanManagerModal({
                     />
                   </View>
 
-                  {/* MRP */}
+                  {/* 2. MRP */}
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#475569', marginBottom: 2 }} numberOfLines={1}>
+                    <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#475569', marginBottom: 2 }} numberOfLines={1}>
                       🏷️ MRP (₹)
                     </Text>
                     <TextInput
@@ -2660,7 +2679,7 @@ function UnifiedPlanManagerModal({
                         borderColor: '#cbd5e1',
                         borderRadius: RADIUS.sm,
                         paddingHorizontal: 6,
-                        fontSize: 11.5,
+                        fontSize: 11,
                         fontFamily: FONT.bold,
                         color: '#0f172a',
                         backgroundColor: '#ffffff',
@@ -2672,35 +2691,10 @@ function UnifiedPlanManagerModal({
                     />
                   </View>
 
-                  {/* Partner Commission / Advisor Fee */}
-                  {!isCareCategory && (
-                    <View style={{ flex: 0.9 }}>
-                      <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }} numberOfLines={1}>
-                        🤝 Commision %
-                      </Text>
-                      <TextInput
-                        style={{
-                          height: 34,
-                          borderWidth: 1,
-                          borderColor: '#cbd5e1',
-                          borderRadius: RADIUS.sm,
-                          paddingHorizontal: 6,
-                          fontSize: 11.5,
-                          fontFamily: FONT.bold,
-                          color: '#0f172a',
-                          backgroundColor: '#ffffff',
-                        }}
-                        keyboardType="numeric"
-                        placeholder="10%"
-                        value={item.partnerSharePercent}
-                        onChangeText={(val) => handleUpdateItemField(idx, 'partnerSharePercent', val)}
-                      />
-                    </View>
-                  )}
-
-                  <View style={{ flex: 1.1 }}>
-                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }} numberOfLines={1}>
-                      {isCareCategory ? '🤝 Advisor Fee (₹)' : '🤝 Commision (₹)'}
+                  {/* 3. Platform Fee (₹) immediately to the right of MRP */}
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }} numberOfLines={1}>
+                      ⚡ Platform (₹)
                     </Text>
                     <TextInput
                       style={{
@@ -2709,23 +2703,23 @@ function UnifiedPlanManagerModal({
                         borderColor: '#cbd5e1',
                         borderRadius: RADIUS.sm,
                         paddingHorizontal: 6,
-                        fontSize: 11.5,
+                        fontSize: 11,
                         fontFamily: FONT.bold,
                         color: '#0f172a',
                         backgroundColor: '#ffffff',
                       }}
                       keyboardType="numeric"
-                      placeholder="₹ Amount"
-                      value={item.partnerShareAmount}
-                      onChangeText={(val) => handleUpdateItemField(idx, 'partnerShareAmount', val)}
+                      placeholder="10%"
+                      value={item.adminShareValue}
+                      onChangeText={(val) => handleUpdateItemField(idx, 'adminShareValue', val)}
                     />
                   </View>
 
-                  {/* Doctor Fee (only for Crop Care plans) */}
+                  {/* 4. Doctor Fee (₹) (only for Crop Care plans) */}
                   {isCareCategory && (
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }} numberOfLines={1}>
-                        🩺 Doctor Fee (₹)
+                      <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }} numberOfLines={1}>
+                        🩺 Doctor (₹)
                       </Text>
                       <TextInput
                         style={{
@@ -2734,23 +2728,49 @@ function UnifiedPlanManagerModal({
                           borderColor: '#cbd5e1',
                           borderRadius: RADIUS.sm,
                           paddingHorizontal: 6,
-                          fontSize: 11.5,
+                          fontSize: 11,
                           fontFamily: FONT.bold,
                           color: '#0f172a',
                           backgroundColor: '#ffffff',
                         }}
                         keyboardType="numeric"
-                        placeholder="100"
+                        placeholder="Manual"
                         value={item.advisorShareValue}
                         onChangeText={(val) => handleUpdateItemField(idx, 'advisorShareValue', val)}
                       />
                     </View>
                   )}
 
-                  {/* Platform Fee */}
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }} numberOfLines={1}>
-                      ⚡ Platform Fee (₹)
+                  {/* Commision % (for membership plans) */}
+                  {!isCareCategory && (
+                    <View style={{ flex: 0.8 }}>
+                      <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }} numberOfLines={1}>
+                        🤝 Comm %
+                      </Text>
+                      <TextInput
+                        style={{
+                          height: 34,
+                          borderWidth: 1,
+                          borderColor: '#cbd5e1',
+                          borderRadius: RADIUS.sm,
+                          paddingHorizontal: 6,
+                          fontSize: 11,
+                          fontFamily: FONT.bold,
+                          color: '#0f172a',
+                          backgroundColor: '#ffffff',
+                        }}
+                        keyboardType="numeric"
+                        placeholder="%"
+                        value={item.partnerSharePercent}
+                        onChangeText={(val) => handleUpdateItemField(idx, 'partnerSharePercent', val)}
+                      />
+                    </View>
+                  )}
+
+                  {/* 5. Advisor Fee (₹) / Commision (₹) */}
+                  <View style={{ flex: 1.1 }}>
+                    <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }} numberOfLines={1}>
+                      {isCareCategory ? '🤝 Advisor (₹)' : '🤝 Commision (₹)'}
                     </Text>
                     <TextInput
                       style={{
@@ -2759,19 +2779,19 @@ function UnifiedPlanManagerModal({
                         borderColor: '#cbd5e1',
                         borderRadius: RADIUS.sm,
                         paddingHorizontal: 6,
-                        fontSize: 11.5,
+                        fontSize: 11,
                         fontFamily: FONT.bold,
                         color: '#0f172a',
                         backgroundColor: '#ffffff',
                       }}
                       keyboardType="numeric"
-                      placeholder="Platform Fee"
-                      value={item.adminShareValue}
-                      onChangeText={(val) => handleUpdateItemField(idx, 'adminShareValue', val)}
+                      placeholder="Auto"
+                      value={item.partnerShareAmount}
+                      onChangeText={(val) => handleUpdateItemField(idx, 'partnerShareAmount', val)}
                     />
                   </View>
 
-                  {/* Remove Button */}
+                  {/* 6. Trash / Delete */}
                   <TouchableOpacity
                     style={{ padding: 6, borderRadius: RADIUS.sm, backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca', marginTop: 14 }}
                     onPress={() => handleRemoveDurationRow(idx, item.id)}

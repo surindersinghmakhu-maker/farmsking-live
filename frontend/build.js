@@ -49,6 +49,14 @@ try {
     fs.cpSync(publicDir, distDir, { recursive: true });
   }
 
+  const distIndexPath = path.join(distDir, 'index.html');
+  if (fs.existsSync(distIndexPath)) {
+    let indexHtml = fs.readFileSync(distIndexPath, 'utf8');
+    const metaCacheHeaders = `<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" /><meta http-equiv="Pragma" content="no-cache" /><meta http-equiv="Expires" content="0" />`;
+    indexHtml = indexHtml.replace('<head>', `<head>${metaCacheHeaders}`);
+    fs.writeFileSync(distIndexPath, indexHtml, 'utf8');
+  }
+
   console.log('✅ Expo Web build completed successfully!');
 } catch (err) {
   console.error('❌ Build failed:', err.message);

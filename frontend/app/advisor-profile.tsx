@@ -15,12 +15,21 @@ const theme = RoleThemes.FARM_ADVISOR;
 
 export default function AdvisorProfileScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, updateUser, refreshUser } = useAuth();
   const updateProfile = useUpdateAdvisorProfile();
 
   const [localPhotoUri, setLocalPhotoUri] = useState<string | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(user?.photoUrl ?? null);
-  const [specialization, setSpecialization] = useState(user?.specialization ?? '');
+
+  React.useEffect(() => {
+    if (user?.photoUrl !== undefined) {
+      setPhotoUrl(user.photoUrl ?? null);
+    }
+  }, [user?.photoUrl]);
+
+  const specializationState = useState(user?.specialization ?? '');
+  const specialization = specializationState[0];
+  const setSpecialization = specializationState[1];
   const [bio, setBio] = useState(user?.bio ?? '');
   const [yearsExperience, setYearsExperience] = useState(user?.yearsExperience?.toString() ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
@@ -70,9 +79,18 @@ export default function AdvisorProfileScreen() {
     setIsUploadingPhoto(true);
     try {
       const uploaded = await uploadPhoto(uri);
-      setPhotoUrl(uploaded.fileUrl);
-    } catch {
-      Alert.alert('Upload failed', 'Could not upload your photo. Please try again.');
+      const newPhotoUrl = uploaded.fileUrl;
+      setPhotoUrl(newPhotoUrl);
+      const updated = await updateProfile.mutateAsync({ photoUrl: newPhotoUrl });
+      await updateUser({
+        ...(user || {}),
+        ...(updated || {}),
+        photoUrl: newPhotoUrl,
+      } as any);
+      await refreshUser();
+      Alert.alert('Success ✨', 'Profile photo updated successfully!');
+    } catch (err: any) {
+      Alert.alert('Upload failed', err?.response?.data?.message ?? err?.message ?? 'Could not upload your photo. Please try again.');
       setLocalPhotoUri(null);
     } finally {
       setIsUploadingPhoto(false);

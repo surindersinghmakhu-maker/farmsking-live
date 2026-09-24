@@ -8,9 +8,12 @@ export interface UploadResponse {
 
 /** Uploads a device photo (from expo-image-picker) to the backend and returns its public URL. */
 export async function uploadPhoto(localUri: string): Promise<UploadResponse> {
-  const filename = localUri.split('/').pop()?.split('?')[0] ?? `photo-${Date.now()}.jpg`;
-  const match = /\.(\w+)$/.exec(filename);
-  const ext = match?.[1]?.toLowerCase() ?? 'jpg';
+  const rawFilename = localUri.split('/').pop()?.split('?')[0] ?? `photo-${Date.now()}.jpg`;
+  const match = /\.(\w+)$/.exec(rawFilename);
+  const rawExt = match?.[1]?.toLowerCase() ?? '';
+  const validExts = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'];
+  const ext = validExts.includes(rawExt) ? rawExt : 'jpg';
+  const filename = rawFilename.replace(/\.\w+$/, '') + `.${ext}`;
   const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
 
   const formData = new FormData();

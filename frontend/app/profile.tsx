@@ -101,8 +101,9 @@ export default function ProfileScreen() {
       if (user.postOffice) setPostOffice(user.postOffice);
       if (user.district) setDistrict(user.district);
       if (user.state) setState(user.state);
+      if (user.photoUrl !== undefined) setPhotoUrl(user.photoUrl ?? null);
     }
-  }, [user?.id, user?.upiId, user?.farmName, user?.farmAddress, user?.farmMobile, user?.name, user?.email, user?.whatsappGroupEnabled]);
+  }, [user?.id, user?.upiId, user?.farmName, user?.farmAddress, user?.farmMobile, user?.name, user?.email, user?.whatsappGroupEnabled, user?.photoUrl]);
 
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
@@ -136,10 +137,24 @@ export default function ProfileScreen() {
     setIsUploadingPhoto(true);
     try {
       const uploaded = await uploadPhoto(result.assets[0].uri);
-      setPhotoUrl(uploaded.fileUrl);
+      const newPhotoUrl = uploaded.fileUrl;
+      setPhotoUrl(newPhotoUrl);
+
+      // Auto-save photoUrl directly to database & update AuthContext
+      const updated = await updateAddress.mutateAsync({ photoUrl: newPhotoUrl });
+      await updateUser({
+        ...(user || {}),
+        ...(updated || {}),
+        photoUrl: newPhotoUrl,
+      } as any);
+      await refreshUser();
+
       setIsPhotoModalOpen(false);
-    } catch {
-      Alert.alert('Upload failed', 'Could not upload your photo. Please try again.');
+      if (Platform.OS !== 'web') {
+        Alert.alert('Success ✨', 'Profile photo updated successfully!');
+      }
+    } catch (err: any) {
+      Alert.alert('Upload failed', err?.response?.data?.message ?? err?.message ?? 'Could not upload your photo. Please try again.');
     } finally {
       setIsUploadingPhoto(false);
     }
@@ -624,20 +639,20 @@ export default function ProfileScreen() {
                   ) : (
                     <View style={styles.expandedOfficeList}>
                       {officeOptions.map((off) => {
-                        const isSel = off.Name === postOffice;
+                        const isSel = off.name === postOffice;
                         return (
                           <TouchableOpacity
-                            key={off.Name}
+                            key={off.name}
                             style={[styles.officeOptionRow, isSel && { backgroundColor: '#f0fdf4', borderColor: theme.primary }]}
                             onPress={() => {
                               tap();
-                              setPostOffice(off.Name);
+                              setPostOffice(off.name);
                               setIsPostOfficeExpanded(false);
                             }}
                           >
                             <Ionicons name={isSel ? 'radio-button-on' : 'radio-button-off'} size={15} color={isSel ? theme.primary : '#94a3b8'} />
                             <Text style={[styles.officeOptionText, isSel && { fontFamily: FONT.bold, color: theme.primary }]}>
-                              {off.Name} ({off.BranchType})
+                              {off.name}
                             </Text>
                           </TouchableOpacity>
                         );
@@ -1145,6 +1160,12 @@ const styles = StyleSheet.create({
   scrollContent: { padding: 10, paddingBottom: 20, alignItems: 'center' },
   card: { width: '100%', maxWidth: 460, backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.lg, ...premiumShadow('#0f172a', 'sm') },
   avatarSection: { alignItems: 'center', marginBottom: 8 },
+  avatarWrap: { position: 'relative', marginBottom: 4 },
+  photoEditBadge: { position: 'absolute', bottom: 2, right: 2, backgroundColor: '#16a34a', width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#ffffff' },
+  changePhotoBtn: { marginTop: 4 },
+  sectionHeaderTitle: { fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a', marginBottom: 10 },
+  officeOptionRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 9, borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: '#e2e8f0', backgroundColor: '#ffffff' },
+  officeOptionText: { fontSize: 13, fontFamily: FONT.medium, color: '#334155' },
   singleMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -177,6 +177,9 @@ export default function ProfileScreen() {
       return;
     }
 
+    // 🔒 Keep interaction lock ON for the ENTIRE save so useEffect cannot
+    // reset photoUrl to an old/null value mid-save
+    isUserInteractingRef.current = true;
     setIsLoading(true);
     try {
       let finalPhotoUrl = photoUrl;
@@ -185,14 +188,13 @@ export default function ProfileScreen() {
         try {
           const uploaded = await uploadPhoto(photoUrl);
           finalPhotoUrl = uploaded.fileUrl;
-          // ✅ Immediately update local state with the server URL
+          // Show server URL immediately in UI (but keep interaction lock)
           setPhotoUrl(finalPhotoUrl);
-          // ✅ Allow useEffect to sync since photo is now a server URL, not local
-          isUserInteractingRef.current = false;
         } catch (uploadErr: any) {
           console.error('[saveProfile] Photo upload failed:', uploadErr);
           setSaveError(`❌ Photo Upload Failed: ${uploadErr?.response?.data?.message || uploadErr?.message || 'Could not upload photo to server.'}`);
           setIsLoading(false);
+          isUserInteractingRef.current = false;
           return;
         }
       }
@@ -226,16 +228,15 @@ export default function ProfileScreen() {
         upiId: finalUpiId,
       } as any);
 
-      // ✅ Reset interaction flag BEFORE refreshUser so photoUrl syncs from server
+      // ✅ Set final confirmed photoUrl BEFORE unlocking interaction
+      const confirmedPhotoUrl = updated?.photoUrl || finalPhotoUrl;
+      if (confirmedPhotoUrl) {
+        setPhotoUrl(confirmedPhotoUrl);
+      }
+
+      // ✅ Unlock THEN refresh — useEffect will sync with correct photoUrl in user store
       isUserInteractingRef.current = false;
       await refreshUser();
-
-      // ✅ Explicitly sync photoUrl from updated record after save
-      if (updated?.photoUrl) {
-        setPhotoUrl(updated.photoUrl);
-      } else if (finalPhotoUrl) {
-        setPhotoUrl(finalPhotoUrl);
-      }
 
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2500);
@@ -243,7 +244,6 @@ export default function ProfileScreen() {
       setSaveError(err?.response?.data?.message ?? err?.message ?? 'Could not save your profile.');
     } finally {
       setIsLoading(false);
-      // ✅ Keep interaction flag false so next user data sync works correctly
       isUserInteractingRef.current = false;
     }
   };

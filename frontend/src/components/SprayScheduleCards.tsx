@@ -1,12 +1,12 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import React, { useMemo, useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
-import { useSprayScheduleForCrop } from '@/src/hooks/useSpraySchedules';
+import { useSprayScheduleForCrop, useUpdateSprayScheduleItem } from '@/src/hooks/useSpraySchedules';
 import { SprayScheduleItem } from '@/src/types/api';
 
 /** Which of the 3 outcome colors a completed/skipped spray item earns, based on how close its last
- * update landed to the originally scheduled date (±2 days = on-time, later = late, SKIPPED = red). */
+ * update landed to the originally scheduled date (>3 days late = delayed blue, SKIPPED = red, <=3 days = green). */
 export function pastSprayOutcome(item: SprayScheduleItem): { color: string; bg: string; border: string; label: string } {
   if (item.status === 'SKIPPED') {
     return { color: '#dc2626', bg: '#fef2f2', border: '#fecaca', label: 'Skipped' };
@@ -16,16 +16,16 @@ export function pastSprayOutcome(item: SprayScheduleItem): { color: string; bg: 
   const updated = new Date(item.updatedAt);
   updated.setHours(0, 0, 0, 0);
   const diffDays = Math.round((updated.getTime() - scheduled.getTime()) / (1000 * 60 * 60 * 24));
-  if (diffDays > 2) {
-    return { color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe', label: 'Late' };
+  if (diffDays > 3) {
+    return { color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe', label: 'Delayed' };
   }
   return { color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0', label: 'Completed' };
 }
 
 /** Two-card spray-schedule summary for one crop cycle: a "Previous Schedule" card (last completed/skipped
  * item, color-coded by how on-time it was) and a highlighted "Upcoming Schedule" card (next pending item).
- * The upcoming card itself is inert; a separate "Detail" button opens the full item detail (dosage,
- * alternatives...) via `onViewDetail`. Tapping/hovering the product name reveals its alt-text inline.
+ * Includes Mark as Done & Skip action buttons for items due Today or up to 5 days late.
+ * Automatically marks items as SKIPPED on the 6th day (after 5 days late).
  * Shared between the farmer's "My Advisor" view and the advisor's "Farmers" roster. */
 export function SprayScheduleCards({
   cropCycleId,
@@ -37,11 +37,52 @@ export function SprayScheduleCards({
   onViewDetail: (item: SprayScheduleItem) => void;
 }) {
   const { data: itemsRaw } = useSprayScheduleForCrop(cropCycleId);
+  const updateItemMutation = useUpdateSprayScheduleItem();
+
   const items = useMemo(
     () => [...(itemsRaw ?? [])].sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime()),
     [itemsRaw],
   );
   const [isAltRevealed, setIsAltRevealed] = useState(false);
+
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
+  // Process items: Auto-skip any pending item that is > 5 days late (6th day or later)
+  const processedItems = useMemo(() => {
+    return items.map((item) => {
+      if (item.status === 'PENDING' || item.status === 'OVERDUE') {
+        const scheduled = new Date(item.scheduledDate);
+        scheduled.setHours(0, 0, 0, 0);
+        const daysLate = Math.round((today.getTime() - scheduled.getTime()) / (1000 * 60 * 60 * 24));
+        if (daysLate >= 6) {
+          return { ...item, status: 'SKIPPED' as const };
+        }
+      }
+      return item;
+    });
+  }, [items, today]);
+
+  // Persist auto-skipped items (>= 6 days late) to backend DB
+  useEffect(() => {
+    if (!itemsRaw) return;
+    const todayMs = new Date().setHours(0, 0, 0, 0);
+    itemsRaw.forEach((item) => {
+      if (item.status === 'PENDING' || item.status === 'OVERDUE') {
+        const schedMs = new Date(item.scheduledDate).setHours(0, 0, 0, 0);
+        const daysLate = Math.round((todayMs - schedMs) / (1000 * 60 * 60 * 24));
+        if (daysLate >= 6) {
+          updateItemMutation.mutate({
+            id: item.id,
+            payload: { status: 'SKIPPED' },
+          });
+        }
+      }
+    });
+  }, [itemsRaw]);
 
   if (items.length === 0) {
     return (
@@ -52,13 +93,14 @@ export function SprayScheduleCards({
     );
   }
 
-  const upcomingIdx = items.findIndex((i) => i.status === 'PENDING' || i.status === 'OVERDUE');
-  const upcoming = upcomingIdx === -1 ? null : items[upcomingIdx];
-  const pastItems = upcomingIdx === -1 ? items : items.slice(0, upcomingIdx);
+  const upcomingIdx = processedItems.findIndex((i) => i.status === 'PENDING' || i.status === 'OVERDUE');
+  const upcoming = upcomingIdx === -1 ? null : processedItems[upcomingIdx];
+  const pastItems = upcomingIdx === -1 ? processedItems : processedItems.slice(0, upcomingIdx);
   const previous = pastItems.length > 0 ? pastItems[pastItems.length - 1] : null;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const upcomingDaysLate = upcoming
+    ? Math.round((today.getTime() - new Date(new Date(upcoming.scheduledDate).setHours(0, 0, 0, 0)).getTime()) / (1000 * 60 * 60 * 24))
+    : -1;
 
   const upcomingDiffDays = upcoming
     ? Math.round((new Date(new Date(upcoming.scheduledDate).setHours(0, 0, 0, 0)).getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
@@ -67,13 +109,11 @@ export function SprayScheduleCards({
     ? new Date(upcoming.scheduledDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
     : '';
   const upcomingPendingLabel =
-    upcoming?.status === 'OVERDUE'
-      ? `${Math.abs(upcomingDiffDays)} Days Overdue`
+    upcoming?.status === 'OVERDUE' || upcomingDaysLate > 0
+      ? `${upcomingDaysLate} Days Overdue`
       : upcomingDiffDays === 0
         ? 'Today'
-        : upcomingDiffDays < 0
-          ? `${Math.abs(upcomingDiffDays)} Days Overdue`
-          : `${upcomingDiffDays} Days Left`;
+        : `${upcomingDiffDays} Days Left`;
 
   const previousOutcome = previous ? pastSprayOutcome(previous) : null;
   const previousDateLabel = previous ? new Date(previous.scheduledDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '';
@@ -84,6 +124,35 @@ export function SprayScheduleCards({
     Platform.OS === 'web'
       ? { onMouseEnter: () => setIsAltRevealed(true), onMouseLeave: () => setIsAltRevealed(false) }
       : {};
+
+  const handleMarkDone = async (item: SprayScheduleItem, daysLate: number) => {
+    try {
+      await updateItemMutation.mutateAsync({
+        id: item.id,
+        payload: { status: 'COMPLETED' },
+      });
+      const note = daysLate > 3 ? '✔️ Marked as Done! (Status: Delayed)' : '✔️ Marked as Done!';
+      if (Platform.OS === 'web') alert(note);
+      else Alert.alert('Status Updated', note);
+    } catch {
+      if (Platform.OS === 'web') alert('Could not update status. Please try again.');
+      else Alert.alert('Error', 'Could not update status. Please try again.');
+    }
+  };
+
+  const handleSkip = async (item: SprayScheduleItem) => {
+    try {
+      await updateItemMutation.mutateAsync({
+        id: item.id,
+        payload: { status: 'SKIPPED' },
+      });
+      if (Platform.OS === 'web') alert('✕ Marked as Skipped!');
+      else Alert.alert('Status Updated', '✕ Marked as Skipped!');
+    } catch {
+      if (Platform.OS === 'web') alert('Could not update status. Please try again.');
+      else Alert.alert('Error', 'Could not update status. Please try again.');
+    }
+  };
 
   return (
     <View style={styles.dualCardRow}>
@@ -142,6 +211,57 @@ export function SprayScheduleCards({
               </Text>
             ) : null}
           </TouchableOpacity>
+
+          {/* Action Row: Shown when due Today or up to 5 days late (0 <= upcomingDaysLate <= 5) */}
+          {upcomingDaysLate >= 0 && upcomingDaysLate <= 5 ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, paddingTop: 8, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.25)' }}>
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 4,
+                  backgroundColor: '#ffffff',
+                  paddingVertical: 6,
+                  paddingHorizontal: 10,
+                  borderRadius: RADIUS.pill,
+                }}
+                activeOpacity={0.8}
+                disabled={updateItemMutation.isPending}
+                onPress={() => handleMarkDone(upcoming, upcomingDaysLate)}
+              >
+                <Ionicons name="checkmark-circle" size={15} color={upcomingDaysLate > 3 ? '#2563eb' : '#16a34a'} />
+                <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: upcomingDaysLate > 3 ? '#2563eb' : '#16a34a' }}>
+                  {upcomingDaysLate > 3 ? '✓ Mark Done (Delayed)' : '✓ Mark as Done'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{
+                  flex: 0.8,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 4,
+                  backgroundColor: 'rgba(239, 68, 68, 0.95)',
+                  paddingVertical: 6,
+                  paddingHorizontal: 10,
+                  borderRadius: RADIUS.pill,
+                  borderWidth: 1,
+                  borderColor: 'rgba(255, 255, 255, 0.4)',
+                }}
+                activeOpacity={0.8}
+                disabled={updateItemMutation.isPending}
+                onPress={() => handleSkip(upcoming)}
+              >
+                <Ionicons name="close-circle" size={15} color="#ffffff" />
+                <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>
+                  ✕ Skip
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
         </View>
       ) : (
         <View style={[styles.sprayCard, { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }]}>

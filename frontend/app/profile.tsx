@@ -136,33 +136,7 @@ export default function ProfileScreen() {
     const selectedUri = result.assets[0].uri;
     isUserInteractingRef.current = true;
     setPhotoUrl(selectedUri);
-    setIsUploadingPhoto(true);
-    try {
-      const uploaded = await uploadPhoto(selectedUri);
-      const newPhotoUrl = uploaded.fileUrl;
-      setPhotoUrl(newPhotoUrl);
-
-      // Auto-save photoUrl directly to database & update AuthContext
-      const updated = await updateAddress.mutateAsync({ photoUrl: newPhotoUrl });
-      await updateUser({
-        ...(user || {}),
-        ...(updated || {}),
-        photoUrl: newPhotoUrl,
-      } as any);
-      await refreshUser();
-
-      setIsPhotoModalOpen(false);
-      if (Platform.OS !== 'web') {
-        Alert.alert('Success ✨', 'Profile photo updated successfully!');
-      }
-    } catch (err: any) {
-      Alert.alert('Upload failed', err?.response?.data?.message ?? err?.message ?? 'Could not upload your photo. Please try again.');
-    } finally {
-      setIsUploadingPhoto(false);
-      setTimeout(() => {
-        isUserInteractingRef.current = false;
-      }, 1000);
-    }
+    setIsPhotoModalOpen(false);
   };
 
   const fetchLocationFromPincode = async (codeToFetch?: string) => {
@@ -198,7 +172,7 @@ export default function ProfileScreen() {
       return;
     }
     if (!photoUrl) {
-      setSaveError('⚠️ Profile photo is mandatory! Please upload a photo from your device to complete profile.');
+      setSaveError('⚠️ Profile photo is mandatory! Please choose a photo from your device.');
       setIsPhotoModalOpen(true);
       return;
     }
@@ -220,7 +194,17 @@ export default function ProfileScreen() {
       setPincodeStatus('❌ PIN Code must be exactly 6 digits.');
       return;
     }
+
+    setIsLoading(true);
     try {
+      let finalPhotoUrl = photoUrl;
+      // If photo is a newly selected local device URI (file:, blob:, content:, data:), upload it now on Save Profile
+      if (photoUrl && /^(file:|blob:|content:|data:)/i.test(photoUrl)) {
+        const uploaded = await uploadPhoto(photoUrl);
+        finalPhotoUrl = uploaded.fileUrl;
+        setPhotoUrl(finalPhotoUrl);
+      }
+
       const finalFarmName = farmName.trim() || trimmedName;
       const finalFarmAddress = farmAddress.trim();
       const finalFarmMobile = farmMobile.trim();
@@ -229,7 +213,7 @@ export default function ProfileScreen() {
       const payload = {
         name: trimmedName,
         email: email.trim() || undefined,
-        photoUrl: photoUrl ?? undefined,
+        photoUrl: finalPhotoUrl ?? undefined,
         pincode: pincode.trim() || undefined,
         postOffice: postOffice.trim() || undefined,
         district: district.trim() || undefined,
@@ -254,7 +238,12 @@ export default function ProfileScreen() {
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2500);
     } catch (err: any) {
-      setSaveError(err?.response?.data?.message ?? 'Could not save your profile.');
+      setSaveError(err?.response?.data?.message ?? err?.message ?? 'Could not save your profile.');
+    } finally {
+      setIsLoading(false);
+      setTimeout(() => {
+        isUserInteractingRef.current = false;
+      }, 1000);
     }
   };
 

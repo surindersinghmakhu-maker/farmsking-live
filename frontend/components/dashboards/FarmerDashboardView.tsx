@@ -81,7 +81,13 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
     ? new Date(startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
     : null;
   const formattedExpiry = endDate
-    ? new Date(endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+    ? (() => {
+        const d = new Date(endDate);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = String(d.getFullYear()).slice(-2);
+        return `${day}/${month}/${year}`;
+      })()
     : null;
   const planPrice = pricing?.find((p) => p.plan === plan)?.price;
 
@@ -114,7 +120,11 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
             </View>
 
             {plan !== 'FREE' && !isExpired && daysUntilExpiry !== null ? (
-              <Text style={[styles.planDaysLeftText, { fontSize: 10.5, color: '#fef08a', textAlign: 'right', fontFamily: FONT.bold }]}>
+              <Text
+                style={[styles.planDaysLeftText, { fontSize: 9.5, color: '#fef08a', textAlign: 'right', fontFamily: FONT.bold }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
                 ⏳ {daysUntilExpiry}d left{formattedExpiry ? ` (Till: ${formattedExpiry})` : ''}
               </Text>
             ) : null}

@@ -668,6 +668,20 @@ export default function FarmListScreen() {
     setIsCropModalOpen(true);
   };
 
+  const getStageStartDate = (crop: RegisteredCropField) => {
+    if ((crop as any).stageStartDate) return (crop as any).stageStartDate;
+    if ((crop as any).stageUpdatedAt) {
+      return new Date((crop as any).stageUpdatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+    if (crop.stage === 'PLANTATION' || crop.stage === 'SOWING') {
+      return crop.sowingDate ? crop.sowingDate.replace(/\s*\([^)]*\)/g, '').trim() : 'Sowing Date';
+    }
+    if ((crop as any).updatedAt) {
+      return new Date((crop as any).updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+    }
+    return crop.sowingDate ? crop.sowingDate.replace(/\s*\([^)]*\)/g, '').trim() : 'Started Recently';
+  };
+
   const getLastDoneTask = (crop: RegisteredCropField) => {
     if ((crop as any).lastDoneTask) return (crop as any).lastDoneTask;
     if ((crop as any).previousActivity) return (crop as any).previousActivity;
@@ -863,7 +877,7 @@ export default function FarmListScreen() {
 
                   {/* Stage & Update Stage Strip */}
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f0fdf4', paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#bbf7d0', marginTop: 3 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flexWrap: 'wrap', flex: 1 }}>
                       <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#166534' }}>
                         Stage:
                       </Text>
@@ -877,6 +891,9 @@ export default function FarmListScreen() {
                           </View>
                         );
                       })()}
+                      <Text style={{ fontSize: 10, fontFamily: FONT.semiBold, color: '#15803d' }}>
+                        (📅 {getStageStartDate(item)})
+                      </Text>
                     </View>
 
                     {item.stage !== 'COMPLETED' && (

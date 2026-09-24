@@ -380,11 +380,18 @@ export default function FarmListScreen() {
     tap();
     try {
       if (editingCrop) {
+        const activeCropId = editingCrop.cropId || (editingCrop.id?.startsWith('C-') ? editingCrop.id : `C-${editingCrop.id?.slice(0, 6).toUpperCase()}`);
         await editCrop(editingCrop.id, values);
+        if (Platform.OS === 'web') {
+          alert(`✅ Crop ID (${activeCropId}) updated successfully!`);
+        } else {
+          Alert.alert('Crop Updated', `Crop ID (${activeCropId}) updated successfully!`);
+        }
       } else {
         await addCrop(values);
       }
       setEditingCrop(null);
+      setIsCropModalOpen(false);
     } catch (err: any) {
       const message = err?.response?.data?.message ?? 'Could not save this crop. Please try again.';
       if (message.toLowerCase().includes('upgrade')) {
@@ -879,7 +886,7 @@ export default function FarmListScreen() {
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f0fdf4', paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#bbf7d0', marginTop: 3 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flexWrap: 'wrap', flex: 1 }}>
                       <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#166534' }}>
-                        Stage:
+                        Stage ({getStageStartDate(item)}):
                       </Text>
                       {(() => {
                         const st = STAGE_META[item.stage];
@@ -891,9 +898,6 @@ export default function FarmListScreen() {
                           </View>
                         );
                       })()}
-                      <Text style={{ fontSize: 10, fontFamily: FONT.semiBold, color: '#15803d' }}>
-                        (📅 {getStageStartDate(item)})
-                      </Text>
                     </View>
 
                     {item.stage !== 'COMPLETED' && (

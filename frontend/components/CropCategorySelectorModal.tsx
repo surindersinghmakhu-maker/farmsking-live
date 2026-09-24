@@ -260,6 +260,15 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
             </TouchableOpacity>
           </View>
 
+          {editingCrop ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#e0f2fe', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: '#bae6fd', marginBottom: 10 }}>
+              <Ionicons name="finger-print-outline" size={15} color="#0284c7" />
+              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0369a1' }}>
+                🆔 Crop ID: <Text style={{ fontFamily: FONT.extraBold, color: '#0284c7' }}>{editingCrop.cropId || (editingCrop.id?.startsWith('C-') ? editingCrop.id : `C-${editingCrop.id?.slice(0, 6).toUpperCase()}`)}</Text>
+              </Text>
+            </View>
+          ) : null}
+
           <ScrollView style={{ maxHeight: 520 }} showsVerticalScrollIndicator={false}>
             {/* 1. Category Horizontal Pill Bar */}
             <Text style={styles.inputLabelCompact}>Select Crop Category *</Text>

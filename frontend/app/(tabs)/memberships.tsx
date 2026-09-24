@@ -238,7 +238,6 @@ export default function MembershipsScreen() {
                 <Text style={styles.featureItem}>✓ Share up to 50 Sale Invoices / Bills</Text>
                 <Text style={styles.featureItem}>✓ Basic AI Crop Disease Scanner</Text>
                 <Text style={styles.featureItem}>✕ No Satellite NDVI Field Heatmaps</Text>
-                <Text style={styles.featureItem}>✕ No Dedicated Doctor Advisory</Text>
               </View>
 
               {/* Free Trial Button */}

@@ -206,8 +206,7 @@ export default function LoginScreen() {
                 <Ionicons name="logo-android" size={20} color="#0284c7" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.downloadAppTitle}>📲 Download Android App (APK)</Text>
-                <Text style={styles.downloadAppSub}>Install FarmsKing App on your phone</Text>
+                <Text style={styles.downloadAppTitle}>📲 Download Android App (APK) · ~18.5 MB</Text>
               </View>
               <View style={styles.downloadBadge}>
                 <Text style={styles.downloadBadgeText}>Download</Text>

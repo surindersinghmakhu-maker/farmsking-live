@@ -300,22 +300,6 @@ export default function RegisterScreen() {
                 ))}
               </View>
 
-              <Text style={styles.farmerLabel}>Soil Type</Text>
-              <TouchableOpacity style={styles.farmerSelectField} onPress={() => setIsSoilPickerOpen(true)}>
-                <Text style={[styles.farmerSelectText, !selectedSoilLabel && styles.placeholder]}>
-                  {selectedSoilLabel || 'Select soil type'}
-                </Text>
-                <Ionicons name="chevron-down" size={16} color="#64748b" />
-              </TouchableOpacity>
-
-              <Text style={styles.farmerLabel}>Water Source</Text>
-              <TouchableOpacity style={styles.farmerSelectField} onPress={() => setIsWaterPickerOpen(true)}>
-                <Text style={[styles.farmerSelectText, !selectedWaterLabel && styles.placeholder]}>
-                  {selectedWaterLabel || 'Select water source'}
-                </Text>
-                <Ionicons name="chevron-down" size={16} color="#64748b" />
-              </TouchableOpacity>
-
               <Text style={styles.farmerLabel}>UPI ID (Optional)</Text>
               <View style={styles.inputWrap}>
                 <Ionicons name="card-outline" size={17} color="#94a3b8" style={styles.inputIcon} />
@@ -487,8 +471,7 @@ export default function RegisterScreen() {
               <Ionicons name="logo-android" size={20} color="#0284c7" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.downloadAppTitle}>📲 Download Android App (APK)</Text>
-              <Text style={styles.downloadAppSub}>⚡ APK Memory Size: ~18.5 MB</Text>
+              <Text style={styles.downloadAppTitle}>📲 Download Android App (APK) · ~18.5 MB</Text>
             </View>
             <View style={styles.downloadBadge}>
               <Text style={styles.downloadBadgeText}>Download</Text>

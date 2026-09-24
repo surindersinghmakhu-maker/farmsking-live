@@ -554,9 +554,9 @@ export function FarmerPlanUpgradeModal({
                 {(planCategory === 'FARMER'
                   ? [
                       { id: 'FARMER_FREE', key: 'FREE', label: '🌱 Free Membership Trial', iconName: 'leaf', color: '#166534', sub: 'Basic Bookkeeping & Max 3 Crop Cycles (7-Day Free Trial)' },
-                      { id: 'FARMER_BASIC', key: 'PRO', label: '⚡ Basic Membership', iconName: 'flash', color: '#0284c7', sub: 'Bookkeeping & Expense Logs + Voice AI Mic (No Doctor)' },
-                      { id: 'FARMER_PRO', key: 'SMART', label: '👑 Pro Membership', iconName: 'sparkles', color: '#1d4ed8', sub: 'All Bookkeeping + Labour Record & Worker Login (No Doctor)' },
-                      { id: 'FARMER_SUPER', key: 'SUPER', label: '⭐ Super Membership', iconName: 'star', color: '#b45309', sub: 'Unlimited Crops, Weather Reports & Mandi AI (No Doctor)' },
+                      { id: 'FARMER_BASIC', key: 'PRO', label: '⚡ Basic Membership', iconName: 'flash', color: '#0284c7', sub: 'Bookkeeping & Expense Logs + Voice AI Mic' },
+                      { id: 'FARMER_PRO', key: 'SMART', label: '👑 Pro Membership', iconName: 'sparkles', color: '#1d4ed8', sub: 'All Bookkeeping + Labour Record & Worker Login' },
+                      { id: 'FARMER_SUPER', key: 'SUPER', label: '⭐ Super Membership', iconName: 'star', color: '#b45309', sub: 'Unlimited Crops, Weather Reports & Mandi AI' },
                     ]
                   : [
                       { id: 'CARE_SILVER', key: 'SILVER', label: 'Doctor Silver Care', iconName: 'medical', color: '#64748b', sub: '5 Crops Supervision + Soil Health & Leaf Scan' },

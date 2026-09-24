@@ -739,8 +739,7 @@ export default function ProfileScreen() {
               <Ionicons name="logo-android" size={20} color="#0284c7" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0369a1' }}>📲 Download FarmsKing App (APK)</Text>
-              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0284c7', marginTop: 1 }}>⚡ APK Memory Size: ~18.5 MB</Text>
+              <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0369a1' }}>📲 Download FarmsKing App (APK) · ~18.5 MB</Text>
             </View>
             <View style={{ backgroundColor: '#0284c7', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill }}>
               <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Download</Text>

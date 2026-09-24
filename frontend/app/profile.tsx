@@ -176,20 +176,7 @@ export default function ProfileScreen() {
       setIsPhotoModalOpen(true);
       return;
     }
-    if (user?.role !== 'LABOUR') {
-      if (!farmName.trim()) {
-        setSaveError('❌ Please enter Farm Name under Use in Printing.');
-        return;
-      }
-      if (!farmAddress.trim()) {
-        setSaveError('❌ Please enter Farm Address under Use in Printing.');
-        return;
-      }
-      if (!farmMobile.trim()) {
-        setSaveError('❌ Please enter Farm Mobile under Use in Printing.');
-        return;
-      }
-    }
+
     if (pincode && pincode.trim().length !== 6) {
       setPincodeStatus('❌ PIN Code must be exactly 6 digits.');
       return;
@@ -200,14 +187,21 @@ export default function ProfileScreen() {
       let finalPhotoUrl = photoUrl;
       // If photo is a newly selected local device URI (file:, blob:, content:, data:), upload it now on Save Profile
       if (photoUrl && /^(file:|blob:|content:|data:)/i.test(photoUrl)) {
-        const uploaded = await uploadPhoto(photoUrl);
-        finalPhotoUrl = uploaded.fileUrl;
-        setPhotoUrl(finalPhotoUrl);
+        try {
+          const uploaded = await uploadPhoto(photoUrl);
+          finalPhotoUrl = uploaded.fileUrl;
+          setPhotoUrl(finalPhotoUrl);
+        } catch (uploadErr: any) {
+          console.error('[saveProfile] Photo upload failed:', uploadErr);
+          setSaveError(`❌ Photo Upload Failed: ${uploadErr?.response?.data?.message || uploadErr?.message || 'Could not upload photo to server.'}`);
+          setIsLoading(false);
+          return;
+        }
       }
 
       const finalFarmName = farmName.trim() || trimmedName;
-      const finalFarmAddress = farmAddress.trim();
-      const finalFarmMobile = farmMobile.trim();
+      const finalFarmAddress = farmAddress.trim() || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || 'Farm Address';
+      const finalFarmMobile = farmMobile.trim() || user?.mobile || '';
       const finalUpiId = upiId.trim();
 
       const payload = {
@@ -383,9 +377,9 @@ export default function ProfileScreen() {
               <TouchableOpacity
                 style={[styles.saveBtn, { backgroundColor: theme.primary, marginTop: 4 }]}
                 onPress={saveProfile}
-                disabled={updateAddress.isPending}
+                disabled={isLoading || updateAddress.isPending}
               >
-                {updateAddress.isPending ? (
+                {isLoading || updateAddress.isPending ? (
                   <ActivityIndicator color="#ffffff" />
                 ) : (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -500,48 +494,46 @@ export default function ProfileScreen() {
 
               {/* Personal Details Card */}
               <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <Text style={styles.sectionHeaderTitle}>👤 Personal Details</Text>
-                  <View style={{ flexDirection: 'row', gap: 6 }}>
-                    <View style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#475569' }}>
-                        🔑 King ID: {user?.kingId || '—'}
+                <Text style={styles.sectionHeaderTitle}>👤 Personal Details</Text>
+
+                {/* Top Badges Row: King ID & Mobile above Name */}
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8, marginBottom: 10 }}>
+                  <View style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569' }}>
+                      🔑 King ID: {user?.kingId || '—'}
+                    </Text>
+                  </View>
+                  {user?.mobile ? (
+                    <View style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569' }}>
+                        📞 Mobile: {user.mobile}
                       </Text>
                     </View>
-                    {user?.mobile ? (
-                      <View style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                        <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#475569' }}>
-                          📞 {user.mobile}
-                        </Text>
-                      </View>
-                    ) : null}
+                  ) : null}
+                </View>
+
+                {/* Single Row: Full Name label (left) & Read-Only text box (right) */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                  <Text style={[styles.inputLabel, { width: 105, marginBottom: 0 }]}>Full Name *</Text>
+                  <View style={{ flex: 1, height: 42, backgroundColor: '#f8fafc', paddingHorizontal: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', justifyContent: 'center' }}>
+                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#334155' }} numberOfLines={1}>
+                      {name || user?.name || '—'}
+                    </Text>
                   </View>
                 </View>
 
-                {/* Compact Side-by-side Row for Name & Email */}
-                <View style={{ flexDirection: 'row', gap: 10 }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.inputLabel}>Full Name *</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={name}
-                      onChangeText={setName}
-                      placeholder="Your Full Name"
-                      placeholderTextColor="#94a3b8"
-                    />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.inputLabel}>Email Address</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={email}
-                      onChangeText={setEmail}
-                      placeholder="email@domain.com"
-                      placeholderTextColor="#94a3b8"
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                    />
-                  </View>
+                {/* Single Row: Email Address label (left) & Editable text box (right) */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <Text style={[styles.inputLabel, { width: 105, marginBottom: 0 }]}>Email Address</Text>
+                  <TextInput
+                    style={[styles.input, { flex: 1 }]}
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder="email@domain.com"
+                    placeholderTextColor="#94a3b8"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
                 </View>
               </View>
 
@@ -733,9 +725,9 @@ export default function ProfileScreen() {
               <TouchableOpacity
                 style={[styles.saveBtn, { backgroundColor: theme.primary, marginTop: 4 }]}
                 onPress={saveProfile}
-                disabled={updateAddress.isPending}
+                disabled={isLoading || updateAddress.isPending}
               >
-                {updateAddress.isPending ? (
+                {isLoading || updateAddress.isPending ? (
                   <ActivityIndicator color="#ffffff" />
                 ) : (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>

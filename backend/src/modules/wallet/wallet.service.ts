@@ -138,29 +138,30 @@ export class WalletService {
     let totalOtherBonus = 0, countOtherBonus = 0;
 
     const formattedTxs = bonusTxs.map((tx) => {
+      const numAmt = Number(tx.amount || 0);
       const r = tx.reason.toLowerCase();
       let category: 'WELCOME' | 'REFERRAL_SIGNUP' | 'REFERRAL_PLAN' | 'OTHER' = 'OTHER';
 
       if (r.includes('welcome')) {
         category = 'WELCOME';
-        totalWelcome += tx.amount;
+        totalWelcome += numAmt;
         countWelcome++;
       } else if (r.includes('referral income') || (r.includes('referral') && r.includes('joined'))) {
         category = 'REFERRAL_SIGNUP';
-        totalReferralSignup += tx.amount;
+        totalReferralSignup += numAmt;
         countReferralSignup++;
       } else if (r.includes('plan bonus') || (r.includes('referral') && r.includes('plan'))) {
         category = 'REFERRAL_PLAN';
-        totalReferralPlan += tx.amount;
+        totalReferralPlan += numAmt;
         countReferralPlan++;
       } else {
-        totalOtherBonus += tx.amount;
+        totalOtherBonus += numAmt;
         countOtherBonus++;
       }
 
       return {
         id: tx.id,
-        amount: tx.amount,
+        amount: numAmt,
         reason: tx.reason,
         createdAt: tx.createdAt,
         category,

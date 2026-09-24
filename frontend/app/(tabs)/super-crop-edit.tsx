@@ -322,7 +322,7 @@ export default function SuperCropEditScreen() {
                   style={[styles.chip, { flex: 1, justifyContent: 'center' }, harvestPattern === 'CONTINUOUS' && { backgroundColor: '#16a34a', borderColor: '#16a34a' }]}
                   onPress={() => { tap(); setHarvestPattern('CONTINUOUS'); }}
                 >
-                  <Text style={[styles.chipText, harvestPattern === 'CONTINUOUS' && { color: '#fff', fontFamily: FONT.bold }]}>Daily (ਸੁਭਾ/ਸ਼ਾਮ)</Text>
+                  <Text style={[styles.chipText, harvestPattern === 'CONTINUOUS' && { color: '#fff', fontFamily: FONT.bold }]}>Daily (Morning/Evening)</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.chip, { flex: 1, justifyContent: 'center' }, harvestPattern === 'ONE_TIME' && { backgroundColor: '#d97706', borderColor: '#d97706' }]}

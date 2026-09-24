@@ -640,7 +640,7 @@ export default function FarmListScreen() {
       plan === 'PRO' ? 'Lite Plan' : plan === 'SMART' ? 'Pro Plan' : plan === 'SUPER' ? 'Smart Plan' : 'Free Plan';
 
     if (maxTotalCrops != null && maxTotalCrops > 0 && totalCropsCount >= maxTotalCrops) {
-      const message = `⚠️ Crop Limit Reached!\nYour current plan (${planDisplayName}) allows a maximum of ${maxTotalCrops} total crop(s).\n\nPlease upgrade your plan OR complete an old crop to register a new crop.\n(ਤੁਹਾਡੇ ਪਲਾਨ ਦੀ ਲਿਮਿਟ ਪੂਰੀ ਹੋ ਗਈ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਪਲਾਨ ਅੱਪਗ੍ਰੇਡ ਕਰੋ ਜਾਂ ਪੁਰਾਣੀ ਫਸਲ ਕੰਪਲੀਟ ਕਰੋ।)`;
+      const message = `⚠️ Crop Limit Reached!\nYour current plan (${planDisplayName}) allows a maximum of ${maxTotalCrops} total crop(s).\n\nPlease upgrade your plan OR complete an old crop to register a new crop.`;
       if (Platform.OS === 'web') {
         if (confirm(`🔒 Crop Limit Reached!\n\n${message}\n\nWould you like to view plan comparison table & upgrade now?`)) {
           setIsUpgradeModalOpen(true);
@@ -657,7 +657,7 @@ export default function FarmListScreen() {
     if (maxActiveCrops != null && maxActiveCrops > 0) {
       const activeCropsCount = cropFields.filter((c) => c.status === 'ACTIVE').length;
       if (activeCropsCount >= maxActiveCrops) {
-        const message = `⚠️ Active Crop Limit Reached!\nYour current plan (${planDisplayName}) allows a maximum of ${maxActiveCrops} active crop(s) at a time (${activeCropsCount}/${maxActiveCrops}).\n\nPlease upgrade your plan OR complete an old crop to register a new crop.\n(ਤੁਹਾਡੇ ਪਲਾਨ ਦੀ ਲਿਮਿਟ ਪੂਰੀ ਹੋ ਗਈ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਪਲਾਨ ਅੱਪਗ੍ਰੇਡ ਕਰੋ ਜਾਂ ਪੁਰਾਣੀ ਫਸਲ ਕੰਪਲੀਟ ਕਰੋ।)`;
+        const message = `⚠️ Active Crop Limit Reached!\nYour current plan (${planDisplayName}) allows a maximum of ${maxActiveCrops} active crop(s) at a time (${activeCropsCount}/${maxActiveCrops}).\n\nPlease upgrade your plan OR complete an old crop to register a new crop.`;
         if (Platform.OS === 'web') {
           if (confirm(`🔒 Active Crop Limit Reached!\n\n${message}\n\nWould you like to view plan comparison table & upgrade now?`)) {
             setIsUpgradeModalOpen(true);
@@ -1322,7 +1322,7 @@ export default function FarmListScreen() {
                 </Text>
                 {pendingStageUpdate?.currentStage === 'PLANTATION' ? (
                   <Text style={[styles.warningHighlightText, { color: '#dc2626', fontFamily: FONT.bold }]}>
-                    🔒 ਧਿਆਨ ਦਿਓ: ਪਲਾਂਟੇਸ਼ਨ (Plantation) ਸਟੇਜ ਬਦਲਣ ਤੋਂ ਬਾਅਦ ਤੁਸੀਂ ਫਸਲ ਦੀਆਂ ਡਿਟੇਲਾਂ (Crop Specs / Edit Details) ਵਿੱਚ ਕੋਈ ਵੀ ਬਦਲਾਅ (Edit) ਨਹੀਂ ਕਰ ਸਕੋਗੇ!
+                    🔒 Notice: After leaving Plantation stage, crop specifications (Edit Crop Details) can no longer be modified!
                   </Text>
                 ) : null}
               </View>

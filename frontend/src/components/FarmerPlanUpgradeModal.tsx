@@ -332,11 +332,14 @@ export function FarmerPlanUpgradeModal({
         const msg = '🎉 Free Membership Trial activated successfully!';
         if (Platform.OS === 'web') alert(msg);
         else Alert.alert('Trial Activated', msg);
-        closeAndReset();
+        reset();
+        onClose();
       } catch (err: any) {
         const msg = err?.response?.data?.message ?? 'Free Trial already active or used.';
         if (Platform.OS === 'web') alert(`Notice: ${msg}`);
         else Alert.alert('Notice', msg);
+        reset();
+        onClose();
       }
       return;
     }

@@ -102,7 +102,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
             {isTrialActive ? (
               <View style={styles.topTrialPill}>
                 <Ionicons name="sparkles" size={10} color="#ffffff" />
-                <Text style={styles.topTrialPillText}>FREE TRIAL ACTIVE</Text>
+                <Text style={styles.topTrialPillText}>FREE TRIAL ACTIVATED</Text>
               </View>
             ) : null}
 

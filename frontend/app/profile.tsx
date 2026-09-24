@@ -134,9 +134,11 @@ export default function ProfileScreen() {
     });
     if (result.canceled || !result.assets[0]) return;
 
+    const selectedUri = result.assets[0].uri;
+    setPhotoUrl(selectedUri);
     setIsUploadingPhoto(true);
     try {
-      const uploaded = await uploadPhoto(result.assets[0].uri);
+      const uploaded = await uploadPhoto(selectedUri);
       const newPhotoUrl = uploaded.fileUrl;
       setPhotoUrl(newPhotoUrl);
 

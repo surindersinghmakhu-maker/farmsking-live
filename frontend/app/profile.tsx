@@ -494,58 +494,56 @@ export default function ProfileScreen() {
 
               {/* Personal Details Card */}
               <View style={[styles.card, { borderRadius: RADIUS.xl, padding: 14, backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderWidth: 1 }, premiumShadow('#0f172a', 'sm')]}>
-                {/* Header Row with Icon Badge */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#f0f9ff', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#bae6fd' }}>
-                      <Ionicons name="person" size={16} color="#0284c7" />
-                    </View>
-                    <Text style={[styles.sectionHeaderTitle, { fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a', marginBottom: 0 }]}>
-                      Personal Details
-                    </Text>
+                {/* 1. Header Title */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#f0f9ff', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#bae6fd' }}>
+                    <Ionicons name="person" size={16} color="#0284c7" />
                   </View>
-
-                  {/* Top Executive Pill Badges */}
-                  <View style={{ flexDirection: 'row', gap: 6 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f8fafc', paddingHorizontal: 9, paddingVertical: 4, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#cbd5e1' }}>
-                      <Ionicons name="key-outline" size={12} color="#0284c7" />
-                      <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#0f172a' }}>
-                        ID: {user?.kingId || '—'}
-                      </Text>
-                    </View>
-                    {user?.mobile ? (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f8fafc', paddingHorizontal: 9, paddingVertical: 4, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#cbd5e1' }}>
-                        <Ionicons name="call-outline" size={12} color="#16a34a" />
-                        <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#0f172a' }}>
-                          {user.mobile}
-                        </Text>
-                      </View>
-                    ) : null}
-                  </View>
+                  <Text style={[styles.sectionHeaderTitle, { fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a', marginBottom: 0 }]}>
+                    Personal Details
+                  </Text>
                 </View>
 
-                {/* Single Row 1: Full Name Label & Read-Only Field */}
+                {/* 2. King ID & Mobile Number Badges right under Title */}
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#f8fafc', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                    <Ionicons name="key-outline" size={13} color="#0284c7" />
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569' }}>
+                      King ID: {user?.kingId || '—'}
+                    </Text>
+                  </View>
+                  {user?.mobile ? (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#f8fafc', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                      <Ionicons name="call-outline" size={13} color="#16a34a" />
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569' }}>
+                        Mobile: {user.mobile}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+
+                {/* 3. Full Name displayed as a clean Label / Info row */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                   <View style={{ width: 105, flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                     <Ionicons name="person-circle-outline" size={15} color="#475569" />
                     <Text style={[styles.inputLabel, { marginBottom: 0, color: '#334155' }]}>Full Name *</Text>
                   </View>
-                  <View style={{ flex: 1, height: 40, backgroundColor: '#f8fafc', paddingHorizontal: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View style={{ flex: 1, height: 38, backgroundColor: '#f8fafc', paddingHorizontal: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
                       {name || user?.name || '—'}
                     </Text>
-                    <Ionicons name="lock-closed" size={13} color="#94a3b8" />
+                    <Ionicons name="checkmark-circle" size={14} color="#16a34a" />
                   </View>
                 </View>
 
-                {/* Single Row 2: Email Address Label & Editable Field */}
+                {/* 4. Email Address Label & Editable Field in 1 row */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <View style={{ width: 105, flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                     <Ionicons name="mail-outline" size={15} color="#475569" />
                     <Text style={[styles.inputLabel, { marginBottom: 0, color: '#334155' }]}>Email Address</Text>
                   </View>
                   <TextInput
-                    style={[styles.input, { flex: 1, height: 40, fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#ffffff', borderColor: '#cbd5e1' }]}
+                    style={[styles.input, { flex: 1, height: 38, fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#ffffff', borderColor: '#cbd5e1' }]}
                     value={email}
                     onChangeText={setEmail}
                     placeholder="yourname@domain.com"

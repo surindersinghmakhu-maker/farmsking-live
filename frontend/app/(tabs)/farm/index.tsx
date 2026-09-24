@@ -969,110 +969,137 @@ export default function FarmListScreen() {
                   return (
                     <TouchableOpacity
                       key={hItem.id}
-                      style={[styles.historyCard, premiumShadow('#000000', 'sm')]}
+                      style={[
+                        styles.historyCard,
+                        {
+                          backgroundColor: '#ffffff',
+                          borderRadius: 14,
+                          padding: 10,
+                          marginBottom: 8,
+                          borderWidth: 1,
+                          borderColor: '#cbd5e1',
+                          overflow: 'hidden',
+                        },
+                        premiumShadow('#000000', 'sm'),
+                      ]}
                       activeOpacity={0.8}
                       onPress={() => openHistoryDetail(hItem)}
                     >
-                      <View style={styles.historyCardHeader}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', flex: 1 }}>
-                          <Text style={styles.historyCropName}>
-                            📍 {hItem.fieldName} <Text style={styles.cropIdSubText}>(ID: {hItem.cropId || (hItem.id?.startsWith('C-') ? hItem.id : `C-${hItem.id?.slice(0, 6).toUpperCase()}`)})</Text>
+                      {/* Top Bar: Field & Crop Name + ID + Completed Tag */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1, flexWrap: 'wrap' }}>
+                          <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' }}>
+                            📍 {hItem.fieldName}
                           </Text>
-                          <View style={styles.completedBadge}>
-                            <Text style={styles.completedBadgeText}>🏁 COMPLETED</Text>
-                          </View>
-                        </View>
-                      </View>
-
-                      {/* Date & Advisor Status Badges */}
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
-                        <Text style={styles.historyCropSub}>
-                          🌾 {hItem.cropName} · {hItem.categoryName}
-                        </Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                          {/* Completion Date */}
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f1f5f9', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 }}>
-                            <Ionicons name="calendar-outline" size={11} color="#64748b" />
-                            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#334155' }}>
-                              📅 {summary.completionDateStr}
+                          <View style={{ backgroundColor: '#f0fdf4', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, borderWidth: 1, borderColor: '#bbf7d0' }}>
+                            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#15803d' }}>
+                              🌾 {hItem.cropName}
                             </Text>
                           </View>
-
-                          {/* Advisor Status */}
-                          {summary.isAdvisorHired ? (
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#dcfce7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12, borderWidth: 1, borderColor: '#bbf7d0' }}>
-                              <Ionicons name="medical" size={11} color="#15803d" />
-                              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#15803d' }}>
-                                🩺 Hired {summary.advisorName ? `(${summary.advisorName})` : ''}
-                              </Text>
-                            </View>
-                          ) : (
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f1f5f9', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                              <Ionicons name="person-outline" size={11} color="#64748b" />
-                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
-                                🩺 Self-Managed
-                              </Text>
-                            </View>
-                          )}
+                          <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' }}>
+                            (ID: {hItem.cropId || (hItem.id?.startsWith('C-') ? hItem.id : `C-${hItem.id?.slice(0, 6).toUpperCase()}`)})
+                          </Text>
+                        </View>
+                        <View style={{ backgroundColor: '#059669', paddingHorizontal: 7, paddingVertical: 2.5, borderRadius: 12 }}>
+                          <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#ffffff', letterSpacing: 0.3 }}>
+                            🏁 COMPLETED
+                          </Text>
                         </View>
                       </View>
 
-                      {/* Financial Summary Breakdown (Sales, Expenses, Labour, Net Profit/Loss) */}
-                      <View style={styles.metricsGridContainer}>
-                        <View style={[styles.metricBadgeBox, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}>
-                          <Text style={[styles.metricBadgeLabel, { color: '#166534' }]}>💰 Sales ({summary.totalWeight})</Text>
-                          <Text style={[styles.metricBadgeValue, { color: '#15803d' }]}>
+                      {/* Info Chips Row */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 5, flexWrap: 'wrap' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#f8fafc', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                          <Ionicons name="calendar-outline" size={10.5} color="#64748b" />
+                          <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#334155' }}>
+                            {summary.completionDateStr}
+                          </Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#f8fafc', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                          <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569' }}>
+                            🌱 {hItem.categoryName}
+                          </Text>
+                        </View>
+
+                        {summary.isAdvisorHired ? (
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#ecfdf5', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: '#a7f3d0' }}>
+                            <Ionicons name="medical" size={10} color="#15803d" />
+                            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#15803d' }}>
+                              🩺 {summary.advisorName || 'Doctor Hired'}
+                            </Text>
+                          </View>
+                        ) : (
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#f8fafc', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                            <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' }}>
+                              🩺 Self-Managed
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+
+                      {/* Compact Financial Summary Breakdown Grid (4 Badges) */}
+                      <View style={{ flexDirection: 'row', gap: 4, marginTop: 7 }}>
+                        {/* Sales */}
+                        <View style={{ flex: 1, backgroundColor: '#f0fdf4', paddingHorizontal: 6, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#bbf7d0' }}>
+                          <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#166534' }} numberOfLines={1}>
+                            💰 Sales ({summary.totalWeight})
+                          </Text>
+                          <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#15803d', marginTop: 1 }}>
                             ₹{summary.totalSalesAmountNum.toLocaleString('en-IN')}
                           </Text>
                         </View>
 
-                        <View style={[styles.metricBadgeBox, { backgroundColor: '#fff7ed', borderColor: '#ffedd5' }]}>
-                          <Text style={[styles.metricBadgeLabel, { color: '#9a3412' }]}>💸 Expenses</Text>
-                          <Text style={[styles.metricBadgeValue, { color: '#c2410c' }]}>
+                        {/* Expenses */}
+                        <View style={{ flex: 1, backgroundColor: '#fff7ed', paddingHorizontal: 6, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#ffedd5' }}>
+                          <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#9a3412' }} numberOfLines={1}>
+                            💸 Inputs
+                          </Text>
+                          <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#c2410c', marginTop: 1 }}>
                             ₹{summary.totalExpensesNum.toLocaleString('en-IN')}
                           </Text>
                         </View>
 
-                        <View style={[styles.metricBadgeBox, { backgroundColor: '#fff7ed', borderColor: '#ffedd5' }]}>
-                          <Text style={[styles.metricBadgeLabel, { color: '#9a3412' }]}>👷 Labour</Text>
-                          <Text style={[styles.metricBadgeValue, { color: '#c2410c' }]}>
+                        {/* Labour */}
+                        <View style={{ flex: 1, backgroundColor: '#fff7ed', paddingHorizontal: 6, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#ffedd5' }}>
+                          <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#9a3412' }} numberOfLines={1}>
+                            👷 Labour
+                          </Text>
+                          <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#c2410c', marginTop: 1 }}>
                             ₹{summary.totalLabourNum.toLocaleString('en-IN')}
                           </Text>
                         </View>
 
+                        {/* Net Profit / Loss */}
                         <View
-                          style={[
-                            styles.metricBadgeBox,
-                            {
-                              backgroundColor: isProfit ? '#ecfdf5' : '#fef2f2',
-                              borderColor: isProfit ? '#a7f3d0' : '#fecaca',
-                            },
-                          ]}
+                          style={{
+                            flex: 1.1,
+                            backgroundColor: isProfit ? '#ecfdf5' : '#fef2f2',
+                            paddingHorizontal: 6,
+                            paddingVertical: 5,
+                            borderRadius: 8,
+                            borderWidth: 1,
+                            borderColor: isProfit ? '#a7f3d0' : '#fecaca',
+                          }}
                         >
-                          <Text style={[styles.metricBadgeLabel, { color: isProfit ? '#065f46' : '#991b1b' }]}>
+                          <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isProfit ? '#065f46' : '#991b1b' }} numberOfLines={1}>
                             {isProfit ? '📈 Net Profit' : '📉 Net Loss'}
                           </Text>
-                          <Text style={[styles.metricBadgeValue, { color: isProfit ? '#047857' : '#dc2626' }]}>
+                          <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: isProfit ? '#047857' : '#dc2626', marginTop: 1 }}>
                             {isProfit ? '+' : '-'}₹{Math.abs(summary.netProfitOrLossNum).toLocaleString('en-IN')}
                           </Text>
                         </View>
                       </View>
 
-                      {isPaid ? (
-                        <View style={styles.historyViewMoreRow}>
-                          <Ionicons name="sparkles" size={13} color="#16a34a" />
-                          <Text style={[styles.historyViewMoreText, { color: '#16a34a', fontFamily: FONT.bold }]}>
-                            ✨ Tap to view full statement (Description & Comments)
+                      {/* Footer Action Bar */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6, paddingTop: 5, borderTopWidth: 1, borderTopColor: '#f1f5f9' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                          <Ionicons name="sparkles" size={12} color="#16a34a" />
+                          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#16a34a' }}>
+                            Tap for full audit statement & receipts
                           </Text>
                         </View>
-                      ) : (
-                        <View style={[styles.historyViewMoreRow, { backgroundColor: '#fff7ed', borderColor: '#ffedd5', borderWidth: 1, paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.xs }]}>
-                          <Ionicons name="lock-closed" size={13} color="#d97706" />
-                          <Text style={[styles.historyViewMoreText, { color: '#b45309', fontFamily: FONT.bold }]}>
-                            🔒 Full Paid Statement (Paid Users Only)
-                          </Text>
-                        </View>
-                      )}
+                        <Ionicons name="chevron-forward" size={14} color="#16a34a" />
+                      </View>
                     </TouchableOpacity>
                   );
                 })
@@ -2633,24 +2660,25 @@ const styles = StyleSheet.create({
   },
   metricsGridContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
     gap: 4,
     marginTop: 6,
+    width: '100%',
   },
   metricBadgeBox: {
     flex: 1,
-    minWidth: '47%',
-    paddingHorizontal: 8,
+    paddingHorizontal: 5,
     paddingVertical: 5,
-    borderRadius: RADIUS.xs,
+    borderRadius: 8,
     borderWidth: 1,
+    overflow: 'hidden',
   },
   metricBadgeLabel: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontFamily: FONT.bold,
   },
   metricBadgeValue: {
-    fontSize: 12.5,
+    fontSize: 11.5,
     fontFamily: FONT.extraBold,
     marginTop: 1,
   },

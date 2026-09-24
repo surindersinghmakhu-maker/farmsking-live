@@ -818,7 +818,7 @@ export default function FarmListScreen() {
                   )}
                 </View>
 
-                {/* Row 2: Subcategory & Variety Name, Sown Date, Area, Plants, Doctor Name */}
+                {/* Row 2: Subcategory & Variety Name, Sown Date */}
                 <View style={{ gap: 3, marginTop: 4 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
                     <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#15803d' }}>
@@ -830,16 +830,19 @@ export default function FarmListScreen() {
                         📅 Sown: {item.sowingDate.replace(/\s*\([^)]*\)/g, '').trim()}
                       </Text>
                     ) : null}
+                  </View>
 
+                  {/* Row 3: Area & Number of Plants (In Next Separate Row) */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                     {item.area ? (
                       <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#334155' }}>
-                        📐 {item.area}
+                        📐 Area: {item.area}
                       </Text>
                     ) : null}
 
                     {item.plantCount ? (
                       <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#334155' }}>
-                        🌱 {item.plantCount} Plants
+                        🌱 Plants: {item.plantCount}
                       </Text>
                     ) : null}
                   </View>

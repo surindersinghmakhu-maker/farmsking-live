@@ -808,7 +808,15 @@ export class UsersService implements OnModuleInit {
 
     const tempPassword = newPassword ?? generateTempPassword();
     const passwordHash = await argon2.hash(tempPassword);
-    await this.prisma.user.update({ where: { id }, data: { passwordHash } });
+    await this.prisma.user.update({
+      where: { id },
+      data: {
+        passwordHash,
+        failedLoginAttempts: 0,
+        lockoutUntil: null,
+        isPermanentlyBlocked: false,
+      },
+    });
 
     return { tempPassword };
   }

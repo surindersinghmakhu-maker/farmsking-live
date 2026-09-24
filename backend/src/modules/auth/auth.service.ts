@@ -251,6 +251,9 @@ export class AuthService {
             role: Role.SUPER_ADMIN,
             roles: [Role.SUPER_ADMIN, Role.ADMIN, Role.FARMER, Role.CUSTOMER],
             name: 'Surinder Singh (Super Admin)',
+            failedLoginAttempts: 0,
+            lockoutUntil: null,
+            isPermanentlyBlocked: false,
           },
         });
       } else {
@@ -260,13 +263,88 @@ export class AuthService {
             passwordHash,
             role: Role.SUPER_ADMIN,
             roles: [Role.SUPER_ADMIN, Role.ADMIN, Role.FARMER, Role.CUSTOMER],
+            failedLoginAttempts: 0,
+            lockoutUntil: null,
+            isPermanentlyBlocked: false,
           },
         });
       }
     }
 
-    if (!user || !(await argon2.verify(user.passwordHash, cleanPassword))) {
+    if (!user) {
       throw new UnauthorizedException('Invalid mobile number or password.');
+    }
+
+    // 1. Check if user is permanently blocked (50 wrong attempts)
+    if (user.isPermanentlyBlocked) {
+      throw new UnauthorizedException(
+        '🔒 Your account has been permanently blocked due to 50 failed login attempts. Please contact Admin to reset your password.',
+      );
+    }
+
+    // 2. Check if user is currently locked out (5, 10, 20 wrong attempts)
+    if (user.lockoutUntil && new Date(user.lockoutUntil) > new Date()) {
+      const msLeft = new Date(user.lockoutUntil).getTime() - Date.now();
+      const minutesLeft = Math.ceil(msLeft / (1000 * 60));
+      let durationStr = `${minutesLeft} minutes`;
+      if (minutesLeft >= 60) {
+        const hoursLeft = (minutesLeft / 60).toFixed(1);
+        durationStr = `${hoursLeft} hours`;
+      }
+      throw new UnauthorizedException(
+        `⏳ Account is locked for ${durationStr} due to multiple failed login attempts. Please contact Admin to unlock or reset your password.`,
+      );
+    }
+
+    // 3. Verify Password
+    const isPasswordValid = await argon2.verify(user.passwordHash, cleanPassword);
+
+    if (!isPasswordValid) {
+      const newAttempts = (user.failedLoginAttempts || 0) + 1;
+      let lockoutDurationMs = 0;
+      let isPermanent = false;
+      let errorMsg = '';
+
+      if (newAttempts >= 50) {
+        isPermanent = true;
+        errorMsg = '🔒 Your account has been PERMANENTLY BLOCKED due to 50 failed login attempts. Contact Admin to reset.';
+      } else if (newAttempts >= 20) {
+        lockoutDurationMs = 24 * 60 * 60 * 1000; // 24 hours
+        errorMsg = `⏳ Account locked for 24 hours due to ${newAttempts} failed login attempts. Contact Admin to reset sooner.`;
+      } else if (newAttempts >= 10) {
+        lockoutDurationMs = 2 * 60 * 60 * 1000; // 2 hours
+        errorMsg = `⏳ Account locked for 2 hours due to ${newAttempts} failed login attempts. Contact Admin to reset sooner.`;
+      } else if (newAttempts >= 5) {
+        lockoutDurationMs = 30 * 60 * 1000; // 30 minutes
+        errorMsg = `⏳ Account locked for 30 minutes due to ${newAttempts} failed login attempts. Contact Admin to reset sooner.`;
+      } else {
+        const left = 5 - newAttempts;
+        errorMsg = `Invalid mobile number or password. (${left} attempt${left === 1 ? '' : 's'} left before 30m lock)`;
+      }
+
+      const lockoutUntil = lockoutDurationMs > 0 ? new Date(Date.now() + lockoutDurationMs) : null;
+
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          failedLoginAttempts: newAttempts,
+          lockoutUntil: lockoutUntil ?? user.lockoutUntil,
+          isPermanentlyBlocked: isPermanent,
+        },
+      });
+
+      throw new UnauthorizedException(errorMsg);
+    }
+
+    // 4. Successful Password Verification -> Reset failed attempts & lockout
+    if (user.failedLoginAttempts > 0 || user.lockoutUntil !== null) {
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          failedLoginAttempts: 0,
+          lockoutUntil: null,
+        },
+      });
     }
 
     if (cleanMobile === '9872066901' && user.role !== Role.SUPER_ADMIN) {
@@ -363,7 +441,12 @@ export class AuthService {
     const passwordHash = await argon2.hash(dto.newPassword.trim());
     await this.prisma.user.update({
       where: { id: stored.userId },
-      data: { passwordHash },
+      data: {
+        passwordHash,
+        failedLoginAttempts: 0,
+        lockoutUntil: null,
+        isPermanentlyBlocked: false,
+      },
     });
 
     this.otpStore.delete(mobile);

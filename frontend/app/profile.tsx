@@ -608,122 +608,155 @@ export default function ProfileScreen() {
                 </View>
               </View>
 
-              {/* Location & Address Details Card - Compact 2-Row Layout */}
-              <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
-                <Text style={styles.sectionHeaderTitle}>📍 Location & Address</Text>
-
-                {/* Row 1: PIN Code Input & Post Office Badge */}
-                <View style={{ flexDirection: 'row', gap: 10, marginTop: 6 }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.inputLabel}>PIN Code *</Text>
-                    <View style={styles.pincodeRow}>
-                      <View style={[styles.inputWrap, { flex: 1, backgroundColor: '#ffffff' }]}>
-                        <TextInput
-                          style={styles.input}
-                          placeholder="6-digit PIN"
-                          placeholderTextColor="#94a3b8"
-                          keyboardType="numeric"
-                          maxLength={6}
-                          value={pincode}
-                          onChangeText={(t) => {
-                            setPincode(t);
-                            if (t.length === 6) fetchLocationFromPincode(t);
-                          }}
-                        />
-                      </View>
-                      <TouchableOpacity
-                        style={[styles.fetchBtn, { backgroundColor: theme.primary, paddingHorizontal: 10 }]}
-                        activeOpacity={0.8}
-                        disabled={isPincodeLoading || pincode.length !== 6}
-                        onPress={() => fetchLocationFromPincode(pincode)}
-                      >
-                        {isPincodeLoading ? <ActivityIndicator size="small" color="#ffffff" /> : <Text style={styles.fetchBtnText}>Fetch</Text>}
-                      </TouchableOpacity>
-                    </View>
+              {/* Location & Address Details Card - Updated Layout */}
+              <View style={[styles.card, { borderRadius: RADIUS.xl, padding: 14, backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderWidth: 1 }, premiumShadow('#0f172a', 'sm')]}>
+                {/* Header Title */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                  <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#f0fdf4', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#bbf7d0' }}>
+                    <Ionicons name="location" size={16} color="#16a34a" />
                   </View>
-
-                  <View style={{ flex: 1.2 }}>
-                    <Text style={styles.inputLabel}>Post Office / Locality</Text>
-                    {officeOptions.length > 0 && isPostOfficeExpanded ? (
-                      <View style={styles.expandedOfficeList}>
-                        {officeOptions.map((off) => {
-                          const isSel = off.name === postOffice;
-                          return (
-                            <TouchableOpacity
-                              key={off.name}
-                              style={[styles.officeOptionRow, isSel && { backgroundColor: '#f0fdf4', borderColor: theme.primary }]}
-                              onPress={() => {
-                                tap();
-                                setPostOffice(off.name);
-                                setIsPostOfficeExpanded(false);
-                              }}
-                            >
-                              <Ionicons name={isSel ? 'radio-button-on' : 'radio-button-off'} size={14} color={isSel ? theme.primary : '#94a3b8'} />
-                              <Text style={[styles.officeOptionText, isSel && { fontFamily: FONT.bold, color: theme.primary }]}>
-                                {off.name}
-                              </Text>
-                            </TouchableOpacity>
-                          );
-                        })}
-                      </View>
-                    ) : (
-                      <TouchableOpacity
-                        style={{
-                          height: 42,
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          justify: 'space-between',
-                          backgroundColor: '#f8fafc',
-                          paddingHorizontal: 10,
-                          borderRadius: RADIUS.md,
-                          borderWidth: 1,
-                          borderColor: '#e2e8f0',
-                        }}
-                        activeOpacity={officeOptions.length > 0 ? 0.8 : 1}
-                        onPress={() => {
-                          if (officeOptions.length > 0) {
-                            tap();
-                            setIsPostOfficeExpanded(true);
-                          }
-                        }}
-                      >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1 }}>
-                          <Ionicons name="mail-outline" size={15} color="#64748b" />
-                          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: postOffice ? '#0f172a' : '#94a3b8' }} numberOfLines={1}>
-                            {postOffice || 'Auto-fetched'}
-                          </Text>
-                        </View>
-                        {officeOptions.length > 0 && (
-                          <Ionicons name="chevron-down" size={13} color={theme.primary} />
-                        )}
-                      </TouchableOpacity>
-                    )}
-                  </View>
+                  <Text style={[styles.sectionHeaderTitle, { fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a', marginBottom: 0 }]}>
+                    Location & Address
+                  </Text>
                 </View>
 
-                {pincodeStatus ? (
-                  <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: pincodeStatus.includes('❌') ? '#dc2626' : '#16a34a', marginTop: 3 }}>
-                    {pincodeStatus}
-                  </Text>
-                ) : null}
+                {/* Row 1: PIN Code Input with Fetch Button on Right & Auto-Fetch */}
+                <View style={{ marginBottom: 10 }}>
+                  <Text style={[styles.inputLabel, { color: '#334155', marginBottom: 4 }]}>PIN Code *</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <View style={{ flex: 1, height: 40, backgroundColor: '#ffffff', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#cbd5e1', paddingHorizontal: 12, justifyContent: 'center' }}>
+                      <TextInput
+                        style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a', padding: 0 }}
+                        placeholder="6-digit PIN"
+                        placeholderTextColor="#94a3b8"
+                        keyboardType="numeric"
+                        maxLength={6}
+                        value={pincode}
+                        onChangeText={(t) => {
+                          setPincode(t);
+                          if (t.length === 6) fetchLocationFromPincode(t);
+                        }}
+                      />
+                    </View>
+                    <TouchableOpacity
+                      style={{
+                        height: 40,
+                        paddingHorizontal: 16,
+                        backgroundColor: pincode.length === 6 ? theme.primary : '#94a3b8',
+                        borderRadius: RADIUS.md,
+                        alignItems: 'center',
+                        justify: 'center',
+                        flexDirection: 'row',
+                        gap: 6,
+                      }}
+                      activeOpacity={0.8}
+                      disabled={isPincodeLoading || pincode.length !== 6}
+                      onPress={() => fetchLocationFromPincode(pincode)}
+                    >
+                      {isPincodeLoading ? (
+                        <ActivityIndicator size="small" color="#ffffff" />
+                      ) : (
+                        <>
+                          <Ionicons name="search" size={14} color="#ffffff" />
+                          <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#ffffff' }}>Fetch</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                  {pincodeStatus ? (
+                    <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: pincodeStatus.includes('❌') ? '#dc2626' : '#16a34a', marginTop: 4 }}>
+                      {pincodeStatus}
+                    </Text>
+                  ) : null}
+                </View>
 
-                {/* Row 2: District & State Info Badges */}
-                <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.inputLabel}>District</Text>
-                    <View style={{ height: 42, backgroundColor: '#f8fafc', paddingHorizontal: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                      <Ionicons name="business-outline" size={15} color="#64748b" />
-                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: district ? '#0f172a' : '#94a3b8' }} numberOfLines={1}>
+                {/* Row 2: Post Office / Locality Selected (Read Only) */}
+                <View style={{ marginBottom: 10 }}>
+                  <Text style={[styles.inputLabel, { color: '#334155', marginBottom: 4 }]}>Post Office / Locality</Text>
+                  {officeOptions.length > 0 && isPostOfficeExpanded ? (
+                    <View style={{ backgroundColor: '#ffffff', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#cbd5e1', overflow: 'hidden', maxHeight: 160 }}>
+                      {officeOptions.map((off) => {
+                        const isSel = off.name === postOffice;
+                        return (
+                          <TouchableOpacity
+                            key={off.name}
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              gap: 8,
+                              paddingHorizontal: 12,
+                              paddingVertical: 9,
+                              borderBottomWidth: 1,
+                              borderBottomColor: '#f1f5f9',
+                              backgroundColor: isSel ? '#f0fdf4' : '#ffffff',
+                            }}
+                            onPress={() => {
+                              tap();
+                              setPostOffice(off.name);
+                              setIsPostOfficeExpanded(false);
+                            }}
+                          >
+                            <Ionicons name={isSel ? 'radio-button-on' : 'radio-button-off'} size={14} color={isSel ? theme.primary : '#94a3b8'} />
+                            <Text style={{ fontSize: 12, fontFamily: isSel ? FONT.bold : FONT.medium, color: isSel ? theme.primary : '#334155', flex: 1 }}>
+                              {off.name}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  ) : (
+                    <TouchableOpacity
+                      style={{
+                        height: 38,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justify: 'space-between',
+                        backgroundColor: '#f8fafc',
+                        paddingHorizontal: 12,
+                        borderRadius: RADIUS.md,
+                        borderWidth: 1,
+                        borderColor: '#e2e8f0',
+                      }}
+                      activeOpacity={officeOptions.length > 0 ? 0.8 : 1}
+                      onPress={() => {
+                        if (officeOptions.length > 0) {
+                          tap();
+                          setIsPostOfficeExpanded(true);
+                        }
+                      }}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                        <Ionicons name="mail-outline" size={15} color="#64748b" />
+                        <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: postOffice ? '#0f172a' : '#94a3b8' }} numberOfLines={1}>
+                          {postOffice || 'Auto-fetched (Read Only)'}
+                        </Text>
+                      </View>
+                      {officeOptions.length > 0 ? (
+                        <Ionicons name="chevron-down" size={14} color={theme.primary} />
+                      ) : (
+                        <Ionicons name="lock-closed" size={12} color="#94a3b8" />
+                      )}
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {/* Row 3: District & State Text Display (Read Only Text) */}
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={{ flex: 1, backgroundColor: '#f8fafc', paddingHorizontal: 12, paddingVertical: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                    <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>District</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <Ionicons name="business" size={13} color="#0284c7" />
+                      <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: '#0f172a' }} numberOfLines={1}>
                         {district || '—'}
                       </Text>
                     </View>
                   </View>
 
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.inputLabel}>State</Text>
-                    <View style={{ height: 42, backgroundColor: '#f8fafc', paddingHorizontal: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                      <Ionicons name="map-outline" size={15} color="#64748b" />
-                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: state ? '#0f172a' : '#94a3b8' }} numberOfLines={1}>
+                  <View style={{ flex: 1, backgroundColor: '#f8fafc', paddingHorizontal: 12, paddingVertical: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                    <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>State</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <Ionicons name="map" size={13} color="#16a34a" />
+                      <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: '#0f172a' }} numberOfLines={1}>
                         {state || '—'}
                       </Text>
                     </View>

@@ -46,6 +46,7 @@ export default function WalletScreen() {
   const { role: currentRole } = useRole();
   const theme = RoleThemes[currentRole] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER;
   const { data: wallet, isLoading: isLoadingWallet } = useMyWallet();
+  const { data: referralData } = useReferralStatement();
   const { data: withdrawals } = useMyWithdrawals();
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [isRedeemForFarmerOpen, setIsRedeemForFarmerOpen] = useState(false);
@@ -116,23 +117,12 @@ export default function WalletScreen() {
         {/* Unified Plan Coupons Hub for Advisors & Business Partners */}
         {isAdvisorOrPartner ? <MyUnifiedPlanCouponsSection theme={theme} /> : null}
 
-        <Text style={styles.sectionTitle}>Transaction History</Text>
-        <View style={[styles.txCard, premiumShadow('#0f172a', 'sm')]}>
-          {!wallet || wallet.transactions.length === 0 ? (
-            <Text style={styles.emptyText}>No transactions yet.</Text>
-          ) : (
-            wallet.transactions.map((tx, idx) => (
-              <TransactionRow
-                key={tx.id}
-                tx={tx}
-                theme={theme}
-                isLast={idx === wallet.transactions.length - 1}
-                isExpanded={expandedTxId === tx.id}
-                onToggle={() => setExpandedTxId((cur) => (cur === tx.id ? null : tx.id))}
-              />
-            ))
-          )}
-        </View>
+        {/* Unified Wallet & Referral History Table */}
+        <WalletHistoryTable
+          transactions={wallet?.transactions ?? []}
+          referees={referralData?.referees ?? []}
+          theme={theme}
+        />
       </ScrollView>
 
       <WithdrawModal visible={isWithdrawOpen} balance={wallet?.balance ?? 0} onClose={() => setIsWithdrawOpen(false)} />
@@ -497,6 +487,202 @@ function ReferralStatementTable({ theme }: { theme: RoleTheme }) {
                   </View>
                 </View>
               </View>
+            );
+          })
+        )}
+      </View>
+    </View>
+  );
+}
+
+function WalletHistoryTable({
+  transactions,
+  referees,
+  theme,
+}: {
+  transactions: WalletTransaction[];
+  referees: RefereeStatementItem[];
+  theme: RoleTheme;
+}) {
+  const [filter, setFilter] = useState<'ALL' | 'REFERRALS' | 'PENDING'>('ALL');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const unifiedLedger = useMemo(() => {
+    const items: Array<{
+      id: string;
+      date: Date;
+      type: string;
+      referenceName: string;
+      referenceKingId: string;
+      amount: number;
+      pendingAmount: number;
+      status: 'SUCCESS' | 'PENDING';
+      isCredit: boolean;
+      rawReason: string;
+      relatedUserMobile?: string;
+    }> = [];
+
+    // Processed transactions
+    for (const tx of transactions) {
+      const isCredit = tx.type === 'CREDIT';
+      let displayType = isCredit ? 'Credit' : 'Debit';
+      if (tx.reason.includes('Welcome')) displayType = '🎁 Welcome Bonus';
+      else if (tx.reason.includes('Plan Bonus') || tx.reason.includes('Plan')) displayType = '👑 Referral Plan Bonus';
+      else if (tx.reason.includes('Referral')) displayType = '🎉 Referral Bonus';
+      else if (tx.reason.includes('Withdrawal')) displayType = '💸 Withdrawal';
+      else if (tx.reason.includes('Manual')) displayType = '🛠️ Admin Credit';
+
+      items.push({
+        id: tx.id,
+        date: new Date(tx.createdAt),
+        type: displayType,
+        referenceName: tx.relatedUser?.name || 'FarmsKing System',
+        referenceKingId: tx.relatedUser?.kingId || 'N/A',
+        amount: Number(tx.amount),
+        pendingAmount: 0,
+        status: 'SUCCESS',
+        isCredit,
+        rawReason: tx.reason,
+        relatedUserMobile: tx.relatedUser?.mobile,
+      });
+    }
+
+    // Pending plan bonuses for referees who haven't bought a paid plan yet
+    for (const ref of referees) {
+      if (ref.status === 'PENDING' && ref.pendingAmount > 0) {
+        items.push({
+          id: `pending-${ref.refereeId}`,
+          date: new Date(ref.registrationDate),
+          type: '⏳ Plan Bonus (Pending)',
+          referenceName: ref.refereeName,
+          referenceKingId: ref.refereeKingId,
+          amount: 0,
+          pendingAmount: ref.pendingAmount,
+          status: 'PENDING',
+          isCredit: true,
+          rawReason: `Pending Plan Bonus: Waiting for ${ref.refereeName} (${ref.refereeKingId}) to buy any paid plan`,
+        });
+      }
+    }
+
+    return items.sort((a, b) => b.date.getTime() - a.date.getTime());
+  }, [transactions, referees]);
+
+  const filteredItems = useMemo(() => {
+    if (filter === 'REFERRALS') {
+      return unifiedLedger.filter((item) => item.type.includes('Bonus') || item.type.includes('Referral') || item.type.includes('Welcome'));
+    }
+    if (filter === 'PENDING') {
+      return unifiedLedger.filter((item) => item.status === 'PENDING');
+    }
+    return unifiedLedger;
+  }, [unifiedLedger, filter]);
+
+  return (
+    <View style={{ width: '100%', marginTop: 16 }}>
+      {/* Table Control Header */}
+      <View style={styles.tableControlRow}>
+        <Text style={styles.sectionTitle}>Wallet & Bonus History Table 📊</Text>
+        <View style={styles.filterChipGroup}>
+          <TouchableOpacity
+            style={[styles.filterChip, filter === 'ALL' && { backgroundColor: theme.primary, borderColor: theme.primary }]}
+            onPress={() => setFilter('ALL')}
+          >
+            <Text style={[styles.filterChipText, filter === 'ALL' && { color: '#fff' }]}>All ({unifiedLedger.length})</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.filterChip, filter === 'REFERRALS' && { backgroundColor: theme.primary, borderColor: theme.primary }]}
+            onPress={() => setFilter('REFERRALS')}
+          >
+            <Text style={[styles.filterChipText, filter === 'REFERRALS' && { color: '#fff' }]}>Referrals</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.filterChip, filter === 'PENDING' && { backgroundColor: '#d97706', borderColor: '#d97706' }]}
+            onPress={() => setFilter('PENDING')}
+          >
+            <Text style={[styles.filterChipText, filter === 'PENDING' && { color: '#fff' }]}>Pending ⏳</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* History Table */}
+      <View style={[styles.txCard, premiumShadow('#0f172a', 'sm'), { padding: 0, overflow: 'hidden' }]}>
+        <View style={styles.historyTableHeader}>
+          <Text style={[styles.historyHeadCell, { flex: 1.1 }]}>Date</Text>
+          <Text style={[styles.historyHeadCell, { flex: 1.5 }]}>Type / Reason</Text>
+          <Text style={[styles.historyHeadCell, { flex: 1.4 }]}>Referee / King ID</Text>
+          <Text style={[styles.historyHeadCell, { flex: 1, textAlign: 'right' }]}>Amount</Text>
+          <Text style={[styles.historyHeadCell, { flex: 1, textAlign: 'right' }]}>Pending</Text>
+          <Text style={[styles.historyHeadCell, { flex: 1.1, textAlign: 'center' }]}>Status</Text>
+        </View>
+
+        {filteredItems.length === 0 ? (
+          <Text style={[styles.emptyText, { padding: 20, textAlign: 'center' }]}>
+            No history records found for this view.
+          </Text>
+        ) : (
+          filteredItems.map((item, idx) => {
+            const isLast = idx === filteredItems.length - 1;
+            const isExpanded = expandedId === item.id;
+            const dateStr = item.date.toLocaleDateString('en-IN', {
+              day: '2-digit',
+              month: 'short',
+              year: '2-digit',
+            });
+
+            return (
+              <React.Fragment key={item.id}>
+                <TouchableOpacity
+                  style={[styles.historyTableRow, !isLast && styles.tableRowBorder, isExpanded && { backgroundColor: '#f8fafc' }]}
+                  activeOpacity={0.7}
+                  onPress={() => setExpandedId(isExpanded ? null : item.id)}
+                >
+                  <Text style={[styles.historyCellText, { flex: 1.1 }]}>{dateStr}</Text>
+
+                  <View style={{ flex: 1.5, justifyContent: 'center' }}>
+                    <Text style={styles.tableNameText} numberOfLines={1}>{item.type}</Text>
+                  </View>
+
+                  <View style={{ flex: 1.4, justifyContent: 'center' }}>
+                    <Text style={styles.tableNameText} numberOfLines={1}>{item.referenceName}</Text>
+                    {item.referenceKingId !== 'N/A' ? (
+                      <Text style={styles.tableCodeText}>ID: {item.referenceKingId}</Text>
+                    ) : null}
+                  </View>
+
+                  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'flex-end' }}>
+                    <Text style={[styles.tableAmountText, { color: item.status === 'PENDING' ? '#94a3b8' : item.isCredit ? '#16a34a' : '#dc2626' }]}>
+                      {item.status === 'PENDING' ? '₹0' : `${item.isCredit ? '+' : '-'}₹${item.amount}`}
+                    </Text>
+                  </View>
+
+                  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'flex-end' }}>
+                    <Text style={[styles.tableAmountText, { color: item.pendingAmount > 0 ? '#d97706' : '#94a3b8' }]}>
+                      ₹{item.pendingAmount}
+                    </Text>
+                  </View>
+
+                  <View style={{ flex: 1.1, justifyContent: 'center', alignItems: 'center' }}>
+                    <View style={[styles.statusBadge, { backgroundColor: item.status === 'SUCCESS' ? '#dcfce7' : '#fef3c7' }]}>
+                      <Text style={[styles.statusBadgeText, { color: item.status === 'SUCCESS' ? '#15803d' : '#b45309' }]}>
+                        {item.status === 'SUCCESS' ? 'SUCCESS ✅' : 'PENDING ⏳'}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+
+                {isExpanded ? (
+                  <View style={styles.historyDetailBox}>
+                    <Text style={styles.historyDetailReason}>📌 {item.rawReason}</Text>
+                    {item.relatedUserMobile ? (
+                      <Text style={styles.historyDetailSub}>📞 Contact: {item.relatedUserMobile}</Text>
+                    ) : null}
+                    <Text style={styles.historyDetailSub}>
+                      📅 Timestamp: {item.date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} at {item.date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                    </Text>
+                  </View>
+                ) : null}
+              </React.Fragment>
             );
           })
         )}
@@ -1419,4 +1605,15 @@ const styles = StyleSheet.create({
   tableCodeText: { fontSize: 9.5, fontFamily: FONT.bold, color: staticTheme.primary },
   tableDateText: { fontSize: 10.5, fontFamily: FONT.medium, color: '#475569' },
   tableAmountText: { fontSize: 12, fontFamily: FONT.extraBold },
+  tableControlRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 20, marginBottom: 8, flexWrap: 'wrap', gap: 8 },
+  filterChipGroup: { flexDirection: 'row', gap: 6 },
+  filterChip: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff' },
+  filterChipText: { fontSize: 11, fontFamily: FONT.bold, color: '#64748b' },
+  historyTableHeader: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 12, backgroundColor: '#f8fafc', borderBottomWidth: 1.5, borderBottomColor: '#e2e8f0' },
+  historyHeadCell: { fontSize: 10.5, fontFamily: FONT.bold, color: '#475569', textTransform: 'uppercase' },
+  historyTableRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 12 },
+  historyCellText: { fontSize: 11, fontFamily: FONT.medium, color: '#475569' },
+  historyDetailBox: { backgroundColor: '#f1f5f9', padding: 10, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: '#e2e8f0', gap: 4 },
+  historyDetailReason: { fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' },
+  historyDetailSub: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b' },
 });

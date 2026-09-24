@@ -858,6 +858,42 @@ export default function FarmListScreen() {
                     </TouchableOpacity>
                   )}
 
+                  {/* Stage & Update Stage Strip */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f0fdf4', paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#bbf7d0', marginTop: 3 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#166534' }}>
+                        Stage:
+                      </Text>
+                      {(() => {
+                        const st = STAGE_META[item.stage];
+                        return (
+                          <View style={{ backgroundColor: st.color, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6 }}>
+                            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#ffffff' }}>
+                              {st.label}
+                            </Text>
+                          </View>
+                        );
+                      })()}
+                    </View>
+
+                    {item.stage !== 'COMPLETED' && (
+                      <TouchableOpacity
+                        style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#ffffff', paddingHorizontal: 8, paddingVertical: 3.5, borderRadius: 6, borderWidth: 1, borderColor: '#86efac' }}
+                        activeOpacity={0.8}
+                        onPress={() => {
+                          tap();
+                          setStagePickerCrop(item);
+                          setStagePickerVisible(true);
+                        }}
+                      >
+                        <Ionicons name="repeat" size={12} color="#15803d" />
+                        <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#15803d' }}>
+                          Update Stage
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+
                   {/* Previous Activity Row (Last Mark as Done Schedule Task) */}
                   <View style={{ backgroundColor: '#f8fafc', paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0', marginTop: 2 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
@@ -1006,33 +1042,6 @@ export default function FarmListScreen() {
                       );
                     }
                   })()}
-                </View>
-
-                <View style={styles.stageInlineRow}>
-                  {(() => {
-                    const st = STAGE_META[item.stage];
-                    return (
-                      <View style={[styles.stageChip, { backgroundColor: st.color, borderColor: st.color }]}>
-                        <Text style={[styles.stageChipText, { color: '#ffffff', fontFamily: FONT.bold }]}>
-                          {st.label}
-                        </Text>
-                      </View>
-                    );
-                  })()}
-                  {item.stage !== 'COMPLETED' && (
-                    <TouchableOpacity
-                      style={styles.updateStageBtn}
-                      activeOpacity={0.8}
-                      onPress={() => {
-                        tap();
-                        setStagePickerCrop(item);
-                        setStagePickerVisible(true);
-                      }}
-                    >
-                      <Ionicons name="repeat" size={12} color={theme.primary} />
-                      <Text style={styles.updateStageBtnText}>Update Stage</Text>
-                    </TouchableOpacity>
-                  )}
                 </View>
               </View>
             );

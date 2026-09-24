@@ -213,14 +213,6 @@ export default function LoginScreen() {
                 <Text style={styles.downloadBadgeText}>Download</Text>
               </View>
             </TouchableOpacity>
-
-              <View style={styles.apkMetaCard}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Ionicons name="hardware-chip" size={13} color="#0369a1" />
-                  <Text style={styles.apkMetaTitle}>⚡ APK Memory Size: ~18.5 MB</Text>
-                </View>
-                <Text style={styles.apkMetaSub}>Direct Download • Fast Installation • Auto-Updating Engine</Text>
-              </View>
           </View>
 
         </View>

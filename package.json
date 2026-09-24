@@ -5,7 +5,7 @@
   "scripts": {
     "build": "cd backend && npm install --legacy-peer-deps && npx prisma@6.4.0 generate && npm run build",
     "start": "cd backend && node dist/main.js",
-    "build:web": "node build.js",
-    "deploy:hostinger": "node build.js && git add . && git commit -m \"deploy: hostinger live update\" && git push origin main"
+    "build:web": "node frontend/build.js",
+    "deploy": "node frontend/build.js; git add .; git commit -m \"deploy: live update\"; git push origin main; git push hostinger main"
   }
 }

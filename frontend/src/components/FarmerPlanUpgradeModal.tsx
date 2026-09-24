@@ -6,7 +6,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RoleThemes } from '../../constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '../../constants/theme';
-import { useFarmerPlan, useFarmerPlanPricing, usePreviewFarmerPlanCoupon, useRedeemFarmerPlanCoupon } from '../hooks/useFarmerPlan';
+import { useFarmerPlan, useFarmerPlanPricing, usePreviewFarmerPlanCoupon, useRedeemFarmerPlanCoupon, useActivateTrial } from '../hooks/useFarmerPlan';
 import { useInitiateFarmerPlanPayment, useSubmitFarmerPlanPayment } from '../hooks/useFarmerPlanPayments';
 import { useAvailableAdvisors, useMyAdvisor } from '../hooks/useAdvisorAssignments';
 import { uploadPhoto } from '../api/uploads.api';
@@ -120,7 +120,14 @@ function PlanComparisonChart({
           const isDowngrade = PLAN_RANK[p] < PLAN_RANK[currentPlan];
           return (
             <View key={p} style={chartStyles.cell}>
-              {p === 'FREE' ? null : isCurrent ? (
+              {p === 'FREE' ? (
+                <TouchableOpacity
+                  style={[chartStyles.planBtn, { backgroundColor: '#166534' }]}
+                  onPress={() => onPickPlan('FREE')}
+                >
+                  <Text style={chartStyles.planBtnText}>Trial</Text>
+                </TouchableOpacity>
+              ) : isCurrent ? (
                 <TouchableOpacity
                   style={[chartStyles.planBtn, { backgroundColor: PLAN_COLUMN_META[p].color }]}
                   onPress={() => onPickPlan(p)}
@@ -278,6 +285,7 @@ export function FarmerPlanUpgradeModal({
   const plans: FarmerPlanType[] = ['FREE', ...tiers];
   const preview = usePreviewFarmerPlanCoupon();
   const redeem = useRedeemFarmerPlanCoupon();
+  const activateTrial = useActivateTrial();
   const { data: myAdvisor } = useMyAdvisor();
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -285,7 +293,7 @@ export function FarmerPlanUpgradeModal({
   const [result, setResult] = useState<Awaited<ReturnType<typeof redeem.mutateAsync>> | null>(null);
   const [showChart, setShowChart] = useState(false);
   const [pickedPlan, setPickedPlan] = useState<FarmerPlanType | null>(null);
-  const [selectedOptionId, setSelectedOptionId] = useState<string>('FARMER_LITE');
+  const [selectedOptionId, setSelectedOptionId] = useState<string>('FARMER_FREE');
   const [planCategory, setPlanCategory] = useState<'FARMER' | 'ADVISOR'>('FARMER');
   const [mode, setMode] = useState<'CODE' | 'UPI'>('CODE');
   const [tabMode, setTabMode] = useState<'GET_COUPON' | 'REDEEM_CODE'>(initialMode);
@@ -317,17 +325,31 @@ export function FarmerPlanUpgradeModal({
     setSelectedAdvisorId(null);
   };
 
-  const handlePickPlan = (plan: FarmerPlanType) => {
+  const handlePickPlan = async (plan: FarmerPlanType) => {
+    if (plan === 'FREE') {
+      try {
+        await activateTrial.mutateAsync();
+        const msg = '🎉 Free Membership Trial activated successfully!';
+        if (Platform.OS === 'web') alert(msg);
+        else Alert.alert('Trial Activated', msg);
+        closeAndReset();
+      } catch (err: any) {
+        const msg = err?.response?.data?.message ?? 'Free Trial already active or used.';
+        if (Platform.OS === 'web') alert(`Notice: ${msg}`);
+        else Alert.alert('Notice', msg);
+      }
+      return;
+    }
     setPickedPlan(plan);
     if (plan === 'PRO') {
       setPlanCategory('FARMER');
-      setSelectedOptionId('FARMER_LITE');
+      setSelectedOptionId('FARMER_BASIC');
     } else if (plan === 'SMART') {
       setPlanCategory('FARMER');
       setSelectedOptionId('FARMER_PRO');
     } else if (plan === 'SUPER') {
-      setPlanCategory('ADVISOR');
-      setSelectedOptionId('ADVISOR_SUPER');
+      setPlanCategory('FARMER');
+      setSelectedOptionId('FARMER_SUPER');
     }
     const activeVariants = pricingList.filter((it) => it.plan === plan && it.isActive !== false);
     if (activeVariants.length > 0 && !selectedDaysMap[plan]) {
@@ -531,6 +553,7 @@ export function FarmerPlanUpgradeModal({
               <View style={{ gap: 8 }}>
                 {(planCategory === 'FARMER'
                   ? [
+                      { id: 'FARMER_FREE', key: 'FREE', label: '🌱 Free Membership Trial', iconName: 'leaf', color: '#166534', sub: 'Basic Bookkeeping & Max 3 Crop Cycles (7-Day Free Trial)' },
                       { id: 'FARMER_BASIC', key: 'PRO', label: '⚡ Basic Membership', iconName: 'flash', color: '#0284c7', sub: 'Bookkeeping & Expense Logs + Voice AI Mic (No Doctor)' },
                       { id: 'FARMER_PRO', key: 'SMART', label: '👑 Pro Membership', iconName: 'sparkles', color: '#1d4ed8', sub: 'All Bookkeeping + Labour Record & Worker Login (No Doctor)' },
                       { id: 'FARMER_SUPER', key: 'SUPER', label: '⭐ Super Membership', iconName: 'star', color: '#b45309', sub: 'Unlimited Crops, Weather Reports & Mandi AI (No Doctor)' },
@@ -552,7 +575,7 @@ export function FarmerPlanUpgradeModal({
                       ? availableVariants.find((v) => Number(v.billingPeriodDays) === Number(selectedDays))
                       : null) ||
                     availableVariants[0] ||
-                    { price: p === 'SUPER' ? '999' : p === 'SMART' ? '499' : '299', billingPeriodDays: planCategory === 'FARMER' ? 365 : 30 };
+                    { price: p === 'FREE' ? '0' : p === 'SUPER' ? '999' : p === 'SMART' ? '499' : '299', billingPeriodDays: planCategory === 'FARMER' ? 365 : 30 };
 
                   const isSelected = selectedOptionId === item.id;
 
@@ -577,7 +600,7 @@ export function FarmerPlanUpgradeModal({
                           </Text>
                         </View>
                         <Text style={[styles.advisorPickMeta, { color: '#475569', fontWeight: '700' }]}>
-                          Price: ₹{currentVariant.price} / {currentVariant.billingPeriodDays === 365 ? '1 year' : `${currentVariant.billingPeriodDays} days`}
+                          Price: {p === 'FREE' ? '₹0 (Free Trial)' : `₹${currentVariant.price} / ${currentVariant.billingPeriodDays === 365 ? '1 year' : `${currentVariant.billingPeriodDays} days`}`}
                         </Text>
                         <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 }}>
                           {item.sub}
@@ -628,40 +651,60 @@ export function FarmerPlanUpgradeModal({
                 })}
               </View>
 
-              <TouchableOpacity
-                style={[styles.submitBtn, { backgroundColor: '#6d28d9', flexDirection: 'row', justifyContent: 'center', gap: 8 }]}
-                onPress={() => {
-                  if (!pickedPlan) setPickedPlan(planCategory === 'FARMER' ? 'PRO' : 'SUPER');
-                  setMode('UPI');
-                }}
-              >
-                <Ionicons name="qr-code-outline" size={18} color="#ffffff" />
-                <Text style={styles.submitBtnText}>
-                  Pay via UPI for {
-                    (() => {
-                      const allOpts = [
-                        { id: 'FARMER_LITE', label: 'Lite Plan', key: 'PRO' },
-                        { id: 'FARMER_PRO', label: 'Pro Plan', key: 'SMART' },
-                        { id: 'ADVISOR_SMART', label: 'Smart Plan', key: 'SMART' },
-                        { id: 'ADVISOR_SUPER', label: 'Super Plan', key: 'SUPER' },
-                      ];
-                      const selOpt = allOpts.find((o) => o.id === selectedOptionId) || allOpts[0];
-                      const availableVariants = pricingList
-                        .filter((it) => it.plan === selOpt.key && it.isActive !== false)
-                        .sort((a, b) => Number(a.billingPeriodDays) - Number(b.billingPeriodDays));
-                      const selectedDays = selectedDaysMap[selOpt.id];
-                      const currentVariant =
-                        (selectedDays != null
-                          ? availableVariants.find((v) => Number(v.billingPeriodDays) === Number(selectedDays))
-                          : null) ||
-                        availableVariants[0] ||
-                        { price: selOpt.key === 'SUPER' ? '999' : selOpt.key === 'SMART' ? '499' : '299' };
+              {pickedPlan === 'FREE' || selectedOptionId === 'FARMER_FREE' ? (
+                <TouchableOpacity
+                  style={[styles.submitBtn, { backgroundColor: '#166534', flexDirection: 'row', justifyContent: 'center', gap: 8 }]}
+                  disabled={activateTrial.isPending}
+                  onPress={() => handlePickPlan('FREE')}
+                >
+                  {activateTrial.isPending ? (
+                    <ActivityIndicator color="#ffffff" />
+                  ) : (
+                    <>
+                      <Ionicons name="sparkles" size={18} color="#ffffff" />
+                      <Text style={styles.submitBtnText}>Activate Free Trial 🎁</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.submitBtn, { backgroundColor: '#6d28d9', flexDirection: 'row', justifyContent: 'center', gap: 8 }]}
+                  onPress={() => {
+                    if (!pickedPlan) setPickedPlan(planCategory === 'FARMER' ? 'PRO' : 'SUPER');
+                    setMode('UPI');
+                  }}
+                >
+                  <Ionicons name="qr-code-outline" size={18} color="#ffffff" />
+                  <Text style={styles.submitBtnText}>
+                    Pay via UPI for {
+                      (() => {
+                        const allOpts = [
+                          { id: 'FARMER_FREE', label: 'Free Membership', key: 'FREE' },
+                          { id: 'FARMER_BASIC', label: 'Basic Plan', key: 'PRO' },
+                          { id: 'FARMER_PRO', label: 'Pro Plan', key: 'SMART' },
+                          { id: 'FARMER_SUPER', label: 'Super Plan', key: 'SUPER' },
+                          { id: 'CARE_SILVER', label: 'Silver Doctor Care', key: 'SILVER' },
+                          { id: 'CARE_GOLD', label: 'Gold Doctor Care', key: 'GOLD' },
+                          { id: 'CARE_ROYAL', label: 'Royal Doctor Care', key: 'ROYAL' },
+                        ];
+                        const selOpt = allOpts.find((o) => o.id === selectedOptionId) || allOpts[0];
+                        const availableVariants = pricingList
+                          .filter((it) => it.plan === selOpt.key && it.isActive !== false)
+                          .sort((a, b) => Number(a.billingPeriodDays) - Number(b.billingPeriodDays));
+                        const selectedDays = selectedDaysMap[selOpt.id];
+                        const currentVariant =
+                          (selectedDays != null
+                            ? availableVariants.find((v) => Number(v.billingPeriodDays) === Number(selectedDays))
+                            : null) ||
+                          availableVariants[0] ||
+                          { price: selOpt.key === 'SUPER' ? '999' : selOpt.key === 'SMART' ? '499' : '299' };
 
-                      return `${selOpt.label} (₹${currentVariant.price})`;
-                    })()
-                  }
-                </Text>
-              </TouchableOpacity>
+                        return `${selOpt.label} (₹${currentVariant.price})`;
+                      })()
+                    }
+                  </Text>
+                </TouchableOpacity>
+              )}
 
               <TouchableOpacity style={styles.seePlansBtn} onPress={() => setTabMode('REDEEM_CODE')}>
                 <Ionicons name="key-outline" size={14} color={theme.primary} />

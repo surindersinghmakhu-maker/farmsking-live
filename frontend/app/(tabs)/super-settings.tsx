@@ -2099,7 +2099,7 @@ export function PlanPricingSection() {
             <Ionicons name="apps" size={20} color="#0284c7" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.sectionTitle}>🎫 Farmer Pass Membership Plans</Text>
+            <Text style={styles.sectionTitle}>🎫 Membership Plans</Text>
             <Text style={styles.helperText}>Add, edit & delete software membership plans, MRP, discounted prices, duration days & commission splits</Text>
           </View>
           <Ionicons

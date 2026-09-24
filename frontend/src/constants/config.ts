@@ -79,12 +79,13 @@ export function getDefaultApiUrl(): string {
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       return 'http://localhost:3000/api/v1';
     }
+    return `${window.location.origin}/api/v1`;
   }
   const autoIp = getAutoDetectedHostIp();
   if (autoIp) {
     return `http://${autoIp}:3000/api/v1`;
   }
-  return 'https://farmsking-live-md6m.onrender.com/api/v1';
+  return 'https://farmsking.tech/api/v1';
 }
 
 // Initial default API URL

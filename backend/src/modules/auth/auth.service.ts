@@ -211,31 +211,12 @@ export class AuthService {
 
     await provisionInviteCoupon(this.prisma, user.id);
 
-    if (referrer && !existing) {
+    if (referrer) {
       await provisionReferralWelcomeCoupon(this.prisma, user.id, referrer.id);
-
-      const appSettings = await this.appSettingsService.get();
-      const referralBonus = Number(appSettings.referralSignupBonusAmount ?? 10);
-      const newUserBonus = Number(appSettings.newUserSignupBonusAmount ?? 10);
-
-      if (referralBonus > 0) {
-        await this.walletService.credit(
-          referrer.id,
-          referralBonus,
-          `🎉 Referral Income (New user joined: ${user.name || user.kingId})`,
-          { relatedUserId: user.id },
-        );
-      }
-
-      if (newUserBonus > 0) {
-        await this.walletService.credit(
-          user.id,
-          newUserBonus,
-          `🎁 Welcome Offer Bonus (Referral Signup)`,
-          { relatedUserId: referrer.id },
-        );
-      }
     }
+
+    // Auto-credit Welcome Signup Bonus to new user and Referral Income to referrer (if referred)
+    await this.walletService.ensureWelcomeBonus(user.id);
 
     const finalUser = await this.applyAccountType(user.id, dto.accountType);
 

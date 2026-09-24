@@ -33,7 +33,67 @@ export class WalletService {
     return Number(credits._sum.amount ?? 0) - Number(debits._sum.amount ?? 0);
   }
 
+  /**
+   * Self-healing welcome bonus verification: ensures every user gets their Welcome Signup Bonus,
+   * and if they signed up via referral, ensures both customer and referrer received their wallet credit.
+   */
+  async ensureWelcomeBonus(userId: string) {
+    try {
+      const dbUser = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, name: true, kingId: true, referredById: true, deletedAt: true },
+      });
+      if (!dbUser || dbUser.deletedAt) return;
+
+      const existingWelcomeTx = await this.prisma.walletTransaction.findFirst({
+        where: {
+          userId,
+          type: WalletTransactionType.CREDIT,
+          reason: { contains: 'Welcome' },
+        },
+      });
+
+      const settings = await this.prisma.appSetting.findUnique({ where: { id: 'default' } });
+      const referralBonus = Number((settings as any)?.referralSignupBonusAmount ?? 10);
+      const newUserBonus = Number((settings as any)?.newUserSignupBonusAmount ?? 10);
+
+      if (!existingWelcomeTx && newUserBonus > 0) {
+        await this.credit(
+          userId,
+          newUserBonus,
+          dbUser.referredById
+            ? '🎁 Welcome Offer Bonus (Referral Signup)'
+            : '🎁 Welcome Offer Bonus (New User Signup)',
+          dbUser.referredById ? { relatedUserId: dbUser.referredById } : undefined,
+        );
+      }
+
+      if (dbUser.referredById && referralBonus > 0) {
+        const existingReferrerTx = await this.prisma.walletTransaction.findFirst({
+          where: {
+            userId: dbUser.referredById,
+            type: WalletTransactionType.CREDIT,
+            relatedUserId: userId,
+            reason: { contains: 'Referral Income' },
+          },
+        });
+
+        if (!existingReferrerTx) {
+          await this.credit(
+            dbUser.referredById,
+            referralBonus,
+            `🎉 Referral Income (New user joined: ${dbUser.name || dbUser.kingId || 'User'})`,
+            { relatedUserId: userId },
+          );
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to ensure welcome bonus:', e);
+    }
+  }
+
   async getMyWallet(user: AuthUser) {
+    await this.ensureWelcomeBonus(user.id);
     return this.getWalletForUser(user.id);
   }
 

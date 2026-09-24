@@ -44,8 +44,16 @@ export default function RegisterScreen() {
   const { register } = useAuth();
   const router = useRouter();
   const captchaRef = useRef<CaptchaRef>(null);
-  const { ref: refParam } = useLocalSearchParams<{ ref?: string }>();
-  const referredViaLink = typeof refParam === 'string' && refParam.trim().length > 0;
+  const searchParams = useLocalSearchParams<{ ref?: string; code?: string; referralCode?: string; referral?: string; kingId?: string }>();
+  const incomingRefCode = (
+    searchParams.ref ||
+    searchParams.code ||
+    searchParams.referralCode ||
+    searchParams.referral ||
+    searchParams.kingId ||
+    ''
+  ).trim();
+  const referredViaLink = incomingRefCode.length > 0;
   const [accountType, setAccountType] = useState<'CUSTOMER' | 'FARMER' | 'GARDENER'>('CUSTOMER');
   const [sprayTankSizeL, setSprayTankSizeL] = useState<SprayTankSizeL | null>(20);
   const [farmName, setFarmName] = useState('');
@@ -71,7 +79,13 @@ export default function RegisterScreen() {
   const [state, setState] = useState('');
   const [isFetchingPincode, setIsFetchingPincode] = useState(false);
   const [pincodeError, setPincodeError] = useState<string | null>(null);
-  const [referralCode, setReferralCode] = useState(typeof refParam === 'string' ? refParam : '');
+  const [referralCode, setReferralCode] = useState(incomingRefCode);
+
+  useEffect(() => {
+    if (incomingRefCode && !referralCode) {
+      setReferralCode(incomingRefCode);
+    }
+  }, [incomingRefCode]);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showOtpModal, setShowOtpModal] = useState(false);

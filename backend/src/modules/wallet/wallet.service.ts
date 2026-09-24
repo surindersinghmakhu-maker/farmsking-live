@@ -161,7 +161,7 @@ export class WalletService {
       if (existingPlanBonus) return;
 
       const settings = await this.prisma.appSetting.findUnique({ where: { id: 'default' } });
-      const planUpgradeBonusAmount = Number((settings as any)?.referralPlanUpgradeBonusAmount ?? 50);
+      const planUpgradeBonusAmount = Number((settings as any)?.referralPaidPlanBonusAmount ?? (settings as any)?.referralPlanUpgradeBonusAmount ?? 50);
 
       if (planUpgradeBonusAmount > 0) {
         await this.credit(
@@ -209,7 +209,7 @@ export class WalletService {
     const settings = await this.prisma.appSetting.findUnique({ where: { id: 'default' } });
     const signupBonusAmount = Number((settings as any)?.referralSignupBonusAmount ?? 10);
     const welcomeBonusAmount = Number((settings as any)?.newUserSignupBonusAmount ?? 10);
-    const planUpgradeBonusAmount = Number((settings as any)?.referralPlanUpgradeBonusAmount ?? 50);
+    const planUpgradeBonusAmount = Number((settings as any)?.referralPaidPlanBonusAmount ?? (settings as any)?.referralPlanUpgradeBonusAmount ?? 50);
 
     // Fetch referees (users referred by this user)
     const referees = await this.prisma.user.findMany({

@@ -1009,6 +1009,7 @@ function ReferralBonusSettingsPanel() {
   const update = useUpdateAppSettings();
   const [referralBonus, setReferralBonus] = useState<string>('10');
   const [newUserBonus, setNewUserBonus] = useState<string>('10');
+  const [paidPlanBonus, setPaidPlanBonus] = useState<string>('50');
   const [saving, setSaving] = useState(false);
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
 
@@ -1016,13 +1017,15 @@ function ReferralBonusSettingsPanel() {
     if (settings) {
       setReferralBonus(String(settings.referralSignupBonusAmount ?? 10));
       setNewUserBonus(String(settings.newUserSignupBonusAmount ?? 10));
+      setPaidPlanBonus(String(settings.referralPaidPlanBonusAmount ?? 50));
     }
   }, [settings]);
 
   const handleSave = async () => {
     const refVal = parseFloat(referralBonus);
     const newVal = parseFloat(newUserBonus);
-    if (isNaN(refVal) || refVal < 0 || isNaN(newVal) || newVal < 0) {
+    const paidVal = parseFloat(paidPlanBonus);
+    if (isNaN(refVal) || refVal < 0 || isNaN(newVal) || newVal < 0 || isNaN(paidVal) || paidVal < 0) {
       alert('Please enter valid non-negative bonus amounts.');
       return;
     }
@@ -1032,6 +1035,7 @@ function ReferralBonusSettingsPanel() {
       await update.mutateAsync({
         referralSignupBonusAmount: refVal,
         newUserSignupBonusAmount: newVal,
+        referralPaidPlanBonusAmount: paidVal,
       });
       if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       setSavedNotice('✅ Referral & Signup Wallet Bonus amounts saved successfully!');
@@ -1050,15 +1054,16 @@ function ReferralBonusSettingsPanel() {
           <Ionicons name="gift" size={20} color="#ffffff" />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.cardTitle}>🎁 Referral & welcome Bonus</Text>
+          <Text style={styles.cardTitle}>🎁 Referral & Welcome Bonus Settings</Text>
+          <Text style={styles.cardSub}>Configure signup bonus rewards & referral bonuses when referred users buy paid plans</Text>
         </View>
       </View>
 
       <View style={{ gap: 12, marginTop: 10 }}>
         {/* Referrer Signup Bonus Amount */}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-          <Text style={{ flex: 1, fontSize: 13, fontFamily: FONT.bold, color: '#166534' }}>
-            🤝 Referrer Signup Bonus (₹)
+          <Text style={{ flex: 1, fontSize: 12.5, fontFamily: FONT.bold, color: '#166534' }}>
+            🤝 Referrer Instant Signup Bonus (₹)
           </Text>
           <TextInput
             style={{
@@ -1067,8 +1072,8 @@ function ReferralBonusSettingsPanel() {
               borderColor: '#86efac',
               borderRadius: RADIUS.md,
               paddingHorizontal: 12,
-              paddingVertical: 8,
-              fontSize: 14,
+              paddingVertical: 7,
+              fontSize: 13.5,
               fontFamily: FONT.bold,
               color: '#0f172a',
               backgroundColor: '#ffffff',
@@ -1083,7 +1088,7 @@ function ReferralBonusSettingsPanel() {
 
         {/* New User Signup Bonus Amount */}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-          <Text style={{ flex: 1, fontSize: 13, fontFamily: FONT.bold, color: '#166534' }}>
+          <Text style={{ flex: 1, fontSize: 12.5, fontFamily: FONT.bold, color: '#166534' }}>
             🎉 New User Welcome Offer Bonus (₹)
           </Text>
           <TextInput
@@ -1093,8 +1098,8 @@ function ReferralBonusSettingsPanel() {
               borderColor: '#86efac',
               borderRadius: RADIUS.md,
               paddingHorizontal: 12,
-              paddingVertical: 8,
-              fontSize: 14,
+              paddingVertical: 7,
+              fontSize: 13.5,
               fontFamily: FONT.bold,
               color: '#0f172a',
               backgroundColor: '#ffffff',
@@ -1104,6 +1109,32 @@ function ReferralBonusSettingsPanel() {
             value={newUserBonus}
             onChangeText={setNewUserBonus}
             placeholder="10"
+          />
+        </View>
+
+        {/* Referrer Paid Plan Bonus Amount */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+          <Text style={{ flex: 1, fontSize: 12.5, fontFamily: FONT.bold, color: '#15803d' }}>
+            👑 Referrer Bonus when Referee buys Paid Plan (₹)
+          </Text>
+          <TextInput
+            style={{
+              width: 100,
+              borderWidth: 1.5,
+              borderColor: '#86efac',
+              borderRadius: RADIUS.md,
+              paddingHorizontal: 12,
+              paddingVertical: 7,
+              fontSize: 13.5,
+              fontFamily: FONT.bold,
+              color: '#0f172a',
+              backgroundColor: '#ffffff',
+              textAlign: 'center',
+            }}
+            keyboardType="numeric"
+            value={paidPlanBonus}
+            onChangeText={setPaidPlanBonus}
+            placeholder="50"
           />
         </View>
 
@@ -1123,7 +1154,7 @@ function ReferralBonusSettingsPanel() {
           ) : (
             <>
               <Ionicons name="save-outline" size={16} color="#ffffff" />
-              <Text style={wStyles.btnText}>💾 Save Referral Bonus Settings</Text>
+              <Text style={wStyles.btnText}>💾 Save All Bonus Settings</Text>
             </>
           )}
         </TouchableOpacity>

@@ -64,6 +64,9 @@ export class UpdateAppSettingsDto {
   newUserSignupBonusAmount?: number;
 
   @IsOptional()
+  referralPaidPlanBonusAmount?: number;
+
+  @IsOptional()
   @IsString()
   appDownloadUrl?: string;
 

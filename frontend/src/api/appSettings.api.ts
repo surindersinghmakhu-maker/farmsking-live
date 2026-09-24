@@ -14,6 +14,7 @@ export interface AppSettings {
   whatsappGroupJid?: string | null;
   referralSignupBonusAmount?: number;
   newUserSignupBonusAmount?: number;
+  referralPaidPlanBonusAmount?: number;
   appDownloadUrl?: string | null;
   latestAppVersion?: string | null;
   storefrontMaintenanceMode?: boolean;
@@ -40,6 +41,7 @@ export interface UpdateAppSettingsPayload {
   whatsappGroupJid?: string;
   referralSignupBonusAmount?: number;
   newUserSignupBonusAmount?: number;
+  referralPaidPlanBonusAmount?: number;
   appDownloadUrl?: string;
   latestAppVersion?: string;
   storefrontMaintenanceMode?: boolean;

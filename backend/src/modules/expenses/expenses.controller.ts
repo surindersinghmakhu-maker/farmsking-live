@@ -49,6 +49,12 @@ export class ExpensesController {
     return this.expensesService.create(user, dto);
   }
 
+  @Get('admin/all')
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  findAllForAdmin() {
+    return this.expensesService.findAllForAdmin();
+  }
+
   @Get('farm/:farmId')
   findAllForFarm(@CurrentUser() user: AuthUser, @Param('farmId') farmId: string) {
     return this.expensesService.findAllForFarm(user, farmId);

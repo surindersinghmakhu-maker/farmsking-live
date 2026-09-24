@@ -55,6 +55,13 @@ export function useExpensesForFarm(farmId: string | undefined) {
   });
 }
 
+export function useAllExpensesForAdmin() {
+  return useQuery({
+    queryKey: ['expenses', 'admin-all'],
+    queryFn: expensesApi.listAllExpensesForAdmin,
+  });
+}
+
 export function useCreateExpense() {
   const queryClient = useQueryClient();
   return useMutation({

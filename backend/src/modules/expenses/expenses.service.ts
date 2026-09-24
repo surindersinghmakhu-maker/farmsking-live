@@ -168,6 +168,45 @@ export class ExpensesService {
     );
   }
 
+  findAllForAdmin() {
+    return this.prisma.expense.findMany({
+      where: { deletedAt: null },
+      include: {
+        category: true,
+        farm: {
+          select: {
+            id: true,
+            name: true,
+            owner: {
+              select: {
+                id: true,
+                name: true,
+                mobile: true,
+                state: true,
+                district: true,
+                village: true,
+              },
+            },
+          },
+        },
+        recordedBy: {
+          select: {
+            id: true,
+            name: true,
+            mobile: true,
+            state: true,
+            district: true,
+            village: true,
+          },
+        },
+        cropCycle: { select: { id: true, cropName: true } },
+        plot: { select: { id: true, name: true } },
+        party: { select: { id: true, name: true, mobile: true } },
+      },
+      orderBy: { expenseDate: 'desc' },
+    });
+  }
+
   async findOneOrThrow(user: AuthUser, id: string) {
     const expense = await this.prisma.expense.findFirst({
       where: { id, deletedAt: null },

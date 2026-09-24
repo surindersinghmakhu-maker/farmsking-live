@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -992,15 +992,31 @@ function UserRow({
     ]),
   );
 
+  const locationStr = [user.village, user.district, user.state].filter(Boolean).join(', ');
+  const joinedDateStr = user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+
   return (
     <View style={[styles.userCard, premiumShadow('#0f172a', 'sm'), isDeactivated && styles.userCardDeactivated]}>
-      <TouchableOpacity style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }} activeOpacity={0.7} onPress={onOpenDetail} disabled={!onOpenDetail}>
+      {/* Profile & Info Section */}
+      <TouchableOpacity
+        style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}
+        activeOpacity={0.7}
+        onPress={onOpenDetail}
+        disabled={!onOpenDetail}
+      >
+        {/* Profile Circle Photo */}
         <View style={[styles.userAvatar, isDeactivated && { backgroundColor: '#f1f5f9' }]}>
-          <Text style={[styles.userAvatarText, isDeactivated && { color: '#94a3b8' }]}>{initials}</Text>
+          {user.photoUrl ? (
+            <Image source={{ uri: user.photoUrl }} style={styles.userAvatarImage} resizeMode="cover" />
+          ) : (
+            <Text style={[styles.userAvatarText, isDeactivated && { color: '#94a3b8' }]}>{initials}</Text>
+          )}
         </View>
-        <View style={{ flex: 1 }}>
+
+        {/* User Details */}
+        <View style={{ flex: 1, gap: 2 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-            <Text style={styles.userName} numberOfLines={1}>{user.name}</Text>
+            <Text style={styles.userName}>{user.name}</Text>
             {isDeactivated ? (
               <View style={styles.deactivatedBadge}>
                 <View style={styles.deactivatedDot} />
@@ -1008,9 +1024,24 @@ function UserRow({
               </View>
             ) : null}
           </View>
-          <Text style={styles.userMeta} numberOfLines={1}>
-            {user.kingId ? `🔑 ${user.kingId} · ` : ''}📱 {user.mobile}
+
+          <Text style={styles.userMeta}>
+            📱 {user.mobile} {user.kingId ? `· 🔑 ${user.kingId}` : ''}
           </Text>
+
+          {user.email ? (
+            <Text style={styles.userSubMeta}>✉️ {user.email}</Text>
+          ) : null}
+
+          {locationStr ? (
+            <Text style={styles.userSubMeta}>📍 {locationStr}</Text>
+          ) : null}
+
+          {joinedDateStr ? (
+            <Text style={styles.userSubMeta}>📅 Joined: {joinedDateStr}</Text>
+          ) : null}
+
+          {/* Role Badges */}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
             {activeAssignedRoles.map((r) => (
               <View key={r} style={{ backgroundColor: r === user.role ? '#e0f2fe' : '#f1f5f9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
@@ -1021,20 +1052,23 @@ function UserRow({
             ))}
           </View>
         </View>
-        {onOpenDetail ? <Ionicons name="chevron-forward" size={16} color="#cbd5e1" /> : null}
+        {onOpenDetail ? <Ionicons name="chevron-forward" size={16} color="#cbd5e1" style={{ marginTop: 4 }} /> : null}
       </TouchableOpacity>
 
-      <View style={styles.userActionRow}>
+      {/* Top & Bottom Column for Deactivate, Delete & Action Buttons */}
+      <View style={styles.userActionColumn}>
         {isOperator && onEditPermissions ? (
           <TouchableOpacity style={[styles.actionBtnText, { backgroundColor: '#eff6ff' }]} activeOpacity={0.8} onPress={onEditPermissions}>
             <Text style={[styles.actionBtnLabel, { color: '#1d4ed8' }]}>Permissions</Text>
           </TouchableOpacity>
         ) : null}
+
         {onEditRoles ? (
           <TouchableOpacity style={[styles.actionBtnText, { backgroundColor: '#eef2ff' }]} activeOpacity={0.8} onPress={onEditRoles}>
             <Text style={[styles.actionBtnLabel, { color: '#4338ca' }]}>Role</Text>
           </TouchableOpacity>
         ) : null}
+
         {isDeactivated ? (
           <TouchableOpacity style={[styles.actionBtnText, { backgroundColor: '#dcfce7' }]} activeOpacity={0.8} onPress={onReactivate}>
             <Text style={[styles.actionBtnLabel, { color: '#16a34a' }]}>Reactivate</Text>
@@ -1044,6 +1078,7 @@ function UserRow({
             <Text style={[styles.actionBtnLabel, { color: '#dc2626' }]}>Deactivate</Text>
           </TouchableOpacity>
         )}
+
         {onDelete ? (
           <TouchableOpacity style={[styles.actionBtnText, { backgroundColor: '#991b1b' }]} activeOpacity={0.8} onPress={onDelete}>
             <Text style={[styles.actionBtnLabel, { color: '#ffffff' }]}>🗑️ Delete</Text>
@@ -1325,11 +1360,13 @@ const styles = StyleSheet.create({
     borderColor: '#f1f5f9',
   },
   userCardDeactivated: { backgroundColor: '#fafbfc', opacity: 0.85 },
-  userAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: theme.primaryLight, alignItems: 'center', justifyContent: 'center' },
-  userAvatarText: { fontSize: 12.5, fontFamily: FONT.extraBold, color: theme.primary },
-  userActionRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end', marginLeft: 8 },
-  userName: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a', flexShrink: 1 },
-  userMeta: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 },
+  userAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.primaryLight, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  userAvatarImage: { width: 44, height: 44, borderRadius: 22 },
+  userAvatarText: { fontSize: 14, fontFamily: FONT.extraBold, color: theme.primary },
+  userActionColumn: { flexDirection: 'column', gap: 5, justifyContent: 'center', minWidth: 85, marginLeft: 4 },
+  userName: { fontSize: 14, fontFamily: FONT.bold, color: '#0f172a', flexShrink: 1 },
+  userMeta: { fontSize: 12, fontFamily: FONT.medium, color: '#475569', marginTop: 1 },
+  userSubMeta: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
   userKingId: { fontSize: 10.5, fontFamily: FONT.bold, color: theme.primary, marginTop: 2, letterSpacing: 0.3 },
   deactivatedBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#fee2e2', paddingHorizontal: 7, paddingVertical: 2.5, borderRadius: RADIUS.pill },
   deactivatedDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#dc2626' },

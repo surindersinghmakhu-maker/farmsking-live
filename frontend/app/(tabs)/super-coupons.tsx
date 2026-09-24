@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ActivityIndicator, Alert, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -19,6 +19,11 @@ import {
   useAdminDocsList,
   useDownloadAdminDoc,
 } from '@/src/hooks/useFarmerPlan';
+import { useAllExpensesForAdmin } from '@/src/hooks/useExpenses';
+import { PickerModal } from '@/src/components/PickerModal';
+import { formatInr } from '@/src/utils/formatInr';
+import { formatDateDDMMYYYY } from '@/src/utils/formatDate';
+import { COMBINED_EXPENSE_CATEGORIES } from './records';
 
 import { LANGUAGE_OPTIONS } from '@/src/constants/translations';
 import { useCouponSettings, useUpdateCouponSettings } from '@/src/hooks/useCouponSettings';
@@ -169,7 +174,7 @@ function CategoryCollapse({
   );
 }
 
-type CouponsTab = 'GENERATE' | 'COUPONS' | 'PRICING' | 'FEATURES' | 'REFERRAL_SETTINGS' | 'REQUESTS';
+type CouponsTab = 'GENERATE' | 'COUPONS' | 'PRICING' | 'FEATURES' | 'REFERRAL_SETTINGS' | 'REQUESTS' | 'SAVED_ENTRIES';
 
 const MAIN_SUB_TABS: {
   value: CouponsTab;
@@ -180,6 +185,15 @@ const MAIN_SUB_TABS: {
   color: string;
   softBg: string;
 }[] = [
+  {
+    value: 'SAVED_ENTRIES',
+    title: 'Saved Entries (ਸਾਰੀਆਂ ਐਂਟਰੀਆਂ)',
+    sub: 'Farmer, Date, State, Category & Subcategory Wise',
+    icon: 'receipt-outline',
+    activeIcon: 'receipt',
+    color: '#059669',
+    softBg: '#d1fae5',
+  },
   {
     value: 'REQUESTS',
     title: 'Payment Requests',
@@ -415,6 +429,8 @@ export default function SuperCouponsScreen() {
                   <PlanFeaturesSection category="ADVISOR" only={['SMART', 'SUPER']} />
                 </View>
               </View>
+            ) : activeTab === 'SAVED_ENTRIES' ? (
+              <SavedEntriesSection />
             ) : activeTab === 'REFERRAL_SETTINGS' ? (
               <ReferralRateSettingSection />
             ) : null}
@@ -3206,7 +3222,728 @@ const styles = StyleSheet.create({
     color: '#0f172a',
     marginTop: 2,
   },
+  resetFilterBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#fef2f2',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  resetFilterText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#dc2626',
+  },
+  searchBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    paddingVertical: Platform.OS === 'ios' ? 8 : 4,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: FONT.medium,
+    color: '#0f172a',
+    paddingHorizontal: 8,
+  },
+  dropdownGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  dropdownPill: {
+    width: '48.5%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  dropdownPillActive: {
+    backgroundColor: '#ecfdf5',
+    borderColor: '#059669',
+  },
+  dropdownPillLabel: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+    textTransform: 'uppercase',
+  },
+  dropdownPillValue: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+    marginTop: 2,
+  },
+  kpiCard: {
+    flex: 1,
+    padding: 10,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  kpiLabel: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+    textTransform: 'uppercase',
+  },
+  kpiValue: {
+    fontSize: 16,
+    fontFamily: FONT.extraBold,
+    marginTop: 2,
+  },
+  savedEntryCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    padding: 14,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  entryCategoryIconBg: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#d1fae5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  entryCategoryTitle: {
+    fontSize: 13.5,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+  },
+  entryDateText: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  entryAmountText: {
+    fontSize: 15,
+    fontFamily: FONT.extraBold,
+    color: '#059669',
+  },
+  entryDivider: {
+    height: 1,
+    backgroundColor: '#f1f5f9',
+    marginVertical: 2,
+  },
+  entryFarmerName: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#0284c7',
+  },
+  entryFarmerPhone: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  stateBadge: {
+    backgroundColor: '#f0f9ff',
+    borderColor: '#bae6fd',
+    borderWidth: 1,
+    borderRadius: RADIUS.sm,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  stateBadgeText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#0369a1',
+  },
+  entrySubDetailsBox: {
+    backgroundColor: '#f8fafc',
+    borderRadius: RADIUS.md,
+    padding: 8,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  entrySubDetailText: {
+    fontSize: 11.5,
+    fontFamily: FONT.regular,
+    color: '#334155',
+  },
+  entryFooterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  entryPaymentMode: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+  },
+  entryLocationText: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
 });
+
+function SavedEntriesSection() {
+  const { data: expenses = [], isLoading } = useAllExpensesForAdmin();
+
+  const [selectedFarmerId, setSelectedFarmerId] = useState<string>('ALL');
+  const [selectedDateRange, setSelectedDateRange] = useState<string>('ALL');
+  const [selectedState, setSelectedState] = useState<string>('ALL');
+  const [selectedCategoryKey, setSelectedCategoryKey] = useState<string>('ALL');
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('ALL');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const [activePicker, setActivePicker] = useState<'FARMER' | 'DATE' | 'STATE' | 'CATEGORY' | 'SUBCATEGORY' | null>(null);
+
+  // Extract unique farmers from expenses
+  const uniqueFarmers = useMemo(() => {
+    const map = new Map<string, { id: string; name: string; mobile: string; state?: string }>();
+    expenses.forEach((e: any) => {
+      const u = e.farm?.owner || e.recordedBy;
+      if (u && u.id && !map.has(u.id)) {
+        map.set(u.id, {
+          id: u.id,
+          name: u.name || 'Unnamed Farmer',
+          mobile: u.mobile || '',
+          state: u.state || '',
+        });
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [expenses]);
+
+  // Extract unique states from expenses
+  const uniqueStates = useMemo(() => {
+    const stateSet = new Set<string>([
+      'Punjab',
+      'Haryana',
+      'Rajasthan',
+      'Uttar Pradesh',
+      'Madhya Pradesh',
+      'Gujarat',
+      'Maharashtra',
+      'Himachal Pradesh',
+      'Jammu & Kashmir',
+    ]);
+    expenses.forEach((e: any) => {
+      const st = e.farm?.owner?.state || e.recordedBy?.state;
+      if (st && st.trim()) stateSet.add(st.trim());
+    });
+    return Array.from(stateSet).sort();
+  }, [expenses]);
+
+  // Common subcategories mapping per category
+  const categorySubcategoriesMap: Record<string, string[]> = {
+    cat_fertilizer: ['Urea', 'DAP', 'NPK 12:32:16', 'Zinc', 'Potash', 'FYM / Organic Manure (ਰੂੜੀ ਖਾਦ)', 'Bio Fertilizer'],
+    cat_sowing_seeds: ['Wheat Seeds', 'Paddy Seeds', 'Mustard Seeds', 'Cotton Seeds', 'Potato Seeds', 'Vegetable Seeds', 'Fodder Seeds'],
+    cat_labour: ['Harvesting Labour', 'Sowing Labour', 'Weeding Labour', 'Spraying Labour', 'Loading & Packing', 'Daily Wages (ਦਿਹਾੜੀ)'],
+    cat_irrig_power: ['Diesel Fuel', 'Electricity Bill', 'Pipe Repair', 'Borewell Motor', 'Tractor Fuel'],
+    cat_spray_pest: ['Insecticide', 'Fungicide', 'Weedicide (ਨਦੀਨ ਨਾਸ਼ਕ)', 'Growth Tonic', 'Spray Pump'],
+    cat_machinery: ['Tractor Rent', 'Combine Harvester', 'Rotavator', 'Laser Leveler', 'Straw Reaper', 'Machine Repair'],
+    cat_cultivation: ['Plowing (ਹਲ ਵਾਹੁਣਾ)', 'Planking (ਸੁਹਾਗਾ)', 'Deep Tillage', 'Laser Leveling'],
+    cat_harvesting: ['Combine Harvesting', 'Manual Cutting', 'Threshing', 'Baling'],
+    cat_transport: ['Tractor Trolley Freight', 'Truck Freight', 'Mandi Transport'],
+    cat_mandi_pack: ['Gunny Bags (ਬੋਰੀਆਂ)', 'Packing String', 'Mandi Charges', 'Arhtiya Fee'],
+  };
+
+  // Subcategories available
+  const availableSubcategories = useMemo(() => {
+    const set = new Set<string>();
+    if (selectedCategoryKey !== 'ALL' && categorySubcategoriesMap[selectedCategoryKey]) {
+      categorySubcategoriesMap[selectedCategoryKey].forEach((s) => set.add(s));
+    } else {
+      Object.values(categorySubcategoriesMap).forEach((arr) => arr.forEach((s) => set.add(s)));
+    }
+    expenses.forEach((e: any) => {
+      if (e.vendorName && e.vendorName.trim()) set.add(e.vendorName.trim());
+    });
+    return Array.from(set).sort();
+  }, [expenses, selectedCategoryKey]);
+
+  // Options arrays for PickerModals
+  const farmerOptions = useMemo(() => {
+    return [
+      { value: 'ALL', label: '🌾 All Farmers (ਸਾਰੇ ਕਿਸਾਨ)' },
+      ...uniqueFarmers.map((f) => ({
+        value: f.id,
+        label: `${f.name} (${f.mobile || 'No Mobile'})${f.state ? ` • ${f.state}` : ''}`,
+      })),
+    ];
+  }, [uniqueFarmers]);
+
+  const dateOptions = [
+    { value: 'ALL', label: '📅 All Dates (ਸਾਰੀਆਂ ਤਾਰੀਖਾਂ)' },
+    { value: 'TODAY', label: '☀️ Today (ਅੱਜ)' },
+    { value: 'YESTERDAY', label: '⌛ Yesterday (ਕੱਲ੍ਹ)' },
+    { value: 'THIS_WEEK', label: '📆 This Week (ਇਸ ਹਫ਼ਤੇ)' },
+    { value: 'THIS_MONTH', label: '🗓️ This Month (ਇਸ ਮਹੀਨੇ)' },
+    { value: 'LAST_30_DAYS', label: '🕒 Last 30 Days (ਪਿਛਲੇ 30 ਦਿਨ)' },
+  ];
+
+  const stateOptions = useMemo(() => {
+    return [
+      { value: 'ALL', label: '📍 All States (ਸਾਰੇ ਰਾਜ)' },
+      ...uniqueStates.map((s) => ({ value: s, label: s })),
+    ];
+  }, [uniqueStates]);
+
+  const categoryOptions = useMemo(() => {
+    return [
+      { value: 'ALL', label: '🏷️ All Categories (ਸਾਰੀਆਂ ਕੈਟੇਗਰੀਆਂ)' },
+      ...COMBINED_EXPENSE_CATEGORIES.map((c) => ({
+        value: c.id,
+        label: c.labelEn || c.labelPa,
+      })),
+    ];
+  }, []);
+
+  const subcategoryOptions = useMemo(() => {
+    return [
+      { value: 'ALL', label: '📂 All Subcategories (ਸਾਰੀਆਂ ਸਬ-ਕੈਟੇਗਰੀਆਂ)' },
+      ...availableSubcategories.map((s) => ({ value: s, label: s })),
+    ];
+  }, [availableSubcategories]);
+
+  // Filtering Logic
+  const filteredExpenses = useMemo(() => {
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().slice(0, 10);
+
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const thirtyDaysAgo = new Date(now);
+    thirtyDaysAgo.setDate(now.getDate() - 30);
+
+    return expenses.filter((e: any) => {
+      // 1. Farmer Filter
+      if (selectedFarmerId !== 'ALL') {
+        const ownerId = e.farm?.owner?.id;
+        const recId = e.recordedBy?.id;
+        if (ownerId !== selectedFarmerId && recId !== selectedFarmerId) {
+          return false;
+        }
+      }
+
+      // 2. State Filter
+      if (selectedState !== 'ALL') {
+        const st = e.farm?.owner?.state || e.recordedBy?.state;
+        if (!st || st.trim().toLowerCase() !== selectedState.toLowerCase()) {
+          return false;
+        }
+      }
+
+      // 3. Category Filter
+      if (selectedCategoryKey !== 'ALL') {
+        const catKey = e.category?.key;
+        const catId = e.category?.id || e.categoryId;
+        if (catKey !== selectedCategoryKey && catId !== selectedCategoryKey) {
+          return false;
+        }
+      }
+
+      // 4. Subcategory Filter
+      if (selectedSubcategory !== 'ALL') {
+        const subLow = selectedSubcategory.toLowerCase();
+        const vendorMatch = e.vendorName && e.vendorName.toLowerCase().includes(subLow);
+        const descMatch = e.description && e.description.toLowerCase().includes(subLow);
+        const notesMatch = e.notes && e.notes.toLowerCase().includes(subLow);
+        const catMatch = e.category?.labelEn?.toLowerCase().includes(subLow);
+        if (!vendorMatch && !descMatch && !notesMatch && !catMatch) {
+          return false;
+        }
+      }
+
+      // 5. Date Range Filter
+      if (selectedDateRange !== 'ALL') {
+        const expDate = new Date(e.expenseDate);
+        const expDateStr = e.expenseDate ? e.expenseDate.slice(0, 10) : '';
+
+        if (selectedDateRange === 'TODAY' && expDateStr !== todayStr) return false;
+        if (selectedDateRange === 'YESTERDAY' && expDateStr !== yesterdayStr) return false;
+        if (selectedDateRange === 'THIS_WEEK' && expDate < startOfWeek) return false;
+        if (selectedDateRange === 'THIS_MONTH' && expDate < startOfMonth) return false;
+        if (selectedDateRange === 'LAST_30_DAYS' && expDate < thirtyDaysAgo) return false;
+      }
+
+      // 6. Text Search Query
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const farmerName = (e.farm?.owner?.name || e.recordedBy?.name || '').toLowerCase();
+        const farmerPhone = (e.farm?.owner?.mobile || e.recordedBy?.mobile || '').toLowerCase();
+        const vendor = (e.vendorName || '').toLowerCase();
+        const notes = (e.notes || '').toLowerCase();
+        const crop = (e.cropCycle?.cropName || '').toLowerCase();
+        const plot = (e.plot?.plotName || '').toLowerCase();
+
+        if (
+          !farmerName.includes(q) &&
+          !farmerPhone.includes(q) &&
+          !vendor.includes(q) &&
+          !notes.includes(q) &&
+          !crop.includes(q) &&
+          !plot.includes(q)
+        ) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [expenses, selectedFarmerId, selectedState, selectedCategoryKey, selectedSubcategory, selectedDateRange, searchQuery]);
+
+  // Aggregate stats
+  const totalAmount = useMemo(() => {
+    return filteredExpenses.reduce((sum: number, e: any) => sum + Number(e.amount || 0), 0);
+  }, [filteredExpenses]);
+
+  const activeFarmerCount = useMemo(() => {
+    const s = new Set<string>();
+    filteredExpenses.forEach((e: any) => {
+      const id = e.farm?.owner?.id || e.recordedBy?.id;
+      if (id) s.add(id);
+    });
+    return s.size;
+  }, [filteredExpenses]);
+
+  const hasActiveFilters =
+    selectedFarmerId !== 'ALL' ||
+    selectedDateRange !== 'ALL' ||
+    selectedState !== 'ALL' ||
+    selectedCategoryKey !== 'ALL' ||
+    selectedSubcategory !== 'ALL' ||
+    searchQuery.length > 0;
+
+  const resetFilters = () => {
+    tap();
+    setSelectedFarmerId('ALL');
+    setSelectedDateRange('ALL');
+    setSelectedState('ALL');
+    setSelectedCategoryKey('ALL');
+    setSelectedSubcategory('ALL');
+    setSearchQuery('');
+  };
+
+  // Option labels display helpers
+  const selectedFarmerLabel = farmerOptions.find((f) => f.value === selectedFarmerId)?.label || 'All Farmers';
+  const selectedDateLabel = dateOptions.find((d) => d.value === selectedDateRange)?.label || 'All Dates';
+  const selectedStateLabel = stateOptions.find((s) => s.value === selectedState)?.label || 'All States';
+  const selectedCategoryLabel = categoryOptions.find((c) => c.value === selectedCategoryKey)?.label || 'All Categories';
+  const selectedSubcategoryLabel = subcategoryOptions.find((s) => s.value === selectedSubcategory)?.label || 'All Subcategories';
+
+  return (
+    <View style={{ gap: 14 }}>
+      {/* Header & Filter Controls Card */}
+      <View style={[styles.couponCard, premiumShadow('#0f172a', 'sm'), { gap: 12 }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#d1fae5', alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name="receipt" size={18} color="#059669" />
+            </View>
+            <View>
+              <Text style={styles.sectionTitle}>Farmer Saved Entries</Text>
+              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
+                All records, expenses & saved entries across farmers
+              </Text>
+            </View>
+          </View>
+
+          {hasActiveFilters ? (
+            <TouchableOpacity style={styles.resetFilterBtn} onPress={resetFilters}>
+              <Ionicons name="refresh-outline" size={13} color="#dc2626" />
+              <Text style={styles.resetFilterText}>Reset Filters</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+
+        {/* Search Input */}
+        <View style={styles.searchBarContainer}>
+          <Ionicons name="search-outline" size={16} color="#64748b" style={{ marginLeft: 10 }} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search farmer name, phone, vendor, notes..."
+            placeholderTextColor="#94a3b8"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery ? (
+            <TouchableOpacity onPress={() => setSearchQuery('')} style={{ marginRight: 8 }}>
+              <Ionicons name="close-circle" size={16} color="#94a3b8" />
+            </TouchableOpacity>
+          ) : null}
+        </View>
+
+        {/* 5 Filter Dropdowns Grid */}
+        <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#334155', marginTop: 4 }}>
+          ⚙️ Filter Dropdowns:
+        </Text>
+
+        <View style={styles.dropdownGrid}>
+          {/* 1. Farmer Wise Dropdown */}
+          <TouchableOpacity
+            style={[styles.dropdownPill, selectedFarmerId !== 'ALL' && styles.dropdownPillActive]}
+            activeOpacity={0.85}
+            onPress={() => setActivePicker('FARMER')}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={styles.dropdownPillLabel}>👨‍🌾 Farmer</Text>
+              <Text style={styles.dropdownPillValue} numberOfLines={1}>
+                {selectedFarmerLabel}
+              </Text>
+            </View>
+            <Ionicons name="chevron-down" size={15} color={selectedFarmerId !== 'ALL' ? '#059669' : '#64748b'} />
+          </TouchableOpacity>
+
+          {/* 2. Date Wise Dropdown */}
+          <TouchableOpacity
+            style={[styles.dropdownPill, selectedDateRange !== 'ALL' && styles.dropdownPillActive]}
+            activeOpacity={0.85}
+            onPress={() => setActivePicker('DATE')}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={styles.dropdownPillLabel}>📅 Date Range</Text>
+              <Text style={styles.dropdownPillValue} numberOfLines={1}>
+                {selectedDateLabel}
+              </Text>
+            </View>
+            <Ionicons name="chevron-down" size={15} color={selectedDateRange !== 'ALL' ? '#059669' : '#64748b'} />
+          </TouchableOpacity>
+
+          {/* 3. State Wise Dropdown */}
+          <TouchableOpacity
+            style={[styles.dropdownPill, selectedState !== 'ALL' && styles.dropdownPillActive]}
+            activeOpacity={0.85}
+            onPress={() => setActivePicker('STATE')}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={styles.dropdownPillLabel}>📍 State</Text>
+              <Text style={styles.dropdownPillValue} numberOfLines={1}>
+                {selectedStateLabel}
+              </Text>
+            </View>
+            <Ionicons name="chevron-down" size={15} color={selectedState !== 'ALL' ? '#059669' : '#64748b'} />
+          </TouchableOpacity>
+
+          {/* 4. Category Wise Dropdown */}
+          <TouchableOpacity
+            style={[styles.dropdownPill, selectedCategoryKey !== 'ALL' && styles.dropdownPillActive]}
+            activeOpacity={0.85}
+            onPress={() => setActivePicker('CATEGORY')}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={styles.dropdownPillLabel}>🏷️ Category</Text>
+              <Text style={styles.dropdownPillValue} numberOfLines={1}>
+                {selectedCategoryLabel}
+              </Text>
+            </View>
+            <Ionicons name="chevron-down" size={15} color={selectedCategoryKey !== 'ALL' ? '#059669' : '#64748b'} />
+          </TouchableOpacity>
+
+          {/* 5. Subcategory Wise Dropdown */}
+          <TouchableOpacity
+            style={[styles.dropdownPill, selectedSubcategory !== 'ALL' && styles.dropdownPillActive, { width: '100%' }]}
+            activeOpacity={0.85}
+            onPress={() => setActivePicker('SUBCATEGORY')}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={styles.dropdownPillLabel}>📂 Subcategory</Text>
+              <Text style={styles.dropdownPillValue} numberOfLines={1}>
+                {selectedSubcategoryLabel}
+              </Text>
+            </View>
+            <Ionicons name="chevron-down" size={15} color={selectedSubcategory !== 'ALL' ? '#059669' : '#64748b'} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* KPI Stats Cards */}
+      <View style={{ flexDirection: 'row', gap: 10 }}>
+        <View style={[styles.kpiCard, { backgroundColor: '#ecfdf5', borderColor: '#a7f3d0' }]}>
+          <Text style={styles.kpiLabel}>Total Saved Entries</Text>
+          <Text style={[styles.kpiValue, { color: '#047857' }]}>{filteredExpenses.length}</Text>
+        </View>
+
+        <View style={[styles.kpiCard, { backgroundColor: '#eff6ff', borderColor: '#bfdbfe' }]}>
+          <Text style={styles.kpiLabel}>Total Value (₹)</Text>
+          <Text style={[styles.kpiValue, { color: '#1d4ed8' }]}>₹{formatInr(totalAmount)}</Text>
+        </View>
+
+        <View style={[styles.kpiCard, { backgroundColor: '#faf5ff', borderColor: '#e9d5ff' }]}>
+          <Text style={styles.kpiLabel}>Farmers</Text>
+          <Text style={[styles.kpiValue, { color: '#6b21a8' }]}>{activeFarmerCount}</Text>
+        </View>
+      </View>
+
+      {/* Saved Entries List */}
+      {isLoading ? (
+        <ActivityIndicator color={theme.primary} style={{ marginVertical: 24 }} />
+      ) : filteredExpenses.length === 0 ? (
+        <View style={[styles.categoryCard, { padding: 24, alignItems: 'center', gap: 8 }]}>
+          <Ionicons name="document-text-outline" size={36} color="#94a3b8" />
+          <Text style={{ fontSize: 14, fontFamily: FONT.bold, color: '#475569' }}>No Saved Entries Found</Text>
+          <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center' }}>
+            No entries match your selected dropdown filters. Try resetting the filters or clearing search.
+          </Text>
+          {hasActiveFilters ? (
+            <TouchableOpacity style={styles.submitBtn} onPress={resetFilters}>
+              <Text style={styles.submitBtnText}>Reset Filters</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      ) : (
+        <View style={{ gap: 10 }}>
+          {filteredExpenses.map((item: any) => {
+            const farmer = item.farm?.owner || item.recordedBy;
+            const farmerName = farmer?.name || 'Unknown Farmer';
+            const farmerMobile = farmer?.mobile || '';
+            const farmerState = farmer?.state || '';
+            const farmerVillage = farmer?.village || '';
+            const categoryLabel = item.category?.labelEn || item.category?.labelPa || 'Expense';
+            const dateDisplay = item.expenseDate ? formatDateDDMMYYYY(item.expenseDate) : '—';
+
+            return (
+              <View key={item.id} style={[styles.savedEntryCard, premiumShadow('#0f172a', 'sm')]}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                    <View style={styles.entryCategoryIconBg}>
+                      <Ionicons name="leaf-outline" size={16} color="#059669" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.entryCategoryTitle}>{categoryLabel}</Text>
+                      <Text style={styles.entryDateText}>📅 {dateDisplay}</Text>
+                    </View>
+                  </View>
+
+                  <Text style={styles.entryAmountText}>₹{formatInr(item.amount)}</Text>
+                </View>
+
+                <View style={styles.entryDivider} />
+
+                {/* Farmer Info */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="person-circle-outline" size={16} color="#0284c7" />
+                    <Text style={styles.entryFarmerName}>{farmerName}</Text>
+                    {farmerMobile ? <Text style={styles.entryFarmerPhone}>({farmerMobile})</Text> : null}
+                  </View>
+
+                  {farmerState ? (
+                    <View style={styles.stateBadge}>
+                      <Text style={styles.stateBadgeText}>📍 {farmerState}</Text>
+                    </View>
+                  ) : null}
+                </View>
+
+                {/* Vendor / Notes / Details */}
+                {item.vendorName || item.notes || item.description || item.cropCycle?.cropName ? (
+                  <View style={styles.entrySubDetailsBox}>
+                    {item.vendorName ? (
+                      <Text style={styles.entrySubDetailText}>
+                        <Text style={{ fontFamily: FONT.bold }}>Vendor/Sub: </Text>
+                        {item.vendorName}
+                      </Text>
+                    ) : null}
+
+                    {item.cropCycle?.cropName ? (
+                      <Text style={styles.entrySubDetailText}>
+                        <Text style={{ fontFamily: FONT.bold }}>Crop: </Text>
+                        {item.cropCycle.cropName}
+                        {item.plot?.plotName ? ` (${item.plot.plotName})` : ''}
+                      </Text>
+                    ) : null}
+
+                    {item.notes || item.description ? (
+                      <Text style={styles.entrySubDetailText}>
+                        <Text style={{ fontFamily: FONT.bold }}>Notes: </Text>
+                        {item.notes || item.description}
+                      </Text>
+                    ) : null}
+                  </View>
+                ) : null}
+
+                {/* Footer Row */}
+                <View style={styles.entryFooterRow}>
+                  <Text style={styles.entryPaymentMode}>
+                    💳 {item.paymentMode ? item.paymentMode : 'RECORDED'}
+                  </Text>
+                  {farmerVillage ? (
+                    <Text style={styles.entryLocationText}>🏡 {farmerVillage}</Text>
+                  ) : null}
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      )}
+
+      {/* 5 Dropdown Picker Modals */}
+      <PickerModal
+        visible={activePicker === 'FARMER'}
+        title="Select Farmer (ਕਿਸਾਨ ਚੁਣੋ)"
+        options={farmerOptions}
+        selectedValue={selectedFarmerId}
+        onSelect={(val) => setSelectedFarmerId(val)}
+        onClose={() => setActivePicker(null)}
+      />
+
+      <PickerModal
+        visible={activePicker === 'DATE'}
+        title="Select Date Range (ਮਿਤੀ ਚੁਣੋ)"
+        options={dateOptions}
+        selectedValue={selectedDateRange}
+        onSelect={(val) => setSelectedDateRange(val)}
+        onClose={() => setActivePicker(null)}
+      />
+
+      <PickerModal
+        visible={activePicker === 'STATE'}
+        title="Select State (ਰਾਜ ਚੁਣੋ)"
+        options={stateOptions}
+        selectedValue={selectedState}
+        onSelect={(val) => setSelectedState(val)}
+        onClose={() => setActivePicker(null)}
+      />
+
+      <PickerModal
+        visible={activePicker === 'CATEGORY'}
+        title="Select Category (ਕੈਟੇਗਰੀ ਚੁਣੋ)"
+        options={categoryOptions}
+        selectedValue={selectedCategoryKey}
+        onSelect={(val) => {
+          setSelectedCategoryKey(val);
+          setSelectedSubcategory('ALL');
+        }}
+        onClose={() => setActivePicker(null)}
+      />
+
+      <PickerModal
+        visible={activePicker === 'SUBCATEGORY'}
+        title="Select Subcategory (ਸਬ-ਕੈਟੇਗਰੀ ਚੁਣੋ)"
+        options={subcategoryOptions}
+        selectedValue={selectedSubcategory}
+        onSelect={(val) => setSelectedSubcategory(val)}
+        onClose={() => setActivePicker(null)}
+      />
+    </View>
+  );
+}
 
 /** Super Admin User Guides & Documentation Books Download Section */
 function AdminUserGuidesSection() {

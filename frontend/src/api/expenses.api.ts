@@ -49,6 +49,11 @@ export async function listExpensesForFarm(farmId: string): Promise<Expense[]> {
   return data;
 }
 
+export async function listAllExpensesForAdmin(): Promise<Expense[]> {
+  const { data } = await apiClient.get<Expense[]>('/expenses/admin/all');
+  return data;
+}
+
 export async function createExpense(payload: CreateExpensePayload): Promise<Expense> {
   const { data } = await apiClient.post<Expense>('/expenses', payload);
   return data;

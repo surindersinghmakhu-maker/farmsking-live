@@ -2185,9 +2185,9 @@ export function PlanPricingSection() {
         )}
       </View>
 
-      <EditPricingModal
-        planKey={editingPlanKey}
-        pricingItems={editingItems}
+      <UnifiedPlanManagerModal
+        initialPlanKey={editingPlanKey}
+        allPricingItems={pricing ?? []}
         onClose={() => setEditingPlanKey(null)}
       />
     </View>
@@ -2274,57 +2274,75 @@ function PlanCardGroup({
   );
 }
 
-function EditPricingModal({
-  planKey,
-  pricingItems,
+const ALL_PLAN_KEYS = ['PRO', 'SMART', 'SUPER', 'SILVER', 'GOLD', 'ROYAL'] as const;
+
+function UnifiedPlanManagerModal({
+  initialPlanKey,
+  allPricingItems,
   onClose,
 }: {
-  planKey: string | null;
-  pricingItems: FarmerPlanPricing[];
+  initialPlanKey: string | null;
+  allPricingItems: FarmerPlanPricing[];
   onClose: () => void;
 }) {
   const update = useUpdateFarmerPlanPricing();
   const remove = useDeleteFarmerPlanPricing();
 
+  const [activeTab, setActiveTab] = useState<string>('PRO');
   const [formItems, setFormItems] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  React.useEffect(() => {
-    if (planKey) {
-      if (pricingItems.length > 0) {
-        setFormItems(
-          pricingItems.map((item) => ({
-            id: item.id,
-            mrp: String(item.mrp ?? item.price ?? ''),
-            price: String(item.price ?? ''),
-            billingPeriodDays: String(item.billingPeriodDays ?? 365),
-            partnerShareType: item.partnerShareType ?? 'PERCENTAGE',
-            partnerShareValue: String(item.partnerShareValue ?? 10),
-            advisorShareValue: item.advisorShareValue ? String(item.advisorShareValue) : '',
-            adminShareValue: item.adminShareValue ? String(item.adminShareValue) : '',
-          }))
-        );
-      } else {
-        // Default new entry
-        setFormItems([
-          {
-            id: `new_${Date.now()}`,
-            mrp: '1999',
-            price: '999',
-            billingPeriodDays: '365',
-            partnerShareType: 'PERCENTAGE',
-            partnerShareValue: '10',
-            advisorShareValue: '100',
-            adminShareValue: '',
-          },
-        ]);
-      }
-      setError(null);
-    }
-  }, [planKey, pricingItems]);
+  // Plan Feature Switches state
+  const [features, setFeatures] = useState<Record<string, boolean>>({
+    weather: true,
+    satellite: true,
+    doctor: true,
+    shopDiscount: true,
+    mandiRates: true,
+    prioritySupport: false,
+  });
 
-  if (!planKey) return null;
+  useEffect(() => {
+    if (initialPlanKey) {
+      setActiveTab(initialPlanKey);
+    }
+  }, [initialPlanKey]);
+
+  useEffect(() => {
+    if (!initialPlanKey) return;
+    const currentTabItems = allPricingItems.filter((p) => p.plan === activeTab);
+    if (currentTabItems.length > 0) {
+      setFormItems(
+        currentTabItems.map((item) => ({
+          id: item.id,
+          mrp: String(item.mrp ?? item.price ?? ''),
+          price: String(item.price ?? ''),
+          billingPeriodDays: String(item.billingPeriodDays ?? 365),
+          partnerShareType: item.partnerShareType ?? 'PERCENTAGE',
+          partnerShareValue: String(item.partnerShareValue ?? 10),
+          advisorShareValue: item.advisorShareValue ? String(item.advisorShareValue) : '',
+          adminShareValue: item.adminShareValue ? String(item.adminShareValue) : '',
+        }))
+      );
+    } else {
+      setFormItems([
+        {
+          id: `new_${Date.now()}`,
+          mrp: '1999',
+          price: '999',
+          billingPeriodDays: '365',
+          partnerShareType: 'PERCENTAGE',
+          partnerShareValue: '10',
+          advisorShareValue: '100',
+          adminShareValue: '',
+        },
+      ]);
+    }
+    setError(null);
+  }, [activeTab, initialPlanKey, allPricingItems]);
+
+  if (!initialPlanKey) return null;
 
   const handleAddDurationRow = () => {
     setFormItems((prev) => [
@@ -2346,9 +2364,7 @@ function EditPricingModal({
     if (itemId && !itemId.startsWith('new_')) {
       try {
         await remove.mutateAsync(itemId);
-      } catch {
-        // ignore
-      }
+      } catch {}
     }
     setFormItems((prev) => prev.filter((_, i) => i !== index));
   };
@@ -2371,7 +2387,7 @@ function EditPricingModal({
     try {
       for (const item of formItems) {
         await update.mutateAsync({
-          plan: planKey,
+          plan: activeTab,
           payload: {
             mrp: Number(item.mrp || item.price),
             price: Number(item.price),
@@ -2383,6 +2399,7 @@ function EditPricingModal({
           },
         });
       }
+      if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       onClose();
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Could not save pricing plan.');
@@ -2391,33 +2408,24 @@ function EditPricingModal({
     }
   };
 
-  const planMeta = planKey ? (PLAN_META[planKey as FarmerPlanType] || { label: planKey, emoji: '🎫', color: '#0284c7' }) : null;
+  const planMeta = PLAN_META[activeTab as FarmerPlanType] || { label: activeTab, emoji: '🎫', color: '#0284c7' };
 
   return (
-    <Modal visible={!!planKey} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={!!initialPlanKey} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
-        <View style={[styles.modalCard, { maxWidth: 540, maxHeight: '92%', borderRadius: RADIUS.xl, padding: 18 }]}>
-          {/* Header with Dynamic Plan Title & Emoji */}
-          <View style={[styles.modalHeaderRow, { marginBottom: 12 }]}>
+        <View style={[styles.modalCard, { maxWidth: 580, maxHeight: '92%', borderRadius: RADIUS.xl, padding: 16 }]}>
+          {/* Header */}
+          <View style={[styles.modalHeaderRow, { marginBottom: 10 }]}>
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              {planMeta ? (
-                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: (planMeta.color || '#0284c7') + '15', alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={{ fontSize: 22 }}>{planMeta.emoji}</Text>
-                </View>
-              ) : null}
+              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: (planMeta.color || '#0284c7') + '15', alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ fontSize: 20 }}>{planMeta.emoji}</Text>
+              </View>
               <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <Text style={[styles.modalTitle, { color: '#0f172a' }]}>
-                    Edit {planKey} — {planMeta?.label}
-                  </Text>
-                  <View style={{ backgroundColor: (planMeta?.color || '#0284c7') + '20', paddingHorizontal: 8, paddingVertical: 2, borderRadius: RADIUS.pill }}>
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: planMeta?.color || '#0284c7' }}>
-                      {planKey}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 }}>
-                  Set duration days, MRP, discounted price & commission splits for {planMeta?.label}
+                <Text style={[styles.modalTitle, { color: '#0f172a', fontSize: 15 }]}>
+                  Edit {activeTab} — {planMeta?.label}
+                </Text>
+                <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
+                  Compact pricing, commission cuts & feature toggles
                 </Text>
               </View>
             </View>
@@ -2426,212 +2434,248 @@ function EditPricingModal({
             </TouchableOpacity>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingVertical: 4 }}>
+          {/* Unified Plan Tabs Bar */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingBottom: 10 }}>
+            {ALL_PLAN_KEYS.map((key) => {
+              const meta = PLAN_META[key as FarmerPlanType] || { label: key, emoji: '🌾', color: '#0284c7' };
+              const isSelected = activeTab === key;
+              return (
+                <TouchableOpacity
+                  key={key}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 5,
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                    borderRadius: RADIUS.pill,
+                    borderWidth: 1.5,
+                    borderColor: isSelected ? meta.color : '#e2e8f0',
+                    backgroundColor: isSelected ? meta.color : '#ffffff',
+                  }}
+                  onPress={() => setActiveTab(key)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={{ fontSize: 13 }}>{meta.emoji}</Text>
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isSelected ? '#ffffff' : '#334155' }}>
+                    {key}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingVertical: 2 }}>
+            {/* Feature ON/OFF Toggles for Active Plan */}
+            <View style={{ backgroundColor: '#f8fafc', borderRadius: RADIUS.lg, padding: 10, borderWidth: 1, borderColor: '#e2e8f0', gap: 6 }}>
+              <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: '#334155' }}>
+                ⚙️ {activeTab} Plan Features (ON / OFF)
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                {[
+                  { key: 'weather', label: '🌦️ Weather', val: features.weather },
+                  { key: 'satellite', label: '🛰️ Satellite', val: features.satellite },
+                  { key: 'doctor', label: '🩺 Doctor Care', val: features.doctor },
+                  { key: 'shopDiscount', label: '🛒 Discounts', val: features.shopDiscount },
+                  { key: 'mandiRates', label: '📊 Mandi Rates', val: features.mandiRates },
+                  { key: 'prioritySupport', label: '⚡ Priority', val: features.prioritySupport },
+                ].map((f) => (
+                  <TouchableOpacity
+                    key={f.key}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 4,
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
+                      borderRadius: RADIUS.pill,
+                      borderWidth: 1,
+                      borderColor: f.val ? '#bbf7d0' : '#fecaca',
+                      backgroundColor: f.val ? '#f0fdf4' : '#fef2f2',
+                    }}
+                    onPress={() => setFeatures((prev) => ({ ...prev, [f.key]: !prev[f.key] }))}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name={f.val ? 'checkmark-circle' : 'close-circle'} size={13} color={f.val ? '#16a34a' : '#ef4444'} />
+                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: f.val ? '#15803d' : '#dc2626' }}>
+                      {f.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {/* Duration Options in Compact Rows */}
             {formItems.map((item, idx) => (
               <View
                 key={item.id || idx}
                 style={{
                   backgroundColor: '#ffffff',
                   borderRadius: RADIUS.lg,
-                  padding: 12,
+                  padding: 10,
                   borderWidth: 1.5,
                   borderColor: '#e2e8f0',
-                  gap: 10,
+                  gap: 8,
                   ...premiumShadow('#0f172a', 'sm'),
                 }}
               >
-                {/* Duration Row Header */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', pb: 8, paddingBottom: 8 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: (planMeta?.color || '#0284c7') + '15', alignItems: 'center', justifyContent: 'center' }}>
-                      <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: planMeta?.color || '#0284c7' }}>#{idx + 1}</Text>
-                    </View>
-                    <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' }}>
-                      {item.billingPeriodDays ? `${item.billingPeriodDays} Days Duration Plan` : `Duration Plan #${idx + 1}`}
-                    </Text>
-                  </View>
-
-                  <TouchableOpacity
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: '#fef2f2', borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#fecaca' }}
-                    onPress={() => handleRemoveDurationRow(idx, item.id)}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="trash-outline" size={13} color="#ef4444" />
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#ef4444' }}>Remove</Text>
-                  </TouchableOpacity>
-                </View>
-
-                {/* Duration Days Input */}
-                <View>
-                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#475569', marginBottom: 4 }}>
-                    📅 Billing Period (Days e.g. 30, 90, 365)
-                  </Text>
-                  <TextInput
-                    style={{
-                      height: 38,
-                      borderWidth: 1.5,
-                      borderColor: '#cbd5e1',
-                      borderRadius: RADIUS.md,
-                      paddingHorizontal: 12,
-                      fontSize: 13,
-                      fontFamily: FONT.bold,
-                      color: '#0f172a',
-                      backgroundColor: '#f8fafc',
-                    }}
-                    keyboardType="numeric"
-                    placeholder="e.g. 365"
-                    value={item.billingPeriodDays}
-                    onChangeText={(val) => handleUpdateItemField(idx, 'billingPeriodDays', val)}
-                  />
-                </View>
-
-                {/* MRP & Discounted Selling Price Grid */}
-                <View style={{ flexDirection: 'row', gap: 10 }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#475569', marginBottom: 4 }}>
-                      🏷️ Plan Price / MRP (₹)
+                {/* Compact Row 1: Duration, MRP, Selling Price & Remove */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  {/* Days */}
+                  <View style={{ width: 80 }}>
+                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#475569', marginBottom: 2 }}>
+                      📅 Days
                     </Text>
                     <TextInput
                       style={{
-                        height: 38,
-                        borderWidth: 1.5,
+                        height: 34,
+                        borderWidth: 1,
                         borderColor: '#cbd5e1',
-                        borderRadius: RADIUS.md,
-                        paddingHorizontal: 12,
-                        fontSize: 13,
+                        borderRadius: RADIUS.sm,
+                        paddingHorizontal: 8,
+                        fontSize: 12.5,
+                        fontFamily: FONT.bold,
+                        color: '#0f172a',
+                        backgroundColor: '#f8fafc',
+                        textAlign: 'center',
+                      }}
+                      keyboardType="numeric"
+                      placeholder="365"
+                      value={item.billingPeriodDays}
+                      onChangeText={(val) => handleUpdateItemField(idx, 'billingPeriodDays', val)}
+                    />
+                  </View>
+
+                  {/* MRP */}
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#475569', marginBottom: 2 }}>
+                      🏷️ MRP (₹)
+                    </Text>
+                    <TextInput
+                      style={{
+                        height: 34,
+                        borderWidth: 1,
+                        borderColor: '#cbd5e1',
+                        borderRadius: RADIUS.sm,
+                        paddingHorizontal: 8,
+                        fontSize: 12.5,
                         fontFamily: FONT.bold,
                         color: '#64748b',
                         backgroundColor: '#f8fafc',
                       }}
                       keyboardType="numeric"
-                      placeholder="e.g. 1999"
+                      placeholder="1999"
                       value={item.mrp}
                       onChangeText={(val) => handleUpdateItemField(idx, 'mrp', val)}
                     />
                   </View>
+
+                  {/* Selling Price */}
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#166534', marginBottom: 4 }}>
-                      💰 Selling Price (₹)
+                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#166534', marginBottom: 2 }}>
+                      💰 Price (₹)
                     </Text>
                     <TextInput
                       style={{
-                        height: 38,
+                        height: 34,
                         borderWidth: 1.5,
                         borderColor: '#86efac',
-                        borderRadius: RADIUS.md,
-                        paddingHorizontal: 12,
-                        fontSize: 13,
+                        borderRadius: RADIUS.sm,
+                        paddingHorizontal: 8,
+                        fontSize: 12.5,
                         fontFamily: FONT.extraBold,
                         color: '#16a34a',
                         backgroundColor: '#f0fdf4',
                       }}
                       keyboardType="numeric"
-                      placeholder="e.g. 999"
+                      placeholder="999"
                       value={item.price}
                       onChangeText={(val) => handleUpdateItemField(idx, 'price', val)}
                     />
                   </View>
+
+                  {/* Remove Button */}
+                  <TouchableOpacity
+                    style={{ padding: 6, borderRadius: RADIUS.sm, backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca', marginTop: 14 }}
+                    onPress={() => handleRemoveDurationRow(idx, item.id)}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="trash-outline" size={15} color="#ef4444" />
+                  </TouchableOpacity>
                 </View>
 
-                {/* Partner Share Type & Value */}
-                <View style={{ backgroundColor: '#f8fafc', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', gap: 6 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>
-                      🤝 Business Partner Commission Share
-                    </Text>
-                    <View style={{ flexDirection: 'row', gap: 4 }}>
+                {/* Compact Row 2: Partner Share, Advisor Cut & Platform Fee */}
+                <View style={{ flexDirection: 'row', gap: 6, backgroundColor: '#f8fafc', padding: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#e2e8f0', alignItems: 'center' }}>
+                  {/* Partner Share */}
+                  <View style={{ flex: 1.2 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#334155' }}>🤝 Partner Cut</Text>
                       <TouchableOpacity
-                        style={{
-                          paddingHorizontal: 8,
-                          paddingVertical: 3,
-                          borderRadius: RADIUS.sm,
-                          backgroundColor: item.partnerShareType === 'PERCENTAGE' ? '#0284c7' : '#e2e8f0',
-                        }}
-                        onPress={() => handleUpdateItemField(idx, 'partnerShareType', 'PERCENTAGE')}
-                        activeOpacity={0.8}
+                        onPress={() => handleUpdateItemField(idx, 'partnerShareType', item.partnerShareType === 'PERCENTAGE' ? 'FIXED' : 'PERCENTAGE')}
                       >
-                        <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: item.partnerShareType === 'PERCENTAGE' ? '#ffffff' : '#475569' }}>
-                          % Percent
-                        </Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={{
-                          paddingHorizontal: 8,
-                          paddingVertical: 3,
-                          borderRadius: RADIUS.sm,
-                          backgroundColor: item.partnerShareType === 'FIXED' ? '#0284c7' : '#e2e8f0',
-                        }}
-                        onPress={() => handleUpdateItemField(idx, 'partnerShareType', 'FIXED')}
-                        activeOpacity={0.8}
-                      >
-                        <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: item.partnerShareType === 'FIXED' ? '#ffffff' : '#475569' }}>
-                          ₹ Fixed
+                        <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#0284c7' }}>
+                          {item.partnerShareType === 'PERCENTAGE' ? '%' : '₹'}
                         </Text>
                       </TouchableOpacity>
                     </View>
-                  </View>
-
-                  <TextInput
-                    style={{
-                      height: 38,
-                      borderWidth: 1.5,
-                      borderColor: '#cbd5e1',
-                      borderRadius: RADIUS.md,
-                      paddingHorizontal: 12,
-                      fontSize: 13,
-                      fontFamily: FONT.bold,
-                      color: '#0f172a',
-                      backgroundColor: '#ffffff',
-                    }}
-                    keyboardType="numeric"
-                    placeholder={`Enter partner share in ${item.partnerShareType === 'FIXED' ? '₹' : '%'}`}
-                    value={item.partnerShareValue}
-                    onChangeText={(val) => handleUpdateItemField(idx, 'partnerShareValue', val)}
-                  />
-                </View>
-
-                {/* Advisor Cut & Platform Fee Cut Grid */}
-                <View style={{ flexDirection: 'row', gap: 10 }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#475569', marginBottom: 4 }}>
-                      🩺 Advisor Cut (₹)
-                    </Text>
                     <TextInput
                       style={{
-                        height: 38,
-                        borderWidth: 1.5,
+                        height: 32,
+                        borderWidth: 1,
                         borderColor: '#cbd5e1',
-                        borderRadius: RADIUS.md,
-                        paddingHorizontal: 12,
-                        fontSize: 13,
+                        borderRadius: RADIUS.sm,
+                        paddingHorizontal: 8,
+                        fontSize: 12,
                         fontFamily: FONT.bold,
                         color: '#0f172a',
-                        backgroundColor: '#f8fafc',
+                        backgroundColor: '#ffffff',
                       }}
                       keyboardType="numeric"
-                      placeholder="e.g. 100"
+                      placeholder="10"
+                      value={item.partnerShareValue}
+                      onChangeText={(val) => handleUpdateItemField(idx, 'partnerShareValue', val)}
+                    />
+                  </View>
+
+                  {/* Advisor Cut */}
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }}>🩺 Advisor (₹)</Text>
+                    <TextInput
+                      style={{
+                        height: 32,
+                        borderWidth: 1,
+                        borderColor: '#cbd5e1',
+                        borderRadius: RADIUS.sm,
+                        paddingHorizontal: 8,
+                        fontSize: 12,
+                        fontFamily: FONT.bold,
+                        color: '#0f172a',
+                        backgroundColor: '#ffffff',
+                      }}
+                      keyboardType="numeric"
+                      placeholder="100"
                       value={item.advisorShareValue}
                       onChangeText={(val) => handleUpdateItemField(idx, 'advisorShareValue', val)}
                     />
                   </View>
+
+                  {/* Fee Cut */}
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#475569', marginBottom: 4 }}>
-                      ⚡ Platform Fee (₹)
-                    </Text>
+                    <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }}>⚡ Fee (₹)</Text>
                     <TextInput
                       style={{
-                        height: 38,
-                        borderWidth: 1.5,
+                        height: 32,
+                        borderWidth: 1,
                         borderColor: '#cbd5e1',
-                        borderRadius: RADIUS.md,
-                        paddingHorizontal: 12,
-                        fontSize: 13,
+                        borderRadius: RADIUS.sm,
+                        paddingHorizontal: 8,
+                        fontSize: 12,
                         fontFamily: FONT.bold,
                         color: '#0f172a',
-                        backgroundColor: '#f8fafc',
+                        backgroundColor: '#ffffff',
                       }}
                       keyboardType="numeric"
-                      placeholder="Auto / Fee"
+                      placeholder="Auto"
                       value={item.adminShareValue}
                       onChangeText={(val) => handleUpdateItemField(idx, 'adminShareValue', val)}
                     />
@@ -2647,7 +2691,7 @@ function EditPricingModal({
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 6,
-                paddingVertical: 10,
+                paddingVertical: 9,
                 borderWidth: 1.5,
                 borderColor: planMeta?.color || '#0284c7',
                 borderStyle: 'dashed',
@@ -2657,8 +2701,8 @@ function EditPricingModal({
               onPress={handleAddDurationRow}
               activeOpacity={0.8}
             >
-              <Ionicons name="add-circle" size={18} color={planMeta?.color || '#0284c7'} />
-              <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: planMeta?.color || '#0284c7' }}>
+              <Ionicons name="add-circle" size={16} color={planMeta?.color || '#0284c7'} />
+              <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: planMeta?.color || '#0284c7' }}>
                 + Add Duration Option (e.g. 30 Days)
               </Text>
             </TouchableOpacity>
@@ -2666,7 +2710,7 @@ function EditPricingModal({
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
             <TouchableOpacity
-              style={[styles.submitBtn, { backgroundColor: planMeta?.color || '#0284c7', borderRadius: RADIUS.lg, height: 44, marginTop: 4 }]}
+              style={[styles.submitBtn, { backgroundColor: planMeta?.color || '#0284c7', borderRadius: RADIUS.lg, height: 42, marginTop: 4 }]}
               disabled={isSubmitting}
               onPress={handleSaveAll}
               activeOpacity={0.85}
@@ -2676,7 +2720,7 @@ function EditPricingModal({
               ) : (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Ionicons name="save-outline" size={16} color="#ffffff" />
-                  <Text style={styles.submitBtnText}>Save All {planKey} ({planMeta?.label}) Plans</Text>
+                  <Text style={styles.submitBtnText}>Save {activeTab} ({planMeta?.label}) Plan</Text>
                 </View>
               )}
             </TouchableOpacity>
@@ -2686,4 +2730,5 @@ function EditPricingModal({
     </Modal>
   );
 }
+
 

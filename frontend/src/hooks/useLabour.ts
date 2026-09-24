@@ -97,10 +97,12 @@ export function useLabourDashboard() {
 }
 
 export function useSearchWorkersByMobile(mobile: string) {
+  const cleanMobile = mobile ? mobile.replace(/\D/g, '') : '';
   return useQuery({
-    queryKey: ['labour-search-mobile', mobile],
-    queryFn: () => labourApi.searchWorkersByMobile(mobile),
-    enabled: !!mobile && mobile.trim().length >= 3,
+    queryKey: ['labour-search-mobile', cleanMobile],
+    queryFn: () => labourApi.searchWorkersByMobile(cleanMobile),
+    enabled: cleanMobile.length === 10,
+    staleTime: 1000 * 60 * 5,
   });
 }
 

@@ -185,7 +185,10 @@ export default function ProfileScreen() {
         try {
           const uploaded = await uploadPhoto(photoUrl);
           finalPhotoUrl = uploaded.fileUrl;
+          // ✅ Immediately update local state with the server URL
           setPhotoUrl(finalPhotoUrl);
+          // ✅ Allow useEffect to sync since photo is now a server URL, not local
+          isUserInteractingRef.current = false;
         } catch (uploadErr: any) {
           console.error('[saveProfile] Photo upload failed:', uploadErr);
           setSaveError(`❌ Photo Upload Failed: ${uploadErr?.response?.data?.message || uploadErr?.message || 'Could not upload photo to server.'}`);
@@ -223,16 +226,25 @@ export default function ProfileScreen() {
         upiId: finalUpiId,
       } as any);
 
+      // ✅ Reset interaction flag BEFORE refreshUser so photoUrl syncs from server
+      isUserInteractingRef.current = false;
       await refreshUser();
+
+      // ✅ Explicitly sync photoUrl from updated record after save
+      if (updated?.photoUrl) {
+        setPhotoUrl(updated.photoUrl);
+      } else if (finalPhotoUrl) {
+        setPhotoUrl(finalPhotoUrl);
+      }
+
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2500);
     } catch (err: any) {
       setSaveError(err?.response?.data?.message ?? err?.message ?? 'Could not save your profile.');
     } finally {
       setIsLoading(false);
-      setTimeout(() => {
-        isUserInteractingRef.current = false;
-      }, 1000);
+      // ✅ Keep interaction flag false so next user data sync works correctly
+      isUserInteractingRef.current = false;
     }
   };
 
@@ -477,7 +489,7 @@ export default function ProfileScreen() {
               {/* Photo Avatar */}
               <View style={styles.avatarSection}>
                 <TouchableOpacity style={styles.avatarWrap} activeOpacity={0.85} onPress={() => setIsPhotoModalOpen(true)}>
-                  <Avatar uri={photoUrl ?? undefined} size={88} />
+                  <Avatar key={photoUrl ?? 'avatar'} uri={photoUrl ?? undefined} size={88} />
                   <View style={styles.photoEditBadge}>
                     <Ionicons name="camera" size={13} color="#ffffff" />
                   </View>

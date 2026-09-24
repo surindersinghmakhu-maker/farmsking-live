@@ -177,8 +177,8 @@ export default function MembershipsScreen() {
                   </View>
                 </View>
                 <View style={[styles.activePill, { backgroundColor: isExpired ? '#fef2f2' : '#ecfdf5' }]}>
-                  <Text style={[styles.activePillText, { color: isExpired ? '#dc2626' : '#059669' }]}>
-                    {isExpired ? 'EXPIRED' : plan !== 'FREE' ? 'Free Trial' : 'ACTIVE'}
+                  <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={[styles.activePillText, { color: isExpired ? '#dc2626' : '#059669' }]}>
+                    {isExpired ? 'EXPIRED' : plan !== 'FREE' ? 'Free Trial Activated' : 'ACTIVE'}
                   </Text>
                 </View>
               </View>

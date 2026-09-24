@@ -609,7 +609,9 @@ export function FarmerPlanUpgradeModal({
                           </Text>
                           {item.key === 'FREE' && (!isExpired && (currentPlan === 'SUPER' || currentPlan === 'FREE')) ? (
                             <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#86efac' }}>
-                              <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#15803d' }}>✨ Free Trial Active</Text>
+                              <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#15803d' }}>
+                                ✨ Free Trial Activated
+                              </Text>
                             </View>
                           ) : null}
                         </View>

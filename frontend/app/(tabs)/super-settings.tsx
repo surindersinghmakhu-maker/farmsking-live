@@ -2215,7 +2215,6 @@ function PlanCardGroup({
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Text style={[styles.planCardTitle, { color: meta.color }]}>{meta.label}</Text>
-              <Text style={[styles.planCardBadge, { backgroundColor: meta.color + '15', color: meta.color }]}>{planKey}</Text>
             </View>
             <Text style={styles.planCardSub}>{items.length} Duration Option(s)</Text>
           </View>
@@ -2227,7 +2226,7 @@ function PlanCardGroup({
           onPress={onEditTier}
         >
           <Ionicons name="create-outline" size={14} color="#ffffff" />
-          <Text style={styles.variantEditBtnText}>Edit {meta.label} ({planKey})</Text>
+          <Text style={styles.variantEditBtnText}>Edit {meta.label}</Text>
         </TouchableOpacity>
       </View>
 
@@ -2237,7 +2236,7 @@ function PlanCardGroup({
         <Text style={styles.cardSectionTitle}>💰 Duration Plans, Prices & Cuts</Text>
         {items.length === 0 ? (
           <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8', fontStyle: 'italic' }}>
-            No duration options added yet. Click "Edit {meta.label} ({planKey})" above to add duration plans.
+            No duration options added yet. Click "Edit {meta.label}" above to add duration plans.
           </Text>
         ) : (
           <View style={{ gap: 8 }}>
@@ -2448,7 +2447,7 @@ function UnifiedPlanManagerModal({
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.modalTitle, { color: '#0f172a', fontSize: 15 }]}>
-                  {isCareCategory ? '🩺 Crop Care Plan' : '🎫 Membership Plan'} — {planMeta?.label} ({activeTab})
+                  {isCareCategory ? '🩺 Crop Care Plan' : '🎫 Membership Plan'} — {planMeta?.label}
                 </Text>
                 <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
                   {isCareCategory
@@ -2486,7 +2485,7 @@ function UnifiedPlanManagerModal({
                 >
                   <Text style={{ fontSize: 13 }}>{meta.emoji}</Text>
                   <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isSelected ? '#ffffff' : '#334155' }}>
-                    {meta.label} ({key})
+                    {meta.label}
                   </Text>
                 </TouchableOpacity>
               );
@@ -2497,7 +2496,7 @@ function UnifiedPlanManagerModal({
             {/* Feature ON/OFF Toggles for Active Plan */}
             <View style={{ backgroundColor: '#f8fafc', borderRadius: RADIUS.lg, padding: 10, borderWidth: 1, borderColor: '#e2e8f0', gap: 6 }}>
               <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: '#334155' }}>
-                ⚙️ {activeTab} Plan Features (ON / OFF)
+                ⚙️ {planMeta?.label} Features (ON / OFF)
               </Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                 {[
@@ -2809,7 +2808,7 @@ function UnifiedPlanManagerModal({
               ) : (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Ionicons name="save-outline" size={16} color="#ffffff" />
-                  <Text style={styles.submitBtnText}>Save {activeTab} ({planMeta?.label}) Plan</Text>
+                  <Text style={styles.submitBtnText}>Save {planMeta?.label} Plan</Text>
                 </View>
               )}
             </TouchableOpacity>

@@ -2259,8 +2259,8 @@ function PlanCardGroup({
                     )}
                   </Text>
                   <Text style={styles.variantMeta}>
-                    Partner Share: {p.partnerShareType === 'PERCENTAGE' ? `${p.partnerShareValue}%` : `₹${p.partnerShareValue}`}
-                    {p.advisorShareValue ? ` · Advisor Cut: ₹${p.advisorShareValue}` : ''}
+                    {['SILVER', 'GOLD', 'ROYAL'].includes(planKey) ? 'Advisor Fee' : 'Partner Commission'}: {p.partnerShareType === 'PERCENTAGE' ? `${p.partnerShareValue}%` : `₹${p.partnerShareValue}`}
+                    {p.advisorShareValue ? ` · Doctor Fee: ₹${p.advisorShareValue}` : ''}
                     {p.adminShareValue ? ` · Platform Fee: ₹${p.adminShareValue}` : ''}
                   </Text>
                 </View>
@@ -2636,7 +2636,9 @@ function UnifiedPlanManagerModal({
                   {/* Partner Share */}
                   <View style={{ flex: 1.2 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#334155' }}>🤝 Partner Cut</Text>
+                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#334155' }}>
+                        {isCareCategory ? '🤝 Advisor Fee' : '🤝 Partner Commission'}
+                      </Text>
                       <TouchableOpacity
                         onPress={() => handleUpdateItemField(idx, 'partnerShareType', item.partnerShareType === 'PERCENTAGE' ? 'FIXED' : 'PERCENTAGE')}
                       >
@@ -2664,27 +2666,29 @@ function UnifiedPlanManagerModal({
                     />
                   </View>
 
-                  {/* Doctor / Advisor Cut */}
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }}>🩺 Doctor Fee (₹)</Text>
-                    <TextInput
-                      style={{
-                        height: 32,
-                        borderWidth: 1,
-                        borderColor: '#cbd5e1',
-                        borderRadius: RADIUS.sm,
-                        paddingHorizontal: 8,
-                        fontSize: 12,
-                        fontFamily: FONT.bold,
-                        color: '#0f172a',
-                        backgroundColor: '#ffffff',
-                      }}
-                      keyboardType="numeric"
-                      placeholder="100"
-                      value={item.advisorShareValue}
-                      onChangeText={(val) => handleUpdateItemField(idx, 'advisorShareValue', val)}
-                    />
-                  </View>
+                  {/* Doctor Fee (only for Crop Care plans) */}
+                  {isCareCategory && (
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }}>🩺 Doctor Fee (₹)</Text>
+                      <TextInput
+                        style={{
+                          height: 32,
+                          borderWidth: 1,
+                          borderColor: '#cbd5e1',
+                          borderRadius: RADIUS.sm,
+                          paddingHorizontal: 8,
+                          fontSize: 12,
+                          fontFamily: FONT.bold,
+                          color: '#0f172a',
+                          backgroundColor: '#ffffff',
+                        }}
+                        keyboardType="numeric"
+                        placeholder="100"
+                        value={item.advisorShareValue}
+                        onChangeText={(val) => handleUpdateItemField(idx, 'advisorShareValue', val)}
+                      />
+                    </View>
+                  )}
 
                   {/* Platform Fee */}
                   <View style={{ flex: 1 }}>

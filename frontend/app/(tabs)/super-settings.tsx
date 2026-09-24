@@ -2254,7 +2254,7 @@ function PlanCardGroup({
                     {p.isOffer && (
                       <Text style={{ color: '#d97706', fontSize: 11, fontFamily: FONT.bold }}>
                         {' '}🔥 Offer: {p.offerName || 'Special'} @ ₹{p.offerPrice || p.price}
-                        {p.offerValidTill ? ` (Till ${String(p.offerValidTill).slice(0, 10)})` : ''}
+                        {p.offerValidTill ? ` (Till ${formatToDDMMYY(String(p.offerValidTill))})` : ''}
                       </Text>
                     )}
                   </Text>
@@ -2277,6 +2277,31 @@ function PlanCardGroup({
       </View>
     </View>
   );
+}
+
+function formatToDDMMYY(val?: string | null): string {
+  if (!val) return '';
+  const clean = val.slice(0, 10);
+  const parts = clean.split('-');
+  if (parts.length === 3 && parts[0].length === 4) {
+    const [yyyy, mm, dd] = parts;
+    return `${dd}/${mm}/${yyyy.slice(-2)}`;
+  }
+  return val;
+}
+
+function parseDDMMYYToISO(val?: string | null): string | undefined {
+  if (!val || !val.trim()) return undefined;
+  const str = val.trim();
+  if (str.includes('/')) {
+    const parts = str.split('/');
+    if (parts.length === 3) {
+      const [dd, mm, yy] = parts;
+      const yyyy = yy.length === 2 ? `20${yy}` : yy;
+      return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+    }
+  }
+  return str;
 }
 
 const SOFTWARE_PLAN_KEYS = ['PRO', 'SMART', 'SUPER'] as const;
@@ -2331,7 +2356,7 @@ function UnifiedPlanManagerModal({
           isOffer: !!item.isOffer,
           offerName: item.offerName || '',
           offerPrice: item.offerPrice ? String(item.offerPrice) : '',
-          offerValidTill: item.offerValidTill ? String(item.offerValidTill).slice(0, 10) : '',
+          offerValidTill: item.offerValidTill ? formatToDDMMYY(item.offerValidTill) : '',
           partnerShareType: item.partnerShareType ?? 'PERCENTAGE',
           partnerShareValue: String(item.partnerShareValue ?? 10),
           advisorShareValue: item.advisorShareValue ? String(item.advisorShareValue) : '',
@@ -2416,7 +2441,7 @@ function UnifiedPlanManagerModal({
             isOffer: !!item.isOffer,
             offerName: item.offerName || undefined,
             offerPrice: item.offerPrice ? Number(item.offerPrice) : undefined,
-            offerValidTill: item.offerValidTill || undefined,
+            offerValidTill: parseDDMMYYToISO(item.offerValidTill),
             partnerShareType: item.partnerShareType,
             partnerShareValue: Number(item.partnerShareValue),
             advisorShareValue: item.advisorShareValue ? Number(item.advisorShareValue) : undefined,
@@ -2765,7 +2790,7 @@ function UnifiedPlanManagerModal({
                             height: 30, borderWidth: 1, borderColor: '#fde68a', borderRadius: RADIUS.sm,
                             paddingHorizontal: 6, fontSize: 11, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#ffffff',
                           }}
-                          placeholder="YYYY-MM-DD"
+                          placeholder="DD/MM/YY"
                           value={item.offerValidTill}
                           onChangeText={(val) => handleUpdateItemField(idx, 'offerValidTill', val)}
                         />

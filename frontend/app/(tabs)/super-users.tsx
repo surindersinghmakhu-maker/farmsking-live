@@ -22,7 +22,7 @@ import {
 import { formatInr } from '@/src/utils/formatInr';
 import { ASSIGNABLE_CHECKBOX_ROLES } from '@/src/api/users.api';
 import { useAuth } from '@/src/store/auth-context';
-import { AdminUser, AdvisorType, OperatorPermission, Role } from '@/src/types/api';
+import { PickerModal } from '@/src/components/PickerModal';
 
 const theme = RoleThemes.SUPER_ADMIN;
 
@@ -75,7 +75,8 @@ export default function SuperUsersScreen() {
   const [permissionsTarget, setPermissionsTarget] = useState<AdminUser | null>(null);
   const [rolesTarget, setRolesTarget] = useState<AdminUser | null>(null);
   const [detailTargetId, setDetailTargetId] = useState<string | null>(null);
-  const PAGE_SIZE = 10;
+  const [pageSize, setPageSize] = useState<number>(50);
+  const [isPageSizePickerOpen, setIsPageSizePickerOpen] = useState(false);
   const [page, setPage] = useState(1);
 
   const selectGroup = (g: UserGroup) => {
@@ -85,7 +86,7 @@ export default function SuperUsersScreen() {
   };
 
   const { data: allUsersData } = useUsersList({ limit: 1000 });
-  const { data, isLoading } = useUsersList({ role: filterToBackendRole(filter), search: search.trim() || undefined, limit: 100 });
+  const { data, isLoading } = useUsersList({ role: filterToBackendRole(filter), search: search.trim() || undefined, limit: 1000 });
   const deactivate = useDeactivateUser();
   const reactivate = useReactivateUser();
   const deleteUser = useDeleteUser();
@@ -156,8 +157,8 @@ export default function SuperUsersScreen() {
     setPage(1);
   }, [filter, search]);
 
-  const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
-  const visibleItems = items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+  const visibleItems = items.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <View style={styles.container}>
@@ -266,7 +267,17 @@ export default function SuperUsersScreen() {
               onOpenDetail={() => setDetailTargetId(u.id)}
             />
           ))}
-          {totalPages > 1 ? (
+
+          {/* Pagination Controls Row with Page Size Selector Dropdown */}
+          <View style={styles.paginationContainer}>
+            <TouchableOpacity
+              style={styles.pageSizeDropdownBtn}
+              activeOpacity={0.8}
+              onPress={() => setIsPageSizePickerOpen(true)}
+            >
+              <Text style={styles.pageSizeDropdownText}>📄 {pageSize} Users per page ▾</Text>
+            </TouchableOpacity>
+
             <View style={styles.pagerRow}>
               <TouchableOpacity
                 style={[styles.pagerBtn, page === 1 && styles.pagerBtnDisabled]}
@@ -279,7 +290,7 @@ export default function SuperUsersScreen() {
               >
                 <Ionicons name="chevron-back" size={15} color={page === 1 ? '#cbd5e1' : theme.primary} />
               </TouchableOpacity>
-              <Text style={styles.pagerText}>Page {page} of {totalPages}</Text>
+              <Text style={styles.pagerText}>Page {page} of {totalPages} ({items.length} Users)</Text>
               <TouchableOpacity
                 style={[styles.pagerBtn, page === totalPages && styles.pagerBtnDisabled]}
                 activeOpacity={0.8}
@@ -292,10 +303,29 @@ export default function SuperUsersScreen() {
                 <Ionicons name="chevron-forward" size={15} color={page === totalPages ? '#cbd5e1' : theme.primary} />
               </TouchableOpacity>
             </View>
-          ) : null}
+          </View>
           </>
         )}
       </ScrollView>
+
+      <PickerModal
+        visible={isPageSizePickerOpen}
+        title="Select Users Per Page (ਹਰ ਪੇਜ 'ਤੇ ਯੂਜ਼ਰ ਗਿਣਤੀ)"
+        options={[
+          { value: 10, label: '10 Users per page' },
+          { value: 20, label: '20 Users per page' },
+          { value: 50, label: '50 Users per page (Default)' },
+          { value: 100, label: '100 Users per page' },
+          { value: 200, label: '200 Users per page' },
+          { value: 500, label: '500 Users per page' },
+        ]}
+        selectedValue={pageSize}
+        onSelect={(val) => {
+          setPageSize(Number(val));
+          setPage(1);
+        }}
+        onClose={() => setIsPageSizePickerOpen(false)}
+      />
 
       <AddAdvisorModal
         visible={isAddAdvisorOpen}
@@ -1326,14 +1356,39 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md,
   },
   addAdvisorBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 13.5 },
-  emptyCenter: { alignItems: 'center', justifyContent: 'center', padding: 50, gap: 8, backgroundColor: '#ffffff', borderRadius: RADIUS.lg, borderWidth: 1, borderColor: '#f1f5f9', borderStyle: 'dashed' },
+  paginationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  pageSizeDropdownBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+  },
+  pageSizeDropdownText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
   pagerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 14,
-    paddingVertical: 10,
-    marginTop: 4,
+    paddingVertical: 4,
   },
   pagerBtn: {
     width: 32,

@@ -21,8 +21,8 @@ import { lookupPincode } from '@/src/api/pincode.api';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { OtpVerificationModal } from '@/src/components/OtpVerificationModal';
 import { PickerModal } from '@/src/components/PickerModal';
-import { SOIL_TYPE_OPTIONS, SPRAY_TANK_SIZE_OPTIONS, WATER_TYPE_OPTIONS } from '@/src/constants/farmerProfileOptions';
-import { SoilType, SprayTankSizeL, WaterType } from '@/src/types/api';
+import { SPRAY_TANK_SIZE_OPTIONS } from '@/src/constants/farmerProfileOptions';
+import { SprayTankSizeL } from '@/src/types/api';
 import { CaptchaChallenge, CaptchaRef } from '@/src/components/CaptchaChallenge';
 import { useSearchWorkersByMobile } from '@/src/hooks/useLabour';
 
@@ -52,10 +52,7 @@ export default function RegisterScreen() {
   const [farmAddress, setFarmAddress] = useState('');
   const [farmMobile, setFarmMobile] = useState('');
   const [upiId, setUpiId] = useState('');
-  const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState(true);
   const [pincode, setPincode] = useState('');
-  const [isSoilPickerOpen, setIsSoilPickerOpen] = useState(false);
-  const [isWaterPickerOpen, setIsWaterPickerOpen] = useState(false);
 
   const [values, setValues] = useState({ name: '', mobile: '', password: '', confirmPassword: '' });
   const { data: searchMobileResult, isLoading: isSearchingMobile } = useSearchWorkersByMobile(values.mobile);
@@ -79,9 +76,6 @@ export default function RegisterScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [generatedOtp, setGeneratedOtp] = useState('');
-
-  const selectedSoilLabel = SOIL_TYPE_OPTIONS.find((o) => o.value === soilType)?.label;
-  const selectedWaterLabel = WATER_TYPE_OPTIONS.find((o) => o.value === waterType)?.label;
 
   const onFetchPincode = async (codeToFetch?: string) => {
     setPincodeError(null);
@@ -565,24 +559,6 @@ export default function RegisterScreen() {
         selectedValue={postOffice}
         onSelect={(val) => setPostOffice(val)}
         onClose={() => setIsPostOfficePickerOpen(false)}
-      />
-
-      <PickerModal
-        visible={isSoilPickerOpen}
-        title="Select Soil Type"
-        options={SOIL_TYPE_OPTIONS}
-        selectedValue={soilType}
-        onSelect={(val) => setSoilType(val as SoilType)}
-        onClose={() => setIsSoilPickerOpen(false)}
-      />
-
-      <PickerModal
-        visible={isWaterPickerOpen}
-        title="Select Water Source"
-        options={WATER_TYPE_OPTIONS}
-        selectedValue={waterType}
-        onSelect={(val) => setWaterType(val as WaterType)}
-        onClose={() => setIsWaterPickerOpen(false)}
       />
     </KeyboardAvoidingView>
   );

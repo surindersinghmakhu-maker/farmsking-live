@@ -1004,11 +1004,26 @@ export default function FarmListScreen() {
                         </View>
                       </View>
 
-                      {/* Row 2: Subcategory & Variety Name */}
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                      {/* Row 2: Crop Name, Variety, Area, Plant Count & Subcategory */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4, flexWrap: 'wrap' }}>
                         <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#15803d' }}>
-                          🌾 {hItem.cropName} {hItem.variety ? `· ${hItem.variety}` : ''} {hItem.categoryName ? `(${hItem.categoryName})` : ''}
+                          🌾 {hItem.cropName} {hItem.variety ? `· ${hItem.variety}` : ''}
                         </Text>
+                        {hItem.area ? (
+                          <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#334155' }}>
+                            · 📐 {hItem.area}
+                          </Text>
+                        ) : null}
+                        {hItem.plantCount ? (
+                          <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#334155' }}>
+                            · 🪴 {hItem.plantCount} Plants
+                          </Text>
+                        ) : null}
+                        {hItem.categoryName ? (
+                          <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' }}>
+                            ({hItem.categoryName})
+                          </Text>
+                        ) : null}
                       </View>
 
                       {/* Row 3: Crop Period (Sown Date -> Completion Date) & Doctor Status */}

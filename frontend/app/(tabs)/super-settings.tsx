@@ -1184,11 +1184,11 @@ function AppDownloadSettingsPanel() {
       setSaving(true);
       await update.mutateAsync({
         appDownloadUrl: downloadUrl.trim(),
-        latestAppVersion: version.trim(),
+        latestAppVersion: version.trim() || APP_VERSION,
       });
       if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      setSavedNotice('✅ App Download Link & Latest Version updated successfully!');
-      setTimeout(() => setSavedNotice(null), 3500);
+      setSavedNotice('✅ App Download & Version saved!');
+      setTimeout(() => setSavedNotice(null), 3000);
     } catch {
       alert('❌ Failed to update App Download settings.');
     } finally {
@@ -1197,85 +1197,89 @@ function AppDownloadSettingsPanel() {
   };
 
   return (
-    <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#f0f9ff', borderColor: '#bae6fd', borderWidth: 1.5 }]}>
-      <View style={styles.cardHeader}>
-        <View style={[styles.iconCircle, { backgroundColor: '#0284c7' }]}>
-          <Ionicons name="logo-android" size={20} color="#ffffff" />
+    <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#f0f9ff', borderColor: '#bae6fd', borderWidth: 1.5, padding: 14 }]}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+          <View style={[styles.iconCircle, { backgroundColor: '#0284c7', width: 34, height: 34, borderRadius: 17 }]}>
+            <Ionicons name="logo-android" size={18} color="#ffffff" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' }}>📱 App Download & Auto Update Link</Text>
+            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#0369a1' }}>APK link & latest app version configuration</Text>
+          </View>
         </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.cardTitle}>📱 App Download & In-App Auto Update Link</Text>
-        </View>
-      </View>
-
-      <View style={{ gap: 12, marginTop: 10 }}>
-        <View style={{ gap: 4 }}>
-          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0369a1' }}>
-            🔗 App APK / Play Store Download Link
-          </Text>
-          <TextInput
-            style={{
-              borderWidth: 1.5,
-              borderColor: '#7dd3fc',
-              borderRadius: RADIUS.md,
-              paddingHorizontal: 12,
-              paddingVertical: 8,
-              fontSize: 13,
-              fontFamily: FONT.medium,
-              color: '#0f172a',
-              backgroundColor: '#ffffff',
-            }}
-            value={downloadUrl}
-            onChangeText={setDownloadUrl}
-            placeholder="https://..."
-            autoCapitalize="none"
-          />
-        </View>
-
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-          <Text style={{ flex: 1, fontSize: 13, fontFamily: FONT.bold, color: '#0369a1' }}>
-            🏷️ Latest App Version (e.g. 1.0.1)
-          </Text>
-          <TextInput
-            style={{
-              width: 110,
-              borderWidth: 1.5,
-              borderColor: '#7dd3fc',
-              borderRadius: RADIUS.md,
-              paddingHorizontal: 12,
-              paddingVertical: 8,
-              fontSize: 14,
-              fontFamily: FONT.bold,
-              color: '#0f172a',
-              backgroundColor: '#ffffff',
-              textAlign: 'center',
-            }}
-            value={version}
-            onChangeText={setVersion}
-            placeholder="1.0.0"
-          />
-        </View>
-
-        {savedNotice ? (
-          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#16a34a', textAlign: 'center' }}>
-            {savedNotice}
-          </Text>
-        ) : null}
 
         <TouchableOpacity
-          style={[wStyles.btn, { backgroundColor: '#0284c7' }]}
+          style={{ backgroundColor: '#0284c7', paddingHorizontal: 14, paddingVertical: 8, borderRadius: RADIUS.md, flexDirection: 'row', alignItems: 'center', gap: 5 }}
           onPress={handleSave}
           disabled={saving}
+          activeOpacity={0.85}
         >
           {saving ? (
             <ActivityIndicator color="#ffffff" size="small" />
           ) : (
             <>
-              <Ionicons name="save-outline" size={16} color="#ffffff" />
-              <Text style={wStyles.btnText}>💾 Save App Download & Update Settings</Text>
+              <Ionicons name="checkmark-circle-outline" size={15} color="#ffffff" />
+              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>Save</Text>
             </>
           )}
         </TouchableOpacity>
       </View>
+
+      {/* 2 Input Fields in Single Compact Row Grid */}
+      <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+        <View style={{ flex: 2.2, backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#7dd3fc', gap: 4 }}>
+          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#0369a1' }} numberOfLines={1}>
+            🔗 APK / Play Store Link
+          </Text>
+          <TextInput
+            style={{
+              height: 34,
+              borderWidth: 1,
+              borderColor: '#cbd5e1',
+              borderRadius: RADIUS.sm,
+              paddingHorizontal: 8,
+              fontSize: 12,
+              fontFamily: FONT.medium,
+              color: '#0f172a',
+              backgroundColor: '#f8fafc',
+            }}
+            value={downloadUrl}
+            onChangeText={setDownloadUrl}
+            placeholder="https://farmsking.tech/download/farmsking.apk"
+            autoCapitalize="none"
+          />
+        </View>
+
+        <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#7dd3fc', gap: 4 }}>
+          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#0369a1' }} numberOfLines={1}>
+            🏷️ App Version
+          </Text>
+          <TextInput
+            style={{
+              height: 34,
+              borderWidth: 1,
+              borderColor: '#cbd5e1',
+              borderRadius: RADIUS.sm,
+              paddingHorizontal: 8,
+              fontSize: 13,
+              fontFamily: FONT.extraBold,
+              color: '#0f172a',
+              backgroundColor: '#f8fafc',
+              textAlign: 'center',
+            }}
+            value={version}
+            onChangeText={setVersion}
+            placeholder={APP_VERSION}
+          />
+        </View>
+      </View>
+
+      {savedNotice ? (
+        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0284c7', marginTop: 4, textAlign: 'center' }}>
+          {savedNotice}
+        </Text>
+      ) : null}
     </View>
   );
 }

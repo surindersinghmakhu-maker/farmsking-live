@@ -118,13 +118,6 @@ export default function RegisterScreen() {
       return;
     }
 
-    if (accountType === 'FARMER') {
-      if (!sprayTankSizeL) {
-        setError('Farmer registration ke liye Spray Tank Size compulsory hai!');
-        return;
-      }
-    }
-
     if (pincode.trim().length !== 6) {
       setError('PIN Code compulsory hai! Kripya 6-digit PIN Code bharein aur Fetch dabayein.');
       return;
@@ -284,7 +277,7 @@ export default function RegisterScreen() {
               </View>
 
               {/* 1. Spray Tank Capacity */}
-              <Text style={styles.farmerLabel}>Spray Tank Capacity (Liters) *</Text>
+              <Text style={styles.farmerLabel}>Spray Tank Capacity (Liters) (Optional)</Text>
               <View style={styles.farmerChipRow}>
                 {SPRAY_TANK_SIZE_OPTIONS.map((opt) => (
                   <TouchableOpacity

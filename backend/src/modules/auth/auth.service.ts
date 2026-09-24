@@ -72,12 +72,6 @@ export class AuthService {
   async register(dto: RegisterDto) {
     const existing = await this.prisma.user.findUnique({ where: { mobile: dto.mobile } });
 
-    if (dto.accountType === 'FARMER') {
-      if (!dto.sprayTankSizeL) {
-        throw new BadRequestException('Farmer registration requires sprayTankSizeL.');
-      }
-    }
-
     let referrer: { id: string } | null = null;
     if (dto.referralCode?.trim()) {
       const cleanCode = dto.referralCode.trim();

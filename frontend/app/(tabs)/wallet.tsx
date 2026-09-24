@@ -15,6 +15,7 @@ import { useMineFarmerPlanCoupons, useMinePartnerFarmerPlanCoupons, useGenerateO
 import { useFarmersList } from '@/src/hooks/useAdvisorAssignments';
 import { useSearchBusinessPartners } from '@/src/hooks/useUsersAdmin';
 import type { FarmerPlanPricing, FarmerPlanType } from '@/src/api/farmerPlans.api';
+import type { RefereeStatementItem } from '@/src/api/wallet.api';
 import { useAvailableBasicPlanCoupons, useMyPurchasedBasicPlanCoupons, usePurchaseBasicPlanCoupon } from '@/src/hooks/useBasicPlanCoupons';
 import { Coupon, DiscountValueType, WalletTransaction } from '@/src/types/api';
 import { useAuth } from '@/src/store/auth-context';
@@ -23,6 +24,7 @@ import { CopyButton } from '@/src/components/CopyButton';
 import { RedeemForFarmerModal } from '@/src/components/RedeemForFarmerModal';
 import { CouponCardPreview, FarmerPlanCouponCardPreview, useShareCouponAsJpg } from '@/src/components/CouponCardPreview';
 
+type RoleTheme = (typeof RoleThemes)[keyof typeof RoleThemes];
 const staticTheme = RoleThemes.BUSINESS_PARTNER;
 
 const tap = () => {
@@ -690,9 +692,6 @@ function WalletHistoryTable({
     </View>
   );
 }
-
-type RoleTheme = (typeof RoleThemes)[keyof typeof RoleThemes];
-
 function TransactionRow({
   tx,
   theme,

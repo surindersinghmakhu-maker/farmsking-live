@@ -21,9 +21,9 @@ const PLAN_COLUMN_META: Record<FarmerPlanType, { label: string; emoji: string; c
   PRO: { label: 'Basic', emoji: '⚡', color: '#0284c7', price: '₹199/yr' },
   SMART: { label: 'Pro', emoji: '👑', color: '#1d4ed8', price: '₹499/yr' },
   SUPER: { label: 'Super', emoji: '⭐', color: '#b45309', price: '₹999/30d' },
-  SILVER: { label: 'Doctor Advisor', emoji: '🩺', color: '#64748b', price: '₹999/yr' },
-  GOLD: { label: 'Crop Care Plan', emoji: '🌾', color: '#d97706', price: '₹1999/yr' },
-  ROYAL: { label: 'Doctor VIP', emoji: '👑', color: '#7c3aed', price: '₹3499/yr' },
+  SILVER: { label: 'Crop Advisor', emoji: '🩺', color: '#64748b', price: '₹999/yr' },
+  GOLD: { label: 'Crop Doctor', emoji: '🌾', color: '#d97706', price: '₹1999/yr' },
+  ROYAL: { label: 'Crop Doctor VIP', emoji: '👑', color: '#7c3aed', price: '₹3499/yr' },
 };
 
 interface PlanRow {
@@ -568,9 +568,9 @@ export function FarmerPlanUpgradeModal({
                       { id: 'FARMER_SUPER', key: 'SUPER', label: '⭐ Super Membership', iconName: 'star', color: '#b45309', sub: 'Unlimited Crops, Weather Reports & Mandi AI' },
                     ]
                   : [
-                      { id: 'CARE_SILVER', key: 'SILVER', label: 'Doctor Silver Care', iconName: 'medical', color: '#64748b', sub: '5 Crops Supervision + Soil Health & Leaf Scan' },
-                      { id: 'CARE_GOLD', key: 'GOLD', label: 'Doctor Gold Care', iconName: 'ribbon', color: '#d97706', sub: '5 Crops Priority Doctor Care + Advisor Chat & Call Requests' },
-                      { id: 'CARE_ROYAL', key: 'ROYAL', label: 'Doctor Royal Care', iconName: 'shield-checkmark', color: '#7c3aed', sub: '10 Crops Full Senior Doctor Supervision & Custom Spray Schedule' },
+                      { id: 'CARE_SILVER', key: 'SILVER', label: 'Crop Advisor', iconName: 'medical', color: '#64748b', sub: '5 Crops Supervision + Soil Health & Leaf Scan' },
+                      { id: 'CARE_GOLD', key: 'GOLD', label: 'Crop Doctor', iconName: 'ribbon', color: '#d97706', sub: '5 Crops Priority Doctor Care + Advisor Chat & Call Requests' },
+                      { id: 'CARE_ROYAL', key: 'ROYAL', label: 'Crop Doctor VIP', iconName: 'shield-checkmark', color: '#7c3aed', sub: '10 Crops Full Senior Doctor Supervision & Custom Spray Schedule' },
                     ]
                 ).map((item) => {
                   const p = item.key as FarmerPlanType;
@@ -697,9 +697,9 @@ export function FarmerPlanUpgradeModal({
                           { id: 'FARMER_BASIC', label: 'Basic Plan', key: 'PRO' },
                           { id: 'FARMER_PRO', label: 'Pro Plan', key: 'SMART' },
                           { id: 'FARMER_SUPER', label: 'Super Plan', key: 'SUPER' },
-                          { id: 'CARE_SILVER', label: 'Silver Doctor Care', key: 'SILVER' },
-                          { id: 'CARE_GOLD', label: 'Gold Doctor Care', key: 'GOLD' },
-                          { id: 'CARE_ROYAL', label: 'Royal Doctor Care', key: 'ROYAL' },
+                          { id: 'CARE_SILVER', label: 'Crop Advisor', key: 'SILVER' },
+                          { id: 'CARE_GOLD', label: 'Crop Doctor', key: 'GOLD' },
+                          { id: 'CARE_ROYAL', label: 'Crop Doctor VIP', key: 'ROYAL' },
                         ];
                         const selOpt = allOpts.find((o) => o.id === selectedOptionId) || allOpts[0];
                         const availableVariants = pricingList

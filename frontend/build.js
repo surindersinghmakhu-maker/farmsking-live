@@ -18,6 +18,17 @@ while (currentDir !== path.parse(currentDir).root) {
   currentDir = path.dirname(currentDir);
 }
 
+// Trigger automatic version bump
+try {
+  const bumpScriptPath = path.join(currentDir, 'scripts', 'bump-version.js');
+  if (fs.existsSync(bumpScriptPath)) {
+    const { runVersionBump } = require(bumpScriptPath);
+    runVersionBump();
+  }
+} catch (bumpErr) {
+  console.warn('⚠️ Auto version bump skipped:', bumpErr.message);
+}
+
 console.log(`🚀 Starting Expo Web build in resolved directory: ${targetDir}`);
 
 process.env.CI = '1';

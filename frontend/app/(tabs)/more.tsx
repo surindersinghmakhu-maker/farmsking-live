@@ -54,10 +54,12 @@ const SUPER_ADMIN_ITEMS: { key: TranslationKey | 'workspace'; label: string; ico
   { key: 'superEditCrop', label: 'Edit Crop by Crop ID', icon: 'leaf-outline', href: '/(tabs)/super-crop-edit' },
 ];
 
+import { APP_VERSION } from '@/src/constants/version';
+
 function AppDownloadRow() {
   const { data: settings } = useAppSettings();
   const downloadUrl = settings?.appDownloadUrl || 'https://farmsking.tech/download/farmsking.apk';
-  const version = settings?.latestAppVersion || '1.0.0';
+  const version = settings?.latestAppVersion || APP_VERSION;
 
   const handleDownload = async () => {
     try {

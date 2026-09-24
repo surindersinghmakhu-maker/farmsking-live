@@ -1132,18 +1132,20 @@ function ReferralBonusSettingsPanel() {
   );
 }
 
+import { APP_VERSION } from '@/src/constants/version';
+
 function AppDownloadSettingsPanel() {
   const { data: settings } = useAppSettings();
   const update = useUpdateAppSettings();
   const [downloadUrl, setDownloadUrl] = useState<string>('');
-  const [version, setVersion] = useState<string>('1.0.0');
+  const [version, setVersion] = useState<string>(APP_VERSION);
   const [saving, setSaving] = useState(false);
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (settings) {
       setDownloadUrl(settings.appDownloadUrl || 'https://farmsking.tech/download/farmsking.apk');
-      setVersion(settings.latestAppVersion || '1.0.0');
+      setVersion(settings.latestAppVersion || APP_VERSION);
     }
   }, [settings]);
 

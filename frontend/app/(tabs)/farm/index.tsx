@@ -339,6 +339,7 @@ export default function FarmListScreen() {
   const [stageConfirmModalVisible, setStageConfirmModalVisible] = useState(false);
   const [pendingStageUpdate, setPendingStageUpdate] = useState<{
     id: string;
+    currentStage: CropStage;
     targetStage: CropStage;
     cropName: string;
   } | null>(null);
@@ -446,7 +447,7 @@ export default function FarmListScreen() {
 
     // Show Confirmation Warning Modal before advancing
     tap();
-    setPendingStageUpdate({ id: item.id, targetStage, cropName: item.cropName });
+    setPendingStageUpdate({ id: item.id, currentStage, targetStage, cropName: item.cropName });
     setStageConfirmModalVisible(true);
   };
 
@@ -1315,9 +1316,16 @@ export default function FarmListScreen() {
 
             <View style={styles.warningHighlightBox}>
               <Ionicons name="lock-closed" size={16} color="#b45309" />
-              <Text style={styles.warningHighlightText}>
-                ⚠️ Note: Once advanced to the next stage, you CANNOT revert to previous stages!
-              </Text>
+              <View style={{ flex: 1, gap: 3 }}>
+                <Text style={styles.warningHighlightText}>
+                  ⚠️ Note: Once advanced to the next stage, you CANNOT revert to previous stages!
+                </Text>
+                {pendingStageUpdate?.currentStage === 'PLANTATION' ? (
+                  <Text style={[styles.warningHighlightText, { color: '#dc2626', fontFamily: FONT.bold }]}>
+                    🔒 ਧਿਆਨ ਦਿਓ: ਪਲਾਂਟੇਸ਼ਨ (Plantation) ਸਟੇਜ ਬਦਲਣ ਤੋਂ ਬਾਅਦ ਤੁਸੀਂ ਫਸਲ ਦੀਆਂ ਡਿਟੇਲਾਂ (Crop Specs / Edit Details) ਵਿੱਚ ਕੋਈ ਵੀ ਬਦਲਾਅ (Edit) ਨਹੀਂ ਕਰ ਸਕੋਗੇ!
+                  </Text>
+                ) : null}
+              </View>
             </View>
 
             <View style={styles.modalActionRow}>

@@ -339,10 +339,20 @@ function toRegisteredCropField(
   const areaText = crop.plot?.area != null ? `${crop.plot.area} ${displayUnit}` : (crop.area != null ? `${crop.area} ${displayUnit}` : '');
   const sowingDateDisplay = (crop.notes ? crop.notes.replace(/\s*\[UNIT:.*?\]/g, '').replace(/\s*\([^)]*\)/g, '').trim() : '') || (crop.sowingDate ? formatDateDisplay(crop.sowingDate) : '');
 
+  let formattedCropId = crop.cropId || crop.id;
+  if (formattedCropId && formattedCropId.startsWith('C-')) {
+    formattedCropId = formattedCropId.replace('C-', 'C');
+  } else if (formattedCropId && !formattedCropId.startsWith('C') && formattedCropId.length === 36) {
+    formattedCropId = `C${formattedCropId.replace(/\D/g, '').slice(0, 6).padStart(6, '0') || '100001'}`;
+  }
+
+  const baseCropName = crop.cropName ? crop.cropName.replace(/\s*\([^)]*\)/g, '').trim() : 'Crop';
+  const cropNameDisplay = crop.variety && !baseCropName.toLowerCase().includes(crop.variety.toLowerCase()) ? `${baseCropName} (${crop.variety})` : crop.cropName;
+
   return {
     id: crop.id,
-    cropId: crop.cropId || crop.id,
-    cropName: crop.variety ? `${crop.cropName} (${crop.variety})` : crop.cropName,
+    cropId: formattedCropId,
+    cropName: cropNameDisplay,
     categoryName: catInfo.name,
     categoryColor: catInfo.color,
     categoryBg: catInfo.bg,
@@ -535,10 +545,26 @@ export function CropsProvider({ children }: { children: ReactNode }) {
   };
 
   const editCrop = async (cropId: string, values: CropFormValues) => {
-    await ensureFarmAndPlot(values.fieldName.trim(), Number(values.area) || 1, values.areaUnit, values.irrigationType);
+    // 1. Find target crop to update underlying plot (fieldName, area, areaUnit, irrigationType)
+    const targetCrop = myCrops.find((c) => c.id === cropId);
+    if (targetCrop?.plotId || targetCrop?.plot?.id) {
+      const plotId = targetCrop.plotId || targetCrop.plot?.id;
+      if (plotId) {
+        await plotsApi.updatePlot(plotId, {
+          name: values.fieldName.trim(),
+          area: Number(values.area) || 1,
+          areaUnit: LAND_UNIT_TO_REAL[values.areaUnit] ?? 'ACRE',
+          irrigationType: values.irrigationType,
+        });
+      }
+    } else {
+      await ensureFarmAndPlot(values.fieldName.trim(), Number(values.area) || 1, values.areaUnit, values.irrigationType);
+    }
 
+    // 2. Update Crop Cycle specifications
+    const realCategory = (values.category?.id && CATEGORY_ID_TO_REAL[values.category.id]) ? CATEGORY_ID_TO_REAL[values.category.id] : 'OTHER';
     await cropsApi.updateCrop(cropId, {
-      category: CATEGORY_ID_TO_REAL[values.category.id] ?? 'OTHER',
+      category: realCategory,
       cropName: values.crop.name.trim(),
       variety: values.crop.variety,
       sowingDate: parseSowingDateToISO(values.sowingDate),

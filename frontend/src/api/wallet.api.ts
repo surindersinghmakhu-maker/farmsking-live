@@ -57,3 +57,36 @@ export async function getReferralStatement(): Promise<ReferralStatementResponse>
   const { data } = await apiClient.get<ReferralStatementResponse>('/wallet/referral-statement');
   return data;
 }
+
+export interface AdminBonusItem {
+  id: string;
+  amount: number;
+  reason: string;
+  createdAt: string;
+  category: 'WELCOME' | 'REFERRAL_SIGNUP' | 'REFERRAL_PLAN' | 'OTHER';
+  user: { id: string; name?: string; mobile: string; kingId?: string; role: string };
+  relatedUser?: { id: string; name?: string; mobile: string; kingId?: string; role: string } | null;
+}
+
+export interface AdminBonusReportResponse {
+  summary: {
+    totalBonusIssued: number;
+    totalWelcome: number;
+    countWelcome: number;
+    totalReferralSignup: number;
+    countReferralSignup: number;
+    totalReferralPlan: number;
+    countReferralPlan: number;
+    totalOtherBonus: number;
+    countOtherBonus: number;
+    totalWalletLiability: number;
+    totalBonusTransactions: number;
+  };
+  transactions: AdminBonusItem[];
+}
+
+export async function getAdminBonusReport(): Promise<AdminBonusReportResponse> {
+  const { data } = await apiClient.get<AdminBonusReportResponse>('/wallet/admin/bonus-report');
+  return data;
+}
+

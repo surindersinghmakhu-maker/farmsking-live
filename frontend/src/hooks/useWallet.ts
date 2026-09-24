@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { creditWallet, debitWallet, getMyWallet, getReferralStatement, getWalletForUser } from '../api/wallet.api';
+import { creditWallet, debitWallet, getAdminBonusReport, getMyWallet, getReferralStatement, getWalletForUser } from '../api/wallet.api';
 
 export function useMyWallet() {
   return useQuery({ queryKey: ['wallet', 'mine'], queryFn: getMyWallet });
@@ -12,6 +12,14 @@ export function useReferralStatement() {
   });
 }
 
+/** Admin/Super Admin: bonus calculations & issued bonus report. */
+export function useAdminBonusReport() {
+  return useQuery({
+    queryKey: ['wallet', 'admin', 'bonus-report'],
+    queryFn: getAdminBonusReport,
+  });
+}
+
 /** Admin: view any partner/advisor's full wallet ledger. */
 export function useWalletForUser(userId: string | undefined) {
   return useQuery({
@@ -20,6 +28,7 @@ export function useWalletForUser(userId: string | undefined) {
     enabled: !!userId,
   });
 }
+
 
 /** Admin/Super Admin: manually add balance to any user's wallet. */
 export function useCreditWallet() {

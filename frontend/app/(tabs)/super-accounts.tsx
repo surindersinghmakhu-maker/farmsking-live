@@ -12,7 +12,7 @@ import type { PlanPaymentRequest } from '@/src/api/planPayments.api';
 import { usePendingFarmerPlanPayments, useConfirmFarmerPlanPayment, useRejectFarmerPlanPayment } from '@/src/hooks/useFarmerPlanPayments';
 import type { FarmerPlanPaymentRequest } from '@/src/api/farmerPlanPayments.api';
 import { useUsersList } from '@/src/hooks/useUsersAdmin';
-import { useCreditWallet, useDebitWallet, useWalletForUser } from '@/src/hooks/useWallet';
+import { useAdminBonusReport, useCreditWallet, useDebitWallet, useWalletForUser } from '@/src/hooks/useWallet';
 import { AdminUser } from '@/src/types/api';
 
 const theme = RoleThemes.SUPER_ADMIN;
@@ -27,13 +27,15 @@ const STATUS_META: Record<WithdrawalStatus, { color: string; bg: string; label: 
   REJECTED: { color: '#b91c1c', bg: '#fee2e2', label: 'Rejected' },
 };
 
-type SectionKey = 'REQUESTS' | 'PARTNERS' | 'SEARCH';
+type SectionKey = 'REQUESTS' | 'BONUSES' | 'PARTNERS' | 'SEARCH';
 
 const SECTIONS: { value: SectionKey; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: 'REQUESTS', label: 'Requests', icon: 'time-outline' },
+  { value: 'BONUSES', label: 'Bonus Details', icon: 'gift-outline' },
   { value: 'PARTNERS', label: 'Partner Wallets', icon: 'briefcase-outline' },
   { value: 'SEARCH', label: 'Find a User', icon: 'search-outline' },
 ];
+
 
 function initials(name?: string) {
   if (!name) return '?';
@@ -191,6 +193,10 @@ export default function SuperAccountsScreen() {
               ))}
             </View>
           )
+        ) : null}
+
+        {section === 'BONUSES' ? (
+          <AdminBonusSectionComponent />
         ) : null}
 
         {section === 'REQUESTS' ? (
@@ -831,3 +837,211 @@ const styles = StyleSheet.create({
   txDate: { fontSize: 10.5, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 2 },
   txAmount: { fontSize: 13.5, fontFamily: FONT.extraBold },
 });
+
+function AdminBonusSectionComponent() {
+  const { data: bonusReport, isLoading } = useAdminBonusReport();
+  const [filter, setFilter] = useState<'ALL' | 'WELCOME' | 'REFERRAL_SIGNUP' | 'REFERRAL_PLAN' | 'OTHER'>('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  if (isLoading) {
+    return <ActivityIndicator color={theme.primary} style={{ marginTop: 24 }} />;
+  }
+
+  const summary = bonusReport?.summary || {
+    totalBonusIssued: 0,
+    totalWelcome: 0,
+    countWelcome: 0,
+    totalReferralSignup: 0,
+    countReferralSignup: 0,
+    totalReferralPlan: 0,
+    countReferralPlan: 0,
+    totalOtherBonus: 0,
+    countOtherBonus: 0,
+    totalWalletLiability: 0,
+    totalBonusTransactions: 0,
+  };
+
+  const rawTransactions = bonusReport?.transactions || [];
+
+  const filteredTransactions = rawTransactions.filter((tx) => {
+    if (filter !== 'ALL' && tx.category !== filter) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const userName = (tx.user?.name || '').toLowerCase();
+      const userMobile = (tx.user?.mobile || '').toLowerCase();
+      const userKingId = (tx.user?.kingId || '').toLowerCase();
+      const reason = (tx.reason || '').toLowerCase();
+      const relatedName = (tx.relatedUser?.name || '').toLowerCase();
+      return userName.includes(q) || userMobile.includes(q) || userKingId.includes(q) || reason.includes(q) || relatedName.includes(q);
+    }
+    return true;
+  });
+
+  return (
+    <View style={{ gap: 14 }}>
+      {/* Overview Calculation Summary Cards */}
+      <View style={{ gap: 8 }}>
+        <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' }}>
+          📊 Bonus Financial Calculations & System Balance
+        </Text>
+
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          {/* Total Bonus Credited Card */}
+          <View style={[styles.card, { flex: 1, backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1.5, flexDirection: 'column', alignItems: 'flex-start', padding: 12, gap: 4 }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#16a34a', alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="gift" size={13} color="#ffffff" />
+              </View>
+              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#166534' }}>Total Bonus Credited</Text>
+            </View>
+            <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: '#15803d' }}>
+              ₹{summary.totalBonusIssued.toLocaleString('en-IN')}
+            </Text>
+            <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#166534' }}>
+              Across {summary.totalBonusTransactions} transactions
+            </Text>
+          </View>
+
+          {/* Wallet Balance Liability Card */}
+          <View style={[styles.card, { flex: 1, backgroundColor: '#eff6ff', borderColor: '#bfdbfe', borderWidth: 1.5, flexDirection: 'column', alignItems: 'flex-start', padding: 12, gap: 4 }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#2563eb', alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="wallet" size={13} color="#ffffff" />
+              </View>
+              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#1e40af' }}>Wallet Liability</Text>
+            </View>
+            <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: '#1d4ed8' }}>
+              ₹{summary.totalWalletLiability.toLocaleString('en-IN')}
+            </Text>
+            <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#1e40af' }}>
+              System user wallet balance
+            </Text>
+          </View>
+        </View>
+
+        {/* 3-Way Detailed Breakdown Grid */}
+        <View style={{ flexDirection: 'row', gap: 6 }}>
+          <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', gap: 2 }}>
+            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>🎁 Welcome Signups</Text>
+            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' }}>₹{summary.totalWelcome.toLocaleString('en-IN')}</Text>
+            <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8' }}>{summary.countWelcome} users</Text>
+          </View>
+
+          <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', gap: 2 }}>
+            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>🤝 Referral Signups</Text>
+            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' }}>₹{summary.totalReferralSignup.toLocaleString('en-IN')}</Text>
+            <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8' }}>{summary.countReferralSignup} referrals</Text>
+          </View>
+
+          <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', gap: 2 }}>
+            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>👑 Plan Upgrades</Text>
+            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' }}>₹{summary.totalReferralPlan.toLocaleString('en-IN')}</Text>
+            <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8' }}>{summary.countReferralPlan} upgrades</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Filter Chips & Search Bar */}
+      <View style={{ gap: 8 }}>
+        <View style={styles.searchWrap}>
+          <Ionicons name="search" size={16} color="#94a3b8" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by user name, King ID, mobile or reason..."
+            placeholderTextColor="#94a3b8"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingVertical: 2 }}>
+          {[
+            { key: 'ALL', label: `All (${rawTransactions.length})` },
+            { key: 'WELCOME', label: `🎁 Welcome (${summary.countWelcome})` },
+            { key: 'REFERRAL_SIGNUP', label: `🤝 Referral (${summary.countReferralSignup})` },
+            { key: 'REFERRAL_PLAN', label: `👑 Paid Plan (${summary.countReferralPlan})` },
+            { key: 'OTHER', label: `✨ Other (${summary.countOtherBonus})` },
+          ].map((item) => (
+            <TouchableOpacity
+              key={item.key}
+              style={{
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+                borderRadius: RADIUS.pill,
+                backgroundColor: filter === item.key ? theme.primary : '#ffffff',
+                borderWidth: 1,
+                borderColor: filter === item.key ? theme.primary : '#cbd5e1',
+              }}
+              onPress={() => setFilter(item.key as any)}
+            >
+              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: filter === item.key ? '#ffffff' : '#475569' }}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* Bonus Transactions List */}
+      <View style={{ gap: 8 }}>
+        <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: '#475569' }}>
+          Issued Bonus Details ({filteredTransactions.length})
+        </Text>
+
+        {filteredTransactions.length === 0 ? (
+          <EmptyState icon="gift-outline" text="No bonus issue records found matching filter." compact />
+        ) : (
+          filteredTransactions.map((tx) => {
+            const badgeMeta =
+              tx.category === 'WELCOME'
+                ? { bg: '#dcfce7', text: '#15803d', label: 'Welcome Bonus' }
+                : tx.category === 'REFERRAL_SIGNUP'
+                ? { bg: '#e0f2fe', text: '#0369a1', label: 'Referral Signup' }
+                : tx.category === 'REFERRAL_PLAN'
+                ? { bg: '#fef3c7', text: '#b45309', label: 'Paid Plan Bonus' }
+                : { bg: '#f3e8ff', text: '#7e22ce', label: 'Bonus Credit' };
+
+            return (
+              <View key={tx.id} style={[styles.card, premiumShadow('#0f172a', 'sm'), { flexDirection: 'column', alignItems: 'stretch', gap: 8 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <IdentityBadge
+                    name={tx.user?.name || 'User'}
+                    sub={`📱 ${tx.user?.mobile || 'N/A'}${tx.user?.kingId ? ` · 🔑 ${tx.user.kingId}` : ''} (${tx.user?.role || 'FARMER'})`}
+                  />
+                  <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: '#16a34a' }}>
+                    +₹{Number(tx.amount).toLocaleString('en-IN')}
+                  </Text>
+                </View>
+
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f8fafc', padding: 8, borderRadius: RADIUS.sm }}>
+                  <View style={{ flex: 1, paddingRight: 6 }}>
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.semiBold, color: '#334155' }}>
+                      {tx.reason}
+                    </Text>
+                    {tx.relatedUser ? (
+                      <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#0284c7', marginTop: 2 }}>
+                        🔗 Referee / Sponsor: {tx.relatedUser.name} ({tx.relatedUser.kingId || tx.relatedUser.mobile})
+                      </Text>
+                    ) : null}
+                  </View>
+
+                  <View style={{ alignItems: 'flex-end', gap: 4 }}>
+                    <View style={{ backgroundColor: badgeMeta.bg, paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.pill }}>
+                      <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: badgeMeta.text }}>
+                        {badgeMeta.label}
+                      </Text>
+                    </View>
+                    <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#94a3b8' }}>
+                      {new Date(tx.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            );
+          })
+        )}
+      </View>
+    </View>
+  );
+}
+

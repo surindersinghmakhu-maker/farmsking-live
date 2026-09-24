@@ -111,6 +111,98 @@ export class WalletService {
     return { balance, transactions };
   }
 
+  /** Admin/Super Admin: Comprehensive report of all issued bonuses, statistics & user bonus ledgers. */
+  async getAdminBonusReport() {
+    const bonusTxs = await this.prisma.walletTransaction.findMany({
+      where: {
+        type: WalletTransactionType.CREDIT,
+        OR: [
+          { reason: { contains: 'Welcome' } },
+          { reason: { contains: 'Referral' } },
+          { reason: { contains: 'Bonus' } },
+          { reason: { contains: 'Offer' } },
+          { reason: { contains: 'Reward' } },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 300,
+      include: {
+        user: { select: { id: true, name: true, mobile: true, kingId: true, role: true } },
+        relatedUser: { select: { id: true, name: true, mobile: true, kingId: true, role: true } },
+      },
+    });
+
+    let totalWelcome = 0, countWelcome = 0;
+    let totalReferralSignup = 0, countReferralSignup = 0;
+    let totalReferralPlan = 0, countReferralPlan = 0;
+    let totalOtherBonus = 0, countOtherBonus = 0;
+
+    const formattedTxs = bonusTxs.map((tx) => {
+      const r = tx.reason.toLowerCase();
+      let category: 'WELCOME' | 'REFERRAL_SIGNUP' | 'REFERRAL_PLAN' | 'OTHER' = 'OTHER';
+
+      if (r.includes('welcome')) {
+        category = 'WELCOME';
+        totalWelcome += tx.amount;
+        countWelcome++;
+      } else if (r.includes('referral income') || (r.includes('referral') && r.includes('joined'))) {
+        category = 'REFERRAL_SIGNUP';
+        totalReferralSignup += tx.amount;
+        countReferralSignup++;
+      } else if (r.includes('plan bonus') || (r.includes('referral') && r.includes('plan'))) {
+        category = 'REFERRAL_PLAN';
+        totalReferralPlan += tx.amount;
+        countReferralPlan++;
+      } else {
+        totalOtherBonus += tx.amount;
+        countOtherBonus++;
+      }
+
+      return {
+        id: tx.id,
+        amount: tx.amount,
+        reason: tx.reason,
+        createdAt: tx.createdAt,
+        category,
+        user: tx.user,
+        relatedUser: tx.relatedUser,
+      };
+    });
+
+    const totalBonusIssued = totalWelcome + totalReferralSignup + totalReferralPlan + totalOtherBonus;
+
+    const [allCredits, allDebits] = await Promise.all([
+      this.prisma.walletTransaction.aggregate({
+        where: { type: WalletTransactionType.CREDIT },
+        _sum: { amount: true },
+      }),
+      this.prisma.walletTransaction.aggregate({
+        where: { type: WalletTransactionType.DEBIT },
+        _sum: { amount: true },
+      }),
+    ]);
+
+    const totalWalletLiability = Number(allCredits._sum.amount ?? 0) - Number(allDebits._sum.amount ?? 0);
+
+    return {
+      summary: {
+        totalBonusIssued,
+        totalWelcome,
+        countWelcome,
+        totalReferralSignup,
+        countReferralSignup,
+        totalReferralPlan,
+        countReferralPlan,
+        totalOtherBonus,
+        countOtherBonus,
+        totalWalletLiability: Math.max(0, totalWalletLiability),
+        totalBonusTransactions: bonusTxs.length,
+      },
+      transactions: formattedTxs,
+    };
+  }
+
+
   /** Admin/Super Admin manual top-up — adds balance to any user's wallet (cash top-up, goodwill credit, correction). */
   async adminCreditWallet(admin: AuthUser, userId: string, amount: number, reason?: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });

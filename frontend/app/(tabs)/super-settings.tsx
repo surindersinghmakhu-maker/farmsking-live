@@ -1048,35 +1048,52 @@ function ReferralBonusSettingsPanel() {
   };
 
   return (
-    <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1.5 }]}>
-      <View style={styles.cardHeader}>
-        <View style={[styles.iconCircle, { backgroundColor: '#16a34a' }]}>
-          <Ionicons name="gift" size={20} color="#ffffff" />
+    <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1.5, padding: 14 }]}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+          <View style={[styles.iconCircle, { backgroundColor: '#16a34a', width: 34, height: 34, borderRadius: 17 }]}>
+            <Ionicons name="gift" size={18} color="#ffffff" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' }}>🎁 Referral & Welcome Bonus Settings</Text>
+            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#166534' }}>Set instant signup, welcome offer & referee paid plan bonuses</Text>
+          </View>
         </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.cardTitle}>🎁 Referral & Welcome Bonus Settings</Text>
-          <Text style={styles.cardSub}>Configure signup bonus rewards & referral bonuses when referred users buy paid plans</Text>
-        </View>
+
+        <TouchableOpacity
+          style={{ backgroundColor: '#16a34a', paddingHorizontal: 14, paddingVertical: 8, borderRadius: RADIUS.md, flexDirection: 'row', alignItems: 'center', gap: 5 }}
+          onPress={handleSave}
+          disabled={saving}
+          activeOpacity={0.85}
+        >
+          {saving ? (
+            <ActivityIndicator color="#ffffff" size="small" />
+          ) : (
+            <>
+              <Ionicons name="checkmark-circle-outline" size={15} color="#ffffff" />
+              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>Save</Text>
+            </>
+          )}
+        </TouchableOpacity>
       </View>
 
-      <View style={{ gap: 12, marginTop: 10 }}>
-        {/* Referrer Signup Bonus Amount */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-          <Text style={{ flex: 1, fontSize: 12.5, fontFamily: FONT.bold, color: '#166534' }}>
-            🤝 Referrer Instant Signup Bonus (₹)
+      {/* 3 Bonus Inputs in Single Compact Row Grid */}
+      <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+        <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#86efac', gap: 4 }}>
+          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#166534' }} numberOfLines={1}>
+            🤝 Referrer Bonus (₹)
           </Text>
           <TextInput
             style={{
-              width: 100,
-              borderWidth: 1.5,
-              borderColor: '#86efac',
-              borderRadius: RADIUS.md,
-              paddingHorizontal: 12,
-              paddingVertical: 7,
-              fontSize: 13.5,
-              fontFamily: FONT.bold,
+              height: 34,
+              borderWidth: 1,
+              borderColor: '#cbd5e1',
+              borderRadius: RADIUS.sm,
+              paddingHorizontal: 8,
+              fontSize: 13,
+              fontFamily: FONT.extraBold,
               color: '#0f172a',
-              backgroundColor: '#ffffff',
+              backgroundColor: '#f8fafc',
               textAlign: 'center',
             }}
             keyboardType="numeric"
@@ -1086,23 +1103,21 @@ function ReferralBonusSettingsPanel() {
           />
         </View>
 
-        {/* New User Signup Bonus Amount */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-          <Text style={{ flex: 1, fontSize: 12.5, fontFamily: FONT.bold, color: '#166534' }}>
-            🎉 New User Welcome Offer Bonus (₹)
+        <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#86efac', gap: 4 }}>
+          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#166534' }} numberOfLines={1}>
+            🎉 New User Offer (₹)
           </Text>
           <TextInput
             style={{
-              width: 100,
-              borderWidth: 1.5,
-              borderColor: '#86efac',
-              borderRadius: RADIUS.md,
-              paddingHorizontal: 12,
-              paddingVertical: 7,
-              fontSize: 13.5,
-              fontFamily: FONT.bold,
+              height: 34,
+              borderWidth: 1,
+              borderColor: '#cbd5e1',
+              borderRadius: RADIUS.sm,
+              paddingHorizontal: 8,
+              fontSize: 13,
+              fontFamily: FONT.extraBold,
               color: '#0f172a',
-              backgroundColor: '#ffffff',
+              backgroundColor: '#f8fafc',
               textAlign: 'center',
             }}
             keyboardType="numeric"
@@ -1112,23 +1127,21 @@ function ReferralBonusSettingsPanel() {
           />
         </View>
 
-        {/* Referrer Paid Plan Bonus Amount */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-          <Text style={{ flex: 1, fontSize: 12.5, fontFamily: FONT.bold, color: '#15803d' }}>
-            👑 Referrer Bonus when Referee buys Paid Plan (₹)
+        <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#86efac', gap: 4 }}>
+          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#15803d' }} numberOfLines={1}>
+            👑 Paid Plan Bonus (₹)
           </Text>
           <TextInput
             style={{
-              width: 100,
-              borderWidth: 1.5,
-              borderColor: '#86efac',
-              borderRadius: RADIUS.md,
-              paddingHorizontal: 12,
-              paddingVertical: 7,
-              fontSize: 13.5,
-              fontFamily: FONT.bold,
+              height: 34,
+              borderWidth: 1,
+              borderColor: '#cbd5e1',
+              borderRadius: RADIUS.sm,
+              paddingHorizontal: 8,
+              fontSize: 13,
+              fontFamily: FONT.extraBold,
               color: '#0f172a',
-              backgroundColor: '#ffffff',
+              backgroundColor: '#f8fafc',
               textAlign: 'center',
             }}
             keyboardType="numeric"
@@ -1137,30 +1150,16 @@ function ReferralBonusSettingsPanel() {
             placeholder="50"
           />
         </View>
-
-        {savedNotice ? (
-          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#16a34a', textAlign: 'center' }}>
-            {savedNotice}
-          </Text>
-        ) : null}
-
-        <TouchableOpacity
-          style={[wStyles.btn, { backgroundColor: '#16a34a' }]}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator color="#ffffff" size="small" />
-          ) : (
-            <>
-              <Ionicons name="save-outline" size={16} color="#ffffff" />
-              <Text style={wStyles.btnText}>💾 Save All Bonus Settings</Text>
-            </>
-          )}
-        </TouchableOpacity>
       </View>
+
+      {savedNotice ? (
+        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#16a34a', marginTop: 4, textAlign: 'center' }}>
+          {savedNotice}
+        </Text>
+      ) : null}
     </View>
   );
+
 }
 
 import { APP_VERSION } from '@/src/constants/version';

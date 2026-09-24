@@ -25,6 +25,15 @@ export class WalletController {
     return this.walletService.getReferralStatement(user.id);
   }
 
+  /** Admin/Super Admin: Detailed calculation breakdown of all issued bonuses & transactions. */
+  @UseGuards(OperatorPermissionGuard)
+  @RequireOperatorPermission(OperatorPermission.VIEW_WALLETS)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR)
+  @Get('admin/bonus-report')
+  getAdminBonusReport() {
+    return this.walletService.getAdminBonusReport();
+  }
+
   /** Admin/Super Admin (or Operator with VIEW_WALLETS): full transaction ledger for any partner/advisor's wallet. */
   @UseGuards(OperatorPermissionGuard)
   @RequireOperatorPermission(OperatorPermission.VIEW_WALLETS)

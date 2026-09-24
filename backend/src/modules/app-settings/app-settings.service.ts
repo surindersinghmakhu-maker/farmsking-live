@@ -53,8 +53,8 @@ export class AppSettingsService {
       newUserSignupBonusAmount: (settings as any).newUserSignupBonusAmount ?? 10,
       storefrontMaintenanceMode: (settings as any).storefrontMaintenanceMode ?? false,
       freeTrialEnabled: (settings as any).freeTrialEnabled ?? true,
-      freeTrialDays: (settings as any).freeTrialDays ?? 14,
-      freeTrialPlan: (settings as any).freeTrialPlan ?? 'SUPER',
+      freeTrialDays: (settings as any).freeTrialDays ?? 10,
+      freeTrialPlan: ((settings as any).freeTrialPlan === 'FARMER_FREE' || !(settings as any).freeTrialPlan) ? 'SUPER' : (settings as any).freeTrialPlan,
     };
 
     this.cache = { data: result, timestamp: now };

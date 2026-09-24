@@ -1820,8 +1820,8 @@ model AppSetting {
   latestAppVersion       String?  @default("1.0.0")
   storefrontMaintenanceMode Boolean @default(false)
   freeTrialEnabled       Boolean  @default(true)
-  freeTrialDays          Int      @default(14)
-  freeTrialPlan          String   @default("FARMER_FREE")
+  freeTrialDays          Int      @default(10)
+  freeTrialPlan          String   @default("SUPER")
   featureFlags          Json?
   updatedAt             DateTime @updatedAt
   updatedById           String?

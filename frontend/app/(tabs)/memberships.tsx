@@ -243,12 +243,12 @@ export default function MembershipsScreen() {
               {/* Free Trial Button */}
               {freeTrialEnabled && (plan === 'FREE' || isExpired) ? (
                 <TouchableOpacity
-                  style={[styles.upgradeBtn, { backgroundColor: '#c026d3', marginTop: 6 }]}
+                  style={[styles.upgradeBtn, { backgroundColor: '#166534', marginTop: 6 }]}
                   disabled={activateTrialMutation.isPending}
                   onPress={handleActivateFreeTrial}
                 >
                   <Text style={styles.upgradeBtnText}>
-                    {activateTrialMutation.isPending ? 'Activating Trial...' : `Get ${freeTrialDays} Days Free Trial 🎁`}
+                    {activateTrialMutation.isPending ? 'Activating Demo...' : `Get Free Demo 10 Days 🎁`}
                   </Text>
                 </TouchableOpacity>
               ) : null}

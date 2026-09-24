@@ -553,7 +553,7 @@ export function FarmerPlanUpgradeModal({
               <View style={{ gap: 8 }}>
                 {(planCategory === 'FARMER'
                   ? [
-                      { id: 'FARMER_FREE', key: 'FREE', label: '🌱 Free Membership Trial', iconName: 'leaf', color: '#166534', sub: 'Basic Bookkeeping & Max 3 Crop Cycles (7-Day Free Trial)' },
+                      { id: 'FARMER_FREE', key: 'FREE', label: '🌱 Free Membership Trial', iconName: 'leaf', color: '#166534', sub: 'Full Super Plan Access (10-Day Free Demo Trial)' },
                       { id: 'FARMER_BASIC', key: 'PRO', label: '⚡ Basic Membership', iconName: 'flash', color: '#0284c7', sub: 'Bookkeeping & Expense Logs + Voice AI Mic' },
                       { id: 'FARMER_PRO', key: 'SMART', label: '👑 Pro Membership', iconName: 'sparkles', color: '#1d4ed8', sub: 'All Bookkeeping + Labour Record & Worker Login' },
                       { id: 'FARMER_SUPER', key: 'SUPER', label: '⭐ Super Membership', iconName: 'star', color: '#b45309', sub: 'Unlimited Crops, Weather Reports & Mandi AI' },
@@ -593,14 +593,19 @@ export function FarmerPlanUpgradeModal({
                       }}
                     >
                       <View style={{ flex: 1 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                           <Ionicons name={item.iconName as any} size={15} color={item.color} />
                           <Text style={[styles.advisorPickName, { color: item.color }]}>
                             {item.label}
                           </Text>
+                          {item.key === 'FREE' && (!isExpired && (currentPlan === 'SUPER' || currentPlan === 'FREE')) ? (
+                            <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#86efac' }}>
+                              <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#15803d' }}>✨ Free Trial Active</Text>
+                            </View>
+                          ) : null}
                         </View>
                         <Text style={[styles.advisorPickMeta, { color: '#475569', fontWeight: '700' }]}>
-                          Price: {p === 'FREE' ? '₹0 (Free Trial)' : `₹${currentVariant.price} / ${currentVariant.billingPeriodDays === 365 ? '1 year' : `${currentVariant.billingPeriodDays} days`}`}
+                          Price: {p === 'FREE' ? '₹0 (10 Days Demo)' : `₹${currentVariant.price} / ${currentVariant.billingPeriodDays === 365 ? '1 year' : `${currentVariant.billingPeriodDays} days`}`}
                         </Text>
                         <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 }}>
                           {item.sub}
@@ -662,7 +667,7 @@ export function FarmerPlanUpgradeModal({
                   ) : (
                     <>
                       <Ionicons name="sparkles" size={18} color="#ffffff" />
-                      <Text style={styles.submitBtnText}>Activate Free Trial 🎁</Text>
+                      <Text style={styles.submitBtnText}>Get Free Demo 10 Days 🎁</Text>
                     </>
                   )}
                 </TouchableOpacity>

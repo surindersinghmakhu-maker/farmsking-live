@@ -858,8 +858,18 @@ export class FarmerPlansService implements OnModuleInit {
       throw new BadRequestException('Free trial is currently disabled by Admin.');
     }
 
-    const freeTrialDays = (appSetting as any)?.freeTrialDays ?? 14;
-    const planName = ((appSetting as any)?.freeTrialPlan as FarmerSubscriptionPlan) || FarmerSubscriptionPlan.SUPER;
+    const freeTrialDays = (appSetting as any)?.freeTrialDays ?? 10;
+    let planName = (appSetting as any)?.freeTrialPlan as FarmerSubscriptionPlan;
+
+    if (!planName || !Object.values(FarmerSubscriptionPlan).includes(planName as any) || (planName as string) === 'FARMER_FREE') {
+      planName = FarmerSubscriptionPlan.SUPER;
+      await this.prisma.appSetting.upsert({
+        where: { id: 'default' },
+        update: { freeTrialPlan: 'SUPER', freeTrialDays: 10 },
+        create: { id: 'default', freeTrialPlan: 'SUPER', freeTrialDays: 10 },
+      }).catch(() => {});
+    }
+
     const targetEndDate = new Date(now.getTime() + freeTrialDays * DAY_MS);
 
     const updatedPlan = await this.prisma.farmerPlan.upsert({

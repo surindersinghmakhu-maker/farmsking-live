@@ -33,8 +33,8 @@ const SAFE_USER_SELECT = {
   preferredLanguage: true,
   upiId: true,
   billPrintingAddress: true,
-  printName: true,
-  printAddress: true,
+  farmName: true,
+  farmAddress: true,
   createdAt: true,
 } as const;
 
@@ -70,21 +70,74 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto) {
-    const existing = await this.prisma.user.findUnique({ where: { mobile: dto.mobile } });
+    const rawMobileDigits = dto.mobile ? dto.mobile.replace(/\D/g, '') : '';
+    const cleanMobileNum = rawMobileDigits.slice(-10);
+
+    const existing = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { mobile: dto.mobile.trim() },
+          ...(cleanMobileNum ? [
+            { mobile: cleanMobileNum },
+            { mobile: `+91${cleanMobileNum}` },
+            { mobile: { endsWith: cleanMobileNum } },
+          ] : []),
+        ],
+        deletedAt: null,
+      },
+    });
 
     let referrer: { id: string } | null = null;
     if (dto.referralCode?.trim()) {
       const cleanCode = dto.referralCode.trim();
-      referrer = await this.prisma.user.findUnique({ where: { kingId: cleanCode }, select: { id: true } });
+      const rawDigits = cleanCode.replace(/\D/g, '');
+      const cleanReferrerMobile = rawDigits.slice(-10);
+
+      // 1. Try finding by exact King ID, padded King ID, or endsWith digits
+      referrer = await this.prisma.user.findFirst({
+        where: {
+          OR: [
+            { kingId: cleanCode },
+            ...(rawDigits ? [
+              { kingId: rawDigits },
+              { kingId: rawDigits.padStart(8, '0') },
+              { kingId: { endsWith: rawDigits } },
+            ] : []),
+          ],
+        },
+        select: { id: true },
+      });
+
+      // 2. Try finding by Referrer's Mobile Number (if user typed phone number instead of King ID)
+      if (!referrer && cleanReferrerMobile.length === 10) {
+        referrer = await this.prisma.user.findFirst({
+          where: {
+            OR: [
+              { mobile: cleanReferrerMobile },
+              { mobile: `+91${cleanReferrerMobile}` },
+              { mobile: { endsWith: cleanReferrerMobile } },
+            ],
+            deletedAt: null,
+          },
+          select: { id: true },
+        });
+      }
+
+      // 3. Try finding by Coupon code (case-insensitive)
       if (!referrer) {
-        const coupon = await this.prisma.coupon.findUnique({ where: { code: cleanCode }, select: { createdById: true, businessPartnerId: true } });
+        const coupon = await this.prisma.coupon.findFirst({
+          where: { code: { equals: cleanCode, mode: 'insensitive' } },
+          select: { createdById: true, businessPartnerId: true },
+        });
         const ownerId = coupon?.createdById || coupon?.businessPartnerId;
         if (ownerId) {
           referrer = { id: ownerId };
         }
       }
+
+      // If referral code is provided but not matched, log warning & allow registration to complete
       if (!referrer) {
-        throw new BadRequestException('Invalid referral code or coupon code.');
+        console.warn(`[Register] Referral code "${cleanCode}" provided but not found. Proceeding with registration without referrer.`);
       }
     }
 

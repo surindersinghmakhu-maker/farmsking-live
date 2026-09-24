@@ -110,20 +110,20 @@ export default function RegisterScreen() {
     setError(null);
 
     if (values.mobile.trim().length !== 10) {
-      setError('10-digit mobile number compulsory hai!');
+      setError('Please enter a valid 10-digit mobile number.');
       return;
     }
     if (!values.name.trim()) {
-      setError('Full Name is compulsory!');
+      setError('Full Name is required.');
       return;
     }
 
     if (pincode.trim().length !== 6) {
-      setError('PIN Code compulsory hai! Kripya 6-digit PIN Code bharein aur Fetch dabayein.');
+      setError('PIN Code is required. Please enter a valid 6-digit PIN Code and tap Check.');
       return;
     }
     if (!district || !state) {
-      setError('PIN Code se district/state fetch karein pehle "Fetch" button dabakar.');
+      setError('Please tap "Check" to verify your PIN Code and fetch location details.');
       return;
     }
     if (values.password !== values.confirmPassword) {
@@ -252,17 +252,17 @@ export default function RegisterScreen() {
                     <Text style={styles.kingIdSub}>Name: {searchMobileResult.user.name}</Text>
                   ) : null}
                   <Text style={[styles.kingIdHint, { color: '#92400e' }]}>
-                    ਇਹ ਮੋਬਾਈਲ ਨੰਬਰ ਪਹਿਲਾਂ ਤੋਂ ਰਜਿਸਟਰਡ ਹੈ। ਨਵਾਂ ਅਕਾਊਂਟ ਇਸੇ King ID ਨਾਲ ਲਿੰਕ ਹੋ ਜਾਵੇਗਾ।
+                    This mobile number is already registered. Your account will be linked with this King ID.
                   </Text>
                 </View>
               ) : searchMobileResult ? (
                 <View style={styles.kingIdBadgeNew}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                     <Ionicons name="sparkles" size={15} color="#16a34a" />
-                    <Text style={styles.kingIdTitle}>✨ New Mobile Number! (ਨਵਾਂ ਮੋਬਾਈਲ ਨੰਬਰ)</Text>
+                    <Text style={styles.kingIdTitle}>✨ New Mobile Number!</Text>
                   </View>
                   <Text style={styles.kingIdHint}>
-                    ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਪੂਰੀ ਹੋਣ 'ਤੇ ਤੁਹਾਡੀ ਇੱਕ ਬਿਲਕੁਲ ਨਵੀਂ King ID ਤਿਆਰ ਹੋ ਜਾਵੇਗੀ।
+                    Upon completing registration, a brand new King ID will be generated for your account.
                   </Text>
                 </View>
               ) : null

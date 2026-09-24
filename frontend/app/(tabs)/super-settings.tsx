@@ -2436,7 +2436,7 @@ function UnifiedPlanManagerModal({
           plan: activeTab,
           payload: {
             mrp: Number(item.mrp || item.price),
-            price: Number(item.price),
+            price: Number(item.mrp || item.price),
             billingPeriodDays: Number(item.billingPeriodDays),
             isOffer: !!item.isOffer,
             offerName: item.offerName || undefined,
@@ -2622,29 +2622,6 @@ function UnifiedPlanManagerModal({
                     />
                   </View>
 
-                  {/* Selling Price */}
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#166534', marginBottom: 2 }}>
-                      💰 Price (₹)
-                    </Text>
-                    <TextInput
-                      style={{
-                        height: 34,
-                        borderWidth: 1.5,
-                        borderColor: '#86efac',
-                        borderRadius: RADIUS.sm,
-                        paddingHorizontal: 8,
-                        fontSize: 12,
-                        fontFamily: FONT.extraBold,
-                        color: '#16a34a',
-                        backgroundColor: '#f0fdf4',
-                      }}
-                      keyboardType="numeric"
-                      placeholder="999"
-                      value={item.price}
-                      onChangeText={(val) => handleUpdateItemField(idx, 'price', val)}
-                    />
-                  </View>
 
                   {/* Remove Button */}
                   <TouchableOpacity

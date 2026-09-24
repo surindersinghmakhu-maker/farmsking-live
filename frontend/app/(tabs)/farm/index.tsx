@@ -1003,7 +1003,7 @@ export default function FarmListScreen() {
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#ecfdf5', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: '#a7f3d0' }}>
                             <Ionicons name="medical" size={9.5} color="#15803d" />
                             <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }} numberOfLines={1}>
-                              🩺 {summary.advisorName ? `Hired (${summary.advisorName})` : 'Hired Doctor'}
+                              🩺 Hired
                             </Text>
                           </View>
                         ) : (

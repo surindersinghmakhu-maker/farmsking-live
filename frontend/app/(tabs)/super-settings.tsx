@@ -1315,8 +1315,8 @@ function FreeTrialSettingsPanel() {
         freeTrialPlan: targetPlan,
       });
       if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      setSavedNotice('✅ Free Trial Settings updated successfully!');
-      setTimeout(() => setSavedNotice(null), 3500);
+      setSavedNotice('✅ Free Trial saved!');
+      setTimeout(() => setSavedNotice(null), 3000);
     } catch {
       alert('❌ Failed to update Free Trial settings.');
     } finally {
@@ -1325,49 +1325,67 @@ function FreeTrialSettingsPanel() {
   };
 
   return (
-    <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#fdf4ff', borderColor: '#f5d0fe', borderWidth: 1.5 }]}>
-      <View style={styles.cardHeader}>
-        <View style={[styles.iconCircle, { backgroundColor: '#c026d3' }]}>
-          <Ionicons name="gift-outline" size={20} color="#ffffff" />
+    <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#fdf4ff', borderColor: '#f5d0fe', borderWidth: 1.5, padding: 14 }]}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+          <View style={[styles.iconCircle, { backgroundColor: '#c026d3', width: 34, height: 34, borderRadius: 17 }]}>
+            <Ionicons name="gift-outline" size={18} color="#ffffff" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' }}>🎁 Free Membership Trial Settings</Text>
+            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#86198f' }}>Configure free trial status, duration & plan tier</Text>
+          </View>
         </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.cardTitle}>🎁 Free Membership Trial Settings</Text>
-          <Text style={styles.cardSub}>Control ON/OFF status, duration (days), and target membership tier granted to farmers on free trial</Text>
-        </View>
+
+        <TouchableOpacity
+          style={{ backgroundColor: '#c026d3', paddingHorizontal: 14, paddingVertical: 8, borderRadius: RADIUS.md, flexDirection: 'row', alignItems: 'center', gap: 5 }}
+          onPress={handleSave}
+          disabled={saving}
+          activeOpacity={0.85}
+        >
+          {saving ? (
+            <ActivityIndicator color="#ffffff" size="small" />
+          ) : (
+            <>
+              <Ionicons name="checkmark-circle-outline" size={15} color="#ffffff" />
+              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>Save</Text>
+            </>
+          )}
+        </TouchableOpacity>
       </View>
 
-      <View style={{ gap: 12, marginTop: 10 }}>
-        {/* Enable / Disable Free Trial Switch */}
-        <View style={styles.subToggleRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.subToggleTitle}>🎁 Enable Free Trial Button for Farmers</Text>
-            <Text style={styles.subToggleDesc}>Show "Get [X] Days Free Trial" button on free membership cards</Text>
-          </View>
+      {/* 3 Controls in Single Compact Row Grid */}
+      <View style={{ flexDirection: 'row', gap: 8, marginTop: 10, alignItems: 'center' }}>
+        {/* Col 1: Switch */}
+        <View style={{ backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#f5d0fe', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#86198f' }}>
+            Enable Trial
+          </Text>
           <Switch
             value={enabled}
             onValueChange={setEnabled}
             trackColor={{ false: '#cbd5e1', true: '#c026d3' }}
             thumbColor="#ffffff"
+            style={{ transform: Platform.OS === 'web' ? [] : [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
           />
         </View>
 
-        {/* Duration in Days */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-          <Text style={{ flex: 1, fontSize: 13, fontFamily: FONT.bold, color: '#86198f' }}>
-            ⏳ Free Trial Duration (Days)
+        {/* Col 2: Days */}
+        <View style={{ width: 80, backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#f5d0fe', gap: 4 }}>
+          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#86198f' }} numberOfLines={1}>
+            ⏳ Days
           </Text>
           <TextInput
             style={{
-              width: 100,
-              borderWidth: 1.5,
-              borderColor: '#f5d0fe',
-              borderRadius: RADIUS.md,
-              paddingHorizontal: 12,
-              paddingVertical: 8,
-              fontSize: 14,
-              fontFamily: FONT.bold,
+              height: 34,
+              borderWidth: 1,
+              borderColor: '#cbd5e1',
+              borderRadius: RADIUS.sm,
+              paddingHorizontal: 8,
+              fontSize: 13,
+              fontFamily: FONT.extraBold,
               color: '#0f172a',
-              backgroundColor: '#ffffff',
+              backgroundColor: '#f8fafc',
               textAlign: 'center',
             }}
             keyboardType="numeric"
@@ -1377,62 +1395,48 @@ function FreeTrialSettingsPanel() {
           />
         </View>
 
-        {/* Target Plan Tier */}
-        <View style={{ gap: 4 }}>
-          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#86198f' }}>
-            👑 Select Trial Membership Plan Tier:
+        {/* Col 3: Plan Tier */}
+        <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#f5d0fe', gap: 4 }}>
+          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#86198f' }} numberOfLines={1}>
+            👑 Target Plan Tier
           </Text>
-          <View style={{ flexDirection: 'row', gap: 6 }}>
+          <View style={{ flexDirection: 'row', gap: 4, height: 34, alignItems: 'center' }}>
             {(['PRO', 'SMART', 'SUPER'] as const).map((p) => {
               const isSelected = targetPlan === p;
-              const labels = { PRO: 'Basic ⚡', SMART: 'Pro 👑', SUPER: 'Super ⭐' };
               return (
                 <TouchableOpacity
                   key={p}
                   style={{
                     flex: 1,
-                    paddingVertical: 8,
-                    borderRadius: RADIUS.md,
-                    borderWidth: 1.5,
-                    borderColor: isSelected ? '#c026d3' : '#e2e8f0',
-                    backgroundColor: isSelected ? '#c026d3' : '#ffffff',
+                    height: '100%',
+                    borderRadius: RADIUS.sm,
+                    borderWidth: 1,
+                    borderColor: isSelected ? '#c026d3' : '#cbd5e1',
+                    backgroundColor: isSelected ? '#c026d3' : '#f8fafc',
                     alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                   onPress={() => setTargetPlan(p)}
                 >
-                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isSelected ? '#ffffff' : '#334155' }}>
-                    {labels[p]}
+                  <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isSelected ? '#ffffff' : '#334155' }}>
+                    {p}
                   </Text>
                 </TouchableOpacity>
               );
             })}
           </View>
         </View>
-
-        {savedNotice ? (
-          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#c026d3', textAlign: 'center' }}>
-            {savedNotice}
-          </Text>
-        ) : null}
-
-        <TouchableOpacity
-          style={[wStyles.btn, { backgroundColor: '#c026d3' }]}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator color="#ffffff" size="small" />
-          ) : (
-            <>
-              <Ionicons name="save-outline" size={16} color="#ffffff" />
-              <Text style={wStyles.btnText}>💾 Save Free Trial Settings</Text>
-            </>
-          )}
-        </TouchableOpacity>
       </View>
+
+      {savedNotice ? (
+        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#c026d3', marginTop: 4, textAlign: 'center' }}>
+          {savedNotice}
+        </Text>
+      ) : null}
     </View>
   );
 }
+
 
 export default function SuperSettingsScreen() {
   const router = useRouter();

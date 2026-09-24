@@ -19,6 +19,10 @@ export interface RegisterPayload {
   securityAnswer?: string;
   referralCode?: string;
   upiId?: string;
+  farmName?: string;
+  farmAddress?: string;
+  farmMobile?: string;
+  whatsappGroupEnabled?: boolean;
 }
 
 export interface LoginPayload {

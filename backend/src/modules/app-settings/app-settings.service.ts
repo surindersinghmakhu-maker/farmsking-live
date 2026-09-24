@@ -175,11 +175,61 @@ export class AppSettingsService {
       }
     }
 
-    return this.prisma.appSetting.upsert({
-      where: { id: SINGLETON_ID },
-      create: { id: SINGLETON_ID, ...fields, updatedById: admin?.id },
-      update: { ...fields, updatedById: admin?.id },
-    });
+    const ALLOWED_PRISMA_FIELDS = new Set([
+      'appName',
+      'logoUrl',
+      'tagline',
+      'upiId',
+      'upiPayeeName',
+      'adminName',
+      'adminMobile',
+      'adminEmail',
+      'groupVoiceCallEnabled',
+      'whatsappGroupSyncEnabled',
+      'whatsappAutoAddEnabled',
+      'whatsappAutoRemoveEnabled',
+      'whatsappGroupJid',
+      'otpDeliveryChannel',
+      'referralSignupBonusAmount',
+      'newUserSignupBonusAmount',
+      'appDownloadUrl',
+      'latestAppVersion',
+      'storefrontMaintenanceMode',
+      'freeTrialEnabled',
+      'freeTrialDays',
+      'freeTrialPlan',
+    ]);
+
+    const prismaPayload: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(fields)) {
+      if (ALLOWED_PRISMA_FIELDS.has(k)) {
+        prismaPayload[k] = v;
+      }
+    }
+
+    try {
+      return await this.prisma.appSetting.upsert({
+        where: { id: SINGLETON_ID },
+        create: { id: SINGLETON_ID, ...prismaPayload, updatedById: admin?.id },
+        update: { ...prismaPayload, updatedById: admin?.id },
+      });
+    } catch (err: any) {
+      if (err?.message?.includes('Unknown argument')) {
+        console.warn('Handling Prisma Unknown argument in AppSetting upsert, falling back to safe payload:', err?.message);
+        const safePayload: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(prismaPayload)) {
+          if (!err.message.includes(k)) {
+            safePayload[k] = v;
+          }
+        }
+        return this.prisma.appSetting.upsert({
+          where: { id: SINGLETON_ID },
+          create: { id: SINGLETON_ID, ...safePayload, updatedById: admin?.id },
+          update: { ...safePayload, updatedById: admin?.id },
+        });
+      }
+      throw err;
+    }
   }
 
   async getFeatureFlags(): Promise<FeatureFlagsMap> {

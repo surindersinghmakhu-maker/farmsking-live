@@ -1816,6 +1816,9 @@ model AppSetting {
   appDownloadUrl         String?  @default("https://farmsking.tech/download/farmsking.apk")
   latestAppVersion       String?  @default("1.0.0")
   storefrontMaintenanceMode Boolean @default(false)
+  freeTrialEnabled       Boolean  @default(true)
+  freeTrialDays          Int      @default(14)
+  freeTrialPlan          String   @default("FARMER_FREE")
   featureFlags          Json?
   updatedAt             DateTime @updatedAt
   updatedById           String?

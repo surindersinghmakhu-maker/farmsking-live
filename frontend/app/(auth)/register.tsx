@@ -6,6 +6,7 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -47,9 +48,11 @@ export default function RegisterScreen() {
   const referredViaLink = typeof refParam === 'string' && refParam.trim().length > 0;
   const [accountType, setAccountType] = useState<'CUSTOMER' | 'FARMER' | 'GARDENER'>('CUSTOMER');
   const [sprayTankSizeL, setSprayTankSizeL] = useState<SprayTankSizeL | null>(20);
-  const [soilType, setSoilType] = useState<SoilType | null>(null);
-  const [waterType, setWaterType] = useState<WaterType | null>('BOREWELL_TUBEWELL');
+  const [farmName, setFarmName] = useState('');
+  const [farmAddress, setFarmAddress] = useState('');
+  const [farmMobile, setFarmMobile] = useState('');
   const [upiId, setUpiId] = useState('');
+  const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState(true);
   const [pincode, setPincode] = useState('');
   const [isSoilPickerOpen, setIsSoilPickerOpen] = useState(false);
   const [isWaterPickerOpen, setIsWaterPickerOpen] = useState(false);
@@ -166,9 +169,11 @@ export default function RegisterScreen() {
         password: values.password,
         accountType,
         sprayTankSizeL: accountType === 'FARMER' ? (sprayTankSizeL ?? undefined) : undefined,
-        soilType: accountType === 'FARMER' ? (soilType ?? undefined) : undefined,
-        waterType: accountType === 'FARMER' ? (waterType ?? undefined) : undefined,
+        farmName: accountType === 'FARMER' && farmName.trim() ? farmName.trim() : undefined,
+        farmAddress: accountType === 'FARMER' && farmAddress.trim() ? farmAddress.trim() : undefined,
+        farmMobile: accountType === 'FARMER' && farmMobile.trim() ? farmMobile.trim() : undefined,
         upiId: accountType === 'FARMER' && upiId.trim() ? upiId.trim() : undefined,
+        whatsappGroupEnabled: accountType === 'FARMER' ? whatsappGroupEnabled : undefined,
         pincode: pincode.trim(),
         postOffice: postOffice || undefined,
         district: district || undefined,
@@ -277,15 +282,16 @@ export default function RegisterScreen() {
             </View>
           </View>
 
-          {/* Farmer-Specific Optional / Extra Fields */}
+          {/* Farmer Profile Setup Section */}
           {accountType === 'FARMER' && (
             <View style={styles.farmerCardBox}>
               <View style={styles.farmerCardHeader}>
-                <Ionicons name="leaf" size={15} color="#16a34a" />
-                <Text style={styles.farmerCardTitle}>Farmer Profile Details</Text>
+                <Ionicons name="leaf" size={16} color="#16a34a" />
+                <Text style={styles.farmerCardTitle}>🌾 Farmer Profile Setup</Text>
               </View>
-              
-              <Text style={styles.farmerLabel}>Spray Tank Size (Liters) *</Text>
+
+              {/* 1. Spray Tank Capacity */}
+              <Text style={styles.farmerLabel}>Spray Tank Capacity (Liters) *</Text>
               <View style={styles.farmerChipRow}>
                 {SPRAY_TANK_SIZE_OPTIONS.map((opt) => (
                   <TouchableOpacity
@@ -300,15 +306,79 @@ export default function RegisterScreen() {
                 ))}
               </View>
 
-              <Text style={styles.farmerLabel}>UPI ID (Optional)</Text>
-              <View style={styles.inputWrap}>
-                <Ionicons name="card-outline" size={17} color="#94a3b8" style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  placeholder="e.g. name@upi"
-                  placeholderTextColor="#94a3b8"
-                  value={upiId}
-                  onChangeText={setUpiId}
+              {/* 2. Use in Printing Details */}
+              <View style={{ marginTop: 6, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#bbf7d0', gap: 6 }}>
+                <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#15803d' }}>
+                  🖨️ Use in Printing (Bills / Receipts)
+                </Text>
+
+                <Text style={styles.farmerLabel}>Farm Name (Optional)</Text>
+                <View style={styles.inputWrap}>
+                  <Ionicons name="business-outline" size={17} color="#94a3b8" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="e.g. Surinder Agro Farm"
+                    placeholderTextColor="#94a3b8"
+                    value={farmName}
+                    onChangeText={setFarmName}
+                  />
+                </View>
+
+                <Text style={styles.farmerLabel}>Farm Address (Optional)</Text>
+                <View style={styles.inputWrap}>
+                  <Ionicons name="location-outline" size={17} color="#94a3b8" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="e.g. Grain Market, Shop No. 12"
+                    placeholderTextColor="#94a3b8"
+                    value={farmAddress}
+                    onChangeText={setFarmAddress}
+                  />
+                </View>
+
+                <Text style={styles.farmerLabel}>Farm Mobile (Optional)</Text>
+                <View style={styles.inputWrap}>
+                  <Ionicons name="call-outline" size={17} color="#94a3b8" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="10-digit farm mobile"
+                    placeholderTextColor="#94a3b8"
+                    keyboardType="phone-pad"
+                    maxLength={10}
+                    value={farmMobile}
+                    onChangeText={setFarmMobile}
+                  />
+                </View>
+
+                <Text style={styles.farmerLabel}>UPI ID (Optional)</Text>
+                <View style={styles.inputWrap}>
+                  <Ionicons name="card-outline" size={17} color="#94a3b8" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="e.g. name@upi"
+                    placeholderTextColor="#94a3b8"
+                    value={upiId}
+                    onChangeText={setUpiId}
+                  />
+                </View>
+              </View>
+
+              {/* 3. WhatsApp Group Membership Toggle */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#bbf7d0' }}>
+                <View style={{ flex: 1, paddingRight: 8 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                    <Ionicons name="logo-whatsapp" size={16} color="#25D366" />
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>WhatsApp Group</Text>
+                  </View>
+                  <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 }}>
+                    {whatsappGroupEnabled ? 'Auto-added to official WhatsApp group' : 'Opted out of official WhatsApp group'}
+                  </Text>
+                </View>
+                <Switch
+                  value={whatsappGroupEnabled}
+                  onValueChange={setWhatsappGroupEnabled}
+                  trackColor={{ false: '#cbd5e1', true: '#86efac' }}
+                  thumbColor={whatsappGroupEnabled ? '#16a34a' : '#f8fafc'}
                 />
               </View>
             </View>

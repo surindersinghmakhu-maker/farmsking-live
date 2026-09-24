@@ -73,8 +73,8 @@ export class AuthService {
     const existing = await this.prisma.user.findUnique({ where: { mobile: dto.mobile } });
 
     if (dto.accountType === 'FARMER') {
-      if (!dto.sprayTankSizeL || !dto.soilType || !dto.waterType) {
-        throw new BadRequestException('Farmer registration requires sprayTankSizeL, soilType, and waterType.');
+      if (!dto.sprayTankSizeL) {
+        throw new BadRequestException('Farmer registration requires sprayTankSizeL.');
       }
     }
 

@@ -668,6 +668,28 @@ export default function FarmListScreen() {
     setIsCropModalOpen(true);
   };
 
+  const getLastDoneTask = (crop: RegisteredCropField) => {
+    if ((crop as any).lastDoneTask) return (crop as any).lastDoneTask;
+    if ((crop as any).previousActivity) return (crop as any).previousActivity;
+
+    switch (crop.stage) {
+      case 'PLANTATION':
+      case 'SOWING':
+        return 'Soil Preparation & Sowing Done';
+      case 'VEGETATIVE':
+      case 'GROWTH':
+        return 'Fertilizer & NPK Drenching Done';
+      case 'FLOWERING':
+        return 'Fungicide & Blossom Care Spray Done';
+      case 'HARVESTING':
+        return 'Primary Harvesting & Grading Done';
+      case 'COMPLETED':
+        return 'Final Harvest & Field Clearing Done';
+      default:
+        return 'Sowing & Field Prep Done';
+    }
+  };
+
   const activeCropFields = useMemo(
     () => cropFields.filter((crop) => crop.status === 'ACTIVE' && crop.stage !== 'COMPLETED'),
     [cropFields]
@@ -747,43 +769,23 @@ export default function FarmListScreen() {
           }
           renderItem={({ item }) => {
             const isHarvestingReady = item.stage === 'HARVESTING';
-            const isEditableStage = item.stage === 'PLANTATION' || item.stage === 'SOWING' || isAdminOrSuperAdmin;
+            const isPlantationStage = item.stage === 'PLANTATION' || item.stage === 'SOWING';
+            const isEditableStage = isPlantationStage || isAdminOrSuperAdmin;
             const isAdvisorHired = item.advisorStatus === 'ACCEPTED' || (activeAdvisor && item.advisorStatus !== 'NONE');
             const advisorName = (item.advisorStatus === 'ACCEPTED' ? activeAdvisor?.name : null) || (isAdvisorHired ? activeAdvisor?.name || 'Assigned Doctor' : null);
 
             return (
               <View style={[styles.card, premiumShadow('#000000', 'sm')]}>
+                {/* Row 1: Plot Name & ID + Top Right Action (Edit Crop if Plantation stage, otherwise Advisor Status) */}
                 <View style={styles.cardHeader}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', flex: 1 }}>
                     <Text style={styles.cardTitle} numberOfLines={1}>
                       📍 {item.fieldName} <Text style={styles.cropIdSubText}>(ID: {item.cropId || (item.id?.startsWith('C-') ? item.id : `C-${item.id?.slice(0, 6).toUpperCase()}`)})</Text>
                     </Text>
-                    <View style={styles.cropBadge}>
-                      <Text style={styles.cropBadgeText}>🌾 {item.cropName}</Text>
-                    </View>
                   </View>
 
-                  {/* Advisor Hired Status Badge */}
-                  {isAdvisorHired ? (
-                    <TouchableOpacity
-                      style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#ecfdf5', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: '#a7f3d0' }}
-                      activeOpacity={0.8}
-                      onPress={() => handleOpenDoctorDialog(item, advisorName)}
-                    >
-                      <Ionicons name="medical" size={9.5} color="#15803d" />
-                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }} numberOfLines={1}>
-                        🩺 Doctor Hired
-                      </Text>
-                    </TouchableOpacity>
-                  ) : (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#f8fafc', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                      <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b' }} numberOfLines={1}>
-                        🩺 Self-Managed
-                      </Text>
-                    </View>
-                  )}
-
-                  {isEditableStage && (
+                  {/* Top Right Action: Edit Crop if Plantation stage, otherwise show Advisor Status Badge */}
+                  {isPlantationStage ? (
                     <TouchableOpacity
                       style={styles.editCropBadgeBtn}
                       activeOpacity={0.8}
@@ -793,19 +795,57 @@ export default function FarmListScreen() {
                         setIsCropModalOpen(true);
                       }}
                     >
-                      <Ionicons name="pencil" size={13} color="#0284c7" />
-                      <Text style={styles.editCropBadgeText}>Edit</Text>
+                      <Ionicons name="pencil" size={12} color="#0284c7" />
+                      <Text style={styles.editCropBadgeText}>Edit Crop</Text>
                     </TouchableOpacity>
+                  ) : isAdvisorHired ? (
+                    <TouchableOpacity
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#ecfdf5', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: '#a7f3d0' }}
+                      activeOpacity={0.8}
+                      onPress={() => handleOpenDoctorDialog(item, advisorName)}
+                    >
+                      <Ionicons name="medical" size={9.5} color="#15803d" />
+                      <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#15803d' }} numberOfLines={1}>
+                        🩺 Doctor Hired
+                      </Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#f8fafc', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                      <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b' }} numberOfLines={1}>
+                        🩺 Self-Managed
+                      </Text>
+                    </View>
                   )}
                 </View>
 
-                <View style={{ gap: 2 }}>
-                  <Text style={styles.cardMetaText}>
-                    📏 {item.area}{item.sowingDate ? ` · 📅 ${item.sowingDate.replace(/\s*\([^)]*\)/g, '').trim()}` : ''}{item.variety ? ` · 🌱 ${item.variety}` : ''}{item.plantCount ? ` · 🪴 ${item.plantCount} Plants` : ''}
-                  </Text>
+                {/* Row 2: Subcategory & Variety Name, Sown Date, Area, Plants, Doctor Name */}
+                <View style={{ gap: 3, marginTop: 4 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#15803d' }}>
+                      🌾 {item.cropName} {item.variety ? `· ${item.variety}` : ''}
+                    </Text>
 
-                  {/* Doctor Name under Plant Count / Specs */}
-                  {isAdvisorHired ? (
+                    {item.sowingDate ? (
+                      <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#0369a1' }}>
+                        📅 Sown: {item.sowingDate.replace(/\s*\([^)]*\)/g, '').trim()}
+                      </Text>
+                    ) : null}
+
+                    {item.area ? (
+                      <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#334155' }}>
+                        📐 {item.area}
+                      </Text>
+                    ) : null}
+
+                    {item.plantCount ? (
+                      <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#334155' }}>
+                        🌱 {item.plantCount} Plants
+                      </Text>
+                    ) : null}
+                  </View>
+
+                  {/* Doctor Name (if Doctor Hired) */}
+                  {isAdvisorHired && (
                     <TouchableOpacity
                       activeOpacity={0.8}
                       onPress={() => handleOpenDoctorDialog(item, advisorName)}
@@ -816,29 +856,39 @@ export default function FarmListScreen() {
                       </Text>
                       <Ionicons name="information-circle-outline" size={13} color="#0284c7" />
                     </TouchableOpacity>
-                  ) : null}
+                  )}
+
+                  {/* Previous Activity Row (Last Mark as Done Schedule Task) */}
+                  <View style={{ backgroundColor: '#f8fafc', paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0', marginTop: 2 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                      <Ionicons name="checkmark-done-circle" size={14} color="#16a34a" />
+                      <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#334155' }}>
+                        Previous Activity: <Text style={{ fontFamily: FONT.semiBold, color: '#166534' }}>{getLastDoneTask(item)}</Text>
+                      </Text>
+                    </View>
+                  </View>
                 </View>
 
-                {/* Crop GPS Location & Advisor Remote Sync Section — Dynamic based on GPS locked status */}
-                <View style={{ marginTop: 6, gap: 6 }}>
+                {/* Crop GPS Location & Advisor Buttons in 1 SINGLE ROW */}
+                <View style={{ marginTop: 6 }}>
                   {(() => {
                     const cropGps = cropGpsDataMap[item.id] || item.gpsData;
                     const isGpsLocked = cropGps?.isLocked || false;
 
                     if (!isGpsLocked) {
                       return (
-                        <>
-                          {/* Row 1: 📍 Set Crop GPS Location (Full Width) */}
+                        <View style={{ flexDirection: 'row', gap: 6, width: '100%' }}>
+                          {/* Button 1: Set GPS Location */}
                           <TouchableOpacity
                             style={{
-                              width: '100%',
+                              flex: 1,
                               flexDirection: 'row',
                               alignItems: 'center',
                               justifyContent: 'center',
                               gap: 4,
                               backgroundColor: '#16a34a',
                               paddingVertical: 7,
-                              paddingHorizontal: 8,
+                              paddingHorizontal: 6,
                               borderRadius: 8,
                             }}
                             activeOpacity={0.85}
@@ -850,15 +900,15 @@ export default function FarmListScreen() {
                             }}
                           >
                             <Ionicons name="location" size={13} color="#ffffff" />
-                            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>
-                              📍 Set Crop GPS Location
+                            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#ffffff' }} numberOfLines={1}>
+                              📍 Set GPS Location
                             </Text>
                           </TouchableOpacity>
 
-                          {/* Row 2: 🔒 Satellite Advisor (Lock Location First) */}
+                          {/* Button 2: Satellite Advisor */}
                           <TouchableOpacity
                             style={{
-                              width: '100%',
+                              flex: 1,
                               flexDirection: 'row',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -867,7 +917,7 @@ export default function FarmListScreen() {
                               borderWidth: 1,
                               borderColor: '#ffedd5',
                               paddingVertical: 7,
-                              paddingHorizontal: 8,
+                              paddingHorizontal: 6,
                               borderRadius: 8,
                             }}
                             activeOpacity={0.85}
@@ -875,31 +925,31 @@ export default function FarmListScreen() {
                               tap();
                               Alert.alert(
                                 'Location Not Locked 🔒',
-                                'Please tap "📍 Set Crop GPS Location" to mark & lock 4 field corners first before accessing Satellite Advisor.'
+                                'Please tap "📍 Set GPS Location" to mark & lock 4 field corners first before accessing Satellite Advisor.'
                               );
                             }}
                           >
-                            <Ionicons name="lock-closed" size={13} color="#d97706" />
-                            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#b45309' }}>
+                            <Ionicons name="lock-closed" size={12} color="#d97706" />
+                            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#b45309' }} numberOfLines={1}>
                               🔒 Satellite Advisor
                             </Text>
                           </TouchableOpacity>
-                        </>
+                        </View>
                       );
                     } else {
-                      // GPS Locked: Show active Satellite Map action button + Edit GPS
+                      // GPS Locked: Show active Satellite Map action button + Edit GPS in 1 row
                       return (
-                        <View style={{ flexDirection: 'row', gap: 6 }}>
+                        <View style={{ flexDirection: 'row', gap: 6, width: '100%' }}>
                           <TouchableOpacity
                             style={{
                               flex: 1.8,
                               flexDirection: 'row',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              gap: 6,
+                              gap: 5,
                               backgroundColor: '#2563eb',
-                              paddingVertical: 8,
-                              paddingHorizontal: 10,
+                              paddingVertical: 7,
+                              paddingHorizontal: 8,
                               borderRadius: 8,
                             }}
                             activeOpacity={0.85}
@@ -920,9 +970,9 @@ export default function FarmListScreen() {
                               });
                             }}
                           >
-                            <Ionicons name="planet" size={15} color="#ffffff" />
-                            <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' }}>
-                              🛰️ View Satellite Health Map
+                            <Ionicons name="planet" size={14} color="#ffffff" />
+                            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#ffffff' }} numberOfLines={1}>
+                              🛰️ Satellite Map
                             </Text>
                           </TouchableOpacity>
 
@@ -936,8 +986,8 @@ export default function FarmListScreen() {
                               backgroundColor: '#f0fdf4',
                               borderWidth: 1,
                               borderColor: '#bbf7d0',
-                              paddingVertical: 8,
-                              paddingHorizontal: 8,
+                              paddingVertical: 7,
+                              paddingHorizontal: 6,
                               borderRadius: 8,
                             }}
                             activeOpacity={0.85}
@@ -948,7 +998,7 @@ export default function FarmListScreen() {
                             }}
                           >
                             <Ionicons name="location-outline" size={13} color="#166534" />
-                            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#166534' }}>
+                            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#166534' }} numberOfLines={1}>
                               📍 Edit GPS
                             </Text>
                           </TouchableOpacity>

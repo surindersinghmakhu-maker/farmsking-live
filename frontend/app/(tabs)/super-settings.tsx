@@ -2672,33 +2672,35 @@ function UnifiedPlanManagerModal({
                     />
                   </View>
 
-                  {/* Partner Commission / Advisor Fee - 2 Boxes (% and Amount) */}
-                  <View style={{ flex: 0.9 }}>
-                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }} numberOfLines={1}>
-                      {isCareCategory ? '🤝 Advisor %' : '🤝 Commision %'}
-                    </Text>
-                    <TextInput
-                      style={{
-                        height: 34,
-                        borderWidth: 1,
-                        borderColor: '#cbd5e1',
-                        borderRadius: RADIUS.sm,
-                        paddingHorizontal: 6,
-                        fontSize: 11.5,
-                        fontFamily: FONT.bold,
-                        color: '#0f172a',
-                        backgroundColor: '#ffffff',
-                      }}
-                      keyboardType="numeric"
-                      placeholder="10%"
-                      value={item.partnerSharePercent}
-                      onChangeText={(val) => handleUpdateItemField(idx, 'partnerSharePercent', val)}
-                    />
-                  </View>
+                  {/* Partner Commission / Advisor Fee */}
+                  {!isCareCategory && (
+                    <View style={{ flex: 0.9 }}>
+                      <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }} numberOfLines={1}>
+                        🤝 Commision %
+                      </Text>
+                      <TextInput
+                        style={{
+                          height: 34,
+                          borderWidth: 1,
+                          borderColor: '#cbd5e1',
+                          borderRadius: RADIUS.sm,
+                          paddingHorizontal: 6,
+                          fontSize: 11.5,
+                          fontFamily: FONT.bold,
+                          color: '#0f172a',
+                          backgroundColor: '#ffffff',
+                        }}
+                        keyboardType="numeric"
+                        placeholder="10%"
+                        value={item.partnerSharePercent}
+                        onChangeText={(val) => handleUpdateItemField(idx, 'partnerSharePercent', val)}
+                      />
+                    </View>
+                  )}
 
                   <View style={{ flex: 1.1 }}>
                     <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#334155', marginBottom: 2 }} numberOfLines={1}>
-                      {isCareCategory ? '🤝 Advisor (₹)' : '🤝 Commision (₹)'}
+                      {isCareCategory ? '🤝 Advisor Fee (₹)' : '🤝 Commision (₹)'}
                     </Text>
                     <TextInput
                       style={{

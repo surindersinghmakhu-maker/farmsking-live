@@ -204,7 +204,8 @@ export function AdvisorScheduleTimeline({ cropCycleId, cropName, farmerName }: A
           <View style={styles.tableHeaderRow}>
             <Text style={[styles.tableHeaderCell, styles.dateCol]}>Date</Text>
             <Text style={[styles.tableHeaderCell, styles.taskCol]}>Task / Activity</Text>
-            <Text style={[styles.tableHeaderCell, styles.remarksCol]}>Remarks & Actions</Text>
+            <Text style={[styles.tableHeaderCell, styles.statusCol]}>Status</Text>
+            <Text style={[styles.tableHeaderCell, styles.actionsCol]}>Actions</Text>
           </View>
           {[...tasks]
             .sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime())
@@ -215,7 +216,7 @@ export function AdvisorScheduleTimeline({ cropCycleId, cropName, farmerName }: A
               todayZero.setHours(0, 0, 0, 0);
               const taskDate = new Date(task.scheduledDate);
               taskDate.setHours(0, 0, 0, 0);
-              const isPastTask = taskDate.getTime() < todayZero.getTime() || task.status === 'COMPLETED';
+              const isPastTask = taskDate.getTime() < todayZero.getTime() || task.status === 'COMPLETED' || task.status === 'SKIPPED';
 
               return (
                 <View key={task.id} style={[styles.tableRow, { backgroundColor: meta.bg }]}>
@@ -225,15 +226,7 @@ export function AdvisorScheduleTimeline({ cropCycleId, cropName, farmerName }: A
                     </Text>
                   </View>
                   <View style={styles.taskCol}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                      <Text style={styles.taskTitle}>{task.title}</Text>
-                      {isPastTask ? (
-                        <View style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 4, paddingVertical: 1, borderRadius: 4, flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-                          <Ionicons name="lock-closed" size={9} color="#64748b" />
-                          <Text style={{ fontSize: 8.5, fontFamily: FONT.bold, color: '#64748b' }}>Read Only</Text>
-                        </View>
-                      ) : null}
-                    </View>
+                    <Text style={styles.taskTitle}>{task.title}</Text>
                     {task.status === 'COMPLETED' && task.completedAt ? (
                       <Text style={styles.metaText}>
                         Completed {new Date(task.completedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
@@ -242,12 +235,13 @@ export function AdvisorScheduleTimeline({ cropCycleId, cropName, farmerName }: A
                       <Text style={styles.metaText} numberOfLines={1}>{task.description}</Text>
                     ) : null}
                   </View>
-                  <View style={[styles.remarksCol, { flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
+                  <View style={styles.statusCol}>
                     <View style={[styles.remarksBadge, { borderColor: meta.border }]}>
                       <Ionicons name={meta.icon} size={11} color={meta.color} />
                       <Text style={[styles.remarksText, { color: meta.color }]}>{meta.label}</Text>
                     </View>
-
+                  </View>
+                  <View style={styles.actionsCol}>
                     {!isPastTask ? (
                       <TouchableOpacity
                         style={styles.editChipBtn}
@@ -260,7 +254,12 @@ export function AdvisorScheduleTimeline({ cropCycleId, cropName, farmerName }: A
                         <Ionicons name="pencil" size={11} color="#0284c7" />
                         <Text style={styles.editChipBtnText}>Edit</Text>
                       </TouchableOpacity>
-                    ) : null}
+                    ) : (
+                      <View style={styles.lockedBadge}>
+                        <Ionicons name="lock-closed" size={10} color="#64748b" />
+                        <Text style={styles.lockedBadgeText}>Locked</Text>
+                      </View>
+                    )}
                   </View>
                 </View>
               );
@@ -564,6 +563,18 @@ const styles = StyleSheet.create({
   },
   dateCol: { width: 56 },
   taskCol: { flex: 1, paddingRight: 6 },
+  statusCol: { width: 95 },
+  actionsCol: { width: 56, alignItems: 'flex-end' },
+  lockedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+  },
+  lockedBadgeText: { fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b' },
   remarksCol: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   editChipBtn: {
     flexDirection: 'row',

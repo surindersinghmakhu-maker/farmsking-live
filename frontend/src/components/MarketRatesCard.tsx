@@ -926,7 +926,7 @@ export function MarketRatesCard() {
         <>
           {/* Table Header */}
           <View style={styles.columnHeaderRow}>
-            <Text style={[styles.columnHeader, styles.cropColumn]}>YOUR CROP (TAP FOR MANDIS)</Text>
+            <Text style={[styles.columnHeader, styles.cropColumn]}>YOUR CROP</Text>
             <Text style={[styles.columnHeader, styles.rateColumn]}>LOCAL ({userState ? userState.toUpperCase() : 'PUNJAB'})</Text>
             <Text style={[styles.columnHeader, styles.rateColumn]}>ALL INDIA</Text>
             <Text style={[styles.columnHeader, styles.shareColumn]}>SHARE</Text>
@@ -959,7 +959,7 @@ export function MarketRatesCard() {
                       </Text>
                       <Ionicons name="stats-chart" size={11} color="#2563eb" />
                     </View>
-                    <Text style={styles.cropUnitSub}>Per {rate.unit} • Tap for Mandis</Text>
+                    <Text style={styles.cropUnitSub}>Per {rate.unit}</Text>
                   </TouchableOpacity>
 
                   {/* 2. Local (State) Rate Box */}

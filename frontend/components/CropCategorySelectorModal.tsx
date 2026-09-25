@@ -508,7 +508,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                   }}
                 >
                   <Text style={[styles.compactMiniText, customHarvestType === 'CONTINUOUS' ? { color: '#fff', fontFamily: FONT.bold } : { color: '#16a34a' }]}>
-                     Daily Harvest (ਸੁਭਾ/ਸ਼ਾਮ)
+                    Daily Harvest (Morning/Evening)
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -525,7 +525,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                   }}
                 >
                   <Text style={[styles.compactMiniText, customHarvestType === 'ONE_TIME' ? { color: '#fff', fontFamily: FONT.bold } : { color: '#d97706' }]}>
-                    🌾 1-Time Harvest (ਇੱਕ ਵਾਰ)
+                    🌾 1-Time Harvest (Single)
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -535,7 +535,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
             <View style={styles.saleInfoCard}>
               <View style={styles.saleCardHeader}>
                 <Ionicons name="scale" size={14} color="#16a34a" />
-                <Text style={styles.saleCardTitle}>Crop Measurement Unit (ਮਾਪ ਇਕਾਈ)</Text>
+                <Text style={styles.saleCardTitle}>Crop Measurement Unit</Text>
               </View>
 
               {/* Crop Measurement Unit Selector */}

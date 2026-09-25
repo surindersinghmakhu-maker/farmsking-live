@@ -548,8 +548,26 @@ export function CropsProvider({ children }: { children: ReactNode }) {
     // 1. Find target crop to update underlying plot (fieldName, area, areaUnit, irrigationType)
     const targetCrop = myCrops.find((c) => c.id === cropId);
     if (targetCrop?.plotId || targetCrop?.plot?.id) {
-      const plotId = targetCrop.plotId || targetCrop.plot?.id;
-      if (plotId) {
+      const plotId = (targetCrop.plotId || targetCrop.plot?.id)!;
+      const sharedCrops = myCrops.filter((c) => (c.plotId || c.plot?.id) === plotId);
+      if (sharedCrops.length > 1) {
+        // Shared plot — create dedicated plot for this crop ID so editing doesn't mutate other crops' plots
+        const farmId = targetCrop.plot?.farmId || targetCrop.plot?.farm?.id;
+        if (farmId) {
+          const newPlot = await plotsApi.createPlot({
+            farmId,
+            name: values.fieldName.trim(),
+            area: Number(values.area) || 1,
+            areaUnit: LAND_UNIT_TO_REAL[values.areaUnit] ?? 'ACRE',
+            irrigationType: values.irrigationType,
+          });
+          await cropsApi.updateCrop(cropId, { plotId: newPlot.id });
+        } else {
+          const ensuredPlot = await ensureFarmAndPlot(values.fieldName.trim(), Number(values.area) || 1, values.areaUnit, values.irrigationType);
+          await cropsApi.updateCrop(cropId, { plotId: ensuredPlot.id });
+        }
+      } else {
+        // Single crop on this plot — update plot directly
         await plotsApi.updatePlot(plotId, {
           name: values.fieldName.trim(),
           area: Number(values.area) || 1,
@@ -558,10 +576,11 @@ export function CropsProvider({ children }: { children: ReactNode }) {
         });
       }
     } else {
-      await ensureFarmAndPlot(values.fieldName.trim(), Number(values.area) || 1, values.areaUnit, values.irrigationType);
+      const ensuredPlot = await ensureFarmAndPlot(values.fieldName.trim(), Number(values.area) || 1, values.areaUnit, values.irrigationType);
+      await cropsApi.updateCrop(cropId, { plotId: ensuredPlot.id });
     }
 
-    // 2. Update Crop Cycle specifications
+    // 2. Update Crop Cycle specifications for ONLY this target crop ID
     const realCategory = (values.category?.id && CATEGORY_ID_TO_REAL[values.category.id]) ? CATEGORY_ID_TO_REAL[values.category.id] : 'OTHER';
     await cropsApi.updateCrop(cropId, {
       category: realCategory,

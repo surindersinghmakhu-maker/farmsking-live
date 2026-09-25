@@ -228,10 +228,11 @@ export default function RecordsScreen() {
 
   // Combine categories: use api categories if available, else fall back to COMBINED_EXPENSE_CATEGORIES
   const displayCategories = useMemo(() => {
-    if (apiCategories && apiCategories.length > 0) {
-      return apiCategories;
-    }
-    return COMBINED_EXPENSE_CATEGORIES;
+    const raw = (apiCategories && apiCategories.length > 0) ? apiCategories : COMBINED_EXPENSE_CATEGORIES;
+    return raw.map((c) => ({
+      ...c,
+      labelEn: (c.labelEn || '').replace(/\s*\([\u0A00-\u0A7F\s\/]+\)/g, '').replace(/[\u0A00-\u0A7F]+/g, '').trim(),
+    }));
   }, [apiCategories]);
 
   // Expense Form state
@@ -3859,18 +3860,18 @@ export default function RecordsScreen() {
 
                       {/* ROW 4: PLOT / LAND SELECTOR */}
                       <View style={{ backgroundColor: '#f8fafc', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                        <Text style={[styles.label, { marginBottom: 6 }]}>Expense Type / Plot Selection *</Text>
+                        <Text style={[styles.label, { marginBottom: 6 }]}>Expense Location / Plot Selection *</Text>
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-                          {activeCrops.map((c) => {
+                          {activeCrops.map((c, index) => {
                             const isSelected = expenseCropType === 'CROP' && expenseCropId === c.id;
-                            const plotDisplayName = c.fieldName ? `${c.fieldName} (${c.cropName})` : c.cropName;
+                            const plotName = c.fieldName || (plots && plots[index]?.name) || `Plot ${index + 1}`;
                             return (
                               <TouchableOpacity
                                 key={c.id}
                                 style={[
                                   styles.categoryChip,
                                   isSelected && { backgroundColor: '#16a34a', borderColor: '#15803d' },
-                                  { paddingVertical: 5, paddingHorizontal: 10 },
+                                  { paddingVertical: 6, paddingHorizontal: 10 },
                                 ]}
                                 activeOpacity={0.8}
                                 onPress={() => {
@@ -3879,9 +3880,9 @@ export default function RecordsScreen() {
                                   setExpenseCropId(c.id);
                                 }}
                               >
-                                <Ionicons name="location-outline" size={13} color={isSelected ? '#fff' : '#16a34a'} />
+                                <Ionicons name="location" size={13} color={isSelected ? '#fff' : '#16a34a'} />
                                 <Text style={[styles.categoryChipText, isSelected && { color: '#fff', fontFamily: FONT.bold }]}>
-                                  {plotDisplayName}
+                                  {plotName}
                                 </Text>
                               </TouchableOpacity>
                             );
@@ -3891,7 +3892,7 @@ export default function RecordsScreen() {
                             style={[
                               styles.categoryChip,
                               expenseCropType === 'OTHER' && { backgroundColor: '#475569', borderColor: '#334155' },
-                              { paddingVertical: 5, paddingHorizontal: 10 },
+                              { paddingVertical: 6, paddingHorizontal: 10 },
                             ]}
                             activeOpacity={0.8}
                             onPress={() => {
@@ -3902,7 +3903,7 @@ export default function RecordsScreen() {
                           >
                             <Ionicons name="grid-outline" size={13} color={expenseCropType === 'OTHER' ? '#fff' : '#475569'} />
                             <Text style={[styles.categoryChipText, expenseCropType === 'OTHER' && { color: '#fff', fontFamily: FONT.bold }]}>
-                              General / Other
+                              General / Entire Farm
                             </Text>
                           </TouchableOpacity>
                         </View>

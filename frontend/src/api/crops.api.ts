@@ -28,8 +28,15 @@ export async function listCropsForPlot(plotId: string): Promise<CropCycle[]> {
 
 /** Farmer: every active crop cycle across all their own farms/plots (real data, not per-plot). */
 export async function listMyCrops(): Promise<MyCropCycle[]> {
-  const { data } = await apiClient.get<MyCropCycle[]>('/crops/mine');
-  return data;
+  try {
+    const { data } = await apiClient.get<any>('/crops/mine');
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.crops)) return data.crops;
+    if (data && Array.isArray(data.data)) return data.data;
+    return [];
+  } catch {
+    return [];
+  }
 }
 
 export async function getCrop(id: string): Promise<CropCycle> {

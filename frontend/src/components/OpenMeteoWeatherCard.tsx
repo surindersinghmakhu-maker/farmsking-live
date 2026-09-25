@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
@@ -175,6 +175,8 @@ export function OpenMeteoWeatherCard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [showSirenModal, setShowSirenModal] = useState(false);
+  const [isSirenActive, setIsSirenActive] = useState(true);
 
   const fetchWeather = async () => {
     setLoading(true);
@@ -253,8 +255,9 @@ export function OpenMeteoWeatherCard() {
   }, [user?.locationPreference, user?.gpsLat, user?.gpsLng, user?.pincode, (user as any)?.postOffice, user?.district, user?.village]);
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.92}
+    <>
+      <TouchableOpacity
+        activeOpacity={0.92}
       onPress={() => setExpanded(!expanded)}
       style={[styles.card, premiumShadow('#0f172a', 'sm')]}
     >
@@ -263,16 +266,26 @@ export function OpenMeteoWeatherCard() {
         <View style={styles.headerLeft}>
           <View style={styles.liveTag}>
             <Text style={styles.liveTagText}>
-              {user?.locationPreference === 'GPS' ? '📡 LIVE GPS SATELLITE' : '🏠 PROFILE PIN WEATHER'}
+              {user?.locationPreference === 'GPS' ? '📡 LIVE GPS SATELLITE' : '🏠 PIN WEATHER'}
             </Text>
           </View>
-          <Text style={styles.headerTitle}>🌤️ Weather</Text>
           <Text style={styles.locationText} numberOfLines={1}>
             📍 {data?.locationName || (user?.pincode ? `PIN ${user.pincode}` : `${user?.district || 'Punjab'}`)}
           </Text>
         </View>
 
         <View style={styles.headerRight}>
+          <TouchableOpacity
+            style={styles.sirenHeaderBtn}
+            onPress={(e) => {
+              e.stopPropagation?.();
+              setShowSirenModal(true);
+            }}
+          >
+            <Ionicons name="warning" size={11} color="#ffffff" />
+            <Text style={styles.sirenHeaderBtnText}>Siren 🚨</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.refreshBtn}
             onPress={(e) => {
@@ -396,7 +409,7 @@ export function OpenMeteoWeatherCard() {
               {/* 5-Day Compact Forecast */}
               {data.daily && data.daily.length > 0 && (
                 <View style={styles.forecastBox}>
-                  <Text style={styles.forecastHeaderTitle}>📅 5-Day Weather Forecast</Text>
+                  <Text style={styles.forecastHeaderTitle}>📅 5-Day Forecast</Text>
                   <View style={styles.forecastGrid}>
                     {data.daily.map((item, index) => (
                       <View key={index} style={styles.forecastItemCard}>
@@ -420,7 +433,66 @@ export function OpenMeteoWeatherCard() {
           )}
         </View>
       )}
-    </TouchableOpacity>
+      </TouchableOpacity>
+
+      {/* 🚨 Emergency Weather Siren Dialogue Modal */}
+      <Modal
+        visible={showSirenModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSirenModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeaderRow}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="warning" size={20} color="#dc2626" />
+                <Text style={styles.modalTitle}>EMERGENCY WEATHER SIREN</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowSirenModal(false)}>
+                <Ionicons name="close-circle" size={22} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalAlertBadge}>
+              <View style={styles.livePulseDot} />
+              <Text style={styles.modalAlertTag}>ACTIVE ALERT: SEVERE WEATHER</Text>
+            </View>
+
+            <Text style={styles.modalDesc}>
+              Severe Hailstorm & Rain forecast in your district ({data?.locationName || (user?.district || 'Punjab')}) within 2 hours.
+            </Text>
+
+            <View style={styles.modalAdviceBox}>
+              <Ionicons name="shield-checkmark" size={16} color="#dc2626" />
+              <Text style={styles.modalAdviceText}>
+                Actionable Advice: Cover harvested crops with waterproof tarpaulin & secure tubewell power.
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.modalSirenToggleBtn, isSirenActive && styles.modalSirenActive]}
+              activeOpacity={0.8}
+              onPress={() => {
+                setIsSirenActive(!isSirenActive);
+              }}
+            >
+              <Ionicons name={isSirenActive ? 'volume-high' : 'volume-mute'} size={18} color="#ffffff" />
+              <Text style={styles.modalSirenText}>
+                {isSirenActive ? 'Siren Alert Enabled 🔊' : 'Turn On Siren Alert 🔇'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modalCloseBtn}
+              onPress={() => setShowSirenModal(false)}
+            >
+              <Text style={styles.modalCloseText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 }
 
@@ -694,5 +766,121 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontFamily: FONT.medium,
     color: '#0284c7',
+  },
+  sirenHeaderBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#dc2626',
+    paddingHorizontal: 6,
+    paddingVertical: 2.5,
+    borderRadius: RADIUS.xs,
+  },
+  sirenHeaderBtnText: {
+    color: '#ffffff',
+    fontSize: 9,
+    fontFamily: FONT.extraBold,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  modalContainer: {
+    width: '100%',
+    maxWidth: 380,
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#fca5a5',
+    gap: 12,
+  },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  modalTitle: {
+    fontSize: 14,
+    fontFamily: FONT.extraBold,
+    color: '#dc2626',
+    letterSpacing: 0.3,
+  },
+  modalAlertBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#fef2f2',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: RADIUS.xs,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  livePulseDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#dc2626',
+  },
+  modalAlertTag: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    color: '#dc2626',
+  },
+  modalDesc: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#334155',
+    lineHeight: 16,
+  },
+  modalAdviceBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    backgroundColor: '#fff5f5',
+    padding: 10,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    borderColor: '#fee2e2',
+  },
+  modalAdviceText: {
+    flex: 1,
+    fontSize: 11,
+    fontFamily: FONT.semiBold,
+    color: '#991b1b',
+    lineHeight: 15,
+  },
+  modalSirenToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#64748b',
+    paddingVertical: 10,
+    borderRadius: RADIUS.sm,
+  },
+  modalSirenActive: {
+    backgroundColor: '#dc2626',
+  },
+  modalSirenText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontFamily: FONT.bold,
+  },
+  modalCloseBtn: {
+    alignItems: 'center',
+    paddingVertical: 8,
+    backgroundColor: '#f1f5f9',
+    borderRadius: RADIUS.sm,
+  },
+  modalCloseText: {
+    color: '#475569',
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
   },
 });

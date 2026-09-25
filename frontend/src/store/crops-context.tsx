@@ -381,7 +381,12 @@ export function CropsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { data: myCropsRaw, isLoading } = useMyCrops();
-  const myCrops = useMemo(() => myCropsRaw ?? [], [myCropsRaw]);
+  const myCrops = useMemo(() => {
+    if (Array.isArray(myCropsRaw)) return myCropsRaw;
+    if (myCropsRaw && Array.isArray((myCropsRaw as any).crops)) return (myCropsRaw as any).crops;
+    if (myCropsRaw && Array.isArray((myCropsRaw as any).data)) return (myCropsRaw as any).data;
+    return [];
+  }, [myCropsRaw]);
 
   const [salesRecords, setSalesRecords] = useState<CropSaleRecord[]>([]);
   const [specialTreatments, setSpecialTreatments] = useState<SpecialTreatmentTemplate[]>(INITIAL_SPECIAL_TREATMENTS);

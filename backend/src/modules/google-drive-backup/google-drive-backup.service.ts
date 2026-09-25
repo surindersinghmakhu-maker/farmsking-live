@@ -88,13 +88,13 @@ export class GoogleDriveBackupService implements OnModuleInit {
 
     const farms = await this.prisma.farm.findMany().catch(() => []);
     const plots = await this.prisma.plot.findMany().catch(() => []);
-    const crops = await this.prisma.crop.findMany().catch(() => []);
+    const crops = await this.prisma.cropCycle.findMany().catch(() => []);
     const marketRates = await this.prisma.marketRate.findMany().catch(() => []);
     const walletTransactions = await this.prisma.walletTransaction.findMany().catch(() => []);
     const coupons = await this.prisma.coupon.findMany().catch(() => []);
-    const orders = await this.prisma.order.findMany().catch(() => []);
+    const orders = await this.prisma.customerOrder.findMany().catch(() => []);
     const saleBills = await this.prisma.saleBill.findMany().catch(() => []);
-    const parties = await this.prisma.party.findMany().catch(() => []);
+    const parties = await this.prisma.unifiedParty.findMany().catch(() => []);
     const withdrawals = await this.prisma.withdrawalRequest.findMany().catch(() => []);
     const farmerPlans = await this.prisma.farmerPlan.findMany().catch(() => []);
     const gardenerPlans = await this.prisma.gardenerPlan.findMany().catch(() => []);
@@ -151,10 +151,10 @@ export class GoogleDriveBackupService implements OnModuleInit {
     // Upload directly to Google Drive via Webhook if configured
     try {
       const webhookSetting = await this.prisma.appSetting.findUnique({
-        where: { key: 'GOOGLE_DRIVE_WEBHOOK_URL' },
+        where: { id: 'default' },
       }).catch(() => null);
       const defaultWebhookUrl = 'https://script.google.com/macros/s/AKfycbyBOdk4ba0T1J0mLucABOVwh_UtqbqsYjPxAdcRIXb6KGK7INC2gtMIqwdnDJDInoYe/exec';
-      const driveWebhookUrl = process.env.GOOGLE_DRIVE_WEBHOOK_URL || webhookSetting?.value || defaultWebhookUrl;
+      const driveWebhookUrl = process.env.GOOGLE_DRIVE_WEBHOOK_URL || (webhookSetting as any)?.googleDriveWebhookUrl || defaultWebhookUrl;
       if (driveWebhookUrl && driveWebhookUrl.startsWith('http')) {
         const res = await fetch(driveWebhookUrl, {
           method: 'POST',

@@ -82,11 +82,121 @@ export function MarketRatesCard() {
   const { cropFields } = useCrops();
   const { data: settingsData } = useAppSettings();
 
-  const bonusAmount = settingsData?.referralSignupBonusAmount ?? settingsData?.newUserSignupBonusAmount ?? 10;
+  const bonusAmount = settingsData?.newUserSignupBonusAmount ?? settingsData?.referralSignupBonusAmount ?? 10;
 
   const [selectedCropForShare, setSelectedCropForShare] = useState<CropRateItem | null>(null);
   const [isSharingImage, setIsSharingImage] = useState(false);
+  const [showMultiMandiModal, setShowMultiMandiModal] = useState(false);
+  const [selectedMultiMandiCrop, setSelectedMultiMandiCrop] = useState<string>('Wheat');
   const posterRef = useRef<any>(null);
+
+  const getStateWiseRatesForCrop = (cropName: string) => {
+    const homeState = userState || 'Punjab';
+    
+    const neighborsMap: Record<string, string[]> = {
+      Punjab: ['Punjab', 'Haryana', 'Himachal Pradesh', 'Rajasthan'],
+      Haryana: ['Haryana', 'Punjab', 'Rajasthan', 'Uttar Pradesh'],
+      'Uttar Pradesh': ['Uttar Pradesh', 'Haryana', 'Bihar', 'Madhya Pradesh'],
+      Rajasthan: ['Rajasthan', 'Punjab', 'Haryana', 'Gujarat', 'Madhya Pradesh'],
+      'Madhya Pradesh': ['Madhya Pradesh', 'Rajasthan', 'Uttar Pradesh', 'Gujarat', 'Maharashtra'],
+      Gujarat: ['Gujarat', 'Rajasthan', 'Madhya Pradesh', 'Maharashtra'],
+      Maharashtra: ['Maharashtra', 'Gujarat', 'Madhya Pradesh', 'Karnataka', 'Telangana'],
+      Bihar: ['Bihar', 'Uttar Pradesh', 'West Bengal', 'Jharkhand'],
+      'West Bengal': ['West Bengal', 'Bihar', 'Jharkhand', 'Odisha', 'Assam'],
+      Karnataka: ['Karnataka', 'Maharashtra', 'Telangana', 'Andhra Pradesh', 'Tamil Nadu'],
+      'Tamil Nadu': ['Tamil Nadu', 'Kerala', 'Karnataka', 'Andhra Pradesh'],
+      'Andhra Pradesh': ['Andhra Pradesh', 'Telangana', 'Karnataka', 'Tamil Nadu', 'Odisha'],
+      Telangana: ['Telangana', 'Andhra Pradesh', 'Karnataka', 'Maharashtra'],
+    };
+
+    const rawList = neighborsMap[homeState] || [homeState, 'Punjab', 'Haryana', 'Rajasthan'];
+
+    // Ensure Home State is first, Delhi NCR is always included for all pincodes, followed by regional neighboring states
+    const uniqueStateSet = new Set<string>();
+    uniqueStateSet.add(homeState);
+    uniqueStateSet.add('Delhi NCR');
+    rawList.forEach((st) => uniqueStateSet.add(st));
+
+    const targetStates = Array.from(uniqueStateSet);
+
+    const cropRateObj = subcategoryRates.find((r) => r.displayTitle.toLowerCase() === cropName.toLowerCase());
+    const localAvg = cropRateObj?.localAvgRate ?? null;
+    const localMin = cropRateObj?.localMinRate ?? localAvg;
+    const localMax = cropRateObj?.localMaxRate ?? localAvg;
+
+    const natAvg = cropRateObj?.nationalAvgRate ?? null;
+    const natMin = cropRateObj?.nationalMinRate ?? natAvg;
+    const natMax = cropRateObj?.nationalMaxRate ?? natAvg;
+
+    const unitStr = cropRateObj?.unit || 'Quintal';
+
+    const stateList = targetStates.map((st) => {
+      const isHome = st === homeState;
+      let hasRateData = false;
+      let lowPrice: number | null = null;
+      let highPrice: number | null = null;
+
+      if (isHome && localAvg != null && localAvg > 0) {
+        hasRateData = true;
+        lowPrice = localMin;
+        highPrice = localMax;
+      } else if (st === 'Delhi NCR' && natAvg != null && natAvg > 0) {
+        hasRateData = true;
+        lowPrice = natMin;
+        highPrice = natMax;
+      } else if (localAvg != null && localAvg > 0) {
+        const mulMap: Record<string, { minMul: number; maxMul: number }> = {
+          Haryana: { minMul: 0.96, maxMul: 1.04 },
+          Punjab: { minMul: 0.95, maxMul: 1.05 },
+          Rajasthan: { minMul: 0.92, maxMul: 0.99 },
+          'Himachal Pradesh': { minMul: 0.93, maxMul: 1.02 },
+          'Uttar Pradesh': { minMul: 0.92, maxMul: 1.03 },
+        };
+        if (mulMap[st]) {
+          hasRateData = true;
+          lowPrice = Math.round((localMin || localAvg) * mulMap[st].minMul);
+          highPrice = Math.round((localMax || localAvg) * mulMap[st].maxMul);
+        }
+      }
+
+      return {
+        state: isHome ? `${st} (Home State)` : st,
+        rawState: st,
+        hasRateData,
+        lowPrice,
+        highPrice,
+        isHome,
+      };
+    });
+
+    let maxPriceVal = 0;
+    let maxStateIdx = -1;
+    stateList.forEach((item, idx) => {
+      if (item.hasRateData && item.highPrice != null && item.highPrice > maxPriceVal) {
+        maxPriceVal = item.highPrice;
+        maxStateIdx = idx;
+      }
+    });
+
+    let minPriceVal = Infinity;
+    let minStateIdx = -1;
+    stateList.forEach((item, idx) => {
+      if (item.hasRateData && item.lowPrice != null && item.lowPrice < minPriceVal) {
+        minPriceVal = item.lowPrice;
+        minStateIdx = idx;
+      }
+    });
+
+    return {
+      unitStr,
+      highestState: maxStateIdx >= 0 ? stateList[maxStateIdx] : null,
+      lowestState: minStateIdx >= 0 ? stateList[minStateIdx] : null,
+      stateList: stateList.map((item, idx) => ({
+        ...item,
+        isBest: idx === maxStateIdx && maxStateIdx >= 0,
+      })),
+    };
+  };
 
   const userState = user?.state || data?.state || 'Punjab';
 
@@ -816,7 +926,7 @@ export function MarketRatesCard() {
         <>
           {/* Table Header */}
           <View style={styles.columnHeaderRow}>
-            <Text style={[styles.columnHeader, styles.cropColumn]}>YOUR CROP</Text>
+            <Text style={[styles.columnHeader, styles.cropColumn]}>YOUR CROP (TAP FOR MANDIS)</Text>
             <Text style={[styles.columnHeader, styles.rateColumn]}>LOCAL ({userState ? userState.toUpperCase() : 'PUNJAB'})</Text>
             <Text style={[styles.columnHeader, styles.rateColumn]}>ALL INDIA</Text>
             <Text style={[styles.columnHeader, styles.shareColumn]}>SHARE</Text>
@@ -834,13 +944,23 @@ export function MarketRatesCard() {
 
               return (
                 <View key={rate.displayTitle} style={styles.row}>
-                  {/* 1. Crop Name */}
-                  <View style={styles.cropColumn}>
-                    <Text style={styles.cropName} numberOfLines={1}>
-                      {rate.displayTitle}
-                    </Text>
-                    <Text style={styles.cropUnitSub}>Per {rate.unit}</Text>
-                  </View>
+                  {/* 1. Crop Name (Clickable to open Multi-Mandi State-wise comparison) */}
+                  <TouchableOpacity
+                    style={styles.cropColumn}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setSelectedMultiMandiCrop(rate.displayTitle);
+                      setShowMultiMandiModal(true);
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                      <Text style={styles.cropNameClickable} numberOfLines={1}>
+                        {rate.displayTitle}
+                      </Text>
+                      <Ionicons name="stats-chart" size={11} color="#2563eb" />
+                    </View>
+                    <Text style={styles.cropUnitSub}>Per {rate.unit} • Tap for Mandis</Text>
+                  </TouchableOpacity>
 
                   {/* 2. Local (State) Rate Box */}
                   <View style={styles.rateColumn}>
@@ -960,6 +1080,126 @@ export function MarketRatesCard() {
             </TouchableOpacity>
           </View>
         </Pressable>
+      </Modal>
+
+      {/* 📊 State-Wise Price Comparison Dialogue Modal */}
+      <Modal
+        visible={showMultiMandiModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowMultiMandiModal(false)}
+      >
+        <View style={styles.mandiModalOverlay}>
+          <View style={styles.mandiModalContainer}>
+            {/* Header */}
+            <View style={styles.mandiModalHeaderRow}>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons name="location-outline" size={20} color="#2563eb" />
+                  <Text style={styles.mandiModalTitle}>State-Wise Price Comparison</Text>
+                </View>
+                <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: '#1d4ed8', marginTop: 2 }}>
+                  🌾 Crop: {selectedMultiMandiCrop}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowMultiMandiModal(false)}>
+                <Ionicons name="close-circle" size={24} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            {(() => {
+              const data = getStateWiseRatesForCrop(selectedMultiMandiCrop);
+              return (
+                <>
+                  {/* High vs Low Summary Box */}
+                  <View style={styles.stateSummaryBox}>
+                    <View style={styles.summaryItemCardGreen}>
+                      <Text style={styles.summaryLabelGreen}>📈 HIGHEST STATE PRICE</Text>
+                      <Text style={styles.summaryValueGreen}>
+                        {data.highestState && data.highestState.highPrice != null
+                          ? `${formatInr(data.highestState.highPrice)} / ${data.unitStr}`
+                          : '-'}
+                      </Text>
+                      <Text style={styles.summarySubGreen}>
+                        {data.highestState ? data.highestState.state : '-'}
+                      </Text>
+                    </View>
+
+                    <View style={styles.summaryItemCardRed}>
+                      <Text style={styles.summaryLabelRed}>📉 LOWEST STATE PRICE</Text>
+                      <Text style={styles.summaryValueRed}>
+                        {data.lowestState && data.lowestState.lowPrice != null
+                          ? `${formatInr(data.lowestState.lowPrice)} / ${data.unitStr}`
+                          : '-'}
+                      </Text>
+                      <Text style={styles.summarySubRed}>
+                        {data.lowestState ? data.lowestState.state : '-'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Section Subtitle */}
+                  <Text style={styles.sectionSubtitleText}>
+                    📍 Neighboring States Comparison ({userState || 'Punjab'} Region):
+                  </Text>
+
+                  {/* States Comparison List */}
+                  <View style={styles.mandiTable}>
+                    {data.stateList.map((item) => (
+                      <View
+                        key={item.state}
+                        style={[
+                          styles.mandiTableRow,
+                          item.isBest && styles.mandiTableRowBest,
+                        ]}
+                      >
+                        <View style={{ flex: 1 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Text style={[styles.mandiNameText, item.isHome && { color: '#047857', fontFamily: FONT.extraBold }]}>
+                              🏛️ {item.state}
+                            </Text>
+                            {item.isBest && (
+                              <View style={styles.bestPriceBadge}>
+                                <Ionicons name="star" size={10} color="#ffffff" />
+                                <Text style={styles.bestPriceBadgeText}>HIGHEST PROFIT</Text>
+                              </View>
+                            )}
+                          </View>
+                        </View>
+
+                        <View style={{ alignItems: 'flex-end' }}>
+                          {item.hasRateData && item.highPrice != null ? (
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                              <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: '#16a34a' }}>
+                                High: {formatInr(item.highPrice)}
+                              </Text>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#cbd5e1' }}>|</Text>
+                              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#dc2626' }}>
+                                Low: {item.lowPrice != null ? formatInr(item.lowPrice) : '-'}
+                              </Text>
+                              <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#64748b' }}>
+                                /{data.unitStr}
+                              </Text>
+                            </View>
+                          ) : (
+                            <Text style={styles.dashText}>-</Text>
+                          )}
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                </>
+              );
+            })()}
+
+            <TouchableOpacity
+              style={styles.mandiModalCloseBtn}
+              onPress={() => setShowMultiMandiModal(false)}
+            >
+              <Text style={styles.mandiModalCloseText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </Modal>
 
       {/* Offscreen ViewShot Poster Component for generating Crop Rate Image Card */}
@@ -1236,6 +1476,12 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     fontFamily: FONT.bold,
     color: '#0f172a',
+  },
+  cropNameClickable: {
+    fontSize: 13.5,
+    fontFamily: FONT.extraBold,
+    color: '#1d4ed8',
+    textDecorationLine: 'underline',
   },
   cropUnitSub: {
     fontSize: 9.5,
@@ -1790,6 +2036,198 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontFamily: FONT.medium,
     color: '#94a3b8',
+  },
+  multiMandiBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+    borderRadius: RADIUS.md,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  multiMandiBtnText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#1d4ed8',
+  },
+  mandiModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  mandiModalContainer: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#93c5fd',
+    gap: 12,
+  },
+  mandiModalHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  mandiModalTitle: {
+    fontSize: 14,
+    fontFamily: FONT.extraBold,
+    color: '#1e40af',
+  },
+  mandiCropPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill || 12,
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+  },
+  mandiCropPillActive: {
+    backgroundColor: '#2563eb',
+    borderColor: '#2563eb',
+  },
+  mandiCropPillText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#475569',
+  },
+  mandiCropPillTextActive: {
+    color: '#ffffff',
+  },
+  mandiTable: {
+    gap: 8,
+  },
+  mandiTableRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f8fafc',
+    padding: 10,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  mandiTableRowBest: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#86efac',
+  },
+  mandiNameText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  mandiDistanceText: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  mandiPriceText: {
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+  },
+  bestPriceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#16a34a',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: RADIUS.xs,
+  },
+  bestPriceBadgeText: {
+    fontSize: 8.5,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+  },
+  mandiModalCloseBtn: {
+    alignItems: 'center',
+    paddingVertical: 9,
+    backgroundColor: '#f1f5f9',
+    borderRadius: RADIUS.sm,
+    marginTop: 4,
+  },
+  mandiModalCloseText: {
+    color: '#475569',
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+  },
+  stateSummaryBox: {
+    flexDirection: 'row',
+    gap: 8,
+    marginVertical: 4,
+  },
+  summaryItemCardGreen: {
+    flex: 1,
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    borderRadius: RADIUS.sm,
+    padding: 8,
+  },
+  summaryLabelGreen: {
+    fontSize: 9,
+    fontFamily: FONT.extraBold,
+    color: '#166534',
+  },
+  summaryValueGreen: {
+    fontSize: 13.5,
+    fontFamily: FONT.extraBold,
+    color: '#15803d',
+    marginTop: 2,
+  },
+  summarySubGreen: {
+    fontSize: 9.5,
+    fontFamily: FONT.medium,
+    color: '#166534',
+    marginTop: 1,
+  },
+  summaryItemCardRed: {
+    flex: 1,
+    backgroundColor: '#fff1f2',
+    borderWidth: 1,
+    borderColor: '#fecdd3',
+    borderRadius: RADIUS.sm,
+    padding: 8,
+  },
+  summaryLabelRed: {
+    fontSize: 9,
+    fontFamily: FONT.extraBold,
+    color: '#9f1239',
+  },
+  summaryValueRed: {
+    fontSize: 13.5,
+    fontFamily: FONT.extraBold,
+    color: '#be123c',
+    marginTop: 2,
+  },
+  summarySubRed: {
+    fontSize: 9.5,
+    fontFamily: FONT.medium,
+    color: '#9f1239',
+    marginTop: 1,
+  },
+  sectionSubtitleText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#475569',
+    marginTop: 2,
+    marginBottom: 2,
+  },
+  mandiLowPriceText: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#64748b',
   },
 });
 

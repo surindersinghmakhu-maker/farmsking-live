@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Linking, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
-import { apiClient } from '@/src/api/client';
 import {
   useAdminUpdateUser,
   useCreateAdmin,
@@ -221,8 +220,6 @@ export default function SuperUsersScreen() {
       </LinearGradient>
 
       <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
-        {isSuperAdmin && <DatabaseBackupControlCard />}
-
         {(filter === 'FARM_ADVISOR' || filter === 'GARDEN_ADVISOR') && (
           <TouchableOpacity
             style={[styles.addAdvisorBtn, premiumShadow(theme.primary, 'sm')]}
@@ -257,56 +254,56 @@ export default function SuperUsersScreen() {
           </View>
         ) : (
           <>
-          {visibleItems.map((u) => (
-            <UserRow
-              key={u.id}
-              user={u}
-              isOperator={filter === 'OPERATOR'}
-              onDeactivate={() => deactivate.mutate(u.id)}
-              onReactivate={() => reactivate.mutate(u.id)}
-              onDelete={isSuperAdmin ? () => handleDeleteUser(u) : undefined}
-              onEditPermissions={filter === 'OPERATOR' ? () => setPermissionsTarget(u) : undefined}
-              onEditRoles={filter !== 'OPERATOR' && filter !== 'ADMIN' && filter !== 'SUPER_ADMIN' ? () => setRolesTarget(u) : undefined}
-              onOpenDetail={() => setDetailTargetId(u.id)}
-            />
-          ))}
+            {visibleItems.map((u) => (
+              <UserRow
+                key={u.id}
+                user={u}
+                isOperator={filter === 'OPERATOR'}
+                onDeactivate={() => deactivate.mutate(u.id)}
+                onReactivate={() => reactivate.mutate(u.id)}
+                onDelete={isSuperAdmin ? () => handleDeleteUser(u) : undefined}
+                onEditPermissions={filter === 'OPERATOR' ? () => setPermissionsTarget(u) : undefined}
+                onEditRoles={filter !== 'OPERATOR' && filter !== 'ADMIN' && filter !== 'SUPER_ADMIN' ? () => setRolesTarget(u) : undefined}
+                onOpenDetail={() => setDetailTargetId(u.id)}
+              />
+            ))}
 
-          {/* Pagination Controls Row with Page Size Selector Dropdown */}
-          <View style={styles.paginationContainer}>
-            <TouchableOpacity
-              style={styles.pageSizeDropdownBtn}
-              activeOpacity={0.8}
-              onPress={() => setIsPageSizePickerOpen(true)}
-            >
-              <Text style={styles.pageSizeDropdownText}>📄 {pageSize} Users per page ▾</Text>
-            </TouchableOpacity>
+            {/* Pagination Controls Row with Page Size Selector Dropdown */}
+            <View style={styles.paginationContainer}>
+              <TouchableOpacity
+                style={styles.pageSizeDropdownBtn}
+                activeOpacity={0.8}
+                onPress={() => setIsPageSizePickerOpen(true)}
+              >
+                <Text style={styles.pageSizeDropdownText}>📄 {pageSize} Users per page ▾</Text>
+              </TouchableOpacity>
 
-            <View style={styles.pagerRow}>
-              <TouchableOpacity
-                style={[styles.pagerBtn, page === 1 && styles.pagerBtnDisabled]}
-                activeOpacity={0.8}
-                disabled={page === 1}
-                onPress={() => {
-                  tap();
-                  setPage((p) => Math.max(1, p - 1));
-                }}
-              >
-                <Ionicons name="chevron-back" size={15} color={page === 1 ? '#cbd5e1' : theme.primary} />
-              </TouchableOpacity>
-              <Text style={styles.pagerText}>Page {page} of {totalPages} ({items.length} Users)</Text>
-              <TouchableOpacity
-                style={[styles.pagerBtn, page === totalPages && styles.pagerBtnDisabled]}
-                activeOpacity={0.8}
-                disabled={page === totalPages}
-                onPress={() => {
-                  tap();
-                  setPage((p) => Math.min(totalPages, p + 1));
-                }}
-              >
-                <Ionicons name="chevron-forward" size={15} color={page === totalPages ? '#cbd5e1' : theme.primary} />
-              </TouchableOpacity>
+              <View style={styles.pagerRow}>
+                <TouchableOpacity
+                  style={[styles.pagerBtn, page === 1 && styles.pagerBtnDisabled]}
+                  activeOpacity={0.8}
+                  disabled={page === 1}
+                  onPress={() => {
+                    tap();
+                    setPage((p) => Math.max(1, p - 1));
+                  }}
+                >
+                  <Ionicons name="chevron-back" size={15} color={page === 1 ? '#cbd5e1' : theme.primary} />
+                </TouchableOpacity>
+                <Text style={styles.pagerText}>Page {page} of {totalPages} ({items.length} Users)</Text>
+                <TouchableOpacity
+                  style={[styles.pagerBtn, page === totalPages && styles.pagerBtnDisabled]}
+                  activeOpacity={0.8}
+                  disabled={page === totalPages}
+                  onPress={() => {
+                    tap();
+                    setPage((p) => Math.min(totalPages, p + 1));
+                  }}
+                >
+                  <Ionicons name="chevron-forward" size={15} color={page === totalPages ? '#cbd5e1' : theme.primary} />
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
           </>
         )}
       </ScrollView>
@@ -604,32 +601,32 @@ function EditUserForm({ user, onDone }: { user: AdminUser; onDone: () => void })
           state: state.trim() || undefined,
           ...(isAdvisor
             ? {
-                photoUrl: photoUrl.trim() || undefined,
-                specialization: specialization.trim() || undefined,
-                bio: bio.trim() || undefined,
-                yearsExperience: yearsExperience.trim() ? Number(yearsExperience.trim()) : undefined,
-                qualification: qualification.trim() || undefined,
-                profileTitle: profileTitle.trim() || undefined,
-                isSeniorDoctor,
-                seniorDoctorId: seniorDoctorId.trim() || undefined,
-                doctorConsultationFee: doctorConsultationFee.trim() ? Number(doctorConsultationFee.trim()) : undefined,
-              }
+              photoUrl: photoUrl.trim() || undefined,
+              specialization: specialization.trim() || undefined,
+              bio: bio.trim() || undefined,
+              yearsExperience: yearsExperience.trim() ? Number(yearsExperience.trim()) : undefined,
+              qualification: qualification.trim() || undefined,
+              profileTitle: profileTitle.trim() || undefined,
+              isSeniorDoctor,
+              seniorDoctorId: seniorDoctorId.trim() || undefined,
+              doctorConsultationFee: doctorConsultationFee.trim() ? Number(doctorConsultationFee.trim()) : undefined,
+            }
             : {}),
           ...(isFarmer
             ? {
-                soilType: soilType || undefined,
-                waterType: waterType || undefined,
-              }
+              soilType: soilType || undefined,
+              waterType: waterType || undefined,
+            }
             : {}),
           ...(showPayoutFields
             ? {
-                upiId: upiId.trim() || undefined,
-                panNumber: panNumber.trim() ? panNumber.trim().toUpperCase() : undefined,
-                alternativeMobile: alternativeMobile.trim() || undefined,
-                bankAccountNumber: bankAccountNumber.trim() || undefined,
-                bankIfsc: bankIfsc.trim() ? bankIfsc.trim().toUpperCase() : undefined,
-                bankAccountHolderName: bankAccountHolderName.trim() || undefined,
-              }
+              upiId: upiId.trim() || undefined,
+              panNumber: panNumber.trim() ? panNumber.trim().toUpperCase() : undefined,
+              alternativeMobile: alternativeMobile.trim() || undefined,
+              bankAccountNumber: bankAccountNumber.trim() || undefined,
+              bankIfsc: bankIfsc.trim() ? bankIfsc.trim().toUpperCase() : undefined,
+              bankAccountHolderName: bankAccountHolderName.trim() || undefined,
+            }
             : {}),
         },
       });
@@ -1467,94 +1464,4 @@ const styles = StyleSheet.create({
   detailStatLabel: { fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 },
   successBox: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#f0fdf4', borderRadius: RADIUS.md, padding: 12, borderWidth: 1, borderColor: '#bbf7d0' },
   successText: { flex: 1, fontSize: 12.5, fontFamily: FONT.medium, color: '#15803d' },
-  backupCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: RADIUS.xl,
-    padding: SPACING.md,
-    marginBottom: 8,
-    borderWidth: 1.5,
-    borderColor: '#bbf7d0',
-    ...premiumShadow('#16a34a', 'sm'),
-  },
-  backupCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
-  backupCardTitle: { fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' },
-  backupCardSub: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
-  backupInfoBox: { backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#dcfce7', borderRadius: RADIUS.md, padding: 10, gap: 4 },
-  backupInfoRow: { fontSize: 11.5, fontFamily: FONT.medium, color: '#334155' },
-  backupInfoBold: { fontFamily: FONT.bold, color: '#0f172a' },
-  backupStatusMsg: { fontSize: 11.5, fontFamily: FONT.bold, color: '#15803d', marginTop: 6 },
-  backupBtnRow: { flexDirection: 'row', gap: 8, marginTop: 10, flexWrap: 'wrap' },
-  backupDownloadBtn: { flex: 1, minWidth: 180, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#16a34a', paddingVertical: 10, borderRadius: RADIUS.md },
-  backupTriggerBtn: { flex: 1, minWidth: 180, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#dcfce7', borderWidth: 1, borderColor: '#86efac', paddingVertical: 10, borderRadius: RADIUS.md },
-  backupBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 12 },
-  backupTriggerBtnText: { color: '#15803d', fontFamily: FONT.bold, fontSize: 12 },
 });
-
-function DatabaseBackupControlCard() {
-  const [isTriggering, setIsTriggering] = useState(false);
-  const [statusMsg, setStatusMsg] = useState<string | null>(null);
-
-  const handleDownloadBackup = () => {
-    tap();
-    const downloadUrl = 'https://farmsking.in/api/v1/backup/download';
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      window.open(downloadUrl, '_blank');
-    } else {
-      Linking.openURL(downloadUrl).catch(() => {});
-    }
-  };
-
-  const handleTriggerBackupNow = async () => {
-    tap();
-    setIsTriggering(true);
-    setStatusMsg(null);
-    try {
-      const res = await apiClient.post('/backup/trigger');
-      const sizeKb = ((res.data?.result?.sizeBytes || 0) / 1024).toFixed(1);
-      setStatusMsg(`✅ Instant Backup Created! (${sizeKb} KB) Synced to Google Drive & Server!`);
-    } catch (err: any) {
-      setStatusMsg(err?.response?.data?.message || 'Could not trigger backup. Please try again.');
-    } finally {
-      setIsTriggering(false);
-    }
-  };
-
-  return (
-    <View style={styles.backupCard}>
-      <View style={styles.backupCardHeader}>
-        <Ionicons name="cloud-upload" size={22} color="#16a34a" />
-        <View style={{ flex: 1 }}>
-          <Text style={styles.backupCardTitle}>🛡️ Database Backup & Cloud Recovery Center</Text>
-          <Text style={styles.backupCardSub}>Automated 12:00 AM Midnight Google Drive Sync & 1-Click Manual Backup</Text>
-        </View>
-      </View>
-
-      <View style={styles.backupInfoBox}>
-        <Text style={styles.backupInfoRow}>🟢 <Text style={styles.backupInfoBold}>Google Drive Auto-Sync:</Text> ACTIVE (Every Night @ 12:00 AM)</Text>
-        <Text style={styles.backupInfoRow}>📁 <Text style={styles.backupInfoBold}>Cloud Folder:</Text> Google Drive / FarmsKing_Database_Backups</Text>
-        <Text style={styles.backupInfoRow}>📧 <Text style={styles.backupInfoBold}>Admin Email:</Text> surindersinghmakhu@gmail.com</Text>
-        <Text style={styles.backupInfoRow}>📱 <Text style={styles.backupInfoBold}>WhatsApp Admin Alert:</Text> +91 9872066901</Text>
-        <Text style={styles.backupInfoRow}>💾 <Text style={styles.backupInfoBold}>VPS Storage Path:</Text> /var/repo/farmsking/backend/backups/</Text>
-        <Text style={styles.backupInfoRow}>🔒 <Text style={styles.backupInfoBold}>Data Safeguard:</Text> Anti-delete active (Force reset disabled)</Text>
-      </View>
-
-      {statusMsg ? <Text style={styles.backupStatusMsg}>{statusMsg}</Text> : null}
-
-      <View style={styles.backupBtnRow}>
-        <TouchableOpacity style={styles.backupDownloadBtn} activeOpacity={0.8} onPress={handleDownloadBackup}>
-          <Ionicons name="download-outline" size={16} color="#ffffff" />
-          <Text style={styles.backupBtnText}>📥 Download Manual Backup (.JSON)</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.backupTriggerBtn} activeOpacity={0.8} disabled={isTriggering} onPress={handleTriggerBackupNow}>
-          {isTriggering ? <ActivityIndicator size="small" color="#15803d" /> : (
-            <>
-              <Ionicons name="sync-outline" size={16} color="#15803d" />
-              <Text style={styles.backupTriggerBtnText}>⚡ Run Instant Backup Now</Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-}

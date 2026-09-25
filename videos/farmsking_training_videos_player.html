@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FarmsKing App Training & Feature Videos (Mobile HQ)</title>
+  <style>
+    body {
+      background-color: #0b0f19;
+      color: #f8fafc;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+      margin: 0;
+    }
+    h1 {
+      color: #10b981;
+      margin-bottom: 5px;
+      text-align: center;
+    }
+    p {
+      color: #94a3b8;
+      margin-bottom: 25px;
+      text-align: center;
+    }
+    .section-title {
+      color: #fbbf24;
+      font-size: 18px;
+      margin-top: 10px;
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+    .tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .tab-btn {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 2px solid #334155;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: #10b981;
+      color: #ffffff;
+      border-color: #10b981;
+    }
+    .video-card {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+      border: 1px solid #334155;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 480px;
+      width: 100%;
+    }
+    video {
+      width: 100%;
+      max-height: 750px;
+      border-radius: 12px;
+      background: #000;
+    }
+    .info {
+      margin-top: 15px;
+      font-size: 14px;
+      line-height: 1.6;
+      text-align: center;
+    }
+    .badge {
+      background: #047857;
+      color: #a7f3d0;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      font-size: 13px;
+      display: inline-block;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🌾 FarmsKing ਐਪ ਵੀਡੀਓ ਫਾਈਲਾਂ (Full HD Mobile MP4)</h1>
+  <p>1080x1920 Mobile View Portrait Videos - Punjabi Female Voiceover</p>
+
+  <div class="section-title">📺 ਵੀਡੀਓ ਚੁਣੋ (Select Video):</div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchVideo('v2_mobile')">✨ ਵੀਡੀਓ 2: ਐਪ ਦੀਆਂ ਖੂਬੀਆਂ (Mandi Rates, Accounts & Crops)</button>
+    <button class="tab-btn" onclick="switchVideo('v1_mobile')">📱 ਵੀਡੀਓ 1: ਰਜਿਸਟ੍ਰੇਸ਼ਨ & WhatsApp OTP ਲੌਗਇਨ</button>
+  </div>
+
+  <div class="video-card">
+    <span class="badge" id="lang-badge">✨ ਵੀਡੀਓ 2: ਐਪ ਖੂਬੀਆਂ (1080x1920 Mobile HQ)</span>
+    <video id="player" controls autoplay muted>
+      <source id="video-src" src="farmsking_features_video2_punjabi_mobile.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <div class="info" id="info-text">
+      <strong>✨ ਵੀਡੀਓ 2 (ਐਪ ਖੂਬੀਆਂ):</strong> ਲਾਈਵ ਮੰਡੀ ਭਾਅ (ਫੁੱਲ, ਫਲ, ਸਬਜ਼ੀਆਂ), ਖਰਚੇ/ਕਮਾਈ ਤੇ ਲੇਬਰ ਦਾ ਹਿਸਾਬ-ਕਿਤਾਬ, ਫਸਲ ਦੀ ਹਿਸਟਰੀ ਅਤੇ WhatsApp OTP ਕੈਸ਼ਬੈਕ ਰੈਫਰਲ ਦੀ ਵੀਡੀਓ।
+    </div>
+  </div>
+
+  <script>
+    function switchVideo(type) {
+      const player = document.getElementById('player');
+      const src = document.getElementById('video-src');
+      const badge = document.getElementById('lang-badge');
+      const info = document.getElementById('info-text');
+      const btns = document.querySelectorAll('.tab-btn');
+
+      btns.forEach(b => b.classList.remove('active'));
+
+      if (type === 'v2_mobile') {
+        src.src = 'farmsking_features_video2_punjabi_mobile.mp4';
+        badge.innerText = '✨ ਵੀਡੀਓ 2: ਐਪ ਖੂਬੀਆਂ (1080x1920 Mobile HQ)';
+        info.innerHTML = '<strong>✨ ਵੀਡੀਓ 2 (ਐਪ ਖੂਬੀਆਂ):</strong> ਲਾਈਵ ਮੰਡੀ ਭਾਅ (ਫੁੱਲ, ਫਲ, ਸਬਜ਼ੀਆਂ), ਖਰਚੇ/ਕਮਾਈ ਤੇ ਲੇਬਰ ਦਾ ਹਿਸਾਬ-ਕਿਤਾਬ, ਫਸਲ ਦੀ ਹਿਸਟਰੀ ਅਤੇ WhatsApp OTP ਕੈਸ਼ਬੈਕ ਰੈਫਰਲ ਦੀ ਵੀਡੀਓ।';
+        btns[0].classList.add('active');
+      } else if (type === 'v1_mobile') {
+        src.src = 'farmsking_training_video1_punjabi_mobile.mp4';
+        badge.innerText = '📱 ਵੀਡੀਓ 1: ਰਜਿਸਟ੍ਰੇਸ਼ਨ & WhatsApp OTP (1080x1920 Mobile HQ)';
+        info.innerHTML = '<strong>📱 ਵੀਡੀਓ 1 (ਰਜਿਸਟ੍ਰੇਸ਼ਨ):</strong> ਰਜਿਸਟ੍ਰੇਸ਼ਨ, 8-ਅੱਖਰੀ ਪਾਸਵਰਡ, ਆਟੋ-ਲੋਕੇਸ਼ਨ, ਵਟਸਐਪ OTP ਅਤੇ ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਦੀ ਵੀਡੀਓ।';
+        btns[1].classList.add('active');
+      }
+      player.load();
+      player.play();
+    }
+  </script>
+
+</body>
+</html>

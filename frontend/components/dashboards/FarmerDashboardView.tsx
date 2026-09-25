@@ -22,6 +22,7 @@ import { KisanCropIntelligenceCard } from '@/src/components/KisanCropIntelligenc
 import { CropAdvisoryPromoCard } from '@/src/components/CropAdvisoryPromoCard';
 import { OpenMeteoWeatherCard } from '@/src/components/OpenMeteoWeatherCard';
 import { FarmLocationProfileModal } from '@/src/components/FarmLocationProfileModal';
+import { FarmerPortalUpgradeSection, ExecutiveTheme } from '@/src/components/FarmerPortalUpgradeSection';
 
 
 const tap = () => {
@@ -50,6 +51,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
   const { data: pricing } = useFarmerPlanPricing();
   const activateTrialMutation = useActivateTrial();
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const [executiveTheme, setExecutiveTheme] = useState<ExecutiveTheme>('EMERALD');
   const currentPlanMeta = PLAN_ICON_MAP[plan] || { icon: 'crown', color: '#d97706' };
 
   const isTrialActive =
@@ -190,8 +192,6 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         {/* Live Open-Meteo Weather Card */}
         <OpenMeteoWeatherCard />
 
-
-
         {/* Quick Accounts & Payments Action Grid */}
 
         <View style={styles.quickAccountsCard}>
@@ -276,27 +276,67 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.actionCard, premiumShadow('#0f172a', 'sm')]}
-            activeOpacity={0.8}
-            onPress={() => {
-              tap();
-              const msg = 'Satellite Scanner feature is coming soon! Stay tuned.';
-              if (Platform.OS === 'web') {
-                alert('Coming Soon 🚀\n\n' + msg);
-              } else {
-                Alert.alert('Coming Soon 🚀', msg, [{ text: 'OK' }]);
-              }
-            }}
-          >
-            <View style={[styles.actionIconBg, { backgroundColor: '#e0f2fe' }]}>
-              <Ionicons name="planet" size={19} color="#0284c7" />
+          {/* Executive Theme Card with Compact Integrated Option Buttons */}
+          <View style={[styles.actionCard, { flexDirection: 'column', alignItems: 'stretch', justifyContent: 'center', paddingVertical: 6, paddingHorizontal: 8, gap: 3 }, premiumShadow('#0f172a', 'sm')]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={[styles.actionIconBg, { backgroundColor: '#f0fdf4', width: 26, height: 26, borderRadius: 8 }]}>
+                <Ionicons name="color-palette" size={15} color="#047857" />
+              </View>
+              <Text style={[styles.actionCardTitle, { fontSize: 11 }]} numberOfLines={1}>Executive Theme</Text>
             </View>
-            <View style={styles.actionCardTextGroup}>
-              <Text style={styles.actionCardTitle} numberOfLines={1}>Satellite Scanner</Text>
-              <Text style={styles.actionCardSub} numberOfLines={1}>NDVI Heatmap</Text>
+
+            <View style={{ flexDirection: 'row', gap: 3, marginTop: 1 }}>
+              {(['EMERALD', 'DARK', 'GOLD'] as const).map((thKey) => {
+                const isActive = executiveTheme === thKey;
+                const config = {
+                  EMERALD: { label: 'Emerald', icon: 'leaf' as const, bg: '#047857' },
+                  DARK: { label: 'Dark', icon: 'moon' as const, bg: '#0f172a' },
+                  GOLD: { label: 'Gold', icon: 'sparkles' as const, bg: '#d97706' },
+                }[thKey];
+
+                return (
+                  <TouchableOpacity
+                    key={thKey}
+                    style={[
+                      {
+                        flex: 1,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 2,
+                        paddingVertical: 3.5,
+                        borderRadius: RADIUS.pill,
+                        backgroundColor: '#f8fafc',
+                        borderWidth: 1,
+                        borderColor: '#cbd5e1',
+                      },
+                      isActive && { backgroundColor: config.bg, borderColor: config.bg },
+                    ]}
+                    onPress={() => {
+                      tap();
+                      setExecutiveTheme(thKey);
+                    }}
+                  >
+                    <Ionicons
+                      name={config.icon}
+                      size={9.5}
+                      color={isActive ? '#ffffff' : '#475569'}
+                    />
+                    <Text
+                      style={[
+                        { fontSize: 8.5, fontFamily: FONT.bold, color: '#334155' },
+                        isActive && { color: '#ffffff', fontFamily: FONT.extraBold },
+                      ]}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                    >
+                      {config.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
-          </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
             style={[styles.actionCard, premiumShadow('#0f172a', 'sm')]}
@@ -337,6 +377,9 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
             </View>
           </TouchableOpacity>
         </View>
+
+        {/* 🌟 Executive Smart Farming Portal 7-Feature Upgrade Section */}
+        <FarmerPortalUpgradeSection executiveTheme={executiveTheme} />
 
       </View>
 
@@ -869,6 +912,45 @@ const styles = StyleSheet.create({
     fontSize: 9.5,
     fontFamily: FONT.bold,
     color: '#fef08a',
+  },
+  verticalThemeCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    padding: 12,
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    marginVertical: 4,
+    gap: 8,
+  },
+  verticalThemeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  verticalThemeTitle: {
+    fontSize: 12,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+  },
+  verticalThemePillCol: {
+    flexDirection: 'column',
+    gap: 6,
+  },
+  verticalThemePillBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: RADIUS.md,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+  },
+  verticalThemePillText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#334155',
   },
 });
 

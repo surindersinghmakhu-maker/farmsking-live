@@ -49,14 +49,20 @@ export class WhatsappBotService implements OnModuleInit {
         }
 
         if (connection === 'close') {
-          const shouldReconnect =
-            (lastDisconnect?.error as any)?.output?.statusCode !== DisconnectReason.loggedOut;
+          const statusCode = (lastDisconnect?.error as any)?.output?.statusCode;
+          const shouldReconnect = statusCode !== DisconnectReason.loggedOut && statusCode !== 401;
           this.isConnected = false;
-          this.logger.warn(`WhatsApp connection closed. Reconnecting: ${shouldReconnect}`);
+          this.logger.warn(`WhatsApp connection closed (statusCode: ${statusCode}). Reconnecting: ${shouldReconnect}`);
           if (shouldReconnect) {
             setTimeout(() => this.initWhatsAppSocket(), 5000);
           } else {
+            // Stale or logged out session — purge auth folder to force fresh QR code generation
             this.qrCodeDataUrl = null;
+            const authFolder = path.join(process.cwd(), 'whatsapp_auth_session');
+            if (fs.existsSync(authFolder)) {
+              fs.rmSync(authFolder, { recursive: true, force: true });
+            }
+            setTimeout(() => this.initWhatsAppSocket(), 3000);
           }
         } else if (connection === 'open') {
           this.isConnected = true;
@@ -66,6 +72,33 @@ export class WhatsappBotService implements OnModuleInit {
       });
     } catch (err) {
       this.logger.error('Error initializing WhatsApp socket:', err);
+    }
+  }
+
+  async forceResetQr(): Promise<boolean> {
+    try {
+      this.logger.log('Force resetting WhatsApp session to generate new QR code...');
+      if (this.socket) {
+        try {
+          this.socket.ev.removeAllListeners('creds.update');
+          this.socket.ev.removeAllListeners('connection.update');
+          this.socket.end(undefined);
+        } catch {}
+        this.socket = null;
+      }
+      this.isConnected = false;
+      this.qrCodeDataUrl = null;
+
+      const authFolder = path.join(process.cwd(), 'whatsapp_auth_session');
+      if (fs.existsSync(authFolder)) {
+        fs.rmSync(authFolder, { recursive: true, force: true });
+      }
+
+      await this.initWhatsAppSocket();
+      return true;
+    } catch (err) {
+      this.logger.error('Error force resetting WhatsApp session:', err);
+      return false;
     }
   }
 

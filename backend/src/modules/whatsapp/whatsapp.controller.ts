@@ -22,6 +22,12 @@ export class WhatsappBotController {
     return { groups, total: groups.length };
   }
 
+  @Get('qr/reset')
+  async resetAndGetQrWebPage(@Res() res: Response) {
+    await this.whatsappService.forceResetQr();
+    return res.redirect('/api/v1/whatsapp/qr');
+  }
+
   @Get('qr')
   getQrWebPage(@Res() res: Response) {
     const status = this.whatsappService.getQrCodeStatus();
@@ -29,25 +35,28 @@ export class WhatsappBotController {
     let contentHtml = '';
     if (status.isConnected) {
       contentHtml = `
-        <div style="background:#dcfce7; border:1.5px solid #22c55e; color:#15803d; padding:20px; border-radius:12px; font-family:sans-serif; text-align:center;">
-          <h2 style="margin:0 0 10px;">🟢 WhatsApp Business Connected!</h2>
-          <p style="margin:0;">ਤੁਹਾਡਾ WhatsApp Business ਸਫਲਤਾਪੂਰਵਕ FarmsKing ਨਾਲ ਲਿੰਕ ਹੋ ਗਿਆ ਹੈ। ਹੁਣ OTP ਆਟੋਮੈਟਿਕ ਭੇਜੇ ਜਾਣਗੇ।</p>
+        <div style="background:#dcfce7; border:1.5px solid #22c55e; color:#15803d; padding:24px; border-radius:16px; font-family:sans-serif; text-align:center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+          <h2 style="margin:0 0 10px; color:#15803d;">🟢 WhatsApp Business Connected!</h2>
+          <p style="margin:0 0 16px; color:#166534; font-size:14px; line-height:1.5;">Your WhatsApp Business account has been successfully linked with FarmsKing Platform.<br/>OTP and notification messages will now be sent automatically.</p>
+          <a href="/api/v1/whatsapp/qr/reset" style="display:inline-block; margin-top:8px; background:#dc2626; color:#ffffff; padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:13px;">🔗 Unlink & Connect New Number</a>
         </div>
       `;
     } else if (status.qrCodeDataUrl) {
       contentHtml = `
         <div style="background:#ffffff; border:1px solid #e2e8f0; padding:24px; border-radius:16px; font-family:sans-serif; text-align:center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
           <h2 style="margin:0 0 8px; color:#0f172a;">📲 WhatsApp Business QR Code Scan</h2>
-          <p style="color:#64748b; margin:0 0 20px; font-size:14px;">ਆਪਣੇ ਫੋਨ ਵਿੱਚ <b>WhatsApp Business</b> ਖੋਲ੍ਹੋ ➔ <b>Linked Devices (ਲਿੰਕ ਕੀਤੇ ਡਿਵਾਈਸ)</b> ➔ ਸਕੈਨ ਕਰੋ:</p>
-          <img src="${status.qrCodeDataUrl}" alt="WhatsApp QR Code" style="width:260px; height:260px; border:2px solid #16a34a; border-radius:12px; padding:8px; background:#fff;" />
-          <p style="color:#94a3b8; font-size:12px; margin-top:16px;">ਇਹ ਪੇਜ ਆਪਣੇ ਆਪ ਹਰ 5 ਸੈਕਿੰਡ ਬਾਅਦ ਰਿਫ੍ਰੈਸ਼ ਹੁੰਦਾ ਹੈ...</p>
+          <p style="color:#475569; margin:0 0 16px; font-size:14px; line-height:1.4;">Open <b>WhatsApp Business</b> on your mobile phone ➔ Go to <b>Linked Devices</b> ➔ Tap <b>Link a Device</b> ➔ Scan QR Code below:</p>
+          <img src="${status.qrCodeDataUrl}" alt="WhatsApp QR Code" style="width:260px; height:260px; border:2.5px solid #16a34a; border-radius:12px; padding:8px; background:#fff;" />
+          <p style="color:#94a3b8; font-size:12px; margin-top:14px; margin-bottom:14px;">This page automatically refreshes every 5 seconds...</p>
+          <a href="/api/v1/whatsapp/qr/reset" style="display:inline-block; background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; padding:8px 16px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:12.5px;">🔄 Refresh / Generate New QR Code</a>
         </div>
       `;
     } else {
       contentHtml = `
-        <div style="background:#fef3c7; border:1.5px solid #f59e0b; color:#b45309; padding:20px; border-radius:12px; font-family:sans-serif; text-align:center;">
-          <h3 style="margin:0 0 8px;">⏳ QR Code ਜਨਰੇਟ ਹੋ ਰਿਹਾ ਹੈ...</h3>
-          <p style="margin:0;">ਕਿਰਪਾ ਕਰਕੇ 5 ਸੈਕਿੰਡ ਇੰਤਜ਼ਾਰ ਕਰੋ, ਇਹ ਪੇਜ ਆਟੋਮੈਟਿਕ ਰਿਫ੍ਰੈਸ਼ ਹੋਵੇਗਾ।</p>
+        <div style="background:#fffbeb; border:1.5px solid #f59e0b; color:#b45309; padding:24px; border-radius:16px; font-family:sans-serif; text-align:center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+          <h3 style="margin:0 0 10px; color:#b45309; font-size:18px;">⏳ Generating Fresh QR Code...</h3>
+          <p style="margin:0 0 16px; font-size:14px; color:#92400e;">Please wait a few seconds. The QR code will load automatically on screen.</p>
+          <a href="/api/v1/whatsapp/qr/reset" style="display:inline-block; background:#f59e0b; color:#ffffff; padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:13px;">⚡ Click Here to Force Reset & Load QR</a>
         </div>
       `;
     }

@@ -335,13 +335,13 @@ export function FarmerPlanUpgradeModal({
     if (plan === 'FREE') {
       try {
         await activateTrial.mutateAsync();
-        const msg = '🎉 Free Membership Trial activated successfully!';
+        const msg = '🎉 Trial Activated successfully!';
         if (Platform.OS === 'web') alert(msg);
         else Alert.alert('Trial Activated', msg);
         reset();
         onClose();
       } catch (err: any) {
-        const msg = err?.response?.data?.message ?? 'Free Trial already active or used.';
+        const msg = err?.response?.data?.message ?? 'Trial already active or used.';
         if (Platform.OS === 'web') alert(`Notice: ${msg}`);
         else Alert.alert('Notice', msg);
         reset();
@@ -610,7 +610,7 @@ export function FarmerPlanUpgradeModal({
                           {item.key === 'FREE' && (!isExpired && (currentPlan === 'SUPER' || currentPlan === 'FREE')) ? (
                             <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#86efac' }}>
                               <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#15803d' }}>
-                                ✨ Free Trial Activated
+                                ✨ Trial Activated
                               </Text>
                             </View>
                           ) : null}

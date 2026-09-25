@@ -64,10 +64,10 @@ export default function MembershipsScreen() {
     tap();
     try {
       const res = await activateTrialMutation.mutateAsync();
-      const msg = `🎉 Free Trial Activated! You have received free trial access for ${freeTrialDays} days.`;
+      const msg = `🎉 Trial Activated! You have received trial access for ${freeTrialDays} days.`;
       setAppliedCouponNotice(msg);
       if (Platform.OS === 'web') alert(msg);
-      else Alert.alert('Free Trial Activated', msg);
+      else Alert.alert('Trial Activated', msg);
     } catch (err: any) {
       const errMsg = err?.response?.data?.message || 'Could not activate free trial.';
       setAppliedCouponNotice(`❌ ${errMsg}`);

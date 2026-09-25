@@ -106,44 +106,42 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         subtitle={user?.village ? `🌾 ${user.village}` : 'Farmer Profile'}
         avatarUrl={user?.photoUrl || undefined}
         planBadge={
-          <View style={{ alignItems: 'flex-end', gap: 4 }}>
-            {isTrialActive ? (
-              <View style={styles.topTrialPill}>
-                <Ionicons name="sparkles" size={10} color="#ffffff" />
-                <Text style={styles.topTrialPillText}>FREE TRIAL ACTIVATED</Text>
-              </View>
-            ) : null}
-
-            <View style={styles.highlightPlanBadge}>
-              <Ionicons name={currentPlanMeta.icon} size={13} color="#d97706" />
-              <Text style={styles.highlightPlanBadgeText} numberOfLines={1}>
+          <TouchableOpacity
+            style={styles.combinedMembershipCard}
+            activeOpacity={0.88}
+            onPress={() => {
+              tap();
+              setModalInitialMode('GET_COUPON');
+              setIsPlanModalOpen(true);
+            }}
+          >
+            <View style={styles.combinedCardTopRow}>
+              <Ionicons name={currentPlanMeta.icon} size={13} color="#f59e0b" />
+              <Text style={styles.combinedCardPlanText} numberOfLines={1}>
                 {meta.label}
               </Text>
+              {isTrialActive ? (
+                <View style={styles.combinedCardTrialPill}>
+                  <Ionicons name="sparkles" size={9} color="#ffffff" />
+                  <Text style={styles.combinedCardTrialText}>TRIAL ACTIVATED</Text>
+                </View>
+              ) : null}
             </View>
 
-            {plan !== 'FREE' && !isExpired && daysUntilExpiry !== null ? (
-              <Text
-                style={[styles.planDaysLeftText, { fontSize: 9.5, color: '#fef08a', textAlign: 'right', fontFamily: FONT.bold }]}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-              >
-                ⏳ {daysUntilExpiry}d left{formattedExpiry ? ` (Till: ${formattedExpiry})` : ''}
-              </Text>
-            ) : null}
-
-            <TouchableOpacity
-              style={styles.highlightPlanActionBtn}
-              activeOpacity={0.85}
-              onPress={() => {
-                tap();
-                setModalInitialMode('GET_COUPON');
-                setIsPlanModalOpen(true);
-              }}
-            >
-              <Ionicons name={currentPlanMeta.icon} size={12} color="#f59e0b" />
-              <Text style={styles.planActionBtnText} numberOfLines={1}>Farmer Pass</Text>
-            </TouchableOpacity>
-          </View>
+            {plan !== 'FREE' && !isExpired && (daysUntilExpiry !== null || formattedExpiry) ? (
+              <View style={styles.combinedCardValidRow}>
+                <Ionicons name="time-outline" size={10} color="#fef08a" />
+                <Text style={styles.combinedCardValidText} numberOfLines={1} adjustsFontSizeToFit>
+                  {daysUntilExpiry !== null ? `${daysUntilExpiry}d left` : ''}
+                  {formattedExpiry ? ` (Till: ${formattedExpiry})` : ''}
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.combinedCardValidRow}>
+                <Text style={styles.combinedCardValidText}>Farmer Pass 🎟️</Text>
+              </View>
+            )}
+          </TouchableOpacity>
         }
 
       />
@@ -820,6 +818,54 @@ const styles = StyleSheet.create({
     fontFamily: FONT.extraBold,
     color: '#ffffff',
     letterSpacing: 0.4,
+  },
+  combinedMembershipCard: {
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderWidth: 1.2,
+    borderColor: '#f59e0b',
+    alignItems: 'flex-end',
+    gap: 2,
+    ...premiumShadow('#000000', 'xs'),
+  },
+  combinedCardTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  combinedCardPlanText: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+  },
+  combinedCardTrialPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#15803d',
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#86efac',
+  },
+  combinedCardTrialText: {
+    fontSize: 8.5,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    letterSpacing: 0.3,
+  },
+  combinedCardValidRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  combinedCardValidText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#fef08a',
   },
 });
 

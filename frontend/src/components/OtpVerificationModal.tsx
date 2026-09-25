@@ -62,14 +62,12 @@ export function OtpVerificationModal({
         otp: generatedOtp,
       });
       if (res.data?.success) {
-        setBotStatusText("🟢 5-digit OTP sent to your WhatsApp automatically!");
+        setBotStatusText("🟢 4-digit OTP sent to your WhatsApp!");
       } else {
-        setBotStatusText(`🔑 Your OTP Code: ${generatedOtp} (Auto-filled below)`);
-        setEnteredOtp(generatedOtp);
+        setBotStatusText("📲 OTP triggered. Check your WhatsApp messages.");
       }
     } catch {
-      setBotStatusText(`🔑 Your OTP Code: ${generatedOtp} (Auto-filled below)`);
-      setEnteredOtp(generatedOtp);
+      setBotStatusText("📲 Check your WhatsApp messages for the 4-digit code.");
     } finally {
       setIsBotSending(false);
     }
@@ -89,13 +87,7 @@ export function OtpVerificationModal({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     setErrorText(null);
     const clean = enteredOtp.trim();
-    if (
-      clean === generatedOtp ||
-      clean === '12345' ||
-      clean === '1234' ||
-      clean === '00000' ||
-      clean === '0000'
-    ) {
+    if (clean === generatedOtp) {
       onVerifySuccess();
     } else {
       setErrorText('Invalid OTP! Please enter the correct code.');
@@ -123,13 +115,13 @@ export function OtpVerificationModal({
           {isBotSending ? (
             <View style={styles.botStatusWrap}>
               <ActivityIndicator size="small" color="#16a34a" />
-              <Text style={styles.botStatusText}>Sending 5-digit OTP to WhatsApp...</Text>
+              <Text style={styles.botStatusText}>Sending 4-digit OTP to WhatsApp...</Text>
             </View>
           ) : botStatusText ? (
             <Text style={styles.botStatusText}>{botStatusText}</Text>
           ) : (
             <Text style={styles.instruction}>
-              A 5-digit OTP code has been sent to your WhatsApp number. Enter the code below:
+              A 4-digit OTP code has been sent to your WhatsApp number (+91 {mobileNumber}). Enter the code below:
             </Text>
           )}
 
@@ -138,8 +130,8 @@ export function OtpVerificationModal({
             <TextInput
               style={styles.otpInput}
               keyboardType="number-pad"
-              maxLength={5}
-              placeholder="•••••"
+              maxLength={4}
+              placeholder="••••"
               placeholderTextColor="#cbd5e1"
               value={enteredOtp}
               onChangeText={(text) => {

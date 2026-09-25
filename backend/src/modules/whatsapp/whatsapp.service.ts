@@ -132,15 +132,26 @@ export class WhatsappBotService implements OnModuleInit {
     }
   }
 
+  private formatRecipient(mobileNumber: string): string {
+    const cleanDigits = (mobileNumber || '').replace(/\D/g, '');
+    const last10 = cleanDigits.slice(-10);
+    return `91${last10}`;
+  }
+
+  formatJid(mobileNumber: string): string {
+    const recipient = this.formatRecipient(mobileNumber);
+    return `${recipient}@s.whatsapp.net`;
+  }
+
   async sendOtpMessage(mobileNumber: string, otpCode: string): Promise<boolean> {
     const metaToken = process.env.META_WA_TOKEN || process.env.WHATSAPP_CLOUD_API_TOKEN;
     const metaPhoneId = process.env.META_WA_PHONE_ID || process.env.WHATSAPP_CLOUD_PHONE_ID;
+    const recipient = this.formatRecipient(mobileNumber);
+    const otpMessage = `🌾 *FarmsKing Verification Code*\n\nYour 4-digit FarmsKing verification code is: *${otpCode}*\n\nThis code is valid for 10 minutes.`;
 
     // 1. Primary: Official Meta WhatsApp Cloud API (If configured in .env)
     if (metaToken && metaPhoneId) {
       try {
-        const cleanMobile = mobileNumber.replace(/\D/g, '');
-        const recipient = cleanMobile.startsWith('91') ? cleanMobile : '91' + cleanMobile;
         const response = await fetch(`https://graph.facebook.com/v20.0/${metaPhoneId}/messages`, {
           method: 'POST',
           headers: {
@@ -152,7 +163,7 @@ export class WhatsappBotService implements OnModuleInit {
             to: recipient,
             type: 'text',
             text: {
-              body: `🌾 *FarmsKing Verification Code*\n\nYour 5-digit FarmsKing verification code is: *${otpCode}*\n\nThis code is valid for 10 minutes.`,
+              body: otpMessage,
             },
           }),
         });
@@ -171,18 +182,14 @@ export class WhatsappBotService implements OnModuleInit {
 
     // 2. Secondary: Baileys WhatsApp Web Socket Connection
     if (!this.socket || !this.isConnected) {
-      this.logger.warn('WhatsApp Bot is not connected yet. Fallback to deep-link / auto-fill.');
+      this.logger.warn('WhatsApp Bot is not connected yet. Check https://farmsking.in/api/v1/whatsapp/qr');
       return false;
     }
 
     try {
-      const cleanMobile = mobileNumber.replace(/\D/g, '');
-      const formattedJid = `${cleanMobile.startsWith('91') ? cleanMobile : '91' + cleanMobile}@s.whatsapp.net`;
-
-      const message = `🌾 *FarmsKing Verification Code*\n\nYour 5-digit FarmsKing verification code is: *${otpCode}*\n\nThis code is valid for 10 minutes.`;
-
-      await this.socket.sendMessage(formattedJid, { text: message });
-      this.logger.log(`WhatsApp OTP sent successfully to ${mobileNumber}`);
+      const formattedJid = this.formatJid(mobileNumber);
+      await this.socket.sendMessage(formattedJid, { text: otpMessage });
+      this.logger.log(`WhatsApp OTP sent successfully to ${recipient}`);
       return true;
     } catch (err) {
       this.logger.error(`Failed to send WhatsApp message to ${mobileNumber}:`, err);
@@ -214,23 +221,14 @@ export class WhatsappBotService implements OnModuleInit {
   /**
    * Helper to format mobile number into standard Baileys JID (e.g. 919876543210@s.whatsapp.net)
    */
-  formatJid(mobileNumber: string): string {
-    const cleanMobile = mobileNumber.replace(/\D/g, '');
-    return `${cleanMobile.startsWith('91') ? cleanMobile : '91' + cleanMobile}@s.whatsapp.net`;
-  }
-
-  /**
-   * Send arbitrary text message to a user on WhatsApp (Meta Cloud API Primary + Baileys Fallback)
-   */
   async sendDirectTextMessage(mobileNumber: string, text: string): Promise<boolean> {
     const metaToken = process.env.META_WA_TOKEN || process.env.WHATSAPP_CLOUD_API_TOKEN;
     const metaPhoneId = process.env.META_WA_PHONE_ID || process.env.WHATSAPP_CLOUD_PHONE_ID;
+    const recipient = this.formatRecipient(mobileNumber);
 
     // 1. Primary: Official Meta WhatsApp Cloud API
     if (metaToken && metaPhoneId) {
       try {
-        const cleanMobile = mobileNumber.replace(/\D/g, '');
-        const recipient = cleanMobile.startsWith('91') ? cleanMobile : '91' + cleanMobile;
         const response = await fetch(`https://graph.facebook.com/v20.0/${metaPhoneId}/messages`, {
           method: 'POST',
           headers: {

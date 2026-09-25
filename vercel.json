@@ -3,7 +3,7 @@
   "redirects": [
     {
       "source": "/(.*)",
-      "destination": "https://farmsking.tech/$1",
+      "destination": "https://farmsking.in/$1",
       "permanent": true
     }
   ]

@@ -173,7 +173,7 @@ export default function LoginScreen() {
             <TouchableOpacity
               style={styles.downloadAppBtn}
               onPress={async () => {
-                const url = appSettings?.appDownloadUrl || 'https://farmsking.tech/download/farmsking.apk';
+                const url = appSettings?.appDownloadUrl || 'https://farmsking.in/download/farmsking.apk';
                 try {
                   if (Platform.OS === 'web' && typeof window !== 'undefined') {
                     const link = document.createElement('a');

@@ -141,7 +141,7 @@ function ReferralInviteCard({ theme, kingId }: { theme: RoleTheme; kingId: strin
   const referralBonusAmount = appSettings?.referralSignupBonusAmount ?? 10;
   const welcomeRewardAmount = appSettings?.newUserSignupBonusAmount ?? 10;
   const referralPaidPlanBonusAmount = appSettings?.referralPaidPlanBonusAmount ?? 50;
-  const inviteLink = `https://farmsking.tech/register?ref=${kingId}`;
+  const inviteLink = `https://farmsking.in/register?ref=${kingId}`;
 
   const handleCopyCode = async () => {
     tap();

@@ -1174,7 +1174,7 @@ function AppDownloadSettingsPanel() {
 
   useEffect(() => {
     if (settings) {
-      setDownloadUrl(settings.appDownloadUrl || 'https://farmsking.tech/download/farmsking.apk');
+      setDownloadUrl(settings.appDownloadUrl || 'https://farmsking.in/download/farmsking.apk');
       setVersion(settings.latestAppVersion || APP_VERSION);
     }
   }, [settings]);
@@ -1246,7 +1246,7 @@ function AppDownloadSettingsPanel() {
             }}
             value={downloadUrl}
             onChangeText={setDownloadUrl}
-            placeholder="https://farmsking.tech/download/farmsking.apk"
+            placeholder="https://farmsking.in/download/farmsking.apk"
             autoCapitalize="none"
           />
         </View>

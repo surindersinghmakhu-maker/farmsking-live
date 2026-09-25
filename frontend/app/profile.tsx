@@ -366,7 +366,7 @@ export default function ProfileScreen() {
                   style={styles.input}
                   value={email}
                   onChangeText={setEmail}
-                  placeholder="admin@farmsking.tech"
+                  placeholder="admin@farmsking.in"
                   placeholderTextColor="#94a3b8"
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -814,7 +814,7 @@ export default function ProfileScreen() {
             }}
             onPress={() => {
               tap();
-              const url = 'https://farmsking.tech/download/farmsking.apk';
+              const url = 'https://farmsking.in/download/farmsking.apk';
               if (Platform.OS === 'web' && typeof window !== 'undefined') {
                 const link = document.createElement('a');
                 link.href = url;

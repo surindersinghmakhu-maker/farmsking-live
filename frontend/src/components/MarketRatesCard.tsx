@@ -195,8 +195,8 @@ export function MarketRatesCard() {
 
     const userRefCode = user?.kingId ? user.kingId : 'FARMSKING';
     const shareLink = userRefCode
-      ? `https://farmsking.tech/register?ref=${userRefCode}`
-      : `https://farmsking.tech`;
+      ? `https://farmsking.in/register?ref=${userRefCode}`
+      : `https://farmsking.in`;
 
     const unitTag = crop.unit ? ` / ${crop.unit}` : '';
     const localMinStr = crop.localMinRate != null ? `${formatInr(crop.localMinRate)}${unitTag}` : '-';
@@ -293,7 +293,7 @@ export function MarketRatesCard() {
       const userRefCode = user?.kingId ? user.kingId : 'FARMSKING';
 
       const W = 640;
-      const H = 570;
+      const H = 585;
       canvas.width = W;
       canvas.height = H;
       const ctx = canvas.getContext('2d');
@@ -645,12 +645,16 @@ export function MarketRatesCard() {
       ctx.fillText(userRefCode, 510, vchY + 67);
       ctx.textAlign = 'left';
 
-      // 11. Bottom Footer with VERIFIED Badge
-      const ftrY = vchY + 106;
+      // 11. Bottom Footer with VERIFIED Badge & Visit Web Domain
+      const ftrY = vchY + 104;
       ctx.fillStyle = '#64748b';
       ctx.font = 'bold 10.5px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('Computer Generated Official Rate Card • FarmsKing Platform', 320, ftrY);
+
+      ctx.fillStyle = '#047857';
+      ctx.font = '800 12px sans-serif';
+      ctx.fillText('🌐 Visit: www.farmsking.in', 320, ftrY + 16);
 
       // Bottom Centered VERIFIED Badge Pill
       ctx.fillStyle = '#f0fdf4';
@@ -658,16 +662,16 @@ export function MarketRatesCard() {
       ctx.lineWidth = 1.5;
       if (typeof (ctx as any).roundRect === 'function') {
         ctx.beginPath();
-        (ctx as any).roundRect(230, ftrY + 10, 180, 24, 12);
+        (ctx as any).roundRect(230, ftrY + 24, 180, 24, 12);
         ctx.fill();
         ctx.stroke();
       } else {
-        ctx.fillRect(230, ftrY + 10, 180, 24);
-        ctx.strokeRect(230, ftrY + 10, 180, 24);
+        ctx.fillRect(230, ftrY + 24, 180, 24);
+        ctx.strokeRect(230, ftrY + 24, 180, 24);
       }
       ctx.fillStyle = '#16a34a';
       ctx.font = '800 10.5px sans-serif';
-      ctx.fillText('✓ VERIFIED DIGITAL RECORD', 320, ftrY + 26);
+      ctx.fillText('✓ VERIFIED DIGITAL RECORD', 320, ftrY + 40);
       ctx.textAlign = 'left';
 
       // 12. Top-Layer Watermark Overlay across Rates & Content (Visible over table boxes)

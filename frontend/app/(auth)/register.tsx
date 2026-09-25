@@ -521,7 +521,7 @@ export default function RegisterScreen() {
           <TouchableOpacity
             style={styles.downloadAppBtn}
             onPress={() => {
-              const url = 'https://farmsking.tech/download/farmsking.apk';
+              const url = 'https://farmsking.in/download/farmsking.apk';
               if (Platform.OS === 'web' && typeof window !== 'undefined') {
                 const link = document.createElement('a');
                 link.href = url;

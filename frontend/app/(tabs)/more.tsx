@@ -58,7 +58,7 @@ import { APP_VERSION } from '@/src/constants/version';
 
 function AppDownloadRow() {
   const { data: settings } = useAppSettings();
-  const downloadUrl = settings?.appDownloadUrl || 'https://farmsking.tech/download/farmsking.apk';
+  const downloadUrl = settings?.appDownloadUrl || 'https://farmsking.in/download/farmsking.apk';
   const version = settings?.latestAppVersion || APP_VERSION;
 
   const handleDownload = async () => {

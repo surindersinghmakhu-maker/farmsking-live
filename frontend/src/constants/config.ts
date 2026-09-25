@@ -85,7 +85,7 @@ export function getDefaultApiUrl(): string {
   if (autoIp) {
     return `http://${autoIp}:3000/api/v1`;
   }
-  return 'https://farmsking.tech/api/v1';
+  return 'https://farmsking.in/api/v1';
 }
 
 // Initial default API URL

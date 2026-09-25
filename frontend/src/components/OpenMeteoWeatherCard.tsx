@@ -109,13 +109,14 @@ const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 async function getCoordsForPincode(
   pincode?: string,
   district?: string,
+  postOffice?: string,
   village?: string
 ): Promise<{ lat: number; lon: number; name: string }> {
   const defaultCoords = { lat: 30.9010, lon: 75.8573, name: 'Ludhiana, PB' };
 
   try {
-    let searchTerm = district || village || '';
-    let pinDistrictName = '';
+    let searchTerm = postOffice || district || village || '';
+    let pinDistrictName = postOffice || '';
 
     if (pincode && pincode.trim().length === 6) {
       try {
@@ -124,8 +125,8 @@ async function getCoordsForPincode(
           const pinJson = await pinRes.json();
           if (pinJson?.[0]?.Status === 'Success' && pinJson[0].PostOffice?.[0]) {
             const po = pinJson[0].PostOffice[0];
-            pinDistrictName = po.District || po.Name;
-            searchTerm = `${pinDistrictName}, ${po.State || 'Punjab'}, India`;
+            pinDistrictName = postOffice || po.District || po.Name;
+            searchTerm = `${postOffice || pinDistrictName}, ${po.State || 'Punjab'}, India`;
           }
         }
       } catch (e) {
@@ -149,7 +150,7 @@ async function getCoordsForPincode(
       const geoJson = await geoRes.json();
       if (geoJson.results && geoJson.results.length > 0) {
         const result = geoJson.results[0];
-        const placeName = result.name || pinDistrictName || district || 'Location';
+        const placeName = postOffice || result.name || pinDistrictName || district || 'Location';
         const displayLocationName = pincode ? `${placeName} (${pincode})` : `${placeName}, ${result.admin1 || 'PB'}`;
         return {
           lat: result.latitude,
@@ -163,8 +164,8 @@ async function getCoordsForPincode(
   }
 
   const fallbackName = pincode
-    ? `${district || village || 'PIN'} (${pincode})`
-    : `${district || village || 'Ludhiana, PB'}`;
+    ? `${postOffice || district || village || 'PIN'} (${pincode})`
+    : `${postOffice || district || village || 'Ludhiana, PB'}`;
   return { ...defaultCoords, name: fallbackName };
 }
 
@@ -179,7 +180,22 @@ export function OpenMeteoWeatherCard() {
     setLoading(true);
     setError(false);
     try {
-      const location = await getCoordsForPincode(user?.pincode || undefined, user?.district || undefined, user?.village || undefined);
+      let location: { lat: number; lon: number; name: string };
+      
+      if (user?.locationPreference === 'GPS' && user?.gpsLat && user?.gpsLng) {
+        location = {
+          lat: user.gpsLat,
+          lon: user.gpsLng,
+          name: user.gpsLocationName || `GPS (${user.gpsLat.toFixed(2)}°, ${user.gpsLng.toFixed(2)}°)`,
+        };
+      } else {
+        location = await getCoordsForPincode(
+          user?.pincode || undefined,
+          user?.district || undefined,
+          (user as any)?.postOffice || undefined,
+          user?.village || undefined
+        );
+      }
 
       const res = await fetch(
         `https://api.open-meteo.com/v1/forecast?latitude=${location.lat}&longitude=${location.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto`
@@ -234,7 +250,7 @@ export function OpenMeteoWeatherCard() {
 
   useEffect(() => {
     fetchWeather();
-  }, [user?.pincode, user?.district, user?.village]);
+  }, [user?.locationPreference, user?.gpsLat, user?.gpsLng, user?.pincode, (user as any)?.postOffice, user?.district, user?.village]);
 
   return (
     <TouchableOpacity
@@ -246,7 +262,9 @@ export function OpenMeteoWeatherCard() {
       <View style={styles.headerRow}>
         <View style={styles.headerLeft}>
           <View style={styles.liveTag}>
-            <Text style={styles.liveTagText}>LIVE OPEN-METEO</Text>
+            <Text style={styles.liveTagText}>
+              {user?.locationPreference === 'GPS' ? '📡 LIVE GPS SATELLITE' : '🏠 PROFILE PIN WEATHER'}
+            </Text>
           </View>
           <Text style={styles.headerTitle}>🌤️ Weather</Text>
           <Text style={styles.locationText} numberOfLines={1}>

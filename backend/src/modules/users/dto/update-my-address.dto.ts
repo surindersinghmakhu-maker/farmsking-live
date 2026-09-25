@@ -57,6 +57,22 @@ export class UpdateMyAddressDto {
 
   @IsOptional()
   @IsString()
+  locationPreference?: string;
+
+  @IsOptional()
+  @IsNumber()
+  gpsLat?: number;
+
+  @IsOptional()
+  @IsNumber()
+  gpsLng?: number;
+
+  @IsOptional()
+  @IsString()
+  gpsLocationName?: string;
+
+  @IsOptional()
+  @IsString()
   upiId?: string;
 
   @IsOptional()

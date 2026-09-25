@@ -380,6 +380,10 @@ model User {
   weatherAlertMinTempC   Float?
   weatherAlertMaxTempC   Float?
   weatherAlertRainEnabled Boolean            @default(false)
+  locationPreference     String?            @default("GPS")
+  gpsLat                 Float?
+  gpsLng                 Float?
+  gpsLocationName        String?
   photoUrl             String?
   sprayTankSizeL       Int?
   soilType             SoilType?

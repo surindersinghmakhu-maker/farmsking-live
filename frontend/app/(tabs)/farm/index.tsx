@@ -33,6 +33,7 @@ import { CropCategorySelectorModal, CropFormValues } from '@/components/CropCate
 import { FarmerPlanUpgradeModal } from '@/src/components/FarmerPlanUpgradeModal';
 import { FarmLocationPickerModal } from '@/components/FarmLocationPickerModal';
 import { CropLocationGuideModal } from '@/components/CropLocationGuideModal';
+import { FarmLocationProfileModal } from '@/src/components/FarmLocationProfileModal';
 import { PaymentVoucherModal, VoucherType } from '@/src/components/PaymentVoucherModal';
 import { useLabourWorkers, useLabourWorkEntries, useLabourPayments } from '@/src/hooks/useLabour';
 import { useFarms } from '@/src/hooks/useFarms';
@@ -181,6 +182,7 @@ export default function FarmListScreen() {
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(false);
   const [isCropAdoptionExpanded, setIsCropAdoptionExpanded] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showLocationProfileModal, setShowLocationProfileModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [selectedCropForGps, setSelectedCropForGps] = useState<RegisteredCropField | null>(null);
   const [completionReviewModalVisible, setCompletionReviewModalVisible] = useState(false);
@@ -955,14 +957,7 @@ export default function FarmListScreen() {
                             activeOpacity={0.85}
                             onPress={() => {
                               tap();
-                              if (Platform.OS === 'web') {
-                                alert('📍 Set GPS Location - Coming Soon...\n\nSatellite field GPS coordinate mapping feature is currently under final testing and will be enabled in the upcoming update!');
-                              } else {
-                                Alert.alert(
-                                  'Coming Soon... 📍',
-                                  'Satellite field GPS coordinate mapping feature is currently under final testing and will be enabled in the upcoming update!'
-                                );
-                              }
+                              setShowLocationProfileModal(true);
                             }}
                           >
                             <Ionicons name="location" size={13} color="#ffffff" />
@@ -2090,6 +2085,11 @@ export default function FarmListScreen() {
         </View>
       </Modal>
 
+      {/* Farm Location & Personal Profile Dialogue Modal */}
+      <FarmLocationProfileModal
+        visible={showLocationProfileModal}
+        onClose={() => setShowLocationProfileModal(false)}
+      />
     </View>
   );
 }

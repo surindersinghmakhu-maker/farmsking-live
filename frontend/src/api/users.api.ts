@@ -237,6 +237,10 @@ export interface UpdateMyAddressPayload {
   weatherAlertMinTempC?: number | null;
   weatherAlertMaxTempC?: number | null;
   weatherAlertRainEnabled?: boolean;
+  locationPreference?: 'GPS' | 'PROFILE';
+  gpsLat?: number;
+  gpsLng?: number;
+  gpsLocationName?: string;
 }
 
 export async function updateMyAddress(payload: UpdateMyAddressPayload) {

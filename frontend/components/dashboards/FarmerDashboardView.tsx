@@ -21,6 +21,7 @@ import { useParties } from '@/src/hooks/useParties';
 import { KisanCropIntelligenceCard } from '@/src/components/KisanCropIntelligenceCard';
 import { CropAdvisoryPromoCard } from '@/src/components/CropAdvisoryPromoCard';
 import { OpenMeteoWeatherCard } from '@/src/components/OpenMeteoWeatherCard';
+import { FarmLocationProfileModal } from '@/src/components/FarmLocationProfileModal';
 
 
 const tap = () => {
@@ -72,6 +73,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
 
   // Quick Payment Voucher Modal State
   const [showPaymentVoucherModal, setShowPaymentVoucherModal] = useState(false);
+  const [showLocationProfileModal, setShowLocationProfileModal] = useState(false);
   const [voucherInitialType, setVoucherInitialType] = useState<VoucherType>('RECEIPT_IN');
   const { data: labourWorkers = [] } = useLabourWorkers();
   const { data: parties = [] } = useParties();
@@ -261,7 +263,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
             activeOpacity={0.8}
             onPress={() => {
               tap();
-              router.push('/(tabs)/satellite-map' as any);
+              setShowLocationProfileModal(true);
             }}
           >
             <View style={[styles.actionIconBg, { backgroundColor: '#fef3c7' }]}>
@@ -278,7 +280,12 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
             activeOpacity={0.8}
             onPress={() => {
               tap();
-              router.push('/(tabs)/satellite-map' as any);
+              const msg = 'Satellite Scanner feature is coming soon! Stay tuned.';
+              if (Platform.OS === 'web') {
+                alert('Coming Soon 🚀\n\n' + msg);
+              } else {
+                Alert.alert('Coming Soon 🚀', msg, [{ text: 'OK' }]);
+              }
             }}
           >
             <View style={[styles.actionIconBg, { backgroundColor: '#e0f2fe' }]}>
@@ -295,7 +302,12 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
             activeOpacity={0.8}
             onPress={() => {
               tap();
-              router.push('/(tabs)/crop-disease-scanner' as any);
+              const msg = 'AI Disease Scanner feature is coming soon! Stay tuned.';
+              if (Platform.OS === 'web') {
+                alert('Coming Soon 🚀\n\n' + msg);
+              } else {
+                Alert.alert('Coming Soon 🚀', msg, [{ text: 'OK' }]);
+              }
             }}
           >
             <View style={[styles.actionIconBg, { backgroundColor: '#dcfce7' }]}>
@@ -342,6 +354,12 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         parties={parties}
         labourWorkers={labourWorkers}
         onClose={() => setShowPaymentVoucherModal(false)}
+      />
+
+      {/* Farm Location & Personal Profile Dialogue Modal */}
+      <FarmLocationProfileModal
+        visible={showLocationProfileModal}
+        onClose={() => setShowLocationProfileModal(false)}
       />
     </ScrollView>
   );

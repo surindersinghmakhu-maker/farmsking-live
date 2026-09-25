@@ -1,7 +1,7 @@
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { useState, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, Linking, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, Linking, ActivityIndicator, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -356,7 +356,14 @@ export default function MoreScreen() {
               <TouchableOpacity
                 style={styles.row}
                 activeOpacity={0.7}
-                onPress={() => router.push('/(tabs)/crop-disease-scanner' as any)}
+                onPress={() => {
+                  const msg = 'AI Disease Scanner feature is coming soon! Stay tuned.';
+                  if (Platform.OS === 'web') {
+                    alert('Coming Soon 🚀\n\n' + msg);
+                  } else {
+                    Alert.alert('Coming Soon 🚀', msg, [{ text: 'OK' }]);
+                  }
+                }}
               >
                 <View style={[styles.rowIconBg, { backgroundColor: '#dcfce7' }]}>
                   <Ionicons name="scan-circle-outline" size={18} color="#16a34a" />
@@ -371,7 +378,14 @@ export default function MoreScreen() {
               <TouchableOpacity
                 style={[styles.row, { borderBottomWidth: 0 }]}
                 activeOpacity={0.7}
-                onPress={() => router.push('/(tabs)/satellite-map' as any)}
+                onPress={() => {
+                  const msg = 'Satellite Scanner feature is coming soon! Stay tuned.';
+                  if (Platform.OS === 'web') {
+                    alert('Coming Soon 🚀\n\n' + msg);
+                  } else {
+                    Alert.alert('Coming Soon 🚀', msg, [{ text: 'OK' }]);
+                  }
+                }}
               >
                 <View style={[styles.rowIconBg, { backgroundColor: '#f0f9ff' }]}>
                   <Ionicons name="planet-outline" size={18} color="#0284c7" />

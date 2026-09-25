@@ -27,7 +27,6 @@ export default function ForgotPasswordScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,10 +45,7 @@ export default function ForgotPasswordScreen() {
     }
     setIsSubmitting(true);
     try {
-      const result = await forgotPasswordStart({ mobile: mobile.trim(), pincode: pincode.trim() });
-      if (result.devOtp) {
-        setDevOtpHint(result.devOtp);
-      }
+      await forgotPasswordStart({ mobile: mobile.trim(), pincode: pincode.trim() });
       setStep('otp');
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Could not find an account matching this mobile number and PIN code.');
@@ -166,7 +162,6 @@ export default function ForgotPasswordScreen() {
                 <Text style={styles.otpBoxTitle}>WhatsApp OTP Sent!</Text>
                 <Text style={styles.otpBoxSubtitle}>
                   Check your WhatsApp messages for the 4-digit code.
-                  {devOtpHint ? ` (Demo Code: ${devOtpHint})` : ''}
                 </Text>
               </View>
             </View>

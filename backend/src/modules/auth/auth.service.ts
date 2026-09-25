@@ -431,8 +431,7 @@ export class AuthService {
       mobile,
       message: sentViaWhatsApp
         ? 'WhatsApp OTP has been sent to your mobile number.'
-        : `WhatsApp OTP generated (${otpCode}).`,
-      devOtp: sentViaWhatsApp ? undefined : otpCode,
+        : 'WhatsApp OTP message triggered. Please check your WhatsApp.',
     };
   }
 

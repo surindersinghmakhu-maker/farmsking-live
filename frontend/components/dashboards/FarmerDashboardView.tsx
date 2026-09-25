@@ -106,42 +106,45 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         subtitle={user?.village ? `🌾 ${user.village}` : 'Farmer Profile'}
         avatarUrl={user?.photoUrl || undefined}
         planBadge={
-          <TouchableOpacity
-            style={styles.combinedMembershipCard}
-            activeOpacity={0.88}
-            onPress={() => {
-              tap();
-              setModalInitialMode('GET_COUPON');
-              setIsPlanModalOpen(true);
-            }}
-          >
-            <View style={styles.combinedCardTopRow}>
-              <Ionicons name={currentPlanMeta.icon} size={13} color="#f59e0b" />
-              <Text style={styles.combinedCardPlanText} numberOfLines={1}>
-                {meta.label}
-              </Text>
-              {isTrialActive ? (
-                <View style={styles.combinedCardTrialPill}>
-                  <Ionicons name="sparkles" size={9} color="#ffffff" />
-                  <Text style={styles.combinedCardTrialText}>TRIAL ACTIVATED</Text>
-                </View>
-              ) : null}
-            </View>
+          <View style={{ alignItems: 'flex-end', gap: 3 }}>
+            {isTrialActive ? (
+              <View style={styles.topTrialPill}>
+                <Ionicons name="sparkles" size={10} color="#ffffff" />
+                <Text style={styles.topTrialPillText}>TRIAL ACTIVATED</Text>
+              </View>
+            ) : null}
 
-            {plan !== 'FREE' && !isExpired && (daysUntilExpiry !== null || formattedExpiry) ? (
-              <View style={styles.combinedCardValidRow}>
-                <Ionicons name="time-outline" size={10} color="#fef08a" />
-                <Text style={styles.combinedCardValidText} numberOfLines={1} adjustsFontSizeToFit>
-                  {daysUntilExpiry !== null ? `${daysUntilExpiry}d left` : ''}
-                  {formattedExpiry ? ` (Till: ${formattedExpiry})` : ''}
+            <TouchableOpacity
+              style={styles.combinedMembershipCard}
+              activeOpacity={0.88}
+              onPress={() => {
+                tap();
+                setModalInitialMode('GET_COUPON');
+                setIsPlanModalOpen(true);
+              }}
+            >
+              <View style={styles.combinedCardTopRow}>
+                <Ionicons name={currentPlanMeta.icon} size={13} color="#f59e0b" />
+                <Text style={styles.combinedCardPlanText} numberOfLines={1}>
+                  {meta.label}
                 </Text>
               </View>
-            ) : (
-              <View style={styles.combinedCardValidRow}>
-                <Text style={styles.combinedCardValidText}>Farmer Pass 🎟️</Text>
-              </View>
-            )}
-          </TouchableOpacity>
+
+              {plan !== 'FREE' && !isExpired && (daysUntilExpiry !== null || formattedExpiry) ? (
+                <View style={styles.combinedCardValidRow}>
+                  <Ionicons name="time-outline" size={10} color="#fef08a" />
+                  <Text style={styles.combinedCardValidText} numberOfLines={1} adjustsFontSizeToFit>
+                    {daysUntilExpiry !== null ? `${daysUntilExpiry}d left` : ''}
+                    {formattedExpiry ? ` (Till: ${formattedExpiry})` : ''}
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.combinedCardValidRow}>
+                  <Text style={styles.combinedCardValidText}>Farmer Pass 🎟️</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
         }
 
       />

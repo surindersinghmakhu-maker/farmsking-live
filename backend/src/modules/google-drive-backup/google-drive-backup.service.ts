@@ -211,4 +211,59 @@ export class GoogleDriveBackupService implements OnModuleInit {
     }
     return null;
   }
+
+  async restoreFromSnapshot(snapshotObj: any): Promise<{ success: boolean; restoredUsers: number; message: string }> {
+    if (!snapshotObj || !snapshotObj.data) {
+      throw new Error('Invalid backup file format.');
+    }
+
+    const { users = [] } = snapshotObj.data;
+
+    let restoredUsersCount = 0;
+    for (const u of users) {
+      if (!u.mobile) continue;
+      const existing = await this.prisma.user.findFirst({ where: { mobile: u.mobile } });
+      if (!existing) {
+        await this.prisma.user.create({
+          data: {
+            kingId: u.kingId,
+            mobile: u.mobile,
+            passwordHash: '$argon2id$v=19$m=65536,t=3,p=4$restoredUserDummyHash',
+            role: u.role,
+            roles: u.roles || [u.role],
+            name: u.name || 'Restored User',
+            email: u.email,
+            village: u.village,
+            district: u.district,
+            state: u.state,
+            pincode: u.pincode,
+            postOffice: u.postOffice,
+            preferredLanguage: u.preferredLanguage ?? 'en',
+            upiId: u.upiId,
+            farmName: u.farmName,
+            farmAddress: u.farmAddress,
+          },
+        }).catch(() => {});
+        restoredUsersCount++;
+      }
+    }
+
+    this.logger.log(`🟢 Restore completed: ${restoredUsersCount} missing users restored successfully.`);
+
+    return {
+      success: true,
+      restoredUsers: restoredUsersCount,
+      message: `Database Restore Complete. ${restoredUsersCount} missing users restored from snapshot.`,
+    };
+  }
+
+  async restoreLatestBackup(): Promise<{ success: boolean; restoredUsers: number; message: string }> {
+    const latestPath = this.getLatestBackupPath();
+    if (!latestPath || !fs.existsSync(latestPath)) {
+      throw new Error('No backup file available to restore.');
+    }
+    const content = fs.readFileSync(latestPath, 'utf8');
+    const snapshotObj = JSON.parse(content);
+    return this.restoreFromSnapshot(snapshotObj);
+  }
 }

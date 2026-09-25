@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Res, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Res, NotFoundException } from '@nestjs/common';
 import type { Response } from 'express';
 import { GoogleDriveBackupService } from './google-drive-backup.service';
 import * as fs from 'fs';
@@ -28,5 +28,15 @@ export class GoogleDriveBackupController {
       throw new NotFoundException('No backup file available yet.');
     }
     return res.download(filePath);
+  }
+
+  @Post('restore-latest')
+  async restoreLatest() {
+    return this.backupService.restoreLatestBackup();
+  }
+
+  @Post('restore')
+  async restoreFromData(@Body() body: { snapshotData: any }) {
+    return this.backupService.restoreFromSnapshot(body.snapshotData);
   }
 }

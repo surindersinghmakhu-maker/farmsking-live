@@ -23,10 +23,10 @@ export default function ReferralsScreen() {
   const handleShare = async () => {
     tap();
     const link = network?.inviteUrl || `https://farmsking.in/register?ref=${kingId}`;
-    const message = `🌾 *Join FarmsKing Platform!* 🙏✨\n\nRegister using my link or Referral Code \`${kingId}\` to get Welcome Reward bonus in your wallet!\n👉 ${link}`;
+    const message = `👑 *WELCOME TO FARMSKING APP!* 🌾✨\n_Smart Farming · Better Yield · Higher Profits_\n\n🎁 *विशेष वेलकम ऑफ़र (Special Welcome Offer)*\nनीचे दिए गए लिंक से रजिस्टर करने पर तुरंत पाएँ Instant Wallet Cashback & Bonus Rewards! 💸✨\n\n💶 *Welcome Bonus:* साइनअप करने पर पाएँ मुफ़्त वेलकम बोनस!\n🎁 *Paid Plan Benefit:* पेड प्लान लेने पर पाएँ एक्स्ट्रा बोनस!\n\n👇 *रजिस्टर करने और कैशबैक पाने के लिए लिंक पर क्लिक करें:*\n👉 ${link}\n\n🏷️ *Referral / Coupon Code:* \`${kingId}\`\n\n---\n🌾 *FarmsKing Agriculture App* · _स्मार्ट खेती, बेहतर भविष्य!_ 👑`;
     if (Platform.OS === 'web') {
       await Clipboard.setStringAsync(message);
-      alert('Invite link copied to clipboard!');
+      alert('Full invitation message & link copied to clipboard!');
       return;
     }
     try {

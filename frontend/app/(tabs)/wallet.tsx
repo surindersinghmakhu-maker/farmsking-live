@@ -143,6 +143,8 @@ function ReferralInviteCard({ theme, kingId }: { theme: RoleTheme; kingId: strin
   const referralPaidPlanBonusAmount = appSettings?.referralPaidPlanBonusAmount ?? 50;
   const inviteLink = `https://farmsking.in/register?ref=${kingId}`;
 
+  const fullShareMessage = `👑 *WELCOME TO FARMSKING APP!* 🌾✨\n_Smart Farming · Better Yield · Higher Profits_\n\n🎁 *विशेष वेलकम ऑफ़र (Special Welcome Offer)*\nनीचे दिए गए लिंक से रजिस्टर करने पर तुरंत पाएँ Instant Wallet Cashback & Bonus Rewards! 💸✨\n\n💶 *Welcome Bonus:* साइनअप करने पर पाएँ ₹${welcomeRewardAmount} मुफ़्त बोनस!\n🎁 *Paid Plan Benefit:* पेड प्लान लेने पर पाएँ +₹${referralPaidPlanBonusAmount} एक्स्ट्रा बोनस!\n\n👇 *रजिस्टर करने और कैशबैक पाने के लिए लिंक पर क्लिक करें:*\n👉 ${inviteLink}\n\n🏷️ *Referral / Coupon Code:* \`${kingId}\`\n\n---\n🌾 *FarmsKing Agriculture App* · _स्मार्ट खेती, बेहतर भविष्य!_ 👑`;
+
   const handleCopyCode = async () => {
     tap();
     await Clipboard.setStringAsync(kingId);
@@ -152,23 +154,21 @@ function ReferralInviteCard({ theme, kingId }: { theme: RoleTheme; kingId: strin
 
   const handleCopyLink = async () => {
     tap();
-    await Clipboard.setStringAsync(inviteLink);
+    await Clipboard.setStringAsync(fullShareMessage);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 3000);
   };
 
   const handleShareWhatsApp = async () => {
     tap();
-    const shareMessage = `🌾 *Join FarmsKing Platform!* 🙏✨\n\nRegister using my referral link or Coupon Code *${kingId}*!\nYou will get ₹${referralBonusAmount} + ₹${referralPaidPlanBonusAmount} (Paid Plan) Referral Bonus & New user will get ₹${welcomeRewardAmount} Welcome Bonus in wallet!\n\n👉 *Click to Register:* ${inviteLink}`;
-
     if (Platform.OS === 'web') {
-      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`;
+      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(fullShareMessage)}`;
       window.open(whatsappUrl, '_blank');
       return;
     }
 
     try {
-      await Share.share({ message: shareMessage });
+      await Share.share({ message: fullShareMessage });
     } catch {
       // share dismissed
     }

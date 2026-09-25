@@ -153,7 +153,8 @@ export class GoogleDriveBackupService implements OnModuleInit {
       const webhookSetting = await this.prisma.appSetting.findUnique({
         where: { key: 'GOOGLE_DRIVE_WEBHOOK_URL' },
       }).catch(() => null);
-      const driveWebhookUrl = process.env.GOOGLE_DRIVE_WEBHOOK_URL || webhookSetting?.value;
+      const defaultWebhookUrl = 'https://script.google.com/macros/s/AKfycbyBOdk4ba0T1J0mLucABOVwh_UtqbqsYjPxAdcRIXb6KGK7INC2gtMIqwdnDJDInoYe/exec';
+      const driveWebhookUrl = process.env.GOOGLE_DRIVE_WEBHOOK_URL || webhookSetting?.value || defaultWebhookUrl;
       if (driveWebhookUrl && driveWebhookUrl.startsWith('http')) {
         const res = await fetch(driveWebhookUrl, {
           method: 'POST',

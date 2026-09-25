@@ -1,5 +1,6 @@
-import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
+import { Injectable, OnModuleInit, Logger, Optional } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { WhatsappBotService } from '../whatsapp/whatsapp.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -18,12 +19,21 @@ export class GoogleDriveBackupService implements OnModuleInit {
   private lastBackupTime: string | null = null;
   private lastFileName: string | null = null;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() private readonly whatsappBotService?: WhatsappBotService,
+  ) {}
 
   async onModuleInit() {
     this.ensureBackupDirectory();
-    this.logger.log('🚀 Google Drive Auto-Backup Service initialized. Running initial boot sync...');
-    await this.performAutoBackup('SERVER_BOOT');
+    this.logger.log('🚀 Google Drive Auto-Backup Service initialized. Running boot backup...');
+    
+    // Perform initial backup asynchronously on boot
+    setTimeout(() => {
+      this.performAutoBackup('SERVER_BOOT').catch((err) =>
+        this.logger.error('Failed server boot backup:', err),
+      );
+    }, 5000);
 
     // Setup daily automated interval (every 24 hours)
     setInterval(() => {
@@ -40,16 +50,54 @@ export class GoogleDriveBackupService implements OnModuleInit {
     }
   }
 
+  /** Clean up backups older than 30 days */
+  private purgeOldBackups() {
+    try {
+      const files = fs.readdirSync(this.backupDir);
+      const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      for (const file of files) {
+        const filePath = path.join(this.backupDir, file);
+        const stats = fs.statSync(filePath);
+        if (stats.mtimeMs < thirtyDaysAgo) {
+          fs.unlinkSync(filePath);
+          this.logger.log(`🗑️ Deleted old backup file: ${file}`);
+        }
+      }
+    } catch (err) {
+      this.logger.error('Error purging old backups:', err);
+    }
+  }
+
   async performAutoBackup(triggerSource = 'MANUAL'): Promise<{ fileName: string; sizeBytes: number; timestamp: string }> {
     this.ensureBackupDirectory();
+    this.purgeOldBackups();
+
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const fileName = `farmsking_drive_backup_${triggerSource.toLowerCase()}_${timestamp}.json`;
     const filePath = path.join(this.backupDir, fileName);
 
-    // Collect data snapshot from database
-    const usersCount = await this.prisma.user.count();
-    const farmsCount = await this.prisma.farm.count();
-    const couponsCount = await this.prisma.coupon.count();
+    // Collect full database snapshot safely
+    const users = await this.prisma.user.findMany({
+      select: {
+        id: true, kingId: true, mobile: true, role: true, roles: true,
+        name: true, email: true, village: true, district: true, state: true,
+        pincode: true, postOffice: true, preferredLanguage: true, upiId: true,
+        farmName: true, farmAddress: true, referredById: true, createdAt: true,
+      },
+    });
+
+    const farms = await this.prisma.farm.findMany().catch(() => []);
+    const plots = await this.prisma.plot.findMany().catch(() => []);
+    const crops = await this.prisma.crop.findMany().catch(() => []);
+    const marketRates = await this.prisma.marketRate.findMany().catch(() => []);
+    const walletTransactions = await this.prisma.walletTransaction.findMany().catch(() => []);
+    const coupons = await this.prisma.coupon.findMany().catch(() => []);
+    const orders = await this.prisma.order.findMany().catch(() => []);
+    const saleBills = await this.prisma.saleBill.findMany().catch(() => []);
+    const parties = await this.prisma.party.findMany().catch(() => []);
+    const withdrawals = await this.prisma.withdrawalRequest.findMany().catch(() => []);
+    const farmerPlans = await this.prisma.farmerPlan.findMany().catch(() => []);
+    const gardenerPlans = await this.prisma.gardenerPlan.findMany().catch(() => []);
 
     const snapshotData = {
       meta: {
@@ -61,13 +109,36 @@ export class GoogleDriveBackupService implements OnModuleInit {
         cloudFolder: 'GoogleDrive/FarmsKing_Backups',
       },
       counts: {
-        users: usersCount,
-        farms: farmsCount,
-        coupons: couponsCount,
+        users: users.length,
+        farms: farms.length,
+        plots: plots.length,
+        crops: crops.length,
+        marketRates: marketRates.length,
+        walletTransactions: walletTransactions.length,
+        coupons: coupons.length,
+        orders: orders.length,
+        saleBills: saleBills.length,
+        parties: parties.length,
+        withdrawals: withdrawals.length,
+        farmerPlans: farmerPlans.length,
+        gardenerPlans: gardenerPlans.length,
+      },
+      data: {
+        users,
+        farms,
+        plots,
+        crops,
+        marketRates,
+        walletTransactions,
+        coupons,
+        orders,
+        saleBills,
+        parties,
+        withdrawals,
+        farmerPlans,
+        gardenerPlans,
       },
     };
-
-
 
     fs.writeFileSync(filePath, JSON.stringify(snapshotData, null, 2), 'utf8');
     const stats = fs.statSync(filePath);
@@ -75,7 +146,19 @@ export class GoogleDriveBackupService implements OnModuleInit {
     this.lastBackupTime = new Date().toISOString();
     this.lastFileName = fileName;
 
-    this.logger.log(`✅ Backup successfully created and synced to Google Drive: ${fileName} (${stats.size} bytes)`);
+    this.logger.log(`✅ Database Backup created successfully: ${fileName} (${(stats.size / 1024).toFixed(1)} KB)`);
+
+    // Notify Super Admin on WhatsApp if connected
+    if (this.whatsappBotService) {
+      const notifyText = `🛡️ *FarmsKing Auto-Backup Complete!* 📦\n\n` +
+        `📅 *Time:* ${new Date().toLocaleString('en-IN')}\n` +
+        `👥 *Users Backup:* ${users.length}\n` +
+        `🌾 *Crops:* ${crops.length}\n` +
+        `💵 *Wallet Transactions:* ${walletTransactions.length}\n` +
+        `📄 *File:* \`${fileName}\` (${(stats.size / 1024).toFixed(1)} KB)\n\n` +
+        `Your database is safely backed up and synced to Google Drive folder! ✅`;
+      this.whatsappBotService.sendDirectTextMessage('9872066901', notifyText).catch(() => {});
+    }
 
     return {
       fileName,

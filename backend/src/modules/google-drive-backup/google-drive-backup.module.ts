@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
+import { WhatsappBotModule } from '../whatsapp/whatsapp.module';
 import { GoogleDriveBackupService } from './google-drive-backup.service';
 import { GoogleDriveBackupController } from './google-drive-backup.controller';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, WhatsappBotModule],
   providers: [GoogleDriveBackupService],
   controllers: [GoogleDriveBackupController],
   exports: [GoogleDriveBackupService],

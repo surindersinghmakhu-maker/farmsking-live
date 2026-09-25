@@ -221,7 +221,18 @@ export class AuthService {
     const finalUser = await this.applyAccountType(user.id, dto.accountType);
 
     // Send WhatsApp Welcome & Registration message directly to mobile via WhatsApp Bot
-    const welcomeMsg = `🌾 *Welcome to FarmsKing!* 🙏✨\n\nHello *${dto.name || user.name}* ji,\nYour FarmsKing account has been registered successfully!\n\n🔑 *King ID:* ${user.kingId}\n📱 *Registered Mobile:* ${dto.mobile}\n\nThank you for choosing FarmsKing!`;
+    const userReferralLink = `https://farmsking.in/register?ref=${user.kingId}`;
+    const welcomeMsg = `🌾 *Welcome to FarmsKing!* 🙏✨\n\n` +
+      `Hello *${dto.name || user.name}* ji,\n` +
+      `FarmsKing Smart Farming App पर आपका खाता सफलतापूर्वक बन गया है! 🎉\n\n` +
+      `🔑 *Your King ID:* ${user.kingId}\n` +
+      `📱 *Registered Mobile:* ${dto.mobile}\n\n` +
+      `💶 *Invite & Earn Cashback Offer:* 💶\n` +
+      `ਆਪਣੇ ਹੋਰ ਕਿਸਾਨ ਭਰਾਵਾਂ ਨੂੰ FarmsKing App ਨਾਲ ਜੋੜੋ ਅਤੇ ਹਰ ਸਫ਼ਲ ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਤੇ ਪਾਓ *Cashback Bonus!* 🎁✨\n\n` +
+      `👉 *Share Your Referral Link:* 👇\n` +
+      `${userReferralLink}\n\n` +
+      `इस लिंक को खोल के register करने पर पाएं cashback! 💶💶💶💶💶\n\n` +
+      `FarmsKing App ਨਾਲ਼ ਜੁੜਨ ਲਈ ਧੰਨਵਾਦ! 🌾🚜`;
     this.whatsappBotService.sendDirectTextMessage(dto.mobile, welcomeMsg).catch(() => {});
 
     // Auto-add new user to WhatsApp group immediately after signup (non-blocking)
@@ -467,8 +478,8 @@ export class AuthService {
       throw new BadRequestException('OTP session expired or not verified. Please request a new OTP.');
     }
 
-    if (!dto.newPassword || dto.newPassword.trim().length < 6) {
-      throw new BadRequestException('New password must be at least 6 characters.');
+    if (!dto.newPassword || dto.newPassword.trim().length < 8) {
+      throw new BadRequestException('New password must be at least 8 characters.');
     }
 
     const passwordHash = await argon2.hash(dto.newPassword.trim());

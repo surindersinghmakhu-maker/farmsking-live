@@ -75,8 +75,8 @@ export default function ForgotPasswordScreen() {
   // Step 3: Update Password
   const onResetPassword = async () => {
     setError(null);
-    if (newPassword.length < 6) {
-      setError('New password must be at least 6 characters.');
+    if (newPassword.length < 8) {
+      setError('New password must be at least 8 characters.');
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -201,7 +201,7 @@ export default function ForgotPasswordScreen() {
               <TextInput
                 style={styles.input}
                 secureTextEntry={!showPassword}
-                placeholder="Min 6 characters"
+                placeholder="Min 8 characters"
                 placeholderTextColor="#94a3b8"
                 value={newPassword}
                 onChangeText={setNewPassword}

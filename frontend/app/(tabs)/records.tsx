@@ -3614,7 +3614,7 @@ export default function RecordsScreen() {
                     {/* Header */}
                     <View style={[styles.modalHeaderRow, { borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 10, marginBottom: 12 }]}>
                       <View style={{ flex: 1 }}>
-                        <Text style={[styles.formTitle, { fontSize: 16 }]}>🔴 Add Farm Expense (+ ਖਰਚਾ)</Text>
+                        <Text style={[styles.formTitle, { fontSize: 16 }]}>🔴 Add Farm Expense</Text>
                         <Text style={styles.formSubTitle}>Record crop-specific or general farm input expenses</Text>
                       </View>
                       <TouchableOpacity
@@ -3668,10 +3668,7 @@ export default function RecordsScreen() {
                               <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
                                 {(() => {
                                   const selected = displayCategories.find((c) => c.id === categoryId);
-                                  if (!selected) return 'Select Category';
-                                  return (selected as any).labelPa
-                                    ? `${selected.labelEn} (${(selected as any).labelPa})`
-                                    : selected.labelEn;
+                                  return selected ? selected.labelEn : 'Select Category';
                                 })()}
                               </Text>
                             </View>
@@ -3718,12 +3715,7 @@ export default function RecordsScreen() {
                                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
                                         <Ionicons name={cat.icon as any} size={15} color={isSelected ? '#dc2626' : '#475569'} />
                                         <Text style={{ fontSize: 12, fontFamily: isSelected ? FONT.bold : FONT.medium, color: isSelected ? '#dc2626' : '#0f172a' }}>
-                                          {cat.labelEn}{' '}
-                                          {(cat as any).labelPa ? (
-                                            <Text style={{ fontSize: 10.5, color: isSelected ? '#b91c1c' : '#64748b' }}>
-                                              ({(cat as any).labelPa})
-                                            </Text>
-                                          ) : null}
+                                          {cat.labelEn}
                                         </Text>
                                       </View>
                                       {isSelected && <Ionicons name="checkmark" size={15} color="#dc2626" />}
@@ -3865,12 +3857,13 @@ export default function RecordsScreen() {
                         )}
                       </View>
 
-                      {/* ROW 4: CROP SELECTOR (UNDER PAID TO / RECIPIENT) */}
+                      {/* ROW 4: PLOT / LAND SELECTOR */}
                       <View style={{ backgroundColor: '#f8fafc', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                        <Text style={[styles.label, { marginBottom: 6 }]}>Expense Type / Crop Selection *</Text>
+                        <Text style={[styles.label, { marginBottom: 6 }]}>Expense Type / Plot Selection *</Text>
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                           {activeCrops.map((c) => {
                             const isSelected = expenseCropType === 'CROP' && expenseCropId === c.id;
+                            const plotDisplayName = c.fieldName ? `${c.fieldName} (${c.cropName})` : c.cropName;
                             return (
                               <TouchableOpacity
                                 key={c.id}
@@ -3886,9 +3879,9 @@ export default function RecordsScreen() {
                                   setExpenseCropId(c.id);
                                 }}
                               >
-                                <Ionicons name="leaf" size={13} color={isSelected ? '#fff' : '#16a34a'} />
+                                <Ionicons name="location-outline" size={13} color={isSelected ? '#fff' : '#16a34a'} />
                                 <Text style={[styles.categoryChipText, isSelected && { color: '#fff', fontFamily: FONT.bold }]}>
-                                  {c.cropName}
+                                  {plotDisplayName}
                                 </Text>
                               </TouchableOpacity>
                             );
@@ -3909,7 +3902,7 @@ export default function RecordsScreen() {
                           >
                             <Ionicons name="grid-outline" size={13} color={expenseCropType === 'OTHER' ? '#fff' : '#475569'} />
                             <Text style={[styles.categoryChipText, expenseCropType === 'OTHER' && { color: '#fff', fontFamily: FONT.bold }]}>
-                              Other
+                              General / Other
                             </Text>
                           </TouchableOpacity>
                         </View>

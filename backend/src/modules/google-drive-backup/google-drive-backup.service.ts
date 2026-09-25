@@ -148,6 +148,28 @@ export class GoogleDriveBackupService implements OnModuleInit {
 
     this.logger.log(`✅ Database Backup created successfully: ${fileName} (${(stats.size / 1024).toFixed(1)} KB)`);
 
+    // Upload directly to Google Drive via Webhook if configured
+    try {
+      const webhookSetting = await this.prisma.appSetting.findUnique({
+        where: { key: 'GOOGLE_DRIVE_WEBHOOK_URL' },
+      }).catch(() => null);
+      const driveWebhookUrl = process.env.GOOGLE_DRIVE_WEBHOOK_URL || webhookSetting?.value;
+      if (driveWebhookUrl && driveWebhookUrl.startsWith('http')) {
+        const res = await fetch(driveWebhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileName, ...snapshotData }),
+        });
+        if (res.ok) {
+          this.logger.log(`🟢 Successfully uploaded backup directly to Google Drive Webhook!`);
+        } else {
+          this.logger.warn(`Google Drive Webhook returned non-200 response: ${res.status}`);
+        }
+      }
+    } catch (driveErr) {
+      this.logger.error('Failed to upload backup to Google Drive Webhook:', driveErr);
+    }
+
     // Notify Super Admin on WhatsApp if connected
     if (this.whatsappBotService) {
       const notifyText = `🛡️ *FarmsKing Auto-Backup Complete!* 📦\n\n` +

@@ -3864,7 +3864,8 @@ export default function RecordsScreen() {
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                           {activeCrops.map((c, index) => {
                             const isSelected = expenseCropType === 'CROP' && expenseCropId === c.id;
-                            const plotName = c.fieldName || (plots && plots[index]?.name) || `Plot ${index + 1}`;
+                            const plotName = c.plot?.name || c.fieldName || (plots && plots[index]?.name) || `Plot ${index + 1}`;
+                            const chipTitle = c.cropName ? `${plotName} (${c.cropName})` : plotName;
                             return (
                               <TouchableOpacity
                                 key={c.id}
@@ -3882,7 +3883,7 @@ export default function RecordsScreen() {
                               >
                                 <Ionicons name="location" size={13} color={isSelected ? '#fff' : '#16a34a'} />
                                 <Text style={[styles.categoryChipText, isSelected && { color: '#fff', fontFamily: FONT.bold }]}>
-                                  {plotName}
+                                  {chipTitle}
                                 </Text>
                               </TouchableOpacity>
                             );

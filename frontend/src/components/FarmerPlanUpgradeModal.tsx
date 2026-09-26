@@ -9,6 +9,7 @@ import { FONT, RADIUS, SPACING, premiumShadow } from '../../constants/theme';
 import { useFarmerPlan, useFarmerPlanPricing, usePreviewFarmerPlanCoupon, useRedeemFarmerPlanCoupon, useActivateTrial } from '../hooks/useFarmerPlan';
 import { useInitiateFarmerPlanPayment, useSubmitFarmerPlanPayment } from '../hooks/useFarmerPlanPayments';
 import { useAvailableAdvisors, useMyAdvisor } from '../hooks/useAdvisorAssignments';
+import { useAppSettings } from '../hooks/useAppSettings';
 import { uploadPhoto } from '../api/uploads.api';
 import type { FarmerPlanType, FarmerPlanPricing } from '../api/farmerPlans.api';
 import type { InitiateFarmerPlanPaymentResponse } from '../api/farmerPlanPayments.api';
@@ -282,6 +283,9 @@ export function FarmerPlanUpgradeModal({
 }) {
   const { plan: currentPlan, isExpired, inGrace, hasUsedTrial } = useFarmerPlan();
   const { data: rawPricing } = useFarmerPlanPricing();
+  const { data: settings } = useAppSettings();
+  const freeTrialDays = settings?.freeTrialDays ?? 10;
+  const freeTrialPlan = settings?.freeTrialPlan || 'Super VIP';
   const pricingList = Array.isArray(rawPricing) ? rawPricing : (rawPricing as any)?.items || (rawPricing as any)?.data || [];
   const isTrialEligible = !hasUsedTrial && currentPlan === 'FREE';
 
@@ -411,11 +415,11 @@ export function FarmerPlanUpgradeModal({
             <View style={{ flex: 1, gap: 4 }}>
               <View style={styles.highlightVipLabelWrap}>
                 <Ionicons name="sparkles" size={13} color="#f59e0b" />
-                <Text style={styles.highlightVipLabelText}>👑 FARMSKING VIP MEMBERSHIP</Text>
+                <Text style={styles.highlightVipLabelText}>FARMSKING MEMBERSHIP</Text>
               </View>
-              <Text style={styles.headerTitleText}>
-                {tabMode === 'GET_COUPON' ? 'Membership Pass' : 'Redeem Coupon Code 🎟️'}
-              </Text>
+              {tabMode === 'REDEEM_CODE' ? (
+                <Text style={styles.headerTitleText}>Redeem Coupon Code 🎟️</Text>
+              ) : null}
             </View>
             <TouchableOpacity onPress={closeAndReset} style={styles.closeBtnIcon}>
               <Ionicons name="close" size={18} color="#ffffff" />
@@ -553,25 +557,25 @@ export function FarmerPlanUpgradeModal({
                     }}
                   >
                     <Text style={[styles.partnerChipText, planCategory === cat && { color: '#ffffff' }]}>
-                      {cat === 'FARMER' ? '🎫 Farmer Pass' : '🩺 Hire Doctor'}
+                      {cat === 'FARMER' ? '🎫 FarmsKing Membership' : '🩺 Hire Doctor'}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
-              <Text style={styles.label}>Select Membership Option:</Text>
+              <Text style={styles.label}>👑 SELECT FARMSKING MEMBERSHIP PLAN</Text>
               <View style={{ gap: 8 }}>
                 {(planCategory === 'FARMER'
                   ? [
-                      ...(isTrialEligible ? [{ id: 'FARMER_FREE', key: 'FREE', label: '🌱 Free Membership Trial', iconName: 'leaf', color: '#166534', sub: 'Full Super Plan Access (10-Day Free Demo Trial)' }] : []),
-                      { id: 'FARMER_BASIC', key: 'PRO', label: '⚡ Basic Membership', iconName: 'flash', color: '#0284c7', sub: 'Bookkeeping & Expense Logs + Voice AI Mic' },
-                      { id: 'FARMER_PRO', key: 'SMART', label: '👑 Pro Membership', iconName: 'sparkles', color: '#1d4ed8', sub: 'All Bookkeeping + Labour Record & Worker Login' },
-                      { id: 'FARMER_SUPER', key: 'SUPER', label: '👑 VIP Membership', iconName: 'shield-checkmark', color: '#b45309', sub: 'Unlimited Crops, Mandi AI & Supervisor Sub-Accounts Delegation' },
+                      { id: 'FARMER_BASIC', key: 'PRO', label: '⚡ Basic Membership', iconName: 'flash', color: '#0284c7', sub: 'Bookkeeping & Expense Logs + Voice AI Mic 🧾' },
+                      { id: 'FARMER_PRO', key: 'SMART', label: '👑 Pro Membership 🚀', iconName: 'sparkles', color: '#1d4ed8', sub: 'All Bookkeeping + Labour Record & Worker Login 👥 🚀' },
+                      { id: 'FARMER_SUPER', key: 'SUPER', label: '👑 VIP Membership 💎', iconName: 'shield-checkmark', color: '#b45309', sub: 'Unlimited Crops, Mandi AI & Supervisor Sub-Accounts Delegation 🛡️' },
+                      ...(isTrialEligible ? [{ id: 'FARMER_FREE', key: 'FREE', label: '🌱 Free Membership Trial 🎁', iconName: 'leaf', color: '#166534', sub: `Full ${freeTrialPlan} Plan Access (${freeTrialDays}-Day Free Demo Trial) 🎁` }] : []),
                     ]
                   : [
-                      { id: 'CARE_SILVER', key: 'SILVER', label: 'Crop Advisor', iconName: 'medical', color: '#64748b', sub: '5 Crops Supervision + Soil Health & Leaf Scan' },
-                      { id: 'CARE_GOLD', key: 'GOLD', label: 'Crop Doctor', iconName: 'ribbon', color: '#d97706', sub: '5 Crops Priority Doctor Care + Advisor Chat & Call Requests' },
-                      { id: 'CARE_ROYAL', key: 'ROYAL', label: 'Crop Doctor VIP', iconName: 'shield-checkmark', color: '#7c3aed', sub: '10 Crops Full Senior Doctor Supervision & Custom Spray Schedule' },
+                      { id: 'CARE_SILVER', key: 'SILVER', label: 'Crop Advisor 🩺', iconName: 'medical', color: '#64748b', sub: '5 Crops Supervision + Soil Health & Leaf Scan 🌿' },
+                      { id: 'CARE_GOLD', key: 'GOLD', label: 'Crop Doctor 🏆', iconName: 'ribbon', color: '#d97706', sub: '5 Crops Priority Doctor Care + Advisor Chat & Call Requests 📞' },
+                      { id: 'CARE_ROYAL', key: 'ROYAL', label: 'Crop Doctor VIP 👑', iconName: 'shield-checkmark', color: '#7c3aed', sub: '10 Crops Full Senior Doctor Supervision & Custom Spray Schedule 💊' },
                     ]
                 ).map((item) => {
                   const p = item.key as FarmerPlanType;
@@ -617,11 +621,44 @@ export function FarmerPlanUpgradeModal({
                           ) : null}
                         </View>
                         <Text style={[styles.advisorPickMeta, { color: '#475569', fontWeight: '700' }]}>
-                          Price: {p === 'FREE' ? '₹0 (10 Days Demo)' : `₹${currentVariant.price} / ${currentVariant.billingPeriodDays === 365 ? '1 year' : `${currentVariant.billingPeriodDays} days`}`}
+                          Price: {p === 'FREE' ? `₹0 (${freeTrialDays} Days Demo)` : `₹${currentVariant.price} / ${currentVariant.billingPeriodDays === 365 ? '1 year' : `${currentVariant.billingPeriodDays} days`}`}
                         </Text>
                         <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 }}>
                           {item.sub}
                         </Text>
+
+                        {item.key === 'FREE' && isTrialEligible ? (
+                          <TouchableOpacity
+                            style={{
+                              backgroundColor: '#166534',
+                              paddingHorizontal: 14,
+                              paddingVertical: 9,
+                              borderRadius: RADIUS.md,
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: 6,
+                              marginTop: 8,
+                            }}
+                            activeOpacity={0.85}
+                            disabled={activateTrial.isPending}
+                            onPress={(e) => {
+                              e.stopPropagation();
+                              handlePickPlan('FREE');
+                            }}
+                          >
+                            {activateTrial.isPending ? (
+                              <ActivityIndicator size="small" color="#ffffff" />
+                            ) : (
+                              <>
+                                <Ionicons name="sparkles" size={16} color="#ffffff" />
+                                <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff' }}>
+                                  Get Free Demo {freeTrialDays} Days 🎁
+                                </Text>
+                              </>
+                            )}
+                          </TouchableOpacity>
+                        ) : null}
 
                         {/* Duration Variant Selector Chips */}
                         {availableVariants.length > 1 ? (
@@ -668,41 +705,25 @@ export function FarmerPlanUpgradeModal({
                 })}
               </View>
 
-              {pickedPlan === 'FREE' || selectedOptionId === 'FARMER_FREE' ? (
-                <TouchableOpacity
-                  style={[styles.submitBtn, { backgroundColor: '#166534', flexDirection: 'row', justifyContent: 'center', gap: 8 }]}
-                  disabled={activateTrial.isPending}
-                  onPress={() => handlePickPlan('FREE')}
-                >
-                  {activateTrial.isPending ? (
-                    <ActivityIndicator color="#ffffff" />
-                  ) : (
-                    <>
-                      <Ionicons name="sparkles" size={18} color="#ffffff" />
-                      <Text style={styles.submitBtnText}>Get Free Demo 10 Days 🎁</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  style={[styles.submitBtn, { backgroundColor: '#6d28d9', flexDirection: 'row', justifyContent: 'center', gap: 8 }]}
-                  onPress={() => {
-                    if (!pickedPlan) setPickedPlan(planCategory === 'FARMER' ? 'PRO' : 'SUPER');
-                    setMode('UPI');
-                  }}
-                >
+              <TouchableOpacity
+                style={[styles.submitBtn, { backgroundColor: '#6d28d9', flexDirection: 'row', justifyContent: 'center', gap: 8 }]}
+                onPress={() => {
+                  if (!pickedPlan) setPickedPlan(planCategory === 'FARMER' ? 'PRO' : 'SUPER');
+                  setMode('UPI');
+                }}
+              >
                   <Ionicons name="qr-code-outline" size={18} color="#ffffff" />
                   <Text style={styles.submitBtnText}>
-                    Pay via UPI for {
+                    Activate Membership via UPI ⚡ — {
                       (() => {
                         const allOpts = [
-                          { id: 'FARMER_FREE', label: 'Free Membership', key: 'FREE' },
-                          { id: 'FARMER_BASIC', label: 'Basic Plan', key: 'PRO' },
-                          { id: 'FARMER_PRO', label: 'Pro Plan', key: 'SMART' },
-                          { id: 'FARMER_SUPER', label: 'Super Plan', key: 'SUPER' },
-                          { id: 'CARE_SILVER', label: 'Crop Advisor', key: 'SILVER' },
-                          { id: 'CARE_GOLD', label: 'Crop Doctor', key: 'GOLD' },
-                          { id: 'CARE_ROYAL', label: 'Crop Doctor VIP', key: 'ROYAL' },
+                          { id: 'FARMER_FREE', label: 'Free Membership 🎁', key: 'FREE' },
+                          { id: 'FARMER_BASIC', label: 'Basic Plan ⚡', key: 'PRO' },
+                          { id: 'FARMER_PRO', label: 'Pro Plan 🚀', key: 'SMART' },
+                          { id: 'FARMER_SUPER', label: 'VIP Membership 👑', key: 'SUPER' },
+                          { id: 'CARE_SILVER', label: 'Crop Advisor 🩺', key: 'SILVER' },
+                          { id: 'CARE_GOLD', label: 'Crop Doctor 🏆', key: 'GOLD' },
+                          { id: 'CARE_ROYAL', label: 'Crop Doctor VIP 👑', key: 'ROYAL' },
                         ];
                         const selOpt = allOpts.find((o) => o.id === selectedOptionId) || allOpts[0];
                         const availableVariants = pricingList
@@ -721,7 +742,6 @@ export function FarmerPlanUpgradeModal({
                     }
                   </Text>
                 </TouchableOpacity>
-              )}
 
               <TouchableOpacity style={styles.seePlansBtn} onPress={() => setTabMode('REDEEM_CODE')}>
                 <Ionicons name="key-outline" size={14} color={theme.primary} />

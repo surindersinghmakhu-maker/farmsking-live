@@ -21,10 +21,10 @@ export interface MyCropRatesResponse {
 export async function getMyCropRates(): Promise<MyCropRatesResponse> {
   try {
     const { data } = await apiClient.get<MyCropRatesResponse>('/market-rates/my-crops');
-    return data || { state: 'Punjab', rates: [] };
+    return data || { state: 'All India', rates: [] };
   } catch (error) {
     console.warn('Failed to fetch market rates:', error);
-    return { state: 'Punjab', rates: [] };
+    return { state: 'All India', rates: [] };
   }
 }
 

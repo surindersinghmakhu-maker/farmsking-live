@@ -11,6 +11,7 @@ import { useAppSettings } from '../hooks/useAppSettings';
 import { formatInr } from '../utils/formatInr';
 import { RoleThemes } from '../../constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '../../constants/theme';
+import { useExecutiveTheme } from '../store/theme-context';
 
 const theme = RoleThemes.FARMER;
 
@@ -884,10 +885,11 @@ export function MarketRatesCard() {
     }
   };
 
+  const { colors } = useExecutiveTheme();
   const userRefCode = user?.kingId ? user.kingId : 'FARMSKING';
 
   return (
-    <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { position: 'relative', overflow: 'hidden' }]}>
+    <View style={[styles.card, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm'), { position: 'relative', overflow: 'hidden' }]}>
       {/* Subtle Background Watermark Grid */}
       <View style={styles.posterWatermarkGridContainer} pointerEvents="none">
         {Array.from({ length: 6 }).map((_, rowIndex) => (
@@ -895,7 +897,7 @@ export function MarketRatesCard() {
             {Array.from({ length: 3 }).map((_, colIndex) => (
               <View key={colIndex} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginHorizontal: 4 }}>
                 <BrandLogo size={14} useGoldRing />
-                <Text style={styles.posterWatermarkTileText}>FarmsKing</Text>
+                <Text style={[styles.posterWatermarkTileText, colors.isDark && { color: 'rgba(255, 255, 255, 0.06)' }]}>FarmsKing</Text>
               </View>
             ))}
           </View>
@@ -905,7 +907,7 @@ export function MarketRatesCard() {
       {/* Compact Header with LIVE Indicator */}
       <View style={styles.header}>
         <View style={styles.titleRow}>
-          <Text style={styles.title}>Your Crop Prices</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Your Crop Prices</Text>
           <View style={styles.liveBadge}>
             <View style={styles.redDot} />
             <Text style={styles.liveText}>LIVE 24H</Text>

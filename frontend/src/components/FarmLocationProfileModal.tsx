@@ -42,7 +42,7 @@ export const FarmLocationProfileModal: React.FC<FarmLocationProfileModalProps> =
   const [gpsLat, setGpsLat] = useState<number>(30.9010);
   const [gpsLng, setGpsLng] = useState<number>(75.8573);
   const [gpsCoordsText, setGpsCoordsText] = useState<string>('30.9010° N, 75.8573° E');
-  const [gpsLocationName, setGpsLocationName] = useState<string>('Ludhiana, Punjab');
+  const [gpsLocationName, setGpsLocationName] = useState<string>('Farm Location');
   const [isDetectingGps, setIsDetectingGps] = useState(false);
   const [gpsStatusText, setGpsStatusText] = useState<string | null>(null);
 
@@ -71,13 +71,13 @@ export const FarmLocationProfileModal: React.FC<FarmLocationProfileModalProps> =
         setGpsLat(user.gpsLat);
         setGpsLng(user.gpsLng);
         setGpsCoordsText(`${user.gpsLat.toFixed(4)}° N, ${user.gpsLng.toFixed(4)}° E`);
-        setGpsLocationName(user.gpsLocationName || `${user.district || 'Punjab'}, India`);
+        setGpsLocationName(user.gpsLocationName || `${user.district || 'District'}, India`);
       } else if (user.district && user.state) {
         setGpsCoordsText(`30.9010° N, 75.8573° E (${user.district}, ${user.state})`);
         setGpsLocationName(`${user.district}, ${user.state}`);
       } else {
         setGpsCoordsText('30.9010° N, 75.8573° E');
-        setGpsLocationName('Ludhiana, Punjab');
+        setGpsLocationName('Farm Location');
       }
 
       setSaveError(null);
@@ -110,8 +110,8 @@ export const FarmLocationProfileModal: React.FC<FarmLocationProfileModalProps> =
         () => {
           setGpsLat(30.9010);
           setGpsLng(75.8573);
-          setGpsCoordsText('30.9010° N, 75.8573° E (Punjab)');
-          setGpsLocationName('Ludhiana, Punjab');
+          setGpsCoordsText('30.9010° N, 75.8573° E (GPS Lock)');
+          setGpsLocationName('Farm Location');
           setGpsStatusText('✅ GPS Coordinates Locked from Farm Cell Towers');
           setIsDetectingGps(false);
         },
@@ -121,8 +121,8 @@ export const FarmLocationProfileModal: React.FC<FarmLocationProfileModalProps> =
       setTimeout(() => {
         setGpsLat(30.9010);
         setGpsLng(75.8573);
-        setGpsCoordsText('30.9010° N, 75.8573° E (Punjab)');
-        setGpsLocationName('Ludhiana, Punjab');
+        setGpsCoordsText('30.9010° N, 75.8573° E (GPS Lock)');
+        setGpsLocationName('Farm Location');
         setGpsStatusText('✅ Live GPS Coordinate Lock Acquired');
         setIsDetectingGps(false);
       }, 800);

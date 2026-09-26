@@ -255,7 +255,7 @@ export function CropCompletionReviewModal({
               <LinearGradient colors={['#16a34a', '#15803d']} style={styles.submitGradient}>
                 <Ionicons name="checkmark-circle" size={18} color="#ffffff" />
                 <Text style={styles.submitBtnText}>
-                  {isSubmitting ? 'Submitting...' : 'Submit & Complete Crop 🏁'}
+                  {isSubmitting ? 'Submitting...' : 'Submit & Complete Crop'}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>

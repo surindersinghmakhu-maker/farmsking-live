@@ -58,7 +58,7 @@ const STAGE_LABELS: Record<CropStage, string> = {
   GROWTH: '🌿 Vegetative Growth',
   FLOWERING: '🌸 Flowering',
   HARVESTING: '🌾 Harvesting',
-  COMPLETED: '🏁 Completed',
+  COMPLETED: 'Completed',
 };
 
 const STAGE_PICKER_OPTIONS: { key: CropStage; label: string; color: string }[] = [
@@ -66,7 +66,7 @@ const STAGE_PICKER_OPTIONS: { key: CropStage; label: string; color: string }[] =
   { key: 'VEGETATIVE', label: '🌿 Vegetative', color: '#0284c7' },
   { key: 'FLOWERING', label: '🌸 Flowering', color: '#e11d48' },
   { key: 'HARVESTING', label: '🌾 Harvesting', color: '#16a34a' },
-  { key: 'COMPLETED', label: '🏁 Completed', color: '#475569' },
+  { key: 'COMPLETED', label: 'Completed', color: '#475569' },
 ];
 
 const STAGE_META: Record<CropStage, { label: string; color: string }> = {
@@ -76,7 +76,7 @@ const STAGE_META: Record<CropStage, { label: string; color: string }> = {
   GROWTH: { label: '🌿 Vegetative', color: '#0284c7' },
   FLOWERING: { label: '🌸 Flowering', color: '#e11d48' },
   HARVESTING: { label: '🌾 Harvesting', color: '#16a34a' },
-  COMPLETED: { label: '🏁 Completed', color: '#475569' },
+  COMPLETED: { label: 'Completed', color: '#475569' },
 };
 
 export default function FarmListScreen() {

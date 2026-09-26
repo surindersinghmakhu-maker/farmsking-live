@@ -9,6 +9,7 @@ import { useUnreadNotificationCount } from '@/src/hooks/useNotifications';
 import { Avatar } from '@/src/components/Avatar';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 interface RoleHeaderProps {
   currentRole: UserRole;
@@ -43,6 +44,7 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
   onSecondaryAvatarPress,
 }) => {
   const theme = RoleThemes[currentRole] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER;
+  const { colors } = useExecutiveTheme();
   const router = useRouter();
   const greeting = getTimeBasedGreeting();
   const { data: unreadData } = useUnreadNotificationCount();
@@ -50,7 +52,7 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
   const { data: settings } = useAppSettings();
 
   return (
-    <LinearGradient colors={theme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.headerContainer}>
+    <LinearGradient colors={colors.headerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.headerContainer}>
       {/* Top Banner Row: Super Admin Logo + Action Icons */}
       <View style={styles.topRow}>
         <View style={styles.brandRow}>

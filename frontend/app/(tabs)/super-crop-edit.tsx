@@ -9,7 +9,7 @@ import { useLookupCropByCropId, useUpdateCrop } from '@/src/hooks/useCrops';
 import { CropLookupResult } from '@/src/api/crops.api';
 import { INITIAL_CROP_CATEGORIES, CROP_UNITS, LAND_AREA_UNITS, IRRIGATION_TYPES, HarvestType, IrrigationType, LandAreaUnit, CropUnit } from '@/constants/cropCategoriesData';
 
-const theme = RoleThemes.SUPER_ADMIN;
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -22,10 +22,11 @@ const STAGES: { value: Stage; label: string; icon: string; color: string }[] = [
   { value: 'VEGETATIVE', label: '🌿 Vegetative', icon: 'bar-chart', color: '#0284c7' },
   { value: 'FLOWERING', label: '🌸 Flowering', icon: 'flower', color: '#e11d48' },
   { value: 'HARVESTING', label: '🌾 Harvesting', icon: 'basket', color: '#16a34a' },
-  { value: 'COMPLETED', label: '🏁 Completed', icon: 'checkmark-circle', color: '#475569' },
+  { value: 'COMPLETED', label: '✅ Completed', icon: 'checkmark-circle', color: '#475569' },
 ];
 
 export default function SuperCropEditScreen() {
+  const { colors } = useExecutiveTheme();
   const [cropIdInput, setCropIdInput] = useState('');
   const [crop, setCrop] = useState<CropLookupResult | null>(null);
 
@@ -371,7 +372,7 @@ export default function SuperCropEditScreen() {
               {savedMsg ? <Text style={styles.successText}>{savedMsg}</Text> : null}
 
               {/* Save Button specifying the target Crop ID */}
-              <TouchableOpacity style={styles.saveBtn} activeOpacity={0.85} onPress={handleSave} disabled={update.isPending}>
+              <TouchableOpacity style={[styles.saveBtn, { backgroundColor: colors.primary }]} activeOpacity={0.85} onPress={handleSave} disabled={update.isPending}>
                 {update.isPending ? (
                   <ActivityIndicator color="#fff" size="small" />
                 ) : (
@@ -445,7 +446,6 @@ const styles = StyleSheet.create({
   chipText: { fontSize: 11.5, fontFamily: FONT.medium, color: '#334155' },
   saveBtn: {
     marginTop: 14,
-    backgroundColor: theme.primary,
     borderRadius: RADIUS.md,
     paddingVertical: 12,
     alignItems: 'center',

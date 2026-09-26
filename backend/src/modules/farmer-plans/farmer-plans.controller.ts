@@ -189,6 +189,9 @@ export class FarmerPlansController {
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
+    Role.MANAGER,
+    Role.SUPERVISOR,
+    Role.LABOUR,
   )
   @Post('activate-trial')
   activateTrial(@CurrentUser() user: AuthUser) {

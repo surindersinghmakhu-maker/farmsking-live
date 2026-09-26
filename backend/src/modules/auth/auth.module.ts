@@ -11,6 +11,8 @@ import { WhatsappBotModule } from '../whatsapp/whatsapp.module';
 import { AppSettingsModule } from '../app-settings/app-settings.module';
 import { WalletModule } from '../wallet/wallet.module';
 
+import { UserSessionService } from './user-session.service';
+
 @Module({
   imports: [
     PassportModule,
@@ -31,7 +33,7 @@ import { WalletModule } from '../wallet/wallet.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
-  exports: [JwtModule],
+  providers: [AuthService, JwtStrategy, UserSessionService],
+  exports: [JwtModule, UserSessionService],
 })
 export class AuthModule {}

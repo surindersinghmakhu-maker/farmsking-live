@@ -32,6 +32,7 @@ import { useCrops } from '@/src/store/crops-context';
 import { useGroupVoiceCall } from '@/src/hooks/useGroupVoiceCall';
 import { GroupVoiceCallModal } from '@/src/components/chat/GroupVoiceCallModal';
 import { SwitchDashboardSection } from '@/src/components/SwitchDashboardSection';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const theme = RoleThemes.SUPER_ADMIN;
 const LIVE_REQUESTS_POLL_MS = 20000;
@@ -58,6 +59,7 @@ interface ResolvedRequestItem {
 }
 
 export const SuperAdminDashboardView: React.FC = () => {
+  const { colors: tConfig } = useExecutiveTheme();
   const router = useRouter();
   const { user } = useAuth();
   const { gpsUnlockRequests, acceptGpsUnlockRequest, declineGpsUnlockRequest } = useCrops();
@@ -154,7 +156,7 @@ export const SuperAdminDashboardView: React.FC = () => {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.bg }]} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { backgroundColor: tConfig.bg }]} showsVerticalScrollIndicator={false}>
       <RoleHeader
         currentRole="SUPER_ADMIN"
         profileName={user?.name || 'Super Admin'}

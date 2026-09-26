@@ -85,9 +85,18 @@ export interface FarmerProfileStatus {
   };
 }
 
+export interface SessionMeta {
+  sessionId: string;
+  totalActiveSessions: number;
+  hasMultipleLogins: boolean;
+  warningMessage?: string;
+  evictedOldest: boolean;
+}
+
 export interface AuthResponse {
   accessToken: string;
   user: User;
+  sessionMeta?: SessionMeta;
 }
 
 export type OperatorPermission = 'VIEW_ORDERS' | 'VIEW_COUPONS' | 'VIEW_USERS' | 'VIEW_WALLETS' | 'VIEW_FARMER_PLANS';

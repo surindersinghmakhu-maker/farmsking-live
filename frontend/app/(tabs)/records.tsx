@@ -56,6 +56,7 @@ import { formatInr } from '@/src/utils/formatInr';
 import { formatDateDDMMYYYY } from '@/src/utils/formatDate';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const theme = RoleThemes.FARMER;
 
@@ -2269,10 +2270,12 @@ export default function RecordsScreen() {
     setShowVoucherSlipModal(true);
   };
 
+  const { colors } = useExecutiveTheme();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
       {/* Header */}
-      <LinearGradient colors={theme.gradient} style={styles.hero}>
+      <LinearGradient colors={colors.headerGradient} style={styles.hero}>
         <Text style={styles.heroTitle}>Accounts</Text>
         <Text style={styles.heroSubtitle}>Track sales revenue & combined farm expenses</Text>
 

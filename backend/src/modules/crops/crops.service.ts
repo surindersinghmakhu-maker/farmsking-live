@@ -181,10 +181,22 @@ export class CropsService {
     );
   }
 
-  /** Admin/Super Admin: resolve a crop's short public Crop ID (e.g. "C-482910") to its full record, for support/edit lookups. */
+  /** Admin/Super Admin: resolve a crop's short public Crop ID (e.g. "C-482910" or "482910") or UUID to its full record, for support/edit lookups. */
   async lookupByCropId(cropId: string) {
+    const rawCode = cropId.trim();
+    const upperCode = rawCode.toUpperCase();
+    const digitsOnly = rawCode.replace(/\D/g, '');
+
     const cropCycle = await this.prisma.cropCycle.findFirst({
-      where: { cropId: cropId.toUpperCase(), deletedAt: null },
+      where: {
+        OR: [
+          { cropId: upperCode },
+          { cropId: `C-${upperCode}` },
+          ...(digitsOnly ? [{ cropId: `C-${digitsOnly}` }, { cropId: digitsOnly }] : []),
+          { id: rawCode },
+        ],
+        deletedAt: null,
+      },
       include: {
         plot: {
           include: {
@@ -194,7 +206,7 @@ export class CropsService {
       },
     });
     if (!cropCycle) {
-      throw new NotFoundException('No crop found with this Crop ID.');
+      throw new NotFoundException(`No crop found with Crop ID "${cropId}".`);
     }
     return cropCycle;
   }

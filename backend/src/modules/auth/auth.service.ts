@@ -50,6 +50,7 @@ interface ForgotPasswordOtpStore {
 
 import { AppSettingsService } from '../app-settings/app-settings.service';
 import { WalletService } from '../wallet/wallet.service';
+import { UserSessionService } from './user-session.service';
 
 @Injectable()
 export class AuthService {
@@ -62,6 +63,7 @@ export class AuthService {
     private readonly whatsappGroupSyncService: WhatsAppGroupSyncService,
     private readonly appSettingsService: AppSettingsService,
     private readonly walletService: WalletService,
+    private readonly userSessionService: UserSessionService,
   ) {}
 
   async sendWhatsAppOtp(mobile: string, otpCode: string) {
@@ -501,8 +503,35 @@ export class AuthService {
     };
   }
 
-  private buildAuthResponse(user: { id: string; mobile: string; role: Role } & Record<string, unknown>) {
-    const accessToken = this.jwtService.sign({ sub: user.id, role: user.role });
-    return { accessToken, user };
+  async logoutOtherSessions(userId: string, currentSessionId?: string) {
+    const result = this.userSessionService.logoutOtherSessions(userId, currentSessionId || '');
+    return {
+      success: true,
+      message: `Logged out from ${result.loggedOutCount} other device(s).`,
+      loggedOutCount: result.loggedOutCount,
+    };
+  }
+
+  private buildAuthResponse(
+    user: { id: string; mobile: string; role: Role } & Record<string, unknown>,
+    deviceInfo?: string,
+  ) {
+    const sessionInfo = this.userSessionService.createSession(user.id, deviceInfo);
+    const accessToken = this.jwtService.sign({
+      sub: user.id,
+      role: user.role,
+      sid: sessionInfo.sessionId,
+    });
+    return {
+      accessToken,
+      user,
+      sessionMeta: {
+        sessionId: sessionInfo.sessionId,
+        totalActiveSessions: sessionInfo.totalActiveSessions,
+        hasMultipleLogins: sessionInfo.hasMultipleLogins,
+        warningMessage: sessionInfo.warningMessage,
+        evictedOldest: sessionInfo.evictedOldest,
+      },
+    };
   }
 }

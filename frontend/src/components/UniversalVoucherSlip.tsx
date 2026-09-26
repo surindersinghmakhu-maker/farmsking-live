@@ -97,7 +97,7 @@ export function UniversalVoucherSlipModal({ visible, data, onClose }: UniversalV
     : isPaymentOut
     ? '💸 PAYMENT VOUCHER'
     : isExpense
-    ? '🔴 EXPENSE STATEMENT SLIP'
+    ? '🔴 FARM EXPENSE VOUCHER'
     : isSale
     ? '🌾 SALE INVOICE / CROP BILL'
     : '📜 ACCOUNT STATEMENT SLIP';
@@ -195,7 +195,7 @@ export function UniversalVoucherSlipModal({ visible, data, onClose }: UniversalV
                   <div class="tagline">${tagline}</div>
                 </div>
                 <div style="text-align: right; font-size: 11px;">
-                  <strong>${voucherNoText}</strong><br/>
+                  <strong>Ref. No: ${voucherNoText}</strong><br/>
                   <span style="color:#64748b;">${data.date}</span>
                 </div>
               </div>
@@ -245,7 +245,7 @@ export function UniversalVoucherSlipModal({ visible, data, onClose }: UniversalV
               </div>
 
               <div class="footer">
-                Computer Generated Official Slip · ${appName} Platform<br/>
+                Computer Generated Official Voucher Slip · ${appName} Platform<br/>
                 Verified & Recorded Entry
               </div>
             </div>
@@ -272,7 +272,7 @@ export function UniversalVoucherSlipModal({ visible, data, onClose }: UniversalV
         <View style={styles.containerCard}>
           {/* Header Action Row */}
           <View style={styles.headerRow}>
-            <Text style={styles.modalTitle}>📄 Official Voucher & Statement Slip</Text>
+            <Text style={styles.modalTitle}>📄 Official Expense Voucher Slip</Text>
             <TouchableOpacity onPress={onClose} style={{ padding: 4 }}>
               <Ionicons name="close-circle" size={24} color="#64748b" />
             </TouchableOpacity>
@@ -286,7 +286,7 @@ export function UniversalVoucherSlipModal({ visible, data, onClose }: UniversalV
               {/* Brand & Voucher Meta Header */}
               <View style={styles.slipHeaderUnified}>
                 <View style={{ flex: 1.2 }}>
-                  <Text style={styles.slipVoucherNo}>{voucherNoText}</Text>
+                  <Text style={styles.slipVoucherNo}>Ref. No: {voucherNoText}</Text>
                   <Text style={styles.slipDateText}>{data.date}</Text>
                 </View>
 

@@ -20,9 +20,11 @@ import { useAuth } from '@/src/store/auth-context';
 import { useLabourDashboard } from '@/src/hooks/useLabour';
 import { formatInr } from '@/src/utils/formatInr';
 import { LabourFamilySwitcher } from '@/src/components/LabourFamilySwitcher';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 export const LabourDashboardView: React.FC = () => {
   const theme = RoleThemes.LABOUR;
+  const { colors: tConfig } = useExecutiveTheme();
   const { user } = useAuth();
   const { data, isLoading } = useLabourDashboard();
 
@@ -111,7 +113,7 @@ export const LabourDashboardView: React.FC = () => {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.bg }]} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { backgroundColor: tConfig.bg }]} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <RoleHeader
         currentRole="LABOUR"

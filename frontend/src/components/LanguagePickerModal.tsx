@@ -4,18 +4,20 @@ import { Ionicons } from '@expo/vector-icons';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useLanguage } from '@/src/store/language-context';
 import { LANGUAGE_OPTIONS } from '@/src/constants/translations';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 export function LanguagePickerModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { language, setLanguage, t } = useLanguage();
+  const { colors } = useExecutiveTheme();
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
           <View style={styles.headerRow}>
-            <Text style={styles.title}>{t('language')}</Text>
-            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-              <Ionicons name="close" size={20} color="#475569" />
+            <Text style={[styles.title, { color: colors.text }]}>{t('language')}</Text>
+            <TouchableOpacity style={[styles.closeBtn, { backgroundColor: colors.bg }]} onPress={onClose}>
+              <Ionicons name="close" size={20} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
 
@@ -25,7 +27,13 @@ export function LanguagePickerModal({ visible, onClose }: { visible: boolean; on
               return (
                 <TouchableOpacity
                   key={option.code}
-                  style={[styles.optionRow, isSelected && styles.optionRowSelected]}
+                  style={[
+                    styles.optionRow,
+                    {
+                      backgroundColor: isSelected ? colors.primaryLight : colors.bg,
+                      borderColor: isSelected ? colors.primary : colors.borderColor || colors.cardBorder,
+                    },
+                  ]}
                   activeOpacity={0.7}
                   onPress={async () => {
                     await setLanguage(option.code);
@@ -33,10 +41,10 @@ export function LanguagePickerModal({ visible, onClose }: { visible: boolean; on
                   }}
                 >
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.optionNative, isSelected && styles.optionTextSelected]}>{option.nativeName}</Text>
-                    <Text style={[styles.optionEnglish, isSelected && styles.optionTextSelected]}>{option.englishName}</Text>
+                    <Text style={[styles.optionNative, { color: isSelected ? colors.primary : colors.text }]}>{option.nativeName}</Text>
+                    <Text style={[styles.optionEnglish, { color: isSelected ? colors.primary : colors.textMuted }]}>{option.englishName}</Text>
                   </View>
-                  {isSelected ? <Ionicons name="checkmark-circle" size={22} color="#16a34a" /> : null}
+                  {isSelected ? <Ionicons name="checkmark-circle" size={22} color={colors.primary} /> : null}
                 </TouchableOpacity>
               );
             })}
@@ -50,7 +58,7 @@ export function LanguagePickerModal({ visible, onClose }: { visible: boolean; on
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: SPACING.lg,
@@ -59,14 +67,14 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 400,
     maxHeight: '80%',
-    backgroundColor: '#ffffff',
     borderRadius: RADIUS.xl,
     padding: SPACING.lg,
+    borderWidth: 1,
     ...premiumShadow('#000000', 'lg'),
   },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
-  title: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a' },
-  closeBtn: { width: 30, height: 30, borderRadius: 15, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
+  title: { fontSize: 16, fontFamily: FONT.extraBold },
+  closeBtn: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   optionRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -75,11 +83,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#f8fafc',
   },
-  optionRowSelected: { borderColor: '#16a34a', backgroundColor: '#f0fdf4' },
-  optionNative: { fontSize: 15, fontFamily: FONT.bold, color: '#0f172a' },
-  optionEnglish: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
-  optionTextSelected: { color: '#15803d' },
+  optionNative: { fontSize: 15, fontFamily: FONT.bold },
+  optionEnglish: { fontSize: 11.5, fontFamily: FONT.medium, marginTop: 1 },
 });

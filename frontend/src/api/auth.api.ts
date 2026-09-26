@@ -54,3 +54,8 @@ export async function forgotPasswordReset(payload: { mobile: string; otp: string
   const { data } = await apiClient.post('/auth/forgot-password/reset', payload);
   return data;
 }
+
+export async function logoutOtherSessions(): Promise<{ success: boolean; message: string; loggedOutCount: number }> {
+  const { data } = await apiClient.post('/auth/logout-other-sessions');
+  return data;
+}

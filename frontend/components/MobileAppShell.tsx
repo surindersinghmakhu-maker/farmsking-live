@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
 import { View, StyleSheet, Platform, useWindowDimensions } from 'react-native';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 interface MobileAppShellProps {
   children: ReactNode;
@@ -7,16 +8,17 @@ interface MobileAppShellProps {
 
 export const MobileAppShell: React.FC<MobileAppShellProps> = ({ children }) => {
   const { width, height } = useWindowDimensions();
+  const { colors } = useExecutiveTheme();
 
   // On Native Mobile or compact web viewports (mobile web browser), render 100% full screen
   if (Platform.OS !== 'web' || width <= 500 || height <= 720) {
-    return <View style={styles.nativeContainer}>{children}</View>;
+    return <View style={[styles.nativeContainer, { backgroundColor: colors.bg }]}>{children}</View>;
   }
 
   // On Desktop/Laptop Web, wrap in a centered Smartphone Frame container
   return (
     <View style={styles.webOuterCanvas}>
-      <View style={styles.phoneFrame}>
+      <View style={[styles.phoneFrame, { backgroundColor: colors.bg, borderColor: colors.isDark ? '#334155' : '#1e293b' }]}>
         {/* Smartphone Speaker / Notch Bar */}
         <View style={styles.notchBar}>
           <View style={styles.notchSpeaker} />
@@ -24,7 +26,7 @@ export const MobileAppShell: React.FC<MobileAppShellProps> = ({ children }) => {
         </View>
 
         {/* App Content viewport */}
-        <View style={styles.phoneViewport}>{children}</View>
+        <View style={[styles.phoneViewport, { backgroundColor: colors.bg }]}>{children}</View>
       </View>
     </View>
   );

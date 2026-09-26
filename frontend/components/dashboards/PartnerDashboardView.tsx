@@ -10,6 +10,7 @@ import { useAuth } from '@/src/store/auth-context';
 import { useMyWallet } from '@/src/hooks/useWallet';
 import { useMyWithdrawals } from '@/src/hooks/useWithdrawals';
 import { useMyReferrals } from '@/src/hooks/useReferrals';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -17,6 +18,7 @@ function startOfDay(d: Date): Date {
 
 export const PartnerDashboardView: React.FC = () => {
   const theme = RoleThemes.BUSINESS_PARTNER;
+  const { colors: tConfig } = useExecutiveTheme();
   const router = useRouter();
   const { user } = useAuth();
   const { data: wallet, isLoading: isLoadingWallet } = useMyWallet();
@@ -59,7 +61,7 @@ export const PartnerDashboardView: React.FC = () => {
   const recentReferrals = (referrals ?? []).slice(0, 5);
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.bg }]} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { backgroundColor: tConfig.bg }]} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <RoleHeader
         currentRole="BUSINESS_PARTNER"

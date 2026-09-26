@@ -339,14 +339,79 @@ export class UsersService implements OnModuleInit {
     return dbUser;
   }
 
-  /** Self-service Account Deletion (Google Play Store Policy Requirement): Soft-deletes user profile. */
+  /** Self-service Account Deletion (Google Play Store Policy Requirement): Soft-deletes & purges PII, profile, wallet balance, and photos. */
   async deleteMe(user: AuthUser) {
+    const dbUser = await this.prisma.user.findUnique({
+      where: { id: user.id },
+      select: { id: true, mobile: true, name: true },
+    });
+
+    if (!dbUser) {
+      throw new NotFoundException('User account not found.');
+    }
+
+    // 1. Zero out & clear remaining wallet balance
+    try {
+      const currentBalance = await this.walletService.getBalance(user.id);
+      if (currentBalance > 0) {
+        await this.walletService.debit(
+          user.id,
+          currentBalance,
+          'Wallet balance zeroed out upon self-service account deletion',
+        );
+      }
+    } catch (e) {
+      console.warn('Failed to clear wallet balance during account deletion:', e);
+    }
+
+    // 2. Soft-delete employer supervisor sub-accounts created under this account
+    try {
+      await this.prisma.user.updateMany({
+        where: { employerFarmerId: user.id },
+        data: { deletedAt: new Date() },
+      });
+    } catch (e) {
+      console.warn('Failed to soft-delete supervisor sub-accounts:', e);
+    }
+
+    // 3. Scrub & anonymize PII (Google Play Store Account Deletion Policy Compliance)
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { deletedAt: new Date() },
+      data: {
+        name: 'Deleted Account',
+        mobile: `deleted_${user.id}_${Date.now()}`,
+        email: null,
+        photoUrl: null,
+        village: null,
+        district: null,
+        state: null,
+        pincode: null,
+        postOffice: null,
+        upiId: null,
+        billPrintingAddress: null,
+        farmName: null,
+        farmAddress: null,
+        farmMobile: null,
+        specialization: null,
+        bio: null,
+        yearsExperience: null,
+        gpsLat: null,
+        gpsLng: null,
+        gpsLocationName: null,
+        securityQuestion: null,
+        securityAnswerHash: null,
+        passwordHash: 'ACCOUNT_DELETED_PERMANENTLY',
+        deletedAt: new Date(),
+      },
     });
-    this.whatsappGroupSyncService.autoRemoveUser(user.id, user.mobile ?? '', user.name ?? 'User').catch(() => {});
-    return { success: true, message: 'Account and associated data deleted successfully.' };
+
+    // 4. Auto-remove from WhatsApp Group
+    this.whatsappGroupSyncService.autoRemoveUser(user.id, dbUser.mobile ?? '', dbUser.name ?? 'User').catch(() => {});
+
+    return {
+      success: true,
+      message: 'Account, profile info, photo, wallet balance, and personal data deleted successfully in accordance with Google Play Store User Data Policy.',
+    };
   }
 
   /** Every user's shareable invite code — reuses their auto-issued personal Coupon (see provisionInviteCoupon). */

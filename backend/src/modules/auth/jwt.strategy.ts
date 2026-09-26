@@ -5,9 +5,12 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 
+import { UserSessionService } from './user-session.service';
+
 interface JwtPayload {
   sub: string;
   role: string;
+  sid?: string;
 }
 
 @Injectable()
@@ -15,6 +18,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     configService: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly userSessionService: UserSessionService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -31,6 +35,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     if (!user) {
       throw new UnauthorizedException();
+    }
+
+    if (payload.sid) {
+      const isValid = this.userSessionService.isValidSession(user.id, payload.sid);
+      if (!isValid) {
+        throw new UnauthorizedException(
+          '⚠️ Session Terminated: Your account was logged in on another device. Oldest session logged out automatically.',
+        );
+      }
+      this.userSessionService.touchSession(user.id, payload.sid);
+      (user as any).sessionId = payload.sid;
     }
 
     return user;

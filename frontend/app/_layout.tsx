@@ -20,6 +20,7 @@ import { RoleProvider } from '@/src/store/role-context';
 import { CropsProvider } from '@/src/store/crops-context';
 import { CartProvider } from '@/src/store/cart-context';
 import { LanguageProvider } from '@/src/store/language-context';
+import { ExecutiveThemeProvider } from '@/src/store/theme-context';
 import { SplashView } from '@/components/SplashView';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -28,9 +29,11 @@ SplashScreen.preventAutoHideAsync();
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 10_000,
+      staleTime: 60 * 1000,
       gcTime: 10 * 60 * 1000,
       refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      retry: 1,
     },
   },
 });
@@ -90,20 +93,22 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
-        <AuthProvider>
-          <RoleProvider>
-            <CropsProvider>
-              <CartProvider>
-                <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-                  <MobileAppShell>
-                    <RootNavigation />
-                    <StatusBar style="auto" />
-                  </MobileAppShell>
-                </ThemeProvider>
-              </CartProvider>
-            </CropsProvider>
-          </RoleProvider>
-        </AuthProvider>
+        <ExecutiveThemeProvider>
+          <AuthProvider>
+            <RoleProvider>
+              <CropsProvider>
+                <CartProvider>
+                  <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                    <MobileAppShell>
+                      <RootNavigation />
+                      <StatusBar style="auto" />
+                    </MobileAppShell>
+                  </ThemeProvider>
+                </CartProvider>
+              </CropsProvider>
+            </RoleProvider>
+          </AuthProvider>
+        </ExecutiveThemeProvider>
       </LanguageProvider>
     </QueryClientProvider>
   );

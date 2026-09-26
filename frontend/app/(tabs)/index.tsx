@@ -15,8 +15,11 @@ import { OperatorDashboardView } from '@/components/dashboards/OperatorDashboard
 import { LabourDashboardView } from '@/components/dashboards/LabourDashboardView';
 import { AdminChatModal } from '@/src/components/AdminChatModal';
 
+import { useExecutiveTheme } from '@/src/store/theme-context';
+
 export default function HomeScreen() {
   const { role: currentRole } = useRole();
+  const { colors } = useExecutiveTheme();
   const [showAdminChatModal, setShowAdminChatModal] = useState(false);
 
   const theme = RoleThemes[currentRole] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER;
@@ -52,9 +55,9 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.bg }]}>
-      <StatusBar barStyle="light-content" backgroundColor={theme.headerBg} />
-      <View style={[styles.container, { backgroundColor: theme.bg }]}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.bg }]}>
+      <StatusBar barStyle={colors.statusBarStyle === 'light' ? 'light-content' : 'dark-content'} backgroundColor={colors.headerBg} />
+      <View style={[styles.container, { backgroundColor: colors.bg }]}>
         {renderDashboardView()}
 
         {/* Admin Chat Modal for Farmers */}

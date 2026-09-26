@@ -1,8 +1,8 @@
 import * as SecureStore from '../lib/storage';
 import { createContext, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
-import { AppState } from 'react-native';
+import { AppState, Alert } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
-import { login as apiLogin, registerFarmer as apiRegister, LoginPayload, RegisterPayload } from '../api/auth.api';
+import { login as apiLogin, registerFarmer as apiRegister, logoutOtherSessions, LoginPayload, RegisterPayload } from '../api/auth.api';
 import { getMe } from '../api/users.api';
 import { setUnauthorizedHandler, TOKEN_KEY } from '../api/client';
 import { disconnectChatSocket } from '../lib/socket';
@@ -68,14 +68,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user?.id]);
 
   useEffect(() => {
-    setUnauthorizedHandler(() => {
+    setUnauthorizedHandler((msg?: string) => {
       SecureStore.deleteItemAsync(TOKEN_KEY);
       SecureStore.deleteItemAsync(USER_KEY);
       setUser(null);
       disconnectChatSocket();
-      // Wipe every cached query — otherwise the next account to log in on this device/browser
-      // can briefly see the previous account's data (parties, wallet, bills...) from cache.
       queryClient.clear();
+
+      if (msg && (msg.includes('Session Terminated') || msg.includes('logged in on another device'))) {
+        Alert.alert(
+          '⚠️ Active Session Terminated (ਸੈਸ਼ਨ ਸਮਾਪਤ)',
+          'Your account was logged in on another device. As per maximum 2 device policy, the oldest session was automatically logged out.\n\n(ਤੁਹਾਡਾ ਖਾਤਾ ਕਿਸੇ ਹੋਰ ਡਿਵਾਈਸ ਤੇ ਲੌਗਇਨ ਹੋਇਆ ਹੈ। 2 ਡਿਵਾਈਸ ਨਿਯਮ ਅਨੁਸਾਰ ਪੁਰਾਣਾ ਲੌਗਇਨ ਆਪਣੇ ਆਪ ਸਮਾਪਤ ਹੋ ਗਿਆ ਹੈ।)',
+          [{ text: 'OK' }]
+        );
+      }
     });
     return () => setUnauthorizedHandler(null);
   }, [queryClient]);
@@ -97,6 +103,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login: async (payload) => {
         const response = await apiLogin(payload);
         await persistSession(response.accessToken, response.user);
+
+        if (response.sessionMeta?.warningMessage || response.sessionMeta?.hasMultipleLogins) {
+          const meta = response.sessionMeta;
+          if (meta?.evictedOldest) {
+            Alert.alert(
+              '⚠️ Notice: Old Session Auto Logged Out (ਪੁਰਾਣਾ ਲੌਗਇਨ ਬੰਦ)',
+              'You logged in on a 3rd device. Limit is 2 devices. The oldest active session was automatically logged out.\n\n(2 ਤੋਂ ਵੱਧ ਲੌਗਇਨ ਹੋਣ ਕਰਕੇ ਸਭ ਤੋਂ ਪਹਿਲਾਂ ਵਾਲਾ ਡਿਵਾਈਸ ਆਟੋਮੈਟਿਕ ਲੌਗ ਆਉਟ ਕਰ ਦਿੱਤਾ ਗਿਆ ਹੈ।)',
+              [{ text: 'OK (ਠੀਕ ਹੈ)' }]
+            );
+          } else if (meta?.hasMultipleLogins) {
+            Alert.alert(
+              '⚠️ Multiple Devices Logged In (ਬਹੁ-ਡਿਵਾਈਸ ਲੌਗਇਨ alert)',
+              `Your account is currently logged in on ${meta.totalActiveSessions} devices.\n\nWould you like to auto log out all other devices right now?\n(ਤੁਹਾਡੀ ID 1 ਤੋਂ ਵੱਧ ਡਿਵਾਈਸ ਤੇ ਲੌਗਇਨ ਹੈ। ਕੀ ਤੁਸੀਂ ਬਾਕੀ ਸਾਰੇ ਪੁਰਾਣੇ ਲੌਗਇਨ ਲੌਗ ਆਉਟ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?)`,
+              [
+                { text: 'Keep Both (ਰਹਿਣ ਦਿਓ)', style: 'cancel' },
+                {
+                  text: 'Logout Other Devices (ਬਾਕੀ ਲੌਗਆਉਟ ਕਰੋ)',
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      const res = await logoutOtherSessions();
+                      Alert.alert('✅ Success', res.message || 'All other active devices logged out successfully.');
+                    } catch (err: any) {
+                      Alert.alert('Error', err.response?.data?.message || 'Could not logout other devices.');
+                    }
+                  },
+                },
+              ]
+            );
+          }
+        }
       },
       register: async (payload) => {
         const response = await apiRegister(payload);

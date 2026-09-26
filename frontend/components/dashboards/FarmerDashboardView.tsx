@@ -22,8 +22,9 @@ import { KisanCropIntelligenceCard } from '@/src/components/KisanCropIntelligenc
 import { CropAdvisoryPromoCard } from '@/src/components/CropAdvisoryPromoCard';
 import { OpenMeteoWeatherCard } from '@/src/components/OpenMeteoWeatherCard';
 import { FarmLocationProfileModal } from '@/src/components/FarmLocationProfileModal';
-import { FarmerPortalUpgradeSection, ExecutiveTheme } from '@/src/components/FarmerPortalUpgradeSection';
+import { FarmerPortalUpgradeSection } from '@/src/components/FarmerPortalUpgradeSection';
 import { SupervisorManagementModal } from '@/src/components/SupervisorManagementModal';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 
 const tap = () => {
@@ -45,14 +46,23 @@ const PLAN_ICON_MAP: Record<string, { icon: keyof typeof Ionicons.glyphMap; colo
 };
 
 export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpenAdminChat }) => {
-  const theme = RoleThemes.FARMER;
   const router = useRouter();
   const { user } = useAuth();
+  const { executiveTheme, setExecutiveTheme, colors } = useExecutiveTheme();
+  const theme = {
+    ...RoleThemes.FARMER,
+    primary: colors.primary,
+    primaryDark: colors.headerBg,
+    primaryLight: colors.primaryLight,
+    bg: colors.bg,
+    cardBg: colors.cardBg,
+    cardBorder: colors.cardBorder,
+    text: colors.text,
+  };
   const { plan, meta, startDate, endDate, isExpired, inGrace, daysUntilExpiry } = useFarmerPlan();
   const { data: pricing } = useFarmerPlanPricing();
   const activateTrialMutation = useActivateTrial();
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
-  const [executiveTheme, setExecutiveTheme] = useState<ExecutiveTheme>('EMERALD');
   const currentPlanMeta = PLAN_ICON_MAP[plan] || { icon: 'crown', color: '#d97706' };
 
   const isTrialActive =
@@ -98,12 +108,12 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
   const pricingList = Array.isArray(pricing) ? pricing : (pricing as any)?.items || (pricing as any)?.data || [];
   const planPrice = pricingList.find((p: any) => p.plan === plan)?.price;
 
-  const planActionLabel = 'Farmer Pass';
+  const planActionLabel = 'Membership';
 
   const [modalInitialMode, setModalInitialMode] = useState<'GET_COUPON' | 'REDEEM_CODE'>('GET_COUPON');
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.bg }]} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <RoleHeader
         currentRole="FARMER"
@@ -196,9 +206,8 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         <OpenMeteoWeatherCard />
 
         {/* Quick Accounts & Payments Action Grid */}
-
-        <View style={styles.quickAccountsCard}>
-          <Text style={styles.quickAccountsTitle}>📊 Quick Accounts & Payments</Text>
+        <View style={[styles.quickAccountsCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }]}>
+          <Text style={[styles.quickAccountsTitle, { color: colors.text }]}>📊 Quick Accounts & Payments</Text>
           <View style={styles.quickAccountsGrid}>
             {/* Button 1: + Add Sale */}
             <TouchableOpacity
@@ -263,7 +272,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         {/* Farm Action Grid — Executive Compact Tool Layout */}
         <View style={styles.actionGrid}>
           <TouchableOpacity
-            style={[styles.actionCard, premiumShadow('#0f172a', 'sm')]}
+            style={[styles.actionCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}
             activeOpacity={0.8}
             onPress={() => {
               tap();
@@ -274,75 +283,13 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
               <Ionicons name="location" size={19} color="#b45309" />
             </View>
             <View style={styles.actionCardTextGroup}>
-              <Text style={styles.actionCardTitle} numberOfLines={1}>Farm GPS Location</Text>
-              <Text style={styles.actionCardSub} numberOfLines={1}>1-Tap GPS Lock</Text>
+              <Text style={[styles.actionCardTitle, { color: colors.text }]} numberOfLines={1}>Farm GPS Location</Text>
+              <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>1-Tap GPS Lock</Text>
             </View>
           </TouchableOpacity>
 
-          {/* Executive Theme Card with Compact Integrated Option Buttons */}
-          <View style={[styles.actionCard, { flexDirection: 'column', alignItems: 'stretch', justifyContent: 'center', paddingVertical: 6, paddingHorizontal: 8, gap: 3 }, premiumShadow('#0f172a', 'sm')]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <View style={[styles.actionIconBg, { backgroundColor: '#f0fdf4', width: 26, height: 26, borderRadius: 8 }]}>
-                <Ionicons name="color-palette" size={15} color="#047857" />
-              </View>
-              <Text style={[styles.actionCardTitle, { fontSize: 11 }]} numberOfLines={1}>Executive Theme</Text>
-            </View>
-
-            <View style={{ flexDirection: 'row', gap: 3, marginTop: 1 }}>
-              {(['EMERALD', 'DARK', 'GOLD'] as const).map((thKey) => {
-                const isActive = executiveTheme === thKey;
-                const config = {
-                  EMERALD: { label: 'Emerald', icon: 'leaf' as const, bg: '#047857' },
-                  DARK: { label: 'Dark', icon: 'moon' as const, bg: '#0f172a' },
-                  GOLD: { label: 'Gold', icon: 'sparkles' as const, bg: '#d97706' },
-                }[thKey];
-
-                return (
-                  <TouchableOpacity
-                    key={thKey}
-                    style={[
-                      {
-                        flex: 1,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 2,
-                        paddingVertical: 3.5,
-                        borderRadius: RADIUS.pill,
-                        backgroundColor: '#f8fafc',
-                        borderWidth: 1,
-                        borderColor: '#cbd5e1',
-                      },
-                      isActive && { backgroundColor: config.bg, borderColor: config.bg },
-                    ]}
-                    onPress={() => {
-                      tap();
-                      setExecutiveTheme(thKey);
-                    }}
-                  >
-                    <Ionicons
-                      name={config.icon}
-                      size={9.5}
-                      color={isActive ? '#ffffff' : '#475569'}
-                    />
-                    <Text
-                      style={[
-                        { fontSize: 8.5, fontFamily: FONT.bold, color: '#334155' },
-                        isActive && { color: '#ffffff', fontFamily: FONT.extraBold },
-                      ]}
-                      numberOfLines={1}
-                      adjustsFontSizeToFit
-                    >
-                      {config.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
           <TouchableOpacity
-            style={[styles.actionCard, premiumShadow('#0f172a', 'sm')]}
+            style={[styles.actionCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}
             activeOpacity={0.8}
             onPress={() => {
               tap();
@@ -358,13 +305,13 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
               <Ionicons name="scan-circle" size={19} color="#15803d" />
             </View>
             <View style={styles.actionCardTextGroup}>
-              <Text style={styles.actionCardTitle} numberOfLines={1}>AI Disease Scanner</Text>
-              <Text style={styles.actionCardSub} numberOfLines={1}>Instant Leaf Scan</Text>
+              <Text style={[styles.actionCardTitle, { color: colors.text }]} numberOfLines={1}>AI Disease Scanner</Text>
+              <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>Instant Leaf Scan</Text>
             </View>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.actionCard, premiumShadow('#0f172a', 'sm')]}
+            style={[styles.actionCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}
             activeOpacity={0.8}
             onPress={() => {
               tap();
@@ -375,14 +322,14 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
               <Ionicons name="chatbubbles" size={19} color="#15803d" />
             </View>
             <View style={styles.actionCardTextGroup}>
-              <Text style={styles.actionCardTitle} numberOfLines={1}>Admin Support</Text>
-              <Text style={styles.actionCardSub} numberOfLines={1}>Chat Live</Text>
+              <Text style={[styles.actionCardTitle, { color: colors.text }]} numberOfLines={1}>Admin Support</Text>
+              <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>Chat Live</Text>
             </View>
           </TouchableOpacity>
         </View>
 
         {/* 🌟 Executive Smart Farming Portal 7-Feature Upgrade Section */}
-        <FarmerPortalUpgradeSection executiveTheme={executiveTheme} />
+        <FarmerPortalUpgradeSection />
 
       </View>
 

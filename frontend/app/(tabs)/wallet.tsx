@@ -24,6 +24,8 @@ import { CopyButton } from '@/src/components/CopyButton';
 import { RedeemForFarmerModal } from '@/src/components/RedeemForFarmerModal';
 import { CouponCardPreview, FarmerPlanCouponCardPreview, useShareCouponAsJpg } from '@/src/components/CouponCardPreview';
 
+import { useExecutiveTheme } from '@/src/store/theme-context';
+
 type RoleTheme = (typeof RoleThemes)[keyof typeof RoleThemes];
 const staticTheme = RoleThemes.BUSINESS_PARTNER;
 
@@ -46,6 +48,7 @@ function couponPlanAmount(pricing: FarmerPlanPricing[], plan: FarmerPlanType, da
 export default function WalletScreen() {
   const { user } = useAuth();
   const { role: currentRole } = useRole();
+  const { colors } = useExecutiveTheme();
   const theme = RoleThemes[currentRole] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER;
   const { data: wallet, isLoading: isLoadingWallet } = useMyWallet();
   const { data: referralData } = useReferralStatement();
@@ -65,7 +68,7 @@ export default function WalletScreen() {
   const isAdvisorOrPartner = isAdvisor || isPartner;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <View style={styles.hero}>
         <Text style={styles.heroTitle}>My Wallet</Text>
         {user?.kingId ? (

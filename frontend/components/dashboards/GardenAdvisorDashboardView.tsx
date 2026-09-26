@@ -16,6 +16,7 @@ import { RoleHeader } from './RoleHeader';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { apiClient } from '@/src/api/client';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 interface AdvisorTask {
   id: string;
@@ -33,6 +34,7 @@ const tap = () => {
 
 export const GardenAdvisorDashboardView: React.FC = () => {
   const theme = RoleThemes.GARDEN_ADVISOR;
+  const { colors: tConfig } = useExecutiveTheme();
 
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [tasks, setTasks] = useState<AdvisorTask[]>([
@@ -106,7 +108,7 @@ export const GardenAdvisorDashboardView: React.FC = () => {
   const completedCount = tasks.filter((t) => t.completed).length;
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.bg }]} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { backgroundColor: tConfig.bg }]} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <RoleHeader
         currentRole="GARDEN_ADVISOR"

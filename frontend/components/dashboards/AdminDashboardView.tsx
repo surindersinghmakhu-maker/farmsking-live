@@ -11,9 +11,11 @@ import { useAdminConversations } from '@/src/hooks/useAdminChat';
 import { AdminSupportModal } from '@/src/components/AdminSupportModal';
 import { useCrops } from '@/src/store/crops-context';
 import { SwitchDashboardSection } from '@/src/components/SwitchDashboardSection';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 export const AdminDashboardView: React.FC = () => {
   const theme = RoleThemes.ADMIN;
+  const { colors: tConfig } = useExecutiveTheme();
   const router = useRouter();
   const { user } = useAuth();
   const { gpsUnlockRequests, acceptGpsUnlockRequest, declineGpsUnlockRequest } = useCrops();
@@ -30,7 +32,7 @@ export const AdminDashboardView: React.FC = () => {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.bg }]} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { backgroundColor: tConfig.bg }]} showsVerticalScrollIndicator={false}>
       <RoleHeader
         currentRole="ADMIN"
         profileName={user?.name || 'Admin'}

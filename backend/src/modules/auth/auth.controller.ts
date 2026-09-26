@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -6,6 +6,9 @@ import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordStartDto } from './dto/forgot-password-start.dto';
 import { ForgotPasswordVerifyDto } from './dto/forgot-password-verify.dto';
 import { ForgotPasswordResetDto } from './dto/forgot-password-reset.dto';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import type { AuthUser } from '../../common/types/auth-user.type';
 
 @Controller('auth')
 export class AuthController {
@@ -28,6 +31,13 @@ export class AuthController {
   @Post('login')
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('logout-other-sessions')
+  logoutOtherSessions(@CurrentUser() user: AuthUser & { sessionId?: string }) {
+    return this.authService.logoutOtherSessions(user.id, user.sessionId);
   }
 
   @Throttle({ default: { limit: 5, ttl: 60_000 } })

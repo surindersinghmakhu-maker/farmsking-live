@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Modal } fr
 import { Ionicons } from '@expo/vector-icons';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 interface WeatherData {
   temp: number;
@@ -171,6 +172,7 @@ async function getCoordsForPincode(
 
 export function OpenMeteoWeatherCard() {
   const { user } = useAuth();
+  const { colors } = useExecutiveTheme();
   const [data, setData] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -258,76 +260,78 @@ export function OpenMeteoWeatherCard() {
     <>
       <TouchableOpacity
         activeOpacity={0.92}
-      onPress={() => setExpanded(!expanded)}
-      style={[styles.card, premiumShadow('#0f172a', 'sm')]}
-    >
-      {/* Compact Header Bar */}
-      <View style={styles.headerRow}>
-        <View style={styles.headerLeft}>
-          <View style={styles.liveTag}>
-            <Text style={styles.liveTagText}>
-              {user?.locationPreference === 'GPS' ? '📡 LIVE GPS SATELLITE' : '🏠 PIN WEATHER'}
+        onPress={() => setExpanded(!expanded)}
+        style={[styles.card, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}
+      >
+        {/* Compact Header Bar */}
+        <View style={styles.headerRow}>
+          <View style={styles.headerLeft}>
+            <View style={[styles.liveTag, { backgroundColor: colors.primary }]}>
+              <Text style={styles.liveTagText}>
+                {user?.locationPreference === 'GPS' ? '📡 LIVE GPS SATELLITE' : '🏠 PIN WEATHER'}
+              </Text>
+            </View>
+            <Text style={[styles.locationText, { color: colors.primary }]} numberOfLines={1}>
+              📍 {data?.locationName || (user?.pincode ? `PIN ${user.pincode}` : `${user?.district || 'Punjab'}`)}
             </Text>
           </View>
-          <Text style={styles.locationText} numberOfLines={1}>
-            📍 {data?.locationName || (user?.pincode ? `PIN ${user.pincode}` : `${user?.district || 'Punjab'}`)}
-          </Text>
+
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={styles.sirenHeaderBtn}
+              onPress={(e) => {
+                e.stopPropagation?.();
+                setShowSirenModal(true);
+              }}
+            >
+              <Ionicons name="warning" size={11} color="#ffffff" />
+              <Text style={styles.sirenHeaderBtnText}>Siren 🚨</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.refreshBtn, colors.isDark && { backgroundColor: '#1e293b' }]}
+              onPress={(e) => {
+                e.stopPropagation?.();
+                fetchWeather();
+              }}
+            >
+              <Ionicons name="refresh" size={13} color={colors.primary} />
+            </TouchableOpacity>
+            <Ionicons
+              name={expanded ? 'chevron-up-circle-outline' : 'chevron-down-circle-outline'}
+              size={18}
+              color={colors.primary}
+            />
+          </View>
         </View>
 
-        <View style={styles.headerRight}>
-          <TouchableOpacity
-            style={styles.sirenHeaderBtn}
-            onPress={(e) => {
-              e.stopPropagation?.();
-              setShowSirenModal(true);
-            }}
-          >
-            <Ionicons name="warning" size={11} color="#ffffff" />
-            <Text style={styles.sirenHeaderBtnText}>Siren 🚨</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.refreshBtn}
-            onPress={(e) => {
-              e.stopPropagation?.();
-              fetchWeather();
-            }}
-          >
-            <Ionicons name="refresh" size={13} color="#0284c7" />
-          </TouchableOpacity>
-          <Ionicons
-            name={expanded ? 'chevron-up-circle-outline' : 'chevron-down-circle-outline'}
-            size={18}
-            color="#0284c7"
-          />
-        </View>
-      </View>
-
-      {loading ? (
-        <View style={styles.centerBoxCompact}>
-          <ActivityIndicator size="small" color="#0284c7" />
-          <Text style={styles.loadingText}>Fetching live weather...</Text>
-        </View>
-      ) : error || !data ? (
-        <View style={styles.centerBoxCompact}>
-          <Text style={styles.errorText}>Weather service unavailable</Text>
-          <TouchableOpacity style={styles.retryBtn} onPress={fetchWeather}>
-            <Text style={styles.retryText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <View style={styles.contentBody}>
-          {/* Collapsed Compact Row */}
-          {!expanded && (
-            <View style={styles.compactBar}>
-              <View style={styles.compactBarLeft}>
-                <Ionicons name={data.conditionIcon} size={24} color="#0284c7" />
-                <Text style={styles.compactTempText}>{data.temp}°C</Text>
-                <Text style={styles.compactConditionText} numberOfLines={1}>{data.conditionText}</Text>
-                <View style={styles.metricDotDivider} />
-                <Text style={styles.compactMetricsText} numberOfLines={1}>
-                  💧 {data.humidity}% · 💨 {data.windSpeed}km/h
-                </Text>
+        {loading ? (
+          <View style={styles.centerBoxCompact}>
+            <ActivityIndicator size="small" color={colors.primary} />
+            <Text style={[styles.loadingText, { color: colors.textMuted }]}>Fetching live weather...</Text>
+          </View>
+        ) : error || !data ? (
+          <View style={styles.centerBoxCompact}>
+            <Text style={[styles.errorText, { color: colors.textMuted }]}>Weather service unavailable</Text>
+            <TouchableOpacity style={[styles.retryBtn, { backgroundColor: colors.primary }]} onPress={fetchWeather}>
+              <Text style={styles.retryText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.contentBody}>
+            {/* Collapsed Compact Row */}
+            {!expanded && (
+              <>
+                <View style={[styles.compactBar, { backgroundColor: colors.isDark ? '#1e293b' : '#f8fafc', borderColor: colors.isDark ? '#334155' : '#f1f5f9' }]}>
+                <View style={styles.compactBarLeft}>
+                  <Ionicons name={data.conditionIcon} size={24} color={colors.primary} />
+                  <Text style={[styles.compactTempText, { color: colors.text }]}>{data.temp}°C</Text>
+                  <Text style={[styles.compactConditionText, { color: colors.primary }]} numberOfLines={1}>{data.conditionText}</Text>
+                  <View style={styles.metricDotDivider} />
+                  <Text style={[styles.compactMetricsText, { color: colors.textMuted }]} numberOfLines={1}>
+                    💧 {data.humidity}% · 💨 {data.windSpeed}km/h
+                  </Text>
+                </View>
               </View>
 
               <View
@@ -350,8 +354,8 @@ export function OpenMeteoWeatherCard() {
                   {data.isSpraySafe ? 'Spray Safe' : 'Avoid Spray'}
                 </Text>
               </View>
-            </View>
-          )}
+              </>
+            )}
 
           {/* Expanded Executive Details View */}
           {expanded && (

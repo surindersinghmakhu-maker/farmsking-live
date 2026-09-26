@@ -7,10 +7,12 @@ import { useAuth } from '@/src/store/auth-context';
 import { useFulfillmentQueue } from '@/src/hooks/useOrders';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const theme = RoleThemes.OPERATOR;
 
 export const OperatorDashboardView: React.FC = () => {
+  const { colors: tConfig } = useExecutiveTheme();
   const router = useRouter();
   const { user } = useAuth();
   const { data: queue } = useFulfillmentQueue();
@@ -20,7 +22,7 @@ export const OperatorDashboardView: React.FC = () => {
   const packed = (queue ?? []).filter((o) => o.status === 'PACKED').length;
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.bg }]} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { backgroundColor: tConfig.bg }]} showsVerticalScrollIndicator={false}>
       <RoleHeader currentRole="OPERATOR" profileName={user?.name || 'Operator'} subtitle="Printing, Packing & Dispatch" />
 
       <View style={styles.content}>

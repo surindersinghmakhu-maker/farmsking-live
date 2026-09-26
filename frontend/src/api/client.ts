@@ -105,7 +105,7 @@ export async function testServerConnection(customBaseUrl?: string): Promise<{ su
   }
 }
 
-type UnauthorizedHandler = () => void;
+type UnauthorizedHandler = (message?: string) => void;
 let onUnauthorized: UnauthorizedHandler | null = null;
 
 export function setUnauthorizedHandler(handler: UnauthorizedHandler | null) {
@@ -116,7 +116,8 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      onUnauthorized?.();
+      const msg = error.response?.data?.message || '';
+      onUnauthorized?.(msg);
     }
     return Promise.reject(error);
   },

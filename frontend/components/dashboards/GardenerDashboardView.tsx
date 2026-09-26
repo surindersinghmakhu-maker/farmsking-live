@@ -17,6 +17,7 @@ import { RoleHeader } from './RoleHeader';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { apiClient } from '@/src/api/client';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 interface ScheduleItem {
   id: string;
@@ -33,6 +34,7 @@ const tap = () => {
 
 export const GardenerDashboardView: React.FC = () => {
   const theme = RoleThemes.GARDENER;
+  const { colors: tConfig } = useExecutiveTheme();
 
   const [isLoading, setIsLoading] = useState(false);
   const [dashboardData, setDashboardData] = useState<any>(null);
@@ -111,7 +113,7 @@ export const GardenerDashboardView: React.FC = () => {
   const progressPercent = Math.round((completedCount / (schedule.length || 1)) * 100);
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.bg }]} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { backgroundColor: tConfig.bg }]} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <RoleHeader
         currentRole="GARDENER"

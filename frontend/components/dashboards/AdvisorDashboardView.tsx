@@ -25,6 +25,7 @@ import type { FarmerWeatherAlert } from '@/src/api/weather.api';
 import { CropActivitySchedule, AdvisorReviewCropCycle, CropProblem } from '@/src/types/api';
 import { useGroupVoiceCall } from '@/src/hooks/useGroupVoiceCall';
 import { GroupVoiceCallModal } from '@/src/components/chat/GroupVoiceCallModal';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 type TabKey = 'SUBMISSIONS' | 'DELAYED' | 'TODAY' | 'WEATHER' | 'NO_SCHEDULE' | 'PROBLEMS';
 
@@ -101,6 +102,7 @@ const TAB_ORDER: TabKey[] = ['SUBMISSIONS', 'DELAYED', 'TODAY', 'WEATHER', 'NO_S
 const theme = RoleThemes.FARM_ADVISOR;
 
 export const AdvisorDashboardView: React.FC = () => {
+  const { colors: tConfig } = useExecutiveTheme();
   const router = useRouter();
   const { user } = useAuth();
   const { data: farmerStats } = useFarmerStats();
@@ -200,7 +202,7 @@ export const AdvisorDashboardView: React.FC = () => {
 
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView style={[styles.container, { backgroundColor: theme.bg }]} showsVerticalScrollIndicator={false}>
+      <ScrollView style={[styles.container, { backgroundColor: tConfig.bg }]} showsVerticalScrollIndicator={false}>
         <RoleHeader
           currentRole="FARM_ADVISOR"
           profileName={user?.name || 'Advisor'}

@@ -15,6 +15,7 @@ import { useChatUnreadCount, useGlobalChatUnreadSync } from '@/src/hooks/useChat
 import { TranslationKey } from '@/src/constants/translations';
 import { useCart } from '@/src/store/cart-context';
 import { BrandLogo } from '@/src/components/BrandLogo';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 import { Ionicons } from '@expo/vector-icons';
 
@@ -152,6 +153,7 @@ export default function TabLayout() {
   const { role } = useRole();
   const { t, language, setLanguage } = useLanguage();
   const { user } = useAuth();
+  const { colors } = useExecutiveTheme();
   const config = ROLE_TABS[role] || ROLE_TABS.FARMER;
   const visible = new Set(config ? config.tabs : ['index', 'shop', 'farm', 'records', 'wallet', 'more']);
 
@@ -191,10 +193,10 @@ export default function TabLayout() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       {/* 💻 DESKTOP TOP NAVIGATION HEADER MENU (Visible on screens >= 768px) */}
       {isDesktop && (
-        <View style={desktopStyles.headerBar}>
+        <View style={[desktopStyles.headerBar, { backgroundColor: colors.headerBg, borderBottomColor: colors.cardBorder }]}>
           <View style={desktopStyles.headerLeft}>
             <TouchableOpacity style={desktopStyles.brandLogoBox} activeOpacity={0.8} onPress={() => router.push('/(tabs)')}>
               <BrandLogo size={36} useFastBundledOnly={true} />
@@ -217,7 +219,7 @@ export default function TabLayout() {
                   style={[desktopStyles.navMenuItem, isActive && desktopStyles.navMenuItemActive]}
                   onPress={() => handleNavigate(tabName)}
                 >
-                  <Ionicons name={iconName} size={17} color={isActive ? '#38bdf8' : '#94a3b8'} />
+                  <Ionicons name={iconName} size={17} color={isActive ? colors.primary : colors.tabBarInactive} />
                   <Text style={[desktopStyles.navMenuItemText, isActive && desktopStyles.navMenuItemTextActive]}>
                     {title}
                   </Text>
@@ -258,8 +260,8 @@ export default function TabLayout() {
       <View style={{ flex: 1 }}>
         <Tabs
           screenOptions={{
-            tabBarActiveTintColor: theme.primary,
-            tabBarInactiveTintColor: '#94a3b8',
+            tabBarActiveTintColor: colors.tabBarActive,
+            tabBarInactiveTintColor: colors.tabBarInactive,
             tabBarLabelStyle: { fontFamily: FONT.bold, fontSize: 10.5 },
             headerShown: false,
             tabBarButton: (props: any) => <HapticTab {...props} />,
@@ -268,6 +270,8 @@ export default function TabLayout() {
               ios: {
                 position: 'absolute',
                 display: isDesktop ? 'none' : 'flex',
+                backgroundColor: colors.tabBarBg,
+                borderTopColor: colors.tabBarBorder,
               },
               default: {
                 display: isDesktop ? 'none' : 'flex',
@@ -277,8 +281,9 @@ export default function TabLayout() {
                 maxWidth: 520,
                 width: '100%',
                 alignSelf: 'center',
-                backgroundColor: '#ffffff',
-                borderTopWidth: 0,
+                backgroundColor: colors.tabBarBg,
+                borderTopWidth: 1,
+                borderTopColor: colors.tabBarBorder,
                 ...premiumShadow('#0f172a', 'sm'),
               },
             }),

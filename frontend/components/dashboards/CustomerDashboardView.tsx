@@ -8,6 +8,7 @@ import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
 import { useProducts } from '@/src/hooks/useProducts';
 import { formatInr } from '@/src/utils/formatInr';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 type SortMode = 'RECENT' | 'CATEGORY' | 'PRICE_LOW' | 'PRICE_HIGH';
 
@@ -22,6 +23,7 @@ const PAGE_SIZE = 30;
 
 export const CustomerDashboardView: React.FC = () => {
   const theme = RoleThemes.CUSTOMER;
+  const { colors: tConfig } = useExecutiveTheme();
   const router = useRouter();
   const { user } = useAuth();
   const { data: products } = useProducts();
@@ -49,7 +51,7 @@ export const CustomerDashboardView: React.FC = () => {
   const hasMore = visibleCount < sortedProducts.length;
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.bg }]} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { backgroundColor: tConfig.bg }]} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <RoleHeader
         currentRole="CUSTOMER"

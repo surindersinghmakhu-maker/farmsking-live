@@ -7,84 +7,33 @@ import {
   Modal,
   Platform,
   Alert,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { formatInr } from '@/src/utils/formatInr';
+import { FarmerPlanUpgradeModal } from './FarmerPlanUpgradeModal';
+import { useExecutiveTheme, EXECUTIVE_THEME_CONFIG, ExecutiveTheme } from '@/src/store/theme-context';
+
+export type { ExecutiveTheme };
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-};
-
-export type ExecutiveTheme = 'EMERALD' | 'DARK' | 'GOLD';
-
-const THEME_CONFIG: Record<
-  ExecutiveTheme,
-  {
-    name: string;
-    icon: keyof typeof Ionicons.glyphMap;
-    headerGradient: [string, string, string];
-    cardBg: string;
-    borderColor: string;
-    titleColor: string;
-    subColor: string;
-    accentColor: string;
-    badgeBg: string;
-    badgeText: string;
-  }
-> = {
-  EMERALD: {
-    name: 'Royal Emerald',
-    icon: 'leaf',
-    headerGradient: ['#064e3b', '#047857', '#065f46'],
-    cardBg: '#ffffff',
-    borderColor: '#e2e8f0',
-    titleColor: '#0f172a',
-    subColor: '#64748b',
-    accentColor: '#047857',
-    badgeBg: 'rgba(251, 191, 36, 0.18)',
-    badgeText: '#fbbf24',
-  },
-  DARK: {
-    name: 'Midnight Dark',
-    icon: 'moon',
-    headerGradient: ['#0f172a', '#1e293b', '#334155'],
-    cardBg: 'rgba(30, 41, 59, 0.92)',
-    borderColor: '#334155',
-    titleColor: '#f8fafc',
-    subColor: '#94a3b8',
-    accentColor: '#38bdf8',
-    badgeBg: 'rgba(56, 189, 248, 0.2)',
-    badgeText: '#38bdf8',
-  },
-  GOLD: {
-    name: 'Golden Harvest',
-    icon: 'sparkles',
-    headerGradient: ['#78350f', '#b45309', '#d97706'],
-    cardBg: '#fffbeb',
-    borderColor: '#fde68a',
-    titleColor: '#78350f',
-    subColor: '#b45309',
-    accentColor: '#d97706',
-    badgeBg: 'rgba(255, 255, 255, 0.25)',
-    badgeText: '#ffffff',
-  },
 };
 
 interface FarmerPortalUpgradeSectionProps {
   executiveTheme?: ExecutiveTheme;
 }
 
-export const FarmerPortalUpgradeSection: React.FC<FarmerPortalUpgradeSectionProps> = ({
-  executiveTheme = 'EMERALD',
-}) => {
-  const tConfig = THEME_CONFIG[executiveTheme];
+export const FarmerPortalUpgradeSection: React.FC<FarmerPortalUpgradeSectionProps> = () => {
+  const { executiveTheme: currentTheme, setExecutiveTheme, colors: tConfig } = useExecutiveTheme();
 
   // Modal Visibility States
   const [showDoctorVideoModal, setShowDoctorVideoModal] = useState(false);
   const [showScannerModal, setShowScannerModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Video Call State
   const [isVideoCalling, setIsVideoCalling] = useState(false);
@@ -109,22 +58,22 @@ export const FarmerPortalUpgradeSection: React.FC<FarmerPortalUpgradeSectionProp
 
   const mandiData = {
     Wheat: [
-      { mandi: 'Khanna Mandi', price: 2350, distance: '12 km', isBest: true },
-      { mandi: 'Kotkapura Mandi', price: 2315, distance: '28 km', isBest: false },
-      { mandi: 'Bathinda Mandi', price: 2320, distance: '45 km', isBest: false },
-      { mandi: 'Abohar Mandi', price: 2295, distance: '60 km', isBest: false },
+      { mandi: 'Central Grain Mandi', price: 2350, distance: '12 km', isBest: true },
+      { mandi: 'District Mandi Hub', price: 2315, distance: '28 km', isBest: false },
+      { mandi: 'Regional Krishi Mandi', price: 2320, distance: '45 km', isBest: false },
+      { mandi: 'Main City Market', price: 2295, distance: '60 km', isBest: false },
     ],
     'Paddy 1509': [
-      { mandi: 'Khanna Mandi', price: 3820, distance: '12 km', isBest: false },
-      { mandi: 'Kotkapura Mandi', price: 4120, distance: '28 km', isBest: true },
-      { mandi: 'Bathinda Mandi', price: 3950, distance: '45 km', isBest: false },
-      { mandi: 'Abohar Mandi', price: 3890, distance: '60 km', isBest: false },
+      { mandi: 'Central Grain Mandi', price: 3820, distance: '12 km', isBest: false },
+      { mandi: 'District Mandi Hub', price: 4120, distance: '28 km', isBest: true },
+      { mandi: 'Regional Krishi Mandi', price: 3950, distance: '45 km', isBest: false },
+      { mandi: 'Main City Market', price: 3890, distance: '60 km', isBest: false },
     ],
     Cotton: [
-      { mandi: 'Abohar Mandi', price: 7450, distance: '60 km', isBest: true },
-      { mandi: 'Bathinda Mandi', price: 7310, distance: '28 km', isBest: false },
-      { mandi: 'Kotkapura Mandi', price: 7280, distance: '28 km', isBest: false },
-      { mandi: 'Khanna Mandi', price: 7150, distance: '12 km', isBest: false },
+      { mandi: 'Main City Market', price: 7450, distance: '60 km', isBest: true },
+      { mandi: 'Regional Krishi Mandi', price: 7310, distance: '28 km', isBest: false },
+      { mandi: 'District Mandi Hub', price: 7280, distance: '28 km', isBest: false },
+      { mandi: 'Central Grain Mandi', price: 7150, distance: '12 km', isBest: false },
     ],
   };
 
@@ -153,6 +102,34 @@ export const FarmerPortalUpgradeSection: React.FC<FarmerPortalUpgradeSectionProp
 
   return (
     <View style={styles.container}>
+
+      {/* 👑 FARMSKING MEMBERSHIP Banner Card */}
+      <LinearGradient
+        colors={tConfig.headerGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={[styles.royalBanner, premiumShadow(tConfig.shadowColor, 'sm')]}
+      >
+        <View style={styles.royalHeaderRow}>
+          <View style={{ flex: 1, gap: 2 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              <Text style={{ fontSize: 13 }}>👑</Text>
+              <Text style={[styles.royalTitle, { color: tConfig.titleColor }]}>FARMSKING MEMBERSHIP</Text>
+            </View>
+
+            <Text style={[styles.royalSub, { color: tConfig.subColor }]} numberOfLines={1}>
+              👑 Unlimited Crops · Labour Management · Supervisors ✨
+            </Text>
+          </View>
+        </View>
+      </LinearGradient>
+
+      <FarmerPlanUpgradeModal
+        visible={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        tiers={['PRO', 'SMART', 'SUPER']}
+        initialMode="GET_COUPON"
+      />
 
       {/* 📹 Video Call Modal */}
       <Modal visible={showDoctorVideoModal} transparent animationType="slide" onRequestClose={() => setShowDoctorVideoModal(false)}>
@@ -352,14 +329,30 @@ export const FarmerPortalUpgradeSection: React.FC<FarmerPortalUpgradeSectionProp
 const styles = StyleSheet.create({
   container: { gap: 10 },
   royalBanner: {
-    borderRadius: RADIUS.lg,
-    padding: 14,
-    gap: 6,
+    borderRadius: RADIUS.md,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    gap: 4,
   },
   royalHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 8,
+  },
+  demoPillBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: RADIUS.pill,
+  },
+  demoPillBtnText: {
+    fontSize: 10.5,
+    fontFamily: FONT.extraBold,
+    color: '#78350f',
   },
   royalBadgeContainer: {
     flexDirection: 'row',
@@ -621,27 +614,6 @@ const styles = StyleSheet.create({
     fontFamily: FONT.medium,
     color: '#166534',
     marginTop: 2,
-  },
-  actionButtonsRow: {
-    flexDirection: 'column',
-    gap: 8,
-  },
-  actionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: RADIUS.md,
-    gap: 10,
-  },
-  actionBtnTitle: {
-    fontSize: 13,
-    fontFamily: FONT.extraBold,
-    color: '#ffffff',
-  },
-  actionBtnSub: {
-    fontSize: 10.5,
-    fontFamily: FONT.medium,
-    color: 'rgba(255, 255, 255, 0.88)',
   },
   cropPill: {
     paddingHorizontal: 7,

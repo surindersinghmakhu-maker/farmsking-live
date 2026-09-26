@@ -1,12 +1,13 @@
 import { randomBytes } from 'crypto';
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
-import { OperatorPermission, Prisma, Role } from '@prisma/client';
+import { AdminStaffPermission, FarmerSubscriptionPlan, OperatorPermission, Prisma, Role, SupervisorPermission } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
 import { WalletService } from '../wallet/wallet.service';
 import { CreateAdvisorDto } from './dto/create-advisor.dto';
 import { CreateAssistantDoctorDto } from './dto/create-assistant-doctor.dto';
 import { CreateStaffDto } from './dto/create-staff.dto';
+import { CreateSupervisorDto } from './dto/create-supervisor.dto';
 import { ListUsersQueryDto } from './dto/list-users-query.dto';
 import { UpdateFarmerProfileDto } from './dto/update-farmer-profile.dto';
 import { UpdateAdvisorProfileDto } from './dto/update-advisor-profile.dto';
@@ -54,6 +55,9 @@ const SAFE_USER_SELECT = {
   referredById: true,
   advisorType: true,
   operatorPermissions: true,
+  adminStaffPermissions: true,
+  supervisorPermissions: true,
+  employerFarmerId: true,
   upiId: true,
   billPrintingAddress: true,
   farmName: true,
@@ -498,6 +502,97 @@ export class UsersService implements OnModuleInit {
 
   createAdmin(dto: CreateStaffDto) {
     return this.createStaff(dto, Role.ADMIN);
+  }
+
+  createManager(dto: CreateStaffDto) {
+    return this.createStaff(dto, Role.MANAGER);
+  }
+
+  async updateAdminStaffPermissions(id: string, permissions: AdminStaffPermission[]) {
+    const user = await this.findActiveOrThrow(id);
+    if (user.role !== Role.ADMIN && user.role !== Role.MANAGER && user.role !== Role.OPERATOR) {
+      throw new BadRequestException('Can only set staff permissions for Admin, Manager, or Operator accounts.');
+    }
+    return this.prisma.user.update({
+      where: { id },
+      data: { adminStaffPermissions: permissions },
+      select: SAFE_USER_SELECT,
+    });
+  }
+
+  async createSupervisorByFarmer(farmer: AuthUser, dto: CreateSupervisorDto) {
+    const farmerPlan = await this.prisma.farmerPlan.findUnique({
+      where: { farmerId: farmer.id },
+    });
+    const isVipOrSuper = farmerPlan?.plan === FarmerSubscriptionPlan.SUPER || farmerPlan?.plan === FarmerSubscriptionPlan.VIP;
+    if (!isVipOrSuper && farmer.role !== Role.SUPER_ADMIN && farmer.role !== Role.ADMIN) {
+      throw new ForbiddenException('Only farmers with VIP Membership (or Super Admin) can add Supervisors.');
+    }
+
+    const existing = await this.prisma.user.findUnique({ where: { mobile: dto.mobile } });
+    if (existing) {
+      throw new ConflictException('An account with this mobile number already exists.');
+    }
+
+    const initialPassword = dto.password?.trim() || generateTempPassword();
+    const passwordHash = await argon2.hash(initialPassword);
+    const kingId = await generateUniqueKingId(this.prisma);
+
+    const supervisor = await this.prisma.user.create({
+      data: {
+        kingId,
+        mobile: dto.mobile,
+        passwordHash,
+        name: dto.name,
+        role: Role.SUPERVISOR,
+        roles: [Role.SUPERVISOR],
+        employerFarmerId: farmer.id,
+        supervisorPermissions: dto.permissions ?? [
+          SupervisorPermission.MANAGE_SPRAY_SCHEDULE,
+          SupervisorPermission.MANAGE_LABOUR_EXPENSES,
+          SupervisorPermission.CROP_DOCTOR_CHAT,
+          SupervisorPermission.MANAGE_HARVEST_SALES,
+        ],
+      },
+      select: SAFE_USER_SELECT,
+    });
+
+    return { supervisor, tempPassword: initialPassword };
+  }
+
+  async getMySupervisors(farmer: AuthUser) {
+    return this.prisma.user.findMany({
+      where: { employerFarmerId: farmer.id, deletedAt: null },
+      select: SAFE_USER_SELECT,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async updateSupervisorPermissions(farmer: AuthUser, supervisorId: string, permissions: SupervisorPermission[]) {
+    const supervisor = await this.prisma.user.findUnique({ where: { id: supervisorId } });
+    if (!supervisor || supervisor.employerFarmerId !== farmer.id) {
+      throw new NotFoundException('Supervisor not found under your account.');
+    }
+
+    return this.prisma.user.update({
+      where: { id: supervisorId },
+      data: { supervisorPermissions: permissions },
+      select: SAFE_USER_SELECT,
+    });
+  }
+
+  async deleteSupervisor(farmer: AuthUser, supervisorId: string) {
+    const supervisor = await this.prisma.user.findUnique({ where: { id: supervisorId } });
+    if (!supervisor || supervisor.employerFarmerId !== farmer.id) {
+      throw new NotFoundException('Supervisor not found under your account.');
+    }
+
+    await this.prisma.user.update({
+      where: { id: supervisorId },
+      data: { deletedAt: new Date() },
+    });
+
+    return { success: true, message: 'Supervisor removed successfully.' };
   }
 
   private async findActiveOrThrow(id: string) {

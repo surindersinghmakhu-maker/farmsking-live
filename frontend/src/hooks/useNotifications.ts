@@ -52,7 +52,8 @@ export function useReminderAlertOnLoad(enabled: boolean) {
   useEffect(() => {
     if (!enabled || hasShown.current || !notifications) return;
 
-    const reminder = notifications.find((n) => n.type === 'SPRAY_REMINDER' && !n.isRead && n.data?.isReminder === true);
+    const notifList = Array.isArray(notifications) ? notifications : (notifications as any)?.items || (notifications as any)?.notifications || [];
+    const reminder = notifList.find((n: any) => n.type === 'SPRAY_REMINDER' && !n.isRead && n.data?.isReminder === true);
     if (!reminder) return;
 
     hasShown.current = true;

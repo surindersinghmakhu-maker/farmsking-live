@@ -22,6 +22,7 @@ import { uploadPhoto } from '@/src/api/uploads.api';
 import { apiClient } from '@/src/api/client';
 import { deleteMyAccount } from '@/src/api/users.api';
 import { SuperAdminExpenseCategoriesModal } from '@/components/SuperAdminExpenseCategoriesModal';
+import { SupervisorManagementModal } from '@/src/components/SupervisorManagementModal';
 import { CaptchaChallenge, CaptchaRef } from '@/src/components/CaptchaChallenge';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -93,6 +94,7 @@ export default function MoreScreen() {
   const { user, logout } = useAuth();
   const { role } = useRole();
   const { data: appSettings } = useAppSettings();
+  const updateAppSettings = useUpdateAppSettings();
   const isAdminRole = role === 'ADMIN' || role === 'SUPER_ADMIN';
   const brandLogoUri = appSettings?.logoUrl ?? null;
   const { language, t } = useLanguage();
@@ -103,7 +105,7 @@ export default function MoreScreen() {
   const [showWorkspaceModal, setShowWorkspaceModal] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
-  const [isGroupVoiceCallEnabled, setIsGroupVoiceCallEnabled] = useState(false);
+  const [showSupervisorModal, setShowSupervisorModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
@@ -306,6 +308,27 @@ export default function MoreScreen() {
                     <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
                   </TouchableOpacity>
                 ))}
+
+                {/* 🛡️ Farm Supervisors Sub-Accounts (VIP Feature) */}
+                <TouchableOpacity
+                  style={[styles.row, { paddingLeft: 18 }]}
+                  activeOpacity={0.7}
+                  onPress={() => setShowSupervisorModal(true)}
+                >
+                  <View style={[styles.rowIconBg, { backgroundColor: '#eef2ff' }]}>
+                    <Ionicons name="shield-checkmark-outline" size={18} color="#4f46e5" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={styles.rowLabel}>Farm Supervisors</Text>
+                      <View style={{ backgroundColor: '#f59e0b', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3 }}>
+                        <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#ffffff' }}>VIP</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.rowSubLabel}>Add & Manage Supervisor Sub-Accounts</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                </TouchableOpacity>
 
                 {/* 🌐 App Language Switcher Row */}
                 <TouchableOpacity
@@ -668,6 +691,8 @@ export default function MoreScreen() {
 
       <SuperAdminExpenseCategoriesModal visible={showCategoriesModal} onClose={() => setShowCategoriesModal(false)} />
 
+      <SupervisorManagementModal visible={showSupervisorModal} onClose={() => setShowSupervisorModal(false)} />
+
       <ContactModal mode={contactModalMode} onClose={() => setContactModalMode(null)} />
 
       {/* ── Privacy Policy Modal ───────────────────────────────── */}
@@ -1014,7 +1039,8 @@ export function UserGuidesModal({ visible, onClose }: { visible: boolean; onClos
   const isAdvisor = userRoles.includes('ADVISOR') || userRoles.includes('FARM_ADVISOR') || userRoles.includes('GARDEN_ADVISOR') || user?.role === 'ADVISOR';
   const isPartner = userRoles.includes('BUSINESS_PARTNER') || user?.role === 'BUSINESS_PARTNER';
 
-  const docsList = rawDocsList.filter((doc: any) => {
+  const safeRawDocsList = Array.isArray(rawDocsList) ? rawDocsList : [];
+  const docsList = safeRawDocsList.filter((doc: any) => {
     if (isAdmin) return true; // Admin gets access to ALL user guides
     if (doc.key === 'master' || doc.key === 'admin') return false; // Internal admin governance docs hidden for non-admins
 

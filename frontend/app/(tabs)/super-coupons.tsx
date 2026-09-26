@@ -39,6 +39,7 @@ import { CouponCardPreview, FarmerPlanCouponCardPreview, useShareCouponAsJpg } f
 import { usePendingFarmerPlanPayments } from '@/src/hooks/useFarmerPlanPayments';
 import { FarmerPlanPaymentCard, FarmerPlanPaymentReviewModal } from './super-accounts';
 import type { FarmerPlanPaymentRequest } from '@/src/api/farmerPlanPayments.api';
+import { AdminStaffManagementModal } from '@/src/components/AdminStaffManagementModal';
 
 const theme = RoleThemes.SUPER_ADMIN;
 
@@ -174,7 +175,7 @@ function CategoryCollapse({
   );
 }
 
-type CouponsTab = 'GENERATE' | 'COUPONS' | 'PRICING' | 'FEATURES' | 'REFERRAL_SETTINGS' | 'REQUESTS' | 'SAVED_ENTRIES';
+type CouponsTab = 'GENERATE' | 'COUPONS' | 'PRICING' | 'FEATURES' | 'REFERRAL_SETTINGS' | 'REQUESTS' | 'SAVED_ENTRIES' | 'STAFF';
 
 const MAIN_SUB_TABS: {
   value: CouponsTab;
@@ -185,6 +186,15 @@ const MAIN_SUB_TABS: {
   color: string;
   softBg: string;
 }[] = [
+  {
+    value: 'STAFF',
+    title: 'FarmsKing Admin Staff 👔',
+    sub: 'Manage Admins, Managers & Operators',
+    icon: 'shield-half-outline',
+    activeIcon: 'shield-half',
+    color: '#0284c7',
+    softBg: '#e0f2fe',
+  },
   {
     value: 'SAVED_ENTRIES',
     title: 'Saved Entries (ਸਾਰੀਆਂ ਐਂਟਰੀਆਂ)',
@@ -256,6 +266,7 @@ export default function SuperCouponsScreen() {
   const { data: pendingPayments = [], isLoading: isLoadingPendingPayments } = usePendingFarmerPlanPayments();
   const [activeFarmerPlanPayment, setActiveFarmerPlanPayment] = useState<FarmerPlanPaymentRequest | null>(null);
   const [activeTab, setActiveTab] = useState<CouponsTab | null>(null);
+  const [showStaffModal, setShowStaffModal] = useState(false);
 
   const allCoupons = coupons ?? [];
   const allPlanCoupons = farmerPlanCoupons ?? [];
@@ -439,6 +450,7 @@ export default function SuperCouponsScreen() {
       </ScrollView>
 
       <FarmerPlanPaymentReviewModal request={activeFarmerPlanPayment} onClose={() => setActiveFarmerPlanPayment(null)} />
+      <AdminStaffManagementModal visible={showStaffModal || activeTab === 'STAFF'} onClose={() => { setShowStaffModal(false); if (activeTab === 'STAFF') setActiveTab(null); }} />
     </View>
   );
 }

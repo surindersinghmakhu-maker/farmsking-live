@@ -9,7 +9,9 @@ export type UserRole =
   | 'ADMIN'
   | 'SUPER_ADMIN'
   | 'OPERATOR'
-  | 'LABOUR';
+  | 'LABOUR'
+  | 'MANAGER'
+  | 'SUPERVISOR';
 
 /**
  * Shared, role-agnostic surface tokens — every role's theme spreads this
@@ -161,6 +163,28 @@ export const RoleThemes: Record<UserRole, {
     primary: '#ea580c',
     primaryLight: '#ffedd5',
     accent: '#f97316',
+  },
+  MANAGER: {
+    ...SURFACE,
+    name: 'Manager Dashboard',
+    badge: 'Store & user operations',
+    headerBg: '#4c1d95',
+    gradient: ['#4c1d95', '#6d28d9'],
+    heroGradient: ['#ffffff', '#f5f3ff'],
+    primary: '#6d28d9',
+    primaryLight: '#ede9fe',
+    accent: '#7c3aed',
+  },
+  SUPERVISOR: {
+    ...SURFACE,
+    name: 'Supervisor Dashboard',
+    badge: 'Farm & field supervision',
+    headerBg: '#15803d',
+    gradient: ['#15803d', '#16a34a'],
+    heroGradient: ['#ffffff', '#f0fdf4'],
+    primary: '#16a34a',
+    primaryLight: '#dcfce7',
+    accent: '#22c55e',
   },
 };
 

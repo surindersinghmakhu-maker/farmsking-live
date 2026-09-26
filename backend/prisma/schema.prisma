@@ -17,7 +17,9 @@ enum Role {
   BUSINESS_PARTNER
   ADMIN
   SUPER_ADMIN
+  MANAGER
   OPERATOR
+  SUPERVISOR
   LABOUR
 }
 
@@ -30,6 +32,28 @@ enum OperatorPermission {
   VIEW_USERS
   VIEW_WALLETS
   VIEW_FARMER_PLANS
+}
+
+enum AdminStaffPermission {
+  MANAGE_USERS
+  MANAGE_STAFF
+  MANAGE_PAYMENTS
+  MANAGE_PLANS
+  MANAGE_ADVISORS
+  VIEW_FINANCES
+  MANAGE_ORDERS
+  MANAGE_WEATHER_MARKET
+  MANAGE_DOCTORS
+  VIEW_AUDIT_LOGS
+}
+
+enum SupervisorPermission {
+  ASSIGNED_FARMS_ONLY
+  MANAGE_SPRAY_SCHEDULE
+  MANAGE_LABOUR_EXPENSES
+  CROP_DOCTOR_CHAT
+  MANAGE_HARVEST_SALES
+  VIEW_FINANCES
 }
 
 enum AreaUnit {
@@ -257,6 +281,7 @@ enum FarmerSubscriptionPlan {
   PRO
   SMART
   SUPER
+  VIP
   BASIC
   SILVER
   GOLD
@@ -411,7 +436,12 @@ model User {
   seniorDoctor              User?                @relation("DoctorHierarchy", fields: [seniorDoctorId], references: [id], onDelete: SetNull)
   juniorDoctors             User[]               @relation("DoctorHierarchy")
   doctorConsultationFee     Decimal?             @db.Decimal(10, 2)
-  operatorPermissions  OperatorPermission[] @default([])
+  operatorPermissions   OperatorPermission[]   @default([])
+  adminStaffPermissions AdminStaffPermission[] @default([])
+  supervisorPermissions SupervisorPermission[] @default([])
+  employerFarmerId      String?
+  employerFarmer        User?                  @relation("FarmerSupervisors", fields: [employerFarmerId], references: [id], onDelete: SetNull)
+  supervisors           User[]                 @relation("FarmerSupervisors")
   /// Who referred this account in — set once at signup (referral code) or by a Super Admin afterwards, never changed again.
   referredById              String?
   referredBy                User?                @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)

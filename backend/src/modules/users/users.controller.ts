@@ -19,6 +19,9 @@ import { UpdateAdvisorProfileDto } from './dto/update-advisor-profile.dto';
 import { UpdatePartnerProfileDto } from './dto/update-partner-profile.dto';
 import { UpdateMyAddressDto } from './dto/update-my-address.dto';
 import { UpdateOperatorPermissionsDto } from './dto/update-operator-permissions.dto';
+import { CreateSupervisorDto } from './dto/create-supervisor.dto';
+import { UpdateSupervisorPermissionsDto } from './dto/update-supervisor-permissions.dto';
+import { UpdateAdminStaffPermissionsDto } from './dto/update-admin-staff-permissions.dto';
 import { SetReferrerDto } from './dto/set-referrer.dto';
 import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
 import { ResetUserPasswordDto } from './dto/reset-user-password.dto';
@@ -271,6 +274,46 @@ export class UsersController {
   @Post('admins')
   createAdmin(@Body() dto: CreateStaffDto) {
     return this.usersService.createAdmin(dto);
+  }
+
+  @Roles(Role.SUPER_ADMIN)
+  @Post('managers')
+  createManager(@Body() dto: CreateStaffDto) {
+    return this.usersService.createManager(dto);
+  }
+
+  @Roles(Role.SUPER_ADMIN)
+  @Patch(':id/admin-staff-permissions')
+  updateAdminStaffPermissions(@Param('id') id: string, @Body() dto: UpdateAdminStaffPermissionsDto) {
+    return this.usersService.updateAdminStaffPermissions(id, dto.permissions);
+  }
+
+  @Roles(Role.FARMER, Role.SUPER_ADMIN)
+  @Post('my-supervisors')
+  createSupervisor(@CurrentUser() user: AuthUser, @Body() dto: CreateSupervisorDto) {
+    return this.usersService.createSupervisorByFarmer(user, dto);
+  }
+
+  @Roles(Role.FARMER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN)
+  @Get('my-supervisors')
+  getMySupervisors(@CurrentUser() user: AuthUser) {
+    return this.usersService.getMySupervisors(user);
+  }
+
+  @Roles(Role.FARMER, Role.SUPER_ADMIN)
+  @Patch('my-supervisors/:id/permissions')
+  updateSupervisorPermissions(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateSupervisorPermissionsDto,
+  ) {
+    return this.usersService.updateSupervisorPermissions(user, id, dto.permissions);
+  }
+
+  @Roles(Role.FARMER, Role.SUPER_ADMIN)
+  @Delete('my-supervisors/:id')
+  deleteSupervisor(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.usersService.deleteSupervisor(user, id);
   }
 
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)

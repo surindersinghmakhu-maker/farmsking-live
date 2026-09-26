@@ -90,7 +90,7 @@ type TabName =
   | 'super-orders' | 'super-audit-log' | 'super-crop-edit'
   | 'operator-orders';
 
-const ROLE_TABS: Record<UserRole, { tabs: TabName[] }> = {
+const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
   FARMER: { tabs: ['index', 'shop', 'farm', 'records', 'wallet', 'more'] },
   GARDENER: { tabs: ['index', 'shop', 'farm', 'records', 'wallet', 'more'] },
   CUSTOMER: { tabs: ['shop', 'wallet', 'more'] },
@@ -100,6 +100,8 @@ const ROLE_TABS: Record<UserRole, { tabs: TabName[] }> = {
   BUSINESS_PARTNER: { tabs: ['index', 'shop', 'referrals', 'wallet', 'more'] },
   ADMIN: { tabs: ['index', 'shop', 'super-users', 'super-settings', 'super-coupons', 'super-accounts', 'more'] },
   SUPER_ADMIN: { tabs: ['index', 'shop', 'super-users', 'super-coupons', 'super-accounts', 'super-settings', 'more'] },
+  MANAGER: { tabs: ['index', 'shop', 'super-users', 'super-coupons', 'super-accounts', 'super-settings', 'more'] },
+  SUPERVISOR: { tabs: ['index', 'shop', 'farm', 'records', 'more'] },
   OPERATOR: { tabs: ['index', 'shop', 'operator-orders', 'more'] },
   LABOUR: { tabs: ['index', 'shop', 'wallet', 'more'] },
 };
@@ -150,8 +152,8 @@ export default function TabLayout() {
   const { role } = useRole();
   const { t, language, setLanguage } = useLanguage();
   const { user } = useAuth();
-  const config = ROLE_TABS[role];
-  const visible = new Set(config.tabs);
+  const config = ROLE_TABS[role] || ROLE_TABS.FARMER;
+  const visible = new Set(config ? config.tabs : ['index', 'shop', 'farm', 'records', 'wallet', 'more']);
 
   const isChatCapable = !!user && CHAT_CAPABLE_ROLES.has(user.role);
   useGlobalChatUnreadSync(isChatCapable);

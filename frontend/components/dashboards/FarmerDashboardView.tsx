@@ -23,6 +23,7 @@ import { CropAdvisoryPromoCard } from '@/src/components/CropAdvisoryPromoCard';
 import { OpenMeteoWeatherCard } from '@/src/components/OpenMeteoWeatherCard';
 import { FarmLocationProfileModal } from '@/src/components/FarmLocationProfileModal';
 import { FarmerPortalUpgradeSection, ExecutiveTheme } from '@/src/components/FarmerPortalUpgradeSection';
+import { SupervisorManagementModal } from '@/src/components/SupervisorManagementModal';
 
 
 const tap = () => {
@@ -76,6 +77,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
   // Quick Payment Voucher Modal State
   const [showPaymentVoucherModal, setShowPaymentVoucherModal] = useState(false);
   const [showLocationProfileModal, setShowLocationProfileModal] = useState(false);
+  const [showSupervisorModal, setShowSupervisorModal] = useState(false);
   const [voucherInitialType, setVoucherInitialType] = useState<VoucherType>('RECEIPT_IN');
   const { data: labourWorkers = [] } = useLabourWorkers();
   const { data: parties = [] } = useParties();
@@ -93,7 +95,8 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         return `${day}/${month}/${year}`;
       })()
     : null;
-  const planPrice = pricing?.find((p) => p.plan === plan)?.price;
+  const pricingList = Array.isArray(pricing) ? pricing : (pricing as any)?.items || (pricing as any)?.data || [];
+  const planPrice = pricingList.find((p: any) => p.plan === plan)?.price;
 
   const planActionLabel = 'Farmer Pass';
 

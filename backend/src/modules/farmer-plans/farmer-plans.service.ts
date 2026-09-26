@@ -34,6 +34,7 @@ export const PLAN_RANK: Record<FarmerSubscriptionPlan, number> = {
   PRO: 1,
   SMART: 2,
   SUPER: 3,
+  VIP: 3,
   BASIC: 0,
   SILVER: 1,
   GOLD: 2,

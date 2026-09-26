@@ -20,7 +20,7 @@ const PLAN_COLUMN_META: Record<FarmerPlanType, { label: string; emoji: string; c
   FREE: { label: 'Free Membership', emoji: '🌱', color: '#166534', price: '₹0' },
   PRO: { label: 'Basic', emoji: '⚡', color: '#0284c7', price: '₹199/yr' },
   SMART: { label: 'Pro', emoji: '👑', color: '#1d4ed8', price: '₹499/yr' },
-  SUPER: { label: 'Super', emoji: '⭐', color: '#b45309', price: '₹999/30d' },
+  SUPER: { label: 'VIP', emoji: '👑', color: '#b45309', price: '₹999/30d' },
   SILVER: { label: 'Crop Advisor', emoji: '🩺', color: '#64748b', price: '₹999/yr' },
   GOLD: { label: 'Crop Doctor', emoji: '🌾', color: '#d97706', price: '₹1999/yr' },
   ROYAL: { label: 'Crop Doctor VIP', emoji: '👑', color: '#7c3aed', price: '₹3499/yr' },
@@ -281,7 +281,8 @@ export function FarmerPlanUpgradeModal({
   initialMode?: 'GET_COUPON' | 'REDEEM_CODE';
 }) {
   const { plan: currentPlan, isExpired, inGrace, hasUsedTrial } = useFarmerPlan();
-  const { data: pricingList = [] } = useFarmerPlanPricing();
+  const { data: rawPricing } = useFarmerPlanPricing();
+  const pricingList = Array.isArray(rawPricing) ? rawPricing : (rawPricing as any)?.items || (rawPricing as any)?.data || [];
   const isTrialEligible = !hasUsedTrial && currentPlan === 'FREE';
 
   const plans: FarmerPlanType[] = ['FREE', ...tiers];
@@ -565,7 +566,7 @@ export function FarmerPlanUpgradeModal({
                       ...(isTrialEligible ? [{ id: 'FARMER_FREE', key: 'FREE', label: '🌱 Free Membership Trial', iconName: 'leaf', color: '#166534', sub: 'Full Super Plan Access (10-Day Free Demo Trial)' }] : []),
                       { id: 'FARMER_BASIC', key: 'PRO', label: '⚡ Basic Membership', iconName: 'flash', color: '#0284c7', sub: 'Bookkeeping & Expense Logs + Voice AI Mic' },
                       { id: 'FARMER_PRO', key: 'SMART', label: '👑 Pro Membership', iconName: 'sparkles', color: '#1d4ed8', sub: 'All Bookkeeping + Labour Record & Worker Login' },
-                      { id: 'FARMER_SUPER', key: 'SUPER', label: '⭐ Super Membership', iconName: 'star', color: '#b45309', sub: 'Unlimited Crops, Weather Reports & Mandi AI' },
+                      { id: 'FARMER_SUPER', key: 'SUPER', label: '👑 VIP Membership', iconName: 'shield-checkmark', color: '#b45309', sub: 'Unlimited Crops, Mandi AI & Supervisor Sub-Accounts Delegation' },
                     ]
                   : [
                       { id: 'CARE_SILVER', key: 'SILVER', label: 'Crop Advisor', iconName: 'medical', color: '#64748b', sub: '5 Crops Supervision + Soil Health & Leaf Scan' },

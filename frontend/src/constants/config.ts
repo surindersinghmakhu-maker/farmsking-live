@@ -76,8 +76,14 @@ export function normalizeApiUrl(rawInput: string): string {
 export function getDefaultApiUrl(): string {
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
     const hostname = window.location.hostname;
+    const port = window.location.port;
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       return 'http://localhost:3000/api/v1';
+    }
+    const isLocalIp = /^(?:192\.168\.|10\.|172\.(?:1[6-9]|2[0-9]|3[0-1])\.|127\.|localhost)/.test(hostname) || /^\d+\.\d+\.\d+\.\d+$/.test(hostname);
+    const isDevPort = port === '8081' || port === '8082' || port === '19006' || port === '8080';
+    if (isLocalIp || isDevPort) {
+      return `http://${hostname}:3000/api/v1`;
     }
     return `${window.location.origin}/api/v1`;
   }

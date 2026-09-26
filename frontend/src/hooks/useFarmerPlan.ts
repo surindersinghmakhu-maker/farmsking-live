@@ -53,8 +53,8 @@ export const PLAN_META: Record<FarmerPlanType, { label: string; emoji: string; c
     borderColor: '#bfdbfe',
   },
   SUPER: {
-    label: 'Super Membership',
-    emoji: '⭐',
+    label: 'VIP Membership',
+    emoji: '👑',
     color: '#b45309',
     bg: '#fef3c7',
     borderColor: '#fde68a',

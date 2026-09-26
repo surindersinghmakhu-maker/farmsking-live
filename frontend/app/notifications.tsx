@@ -35,7 +35,8 @@ export default function NotificationsScreen() {
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
 
-  const hasUnread = (notifications ?? []).some((n) => !n.isRead);
+  const notifList = Array.isArray(notifications) ? notifications : (notifications as any)?.items || (notifications as any)?.notifications || [];
+  const hasUnread = notifList.some((n: any) => !n.isRead);
 
   const renderItem = ({ item }: { item: AppNotification }) => (
     <TouchableOpacity
@@ -80,7 +81,7 @@ export default function NotificationsScreen() {
         <ActivityIndicator color={theme.primary} style={{ marginTop: 40 }} />
       ) : (
         <FlatList
-          data={notifications ?? []}
+          data={notifList}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={styles.list}

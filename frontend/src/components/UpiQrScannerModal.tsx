@@ -308,7 +308,7 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
                 ) : null}
               </View>
 
-              {/* Action Buttons: OK to Add & Rescan */}
+              {/* Action Buttons: Yes, Save UPI code & Rescan / Cancel */}
               <View style={styles.confirmBtnRow}>
                 <TouchableOpacity
                   style={styles.okConfirmBtn}
@@ -316,7 +316,7 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
                   onPress={handleConfirmAddUpi}
                 >
                   <Ionicons name="checkmark-done" size={18} color="#ffffff" />
-                  <Text style={styles.okConfirmBtnText}>OK / Add to Text Box</Text>
+                  <Text style={styles.okConfirmBtnText}>Yes, Save UPI code</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -327,7 +327,8 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
                     requestCameraPermissionAndStart();
                   }}
                 >
-                  <Text style={styles.rescanBtnText}>Rescan / Cancel</Text>
+                  <Ionicons name="refresh-outline" size={16} color="#334155" />
+                  <Text style={styles.rescanBtnText}>🔄 Rescan / Cancel</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -704,13 +705,19 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   rescanBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 38,
+    gap: 6,
+    height: 42,
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1.5,
+    borderColor: '#cbd5e1',
+    borderRadius: RADIUS.md,
   },
   rescanBtnText: {
-    fontSize: 12.5,
-    fontFamily: FONT.bold,
-    color: '#64748b',
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+    color: '#334155',
   },
 });

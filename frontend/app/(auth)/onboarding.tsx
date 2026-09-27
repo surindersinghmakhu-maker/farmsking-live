@@ -37,6 +37,12 @@ export default function OnboardingScreen() {
 
   const finish = () => router.replace('/(tabs)');
 
+  useEffect(() => {
+    if (user?.role === 'CUSTOMER' && (!user.roles || user.roles.length <= 1 || (user.roles.length === 1 && user.roles[0] === 'CUSTOMER'))) {
+      finish();
+    }
+  }, [user]);
+
   const onSaveFarm = async () => {
     setError(null);
     const area = Number(totalArea);

@@ -180,7 +180,11 @@ export default function RegisterScreen() {
         state: state || undefined,
         referralCode: referralCode.trim() || undefined,
       });
-      router.replace('/(auth)/onboarding');
+      if (accountType === 'CUSTOMER') {
+        router.replace('/(tabs)');
+      } else {
+        router.replace('/(auth)/onboarding');
+      }
     } catch (err: any) {
       const isNetworkErr = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
       if (isNetworkErr) {

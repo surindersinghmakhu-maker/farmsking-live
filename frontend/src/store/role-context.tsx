@@ -43,13 +43,20 @@ export function RoleProvider({ children }: { children: ReactNode }) {
 
     const mapped = activeRoles.map((r) => toUserRole(r, user.advisorType));
 
-    let finalRoles = Array.from(new Set([primaryRole, ...mapped]));
+    const rawPrimary = toUserRole(user.role, user.advisorType);
+    const isPrimaryActive = !deactivated.includes(user.role);
+
+    let finalRoles = isPrimaryActive ? Array.from(new Set([rawPrimary, ...mapped])) : mapped;
+    if (finalRoles.length === 0) {
+      finalRoles = ['CUSTOMER'];
+    }
+
     if (isAdminUser) {
       finalRoles = finalRoles.filter((r) => r !== 'FARMER' && r !== 'CUSTOMER');
-      if (finalRoles.length === 0) finalRoles = [primaryRole];
+      if (finalRoles.length === 0) finalRoles = [rawPrimary];
     }
     return finalRoles;
-  }, [user, primaryRole]);
+  }, [user]);
 
   const isAdminUser = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
 

@@ -515,7 +515,10 @@ export class AuthService {
   async verifyPassword(userId: string, password: string) {
     const cleanPassword = (password ?? '').trim();
     if (!cleanPassword) {
-      throw new BadRequestException('Password required.');
+      return {
+        success: false,
+        message: 'Kripya apna account password darj karo.',
+      };
     }
 
     const user = await this.prisma.user.findUnique({
@@ -523,12 +526,18 @@ export class AuthService {
     });
 
     if (!user || !user.passwordHash) {
-      throw new UnauthorizedException('User account or password not found.');
+      return {
+        success: false,
+        message: 'User account or password not found.',
+      };
     }
 
     const isValid = await argon2.verify(user.passwordHash, cleanPassword);
     if (!isValid) {
-      throw new UnauthorizedException('❌ Wrong Password! (ਗਲਤ ਪਾਸਵਰਡ) Kripya sahi account password darj karo.');
+      return {
+        success: false,
+        message: '❌ ਪਾਸਵਰਡ ਗਲਤ ਹੈ! ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਸਹੀ ਪਾਸਵਰਡ ਭਰੋ (Re-enter Password).',
+      };
     }
 
     return {

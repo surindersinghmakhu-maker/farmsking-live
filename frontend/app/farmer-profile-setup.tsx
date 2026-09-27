@@ -150,19 +150,33 @@ export default function FarmerProfileSetupScreen() {
     setIsVerifyingPassword(true);
     setPasswordError(null);
 
-    try {
-      // Clean password verification API (no session creation, no logout)
-      await verifyAccountPassword(verifyPassword.trim());
+    let isPasswordCorrect = false;
 
+    try {
+      // 1. Verify password (returns 200 OK with success: true / false)
+      const res = await verifyAccountPassword(verifyPassword.trim());
+
+      if (!res?.success) {
+        setIsVerifyingPassword(false);
+        setVerifyPassword(''); // 🔄 Clear input so user can re-enter immediately
+        setPasswordError(res?.message || '❌ ਪਾਸਵਰਡ ਗਲਤ ਹੈ! ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਸਹੀ ਪਾਸਵਰਡ ਭਰੋ (Re-enter Password).');
+        return;
+      }
+
+      isPasswordCorrect = true;
+    } catch (err: any) {
+      setIsVerifyingPassword(false);
+      setVerifyPassword('');
+      setPasswordError('❌ ਪਾਸਵਰਡ ਚੈੱਕ ਕਰਨ ਵਿੱਚ ਦਿੱਕਤ ਆਈ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਪਾਸਵਰਡ ਭਰੋ।');
+      return;
+    }
+
+    if (isPasswordCorrect) {
       setIsVerifyingPassword(false);
       setShowPasswordModal(false);
 
-      // Password verified -> Proceed to save profile
+      // 2. Password verified -> Proceed to save profile
       await executeSaveProfile();
-    } catch (err: any) {
-      setIsVerifyingPassword(false);
-      setVerifyPassword(''); // 🔄 Clear input so user can re-enter immediately
-      setPasswordError('❌ ਪਾਸਵਰਡ ਗਲਤ ਹੈ! ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਸਹੀ ਪਾਸਵਰਡ ਭਰੋ (Re-enter Password).');
     }
   };
 

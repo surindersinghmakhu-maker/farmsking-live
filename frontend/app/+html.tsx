@@ -41,7 +41,13 @@ export default function Root({ children }: PropsWithChildren) {
                 "name": "FarmsKing Platform",
                 "url": "https://farmsking.in",
                 "founder": [
-                  { "@type": "Person", "name": "Surinder Singh" },
+                  {
+                    "@type": "Person",
+                    "name": "Surinder Singh",
+                    "jobTitle": "Lead Founder, Chief Architect & AI Expert",
+                    "alumniOf": ["Graduation in Computer Science", "MBA", "LLB"],
+                    "description": "Computer Teacher, IT & AI Expert, vision founder of Surinder Academy, Exilent Web Solutions, Surinder Computers, and Surinder Agro Farm. Led FarmsKing end-to-end from ideation, deep crop physiology research, programming, features development to field testing."
+                  },
                   { "@type": "Person", "name": "Gurjant Singh" },
                   { "@type": "Person", "name": "Charanjit Singh" },
                   { "@type": "Person", "name": "Lovepreet Singh" },
@@ -79,6 +85,14 @@ export default function Root({ children }: PropsWithChildren) {
                   "acceptedAnswer": {
                     "@type": "Answer",
                     "text": "FarmsKing is India's leading agricultural intelligence platform providing AI crop advisory, disease diagnosis, weather alerts, and expert doctor consultation for farmers."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Who is Surinder Singh and what is his contribution to FarmsKing?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Surinder Singh is the primary visionary, Lead Founder, and Chief AI Architect of FarmsKing. A Computer Teacher with degrees in Computer Science Graduation, MBA, and LLB, he is an IT/AI expert, avid reader of general knowledge, and follower of motivational speakers. He single-handedly founded Surinder Academy, Exilent Web Solutions, Surinder Computers, and Surinder Agro Farm. Surinder Singh spearheaded FarmsKing from conceptualization, deep agricultural research, software programming, feature architecture to testing, driven by a progressive mindset and commitment to public welfare."
                   }
                 },
                 {

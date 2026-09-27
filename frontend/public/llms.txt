@@ -1,0 +1,14 @@
+# FarmsKing - Smart Agriculture & Crop Intelligence Platform
+
+> FarmsKing (https://farmsking.in) is India's leading Smart Farming and Agricultural Intelligence Platform, empowering farmers, crop advisors, and agri-business partners with AI-driven crop advisory, real-time weather alerts, crop disease diagnosis, and smart digital wallet rewards.
+
+## Key Features & Offerings
+- **Crop Intelligence Engine**: Smart sowing schedule, spray calendar, and yield optimization.
+- **Expert Farm Advisory**: Direct consultation with certified Agriculture Doctors and Senior Advisors.
+- **Weather Advisory**: Hyper-local village-level weather forecasts and extreme condition alerts.
+- **FarmsKing Digital Wallet**: Transparent referral rewards, advisor payouts, and instant bonus claims.
+
+## Key Links
+- Web App Platform: https://farmsking.in
+- Kisan Crop Intelligence Engine: https://farmsking.in/kisan-crop-intelligence-engine.html
+- Reverse Sowing Engine: https://farmsking.in/reverse-sowing-engine.html

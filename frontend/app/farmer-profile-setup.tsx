@@ -11,6 +11,8 @@ import { useFarmerProfileStatus, useUpdateFarmerProfile } from '@/src/hooks/useF
 import { useAuth } from '@/src/store/auth-context';
 import { SprayTankSizeL } from '@/src/types/api';
 
+import { UpiQrScannerModal } from '@/src/components/UpiQrScannerModal';
+
 const theme = RoleThemes.FARMER;
 
 const tap = () => {
@@ -31,6 +33,8 @@ export default function FarmerProfileSetupScreen() {
   );
   const [farmMobile, setFarmMobile] = useState<string>(user?.farmMobile || user?.mobile || '');
   const [upiId, setUpiId] = useState<string>(user?.upiId || '');
+  const [upiPayeeName, setUpiPayeeName] = useState<string | null>(null);
+  const [showQrScanner, setShowQrScanner] = useState<boolean>(false);
   const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState<boolean>(user?.whatsappGroupEnabled ?? true);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
 
@@ -246,9 +250,24 @@ export default function FarmerProfileSetupScreen() {
 
             {/* UPI ID (Optional) */}
             <View style={[styles.tableRowField, { borderBottomWidth: 0 }]}>
-              <Text style={styles.fieldLabel}>
-                UPI ID (Optional) <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>(for generating payment QR Code on bill)</Text>
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+                <Text style={[styles.fieldLabel, { flex: 1 }]}>
+                  UPI ID (Optional) <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>(for generating payment QR Code on bill)</Text>
+                </Text>
+
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={styles.scanQrBtn}
+                  onPress={() => {
+                    tap();
+                    setShowQrScanner(true);
+                  }}
+                >
+                  <Ionicons name="camera-outline" size={14} color="#059669" />
+                  <Text style={styles.scanQrBtnText}>📷 Scan QR</Text>
+                </TouchableOpacity>
+              </View>
+
               <View style={[styles.inputWrap, { backgroundColor: '#ffffff' }]}>
                 <Ionicons name="qr-code-outline" size={18} color="#64748b" style={{ marginRight: 8 }} />
                 <TextInput
@@ -257,11 +276,37 @@ export default function FarmerProfileSetupScreen() {
                   placeholderTextColor="#94a3b8"
                   autoCapitalize="none"
                   value={upiId}
-                  onChangeText={setUpiId}
+                  onChangeText={(val) => {
+                    setUpiId(val);
+                    setUpiPayeeName(null);
+                  }}
                 />
               </View>
+
+              {/* Verified Payee Name Label underneath text box */}
+              {upiPayeeName ? (
+                <View style={styles.payeeNameBadge}>
+                  <Ionicons name="checkmark-circle" size={14} color="#16a34a" />
+                  <Text style={styles.payeeNameText}>
+                    Verified Payee: <Text style={{ fontFamily: FONT.extraBold, color: '#15803d' }}>{upiPayeeName}</Text>
+                  </Text>
+                </View>
+              ) : null}
             </View>
           </View>
+
+          <UpiQrScannerModal
+            visible={showQrScanner}
+            onClose={() => setShowQrScanner(false)}
+            onScanSuccess={(res) => {
+              setUpiId(res.upiId);
+              if (res.payeeName) {
+                setUpiPayeeName(res.payeeName);
+              } else {
+                setUpiPayeeName(null);
+              }
+            }}
+          />
 
           {/* SUBMIT BUTTON: Save Farmer Profile */}
           <TouchableOpacity
@@ -420,4 +465,37 @@ const styles = StyleSheet.create({
   },
   saveButtonDisabled: { opacity: 0.5, backgroundColor: '#94a3b8' },
   saveButtonText: { fontSize: 15, fontFamily: FONT.bold, color: '#ffffff' },
+  scanQrBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#ecfdf5',
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+    borderRadius: RADIUS.pill,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+  },
+  scanQrBtnText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#059669',
+  },
+  payeeNameBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginTop: 4,
+  },
+  payeeNameText: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#166534',
+  },
 });

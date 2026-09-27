@@ -21,6 +21,8 @@ import { useBecomeFarmer } from '../hooks/useBecomeRole';
 import { useAuth } from '../store/auth-context';
 import { SoilType, SprayTankSizeL, WaterType } from '../types/api';
 
+import { UpiQrScannerModal } from './UpiQrScannerModal';
+
 const theme = RoleThemes.FARMER;
 
 const tap = () => {
@@ -41,6 +43,8 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
     (user as any)?.sprayTankSizeL ?? 20,
   );
   const [upiId, setUpiId] = useState<string>((user as any)?.upiId ?? '');
+  const [upiPayeeName, setUpiPayeeName] = useState<string | null>(null);
+  const [showQrScanner, setShowQrScanner] = useState<boolean>(false);
   const [farmName, setFarmName] = useState<string>(user?.farmName || user?.name || '');
   const [farmAddress, setFarmAddress] = useState<string>(
     user?.farmAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || ''
@@ -225,7 +229,33 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
 
               {/* UPI ID */}
               <View>
-                <Text style={[styles.label, { fontSize: 12, color: '#0f172a' }]}>UPI ID (Optional - Printed for QR Code)</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 4 }}>
+                  <Text style={[styles.label, { fontSize: 12, color: '#0f172a', flex: 1, marginBottom: 0 }]}>
+                    UPI ID (Optional - Printed for QR Code)
+                  </Text>
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 4,
+                      backgroundColor: '#ecfdf5',
+                      borderWidth: 1,
+                      borderColor: '#a7f3d0',
+                      borderRadius: RADIUS.pill,
+                      paddingHorizontal: 8,
+                      paddingVertical: 3,
+                    }}
+                    onPress={() => {
+                      tap();
+                      setShowQrScanner(true);
+                    }}
+                  >
+                    <Ionicons name="camera-outline" size={13} color="#059669" />
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#059669' }}>📷 Scan QR</Text>
+                  </TouchableOpacity>
+                </View>
+
                 <View style={[styles.inputContainer, { backgroundColor: '#ffffff' }]}>
                   <Ionicons name="qr-code-outline" size={18} color="#64748b" />
                   <TextInput
@@ -233,11 +263,36 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
                     placeholder="e.g. 9876543210@paytm, name@oksbi"
                     placeholderTextColor="#94a3b8"
                     value={upiId}
-                    onChangeText={setUpiId}
+                    onChangeText={(val) => {
+                      setUpiId(val);
+                      setUpiPayeeName(null);
+                    }}
                     autoCapitalize="none"
                   />
                 </View>
+
+                {upiPayeeName ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 5, marginTop: 4 }}>
+                    <Ionicons name="checkmark-circle" size={14} color="#16a34a" />
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#166534' }}>
+                      Verified Payee: <Text style={{ fontFamily: FONT.extraBold, color: '#15803d' }}>{upiPayeeName}</Text>
+                    </Text>
+                  </View>
+                ) : null}
               </View>
+
+              <UpiQrScannerModal
+                visible={showQrScanner}
+                onClose={() => setShowQrScanner(false)}
+                onScanSuccess={(res) => {
+                  setUpiId(res.upiId);
+                  if (res.payeeName) {
+                    setUpiPayeeName(res.payeeName);
+                  } else {
+                    setUpiPayeeName(null);
+                  }
+                }}
+              />
             </View>
 
             {/* Village / District */}

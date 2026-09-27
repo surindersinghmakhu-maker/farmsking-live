@@ -30,6 +30,7 @@ import { apiClient } from '@/src/api/client';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { WelcomeBonusModal } from '@/src/components/WelcomeBonusModal';
+import { AdminWalletManagementView } from '@/src/components/AdminWalletManagementView';
 
 type RoleTheme = (typeof RoleThemes)[keyof typeof RoleThemes];
 const staticTheme = RoleThemes.BUSINESS_PARTNER;
@@ -303,6 +304,9 @@ export default function WalletScreen() {
   const userRoles: string[] = (Array.isArray(user?.roles) && user.roles.length > 0 ? user.roles : [user?.role || currentRole])
     .filter((r) => r && !userDeactivated.includes(r as any)) as string[];
 
+  const isAdminOrOperator = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'OPERATOR';
+  const [adminWalletTab, setAdminWalletTab] = useState<'MY_WALLET' | 'ALL_USERS_MANAGEMENT'>('MY_WALLET');
+
   const isAdvisor = userRoles.includes('ADVISOR') || userRoles.includes('FARM_ADVISOR') || userRoles.includes('GARDEN_ADVISOR') || currentRole === 'FARM_ADVISOR' || currentRole === 'GARDEN_ADVISOR';
   const isPartner = userRoles.includes('BUSINESS_PARTNER') || currentRole === 'BUSINESS_PARTNER';
   const isAdvisorOrPartner = isAdvisor || isPartner;
@@ -350,152 +354,181 @@ export default function WalletScreen() {
           ) : null}
         </View>
 
-        {/* 👑 Royal Compact Highlighted Available Balance Card */}
-        <LinearGradient
-          colors={['#062016', '#094e39', '#031d17']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.royalBalanceCard}
-        >
-          <View style={styles.royalContentRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.royalBalanceLabel}>Available Balance</Text>
-              {isLoadingWallet ? (
-                <ActivityIndicator color="#fbbf24" style={{ alignSelf: 'flex-start', marginVertical: 6 }} />
-              ) : (
-                <View style={styles.balanceAmountRow}>
-                  <Text style={styles.royalCurrencySymbol}>₹</Text>
-                  <Text style={styles.royalBalanceValue} adjustsFontSizeToFit numberOfLines={1}>
-                    {(wallet?.balance ?? 0).toLocaleString('en-IN')}
-                  </Text>
+        {/* Admin Mode Switcher Bar */}
+        {isAdminOrOperator && (
+          <View style={styles.adminTabModeRow}>
+            <TouchableOpacity
+              style={[styles.adminTabModeBtn, adminWalletTab === 'MY_WALLET' && styles.adminTabModeBtnActive]}
+              onPress={() => setAdminWalletTab('MY_WALLET')}
+            >
+              <Ionicons name="wallet" size={15} color={adminWalletTab === 'MY_WALLET' ? '#15803d' : '#64748b'} />
+              <Text style={[styles.adminTabModeText, adminWalletTab === 'MY_WALLET' && styles.adminTabModeTextActive]}>
+                My Wallet
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.adminTabModeBtn, adminWalletTab === 'ALL_USERS_MANAGEMENT' && styles.adminTabModeBtnActive]}
+              onPress={() => setAdminWalletTab('ALL_USERS_MANAGEMENT')}
+            >
+              <Ionicons name="people" size={15} color={adminWalletTab === 'ALL_USERS_MANAGEMENT' ? '#15803d' : '#64748b'} />
+              <Text style={[styles.adminTabModeText, adminWalletTab === 'ALL_USERS_MANAGEMENT' && styles.adminTabModeTextActive]}>
+                All Users Wallet System (Admin)
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {isAdminOrOperator && adminWalletTab === 'ALL_USERS_MANAGEMENT' ? (
+          <AdminWalletManagementView />
+        ) : (
+          <>
+            {/* 👑 Royal Compact Highlighted Available Balance Card */}
+            <LinearGradient
+              colors={['#062016', '#094e39', '#031d17']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.royalBalanceCard}
+            >
+              <View style={styles.royalContentRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.royalBalanceLabel}>Available Balance</Text>
+                  {isLoadingWallet ? (
+                    <ActivityIndicator color="#fbbf24" style={{ alignSelf: 'flex-start', marginVertical: 6 }} />
+                  ) : (
+                    <View style={styles.balanceAmountRow}>
+                      <Text style={styles.royalCurrencySymbol}>₹</Text>
+                      <Text style={styles.royalBalanceValue} adjustsFontSizeToFit numberOfLines={1}>
+                        {(wallet?.balance ?? 0).toLocaleString('en-IN')}
+                      </Text>
+                    </View>
+                  )}
+
+                  {pendingWithdrawals.length > 0 ? (
+                    <Text style={styles.royalPendingNote}>
+                      ⏳ ₹{pendingWithdrawals.reduce((sum, w) => sum + Number(w.requestedAmount), 0).toLocaleString('en-IN')} pending
+                    </Text>
+                  ) : null}
                 </View>
-              )}
 
-              {pendingWithdrawals.length > 0 ? (
-                <Text style={styles.royalPendingNote}>
-                  ⏳ ₹{pendingWithdrawals.reduce((sum, w) => sum + Number(w.requestedAmount), 0).toLocaleString('en-IN')} pending
-                </Text>
-              ) : null}
-            </View>
-
-            <TouchableOpacity
-              style={styles.royalWithdrawBtn}
-              activeOpacity={0.85}
-              onPress={() => {
-                tap();
-                if (Platform.OS === 'web') {
-                  alert('Coming Soon! 🚀 Direct Bank & UPI payouts will be available soon.');
-                } else {
-                  Alert.alert(
-                    'Coming Soon 🚀',
-                    'Direct Bank & UPI wallet payouts will be available soon! Payout processing is being automated.'
-                  );
-                }
-              }}
-            >
-              <LinearGradient colors={['#fbbf24', '#d97706', '#b45309']} style={styles.royalWithdrawGradient}>
-                <Ionicons name="cash-outline" size={15} color="#0f172a" />
-                <Text style={styles.royalWithdrawBtnText}>Withdraw</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-        </LinearGradient>
-
-        {/* 🎁 Light Fresh & Effective Green Banner Card */}
-        <LinearGradient colors={['#f0fdf4', '#dcfce7', '#bbf7d0']} style={[styles.claimBanner, premiumShadow('#16a34a', 'sm')]}>
-          {/* Top Title Row */}
-          <View style={styles.claimBannerTitleRow}>
-            <Animated.View style={[styles.claimBannerIcon, { transform: [{ scale: giftScaleAnim }] }]}>
-              <Ionicons name="gift-outline" size={18} color="#16a34a" />
-            </Animated.View>
-            <Text style={styles.claimBannerTitle}>Invite Others & Earn Cash Rewards</Text>
-          </View>
-
-          {/* Action Buttons Row */}
-          <View style={styles.claimBannerActionsRow}>
-            <TouchableOpacity
-              style={styles.claimBannerBtnSecondary}
-              onPress={handleCopyLink}
-              activeOpacity={0.85}
-            >
-              <Ionicons
-                name={copiedLink ? 'checkmark-circle' : 'link-outline'}
-                size={14}
-                color={copiedLink ? '#15803d' : '#0f172a'}
-              />
-              <Text style={[styles.claimBannerBtnSecondaryText, copiedLink ? { color: '#15803d' } : { color: '#0f172a' }]}>
-                {copiedLink ? 'Copied!' : 'Copy Link'}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.claimBannerBtnJpg}
-              onPress={handleDownloadJpgCoupon}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="image-outline" size={14} color="#b45309" />
-              <Text style={styles.claimBannerBtnJpgText}>Invite Card</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.claimBannerBtn}
-              onPress={() => {
-                tap();
-                if (!isWelcomeClaimed) {
-                  setShowWelcomeModal(true); // Opens WelcomeBonusModal popup box!
-                } else {
-                  handleShareWhatsApp();
-                }
-              }}
-              activeOpacity={0.85}
-            >
-              <Ionicons
-                name={!isWelcomeClaimed ? 'sparkles' : 'logo-whatsapp'}
-                size={14}
-                color={!isWelcomeClaimed ? '#b45309' : '#ffffff'}
-              />
-              <Text style={[styles.claimBannerBtnText, !isWelcomeClaimed ? { color: '#b45309' } : { color: '#ffffff' }]}>
-                {!isWelcomeClaimed ? 'Claim Bonus' : 'Invite'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Dual Benefits Breakdown Cards inside Green Banner */}
-          <View style={styles.bannerBenefitsContainer}>
-            <View style={styles.bannerBenefitBoxYour}>
-              <View style={styles.bannerBenefitHeaderRow}>
-                <Ionicons name="trophy" size={13} color="#15803d" />
-                <Text style={styles.bannerBenefitTitleYour}>Your Earnings</Text>
+                <TouchableOpacity
+                  style={styles.royalWithdrawBtn}
+                  activeOpacity={0.85}
+                  onPress={() => {
+                    tap();
+                    if (Platform.OS === 'web') {
+                      alert('Coming Soon! 🚀 Direct Bank & UPI payouts will be available soon.');
+                    } else {
+                      Alert.alert(
+                        'Coming Soon 🚀',
+                        'Direct Bank & UPI wallet payouts will be available soon! Payout processing is being automated.'
+                      );
+                    }
+                  }}
+                >
+                  <LinearGradient colors={['#fbbf24', '#d97706', '#b45309']} style={styles.royalWithdrawGradient}>
+                    <Ionicons name="cash-outline" size={15} color="#0f172a" />
+                    <Text style={styles.royalWithdrawBtnText}>Withdraw</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
               </View>
-              <Text style={styles.bannerBenefitTextYour}>• <Text style={{ fontFamily: FONT.extraBold }}>₹{appSettings?.referralSignupBonusAmount ?? 10}</Text> Instant on Registration</Text>
-              <Text style={styles.bannerBenefitTextYour}>• <Text style={{ fontFamily: FONT.extraBold }}>₹{appSettings?.referralPaidPlanBonusAmount ?? 50}</Text> on Paid Plan Upgrade</Text>
-            </View>
+            </LinearGradient>
 
-            <View style={styles.bannerBenefitBoxNew}>
-              <View style={styles.bannerBenefitHeaderRow}>
-                <Ionicons name="gift" size={13} color="#0369a1" />
-                <Text style={styles.bannerBenefitTitleNew}>New User Benefits</Text>
+            {/* 🎁 Light Fresh & Effective Green Banner Card */}
+            <LinearGradient colors={['#f0fdf4', '#dcfce7', '#bbf7d0']} style={[styles.claimBanner, premiumShadow('#16a34a', 'sm')]}>
+              {/* Top Title Row */}
+              <View style={styles.claimBannerTitleRow}>
+                <Animated.View style={[styles.claimBannerIcon, { transform: [{ scale: giftScaleAnim }] }]}>
+                  <Ionicons name="gift-outline" size={18} color="#16a34a" />
+                </Animated.View>
+                <Text style={styles.claimBannerTitle}>Invite Others & Earn Cash Rewards</Text>
               </View>
-              <Text style={styles.bannerBenefitTextNew}>• <Text style={{ fontFamily: FONT.extraBold }}>₹{welcomeRewardAmount}</Text> Welcome Cash Bonus</Text>
-              <Text style={styles.bannerBenefitSubNew}>(With your referral/coupon code)</Text>
-            </View>
-          </View>
-        </LinearGradient>
 
+              {/* Action Buttons Row */}
+              <View style={styles.claimBannerActionsRow}>
+                <TouchableOpacity
+                  style={styles.claimBannerBtnSecondary}
+                  onPress={handleCopyLink}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons
+                    name={copiedLink ? 'checkmark-circle' : 'link-outline'}
+                    size={14}
+                    color={copiedLink ? '#15803d' : '#0f172a'}
+                  />
+                  <Text style={[styles.claimBannerBtnSecondaryText, copiedLink ? { color: '#15803d' } : { color: '#0f172a' }]}>
+                    {copiedLink ? 'Copied!' : 'Copy Link'}
+                  </Text>
+                </TouchableOpacity>
 
+                <TouchableOpacity
+                  style={styles.claimBannerBtnJpg}
+                  onPress={handleDownloadJpgCoupon}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="image-outline" size={14} color="#b45309" />
+                  <Text style={styles.claimBannerBtnJpgText}>Invite Card</Text>
+                </TouchableOpacity>
 
-        {/* Detailed Referral & Bonus Statement Table */}
-        <ReferralStatementTable theme={theme} />
+                <TouchableOpacity
+                  style={styles.claimBannerBtn}
+                  onPress={() => {
+                    tap();
+                    if (!isWelcomeClaimed) {
+                      setShowWelcomeModal(true); // Opens WelcomeBonusModal popup box!
+                    } else {
+                      handleShareWhatsApp();
+                    }
+                  }}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons
+                    name={!isWelcomeClaimed ? 'sparkles' : 'logo-whatsapp'}
+                    size={14}
+                    color={!isWelcomeClaimed ? '#b45309' : '#ffffff'}
+                  />
+                  <Text style={[styles.claimBannerBtnText, !isWelcomeClaimed ? { color: '#b45309' } : { color: '#ffffff' }]}>
+                    {!isWelcomeClaimed ? 'Claim Bonus' : 'Invite'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
-        {/* Unified Plan Coupons Hub for Advisors & Business Partners */}
-        {isAdvisorOrPartner ? <MyUnifiedPlanCouponsSection theme={theme} /> : null}
+              {/* Dual Benefits Breakdown Cards inside Green Banner */}
+              <View style={styles.bannerBenefitsContainer}>
+                <View style={styles.bannerBenefitBoxYour}>
+                  <View style={styles.bannerBenefitHeaderRow}>
+                    <Ionicons name="trophy" size={13} color="#15803d" />
+                    <Text style={styles.bannerBenefitTitleYour}>Your Earnings</Text>
+                  </View>
+                  <Text style={styles.bannerBenefitTextYour}>• <Text style={{ fontFamily: FONT.extraBold }}>₹{appSettings?.referralSignupBonusAmount ?? 10}</Text> Instant on Registration</Text>
+                  <Text style={styles.bannerBenefitTextYour}>• <Text style={{ fontFamily: FONT.extraBold }}>₹{appSettings?.referralPaidPlanBonusAmount ?? 50}</Text> on Paid Plan Upgrade</Text>
+                </View>
 
-        {/* Unified Wallet & Referral History Table */}
-        <WalletHistoryTable
-          transactions={wallet?.transactions ?? []}
-          referees={referralData?.referees ?? []}
-          theme={theme}
-        />
+                <View style={styles.bannerBenefitBoxNew}>
+                  <View style={styles.bannerBenefitHeaderRow}>
+                    <Ionicons name="gift" size={13} color="#0369a1" />
+                    <Text style={styles.bannerBenefitTitleNew}>New User Benefits</Text>
+                  </View>
+                  <Text style={styles.bannerBenefitTextNew}>• <Text style={{ fontFamily: FONT.extraBold }}>₹{welcomeRewardAmount}</Text> Welcome Cash Bonus</Text>
+                  <Text style={styles.bannerBenefitSubNew}>(With your referral/coupon code)</Text>
+                </View>
+              </View>
+            </LinearGradient>
+
+            {/* Detailed Referral & Bonus Statement Table */}
+            <ReferralStatementTable theme={theme} />
+
+            {/* Unified Plan Coupons Hub for Advisors & Business Partners */}
+            {isAdvisorOrPartner ? <MyUnifiedPlanCouponsSection theme={theme} /> : null}
+
+            {/* Unified Wallet & Referral History Table */}
+            <WalletHistoryTable
+              transactions={wallet?.transactions ?? []}
+              referees={referralData?.referees ?? []}
+              theme={theme}
+            />
+          </>
+        )}
       </ScrollView>
 
       {/* 🎁 Welcome Bonus Popup Box */}
@@ -2699,5 +2732,33 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     fontFamily: FONT.bold,
     color: '#0f172a',
+  },
+  adminTabModeRow: {
+    flexDirection: 'row',
+    backgroundColor: '#e2e8f0',
+    borderRadius: RADIUS.pill,
+    padding: 4,
+    gap: 4,
+    marginBottom: 8,
+  },
+  adminTabModeBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 9,
+    borderRadius: RADIUS.pill,
+  },
+  adminTabModeBtnActive: {
+    backgroundColor: '#ffffff',
+  },
+  adminTabModeText: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+  },
+  adminTabModeTextActive: {
+    color: '#15803d',
   },
 });

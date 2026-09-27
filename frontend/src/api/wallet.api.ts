@@ -18,6 +18,47 @@ export async function creditWallet(userId: string, amount: number, reason?: stri
   return data;
 }
 
+/** Admin/Super Admin: manually deduct balance from any user's wallet. */
+export async function debitWallet(userId: string, amount: number, reason?: string): Promise<MyWallet> {
+  const { data } = await apiClient.post<MyWallet>(`/wallet/admin/${userId}/debit`, { amount, reason });
+  return data;
+}
+
+export interface AdminUserWalletItem {
+  id: string;
+  name: string;
+  mobile: string;
+  kingId: string | null;
+  role: string;
+  roles?: string[];
+  upiId?: string | null;
+  bankAccountNumber?: string | null;
+  bankIfsc?: string | null;
+  createdAt: string;
+  balance: number;
+  totalCredit: number;
+  totalDebit: number;
+  pendingWithdrawal: number;
+}
+
+export interface AdminAllWalletsResponse {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  items: AdminUserWalletItem[];
+}
+
+export async function getAdminAllWallets(params?: {
+  search?: string;
+  role?: string;
+  page?: number;
+  limit?: number;
+}): Promise<AdminAllWalletsResponse> {
+  const { data } = await apiClient.get<AdminAllWalletsResponse>('/wallet/admin/all-users', { params });
+  return data;
+}
+
 export interface RefereeStatementItem {
   refereeId: string;
   refereeName: string;

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { OperatorPermission, Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -29,6 +29,25 @@ export class WalletController {
   @Get('referral-statement')
   getReferralStatement(@CurrentUser() user: AuthUser) {
     return this.walletService.getReferralStatement(user.id);
+  }
+
+  /** Admin/Super Admin: Comprehensive list of all users and their wallet balances. */
+  @UseGuards(OperatorPermissionGuard)
+  @RequireOperatorPermission(OperatorPermission.VIEW_WALLETS)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR)
+  @Get('admin/all-users')
+  getAdminAllWallets(
+    @Query('search') search?: string,
+    @Query('role') role?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.walletService.getAdminAllWallets(
+      search,
+      role,
+      page ? Number(page) : 1,
+      limit ? Number(limit) : 50,
+    );
   }
 
   /** Admin/Super Admin: Detailed calculation breakdown of all issued bonuses & transactions. */

@@ -405,4 +405,96 @@ export class WalletService {
       referees: refereeStatement,
     };
   }
+
+  /** Admin/Super Admin: Comprehensive list of all users and their wallet balances, total credits & debits. */
+  async getAdminAllWallets(search?: string, role?: string, page: number = 1, limit: number = 50) {
+    const skip = (page - 1) * limit;
+    const where: any = { deletedAt: null };
+
+    if (role && role !== 'ALL') {
+      where.role = role as any;
+    }
+
+    if (search && search.trim()) {
+      const q = search.trim();
+      where.OR = [
+        { name: { contains: q, mode: 'insensitive' } },
+        { mobile: { contains: q } },
+        { kingId: { contains: q, mode: 'insensitive' } },
+      ];
+    }
+
+    const [total, users] = await Promise.all([
+      this.prisma.user.count({ where }),
+      this.prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          mobile: true,
+          kingId: true,
+          role: true,
+          roles: true,
+          upiId: true,
+          bankAccountNumber: true,
+          bankIfsc: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    const userIds = users.map((u) => u.id);
+
+    const [credits, debits, pendingWithdrawals] = await Promise.all([
+      this.prisma.walletTransaction.groupBy({
+        by: ['userId'],
+        where: { userId: { in: userIds }, type: WalletTransactionType.CREDIT },
+        _sum: { amount: true },
+      }),
+      this.prisma.walletTransaction.groupBy({
+        by: ['userId'],
+        where: { userId: { in: userIds }, type: WalletTransactionType.DEBIT },
+        _sum: { amount: true },
+      }),
+      this.prisma.withdrawalRequest.findMany({
+        where: { userId: { in: userIds }, status: 'PENDING' },
+        select: { userId: true, amount: true, id: true },
+      }),
+    ]);
+
+    const creditMap = new Map(credits.map((c) => [c.userId, Number(c._sum.amount ?? 0)]));
+    const debitMap = new Map(debits.map((d) => [d.userId, Number(d._sum.amount ?? 0)]));
+    const pendingMap = new Map<string, number>();
+
+    pendingWithdrawals.forEach((pw) => {
+      const current = pendingMap.get(pw.userId) || 0;
+      pendingMap.set(pw.userId, current + Number(pw.amount || 0));
+    });
+
+    const items = users.map((u) => {
+      const totalCredit = creditMap.get(u.id) || 0;
+      const totalDebit = debitMap.get(u.id) || 0;
+      const balance = totalCredit - totalDebit;
+      const pendingWithdrawal = pendingMap.get(u.id) || 0;
+
+      return {
+        ...u,
+        balance,
+        totalCredit,
+        totalDebit,
+        pendingWithdrawal,
+      };
+    });
+
+    return {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      items,
+    };
+  }
 }

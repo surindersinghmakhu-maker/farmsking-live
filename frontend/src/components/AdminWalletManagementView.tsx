@@ -157,10 +157,10 @@ export function AdminWalletManagementView() {
   const handleExportCSVReport = () => {
     if (!autoReport) return;
     let csv = 'Type,ID,Name,Mobile,Role,Amount,Status,Date/Note\n';
-    autoReport.activeBalanceUsers.forEach((u) => {
-      csv += `ACTIVE_USER,${u.id},"${u.name || ''}",${u.mobile},${u.role},${u.balance.toFixed(2)},BALANCE,"UPI: ${u.upiId || 'N/A'}"\n`;
+    (autoReport?.activeBalanceUsers || []).forEach((u) => {
+      csv += `ACTIVE_USER,${u.id},"${u.name || ''}",${u.mobile},${u.role},${(u.balance || 0).toFixed(2)},BALANCE,"UPI: ${u.upiId || 'N/A'}"\n`;
     });
-    autoReport.withdrawals.forEach((w) => {
+    (autoReport?.withdrawals || []).forEach((w) => {
       csv += `WITHDRAWAL,${w.id},"${w.businessPartner?.name || ''}",${w.businessPartner?.mobile || ''},USER,${w.requestedAmount},${w.status},"${new Date(w.requestedAt).toLocaleDateString()}"\n`;
     });
 
@@ -424,7 +424,7 @@ export function AdminWalletManagementView() {
               <View style={styles.reportHeaderCard}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.reportTitle}>📊 Automated Wallet & Withdrawal Report</Text>
-                  <Text style={styles.reportSub}>Generated: {new Date(autoReport.generatedAt).toLocaleString()}</Text>
+                  <Text style={styles.reportSub}>Generated: {autoReport?.generatedAt ? new Date(autoReport.generatedAt).toLocaleString() : 'N/A'}</Text>
                 </View>
 
                 <TouchableOpacity style={styles.exportBtn} onPress={handleExportCSVReport}>
@@ -435,39 +435,39 @@ export function AdminWalletManagementView() {
 
               <View style={styles.summaryGrid}>
                 <View style={styles.summaryCard}>
-                  <Text style={styles.summaryVal}>{autoReport.summary.totalActiveBalanceUsers}</Text>
+                  <Text style={styles.summaryVal}>{autoReport?.summary?.totalActiveBalanceUsers ?? 0}</Text>
                   <Text style={styles.summaryLab}>Active Balance Users (&gt; ₹0)</Text>
                 </View>
                 <View style={styles.summaryCard}>
-                  <Text style={styles.summaryVal}>₹{autoReport.summary.totalSystemLiability.toFixed(2)}</Text>
+                  <Text style={styles.summaryVal}>₹{(autoReport?.summary?.totalSystemLiability ?? 0).toFixed(2)}</Text>
                   <Text style={styles.summaryLab}>Total System Liability</Text>
                 </View>
                 <View style={styles.summaryCard}>
-                  <Text style={styles.summaryVal}>₹{autoReport.summary.totalApprovedWithdrawals.toFixed(2)}</Text>
-                  <Text style={styles.summaryLab}>Approved Withdrawals Total ({autoReport.summary.countApprovedWithdrawals})</Text>
+                  <Text style={styles.summaryVal}>₹{(autoReport?.summary?.totalApprovedWithdrawals ?? 0).toFixed(2)}</Text>
+                  <Text style={styles.summaryLab}>Approved Withdrawals ({autoReport?.summary?.countApprovedWithdrawals ?? 0})</Text>
                 </View>
                 <View style={styles.summaryCard}>
-                  <Text style={styles.summaryVal}>₹{autoReport.summary.totalPendingWithdrawals.toFixed(2)}</Text>
-                  <Text style={styles.summaryLab}>Pending Withdrawals ({autoReport.summary.countPendingWithdrawals})</Text>
+                  <Text style={styles.summaryVal}>₹{(autoReport?.summary?.totalPendingWithdrawals ?? 0).toFixed(2)}</Text>
+                  <Text style={styles.summaryLab}>Pending Withdrawals ({autoReport?.summary?.countPendingWithdrawals ?? 0})</Text>
                 </View>
                 <View style={styles.summaryCard}>
-                  <Text style={styles.summaryVal}>₹{autoReport.summary.totalManualCredits.toFixed(2)}</Text>
-                  <Text style={styles.summaryLab}>Manual Credits</Text>
+                  <Text style={styles.summaryVal}>₹{(autoReport?.summary?.totalManualCredits ?? 0).toFixed(2)}</Text>
+                  <Text style={styles.summaryLab}>Manual Credits Total</Text>
                 </View>
                 <View style={styles.summaryCard}>
-                  <Text style={styles.summaryVal}>₹{autoReport.summary.totalInAppSpending.toFixed(2)}</Text>
+                  <Text style={styles.summaryVal}>₹{(autoReport?.summary?.totalInAppSpending ?? 0).toFixed(2)}</Text>
                   <Text style={styles.summaryLab}>In-App Usage Total</Text>
                 </View>
               </View>
 
-              <Text style={styles.sectionTitle}>Top Users with Active Wallet Balance ({autoReport.activeBalanceUsers.length})</Text>
-              {autoReport.activeBalanceUsers.slice(0, 15).map((u) => (
+              <Text style={styles.sectionTitle}>Top Users with Active Wallet Balance ({(autoReport?.activeBalanceUsers || []).length})</Text>
+              {(autoReport?.activeBalanceUsers || []).slice(0, 15).map((u) => (
                 <View key={u.id} style={styles.txRow}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.txUser}>{u.name || 'User'} ({u.role})</Text>
                     <Text style={styles.txReason}>📱 {u.mobile} • UPI: {u.upiId || 'N/A'}</Text>
                   </View>
-                  <Text style={styles.txAmount}>₹{u.balance.toFixed(2)}</Text>
+                  <Text style={styles.txAmount}>₹{(u.balance || 0).toFixed(2)}</Text>
                 </View>
               ))}
             </>
@@ -482,26 +482,26 @@ export function AdminWalletManagementView() {
             <>
               <View style={styles.summaryGrid}>
                 <View style={styles.summaryCard}>
-                  <Text style={styles.summaryVal}>₹{bonusReport.summary.totalBonusIssued}</Text>
+                  <Text style={styles.summaryVal}>₹{bonusReport?.summary?.totalBonusIssued ?? 0}</Text>
                   <Text style={styles.summaryLab}>Total Bonus Issued</Text>
                 </View>
                 <View style={styles.summaryCard}>
-                  <Text style={styles.summaryVal}>₹{bonusReport.summary.totalWalletLiability}</Text>
+                  <Text style={styles.summaryVal}>₹{bonusReport?.summary?.totalWalletLiability ?? 0}</Text>
                   <Text style={styles.summaryLab}>Total System Liability</Text>
                 </View>
                 <View style={styles.summaryCard}>
-                  <Text style={styles.summaryVal}>₹{bonusReport.summary.totalWelcome}</Text>
+                  <Text style={styles.summaryVal}>₹{bonusReport?.summary?.totalWelcome ?? 0}</Text>
                   <Text style={styles.summaryLab}>Welcome Signup Bonus</Text>
                 </View>
                 <View style={styles.summaryCard}>
-                  <Text style={styles.summaryVal}>₹{bonusReport.summary.totalReferralSignup}</Text>
+                  <Text style={styles.summaryVal}>₹{bonusReport?.summary?.totalReferralSignup ?? 0}</Text>
                   <Text style={styles.summaryLab}>Referral Signup Bonus</Text>
                 </View>
               </View>
 
-              <Text style={styles.sectionTitle}>Recent Bonus Ledgers ({bonusReport.transactions.length})</Text>
+              <Text style={styles.sectionTitle}>Recent Bonus Ledgers ({(bonusReport?.transactions || []).length})</Text>
 
-              {bonusReport.transactions.map((tx) => (
+              {(bonusReport?.transactions || []).map((tx) => (
                 <View key={tx.id} style={styles.txRow}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.txUser}>{tx.user?.name || tx.user?.mobile}</Text>

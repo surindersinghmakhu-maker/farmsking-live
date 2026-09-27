@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
+import jsQR from 'jsqr';
 import { FONT, RADIUS } from '@/constants/theme';
 import { parseUpiQrCode, ParsedUpiResult } from '../utils/upiQrParser';
 
@@ -21,12 +22,93 @@ interface UpiQrScannerModalProps {
   onScanSuccess: (result: ParsedUpiResult) => void;
 }
 
+// Decode QR code from canvas pixel data using jsQR
+const decodeQrFromCanvas = (canvas: HTMLCanvasElement): string | null => {
+  try {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const result = jsQR(imageData.data, imageData.width, imageData.height, {
+      inversionAttempts: 'dontInvert',
+    });
+    if (result && result.data) return result.data;
+
+    const resultInverted = jsQR(imageData.data, imageData.width, imageData.height, {
+      inversionAttempts: 'onlyInvert',
+    });
+    return resultInverted ? resultInverted.data : null;
+  } catch (e) {
+    return null;
+  }
+};
+
+// Decode QR code from image URI/file
+const decodeQrFromImageUri = (imageUri: string): Promise<string | null> => {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined') {
+      resolve(null);
+      return;
+    }
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        const width = img.naturalWidth || img.width;
+        const height = img.naturalHeight || img.height;
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(null);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        const decoded = decodeQrFromCanvas(canvas);
+        if (decoded) {
+          resolve(decoded);
+          return;
+        }
+
+        // Retry with scaled down image if large
+        if (width > 800 || height > 800) {
+          const scaledCanvas = document.createElement('canvas');
+          const maxDim = 800;
+          const scale = Math.min(maxDim / width, maxDim / height);
+          scaledCanvas.width = Math.round(width * scale);
+          scaledCanvas.height = Math.round(height * scale);
+          const scaledCtx = scaledCanvas.getContext('2d');
+          if (scaledCtx) {
+            scaledCtx.drawImage(img, 0, 0, scaledCanvas.width, scaledCanvas.height);
+            const scaledDecoded = decodeQrFromCanvas(scaledCanvas);
+            if (scaledDecoded) {
+              resolve(scaledDecoded);
+              return;
+            }
+          }
+        }
+
+        resolve(null);
+      } catch (err) {
+        console.warn('QR decode error:', err);
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = imageUri;
+  });
+};
+
 export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
   visible,
   onClose,
   onScanSuccess,
 }) => {
   const [cameraStatus, setCameraStatus] = useState<'IDLE' | 'STARTING' | 'ACTIVE' | 'FAILED'>('IDLE');
+  const [isDecodingPhoto, setIsDecodingPhoto] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -68,14 +150,14 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       }
       setErrorMessage('Invalid UPI QR Code! Please scan a valid GPay/PhonePe/Paytm UPI QR.');
-      setTimeout(() => setErrorMessage(null), 3000);
+      setTimeout(() => setErrorMessage(null), 3500);
       return;
     }
 
     if (Platform.OS !== 'web') {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
-    // Stop camera immediately after scan
+    // Stop camera immediately after successful scan
     stopCameraStream();
     onScanSuccess(parsed);
     onClose();
@@ -115,9 +197,9 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
         startScanLoop();
       }
     } catch (err: any) {
-      console.warn('Camera permission or device error:', err);
+      console.warn('Camera error:', err);
       setCameraStatus('FAILED');
-      setErrorMessage('Camera permission denied or camera unavailable. Please grant camera permission or select QR photo from gallery.');
+      setErrorMessage('Camera permission denied or camera unavailable. You can select a QR photo from gallery.');
     }
   };
 
@@ -150,6 +232,11 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const decoded = decodeQrFromCanvas(canvas);
+            if (decoded) {
+              handleQrDecodedSuccess(decoded);
+              return;
+            }
           }
         } catch (err) {}
       }
@@ -162,11 +249,15 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
     animFrameIdRef.current = requestAnimationFrame(scanFrame);
   };
 
-  // Image upload fallback decoding
+  // Image upload & QR decode handler
   const handlePickQrImage = async () => {
     try {
+      setIsDecodingPhoto(true);
+      setErrorMessage(null);
+
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
+        setIsDecodingPhoto(false);
         Alert.alert('Permission Required', 'Gallery access is needed to select QR image.');
         return;
       }
@@ -177,42 +268,56 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
         allowsEditing: false,
       });
 
-      if (!result.canceled && result.assets && result.assets[0]?.uri) {
-        const imageUri = result.assets[0].uri;
+      if (result.canceled || !result.assets || !result.assets[0]?.uri) {
+        setIsDecodingPhoto(false);
+        return;
+      }
 
-        if (Platform.OS === 'web' && typeof window !== 'undefined' && 'BarcodeDetector' in window) {
+      const imageUri = result.assets[0].uri;
+      let decodedText: string | null = null;
+
+      // 1. Try Browser BarcodeDetector
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && 'BarcodeDetector' in window) {
+        try {
           const img = new Image();
           img.crossOrigin = 'anonymous';
-          img.onload = async () => {
-            try {
-              const detector = new (window as any).BarcodeDetector({ formats: ['qr_code'] });
-              const barcodes = await detector.detect(img);
-              if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
-                handleQrDecodedSuccess(barcodes[0].rawValue);
-              } else {
-                Alert.alert('QR Code Not Found', 'Could not detect a valid QR code in the selected image.');
-              }
-            } catch (err) {
-              Alert.alert('Scan Failed', 'Could not read QR code from image.');
-            }
-          };
-          img.src = imageUri;
-        } else {
-          Alert.alert(
-            'QR Image Selected',
-            'Please paste your UPI ID directly or scan using live camera stream.'
-          );
-        }
+          await new Promise<void>((res) => {
+            img.onload = () => res();
+            img.onerror = () => res();
+            img.src = imageUri;
+          });
+          const detector = new (window as any).BarcodeDetector({ formats: ['qr_code'] });
+          const barcodes = await detector.detect(img);
+          if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+            decodedText = barcodes[0].rawValue;
+          }
+        } catch (e) {}
+      }
+
+      // 2. Fallback to jsQR canvas engine
+      if (!decodedText) {
+        decodedText = await decodeQrFromImageUri(imageUri);
+      }
+
+      setIsDecodingPhoto(false);
+
+      if (decodedText) {
+        handleQrDecodedSuccess(decodedText);
+      } else {
+        Alert.alert(
+          'QR Code Reading Failed',
+          'Selected photo vich valid QR code nahi milya. Kripya saaf QR code di photo select karo ja camera scanner verto.'
+        );
       }
     } catch (err) {
-      Alert.alert('Error', 'Failed to pick image from gallery.');
+      setIsDecodingPhoto(false);
+      Alert.alert('Error', 'Failed to read QR image from gallery.');
     }
   };
 
   useEffect(() => {
     if (visible) {
       if (Platform.OS === 'web') {
-        // Try auto starting web camera
         setTimeout(() => startWebCamera(), 150);
       }
     } else {
@@ -247,7 +352,7 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
 
           {/* Subtitle instructions */}
           <Text style={styles.subtitle}>
-            Point camera at PhonePe, GPay, Paytm or Bank QR code to auto-decode UPI ID.
+            Point camera at PhonePe, GPay, Paytm or Bank QR code, or select QR photo from gallery.
           </Text>
 
           {/* Error / Warning Alert */}
@@ -260,7 +365,12 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
 
           {/* Camera Viewfinder Container */}
           <View style={styles.viewfinderContainer}>
-            {cameraStatus === 'ACTIVE' ? (
+            {isDecodingPhoto ? (
+              <View style={styles.statusBox}>
+                <ActivityIndicator size="large" color="#22c55e" />
+                <Text style={styles.statusText}>Reading & Decoding Selected QR Photo...</Text>
+              </View>
+            ) : cameraStatus === 'ACTIVE' ? (
               <video
                 ref={videoRef as any}
                 style={{
@@ -284,7 +394,7 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
                   <Ionicons name="camera" size={32} color="#22c55e" />
                 </View>
                 <Text style={styles.cameraTitleText}>Camera Access Required</Text>
-                <Text style={styles.cameraSubText}>Click the button below to turn ON camera access</Text>
+                <Text style={styles.cameraSubText}>Click below to turn ON camera or select QR photo</Text>
 
                 <TouchableOpacity
                   style={styles.turnOnCameraBtn}
@@ -298,7 +408,7 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
             )}
 
             {/* Target Frame Box Over Video when Active */}
-            {cameraStatus === 'ACTIVE' && (
+            {cameraStatus === 'ACTIVE' && !isDecodingPhoto && (
               <View style={styles.targetFrame}>
                 <View style={[styles.corner, styles.topLeft]} />
                 <View style={[styles.corner, styles.topRight]} />
@@ -333,10 +443,17 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
             <TouchableOpacity
               style={styles.galleryBtn}
               activeOpacity={0.8}
+              disabled={isDecodingPhoto}
               onPress={handlePickQrImage}
             >
-              <Ionicons name="image-outline" size={18} color="#059669" />
-              <Text style={styles.galleryBtnText}>Select QR Photo</Text>
+              {isDecodingPhoto ? (
+                <ActivityIndicator size="small" color="#059669" />
+              ) : (
+                <>
+                  <Ionicons name="image-outline" size={18} color="#059669" />
+                  <Text style={styles.galleryBtnText}>Select QR Photo</Text>
+                </>
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity

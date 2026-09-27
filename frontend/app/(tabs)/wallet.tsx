@@ -44,14 +44,14 @@ function formatValue(type: DiscountValueType, value: string, maxCap?: string | n
 }
 
 export function maskMobileNumber(val?: string): string {
-  if (!val) return '📞 XXX-XXX-XXXX';
+  if (!val) return 'XXX-XXX-XXXX';
   const cleaned = val.replace(/\D/g, '');
   if (cleaned.length >= 7) {
     const first3 = cleaned.slice(0, 3);
     const last4 = cleaned.slice(-4);
-    return `📞 ${first3}XXX${last4}`;
+    return `${first3}XXX${last4}`;
   }
-  return `📞 ${val}`;
+  return `${val}`;
 }
 
 export function downloadJpgCouponCard({
@@ -465,7 +465,7 @@ export default function WalletScreen() {
             <View style={styles.bannerBenefitBoxYour}>
               <View style={styles.bannerBenefitHeaderRow}>
                 <Ionicons name="trophy" size={13} color="#15803d" />
-                <Text style={styles.bannerBenefitTitleYour}>Your Earnings (Referrer)</Text>
+                <Text style={styles.bannerBenefitTitleYour}>Your Earnings</Text>
               </View>
               <Text style={styles.bannerBenefitTextYour}>• <Text style={{ fontFamily: FONT.extraBold }}>₹{appSettings?.referralSignupBonusAmount ?? 10}</Text> Instant on Registration</Text>
               <Text style={styles.bannerBenefitTextYour}>• <Text style={{ fontFamily: FONT.extraBold }}>₹{appSettings?.referralPaidPlanBonusAmount ?? 50}</Text> on Paid Plan Upgrade</Text>
@@ -620,7 +620,7 @@ function ReferralInviteCard({
           <View style={styles.benefitBoxYour}>
             <View style={styles.benefitHeaderRow}>
               <Ionicons name="trophy" size={13} color="#15803d" />
-              <Text style={styles.benefitBoxTitleYour}>Your Earnings (Referrer)</Text>
+              <Text style={styles.benefitBoxTitleYour}>Your Earnings</Text>
             </View>
             <Text style={styles.benefitItemText}>• <Text style={{ fontFamily: FONT.extraBold }}>₹{referralBonusAmount}</Text> Instant on Registration</Text>
             <Text style={styles.benefitItemText}>• <Text style={{ fontFamily: FONT.extraBold }}>₹{referralPaidPlanBonusAmount}</Text> on Paid Plan Upgrade</Text>
@@ -948,7 +948,6 @@ function ReferralStatementTable({ theme }: { theme: RoleTheme }) {
         </View>
         <View style={styles.collapseTogglePill}>
           <Text style={styles.collapseTogglePillText}>{isLedgerExpanded ? '-' : '+'}</Text>
-          <Ionicons name={isLedgerExpanded ? 'chevron-up' : 'chevron-down'} size={14} color="#0f172a" />
         </View>
       </TouchableOpacity>
 
@@ -989,7 +988,7 @@ function ReferralStatementTable({ theme }: { theme: RoleTheme }) {
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.txCard, premiumShadow('#0f172a', 'sm'), { marginTop: 8, padding: 0, overflow: 'hidden' }]}>
+          <View style={[styles.txCard, premiumShadow('#0f172a', 'sm'), { marginTop: 8, padding: 0, overflow: 'hidden', borderWidth: 1.5, borderColor: '#cbd5e1' }]}>
             <View style={styles.tableHeaderRow}>
               <Text style={[styles.tableHeadCell, { flex: 1.4 }]}>Name & Mobile</Text>
               <Text style={[styles.tableHeadCell, { flex: 1 }]}>Reg Date</Text>
@@ -1165,7 +1164,6 @@ function WalletHistoryTable({
         </View>
         <View style={styles.collapseTogglePill}>
           <Text style={styles.collapseTogglePillText}>{isTxHistoryExpanded ? '-' : '+'}</Text>
-          <Ionicons name={isTxHistoryExpanded ? 'chevron-up' : 'chevron-down'} size={14} color="#0f172a" />
         </View>
       </TouchableOpacity>
 
@@ -2280,9 +2278,9 @@ const styles = StyleSheet.create({
   mySponsorName: { fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' },
   mySponsorSub: { fontSize: 11, fontFamily: FONT.medium, color: '#475569', marginTop: 1 },
   mySponsorBonusText: { fontSize: 11, fontFamily: FONT.medium, color: '#334155' },
-  tableHeaderRow: { flexDirection: 'row', alignItems: 'center', paddingBottom: 8, borderBottomWidth: 1.5, borderBottomColor: '#e2e8f0' },
-  tableHeadCell: { fontSize: 10.5, fontFamily: FONT.bold, color: '#64748b', textTransform: 'uppercase' },
-  tableRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
+  tableHeaderRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 12, backgroundColor: '#f8fafc', borderBottomWidth: 1.5, borderBottomColor: '#e2e8f0' },
+  tableHeadCell: { fontSize: 10.5, fontFamily: FONT.bold, color: '#475569', textTransform: 'uppercase' },
+  tableRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 12 },
   tableRowBorder: { borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   tableNameText: { fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' },
   tableSubText: { fontSize: 10, fontFamily: FONT.medium, color: '#64748b' },

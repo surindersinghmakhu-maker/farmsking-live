@@ -111,10 +111,10 @@ export class TrainersService {
 
     // Send WhatsApp OTP message to farmer
     const msg = `🌾 *FarmsKing Training Verification Code* 🔑\n\n` +
-      `Hello *${log.farmer.name || 'Farmer'}* ji,\n` +
-      `Technical Trainer ਨੇ ਤੁਹਾਨੂੰ ਐਪ ਸਿਖਾਉਣ ਦੀ ਬੇਨਤੀ ਕੀਤੀ ਹੈ।\n\n` +
-      `ਤੁਹਾਡਾ 4-ਅੰਕਾਂ ਦਾ ਵੈਰੀਫਿਕੇਸ਼ਨ ਕੋਡ ਹੈ: *${code}*\n\n` +
-      `ਇਹ ਕੋਡ ਕੇਵਲ ਉਦੋਂ ਹੀ ਟ੍ਰੇਨਰ ਨਾਲ ਸਾਂਝਾ ਕਰੋ ਜੇਕਰ ਤੁਹਾਨੂੰ ਐਪ ਚਲਾਉਣੀ ਸਿਖਾ ਦਿੱਤੀ ਗਈ ਹੈ। 🌾🚜`;
+      `Hello *${log.farmer.name || 'Farmer'}*,\n` +
+      `Your Technical Trainer has requested to verify your app training completion.\n\n` +
+      `Your 4-digit Verification Code is: *${code}*\n\n` +
+      `Please share this code with your trainer only if you have received full app training. 🌾🚜`;
 
     this.whatsappBotService.sendDirectTextMessage(log.farmer.mobile, msg).catch(() => {});
 
@@ -238,8 +238,8 @@ export class TrainersService {
       success: true,
       rewardAmount,
       message: rating >= 4
-        ? `✨ ਧੰਨਵਾਦ! ਤੁਹਾਡੀ ${rating}-ਸਟਾਰ ਰੇਟਿੰਗ ਦਰਜ ਕਰ ਲਈ ਗਈ ਹੈ।`
-        : 'ਤੁਹਾਡਾ ਫੀਡਬੈਕ ਦਰਜ ਕਰ ਲਿਆ ਗਿਆ ਹੈ।',
+        ? `✨ Thank you! Your ${rating}-Star rating has been recorded.`
+        : 'Thank you! Your feedback has been recorded.',
       log: updated,
     };
   }
@@ -343,17 +343,17 @@ export class TrainersService {
     });
 
     // Notify assigned trainer via WhatsApp
-    const msg = `📞 *ਨਵੀਂ ਕਿਸਾਨ ਕਾਲ ਰਿਕਵੈਸਟ (FarmsKing Trainer)*\n\n` +
-      `ਕਿਸਾਨ *${farmerUser.name || farmerUser.kingId || farmerUser.mobile}* ਨੇ ਐਪ ਸਿੱਖਣ ਲਈ ਕਾਲ ਕਰਨ ਦੀ ਬੇਨਤੀ ਕੀਤੀ ਹੈ।\n` +
-      `ਪਸੰਦੀਦਾ ਸਮਾਂ: *${preferredSlot}*\n` +
-      `ਫੋਨ ਨੰਬਰ: *${farmerUser.mobile}*\n\n` +
-      `ਕਿਰਪਾ ਕਰਕੇ ਆਪਣੇ ਟ੍ਰੇਨਰ ਡੈਸ਼ਬੋਰਡ ਤੋਂ ਕਿਸਾਨ ਨਾਲ ਰਾਬਤਾ ਕਾਇਮ ਕਰੋ। 🌾`;
+    const msg = `📞 *New Farmer Call Request (FarmsKing Trainer)*\n\n` +
+      `Farmer *${farmerUser.name || farmerUser.kingId || farmerUser.mobile}* requested phone assistance to learn the app.\n` +
+      `Preferred Time Window: *${preferredSlot}*\n` +
+      `Mobile Number: *${farmerUser.mobile}*\n\n` +
+      `Please contact the farmer from your Trainer Dashboard. 🌾`;
 
     this.whatsappBotService.sendDirectTextMessage(log.trainer.mobile, msg).catch(() => {});
 
     return {
       success: true,
-      message: '✅ ਤੁਹਾਡੀ ਕਾਲ ਬੇਨਤੀ ਦਰਜ ਹੋ ਗਈ ਹੈ! ਟ੍ਰੇਨਰ ਤੁਹਾਨੂੰ ਜਲਦੀ ਹੀ ਕਾਲ ਕਰੇਗਾ।',
+      message: '✅ Your call request has been recorded! Technical Trainer will call you shortly.',
       log: updated,
     };
   }
@@ -391,8 +391,8 @@ export class TrainersService {
     return {
       success: true,
       message: forwardedToId
-        ? '⏩ ਕੇਸ ਸਫ਼ਲਤਾਪੂਰਵਕ Upline Senior Trainer ਕੋਲ ਫਾਰਵਰਡ ਹੋ ਗਿਆ ਹੈ।'
-        : '⏩ ਕੇਸ ਐਸਕੇਲੇਟਿਡ ਮਾਰਕ ਹੋ ਗਿਆ ਹੈ।',
+        ? '⏩ Case forwarded successfully to Upline Senior Trainer.'
+        : '⏩ Case marked as escalated.',
       log: updated,
     };
   }

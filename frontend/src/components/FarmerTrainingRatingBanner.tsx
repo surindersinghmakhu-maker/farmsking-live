@@ -32,7 +32,7 @@ export function FarmerTrainingRatingBanner() {
     setIsSubmitting(true);
     try {
       const res = await submitFarmerTrainingRating(rating);
-      setSuccessMsg(res.message || '✨ ਧੰਨਵਾਦ! ਤੁਹਾਡਾ ਫੀਡਬੈਕ ਦਰਜ ਹੋ ਗਿਆ ਹੈ।');
+      setSuccessMsg(res.message || '✨ Thank you! Your training feedback has been submitted successfully.');
       setTimeout(() => {
         setPendingInfo(null);
       }, 2000);

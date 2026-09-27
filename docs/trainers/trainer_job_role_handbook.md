@@ -1,56 +1,56 @@
-# 🌾 FarmsKing - ਟੈਕਨੀਕਲ ਟ੍ਰੇਨਰ (Technical Trainer) ਜੌਬ ਪ੍ਰੋਫਾਈਲ & ਹਦਾਇਤਾਂ ਪੁਸਤਕ
+# 🌾 FarmsKing - Technical Trainer Job Profile & Operational Manual
 
 ---
 
-## 🎯 1. ਪਦ ਦਾ ਨਾਮ (Job Title) & ਮਨੋਰਥ
-* **ਪਦ ਦਾ ਨਾਮ:** Technical Trainer (ਤਕਨੀਕੀ ਟ੍ਰੇਨਰ - ਪਾਰਟ ਟਾਈਮ / ਫੁੱਲ ਟਾਈਮ)
-* **ਮੁੱਖ ਮਕਸਦ:** FarmsKing ਐਪ ਨਾਲ ਜੁੜਨ ਵਾਲੇ ਹਰ ਨਵੇਂ ਕਿਸਾਨ ਭਰਾ ਨੂੰ ਫੋਨ ਅਤੇ ਵਟਸਐਪ (WhatsApp) ਰਾਹੀਂ ਐਪ ਦੀ ਪੂਰੀ ਵਰਤੋਂ ਸਿਖਾਉਣਾ, ਪ੍ਰੋਫਾਈਲ/UPI ਸੈੱਟਅੱਪ ਕਰਵਾਉਣਾ ਅਤੇ ਕਿਸਾਨਾਂ ਦੀਆਂ ਤਕਨੀਕੀ ਸਮੱਸਿਆਵਾਂ ਹੱਲ ਕਰਨਾ।
+## 🎯 1. Job Title & Purpose
+* **Job Title:** Technical Trainer (Part-time / Full-time)
+* **Core Objective:** Provide phone and WhatsApp guidance to every newly registered farmer, assist them with profile & UPI setup, teach them app navigation, and solve any technical difficulties they face.
 
 ---
 
-## 📋 2. ਟ੍ਰੇਨਰ ਦੀਆਂ ਮੁੱਖ ਜ਼ੁੰਮੇਵਾਰੀਆਂ (Main Duties & Responsibilities)
+## 📋 2. Key Responsibilities
 
-1. **ਨਵੇਂ ਕਿਸਾਨਾਂ ਨੂੰ ਜੀ ਆਇਆਂ (Welcome Call):**
-   - ਆਪਣੇ ਜ਼ਿਲ੍ਹੇ/ਸਟੇਟ ਵਿੱਚ ਰਜਿਸਟਰ ਹੋਣ ਵਾਲੇ ਹਰ ਨਵੇਂ ਕਿਸਾਨ ਨੂੰ 24-48 ਘੰਟਿਆਂ ਦੇ ਅੰਦਰ ਕਾਲ/ਵਟਸਐਪ ਕਰਨਾ।
-2. **ਐਪ ਚਲਾਉਣਾ ਸਿਖਾਉਣਾ (App Guidance):**
-   - ਕਿਸਾਨ ਨੂੰ ਦੱਸਣਾ ਕਿ **ਮੰਡੀ ਭਾਅ (Live Market Rates)** ਕਿਵੇਂ ਦੇਖਣੇ ਹਨ।
-   - ਕਿਸਾਨ ਦੀ **ਪ੍ਰੋਫਾਈਲ ਜਾਣਕਾਰੀ ਅਤੇ UPI ID** ਦਰਜ ਕਰਵਾਉਣਾ ਤਾਂ ਜੋ ਕਿਸਾਨ ਨੂੰ ਰੈਫਰਲ/ਕੈਸ਼ਬੈਕ ਪੈਸੇ ਆ ਸਕਣ।
-   - **ਫਸਲ ਦੀ ਬੀਮਾਰੀ/ਸਪਰੇਅ ਟੈਂਕ (Spray Calculator)** ਦੀ ਵਰਤੋਂ ਸਮਝਾਉਣਾ।
-3. **ਕਾਲ ਰਿਕਵੈਸਟਾਂ ਦਾ ਜਵਾਬ ਦੇਣਾ:**
-   - ਜਦੋਂ ਵੀ ਕੋਈ ਕਿਸਾਨ ਐਪ ਤੋਂ **`📞 ਮੈਨੂੰ ਕਾਲ ਕਰੋ`** ਬਟਨ ਦਬਾਵੇ, ਤਾਂ ਉਸਦੇ ਚੁਣੇ ਹੋਏ ਟਾਈਮ ਸਲਾਟ ਵਿੱਚ ਉਸਨੂੰ ਫੋਨ ਕਰਕੇ ਮਦਦ ਕਰਨੀ।
-4. **ਮੁਸ਼ਕਿਲ ਕੇਸ ਫਾਰਵਰਡ ਕਰਨਾ (Forward to Upline):**
-   - ਜੇਕਰ ਕਿਸਾਨ ਦੀ ਸਮੱਸਿਆ ਤੁਹਾਡੇ ਤੋਂ ਹੱਲ ਨਹੀਂ ਹੁੰਦੀ, ਤਾਂ ਡੈਸ਼ਬੋਰਡ ਤੋਂ **`⏩ Forward`** ਬਟਨ ਦਬਾ ਕੇ ਕੇਸ ਆਪਣੇ **Upline Senior Trainer** ਕੋਲ ਭੇਜ ਦੇਣਾ।
-
----
-
-## 🗣️ 3. ਕਿਸਾਨ ਨਾਲ ਗੱਲਬਾਤ ਕਰਨ ਦਾ ਤਰੀਕਾ (Call Script for Trainer)
-
-> *"ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ ਕਿਸਾਨ ਵੀਰ ਜੀ! ਮੈਂ FarmsKing ਐਪ ਵੱਲੋਂ ਤੁਹਾਡਾ ਤਕਨੀਕੀ ਟ੍ਰੇਨਰ ਬੋਲ ਰਿਹਾ ਹਾਂ। ਅਸੀਂ ਦੇਖਿਆ ਹੈ ਕਿ ਤੁਸੀਂ FarmsKing ਐਪ ਡਾਊਨਲੋਡ ਕੀਤੀ ਹੈ। ਕੀ ਤੁਹਾਨੂੰ ਐਪ ਵਿੱਚ ਮੰਡੀ ਭਾਅ ਦੇਖਣ ਜਾਂ ਆਪਣੇ ਅਕਾਊਂਟ ਵਿੱਚ UPI ID ਭਰਨ 'ਚ ਕੋਈ ਸਮੱਸਿਆ ਆ ਰਹੀ ਹੈ? ਮੈਂ ਤੁਹਾਡੀ ਪੂਰੀ ਮਦਦ ਕਰਾਂਗਾ।"*
+1. **New Farmer Onboarding (Welcome Call):**
+   - Contact newly registered farmers in your assigned State/District within 24-48 hours via Call or WhatsApp.
+2. **App Navigation Training:**
+   - Demonstrate how to view **Live Market Rates (Mandi Rates)**.
+   - Guide farmers to fill in their **Profile Information and UPI ID** for cashback/referral payouts.
+   - Explain how to use the **Crop Disease Advisor & Spray Tank Calculator**.
+3. **Responding to Farmer Call Requests:**
+   - Whenever a farmer taps the **`📞 Call Me Request`** button in the app, contact them during their preferred time slot.
+4. **Escalating Complex Issues (Forward to Upline):**
+   - If a farmer has a complex technical or payment issue that you cannot resolve, tap the **`⏩ Forward to Upline`** button to assign it to your State Upline Senior Trainer.
 
 ---
 
-## 💸 4. ਕਮਾਈ ਅਤੇ ਵਾਲਿਟ ਇਨਾਮ (Salary / Per Call Wallet Payout)
+## 🗣️ 3. Standard Farmer Call Script
 
-ਟ੍ਰੇਨਰ ਦੀ ਕਮਾਈ ਕਿਸਾਨ ਵਲੋਂ ਐਪ ਵਿੱਚ ਦਿੱਤੀ ਗਈ **Star Rating** ਦੇ ਆਧਾਰ 'ਤੇ ਸਿੱਧੀ **FarmsKing Wallet** ਵਿੱਚ ਆਵੇਗੀ:
-
-* ⭐️⭐️⭐️⭐️⭐️ **5-Star Rating:** **₹25** ਪ੍ਰਤੀ ਕਿਸਾਨ ਟ੍ਰੇਨਿੰਗ
-* ⭐️⭐️⭐️⭐️ **4-Star Rating:** **₹15** ਪ੍ਰਤੀ ਕਿਸਾਨ ਟ੍ਰੇਨਿੰਗ
-* ⭐️⭐️⭐️ **1-3 Star Rating:** **₹0** (ਮਾੜੀ ਸਰਵਿਸ 'ਤੇ ਕੋਈ ਪੇਮੈਂਟ ਨਹੀਂ)
-
-> 💡 **ਉਦਾਹਰਨ:** ਜੇਕਰ ਤੁਸੀਂ ਰੋਜ਼ਾਨਾ 10 ਕਿਸਾਨਾਂ ਨੂੰ ਚੰਗੀ ਟ੍ਰੇਨਿੰਗ ਦਿੰਦੇ ਹੋ ਅਤੇ ਉਹ 5-Star ਦਿੰਦੇ ਹਨ, ਤਾਂ ਤੁਹਾਡੀ ਰੋਜ਼ਾਨਾ ਕਮਾਈ **₹250** (ਮਹੀਨੇ ਦੀ **₹7,500** ਪਾਰਟ-ਟਾਈਮ) ਹੋਵੇਗੀ!
+> *"Hello Farmer Friend! I am your Technical Trainer calling from FarmsKing App. We noticed you recently joined FarmsKing. Do you need any assistance viewing Mandi rates, completing your profile, or setting up your UPI ID? I am here to guide you step-by-step."*
 
 ---
 
-## 🏆 5. ਟ੍ਰੇਨਰ ਗ੍ਰੇਡ ਅਤੇ ਪ੍ਰਮੋਸ਼ਨ (Grading System)
+## 💸 4. Wallet Earnings & Reward Structure
 
-* **Grade A (Rating 4.5 - 5.0):** Top Performance! Upline Senior Trainer ਬਣਨ ਦੇ ਯੋਗ।
-* **Grade B (Rating 3.5 - 4.4):** ਚੰਗੀ ਕਾਰਗੁਜ਼ਾਰੀ।
-* **Grade C (Rating < 3.5):** ਸੁਧਾਰ ਦੀ ਲੋੜ।
+Trainer payouts are based on the **Star Rating** submitted by the farmer upon completing training:
+
+* ⭐️⭐️⭐️⭐️⭐️ **5-Star Rating:** **₹25** per farmer training (Credited to Wallet)
+* ⭐️⭐️⭐️⭐️ **4-Star Rating:** **₹15** per farmer training (Credited to Wallet)
+* ⭐️⭐️⭐️ **1-3 Star Rating:** **₹0** (No payout for substandard service)
+
+> 💡 **Example:** If you train 10 farmers daily and receive 5-Star ratings, your daily earnings will be **₹250** (monthly **₹7,500** part-time earnings).
 
 ---
 
-## 📱 6. ਟ੍ਰੇਨਰ ਡੈਸ਼ਬੋਰਡ ਦੀ ਵਰਤੋਂ ਕਿਵੇਂ ਕਰਨੀ ਹੈ?
-1. FarmsKing ਐਪ ਖੋਲ੍ਹੋ ਅਤੇ **`🎓 Trainer Dashboard`** ਟੈਬ 'ਤੇ ਜਾਓ।
-2. ਤੁਹਾਨੂੰ ਤੁਹਾਡੇ ਸਟੇਟ/ਜ਼ਿਲ੍ਹੇ ਦੇ ਸਾਰੇ ਕਿਸਾਨਾਂ ਦੀ ਲਿਸਟ ਦਿਸੇਗੀ।
-3. **`📞 Call`** ਦਬਾ ਕੇ ਕਿਸਾਨ ਨੂੰ ਫੋਨ ਕਰੋ ਜਾਂ **`💬 WhatsApp`** ਦਬਾ ਕੇ ਮੈਸੇਜ ਭੇਜੋ।
-4. ਟ੍ਰੇਨਿੰਗ ਪੂਰੀ ਹੋਣ ਤੋਂ ਬਾਅਦ ਕਿਸਾਨ ਆਪਣੀ ਐਪ ਖੋਲ੍ਹ ਕੇ ਤੁਹਾਨੂੰ Star Rating ਦੇਵੇਗਾ, ਅਤੇ ਪੈਸੇ ਤੁਰੰਤ ਤੁਹਾਡੇ ਵਾਲਿਟ 'ਚ ਆ ਜਾਣਗੇ।
+## 🏆 5. Performance Grading & Promotions
+
+* **Grade A (Rating 4.5 - 5.0):** Outstanding Performance! Eligible for promotion to Upline Senior Trainer.
+* **Grade B (Rating 3.5 - 4.4):** Good Performance. Regular Baseline Trainer.
+* **Grade C (Rating < 3.5):** Needs Improvement. Subject to review.
+
+---
+
+## 📱 6. How to Use the Trainer Dashboard
+1. Open FarmsKing App and navigate to the **`🎓 Trainer Dashboard`** tab.
+2. View the assigned list of farmers in your State/District.
+3. Tap **`📞 Call`** to dial the farmer directly or **`💬 WhatsApp`** to send a welcome template.
+4. After training, the farmer will submit their Star Rating in their app, and your wallet balance will update instantly.

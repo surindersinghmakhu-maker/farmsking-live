@@ -264,7 +264,19 @@ export default function TabLayout() {
           screenOptions={{
             tabBarActiveTintColor: colors.tabBarActive,
             tabBarInactiveTintColor: colors.tabBarInactive,
-            tabBarLabelStyle: { fontFamily: FONT.bold, fontSize: 10.5 },
+            tabBarLabelStyle: {
+              fontFamily: FONT.bold,
+              fontSize: 10,
+              lineHeight: 12,
+              marginTop: 1,
+              marginBottom: 2,
+            },
+            tabBarItemStyle: {
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingTop: 2,
+              paddingBottom: 4,
+            },
             headerShown: false,
             tabBarButton: (props: any) => <HapticTab {...props} />,
             tabBarBackground: TabBarBackground,
@@ -277,9 +289,9 @@ export default function TabLayout() {
               },
               default: {
                 display: isDesktop ? 'none' : 'flex',
-                height: 62,
-                paddingBottom: 8,
-                paddingTop: 6,
+                height: 66,
+                paddingBottom: 14,
+                paddingTop: 4,
                 maxWidth: 520,
                 width: '100%',
                 alignSelf: 'center',

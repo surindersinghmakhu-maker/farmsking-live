@@ -75,9 +75,12 @@ export function OtpVerificationModal({
 
   const handleOpenWhatsAppDeepLink = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    const msg = `🌾 FarmsKing Verification Code: ${generatedOtp} (Mobile: ${mobileNumber})`;
-    const cleanNum = adminWhatsAppNumber.replace(/\D/g, '');
-    const url = `whatsapp://send?phone=${cleanNum.startsWith('91') ? cleanNum : '91' + cleanNum}&text=${encodeURIComponent(msg)}`;
+    const msg = `🌾 FarmsKing Verification Code: ${generatedOtp}`;
+    const cleanUserNum = (mobileNumber || '').replace(/\D/g, '').slice(-10);
+    const targetPhone = cleanUserNum ? `91${cleanUserNum}` : '';
+    const url = targetPhone
+      ? `whatsapp://send?phone=${targetPhone}&text=${encodeURIComponent(msg)}`
+      : 'whatsapp://';
     Linking.openURL(url).catch(() => {
       Alert.alert('WhatsApp Not Available', 'WhatsApp app is not installed on this device.');
     });

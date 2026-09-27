@@ -52,9 +52,22 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   }, [user, primaryRole]);
 
   const isAdminUser = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+
+  const isAdvisorOrDoctor = (r: UserRole) => r === 'ADVISOR' || r === 'FARM_ADVISOR' || r === 'GARDEN_ADVISOR';
+  const hasAdvisorRole = assignedRoles.some(isAdvisorOrDoctor);
+  const hasFarmerRole = assignedRoles.includes('FARMER');
+
+  const advisorRoleToUse = assignedRoles.find(isAdvisorOrDoctor) || (isAdvisorOrDoctor(primaryRole) ? primaryRole : 'FARM_ADVISOR');
+
   const defaultInitialRole = isAdminUser
     ? (user?.role as UserRole)
-    : (user?.role === 'LABOUR' ? 'LABOUR' : (assignedRoles.includes('FARMER') ? 'FARMER' : primaryRole));
+    : (user?.role === 'LABOUR'
+      ? 'LABOUR'
+      : (hasAdvisorRole
+        ? advisorRoleToUse
+        : (hasFarmerRole
+          ? 'FARMER'
+          : primaryRole)));
 
   const [role, setRoleState] = useState<UserRole>(defaultInitialRole);
 
@@ -74,20 +87,21 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // Priority 1: If Doctor or Advisor role is assigned -> Default to Doctor/Advisor tab
+    const advisorRole = assignedRoles.find(isAdvisorOrDoctor);
+    if (advisorRole) {
+      setRoleState(advisorRole);
+      return;
+    }
+
+    // Priority 2: If Farmer role is assigned -> Default to Farmer tab
     if (assignedRoles.includes('FARMER')) {
       setRoleState('FARMER');
       return;
     }
 
-    let cancelled = false;
-    (async () => {
-      const saved = await AppStorage.getItemAsync(`${LAST_DASHBOARD_KEY_PREFIX}${user.id}`);
-      if (cancelled) return;
-      setRoleState(saved && assignedRoles.includes(saved as UserRole) ? (saved as UserRole) : primaryRole);
-    })();
-    return () => {
-      cancelled = true;
-    };
+    // Priority 3: Customer role only -> Default to CUSTOMER (opens Store tab)
+    setRoleState(primaryRole);
   }, [user?.id, user?.role, primaryRole, assignedRoles]);
 
   const setRole = (next: UserRole) => {

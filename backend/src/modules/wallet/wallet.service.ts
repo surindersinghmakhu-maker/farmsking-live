@@ -57,14 +57,13 @@ export class WalletService {
       const referralBonus = Number((settings as any)?.referralSignupBonusAmount ?? 10);
       const newUserBonus = Number((settings as any)?.newUserSignupBonusAmount ?? 10);
 
-      if (!existingWelcomeTx && newUserBonus > 0) {
+      // Welcome bonus is ONLY granted if user signed up with a valid referral/coupon code (referredById is present)
+      if (dbUser.referredById && !existingWelcomeTx && newUserBonus > 0) {
         await this.credit(
           userId,
           newUserBonus,
-          dbUser.referredById
-            ? '🎁 Welcome Offer Bonus (Referral Signup)'
-            : '🎁 Welcome Offer Bonus (New User Signup)',
-          dbUser.referredById ? { relatedUserId: dbUser.referredById } : undefined,
+          '🎁 Welcome Offer Bonus (Referral Signup)',
+          { relatedUserId: dbUser.referredById },
         );
       }
 

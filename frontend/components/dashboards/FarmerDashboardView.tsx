@@ -24,8 +24,8 @@ import { OpenMeteoWeatherCard } from '@/src/components/OpenMeteoWeatherCard';
 import { FarmLocationProfileModal } from '@/src/components/FarmLocationProfileModal';
 import { FarmerPortalUpgradeSection } from '@/src/components/FarmerPortalUpgradeSection';
 import { SupervisorManagementModal } from '@/src/components/SupervisorManagementModal';
+import { WelcomeBonusModal } from '@/src/components/WelcomeBonusModal';
 import { useExecutiveTheme } from '@/src/store/theme-context';
-
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -63,6 +63,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
   const { data: pricing } = useFarmerPlanPricing();
   const activateTrialMutation = useActivateTrial();
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const currentPlanMeta = PLAN_ICON_MAP[plan] || { icon: 'crown', color: '#d97706' };
 
   const isTrialActive =
@@ -355,6 +356,12 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         visible={showLocationProfileModal}
         onClose={() => setShowLocationProfileModal(false)}
       />
+
+      {/* 🎁 Welcome Bonus & Referral Modal */}
+      <WelcomeBonusModal
+        visible={showWelcomeModal}
+        onClose={() => setShowWelcomeModal(false)}
+      />
     </ScrollView>
   );
 };
@@ -362,6 +369,57 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: SPACING.lg, paddingTop: 6, gap: SPACING.sm, paddingBottom: 24 },
+  welcomeBannerCard: {
+    borderRadius: RADIUS.lg,
+    overflow: 'hidden',
+    borderWidth: 1.5,
+    borderColor: '#86efac',
+    marginVertical: 2,
+    ...premiumShadow('#16a34a', 'sm'),
+  },
+  welcomeBannerGradient: {
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  welcomeBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  welcomeIconCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  welcomeBannerTitle: {
+    fontSize: 12.5,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+  },
+  welcomeBannerSub: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginTop: 1,
+  },
+  welcomeBannerBtn: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+  },
+  welcomeBannerBtnText: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    color: '#15803d',
+  },
   quickAccountsCard: {
     backgroundColor: '#ffffff',
     borderRadius: RADIUS.lg,

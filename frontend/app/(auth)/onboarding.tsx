@@ -18,12 +18,15 @@ import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING } from '@/constants/theme';
 import { BrandLogo } from '@/src/components/BrandLogo';
 
+import { WelcomeBonusModal } from '@/src/components/WelcomeBonusModal';
+
 const theme = RoleThemes.FARMER;
 const AREA_UNITS: AreaUnit[] = ['ACRE', 'HECTARE', 'BIGHA', 'GUNTA'];
 
 export default function OnboardingScreen() {
   const router = useRouter();
   const createFarm = useCreateFarm();
+  const [showWelcomeModal, setShowWelcomeModal] = useState(true);
   const [farmName, setFarmName] = useState('');
   const [totalArea, setTotalArea] = useState('');
   const [areaUnit, setAreaUnit] = useState<AreaUnit>('ACRE');
@@ -120,6 +123,8 @@ export default function OnboardingScreen() {
           <Text style={styles.skipText}>Skip for now</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <WelcomeBonusModal visible={showWelcomeModal} onClose={() => setShowWelcomeModal(false)} />
     </KeyboardAvoidingView>
   );
 }

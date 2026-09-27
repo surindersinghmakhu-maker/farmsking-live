@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Animated, Modal, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -26,6 +26,11 @@ import { CouponCardPreview, FarmerPlanCouponCardPreview, useShareCouponAsJpg } f
 
 import { useExecutiveTheme } from '@/src/store/theme-context';
 
+import { apiClient } from '@/src/api/client';
+import { useQueryClient } from '@tanstack/react-query';
+
+import { WelcomeBonusModal } from '@/src/components/WelcomeBonusModal';
+
 type RoleTheme = (typeof RoleThemes)[keyof typeof RoleThemes];
 const staticTheme = RoleThemes.BUSINESS_PARTNER;
 
@@ -36,6 +41,206 @@ const tap = () => {
 function formatValue(type: DiscountValueType, value: string, maxCap?: string | null) {
   const base = type === 'PERCENTAGE' ? `${value}%` : `₹${value}`;
   return type === 'PERCENTAGE' && maxCap ? `${base} (max ₹${maxCap})` : base;
+}
+
+export function maskMobileNumber(val?: string): string {
+  if (!val) return '📞 XXX-XXX-XXXX';
+  const cleaned = val.replace(/\D/g, '');
+  if (cleaned.length >= 7) {
+    const first3 = cleaned.slice(0, 3);
+    const last4 = cleaned.slice(-4);
+    return `📞 ${first3}XXX${last4}`;
+  }
+  return `📞 ${val}`;
+}
+
+export function downloadJpgCouponCard({
+  safeKingId,
+  welcomeRewardAmount,
+  inviteLink,
+  logoUrl,
+}: {
+  safeKingId: string;
+  welcomeRewardAmount: number;
+  inviteLink: string;
+  logoUrl?: string;
+}) {
+  tap();
+  try {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      const renderAndDownload = (imgElement?: HTMLImageElement) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 800;
+        canvas.height = 480;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // 1. Light Fresh Mint Green Background Gradient (matching Invite Card)
+        const bgGrad = ctx.createLinearGradient(0, 0, 800, 480);
+        bgGrad.addColorStop(0, '#f0fdf4');
+        bgGrad.addColorStop(0.5, '#dcfce7');
+        bgGrad.addColorStop(1, '#bbf7d0');
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, 800, 480);
+
+        // Radial Center Light Glow Effect
+        const radialGlow = ctx.createRadialGradient(400, 240, 50, 400, 240, 400);
+        radialGlow.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+        radialGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = radialGlow;
+        ctx.fillRect(0, 0, 800, 480);
+
+        // 2. Crisp Emerald Frame Border
+        const borderGrad = ctx.createLinearGradient(0, 0, 800, 480);
+        borderGrad.addColorStop(0, '#16a34a');
+        borderGrad.addColorStop(0.5, '#15803d');
+        borderGrad.addColorStop(1, '#047857');
+        ctx.strokeStyle = borderGrad;
+        ctx.lineWidth = 6;
+        ctx.strokeRect(14, 14, 772, 452);
+
+        // Inner Fine Green Line
+        ctx.strokeStyle = '#15803d';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(20, 20, 760, 440);
+
+        // Inner Dashed Voucher Ticket Border
+        ctx.strokeStyle = '#16a34a';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([10, 6]);
+        ctx.strokeRect(28, 28, 744, 424);
+        ctx.setLineDash([]);
+
+        // Ticket Side Semi-Circle Notch Cutouts
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(28, 240, 16, -Math.PI / 2, Math.PI / 2);
+        ctx.fill();
+        ctx.strokeStyle = '#16a34a';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(772, 240, 16, Math.PI / 2, -Math.PI / 2);
+        ctx.fill();
+        ctx.strokeStyle = '#16a34a';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // 3. Logo Image (if available)
+        if (imgElement) {
+          try {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(68, 62, 28, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(imgElement, 40, 34, 56, 56);
+            ctx.restore();
+          } catch {}
+        }
+
+        // 4. Header Title & Subtitle (Dark Emerald Text)
+        ctx.fillStyle = '#14532d';
+        ctx.font = 'bold 26px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('👑 FARMSKING OFFICIAL WELCOME VOUCHER 🎁', 400, 60);
+
+        ctx.fillStyle = '#15803d';
+        ctx.font = '600 14px sans-serif';
+        ctx.fillText('⭐ EXCLUSIVE NEW FARMER SIGNUP BENEFIT CARD ⭐', 400, 86);
+
+        // 5. Big Royal Highlighted Cash Benefit Box (Emerald & Gold Highlight)
+        const benefitBoxGrad = ctx.createLinearGradient(50, 105, 750, 165);
+        benefitBoxGrad.addColorStop(0, '#15803d');
+        benefitBoxGrad.addColorStop(0.5, '#16a34a');
+        benefitBoxGrad.addColorStop(1, '#047857');
+        ctx.fillStyle = benefitBoxGrad;
+        ctx.fillRect(60, 106, 680, 62);
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(60, 106, 680, 62);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 22px sans-serif';
+        ctx.fillText(`🎉 YOU GET ₹${welcomeRewardAmount} INSTANT WELCOME CASH BONUS! 🎉`, 400, 145);
+
+        // 6. White Golden Coupon Code Box
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(170, 185, 460, 82);
+        ctx.strokeStyle = '#16a34a';
+        ctx.lineWidth = 3.5;
+        ctx.strokeRect(170, 185, 460, 82);
+
+        // Inner dashed line inside code box
+        ctx.strokeStyle = '#bbf7d0';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([6, 4]);
+        ctx.strokeRect(176, 191, 448, 70);
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#64748b';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillText('YOUR REFERRAL / COUPON CODE', 400, 212);
+
+        ctx.fillStyle = '#14532d';
+        ctx.font = 'bold 34px monospace';
+        ctx.fillText(safeKingId, 400, 252);
+
+        // 7. How to Benefit Steps (Clear messaging)
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(80, 285, 640, 52);
+        ctx.strokeStyle = '#86efac';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(80, 285, 640, 52);
+
+        ctx.fillStyle = '#14532d';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillText(`💡 HOW TO GET BENEFIT: Enter Code "${safeKingId}" while registering on FarmsKing`, 400, 310);
+        ctx.fillStyle = '#15803d';
+        ctx.font = '600 12px sans-serif';
+        ctx.fillText(`✨ Instant ₹${welcomeRewardAmount} Cash Bonus will be credited directly to your Wallet!`, 400, 328);
+
+        // 8. Register Link Box
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(100, 350, 600, 34);
+        ctx.strokeStyle = '#86efac';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(100, 350, 600, 34);
+
+        ctx.fillStyle = '#14532d';
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillText(`👉 Register Link: ${inviteLink}`, 400, 372);
+
+        // 9. Royal Footer Guarantee
+        ctx.fillStyle = '#166534';
+        ctx.font = 'italic 12.5px sans-serif';
+        ctx.fillText('👑 FarmsKing Agriculture Platform · Smart Farming, Higher Profits & Cash Rewards 🌾', 400, 420);
+
+        // Download PNG / JPG File
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        const link = document.createElement('a');
+        link.download = `farmsking-welcome-coupon-${safeKingId}.jpg`;
+        link.href = dataUrl;
+        link.click();
+      };
+
+      if (logoUrl) {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => renderAndDownload(img);
+        img.onerror = () => renderAndDownload();
+        img.src = logoUrl;
+      } else {
+        renderAndDownload();
+      }
+    } else {
+      alert('Welcome Coupon Code: ' + safeKingId + '\nGet ₹' + welcomeRewardAmount + ' Welcome Bonus when you register!');
+    }
+  } catch {
+    alert('Could not generate JPG coupon.');
+  }
 }
 
 function couponPlanAmount(pricing: FarmerPlanPricing[], plan: FarmerPlanType, daysGranted: number): number | null {
@@ -49,13 +254,48 @@ export default function WalletScreen() {
   const { user } = useAuth();
   const { role: currentRole } = useRole();
   const { colors } = useExecutiveTheme();
+  const { data: appSettings } = useAppSettings();
+  const queryClient = useQueryClient();
   const theme = RoleThemes[currentRole] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER;
   const { data: wallet, isLoading: isLoadingWallet } = useMyWallet();
   const { data: referralData } = useReferralStatement();
   const { data: withdrawals } = useMyWithdrawals();
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [isRedeemForFarmerOpen, setIsRedeemForFarmerOpen] = useState(false);
-  const [expandedTxId, setExpandedTxId] = useState<string | null>(null);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const welcomeRewardAmount = Number(appSettings?.newUserSignupBonusAmount ?? 10);
+  const kingId = user?.kingId || user?.mobile?.slice(-6) || 'KING';
+  const inviteLink = `https://farmsking.in/register?ref=${kingId}`;
+
+  const handleCopyLink = async () => {
+    tap();
+    await Clipboard.setStringAsync(inviteLink);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 3000);
+  };
+
+  const handleDownloadJpgCoupon = () => {
+    downloadJpgCouponCard({
+      safeKingId: kingId || 'KING',
+      welcomeRewardAmount,
+      inviteLink,
+      logoUrl: appSettings?.logoUrl,
+    });
+  };
+
+  // Animated gift icon pulsing effect
+  const giftScaleAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(giftScaleAnim, { toValue: 1.2, duration: 750, useNativeDriver: true }),
+        Animated.timing(giftScaleAnim, { toValue: 1.0, duration: 750, useNativeDriver: true }),
+      ])
+    ).start();
+  }, [giftScaleAnim]);
 
   const pendingWithdrawals = (withdrawals ?? []).filter((w) => w.status === 'PENDING');
 
@@ -67,54 +307,182 @@ export default function WalletScreen() {
   const isPartner = userRoles.includes('BUSINESS_PARTNER') || currentRole === 'BUSINESS_PARTNER';
   const isAdvisorOrPartner = isAdvisor || isPartner;
 
+  const isWelcomeClaimed = (wallet?.transactions ?? []).some(
+    (t) => t.type === 'CREDIT' && t.reason?.toLowerCase().includes('welcome')
+  );
+
+  const handleShareWhatsApp = async () => {
+    tap();
+    const shareMessage = `👑 *WELCOME TO FARMSKING (Smart Farming Platform)!* 🌾✨\nRegister using my referral link and claim your *₹${welcomeRewardAmount} Welcome Cash Bonus!* 💶🎉\n👉 ${inviteLink}\n🏷️ Referral Code: \`${kingId}\``;
+    if (Platform.OS === 'web') {
+      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`;
+      window.open(whatsappUrl, '_blank');
+      return;
+    }
+    try {
+      await Share.share({ message: shareMessage });
+    } catch {}
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <View style={styles.hero}>
-        <Text style={styles.heroTitle}>My Wallet</Text>
-        {user?.kingId ? (
-          <View style={styles.kingIdBadge}>
-            <Ionicons name="key-outline" size={12} color={theme.primary} />
-            <Text style={[styles.kingIdText, { color: theme.primary }]}>King ID: {user.kingId}</Text>
-          </View>
-        ) : null}
-      </View>
-
       <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-        <LinearGradient colors={theme.gradient} style={[styles.balanceCard, premiumShadow(theme.primary, 'md')]}>
-          <Text style={styles.balanceLabel}>Available Balance</Text>
-          {isLoadingWallet ? (
-            <ActivityIndicator color="#ffffff" style={{ marginTop: 10 }} />
-          ) : (
-            <Text style={styles.balanceValue} adjustsFontSizeToFit numberOfLines={1}>₹{(wallet?.balance ?? 0).toLocaleString('en-IN')}</Text>
-          )}
-
-          {pendingWithdrawals.length > 0 ? (
-            <Text style={styles.pendingNote}>
-              ₹{pendingWithdrawals.reduce((sum, w) => sum + Number(w.requestedAmount), 0).toLocaleString('en-IN')} pending approval
-            </Text>
-          ) : null}
-
-          <TouchableOpacity
-            style={styles.withdrawButton}
-            activeOpacity={0.85}
-            onPress={() => {
-              tap();
-              if (Platform.OS === 'web') {
-                alert('Coming Soon! 🚀 Direct Bank & UPI payouts will be available soon.');
-              } else {
-                Alert.alert(
-                  'Coming Soon 🚀',
-                  'Direct Bank & UPI wallet payouts will be available soon! Payout processing is being automated.'
-                );
-              }
-            }}
+        {/* 👑 Clean Responsive Royal Header Row (No outer grouping card) */}
+        <View style={styles.royalTitleRow}>
+          <LinearGradient
+            colors={['#0f172a', '#1e293b', '#064e3b']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.royalTitlePill}
           >
-            <Text style={[styles.withdrawText, { color: theme.primary }]}>Withdraw</Text>
-          </TouchableOpacity>
+            <Text style={{ fontSize: 13 }}>👑</Text>
+            <Text style={styles.royalTitleText} numberOfLines={1} adjustsFontSizeToFit>
+              FARMSKING ROYAL WALLET
+            </Text>
+          </LinearGradient>
+
+          {user?.kingId ? (
+            <View style={styles.royalKingIdBadge}>
+              <Text style={styles.royalKingIdText} numberOfLines={1}>
+                ID: {user.kingId}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+
+        {/* 👑 Royal Compact Highlighted Available Balance Card */}
+        <LinearGradient
+          colors={['#062016', '#094e39', '#031d17']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.royalBalanceCard}
+        >
+          <View style={styles.royalContentRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.royalBalanceLabel}>Available Balance</Text>
+              {isLoadingWallet ? (
+                <ActivityIndicator color="#fbbf24" style={{ alignSelf: 'flex-start', marginVertical: 6 }} />
+              ) : (
+                <View style={styles.balanceAmountRow}>
+                  <Text style={styles.royalCurrencySymbol}>₹</Text>
+                  <Text style={styles.royalBalanceValue} adjustsFontSizeToFit numberOfLines={1}>
+                    {(wallet?.balance ?? 0).toLocaleString('en-IN')}
+                  </Text>
+                </View>
+              )}
+
+              {pendingWithdrawals.length > 0 ? (
+                <Text style={styles.royalPendingNote}>
+                  ⏳ ₹{pendingWithdrawals.reduce((sum, w) => sum + Number(w.requestedAmount), 0).toLocaleString('en-IN')} pending
+                </Text>
+              ) : null}
+            </View>
+
+            <TouchableOpacity
+              style={styles.royalWithdrawBtn}
+              activeOpacity={0.85}
+              onPress={() => {
+                tap();
+                if (Platform.OS === 'web') {
+                  alert('Coming Soon! 🚀 Direct Bank & UPI payouts will be available soon.');
+                } else {
+                  Alert.alert(
+                    'Coming Soon 🚀',
+                    'Direct Bank & UPI wallet payouts will be available soon! Payout processing is being automated.'
+                  );
+                }
+              }}
+            >
+              <LinearGradient colors={['#fbbf24', '#d97706', '#b45309']} style={styles.royalWithdrawGradient}>
+                <Ionicons name="cash-outline" size={15} color="#0f172a" />
+                <Text style={styles.royalWithdrawBtnText}>Withdraw</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
         </LinearGradient>
 
-        {/* Referral & Welcome Voucher Invitation Card (Visible to All Logged In Users) */}
-        {user?.kingId ? <ReferralInviteCard theme={theme} kingId={user.kingId} /> : null}
+        {/* 🎁 Light Fresh & Effective Green Banner Card */}
+        <LinearGradient colors={['#f0fdf4', '#dcfce7', '#bbf7d0']} style={[styles.claimBanner, premiumShadow('#16a34a', 'sm')]}>
+          {/* Top Title Row */}
+          <View style={styles.claimBannerTitleRow}>
+            <Animated.View style={[styles.claimBannerIcon, { transform: [{ scale: giftScaleAnim }] }]}>
+              <Text style={{ fontSize: 18 }}>🎁</Text>
+            </Animated.View>
+            <Text style={styles.claimBannerTitle}>🤝 Invite Others & Earn Cash Rewards</Text>
+          </View>
+
+          {/* Action Buttons Row */}
+          <View style={styles.claimBannerActionsRow}>
+            <TouchableOpacity
+              style={styles.claimBannerBtnSecondary}
+              onPress={handleCopyLink}
+              activeOpacity={0.85}
+            >
+              <Ionicons
+                name={copiedLink ? 'checkmark-circle' : 'link-outline'}
+                size={14}
+                color={copiedLink ? '#15803d' : '#0f172a'}
+              />
+              <Text style={[styles.claimBannerBtnSecondaryText, copiedLink ? { color: '#15803d' } : { color: '#0f172a' }]}>
+                {copiedLink ? 'Copied!' : 'Copy Link'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.claimBannerBtnJpg}
+              onPress={handleDownloadJpgCoupon}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="image-outline" size={14} color="#b45309" />
+              <Text style={styles.claimBannerBtnJpgText}>Invite Card</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.claimBannerBtn}
+              onPress={() => {
+                tap();
+                if (!isWelcomeClaimed) {
+                  setShowWelcomeModal(true); // Opens WelcomeBonusModal popup box!
+                } else {
+                  handleShareWhatsApp();
+                }
+              }}
+              activeOpacity={0.85}
+            >
+              <Ionicons
+                name={!isWelcomeClaimed ? 'sparkles' : 'logo-whatsapp'}
+                size={14}
+                color={!isWelcomeClaimed ? '#b45309' : '#ffffff'}
+              />
+              <Text style={[styles.claimBannerBtnText, !isWelcomeClaimed ? { color: '#b45309' } : { color: '#ffffff' }]}>
+                {!isWelcomeClaimed ? 'Claim Bonus' : 'Invite'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Dual Benefits Breakdown Cards inside Green Banner */}
+          <View style={styles.bannerBenefitsContainer}>
+            <View style={styles.bannerBenefitBoxYour}>
+              <View style={styles.bannerBenefitHeaderRow}>
+                <Ionicons name="trophy" size={13} color="#15803d" />
+                <Text style={styles.bannerBenefitTitleYour}>Your Earnings (Referrer)</Text>
+              </View>
+              <Text style={styles.bannerBenefitTextYour}>• <Text style={{ fontFamily: FONT.extraBold }}>₹{appSettings?.referralSignupBonusAmount ?? 10}</Text> Instant on Registration</Text>
+              <Text style={styles.bannerBenefitTextYour}>• <Text style={{ fontFamily: FONT.extraBold }}>₹{appSettings?.referralPaidPlanBonusAmount ?? 50}</Text> on Paid Plan Upgrade</Text>
+            </View>
+
+            <View style={styles.bannerBenefitBoxNew}>
+              <View style={styles.bannerBenefitHeaderRow}>
+                <Ionicons name="gift" size={13} color="#0369a1" />
+                <Text style={styles.bannerBenefitTitleNew}>New User Benefits</Text>
+              </View>
+              <Text style={styles.bannerBenefitTextNew}>• <Text style={{ fontFamily: FONT.extraBold }}>₹{welcomeRewardAmount}</Text> Welcome Cash Bonus</Text>
+              <Text style={styles.bannerBenefitSubNew}>(With your referral/coupon code)</Text>
+            </View>
+          </View>
+        </LinearGradient>
+
+
 
         {/* Detailed Referral & Bonus Statement Table */}
         <ReferralStatementTable theme={theme} />
@@ -130,13 +498,34 @@ export default function WalletScreen() {
         />
       </ScrollView>
 
+      {/* 🎁 Welcome Bonus Popup Box */}
+      <WelcomeBonusModal
+        visible={showWelcomeModal}
+        onClose={() => {
+          setShowWelcomeModal(false);
+          queryClient.invalidateQueries({ queryKey: ['my-wallet'] });
+        }}
+      />
+
       <WithdrawModal visible={isWithdrawOpen} balance={wallet?.balance ?? 0} onClose={() => setIsWithdrawOpen(false)} />
       <RedeemForFarmerModal visible={isRedeemForFarmerOpen} onClose={() => setIsRedeemForFarmerOpen(false)} theme={theme} />
     </View>
   );
 }
 
-function ReferralInviteCard({ theme, kingId }: { theme: RoleTheme; kingId: string }) {
+function ReferralInviteCard({
+  theme,
+  kingId,
+  isWelcomeClaimed,
+  isClaimingBonus,
+  onClaimWelcomeBonus,
+}: {
+  theme: RoleTheme;
+  kingId: string;
+  isWelcomeClaimed?: boolean;
+  isClaimingBonus?: boolean;
+  onClaimWelcomeBonus?: () => void;
+}) {
   const { data: appSettings } = useAppSettings();
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -144,13 +533,14 @@ function ReferralInviteCard({ theme, kingId }: { theme: RoleTheme; kingId: strin
   const referralBonusAmount = appSettings?.referralSignupBonusAmount ?? 10;
   const welcomeRewardAmount = appSettings?.newUserSignupBonusAmount ?? 10;
   const referralPaidPlanBonusAmount = appSettings?.referralPaidPlanBonusAmount ?? 50;
-  const inviteLink = `https://farmsking.in/register?ref=${kingId}`;
+  const safeKingId = kingId || 'KING';
+  const inviteLink = `https://farmsking.in/register?ref=${safeKingId}`;
 
-  const fullShareMessage = `👑 *WELCOME TO FARMSKING APP!* 🌾✨\n_Smart Farming · Better Yield · Higher Profits_\n\n🎁 *विशेष वेलकम ऑफ़र (Special Welcome Offer)*\nनीचे दिए गए लिंक से रजिस्टर करने पर तुरंत पाएँ Instant Wallet Cashback & Bonus Rewards! 💸✨\n\n💶 *Welcome Bonus:* साइनअप करने पर पाएँ ₹${welcomeRewardAmount} मुफ़्त बोनस!\n🎁 *Paid Plan Benefit:* पेड प्लान लेने पर पाएँ +₹${referralPaidPlanBonusAmount} एक्स्ट्रा बोनस!\n\n👇 *रजिस्टर करने और कैशबैक पाने के लिए लिंक पर क्लिक करें:*\n👉 ${inviteLink}\n\n🏷️ *Referral / Coupon Code:* \`${kingId}\`\n\n---\n🌾 *FarmsKing Agriculture App* · _स्मार्ट खेती, बेहतर भविष्य!_ 👑`;
+  const fullShareMessage = `*WELCOME TO FARMSKING (Smart Farming Platform)!*\n_Smart Farming · Better Yield · Higher Profits_\n\n*Special Welcome Offer*\nRegister using my referral link and claim your *₹${welcomeRewardAmount} Welcome Cash Bonus!*\n\n*Click link to register & claim bonus:*\n${inviteLink}\n\n*Referral Code / King ID:* \`${safeKingId}\`\n\n---\n*FarmsKing (Smart Farming Platform)* · _Smart Farming, Better Future!_`;
 
   const handleCopyCode = async () => {
     tap();
-    await Clipboard.setStringAsync(kingId);
+    await Clipboard.setStringAsync(safeKingId);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 3000);
   };
@@ -178,139 +568,71 @@ function ReferralInviteCard({ theme, kingId }: { theme: RoleTheme; kingId: strin
   };
 
   const handleDownloadJpgCoupon = () => {
-    tap();
-    try {
-      if (Platform.OS === 'web' && typeof document !== 'undefined') {
-        const logoUrl = appSettings?.logoUrl;
-
-        const renderAndDownload = (imgElement?: HTMLImageElement) => {
-          const canvas = document.createElement('canvas');
-          canvas.width = 720;
-          canvas.height = 420;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) return;
-
-          // Background Gradient
-          const grad = ctx.createLinearGradient(0, 0, 720, 420);
-          grad.addColorStop(0, '#064e3b');
-          grad.addColorStop(0.5, '#047857');
-          grad.addColorStop(1, '#10b981');
-          ctx.fillStyle = grad;
-          ctx.fillRect(0, 0, 720, 420);
-
-          // Gold Decorative Border
-          ctx.strokeStyle = '#f59e0b';
-          ctx.lineWidth = 6;
-          ctx.strokeRect(12, 12, 696, 396);
-
-          // Inner Dashed Coupon Border
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 2;
-          ctx.setLineDash([8, 6]);
-          ctx.strokeRect(20, 20, 680, 380);
-          ctx.setLineDash([]);
-
-          // Draw FarmsKing Brand Logo Image if loaded
-          if (imgElement) {
-            try {
-              ctx.save();
-              ctx.beginPath();
-              ctx.arc(60, 55, 26, 0, Math.PI * 2, true);
-              ctx.closePath();
-              ctx.clip();
-              ctx.drawImage(imgElement, 34, 29, 52, 52);
-              ctx.restore();
-            } catch {
-              // fallback if image clip fails
-            }
-          }
-
-          // Header Brand Title
-          ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 26px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText('👑 FarmsKing Welcome Bonus Voucher 🎁', 370, 58);
-
-          // Subtitle
-          ctx.fillStyle = '#fde68a';
-          ctx.font = 'bold 14px sans-serif';
-          ctx.fillText('New User Registration Offer', 370, 88);
-
-          // Reward Gold Banner Box — ONLY NEW USER WELCOME BONUS AMOUNT
-          ctx.fillStyle = '#f59e0b';
-          ctx.fillRect(50, 112, 620, 52);
-          ctx.fillStyle = '#0f172a';
-          ctx.font = 'bold 17px sans-serif';
-          ctx.fillText(`🎉 New User Welcome Bonus: Get ₹${welcomeRewardAmount} Free Bonus on Signup!`, 360, 145);
-
-          // Coupon Code Box
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(160, 185, 400, 75);
-          ctx.strokeStyle = '#10b981';
-          ctx.lineWidth = 3;
-          ctx.strokeRect(160, 185, 400, 75);
-
-          ctx.fillStyle = '#64748b';
-          ctx.font = 'bold 12px sans-serif';
-          ctx.fillText('YOUR WELCOME COUPON CODE', 360, 210);
-          ctx.fillStyle = '#047857';
-          ctx.font = 'bold 30px monospace';
-          ctx.fillText(kingId, 360, 246);
-
-          // Link Box
-          ctx.fillStyle = '#ecfdf5';
-          ctx.fillRect(80, 280, 560, 40);
-          ctx.fillStyle = '#065f46';
-          ctx.font = 'bold 12px sans-serif';
-          ctx.fillText(`Register Link: ${inviteLink}`, 360, 305);
-
-          // Footer Tagline
-          ctx.fillStyle = '#ffffff';
-          ctx.font = 'italic 12px sans-serif';
-          ctx.fillText('FarmsKing Agriculture Platform · Smart Farming, Better Future', 360, 365);
-
-          // Download PNG / JPG File
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-          const link = document.createElement('a');
-          link.download = `farmsking-welcome-coupon-${kingId}.jpg`;
-          link.href = dataUrl;
-          link.click();
-        };
-
-        if (logoUrl) {
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-          img.onload = () => renderAndDownload(img);
-          img.onerror = () => renderAndDownload();
-          img.src = logoUrl;
-        } else {
-          renderAndDownload();
-        }
-      } else {
-        alert('Welcome Coupon Code: ' + kingId + '\nGet ₹' + welcomeRewardAmount + ' Welcome Bonus when you register!');
-      }
-    } catch {
-      alert('Could not generate JPG coupon.');
-    }
+    downloadJpgCouponCard({
+      safeKingId,
+      welcomeRewardAmount,
+      inviteLink,
+      logoUrl: appSettings?.logoUrl,
+    });
   };
-
-  if (!kingId) return null;
 
   return (
     <View style={[styles.referralCard, premiumShadow('#16a34a', 'sm')]}>
       <LinearGradient colors={['#f0fdf4', '#dcfce7']} style={styles.referralGradient}>
-        {/* Card Header — Same Row Title & Bonus Wording */}
+        {/* Unclaimed Welcome Bonus Strip if user hasn't claimed yet */}
+        {!isWelcomeClaimed && onClaimWelcomeBonus ? (
+          <View style={styles.cardClaimRow}>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Ionicons name="gift-outline" size={20} color="#d97706" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.cardClaimTitle}>Welcome Bonus Ready (₹{welcomeRewardAmount})</Text>
+                <Text style={styles.cardClaimSub}>Tap button to credit bonus into your wallet</Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={styles.cardClaimBtn}
+              onPress={onClaimWelcomeBonus}
+              disabled={isClaimingBonus}
+              activeOpacity={0.85}
+            >
+              {isClaimingBonus ? (
+                <ActivityIndicator color="#ffffff" size="small" />
+              ) : (
+                <Text style={styles.cardClaimBtnText}>Claim Bonus</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        {/* Card Header — Title & Benefits */}
         <View style={styles.refHeader}>
           <View style={styles.refIconCircle}>
             <Ionicons name="gift" size={20} color="#16a34a" />
           </View>
-          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
-            <Text style={styles.refTitle}>🎁 Invite Friends & Earn Rewards</Text>
-            <View style={styles.rewardBadge}>
-              <Text style={styles.rewardBadgeText}>
-                You get ₹{referralBonusAmount} + ₹{referralPaidPlanBonusAmount} (Paid Plan) & New user gets ₹{welcomeRewardAmount} Welcome Bonus!
-              </Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.refTitle}>Invite Others & Earn Cash Rewards</Text>
+            <Text style={styles.refSub}>Share your referral link & code with farmers to earn cash rewards!</Text>
+          </View>
+        </View>
+
+        {/* Dual Benefits Breakdown Cards (Referrer & New User) */}
+        <View style={styles.benefitsContainer}>
+          <View style={styles.benefitBoxYour}>
+            <View style={styles.benefitHeaderRow}>
+              <Ionicons name="trophy" size={13} color="#15803d" />
+              <Text style={styles.benefitBoxTitleYour}>Your Earnings (Referrer)</Text>
             </View>
+            <Text style={styles.benefitItemText}>• <Text style={{ fontFamily: FONT.extraBold }}>₹{referralBonusAmount}</Text> Instant on Registration</Text>
+            <Text style={styles.benefitItemText}>• <Text style={{ fontFamily: FONT.extraBold }}>₹{referralPaidPlanBonusAmount}</Text> on Paid Plan Upgrade</Text>
+          </View>
+
+          <View style={styles.benefitBoxNew}>
+            <View style={styles.benefitHeaderRow}>
+              <Ionicons name="gift" size={13} color="#0369a1" />
+              <Text style={styles.benefitBoxTitleNew}>New User Benefits</Text>
+            </View>
+            <Text style={styles.benefitItemTextNew}>• <Text style={{ fontFamily: FONT.extraBold }}>₹{welcomeRewardAmount}</Text> Welcome Cash Bonus</Text>
+            <Text style={styles.benefitItemSubNew}>(With your referral/coupon code)</Text>
           </View>
         </View>
 
@@ -318,7 +640,7 @@ function ReferralInviteCard({ theme, kingId }: { theme: RoleTheme; kingId: strin
         <View style={styles.refCodeBox}>
           <View style={{ flex: 1 }}>
             <Text style={styles.refCodeLabel}>YOUR REFERRAL / COUPON CODE</Text>
-            <Text style={styles.refCodeValue}>{kingId}</Text>
+            <Text style={styles.refCodeValue}>{safeKingId}</Text>
           </View>
           <TouchableOpacity
             style={[styles.refBtn, copiedCode ? styles.refBtnSuccess : null]}
@@ -340,37 +662,40 @@ function ReferralInviteCard({ theme, kingId }: { theme: RoleTheme; kingId: strin
           </Text>
         </View>
 
-        {/* Action Buttons Row */}
-        <View style={styles.refActionsRow}>
+        {/* Action Buttons Column (Vertical Stack: Invite -> Copy Link -> Invite Card) */}
+        <View style={styles.refActionsCol}>
+          {/* 1. Invite via WhatsApp Button */}
           <TouchableOpacity
-            style={styles.refShareLinkBtn}
-            onPress={handleCopyLink}
-            activeOpacity={0.8}
-          >
-            <Ionicons name={copiedLink ? 'checkmark-circle' : 'link-outline'} size={16} color="#0f172a" />
-            <Text style={styles.refShareLinkBtnText}>
-              {copiedLink ? 'Link Copied!' : 'Copy Link'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.refShareLinkBtn, { backgroundColor: '#fef3c7', borderColor: '#fde68a' }]}
-            onPress={handleDownloadJpgCoupon}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="image-outline" size={16} color="#b45309" />
-            <Text style={[styles.refShareLinkBtnText, { color: '#b45309' }]}>
-              JPG Coupon
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.refWaBtn}
+            style={styles.refWaBtnStacked}
             onPress={handleShareWhatsApp}
             activeOpacity={0.85}
           >
             <Ionicons name="logo-whatsapp" size={18} color="#ffffff" />
-            <Text style={styles.refWaBtnText}>Share</Text>
+            <Text style={styles.refWaBtnTextStacked}>Invite via WhatsApp</Text>
+          </TouchableOpacity>
+
+          {/* 2. Copy Link Button */}
+          <TouchableOpacity
+            style={styles.refCopyLinkBtnStacked}
+            onPress={handleCopyLink}
+            activeOpacity={0.8}
+          >
+            <Ionicons name={copiedLink ? 'checkmark-circle' : 'link-outline'} size={16} color="#0f172a" />
+            <Text style={styles.refCopyLinkBtnTextStacked}>
+              {copiedLink ? 'Link Copied!' : 'Copy Link'}
+            </Text>
+          </TouchableOpacity>
+
+          {/* 3. Invite Card Button (JPG Coupon) */}
+          <TouchableOpacity
+            style={styles.refCouponBtnStacked}
+            onPress={handleDownloadJpgCoupon}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="image-outline" size={16} color="#b45309" />
+            <Text style={styles.refCouponBtnTextStacked}>
+              Invite Card (JPG)
+            </Text>
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -378,8 +703,173 @@ function ReferralInviteCard({ theme, kingId }: { theme: RoleTheme; kingId: strin
   );
 }
 
+function TablePaginationControls({
+  currentPage,
+  pageSize,
+  totalItems,
+  onPageChange,
+  onPageSizeChange,
+  itemLabel = 'entries',
+}: {
+  currentPage: number;
+  pageSize: number;
+  totalItems: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
+  itemLabel?: string;
+}) {
+  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+  const start = totalItems > 0 ? (currentPage - 1) * pageSize + 1 : 0;
+  const end = Math.min(currentPage * pageSize, totalItems);
+
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push('...');
+      const startP = Math.max(2, currentPage - 1);
+      const endP = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = startP; i <= endP; i++) pages.push(i);
+      if (currentPage < totalPages - 2) pages.push('...');
+      pages.push(totalPages);
+    }
+    return pages;
+  };
+
+  return (
+    <View style={styles.paginationContainer}>
+      <View style={styles.paginationInfoRow}>
+        <Text style={styles.paginationText}>
+          Showing {start}-{end} of {totalItems} {itemLabel}
+        </Text>
+        <View style={styles.pageSizeSelectWrapper}>
+          <Text style={styles.pageSizeLabel}>Per page:</Text>
+          {Platform.OS === 'web' ? (
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                tap();
+                onPageSizeChange(Number(e.target.value));
+              }}
+              style={{
+                padding: '4px 8px',
+                borderRadius: '6px',
+                border: '1px solid #cbd5e1',
+                fontSize: '12px',
+                fontFamily: 'sans-serif',
+                backgroundColor: '#ffffff',
+                color: '#0f172a',
+                fontWeight: '600',
+                cursor: 'pointer',
+                outline: 'none',
+              }}
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          ) : (
+            <View style={{ flexDirection: 'row', gap: 4 }}>
+              {[10, 20, 50, 100].map((sz) => (
+                <TouchableOpacity
+                  key={sz}
+                  style={[styles.pageSizePill, pageSize === sz && styles.pageSizePillActive]}
+                  onPress={() => {
+                    tap();
+                    onPageSizeChange(sz);
+                  }}
+                >
+                  <Text style={[styles.pageSizePillText, pageSize === sz && styles.pageSizePillTextActive]}>{sz}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
+      </View>
+
+      <View style={styles.pageButtonsRow}>
+        <TouchableOpacity
+          style={[styles.pageNavBtn, currentPage <= 1 && styles.pageNavBtnDisabled]}
+          disabled={currentPage <= 1}
+          onPress={() => {
+            tap();
+            onPageChange(currentPage - 1);
+          }}
+        >
+          <Ionicons name="chevron-back" size={14} color={currentPage <= 1 ? '#94a3b8' : '#0f172a'} />
+          <Text style={[styles.pageNavBtnText, currentPage <= 1 && styles.pageNavBtnTextDisabled]}>Prev</Text>
+        </TouchableOpacity>
+
+        {getPageNumbers().map((p, idx) => {
+          if (typeof p === 'string') {
+            return (
+              <Text key={`ellipsis-${idx}`} style={styles.ellipsisText}>
+                ...
+              </Text>
+            );
+          }
+          const isCurrent = p === currentPage;
+          return (
+            <TouchableOpacity
+              key={`page-${p}`}
+              style={[styles.pageNumberBtn, isCurrent && styles.pageNumberBtnActive]}
+              onPress={() => {
+                tap();
+                onPageChange(p as number);
+              }}
+            >
+              <Text style={[styles.pageNumberText, isCurrent && styles.pageNumberTextActive]}>{p}</Text>
+            </TouchableOpacity>
+          );
+        })}
+
+        <TouchableOpacity
+          style={[styles.pageNavBtn, currentPage >= totalPages && styles.pageNavBtnDisabled]}
+          disabled={currentPage >= totalPages}
+          onPress={() => {
+            tap();
+            onPageChange(currentPage + 1);
+          }}
+        >
+          <Text style={[styles.pageNavBtnText, currentPage >= totalPages && styles.pageNavBtnTextDisabled]}>Next</Text>
+          <Ionicons name="chevron-forward" size={14} color={currentPage >= totalPages ? '#94a3b8' : '#0f172a'} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
 function ReferralStatementTable({ theme }: { theme: RoleTheme }) {
   const { data: referralData, isLoading } = useReferralStatement();
+  const { data: appSettings } = useAppSettings();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [isLedgerExpanded, setIsLedgerExpanded] = useState(false);
+  const [ledgerFilter, setLedgerFilter] = useState<'ALL' | 'PAID' | 'PENDING'>('ALL');
+
+  const summary = referralData?.summary;
+  const myReferralInfo = referralData?.myReferralInfo;
+  const referees = useMemo(() => referralData?.referees || [], [referralData]);
+
+  const signupBonusDefault = appSettings?.referralSignupBonusAmount ?? 10;
+  const planBonusDefault = appSettings?.referralPaidPlanBonusAmount ?? 50;
+
+  const filteredReferees = useMemo(() => {
+    if (ledgerFilter === 'PAID') {
+      return referees.filter((ref) => ref.status === 'SUCCESS' || ref.planBonusIssued > 0);
+    }
+    if (ledgerFilter === 'PENDING') {
+      return referees.filter((ref) => ref.status === 'PENDING' && ref.planBonusIssued === 0);
+    }
+    return referees;
+  }, [referees, ledgerFilter]);
+
+  const totalItems = filteredReferees.length;
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedReferees = filteredReferees.slice(startIndex, startIndex + pageSize);
 
   if (isLoading) {
     return (
@@ -389,15 +879,17 @@ function ReferralStatementTable({ theme }: { theme: RoleTheme }) {
     );
   }
 
-  if (!referralData) return null;
-
-  const { summary, myReferralInfo, referees } = referralData;
+  if (!referralData || !summary) return null;
 
   return (
     <View style={{ marginTop: 16, width: '100%' }}>
-      <Text style={styles.sectionTitle}>Referral & Bonus Statement 📊</Text>
+      {/* Referral Rewards Title outside top summary card */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+        <Ionicons name="gift-outline" size={18} color="#15803d" />
+        <Text style={styles.sectionTitle}>Referral Rewards</Text>
+      </View>
 
-      {/* Header Summary Cards */}
+      {/* Upper Header Summary Cards */}
       <View style={styles.refSummaryCard}>
         <View style={styles.refSummaryCol}>
           <Text style={styles.refSummaryLabel}>Total Referees</Text>
@@ -420,83 +912,156 @@ function ReferralStatementTable({ theme }: { theme: RoleTheme }) {
         <View style={styles.mySponsorCard}>
           <View style={styles.mySponsorHeader}>
             <Ionicons name="person-circle-outline" size={20} color="#0284c7" />
-            <Text style={styles.mySponsorTitle}>Referred By (Sponsor)</Text>
+            <Text style={styles.mySponsorTitle}>Referred By (Sponsor / Inviter)</Text>
             <View style={[styles.statusBadge, { backgroundColor: myReferralInfo.status === 'SUCCESS' ? '#dcfce7' : '#fef3c7' }]}>
               <Text style={[styles.statusBadgeText, { color: myReferralInfo.status === 'SUCCESS' ? '#15803d' : '#b45309' }]}>
-                {myReferralInfo.status === 'SUCCESS' ? 'SUCCESS ✅' : 'PENDING ⏳'}
+                {myReferralInfo.status === 'SUCCESS' ? 'PAID PLAN ACTIVE ✅' : 'FREE PLAN ⏳'}
               </Text>
             </View>
           </View>
           <View style={styles.mySponsorBody}>
-            <Text style={styles.mySponsorName}>{myReferralInfo.referredByName} (King ID: {myReferralInfo.referredByKingId})</Text>
-            <Text style={styles.mySponsorSub}>Reference Code: {myReferralInfo.referenceCode}</Text>
+            <Text style={styles.mySponsorName}>{myReferralInfo.referredByName} ({maskMobileNumber(myReferralInfo.referredByKingId)})</Text>
+            <Text style={styles.mySponsorSub}>Reference Code Used: {myReferralInfo.referenceCode}</Text>
             <View style={{ flexDirection: 'row', gap: 12, marginTop: 4, flexWrap: 'wrap' }}>
-              <Text style={styles.mySponsorBonusText}>Welcome Bonus: <Text style={{ color: '#16a34a', fontFamily: FONT.bold }}>₹{myReferralInfo.welcomeBonusIssued}</Text></Text>
-              <Text style={styles.mySponsorBonusText}>Plan Upgrade Bonus: <Text style={{ color: myReferralInfo.status === 'SUCCESS' ? '#16a34a' : '#d97706', fontFamily: FONT.bold }}>₹{myReferralInfo.planBonusPending}</Text></Text>
+              <Text style={styles.mySponsorBonusText}>Your Welcome Bonus: <Text style={{ color: '#16a34a', fontFamily: FONT.bold }}>₹{myReferralInfo.welcomeBonusIssued} ✅</Text></Text>
+              <Text style={styles.mySponsorBonusText}>Sponsor's Paid Plan Referral Income: <Text style={{ color: myReferralInfo.status === 'SUCCESS' ? '#16a34a' : '#d97706', fontFamily: FONT.bold }}>₹{myReferralInfo.planBonusPending} {myReferralInfo.status === 'SUCCESS' ? '✅' : '⏳'}</Text></Text>
             </View>
           </View>
         </View>
       ) : null}
 
-      {/* Referees Table Card */}
-      <View style={[styles.txCard, premiumShadow('#0f172a', 'sm'), { marginTop: 10 }]}>
-        <View style={styles.tableHeaderRow}>
-          <Text style={[styles.tableHeadCell, { flex: 1.4 }]}>Referee / King ID</Text>
-          <Text style={[styles.tableHeadCell, { flex: 1 }]}>Reg Date</Text>
-          <Text style={[styles.tableHeadCell, { flex: 0.9, textAlign: 'right' }]}>Issued</Text>
-          <Text style={[styles.tableHeadCell, { flex: 0.9, textAlign: 'right' }]}>Pending</Text>
-          <Text style={[styles.tableHeadCell, { flex: 1, textAlign: 'center' }]}>Status</Text>
+      {/* 🤝 View Ledger Collapsible Header */}
+      <TouchableOpacity
+        style={styles.collapseHeaderRow}
+        activeOpacity={0.8}
+        onPress={() => {
+          tap();
+          setIsLedgerExpanded(!isLedgerExpanded);
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Ionicons name="receipt-outline" size={18} color="#d97706" />
+          <Text style={styles.sectionTitle}>View Ledger</Text>
+          <View style={styles.collapseBadge}>
+            <Text style={styles.collapseBadgeText}>{referees.length} Referees</Text>
+          </View>
         </View>
+        <View style={styles.collapseTogglePill}>
+          <Text style={styles.collapseTogglePillText}>{isLedgerExpanded ? '-' : '+'}</Text>
+          <Ionicons name={isLedgerExpanded ? 'chevron-up' : 'chevron-down'} size={14} color="#0f172a" />
+        </View>
+      </TouchableOpacity>
 
-        {referees.length === 0 ? (
-          <Text style={[styles.emptyText, { paddingVertical: 14, textAlign: 'center' }]}>
-            No referred users yet. Share your referral code or link to earn rewards! 🎁
-          </Text>
-        ) : (
-          referees.map((item, idx) => {
-            const isLast = idx === referees.length - 1;
-            const regDateStr = new Date(item.registrationDate).toLocaleDateString('en-IN', {
-              day: '2-digit',
-              month: 'short',
-              year: '2-digit',
-            });
+      {/* Referees Table Card (Collapsible) */}
+      {isLedgerExpanded && (
+        <View style={{ marginTop: 6 }}>
+          {/* Filter Chips inside View Ledger */}
+          <View style={styles.filterChipGroup}>
+            <TouchableOpacity
+              style={[styles.filterChip, ledgerFilter === 'ALL' && { backgroundColor: theme.primary, borderColor: theme.primary }]}
+              onPress={() => {
+                tap();
+                setLedgerFilter('ALL');
+                setCurrentPage(1);
+              }}
+            >
+              <Text style={[styles.filterChipText, ledgerFilter === 'ALL' && { color: '#fff' }]}>All ({referees.length})</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.filterChip, ledgerFilter === 'PAID' && { backgroundColor: '#16a34a', borderColor: '#16a34a' }]}
+              onPress={() => {
+                tap();
+                setLedgerFilter('PAID');
+                setCurrentPage(1);
+              }}
+            >
+              <Text style={[styles.filterChipText, ledgerFilter === 'PAID' && { color: '#fff' }]}>Paid Bonus ✅</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.filterChip, ledgerFilter === 'PENDING' && { backgroundColor: '#d97706', borderColor: '#d97706' }]}
+              onPress={() => {
+                tap();
+                setLedgerFilter('PENDING');
+                setCurrentPage(1);
+              }}
+            >
+              <Text style={[styles.filterChipText, ledgerFilter === 'PENDING' && { color: '#fff' }]}>Pending ⏳</Text>
+            </TouchableOpacity>
+          </View>
 
-            return (
-              <View key={item.refereeId} style={[styles.tableRow, !isLast && styles.tableRowBorder]}>
-                <View style={{ flex: 1.4 }}>
-                  <Text style={styles.tableNameText} numberOfLines={1}>{item.refereeName}</Text>
-                  <Text style={styles.tableSubText}>ID: {item.refereeKingId}</Text>
-                  {item.referenceCodeUsed ? (
-                    <Text style={styles.tableCodeText}>Code: {item.referenceCodeUsed}</Text>
-                  ) : null}
-                </View>
+          <View style={[styles.txCard, premiumShadow('#0f172a', 'sm'), { marginTop: 8, padding: 0, overflow: 'hidden' }]}>
+            <View style={styles.tableHeaderRow}>
+              <Text style={[styles.tableHeadCell, { flex: 1.4 }]}>Name & Mobile</Text>
+              <Text style={[styles.tableHeadCell, { flex: 1 }]}>Reg Date</Text>
+              <Text style={[styles.tableHeadCell, { flex: 1.1, textAlign: 'center' }]}>Registration</Text>
+              <Text style={[styles.tableHeadCell, { flex: 1.1, textAlign: 'center' }]}>Paid Bonus</Text>
+            </View>
 
-                <View style={{ flex: 1, justifyContent: 'center' }}>
-                  <Text style={styles.tableDateText}>{regDateStr}</Text>
-                </View>
+            {filteredReferees.length === 0 ? (
+              <Text style={[styles.emptyText, { paddingVertical: 14, paddingHorizontal: 12, textAlign: 'center' }]}>
+                No referees found for this filter.
+              </Text>
+            ) : (
+              paginatedReferees.map((item, idx) => {
+                const isLast = idx === paginatedReferees.length - 1;
+                const regDateStr = new Date(item.registrationDate).toLocaleDateString('en-IN', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: '2-digit',
+                });
 
-                <View style={{ flex: 0.9, justifyContent: 'center', alignItems: 'flex-end' }}>
-                  <Text style={[styles.tableAmountText, { color: '#16a34a' }]}>₹{item.issuedAmount}</Text>
-                </View>
+                const signupBonusVal = item.signupBonusIssued > 0 ? item.signupBonusIssued : signupBonusDefault;
+                const planBonusVal = item.planBonusIssued > 0 ? item.planBonusIssued : (item.pendingAmount > 0 ? item.pendingAmount : planBonusDefault);
+                const isPlanPaid = item.status === 'SUCCESS' || item.planBonusIssued > 0;
 
-                <View style={{ flex: 0.9, justifyContent: 'center', alignItems: 'flex-end' }}>
-                  <Text style={[styles.tableAmountText, { color: item.pendingAmount > 0 ? '#d97706' : '#94a3b8' }]}>
-                    ₹{item.pendingAmount}
-                  </Text>
-                </View>
+                return (
+                  <View key={item.refereeId} style={[styles.tableRow, !isLast && styles.tableRowBorder]}>
+                    {/* Referee Name & Masked Mobile */}
+                    <View style={{ flex: 1.4 }}>
+                      <Text style={styles.tableNameText} numberOfLines={1}>{item.refereeName}</Text>
+                      <Text style={styles.tableSubText}>{maskMobileNumber(item.refereeKingId)}</Text>
+                    </View>
 
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                  <View style={[styles.statusBadge, { backgroundColor: item.status === 'SUCCESS' ? '#dcfce7' : '#fef3c7' }]}>
-                    <Text style={[styles.statusBadgeText, { color: item.status === 'SUCCESS' ? '#15803d' : '#b45309' }]}>
-                      {item.status === 'SUCCESS' ? 'SUCCESS ✅' : 'PENDING ⏳'}
-                    </Text>
+                    {/* Registration Date */}
+                    <View style={{ flex: 1, justifyContent: 'center' }}>
+                      <Text style={styles.tableDateText}>{regDateStr}</Text>
+                    </View>
+
+                    {/* Registration Bonus */}
+                    <View style={{ flex: 1.1, justifyContent: 'center', alignItems: 'center' }}>
+                      <View style={styles.bonusStatusPillSuccess}>
+                        <Text style={styles.bonusStatusTextSuccess}>₹{signupBonusVal} ✅</Text>
+                      </View>
+                    </View>
+
+                    {/* Paid Plan Bonus */}
+                    <View style={{ flex: 1.1, justifyContent: 'center', alignItems: 'center' }}>
+                      <View style={isPlanPaid ? styles.bonusStatusPillSuccess : styles.bonusStatusPillWaiting}>
+                        <Text style={isPlanPaid ? styles.bonusStatusTextSuccess : styles.bonusStatusTextWaiting}>
+                          ₹{planBonusVal} {isPlanPaid ? '✅' : '⏳'}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
-                </View>
-              </View>
-            );
-          })
-        )}
-      </View>
+                );
+              })
+            )}
+
+            {/* Pagination Controls */}
+            <TablePaginationControls
+              currentPage={currentPage}
+              pageSize={pageSize}
+              totalItems={totalItems}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={(sz) => {
+                setPageSize(sz);
+                setCurrentPage(1);
+              }}
+              itemLabel="referees"
+            />
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -510,8 +1075,10 @@ function WalletHistoryTable({
   referees: RefereeStatementItem[];
   theme: RoleTheme;
 }) {
-  const [filter, setFilter] = useState<'ALL' | 'REFERRALS' | 'PENDING'>('ALL');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [isTxHistoryExpanded, setIsTxHistoryExpanded] = useState(false);
 
   const unifiedLedger = useMemo(() => {
     const items: Array<{
@@ -532,11 +1099,11 @@ function WalletHistoryTable({
     for (const tx of transactions) {
       const isCredit = tx.type === 'CREDIT';
       let displayType = isCredit ? 'Credit' : 'Debit';
-      if (tx.reason.includes('Welcome')) displayType = '🎁 Welcome Bonus';
-      else if (tx.reason.includes('Plan Bonus') || tx.reason.includes('Plan')) displayType = '👑 Referral Plan Bonus';
-      else if (tx.reason.includes('Referral')) displayType = '🎉 Referral Bonus';
-      else if (tx.reason.includes('Withdrawal')) displayType = '💸 Withdrawal';
-      else if (tx.reason.includes('Manual')) displayType = '🛠️ Admin Credit';
+      if (tx.reason.includes('Welcome')) displayType = 'Welcome Bonus';
+      else if (tx.reason.includes('Plan Bonus') || tx.reason.includes('Plan')) displayType = 'Referral Plan Bonus';
+      else if (tx.reason.includes('Referral')) displayType = 'Referral Bonus';
+      else if (tx.reason.includes('Withdrawal')) displayType = 'Withdrawal';
+      else if (tx.reason.includes('Manual')) displayType = 'Admin Credit';
 
       items.push({
         id: tx.id,
@@ -559,7 +1126,7 @@ function WalletHistoryTable({
         items.push({
           id: `pending-${ref.refereeId}`,
           date: new Date(ref.registrationDate),
-          type: '⏳ Plan Bonus (Pending)',
+          type: 'Plan Bonus (Pending) ⏳',
           referenceName: ref.refereeName,
           referenceKingId: ref.refereeKingId,
           amount: 0,
@@ -574,125 +1141,123 @@ function WalletHistoryTable({
     return items.sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [transactions, referees]);
 
-  const filteredItems = useMemo(() => {
-    if (filter === 'REFERRALS') {
-      return unifiedLedger.filter((item) => item.type.includes('Bonus') || item.type.includes('Referral') || item.type.includes('Welcome'));
-    }
-    if (filter === 'PENDING') {
-      return unifiedLedger.filter((item) => item.status === 'PENDING');
-    }
-    return unifiedLedger;
-  }, [unifiedLedger, filter]);
+  const totalItems = unifiedLedger.length;
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedItems = unifiedLedger.slice(startIndex, startIndex + pageSize);
 
   return (
     <View style={{ width: '100%', marginTop: 16 }}>
-      {/* Table Control Header */}
-      <View style={styles.tableControlRow}>
-        <Text style={styles.sectionTitle}>Wallet & Bonus History Table 📊</Text>
-        <View style={styles.filterChipGroup}>
-          <TouchableOpacity
-            style={[styles.filterChip, filter === 'ALL' && { backgroundColor: theme.primary, borderColor: theme.primary }]}
-            onPress={() => setFilter('ALL')}
-          >
-            <Text style={[styles.filterChipText, filter === 'ALL' && { color: '#fff' }]}>All ({unifiedLedger.length})</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.filterChip, filter === 'REFERRALS' && { backgroundColor: theme.primary, borderColor: theme.primary }]}
-            onPress={() => setFilter('REFERRALS')}
-          >
-            <Text style={[styles.filterChipText, filter === 'REFERRALS' && { color: '#fff' }]}>Referrals</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.filterChip, filter === 'PENDING' && { backgroundColor: '#d97706', borderColor: '#d97706' }]}
-            onPress={() => setFilter('PENDING')}
-          >
-            <Text style={[styles.filterChipText, filter === 'PENDING' && { color: '#fff' }]}>Pending ⏳</Text>
-          </TouchableOpacity>
+      {/* Collapsible Header for Transaction History */}
+      <TouchableOpacity
+        style={styles.collapseHeaderRow}
+        activeOpacity={0.8}
+        onPress={() => {
+          tap();
+          setIsTxHistoryExpanded(!isTxHistoryExpanded);
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+          <Ionicons name="journal-outline" size={18} color="#0284c7" />
+          <Text style={styles.sectionTitle}>Transaction History</Text>
+          <View style={styles.collapseBadge}>
+            <Text style={styles.collapseBadgeText}>{unifiedLedger.length} Records</Text>
+          </View>
         </View>
-      </View>
-
-      {/* History Table */}
-      <View style={[styles.txCard, premiumShadow('#0f172a', 'sm'), { padding: 0, overflow: 'hidden' }]}>
-        <View style={styles.historyTableHeader}>
-          <Text style={[styles.historyHeadCell, { flex: 1.1 }]}>Date</Text>
-          <Text style={[styles.historyHeadCell, { flex: 1.5 }]}>Type / Reason</Text>
-          <Text style={[styles.historyHeadCell, { flex: 1.4 }]}>Referee / King ID</Text>
-          <Text style={[styles.historyHeadCell, { flex: 1, textAlign: 'right' }]}>Amount</Text>
-          <Text style={[styles.historyHeadCell, { flex: 1, textAlign: 'right' }]}>Pending</Text>
-          <Text style={[styles.historyHeadCell, { flex: 1.1, textAlign: 'center' }]}>Status</Text>
+        <View style={styles.collapseTogglePill}>
+          <Text style={styles.collapseTogglePillText}>{isTxHistoryExpanded ? '-' : '+'}</Text>
+          <Ionicons name={isTxHistoryExpanded ? 'chevron-up' : 'chevron-down'} size={14} color="#0f172a" />
         </View>
+      </TouchableOpacity>
 
-        {filteredItems.length === 0 ? (
-          <Text style={[styles.emptyText, { padding: 20, textAlign: 'center' }]}>
-            No history records found for this view.
-          </Text>
-        ) : (
-          filteredItems.map((item, idx) => {
-            const isLast = idx === filteredItems.length - 1;
-            const isExpanded = expandedId === item.id;
-            const dateStr = item.date.toLocaleDateString('en-IN', {
-              day: '2-digit',
-              month: 'short',
-              year: '2-digit',
-            });
+      {/* History Table (Collapsible) */}
+      {isTxHistoryExpanded && (
+        <View style={{ marginTop: 6 }}>
+          <View style={[styles.txCard, premiumShadow('#0f172a', 'sm'), { padding: 0, overflow: 'hidden', borderWidth: 1.5, borderColor: '#cbd5e1' }]}>
+            <View style={styles.historyTableHeader}>
+              <Text style={[styles.historyHeadCell, { flex: 1.4 }]}>Name & Mobile</Text>
+              <Text style={[styles.tableHeadCell, { flex: 1 }]}>Reg Date</Text>
+              <Text style={[styles.tableHeadCell, { flex: 1.2 }]}>Type</Text>
+              <Text style={[styles.tableHeadCell, { flex: 1.1, textAlign: 'center' }]}>Credit Amount</Text>
+            </View>
 
-            return (
-              <React.Fragment key={item.id}>
-                <TouchableOpacity
-                  style={[styles.historyTableRow, !isLast && styles.tableRowBorder, isExpanded && { backgroundColor: '#f8fafc' }]}
-                  activeOpacity={0.7}
-                  onPress={() => setExpandedId(isExpanded ? null : item.id)}
-                >
-                  <Text style={[styles.historyCellText, { flex: 1.1 }]}>{dateStr}</Text>
+            {unifiedLedger.length === 0 ? (
+              <Text style={[styles.emptyText, { padding: 20, textAlign: 'center' }]}>
+                No history records found.
+              </Text>
+            ) : (
+              paginatedItems.map((item, idx) => {
+                const isLast = idx === paginatedItems.length - 1;
+                const isExpanded = expandedId === item.id;
+                const dateStr = item.date.toLocaleDateString('en-IN', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: '2-digit',
+                });
 
-                  <View style={{ flex: 1.5, justifyContent: 'center' }}>
-                    <Text style={styles.tableNameText} numberOfLines={1}>{item.type}</Text>
-                  </View>
+                return (
+                  <React.Fragment key={item.id}>
+                    <TouchableOpacity
+                      style={[styles.historyTableRow, !isLast && styles.tableRowBorder, isExpanded && { backgroundColor: '#f8fafc' }]}
+                      activeOpacity={0.7}
+                      onPress={() => setExpandedId(isExpanded ? null : item.id)}
+                    >
+                      {/* Referee & Mobile */}
+                      <View style={{ flex: 1.4 }}>
+                        <Text style={styles.tableNameText} numberOfLines={1}>{item.referenceName}</Text>
+                        <Text style={styles.tableSubText}>{maskMobileNumber(item.referenceKingId !== 'N/A' ? item.referenceKingId : item.relatedUserMobile)}</Text>
+                      </View>
 
-                  <View style={{ flex: 1.4, justifyContent: 'center' }}>
-                    <Text style={styles.tableNameText} numberOfLines={1}>{item.referenceName}</Text>
-                    {item.referenceKingId !== 'N/A' ? (
-                      <Text style={styles.tableCodeText}>ID: {item.referenceKingId}</Text>
+                      {/* Reg Date */}
+                      <View style={{ flex: 1, justifyContent: 'center' }}>
+                        <Text style={styles.tableDateText}>{dateStr}</Text>
+                      </View>
+
+                      {/* Type */}
+                      <View style={{ flex: 1.2, justifyContent: 'center' }}>
+                        <Text style={styles.tableNameText} numberOfLines={1}>{item.type}</Text>
+                      </View>
+
+                      {/* Credit Amount */}
+                      <View style={{ flex: 1.1, justifyContent: 'center', alignItems: 'center' }}>
+                        <View style={item.status === 'SUCCESS' ? styles.bonusStatusPillSuccess : styles.bonusStatusTextWaiting}>
+                          <Text style={item.status === 'SUCCESS' ? styles.bonusStatusTextSuccess : styles.bonusStatusTextWaiting}>
+                            {item.status === 'PENDING' ? `₹${item.pendingAmount} ⏳` : `${item.isCredit ? '+' : '-'}₹${item.amount} ${item.isCredit ? '✅' : ''}`}
+                          </Text>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+
+                    {isExpanded ? (
+                      <View style={styles.historyDetailBox}>
+                        <Text style={styles.historyDetailReason}>{item.rawReason}</Text>
+                        {item.relatedUserMobile ? (
+                          <Text style={styles.historyDetailSub}>Contact: {item.relatedUserMobile}</Text>
+                        ) : null}
+                        <Text style={styles.historyDetailSub}>
+                          Timestamp: {item.date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} at {item.date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                        </Text>
+                      </View>
                     ) : null}
-                  </View>
+                  </React.Fragment>
+                );
+              })
+            )}
 
-                  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'flex-end' }}>
-                    <Text style={[styles.tableAmountText, { color: item.status === 'PENDING' ? '#94a3b8' : item.isCredit ? '#16a34a' : '#dc2626' }]}>
-                      {item.status === 'PENDING' ? '₹0' : `${item.isCredit ? '+' : '-'}₹${item.amount}`}
-                    </Text>
-                  </View>
-
-                  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'flex-end' }}>
-                    <Text style={[styles.tableAmountText, { color: item.pendingAmount > 0 ? '#d97706' : '#94a3b8' }]}>
-                      ₹{item.pendingAmount}
-                    </Text>
-                  </View>
-
-                  <View style={{ flex: 1.1, justifyContent: 'center', alignItems: 'center' }}>
-                    <View style={[styles.statusBadge, { backgroundColor: item.status === 'SUCCESS' ? '#dcfce7' : '#fef3c7' }]}>
-                      <Text style={[styles.statusBadgeText, { color: item.status === 'SUCCESS' ? '#15803d' : '#b45309' }]}>
-                        {item.status === 'SUCCESS' ? 'SUCCESS ✅' : 'PENDING ⏳'}
-                      </Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-
-                {isExpanded ? (
-                  <View style={styles.historyDetailBox}>
-                    <Text style={styles.historyDetailReason}>📌 {item.rawReason}</Text>
-                    {item.relatedUserMobile ? (
-                      <Text style={styles.historyDetailSub}>📞 Contact: {item.relatedUserMobile}</Text>
-                    ) : null}
-                    <Text style={styles.historyDetailSub}>
-                      📅 Timestamp: {item.date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} at {item.date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                    </Text>
-                  </View>
-                ) : null}
-              </React.Fragment>
-            );
-          })
-        )}
-      </View>
+            {/* Pagination Controls */}
+            <TablePaginationControls
+              currentPage={currentPage}
+              pageSize={pageSize}
+              totalItems={totalItems}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={(sz) => {
+                setPageSize(sz);
+                setCurrentPage(1);
+              }}
+              itemLabel="transactions"
+            />
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -1514,11 +2079,11 @@ function WithdrawModal({ visible, balance, onClose }: { visible: boolean; balanc
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: staticTheme.bg },
-  hero: { paddingTop: 20, paddingBottom: 16, paddingHorizontal: 16, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  heroTitle: { fontSize: 19, fontFamily: FONT.extraBold, color: '#0f172a' },
+  hero: { paddingTop: 10, paddingBottom: 8, paddingHorizontal: 16, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  heroTitle: { fontSize: 18, fontFamily: FONT.extraBold, color: '#0f172a' },
   kingIdBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6, flexWrap: 'wrap' },
   kingIdText: { fontSize: 11.5, fontFamily: FONT.bold, color: staticTheme.primary, letterSpacing: 0.3, flexShrink: 1 },
-  body: { paddingHorizontal: 16, paddingVertical: 16, maxWidth: 480, alignSelf: 'center', width: '100%' },
+  body: { paddingHorizontal: 16, paddingVertical: 10, maxWidth: 480, alignSelf: 'center', width: '100%' },
   balanceCard: { borderRadius: RADIUS.xl, padding: 16, width: '100%' },
   balanceLabel: { color: 'rgba(255,255,255,0.75)', fontSize: 13, fontFamily: FONT.medium },
   balanceValue: { color: '#fff', fontSize: 32, fontFamily: FONT.extraBold, marginTop: 6, letterSpacing: -0.6, flexShrink: 1 },
@@ -1565,6 +2130,122 @@ const styles = StyleSheet.create({
   generateBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 },
   costPreviewBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fffbeb', borderRadius: RADIUS.md, padding: 10, borderWidth: 1, borderColor: '#fde68a' },
   costPreviewText: { flex: 1, fontSize: 11.5, fontFamily: FONT.medium, color: '#92400e' },
+  claimBanner: {
+    padding: 14,
+    borderRadius: RADIUS.xl,
+    marginTop: 14,
+    gap: 12,
+    borderWidth: 1.5,
+    borderColor: '#86efac',
+  },
+  claimBannerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    width: '100%',
+  },
+  claimBannerIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#86efac',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  claimBannerTitle: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#14532d', letterSpacing: 0.2 },
+  claimBannerActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    width: '100%',
+  },
+  bannerBenefitsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    width: '100%',
+  },
+  bannerBenefitBoxYour: {
+    flex: 1,
+    backgroundColor: '#f0fdf4',
+    borderRadius: RADIUS.md,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    gap: 2,
+  },
+  bannerBenefitHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
+  },
+  bannerBenefitTitleYour: {
+    fontSize: 10.5,
+    fontFamily: FONT.extraBold,
+    color: '#15803d',
+  },
+  bannerBenefitTextYour: {
+    fontSize: 9.5,
+    fontFamily: FONT.medium,
+    color: '#166534',
+    lineHeight: 13,
+  },
+  bannerBenefitBoxNew: {
+    flex: 1,
+    backgroundColor: '#f0f9ff',
+    borderRadius: RADIUS.md,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#bae6fd',
+    gap: 2,
+  },
+  bannerBenefitTitleNew: {
+    fontSize: 10.5,
+    fontFamily: FONT.extraBold,
+    color: '#0369a1',
+  },
+  bannerBenefitTextNew: {
+    fontSize: 9.5,
+    fontFamily: FONT.medium,
+    color: '#0369a1',
+    lineHeight: 13,
+  },
+  bannerBenefitSubNew: {
+    fontSize: 8.5,
+    fontFamily: FONT.bold,
+    color: '#0284c7',
+    marginTop: 1,
+  },
+  claimBannerBtn: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: RADIUS.pill,
+  },
+  claimBannerBtnText: { fontSize: 11.5, fontFamily: FONT.extraBold, color: '#15803d' },
+  cardClaimRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#86efac',
+    marginBottom: 4,
+  },
+  cardClaimTitle: { fontSize: 12, fontFamily: FONT.extraBold, color: '#15803d' },
+  cardClaimSub: { fontSize: 10, fontFamily: FONT.medium, color: '#64748b' },
+  cardClaimBtn: {
+    backgroundColor: '#16a34a',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+  },
+  cardClaimBtnText: { color: '#ffffff', fontSize: 11, fontFamily: FONT.extraBold },
   referralCard: { borderRadius: RADIUS.xl, marginTop: 14, overflow: 'hidden' },
   referralGradient: { padding: 14, borderRadius: RADIUS.xl, borderWidth: 1.5, borderColor: '#bbf7d0', gap: 10 },
   refHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -1617,6 +2298,425 @@ const styles = StyleSheet.create({
   historyTableRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 12 },
   historyCellText: { fontSize: 11, fontFamily: FONT.medium, color: '#475569' },
   historyDetailBox: { backgroundColor: '#f1f5f9', padding: 10, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: '#e2e8f0', gap: 4 },
-  historyDetailReason: { fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' },
   historyDetailSub: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b' },
+  benefitsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  benefitBoxYour: {
+    flex: 1,
+    backgroundColor: '#f0fdf4',
+    borderRadius: RADIUS.md,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    gap: 2,
+  },
+  benefitHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 2,
+  },
+  benefitBoxTitleYour: {
+    fontSize: 10.5,
+    fontFamily: FONT.extraBold,
+    color: '#15803d',
+  },
+  benefitItemText: {
+    fontSize: 9.5,
+    fontFamily: FONT.medium,
+    color: '#166534',
+    lineHeight: 13,
+  },
+  benefitBoxNew: {
+    flex: 1,
+    backgroundColor: '#f0f9ff',
+    borderRadius: RADIUS.md,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#bae6fd',
+    gap: 2,
+  },
+  benefitBoxTitleNew: {
+    fontSize: 10.5,
+    fontFamily: FONT.extraBold,
+    color: '#0369a1',
+  },
+  benefitItemTextNew: {
+    fontSize: 9.5,
+    fontFamily: FONT.medium,
+    color: '#0369a1',
+    lineHeight: 13,
+  },
+  benefitItemSubNew: {
+    fontSize: 8.5,
+    fontFamily: FONT.bold,
+    color: '#0284c7',
+    marginTop: 1,
+  },
+  royalBalanceCard: {
+    borderRadius: RADIUS.xl,
+    padding: 16,
+    width: '100%',
+    borderWidth: 1.5,
+    borderColor: '#f59e0b',
+    gap: 12,
+    ...premiumShadow('#f59e0b', 'sm'),
+  },
+  royalTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 8,
+    gap: 6,
+  },
+  royalTitlePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1.5,
+    borderColor: '#f59e0b',
+    flexShrink: 1,
+    maxWidth: '74%',
+    ...premiumShadow('#f59e0b', 'xs'),
+  },
+  royalTitleText: {
+    fontSize: 11.5,
+    fontFamily: FONT.extraBold,
+    color: '#fef08a',
+    letterSpacing: 0.4,
+    flexShrink: 1,
+  },
+  royalKingIdBadge: {
+    backgroundColor: '#0f172a',
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1.5,
+    borderColor: '#f59e0b',
+    flexShrink: 0,
+    ...premiumShadow('#f59e0b', 'xs'),
+  },
+  royalKingIdText: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    letterSpacing: 0.3,
+  },
+  royalCardTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  royalPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#f59e0b',
+  },
+  royalPillText: {
+    fontSize: 10,
+    fontFamily: FONT.extraBold,
+    color: '#fef08a',
+    letterSpacing: 0.5,
+  },
+  royalKingId: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#e2e8f0',
+  },
+  royalContentRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: 12,
+  },
+  royalBalanceLabel: {
+    color: '#cbd5e1',
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    letterSpacing: 0.3,
+  },
+  balanceAmountRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 3,
+    marginTop: 4,
+  },
+  royalCurrencySymbol: {
+    color: '#f59e0b',
+    fontSize: 24,
+    fontFamily: FONT.extraBold,
+  },
+  royalBalanceValue: {
+    color: '#ffffff',
+    fontSize: 34,
+    fontFamily: FONT.extraBold,
+    letterSpacing: -0.5,
+  },
+  royalPendingNote: {
+    color: '#fef08a',
+    fontSize: 11,
+    fontFamily: FONT.semiBold,
+    marginTop: 4,
+  },
+  royalWithdrawBtn: {
+    borderRadius: RADIUS.pill,
+    overflow: 'hidden',
+    ...premiumShadow('#eab308', 'xs'),
+  },
+  royalWithdrawGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: RADIUS.pill,
+  },
+  royalWithdrawBtnText: {
+    color: '#0f172a',
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+  },
+  claimBannerBtnSecondary: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1.5,
+    borderColor: '#cbd5e1',
+  },
+  claimBannerBtnSecondaryText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  claimBannerBtnJpg: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    backgroundColor: '#fffbe6',
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1.5,
+    borderColor: '#f59e0b',
+  },
+  claimBannerBtnJpgText: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    color: '#b45309',
+  },
+  claimBannerBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    backgroundColor: '#16a34a',
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1.5,
+    borderColor: '#15803d',
+  },
+  claimBannerBtnText: {
+    fontSize: 11.5,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+  },
+  bonusStatusPillSuccess: {
+    backgroundColor: '#dcfce7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#86efac',
+  },
+  bonusStatusTextSuccess: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    color: '#15803d',
+  },
+  bonusStatusPillWaiting: {
+    backgroundColor: '#fffbeb',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#fde68a',
+  },
+  bonusStatusTextWaiting: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    color: '#b45309',
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: '#f8fafc',
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  paginationInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  paginationText: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  pageSizeSelectWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  pageSizeLabel: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#475569',
+  },
+  pageSizePill: {
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 6,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+  },
+  pageSizePillActive: {
+    backgroundColor: '#15803d',
+    borderColor: '#15803d',
+  },
+  pageSizePillText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#475569',
+  },
+  pageSizePillTextActive: {
+    color: '#ffffff',
+  },
+  pageButtonsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  pageNavBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    gap: 2,
+  },
+  pageNavBtnDisabled: {
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
+  },
+  pageNavBtnText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
+  pageNavBtnTextDisabled: {
+    color: '#cbd5e1',
+  },
+  pageNumberBtn: {
+    minWidth: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 6,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+  },
+  pageNumberBtnActive: {
+    backgroundColor: '#0f172a',
+    borderColor: '#0f172a',
+  },
+  pageNumberText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#334155',
+  },
+  pageNumberTextActive: {
+    color: '#ffffff',
+  },
+  ellipsisText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#94a3b8',
+    paddingHorizontal: 2,
+  },
+  collapseHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 14,
+    marginBottom: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+  },
+  collapseBadge: {
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  collapseBadgeText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+  },
+  collapseTogglePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+  },
+  collapseTogglePillText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#0f172a',
+  },
 });

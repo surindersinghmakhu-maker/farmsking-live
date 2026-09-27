@@ -178,7 +178,7 @@ export function OpenMeteoWeatherCard() {
   const [error, setError] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [showSirenModal, setShowSirenModal] = useState(false);
-  const [isSirenActive, setIsSirenActive] = useState(true);
+  const [isSirenActive, setIsSirenActive] = useState(false);
 
   const fetchWeather = async () => {
     setLoading(true);

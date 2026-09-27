@@ -99,11 +99,11 @@ const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
   FARM_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
   GARDEN_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
   BUSINESS_PARTNER: { tabs: ['index', 'shop', 'referrals', 'wallet', 'more'] },
-  ADMIN: { tabs: ['index', 'shop', 'super-users', 'super-settings', 'super-coupons', 'super-accounts', 'more'] },
-  SUPER_ADMIN: { tabs: ['index', 'shop', 'super-users', 'super-coupons', 'super-accounts', 'super-settings', 'more'] },
-  MANAGER: { tabs: ['index', 'shop', 'super-users', 'super-coupons', 'super-accounts', 'super-settings', 'more'] },
-  SUPERVISOR: { tabs: ['index', 'shop', 'farm', 'records', 'more'] },
-  OPERATOR: { tabs: ['index', 'shop', 'operator-orders', 'more'] },
+  ADMIN: { tabs: ['index', 'shop', 'super-users', 'super-settings', 'super-coupons', 'super-accounts', 'wallet', 'more'] },
+  SUPER_ADMIN: { tabs: ['index', 'shop', 'super-users', 'super-coupons', 'super-accounts', 'super-settings', 'wallet', 'more'] },
+  MANAGER: { tabs: ['index', 'shop', 'super-users', 'super-coupons', 'super-accounts', 'super-settings', 'wallet', 'more'] },
+  SUPERVISOR: { tabs: ['index', 'shop', 'farm', 'records', 'wallet', 'more'] },
+  OPERATOR: { tabs: ['index', 'shop', 'operator-orders', 'wallet', 'more'] },
   LABOUR: { tabs: ['index', 'shop', 'wallet', 'more'] },
 };
 

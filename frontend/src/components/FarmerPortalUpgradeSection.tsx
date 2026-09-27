@@ -51,7 +51,7 @@ export const FarmerPortalUpgradeSection: React.FC<FarmerPortalUpgradeSectionProp
   const [isScanning, setIsScanning] = useState(false);
 
   // Emergency Siren State
-  const [isSirenActive, setIsSirenActive] = useState(true);
+  const [isSirenActive, setIsSirenActive] = useState(false);
 
   // Multi-Mandi Comparison Selected Crop
   const [selectedCrop, setSelectedCrop] = useState<'Wheat' | 'Paddy 1509' | 'Cotton'>('Wheat');
@@ -102,27 +102,6 @@ export const FarmerPortalUpgradeSection: React.FC<FarmerPortalUpgradeSectionProp
 
   return (
     <View style={styles.container}>
-
-      {/* 👑 FARMSKING MEMBERSHIP Banner Card */}
-      <LinearGradient
-        colors={tConfig.headerGradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={[styles.royalBanner, premiumShadow(tConfig.shadowColor, 'sm')]}
-      >
-        <View style={styles.royalHeaderRow}>
-          <View style={{ flex: 1, gap: 2 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-              <Text style={{ fontSize: 13 }}>👑</Text>
-              <Text style={[styles.royalTitle, { color: tConfig.titleColor }]}>FARMSKING MEMBERSHIP</Text>
-            </View>
-
-            <Text style={[styles.royalSub, { color: tConfig.subColor }]} numberOfLines={1}>
-              👑 Unlimited Crops · Labour Management · Supervisors ✨
-            </Text>
-          </View>
-        </View>
-      </LinearGradient>
 
       <FarmerPlanUpgradeModal
         visible={showUpgradeModal}

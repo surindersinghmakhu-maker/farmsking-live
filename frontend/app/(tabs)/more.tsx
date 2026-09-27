@@ -117,6 +117,7 @@ export default function MoreScreen() {
   const [isSecurityVerified, setIsSecurityVerified] = useState(false);
   const [contactModalMode, setContactModalMode] = useState<'SUPPORT' | 'CONTACT' | null>(null);
   const [isAccountExpanded, setIsAccountExpanded] = useState(false);
+  const [isGroupVoiceCallEnabled, setIsGroupVoiceCallEnabled] = useState(true);
 
   const [deletePincodeInput, setDeletePincodeInput] = useState('');
 
@@ -551,6 +552,28 @@ export default function MoreScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.rowLabel}>🤖 AI Crop Disease Scanner</Text>
                     <Text style={styles.rowSubLabel}>2-Sec Disease Detection & First-Aid Spray</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.row}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    const msg = 'Authenticity Barcode Scanner feature is coming soon! Stay tuned.';
+                    if (Platform.OS === 'web') {
+                      alert('Coming Soon 🚀\n\n' + msg);
+                    } else {
+                      Alert.alert('Coming Soon 🚀', msg, [{ text: 'OK' }]);
+                    }
+                  }}
+                >
+                  <View style={[styles.rowIconBg, { backgroundColor: '#e0f2fe' }]}>
+                    <Ionicons name="qr-code-outline" size={18} color="#0284c7" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.rowLabel}>🔎 Authenticity Barcode Scanner</Text>
+                    <Text style={styles.rowSubLabel}>Verify Fertilizer & Spray Barcode Authenticity</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
                 </TouchableOpacity>

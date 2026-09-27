@@ -20,6 +20,12 @@ export class WalletController {
     return this.walletService.getMyWallet(user);
   }
 
+  @Post('claim-welcome-bonus')
+  async claimWelcomeBonus(@CurrentUser() user: AuthUser) {
+    await this.walletService.ensureWelcomeBonus(user.id);
+    return this.walletService.getMyWallet(user);
+  }
+
   @Get('referral-statement')
   getReferralStatement(@CurrentUser() user: AuthUser) {
     return this.walletService.getReferralStatement(user.id);

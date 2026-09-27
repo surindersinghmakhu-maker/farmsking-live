@@ -46,7 +46,11 @@ try {
   const distDir = path.join(targetDir, 'dist');
   if (fs.existsSync(publicDir) && fs.existsSync(distDir)) {
     console.log('📂 Copying static assets from public to dist...');
-    fs.cpSync(publicDir, distDir, { recursive: true });
+    try {
+      fs.cpSync(publicDir, distDir, { recursive: true, force: true, dereference: true, errorOnExist: false });
+    } catch (cpErr) {
+      console.warn('⚠️ Warning: Some static assets skipped due to locked file handles:', cpErr.message);
+    }
   }
 
   const distIndexPath = path.join(distDir, 'index.html');

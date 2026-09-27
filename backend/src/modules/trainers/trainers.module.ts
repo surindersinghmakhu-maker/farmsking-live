@@ -3,10 +3,10 @@ import { TrainersService } from './trainers.service';
 import { TrainersController } from './trainers.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { WalletModule } from '../wallet/wallet.module';
-import { WhatsappModule } from '../whatsapp/whatsapp.module';
+import { WhatsappBotModule } from '../whatsapp/whatsapp.module';
 
 @Module({
-  imports: [PrismaModule, WalletModule, WhatsappModule],
+  imports: [PrismaModule, WalletModule, WhatsappBotModule],
   controllers: [TrainersController],
   providers: [TrainersService],
   exports: [TrainersService],

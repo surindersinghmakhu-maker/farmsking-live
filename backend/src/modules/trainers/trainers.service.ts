@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { WalletService } from '../wallet/wallet.service';
 import { WhatsappBotService } from '../whatsapp/whatsapp.service';
 import { AuthUser } from '../../common/types/auth-user.type';
-import { Role, TrainingStatus } from '@prisma/client';
+import { Role, TrainerLevel, TrainingStatus } from '@prisma/client';
 
 @Injectable()
 export class TrainersService {

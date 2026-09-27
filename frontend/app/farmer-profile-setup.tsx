@@ -114,11 +114,7 @@ export default function FarmerProfileSetupScreen() {
 
       await updateUser(mergedUser as any);
       await refreshUser();
-      setSaveSuccessMsg('✨ ਕਿਸਾਨ ਪ੍ਰੋਫਾਈਲ ਜਾਣਕਾਰੀ ਸਫ਼ਲਤਾਪੂਰਵਕ ਸੇਵ ਹੋ ਗਈ ਹੈ!');
-      setTimeout(() => {
-        setSaveSuccessMsg(null);
-        handleGoBack();
-      }, 1200);
+      setSaveSuccessMsg('✨ ਕਿਸਾਨ ਪ੍ਰੋਫਾਈਲ ਜਾਣਕਾਰੀ ਅਤੇ UPI ID ਸਫ਼ਲਤਾਪੂਰਵਕ ਸੇਵ ਹੋ ਗਈ ਹੈ!');
     } catch (error: any) {
       const msg = error?.response?.data?.message ?? 'Could not save farmer profile details. Please try again.';
       Alert.alert('Error Saving Profile', typeof msg === 'string' ? msg : JSON.stringify(msg));
@@ -153,8 +149,8 @@ export default function FarmerProfileSetupScreen() {
     let isPasswordCorrect = false;
 
     try {
-      // 1. Verify password (returns 200 OK with success: true / false)
-      const res = await verifyAccountPassword(verifyPassword.trim());
+      // 1. Verify password (returns 200 OK with success: true / false, checked against mobile)
+      const res = await verifyAccountPassword(verifyPassword.trim(), user?.mobile);
 
       if (!res?.success) {
         setIsVerifyingPassword(false);

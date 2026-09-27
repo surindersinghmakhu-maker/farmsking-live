@@ -512,7 +512,7 @@ export class AuthService {
     };
   }
 
-  async verifyPassword(userId: string, password: string) {
+  async verifyPassword(identifier: string, password: string) {
     const cleanPassword = (password ?? '').trim();
     if (!cleanPassword) {
       return {
@@ -521,8 +521,23 @@ export class AuthService {
       };
     }
 
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+    const cleanDigits = identifier ? identifier.replace(/\D/g, '').slice(-10) : '';
+
+    const user = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { id: identifier },
+          { mobile: identifier },
+          ...(cleanDigits
+            ? [
+                { mobile: cleanDigits },
+                { mobile: `+91${cleanDigits}` },
+                { mobile: { endsWith: cleanDigits } },
+              ]
+            : []),
+        ],
+        deletedAt: null,
+      },
     });
 
     if (!user || !user.passwordHash) {

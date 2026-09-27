@@ -40,14 +40,14 @@ export class AuthController {
     return this.authService.logoutOtherSessions(user.id, user.sessionId);
   }
 
-  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @Post('verify-password')
   verifyPassword(
-    @CurrentUser() user: AuthUser,
-    @Body() body: { password?: string },
+    @CurrentUser() user: AuthUser | null,
+    @Body() body: { password?: string; mobile?: string },
   ) {
-    return this.authService.verifyPassword(user.id, body.password ?? '');
+    const identifier = user?.id || body?.mobile || '';
+    return this.authService.verifyPassword(identifier, body.password ?? '');
   }
 
   @Throttle({ default: { limit: 5, ttl: 60_000 } })

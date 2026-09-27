@@ -60,7 +60,7 @@ export async function logoutOtherSessions(): Promise<{ success: boolean; message
   return data;
 }
 
-export async function verifyAccountPassword(password: string): Promise<{ success: boolean; message: string }> {
-  const { data } = await apiClient.post('/auth/verify-password', { password });
+export async function verifyAccountPassword(password: string, mobile?: string): Promise<{ success: boolean; message: string }> {
+  const { data } = await apiClient.post<{ success: boolean; message: string }>('/auth/verify-password', { password, mobile });
   return data;
 }

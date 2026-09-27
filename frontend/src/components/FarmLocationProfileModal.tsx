@@ -192,20 +192,8 @@ export const FarmLocationProfileModal: React.FC<FarmLocationProfileModalProps> =
       await refreshUser();
 
       setIsSaved(true);
-      const msg = selectedOption === 'GPS'
-        ? '✅ GPS Satellite location saved! Weather card will now show weather for your GPS coordinates.'
-        : '✅ Profile address saved! Weather card will now show weather for your PIN code location.';
-
-      if (Platform.OS === 'web') {
-        alert(msg);
-      } else {
-        Alert.alert('✅ Location Saved!', msg);
-      }
-
-      setTimeout(() => {
-        setIsSaved(false);
-        onClose();
-      }, 1200);
+      // Immediately close modal dialog when Save Location is pressed
+      onClose();
     } catch (err: any) {
       setSaveError(err?.response?.data?.message || err?.message || 'Could not save farm location.');
     }

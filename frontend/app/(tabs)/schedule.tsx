@@ -37,7 +37,7 @@ const CATEGORY_DISPLAY: Record<string, { name: string; color: string; bg: string
   OTHER: { name: 'Other Crops', color: '#64748b', bg: '#f1f5f9' },
 };
 
-const AREA_UNIT_LABEL: Record<string, string> = { ACRE: 'Killa (Acre)', HECTARE: 'Hectare', BIGHA: 'Bigha', GUNTA: 'Gunta' };
+const AREA_UNIT_LABEL: Record<string, string> = { ACRE: 'Acre', HECTARE: 'Hectare', BIGHA: 'Bigha', GUNTA: 'Gunta' };
 
 /** Advisor-side crops (real backend, accepted only) adapted into the same card shape the farmer-side screens use. */
 function toScheduleFarmCard(crop: AdvisorReviewCropCycle): RegisteredCropField {

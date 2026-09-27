@@ -21,6 +21,7 @@ enum Role {
   OPERATOR
   SUPERVISOR
   LABOUR
+  TECHNICAL_TRAINER
 }
 
 /// Fixed, read-only capabilities an Admin/Super Admin can grant to a specific Operator account.
@@ -570,6 +571,11 @@ model User {
   // Group Voice Call Relations
   groupVoiceCallsHosted      GroupVoiceCall[]            @relation("VoiceCallHost")
   groupVoiceCallParticipations GroupVoiceCallParticipant[] @relation("VoiceCallParticipant")
+
+  // Technical Trainer Relations
+  trainerAssignments         TrainerAssignment[]       @relation("TrainerAssignmentUser")
+  trainerLogs                FarmerTrainingLog[]       @relation("TrainerLogs")
+  farmerTrainingLog          FarmerTrainingLog?        @relation("TrainedFarmer")
 
   @@index([kingId])
   @@index([mobile])
@@ -2562,5 +2568,56 @@ model GroupVoiceCallParticipant {
   @@index([callId])
   @@index([userId])
   @@map("group_voice_call_participants")
+}
+
+// ─── Technical Trainer & Verification System ──────────────────────────────────
+
+enum TrainingStatus {
+  PENDING_CALL
+  IN_PROGRESS
+  WAITING_VERIFICATION
+  VERIFIED_AND_PAID
+  UNREACHABLE
+}
+
+model TrainerAssignment {
+  id             String   @id @default(uuid())
+  trainerId      String
+  trainer        User     @relation("TrainerAssignmentUser", fields: [trainerId], references: [id], onDelete: Cascade)
+  state          String
+  district       String?
+  commissionRate Float    @default(20.0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([trainerId])
+  @@index([state])
+  @@index([district])
+  @@map("trainer_assignments")
+}
+
+model FarmerTrainingLog {
+  id               String         @id @default(uuid())
+  farmerId         String         @unique
+  farmer           User           @relation("TrainedFarmer", fields: [farmerId], references: [id], onDelete: Cascade)
+  trainerId        String
+  trainer          User           @relation("TrainerLogs", fields: [trainerId], references: [id], onDelete: Cascade)
+  state            String
+  district         String?
+  status           TrainingStatus @default(PENDING_CALL)
+  rating           Int?
+  verificationCode String?
+  callNotes        String?
+  payoutAmount     Float          @default(0.0)
+  payoutTxId       String?
+  verifiedAt       DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([trainerId])
+  @@index([state])
+  @@index([district])
+  @@index([status])
+  @@map("farmer_training_logs")
 }
 

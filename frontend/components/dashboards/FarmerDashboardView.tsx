@@ -25,6 +25,7 @@ import { FarmLocationProfileModal } from '@/src/components/FarmLocationProfileMo
 import { FarmerPortalUpgradeSection } from '@/src/components/FarmerPortalUpgradeSection';
 import { SupervisorManagementModal } from '@/src/components/SupervisorManagementModal';
 import { WelcomeBonusModal } from '@/src/components/WelcomeBonusModal';
+import { FarmerTrainingRatingBanner } from '@/src/components/FarmerTrainingRatingBanner';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const tap = () => {
@@ -266,6 +267,9 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
 
           </View>
         </View>
+
+        {/* 🎓 Technical Trainer Rating Banner */}
+        <FarmerTrainingRatingBanner />
 
         {/* Your Crop Prices LIVE */}
         <MarketRatesCard />

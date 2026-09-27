@@ -55,6 +55,7 @@ import { MandiAIModule } from './modules/mandi-ai/mandi-ai.module';
 import { GoogleDriveBackupModule } from './modules/google-drive-backup/google-drive-backup.module';
 import { KingConnectModule } from './modules/king-connect/king-connect.module';
 import { VoiceCallModule } from './modules/voice-call/voice-call.module';
+import { TrainersModule } from './modules/trainers/trainers.module';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 
 
@@ -114,6 +115,7 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
     MandiAIModule,
     KingConnectModule,
     VoiceCallModule,
+    TrainersModule,
   ],
 
 

@@ -89,7 +89,7 @@ type TabName =
   | 'admin-orders' | 'admin-products'
   | 'super-users' | 'super-coupons' | 'super-accounts' | 'super-settings'
   | 'super-orders' | 'super-audit-log' | 'super-crop-edit'
-  | 'operator-orders';
+  | 'operator-orders' | 'trainer-dashboard';
 
 const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
   FARMER: { tabs: ['index', 'shop', 'farm', 'records', 'wallet', 'more'] },
@@ -105,6 +105,7 @@ const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
   SUPERVISOR: { tabs: ['index', 'shop', 'farm', 'records', 'wallet', 'more'] },
   OPERATOR: { tabs: ['index', 'shop', 'operator-orders', 'wallet', 'more'] },
   LABOUR: { tabs: ['index', 'shop', 'wallet', 'more'] },
+  TECHNICAL_TRAINER: { tabs: ['index', 'trainer-dashboard', 'shop', 'wallet', 'more'] },
 };
 
 const TAB_META: Record<Exclude<TabName, 'index' | 'more'>, { key: TranslationKey; title: string; icon: keyof typeof Ionicons.glyphMap; iconFilled: keyof typeof Ionicons.glyphMap }> = {
@@ -130,6 +131,7 @@ const TAB_META: Record<Exclude<TabName, 'index' | 'more'>, { key: TranslationKey
   'super-audit-log': { key: 'superAuditLog', title: 'Audit Log', icon: 'time-outline', iconFilled: 'time' },
   'super-crop-edit': { key: 'tabCrops', title: 'Edit Crop', icon: 'leaf-outline', iconFilled: 'leaf' },
   'operator-orders': { key: 'tabFulfillment', title: 'Fulfillment', icon: 'cube-outline', iconFilled: 'cube' },
+  'trainer-dashboard': { key: 'tabFarms', title: 'Trainer', icon: 'school-outline', iconFilled: 'school' },
 };
 
 const ALL_TABS: TabName[] = [
@@ -140,7 +142,7 @@ const ALL_TABS: TabName[] = [
   'admin-orders', 'admin-products',
   'super-users', 'super-coupons', 'super-accounts', 'super-settings',
   'super-orders', 'super-audit-log', 'super-crop-edit',
-  'operator-orders',
+  'operator-orders', 'trainer-dashboard',
   'more',
 ];
 

@@ -335,7 +335,7 @@ export default function WalletScreen() {
             end={{ x: 1, y: 0 }}
             style={styles.royalTitlePill}
           >
-            <Text style={{ fontSize: 13 }}>👑</Text>
+            <Ionicons name="wallet-outline" size={15} color="#fef08a" />
             <Text style={styles.royalTitleText} numberOfLines={1} adjustsFontSizeToFit>
               FARMSKING ROYAL WALLET
             </Text>
@@ -406,9 +406,9 @@ export default function WalletScreen() {
           {/* Top Title Row */}
           <View style={styles.claimBannerTitleRow}>
             <Animated.View style={[styles.claimBannerIcon, { transform: [{ scale: giftScaleAnim }] }]}>
-              <Text style={{ fontSize: 18 }}>🎁</Text>
+              <Ionicons name="gift-outline" size={18} color="#16a34a" />
             </Animated.View>
-            <Text style={styles.claimBannerTitle}>🤝 Invite Others & Earn Cash Rewards</Text>
+            <Text style={styles.claimBannerTitle}>Invite Others & Earn Cash Rewards</Text>
           </View>
 
           {/* Action Buttons Row */}
@@ -2071,7 +2071,7 @@ const styles = StyleSheet.create({
   pendingNote: { color: 'rgba(255,255,255,0.85)', fontSize: 12, fontFamily: FONT.semiBold, marginTop: 8, flexShrink: 1 },
   withdrawButton: { backgroundColor: '#ffffff', borderRadius: RADIUS.md, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center', marginTop: 16 },
   withdrawText: { color: staticTheme.primary, fontSize: 14, fontFamily: FONT.bold },
-  sectionTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#64748b', marginTop: 20, marginBottom: 8 },
+  sectionTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#64748b' },
   txCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 14, width: '100%' },
   applyCouponBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1.5, borderRadius: RADIUS.lg, paddingVertical: 12, marginTop: 12 },
   applyCouponBtnText: { fontSize: 13, fontFamily: FONT.bold },
@@ -2377,19 +2377,19 @@ const styles = StyleSheet.create({
   },
   royalKingIdBadge: {
     backgroundColor: '#0f172a',
-    paddingHorizontal: 9,
-    paddingVertical: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
     borderRadius: RADIUS.pill,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#f59e0b',
     flexShrink: 0,
     ...premiumShadow('#f59e0b', 'xs'),
   },
   royalKingIdText: {
-    fontSize: 11,
-    fontFamily: FONT.extraBold,
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
     color: '#ffffff',
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
   royalCardTopRow: {
     flexDirection: 'row',
@@ -2666,10 +2666,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 14,
+    marginTop: 8,
     marginBottom: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 2,
   },
   collapseBadge: {
     backgroundColor: '#f1f5f9',

@@ -9,12 +9,16 @@ export default function Root({ children }: PropsWithChildren) {
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
+        {/* Primary Page Title & Canonical SEO Tags */}
+        <title>FarmsKing - India's #1 Smart Farming & Crop Intelligence Platform | Surinder Agro Farm</title>
+        <link rel="canonical" href="https://farmsking.in/" />
+
         {/* Google Search Console Verification & Regional Search Meta Tags */}
         <meta name="google-site-verification" content="cLbkUgC7i1XUv8vvpPcjQP-UuD3FKtdXKH2o9DZik2o" />
-        <meta name="description" content="FarmsKing - India's leading Smart Farming & Crop Advisory Platform. AI crop intelligence, disease diagnosis, weather advisory & farmer rewards." />
-        <meta name="keywords" content="FarmsKing, Smart Farming, Crop Advisory, Agriculture Doctor, Kisan App, ਝੋਨੇ ਦੀ ਸਪਰੇਅ, ਕਣਕ ਦੀ ਬੀਜਾਈ, ਫਸਲ ਇਲਾਜ, ਗੋਭੀ ਸਪਰੇਅ, ਖੇਤੀਬਾੜੀ ਸਲਾਹ, ਕਿਸਾਨ ਮਦਦ, Crop Disease Scan, Reverse Sowing Engine" />
+        <meta name="description" content="FarmsKing (farmsking.in / www.farmsking.in) is India's leading Smart Farming & Crop Advisory Platform founded by Surinder Singh (Surinder Academy / Surinder Agro Farm). AI crop intelligence, disease diagnosis, PAU advisory & farmer rewards." />
+        <meta name="keywords" content="FarmsKing, www.farmsking.in, farmsking.in, Surinder Singh, Surinder Agro Farm, Surinder Academy, Surinder Computers, Exilent Web Solutions, Gurnam Singh FarmsKing, PAU Punjab Agricultural University FarmsKing, Smart Farming, Crop Advisory, Agriculture Doctor, Kisan App, ਝੋਨੇ ਦੀ ਸਪਰੇਅ, ਕਣਕ ਦੀ ਬੀਜਾਈ, ਫਸਲ ਇਲਾਜ, ਗੋਭੀ ਸਪਰੇਅ, ਖੇਤੀਬਾੜੀ ਸਲਾਹ, ਕਿਸਾਨ ਮਦਦ, Crop Disease Scan, Reverse Sowing Engine" />
         <meta property="og:title" content="FarmsKing - Smart Farming & Crop Intelligence Platform" />
-        <meta property="og:description" content="India's leading Smart Farming & Crop Advisory Platform. Empowering farmers with AI crop intelligence and expert advice." />
+        <meta property="og:description" content="India's leading Smart Farming & Crop Advisory Platform created by Surinder Singh with practical R&D at Surinder Agro Farm." />
         <meta property="og:image" content="https://farmsking.in/farmsking_logo.png" />
         <meta property="og:url" content="https://farmsking.in" />
 

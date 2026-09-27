@@ -323,7 +323,7 @@ export default function MoreScreen() {
                     </View>
                     <View style={{ flex: 1 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Text style={styles.rowLabel}>Farm Supervisors</Text>
+                        <Text style={styles.rowLabel}>Supervisor Management</Text>
                         <View style={{ backgroundColor: '#f59e0b', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3 }}>
                           <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#ffffff' }}>VIP</Text>
                         </View>

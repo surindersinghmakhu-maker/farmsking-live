@@ -38,6 +38,7 @@ export function OtpVerificationModal({
   const [errorText, setErrorText] = useState<string | null>(null);
   const [isBotSending, setIsBotSending] = useState(false);
   const [botStatusText, setBotStatusText] = useState<string | null>(null);
+  const [isBotConnected, setIsBotConnected] = useState<boolean | null>(null);
 
   useEffect(() => {
     let interval: any = null;
@@ -56,18 +57,22 @@ export function OtpVerificationModal({
   const triggerAutomatedBotOtp = async () => {
     setIsBotSending(true);
     setBotStatusText(null);
+    setIsBotConnected(null);
     try {
       const res = await apiClient.post('/auth/send-otp', {
         mobile: mobileNumber,
         otp: generatedOtp,
       });
       if (res.data?.success) {
-        setBotStatusText("🟢 4-digit OTP sent to your WhatsApp!");
+        setIsBotConnected(true);
+        setBotStatusText(`🟢 4-digit OTP sent to your WhatsApp (+91 ${mobileNumber})!`);
       } else {
-        setBotStatusText("📲 OTP triggered. Check your WhatsApp messages.");
+        setIsBotConnected(false);
+        setBotStatusText("⚠️ Automated WhatsApp Bot is currently offline.");
       }
     } catch {
-      setBotStatusText("📲 Check your WhatsApp messages for the 4-digit code.");
+      setIsBotConnected(false);
+      setBotStatusText("⚠️ Automated WhatsApp Bot is currently offline.");
     } finally {
       setIsBotSending(false);
     }
@@ -75,12 +80,9 @@ export function OtpVerificationModal({
 
   const handleOpenWhatsAppDeepLink = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    const msg = `🌾 FarmsKing Verification Code: ${generatedOtp}`;
-    const cleanUserNum = (mobileNumber || '').replace(/\D/g, '').slice(-10);
-    const targetPhone = cleanUserNum ? `91${cleanUserNum}` : '';
-    const url = targetPhone
-      ? `whatsapp://send?phone=${targetPhone}&text=${encodeURIComponent(msg)}`
-      : 'whatsapp://';
+    const msg = `🌾 FarmsKing Verification Code: ${generatedOtp}\nMobile Number: ${mobileNumber}`;
+    const cleanAdminNum = adminWhatsAppNumber.replace(/\D/g, '');
+    const url = `https://wa.me/${cleanAdminNum}?text=${encodeURIComponent(msg)}`;
     Linking.openURL(url).catch(() => {
       Alert.alert('WhatsApp Not Available', 'WhatsApp app is not installed on this device.');
     });
@@ -121,11 +123,37 @@ export function OtpVerificationModal({
               <Text style={styles.botStatusText}>Sending 4-digit OTP to WhatsApp...</Text>
             </View>
           ) : botStatusText ? (
-            <Text style={styles.botStatusText}>{botStatusText}</Text>
+            <Text style={[styles.botStatusText, isBotConnected === false && { color: '#b45309' }]}>
+              {botStatusText}
+            </Text>
           ) : (
             <Text style={styles.instruction}>
               A 4-digit OTP code has been sent to your WhatsApp number (+91 {mobileNumber}). Enter the code below:
             </Text>
+          )}
+
+          {/* If Bot is Offline, show Fallback Quick-Fill Card */}
+          {isBotConnected === false && (
+            <View style={styles.fallbackBox}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                <Ionicons name="alert-circle" size={16} color="#d97706" />
+                <Text style={styles.fallbackTitle}>Bot Service Offline Notice</Text>
+              </View>
+              <Text style={styles.fallbackSub}>
+                Your verification OTP is <Text style={{ fontFamily: FONT.extraBold, color: '#16a34a', fontSize: 14 }}>{generatedOtp}</Text>. Tap Quick-Fill to auto-enter the code:
+              </Text>
+              <TouchableOpacity
+                style={styles.quickFillBtn}
+                onPress={() => {
+                  setEnteredOtp(generatedOtp);
+                  setErrorText(null);
+                }}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="flash" size={15} color="#ffffff" />
+                <Text style={styles.quickFillText}>⚡ Quick-Fill Code ({generatedOtp})</Text>
+              </TouchableOpacity>
+            </View>
           )}
 
           {/* OTP Input */}
@@ -146,10 +174,10 @@ export function OtpVerificationModal({
 
           {errorText ? <Text style={styles.errorText}>{errorText}</Text> : null}
 
-          {/* Deep Link Free WhatsApp Option */}
+          {/* Deep Link WhatsApp Support Option */}
           <TouchableOpacity style={styles.freeWaLinkBtn} onPress={handleOpenWhatsAppDeepLink}>
             <Ionicons name="logo-whatsapp" size={16} color="#25d366" />
-            <Text style={styles.freeWaLinkText}>📲 Open WhatsApp</Text>
+            <Text style={styles.freeWaLinkText}>💬 Open WhatsApp Support</Text>
           </TouchableOpacity>
 
           {/* Verify Action Button */}
@@ -159,7 +187,7 @@ export function OtpVerificationModal({
             onPress={handleVerify}
           >
             <LinearGradient colors={['#16a34a', '#15803d']} style={styles.verifyBtn}>
-              <Text style={styles.verifyBtnText}>Verify OTP</Text>
+              <Text style={styles.verifyBtnText}>Verify OTP & Complete Registration</Text>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -189,6 +217,27 @@ const styles = StyleSheet.create({
   instruction: { fontSize: 13, fontFamily: FONT.medium, color: '#475569', lineHeight: 19, marginBottom: 16 },
   botStatusWrap: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#f0fdf4', padding: 10, borderRadius: RADIUS.md, marginBottom: 14 },
   botStatusText: { fontSize: 12.5, fontFamily: FONT.bold, color: '#15803d', textAlign: 'center', marginBottom: 12 },
+  fallbackBox: {
+    backgroundColor: '#fefce8',
+    borderWidth: 1.5,
+    borderColor: '#fde047',
+    borderRadius: RADIUS.md,
+    padding: 10,
+    marginBottom: 12,
+  },
+  fallbackTitle: { fontSize: 12, fontFamily: FONT.extraBold, color: '#b45309' },
+  fallbackSub: { fontSize: 11.5, fontFamily: FONT.medium, color: '#78350f', marginTop: 2, marginBottom: 8 },
+  quickFillBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#d97706',
+    borderRadius: RADIUS.sm,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+  },
+  quickFillText: { color: '#ffffff', fontSize: 12, fontFamily: FONT.bold },
   inputContainer: { alignItems: 'center', marginBottom: 10 },
   otpInput: { width: '100%', backgroundColor: '#f8fafc', borderWidth: 1.5, borderColor: '#16a34a', borderRadius: RADIUS.md, paddingVertical: 12, textAlign: 'center', fontSize: 24, fontFamily: FONT.extraBold, letterSpacing: 8, color: '#0f172a' },
   errorText: { fontSize: 12, color: '#dc2626', fontFamily: FONT.bold, textAlign: 'center', marginBottom: 8 },

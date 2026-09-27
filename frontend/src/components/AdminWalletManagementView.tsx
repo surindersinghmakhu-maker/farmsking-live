@@ -239,22 +239,34 @@ export function AdminWalletManagementView() {
               activeOpacity={0.8}
               onPress={() => setOnlyActiveBalance(!onlyActiveBalance)}
             >
-              <Ionicons name={onlyActiveBalance ? 'checkbox' : 'square-outline'} size={16} color={onlyActiveBalance ? '#ffffff' : '#15803d'} />
+              <Ionicons name={onlyActiveBalance ? 'checkbox' : 'wallet-outline'} size={16} color={onlyActiveBalance ? '#ffffff' : '#15803d'} />
               <Text style={[styles.activeBalanceToggleText, onlyActiveBalance && { color: '#ffffff' }]}>
-                Balance &gt; ₹0
+                🟢 Active Balance &gt; ₹0 ({users.filter((u) => u.balance > 0).length})
               </Text>
             </TouchableOpacity>
           </View>
 
           {/* Role Filter Chips */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+            <TouchableOpacity
+              style={[styles.chip, onlyActiveBalance && styles.chipActive, { backgroundColor: onlyActiveBalance ? '#15803d' : '#dcfce7', borderWidth: 1, borderColor: '#86efac' }]}
+              onPress={() => setOnlyActiveBalance(!onlyActiveBalance)}
+            >
+              <Text style={[styles.chipText, { color: onlyActiveBalance ? '#ffffff' : '#15803d' }]}>
+                🟢 Active Balance Holders ({users.filter((u) => u.balance > 0).length})
+              </Text>
+            </TouchableOpacity>
+
             {['ALL', 'FARMER', 'TECHNICAL_TRAINER', 'BUSINESS_PARTNER', 'ADVISOR', 'CUSTOMER', 'ADMIN'].map((r) => (
               <TouchableOpacity
                 key={r}
-                style={[styles.chip, roleFilter === r && styles.chipActive]}
-                onPress={() => setRoleFilter(r)}
+                style={[styles.chip, roleFilter === r && !onlyActiveBalance && styles.chipActive]}
+                onPress={() => {
+                  setRoleFilter(r);
+                  setOnlyActiveBalance(false);
+                }}
               >
-                <Text style={[styles.chipText, roleFilter === r && styles.chipTextActive]}>
+                <Text style={[styles.chipText, roleFilter === r && !onlyActiveBalance && styles.chipTextActive]}>
                   {r === 'ALL' ? 'All Roles' : r}
                 </Text>
               </TouchableOpacity>
@@ -460,14 +472,57 @@ export function AdminWalletManagementView() {
                 </View>
               </View>
 
-              <Text style={styles.sectionTitle}>Top Users with Active Wallet Balance ({(autoReport?.activeBalanceUsers || []).length})</Text>
-              {(autoReport?.activeBalanceUsers || []).slice(0, 15).map((u) => (
-                <View key={u.id} style={styles.txRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.txUser}>{u.name || 'User'} ({u.role})</Text>
-                    <Text style={styles.txReason}>📱 {u.mobile} • UPI: {u.upiId || 'N/A'}</Text>
+              <Text style={styles.sectionTitle}>🟢 Active Balance Holders Directory ({(autoReport?.activeBalanceUsers || []).length})</Text>
+              {(autoReport?.activeBalanceUsers || []).map((u) => (
+                <View key={u.id} style={[styles.userCard, premiumShadow('#0f172a', 'sm')]}>
+                  <View style={styles.userCardHeader}>
+                    <View style={styles.avatarBg}>
+                      <Text style={styles.avatarText}>{u.name ? u.name[0].toUpperCase() : 'U'}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.userName}>{u.name || 'User'}</Text>
+                      <Text style={styles.userMeta}>📱 {u.mobile} {u.kingId ? `• 🔑 ${u.kingId}` : ''}</Text>
+                      <Text style={styles.userRoleTag}>Role: {u.role}</Text>
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Text style={styles.balanceText}>₹{(u.balance || 0).toFixed(2)}</Text>
+                      <Text style={[styles.statusTagText, { color: '#15803d', marginTop: 2 }]}>🟢 Active Balance</Text>
+                    </View>
                   </View>
-                  <Text style={styles.txAmount}>₹{(u.balance || 0).toFixed(2)}</Text>
+
+                  {(u.upiId || u.bankAccountNumber) ? (
+                    <View style={styles.payoutInfoBox}>
+                      <Text style={styles.payoutInfoText}>
+                        💳 UPI: {u.upiId || 'N/A'} | Bank: {u.bankAccountNumber ? `${u.bankAccountNumber} (${u.bankIfsc})` : 'N/A'}
+                      </Text>
+                    </View>
+                  ) : null}
+
+                  <View style={styles.userActionsRow}>
+                    <TouchableOpacity
+                      style={styles.ledgerBtn}
+                      onPress={() => handleOpenUserLedger(u)}
+                    >
+                      <Ionicons name="receipt-outline" size={14} color="#0f172a" />
+                      <Text style={styles.ledgerBtnText}>View Ledger</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.creditBtn}
+                      onPress={() => setActionTarget({ user: u, type: 'CREDIT' })}
+                    >
+                      <Ionicons name="add-circle" size={14} color="#ffffff" />
+                      <Text style={styles.actionBtnText}>+ Credit</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.debitBtn}
+                      onPress={() => setActionTarget({ user: u, type: 'DEBIT' })}
+                    >
+                      <Ionicons name="remove-circle" size={14} color="#ffffff" />
+                      <Text style={styles.actionBtnText}>- Deduct</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               ))}
             </>

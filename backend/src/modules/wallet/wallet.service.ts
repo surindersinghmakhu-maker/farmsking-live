@@ -91,6 +91,25 @@ export class WalletService {
     }
   }
 
+  /**
+   * Bulk self-healing sync: loops over all users who signed up via referral
+   * and ensures both referee and referrer have received their wallet credits.
+   */
+  async syncAllUserReferralBonuses() {
+    try {
+      const referredUsers = await this.prisma.user.findMany({
+        where: { referredById: { not: null }, deletedAt: null },
+        select: { id: true },
+      });
+
+      for (const u of referredUsers) {
+        await this.ensureWelcomeBonus(u.id);
+      }
+    } catch (e) {
+      console.warn('Failed to sync all referral bonuses:', e);
+    }
+  }
+
   async getMyWallet(user: AuthUser) {
     await this.ensureWelcomeBonus(user.id);
     return this.getWalletForUser(user.id);

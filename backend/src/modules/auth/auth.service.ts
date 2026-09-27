@@ -35,6 +35,7 @@ const SAFE_USER_SELECT = {
   billPrintingAddress: true,
   farmName: true,
   farmAddress: true,
+  referredById: true,
   createdAt: true,
 } as const;
 

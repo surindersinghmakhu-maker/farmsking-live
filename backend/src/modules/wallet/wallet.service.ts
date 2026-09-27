@@ -619,8 +619,8 @@ export class WalletService {
         _sum: { amount: true },
       }),
       this.prisma.withdrawalRequest.findMany({
-        where: { userId: { in: userIds }, status: 'PENDING' },
-        select: { userId: true, amount: true, id: true },
+        where: { businessPartnerId: { in: userIds }, status: 'PENDING' },
+        select: { businessPartnerId: true, requestedAmount: true, id: true },
       }),
     ]);
 
@@ -629,8 +629,8 @@ export class WalletService {
     const pendingMap = new Map<string, number>();
 
     pendingWithdrawals.forEach((pw) => {
-      const current = pendingMap.get(pw.userId) || 0;
-      pendingMap.set(pw.userId, current + Number(pw.amount || 0));
+      const current = pendingMap.get(pw.businessPartnerId) || 0;
+      pendingMap.set(pw.businessPartnerId, current + Number(pw.requestedAmount || 0));
     });
 
     const items = users.map((u) => {

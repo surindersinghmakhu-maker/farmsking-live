@@ -18,6 +18,7 @@ import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING } from '@/constants/theme';
 import { BrandLogo } from '@/src/components/BrandLogo';
 
+import { useAuth } from '@/src/store/auth-context';
 import { WelcomeBonusModal } from '@/src/components/WelcomeBonusModal';
 
 const theme = RoleThemes.FARMER;
@@ -25,8 +26,9 @@ const AREA_UNITS: AreaUnit[] = ['ACRE', 'HECTARE', 'BIGHA', 'GUNTA'];
 
 export default function OnboardingScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const createFarm = useCreateFarm();
-  const [showWelcomeModal, setShowWelcomeModal] = useState(true);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(!!user?.referredById);
   const [farmName, setFarmName] = useState('');
   const [totalArea, setTotalArea] = useState('');
   const [areaUnit, setAreaUnit] = useState<AreaUnit>('ACRE');

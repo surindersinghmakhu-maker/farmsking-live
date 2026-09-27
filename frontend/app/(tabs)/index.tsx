@@ -35,6 +35,9 @@ export default function HomeScreen() {
     if (!user?.id) return;
 
     const checkFirstTimeWelcome = async () => {
+      // ONLY show welcome bonus popup if user registered via a referral link/code (user.referredById is present)!
+      if (!user?.referredById) return;
+
       // 1. Check if user already claimed welcome bonus
       const hasClaimed = (wallet?.transactions ?? []).some(
         (t) => t.type === 'CREDIT' && t.reason?.toLowerCase().includes('welcome')
@@ -51,7 +54,7 @@ export default function HomeScreen() {
     };
 
     checkFirstTimeWelcome();
-  }, [user?.id, wallet]);
+  }, [user?.id, user?.referredById, wallet]);
 
   const handleCloseWelcomeModal = async () => {
     setShowWelcomeModal(false);

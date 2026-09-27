@@ -52,7 +52,7 @@ export function FarmerTrainingRatingBanner() {
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>🎓 FarmsKing App Training Feedback</Text>
           <Text style={styles.subTitle}>
-            Technical Trainer <Text style={{ fontFamily: FONT.bold }}>{pendingInfo.training.trainerName}</Text> ji guided you on FarmsKing App. Rate your training:
+            Technical Staff <Text style={{ fontFamily: FONT.bold }}>{pendingInfo.training.trainerName}</Text> ji guided you on FarmsKing App. Rate your training:
           </Text>
         </View>
       </View>

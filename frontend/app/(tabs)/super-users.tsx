@@ -53,7 +53,7 @@ const FILTERS_BY_GROUP: Record<UserGroup, { value: UserFilter; label: string; ic
     { value: 'BUSINESS_PARTNER', label: 'Business Partners', icon: 'briefcase-outline' },
     { value: 'FARM_ADVISOR', label: 'Crop Doctors', icon: 'medical-outline' },
     { value: 'GARDEN_ADVISOR', label: 'Garden Advisors', icon: 'sunny-outline' },
-    { value: 'TECHNICAL_TRAINER', label: 'Technical Trainers', icon: 'school-outline' },
+    { value: 'TECHNICAL_TRAINER', label: 'Technical Staff', icon: 'school-outline' },
   ],
   CLIENTS: [
     { value: 'CUSTOMER', label: 'Customers', icon: 'cart-outline' },
@@ -256,7 +256,7 @@ export default function SuperUsersScreen() {
               onPress={() => setIsAddTrainerOpen(true)}
             >
               <Ionicons name="add-circle" size={16} color="#ffffff" />
-              <Text style={styles.addAdvisorBtnText}>Appoint Trainer</Text>
+              <Text style={styles.addAdvisorBtnText}>Appoint Technical Staff</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -265,7 +265,7 @@ export default function SuperUsersScreen() {
               onPress={() => setIsTrainerReportsOpen(true)}
             >
               <Ionicons name="bar-chart" size={16} color="#ffffff" />
-              <Text style={styles.addAdvisorBtnText}>Trainer Reports</Text>
+              <Text style={styles.addAdvisorBtnText}>Staff Reports</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -1377,11 +1377,11 @@ function AddTrainerModal({ visible, onClose }: { visible: boolean; onClose: () =
     try {
       const userId = userFound?.id || kingIdOrMobile.trim();
       await assignTrainerState(userId, state.trim(), district.trim() || undefined, Number(commissionRate) || 20);
-      alert('✅ Technical Trainer role assigned successfully!');
+      alert('✅ Technical Staff role assigned successfully!');
       reset();
       onClose();
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Could not assign Technical Trainer.');
+      setError(err?.response?.data?.message || 'Could not assign Technical Staff.');
     } finally {
       setIsSubmitting(false);
     }
@@ -1392,14 +1392,14 @@ function AddTrainerModal({ visible, onClose }: { visible: boolean; onClose: () =
       <View style={styles.modalOverlay}>
         <View style={styles.modalCard}>
           <View style={styles.modalHeaderRow}>
-            <Text style={styles.modalTitle}>Appoint Technical Trainer</Text>
+            <Text style={styles.modalTitle}>Appoint Technical Staff (ਤਕਨੀਕੀ ਸਟਾਫ)</Text>
             <TouchableOpacity onPress={() => { reset(); onClose(); }}>
               <Ionicons name="close-circle" size={24} color="#64748b" />
             </TouchableOpacity>
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-            <Text style={styles.helperText}>Enter user's King ID or Mobile Number to appoint them as State/District Technical Trainer:</Text>
+            <Text style={styles.helperText}>Enter user's King ID or Mobile Number to appoint them as State/District Technical Staff:</Text>
             <View style={{ flexDirection: 'row', gap: 6 }}>
               <TextInput
                 style={[styles.input, { flex: 1 }]}
@@ -1438,7 +1438,7 @@ function AddTrainerModal({ visible, onClose }: { visible: boolean; onClose: () =
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
             <TouchableOpacity style={styles.submitBtn} disabled={isSubmitting} onPress={handleSubmit}>
-              {isSubmitting ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Assign Technical Trainer Role</Text>}
+              {isSubmitting ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Assign Technical Staff Role</Text>}
             </TouchableOpacity>
           </ScrollView>
         </View>
@@ -1481,7 +1481,7 @@ function TrainerReportsModal({ visible, onClose }: { visible: boolean; onClose: 
           <View style={styles.modalHeaderRow}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Ionicons name="bar-chart" size={20} color="#059669" />
-              <Text style={styles.modalTitle}>Technical Trainer System Reports</Text>
+              <Text style={styles.modalTitle}>Technical Staff System Reports</Text>
             </View>
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close-circle" size={24} color="#64748b" />

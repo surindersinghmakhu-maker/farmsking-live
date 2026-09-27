@@ -48,7 +48,7 @@ export default function TechnicalTrainerDashboardScreen() {
     const cleanNum = mobile ? mobile.replace(/\D/g, '').slice(-10) : '';
     if (cleanNum) {
       const text = encodeURIComponent(
-        `🌾 *FarmsKing App Welcome & Training Support* 🙏\n\nHello *${name || 'Farmer'}* ji,\nMain FarmsKing App valo Technical Trainer bol reha haan. Tuhadi app setup ya UPI QR code vich madad lyi call kr reha haan. 🌾🚜`
+        `🌾 *FarmsKing App Welcome & Training Support* 🙏\n\nHello *${name || 'Farmer'}* ji,\nMain FarmsKing App valo Technical Staff bol reha haan. Tuhadi app setup ya UPI QR code vich madad lyi call kr reha haan. 🌾🚜`
       );
       Linking.openURL(`https://wa.me/91${cleanNum}?text=${text}`);
     }
@@ -59,9 +59,9 @@ export default function TechnicalTrainerDashboardScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <LinearGradient colors={['#15803d', '#16a34a', '#059669']} style={styles.headerBar}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>🎓 Technical Trainer Dashboard</Text>
+          <Text style={styles.headerTitle}>🎓 Technical Staff Dashboard</Text>
           <Text style={styles.headerSubtitle}>
-            State/District Farmer Welcome Calls & Training
+            State/District Farmer Welcome Calls & Support
           </Text>
         </View>
         <TouchableOpacity
@@ -94,7 +94,7 @@ export default function TechnicalTrainerDashboardScreen() {
               <Ionicons name="cash" size={22} color="#15803d" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.walletTitle}>Technical Trainer Rewards Wallet</Text>
+              <Text style={styles.walletTitle}>Technical Staff Rewards Wallet</Text>
               <Text style={styles.walletBalanceText}>₹{walletBalance.toFixed(2)}</Text>
             </View>
             <TouchableOpacity

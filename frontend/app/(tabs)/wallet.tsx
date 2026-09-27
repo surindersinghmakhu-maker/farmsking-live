@@ -2097,7 +2097,7 @@ const styles = StyleSheet.create({
   heroTitle: { fontSize: 18, fontFamily: FONT.extraBold, color: '#0f172a' },
   kingIdBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6, flexWrap: 'wrap' },
   kingIdText: { fontSize: 11.5, fontFamily: FONT.bold, color: staticTheme.primary, letterSpacing: 0.3, flexShrink: 1 },
-  body: { paddingHorizontal: 16, paddingVertical: 10, maxWidth: 480, alignSelf: 'center', width: '100%' },
+  body: { paddingHorizontal: 16, paddingVertical: 10, maxWidth: 1200, alignSelf: 'center', width: '100%' },
   balanceCard: { borderRadius: RADIUS.xl, padding: 16, width: '100%' },
   balanceLabel: { color: 'rgba(255,255,255,0.75)', fontSize: 13, fontFamily: FONT.medium },
   balanceValue: { color: '#fff', fontSize: 32, fontFamily: FONT.extraBold, marginTop: 6, letterSpacing: -0.6, flexShrink: 1 },

@@ -161,8 +161,8 @@ export default function FarmerProfileSetupScreen() {
       await executeSaveProfile();
     } catch (err: any) {
       setIsVerifyingPassword(false);
-      const msg = err?.response?.data?.message ?? '❌ Incorrect password! Kripya sahi account password darj karo.';
-      setPasswordError(typeof msg === 'string' ? msg : '❌ Incorrect password!');
+      setVerifyPassword(''); // 🔄 Clear input so user can re-enter immediately
+      setPasswordError('❌ ਪਾਸਵਰਡ ਗਲਤ ਹੈ! ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਸਹੀ ਪਾਸਵਰਡ ਭਰੋ (Re-enter Password).');
     }
   };
 
@@ -384,18 +384,24 @@ export default function FarmerProfileSetupScreen() {
 
                 {passwordError ? (
                   <View style={styles.passwordErrorBox}>
-                    <Ionicons name="alert-circle" size={16} color="#dc2626" />
-                    <Text style={styles.passwordErrorText}>{passwordError}</Text>
+                    <Ionicons name="alert-circle" size={18} color="#dc2626" style={{ marginTop: 2 }} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.passwordErrorText}>{passwordError}</Text>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#b91c1c', marginTop: 2 }}>
+                        👉 ਹੇਠਾਂ ਦਿੱਤੇ ਬਾਕਸ ਵਿੱਚ ਸਹੀ ਪਾਸਵਰਡ ਦੁਬਾਰਾ ਭਰੋ:
+                      </Text>
+                    </View>
                   </View>
                 ) : null}
 
-                <View style={styles.passwordInputWrap}>
-                  <Ionicons name="key-outline" size={18} color="#64748b" style={{ marginRight: 8 }} />
+                <View style={[styles.passwordInputWrap, passwordError ? { borderColor: '#ef4444', backgroundColor: '#fef2f2' } : null]}>
+                  <Ionicons name="key-outline" size={18} color={passwordError ? '#dc2626' : '#64748b'} style={{ marginRight: 8 }} />
                   <TextInput
                     style={styles.passwordTextInput}
-                    placeholder="Enter Your Account Password"
-                    placeholderTextColor="#94a3b8"
+                    placeholder={passwordError ? "Re-enter Account Password" : "Enter Your Account Password"}
+                    placeholderTextColor={passwordError ? '#ef4444' : '#94a3b8'}
                     secureTextEntry
+                    autoFocus
                     value={verifyPassword}
                     onChangeText={(t) => {
                       setVerifyPassword(t);

@@ -28,12 +28,20 @@ const STATUS_META: Record<WithdrawalStatus, { color: string; bg: string; label: 
 };
 
 type SectionKey = 'REQUESTS' | 'BONUSES' | 'PARTNERS' | 'SEARCH';
+type PartnerSubTab = 'VENDORS' | 'DOCTORS' | 'STAFF' | 'MEMBERSHIPS';
 
 const SECTIONS: { value: SectionKey; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: 'REQUESTS', label: 'Requests', icon: 'time-outline' },
   { value: 'BONUSES', label: 'Bonus Details', icon: 'gift-outline' },
-  { value: 'PARTNERS', label: 'Partner Wallets', icon: 'briefcase-outline' },
+  { value: 'PARTNERS', label: 'Partners', icon: 'briefcase-outline' },
   { value: 'SEARCH', label: 'Find a User', icon: 'search-outline' },
+];
+
+const PARTNER_SUB_TABS: { value: PartnerSubTab; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { value: 'VENDORS', label: 'Vendors / Partners', icon: 'briefcase-outline' },
+  { value: 'DOCTORS', label: 'Doctors / Advisors', icon: 'medical-outline' },
+  { value: 'STAFF', label: 'Staff', icon: 'people-outline' },
+  { value: 'MEMBERSHIPS', label: 'Memberships & Plans', icon: 'ribbon-outline' },
 ];
 
 
@@ -67,11 +75,14 @@ export default function SuperAccountsScreen() {
   const [walletPartner, setWalletPartner] = useState<AdminUser | null>(null);
   const [userSearch, setUserSearch] = useState('');
   const [section, setSection] = useState<SectionKey>('REQUESTS');
+  const [partnerSubTab, setPartnerSubTab] = useState<PartnerSubTab>('VENDORS');
 
   const pending = (withdrawals ?? []).filter((w) => w.status === 'PENDING');
   const processed = (withdrawals ?? []).filter((w) => w.status !== 'PENDING');
 
-  const { data: partnersData, isLoading: isLoadingPartners } = useUsersList({ role: 'BUSINESS_PARTNER', limit: 100 });
+  const { data: vendorsData, isLoading: isLoadingVendors } = useUsersList({ role: 'BUSINESS_PARTNER', limit: 100 });
+  const { data: doctorsData, isLoading: isLoadingDoctors } = useUsersList({ role: 'ADVISOR', limit: 100 });
+  const { data: staffData, isLoading: isLoadingStaff } = useUsersList({ role: 'TECHNICAL_TRAINER', limit: 100 });
   const { data: searchResults, isLoading: isSearching } = useUsersList({ search: userSearch.trim() || undefined, limit: 20 });
 
   const pendingPlanPayments = planPayments ?? [];
@@ -86,8 +97,8 @@ export default function SuperAccountsScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient colors={theme.gradient} style={styles.hero}>
-        <Text style={styles.heroTitle}>Partner Accounts</Text>
-        <Text style={styles.heroSubtitle}>Review payouts, verify payments & manage partner wallets</Text>
+        <Text style={styles.heroTitle}>Partners</Text>
+        <Text style={styles.heroSubtitle}>Manage Staff, Doctors, Vendors, Memberships & Payout Ledgers</Text>
 
         <View style={styles.statRow}>
           <View style={styles.statCard}>
@@ -171,28 +182,124 @@ export default function SuperAccountsScreen() {
         ) : null}
 
         {section === 'PARTNERS' ? (
-          isLoadingPartners ? (
-            <ActivityIndicator color={theme.primary} style={{ marginTop: 20 }} />
-          ) : (partnersData?.items ?? []).length === 0 ? (
-            <EmptyState icon="briefcase-outline" text="No business partners yet." />
-          ) : (
-            <View style={{ gap: 8 }}>
-              {(partnersData?.items ?? []).map((p) => (
-                <TouchableOpacity
-                  key={p.id}
-                  style={[styles.card, premiumShadow('#0f172a', 'sm')]}
-                  activeOpacity={0.85}
-                  onPress={() => { tap(); setWalletPartner(p); }}
-                >
-                  <IdentityBadge name={p.name} sub={`📱 ${p.mobile}${p.kingId ? ` · 🔑 ${p.kingId}` : ''}`} />
-                  <View style={styles.ledgerBtn}>
-                    <Ionicons name="wallet-outline" size={13} color={theme.primary} />
-                    <Text style={styles.ledgerBtnText}>Ledger</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )
+          <View style={{ gap: 12 }}>
+            {/* Sub-Tabs: Vendors, Doctors/Advisors, Staff, Memberships & Plans */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingBottom: 4 }}>
+              {PARTNER_SUB_TABS.map((sub) => {
+                const isSelected = partnerSubTab === sub.value;
+                return (
+                  <TouchableOpacity
+                    key={sub.value}
+                    style={[
+                      styles.subTabChip,
+                      isSelected && styles.subTabChipActive,
+                    ]}
+                    activeOpacity={0.8}
+                    onPress={() => { tap(); setPartnerSubTab(sub.value); }}
+                  >
+                    <Ionicons name={sub.icon} size={14} color={isSelected ? '#ffffff' : '#64748b'} />
+                    <Text style={[styles.subTabChipText, isSelected && styles.subTabChipTextActive]}>
+                      {sub.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            {/* Sub-Tab 1: Vendors / Business Partners */}
+            {partnerSubTab === 'VENDORS' ? (
+              isLoadingVendors ? (
+                <ActivityIndicator color={theme.primary} style={{ marginTop: 20 }} />
+              ) : (vendorsData?.items ?? []).length === 0 ? (
+                <EmptyState icon="briefcase-outline" text="No business partners or vendors yet." />
+              ) : (
+                <View style={{ gap: 8 }}>
+                  {(vendorsData?.items ?? []).map((p) => (
+                    <TouchableOpacity
+                      key={p.id}
+                      style={[styles.card, premiumShadow('#0f172a', 'sm')]}
+                      activeOpacity={0.85}
+                      onPress={() => { tap(); setWalletPartner(p); }}
+                    >
+                      <IdentityBadge name={p.name} sub={`Vendor · 📱 ${p.mobile}${p.kingId ? ` · 🔑 ${p.kingId}` : ''}`} />
+                      <View style={styles.ledgerBtn}>
+                        <Ionicons name="wallet-outline" size={13} color={theme.primary} />
+                        <Text style={styles.ledgerBtnText}>Ledger</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )
+            ) : null}
+
+            {/* Sub-Tab 2: Doctors / Advisors */}
+            {partnerSubTab === 'DOCTORS' ? (
+              isLoadingDoctors ? (
+                <ActivityIndicator color={theme.primary} style={{ marginTop: 20 }} />
+              ) : (doctorsData?.items ?? []).length === 0 ? (
+                <EmptyState icon="medical-outline" text="No doctors or advisors registered yet." />
+              ) : (
+                <View style={{ gap: 8 }}>
+                  {(doctorsData?.items ?? []).map((p) => (
+                    <TouchableOpacity
+                      key={p.id}
+                      style={[styles.card, premiumShadow('#0f172a', 'sm')]}
+                      activeOpacity={0.85}
+                      onPress={() => { tap(); setWalletPartner(p); }}
+                    >
+                      <IdentityBadge name={p.name} sub={`Doctor / Advisor · 📱 ${p.mobile}${p.kingId ? ` · 🔑 ${p.kingId}` : ''}`} tint="#e0f2fe" />
+                      <View style={styles.ledgerBtn}>
+                        <Ionicons name="wallet-outline" size={13} color={theme.primary} />
+                        <Text style={styles.ledgerBtnText}>Ledger</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )
+            ) : null}
+
+            {/* Sub-Tab 3: Staff (Technical Staff & Admin Staff) */}
+            {partnerSubTab === 'STAFF' ? (
+              isLoadingStaff ? (
+                <ActivityIndicator color={theme.primary} style={{ marginTop: 20 }} />
+              ) : (staffData?.items ?? []).length === 0 ? (
+                <EmptyState icon="people-outline" text="No technical staff members registered yet." />
+              ) : (
+                <View style={{ gap: 8 }}>
+                  {(staffData?.items ?? []).map((p) => (
+                    <TouchableOpacity
+                      key={p.id}
+                      style={[styles.card, premiumShadow('#0f172a', 'sm')]}
+                      activeOpacity={0.85}
+                      onPress={() => { tap(); setWalletPartner(p); }}
+                    >
+                      <IdentityBadge name={p.name} sub={`Technical Staff · 📱 ${p.mobile}${p.kingId ? ` · 🔑 ${p.kingId}` : ''}`} tint="#fef3c7" />
+                      <View style={styles.ledgerBtn}>
+                        <Ionicons name="wallet-outline" size={13} color={theme.primary} />
+                        <Text style={styles.ledgerBtnText}>Ledger</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )
+            ) : null}
+
+            {/* Sub-Tab 4: Memberships & Plans */}
+            {partnerSubTab === 'MEMBERSHIPS' ? (
+              <View style={{ gap: 10 }}>
+                <SectionHeader title="Active Memberships & Plan Payments" count={pendingPlanPayments.length + pendingFarmerPlanPayments.length} subtitle="Plan upgrade payments & verifications" />
+                {pendingFarmerPlanPayments.map((p) => (
+                  <FarmerPlanPaymentCard key={p.id} request={p} onReview={() => setActiveFarmerPlanPayment(p)} />
+                ))}
+                {pendingPlanPayments.map((p) => (
+                  <PlanPaymentCard key={p.id} request={p} onReview={() => setActivePlanPayment(p)} />
+                ))}
+                {pendingFarmerPlanPayments.length === 0 && pendingPlanPayments.length === 0 ? (
+                  <EmptyState icon="ribbon-outline" text="All membership & plan payments are verified!" />
+                ) : null}
+              </View>
+            ) : null}
+          </View>
         ) : null}
 
         {section === 'BONUSES' ? (
@@ -768,6 +875,30 @@ const styles = StyleSheet.create({
   sectionTabText: { color: '#fff', fontSize: 11.5, fontFamily: FONT.bold },
   tabBadge: { minWidth: 16, height: 16, borderRadius: 8, paddingHorizontal: 4, backgroundColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center' },
   tabBadgeText: { color: '#fff', fontSize: 9.5, fontFamily: FONT.extraBold },
+
+  subTabChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: RADIUS.pill,
+    backgroundColor: '#ffffff',
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+  },
+  subTabChipActive: {
+    backgroundColor: theme.primary,
+    borderColor: theme.primary,
+  },
+  subTabChipText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+  },
+  subTabChipTextActive: {
+    color: '#ffffff',
+  },
 
   list: { padding: SPACING.lg, paddingBottom: SPACING.xxl },
 

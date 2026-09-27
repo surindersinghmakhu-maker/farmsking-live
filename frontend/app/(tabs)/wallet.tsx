@@ -354,32 +354,7 @@ export default function WalletScreen() {
           ) : null}
         </View>
 
-        {/* Admin Mode Switcher Bar */}
-        {isAdminOrOperator && (
-          <View style={styles.adminTabModeRow}>
-            <TouchableOpacity
-              style={[styles.adminTabModeBtn, adminWalletTab === 'MY_WALLET' && styles.adminTabModeBtnActive]}
-              onPress={() => setAdminWalletTab('MY_WALLET')}
-            >
-              <Ionicons name="wallet" size={15} color={adminWalletTab === 'MY_WALLET' ? '#15803d' : '#64748b'} />
-              <Text style={[styles.adminTabModeText, adminWalletTab === 'MY_WALLET' && styles.adminTabModeTextActive]}>
-                My Wallet
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.adminTabModeBtn, adminWalletTab === 'ALL_USERS_MANAGEMENT' && styles.adminTabModeBtnActive]}
-              onPress={() => setAdminWalletTab('ALL_USERS_MANAGEMENT')}
-            >
-              <Ionicons name="people" size={15} color={adminWalletTab === 'ALL_USERS_MANAGEMENT' ? '#15803d' : '#64748b'} />
-              <Text style={[styles.adminTabModeText, adminWalletTab === 'ALL_USERS_MANAGEMENT' && styles.adminTabModeTextActive]}>
-                All Users Wallet System (Admin)
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {isAdminOrOperator && adminWalletTab === 'ALL_USERS_MANAGEMENT' ? (
+        {isAdminOrOperator ? (
           <AdminWalletManagementView />
         ) : (
           <>

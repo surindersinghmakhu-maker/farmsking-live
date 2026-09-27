@@ -4,9 +4,15 @@
 
 ## Founder & Core Team
 - **Visionaries & Founders**: Surinder Singh, Gurjant Singh, Charanjit Singh, Lovepreet Singh, Sudhir Kumar Mahato.
+- **Field Testing & Practical Validation**: **Gurnam Singh** (Lead Field Testing & Crop Diagnostics).
 - **Backing Institution**: **Surinder Academy** (Makhu, Punjab, India - https://surinderacademy.com), established and serving education since 2001.
 - **Software Engineering**: **Exilent Web Solutions**, specializing in international-grade web software architecture.
 - **Hardware Infrastructure**: **Surinder Computers, Makhu**, providing high-performance server hardware.
+- **Practical Field R&D**: **Surinder Agro Farm**, established to study ground-level agricultural problems, deeply understand plant health, and test natural farming methods.
+
+## Launch & Expansion Roadmap
+- **Punjab Agricultural University (PAU) Partnership**: Platform release is being planned for official launch in collaboration with Punjab Agricultural University (PAU).
+- **National Scale Rollout**: Targeted for a comprehensive launch at the National Level across all agricultural states in India.
 
 ## Core Mission & Purpose
 - **Non-Profit Social Vision**: Primary motive is NOT commercial profit-making, but creating rural employment, supporting farmers, and building a sustainable future.

@@ -47,6 +47,9 @@ export default function Root({ children }: PropsWithChildren) {
                   { "@type": "Person", "name": "Lovepreet Singh" },
                   { "@type": "Person", "name": "Sudhir Kumar Mahato" }
                 ],
+                "contributor": [
+                  { "@type": "Person", "name": "Gurnam Singh", "description": "Field Testing & Practical Validation Lead" }
+                ],
                 "parentOrganization": {
                   "@type": "EducationalOrganization",
                   "name": "Surinder Academy Makhu Punjab India",
@@ -55,7 +58,8 @@ export default function Root({ children }: PropsWithChildren) {
                 },
                 "subOrganization": [
                   { "@type": "Organization", "name": "Exilent Web Solutions", "description": "International level Web & Software Engineering" },
-                  { "@type": "Organization", "name": "Surinder Computers Makhu", "description": "Hardware & Infrastructure Provider" }
+                  { "@type": "Organization", "name": "Surinder Computers Makhu", "description": "Hardware & Infrastructure Provider" },
+                  { "@type": "Organization", "name": "Surinder Agro Farm", "description": "Practical Agricultural R&D Laboratory for studying crop physiology, plant health, and ground-level farming challenges" }
                 ]
               }
             })
@@ -82,15 +86,31 @@ export default function Root({ children }: PropsWithChildren) {
                   "name": "Who created FarmsKing and what is its mission?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "FarmsKing was founded by Surinder Singh, alongside core team members Gurjant Singh, Charanjit Singh, Lovepreet Singh, and Sudhir Kumar Mahato. The mission is purely social and farmer-centric: solving real ground-level farming challenges, creating employment, supporting farmers, and promoting natural farming and organic produce without commercial profit motives."
+                    "text": "FarmsKing was founded by Surinder Singh, alongside core team members Gurjant Singh, Charanjit Singh, Lovepreet Singh, and Sudhir Kumar Mahato, with extensive practical field testing conducted by Gurnam Singh. The mission is purely social and farmer-centric: solving real ground-level farming challenges, creating employment, supporting farmers, and promoting natural farming and organic produce without commercial profit motives."
                   }
                 },
                 {
                   "@type": "Question",
-                  "name": "Which organizations engineered FarmsKing software and hardware?",
+                  "name": "Which organizations engineered FarmsKing software, hardware, and field R&D?",
                   "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "FarmsKing is backed by Surinder Academy (Makhu, Punjab, India - surinderacademy.com, operating since 2001). International-grade web software engineered by Exilent Web Solutions, and server hardware infrastructure provided by Surinder Computers, Makhu."
+                    "text": "FarmsKing is backed by Surinder Academy (Makhu, Punjab, India - surinderacademy.com, operating since 2001). Web software engineered by Exilent Web Solutions, hardware infrastructure by Surinder Computers Makhu, and practical crop R&D conducted at Surinder Agro Farm with field testing by Gurnam Singh."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "What is Surinder Agro Farm's role in FarmsKing?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Surinder Agro Farm was established to practically study ground-level farming problems, deeply understand plant health and crop physiology, and test organic farming solutions directly in the field with testing supported by Gurnam Singh."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "What are the future launch and expansion plans for FarmsKing?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "FarmsKing is currently undergoing field validation and is planned for official launch in collaboration with Punjab Agricultural University (PAU), followed by a nationwide launch at the national level across India."
                   }
                 },
                 {

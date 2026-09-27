@@ -59,3 +59,8 @@ export async function logoutOtherSessions(): Promise<{ success: boolean; message
   const { data } = await apiClient.post('/auth/logout-other-sessions');
   return data;
 }
+
+export async function verifyAccountPassword(password: string): Promise<{ success: boolean; message: string }> {
+  const { data } = await apiClient.post('/auth/verify-password', { password });
+  return data;
+}

@@ -512,6 +512,31 @@ export class AuthService {
     };
   }
 
+  async verifyPassword(userId: string, password: string) {
+    const cleanPassword = (password ?? '').trim();
+    if (!cleanPassword) {
+      throw new BadRequestException('Password required.');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user || !user.passwordHash) {
+      throw new UnauthorizedException('User account or password not found.');
+    }
+
+    const isValid = await argon2.verify(user.passwordHash, cleanPassword);
+    if (!isValid) {
+      throw new UnauthorizedException('❌ Wrong Password! (ਗਲਤ ਪਾਸਵਰਡ) Kripya sahi account password darj karo.');
+    }
+
+    return {
+      success: true,
+      message: 'Password verified successfully.',
+    };
+  }
+
   private buildAuthResponse(
     user: { id: string; mobile: string; role: Role } & Record<string, unknown>,
     deviceInfo?: string,

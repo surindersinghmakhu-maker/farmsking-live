@@ -10,7 +10,7 @@ import { SPRAY_TANK_SIZE_OPTIONS } from '@/src/constants/farmerProfileOptions';
 import { useFarmerProfileStatus, useUpdateFarmerProfile } from '@/src/hooks/useFarmerProfile';
 import { useAuth } from '@/src/store/auth-context';
 import { SprayTankSizeL } from '@/src/types/api';
-import { login } from '@/src/api/auth.api';
+import { verifyAccountPassword } from '@/src/api/auth.api';
 
 import { UpiQrScannerModal } from '@/src/components/UpiQrScannerModal';
 
@@ -151,11 +151,8 @@ export default function FarmerProfileSetupScreen() {
     setPasswordError(null);
 
     try {
-      // Verify password via login API call
-      await login({
-        mobile: user?.mobile || '',
-        password: verifyPassword.trim(),
-      });
+      // Clean password verification API (no session creation, no logout)
+      await verifyAccountPassword(verifyPassword.trim());
 
       setIsVerifyingPassword(false);
       setShowPasswordModal(false);
@@ -164,8 +161,8 @@ export default function FarmerProfileSetupScreen() {
       await executeSaveProfile();
     } catch (err: any) {
       setIsVerifyingPassword(false);
-      const msg = err?.response?.data?.message ?? 'Incorrect password! Kripya sahi account password darj karo.';
-      setPasswordError(typeof msg === 'string' ? msg : 'Incorrect password!');
+      const msg = err?.response?.data?.message ?? '❌ Incorrect password! Kripya sahi account password darj karo.';
+      setPasswordError(typeof msg === 'string' ? msg : '❌ Incorrect password!');
     }
   };
 

@@ -40,6 +40,16 @@ export class AuthController {
     return this.authService.logoutOtherSessions(user.id, user.sessionId);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('verify-password')
+  verifyPassword(
+    @CurrentUser() user: AuthUser,
+    @Body() body: { password?: string },
+  ) {
+    return this.authService.verifyPassword(user.id, body.password ?? '');
+  }
+
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @Post('forgot-password/start')

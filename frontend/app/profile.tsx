@@ -561,59 +561,7 @@ export default function ProfileScreen() {
                 </View>
               </View>
 
-              {/* Printing & Farm Details Card */}
-              <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
-                <Text style={styles.sectionHeaderTitle}>🌾 Farm & Printing Details</Text>
 
-                <View style={{ flexDirection: 'row', gap: 10, marginTop: 6 }}>
-                  <View style={{ flex: 1.2 }}>
-                    <Text style={styles.inputLabel}>Farm Name (Printed) *</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={farmName}
-                      onChangeText={setFarmName}
-                      placeholder="e.g. Makhu Organic Farm"
-                      placeholderTextColor="#94a3b8"
-                    />
-                  </View>
-                  <View style={{ flex: 0.8 }}>
-                    <Text style={styles.inputLabel}>Contact Mobile *</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={farmMobile}
-                      onChangeText={setFarmMobile}
-                      placeholder="10-digit mobile"
-                      placeholderTextColor="#94a3b8"
-                      keyboardType="phone-pad"
-                      maxLength={10}
-                    />
-                  </View>
-                </View>
-
-                <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
-                  <View style={{ flex: 1.2 }}>
-                    <Text style={styles.inputLabel}>Farm Address *</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={farmAddress}
-                      onChangeText={setFarmAddress}
-                      placeholder="e.g. Village Makhu, Ferozepur"
-                      placeholderTextColor="#94a3b8"
-                    />
-                  </View>
-                  <View style={{ flex: 0.8 }}>
-                    <Text style={styles.inputLabel}>UPI ID (For Receipts)</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={upiId}
-                      onChangeText={setUpiId}
-                      placeholder="e.g. farmer@upi"
-                      placeholderTextColor="#94a3b8"
-                      autoCapitalize="none"
-                    />
-                  </View>
-                </View>
-              </View>
 
               {/* Location & Address Details Card - Updated Layout */}
               <View style={[styles.card, { borderRadius: RADIUS.xl, padding: 14, backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderWidth: 1 }, premiumShadow('#0f172a', 'sm')]}>

@@ -50,6 +50,24 @@ export default function Root({ children }: PropsWithChildren) {
           }}
         />
 
+        {/* Google BreadcrumbList Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                { "@type": "ListItem", "position": 1, "name": "FarmsKing Home", "item": "https://farmsking.in/" },
+                { "@type": "ListItem", "position": 2, "name": "About FarmsKing", "item": "https://farmsking.in/about-farmsking.html" },
+                { "@type": "ListItem", "position": 3, "name": "Surinder Agro Farm", "item": "https://farmsking.in/surinder-agro-farm.html" },
+                { "@type": "ListItem", "position": 4, "name": "Punjab Kheti Advisory", "item": "https://farmsking.in/punjab-kheti-advisory.html" },
+                { "@type": "ListItem", "position": 5, "name": "Kisan Crop Intelligence", "item": "https://farmsking.in/kisan-crop-intelligence-engine.html" }
+              ]
+            })
+          }}
+        />
+
         {/* Google Rich Snippets & FAQ Schema for Search Engine Indexing */}
         <script
           type="application/ld+json"

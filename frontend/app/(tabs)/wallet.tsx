@@ -315,6 +315,12 @@ export default function WalletScreen() {
     (t) => t.type === 'CREDIT' && t.reason?.toLowerCase().includes('welcome')
   );
 
+  const isEligibleForWelcomeBonus = Boolean(
+    user?.referredById || (user as any)?.referralWelcomeCouponCode || referralData?.myReferralInfo
+  );
+
+  const showClaimBonusButton = isEligibleForWelcomeBonus && !isWelcomeClaimed;
+
   const handleShareWhatsApp = async () => {
     tap();
     const shareMessage = `👑 *WELCOME TO FARMSKING (Smart Farming Platform)!* 🌾✨\nRegister using my referral link and claim your *₹${welcomeRewardAmount} Welcome Cash Bonus!* 💶🎉\n👉 ${inviteLink}\n🏷️ Referral Code: \`${kingId}\``;
@@ -389,7 +395,7 @@ export default function WalletScreen() {
 
                 {/* Right Action Column: Claim Bonus + Withdraw */}
                 <View style={{ gap: 8, alignItems: 'flex-end' }}>
-                  {!isWelcomeClaimed && (
+                  {showClaimBonusButton && (
                     <TouchableOpacity
                       style={styles.royalWithdrawBtn}
                       activeOpacity={0.85}
@@ -470,7 +476,7 @@ export default function WalletScreen() {
                   style={styles.claimBannerBtn}
                   onPress={() => {
                     tap();
-                    if (!isWelcomeClaimed) {
+                    if (showClaimBonusButton) {
                       setShowWelcomeModal(true); // Opens WelcomeBonusModal popup box!
                     } else {
                       handleShareWhatsApp();
@@ -479,12 +485,12 @@ export default function WalletScreen() {
                   activeOpacity={0.85}
                 >
                   <Ionicons
-                    name={!isWelcomeClaimed ? 'sparkles' : 'logo-whatsapp'}
+                    name={showClaimBonusButton ? 'sparkles' : 'logo-whatsapp'}
                     size={14}
-                    color={!isWelcomeClaimed ? '#b45309' : '#ffffff'}
+                    color={showClaimBonusButton ? '#b45309' : '#ffffff'}
                   />
-                  <Text style={[styles.claimBannerBtnText, !isWelcomeClaimed ? { color: '#b45309' } : { color: '#ffffff' }]}>
-                    {!isWelcomeClaimed ? 'Claim Bonus' : 'Invite'}
+                  <Text style={[styles.claimBannerBtnText, showClaimBonusButton ? { color: '#b45309' } : { color: '#ffffff' }]}>
+                    {showClaimBonusButton ? 'Claim Bonus' : 'Invite'}
                   </Text>
                 </TouchableOpacity>
               </View>

@@ -301,7 +301,7 @@ export default function TabLayout() {
                     title: getHomeTitle(role),
                     href: isShown ? undefined : null,
                     tabBarIcon: ({ color, focused }) => (
-                      <Ionicons size={23} name={focused ? 'home' : 'home-outline'} color={color} />
+                      <Ionicons size={22} name={focused ? 'home' : 'home-outline'} color={color} />
                     ),
                   }}
                 />
@@ -316,7 +316,7 @@ export default function TabLayout() {
                     title: role === 'CUSTOMER' ? t('tabSettings', 'Settings') : t('tabMore', 'More'),
                     href: isShown ? undefined : null,
                     tabBarIcon: ({ color, focused }) => (
-                      <Ionicons size={23} name={focused ? 'grid' : 'grid-outline'} color={color} />
+                      <Ionicons size={22} name={focused ? 'grid' : 'grid-outline'} color={color} />
                     ),
                   }}
                 />
@@ -333,7 +333,7 @@ export default function TabLayout() {
                     href: isShown ? undefined : null,
                     tabBarIcon: ({ color, focused }) => (
                       <TabIconWithUnreadDot showDot={hasUnreadChat}>
-                        <Ionicons size={23} name={focused ? 'leaf' : 'leaf-outline'} color={color} />
+                        <Ionicons size={22} name={focused ? 'leaf' : 'leaf-outline'} color={color} />
                       </TabIconWithUnreadDot>
                     ),
                   }}
@@ -352,7 +352,7 @@ export default function TabLayout() {
                     href: isShown ? undefined : null,
                     tabBarIcon: ({ color, focused }) => (
                       <TabIconWithCartCount count={cartItemCount}>
-                        <Ionicons size={23} name={focused ? meta.iconFilled : meta.icon} color={color} />
+                        <Ionicons size={22} name={focused ? meta.iconFilled : meta.icon} color={color} />
                       </TabIconWithCartCount>
                     ),
                   }}
@@ -368,7 +368,7 @@ export default function TabLayout() {
                   href: isShown ? undefined : null,
                   tabBarIcon: ({ color, focused }) => (
                     <TabIconWithUnreadDot showDot={showUnreadDot}>
-                      <Ionicons size={23} name={focused ? meta.iconFilled : meta.icon} color={color} />
+                      <Ionicons size={22} name={focused ? meta.iconFilled : meta.icon} color={color} />
                     </TabIconWithUnreadDot>
                   ),
                 }}

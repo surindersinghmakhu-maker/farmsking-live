@@ -381,9 +381,9 @@ export default function MoreScreen() {
 
               {/* Collapsible Content for App Themes */}
               {isAppThemesExpanded && (
-                <View style={{ padding: 12, gap: 10, backgroundColor: '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}>
+                <View style={{ padding: 10, gap: 8, backgroundColor: '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}>
                   {/* Compact Theme Selector Pills */}
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5 }}>
                     {(Object.keys(EXECUTIVE_THEME_CONFIG) as ExecutiveTheme[]).map((tKey) => {
                       const conf = EXECUTIVE_THEME_CONFIG[tKey];
                       const isActive = executiveTheme === tKey;
@@ -396,9 +396,9 @@ export default function MoreScreen() {
                           style={{
                             flexDirection: 'row',
                             alignItems: 'center',
-                            gap: 4,
-                            paddingVertical: 6,
-                            paddingHorizontal: 9,
+                            gap: 3,
+                            paddingVertical: 4,
+                            paddingHorizontal: 8,
                             borderRadius: RADIUS.pill,
                             borderWidth: isActive ? 1.5 : 1,
                             borderColor: isActive ? conf.primary : '#cbd5e1',
@@ -411,20 +411,20 @@ export default function MoreScreen() {
                         >
                           <View
                             style={{
-                              width: 18,
-                              height: 18,
-                              borderRadius: 9,
+                              width: 14,
+                              height: 14,
+                              borderRadius: 7,
                               backgroundColor: conf.headerBg,
                               alignItems: 'center',
                               justifyContent: 'center',
                             }}
                           >
-                            <Ionicons name={conf.icon} size={10} color="#ffffff" />
+                            <Ionicons name={conf.icon} size={8} color="#ffffff" />
                           </View>
 
                           <Text
                             style={{
-                              fontSize: 10,
+                              fontSize: 9.5,
                               fontFamily: isActive ? FONT.extraBold : FONT.semibold,
                               color: isActive ? conf.primary : '#334155',
                             }}
@@ -433,99 +433,50 @@ export default function MoreScreen() {
                           </Text>
 
                           {isActive && (
-                            <Ionicons name="checkmark-circle" size={12} color={conf.primary} />
+                            <Ionicons name="checkmark-circle" size={10} color={conf.primary} />
                           )}
                         </TouchableOpacity>
                       );
                     })}
                   </View>
 
-                  {/* 👁️ Theme Live Preview Box */}
+                  {/* Compact Live Theme Preview Banner */}
                   {(() => {
                     const previewConf = EXECUTIVE_THEME_CONFIG[executiveTheme];
                     return (
-                      <View
+                      <LinearGradient
+                        colors={previewConf.headerGradient}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
                         style={{
-                          borderRadius: 10,
-                          borderWidth: 1.5,
+                          padding: 8,
+                          borderRadius: 8,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          borderWidth: 1,
                           borderColor: previewConf.cardBorder,
-                          backgroundColor: previewConf.bg,
-                          padding: 10,
-                          gap: 8,
-                          marginTop: 2,
                         }}
                       >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                            <Ionicons name="eye-outline" size={13} color={previewConf.primary} />
-                            <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: previewConf.text, letterSpacing: 0.5 }}>
-                              LIVE THEME PREVIEW
-                            </Text>
-                          </View>
-                          <View
-                            style={{
-                              backgroundColor: previewConf.primary,
-                              paddingHorizontal: 8,
-                              paddingVertical: 2,
-                              borderRadius: RADIUS.pill,
-                            }}
-                          >
-                            <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>
-                              {previewConf.name}
-                            </Text>
-                          </View>
-                        </View>
-
-                        {/* Mini Banner Preview */}
-                        <LinearGradient
-                          colors={previewConf.headerGradient}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 0 }}
-                          style={{ padding: 10, borderRadius: 8, gap: 4 }}
-                        >
-                          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: previewConf.titleColor }}>
-                              {previewConf.name}
-                            </Text>
-                            <View
-                              style={{
-                                backgroundColor: previewConf.btnBg,
-                                paddingHorizontal: 8,
-                                paddingVertical: 3,
-                                borderRadius: RADIUS.pill,
-                              }}
-                            >
-                              <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: previewConf.btnText }}>
-                                Sample Button
-                              </Text>
-                            </View>
-                          </View>
-                          <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: previewConf.subColor }} numberOfLines={1}>
-                            Unlimited Crops · Labour Management · Supervisors
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                          <Ionicons name="eye-outline" size={14} color={previewConf.titleColor} />
+                          <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: previewConf.titleColor }} numberOfLines={1}>
+                            Active: {previewConf.name}
                           </Text>
-                        </LinearGradient>
-
-                        {/* Sample Card Inside Preview */}
+                        </View>
                         <View
                           style={{
-                            backgroundColor: previewConf.cardBg,
-                            borderColor: previewConf.cardBorder,
-                            borderWidth: 1,
-                            padding: 8,
-                            borderRadius: 6,
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
+                            backgroundColor: previewConf.btnBg,
+                            paddingHorizontal: 8,
+                            paddingVertical: 3,
+                            borderRadius: RADIUS.pill,
                           }}
                         >
-                          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: previewConf.text }}>
-                            Sample Dashboard Card
-                          </Text>
-                          <Text style={{ fontSize: 10, fontFamily: FONT.semibold, color: previewConf.primary }}>
-                            Active View
+                          <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: previewConf.btnText }}>
+                            Live Theme
                           </Text>
                         </View>
-                      </View>
+                      </LinearGradient>
                     );
                   })()}
                 </View>

@@ -186,14 +186,13 @@ export default function MoreScreen() {
   const showAdvisorBusinessSection = role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR';
 
 
-  const isFarmerRole = role === 'FARMER' || user?.role === 'FARMER';
-  const isAdvisorRole = role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR' || user?.role === 'FARM_ADVISOR' || user?.role === 'GARDEN_ADVISOR';
-  const isLabourRole = role === 'LABOUR' || role === 'OPERATOR' || user?.role === 'LABOUR' || user?.role === 'OPERATOR';
+  const isAdvisorRole = role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR' || user?.role === 'FARM_ADVISOR' || user?.role === 'GARDEN_ADVISOR' || (Array.isArray(user?.roles) && (user.roles.includes('FARM_ADVISOR') || user.roles.includes('GARDEN_ADVISOR')));
+  const isLabourRole = role === 'LABOUR' || role === 'OPERATOR' || user?.role === 'LABOUR' || user?.role === 'OPERATOR' || (Array.isArray(user?.roles) && (user.roles.includes('LABOUR') || user.roles.includes('OPERATOR')));
 
   const accountItems: AccountItem[] = [
     MY_PROFILE_ITEM,
     MY_ADDRESSES_ITEM,
-    ...(isFarmerRole ? [FARMER_ONLY_ITEM] : []),
+    FARMER_ONLY_ITEM,
     ...(isAdvisorRole ? [ADVISOR_PROFILE_ITEM] : []),
     ...(isLabourRole ? [LABOUR_ITEM] : []),
   ];
@@ -333,25 +332,6 @@ export default function MoreScreen() {
                     <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
                   </TouchableOpacity>
 
-                  {/* 🌐 App Language Switcher Row */}
-                  <TouchableOpacity
-                    style={[styles.row, { paddingLeft: 18 }, isAdminRole && { borderBottomWidth: 0 }]}
-                    activeOpacity={0.7}
-                    onPress={() => setShowLanguageModal(true)}
-                  >
-                    <View style={[styles.rowIconBg, { backgroundColor: '#fef3c7' }]}>
-                      <Ionicons name="language-outline" size={18} color="#d97706" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.rowLabel}>{t('languageSwitchLabel')}</Text>
-                      <Text style={styles.rowSubLabel}>{t('languageSwitchSub')}</Text>
-                    </View>
-                    <View style={styles.switchBadgeContainer}>
-                      <Text style={styles.langBadgeTextActive}>{currentLanguageName}</Text>
-                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                    </View>
-                  </TouchableOpacity>
-
                   {/* 🗑️ Delete Account Row (Hidden for Admin & Super Admin) */}
                   {!isAdminRole ? (
                     <TouchableOpacity
@@ -374,11 +354,17 @@ export default function MoreScreen() {
             </View>
           </View>
 
-          {/* 🎨 Executive Theme & Appearance Settings */}
+          {/* ⚙️ SETTINGS Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>🎨 EXECUTIVE THEME & SETTINGS</Text>
+            <Text style={styles.sectionTitle}>⚙️ SETTINGS</Text>
             <View style={styles.sectionCard}>
-              <View style={{ padding: 10, gap: 10 }}>
+              {/* Executive Theme & Appearance Selector */}
+              <View style={{ padding: 12, gap: 10, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                  <Ionicons name="color-palette-outline" size={18} color="#0284c7" />
+                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>Executive Theme & Appearance</Text>
+                </View>
+
                 {/* Compact Theme Selector Pills */}
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                   {(Object.keys(EXECUTIVE_THEME_CONFIG) as ExecutiveTheme[]).map((tKey) => {
@@ -437,7 +423,7 @@ export default function MoreScreen() {
                   })}
                 </View>
 
-                {/* 👁️ Theme Live Preview Box (Thalle Live Preview Dabbi) */}
+                {/* 👁️ Theme Live Preview Box */}
                 {(() => {
                   const previewConf = EXECUTIVE_THEME_CONFIG[executiveTheme];
                   return (
@@ -456,7 +442,7 @@ export default function MoreScreen() {
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
                           <Ionicons name="eye-outline" size={13} color={previewConf.primary} />
                           <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: previewConf.text, letterSpacing: 0.5 }}>
-                            👁️ LIVE THEME PREVIEW
+                            LIVE THEME PREVIEW
                           </Text>
                         </View>
                         <View
@@ -482,7 +468,7 @@ export default function MoreScreen() {
                       >
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                           <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: previewConf.titleColor }}>
-                            👑 {previewConf.name}
+                            {previewConf.name}
                           </Text>
                           <View
                             style={{
@@ -498,7 +484,7 @@ export default function MoreScreen() {
                           </View>
                         </View>
                         <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: previewConf.subColor }} numberOfLines={1}>
-                          🚩 Unlimited Crops · Labour Management · Supervisors 🏁
+                          Unlimited Crops · Labour Management · Supervisors
                         </Text>
                       </LinearGradient>
 
@@ -526,6 +512,59 @@ export default function MoreScreen() {
                   );
                 })()}
               </View>
+
+              {/* 🌐 App Language Switcher Row */}
+              <TouchableOpacity
+                style={styles.row}
+                activeOpacity={0.7}
+                onPress={() => setShowLanguageModal(true)}
+              >
+                <View style={[styles.rowIconBg, { backgroundColor: '#fef3c7' }]}>
+                  <Ionicons name="language-outline" size={18} color="#d97706" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowLabel}>{t('languageSwitchLabel')}</Text>
+                  <Text style={styles.rowSubLabel}>{t('languageSwitchSub')}</Text>
+                </View>
+                <View style={styles.switchBadgeContainer}>
+                  <Text style={styles.langBadgeTextActive}>{currentLanguageName}</Text>
+                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                </View>
+              </TouchableOpacity>
+
+              {/* 🔔 Notifications & Weather Preferences Row */}
+              <TouchableOpacity
+                style={[styles.row, !showSuperAdminSection && { borderBottomWidth: 0 }]}
+                activeOpacity={0.7}
+                onPress={() => router.push(NOTIFICATIONS_ITEM.href as any)}
+              >
+                <View style={styles.rowIconBg}>
+                  <Ionicons name={NOTIFICATIONS_ITEM.icon} size={18} color={theme.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowLabel}>{t(NOTIFICATIONS_ITEM.key, NOTIFICATIONS_ITEM.label)}</Text>
+                  <Text style={styles.rowSubLabel}>Notification alerts & weather updates</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+              </TouchableOpacity>
+
+              {/* ⚙️ System Settings (Super Admin / Admin only) */}
+              {showSuperAdminSection ? (
+                <TouchableOpacity
+                  style={[styles.row, { borderBottomWidth: 0 }]}
+                  activeOpacity={0.7}
+                  onPress={() => router.push('/(tabs)/super-settings' as any)}
+                >
+                  <View style={[styles.rowIconBg, { backgroundColor: '#f8fafc' }]}>
+                    <Ionicons name="options-outline" size={18} color="#0d9488" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.rowLabel}>System Settings</Text>
+                    <Text style={styles.rowSubLabel}>Full system & feature flag controls</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                </TouchableOpacity>
+              ) : null}
             </View>
           </View>
 
@@ -786,18 +825,6 @@ export default function MoreScreen() {
                 </TouchableOpacity>
               ) : null}
 
-              {/* Notifications & Weather Preferences Row */}
-              <TouchableOpacity
-                style={styles.row}
-                activeOpacity={0.7}
-                onPress={() => router.push(NOTIFICATIONS_ITEM.href as any)}
-              >
-                <View style={styles.rowIconBg}>
-                  <Ionicons name={NOTIFICATIONS_ITEM.icon} size={18} color={theme.primary} />
-                </View>
-                <Text style={styles.rowLabel}>{t(NOTIFICATIONS_ITEM.key, NOTIFICATIONS_ITEM.label)}</Text>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-              </TouchableOpacity>
 
               {/* Privacy Policy Row */}
               <TouchableOpacity

@@ -14,6 +14,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { FONT, RADIUS } from '@/constants/theme';
 import { parseUpiQrCode, ParsedUpiResult } from '../utils/upiQrParser';
+import { decodeQrFromImageUri } from '../utils/qrDecoder';
 
 interface UpiQrScannerModalProps {
   visible: boolean;
@@ -30,6 +31,10 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [isRequestingPermission, setIsRequestingPermission] = useState(false);
+  const [isDecodingImage, setIsDecodingImage] = useState(false);
+
+  // Confirmation state for decoded QR photo preview
+  const [pendingDecodedResult, setPendingDecodedResult] = useState<ParsedUpiResult | null>(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -60,10 +65,11 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
 
   const handleClose = () => {
     stopCameraStream();
+    setPendingDecodedResult(null);
     onClose();
   };
 
-  const handleQrDecodedSuccess = (rawText: string) => {
+  const handleQrDecodedFromLiveCamera = (rawText: string) => {
     const parsed = parseUpiQrCode(rawText);
     if (!parsed) {
       if (Platform.OS !== 'web') {
@@ -77,7 +83,7 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
     if (Platform.OS !== 'web') {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
-    // Immediately stop camera & close modal as requested
+    // Directly confirm or show result
     stopCameraStream();
     onScanSuccess(parsed);
     onClose();
@@ -97,7 +103,6 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
     }
 
     try {
-      // Direct browser permission prompt
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: 'environment' } },
         audio: false,
@@ -124,7 +129,7 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
       setHasCameraPermission(false);
       setIsScanning(false);
       setIsRequestingPermission(false);
-      setErrorMessage('Camera permission was denied. Please allow camera access in your browser or select a QR photo from gallery below.');
+      setErrorMessage('Camera permission was denied. Click "Allow Camera Access" or pick a QR photo below.');
     }
   };
 
@@ -150,7 +155,7 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
           if (barcodeDetector) {
             const barcodes = await barcodeDetector.detect(video);
             if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
-              handleQrDecodedSuccess(barcodes[0].rawValue);
+              handleQrDecodedFromLiveCamera(barcodes[0].rawValue);
               return;
             }
           } else if (canvas && ctx) {
@@ -169,12 +174,13 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
     animFrameIdRef.current = requestAnimationFrame(scanFrame);
   };
 
-  // Image pick option
+  // Image select & decode flow with preview confirmation
   const handlePickQrImage = async () => {
+    setErrorMessage(null);
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
-        Alert.alert('Permission Required', 'Gallery access is needed to select QR image.');
+        Alert.alert('Permission Required', 'Gallery access is needed to select a QR photo.');
         return;
       }
 
@@ -185,39 +191,57 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
       });
 
       if (!result.canceled && result.assets && result.assets[0]?.uri) {
+        setIsDecodingImage(true);
         const imageUri = result.assets[0].uri;
 
-        if (Platform.OS === 'web' && typeof window !== 'undefined' && 'BarcodeDetector' in window) {
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-          img.onload = async () => {
-            try {
-              const detector = new (window as any).BarcodeDetector({ formats: ['qr_code'] });
-              const barcodes = await detector.detect(img);
-              if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
-                handleQrDecodedSuccess(barcodes[0].rawValue);
-              } else {
-                Alert.alert('QR Code Not Found', 'Could not detect a valid QR code in the selected image.');
-              }
-            } catch (err) {
-              Alert.alert('Scan Failed', 'Could not read QR code from image.');
-            }
-          };
-          img.src = imageUri;
-        } else {
-          Alert.alert(
-            'QR Image Selected',
-            'Please paste your UPI ID directly or scan using live camera stream.'
-          );
+        const rawText = await decodeQrFromImageUri(imageUri);
+        setIsDecodingImage(false);
+
+        if (!rawText) {
+          if (Platform.OS !== 'web') {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          }
+          setErrorMessage('Could not find a valid QR code in the selected photo. Please select a clear QR code image.');
+          return;
         }
+
+        const parsed = parseUpiQrCode(rawText);
+        if (!parsed) {
+          if (Platform.OS !== 'web') {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          }
+          setErrorMessage('QR code found, but it is not a valid UPI ID / Payment QR code.');
+          return;
+        }
+
+        if (Platform.OS !== 'web') {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+
+        // Pause camera stream and show confirmation preview modal
+        stopCameraStream();
+        setPendingDecodedResult(parsed);
       }
     } catch (err) {
+      setIsDecodingImage(false);
       Alert.alert('Error', 'Failed to pick image from gallery.');
+    }
+  };
+
+  const handleConfirmAddUpi = () => {
+    if (pendingDecodedResult) {
+      if (Platform.OS !== 'web') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+      onScanSuccess(pendingDecodedResult);
+      setPendingDecodedResult(null);
+      onClose();
     }
   };
 
   useEffect(() => {
     if (visible) {
+      setPendingDecodedResult(null);
       if (Platform.OS === 'web') {
         setTimeout(() => requestCameraPermissionAndStart(), 150);
       } else {
@@ -226,6 +250,7 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
     } else {
       stopCameraStream();
       setHasCameraPermission(null);
+      setPendingDecodedResult(null);
     }
     return () => {
       stopCameraStream();
@@ -247,99 +272,162 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
           <View style={styles.header}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Ionicons name="qr-code" size={22} color="#16a34a" />
-              <Text style={styles.headerTitle}>Scan UPI QR Code</Text>
+              <Text style={styles.headerTitle}>
+                {pendingDecodedResult ? 'Decoded QR Code' : 'Scan UPI QR Code'}
+              </Text>
             </View>
             <TouchableOpacity onPress={handleClose} style={styles.closeBtn} activeOpacity={0.75}>
               <Ionicons name="close" size={22} color="#475569" />
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.subtitle}>
-            Point your camera at any PhonePe, GPay, Paytm or Bank QR code to auto-decode UPI ID.
-          </Text>
+          {/* IF PREVIEW CONFIRMATION STEP FOR PHOTO DECODED QR */}
+          {pendingDecodedResult ? (
+            <View style={styles.previewContainer}>
+              <View style={styles.successIconBadge}>
+                <Ionicons name="checkmark-circle" size={44} color="#16a34a" />
+              </View>
 
-          {/* Error / Warning Alert */}
-          {errorMessage ? (
-            <View style={styles.errorBox}>
-              <Ionicons name="warning" size={16} color="#dc2626" />
-              <Text style={styles.errorText}>{errorMessage}</Text>
-            </View>
-          ) : null}
+              <Text style={styles.previewSuccessTitle}>QR Code Successfully Decoded! 🎉</Text>
+              <Text style={styles.previewSub}>
+                Verify the decoded UPI ID details below and click OK to add to text box.
+              </Text>
 
-          {/* Camera Viewfinder Box */}
-          <View style={styles.viewfinderContainer}>
-            {hasCameraPermission === false ? (
-              <View style={styles.permissionDeniedBox}>
-                <Ionicons name="camera-outline" size={42} color="#f59e0b" />
-                <Text style={styles.permissionTitle}>Camera Permission Required</Text>
-                <Text style={styles.permissionSub}>
-                  Please click allow when prompted to enable your camera and scan the QR code directly.
-                </Text>
+              {/* Decoded Details Card */}
+              <View style={styles.decodedCard}>
+                <View style={styles.decodedRow}>
+                  <Text style={styles.decodedLabel}>Decoded UPI ID:</Text>
+                  <Text style={styles.decodedValueUpi}>{pendingDecodedResult.upiId}</Text>
+                </View>
+
+                {pendingDecodedResult.payeeName ? (
+                  <View style={[styles.decodedRow, { borderTopWidth: 1, borderTopColor: '#e2e8f0', paddingTop: 8 }]}>
+                    <Text style={styles.decodedLabel}>Payee Name:</Text>
+                    <Text style={styles.decodedValueName}>{pendingDecodedResult.payeeName}</Text>
+                  </View>
+                ) : null}
+              </View>
+
+              {/* Action Buttons: OK to Add & Rescan */}
+              <View style={styles.confirmBtnRow}>
                 <TouchableOpacity
-                  style={styles.allowCameraBtn}
+                  style={styles.okConfirmBtn}
                   activeOpacity={0.85}
-                  disabled={isRequestingPermission}
-                  onPress={requestCameraPermissionAndStart}
+                  onPress={handleConfirmAddUpi}
                 >
-                  {isRequestingPermission ? (
-                    <ActivityIndicator color="#ffffff" size="small" />
-                  ) : (
-                    <>
-                      <Ionicons name="videocam" size={16} color="#ffffff" />
-                      <Text style={styles.allowCameraBtnText}>Allow Camera Access & Scan</Text>
-                    </>
-                  )}
+                  <Ionicons name="checkmark-done" size={18} color="#ffffff" />
+                  <Text style={styles.okConfirmBtnText}>OK / Add to Text Box</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.rescanBtn}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    setPendingDecodedResult(null);
+                    requestCameraPermissionAndStart();
+                  }}
+                >
+                  <Text style={styles.rescanBtnText}>Rescan / Cancel</Text>
                 </TouchableOpacity>
               </View>
-            ) : Platform.OS === 'web' ? (
-              <video
-                ref={videoRef as any}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  borderRadius: RADIUS.md,
-                }}
-                playsInline
-                muted
-              />
-            ) : (
-              <View style={styles.nativeCameraFallback}>
-                <Ionicons name="camera" size={48} color="#94a3b8" />
-                <Text style={styles.fallbackText}>Live Web Scanner Active</Text>
+            </View>
+          ) : (
+            /* REGULAR CAMERA / SCANNER STEP */
+            <>
+              <Text style={styles.subtitle}>
+                Point camera at QR code or click "Select QR Photo" to decode from gallery.
+              </Text>
+
+              {/* Error / Warning Alert */}
+              {errorMessage ? (
+                <View style={styles.errorBox}>
+                  <Ionicons name="warning" size={16} color="#dc2626" />
+                  <Text style={styles.errorText}>{errorMessage}</Text>
+                </View>
+              ) : null}
+
+              {/* Camera Viewfinder Box */}
+              <View style={styles.viewfinderContainer}>
+                {isDecodingImage ? (
+                  <View style={styles.decodingBox}>
+                    <ActivityIndicator size="large" color="#16a34a" />
+                    <Text style={styles.decodingText}>Decoding QR code from photo...</Text>
+                  </View>
+                ) : hasCameraPermission === false ? (
+                  <View style={styles.permissionDeniedBox}>
+                    <Ionicons name="camera-outline" size={42} color="#f59e0b" />
+                    <Text style={styles.permissionTitle}>Camera Permission Required</Text>
+                    <Text style={styles.permissionSub}>
+                      Please click allow to enable your camera and scan live QR codes directly.
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.allowCameraBtn}
+                      activeOpacity={0.85}
+                      disabled={isRequestingPermission}
+                      onPress={requestCameraPermissionAndStart}
+                    >
+                      {isRequestingPermission ? (
+                        <ActivityIndicator color="#ffffff" size="small" />
+                      ) : (
+                        <>
+                          <Ionicons name="videocam" size={16} color="#ffffff" />
+                          <Text style={styles.allowCameraBtnText}>Allow Camera Access & Scan</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                ) : Platform.OS === 'web' ? (
+                  <video
+                    ref={videoRef as any}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      borderRadius: RADIUS.md,
+                    }}
+                    playsInline
+                    muted
+                  />
+                ) : (
+                  <View style={styles.nativeCameraFallback}>
+                    <Ionicons name="camera" size={48} color="#94a3b8" />
+                    <Text style={styles.fallbackText}>Live Web Scanner Active</Text>
+                  </View>
+                )}
+
+                {/* Target Frame Box Over Video */}
+                {hasCameraPermission !== false && !isDecodingImage ? (
+                  <View style={styles.targetFrame}>
+                    <View style={[styles.corner, styles.topLeft]} />
+                    <View style={[styles.corner, styles.topRight]} />
+                    <View style={[styles.corner, styles.bottomLeft]} />
+                    <View style={[styles.corner, styles.bottomRight]} />
+                  </View>
+                ) : null}
               </View>
-            )}
 
-            {/* Target Frame Box Over Video */}
-            {hasCameraPermission !== false ? (
-              <View style={styles.targetFrame}>
-                <View style={[styles.corner, styles.topLeft]} />
-                <View style={[styles.corner, styles.topRight]} />
-                <View style={[styles.corner, styles.bottomLeft]} />
-                <View style={[styles.corner, styles.bottomRight]} />
+              {/* Bottom Actions */}
+              <View style={styles.actionsRow}>
+                <TouchableOpacity
+                  style={styles.galleryBtn}
+                  activeOpacity={0.8}
+                  disabled={isDecodingImage}
+                  onPress={handlePickQrImage}
+                >
+                  <Ionicons name="image-outline" size={18} color="#059669" />
+                  <Text style={styles.galleryBtnText}>Select QR Photo</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.cancelBtn}
+                  activeOpacity={0.8}
+                  onPress={handleClose}
+                >
+                  <Text style={styles.cancelBtnText}>Cancel</Text>
+                </TouchableOpacity>
               </View>
-            ) : null}
-          </View>
-
-          {/* Bottom Actions */}
-          <View style={styles.actionsRow}>
-            <TouchableOpacity
-              style={styles.galleryBtn}
-              activeOpacity={0.8}
-              onPress={handlePickQrImage}
-            >
-              <Ionicons name="image-outline" size={18} color="#059669" />
-              <Text style={styles.galleryBtnText}>Select QR Photo</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.cancelBtn}
-              activeOpacity={0.8}
-              onPress={handleClose}
-            >
-              <Text style={styles.cancelBtnText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
+            </>
+          )}
         </View>
       </View>
     </Modal>
@@ -411,6 +499,17 @@ const styles = StyleSheet.create({
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  decodingBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    padding: 16,
+  },
+  decodingText: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
   },
   permissionDeniedBox: {
     alignItems: 'center',
@@ -527,5 +626,91 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: FONT.bold,
     color: '#475569',
+  },
+
+  // Decoded Preview Confirmation Styles
+  previewContainer: {
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 6,
+  },
+  successIconBadge: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#dcfce7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  previewSuccessTitle: {
+    fontSize: 15.5,
+    fontFamily: FONT.extraBold,
+    color: '#15803d',
+    textAlign: 'center',
+  },
+  previewSub: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#475569',
+    textAlign: 'center',
+  },
+  decodedCard: {
+    width: '100%',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    borderRadius: RADIUS.lg,
+    padding: 12,
+    gap: 8,
+  },
+  decodedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  decodedLabel: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+  },
+  decodedValueUpi: {
+    fontSize: 13.5,
+    fontFamily: FONT.extraBold,
+    color: '#0284c7',
+  },
+  decodedValueName: {
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+    color: '#15803d',
+  },
+  confirmBtnRow: {
+    width: '100%',
+    gap: 8,
+    marginTop: 4,
+  },
+  okConfirmBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#16a34a',
+    borderRadius: RADIUS.md,
+    height: 44,
+  },
+  okConfirmBtnText: {
+    fontSize: 14,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  rescanBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 38,
+  },
+  rescanBtnText: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#64748b',
   },
 });

@@ -390,7 +390,7 @@ export class WhatsappBotService implements OnModuleInit {
       if (res.status === '200') {
         const nameLabel = farmerName?.trim() || '';
         // Thank you and membership purchase prompt sent to farmer upon removal
-        const notification = `🌾 *FarmsKing Notice*\n\nਧੰਨਵਾਦ ${nameLabel ? '*' + nameLabel + '*' : ''} ਜੀ!\nਤੁਹਾਡੀ FarmsKing Advisor Membership ਸਮਾਪਤ ਹੋ ਗਈ ਹੈ। ਦੁਬਾਰਾ ਗਰੁੱਪ ਮੈਂਬਰ ਬਣਨ ਲਈ ਨਵੀਂ ਮੈਂਬਰਸ਼ਿਪ ਖਰੀਦੋ।\n\nThank you! Your FarmsKing Advisor Membership has expired. Please purchase a membership to rejoin the group.`;
+        const notification = `🌾 *FarmsKing Notice*\n\nHello ${nameLabel ? '*' + nameLabel + '*' : 'User'} ji,\nआपकी FarmsKing Advisor Membership समाप्त हो गई है। दोबारा ग्रुप मेंबर बनने के लिए नई मेंबरशिप खरीदें।\n\nThank you! Your FarmsKing Advisor Membership has expired. Please purchase a membership to rejoin the group.`;
         await this.sendDirectTextMessage(mobileNumber, notification).catch(() => {});
         return { success: true, status: 'REMOVED' };
       }

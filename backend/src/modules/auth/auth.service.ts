@@ -230,11 +230,11 @@ export class AuthService {
       `🔑 *Your King ID:* ${user.kingId}\n` +
       `📱 *Registered Mobile:* ${dto.mobile}\n\n` +
       `💶 *Invite & Earn Cashback Offer:* 💶\n` +
-      `ਆਪਣੇ ਹੋਰ ਕਿਸਾਨ ਭਰਾਵਾਂ ਨੂੰ FarmsKing App ਨਾਲ ਜੋੜੋ ਅਤੇ ਹਰ ਸਫ਼ਲ ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਤੇ ਪਾਓ *Cashback Bonus!* 🎁✨\n\n` +
+      `अपने अन्य किसान भाइयों को FarmsKing App से जोड़ें और हर सफल रजिस्ट्रेशन पर पाएं *Cashback Bonus!* 🎁✨\n\n` +
       `👉 *Share Your Referral Link:* 👇\n` +
       `${userReferralLink}\n\n` +
       `इस लिंक को खोल के register करने पर पाएं cashback! 💶💶💶💶💶\n\n` +
-      `FarmsKing App ਨਾਲ਼ ਜੁੜਨ ਲਈ ਧੰਨਵਾਦ! 🌾🚜`;
+      `FarmsKing App से जुड़ने के लिए धन्यवाद! 🌾🚜`;
     this.whatsappBotService.sendDirectTextMessage(dto.mobile, welcomeMsg).catch(() => {});
 
     // Auto-add new user to WhatsApp group immediately after signup (non-blocking)

@@ -76,3 +76,18 @@ export async function getAdminTrainerReports(): Promise<any> {
   const { data } = await apiClient.get('/trainers/admin-reports');
   return data;
 }
+
+export async function assignTrainerState(
+  trainerId: string,
+  state: string,
+  district?: string,
+  commissionRate: number = 20.0,
+): Promise<any> {
+  const { data } = await apiClient.post('/trainers/assignments', {
+    trainerId,
+    state,
+    district,
+    commissionRate,
+  });
+  return data;
+}

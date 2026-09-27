@@ -20,7 +20,8 @@ import {
   useUsersList,
 } from '@/src/hooks/useUsersAdmin';
 import { formatInr } from '@/src/utils/formatInr';
-import { ASSIGNABLE_CHECKBOX_ROLES } from '@/src/api/users.api';
+import { ASSIGNABLE_CHECKBOX_ROLES, lookupByKingId } from '@/src/api/users.api';
+import { assignTrainerState } from '@/src/api/trainers.api';
 import { useAuth } from '@/src/store/auth-context';
 import { PickerModal } from '@/src/components/PickerModal';
 
@@ -40,7 +41,7 @@ const GROUPS: { value: UserGroup; label: string; icon: keyof typeof Ionicons.gly
 
 type UserFilter =
   | 'SUPER_ADMIN' | 'ADMIN' | 'OPERATOR'
-  | 'BUSINESS_PARTNER' | 'FARM_ADVISOR' | 'GARDEN_ADVISOR'
+  | 'BUSINESS_PARTNER' | 'FARM_ADVISOR' | 'GARDEN_ADVISOR' | 'TECHNICAL_TRAINER'
   | 'CUSTOMER' | 'FARMER' | 'GARDENER';
 
 const FILTERS_BY_GROUP: Record<UserGroup, { value: UserFilter; label: string; icon: keyof typeof Ionicons.glyphMap }[]> = {
@@ -52,6 +53,7 @@ const FILTERS_BY_GROUP: Record<UserGroup, { value: UserFilter; label: string; ic
     { value: 'BUSINESS_PARTNER', label: 'Business Partners', icon: 'briefcase-outline' },
     { value: 'FARM_ADVISOR', label: 'Crop Doctors', icon: 'medical-outline' },
     { value: 'GARDEN_ADVISOR', label: 'Garden Advisors', icon: 'sunny-outline' },
+    { value: 'TECHNICAL_TRAINER', label: 'Technical Trainers', icon: 'school-outline' },
   ],
   CLIENTS: [
     { value: 'CUSTOMER', label: 'Customers', icon: 'cart-outline' },
@@ -61,6 +63,7 @@ const FILTERS_BY_GROUP: Record<UserGroup, { value: UserFilter; label: string; ic
 };
 
 function filterToBackendRole(filter: UserFilter): Role {
+  if (filter === 'TECHNICAL_TRAINER') return 'TECHNICAL_TRAINER' as Role;
   return filter === 'FARM_ADVISOR' || filter === 'GARDEN_ADVISOR' ? 'ADVISOR' : (filter as Role);
 }
 
@@ -72,6 +75,7 @@ export default function SuperUsersScreen() {
   const [search, setSearch] = useState('');
   const [isAddAdvisorOpen, setIsAddAdvisorOpen] = useState(false);
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
+  const [isAddTrainerOpen, setIsAddTrainerOpen] = useState(false);
   const [permissionsTarget, setPermissionsTarget] = useState<AdminUser | null>(null);
   const [rolesTarget, setRolesTarget] = useState<AdminUser | null>(null);
   const [detailTargetId, setDetailTargetId] = useState<string | null>(null);
@@ -102,6 +106,7 @@ export default function SuperUsersScreen() {
       if (subFilter === 'BUSINESS_PARTNER') return activeRoles.includes('BUSINESS_PARTNER') || u.role === 'BUSINESS_PARTNER';
       if (subFilter === 'FARM_ADVISOR') return (activeRoles.includes('ADVISOR') || u.role === 'ADVISOR') && u.advisorType !== 'GARDEN';
       if (subFilter === 'GARDEN_ADVISOR') return (activeRoles.includes('ADVISOR') || u.role === 'ADVISOR') && u.advisorType === 'GARDEN';
+      if (subFilter === 'TECHNICAL_TRAINER') return activeRoles.includes('TECHNICAL_TRAINER') || u.role === 'TECHNICAL_TRAINER';
       if (subFilter === 'CUSTOMER') return activeRoles.includes('CUSTOMER') || u.role === 'CUSTOMER';
       if (subFilter === 'FARMER') return activeRoles.includes('FARMER') || u.role === 'FARMER';
       if (subFilter === 'GARDENER') return activeRoles.includes('GARDENER') || u.role === 'GARDENER';
@@ -241,6 +246,17 @@ export default function SuperUsersScreen() {
             <Text style={styles.addAdvisorBtnText}>Add {filter === 'OPERATOR' ? 'Operator' : 'Admin'}</Text>
           </TouchableOpacity>
         )}
+
+        {filter === 'TECHNICAL_TRAINER' && (
+          <TouchableOpacity
+            style={[styles.addAdvisorBtn, premiumShadow(theme.primary, 'sm')]}
+            activeOpacity={0.85}
+            onPress={() => setIsAddTrainerOpen(true)}
+          >
+            <Ionicons name="add-circle" size={16} color="#ffffff" />
+            <Text style={styles.addAdvisorBtnText}>Appoint Technical Trainer (King ID / State)</Text>
+          </TouchableOpacity>
+        )}
         {filter === 'ADMIN' && !isSuperAdmin ? (
           <Text style={styles.emptyText}>Only the Super Admin can add new Admin accounts.</Text>
         ) : null}
@@ -343,6 +359,7 @@ export default function SuperUsersScreen() {
       <EditRolesModal target={rolesTarget} onClose={() => setRolesTarget(null)} />
       <UserDetailModal userId={detailTargetId} onClose={() => setDetailTargetId(null)} />
       <DeleteUserSecurityModal target={deleteVerificationTarget} onClose={() => setDeleteVerificationTarget(null)} />
+      <AddTrainerModal visible={isAddTrainerOpen} onClose={() => setIsAddTrainerOpen(false)} />
     </View>
   );
 }
@@ -1292,6 +1309,125 @@ function AddStaffModal({ visible, kind, onClose }: { visible: boolean; kind: 'OP
               </TouchableOpacity>
             </ScrollView>
           )}
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function AddTrainerModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const [kingIdOrMobile, setKingIdOrMobile] = useState('');
+  const [state, setState] = useState('Punjab');
+  const [district, setDistrict] = useState('');
+  const [commissionRate, setCommissionRate] = useState('20');
+  const [userFound, setUserFound] = useState<{ id: string; name: string; mobile: string; kingId: string | null } | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const reset = () => {
+    setKingIdOrMobile('');
+    setState('Punjab');
+    setDistrict('');
+    setCommissionRate('20');
+    setUserFound(null);
+    setIsSearching(false);
+    setIsSubmitting(false);
+    setError(null);
+  };
+
+  const handleLookupUser = async () => {
+    if (!kingIdOrMobile.trim()) return;
+    setIsSearching(true);
+    setError(null);
+    try {
+      const res = await lookupByKingId(kingIdOrMobile.trim());
+      setUserFound(res);
+    } catch {
+      setError('User not found by King ID or Mobile. Please verify.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!userFound && !kingIdOrMobile.trim()) {
+      setError('Please search and select a user account.');
+      return;
+    }
+    if (!state.trim()) {
+      setError('State is required.');
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const userId = userFound?.id || kingIdOrMobile.trim();
+      await assignTrainerState(userId, state.trim(), district.trim() || undefined, Number(commissionRate) || 20);
+      alert('✅ Technical Trainer role assigned successfully!');
+      reset();
+      onClose();
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'Could not assign Technical Trainer.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={() => { reset(); onClose(); }}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalCard}>
+          <View style={styles.modalHeaderRow}>
+            <Text style={styles.modalTitle}>Appoint Technical Trainer</Text>
+            <TouchableOpacity onPress={() => { reset(); onClose(); }}>
+              <Ionicons name="close-circle" size={24} color="#64748b" />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+            <Text style={styles.helperText}>Enter user's King ID or Mobile Number to appoint them as State/District Technical Trainer:</Text>
+            <View style={{ flexDirection: 'row', gap: 6 }}>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder="Enter King ID or Mobile"
+                placeholderTextColor="#94a3b8"
+                value={kingIdOrMobile}
+                onChangeText={setKingIdOrMobile}
+              />
+              <TouchableOpacity
+                style={[styles.submitBtn, { marginTop: 0, paddingHorizontal: 12 }]}
+                onPress={handleLookupUser}
+                disabled={isSearching}
+              >
+                {isSearching ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.submitBtnText}>Search</Text>}
+              </TouchableOpacity>
+            </View>
+
+            {userFound && (
+              <View style={styles.successBox}>
+                <Ionicons name="person-circle" size={20} color="#16a34a" />
+                <Text style={styles.successText}>
+                  Selected: <Text style={{ fontFamily: FONT.bold }}>{userFound.name}</Text> ({userFound.mobile})
+                </Text>
+              </View>
+            )}
+
+            <Text style={styles.label}>State Assignment</Text>
+            <TextInput style={styles.input} placeholder="State (e.g. Punjab)" placeholderTextColor="#94a3b8" value={state} onChangeText={setState} />
+
+            <Text style={styles.label}>District Assignment (Optional)</Text>
+            <TextInput style={styles.input} placeholder="District (e.g. Firozpur or leave empty for state-level)" placeholderTextColor="#94a3b8" value={district} onChangeText={setDistrict} />
+
+            <Text style={styles.label}>Commission Rate per Training (₹)</Text>
+            <TextInput style={styles.input} placeholder="Default 20" placeholderTextColor="#94a3b8" value={commissionRate} onChangeText={setCommissionRate} keyboardType="number-pad" />
+
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+            <TouchableOpacity style={styles.submitBtn} disabled={isSubmitting} onPress={handleSubmit}>
+              {isSubmitting ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Assign Technical Trainer Role</Text>}
+            </TouchableOpacity>
+          </ScrollView>
         </View>
       </View>
     </Modal>

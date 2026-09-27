@@ -365,6 +365,7 @@ export default function WalletScreen() {
               end={{ x: 1, y: 1 }}
               style={styles.royalBalanceCard}
             >
+              {/* Top Row: Balance & Action Buttons (Claim Bonus + Withdraw) */}
               <View style={styles.royalContentRow}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.royalBalanceLabel}>Available Balance</Text>
@@ -386,27 +387,47 @@ export default function WalletScreen() {
                   ) : null}
                 </View>
 
-                <TouchableOpacity
-                  style={styles.royalWithdrawBtn}
-                  activeOpacity={0.85}
-                  onPress={() => {
-                    tap();
-                    if (Platform.OS === 'web') {
-                      alert('Coming Soon! 🚀 Direct Bank & UPI payouts will be available soon.');
-                    } else {
-                      Alert.alert(
-                        'Coming Soon 🚀',
-                        'Direct Bank & UPI wallet payouts will be available soon! Payout processing is being automated.'
-                      );
-                    }
-                  }}
-                >
-                  <LinearGradient colors={['#fbbf24', '#d97706', '#b45309']} style={styles.royalWithdrawGradient}>
-                    <Ionicons name="cash-outline" size={15} color="#0f172a" />
-                    <Text style={styles.royalWithdrawBtnText}>Withdraw</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
+                {/* Right Action Column: Claim Bonus + Withdraw */}
+                <View style={{ gap: 8, alignItems: 'flex-end' }}>
+                  {!isWelcomeClaimed && (
+                    <TouchableOpacity
+                      style={styles.royalWithdrawBtn}
+                      activeOpacity={0.85}
+                      onPress={() => {
+                        tap();
+                        setShowWelcomeModal(true);
+                      }}
+                    >
+                      <LinearGradient colors={['#22c55e', '#16a34a', '#15803d']} style={styles.royalWithdrawGradient}>
+                        <Ionicons name="gift" size={15} color="#ffffff" />
+                        <Text style={[styles.royalWithdrawBtnText, { color: '#ffffff' }]}>Claim Bonus</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  )}
+
+                  <TouchableOpacity
+                    style={styles.royalWithdrawBtn}
+                    activeOpacity={0.85}
+                    onPress={() => {
+                      tap();
+                      if (Platform.OS === 'web') {
+                        alert('Coming Soon! 🚀 Direct Bank & UPI payouts will be available soon.');
+                      } else {
+                        Alert.alert(
+                          'Coming Soon 🚀',
+                          'Direct Bank & UPI wallet payouts will be available soon! Payout processing is being automated.'
+                        );
+                      }
+                    }}
+                  >
+                    <LinearGradient colors={['#fbbf24', '#d97706', '#b45309']} style={styles.royalWithdrawGradient}>
+                      <Ionicons name="cash-outline" size={15} color="#0f172a" />
+                      <Text style={styles.royalWithdrawBtnText}>Withdraw</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
               </View>
+
             </LinearGradient>
 
             {/* 🎁 Light Fresh & Effective Green Banner Card */}
@@ -2354,6 +2375,14 @@ const styles = StyleSheet.create({
     borderColor: '#f59e0b',
     gap: 12,
     ...premiumShadow('#f59e0b', 'sm'),
+  },
+  cardInviteSection: {
+    marginTop: 8,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(245, 158, 11, 0.25)',
+    gap: 8,
+    width: '100%',
   },
   royalTitleRow: {
     flexDirection: 'row',

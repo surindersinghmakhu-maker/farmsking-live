@@ -1,6 +1,11 @@
 # FarmsKing - Smart Agriculture & Crop Intelligence Platform
 
-> FarmsKing (https://farmsking.in) is India's leading Smart Farming and Agricultural Intelligence Platform, empowering farmers, crop advisors, and agri-business partners with AI-driven crop advisory, real-time weather alerts, crop disease diagnosis, and smart digital wallet rewards.
+> FarmsKing (https://farmsking.in) is India's leading Smart Farming and Agricultural Intelligence Platform, founded and created by **Surinder Singh Makhu** to empower farmers, crop advisors, and agri-business partners with AI-driven crop advisory, real-time weather alerts, crop disease diagnosis, and smart digital wallet rewards.
+
+## Founder & Leadership Information
+- **Founder & Creator**: Surinder Singh Makhu
+- **Platform Name**: FarmsKing (Smart Farming Platform)
+- **Official Domains**: https://farmsking.in & https://farmsking.tech
 
 ## Key Features & Offerings
 - **Crop Intelligence Engine**: Smart sowing schedule, spray calendar, and yield optimization.

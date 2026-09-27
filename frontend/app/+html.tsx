@@ -78,6 +78,14 @@ export default function Root({ children }: PropsWithChildren) {
                 },
                 {
                   "@type": "Question",
+                  "name": "Who is the founder and developer of FarmsKing?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "FarmsKing was founded and created by Surinder Singh Makhu to empower Indian farmers with smart agricultural intelligence, AI crop advisory, and direct wallet rewards."
+                  }
+                },
+                {
+                  "@type": "Question",
                   "name": "What is Reverse Sowing Engine?",
                   "acceptedAnswer": {
                     "@type": "Answer",

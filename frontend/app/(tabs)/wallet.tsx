@@ -1094,8 +1094,9 @@ function WalletHistoryTable({
       relatedUserMobile?: string;
     }> = [];
 
-    // Processed transactions
+    // Processed successful transactions
     for (const tx of transactions) {
+      if (tx.status && tx.status !== 'SUCCESS') continue;
       const isCredit = tx.type === 'CREDIT';
       let displayType = isCredit ? 'Credit' : 'Debit';
       if (tx.reason.includes('Welcome')) displayType = 'Welcome Bonus';
@@ -1119,26 +1120,8 @@ function WalletHistoryTable({
       });
     }
 
-    // Pending plan bonuses for referees who haven't bought a paid plan yet
-    for (const ref of referees) {
-      if (ref.status === 'PENDING' && ref.pendingAmount > 0) {
-        items.push({
-          id: `pending-${ref.refereeId}`,
-          date: new Date(ref.registrationDate),
-          type: 'Plan Bonus (Pending) ⏳',
-          referenceName: ref.refereeName,
-          referenceKingId: ref.refereeKingId,
-          amount: 0,
-          pendingAmount: ref.pendingAmount,
-          status: 'PENDING',
-          isCredit: true,
-          rawReason: `Pending Plan Bonus: Waiting for ${ref.refereeName} (${ref.refereeKingId}) to buy any paid plan`,
-        });
-      }
-    }
-
     return items.sort((a, b) => b.date.getTime() - a.date.getTime());
-  }, [transactions, referees]);
+  }, [transactions]);
 
   const totalItems = unifiedLedger.length;
   const startIndex = (currentPage - 1) * pageSize;

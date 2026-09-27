@@ -668,14 +668,25 @@ export class UsersService implements OnModuleInit {
     return user;
   }
 
-  /** Resolves a farmer's FarmsKing ID to their account — used by advisors/admins/business partners to apply a coupon on their behalf. */
-  async lookupByKingId(kingId: string) {
+  /** Resolves a user's FarmsKing ID or Mobile Number to their account — used for appointing trainers, coupons, and wallet payouts. */
+  async lookupByKingId(query: string) {
+    const cleanQuery = query.trim();
+    const cleanDigits = cleanQuery.replace(/\D/g, '');
+    const cleanMobile = cleanDigits.length >= 10 ? cleanDigits.slice(-10) : '';
+
     const user = await this.prisma.user.findFirst({
-      where: { kingId: kingId.toUpperCase(), roles: { has: Role.FARMER }, deletedAt: null },
-      select: { id: true, name: true, kingId: true, mobile: true, role: true },
+      where: {
+        deletedAt: null,
+        OR: [
+          { kingId: cleanQuery.toUpperCase() },
+          { mobile: cleanQuery },
+          ...(cleanMobile ? [{ mobile: { endsWith: cleanMobile } }] : []),
+        ],
+      },
+      select: { id: true, name: true, kingId: true, mobile: true, role: true, roles: true },
     });
     if (!user) {
-      throw new NotFoundException('No farmer found with that FarmsKing ID.');
+      throw new NotFoundException('No user found matching that King ID or Mobile number.');
     }
     return user;
   }

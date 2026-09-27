@@ -9,14 +9,85 @@ export default function Root({ children }: PropsWithChildren) {
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
-        {/* Google Search Console Verification & SEO Meta Tags */}
+        {/* Google Search Console Verification & Regional Search Meta Tags */}
         <meta name="google-site-verification" content="cLbkUgC7i1XUv8vvpPcjQP-UuD3FKtdXKH2o9DZik2o" />
         <meta name="description" content="FarmsKing - India's leading Smart Farming & Crop Advisory Platform. AI crop intelligence, disease diagnosis, weather advisory & farmer rewards." />
-        <meta name="keywords" content="FarmsKing, Smart Farming, Crop Advisory, Agriculture Doctor, Kisan App, Crop Disease Scan, Reverse Sowing" />
+        <meta name="keywords" content="FarmsKing, Smart Farming, Crop Advisory, Agriculture Doctor, Kisan App, ਝੋਨੇ ਦੀ ਸਪਰੇਅ, ਕਣਕ ਦੀ ਬੀਜਾਈ, ਫਸਲ ਇਲਾਜ, ਗੋਭੀ ਸਪਰੇਅ, ਖੇਤੀਬਾੜੀ ਸਲਾਹ, ਕਿਸਾਨ ਮਦਦ, Crop Disease Scan, Reverse Sowing Engine" />
         <meta property="og:title" content="FarmsKing - Smart Farming & Crop Intelligence Platform" />
         <meta property="og:description" content="India's leading Smart Farming & Crop Advisory Platform. Empowering farmers with AI crop intelligence and expert advice." />
         <meta property="og:image" content="https://farmsking.in/farmsking_logo.png" />
         <meta property="og:url" content="https://farmsking.in" />
+
+        {/* Google Rich Snippets & FAQ Schema for Search Engine Indexing */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              "name": "FarmsKing",
+              "operatingSystem": "ANDROID, IOS, WEB",
+              "applicationCategory": "BusinessApplication",
+              "ratingValue": "4.9",
+              "ratingCount": "1250",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "INR"
+              },
+              "description": "FarmsKing Smart Farming, Crop Advisory, Agriculture Doctor Consultation & Crop Intelligence Platform.",
+              "author": {
+                "@type": "Organization",
+                "name": "FarmsKing",
+                "url": "https://farmsking.in"
+              }
+            })
+          }}
+        />
+
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "What is FarmsKing Smart Farming Platform?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "FarmsKing is India's leading agricultural intelligence platform providing AI crop advisory, disease diagnosis, weather alerts, and expert doctor consultation for farmers."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "How to claim FarmsKing Welcome Cash Bonus?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Register on FarmsKing using a valid referral code or link, open your Wallet screen, and click 'Claim Bonus' to receive instant wallet cashback."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "How to consult an Agriculture Doctor on FarmsKing?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Open FarmsKing app, navigate to Advisor Consultation, select your crop problem or upload a crop photo, and connect with certified Agriculture Experts."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "What is Reverse Sowing Engine?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "FarmsKing's Reverse Sowing Engine calculates festival demand dates (Diwali, Chhath, Baisakhi) to advise farmers on the exact sowing date for 3x market prices."
+                  }
+                }
+              ]
+            })
+          }}
+        />
 
         {/* App Favicon & Official FarmsKing Logo Icons */}
         <link rel="icon" type="image/png" href="/favicon.png" />

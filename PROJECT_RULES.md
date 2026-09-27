@@ -4,6 +4,12 @@
 
 ---
 
+## 0. 🔤 100% Pure English Language Standard
+- **Strict English UI**: All user-facing UI text, buttons, modals, headings, badges, admin dashboards, system messages, and technical documentation MUST be written in **100% pure professional English language**.
+- No mixed-language text or local slang in core application interfaces unless explicitly requested by the user for a specific multi-language component.
+
+---
+
 ## 1. 🚀 Instant Full-Stack Automated Deployment
 - **Web Build**: Always run `node build.js` in `frontend/` to generate the production web bundle into `frontend/dist`.
 - **Live Server Deployment**: Deploy changes directly to production by committing and pushing to Hostinger VPS:
@@ -36,7 +42,7 @@
 
 ## 4. 🌐 SEO & AI Search Engine Standards (GEO)
 - **Google SEO**: Maintain `sitemap.xml` and `robots.txt` in `frontend/public/` listing all key routes with daily/weekly change frequencies.
-- **Google Search Console Verification**: Maintain `<meta name="google-site-verification" content="cLbkUgC7i1XUv8vvpPcjQP-UuD3FKtdXKH2o9DZik2o9DZik2o" />` in `frontend/app/+html.tsx` and static HTML files.
+- **Google Search Console Verification**: Maintain `<meta name="google-site-verification" content="cLbkUgC7i1XUv8vvpPcjQP-UuD3FKtdXKH2o9DZik2o" />` in `frontend/app/+html.tsx` and static HTML files.
 - **AI Search Engines (GEO)**: Maintain `llms.txt` in `frontend/public/` so ChatGPT, Perplexity, and Google Gemini can index and recommend FarmsKing.
 
 ---

@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -10,6 +10,7 @@ import { SPRAY_TANK_SIZE_OPTIONS } from '@/src/constants/farmerProfileOptions';
 import { useFarmerProfileStatus, useUpdateFarmerProfile } from '@/src/hooks/useFarmerProfile';
 import { useAuth } from '@/src/store/auth-context';
 import { SprayTankSizeL } from '@/src/types/api';
+import { login } from '@/src/api/auth.api';
 
 import { UpiQrScannerModal } from '@/src/components/UpiQrScannerModal';
 
@@ -37,6 +38,12 @@ export default function FarmerProfileSetupScreen() {
   const [showQrScanner, setShowQrScanner] = useState<boolean>(false);
   const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState<boolean>(user?.whatsappGroupEnabled ?? true);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
+
+  // Password verification state for UPI ID save
+  const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
+  const [verifyPassword, setVerifyPassword] = useState<string>('');
+  const [isVerifyingPassword, setIsVerifyingPassword] = useState<boolean>(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   const isInitializedRef = React.useRef(false);
 
@@ -71,8 +78,7 @@ export default function FarmerProfileSetupScreen() {
     }
   };
 
-  const handleSave = async () => {
-    tap();
+  const executeSaveProfile = async () => {
     const selectedTankSize = sprayTankSizeL ?? 20;
     const finalFarmName = farmName.trim() || user?.name || '';
     const finalFarmAddress = farmAddress.trim();
@@ -116,6 +122,50 @@ export default function FarmerProfileSetupScreen() {
     } catch (error: any) {
       const msg = error?.response?.data?.message ?? 'Could not save farmer profile details. Please try again.';
       Alert.alert('Error Saving Profile', typeof msg === 'string' ? msg : JSON.stringify(msg));
+    }
+  };
+
+  const handleSave = () => {
+    tap();
+    const finalUpiId = upiId.trim();
+
+    // 🔒 If UPI ID is filled, require account password verification first
+    if (finalUpiId && user?.mobile) {
+      setVerifyPassword('');
+      setPasswordError(null);
+      setShowPasswordModal(true);
+      return;
+    }
+
+    // Direct save if UPI ID is empty
+    executeSaveProfile();
+  };
+
+  const handleConfirmPasswordAndSave = async () => {
+    if (!verifyPassword.trim()) {
+      setPasswordError('Kripya apna account password darj karo.');
+      return;
+    }
+
+    setIsVerifyingPassword(true);
+    setPasswordError(null);
+
+    try {
+      // Verify password via login API call
+      await login({
+        mobile: user?.mobile || '',
+        password: verifyPassword.trim(),
+      });
+
+      setIsVerifyingPassword(false);
+      setShowPasswordModal(false);
+
+      // Password verified -> Proceed to save profile
+      await executeSaveProfile();
+    } catch (err: any) {
+      setIsVerifyingPassword(false);
+      const msg = err?.response?.data?.message ?? 'Incorrect password! Kripya sahi account password darj karo.';
+      setPasswordError(typeof msg === 'string' ? msg : 'Incorrect password!');
     }
   };
 
@@ -308,6 +358,82 @@ export default function FarmerProfileSetupScreen() {
             }}
           />
 
+          {/* 🔒 Account Password Verification Modal for UPI ID Save */}
+          <Modal
+            visible={showPasswordModal}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setShowPasswordModal(false)}
+          >
+            <View style={styles.passwordOverlay}>
+              <View style={styles.passwordCard}>
+                <View style={styles.passwordHeader}>
+                  <View style={styles.passwordIconBg}>
+                    <Ionicons name="lock-closed" size={20} color="#15803d" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.passwordTitle}>Verify Account Password</Text>
+                    <Text style={styles.passwordSub}>
+                      UPI ID save karan lyi apna password enter karo
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => setShowPasswordModal(false)}
+                    style={styles.passwordCloseBtn}
+                  >
+                    <Ionicons name="close" size={18} color="#64748b" />
+                  </TouchableOpacity>
+                </View>
+
+                {passwordError ? (
+                  <View style={styles.passwordErrorBox}>
+                    <Ionicons name="alert-circle" size={16} color="#dc2626" />
+                    <Text style={styles.passwordErrorText}>{passwordError}</Text>
+                  </View>
+                ) : null}
+
+                <View style={styles.passwordInputWrap}>
+                  <Ionicons name="key-outline" size={18} color="#64748b" style={{ marginRight: 8 }} />
+                  <TextInput
+                    style={styles.passwordTextInput}
+                    placeholder="Enter Your Account Password"
+                    placeholderTextColor="#94a3b8"
+                    secureTextEntry
+                    value={verifyPassword}
+                    onChangeText={(t) => {
+                      setVerifyPassword(t);
+                      setPasswordError(null);
+                    }}
+                  />
+                </View>
+
+                <View style={styles.passwordActionsRow}>
+                  <TouchableOpacity
+                    style={styles.passwordCancelBtn}
+                    onPress={() => setShowPasswordModal(false)}
+                  >
+                    <Text style={styles.passwordCancelBtnText}>Cancel</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.passwordConfirmBtn}
+                    disabled={isVerifyingPassword}
+                    onPress={handleConfirmPasswordAndSave}
+                  >
+                    {isVerifyingPassword ? (
+                      <ActivityIndicator color="#ffffff" size="small" />
+                    ) : (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Ionicons name="shield-checkmark" size={16} color="#ffffff" />
+                        <Text style={styles.passwordConfirmBtnText}>Verify & Save</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
+
           {/* SUBMIT BUTTON: Save Farmer Profile */}
           <TouchableOpacity
             style={[styles.saveButton, premiumShadow('#15803d', 'md')]}
@@ -497,5 +623,115 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: FONT.medium,
     color: '#166534',
+  },
+  passwordOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  passwordCard: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.xl,
+    padding: 18,
+    gap: 12,
+    ...premiumShadow('#0f172a', 'lg'),
+  },
+  passwordHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  passwordIconBg: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#dcfce7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  passwordTitle: {
+    fontSize: 15,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+  },
+  passwordSub: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    marginTop: 1,
+  },
+  passwordCloseBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  passwordErrorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fca5a5',
+    padding: 8,
+    borderRadius: RADIUS.md,
+  },
+  passwordErrorText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#dc2626',
+    flex: 1,
+  },
+  passwordInputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: '#cbd5e1',
+    paddingHorizontal: 12,
+    height: 44,
+  },
+  passwordTextInput: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: FONT.medium,
+    color: '#0f172a',
+  },
+  passwordActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 8,
+    marginTop: 4,
+  },
+  passwordCancelBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: RADIUS.md,
+  },
+  passwordCancelBtnText: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+  },
+  passwordConfirmBtn: {
+    backgroundColor: '#16a34a',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  passwordConfirmBtnText: {
+    fontSize: 13.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
   },
 });

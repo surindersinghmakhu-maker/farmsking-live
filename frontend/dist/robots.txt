@@ -3,7 +3,7 @@ Allow: /
 Disallow: /api/
 Disallow: /admin
 
-# AI Search Crawlers (ChatGPT, Gemini, Perplexity)
+# AI Search Crawlers (ChatGPT, Gemini, Perplexity, Claude)
 User-agent: GPTBot
 Allow: /
 
@@ -16,4 +16,12 @@ Allow: /
 User-agent: PerplexityBot
 Allow: /
 
+User-agent: ClaudeBot
+Allow: /
+
 Sitemap: https://farmsking.in/sitemap.xml
+# AI Knowledge References
+# LLM Standard: https://farmsking.in/llms.txt
+# LLM Full: https://farmsking.in/llms-full.txt
+# AI Knowledge JSON: https://farmsking.in/ai-knowledge.json
+

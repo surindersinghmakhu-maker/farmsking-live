@@ -59,7 +59,8 @@ export function CropPerformanceStatementModal({ visible, data, onClose }: CropPe
 
   if (!visible || !data) return null;
 
-  const refNumber = data.refNo || 'EXP-369740';
+  const farmerRefCode = data.refNo || (user?.refCode || user?.referralCode ? `EXP-${user.refCode || user.referralCode}` : (user?.id ? `EXP-${String(user.id).padStart(6, '0')}` : 'EXP-100001'));
+  const refNumber = farmerRefCode;
   const appName = settings?.appName || 'FarmsKing';
   const farmerName = user?.farmName || user?.name || 'Farmer Ji';
   const farmerPhone = user?.farmMobile || user?.mobile || '';
@@ -138,7 +139,7 @@ export function CropPerformanceStatementModal({ visible, data, onClose }: CropPe
                   <div style="font-size: 10px; color: #64748b;">Official Crop Performance Audit Statement</div>
                 </div>
                 <div class="ref-box">
-                  <strong>Ref. No: ${refNumber}</strong><br/>
+                  <strong>EXP Ref. No: ${refNumber}</strong><br/>
                   <span style="color:#64748b;">Date: ${new Date().toLocaleDateString('en-IN')}</span>
                 </div>
               </div>
@@ -235,7 +236,7 @@ export function CropPerformanceStatementModal({ visible, data, onClose }: CropPe
                   </View>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={styles.refNoBadge}>Ref: {refNumber}</Text>
+                  <Text style={styles.refNoBadge}>EXP Ref. No: {refNumber}</Text>
                   <Text style={styles.dateText}>{new Date().toLocaleDateString('en-IN')}</Text>
                 </View>
               </LinearGradient>

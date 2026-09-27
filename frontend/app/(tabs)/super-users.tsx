@@ -21,7 +21,7 @@ import {
 } from '@/src/hooks/useUsersAdmin';
 import { formatInr } from '@/src/utils/formatInr';
 import { ASSIGNABLE_CHECKBOX_ROLES, lookupByKingId } from '@/src/api/users.api';
-import { assignTrainerState } from '@/src/api/trainers.api';
+import { assignTrainerState, getAdminTrainerReports } from '@/src/api/trainers.api';
 import { useAuth } from '@/src/store/auth-context';
 import { PickerModal } from '@/src/components/PickerModal';
 
@@ -76,6 +76,7 @@ export default function SuperUsersScreen() {
   const [isAddAdvisorOpen, setIsAddAdvisorOpen] = useState(false);
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
   const [isAddTrainerOpen, setIsAddTrainerOpen] = useState(false);
+  const [isTrainerReportsOpen, setIsTrainerReportsOpen] = useState(false);
   const [permissionsTarget, setPermissionsTarget] = useState<AdminUser | null>(null);
   const [rolesTarget, setRolesTarget] = useState<AdminUser | null>(null);
   const [detailTargetId, setDetailTargetId] = useState<string | null>(null);
@@ -248,14 +249,25 @@ export default function SuperUsersScreen() {
         )}
 
         {filter === 'TECHNICAL_TRAINER' && (
-          <TouchableOpacity
-            style={[styles.addAdvisorBtn, premiumShadow(theme.primary, 'sm')]}
-            activeOpacity={0.85}
-            onPress={() => setIsAddTrainerOpen(true)}
-          >
-            <Ionicons name="add-circle" size={16} color="#ffffff" />
-            <Text style={styles.addAdvisorBtnText}>Appoint Technical Trainer (King ID / State)</Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TouchableOpacity
+              style={[styles.addAdvisorBtn, { flex: 1 }, premiumShadow(theme.primary, 'sm')]}
+              activeOpacity={0.85}
+              onPress={() => setIsAddTrainerOpen(true)}
+            >
+              <Ionicons name="add-circle" size={16} color="#ffffff" />
+              <Text style={styles.addAdvisorBtnText}>Appoint Trainer</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.addAdvisorBtn, { flex: 1, backgroundColor: '#059669' }, premiumShadow('#059669', 'sm')]}
+              activeOpacity={0.85}
+              onPress={() => setIsTrainerReportsOpen(true)}
+            >
+              <Ionicons name="bar-chart" size={16} color="#ffffff" />
+              <Text style={styles.addAdvisorBtnText}>Trainer Reports</Text>
+            </TouchableOpacity>
+          </View>
         )}
         {filter === 'ADMIN' && !isSuperAdmin ? (
           <Text style={styles.emptyText}>Only the Super Admin can add new Admin accounts.</Text>
@@ -360,6 +372,7 @@ export default function SuperUsersScreen() {
       <UserDetailModal userId={detailTargetId} onClose={() => setDetailTargetId(null)} />
       <DeleteUserSecurityModal target={deleteVerificationTarget} onClose={() => setDeleteVerificationTarget(null)} />
       <AddTrainerModal visible={isAddTrainerOpen} onClose={() => setIsAddTrainerOpen(false)} />
+      <TrainerReportsModal visible={isTrainerReportsOpen} onClose={() => setIsTrainerReportsOpen(false)} />
     </View>
   );
 }
@@ -1428,6 +1441,106 @@ function AddTrainerModal({ visible, onClose }: { visible: boolean; onClose: () =
               {isSubmitting ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Assign Technical Trainer Role</Text>}
             </TouchableOpacity>
           </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function TrainerReportsModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const [reportsData, setReportsData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (visible) {
+      fetchReports();
+    }
+  }, [visible]);
+
+  const fetchReports = async () => {
+    setIsLoading(true);
+    try {
+      const data = await getAdminTrainerReports();
+      setReportsData(data);
+    } catch {
+      // Best effort
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!visible) return null;
+
+  const summary = reportsData?.summary || {};
+  const logs = reportsData?.logs || [];
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={styles.modalOverlay}>
+        <View style={[styles.modalCard, { maxWidth: 540, maxHeight: '90%' }]}>
+          <View style={styles.modalHeaderRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Ionicons name="bar-chart" size={20} color="#059669" />
+              <Text style={styles.modalTitle}>Technical Trainer System Reports</Text>
+            </View>
+            <TouchableOpacity onPress={onClose}>
+              <Ionicons name="close-circle" size={24} color="#64748b" />
+            </TouchableOpacity>
+          </View>
+
+          {isLoading ? (
+            <ActivityIndicator color="#059669" size="large" style={{ marginVertical: 30 }} />
+          ) : (
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+              {/* Summary Stats Grid */}
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                <View style={[styles.detailStatBox, { flex: 1, minWidth: 100, backgroundColor: '#f0fdf4' }]}>
+                  <Text style={[styles.detailStatValue, { color: '#16a34a' }]}>{summary.totalTrainers || 0}</Text>
+                  <Text style={styles.detailStatLabel}>Trainers</Text>
+                </View>
+                <View style={[styles.detailStatBox, { flex: 1, minWidth: 100, backgroundColor: '#eff6ff' }]}>
+                  <Text style={[styles.detailStatValue, { color: '#2563eb' }]}>{summary.totalLogs || 0}</Text>
+                  <Text style={styles.detailStatLabel}>Total Calls</Text>
+                </View>
+                <View style={[styles.detailStatBox, { flex: 1, minWidth: 100, backgroundColor: '#fef3c7' }]}>
+                  <Text style={[styles.detailStatValue, { color: '#d97706' }]}>{summary.pendingCalls || 0}</Text>
+                  <Text style={styles.detailStatLabel}>Pending Calls</Text>
+                </View>
+                <View style={[styles.detailStatBox, { flex: 1, minWidth: 100, backgroundColor: '#dcfce7' }]}>
+                  <Text style={[styles.detailStatValue, { color: '#15803d' }]}>₹{summary.totalPayoutDisbursed || 0}</Text>
+                  <Text style={styles.detailStatLabel}>Wallet Paid</Text>
+                </View>
+              </View>
+
+              <Text style={styles.sectionTitle}>Training & Call Logs ({logs.length})</Text>
+
+              {logs.length === 0 ? (
+                <Text style={styles.emptyText}>No training logs recorded yet.</Text>
+              ) : (
+                logs.map((log: any) => {
+                  const isVerified = log.status === 'VERIFIED_AND_PAID';
+                  return (
+                    <View key={log.id} style={{ backgroundColor: '#f8fafc', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', gap: 4 }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>
+                          🌾 {log.farmer?.name || 'Farmer'} ({log.farmer?.mobile})
+                        </Text>
+                        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isVerified ? '#15803d' : '#d97706' }}>
+                          {isVerified ? `Verified (₹${log.payoutAmount})` : 'Pending'}
+                        </Text>
+                      </View>
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#475569' }}>
+                        Trainer: <Text style={{ fontFamily: FONT.bold }}>{log.trainer?.name || 'Assigned Trainer'}</Text> ({log.trainer?.mobile})
+                      </Text>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
+                        Location: {log.farmer?.district || log.state || 'Punjab'} • Time Slot: {log.preferredCallSlot || 'ANYTIME'}
+                      </Text>
+                    </View>
+                  );
+                })
+              )}
+            </ScrollView>
+          )}
         </View>
       </View>
     </Modal>

@@ -26,9 +26,8 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
   onClose,
   onScanSuccess,
 }) => {
-  const [isScanning, setIsScanning] = useState(false);
+  const [cameraStatus, setCameraStatus] = useState<'IDLE' | 'STARTING' | 'ACTIVE' | 'FAILED'>('IDLE');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -54,7 +53,7 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
         videoRef.current.srcObject = null;
       } catch (e) {}
     }
-    setIsScanning(false);
+    setCameraStatus('IDLE');
   };
 
   const handleClose = () => {
@@ -76,7 +75,7 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
     if (Platform.OS !== 'web') {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
-    // Stop camera immediately as requested by user
+    // Stop camera immediately after scan
     stopCameraStream();
     onScanSuccess(parsed);
     onClose();
@@ -85,12 +84,12 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
   // Web camera initialization and scanning loop
   const startWebCamera = async () => {
     setErrorMessage(null);
-    setIsScanning(true);
+    setCameraStatus('STARTING');
     isDestroyedRef.current = false;
 
     if (typeof window === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      setCameraStatus('FAILED');
       setErrorMessage('Camera access is not supported on this browser. Try uploading a QR image file.');
-      setIsScanning(false);
       return;
     }
 
@@ -106,7 +105,7 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
       }
 
       streamRef.current = stream;
-      setHasCameraPermission(true);
+      setCameraStatus('ACTIVE');
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -116,10 +115,9 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
         startScanLoop();
       }
     } catch (err: any) {
-      console.warn('Camera error:', err);
-      setHasCameraPermission(false);
-      setIsScanning(false);
-      setErrorMessage('Camera permission denied or camera unavailable. You can pick a QR image from gallery below.');
+      console.warn('Camera permission or device error:', err);
+      setCameraStatus('FAILED');
+      setErrorMessage('Camera permission denied or camera unavailable. Please grant camera permission or select QR photo from gallery.');
     }
   };
 
@@ -142,7 +140,6 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
       const video = videoRef.current;
       if (video.readyState === video.HAVE_ENOUGH_DATA) {
         try {
-          // Priority 1: Native browser BarcodeDetector API
           if (barcodeDetector) {
             const barcodes = await barcodeDetector.detect(video);
             if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
@@ -215,9 +212,8 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
   useEffect(() => {
     if (visible) {
       if (Platform.OS === 'web') {
-        setTimeout(() => startWebCamera(), 200);
-      } else {
-        setIsScanning(true);
+        // Try auto starting web camera
+        setTimeout(() => startWebCamera(), 150);
       }
     } else {
       stopCameraStream();
@@ -251,7 +247,7 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
 
           {/* Subtitle instructions */}
           <Text style={styles.subtitle}>
-            Point your camera at any PhonePe, GPay, Paytm or Bank QR code to auto-decode UPI ID.
+            Point camera at PhonePe, GPay, Paytm or Bank QR code to auto-decode UPI ID.
           </Text>
 
           {/* Error / Warning Alert */}
@@ -262,9 +258,9 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
             </View>
           ) : null}
 
-          {/* Camera Viewfinder Box */}
+          {/* Camera Viewfinder Container */}
           <View style={styles.viewfinderContainer}>
-            {Platform.OS === 'web' ? (
+            {cameraStatus === 'ACTIVE' ? (
               <video
                 ref={videoRef as any}
                 style={{
@@ -276,24 +272,64 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
                 playsInline
                 muted
               />
+            ) : cameraStatus === 'STARTING' ? (
+              <View style={styles.statusBox}>
+                <ActivityIndicator size="large" color="#22c55e" />
+                <Text style={styles.statusText}>Connecting to Camera...</Text>
+              </View>
             ) : (
-              <View style={styles.nativeCameraFallback}>
-                <Ionicons name="camera" size={48} color="#94a3b8" />
-                <Text style={styles.fallbackText}>Live Web Scanner Active</Text>
+              /* Idle or Failed State: Show Turn On Camera CTA */
+              <View style={styles.statusBox}>
+                <View style={styles.cameraIconCircle}>
+                  <Ionicons name="camera" size={32} color="#22c55e" />
+                </View>
+                <Text style={styles.cameraTitleText}>Camera Access Required</Text>
+                <Text style={styles.cameraSubText}>Click the button below to turn ON camera access</Text>
+
+                <TouchableOpacity
+                  style={styles.turnOnCameraBtn}
+                  activeOpacity={0.85}
+                  onPress={startWebCamera}
+                >
+                  <Ionicons name="videocam" size={18} color="#ffffff" />
+                  <Text style={styles.turnOnCameraBtnText}>🎥 Turn On Camera (ਕੈਮਰਾ ਚਾਲੂ ਕਰੋ)</Text>
+                </TouchableOpacity>
               </View>
             )}
 
-            {/* Target Frame Box Over Video */}
-            <View style={styles.targetFrame}>
-              <View style={[styles.corner, styles.topLeft]} />
-              <View style={[styles.corner, styles.topRight]} />
-              <View style={[styles.corner, styles.bottomLeft]} />
-              <View style={[styles.corner, styles.bottomRight]} />
-            </View>
+            {/* Target Frame Box Over Video when Active */}
+            {cameraStatus === 'ACTIVE' && (
+              <View style={styles.targetFrame}>
+                <View style={[styles.corner, styles.topLeft]} />
+                <View style={[styles.corner, styles.topRight]} />
+                <View style={[styles.corner, styles.bottomLeft]} />
+                <View style={[styles.corner, styles.bottomRight]} />
+              </View>
+            )}
           </View>
 
-          {/* Bottom Actions */}
+          {/* Bottom Actions Row */}
           <View style={styles.actionsRow}>
+            {cameraStatus !== 'ACTIVE' ? (
+              <TouchableOpacity
+                style={styles.turnOnCameraActionBtn}
+                activeOpacity={0.8}
+                onPress={startWebCamera}
+              >
+                <Ionicons name="videocam" size={18} color="#ffffff" />
+                <Text style={styles.turnOnCameraActionBtnText}>🎥 Turn On Camera</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={styles.stopCameraActionBtn}
+                activeOpacity={0.8}
+                onPress={stopCameraStream}
+              >
+                <Ionicons name="stop-circle" size={18} color="#dc2626" />
+                <Text style={styles.stopCameraActionBtnText}>Stop Camera</Text>
+              </TouchableOpacity>
+            )}
+
             <TouchableOpacity
               style={styles.galleryBtn}
               activeOpacity={0.8}
@@ -308,7 +344,7 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
               activeOpacity={0.8}
               onPress={handleClose}
             >
-              <Text style={styles.cancelBtnText}>Cancel</Text>
+              <Text style={styles.cancelBtnText}>Close</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -327,7 +363,7 @@ const styles = StyleSheet.create({
   },
   modalCard: {
     width: '100%',
-    maxWidth: 420,
+    maxWidth: 440,
     backgroundColor: '#ffffff',
     borderRadius: RADIUS.xl,
     padding: 18,
@@ -375,7 +411,7 @@ const styles = StyleSheet.create({
   },
   viewfinderContainer: {
     width: '100%',
-    height: 250,
+    height: 260,
     backgroundColor: '#0f172a',
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
@@ -383,15 +419,52 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  nativeCameraFallback: {
+  statusBox: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    padding: 16,
+    gap: 10,
   },
-  fallbackText: {
+  cameraIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(34, 197, 94, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#22c55e',
+  },
+  cameraTitleText: {
+    fontSize: 15,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+  },
+  cameraSubText: {
     fontSize: 12,
-    fontFamily: FONT.semibold,
+    fontFamily: FONT.medium,
     color: '#94a3b8',
+    textAlign: 'center',
+  },
+  turnOnCameraBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#16a34a',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: RADIUS.pill,
+    marginTop: 4,
+  },
+  turnOnCameraBtnText: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  statusText: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#e2e8f0',
   },
   targetFrame: {
     position: 'absolute',
@@ -433,10 +506,25 @@ const styles = StyleSheet.create({
   actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
     marginTop: 4,
   },
-  galleryBtn: {
+  turnOnCameraActionBtn: {
+    flex: 1.2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 42,
+    borderRadius: RADIUS.md,
+    backgroundColor: '#16a34a',
+  },
+  turnOnCameraActionBtnText: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  stopCameraActionBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
@@ -444,17 +532,34 @@ const styles = StyleSheet.create({
     gap: 6,
     height: 42,
     borderRadius: RADIUS.md,
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fca5a5',
+  },
+  stopCameraActionBtnText: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#dc2626',
+  },
+  galleryBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    height: 42,
+    borderRadius: RADIUS.md,
     backgroundColor: '#ecfdf5',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#a7f3d0',
   },
   galleryBtnText: {
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: FONT.bold,
     color: '#059669',
   },
   cancelBtn: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     height: 42,
     borderRadius: RADIUS.md,
     backgroundColor: '#f1f5f9',
@@ -462,7 +567,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cancelBtnText: {
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: FONT.bold,
     color: '#475569',
   },

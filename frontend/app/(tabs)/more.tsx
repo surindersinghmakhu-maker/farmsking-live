@@ -117,6 +117,7 @@ export default function MoreScreen() {
   const [isSecurityVerified, setIsSecurityVerified] = useState(false);
   const [contactModalMode, setContactModalMode] = useState<'SUPPORT' | 'CONTACT' | null>(null);
   const [isAccountExpanded, setIsAccountExpanded] = useState(false);
+  const [isAppThemesExpanded, setIsAppThemesExpanded] = useState(false);
   const [isGroupVoiceCallEnabled, setIsGroupVoiceCallEnabled] = useState(true);
 
   const [deletePincodeInput, setDeletePincodeInput] = useState('');
@@ -358,160 +359,177 @@ export default function MoreScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>⚙️ SETTINGS</Text>
             <View style={styles.sectionCard}>
-              {/* Executive Theme & Appearance Selector */}
-              <View style={{ padding: 12, gap: 10, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+              {/* 🎨 App Themes Collapsible Accordion Row */}
+              <TouchableOpacity
+                style={[styles.row, !isAppThemesExpanded && { borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }]}
+                activeOpacity={0.75}
+                onPress={() => setIsAppThemesExpanded((prev) => !prev)}
+              >
+                <View style={[styles.rowIconBg, { backgroundColor: '#e0f2fe' }]}>
                   <Ionicons name="color-palette-outline" size={18} color="#0284c7" />
-                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>Executive Theme & Appearance</Text>
                 </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowLabel}>🎨 App Themes</Text>
+                  <Text style={styles.rowSubLabel}>Executive color palettes & live theme preview ({EXECUTIVE_THEME_CONFIG[executiveTheme].name})</Text>
+                </View>
+                <Ionicons
+                  name={isAppThemesExpanded ? 'chevron-up' : 'chevron-down'}
+                  size={18}
+                  color="#0284c7"
+                />
+              </TouchableOpacity>
 
-                {/* Compact Theme Selector Pills */}
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-                  {(Object.keys(EXECUTIVE_THEME_CONFIG) as ExecutiveTheme[]).map((tKey) => {
-                    const conf = EXECUTIVE_THEME_CONFIG[tKey];
-                    const isActive = executiveTheme === tKey;
+              {/* Collapsible Content for App Themes */}
+              {isAppThemesExpanded && (
+                <View style={{ padding: 12, gap: 10, backgroundColor: '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}>
+                  {/* Compact Theme Selector Pills */}
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                    {(Object.keys(EXECUTIVE_THEME_CONFIG) as ExecutiveTheme[]).map((tKey) => {
+                      const conf = EXECUTIVE_THEME_CONFIG[tKey];
+                      const isActive = executiveTheme === tKey;
 
-                    return (
-                      <TouchableOpacity
-                        key={tKey}
-                        activeOpacity={0.8}
-                        onPress={() => setExecutiveTheme(tKey)}
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          gap: 4,
-                          paddingVertical: 6,
-                          paddingHorizontal: 9,
-                          borderRadius: RADIUS.pill,
-                          borderWidth: isActive ? 1.5 : 1,
-                          borderColor: isActive ? conf.primary : '#cbd5e1',
-                          backgroundColor: isActive
-                            ? conf.isDark
-                              ? '#1e293b'
-                              : conf.primaryLight
-                            : '#ffffff',
-                        }}
-                      >
-                        <View
+                      return (
+                        <TouchableOpacity
+                          key={tKey}
+                          activeOpacity={0.8}
+                          onPress={() => setExecutiveTheme(tKey)}
                           style={{
-                            width: 18,
-                            height: 18,
-                            borderRadius: 9,
-                            backgroundColor: conf.headerBg,
+                            flexDirection: 'row',
                             alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <Ionicons name={conf.icon} size={10} color="#ffffff" />
-                        </View>
-
-                        <Text
-                          style={{
-                            fontSize: 10,
-                            fontFamily: isActive ? FONT.extraBold : FONT.semibold,
-                            color: isActive ? conf.primary : '#334155',
-                          }}
-                        >
-                          {tKey}
-                        </Text>
-
-                        {isActive && (
-                          <Ionicons name="checkmark-circle" size={12} color={conf.primary} />
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-
-                {/* 👁️ Theme Live Preview Box */}
-                {(() => {
-                  const previewConf = EXECUTIVE_THEME_CONFIG[executiveTheme];
-                  return (
-                    <View
-                      style={{
-                        borderRadius: 10,
-                        borderWidth: 1.5,
-                        borderColor: previewConf.cardBorder,
-                        backgroundColor: previewConf.bg,
-                        padding: 10,
-                        gap: 8,
-                        marginTop: 2,
-                      }}
-                    >
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-                          <Ionicons name="eye-outline" size={13} color={previewConf.primary} />
-                          <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: previewConf.text, letterSpacing: 0.5 }}>
-                            LIVE THEME PREVIEW
-                          </Text>
-                        </View>
-                        <View
-                          style={{
-                            backgroundColor: previewConf.primary,
-                            paddingHorizontal: 8,
-                            paddingVertical: 2,
+                            gap: 4,
+                            paddingVertical: 6,
+                            paddingHorizontal: 9,
                             borderRadius: RADIUS.pill,
+                            borderWidth: isActive ? 1.5 : 1,
+                            borderColor: isActive ? conf.primary : '#cbd5e1',
+                            backgroundColor: isActive
+                              ? conf.isDark
+                                ? '#1e293b'
+                                : conf.primaryLight
+                              : '#ffffff',
                           }}
                         >
-                          <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>
-                            {previewConf.name}
-                          </Text>
-                        </View>
-                      </View>
-
-                      {/* Mini Banner Preview */}
-                      <LinearGradient
-                        colors={previewConf.headerGradient}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={{ padding: 10, borderRadius: 8, gap: 4 }}
-                      >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: previewConf.titleColor }}>
-                            {previewConf.name}
-                          </Text>
                           <View
                             style={{
-                              backgroundColor: previewConf.btnBg,
+                              width: 18,
+                              height: 18,
+                              borderRadius: 9,
+                              backgroundColor: conf.headerBg,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <Ionicons name={conf.icon} size={10} color="#ffffff" />
+                          </View>
+
+                          <Text
+                            style={{
+                              fontSize: 10,
+                              fontFamily: isActive ? FONT.extraBold : FONT.semibold,
+                              color: isActive ? conf.primary : '#334155',
+                            }}
+                          >
+                            {tKey}
+                          </Text>
+
+                          {isActive && (
+                            <Ionicons name="checkmark-circle" size={12} color={conf.primary} />
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  {/* 👁️ Theme Live Preview Box */}
+                  {(() => {
+                    const previewConf = EXECUTIVE_THEME_CONFIG[executiveTheme];
+                    return (
+                      <View
+                        style={{
+                          borderRadius: 10,
+                          borderWidth: 1.5,
+                          borderColor: previewConf.cardBorder,
+                          backgroundColor: previewConf.bg,
+                          padding: 10,
+                          gap: 8,
+                          marginTop: 2,
+                        }}
+                      >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                            <Ionicons name="eye-outline" size={13} color={previewConf.primary} />
+                            <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: previewConf.text, letterSpacing: 0.5 }}>
+                              LIVE THEME PREVIEW
+                            </Text>
+                          </View>
+                          <View
+                            style={{
+                              backgroundColor: previewConf.primary,
                               paddingHorizontal: 8,
-                              paddingVertical: 3,
+                              paddingVertical: 2,
                               borderRadius: RADIUS.pill,
                             }}
                           >
-                            <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: previewConf.btnText }}>
-                              Sample Button
+                            <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>
+                              {previewConf.name}
                             </Text>
                           </View>
                         </View>
-                        <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: previewConf.subColor }} numberOfLines={1}>
-                          Unlimited Crops · Labour Management · Supervisors
-                        </Text>
-                      </LinearGradient>
 
-                      {/* Sample Card Inside Preview */}
-                      <View
-                        style={{
-                          backgroundColor: previewConf.cardBg,
-                          borderColor: previewConf.cardBorder,
-                          borderWidth: 1,
-                          padding: 8,
-                          borderRadius: 6,
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                        }}
-                      >
-                        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: previewConf.text }}>
-                          Sample Dashboard Card
-                        </Text>
-                        <Text style={{ fontSize: 10, fontFamily: FONT.semibold, color: previewConf.primary }}>
-                          Active View
-                        </Text>
+                        {/* Mini Banner Preview */}
+                        <LinearGradient
+                          colors={previewConf.headerGradient}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={{ padding: 10, borderRadius: 8, gap: 4 }}
+                        >
+                          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: previewConf.titleColor }}>
+                              {previewConf.name}
+                            </Text>
+                            <View
+                              style={{
+                                backgroundColor: previewConf.btnBg,
+                                paddingHorizontal: 8,
+                                paddingVertical: 3,
+                                borderRadius: RADIUS.pill,
+                              }}
+                            >
+                              <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: previewConf.btnText }}>
+                                Sample Button
+                              </Text>
+                            </View>
+                          </View>
+                          <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: previewConf.subColor }} numberOfLines={1}>
+                            Unlimited Crops · Labour Management · Supervisors
+                          </Text>
+                        </LinearGradient>
+
+                        {/* Sample Card Inside Preview */}
+                        <View
+                          style={{
+                            backgroundColor: previewConf.cardBg,
+                            borderColor: previewConf.cardBorder,
+                            borderWidth: 1,
+                            padding: 8,
+                            borderRadius: 6,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}
+                        >
+                          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: previewConf.text }}>
+                            Sample Dashboard Card
+                          </Text>
+                          <Text style={{ fontSize: 10, fontFamily: FONT.semibold, color: previewConf.primary }}>
+                            Active View
+                          </Text>
+                        </View>
                       </View>
-                    </View>
-                  );
-                })()}
-              </View>
+                    );
+                  })()}
+                </View>
+              )}
 
               {/* 🌐 App Language Switcher Row */}
               <TouchableOpacity

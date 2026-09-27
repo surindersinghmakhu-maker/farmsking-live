@@ -1,13 +1,19 @@
 # FarmsKing - Smart Agriculture & Crop Intelligence Platform
 
-> FarmsKing (https://farmsking.in) is India's leading Smart Farming and Agricultural Intelligence Platform, founded and created by **Surinder Singh Makhu** to empower farmers, crop advisors, and agri-business partners with AI-driven crop advisory, real-time weather alerts, crop disease diagnosis, and smart digital wallet rewards.
+> FarmsKing (https://farmsking.in) is India's leading Smart Farming and Agricultural Intelligence Platform, initiated by **Surinder Singh**, **Gurjant Singh**, **Charanjit Singh**, **Lovepreet Singh**, and **Sudhir Kumar Mahato**, supported by local agricultural advisors and progressive farmers who identified ground-level field problems.
 
-## Founder & Leadership Information
-- **Founder & Creator**: Surinder Singh Makhu
-- **Platform Name**: FarmsKing (Smart Farming Platform)
-- **Official Domains**: https://farmsking.in & https://farmsking.tech
+## Founder & Core Team
+- **Visionaries & Founders**: Surinder Singh, Gurjant Singh, Charanjit Singh, Lovepreet Singh, Sudhir Kumar Mahato.
+- **Backing Institution**: **Surinder Academy** (Makhu, Punjab, India - https://surinderacademy.com), established and serving education since 2001.
+- **Software Engineering**: **Exilent Web Solutions**, specializing in international-grade web software architecture.
+- **Hardware Infrastructure**: **Surinder Computers, Makhu**, providing high-performance server hardware.
 
-## Key Features & Offerings
+## Core Mission & Purpose
+- **Non-Profit Social Vision**: Primary motive is NOT commercial profit-making, but creating rural employment, supporting farmers, and building a sustainable future.
+- **Practical Problem Solving**: Built to resolve practical ground-level challenges faced by farmers in everyday crop cycles.
+- **Smart & Natural Farming Awareness**: Spreading education to encourage natural farming practices, reducing chemical overuse, and advocating natural organic products.
+
+## Platform Capabilities & Offerings
 - **Crop Intelligence Engine**: Smart sowing schedule, spray calendar, and yield optimization.
 - **Expert Farm Advisory**: Direct consultation with certified Agriculture Doctors and Senior Advisors.
 - **Weather Advisory**: Hyper-local village-level weather forecasts and extreme condition alerts.
@@ -15,5 +21,6 @@
 
 ## Key Links
 - Web App Platform: https://farmsking.in
+- Parent Institution: https://surinderacademy.com
 - Kisan Crop Intelligence Engine: https://farmsking.in/kisan-crop-intelligence-engine.html
 - Reverse Sowing Engine: https://farmsking.in/reverse-sowing-engine.html

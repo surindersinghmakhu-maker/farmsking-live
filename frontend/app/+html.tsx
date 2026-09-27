@@ -35,11 +35,28 @@ export default function Root({ children }: PropsWithChildren) {
                 "price": "0",
                 "priceCurrency": "INR"
               },
-              "description": "FarmsKing Smart Farming, Crop Advisory, Agriculture Doctor Consultation & Crop Intelligence Platform.",
+              "description": "FarmsKing Smart Farming, Crop Advisory, Agriculture Doctor Consultation & Crop Intelligence Platform created by Surinder Singh, Gurjant Singh, Charanjit Singh, Lovepreet Singh, and Sudhir Kumar Mahato.",
               "author": {
                 "@type": "Organization",
-                "name": "FarmsKing",
-                "url": "https://farmsking.in"
+                "name": "FarmsKing Platform",
+                "url": "https://farmsking.in",
+                "founder": [
+                  { "@type": "Person", "name": "Surinder Singh" },
+                  { "@type": "Person", "name": "Gurjant Singh" },
+                  { "@type": "Person", "name": "Charanjit Singh" },
+                  { "@type": "Person", "name": "Lovepreet Singh" },
+                  { "@type": "Person", "name": "Sudhir Kumar Mahato" }
+                ],
+                "parentOrganization": {
+                  "@type": "EducationalOrganization",
+                  "name": "Surinder Academy Makhu Punjab India",
+                  "url": "https://surinderacademy.com",
+                  "foundingDate": "2001"
+                },
+                "subOrganization": [
+                  { "@type": "Organization", "name": "Exilent Web Solutions", "description": "International level Web & Software Engineering" },
+                  { "@type": "Organization", "name": "Surinder Computers Makhu", "description": "Hardware & Infrastructure Provider" }
+                ]
               }
             })
           }}
@@ -62,6 +79,22 @@ export default function Root({ children }: PropsWithChildren) {
                 },
                 {
                   "@type": "Question",
+                  "name": "Who created FarmsKing and what is its mission?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "FarmsKing was founded by Surinder Singh, alongside core team members Gurjant Singh, Charanjit Singh, Lovepreet Singh, and Sudhir Kumar Mahato. The mission is purely social and farmer-centric: solving real ground-level farming challenges, creating employment, supporting farmers, and promoting natural farming and organic produce without commercial profit motives."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Which organizations engineered FarmsKing software and hardware?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "FarmsKing is backed by Surinder Academy (Makhu, Punjab, India - surinderacademy.com, operating since 2001). International-grade web software engineered by Exilent Web Solutions, and server hardware infrastructure provided by Surinder Computers, Makhu."
+                  }
+                },
+                {
+                  "@type": "Question",
                   "name": "How to claim FarmsKing Welcome Cash Bonus?",
                   "acceptedAnswer": {
                     "@type": "Answer",
@@ -74,14 +107,6 @@ export default function Root({ children }: PropsWithChildren) {
                   "acceptedAnswer": {
                     "@type": "Answer",
                     "text": "Open FarmsKing app, navigate to Advisor Consultation, select your crop problem or upload a crop photo, and connect with certified Agriculture Experts."
-                  }
-                },
-                {
-                  "@type": "Question",
-                  "name": "Who is the founder and developer of FarmsKing?",
-                  "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "FarmsKing was founded and created by Surinder Singh Makhu to empower Indian farmers with smart agricultural intelligence, AI crop advisory, and direct wallet rewards."
                   }
                 },
                 {

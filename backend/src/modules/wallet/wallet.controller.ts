@@ -59,6 +59,15 @@ export class WalletController {
     return this.walletService.getAdminBonusReport();
   }
 
+  /** Admin/Super Admin: Automated comprehensive wallet, withdrawal & financial audit report. */
+  @UseGuards(OperatorPermissionGuard)
+  @RequireOperatorPermission(OperatorPermission.VIEW_WALLETS)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR)
+  @Get('admin/automated-report')
+  getAdminAutomatedReport() {
+    return this.walletService.getAdminAutomatedReport();
+  }
+
   /** Admin/Super Admin (or Operator with VIEW_WALLETS): full transaction ledger for any partner/advisor's wallet. */
   @UseGuards(OperatorPermissionGuard)
   @RequireOperatorPermission(OperatorPermission.VIEW_WALLETS)

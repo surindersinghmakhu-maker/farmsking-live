@@ -131,3 +131,30 @@ export async function getAdminBonusReport(): Promise<AdminBonusReportResponse> {
   return data;
 }
 
+export interface AdminAutomatedReportResponse {
+  generatedAt: string;
+  summary: {
+    totalActiveBalanceUsers: number;
+    totalSystemLiability: number;
+    totalWithdrawalsCount: number;
+    totalPendingWithdrawals: number;
+    countPendingWithdrawals: number;
+    totalApprovedWithdrawals: number;
+    countApprovedWithdrawals: number;
+    totalRejectedWithdrawals: number;
+    countRejectedWithdrawals: number;
+    totalManualCredits: number;
+    totalManualDebits: number;
+    totalInAppSpending: number;
+  };
+  activeBalanceUsers: AdminUserWalletItem[];
+  withdrawals: any[];
+  manualTransactions: any[];
+  inAppUsageTransactions: any[];
+}
+
+export async function getAdminAutomatedReport(): Promise<AdminAutomatedReportResponse> {
+  const { data } = await apiClient.get<AdminAutomatedReportResponse>('/wallet/admin/automated-report');
+  return data;
+}
+

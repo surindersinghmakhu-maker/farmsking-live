@@ -202,6 +202,146 @@ export class WalletService {
     };
   }
 
+  /** Admin/Super Admin: Comprehensive Automated Wallet, Withdrawal & Financial Audit Report */
+  async getAdminAutomatedReport() {
+    // 1. Fetch all non-deleted users with payout profiles
+    const users = await this.prisma.user.findMany({
+      where: { deletedAt: null },
+      select: {
+        id: true,
+        name: true,
+        mobile: true,
+        kingId: true,
+        role: true,
+        upiId: true,
+        bankAccountNumber: true,
+        bankIfsc: true,
+        createdAt: true,
+      },
+    });
+
+    const userIds = users.map((u) => u.id);
+
+    // 2. Aggregate Credits and Debits per user
+    const [credits, debits, withdrawals, manualTxs, inAppUseTxs] = await Promise.all([
+      this.prisma.walletTransaction.groupBy({
+        by: ['userId'],
+        where: { userId: { in: userIds }, type: WalletTransactionType.CREDIT },
+        _sum: { amount: true },
+      }),
+      this.prisma.walletTransaction.groupBy({
+        by: ['userId'],
+        where: { userId: { in: userIds }, type: WalletTransactionType.DEBIT },
+        _sum: { amount: true },
+      }),
+      this.prisma.withdrawalRequest.findMany({
+        include: {
+          businessPartner: { select: { id: true, name: true, mobile: true, kingId: true, upiId: true, bankAccountNumber: true, bankIfsc: true } },
+        },
+        orderBy: { requestedAt: 'desc' },
+      }),
+      this.prisma.walletTransaction.findMany({
+        where: {
+          OR: [
+            { reason: { contains: 'Manual', mode: 'insensitive' } },
+            { reason: { contains: 'Admin', mode: 'insensitive' } },
+            { reason: { contains: 'Deduct', mode: 'insensitive' } },
+            { reason: { contains: 'Credit', mode: 'insensitive' } },
+            { reason: { contains: 'Adjustment', mode: 'insensitive' } },
+          ],
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 300,
+        include: { user: { select: { id: true, name: true, mobile: true, kingId: true, role: true } } },
+      }),
+      this.prisma.walletTransaction.findMany({
+        where: {
+          type: WalletTransactionType.DEBIT,
+          OR: [
+            { reason: { contains: 'Plan', mode: 'insensitive' } },
+            { reason: { contains: 'Store', mode: 'insensitive' } },
+            { reason: { contains: 'Purchase', mode: 'insensitive' } },
+            { reason: { contains: 'Coupon', mode: 'insensitive' } },
+            { reason: { contains: 'Service', mode: 'insensitive' } },
+          ],
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 300,
+        include: { user: { select: { id: true, name: true, mobile: true, kingId: true, role: true } } },
+      }),
+    ]);
+
+    const creditMap = new Map(credits.map((c) => [c.userId, Number(c._sum.amount ?? 0)]));
+    const debitMap = new Map(debits.map((d) => [d.userId, Number(d._sum.amount ?? 0)]));
+
+    // Users with active balance (>0)
+    const activeBalanceUsers = users
+      .map((u) => {
+        const totalCredit = creditMap.get(u.id) || 0;
+        const totalDebit = debitMap.get(u.id) || 0;
+        const balance = totalCredit - totalDebit;
+        return { ...u, balance, totalCredit, totalDebit };
+      })
+      .filter((u) => u.balance > 0)
+      .sort((a, b) => b.balance - a.balance);
+
+    // Summary calculations
+    const totalSystemLiability = activeBalanceUsers.reduce((sum, u) => sum + u.balance, 0);
+
+    let totalPendingWithdrawals = 0;
+    let countPendingWithdrawals = 0;
+    let totalApprovedWithdrawals = 0;
+    let countApprovedWithdrawals = 0;
+    let totalRejectedWithdrawals = 0;
+    let countRejectedWithdrawals = 0;
+
+    withdrawals.forEach((w) => {
+      const amt = Number(w.approvedAmount || w.requestedAmount || 0);
+      if (w.status === 'PENDING') {
+        totalPendingWithdrawals += Number(w.requestedAmount || 0);
+        countPendingWithdrawals++;
+      } else if (w.status === 'APPROVED') {
+        totalApprovedWithdrawals += amt;
+        countApprovedWithdrawals++;
+      } else if (w.status === 'REJECTED') {
+        totalRejectedWithdrawals += Number(w.requestedAmount || 0);
+        countRejectedWithdrawals++;
+      }
+    });
+
+    const totalManualCredits = manualTxs
+      .filter((t) => t.type === WalletTransactionType.CREDIT)
+      .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+    const totalManualDebits = manualTxs
+      .filter((t) => t.type === WalletTransactionType.DEBIT)
+      .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+    const totalInAppSpending = inAppUseTxs.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+    return {
+      generatedAt: new Date().toISOString(),
+      summary: {
+        totalActiveBalanceUsers: activeBalanceUsers.length,
+        totalSystemLiability,
+        totalWithdrawalsCount: withdrawals.length,
+        totalPendingWithdrawals,
+        countPendingWithdrawals,
+        totalApprovedWithdrawals,
+        countApprovedWithdrawals,
+        totalRejectedWithdrawals,
+        countRejectedWithdrawals,
+        totalManualCredits,
+        totalManualDebits,
+        totalInAppSpending,
+      },
+      activeBalanceUsers,
+      withdrawals,
+      manualTransactions: manualTxs,
+      inAppUsageTransactions: inAppUseTxs,
+    };
+  }
+
 
   /** Admin/Super Admin manual top-up — adds balance to any user's wallet (cash top-up, goodwill credit, correction). */
   async adminCreditWallet(admin: AuthUser, userId: string, amount: number, reason?: string) {

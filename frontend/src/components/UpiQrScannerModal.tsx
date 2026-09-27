@@ -15,6 +15,7 @@ import * as Haptics from 'expo-haptics';
 import { FONT, RADIUS } from '@/constants/theme';
 import { parseUpiQrCode, ParsedUpiResult } from '../utils/upiQrParser';
 import { decodeQrFromImageUri } from '../utils/qrDecoder';
+import jsQR from 'jsqr';
 
 interface UpiQrScannerModalProps {
   visible: boolean;
@@ -104,7 +105,11 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' } },
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
         audio: false,
       });
 
@@ -121,7 +126,9 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.setAttribute('playsinline', 'true');
-        await videoRef.current.play();
+        videoRef.current.setAttribute('autoplay', 'true');
+        videoRef.current.setAttribute('muted', 'true');
+        await videoRef.current.play().catch(() => {});
         startScanLoop();
       }
     } catch (err: any) {
@@ -144,24 +151,40 @@ export const UpiQrScannerModal: React.FC<UpiQrScannerModalProps> = ({
     }
 
     const canvas = typeof document !== 'undefined' ? document.createElement('canvas') : null;
-    const ctx = canvas?.getContext('2d');
+    const ctx = canvas?.getContext('2d', { willReadFrequently: true });
+    let lastScanTime = 0;
 
-    const scanFrame = async () => {
+    const scanFrame = async (timestamp: number) => {
       if (isDestroyedRef.current || !videoRef.current) return;
 
       const video = videoRef.current;
-      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      if (video.readyState === video.HAVE_ENOUGH_DATA && timestamp - lastScanTime >= 100) {
+        lastScanTime = timestamp;
         try {
+          // Priority 1: Native BarcodeDetector (Chrome Android / Desktop Chrome)
           if (barcodeDetector) {
             const barcodes = await barcodeDetector.detect(video);
             if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
               handleQrDecodedFromLiveCamera(barcodes[0].rawValue);
               return;
             }
-          } else if (canvas && ctx) {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+          }
+
+          // Priority 2: jsQR Engine on canvas (iOS Safari, Firefox Mobile, Samsung Browser, Chrome Android fallback)
+          if (canvas && ctx) {
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const qrCode = jsQR(imageData.data, imageData.width, imageData.height, {
+              inversionAttempts: 'dontInvert',
+            });
+
+            if (qrCode && qrCode.data) {
+              handleQrDecodedFromLiveCamera(qrCode.data);
+              return;
+            }
           }
         } catch (err) {}
       }

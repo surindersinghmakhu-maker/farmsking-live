@@ -318,4 +318,141 @@ export class TrainersService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  /** Farmer: 1-Tap "📞 Call Me Request" to assigned Technical Trainer */
+  async requestTrainerCall(farmerUser: AuthUser, preferredSlot: string = 'ANYTIME') {
+    const log = await this.prisma.farmerTrainingLog.findUnique({
+      where: { farmerId: farmerUser.id },
+      include: {
+        trainer: { select: { id: true, name: true, mobile: true } },
+      },
+    });
+
+    if (!log) {
+      throw new NotFoundException('No assigned Technical Trainer found for your account.');
+    }
+
+    const updated = await this.prisma.farmerTrainingLog.update({
+      where: { farmerId: farmerUser.id },
+      data: {
+        isCallRequested: true,
+        preferredCallSlot: preferredSlot,
+        callRequestedAt: new Date(),
+        status: TrainingStatus.PENDING_CALL,
+      },
+    });
+
+    // Notify assigned trainer via WhatsApp
+    const msg = `📞 *ਨਵੀਂ ਕਿਸਾਨ ਕਾਲ ਰਿਕਵੈਸਟ (FarmsKing Trainer)*\n\n` +
+      `ਕਿਸਾਨ *${farmerUser.name || farmerUser.kingId || farmerUser.mobile}* ਨੇ ਐਪ ਸਿੱਖਣ ਲਈ ਕਾਲ ਕਰਨ ਦੀ ਬੇਨਤੀ ਕੀਤੀ ਹੈ।\n` +
+      `ਪਸੰਦੀਦਾ ਸਮਾਂ: *${preferredSlot}*\n` +
+      `ਫੋਨ ਨੰਬਰ: *${farmerUser.mobile}*\n\n` +
+      `ਕਿਰਪਾ ਕਰਕੇ ਆਪਣੇ ਟ੍ਰੇਨਰ ਡੈਸ਼ਬੋਰਡ ਤੋਂ ਕਿਸਾਨ ਨਾਲ ਰਾਬਤਾ ਕਾਇਮ ਕਰੋ। 🌾`;
+
+    this.whatsappBotService.sendDirectTextMessage(log.trainer.mobile, msg).catch(() => {});
+
+    return {
+      success: true,
+      message: '✅ ਤੁਹਾਡੀ ਕਾਲ ਬੇਨਤੀ ਦਰਜ ਹੋ ਗਈ ਹੈ! ਟ੍ਰੇਨਰ ਤੁਹਾਨੂੰ ਜਲਦੀ ਹੀ ਕਾਲ ਕਰੇਗਾ।',
+      log: updated,
+    };
+  }
+
+  /** Baseline Trainer: Forward complex issue to Upline Senior Trainer */
+  async forwardToUplineTrainer(trainerUser: AuthUser, farmerId: string, forwardReason: string) {
+    const log = await this.prisma.farmerTrainingLog.findUnique({
+      where: { farmerId },
+    });
+
+    if (!log || log.trainerId !== trainerUser.id) {
+      throw new NotFoundException('Farmer log not found under your assigned list.');
+    }
+
+    // Find state Upline Senior Trainer
+    const uplineAssignment = await this.prisma.trainerAssignment.findFirst({
+      where: {
+        state: { equals: log.state, mode: 'insensitive' },
+        level: TrainerLevel.UPLINE,
+      },
+    });
+
+    const forwardedToId = uplineAssignment?.trainerId || null;
+
+    const updated = await this.prisma.farmerTrainingLog.update({
+      where: { farmerId },
+      data: {
+        isForwarded: true,
+        forwardedToId,
+        forwardReason,
+        status: TrainingStatus.IN_PROGRESS,
+      },
+    });
+
+    return {
+      success: true,
+      message: forwardedToId
+        ? '⏩ ਕੇਸ ਸਫ਼ਲਤਾਪੂਰਵਕ Upline Senior Trainer ਕੋਲ ਫਾਰਵਰਡ ਹੋ ਗਿਆ ਹੈ।'
+        : '⏩ ਕੇਸ ਐਸਕੇਲੇਟਿਡ ਮਾਰਕ ਹੋ ਗਿਆ ਹੈ।',
+      log: updated,
+    };
+  }
+
+  /** Technical Trainer: Update duty hours / availability status (Online / Offline / Shift Hours) */
+  async updateTrainerAvailability(
+    trainerUser: AuthUser,
+    isAvailable: boolean,
+    availableFrom?: string,
+    availableTo?: string,
+    shiftType?: string,
+  ) {
+    const assignment = await this.prisma.trainerAssignment.findFirst({
+      where: { trainerId: trainerUser.id },
+    });
+
+    if (!assignment) {
+      throw new NotFoundException('Trainer assignment not found.');
+    }
+
+    return this.prisma.trainerAssignment.update({
+      where: { id: assignment.id },
+      data: {
+        isAvailable,
+        availableFrom: availableFrom || assignment.availableFrom,
+        availableTo: availableTo || assignment.availableTo,
+        shiftType: shiftType || assignment.shiftType,
+      },
+    });
+  }
+
+  /** Admin: Complete Accountability Reports for Technical Trainer System */
+  async getAdminTrainerReports() {
+    const [totalTrainers, totalLogs, pendingCalls, verifiedLogs, aggregatePayout] = await Promise.all([
+      this.prisma.trainerAssignment.count(),
+      this.prisma.farmerTrainingLog.count(),
+      this.prisma.farmerTrainingLog.count({ where: { isCallRequested: true, status: TrainingStatus.PENDING_CALL } }),
+      this.prisma.farmerTrainingLog.count({ where: { status: TrainingStatus.VERIFIED_AND_PAID } }),
+      this.prisma.farmerTrainingLog.aggregate({ _sum: { payoutAmount: true } }),
+    ]);
+
+    const logs = await this.prisma.farmerTrainingLog.findMany({
+      include: {
+        farmer: { select: { name: true, mobile: true, kingId: true, state: true, district: true } },
+        trainer: { select: { name: true, mobile: true, kingId: true } },
+        forwardedTo: { select: { name: true, mobile: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+
+    return {
+      summary: {
+        totalTrainers,
+        totalLogs,
+        pendingCalls,
+        verifiedLogs,
+        totalPayoutDisbursed: aggregatePayout._sum.payoutAmount || 0,
+      },
+      logs,
+    };
+  }
 }

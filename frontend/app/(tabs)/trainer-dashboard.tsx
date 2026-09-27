@@ -166,7 +166,7 @@ export default function TechnicalTrainerDashboardScreen() {
                   </Text>
                 </View>
 
-                {/* Action Buttons: 1-Click Call & 1-Click WhatsApp */}
+                {/* Action Buttons: 1-Click Call, 1-Click WhatsApp, and ⏩ Forward to Upline */}
                 <View style={styles.actionsRow}>
                   <TouchableOpacity
                     style={styles.callBtn}
@@ -174,7 +174,7 @@ export default function TechnicalTrainerDashboardScreen() {
                     onPress={() => handleCallFarmer(log.farmer.mobile)}
                   >
                     <Ionicons name="call" size={15} color="#ffffff" />
-                    <Text style={styles.callBtnText}>Call Farmer</Text>
+                    <Text style={styles.callBtnText}>Call</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -183,7 +183,24 @@ export default function TechnicalTrainerDashboardScreen() {
                     onPress={() => handleWhatsAppFarmer(log.farmer.mobile, log.farmer.name)}
                   >
                     <Ionicons name="logo-whatsapp" size={15} color="#ffffff" />
-                    <Text style={styles.whatsappBtnText}>WhatsApp Welcome</Text>
+                    <Text style={styles.whatsappBtnText}>WhatsApp</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.forwardBtn}
+                    activeOpacity={0.8}
+                    onPress={async () => {
+                      try {
+                        const res = await forwardToUplineTrainer(log.farmer.id, 'Escalated by Baseline Trainer');
+                        alert(res.message);
+                        loadDashboardData();
+                      } catch (e: any) {
+                        alert(e?.response?.data?.message || 'Escalation failed');
+                      }
+                    }}
+                  >
+                    <Ionicons name="arrow-redo" size={14} color="#0f172a" />
+                    <Text style={styles.forwardBtnText}>Forward</Text>
                   </TouchableOpacity>
                 </View>
               </View>

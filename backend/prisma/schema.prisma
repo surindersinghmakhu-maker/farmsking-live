@@ -573,9 +573,11 @@ model User {
   groupVoiceCallParticipations GroupVoiceCallParticipant[] @relation("VoiceCallParticipant")
 
   // Technical Trainer Relations
-  trainerAssignments         TrainerAssignment[]       @relation("TrainerAssignmentUser")
-  trainerLogs                FarmerTrainingLog[]       @relation("TrainerLogs")
-  farmerTrainingLog          FarmerTrainingLog?        @relation("TrainedFarmer")
+  trainerAssignments          TrainerAssignment[]       @relation("TrainerAssignmentUser")
+  uplineTrainerAssignments    TrainerAssignment[]       @relation("TrainerHierarchy")
+  trainerLogs                 FarmerTrainingLog[]       @relation("TrainerLogs")
+  forwardedTrainingLogs       FarmerTrainingLog[]       @relation("ForwardedTrainingLogs")
+  farmerTrainingLog           FarmerTrainingLog?        @relation("TrainedFarmer")
 
   @@index([kingId])
   @@index([mobile])
@@ -2580,41 +2582,71 @@ enum TrainingStatus {
   UNREACHABLE
 }
 
+enum TrainerLevel {
+  BASELINE
+  UPLINE
+}
+
+enum TrainerGrade {
+  GRADE_A
+  GRADE_B
+  GRADE_C
+}
+
 model TrainerAssignment {
-  id             String   @id @default(uuid())
-  trainerId      String
-  trainer        User     @relation("TrainerAssignmentUser", fields: [trainerId], references: [id], onDelete: Cascade)
-  state          String
-  district       String?
-  commissionRate Float    @default(20.0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                  String            @id @default(uuid())
+  trainerId           String
+  trainer             User              @relation("TrainerAssignmentUser", fields: [trainerId], references: [id], onDelete: Cascade)
+  level               TrainerLevel      @default(BASELINE)
+  uplineTrainerId     String?
+  uplineTrainer       User?             @relation("TrainerHierarchy", fields: [uplineTrainerId], references: [id], onDelete: SetNull)
+  grade               TrainerGrade      @default(GRADE_B)
+  averageRating       Float             @default(5.0)
+  state               String
+  district            String?
+  commissionRate      Float             @default(20.0)
+  isAvailable         Boolean           @default(true)
+  availableFrom       String?           @default("09:00")
+  availableTo         String?           @default("18:00")
+  shiftType           String?           @default("PART_TIME")
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
 
   @@index([trainerId])
+  @@index([level])
   @@index([state])
   @@index([district])
   @@map("trainer_assignments")
 }
 
 model FarmerTrainingLog {
-  id               String         @id @default(uuid())
-  farmerId         String         @unique
-  farmer           User           @relation("TrainedFarmer", fields: [farmerId], references: [id], onDelete: Cascade)
-  trainerId        String
-  trainer          User           @relation("TrainerLogs", fields: [trainerId], references: [id], onDelete: Cascade)
-  state            String
-  district         String?
-  status           TrainingStatus @default(PENDING_CALL)
-  rating           Int?
-  verificationCode String?
-  callNotes        String?
-  payoutAmount     Float          @default(0.0)
-  payoutTxId       String?
-  verifiedAt       DateTime?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  id                String         @id @default(uuid())
+  farmerId          String         @unique
+  farmer            User           @relation("TrainedFarmer", fields: [farmerId], references: [id], onDelete: Cascade)
+  trainerId         String
+  trainer           User           @relation("TrainerLogs", fields: [trainerId], references: [id], onDelete: Cascade)
+  isCallRequested   Boolean        @default(false)
+  preferredCallSlot String?        @default("ANYTIME")
+  callRequestedAt   DateTime?
+  calledAt          DateTime?
+  isForwarded       Boolean        @default(false)
+  forwardedToId     String?
+  forwardedTo       User?          @relation("ForwardedTrainingLogs", fields: [forwardedToId], references: [id], onDelete: SetNull)
+  forwardReason     String?
+  state             String
+  district          String?
+  status            TrainingStatus @default(PENDING_CALL)
+  rating            Int?
+  verificationCode  String?
+  callNotes         String?
+  payoutAmount      Float          @default(0.0)
+  payoutTxId        String?
+  verifiedAt        DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
   @@index([trainerId])
+  @@index([forwardedToId])
   @@index([state])
   @@index([district])
   @@index([status])

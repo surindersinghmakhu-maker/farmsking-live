@@ -78,4 +78,50 @@ export class TrainersController {
   listTrainerAssignments() {
     return this.trainersService.listTrainerAssignments();
   }
+
+  /** Farmer: 1-Tap "📞 Call Me Request" to assigned Technical Trainer */
+  @Roles(Role.FARMER, Role.CUSTOMER, Role.GARDENER, Role.TECHNICAL_TRAINER, Role.ADMIN, Role.SUPER_ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @Post('request-call')
+  requestTrainerCall(
+    @CurrentUser() user: AuthUser,
+    @Body() body: { preferredSlot?: string },
+  ) {
+    return this.trainersService.requestTrainerCall(user, body.preferredSlot);
+  }
+
+  /** Technical Trainer: Forward complex case to Upline Senior Trainer */
+  @Roles(Role.TECHNICAL_TRAINER, Role.ADMIN, Role.SUPER_ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @Post('forward-upline')
+  forwardToUplineTrainer(
+    @CurrentUser() user: AuthUser,
+    @Body() body: { farmerId: string; forwardReason: string },
+  ) {
+    return this.trainersService.forwardToUplineTrainer(user, body.farmerId, body.forwardReason);
+  }
+
+  /** Technical Trainer: Update shift hours / availability (Online / Offline) */
+  @Roles(Role.TECHNICAL_TRAINER, Role.ADMIN, Role.SUPER_ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @Post('update-availability')
+  updateTrainerAvailability(
+    @CurrentUser() user: AuthUser,
+    @Body() body: { isAvailable: boolean; availableFrom?: string; availableTo?: string; shiftType?: string },
+  ) {
+    return this.trainersService.updateTrainerAvailability(
+      user,
+      body.isAvailable,
+      body.availableFrom,
+      body.availableTo,
+      body.shiftType,
+    );
+  }
+
+  /** Admin: Full Accountability Reports & Logs */
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Get('admin-reports')
+  getAdminTrainerReports() {
+    return this.trainersService.getAdminTrainerReports();
+  }
 }

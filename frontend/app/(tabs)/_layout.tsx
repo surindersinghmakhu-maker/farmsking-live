@@ -264,19 +264,7 @@ export default function TabLayout() {
           screenOptions={{
             tabBarActiveTintColor: colors.tabBarActive,
             tabBarInactiveTintColor: colors.tabBarInactive,
-            tabBarItemStyle: {
-              justifyContent: 'flex-start',
-              paddingTop: 4,
-            },
-            tabBarIconStyle: {
-              marginTop: 2,
-            },
-            tabBarLabelStyle: {
-              fontFamily: FONT.bold,
-              fontSize: 10.5,
-              marginTop: 1,
-              marginBottom: 2,
-            },
+            tabBarLabelStyle: { fontFamily: FONT.bold, fontSize: 10.5 },
             headerShown: false,
             tabBarButton: (props: any) => <HapticTab {...props} />,
             tabBarBackground: TabBarBackground,
@@ -290,8 +278,8 @@ export default function TabLayout() {
               default: {
                 display: isDesktop ? 'none' : 'flex',
                 height: 62,
-                paddingTop: 4,
-                paddingBottom: 4,
+                paddingBottom: 8,
+                paddingTop: 6,
                 maxWidth: 520,
                 width: '100%',
                 alignSelf: 'center',
@@ -313,7 +301,7 @@ export default function TabLayout() {
                     title: getHomeTitle(role),
                     href: isShown ? undefined : null,
                     tabBarIcon: ({ color, focused }) => (
-                      <Ionicons size={22} name={focused ? 'home' : 'home-outline'} color={color} />
+                      <Ionicons size={23} name={focused ? 'home' : 'home-outline'} color={color} />
                     ),
                   }}
                 />
@@ -328,7 +316,7 @@ export default function TabLayout() {
                     title: role === 'CUSTOMER' ? t('tabSettings', 'Settings') : t('tabMore', 'More'),
                     href: isShown ? undefined : null,
                     tabBarIcon: ({ color, focused }) => (
-                      <Ionicons size={22} name={focused ? 'grid' : 'grid-outline'} color={color} />
+                      <Ionicons size={23} name={focused ? 'grid' : 'grid-outline'} color={color} />
                     ),
                   }}
                 />
@@ -345,7 +333,7 @@ export default function TabLayout() {
                     href: isShown ? undefined : null,
                     tabBarIcon: ({ color, focused }) => (
                       <TabIconWithUnreadDot showDot={hasUnreadChat}>
-                        <Ionicons size={22} name={focused ? 'leaf' : 'leaf-outline'} color={color} />
+                        <Ionicons size={23} name={focused ? 'leaf' : 'leaf-outline'} color={color} />
                       </TabIconWithUnreadDot>
                     ),
                   }}
@@ -364,7 +352,7 @@ export default function TabLayout() {
                     href: isShown ? undefined : null,
                     tabBarIcon: ({ color, focused }) => (
                       <TabIconWithCartCount count={cartItemCount}>
-                        <Ionicons size={22} name={focused ? meta.iconFilled : meta.icon} color={color} />
+                        <Ionicons size={23} name={focused ? meta.iconFilled : meta.icon} color={color} />
                       </TabIconWithCartCount>
                     ),
                   }}
@@ -380,7 +368,7 @@ export default function TabLayout() {
                   href: isShown ? undefined : null,
                   tabBarIcon: ({ color, focused }) => (
                     <TabIconWithUnreadDot showDot={showUnreadDot}>
-                      <Ionicons size={22} name={focused ? meta.iconFilled : meta.icon} color={color} />
+                      <Ionicons size={23} name={focused ? meta.iconFilled : meta.icon} color={color} />
                     </TabIconWithUnreadDot>
                   ),
                 }}

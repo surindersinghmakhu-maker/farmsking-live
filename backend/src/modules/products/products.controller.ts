@@ -14,20 +14,25 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.SELLER)
   @Post()
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateProductDto) {
     return this.productsService.create(user, dto);
   }
 
   @Get()
-  listAll(@CurrentUser() user?: AuthUser, @Query('includeInactive') includeInactive?: string) {
-    const canSeeInactive = Boolean(user && (user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN) && includeInactive === 'true');
-    return this.productsService.listAll(canSeeInactive);
+  listAll(
+    @CurrentUser() user?: AuthUser,
+    @Query('includeInactive') includeInactive?: string,
+    @Query('sellerStoreId') sellerStoreId?: string,
+    @Query('slug') slug?: string,
+  ) {
+    const canSeeInactive = Boolean(user && (user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN || user.role === Role.SELLER) && includeInactive === 'true');
+    return this.productsService.listAll(canSeeInactive, sellerStoreId, slug);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN, Role.SELLER)
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateProductDto) {
     return this.productsService.update(id, dto);

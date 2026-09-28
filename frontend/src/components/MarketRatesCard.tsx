@@ -319,20 +319,13 @@ export function MarketRatesCard() {
     const natAvgStr = crop.nationalAvgRate != null ? `${formatInr(crop.nationalAvgRate)}${unitTag}` : '-';
 
     const textMessage =
-      `🌾 *FarmsKing — Live Market Price Card* 📊\n` +
-      `🌱 *Crop Name:* ${crop.displayTitle}\n` +
-      `📅 *Date & Time:* ${todayDateStr} ${currentTimeStr}\n\n` +
-      `🏛️ *LOCAL PRICE (${userState}):*\n` +
-      `• Minimum: ${localMinStr}\n` +
-      `• Maximum: ${localMaxStr}\n` +
-      `• Average: ${localAvgStr}\n\n` +
-      `🇮🇳 *ALL INDIA PRICE:*\n` +
-      `• Minimum: ${natMinStr}\n` +
-      `• Maximum: ${natMaxStr}\n` +
-      `• Average: ${natAvgStr}\n\n` +
-      `📲 *Use FarmsKing App to stay updated with your crop's live market prices!*\n\n` +
-      `🎁 *Use code to REGISTER & get Rs. ${bonusAmount}:* \`${userRefCode}\`\n` +
-      `👉 Register Link: ${shareLink}`;
+      `🌾 *FarmsKing — Live Mandi Price Card* 📊\n` +
+      `🌱 *Crop:* ${crop.displayTitle} (${todayDateStr} ${currentTimeStr})\n` +
+      `🏛️ *LOCAL (${userState}):* Avg ${localAvgStr} (Min ${localMinStr} · Max ${localMaxStr})\n` +
+      `🇮🇳 *ALL INDIA:* Avg ${natAvgStr}\n\n` +
+      `✨ *FarmsKing Web App Features:* Live Mandi Rates • Farm Accounts & Expenses • Crop Doctor Advisory\n\n` +
+      `🎁 *GET ₹${bonusAmount} WELCOME CASH BONUS!* Code: \`${userRefCode}\`\n` +
+      `🌐 *VISIT NOW & REGISTER:* visit www.farmsking.in`;
 
     try {
       const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(textMessage)}`;
@@ -686,9 +679,9 @@ export function MarketRatesCard() {
       }
 
       ctx.fillStyle = '#166534';
-      ctx.font = 'bold 12px sans-serif';
+      ctx.font = 'bold 11.5px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText("📲 Use FarmsKing App to stay updated with your crop's live market prices!", 320, ctaY + 23);
+      ctx.fillText("🌟 NEW FARMER FEATURES: Live Mandi Rates • Farm Accounts & Ledger • Crop Doctor Advisory", 320, ctaY + 23);
       ctx.textAlign = 'left';
 
       // 10. Official Welcome Bonus Voucher Container
@@ -726,15 +719,15 @@ export function MarketRatesCard() {
       // Voucher Body Left: Offer & Benefit
       ctx.fillStyle = '#0f172a';
       ctx.font = 'bold 13px sans-serif';
-      ctx.fillText('Register on FarmsKing App & Get', 38, vchY + 48);
+      ctx.fillText('Register on FarmsKing Web/App & Get', 38, vchY + 48);
 
       ctx.fillStyle = '#16a34a'; // Bold Emerald Green for Benefit
       ctx.font = '800 15px sans-serif';
-      ctx.fillText(`Rs. ${bonusAmount} FREE BONUS!`, 255, vchY + 49);
+      ctx.fillText(`Rs. ${bonusAmount} FREE BONUS!`, 282, vchY + 49);
 
       ctx.fillStyle = '#64748b';
       ctx.font = '500 11px sans-serif';
-      ctx.fillText('Enter Referral Code during signup on app to claim instant cash benefit', 38, vchY + 71);
+      ctx.fillText('Enter Referral Code during signup on web/app to claim instant cash benefit', 38, vchY + 71);
 
       // Voucher Body Right: Code Badge Box
       ctx.fillStyle = '#16a34a';
@@ -1329,7 +1322,7 @@ export function MarketRatesCard() {
             {/* App CTA Text Banner (English ONLY) */}
             <View style={styles.posterAppCtaBox}>
               <Text style={styles.posterAppCtaText}>
-                📲 Use FarmsKing App to stay updated with your crop's live market prices!
+                🌟 NEW FARMER FEATURES: Live Mandi Rates • Farm Accounts & Ledger • Crop Doctor Advisory
               </Text>
             </View>
 
@@ -1341,10 +1334,10 @@ export function MarketRatesCard() {
               <View style={styles.posterVoucherBodyContainer}>
                 <View style={{ flex: 1, gap: 2 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 3 }}>
-                    <Text style={styles.posterVoucherMainText}>Register on App & Get</Text>
+                    <Text style={styles.posterVoucherMainText}>Register on Web/App & Get</Text>
                     <Text style={styles.posterVoucherBenefitHighlight}>Rs. {bonusAmount} FREE BONUS!</Text>
                   </View>
-                  <Text style={styles.posterVoucherSubtext}>Enter referral code during signup on app to claim reward</Text>
+                  <Text style={styles.posterVoucherSubtext}>Enter referral code during signup on web/app to claim reward</Text>
                 </View>
                 <View style={styles.posterVoucherCodeBadgeBox}>
                   <Text style={styles.posterVoucherCodeLabel}>REFERRAL CODE</Text>

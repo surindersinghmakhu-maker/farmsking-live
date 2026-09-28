@@ -211,9 +211,9 @@ export function AdminWalletManagementView() {
           style={[styles.tabBtn, activeTab === 'BONUS_REPORT' && styles.tabBtnActive]}
           onPress={() => setActiveTab('BONUS_REPORT')}
         >
-          <Ionicons name="stats-chart" size={15} color={activeTab === 'BONUS_REPORT' ? '#15803d' : '#64748b'} />
+          <Ionicons name="gift-outline" size={15} color={activeTab === 'BONUS_REPORT' ? '#15803d' : '#64748b'} />
           <Text style={[styles.tabBtnText, activeTab === 'BONUS_REPORT' && styles.tabBtnTextActive]}>
-            Bonus Report
+            Bonus Details & Report
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -267,7 +267,7 @@ export function AdminWalletManagementView() {
                 }}
               >
                 <Text style={[styles.chipText, roleFilter === r && !onlyActiveBalance && styles.chipTextActive]}>
-                  {r === 'ALL' ? 'All Roles' : r}
+                  {r === 'ALL' ? 'All Roles' : r === 'TECHNICAL_TRAINER' ? 'TECHNICAL_TEAM' : r}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -302,14 +302,19 @@ export function AdminWalletManagementView() {
                   </View>
                 </View>
 
-                {/* Account details */}
-                {(u.upiId || u.bankAccountNumber) ? (
-                  <View style={styles.payoutInfoBox}>
+                {/* Account details & earnings breakdown */}
+                <View style={styles.payoutInfoBox}>
+                  {(u.upiId || u.bankAccountNumber) ? (
                     <Text style={styles.payoutInfoText}>
                       💳 UPI: {u.upiId || 'N/A'} | Bank: {u.bankAccountNumber ? `${u.bankAccountNumber} (${u.bankIfsc})` : 'N/A'}
                     </Text>
-                  </View>
-                ) : null}
+                  ) : null}
+                  {(u.referralEarnings !== undefined || u.welcomeEarnings !== undefined || u.commissionEarnings !== undefined) ? (
+                    <Text style={[styles.payoutInfoText, { marginTop: (u.upiId || u.bankAccountNumber) ? 3 : 0, color: '#15803d', fontFamily: FONT.bold }]}>
+                      👥 Referral: ₹{u.referralEarnings ?? 0} | 🎁 Welcome: ₹{u.welcomeEarnings ?? 0} | 💼 Commission: ₹{u.commissionEarnings ?? 0}
+                    </Text>
+                  ) : null}
+                </View>
 
                 {/* Actions */}
                 <View style={styles.userActionsRow}>
@@ -393,6 +398,17 @@ export function AdminWalletManagementView() {
                     </View>
                   </View>
                 </View>
+
+                {w.partnerWallet ? (
+                  <View style={[styles.payoutInfoBox, { backgroundColor: '#f0fdf4' }]}>
+                    <Text style={[styles.payoutInfoText, { color: '#166534', fontFamily: FONT.bold }]}>
+                      💰 Wallet Breakdown: 👥 Referral: ₹{w.partnerWallet.referralEarnings} | 🎁 Welcome: ₹{w.partnerWallet.welcomeEarnings} | 💼 Commission: ₹{w.partnerWallet.commissionEarnings}
+                    </Text>
+                    <Text style={[styles.payoutInfoText, { marginTop: 2 }]}>
+                      💳 UPI: {w.businessPartner?.upiId || 'N/A'} | Bank: {w.businessPartner?.bankAccountNumber ? `${w.businessPartner.bankAccountNumber} (${w.businessPartner.bankIfsc})` : 'N/A'}
+                    </Text>
+                  </View>
+                ) : null}
 
                 {w.notes ? (
                   <View style={styles.payoutInfoBox}>
@@ -712,6 +728,26 @@ export function AdminWalletManagementView() {
             <Text style={styles.modalSub}>
               User: <Text style={{ fontFamily: FONT.bold }}>{selectedWithdrawalAction?.req.businessPartner?.name || 'Partner'}</Text> ({selectedWithdrawalAction?.req.businessPartner?.mobile})
             </Text>
+
+            {selectedWithdrawalAction?.req.partnerWallet ? (
+              <View style={[styles.payoutInfoBox, { backgroundColor: '#f0fdf4', marginVertical: 6 }]}>
+                <Text style={[styles.payoutInfoText, { color: '#166534', fontFamily: FONT.bold }]}>
+                  💰 Partner Payable Balance Breakdown:
+                </Text>
+                <Text style={[styles.payoutInfoText, { marginTop: 2 }]}>
+                  • 👥 Referral Bonus: ₹{selectedWithdrawalAction.req.partnerWallet.referralEarnings}
+                </Text>
+                <Text style={[styles.payoutInfoText, { marginTop: 2 }]}>
+                  • 🎁 Welcome Bonus: ₹{selectedWithdrawalAction.req.partnerWallet.welcomeEarnings}
+                </Text>
+                <Text style={[styles.payoutInfoText, { marginTop: 2 }]}>
+                  • 💼 Sales Commission: ₹{selectedWithdrawalAction.req.partnerWallet.commissionEarnings}
+                </Text>
+                <Text style={[styles.payoutInfoText, { marginTop: 4, fontFamily: FONT.bold, color: '#15803d' }]}>
+                  Available Total Balance: ₹{selectedWithdrawalAction.req.partnerWallet.balance.toFixed(2)}
+                </Text>
+              </View>
+            ) : null}
 
             <View style={{ gap: 10, marginTop: 10 }}>
               {selectedWithdrawalAction?.type === 'APPROVE' ? (

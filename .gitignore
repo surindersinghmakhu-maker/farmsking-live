@@ -35,6 +35,10 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 
+# Internal Private Documentation (Not deployed)
+docs/company/
+docs/app/
+
 # Stray backup/scratch files that shouldn't live in the repo
 *.zip
 *_token.txt

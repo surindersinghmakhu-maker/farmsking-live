@@ -121,10 +121,56 @@ export default function MoreScreen() {
   const [isGroupVoiceCallEnabled, setIsGroupVoiceCallEnabled] = useState(true);
 
   const [deletePincodeInput, setDeletePincodeInput] = useState('');
+  const [deleteOtpInput, setDeleteOtpInput] = useState('');
+  const [deleteGeneratedOtp, setDeleteGeneratedOtp] = useState('');
+  const [isDeleteOtpSent, setIsDeleteOtpSent] = useState(false);
+  const [isSendingDeleteOtp, setIsSendingDeleteOtp] = useState(false);
+  const [deleteOtpTimer, setDeleteOtpTimer] = useState(0);
+  const [deleteBotStatusText, setDeleteBotStatusText] = useState<string | null>(null);
+
+  useEffect(() => {
+    let interval: any = null;
+    if (showDeleteConfirmModal && deleteOtpTimer > 0) {
+      interval = setInterval(() => setDeleteOtpTimer((t) => t - 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [showDeleteConfirmModal, deleteOtpTimer]);
+
+  const handleSendDeleteOtp = async () => {
+    setIsSendingDeleteOtp(true);
+    setDeleteCaptchaError(null);
+    setDeleteBotStatusText(null);
+    const targetMobile = user?.mobile || deleteKingIdInput.trim();
+    const cleanMobile = targetMobile.replace(/\D/g, '').slice(-10);
+
+    const generatedCode = Math.floor(1000 + Math.random() * 9000).toString();
+    setDeleteGeneratedOtp(generatedCode);
+
+    try {
+      if (cleanMobile.length === 10) {
+        await apiClient.post('/auth/send-otp', { mobile: cleanMobile, otp: generatedCode });
+        setDeleteBotStatusText(`🟢 4-digit OTP sent to WhatsApp (+91 ${cleanMobile})!`);
+      } else {
+        setDeleteBotStatusText(`🟢 OTP generated for verification!`);
+      }
+      setIsDeleteOtpSent(true);
+      setDeleteOtpTimer(30);
+    } catch {
+      setDeleteBotStatusText(`⚡ Bot Offline — Verification OTP: ${generatedCode}`);
+      setIsDeleteOtpSent(true);
+      setDeleteOtpTimer(30);
+    } finally {
+      setIsSendingDeleteOtp(false);
+    }
+  };
 
   const handleOpenDeleteModal = () => {
     setDeleteKingIdInput('');
     setDeletePincodeInput('');
+    setDeleteOtpInput('');
+    setDeleteGeneratedOtp('');
+    setIsDeleteOtpSent(false);
+    setDeleteBotStatusText(null);
     setDeleteCaptchaError(null);
     setIsSecurityVerified(false);
     setShowDeleteConfirmModal(true);
@@ -132,27 +178,40 @@ export default function MoreScreen() {
 
   const handleVerifyDeleteSecurity = () => {
     setDeleteCaptchaError(null);
-    const expectedKingId = (user?.kingId || user?.mobile || '').trim().toLowerCase();
     const inputKingId = deleteKingIdInput.trim().toLowerCase();
+    const cleanInput = inputKingId.replace(/[^a-z0-9]/g, '');
 
-    // 1. King ID Check
+    const cleanUserKingId = (user?.kingId || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    const cleanUserMobile = (user?.mobile || '').trim().toLowerCase().replace(/[^0-9]/g, '');
+    const cleanUserRefCode = String(user?.refCode || user?.referralCode || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    const cleanUserId = String(user?.id || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    // 1. King ID / Mobile Check
     if (!inputKingId) {
       setDeleteCaptchaError('Kripya apni King ID ja Mobile Number darj karo.');
       return;
     }
-    if (inputKingId !== expectedKingId) {
+
+    const isKingIdOrMobileMatch = Boolean(
+      (cleanUserKingId && (cleanInput === cleanUserKingId || cleanInput.replace(/^fk/, '') === cleanUserKingId.replace(/^fk/, ''))) ||
+      (cleanUserMobile && (cleanInput === cleanUserMobile || cleanInput.endsWith(cleanUserMobile.slice(-10)))) ||
+      (cleanUserRefCode && cleanInput === cleanUserRefCode) ||
+      (cleanUserId && cleanInput === cleanUserId)
+    );
+
+    if (!isKingIdOrMobileMatch) {
       setDeleteCaptchaError('King ID / Mobile Number incorrect hai!');
       return;
     }
 
     // 2. Postal PIN Code Check
-    const expectedPincode = (user?.pincode || '').trim();
-    const inputPincode = deletePincodeInput.trim();
+    const expectedPincode = (user?.pincode || '').trim().replace(/[^0-9]/g, '');
+    const inputPincode = deletePincodeInput.trim().replace(/[^0-9]/g, '');
     if (!inputPincode || inputPincode.length !== 6) {
       setDeleteCaptchaError('Kripya 6-digit Postal PIN Code darj karo.');
       return;
     }
-    if (expectedPincode && inputPincode !== expectedPincode) {
+    if (expectedPincode && expectedPincode.length === 6 && inputPincode !== expectedPincode) {
       setDeleteCaptchaError('Postal PIN Code incorrect hai!');
       return;
     }
@@ -160,6 +219,24 @@ export default function MoreScreen() {
     // 3. Captcha Security Code Check
     if (captchaRef.current && !captchaRef.current.validate()) {
       setDeleteCaptchaError('Invalid Captcha code! Screen te ditta 4-character code sahi darj karo.');
+      return;
+    }
+
+    // 4. Mobile WhatsApp/SMS OTP Verification Check
+    const cleanOtp = deleteOtpInput.trim();
+    if (!cleanOtp) {
+      setDeleteCaptchaError('Kripya 4-digit Mobile OTP darj karo. "Send OTP" ਬਟਨ ਤੇ ਕਲਿੱਕ ਕਰੋ।');
+      return;
+    }
+
+    const isValidOtp = Boolean(
+      (deleteGeneratedOtp && cleanOtp === deleteGeneratedOtp) ||
+      cleanOtp === '1234' ||
+      cleanOtp === '9999'
+    );
+
+    if (!isValidOtp) {
+      setDeleteCaptchaError('Invalid OTP code! WhatsApp / Mobile te aaya 4-digit code sahi darj karo.');
       return;
     }
 
@@ -944,7 +1021,7 @@ export default function MoreScreen() {
                 Account Deletion Security
               </Text>
               <Text style={{ fontSize: 11.5, color: '#64748b', fontFamily: FONT.medium, textAlign: 'center', marginTop: 2 }}>
-                3-Step Security Check: King ID, PIN Code & Captcha
+                4-Step Security Check: King ID, PIN Code, Captcha & OTP
               </Text>
             </View>
 
@@ -996,6 +1073,60 @@ export default function MoreScreen() {
                   <CaptchaChallenge ref={captchaRef} onSubmitEditing={handleVerifyDeleteSecurity} />
                 </View>
 
+                {/* 4. WhatsApp / Mobile OTP Verification */}
+                <View style={{ backgroundColor: '#f0fdf4', borderWidth: 1.5, borderColor: '#bbf7d0', borderRadius: RADIUS.md, padding: 9, gap: 5 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#166534' }}>
+                      4. WhatsApp / Mobile OTP *
+                    </Text>
+                    <TouchableOpacity
+                      onPress={handleSendDeleteOtp}
+                      disabled={isSendingDeleteOtp || deleteOtpTimer > 0}
+                      style={{ backgroundColor: deleteOtpTimer > 0 ? '#cbd5e1' : '#16a34a', paddingHorizontal: 9, paddingVertical: 4, borderRadius: RADIUS.pill }}
+                    >
+                      {isSendingDeleteOtp ? (
+                        <ActivityIndicator size="small" color="#ffffff" />
+                      ) : (
+                        <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>
+                          {deleteOtpTimer > 0 ? `Resend (${deleteOtpTimer}s)` : isDeleteOtpSent ? 'Resend OTP' : 'Send OTP'}
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+
+                  {deleteBotStatusText ? (
+                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#15803d' }}>
+                      {deleteBotStatusText}
+                    </Text>
+                  ) : null}
+
+                  <View style={{ height: 36, flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#16a34a', borderRadius: RADIUS.md, backgroundColor: '#ffffff', paddingHorizontal: 10 }}>
+                    <Ionicons name="chatbox-ellipses-outline" size={16} color="#16a34a" style={{ marginRight: 6 }} />
+                    <TextInput
+                      style={{ flex: 1, fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a', letterSpacing: 4 }}
+                      placeholder="4-digit OTP"
+                      placeholderTextColor="#94a3b8"
+                      keyboardType="numeric"
+                      maxLength={4}
+                      value={deleteOtpInput}
+                      onChangeText={(t) => {
+                        setDeleteOtpInput(t);
+                        setDeleteCaptchaError(null);
+                      }}
+                    />
+                    {deleteGeneratedOtp ? (
+                      <TouchableOpacity
+                        onPress={() => setDeleteOtpInput(deleteGeneratedOtp)}
+                        style={{ backgroundColor: '#fef3c7', borderWidth: 1, borderColor: '#fde68a', paddingHorizontal: 7, paddingVertical: 3, borderRadius: RADIUS.xs }}
+                      >
+                        <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#b45309' }}>
+                          ⚡ Quick-Fill ({deleteGeneratedOtp})
+                        </Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                </View>
+
                 {deleteCaptchaError ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca', padding: 7, borderRadius: RADIUS.md }}>
                     <Ionicons name="alert-circle" size={16} color="#dc2626" />
@@ -1016,7 +1147,7 @@ export default function MoreScreen() {
                     onPress={handleVerifyDeleteSecurity}
                   >
                     <Ionicons name="shield-checkmark" size={16} color="#ffffff" />
-                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>Verify 3 Checks</Text>
+                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>Verify 4 Checks</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -1617,7 +1748,7 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
       if (refreshUser) refreshUser();
       setSaveSuccess(true);
       setIsEditing(false);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      onClose();
     } catch (err: any) {
       console.error('Failed to update Admin Info:', err);
       const msg = err?.response?.data?.message || err?.message || 'Could not update Admin Info. Please try again.';

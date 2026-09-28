@@ -112,23 +112,41 @@ export const PartnerDashboardView: React.FC = () => {
         {/* Earnings Overview */}
         <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm')]}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Earnings Overview</Text>
+            <Text style={styles.sectionTitle}>Earnings & Payout Breakdown</Text>
             <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/(tabs)/wallet')}>
-              <Text style={[styles.viewAllText, { color: theme.primary }]}>View All</Text>
+              <Text style={[styles.viewAllText, { color: theme.primary }]}>View Wallet</Text>
             </TouchableOpacity>
           </View>
 
-          <View style={styles.overviewStatsRow}>
-            <View style={[styles.statBox, { backgroundColor: theme.primaryLight }]}>
-              <Text style={styles.statSubText}>Commission</Text>
-              <Text style={[styles.statBigText, { color: theme.primary }]}>₹{totalEarnings.toLocaleString('en-IN')}</Text>
-            </View>
+          <View style={styles.overviewStatsGrid}>
             <View style={[styles.statBox, { backgroundColor: '#f0fdf4' }]}>
-              <Text style={styles.statSubText}>Paid</Text>
-              <Text style={[styles.statBigText, { color: '#166534' }]}>₹{paid.toLocaleString('en-IN')}</Text>
+              <Text style={styles.statSubText}>💼 Sales Commission</Text>
+              <Text style={[styles.statBigText, { color: '#166534' }]}>₹{(wallet?.commissionEarnings ?? 0).toLocaleString('en-IN')}</Text>
             </View>
-            <View style={[styles.statBox, { backgroundColor: '#fffbeb' }]}>
-              <Text style={styles.statSubText}>Pending</Text>
+
+            <View style={[styles.statBox, { backgroundColor: '#eff6ff' }]}>
+              <Text style={styles.statSubText}>👥 Referral Bonus</Text>
+              <Text style={[styles.statBigText, { color: '#1d4ed8' }]}>₹{(wallet?.referralEarnings ?? 0).toLocaleString('en-IN')}</Text>
+            </View>
+
+            <View style={[styles.statBox, { backgroundColor: '#fefce8' }]}>
+              <Text style={styles.statSubText}>🎁 Welcome Bonus</Text>
+              <Text style={[styles.statBigText, { color: '#ca8a04' }]}>₹{(wallet?.welcomeEarnings ?? 0).toLocaleString('en-IN')}</Text>
+            </View>
+
+            <View style={[styles.statBox, { backgroundColor: theme.primaryLight }]}>
+              <Text style={styles.statSubText}>💶 Available Balance</Text>
+              <Text style={[styles.statBigText, { color: theme.primary }]}>₹{(wallet?.balance ?? 0).toLocaleString('en-IN')}</Text>
+            </View>
+          </View>
+
+          <View style={[styles.overviewStatsRow, { marginTop: 10 }]}>
+            <View style={[styles.statBox, { backgroundColor: '#f8fafc', flex: 1 }]}>
+              <Text style={styles.statSubText}>Paid Payouts</Text>
+              <Text style={[styles.statBigText, { color: '#475569' }]}>₹{paid.toLocaleString('en-IN')}</Text>
+            </View>
+            <View style={[styles.statBox, { backgroundColor: '#fffbeb', flex: 1 }]}>
+              <Text style={styles.statSubText}>Pending Payouts</Text>
               <Text style={[styles.statBigText, { color: '#c2410c' }]}>₹{pending.toLocaleString('en-IN')}</Text>
             </View>
           </View>
@@ -188,8 +206,9 @@ const styles = StyleSheet.create({
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   sectionTitle: { fontSize: 15.5, fontFamily: FONT.bold, color: '#0f172a', letterSpacing: -0.1 },
   viewAllText: { fontSize: 12.5, fontFamily: FONT.bold },
+  overviewStatsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   overviewStatsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
-  statBox: { flex: 1, borderRadius: RADIUS.md, padding: 12, alignItems: 'center' },
+  statBox: { minWidth: '47%', flex: 1, borderRadius: RADIUS.md, padding: 10, alignItems: 'center' },
   statSubText: { fontSize: 10.5, color: '#64748b', fontFamily: FONT.medium },
   statBigText: { fontSize: 13.5, fontFamily: FONT.extraBold, marginTop: 4 },
   emptyText: { fontSize: 12.5, fontFamily: FONT.medium, color: '#94a3b8' },

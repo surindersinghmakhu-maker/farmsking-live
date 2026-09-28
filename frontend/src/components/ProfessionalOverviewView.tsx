@@ -17,6 +17,8 @@ import { useLabourWorkers, useLabourWorkEntries, useLabourPayments } from '@/src
 import { useMyCrops } from '@/src/hooks/useCrops';
 import { useAuth } from '@/src/store/auth-context';
 import { BrandLogo } from '@/src/components/BrandLogo';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -604,6 +606,116 @@ function CropStatementModal({
   }, [cropName, salesRecords, expenses]);
 
   const isProfit = netMargin >= 0;
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleExportPdf = async () => {
+    tap();
+    setIsProcessing(true);
+    try {
+      const rowsHtml = timeline
+        .map(
+          (row) => `
+        <tr>
+          <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; font-weight: bold; color: #475569;">${new Date(row.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+          <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; font-weight: bold; color: #0f172a;">${row.category}${row.comments ? `<br/><span style="font-size: 9px; color: #64748b;">${row.comments}</span>` : ''}</td>
+          <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; text-align: right; color: #16a34a; font-weight: bold;">${row.type === 'INCOME' ? `+₹${row.incomeAmt.toLocaleString('en-IN')}` : '—'}</td>
+          <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; text-align: right; color: #dc2626; font-weight: bold;">${row.type === 'EXPENSE' ? `-₹${row.expenseAmt.toLocaleString('en-IN')}` : '—'}</td>
+        </tr>`
+        )
+        .join('');
+
+      const html = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <title>${cropName} Performance Statement Audit</title>
+            <style>
+              @page { size: A4 portrait; margin: 8mm; }
+              * { box-sizing: border-box; }
+              body { font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 12px; background: #ffffff; color: #0f172a; font-size: 11px; }
+              .card { max-width: 100%; margin: 0 auto; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 14px; }
+              .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #16a34a; padding-bottom: 8px; margin-bottom: 8px; }
+              .brand { font-size: 20px; font-weight: 800; color: #15803d; letter-spacing: -0.5px; }
+              .tagline { font-size: 9.5px; color: #64748b; font-weight: 600; }
+              .grid { display: flex; gap: 8px; margin-bottom: 10px; }
+              .box { flex: 1; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 8px; font-size: 10.5px; background: #f8fafc; }
+              .box-title { font-weight: 800; color: #15803d; font-size: 9px; border-bottom: 1px solid #e2e8f0; padding-bottom: 2px; margin-bottom: 4px; }
+              .summary-box { background: ${isProfit ? '#f0fdf4' : '#fef2f2'}; border: 1.5px solid ${isProfit ? '#16a34a' : '#dc2626'}; border-radius: 6px; padding: 8px 12px; display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; margin-bottom: 10px; }
+              .table { width: 100%; border-collapse: collapse; margin-bottom: 10px; border: 1px solid #cbd5e1; }
+              .table th { background: #1e293b; color: #ffffff; font-size: 9.5px; padding: 6px; text-align: left; font-weight: 700; text-transform: uppercase; }
+              .table td { padding: 5px 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; }
+              .footer { text-align: center; font-size: 8.5px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 6px; margin-top: 10px; }
+            </style>
+          </head>
+          <body>
+            <div class="card">
+              <div class="header">
+                <div>
+                  <div class="brand">👑 FarmsKing</div>
+                  <div class="tagline">CROP PERFORMANCE STATEMENT AUDIT</div>
+                </div>
+                <div style="text-align: right; font-size: 10.5px;">
+                  <strong>Date: ${new Date().toLocaleDateString('en-IN')}</strong><br/>
+                  <span style="color:#16a34a; font-weight: bold;">Verified Digital Audit</span>
+                </div>
+              </div>
+              <div class="grid">
+                <div class="box">
+                  <div class="box-title">👨‍🌾 FARMER DETAILS</div>
+                  <strong>${farmerName}</strong><br/>
+                  ${farmerMobile ? `Mobile: ${farmerMobile}<br/>` : ''}
+                  ${farmerVillage ? `Location: ${farmerVillage}` : ''}
+                </div>
+                <div class="box">
+                  <div class="box-title">🌱 CROP DETAILS</div>
+                  <strong style="color: #15803d; font-size: 12px;">${foundCrop?.cropName || cropName}</strong><br/>
+                  Variety: ${foundCrop?.variety || 'Pusa Narangi / Standard'}<br/>
+                  Area: ${foundCrop?.area ? `${foundCrop.area} ${foundCrop.plot?.areaUnit || 'Killa (Acre)'}` : '1 Killa (Acre)'}<br/>
+                  No. of Plants: ${foundCrop?.plantCount ? foundCrop.plantCount.toLocaleString('en-IN') : '12,000'}
+                </div>
+              </div>
+              <div class="summary-box">
+                <span>Total Income: +₹${totalIncome.toLocaleString('en-IN')} | Expense: -₹${totalExpense.toLocaleString('en-IN')}</span>
+                <span style="color: ${isProfit ? '#16a34a' : '#dc2626'};">${isProfit ? `▲ Profit: +₹${netMargin.toLocaleString('en-IN')}` : `▼ Loss: -₹${Math.abs(netMargin).toLocaleString('en-IN')}`}</span>
+              </div>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 16%;">Date</th>
+                    <th style="width: 50%;">Particulars / Comments</th>
+                    <th style="text-align:right; color:#86efac; width: 17%;">Income (₹)</th>
+                    <th style="text-align:right; color:#fca5a5; width: 17%;">Expense (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rowsHtml}
+                </tbody>
+              </table>
+              <div class="footer">
+                Computer Generated Official Crop Performance Audit Statement · FarmsKing Platform
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+
+      if (Platform.OS === 'web') {
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          printWindow.document.write(html);
+          printWindow.document.close();
+          printWindow.print();
+        }
+      } else {
+        await Print.printAsync({ html });
+      }
+    } catch (err) {
+      console.error('Failed to export PDF statement:', err);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
@@ -654,7 +766,7 @@ function CropStatementModal({
 
                 {/* Variety (Subcategory) */}
                 <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#0f172a', marginTop: 2 }}>
-                  🌱 Variety: <Text style={{ color: '#15803d' }}>{foundCrop?.variety || 'Thailand'}</Text>
+                  🌱 Variety: <Text style={{ color: '#15803d' }}>{foundCrop?.variety || 'Pusa Narangi / Standard'}</Text>
                 </Text>
 
                 {/* Area & No. of Plants */}
@@ -733,6 +845,33 @@ function CropStatementModal({
               </View>
             )}
           </ScrollView>
+
+          {/* Action Buttons: Download PDF & Close */}
+          <View style={{ flexDirection: 'row', gap: 8, marginTop: 10, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#f1f5f9' }}>
+            <TouchableOpacity
+              style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#0284c7', paddingVertical: 10, borderRadius: RADIUS.md }}
+              onPress={handleExportPdf}
+              disabled={isProcessing}
+              activeOpacity={0.85}
+            >
+              {isProcessing ? (
+                <ActivityIndicator color="#ffffff" size="small" />
+              ) : (
+                <>
+                  <Ionicons name="document-text-outline" size={16} color="#ffffff" />
+                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>Download PDF Report</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={{ paddingHorizontal: 16, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md }}
+              onPress={onClose}
+              activeOpacity={0.85}
+            >
+              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#475569' }}>Close</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </Modal>

@@ -1,11 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { WalletTransactionType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { WhatsappBotService } from '../whatsapp/whatsapp.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 
 @Injectable()
 export class WalletService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() private readonly whatsappBotService?: WhatsappBotService,
+  ) {}
 
   credit(userId: string, amount: number, reason: string, meta?: { couponRedemptionId?: string; withdrawalRequestId?: string; relatedUserId?: string }) {
     return this.prisma.walletTransaction.create({
@@ -54,36 +58,64 @@ export class WalletService {
       });
 
       const settings = await this.prisma.appSetting.findUnique({ where: { id: 'default' } });
-      const referralBonus = Number((settings as any)?.referralSignupBonusAmount ?? 10);
-      const newUserBonus = Number((settings as any)?.newUserSignupBonusAmount ?? 10);
+      const stdReferralBonus = Number((settings as any)?.referralSignupBonusAmount ?? 10);
+      const stdNewUserBonus = Number((settings as any)?.newUserSignupBonusAmount ?? 10);
+      const partnerReferralBonus = Number((settings as any)?.partnerReferralCommissionAmount ?? 100);
+      const partnerRefereeBonus = Number((settings as any)?.partnerRefereeSignupBonusAmount ?? 20);
+
+      const referrer = dbUser.referredById
+        ? await this.prisma.user.findUnique({
+            where: { id: dbUser.referredById },
+            select: { id: true, role: true, roles: true },
+          })
+        : null;
+
+      const isPartner = referrer?.role === 'BUSINESS_PARTNER' || (Array.isArray(referrer?.roles) && referrer.roles.includes('BUSINESS_PARTNER'));
+
+      // Check scheme active status and expiration date
+      const todayStr = new Date().toISOString().split('T')[0];
+      const isStdSchemeActive = ((settings as any)?.referralOfferSchemeEnabled ?? false) &&
+        (!((settings as any)?.referralOfferExpiryDate) || (settings as any).referralOfferExpiryDate >= todayStr);
+
+      const isPartnerSchemeActive = ((settings as any)?.partnerOfferSchemeEnabled ?? false) &&
+        (!((settings as any)?.partnerOfferExpiryDate) || (settings as any).partnerOfferExpiryDate >= todayStr);
+
+      const isSchemeActive = isPartner ? isPartnerSchemeActive : isStdSchemeActive;
+      if (!isSchemeActive) return;
+
+      const activeNewUserBonus = isPartner ? partnerRefereeBonus : stdNewUserBonus;
 
       // Welcome bonus is ONLY granted if user signed up with a valid referral/coupon code (referredById is present)
-      if (dbUser.referredById && !existingWelcomeTx && newUserBonus > 0) {
+      if (dbUser.referredById && !existingWelcomeTx && activeNewUserBonus > 0) {
         await this.credit(
           userId,
-          newUserBonus,
+          activeNewUserBonus,
           '🎁 Welcome Offer Bonus (Referral Signup)',
           { relatedUserId: dbUser.referredById },
         );
       }
 
-      if (dbUser.referredById && referralBonus > 0) {
-        const existingReferrerTx = await this.prisma.walletTransaction.findFirst({
-          where: {
-            userId: dbUser.referredById,
-            type: WalletTransactionType.CREDIT,
-            relatedUserId: userId,
-            reason: { contains: 'Referral Income' },
-          },
-        });
+      if (dbUser.referredById) {
+        const activeBonus = isPartner ? partnerReferralBonus : stdReferralBonus;
 
-        if (!existingReferrerTx) {
-          await this.credit(
-            dbUser.referredById,
-            referralBonus,
-            `🎉 Referral Income (New user joined: ${dbUser.name || dbUser.kingId || 'User'})`,
-            { relatedUserId: userId },
-          );
+        if (activeBonus > 0) {
+          const existingReferrerTx = await this.prisma.walletTransaction.findFirst({
+            where: {
+              userId: dbUser.referredById,
+              type: WalletTransactionType.CREDIT,
+              relatedUserId: userId,
+              reason: { contains: 'Referral Income' },
+            },
+          });
+
+          if (!existingReferrerTx) {
+            await this.credit(
+              dbUser.referredById,
+              activeBonus,
+              `🎉 Referral Income (${isPartner ? 'Business Partner Commission' : 'New user joined'}: ${dbUser.name || dbUser.kingId || 'User'})`,
+              { relatedUserId: userId },
+            );
+          }
         }
       }
     } catch (e) {
@@ -117,7 +149,7 @@ export class WalletService {
 
   /** Admin: full ledger for any partner/advisor wallet — same shape as getMyWallet, just not scoped to the caller. */
   async getWalletForUser(userId: string) {
-    const [balance, transactions] = await Promise.all([
+    const [balance, transactions, allCredits] = await Promise.all([
       this.getBalance(userId),
       this.prisma.walletTransaction.findMany({
         where: { userId },
@@ -125,8 +157,35 @@ export class WalletService {
         take: 200,
         include: { relatedUser: { select: { id: true, name: true, kingId: true, mobile: true } } },
       }),
+      this.prisma.walletTransaction.findMany({
+        where: { userId, type: WalletTransactionType.CREDIT },
+        select: { amount: true, reason: true },
+      }),
     ]);
-    return { balance, transactions };
+
+    let welcomeEarnings = 0;
+    let referralEarnings = 0;
+    let commissionEarnings = 0;
+
+    for (const tx of allCredits) {
+      const amt = Number(tx.amount || 0);
+      const r = tx.reason.toLowerCase();
+      if (r.includes('welcome')) {
+        welcomeEarnings += amt;
+      } else if (r.includes('referral') || r.includes('joined') || r.includes('plan bonus')) {
+        referralEarnings += amt;
+      } else {
+        commissionEarnings += amt;
+      }
+    }
+
+    return {
+      balance,
+      welcomeEarnings,
+      referralEarnings,
+      commissionEarnings,
+      transactions,
+    };
   }
 
   /** Admin/Super Admin: Comprehensive report of all issued bonuses, statistics & user bonus ledgers. */
@@ -242,7 +301,7 @@ export class WalletService {
     const userIds = users.map((u) => u.id);
 
     // 2. Aggregate Credits and Debits per user
-    const [credits, debits, withdrawals, manualTxs, inAppUseTxs] = await Promise.all([
+    const [credits, debits, withdrawals, manualTxs, inAppUseTxs, creditTxs] = await Promise.all([
       this.prisma.walletTransaction.groupBy({
         by: ['userId'],
         where: { userId: { in: userIds }, type: WalletTransactionType.CREDIT },
@@ -288,10 +347,30 @@ export class WalletService {
         take: 300,
         include: { user: { select: { id: true, name: true, mobile: true, kingId: true, role: true } } },
       }),
+      this.prisma.walletTransaction.findMany({
+        where: { userId: { in: userIds }, type: WalletTransactionType.CREDIT },
+        select: { userId: true, amount: true, reason: true },
+      }),
     ]);
 
     const creditMap = new Map(credits.map((c) => [c.userId, Number(c._sum.amount ?? 0)]));
     const debitMap = new Map(debits.map((d) => [d.userId, Number(d._sum.amount ?? 0)]));
+
+    const welcomeMap = new Map<string, number>();
+    const referralMap = new Map<string, number>();
+    const commissionMap = new Map<string, number>();
+
+    creditTxs.forEach((tx) => {
+      const amt = Number(tx.amount || 0);
+      const r = tx.reason.toLowerCase();
+      if (r.includes('welcome')) {
+        welcomeMap.set(tx.userId, (welcomeMap.get(tx.userId) || 0) + amt);
+      } else if (r.includes('referral') || r.includes('joined') || r.includes('plan bonus')) {
+        referralMap.set(tx.userId, (referralMap.get(tx.userId) || 0) + amt);
+      } else {
+        commissionMap.set(tx.userId, (commissionMap.get(tx.userId) || 0) + amt);
+      }
+    });
 
     // Users with active balance (>0)
     const activeBalanceUsers = users
@@ -299,7 +378,10 @@ export class WalletService {
         const totalCredit = creditMap.get(u.id) || 0;
         const totalDebit = debitMap.get(u.id) || 0;
         const balance = totalCredit - totalDebit;
-        return { ...u, balance, totalCredit, totalDebit };
+        const welcomeEarnings = welcomeMap.get(u.id) || 0;
+        const referralEarnings = referralMap.get(u.id) || 0;
+        const commissionEarnings = commissionMap.get(u.id) || 0;
+        return { ...u, balance, totalCredit, totalDebit, welcomeEarnings, referralEarnings, commissionEarnings };
       })
       .filter((u) => u.balance > 0)
       .sort((a, b) => b.balance - a.balance);
@@ -362,14 +444,31 @@ export class WalletService {
   }
 
 
-  /** Admin/Super Admin manual top-up — adds balance to any user's wallet (cash top-up, goodwill credit, correction). */
+  /** Admin/Super Admin manual top-up — adds balance to any user's wallet (cash top-up, goodwill credit, trainer fee, correction). */
   async adminCreditWallet(admin: AuthUser, userId: string, amount: number, reason?: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException('User not found.');
     }
 
-    await this.credit(userId, amount, reason?.trim() || `Manual credit by admin (${admin.id})`);
+    const creditReason = reason?.trim() || `Manual credit by admin (${admin.id})`;
+    await this.credit(userId, amount, creditReason);
+
+    // Send automated WhatsApp notification if mobile number is present
+    if (user.mobile && this.whatsappBotService) {
+      try {
+        const formattedAmount = `₹${Number(amount).toLocaleString('en-IN')}`;
+        const isTrainerOrStaff = (user.role as string) === 'TECHNICAL_STAFF' || (Array.isArray((user as any).roles) && (user as any).roles.includes('TECHNICAL_STAFF'));
+        const title = isTrainerOrStaff ? '🎓 *FarmsKing Technical Staff Payout*' : '💳 *FarmsKing Wallet Credit Notice*';
+
+        const message = `${title}\n\nHello *${user.name || 'User'}*,\nAdmin has credited *${formattedAmount}* to your FarmsKing Wallet.\n\n📌 *Reason / Note*: ${creditReason}\n\nYour updated wallet balance is now ready for withdrawal or in-app usage. Thank you!`;
+
+        await this.whatsappBotService.sendDirectTextMessage(user.mobile, message);
+      } catch (err) {
+        console.warn('Failed to send WhatsApp credit alert:', err);
+      }
+    }
+
     return this.getWalletForUser(userId);
   }
 
@@ -412,13 +511,21 @@ export class WalletService {
       if (existingPlanBonus) return;
 
       const settings = await this.prisma.appSetting.findUnique({ where: { id: 'default' } });
-      const planUpgradeBonusAmount = Number((settings as any)?.referralPaidPlanBonusAmount ?? (settings as any)?.referralPlanUpgradeBonusAmount ?? 0);
+      const referrer = await this.prisma.user.findUnique({
+        where: { id: referrerId },
+        select: { id: true, role: true, roles: true },
+      });
+      const isPartner = referrer?.role === 'BUSINESS_PARTNER' || (Array.isArray(referrer?.roles) && referrer.roles.includes('BUSINESS_PARTNER'));
 
-      if (planUpgradeBonusAmount > 0) {
+      const stdPlanBonus = Number((settings as any)?.referralPaidPlanBonusAmount ?? (settings as any)?.referralPlanUpgradeBonusAmount ?? 50);
+      const partnerPlanBonus = Number((settings as any)?.partnerReferralPaidPlanBonusAmount ?? 100);
+      const activePlanBonus = isPartner ? partnerPlanBonus : stdPlanBonus;
+
+      if (activePlanBonus > 0) {
         await this.credit(
           referrerId,
-          planUpgradeBonusAmount,
-          `👑 Referral Paid Plan Bonus (Referee upgraded plan: ${dbUser.name || dbUser.kingId || 'User'})`,
+          activePlanBonus,
+          `👑 Referral Paid Plan Bonus (${isPartner ? 'Business Partner Bonus' : 'Referee upgraded plan'}: ${dbUser.name || dbUser.kingId || 'User'})`,
           { relatedUserId: referredUserId },
         );
       }
@@ -607,7 +714,7 @@ export class WalletService {
 
     const userIds = users.map((u) => u.id);
 
-    const [credits, debits, pendingWithdrawals] = await Promise.all([
+    const [credits, debits, pendingWithdrawals, creditTxs] = await Promise.all([
       this.prisma.walletTransaction.groupBy({
         by: ['userId'],
         where: { userId: { in: userIds }, type: WalletTransactionType.CREDIT },
@@ -622,6 +729,10 @@ export class WalletService {
         where: { businessPartnerId: { in: userIds }, status: 'PENDING' },
         select: { businessPartnerId: true, requestedAmount: true, id: true },
       }),
+      this.prisma.walletTransaction.findMany({
+        where: { userId: { in: userIds }, type: WalletTransactionType.CREDIT },
+        select: { userId: true, amount: true, reason: true },
+      }),
     ]);
 
     const creditMap = new Map(credits.map((c) => [c.userId, Number(c._sum.amount ?? 0)]));
@@ -633,11 +744,30 @@ export class WalletService {
       pendingMap.set(pw.businessPartnerId, current + Number(pw.requestedAmount || 0));
     });
 
+    const welcomeMap = new Map<string, number>();
+    const referralMap = new Map<string, number>();
+    const commissionMap = new Map<string, number>();
+
+    creditTxs.forEach((tx) => {
+      const amt = Number(tx.amount || 0);
+      const r = tx.reason.toLowerCase();
+      if (r.includes('welcome')) {
+        welcomeMap.set(tx.userId, (welcomeMap.get(tx.userId) || 0) + amt);
+      } else if (r.includes('referral') || r.includes('joined') || r.includes('plan bonus')) {
+        referralMap.set(tx.userId, (referralMap.get(tx.userId) || 0) + amt);
+      } else {
+        commissionMap.set(tx.userId, (commissionMap.get(tx.userId) || 0) + amt);
+      }
+    });
+
     const items = users.map((u) => {
       const totalCredit = creditMap.get(u.id) || 0;
       const totalDebit = debitMap.get(u.id) || 0;
       const balance = totalCredit - totalDebit;
       const pendingWithdrawal = pendingMap.get(u.id) || 0;
+      const welcomeEarnings = welcomeMap.get(u.id) || 0;
+      const referralEarnings = referralMap.get(u.id) || 0;
+      const commissionEarnings = commissionMap.get(u.id) || 0;
 
       return {
         ...u,
@@ -645,6 +775,9 @@ export class WalletService {
         totalCredit,
         totalDebit,
         pendingWithdrawal,
+        welcomeEarnings,
+        referralEarnings,
+        commissionEarnings,
       };
     });
 

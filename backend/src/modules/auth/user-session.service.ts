@@ -73,18 +73,30 @@ export class UserSessionService {
    */
   isValidSession(userId: string, sessionId?: string): boolean {
     if (!sessionId) return true; // backward compatibility for tokens without sid
-    const sessions = this.userSessions.get(userId);
-    // If no sessions registered yet for user (e.g. server restarted), treat as valid and register
-    if (!sessions || sessions.length === 0) {
-      this.userSessions.set(userId, [{
+    let sessions = this.userSessions.get(userId);
+    if (!sessions) {
+      sessions = [];
+      this.userSessions.set(userId, sessions);
+    }
+
+    const exists = sessions.some((s) => s.sessionId === sessionId);
+    if (exists) {
+      return true;
+    }
+
+    // If session isn't in memory (e.g. backend server restarted) and active count is under max limit (2),
+    // register this session automatically so valid devices/tabs don't get unexpectedly logged out!
+    if (sessions.length < 2) {
+      sessions.push({
         sessionId,
         userId,
         createdAt: Date.now(),
         lastActiveAt: Date.now(),
-      }]);
+      });
       return true;
     }
-    return sessions.some((s) => s.sessionId === sessionId);
+
+    return false;
   }
 
   /**

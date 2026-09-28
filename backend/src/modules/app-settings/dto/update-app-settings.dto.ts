@@ -67,6 +67,57 @@ export class UpdateAppSettingsDto {
   referralPaidPlanBonusAmount?: number;
 
   @IsOptional()
+  partnerReferralCommissionAmount?: number;
+
+  @IsOptional()
+  partnerRefereeSignupBonusAmount?: number;
+
+  @IsOptional()
+  partnerReferralPaidPlanBonusAmount?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  referralOfferSchemeEnabled?: boolean;
+
+  @IsOptional()
+  @IsString()
+  referralOfferExpiryDate?: string;
+
+  @IsOptional()
+  @IsString()
+  referralOfferSchemeName?: string;
+
+  @IsOptional()
+  referralOfferReferrerBonus?: number;
+
+  @IsOptional()
+  referralOfferNewUserBonus?: number;
+
+  @IsOptional()
+  referralOfferPaidPlanBonus?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  partnerOfferSchemeEnabled?: boolean;
+
+  @IsOptional()
+  @IsString()
+  partnerOfferExpiryDate?: string;
+
+  @IsOptional()
+  @IsString()
+  partnerOfferSchemeName?: string;
+
+  @IsOptional()
+  partnerOfferReferrerBonus?: number;
+
+  @IsOptional()
+  partnerOfferNewUserBonus?: number;
+
+  @IsOptional()
+  partnerOfferPaidPlanBonus?: number;
+
+  @IsOptional()
   @IsString()
   appDownloadUrl?: string;
 

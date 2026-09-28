@@ -574,6 +574,9 @@ export interface WalletTransaction {
 
 export interface MyWallet {
   balance: number;
+  welcomeEarnings?: number;
+  referralEarnings?: number;
+  commissionEarnings?: number;
   transactions: WalletTransaction[];
 }
 
@@ -582,13 +585,21 @@ export type WithdrawalStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 export interface WithdrawalRequest {
   id: string;
   businessPartnerId: string;
-  businessPartner?: { id: string; name: string; mobile: string };
+  businessPartner?: { id: string; name: string; mobile: string; kingId?: string | null; upiId?: string | null; bankAccountNumber?: string | null; bankIfsc?: string | null };
   requestedAmount: string;
   approvedAmount?: string | null;
   status: WithdrawalStatus;
   requestedAt: string;
   processedAt?: string | null;
   notes?: string | null;
+  partnerWallet?: {
+    balance: number;
+    totalCredit: number;
+    totalDebit: number;
+    welcomeEarnings: number;
+    referralEarnings: number;
+    commissionEarnings: number;
+  };
 }
 
 export interface Product {

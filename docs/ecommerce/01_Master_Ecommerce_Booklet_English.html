@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="english">
+<head>
+<meta charset="UTF-8">
+<title>01 Master Ecommerce Booklet English</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Gurmukhi:wght@400;600;700&display=swap');
+  
+  @page {
+    size: A4;
+    margin: 15mm 15mm 15mm 15mm;
+  }
+
+  body {
+    font-family: 'Inter', 'Noto Sans Devanagari', 'Noto Sans Gurmukhi', 'Segoe UI', sans-serif;
+    color: #0f172a;
+    line-height: 1.6;
+    font-size: 13px;
+    background-color: #ffffff;
+    padding: 10px;
+  }
+
+  .doc-title {
+    color: #15803d;
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 6px;
+    letter-spacing: -0.3px;
+  }
+
+  .divider {
+    border: none;
+    height: 2.5px;
+    background: linear-gradient(90deg, #15803d, #86efac);
+    margin-bottom: 18px;
+    border-radius: 2px;
+  }
+
+  .doc-h2 {
+    color: #0f172a;
+    font-size: 15px;
+    font-weight: 700;
+    margin-top: 18px;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .doc-h3 {
+    color: #166534;
+    font-size: 13.5px;
+    font-weight: 700;
+    margin-top: 12px;
+    margin-bottom: 6px;
+  }
+
+  .doc-p {
+    font-size: 12.5px;
+    color: #334155;
+    margin-bottom: 6px;
+  }
+
+  .custom-list {
+    margin-left: 18px;
+    margin-bottom: 10px;
+    color: #334155;
+  }
+
+  .custom-list li {
+    margin-bottom: 4px;
+  }
+
+  .quote-box {
+    background-color: #f0fdf4;
+    border-left: 4px solid #16a34a;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin: 10px 0;
+    font-size: 12px;
+    color: #166534;
+  }
+
+  .custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 11.5px;
+  }
+
+  .custom-table th {
+    background-color: #15803d;
+    color: #ffffff;
+    font-weight: 700;
+    padding: 8px 10px;
+    text-align: left;
+  }
+
+  .custom-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+  }
+
+  .custom-table tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+
+  code {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 11.5px;
+  }
+</style>
+</head>
+<body>
+<h1 class='doc-title'>FarmsKing E-Commerce Master Manual & Operations Guide</h1><hr class='divider'>
+<p class='doc-p'><strong>Complete Multi-Seller Marketplace Platform Blueprint</strong></p>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>1. Executive Overview</h2>
+<p class='doc-p'>The FarmsKing E-Commerce Platform is a multi-seller marketplace engineered for agricultural inputs (seeds, fertilizers, pesticides, tools, heavy machinery). It seamlessly connects Sellers (Local Ag-Stores), Buyers (Farmers), Logistics (Shiprocket API), and Financial Compliance (1% GST TCS withholding).</p>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>2. Core Business Rules & Profit Split</h2>
+<ul class='custom-list'>
+<li><strong>FarmsKing Platform Fee</strong>: 10% on gross item sale price.</li>
+<li><strong>GST TCS Rate</strong>: 1% withheld from seller payout and deposited to the Government under Sec 52 CGST Act.</li>
+<li><strong>Free Delivery Rule (50-50 Cost Sharing)</strong>:</li>
+<li>If a seller offers Free Delivery, the shipping fee is shared <strong>50-50% equally</strong> between FarmsKing and the Seller.</li>
+<li><strong>Example (Product ₹2000, Actual Shipping ₹400)</strong>:</li>
+<li>FarmsKing Commission (10%): ₹200</li>
+<li>FarmsKing Share of Shipping: ₹200</li>
+<li>Net FarmsKing Profit: ₹0 (No loss, 10% commission completely covers FarmsKing's share of shipping fee).</li>
+<li>Seller Product Base: ₹1800</li>
+<li>Seller Share of Shipping: ₹200</li>
+<li>Seller Final Payout: ₹1600 (- 1% GST TCS).</li>
+</ul>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>3. Shipping & Logistics System</h2>
+<p class='doc-p'>1. <strong>Shiprocket API Integration</strong>: Automatic pincode serviceability check, courier allocation (Delhivery, BlueDart, Ekart), and live tracking.</p>
+<p class='doc-p'>2. <strong>Delivery Modes</strong>:</p>
+<ul class='custom-list'>
+<li><strong>FarmsKing Courier (Shiprocket)</strong>: Automatic door-step delivery.</li>
+<li><strong>Seller Self-Delivery</strong>: For heavy machinery or hyper-local deliveries.</li>
+<li><strong>Local Store Pickup</strong>: Farmer directly picks up from seller store (Zero delivery fee).</li>
+</ul>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>4. Key Stakeholders & Responsibilities</h2>
+<table class='custom-table'><thead><tr><th>Stakeholder</th><th>Primary Role</th><th>Key Focus</th></tr></thead><tbody><tr><td>**Sellers**</td><td>Product listing, quality packaging, inventory accuracy</td><td>10% commission, 50-50 free shipping rule, weekly payouts</td></tr><tr><td>**ICICI Bank**</td><td>E-Commerce Nodal / Escrow Account</td><td>Compliance with RBI aggregator rules, automated split APIs</td></tr><tr><td>**Chartered Accountant**</td><td>GST TCS Compliance & Filing</td><td>Monthly GSTR-8 return filing, TCS certificate generation</td></tr><tr><td>**Cashfree Gateway**</td><td>Online Payments & Split Payouts</td><td>Instant order payment processing, automated vendor split</td></tr><tr><td>**Shiprocket**</td><td>Multi-vendor pickup & shipping</td><td>API credentials, pickup location sync, return order logistics</td></tr></tbody></table>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>5. Dispute Resolution & Anti-Fraud Protocols</h2>
+<p class='doc-p'>1. <strong>Wrong/Damaged Product</strong>: Mandatory Unboxing Video required from buyer; Seller must replace within 48h or 100% refund issued.</p>
+<p class='doc-p'>2. <strong>Delayed Delivery</strong>: Real-time tracking alerts sent via SMS/App. Orders delayed over 7 days can be cancelled with 100% refund.</p>
+<p class='doc-p'>3. <strong>Refused Delivery (RTO)</strong>: Return courier charges deducted from seller payout for invalid seller descriptions.</p>
+<p class='doc-p'>4. <strong>Counterfeit Goods / Expired Chemicals</strong>: Instant seller suspension + ₹10,000 penalty.</p>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>6. Official Terms & Conditions</h2>
+<ul class='custom-list'>
+<li>All sellers must possess valid GSTIN, PAN Card, and verified Bank Account.</li>
+<li>Sellers listing pesticides/fertilizers must upload valid State Agriculture Licenses.</li>
+<li>All payouts are settled every Thursday via Cashfree Auto-Payout API.</li>
+</ul>
+<br>
+</body>
+</html>

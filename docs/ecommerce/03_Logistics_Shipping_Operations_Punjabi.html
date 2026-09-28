@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="punjabi">
+<head>
+<meta charset="UTF-8">
+<title>03 Logistics Shipping Operations Punjabi</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Gurmukhi:wght@400;600;700&display=swap');
+  
+  @page {
+    size: A4;
+    margin: 15mm 15mm 15mm 15mm;
+  }
+
+  body {
+    font-family: 'Inter', 'Noto Sans Devanagari', 'Noto Sans Gurmukhi', 'Segoe UI', sans-serif;
+    color: #0f172a;
+    line-height: 1.6;
+    font-size: 13px;
+    background-color: #ffffff;
+    padding: 10px;
+  }
+
+  .doc-title {
+    color: #15803d;
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 6px;
+    letter-spacing: -0.3px;
+  }
+
+  .divider {
+    border: none;
+    height: 2.5px;
+    background: linear-gradient(90deg, #15803d, #86efac);
+    margin-bottom: 18px;
+    border-radius: 2px;
+  }
+
+  .doc-h2 {
+    color: #0f172a;
+    font-size: 15px;
+    font-weight: 700;
+    margin-top: 18px;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .doc-h3 {
+    color: #166534;
+    font-size: 13.5px;
+    font-weight: 700;
+    margin-top: 12px;
+    margin-bottom: 6px;
+  }
+
+  .doc-p {
+    font-size: 12.5px;
+    color: #334155;
+    margin-bottom: 6px;
+  }
+
+  .custom-list {
+    margin-left: 18px;
+    margin-bottom: 10px;
+    color: #334155;
+  }
+
+  .custom-list li {
+    margin-bottom: 4px;
+  }
+
+  .quote-box {
+    background-color: #f0fdf4;
+    border-left: 4px solid #16a34a;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin: 10px 0;
+    font-size: 12px;
+    color: #166534;
+  }
+
+  .custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 11.5px;
+  }
+
+  .custom-table th {
+    background-color: #15803d;
+    color: #ffffff;
+    font-weight: 700;
+    padding: 8px 10px;
+    text-align: left;
+  }
+
+  .custom-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+  }
+
+  .custom-table tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+
+  code {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 11.5px;
+  }
+</style>
+</head>
+<body>
+<h1 class='doc-title'>FarmsKing Logistics & Shipping Operations Guide</h1><hr class='divider'>
+<p class='doc-p'><strong>ਸ਼ਿਪਿੰਗ, ਡਿਲਿਵਰੀ ਅਤੇ ਲੌਜਿਸਟਿਕਸ ਆਪ੍ਰੇਸ਼ਨਜ਼ ਗਾਈਡ</strong></p>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>1. Overview / ਲੌਜਿਸਟਿਕਸ ਦਾ ਢਾਂਚਾ</h2>
+<p class='doc-p'>FarmsKing ਪਲੇਟਫਾਰਮ 'ਤੇ ਸਮਾਨ ਦੀ ਆਵਾਜਾਈ ਲਈ <strong>Shiprocket API</strong> ਦੀ ਵਰਤੋਂ ਕੀਤੀ ਜਾਂਦੀ ਹੈ, ਜੋ ਭਾਰਤ ਦੇ ਪ੍ਰਮੁੱਖ ਕੂਰੀਅਰ ਪਾਰਟਨਰਾਂ (Delhivery, BlueDart, DTDC, Ekart) ਨਾਲ ਸਿੱਧਾ ਜੁੜੀ ਹੋਈ ਹੈ।</p>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>2. 3 Delivery Modes / ਡਿਲਿਵਰੀ ਦੇ 3 ਤਰੀਕੇ</h2>
+<p class='doc-p'>1. <strong>FarmsKing Courier (Shiprocket Partner)</strong>:</p>
+<ul class='custom-list'>
+<li>ਆਟੋਮੈਟਿਕ ਪਿਕਅੱਪ ਅਤੇ ਡਿਲਿਵਰੀ।</li>
+<li>ਆਰਡਰ ਆਉਂਦੇ ਹੀ Shiprocket ਰਾਹੀਂ ਲੇਬਲ ਅਤੇ ਮੈਨੀਫੈਸਟ ਜਨਰੇਟ ਹੁੰਦਾ ਹੈ।</li>
+<p class='doc-p'>2. <strong>Seller Self-Delivery</strong>:</p>
+<li>ਭਾਰੀ ਮਸ਼ੀਨਰੀ ਜਾਂ ਨੇੜਲੇ ਇਲਾਕਿਆਂ ਵਿੱਚ ਸੈਲਰ ਆਪ ਆਪਣੀ ਗੱਡੀ 'ਤੇ ਡਿਲਿਵਰੀ ਕਰਦਾ ਹੈ।</li>
+<li>ਸੈਲਰ ਨੂੰ ਐਪ ਵਿੱਚ Tracking ID ਅਤੇ Courier Name ਦਰਜ ਕਰਨਾ ਪੈਂਦਾ ਹੈ।</li>
+<p class='doc-p'>3. <strong>Local Store Pickup</strong>:</p>
+<li>ਕਿਸਾਨ ਆਪ ਸੈਲਰ ਦੀ ਦੁਕਾਨ 'ਤੇ ਜਾ ਕੇ ਸਮਾਨ ਚੱਕ ਸਕਦਾ ਹੈ (No Shipping Charge)।</li>
+</ul>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>3. The Free Delivery 50-50 Profit Split Rule / 50-50% ਮੁਫ਼ਤ ਡਿਲਿਵਰੀ ਨਿਯਮ</h2>
+<p class='doc-p'>ਜਦੋਂ ਸੈਲਰ ਕਿਸੇ ਪ੍ਰੋਡਕਟ 'ਤੇ ਮੁਫ਼ਤ ਡਿਲਿਵਰੀ (Free Shipping) ਦਿੰਦਾ ਹੈ, ਤਾਂ ਉਸ ਦਾ ਖਰਚਾ <strong>FarmsKing</strong> ਅਤੇ <strong>Seller</strong> ਅੱਧਾ-ਅੱਧਾ (50%-50%) ਚੁੱਕਣਗੇ।</p>
+<br>
+<h3 class='doc-h3'>Profit & Cost Calculation Formula / ਹਿਸਾਬ-ਕਿਤਾਬ:</h3>
+<ul class='custom-list'>
+<li><strong>Product Price</strong>: \( P \)</li>
+<li><strong>FarmsKing Commission (10%)</strong>: \( C = 0.10 	imes P \)</li>
+<li><strong>Actual Shipping Fee</strong>: \( S \)</li>
+<li><strong>FarmsKing Share</strong>: \( rac{S}{2} \)</li>
+<li><strong>Seller Share</strong>: \( rac{S}{2} \)</li>
+<li><strong>FarmsKing Net Earnings</strong>: \( C - rac{S}{2} \)</li>
+<li><strong>Seller Net Payout</strong>: \( P - C - rac{S}{2} - 	ext{TCS} \)</li>
+</ul>
+<br>
+<h3 class='doc-h3'>Real Case Example:</h3>
+<ul class='custom-list'>
+<li><strong>Product Price</strong>: ₹2,000</li>
+<li><strong>FarmsKing Margin (10%)</strong>: ₹200</li>
+<li><strong>Actual Shipping Charge</strong>: ₹400 (ਮੁਫ਼ਤ ਡਿਲਿਵਰੀ ਦਿੱਤੀ)</li>
+<li><strong>FarmsKing Share of Shipping</strong>: ₹200</li>
+<li><strong>Seller Share of Shipping</strong>: ₹200</li>
+<li><strong>FarmsKing Final Earning</strong>: \( 200 - 200 = ₹0 \)</li>
+<li><strong>Seller Final Payout</strong>: \( 2000 - 200 - 200 = ₹1600 \) (- 1% GST TCS).</li>
+<li><strong>ਸਿੱਟਾ</strong>: FarmsKing ਆਪਣੀ ਜੇਬ੍ਹ ਵਿੱਚੋਂ ₹50 ਨਹੀਂ ਦੇਵੇਗਾ, ਬਲਕਿ 10% ਕਮਿਸ਼ਨ (₹200) ਨਾਲ ਆਪਣੇ ਹਿੱਸੇ ਦਾ shipping ਖਰਚਾ (₹200) ਪੂਰਾ ਹੋ ਜਾਵੇਗਾ!</li>
+</ul>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>4. Seller Product Addition Guidance / ਪ੍ਰੋਡਕਟ ਐਡ ਕਰਦੇ ਸਮੇਂ ਸ਼ਿਪਿੰਗ ਜਾਣਕਾਰੀ</h2>
+<p class='doc-p'>ਪ੍ਰੋਡਕਟ ਐਡ ਕਰਦੇ ਸਮੇਂ ਸੈਲਰ ਨੂੰ ਐਪ ਵਿੱਚ ਹੇਠ ਲਿਖੀਆਂ ਚੀਜ਼ਾਂ ਦਿੱਖਣਗੀਆਂ:</p>
+<p class='doc-p'>1. <strong>Volumetric Weight Calculator</strong>: ਲੰਬਾਈ, ਚੌੜਾਈ, ਉਚਾਈ ਅਤੇ ਭਾਰ ਦਰਜ ਕਰਦੇ ਹੀ Shiprocket API ਅਨੁਮਾਨਿਤ ਡਿਲਿਵਰੀ ਖਰਚਾ ਦੱਸੇਗੀ।</p>
+<p class='doc-p'>2. <strong>Shipping Option Choice</strong>:</p>
+<ul class='custom-list'>
+<li>Option A: Standard Shipping Charges (ਕਿਸਾਨ ਡਿਲਿਵਰੀ ਖਰਚਾ ਦੇਵੇਗਾ)।</li>
+<li>Option B: Free Delivery (50-50 Split Rule ਲਾਗੂ ਹੋਵੇਗਾ)।</li>
+</ul>
+<br>
+</body>
+</html>

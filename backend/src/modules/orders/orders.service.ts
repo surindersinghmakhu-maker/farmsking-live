@@ -68,7 +68,17 @@ export class OrdersService {
           items: {
             create: dto.items.map((item) => {
               const product = productMap.get(item.productId)!;
-              return { productId: product.id, productName: product.name, quantity: item.quantity, price: product.price };
+              const itemSubtotal = Number(product.price) * item.quantity;
+              const itemTcs = itemSubtotal * 0.01;
+              return {
+                productId: product.id,
+                productName: product.name,
+                quantity: item.quantity,
+                price: product.price,
+                sellerStoreId: product.sellerStoreId,
+                subtotal: itemSubtotal,
+                tcsAmount: itemTcs,
+              };
             }),
           },
         },

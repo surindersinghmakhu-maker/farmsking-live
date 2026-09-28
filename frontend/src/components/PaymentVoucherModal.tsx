@@ -255,10 +255,26 @@ export function PaymentVoucherModal({
         queryClient.invalidateQueries({ queryKey: ['parties', targetParty.id, 'statement'] });
       }
 
+      const vDate = new Date(voucherDate || Date.now());
+      const yy = String(vDate.getFullYear()).slice(-2);
+      const mm = String(vDate.getMonth() + 1).padStart(2, '0');
+      const seq = Date.now().toString().slice(-4);
+      const isLabour = sourceParty && (sourceParty.__type === 'LABOUR' || sourceParty.isWorker || sourceParty.address?.includes('Labour Worker'));
+      const voucherPrefix = isLabour 
+        ? 'L' 
+        : voucherType === 'RECEIPT_IN' 
+          ? 'R' 
+          : voucherType === 'PAYMENT_OUT' 
+            ? 'P' 
+            : voucherType === 'DIRECT_EXPENSE' 
+              ? 'E' 
+              : 'P';
+      const formattedVoucherNo = `${voucherPrefix}${yy}${mm}-${seq}`;
+
       const slipData: UniversalVoucherData = {
         voucherType: voucherType === 'RECEIPT_IN' ? 'PAYMENT_IN' : voucherType === 'PAYMENT_OUT' ? 'PAYMENT_OUT' : 'PARTY_STATEMENT',
         title: voucherType === 'RECEIPT_IN' ? '💰 PAYMENT RECEIPT' : voucherType === 'PAYMENT_OUT' ? '💸 PAYMENT OUT VOUCHER' : '🧾 ACCOUNT TRANSFER VOUCHER',
-        voucherNo: `VCH-${Date.now().toString().slice(-6)}`,
+        voucherNo: formattedVoucherNo,
         date: voucherDate,
         farmerName: user?.farmName || user?.name || 'Farmer',
         farmerPhone: user?.farmMobile || user?.mobile || '',

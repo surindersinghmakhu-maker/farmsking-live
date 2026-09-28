@@ -56,6 +56,9 @@ import { GoogleDriveBackupModule } from './modules/google-drive-backup/google-dr
 import { KingConnectModule } from './modules/king-connect/king-connect.module';
 import { VoiceCallModule } from './modules/voice-call/voice-call.module';
 import { TrainersModule } from './modules/trainers/trainers.module';
+import { SellerModule } from './modules/seller/seller.module';
+import { CashfreeModule } from './modules/cashfree/cashfree.module';
+import { ShiprocketModule } from './modules/shiprocket/shiprocket.module';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 
 
@@ -116,6 +119,9 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
     KingConnectModule,
     VoiceCallModule,
     TrainersModule,
+    SellerModule,
+    CashfreeModule,
+    ShiprocketModule,
   ],
 
 

@@ -15,6 +15,8 @@ import { useUsersList } from '@/src/hooks/useUsersAdmin';
 import { useAdminBonusReport, useCreditWallet, useDebitWallet, useWalletForUser } from '@/src/hooks/useWallet';
 import { AdminUser } from '@/src/types/api';
 
+import { AdminWalletManagementView } from '@/src/components/AdminWalletManagementView';
+
 const theme = RoleThemes.SUPER_ADMIN;
 
 const tap = () => {
@@ -27,12 +29,12 @@ const STATUS_META: Record<WithdrawalStatus, { color: string; bg: string; label: 
   REJECTED: { color: '#b91c1c', bg: '#fee2e2', label: 'Rejected' },
 };
 
-type SectionKey = 'REQUESTS' | 'BONUSES' | 'PARTNERS' | 'SEARCH';
+type SectionKey = 'REQUESTS' | 'WALLETS' | 'PARTNERS' | 'SEARCH';
 type PartnerSubTab = 'VENDORS' | 'DOCTORS' | 'STAFF' | 'MEMBERSHIPS';
 
 const SECTIONS: { value: SectionKey; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { value: 'REQUESTS', label: 'Requests', icon: 'time-outline' },
-  { value: 'BONUSES', label: 'Bonus Details', icon: 'gift-outline' },
+  { value: 'WALLETS', label: 'Wallet Management', icon: 'wallet-outline' },
   { value: 'PARTNERS', label: 'Partners', icon: 'briefcase-outline' },
   { value: 'SEARCH', label: 'Find a User', icon: 'search-outline' },
 ];
@@ -73,6 +75,7 @@ export default function SuperAccountsScreen() {
   const [activePlanPayment, setActivePlanPayment] = useState<PlanPaymentRequest | null>(null);
   const [activeFarmerPlanPayment, setActiveFarmerPlanPayment] = useState<FarmerPlanPaymentRequest | null>(null);
   const [walletPartner, setWalletPartner] = useState<AdminUser | null>(null);
+  const [walletPartnerInitialMode, setWalletPartnerInitialMode] = useState<'CREDIT' | 'DEBIT' | null>(null);
   const [userSearch, setUserSearch] = useState('');
   const [section, setSection] = useState<SectionKey>('REQUESTS');
   const [partnerSubTab, setPartnerSubTab] = useState<PartnerSubTab>('VENDORS');
@@ -271,12 +274,27 @@ export default function SuperAccountsScreen() {
                       key={p.id}
                       style={[styles.card, premiumShadow('#0f172a', 'sm')]}
                       activeOpacity={0.85}
-                      onPress={() => { tap(); setWalletPartner(p); }}
+                      onPress={() => { tap(); setWalletPartnerInitialMode(null); setWalletPartner(p); }}
                     >
                       <IdentityBadge name={p.name} sub={`Technical Staff · 📱 ${p.mobile}${p.kingId ? ` · 🔑 ${p.kingId}` : ''}`} tint="#fef3c7" />
-                      <View style={styles.ledgerBtn}>
-                        <Ionicons name="wallet-outline" size={13} color={theme.primary} />
-                        <Text style={styles.ledgerBtnText}>Ledger</Text>
+                      <View style={{ flexDirection: 'row', gap: 6 }}>
+                        <TouchableOpacity
+                          style={[styles.reviewBtn, { backgroundColor: '#16a34a', flexDirection: 'row', alignItems: 'center', gap: 4 }]}
+                          activeOpacity={0.85}
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            tap();
+                            setWalletPartnerInitialMode('CREDIT');
+                            setWalletPartner(p);
+                          }}
+                        >
+                          <Ionicons name="card-outline" size={13} color="#ffffff" />
+                          <Text style={styles.reviewBtnText}>Pay Staff</Text>
+                        </TouchableOpacity>
+                        <View style={styles.ledgerBtn}>
+                          <Ionicons name="wallet-outline" size={13} color={theme.primary} />
+                          <Text style={styles.ledgerBtnText}>Ledger</Text>
+                        </View>
                       </View>
                     </TouchableOpacity>
                   ))}
@@ -302,8 +320,8 @@ export default function SuperAccountsScreen() {
           </View>
         ) : null}
 
-        {section === 'BONUSES' ? (
-          <AdminBonusSectionComponent />
+        {section === 'WALLETS' ? (
+          <AdminWalletManagementView />
         ) : null}
 
         {section === 'REQUESTS' ? (
@@ -372,7 +390,7 @@ export default function SuperAccountsScreen() {
       <ReviewModal request={activeRequest} onClose={() => setActiveRequest(null)} />
       <PlanPaymentReviewModal request={activePlanPayment} onClose={() => setActivePlanPayment(null)} />
       <FarmerPlanPaymentReviewModal request={activeFarmerPlanPayment} onClose={() => setActiveFarmerPlanPayment(null)} />
-      <PartnerWalletModal partner={walletPartner} onClose={() => setWalletPartner(null)} />
+      <PartnerWalletModal partner={walletPartner} initialMode={walletPartnerInitialMode} onClose={() => { setWalletPartner(null); setWalletPartnerInitialMode(null); }} />
     </View>
   );
 }
@@ -404,14 +422,26 @@ function EmptyState({ icon, text, compact }: { icon: keyof typeof Ionicons.glyph
   );
 }
 
-function PartnerWalletModal({ partner, onClose }: { partner: AdminUser | null; onClose: () => void }) {
+function PartnerWalletModal({ partner, onClose, initialMode }: { partner: AdminUser | null; onClose: () => void; initialMode?: 'CREDIT' | 'DEBIT' | null }) {
   const { data: wallet, isLoading } = useWalletForUser(partner?.id);
   const creditWallet = useCreditWallet();
   const debitWallet = useDebitWallet();
-  const [balanceMode, setBalanceMode] = useState<'CREDIT' | 'DEBIT' | null>(null);
+  const [balanceMode, setBalanceMode] = useState<'CREDIT' | 'DEBIT' | null>(initialMode ?? null);
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (partner) {
+      setBalanceMode(initialMode ?? null);
+      setAmount('');
+      const defaultReason = partner.role === 'TECHNICAL_TRAINER' || (Array.isArray((partner as any).roles) && (partner as any).roles.includes('TECHNICAL_TRAINER'))
+        ? 'Technical Staff Salary / Fee Payout'
+        : '';
+      setReason(defaultReason);
+      setError(null);
+    }
+  }, [partner, initialMode]);
 
   const closeAddBalance = () => {
     setBalanceMode(null);
@@ -459,9 +489,38 @@ function PartnerWalletModal({ partner, onClose }: { partner: AdminUser | null; o
               {balanceMode ? (
                 <View style={{ gap: 8, marginBottom: 8 }}>
                   <Text style={styles.label}>Amount (₹)</Text>
+                  <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginBottom: 2 }}>
+                    {[500, 1000, 2000, 5000].map((preset) => (
+                      <TouchableOpacity
+                        key={preset}
+                        style={{
+                          paddingHorizontal: 10,
+                          paddingVertical: 5,
+                          borderRadius: RADIUS.pill,
+                          backgroundColor: amount === String(preset) ? theme.primary : '#f1f5f9',
+                          borderWidth: 1,
+                          borderColor: amount === String(preset) ? theme.primary : '#cbd5e1',
+                        }}
+                        onPress={() => {
+                          tap();
+                          setAmount(String(preset));
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            fontFamily: FONT.bold,
+                            color: amount === String(preset) ? '#ffffff' : '#334155',
+                          }}
+                        >
+                          ₹{preset.toLocaleString('en-IN')}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
                   <TextInput style={styles.input} keyboardType="numeric" value={amount} onChangeText={setAmount} placeholder="e.g. 500" placeholderTextColor="#94a3b8" />
-                  <Text style={styles.label}>Reason (optional)</Text>
-                  <TextInput style={styles.input} value={reason} onChangeText={setReason} placeholder="Cash top-up, correction, etc." placeholderTextColor="#94a3b8" />
+                  <Text style={styles.label}>Reason / Note</Text>
+                  <TextInput style={styles.input} value={reason} onChangeText={setReason} placeholder="Cash top-up, salary payout, etc." placeholderTextColor="#94a3b8" />
                   {error ? <Text style={styles.errorText}>{error}</Text> : null}
                   <View style={{ flexDirection: 'row', gap: 8 }}>
                     <TouchableOpacity style={styles.rejectBtn} onPress={closeAddBalance}>

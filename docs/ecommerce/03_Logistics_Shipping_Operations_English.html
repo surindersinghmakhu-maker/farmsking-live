@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="english">
+<head>
+<meta charset="UTF-8">
+<title>03 Logistics Shipping Operations English</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Gurmukhi:wght@400;600;700&display=swap');
+  
+  @page {
+    size: A4;
+    margin: 15mm 15mm 15mm 15mm;
+  }
+
+  body {
+    font-family: 'Inter', 'Noto Sans Devanagari', 'Noto Sans Gurmukhi', 'Segoe UI', sans-serif;
+    color: #0f172a;
+    line-height: 1.6;
+    font-size: 13px;
+    background-color: #ffffff;
+    padding: 10px;
+  }
+
+  .doc-title {
+    color: #15803d;
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 6px;
+    letter-spacing: -0.3px;
+  }
+
+  .divider {
+    border: none;
+    height: 2.5px;
+    background: linear-gradient(90deg, #15803d, #86efac);
+    margin-bottom: 18px;
+    border-radius: 2px;
+  }
+
+  .doc-h2 {
+    color: #0f172a;
+    font-size: 15px;
+    font-weight: 700;
+    margin-top: 18px;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .doc-h3 {
+    color: #166534;
+    font-size: 13.5px;
+    font-weight: 700;
+    margin-top: 12px;
+    margin-bottom: 6px;
+  }
+
+  .doc-p {
+    font-size: 12.5px;
+    color: #334155;
+    margin-bottom: 6px;
+  }
+
+  .custom-list {
+    margin-left: 18px;
+    margin-bottom: 10px;
+    color: #334155;
+  }
+
+  .custom-list li {
+    margin-bottom: 4px;
+  }
+
+  .quote-box {
+    background-color: #f0fdf4;
+    border-left: 4px solid #16a34a;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin: 10px 0;
+    font-size: 12px;
+    color: #166534;
+  }
+
+  .custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 11.5px;
+  }
+
+  .custom-table th {
+    background-color: #15803d;
+    color: #ffffff;
+    font-weight: 700;
+    padding: 8px 10px;
+    text-align: left;
+  }
+
+  .custom-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+  }
+
+  .custom-table tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+
+  code {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 11.5px;
+  }
+</style>
+</head>
+<body>
+<h1 class='doc-title'>FarmsKing Logistics & Shipping Operations Guide</h1><hr class='divider'>
+<p class='doc-p'><strong>Shipping, Courier Integration & Delivery Rules</strong></p>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>1. Overview</h2>
+<p class='doc-p'>FarmsKing utilizes the <strong>Shiprocket API</strong> infrastructure to handle pan-India logistics, linking with major carriers (Delhivery, BlueDart, Ekart, DTDC) for multi-vendor pickup and doorstep delivery.</p>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>2. 3 Flexible Delivery Modes</h2>
+<p class='doc-p'>1. <strong>FarmsKing Courier (Shiprocket)</strong>: Fully automated pickup from seller store and delivery to farmer.</p>
+<p class='doc-p'>2. <strong>Seller Self-Delivery</strong>: Designed for heavy equipment, machinery, or local tractor delivery.</p>
+<p class='doc-p'>3. <strong>Local Store Pickup</strong>: Farmers collect directly from the vendor's physical store with zero shipping cost.</p>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>3. The 50-50 Free Delivery Profit Split Rule</h2>
+<p class='doc-p'>When a seller chooses to offer <strong>Free Delivery</strong> on an item, shipping fees are split <strong>50-50%</strong> between FarmsKing and the Seller.</p>
+<br>
+<h3 class='doc-h3'>Formula:</h3>
+<ul class='custom-list'>
+<li><strong>FarmsKing Earning</strong> = Commission (10%) - (Shipping Fee / 2)</li>
+<li><strong>Seller Payout</strong> = Price - Commission (10%) - (Shipping Fee / 2) - GST TCS (1%)</li>
+</ul>
+<br>
+<h3 class='doc-h3'>Example Breakdown (₹2000 Product, ₹400 Shipping Fee):</h3>
+<ul class='custom-list'>
+<li>Product Price: ₹2,000</li>
+<li>10% FarmsKing Commission: ₹200</li>
+<li>Actual Shipping Fee: ₹400</li>
+<li>FarmsKing 50% Share of Shipping: ₹200</li>
+<li>Seller 50% Share of Shipping: ₹200</li>
+<li><strong>FarmsKing Final Earning</strong>: ₹200 - ₹200 = <strong>₹0</strong> (FarmsKing covers its share via commission; zero out-of-pocket loss!).</li>
+<li><strong>Seller Final Payout</strong>: ₹2000 - ₹200 - ₹200 = <strong>₹1,600</strong> (- 1% TCS).</li>
+</ul>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>4. Seller App Product Addition Interface</h2>
+<p class='doc-p'>When sellers list products, the app dynamically displays:</p>
+<p class='doc-p'>1. <strong>Volumetric Weight Calculator</strong>: Auto-calculates shipping fee using dimensions (L x W x H) and weight.</p>
+<p class='doc-p'>2. <strong>Shipping Choice</strong>: Standard Customer Paid Delivery vs Free Delivery (50-50 split rule applied).</p>
+<br>
+</body>
+</html>

@@ -29,4 +29,24 @@ export class CreateProductDto {
   @IsNumber()
   @Min(0)
   stockQty?: number;
+
+  @IsOptional()
+  @IsString()
+  sellerStoreId?: string;
+
+  @IsOptional()
+  @IsString()
+  hsnCode?: string;
+
+  @IsOptional()
+  @IsString()
+  sku?: string;
+
+  @IsOptional()
+  @IsNumber()
+  gstPercentage?: number;
+
+  @IsOptional()
+  @IsNumber()
+  weightKg?: number;
 }

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="english">
+<head>
+<meta charset="UTF-8">
+<title>02 Financial GST TCS Guide English</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Gurmukhi:wght@400;600;700&display=swap');
+  
+  @page {
+    size: A4;
+    margin: 15mm 15mm 15mm 15mm;
+  }
+
+  body {
+    font-family: 'Inter', 'Noto Sans Devanagari', 'Noto Sans Gurmukhi', 'Segoe UI', sans-serif;
+    color: #0f172a;
+    line-height: 1.6;
+    font-size: 13px;
+    background-color: #ffffff;
+    padding: 10px;
+  }
+
+  .doc-title {
+    color: #15803d;
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 6px;
+    letter-spacing: -0.3px;
+  }
+
+  .divider {
+    border: none;
+    height: 2.5px;
+    background: linear-gradient(90deg, #15803d, #86efac);
+    margin-bottom: 18px;
+    border-radius: 2px;
+  }
+
+  .doc-h2 {
+    color: #0f172a;
+    font-size: 15px;
+    font-weight: 700;
+    margin-top: 18px;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .doc-h3 {
+    color: #166534;
+    font-size: 13.5px;
+    font-weight: 700;
+    margin-top: 12px;
+    margin-bottom: 6px;
+  }
+
+  .doc-p {
+    font-size: 12.5px;
+    color: #334155;
+    margin-bottom: 6px;
+  }
+
+  .custom-list {
+    margin-left: 18px;
+    margin-bottom: 10px;
+    color: #334155;
+  }
+
+  .custom-list li {
+    margin-bottom: 4px;
+  }
+
+  .quote-box {
+    background-color: #f0fdf4;
+    border-left: 4px solid #16a34a;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin: 10px 0;
+    font-size: 12px;
+    color: #166534;
+  }
+
+  .custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 11.5px;
+  }
+
+  .custom-table th {
+    background-color: #15803d;
+    color: #ffffff;
+    font-weight: 700;
+    padding: 8px 10px;
+    text-align: left;
+  }
+
+  .custom-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+  }
+
+  .custom-table tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+
+  code {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 11.5px;
+  }
+</style>
+</head>
+<body>
+<h1 class='doc-title'>FarmsKing Financial, Banking & GST TCS Compliance Guide</h1><hr class='divider'>
+<p class='doc-p'><strong>Financial Rules, Nodal Banking, Tax and GST TCS Policy</strong></p>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>1. Banking Architecture Setup</h2>
+<p class='doc-p'>Operating a compliant multi-seller marketplace requires two primary banking components:</p>
+<br>
+<p class='doc-p'>1. <strong>ICICI Bank E-Commerce Nodal / Escrow Account</strong>:</p>
+<ul class='custom-list'>
+<li>Holds buyer funds temporarily before seller disbursement.</li>
+<li>Built under RBI guidelines for E-Commerce Market Aggregators.</li>
+<p class='doc-p'>2. <strong>Cashfree Marketplace Split Gateway</strong>:</p>
+<li>Automatically splits incoming payments: FarmsKing 10% commission goes to FarmsKing Current Account, while 90% (- 1% GST TCS) goes to the Seller's Account.</li>
+</ul>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>2. GST TCS (Tax Collected at Source) - 1% Rule</h2>
+<ul class='custom-list'>
+<li><strong>Statutory Requirement (Sec 52 CGST Act)</strong>: Every e-commerce marketplace operator must deduct 1% GST TCS (0.5% CGST + 0.5% SGST or 1% IGST) on net seller sales.</li>
+<li><strong>Calculation Example</strong>:</li>
+<li>Item Sale Price: ₹1,000</li>
+<li>GST TCS (1%): ₹10 (Deposited directly to the Govt portal under the seller's GSTIN).</li>
+<li>Seller receives ₹10 as Input Tax Credit (ITC) to offset their monthly GST liability.</li>
+</ul>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>3. C.A. (Chartered Accountant) Reports & GSTR-8 Filing</h2>
+<p class='doc-p'>FarmsKing Admin Portal features a dedicated C.A. Export Hub:</p>
+<ul class='custom-list'>
+<li><strong>GSTR-8 Monthly Export</strong>:</li>
+<li>Filed monthly before the 10th.</li>
+<li>CSV/Excel format contains: Seller GSTIN, Gross Sales, Returns, Net Taxable Value, and 1% TCS Amount.</li>
+</ul>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>4. Weekly Payout Schedule</h2>
+<ul class='custom-list'>
+<li><strong>Settlement Cycle</strong>: T+7 days (7 days post-delivery to honor return windows).</li>
+<li><strong>Payout Day</strong>: Every Thursday.</li>
+<li><strong>Automation</strong>: Executed automatically via Cashfree Auto-Payout API.</li>
+</ul>
+<br>
+</body>
+</html>

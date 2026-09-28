@@ -58,10 +58,81 @@ export class WithdrawalsService {
     });
   }
 
-  listAll() {
-    return this.prisma.withdrawalRequest.findMany({
-      include: { businessPartner: { select: { id: true, name: true, mobile: true } } },
+  async listAll() {
+    const requests = await this.prisma.withdrawalRequest.findMany({
+      include: {
+        businessPartner: {
+          select: {
+            id: true,
+            name: true,
+            mobile: true,
+            kingId: true,
+            upiId: true,
+            bankAccountNumber: true,
+            bankIfsc: true,
+          },
+        },
+      },
       orderBy: { requestedAt: 'desc' },
+    });
+
+    const partnerIds = Array.from(new Set(requests.map((r) => r.businessPartnerId)));
+
+    const [credits, debits, creditTxs] = await Promise.all([
+      this.prisma.walletTransaction.groupBy({
+        by: ['userId'],
+        where: { userId: { in: partnerIds }, type: 'CREDIT' },
+        _sum: { amount: true },
+      }),
+      this.prisma.walletTransaction.groupBy({
+        by: ['userId'],
+        where: { userId: { in: partnerIds }, type: 'DEBIT' },
+        _sum: { amount: true },
+      }),
+      this.prisma.walletTransaction.findMany({
+        where: { userId: { in: partnerIds }, type: 'CREDIT' },
+        select: { userId: true, amount: true, reason: true },
+      }),
+    ]);
+
+    const creditMap = new Map(credits.map((c) => [c.userId, Number(c._sum.amount ?? 0)]));
+    const debitMap = new Map(debits.map((d) => [d.userId, Number(d._sum.amount ?? 0)]));
+
+    const welcomeMap = new Map<string, number>();
+    const referralMap = new Map<string, number>();
+    const commissionMap = new Map<string, number>();
+
+    creditTxs.forEach((tx) => {
+      const amt = Number(tx.amount || 0);
+      const r = tx.reason.toLowerCase();
+      if (r.includes('welcome')) {
+        welcomeMap.set(tx.userId, (welcomeMap.get(tx.userId) || 0) + amt);
+      } else if (r.includes('referral') || r.includes('joined') || r.includes('plan bonus')) {
+        referralMap.set(tx.userId, (referralMap.get(tx.userId) || 0) + amt);
+      } else {
+        commissionMap.set(tx.userId, (commissionMap.get(tx.userId) || 0) + amt);
+      }
+    });
+
+    return requests.map((r) => {
+      const totalCredit = creditMap.get(r.businessPartnerId) || 0;
+      const totalDebit = debitMap.get(r.businessPartnerId) || 0;
+      const balance = totalCredit - totalDebit;
+      const welcomeEarnings = welcomeMap.get(r.businessPartnerId) || 0;
+      const referralEarnings = referralMap.get(r.businessPartnerId) || 0;
+      const commissionEarnings = commissionMap.get(r.businessPartnerId) || 0;
+
+      return {
+        ...r,
+        partnerWallet: {
+          balance,
+          totalCredit,
+          totalDebit,
+          welcomeEarnings,
+          referralEarnings,
+          commissionEarnings,
+        },
+      };
     });
   }
 

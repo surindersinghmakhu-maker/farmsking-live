@@ -25,6 +25,7 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { SuperAdminExpenseCategoriesModal } from '@/components/SuperAdminExpenseCategoriesModal';
 import { AdminInfoModal, SuperAdminWorkspaceModal, UserGuidesModal } from '@/app/(tabs)/more';
+import { APP_VERSION } from '@/src/constants/version';
 
 const theme = RoleThemes.SUPER_ADMIN;
 
@@ -93,10 +94,10 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
       const res = await apiClient.post('/whatsapp/sync-group-members');
       const r = res.data?.result;
       setSyncResult(
-        `✅ Sync Done! Added: ${r?.addedCount ?? 0}, Invited: ${r?.inviteSentCount ?? 0}, Removed: ${r?.removedCount ?? 0}`,
+        `Sync Done! Added: ${r?.addedCount ?? 0}, Invited: ${r?.inviteSentCount ?? 0}, Removed: ${r?.removedCount ?? 0}`,
       );
     } catch {
-      setSyncResult('⚠️ Sync failed. Check WhatsApp connection.');
+      setSyncResult('Sync failed. Check WhatsApp connection.');
     } finally {
       setSyncing(false);
     }
@@ -144,7 +145,7 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
       setShowGroupPicker(true);
     } catch {
       setGroupsList([]);
-      alert('⚠️ Could not load groups. WhatsApp bot must be connected and set as group admin.');
+      alert('Could not load groups. WhatsApp bot must be connected and set as group admin.');
     } finally {
       setLoadingGroups(false);
     }
@@ -173,7 +174,7 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
       ══════════════════════════════════════════════════════ */}
       <View style={wStyles.sectionHeader}>
         <Ionicons name="people-circle-outline" size={15} color="#7c3aed" />
-        <Text style={[wStyles.sectionTitle, { color: '#7c3aed' }]}>📋 Target WhatsApp Group</Text>
+        <Text style={[wStyles.sectionTitle, { color: '#7c3aed' }]}>Target WhatsApp Group</Text>
       </View>
 
       {/* Current status badge */}
@@ -192,7 +193,7 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
       <View style={wStyles.groupBox}>
         <Text style={wStyles.groupBoxLabel}>Group Invite Link or JID</Text>
         <Text style={wStyles.groupBoxHint}>
-          {'Open WhatsApp Group → ⋮ → Group Info → Invite Link → Copy\n'}
+          {'Open WhatsApp Group → Group Info → Invite Link → Copy\n'}
           {'Format: '}
           <Text style={{ fontFamily: 'monospace', fontSize: 10 }}>https://chat.whatsapp.com/XXX</Text>
           {'  or JID: '}
@@ -224,7 +225,7 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
           </TouchableOpacity>
         </View>
 
-        {groupSaved && <Text style={wStyles.successText}>✅ Group address saved successfully!</Text>}
+        {groupSaved && <Text style={wStyles.successText}>Group address saved successfully!</Text>}
         {groupError && <Text style={wStyles.errorText}>{groupError}</Text>}
       </View>
 
@@ -248,8 +249,8 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
             <Ionicons name="list-outline" size={16} color="#ffffff" />
             <Text style={wStyles.actionBtnText}>
               {status?.isConnected
-                ? "📋 Select Group from Bot's Group List"
-                : '⚠️ Connect bot first to browse groups'}
+                ? "Select Group from Bot's Group List"
+                : 'Connect bot first to browse groups'}
             </Text>
           </>
         )}
@@ -260,7 +261,7 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
         <View style={wStyles.modalOverlay}>
           <View style={wStyles.modalCard}>
             <View style={wStyles.modalHeader}>
-              <Text style={wStyles.modalTitle}>📋 Select Target WhatsApp Group</Text>
+              <Text style={wStyles.modalTitle}>Select Target WhatsApp Group</Text>
               <TouchableOpacity onPress={() => setShowGroupPicker(false)}>
                 <Ionicons name="close-circle" size={22} color="#64748b" />
               </TouchableOpacity>
@@ -271,7 +272,7 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
             <ScrollView style={{ maxHeight: 380 }} showsVerticalScrollIndicator={false}>
               {groupsList.length === 0 ? (
                 <Text style={wStyles.emptyText}>
-                  ⚠️ No groups found. Make sure the WhatsApp Bot is added as an Admin to your target group.
+                  No groups found. Make sure the WhatsApp Bot is added as an Admin to your target group.
                 </Text>
               ) : (
                 groupsList.map((group) => (
@@ -286,7 +287,7 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
                     <View style={{ flex: 1 }}>
                       <Text style={wStyles.groupName}>{group.name}</Text>
                       <Text style={wStyles.groupJid} numberOfLines={1}>{group.jid}</Text>
-                      <Text style={wStyles.groupMeta}>👥 {group.memberCount} members</Text>
+                      <Text style={wStyles.groupMeta}>{group.memberCount} members</Text>
                     </View>
                     {savedGroupJid === group.jid && (
                       <Ionicons name="checkmark-circle" size={20} color="#16a34a" />
@@ -306,7 +307,7 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
 
       <View style={wStyles.sectionHeader}>
         <Ionicons name="qr-code-outline" size={15} color="#0369a1" />
-        <Text style={wStyles.sectionTitle}>📲 WhatsApp Bot — Link & Status</Text>
+        <Text style={wStyles.sectionTitle}>WhatsApp Bot — Link & Status</Text>
       </View>
 
       {loading || !status ? (
@@ -321,7 +322,7 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
           <View style={wStyles.connectedBadge}>
             <View style={wStyles.connectedDot} />
             <View style={{ flex: 1 }}>
-              <Text style={wStyles.connectedText}>🟢 WhatsApp Bot Connected & Active</Text>
+              <Text style={wStyles.connectedText}>WhatsApp Bot Connected & Active</Text>
               <Text style={wStyles.connectedSub}>
                 Bot is linked. Auto add/remove reconciliation runs every 30 minutes.
               </Text>
@@ -355,7 +356,7 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
             ) : (
               <>
                 <Ionicons name="sync-outline" size={15} color="#ffffff" />
-                <Text style={wStyles.actionBtnText}>🔄 Run Manual Sync Now</Text>
+                <Text style={wStyles.actionBtnText}>Run Manual Sync Now</Text>
               </>
             )}
           </TouchableOpacity>
@@ -382,18 +383,18 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
         /* ── QR CODE ───────────────────────────────── */
         <View style={{ gap: 10, alignItems: 'center' }}>
           <View style={wStyles.qrInstructions}>
-            <Text style={wStyles.qrInstructTitle}>📱 How to link your WhatsApp:</Text>
-            <Text style={wStyles.qrStep}>1️⃣  Open WhatsApp or WhatsApp Business on your phone</Text>
-            <Text style={wStyles.qrStep}>2️⃣  Tap Menu (⋮) → Settings → Linked Devices</Text>
-            <Text style={wStyles.qrStep}>3️⃣  Tap "Link a Device" → scan the QR code below</Text>
+            <Text style={wStyles.qrInstructTitle}>How to link your WhatsApp:</Text>
+            <Text style={wStyles.qrStep}>1. Open WhatsApp or WhatsApp Business on your phone</Text>
+            <Text style={wStyles.qrStep}>2. Tap Menu → Settings → Linked Devices</Text>
+            <Text style={wStyles.qrStep}>3. Tap "Link a Device" → scan the QR code below</Text>
             <Text style={[wStyles.qrStep, { color: '#b45309', marginTop: 4 }]}>
-              ⚠️  The account you link must be Admin in the target group.
+              The account you link must be Admin in the target group.
             </Text>
           </View>
           <View style={wStyles.qrImageBox}>
             <Image source={{ uri: status.qrCodeDataUrl }} style={wStyles.qrImage} resizeMode="contain" />
           </View>
-          <Text style={wStyles.qrNote}>🔄 QR code auto-refreshes every 5 seconds — scan quickly</Text>
+          <Text style={wStyles.qrNote}>QR code auto-refreshes every 5 seconds — scan quickly</Text>
         </View>
 
       ) : (
@@ -401,7 +402,7 @@ function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
         <View style={wStyles.centerBox}>
           <ActivityIndicator color="#f59e0b" />
           <Text style={[wStyles.loadingText, { color: '#b45309' }]}>
-            ⏳ Generating QR Code... Please wait a moment
+            Generating QR Code... Please wait a moment
           </Text>
         </View>
       )}
@@ -598,9 +599,9 @@ function CategoryFeatureFlagPanel() {
     try {
       setSaving(true);
       await apiClient.patch('/app-settings/feature-flags', flags);
-      alert('✅ Category feature settings saved successfully!');
+      alert('Category feature settings saved successfully!');
     } catch {
-      alert('❌ Error saving category feature settings.');
+      alert('Error saving category feature settings.');
     } finally {
       setSaving(false);
     }
@@ -628,7 +629,7 @@ function CategoryFeatureFlagPanel() {
           <Ionicons name="apps" size={20} color="#ffffff" />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={[styles.cardTitle, { color: '#ffffff' }]}>🛡️ Categories & Sub-Categories Switches</Text>
+          <Text style={[styles.cardTitle, { color: '#ffffff' }]}>Categories & Sub-Categories Switches</Text>
           <Text style={[styles.cardSub, { color: '#94a3b8' }]}>
             Toggle live ON/OFF status for any platform module or feature (Shopping, Voice Call, WhatsApp, etc.)
           </Text>
@@ -652,7 +653,7 @@ function CategoryFeatureFlagPanel() {
             ) : (
               <>
                 <Ionicons name="save-outline" size={16} color="#ffffff" />
-                <Text style={wStyles.btnText}>💾 Save All Feature Switches</Text>
+                <Text style={wStyles.btnText}>Save All Feature Switches</Text>
               </>
             )}
           </TouchableOpacity>
@@ -693,7 +694,7 @@ function CategoryFeatureFlagPanel() {
                       </Text>
                     </View>
                     <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: category.enabled ? '#38bdf8' : '#f43f5e' }}>
-                      {category.enabled ? `● ON (${activeSubCount}/${subCount} Active)` : '○ Category Disabled'}
+                      {category.enabled ? `ON (${activeSubCount}/${subCount} Active)` : 'Category Disabled'}
                     </Text>
                   </View>
 
@@ -775,13 +776,13 @@ function ECommerceSettingsPanel() {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
       await updateSettings.mutateAsync({ storefrontMaintenanceMode: value });
-      setSavedNotice(value ? '🔒 Storefront Maintenance Mode ENABLED!' : '✅ Storefront Maintenance Mode DISABLED!');
+      setSavedNotice(value ? 'Storefront Maintenance Mode ENABLED!' : 'Storefront Maintenance Mode DISABLED!');
       setTimeout(() => setSavedNotice(null), 3500);
     } catch (err: any) {
       const errMsg = Array.isArray(err?.response?.data?.message)
         ? err.response.data.message.join(', ')
         : (err?.response?.data?.message || err?.message || 'Could not save settings.');
-      setSavedNotice(`❌ ${errMsg}`);
+      setSavedNotice(errMsg);
       setTimeout(() => setSavedNotice(null), 4000);
     }
   };
@@ -790,13 +791,13 @@ function ECommerceSettingsPanel() {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
       await updateSettings.mutateAsync({ storefrontMaintenanceMode: maintenanceMode });
-      setSavedNotice('✅ E-Commerce Settings Saved!');
+      setSavedNotice('E-Commerce Settings Saved!');
       setTimeout(() => setSavedNotice(null), 3000);
     } catch (err: any) {
       const errMsg = Array.isArray(err?.response?.data?.message)
         ? err.response.data.message.join(', ')
         : (err?.response?.data?.message || err?.message || 'Could not save settings.');
-      setSavedNotice(`❌ ${errMsg}`);
+      setSavedNotice(errMsg);
       setTimeout(() => setSavedNotice(null), 4000);
     }
   };
@@ -812,7 +813,7 @@ function ECommerceSettingsPanel() {
           <Ionicons name="cart" size={20} color="#ffffff" />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.cardTitle}>🛍️ E-Commerce & Shop Control Settings</Text>
+          <Text style={styles.cardTitle}>E-Commerce & Shop Control Settings</Text>
           <Text style={styles.cardSub}>
             Configure GST ON/OFF, Free Delivery threshold, COD, Gateway payments & Store maintenance mode.
           </Text>
@@ -830,7 +831,7 @@ function ECommerceSettingsPanel() {
           {/* GST Tax Calculation Switch */}
           <View style={styles.subToggleRow}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.subToggleTitle}>🏷️ Enable GST Tax Calculations</Text>
+              <Text style={styles.subToggleTitle}>Enable GST Tax Calculations</Text>
               <Text style={styles.subToggleDesc}>Apply 5%, 12%, 18% GST tax rates to product prices</Text>
             </View>
             <Switch
@@ -844,7 +845,7 @@ function ECommerceSettingsPanel() {
           {/* Cash on Delivery Payment Switch */}
           <View style={styles.subToggleRow}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.subToggleTitle}>💵 Cash on Delivery (COD) Payment Option</Text>
+              <Text style={styles.subToggleTitle}>Cash on Delivery (COD) Payment Option</Text>
               <Text style={styles.subToggleDesc}>Allow buyers to pay cash upon order delivery</Text>
             </View>
             <Switch
@@ -858,7 +859,7 @@ function ECommerceSettingsPanel() {
           {/* Online Gateway Payments Switch */}
           <View style={styles.subToggleRow}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.subToggleTitle}>💳 Online Gateway & UPI Payments</Text>
+              <Text style={styles.subToggleTitle}>Online Gateway & UPI Payments</Text>
               <Text style={styles.subToggleDesc}>Enable PhonePe / UPI instant online checkout</Text>
             </View>
             <Switch
@@ -872,7 +873,7 @@ function ECommerceSettingsPanel() {
           {/* Free Shipping Threshold */}
           <View style={{ gap: 4 }}>
             <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#334155' }}>
-              🚚 Free Shipping Threshold Amount (₹)
+              Free Shipping Threshold Amount (₹)
             </Text>
             <TextInput
               style={{
@@ -896,7 +897,7 @@ function ECommerceSettingsPanel() {
           {/* Storefront Maintenance Mode Switch */}
           <View style={styles.subToggleRow}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.subToggleTitle}>🔒 Storefront Maintenance Mode</Text>
+              <Text style={styles.subToggleTitle}>Storefront Maintenance Mode</Text>
               <Text style={styles.subToggleDesc}>Temporarily pause new buyer orders during inventory update</Text>
             </View>
             <Switch
@@ -918,7 +919,7 @@ function ECommerceSettingsPanel() {
             onPress={handleSaveEcomSettings}
           >
             <Ionicons name="save-outline" size={16} color="#ffffff" />
-            <Text style={wStyles.btnText}>💾 Save E-Commerce Settings</Text>
+            <Text style={wStyles.btnText}>Save E-Commerce Settings</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -949,10 +950,10 @@ function OtpDeliveryChannelPanel() {
   };
 
   const CHANNELS = [
-    { id: 'WHATSAPP', label: '💬 WhatsApp Direct', icon: 'logo-whatsapp', desc: 'Send OTP via WhatsApp Bot' },
-    { id: 'SMS', label: '📱 SMS Text Message', icon: 'chatbox-text-outline', desc: 'Send OTP via Mobile SMS' },
-    { id: 'EMAIL', label: '📧 Email OTP', icon: 'mail-outline', desc: 'Send OTP via User Email' },
-    { id: 'ALL', label: '⚡ All Channels', icon: 'flash-outline', desc: 'Send OTP across WhatsApp, SMS & Email simultaneously' },
+    { id: 'WHATSAPP', label: 'WhatsApp Direct', icon: 'logo-whatsapp', desc: 'Send OTP via WhatsApp Bot' },
+    { id: 'SMS', label: 'SMS Text Message', icon: 'chatbox-text-outline', desc: 'Send OTP via Mobile SMS' },
+    { id: 'EMAIL', label: 'Email OTP', icon: 'mail-outline', desc: 'Send OTP via User Email' },
+    { id: 'ALL', label: 'All Channels', icon: 'flash-outline', desc: 'Send OTP across WhatsApp, SMS & Email simultaneously' },
   ];
 
   return (
@@ -966,7 +967,7 @@ function OtpDeliveryChannelPanel() {
           <Ionicons name="key" size={20} color="#ffffff" />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.cardTitle}>🔑 New User OTP Delivery Channel</Text>
+          <Text style={styles.cardTitle}>New User OTP Delivery Channel</Text>
           <Text style={styles.cardSub}>Select channel to deliver OTP codes for registration & forgot password</Text>
         </View>
         <Ionicons
@@ -1004,165 +1005,292 @@ function OtpDeliveryChannelPanel() {
   );
 }
 
-function ReferralBonusSettingsPanel() {
+/** Helper to convert any date representation to Indian Farmer format (DD/MM/YYYY) */
+function formatIndianDate(dateStr: string): string {
+  if (!dateStr) return '';
+  const trimmed = dateStr.trim();
+  if (trimmed.includes('/')) {
+    const parts = trimmed.split('/');
+    if (parts.length === 3) {
+      const [d, m, y] = parts;
+      return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y.length === 2 ? '20' + y : y}`;
+    }
+  }
+  if (trimmed.includes('-')) {
+    const parts = trimmed.split('-');
+    if (parts.length === 3) {
+      if (parts[0].length === 4) {
+        // YYYY-MM-DD
+        return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+      }
+      if (parts[2].length === 4) {
+        // DD-MM-YYYY
+        return `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}`;
+      }
+    }
+  }
+  const d = new Date(trimmed);
+  if (!isNaN(d.getTime())) {
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  }
+  return dateStr;
+}
+
+/** Helper to convert Indian Farmer format (DD/MM/YYYY) to ISO (YYYY-MM-DD) for backend storage & date calculations */
+function parseIndianDateToIso(dateStr: string): string {
+  if (!dateStr) return '';
+  const trimmed = dateStr.trim();
+  if (trimmed.includes('/')) {
+    const parts = trimmed.split('/');
+    if (parts.length === 3) {
+      const [d, m, y] = parts;
+      return `${y.length === 2 ? '20' + y : y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+    }
+  }
+  if (trimmed.includes('-')) {
+    const parts = trimmed.split('-');
+    if (parts.length === 3 && parts[0].length === 2 && (parts[2].length === 4 || parts[2].length === 2)) {
+      const [d, m, y] = parts;
+      return `${y.length === 2 ? '20' + y : y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+    }
+  }
+  return trimmed;
+}
+
+function CombinedReferralBonusSettingsPanel() {
   const { data: settings } = useAppSettings();
   const update = useUpdateAppSettings();
+
+  // --- Referral & Welcome Bonus State ---
   const [referralBonus, setReferralBonus] = useState<string>('10');
   const [newUserBonus, setNewUserBonus] = useState<string>('10');
   const [paidPlanBonus, setPaidPlanBonus] = useState<string>('50');
-  const [saving, setSaving] = useState(false);
-  const [savedNotice, setSavedNotice] = useState<string | null>(null);
+  const [schemeEnabled, setSchemeEnabled] = useState<boolean>(false);
+  const [schemeName, setSchemeName] = useState<string>('OFFER!');
+  const [expiryDateInput, setExpiryDateInput] = useState<string>('31/12/2026');
+  const [offerReferralBonus, setOfferReferralBonus] = useState<string>('1');
+  const [offerNewUserBonus, setOfferNewUserBonus] = useState<string>('5');
+  const [offerPaidPlanBonus, setOfferPaidPlanBonus] = useState<string>('9');
+  const [savingReferral, setSavingReferral] = useState(false);
+  const [savedReferralNotice, setSavedReferralNotice] = useState<string | null>(null);
+
+  // --- Business Partner Referral State ---
+  const [partnerCommission, setPartnerCommission] = useState<string>('100');
+  const [partnerNewUserBonus, setPartnerNewUserBonus] = useState<string>('20');
+  const [partnerPaidPlanBonus, setPartnerPaidPlanBonus] = useState<string>('100');
+  const [partnerSchemeEnabled, setPartnerSchemeEnabled] = useState<boolean>(false);
+  const [partnerSchemeName, setPartnerSchemeName] = useState<string>('OFFER!');
+  const [partnerExpiryDateInput, setPartnerExpiryDateInput] = useState<string>('31/12/2026');
+  const [offerPartnerCommission, setOfferPartnerCommission] = useState<string>('100');
+  const [offerPartnerNewUserBonus, setOfferPartnerNewUserBonus] = useState<string>('20');
+  const [offerPartnerPaidPlanBonus, setOfferPartnerPaidPlanBonus] = useState<string>('100');
+  const [savingPartner, setSavingPartner] = useState(false);
+  const [savedPartnerNotice, setSavedPartnerNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (settings) {
+      // Standard Referral & Welcome Bonus
       setReferralBonus(String(settings.referralSignupBonusAmount ?? 10));
       setNewUserBonus(String(settings.newUserSignupBonusAmount ?? 10));
       setPaidPlanBonus(String(settings.referralPaidPlanBonusAmount ?? 50));
+      setSchemeEnabled(settings.referralOfferSchemeEnabled ?? false);
+      setSchemeName(settings.referralOfferSchemeName || 'OFFER!');
+      setExpiryDateInput(formatIndianDate(settings.referralOfferExpiryDate || '2026-12-31'));
+      setOfferReferralBonus(String(settings.referralOfferReferrerBonus ?? 1));
+      setOfferNewUserBonus(String(settings.referralOfferNewUserBonus ?? 5));
+      setOfferPaidPlanBonus(String(settings.referralOfferPaidPlanBonus ?? 9));
+
+      // Business Partner Referral
+      setPartnerCommission(String(settings.partnerReferralCommissionAmount ?? 100));
+      setPartnerNewUserBonus(String(settings.partnerRefereeSignupBonusAmount ?? 20));
+      setPartnerPaidPlanBonus(String(settings.partnerReferralPaidPlanBonusAmount ?? 100));
+      setPartnerSchemeEnabled(settings.partnerOfferSchemeEnabled ?? false);
+      setPartnerSchemeName(settings.partnerOfferSchemeName || 'OFFER!');
+      setPartnerExpiryDateInput(formatIndianDate(settings.partnerOfferExpiryDate || '2026-12-31'));
+      setOfferPartnerCommission(String(settings.partnerOfferReferrerBonus ?? 100));
+      setOfferPartnerNewUserBonus(String(settings.partnerOfferNewUserBonus ?? 20));
+      setOfferPartnerPaidPlanBonus(String(settings.partnerOfferPaidPlanBonus ?? 100));
     }
   }, [settings]);
 
-  const handleSave = async () => {
+  const handleSaveReferral = async () => {
     const refVal = parseFloat(referralBonus);
     const newVal = parseFloat(newUserBonus);
     const paidVal = parseFloat(paidPlanBonus);
-    if (isNaN(refVal) || refVal < 0 || isNaN(newVal) || newVal < 0 || isNaN(paidVal) || paidVal < 0) {
+
+    if (
+      isNaN(refVal) || refVal < 0 ||
+      isNaN(newVal) || newVal < 0 ||
+      isNaN(paidVal) || paidVal < 0
+    ) {
       alert('Please enter valid non-negative bonus amounts.');
       return;
     }
 
     try {
-      setSaving(true);
+      setSavingReferral(true);
       await update.mutateAsync({
         referralSignupBonusAmount: refVal,
         newUserSignupBonusAmount: newVal,
         referralPaidPlanBonusAmount: paidVal,
       });
       if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      setSavedNotice('✅ Referral & Signup Wallet Bonus amounts saved successfully!');
-      setTimeout(() => setSavedNotice(null), 3500);
+      setSavedReferralNotice('Referral & Welcome Bonus settings saved!');
+      setTimeout(() => setSavedReferralNotice(null), 3500);
     } catch {
-      alert('❌ Failed to update referral bonus settings.');
+      alert('Failed to update referral bonus settings.');
     } finally {
-      setSaving(false);
+      setSavingReferral(false);
+    }
+  };
+
+  const handleSavePartner = async () => {
+    const commissionVal = parseFloat(partnerCommission);
+    const newUserVal = parseFloat(partnerNewUserBonus);
+    const paidPlanVal = parseFloat(partnerPaidPlanBonus);
+
+    if (
+      isNaN(commissionVal) || commissionVal < 0 ||
+      isNaN(newUserVal) || newUserVal < 0 ||
+      isNaN(paidPlanVal) || paidPlanVal < 0
+    ) {
+      alert('Please enter valid non-negative bonus/commission amounts.');
+      return;
+    }
+
+    try {
+      setSavingPartner(true);
+      await update.mutateAsync({
+        partnerReferralCommissionAmount: commissionVal,
+        partnerRefereeSignupBonusAmount: newUserVal,
+        partnerReferralPaidPlanBonusAmount: paidPlanVal,
+      });
+      if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setSavedPartnerNotice('Business Partner Referral settings saved!');
+      setTimeout(() => setSavedPartnerNotice(null), 3500);
+    } catch {
+      alert('Failed to update Business Partner commission settings.');
+    } finally {
+      setSavingPartner(false);
     }
   };
 
   return (
-    <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1.5, padding: 14 }]}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-          <View style={[styles.iconCircle, { backgroundColor: '#16a34a', width: 34, height: 34, borderRadius: 17 }]}>
-            <Ionicons name="gift" size={18} color="#ffffff" />
+    <View style={{ gap: 12 }}>
+      {/* CARD 1: Standard Referral & Welcome Bonus */}
+      <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#f0fdf4', borderColor: '#86efac', borderWidth: 1.5, padding: 8, gap: 6 }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+            <View style={[styles.iconCircle, { backgroundColor: '#16a34a', width: 26, height: 26, borderRadius: 13 }]}>
+              <Ionicons name="gift" size={14} color="#ffffff" />
+            </View>
+            <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' }}>Referral & Welcome Bonus</Text>
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' }}>🎁 Referral & Welcome Bonus Settings</Text>
-            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#166534' }}>Set instant signup, welcome offer & referee paid plan bonuses</Text>
+
+          <TouchableOpacity
+            style={{ backgroundColor: '#16a34a', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.sm, flexDirection: 'row', alignItems: 'center', gap: 4 }}
+            onPress={handleSaveReferral}
+            disabled={savingReferral}
+            activeOpacity={0.85}
+          >
+            {savingReferral ? (
+              <ActivityIndicator color="#ffffff" size="small" />
+            ) : (
+              <>
+                <Ionicons name="checkmark-circle-outline" size={13} color="#ffffff" />
+                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Save</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* 3 Full Bonus Inputs in Single Grid Row */}
+        <View style={{ flexDirection: 'row', gap: 4 }}>
+          <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 5, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: '#86efac' }}>
+            <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#166534', marginBottom: 2 }} numberOfLines={1}>
+              Referrer (₹)
+            </Text>
+            <TextInput
+              style={{
+                height: 26,
+                borderWidth: 1,
+                borderColor: '#cbd5e1',
+                borderRadius: RADIUS.xs,
+                paddingHorizontal: 4,
+                fontSize: 12,
+                fontFamily: FONT.extraBold,
+                color: '#0f172a',
+                backgroundColor: '#f8fafc',
+                textAlign: 'center',
+              }}
+              keyboardType="numeric"
+              value={referralBonus}
+              onChangeText={setReferralBonus}
+              placeholder="1"
+            />
+          </View>
+
+          <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 5, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: '#86efac' }}>
+            <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#166534', marginBottom: 2 }} numberOfLines={1}>
+              New User (₹)
+            </Text>
+            <TextInput
+              style={{
+                height: 26,
+                borderWidth: 1,
+                borderColor: '#cbd5e1',
+                borderRadius: RADIUS.xs,
+                paddingHorizontal: 4,
+                fontSize: 12,
+                fontFamily: FONT.extraBold,
+                color: '#0f172a',
+                backgroundColor: '#f8fafc',
+                textAlign: 'center',
+              }}
+              keyboardType="numeric"
+              value={newUserBonus}
+              onChangeText={setNewUserBonus}
+              placeholder="5"
+            />
+          </View>
+
+          <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 5, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: '#86efac' }}>
+            <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#15803d', marginBottom: 2 }} numberOfLines={1}>
+              Membership (₹)
+            </Text>
+            <TextInput
+              style={{
+                height: 26,
+                borderWidth: 1,
+                borderColor: '#cbd5e1',
+                borderRadius: RADIUS.xs,
+                paddingHorizontal: 4,
+                fontSize: 12,
+                fontFamily: FONT.extraBold,
+                color: '#0f172a',
+                backgroundColor: '#f8fafc',
+                textAlign: 'center',
+              }}
+              keyboardType="numeric"
+              value={paidPlanBonus}
+              onChangeText={setPaidPlanBonus}
+              placeholder="50"
+            />
           </View>
         </View>
 
-        <TouchableOpacity
-          style={{ backgroundColor: '#16a34a', paddingHorizontal: 14, paddingVertical: 8, borderRadius: RADIUS.md, flexDirection: 'row', alignItems: 'center', gap: 5 }}
-          onPress={handleSave}
-          disabled={saving}
-          activeOpacity={0.85}
-        >
-          {saving ? (
-            <ActivityIndicator color="#ffffff" size="small" />
-          ) : (
-            <>
-              <Ionicons name="checkmark-circle-outline" size={15} color="#ffffff" />
-              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>Save</Text>
-            </>
-          )}
-        </TouchableOpacity>
+        {savedReferralNotice ? (
+          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#16a34a', textAlign: 'center', marginTop: 2 }}>
+            {savedReferralNotice}
+          </Text>
+        ) : null}
       </View>
-
-      {/* 3 Bonus Inputs in Single Compact Row Grid */}
-      <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
-        <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#86efac', gap: 4 }}>
-          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#166534' }} numberOfLines={1}>
-            🤝 Referrer Bonus (₹)
-          </Text>
-          <TextInput
-            style={{
-              height: 34,
-              borderWidth: 1,
-              borderColor: '#cbd5e1',
-              borderRadius: RADIUS.sm,
-              paddingHorizontal: 8,
-              fontSize: 13,
-              fontFamily: FONT.extraBold,
-              color: '#0f172a',
-              backgroundColor: '#f8fafc',
-              textAlign: 'center',
-            }}
-            keyboardType="numeric"
-            value={referralBonus}
-            onChangeText={setReferralBonus}
-            placeholder="10"
-          />
-        </View>
-
-        <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#86efac', gap: 4 }}>
-          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#166534' }} numberOfLines={1}>
-            🎉 New User Offer (₹)
-          </Text>
-          <TextInput
-            style={{
-              height: 34,
-              borderWidth: 1,
-              borderColor: '#cbd5e1',
-              borderRadius: RADIUS.sm,
-              paddingHorizontal: 8,
-              fontSize: 13,
-              fontFamily: FONT.extraBold,
-              color: '#0f172a',
-              backgroundColor: '#f8fafc',
-              textAlign: 'center',
-            }}
-            keyboardType="numeric"
-            value={newUserBonus}
-            onChangeText={setNewUserBonus}
-            placeholder="10"
-          />
-        </View>
-
-        <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#86efac', gap: 4 }}>
-          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#15803d' }} numberOfLines={1}>
-            👑 Paid Plan Bonus (₹)
-          </Text>
-          <TextInput
-            style={{
-              height: 34,
-              borderWidth: 1,
-              borderColor: '#cbd5e1',
-              borderRadius: RADIUS.sm,
-              paddingHorizontal: 8,
-              fontSize: 13,
-              fontFamily: FONT.extraBold,
-              color: '#0f172a',
-              backgroundColor: '#f8fafc',
-              textAlign: 'center',
-            }}
-            keyboardType="numeric"
-            value={paidPlanBonus}
-            onChangeText={setPaidPlanBonus}
-            placeholder="50"
-          />
-        </View>
-      </View>
-
-      {savedNotice ? (
-        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#16a34a', marginTop: 4, textAlign: 'center' }}>
-          {savedNotice}
-        </Text>
-      ) : null}
     </View>
   );
-
 }
-
-import { APP_VERSION } from '@/src/constants/version';
 
 function AppDownloadSettingsPanel() {
   const { data: settings } = useAppSettings();
@@ -1187,10 +1315,10 @@ function AppDownloadSettingsPanel() {
         latestAppVersion: version.trim() || APP_VERSION,
       });
       if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      setSavedNotice('✅ App Download & Version saved!');
+      setSavedNotice('App Download & Version saved!');
       setTimeout(() => setSavedNotice(null), 3000);
     } catch {
-      alert('❌ Failed to update App Download settings.');
+      alert('Failed to update App Download settings.');
     } finally {
       setSaving(false);
     }
@@ -1204,7 +1332,7 @@ function AppDownloadSettingsPanel() {
             <Ionicons name="logo-android" size={18} color="#ffffff" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' }}>📱 App Download & Auto Update Link</Text>
+            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' }}>App Download & Auto Update Link</Text>
             <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#0369a1' }}>APK link & latest app version configuration</Text>
           </View>
         </View>
@@ -1230,7 +1358,7 @@ function AppDownloadSettingsPanel() {
       <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
         <View style={{ flex: 2.2, backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#7dd3fc', gap: 4 }}>
           <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#0369a1' }} numberOfLines={1}>
-            🔗 APK / Play Store Link
+            APK / Play Store Link
           </Text>
           <TextInput
             style={{
@@ -1253,7 +1381,7 @@ function AppDownloadSettingsPanel() {
 
         <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#7dd3fc', gap: 4 }}>
           <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#0369a1' }} numberOfLines={1}>
-            🏷️ App Version
+            App Version
           </Text>
           <TextInput
             style={{
@@ -1315,10 +1443,10 @@ function FreeTrialSettingsPanel() {
         freeTrialPlan: targetPlan,
       });
       if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      setSavedNotice('✅ Free Trial saved!');
+      setSavedNotice('Free Trial saved!');
       setTimeout(() => setSavedNotice(null), 3000);
     } catch {
-      alert('❌ Failed to update Free Trial settings.');
+      alert('Failed to update Free Trial settings.');
     } finally {
       setSaving(false);
     }
@@ -1332,7 +1460,7 @@ function FreeTrialSettingsPanel() {
             <Ionicons name="gift-outline" size={18} color="#ffffff" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' }}>🎁 Free Membership Trial Settings</Text>
+            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' }}>Free Membership Trial Settings</Text>
             <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#86198f' }}>Configure free trial status, duration & plan tier</Text>
           </View>
         </View>
@@ -1373,7 +1501,7 @@ function FreeTrialSettingsPanel() {
         {/* Col 2: Days */}
         <View style={{ width: 80, backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#f5d0fe', gap: 4 }}>
           <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#86198f' }} numberOfLines={1}>
-            ⏳ Days
+            Days
           </Text>
           <TextInput
             style={{
@@ -1398,11 +1526,12 @@ function FreeTrialSettingsPanel() {
         {/* Col 3: Plan Tier */}
         <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#f5d0fe', gap: 4 }}>
           <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#86198f' }} numberOfLines={1}>
-            👑 Target Plan Tier
+            Target Plan Tier
           </Text>
           <View style={{ flexDirection: 'row', gap: 4, height: 34, alignItems: 'center' }}>
             {(['PRO', 'SMART', 'SUPER'] as const).map((p) => {
               const isSelected = targetPlan === p;
+              const displayLabel = p === 'PRO' ? 'BASIC' : p === 'SMART' ? 'PRO' : 'VIP';
               return (
                 <TouchableOpacity
                   key={p}
@@ -1419,7 +1548,7 @@ function FreeTrialSettingsPanel() {
                   onPress={() => setTargetPlan(p)}
                 >
                   <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isSelected ? '#ffffff' : '#334155' }}>
-                    {p}
+                    {displayLabel}
                   </Text>
                 </TouchableOpacity>
               );
@@ -1742,12 +1871,10 @@ export default function SuperSettingsScreen() {
             {/* E-Commerce Global Settings Panel */}
             <ECommerceSettingsPanel />
           </View>
-
-        /* ── 2. MODIFICATIONS Tab ── */
         ) : cpanelSubTab === 'MODIFICATIONS' ? (
           <View style={{ gap: 14 }}>
-            {/* 🎁 Referral & Signup Wallet Bonus Options */}
-            <ReferralBonusSettingsPanel />
+            {/* 🎁 Combined Referral & Business Partner Bonus Panel */}
+            <CombinedReferralBonusSettingsPanel />
 
             {/* 📱 App Download & APK Update Link Panel */}
             <AppDownloadSettingsPanel />
@@ -1767,31 +1894,31 @@ export default function SuperSettingsScreen() {
                 </View>
               </View>
               <TouchableOpacity
-                style={[wStyles.btn, { backgroundColor: '#dc2626', marginTop: 4 }]}
+                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: RADIUS.md, backgroundColor: '#dc2626', marginTop: 4 }}
                 onPress={() => setShowCategoriesModal(true)}
               >
                 <Ionicons name="open-outline" size={16} color="#ffffff" />
-                <Text style={wStyles.btnText}>Open Category Manager Console</Text>
+                <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 }}>Open Category Manager Console</Text>
               </TouchableOpacity>
             </View>
 
-            {/* 👑 Admin Info & Brand Details */}
+            {/* Admin Info & Brand Details */}
             <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#eff6ff', borderColor: '#bfdbfe', borderWidth: 1 }]}>
               <View style={styles.cardHeader}>
                 <View style={[styles.iconCircle, { backgroundColor: '#2563eb' }]}>
                   <Ionicons name="shield-checkmark" size={20} color="#ffffff" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.cardTitle}>👑 Admin Info & Brand Details</Text>
+                  <Text style={styles.cardTitle}>Admin Info & Brand Details</Text>
                   <Text style={styles.cardSub}>App Name, Brand Logo, Tagline, Payment UPI & Super Admin Profile</Text>
                 </View>
               </View>
               <TouchableOpacity
-                style={[wStyles.btn, { backgroundColor: '#2563eb', marginTop: 4 }]}
+                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: RADIUS.md, backgroundColor: '#2563eb', marginTop: 4 }}
                 onPress={() => setShowAdminInfoModal(true)}
               >
                 <Ionicons name="create-outline" size={16} color="#ffffff" />
-                <Text style={wStyles.btnText}>Open Admin Info Console</Text>
+                <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 }}>Open Admin Info Console</Text>
               </TouchableOpacity>
             </View>
 
@@ -1801,8 +1928,6 @@ export default function SuperSettingsScreen() {
             {/* 💰 Farmer Plan Pricing Manager */}
             <PlanPricingSection />
           </View>
-
-        /* ── 3. OTHERS Tab ── */
         ) : (
           <View style={{ gap: 14 }}>
             {/* Super Admin Shortcuts Grid */}

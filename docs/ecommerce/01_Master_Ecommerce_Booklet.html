@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>01 Master Ecommerce Booklet</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+Gurmukhi:wght@400;600;700&display=swap');
+  
+  @page {
+    size: A4;
+    margin: 15mm 15mm 15mm 15mm;
+  }
+
+  body {
+    font-family: 'Inter', 'Noto Sans Gurmukhi', 'Arial', sans-serif;
+    color: #0f172a;
+    line-height: 1.6;
+    font-size: 13px;
+    background-color: #ffffff;
+    padding: 10px;
+  }
+
+  .doc-title {
+    color: #15803d;
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 6px;
+    letter-spacing: -0.3px;
+  }
+
+  .divider {
+    border: none;
+    height: 2.5px;
+    background: linear-gradient(90deg, #15803d, #86efac);
+    margin-bottom: 18px;
+    border-radius: 2px;
+  }
+
+  .doc-h2 {
+    color: #0f172a;
+    font-size: 15px;
+    font-weight: 700;
+    margin-top: 18px;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .doc-h3 {
+    color: #166534;
+    font-size: 13.5px;
+    font-weight: 700;
+    margin-top: 12px;
+    margin-bottom: 6px;
+  }
+
+  .doc-p {
+    font-size: 12.5px;
+    color: #334155;
+    margin-bottom: 6px;
+  }
+
+  .custom-list {
+    margin-left: 18px;
+    margin-bottom: 10px;
+    color: #334155;
+  }
+
+  .custom-list li {
+    margin-bottom: 4px;
+  }
+
+  .quote-box {
+    background-color: #f0fdf4;
+    border-left: 4px solid #16a34a;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin: 10px 0;
+    font-size: 12px;
+    color: #166534;
+  }
+
+  .custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 11.5px;
+  }
+
+  .custom-table th {
+    background-color: #15803d;
+    color: #ffffff;
+    font-weight: 700;
+    padding: 8px 10px;
+    text-align: left;
+  }
+
+  .custom-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #e2e8f0;
+    color: #334155;
+  }
+
+  .custom-table tr:nth-child(even) {
+    background-color: #f8fafc;
+  }
+
+  code {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 11.5px;
+  }
+</style>
+</head>
+<body>
+<h1 class='doc-title'>FarmsKing E-Commerce Master Manual & Operations Guide</h1><hr class='divider'>
+<p class='doc-p'><strong>ਈ-ਕੋਮਰਸ ਮਲਟੀ-ਸੈਲਰ ਸਟੋਰ ਮੈਨੇਜਮੈਂਟ ਸਿਸਟਮ - ਸੰਪੂਰਨ ਗਾਈਡ</strong></p>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>1. Executive Overview / ਮੁੱਖ ਉਦੇਸ਼</h2>
+<p class='doc-p'>FarmsKing ਦਾ ਈ-ਕੋਮਰਸ ਪਲੇਟਫਾਰਮ ਖੇਤੀਬਾੜੀ ਉਤਪਾਦਾਂ (ਬੀਜ, ਖਾਦਾਂ, ਟੂਲਸ, ਮਸ਼ੀਨਰੀ) ਦੀ ਖਰੀਦ-ਵੇਚ ਲਈ ਇੱਕ ਮਲਟੀ-ਸੈਲਰ ਮਾਰਕੀਟਪਲੇਸ ਹੈ।</p>
+<p class='doc-p'>ਇਹ ਸਿਸਟਮ ਸੈਲਰਾਂ (ਸਟੋਰਾਂ), ਖਰੀਦਦਾਰਾਂ (ਕਿਸਾਨਾਂ), ਲੌਜਿਸਟਿਕਸ (ਕੂਰੀਅਰ ਪਾਰਟਨਰ) ਅਤੇ ਵਿੱਤੀ ਕੰਪਲਾਇੰਸ (GST TCS, Tax) ਨੂੰ ਆਟੋਮੈਟਿਕ ਤਰੀਕੇ ਨਾਲ ਜੋੜਦਾ ਹੈ।</p>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>2. Platform Core Rules & Financial Model / ਮੁੱਖ ਨਿਯਮ ਅਤੇ ਕਮਿਸ਼ਨ</h2>
+<ul class='custom-list'>
+<li><strong>FarmsKing Platform Fee</strong>: 10% (ਹਰੇਕ ਵਿਕਰੀ 'ਤੇ)।</li>
+<li><strong>GST TCS Rate</strong>: 1% (ਸਰਕਾਰੀ ਨਿਯਮਾਂ ਅਨੁਸਾਰ ਸੈਲਰ ਦੇ ਹਿੱਸੇ ਵਿੱਚੋਂ ਕੱਟ ਕੇ ਜਮ੍ਹਾਂ)।</li>
+<li><strong>Free Delivery Rule (ਮੁਫ਼ਤ ਡਿਲਿਵਰੀ ਨਿਯਮ)</strong>:</li>
+<li>ਜੇਕਰ ਕਿਸੇ ਉਤਪਾਦ 'ਤੇ ਡਿਲਿਵਰੀ ਮੁਫ਼ਤ ਦਿੱਤੀ ਜਾਂਦੀ ਹੈ, ਤਾਂ ਉਸ ਦਾ ਖਰਚਾ FarmsKing ਅਤੇ Seller <strong>50-50% ਅੱਧਾ-ਅੱਧਾ</strong> ਵੰਡਣਗੇ।</li>
+<li>ਉਦਾਹਰਨ: ₹2000 ਦਾ ਪ੍ਰੋਡਕਟ, ₹400 ਡਿਲਿਵਰੀ ਖਰਚਾ (ਮੁਫ਼ਤ ਦਿੱਤੀ)।</li>
+<li>FarmsKing Margin (10%): ₹200</li>
+<li>FarmsKing Share of Shipping: ₹200</li>
+<li>Net FarmsKing Earning: ₹0 (ਕੋਈ ਘਾਟਾ ਨਹੀਂ, ₹0 ਜੇਬ ਵਿੱਚੋਂ)।</li>
+<li>Seller Product Price: ₹1800</li>
+<li>Seller Share of Shipping: ₹200</li>
+<li>Seller Payout: ₹1600 (- GST TCS).</li>
+</ul>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>3. Shipping & Logistics System / ਡਿਲਿਵਰੀ ਸਿਸਟਮ</h2>
+<p class='doc-p'>1. <strong>Shiprocket API Integration</strong>: ਆਟੋਮੈਟਿਕ ਪਿਨਕੋਡ ਚੈਕਿੰਗ, ਕੂਰੀਅਰ ਚੋਣ (Delhivery, BlueDart, Ekart) ਅਤੇ ਲਾਈਵ ਟਰੈਕਿੰਗ।</p>
+<p class='doc-p'>2. <strong>Delivery Modes</strong>:</p>
+<ul class='custom-list'>
+<li><strong>Seller Shipping</strong>: ਸੈਲਰ ਆਪ ਡਿਲਿਵਰ ਕਰਦਾ ਹੈ।</li>
+<li><strong>FarmsKing Courier (Shiprocket)</strong>: FarmsKing ਦਾ ਆਟੋਮੈਟਿਕ ਕੂਰੀਅਰ ਸਿਸਟਮ।</li>
+<li><strong>Local Store Pickup</strong>: ਕਿਸਾਨ ਆਪ ਦੁਕਾਨ ਤੋਂ ਚੱਕ ਸਕਦਾ ਹੈ।</li>
+</ul>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>4. Key Parties & Communication Protocols / ਸਬੰਧਤ ਧਿਰਾਂ ਅਤੇ ਗੱਲਬਾਤ ਦੇ ਤਰੀਕੇ</h2>
+<table class='custom-table'><thead><tr><th>Party (ਧਿਰ)</th><th>Role & Responsibility (ਜ਼ਿੰਮੇਵਾਰੀ)</th><th>Communication Focus (ਗੱਲਬਾਤ ਦਾ ਵਿਸ਼ਾ)</th></tr></thead><tbody><tr><td>**Sellers (ਵਪਾਰੀ)**</td><td>ਉਤਪਾਦ ਅੱਪਲੋਡ, ਪੈਕਿੰਗ, ਸਹੀ ਸਟਾਕ</td><td>ਰਜਿਸਟ੍ਰੇਸ਼ਨ, 10% ਕਮਿਸ਼ਨ, 50-50 ਡਿਲਿਵਰੀ ਨਿਯਮ, ਹਫ਼ਤਾਵਾਰ ਪੇਆਊਟ</td></tr><tr><td>**Bank (ICICI Bank)**</td><td>ਈ-ਕੋਮਰਸ ਨੋਡਲ / ਐਸਕਰੋ ਅਕਾਊਂਟ</td><td>ਨੋਡਲ ਅਕਾਊਂਟ ਖੋਲ੍ਹਣਾ, ਆਟੋਮੈਟਿਕ ਪੇਆਊਟ ਏਪੀਆਈ</td></tr><tr><td>**Chartered Accountant (CA)**</td><td>GSTR-8 ਫਾਈਲਿੰਗ & TCS ਡਿਪਾਜ਼ਿਟ</td><td>ਮਹੀਨਾਵਾਰ TCS ਰਿਪੋਰਟ, GSTR-8 ਸਬਮਿਸ਼ਨ, GST ਇਨਪੁਟ ਕ੍ਰੈਡਿਟ</td></tr><tr><td>**Payment Gateway (Cashfree)**</td><td>ਆਨਲਾਈਨ ਪੇਮੈਂਟ + ਆਟੋ ਸਪਲਿਟ ਪੇਆਊਟ</td><td>ਨੋਡਲ ਸਪਲਿਟ API, T+2 / T+7 ਪੇਆਊਟ ਸੈਟਲਮੈਂਟ</td></tr><tr><td>**Logistics (Shiprocket)**</td><td>ਕੂਰੀਅਰ ਪਿਕਅੱਪ, ਟਰੈਕਿੰਗ, ਆਰ.ਟੀ.ਓ</td><td>ਏਪੀਆਈ ਕੀਅਸ, ਪਿਕਅੱਪ ਐਡਰੈੱਸ, ਰਿਟਰਨ ਆਰਡਰ ਮੈਨੇਜਮੈਂਟ</td></tr></tbody></table>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>5. Dispute & Risk Management / ਝਗੜੇ ਅਤੇ ਸਮੱਸਿਆਵਾਂ ਦਾ ਹੱਲ</h2>
+<p class='doc-p'>1. <strong>Wrong/Damaged Product</strong>: Unboxing ਵੀਡੀਓ ਲਾਜ਼ਮੀ; ਸੈਲਰ ਬਦਲ ਕੇ ਦੇਵੇਗਾ ਜਾਂ 100% ਰਿਫੰਡ।</p>
+<p class='doc-p'>2. <strong>Delayed Delivery</strong>: Shiprocket API ਰਾਹੀਂ ਟਰੈਕਿੰਗ ਸੂਚਨਾ ਕਿਸਾਨ ਨੂੰ SMS/App 'ਤੇ ਭੇਜੀ ਜਾਵੇਗੀ।</p>
+<p class='doc-p'>3. <strong>RTO (Refused Delivery)</strong>: ਰਿਟਰਨ ਡਿਲਿਵਰੀ ਖਰਚਾ ਸੈਲਰ ਦੇ ਪੇਆਊਟ ਵਿੱਚੋਂ ਕੱਟਿਆ ਜਾਵੇਗਾ।</p>
+<p class='doc-p'>4. <strong>Fake Product / Expired Chemicals</strong>: ਸੈਲਰ ਦਾ ਅਕਾਊਂਟ ਤੁਰੰਤ ਬਲੌਕ + ₹10,000 ਜੁਰਮਾਨਾ।</p>
+<br>
+<p class='doc-p'>---</p>
+<br>
+<h2 class='doc-h2'>6. Official Terms & Conditions / ਕਾਨੂੰਨੀ ਸ਼ਰਤਾਂ</h2>
+<ul class='custom-list'>
+<li>ਸਾਰੇ ਸੈਲਰਾਂ ਕੋਲ ਵੈਧ GSTIN, PAN Card, ਅਤੇ ਬੈਂਕ ਅਕਾਊਂਟ ਹੋਣਾ ਲਾਜ਼ਮੀ ਹੈ।</li>
+<li>ਕੀਟਨਾਸ਼ਕ / ਦਵਾਈਆਂ ਵੇਚਣ ਵਾਲੇ ਸੈਲਰਾਂ ਕੋਲ ਵੈਧ ਖੇਤੀਬਾੜੀ ਲਾਇਸੈਂਸ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ।</li>
+<li>ਸਾਰੇ ਪੇਆਊਟ GST TCS (1%) ਕੱਟ ਕੇ ਹਰ ਵੀਰਵਾਰ ਸੈਲਰ ਅਕਾਊਂਟ ਵਿੱਚ ਟਰਾਂਸਫਰ ਕੀਤੇ ਜਾਣਗੇ।</li>
+</ul>
+<br>
+</body>
+</html>

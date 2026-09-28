@@ -726,7 +726,7 @@ export default function RecordsScreen() {
         loadedDelivery = Number(matchedBill.deliveryCharge) !== 0 ? String(Number(matchedBill.deliveryCharge)) : '';
       }
       if (matchedBill.notes) loadedNotes = matchedBill.notes;
-      if (matchedBill.createdAt) loadedBillDate = String(matchedBill.createdAt).slice(0, 10);
+      if (matchedBill.createdAt) loadedBillDate = getCleanIsoDate(String(matchedBill.createdAt));
       if (Array.isArray(matchedBill.items) && matchedBill.items.length > 0) {
         loadedItems = (matchedBill.items as any[]).map((bi: any, idx: number) => ({
           id: bi.id || `bill-item-${idx}-${Date.now()}`,
@@ -766,7 +766,7 @@ export default function RecordsScreen() {
             ? String(Number(bill.deliveryCharge))
             : '';
           if (bill.notes !== undefined) loadedNotes = bill.notes || '';
-          if (bill.createdAt) loadedBillDate = String(bill.createdAt).slice(0, 10);
+          if (bill.createdAt) loadedBillDate = getCleanIsoDate(String(bill.createdAt));
           if (Array.isArray(bill.items) && bill.items.length > 0) {
             loadedItems = (bill.items as any[]).map((bi: any, idx: number) => ({
               id: bi.id || `bill-item-${idx}-${Date.now()}`,
@@ -821,13 +821,9 @@ export default function RecordsScreen() {
     setAmountReceived(loadedAmountReceived !== null ? loadedAmountReceived : defaultRecd);
     setAmountReceivedMode(loadedReceivedMode);
     setSaleDescription(loadedNotes || item.notes || '');
-    // ✅ FIX: sale date — prefer bill date, then item.saleDate, then today
+    // ✅ FIX: sale date — use getCleanIsoDate so any format (ISO, DD/MM/YYYY, timestamp) is parsed cleanly to YYYY-MM-DD
     const rawSaleDate = loadedBillDate || item.saleDate || item.createdAt;
-    if (rawSaleDate) {
-      setSaleDate(String(rawSaleDate).slice(0, 10));
-    } else {
-      setSaleDate(todayIso());
-    }
+    setSaleDate(getCleanIsoDate(rawSaleDate));
     setEditingBillId(realBillIdToUse);
     setEditingBillNo(billNoToUse);
     setSaleStep('FORM');
@@ -882,9 +878,11 @@ export default function RecordsScreen() {
 
   // Get calendar data for a given month
   const getCalendarMonth = (isoDate: string) => {
-    const d = new Date(isoDate);
-    const year = d.getFullYear();
-    const month = d.getMonth();
+    const cleanStr = getCleanIsoDate(isoDate);
+    const d = new Date(cleanStr);
+    const validDate = isNaN(d.getTime()) ? new Date() : d;
+    const year = validDate.getFullYear();
+    const month = validDate.getMonth();
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     return { year, month, firstDay, daysInMonth };
@@ -895,9 +893,11 @@ export default function RecordsScreen() {
   const calDayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
   const shiftCalMonth = (dir: -1 | 1) => {
-    const d = new Date(saleDate);
-    d.setMonth(d.getMonth() + dir);
-    setSaleDate(d.toISOString().slice(0, 10));
+    const cleanStr = getCleanIsoDate(saleDate);
+    const d = new Date(cleanStr);
+    const validDate = isNaN(d.getTime()) ? new Date() : d;
+    validDate.setMonth(validDate.getMonth() + dir);
+    setSaleDate(validDate.toISOString().slice(0, 10));
   };
 
   const selectCalDay = (day: number) => {
@@ -2223,7 +2223,7 @@ export default function RecordsScreen() {
       const createdVoucherData: UniversalVoucherData = {
         voucherType: 'EXPENSE',
         title: editingExpenseId ? '🔴 UPDATED FARM EXPENSE SLIP' : '🔴 FARM EXPENSE STATEMENT SLIP',
-        voucherNo: editingExpenseId ? `EXP-${editingExpenseId.slice(0, 6).toUpperCase()}` : `EXP-${Date.now().toString().slice(-6)}`,
+        voucherNo: editingExpenseId ? `${editingExpenseId.replace(/^EXP-?/i, '').slice(0, 6).toUpperCase()}` : `${Date.now().toString().slice(-6)}`,
         date: expenseDate || todayIso(),
         farmerName: user?.name || 'Farmer',
         farmerPhone: user?.mobile || '',
@@ -2251,10 +2251,11 @@ export default function RecordsScreen() {
 
   const openExpenseSlipPreview = (item: any) => {
     tap();
+    const cleanId = String(item.id || '').replace(/^EXP-?/i, '');
     setActiveVoucherData({
       voucherType: 'EXPENSE',
       title: '🔴 FARM EXPENSE STATEMENT SLIP',
-      voucherNo: `EXP-${item.id.slice(0, 6).toUpperCase()}`,
+      voucherNo: `${cleanId.slice(0, 6).toUpperCase()}`,
       date: item.expenseDate ? item.expenseDate.slice(0, 10) : todayIso(),
       farmerName: user?.name || 'Farmer',
       farmerPhone: user?.mobile || '',
@@ -2570,9 +2571,11 @@ export default function RecordsScreen() {
                             <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: theme.text }}>
                               {editingBillId ? `✏️ Edit Sale / Bill #${editingBillNo}` : `New Sale / Bill #${nextSuggestedBillNo}`}
                             </Text>
-                            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
-                              {editingBillId ? `Updating record for Bill #${editingBillNo} (Bill # stays unchanged)` : `Vyapar Billing POS — Auto Bill #${nextSuggestedBillNo}`}
-                            </Text>
+                            {!editingBillId && (
+                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
+                                Vyapar Billing POS — Auto Bill #{nextSuggestedBillNo}
+                              </Text>
+                            )}
                           </View>
 
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -2622,7 +2625,8 @@ export default function RecordsScreen() {
                                 ))}
                                 {Array.from({ length: calData.daysInMonth }).map((_, i) => {
                                   const day = i + 1;
-                                  const selDay = parseInt(saleDate.split('-')[2], 10);
+                                  const cleanDateStr = getCleanIsoDate(saleDate);
+                                  const selDay = parseInt(cleanDateStr.split('-')[2], 10);
                                   const isSelected = day === selDay;
                                   return (
                                     <TouchableOpacity
@@ -3634,7 +3638,7 @@ export default function RecordsScreen() {
 
                     <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 12 }}>
                       {/* ROW 1: EXPENSE DATE & EXPENSE CATEGORY SIDE-BY-SIDE */}
-                      <View style={{ flexDirection: 'row', gap: 8, zIndex: 100 }}>
+                      <View style={{ flexDirection: 'row', gap: 8, zIndex: 1000 }}>
                         <View style={{ flex: 1 }}>
                           <Text style={styles.label}>Expense Date *</Text>
                           <TextInput
@@ -3646,7 +3650,7 @@ export default function RecordsScreen() {
                           />
                         </View>
 
-                        <View style={{ flex: 1.2 }}>
+                        <View style={{ flex: 1.2, position: 'relative', zIndex: 1000 }}>
                           <Text style={styles.label}>Expense Category *</Text>
                           <TouchableOpacity
                             style={{
@@ -3679,17 +3683,23 @@ export default function RecordsScreen() {
                             <Ionicons name={isExpenseCategoryDropdownOpen ? 'chevron-up' : 'chevron-down'} size={15} color="#64748b" />
                           </TouchableOpacity>
 
-                          {/* Dropdown Menu Inline List */}
+                          {/* Floating Overlay Dropdown Menu List */}
                           {isExpenseCategoryDropdownOpen && (
                             <View
                               style={{
-                                marginTop: 6,
+                                position: 'absolute',
+                                top: 62,
+                                left: 0,
+                                right: 0,
+                                zIndex: 9999,
+                                elevation: 12,
                                 backgroundColor: '#ffffff',
                                 borderRadius: RADIUS.md,
                                 borderWidth: 1.5,
                                 borderColor: '#dc2626',
-                                maxHeight: 200,
+                                maxHeight: 220,
                                 padding: 4,
+                                ...premiumShadow('#000000', 'md'),
                               }}
                             >
                               <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
@@ -3732,7 +3742,19 @@ export default function RecordsScreen() {
                         </View>
                       </View>
 
-                      {/* ROW 2: EXPENSE AMOUNT WITH INLINE CASH / UPI RADIOS ON THE RIGHT SIDE OF TEXTBOX */}
+                      {/* ROW 2: EXPENSE DETAILS */}
+                      <View>
+                        <Text style={styles.label}>Expense Details</Text>
+                        <TextInput
+                          style={[styles.input, { height: 38 }]}
+                          placeholder="e.g. 2 bags DAP fertilizer / diesel payment..."
+                          placeholderTextColor="#94a3b8"
+                          value={notes}
+                          onChangeText={setNotes}
+                        />
+                      </View>
+
+                      {/* ROW 3: EXPENSE AMOUNT WITH INLINE CASH / UPI RADIOS ON THE RIGHT SIDE OF TEXTBOX */}
                       <View>
                         <Text style={styles.label}>Expense Amount (₹) *</Text>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -3913,17 +3935,7 @@ export default function RecordsScreen() {
                         </View>
                       </View>
 
-                      {/* ROW 5: REMARKS / NOTES */}
-                      <View>
-                        <Text style={styles.label}>Remarks / Notes</Text>
-                        <TextInput
-                          style={[styles.input, { height: 38 }]}
-                          placeholder="e.g. 2 bags DAP fertilizer / diesel payment..."
-                          placeholderTextColor="#94a3b8"
-                          value={notes}
-                          onChangeText={setNotes}
-                        />
-                      </View>
+
 
                       {expenseError ? <Text style={styles.errorText}>{expenseError}</Text> : null}
 

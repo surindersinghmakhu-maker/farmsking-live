@@ -18,15 +18,31 @@ export class ProductsService {
         price: dto.price,
         imageUrl: dto.imageUrl,
         stockQty: dto.stockQty ?? 0,
+        sellerStoreId: dto.sellerStoreId,
+        hsnCode: dto.hsnCode,
+        sku: dto.sku,
+        gstPercentage: dto.gstPercentage ?? 18.0,
+        weightKg: dto.weightKg ?? 0.5,
         createdById: admin.id,
       },
     });
   }
 
-  /** Customers/shop browsing only ever sees active products; admins can request everything. */
+  /** Customers/shop browsing only ever sees active products; includes seller store information */
   listAll(includeInactive: boolean) {
     return this.prisma.product.findMany({
       where: includeInactive ? {} : { isActive: true },
+      include: {
+        sellerStore: {
+          select: {
+            id: true,
+            storeName: true,
+            slug: true,
+            rating: true,
+            kycStatus: true,
+          },
+        },
+      },
       orderBy: { createdAt: 'desc' },
     });
   }

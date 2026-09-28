@@ -352,6 +352,28 @@ export default function ProfileScreen() {
                   </View>
                 </View>
 
+                {/* Admin Seller Governance Button */}
+                <TouchableOpacity
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    backgroundColor: '#1e293b',
+                    padding: 12,
+                    borderRadius: RADIUS.md,
+                    marginBottom: 12,
+                  }}
+                  onPress={() => router.push('/admin-sellers')}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Ionicons name="shield-checkmark" size={18} color="#10b981" />
+                    <Text style={{ color: '#FFF', fontSize: 12.5, fontFamily: FONT.bold }}>
+                      Admin Seller Governance & KYC Hub
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
+                </TouchableOpacity>
+
                 <Text style={styles.inputLabel}>Admin Full Name *</Text>
                 <TextInput
                   style={styles.input}
@@ -589,6 +611,39 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
           )}
+
+          {/* Seller Store Hub Button */}
+          <TouchableOpacity
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+              backgroundColor: '#ecfdf5',
+              borderRadius: RADIUS.lg,
+              borderWidth: 1.5,
+              borderColor: '#6ee7b7',
+              padding: 12,
+              marginTop: 12,
+              width: '100%',
+              maxWidth: 460,
+            }}
+            onPress={() => {
+              tap();
+              router.push('/seller-dashboard');
+            }}
+            activeOpacity={0.85}
+          >
+            <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#d1fae5', alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name="storefront" size={20} color="#059669" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: '#065f46' }}>🏪 Seller Hub / ਵੈਂਡਰ ਡੈਸ਼ਬੋਰਡ</Text>
+              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#047857' }}>Register Store, Add Products & Manage Cashfree Payouts</Text>
+            </View>
+            <View style={{ backgroundColor: '#059669', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill }}>
+              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Open</Text>
+            </View>
+          </TouchableOpacity>
 
           {/* APK Download Card */}
           <TouchableOpacity

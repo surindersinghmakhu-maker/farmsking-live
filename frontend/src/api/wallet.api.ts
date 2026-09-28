@@ -39,6 +39,9 @@ export interface AdminUserWalletItem {
   totalCredit: number;
   totalDebit: number;
   pendingWithdrawal: number;
+  welcomeEarnings?: number;
+  referralEarnings?: number;
+  commissionEarnings?: number;
 }
 
 export interface AdminAllWalletsResponse {

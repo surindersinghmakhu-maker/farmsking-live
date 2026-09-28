@@ -5682,6 +5682,12 @@ function ProductCard({
       })()}
 
       <View style={styles.cardContent}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 2 }}>
+          <Ionicons name="storefront-outline" size={11} color="#059669" />
+          <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#059669' }} numberOfLines={1}>
+            {(product as any).sellerStore?.storeName || 'FarmsKing Direct'}
+          </Text>
+        </View>
         <Text style={styles.productCategoryTag}>{product.category || 'Agri Inputs'}</Text>
         <Text style={[styles.productName, isHidden && { color: '#991b1b', textDecorationLine: 'line-through' }]} numberOfLines={2}>{product.name}</Text>
 

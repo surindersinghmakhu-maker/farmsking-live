@@ -146,7 +146,18 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
 
     // 0. Language Request Command ("punjabi language vich gall kro", "use punjabi language")
     if ((q.includes('punjabi') || q.includes('ਪੰਜਾਬੀ')) && (q.includes('language') || q.includes('gall') || q.includes('use') || q.includes('speak') || q.includes('vich'))) {
-      return '🌾 **ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ ਜੀ! (FarmsKing AI ਖੇਤੀ ਡਾਕਟਰ):**\n\nਜੀ ਹਾਂ, ਹੁਣ ਮੈਂ ਤੁਹਾਡੇ ਨਾਲ ਪੂਰੀ ਤਰ੍ਹਾਂ ਪੰਜਾਬੀ (ਗੁਰਮੁਖੀ) ਵਿੱਚ ਗੱਲਬਾਤ ਕਰਾਂਗਾ।\n\nਤੁਸੀਂ ਆਪਣੀ ਫਸਲ (ਕਣਕ, ਝੋਨਾ, ਨਰਮਾ, ਗੰਨਾ, ਆਲੂ, ਟਮਾਟਰ, ਗੇਂਦਾ), ਖਾਦਾਂ, ਯੂਰੀਆ, 20 ਦਿਨਾਂ ਦੇ ਪੌਦਿਆਂ ਲਈ ਸਪ੍ਰੇ, ਮੰਡੀ ਭਾਵ ਅਤੇ ਮੌਸਮ ਬਾਰੇ ਕੋਈ ਵੀ ਸਵਾਲ ਪੁੱਛੋ!';
+      return '🌾 **ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ ਜੀ! (FarmsKing AI ਖੇਤੀ ਡਾਕਟਰ):**\n\nਜੀ ਹਾਂ, ਹੁਣ ਮੈਂ ਤੁਹਾਡੇ ਨਾਲ ਪੂਰੀ ਤਰ੍ਹਾਂ ਪੰਜਾਬੀ (ਗੁਰਮੁਖੀ) ਵਿੱਚ ਗੱਲਬਾਤ ਕਰਾਂਗਾ।\n\nਤੁਸੀਂ ਆਪਣੀ ਫਸਲ (ਕਣਕ, ਝੋਨਾ, ਨਰਮਾ, ਗੰਨਾ, ਆਲੂ, ਟਮਾਟਰ, ਗੇਂਦਾ), ਖਾਦਾਂ, ਯੂਰੀਆ, 20 ਦਿਨਾਂ ਦੇ ਪੌਦਿਆਂ ਲਈ ਸਪ੍ਰੇ, ਮੰਡੀ ਭਾਵ, ਮੌਸਮ ਅਤੇ FarmsKing ਐਪ ਬਾਰੇ ਕੋਈ ਵੀ ਸਵਾਲ ਪੁੱਛੋ!';
+    }
+
+    // 0.0 FarmsKing Web Application & Platform Queries
+    if (q.includes('farmsking') || q.includes('app') || q.includes('website') || q.includes('web application') || q.includes('site') || q.includes('store') || q.includes('dukan') || q.includes('wallet')) {
+      if (lang === 'DEVANAGARI') {
+        return '🌾 **FarmsKing ऐप और वेबसाइट के बारे में जानकारी:**\n\nFarmsKing किसानों का 100% निशुल्क कृषि प्लेटफॉर्म है:\n\n1. **एग्रीस्टोर (AgriStore):** असली बीज, यूरिया, DAP और कीटनाशक घर बैठे मंगाएं।\n2. **ताजा मंडी भाव (Live Mandi Rates):** प्रतिदिन जिलेवार मंडी भाव देखें।\n3. **सैटेलाइट खेत निगरानी (Satellite View):** खेत की नमी और फसल स्वास्थ्य जांचें।\n4. **मौसम पूर्वानुमान:** 7 दिनों की सटीक मौसम रिपोर्ट।\n5. **विक्रेता एवं वॉलेट (Seller Store):** अपनी दुकान रजिस्टर करें और डायरेक्ट पेमेंट पाएं।';
+      }
+      if (lang === 'ENGLISH') {
+        return '🌾 **FarmsKing Web Application & Platform Guide:**\n\nFarmsKing is India\'s leading digital agricultural ecosystem:\n\n1. **AgriStore Shopping:** Order 100% genuine fertilizers, seeds, and sprays with fast village delivery.\n2. **Live Mandi Rates:** Real-time crop prices across Punjab, Haryana & North India mandis.\n3. **Satellite Crop Health:** Monitor field soil moisture & satellite NDVI greenness.\n4. **7-Day Weather Forecast:** Live temperature, wind speed & rain alerts.\n5. **Seller Store & Digital Wallet:** Register as an agri-seller to list products & receive instant wallet payouts!';
+      }
+      return '🌾 **FarmsKing ਸੁਪਰ ਐਪ ਬਾਰੇ ਜਾਣਕਾਰੀ:**\n\nFarmsKing ਭਾਰਤ ਦਾ ਨੰਬਰ 1 ਕਿਸਾਨ ਐਗਰੀਕਲਚਰ ਪਲੇਟਫਾਰਮ ਹੈ:\n\n1. **ਖੇਤੀ ਦਵਾਈਆਂ & ਖਾਦਾਂ (AgriStore):** ਅਸਲੀ ਯੂਰੀਆ, DAP, NPK, ਅਤੇ PAU ਸਿਫਾਰਿਸ਼ ਕੀਤੀਆਂ ਸਪ੍ਰੇਆਂ 24-48 ਘੰਟਿਆਂ ਵਿੱਚ ਪਿੰਡਾਂ \'ਚ ਡਿਲੀਵਰੀ।\n2. **ਤਾਜ਼ਾ ਮੰਡੀ ਭਾਵ (Live Mandi Rates):** ਪੰਜਾਬ, ਹਰਿਆਣਾ ਅਤੇ ਰਾਜਸਥਾਨ ਦੀਆਂ ਮੰਡੀਆਂ ਦੇ ਰੋਜ਼ਾਨਾ ਸਰਕਾਰੀ ਭਾਵ।\n3. **ਸੈਟੇਲਾਈਟ ਖੇਤ ਦੇਖਭਾਲ (Satellite Health):** ਸੈਟੇਲਾਈਟ ਰਾਹੀਂ ਆਪਣੇ ਖੇਤ ਦੀ ਹਰਿਆਲੀ ਅਤੇ ਪਾਣੀ ਦੀ ਜਾਂਚ ਕਰੋ।\n4. **ਮੌਸਮ ਜਾਣਕਾਰੀ (Weather Forecast):** 7 ਦਿਨਾਂ ਦਾ ਮੌਸਮ ਅਤੇ ਬਾਰਿਸ਼ ਦਾ ਪੂਰਵ-ਅਨੁਮਾਨ।\n5. **ਦੁਕਾਨਦਾਰ & ਵਾਲਿਟ (Seller Store):** ਦੁਕਾਨਦਾਰ ਆਪਣਾ ਸਮਾਨ ਵੇਚ ਸਕਦੇ ਹਨ ਅਤੇ ਵਾਲਿਟ ਵਿੱਚ ਪੈਸੇ ਪ੍ਰਾਪਤ ਕਰ ਸਕਦੇ ਹਨ।';
     }
 
     // 0.1 Plant Age / 20-Day Crop Spray Advisory ("20 din de paude", "ki spray kra", "paude ho gye")
@@ -330,35 +341,89 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
 
     // 10. Weather / Mausam / Rain / Barish
     if (q.includes('ਮੌਸਮ') || q.includes('mausam') || q.includes('weather') || q.includes('rain') || q.includes('barish')) {
-      if (lang === 'GURMUKHI') {
-        return '🌤️ **ਮੌਸਮ ਅਤੇ ਖੇਤੀਬਾੜੀ ਸਲਾਹ:**\n\n• 7 ਦਿਨਾਂ ਦਾ ਮੌਸਮ ਅਤੇ ਬਾਰਿਸ਼ ਦਾ ਪੂਰਵ-ਅਨੁਮਾਨ ਆਪਣੇ ਹੋਮ ਡੈਸ਼ਬੋਰਡ \'ਤੇ ਦੇਖੋ।\n• **ਸਪ੍ਰੇ ਦੀ ਸਲਾਹ:** ਤੇਜ਼ ਹਵਾ (15 km/h ਤੋਂ ਵੱਧ) ਜਾਂ 4 ਘੰਟਿਆਂ ਵਿੱਚ ਬਾਰਿਸ਼ ਦੀ ਸੰਭਾਵਨਾ ਹੋਵੇ ਤਾਂ ਸਪ੍ਰੇ ਨਾ ਕਰੋ।';
-      }
       if (lang === 'DEVANAGARI') {
         return '🌤️ **मौसम और कृषि सलाह:**\n\n• 7 दिनों का मौसम पूर्वानुमान होम डैशबोर्ड पर देखें।\n• **स्प्रे सलाह:** तेज़ हवा या बारिश की संभावना होने पर स्प्रे न करें।';
       }
-      if (lang === 'PUNJABI_ROMAN') {
-        return '🌤️ **Mausam & Kheti Advisory:**\n\n• Live 7 days da mausam forecast app de Home Dashboard te dekho.\n• **Spray Tip:** Tej hawa ya barish di samabhavna hove ta spray na karo.';
+      if (lang === 'ENGLISH') {
+        return '🌤️ **Weather & Agricultural Advisory:**\n\n• Check live 7-day temperature, humidity, and rainfall forecast on your FarmsKing Home Dashboard.\n• **Spraying Tip:** Avoid chemical sprays when wind speed exceeds 15 km/h or rain is expected within 4 hours.';
       }
-      if (lang === 'HINDI_ROMAN') {
-        return '🌤️ **Mausam & Kheti Advisory:**\n\n• Live 7 days ka mausam forecast app ke Home Dashboard par dekhein.\n• **Spray Tip:** Tej hawa ya barish ki sambhavna hone par spray mat karein.';
-      }
-      return '🌤️ **Weather & Agricultural Advisory:**\n\n• Check live 7-day temperature, humidity, and rainfall forecast on your FarmsKing Home Dashboard.\n• **Spraying Tip:** Avoid chemical sprays when wind speed exceeds 15 km/h or rain is expected within 4 hours.';
+      return '🌤️ **ਮੌਸਮ ਅਤੇ ਖੇਤੀਬਾੜੀ ਸਲਾਹ:**\n\n• 7 ਦਿਨਾਂ ਦਾ ਮੌਸਮ ਅਤੇ ਬਾਰਿਸ਼ ਦਾ ਪੂਰਵ-ਅਨੁਮਾਨ ਆਪਣੇ ਹੋਮ ਡੈਸ਼ਬੋਰਡ \'ਤੇ ਦੇਖੋ।\n• **ਸਪ੍ਰੇ ਦੀ ਸਲਾਹ:** ਤੇਜ਼ ਹਵਾ (15 km/h ਤੋਂ ਵੱਧ) ਜਾਂ 4 ਘੰਟਿਆਂ ਵਿੱਚ ਬਾਰਿਸ਼ ਦੀ ਸੰਭਾਵਨਾ ਹੋਵੇ ਤਾਂ ਸਪ੍ਰੇ ਨਾ ਕਰੋ।';
     }
 
-    // 11. General Agri / Default Advice across languages
-    if (lang === 'GURMUKHI') {
-      return '🌾 **ਖੇਤੀਬਾੜੀ ਮਾਹਰ ਦੀ ਸਲਾਹ:**\n\n1. **ਫਸਲ ਦੀ ਦੇਖਭਾਲ:** ਸਮੇਂ ਸਿਰ ਪਾਣੀ ਅਤੇ PAU ਸਿਫਾਰਿਸ਼ ਅਨੁਸਾਰ ਖਾਦਾਂ ਦੀ ਵਰਤੋਂ ਕਰੋ।\n2. **ਬੀਮਾਰੀ ਦੀ ਜਾਂਚ:** ਹਰ 3 ਦਿਨਾਂ ਬਾਅਦ ਪੱਤਿਆਂ ਦੀ ਜਾਂਚ ਕਰੋ। ਸ਼ੁਰੂਆਤ \'ਚ ਹੀ ਸਪ੍ਰੇ ਕਰੋ।\n3. **ਜੈਵਿਕ ਸੁਰੱਖਿਆ:** 5% ਨਿੰਮ ਦਾ ਅਰਕ ਜਾਂ ਟ੍ਰਾਈਕੋਡਰਮਾ ਦੀ ਵਰਤੋਂ ਕਰੋ।\n4. **ਦਵਾਈਆਂ:** FarmsKing Store ਤੋਂ ਅਸਲੀ ਦਵਾਈਆਂ ਤੇ ਖਾਦਾਂ ਘਰ ਬੈਠੇ ਮੰਗਵਾਓ।';
+    // 11. Disease / Insects / Pest / Sundi / Keeda / Blight / Rust / Dawai / Spray / Ilaaj
+    if (q.includes('dawai') || q.includes('dawaii') || q.includes('dawa') || q.includes('spray') || q.includes('sundi') || q.includes('keeda') || q.includes('beemari') || q.includes('ilaaj') || q.includes('ilac') || q.includes('tika') || q.includes('fungus') || q.includes('pest') || q.includes('disease') || q.includes('ਸਪ੍ਰੇ') || q.includes('ਦਵਾਈ') || q.includes('ਬੀਮਾਰੀ') || q.includes('ਇਲਾਜ') || q.includes('ਕੀੜਾ') || q.includes('ਸੁੰਡੀ') || q.includes('रोग') || q.includes('इलाज') || q.includes('कीड़ा')) {
+      if (lang === 'DEVANAGARI') {
+        return '🐛 **फसल रोग एवं कीट नियंत्रण (कृषि सलाह):**\n\n1. **सुंडी/कीट स्प्रे:** इमामेक्टिन बेंजोएट 5% SG (100g प्रति एकड़) 200L पानी में मिलाकर छिड़कें।\n2. **फफूंद/झुलसा रोग:** एक्रोबेट (400g) + मैंकोजेब (600g) प्रति एकड़ छिड़कें।\n3. **जैविक उपाय:** 5% नीम का अर्क या नीम तेल (500ml) का छिड़काव करें।\n4. **दवा ऑर्डर:** FarmsKing Store से असली दवाएं मंगाएं।';
+      }
+      if (lang === 'ENGLISH') {
+        return '🐛 **Crop Disease & Pest Control Advisory:**\n\n1. **Pest/Insect Control:** Spray Emamectin Benzoate 5% SG @ 100g per acre in 200L water.\n2. **Fungal/Blight Control:** Spray Acrobat (400g) + Mancozeb (600g) per acre.\n3. **Bio-Control:** Spray 5% Neem extract or Neem Oil @ 500ml/acre.\n4. **Order Online:** Buy genuine pesticides on FarmsKing Store.';
+      }
+      return '🐛 **ਫਸਲ ਦੀ ਬੀਮਾਰੀ ਅਤੇ ਸੁੰਡੀ/ਕੀੜੇ ਦਾ ਹੱਲ (PAU ਮਾਹਰ ਸਲਾਹ):**\n\n1. **ਸੁੰਡੀ/ਕੀੜੇ ਦੀ ਸਪ੍ਰੇ:** ਇਮਾਮੈਕਟਿਨ ਬੈਂਜ਼ੋਏਟ 5% SG (100g ਪ੍ਰਤੀ ਏਕੜ) 200L ਪਾਣੀ ਵਿੱਚ ਮਿਲਾ ਕੇ ਛਿੜਕੋ।\n2. **ਝੁਲਸ/ਫੰਗਸ ਰੋਗ:** ਐਕਰੋਬੈਟ (400g) + ਮੈਂਕੋਜ਼ੇਬ (600g) ਪ੍ਰਤੀ ਏਕੜ ਸਪ੍ਰੇ ਕਰੋ।\n3. **ਜੈਵਿਕ ਹੱਲ:** 5% ਨਿੰਮ ਦਾ ਅਰਕ ਜਾਂ ਨਿੰਮ ਦਾ ਤੇਲ (Neem Oil 500ml) ਛਿੜਕਾਅ ਕਰੋ।\n4. **ਅਸਲੀ ਦਵਾਈਆਂ:** FarmsKing Store ਤੋਂ ਅਸਲੀ ਖੇਤੀ ਦਵਾਈਆਂ ਮੰਗਵਾਓ।';
     }
+
+    // 12. Plant Growth / Tillering / Phutara
+    if (q.includes('growth') || q.includes('phutara') || q.includes('futara') || q.includes('vadhara') || q.includes('ਫੁੱਟਾਰਾ') || q.includes('ਗ੍ਰੋਥ') || q.includes('बढ़वार')) {
+      if (lang === 'DEVANAGARI') {
+        return '🌱 **फसल के अच्छे फुटाव और बढ़वार की सलाह:**\n\n1. **ग्रोथ स्प्रे:** 1kg NPK (19:19:19) प्रति एकड़ 200L पानी में मिलाकर छिड़कें।\n2. **ह्यूमिक एसिड:** जड़ों की मजबूती के लिए 1 लीटर ह्यूमिक एसिड सिंचाई के साथ दें।';
+      }
+      if (lang === 'ENGLISH') {
+        return '🌱 **Crop Growth & Tillering Advisory:**\n\n1. **Foliar Spray:** Spray 1kg NPK (19:19:19) per acre in 200L water.\n2. **Root Booster:** Apply 1L Humic Acid with irrigation water for vigorous root growth.';
+      }
+      return '🌱 **ਫਸਲ ਦੇ ਵਧੀਆ ਫੁੱਟਾਰੇ ਅਤੇ ਗ੍ਰੋਥ ਲਈ ਸਲਾਹ:**\n\n1. **ਗ੍ਰੋਥ ਸਪ੍ਰੇ:** 1kg NPK (19:19:19) ਪ੍ਰਤੀ ਏਕੜ 200L ਪਾਣੀ ਵਿੱਚ ਮਿਲਾ ਕੇ ਛਿੜਕਾਅ ਕਰੋ।\n2. **ਹਿਊਮਿਕ ਐਸਿਡ:** ਜ਼ਮੀਨ \'ਚ ਜੜ੍ਹਾਂ ਦੀ ਮਜ਼ਬੂਤੀ ਲਈ 1 ਲੀਟਰ ਹਿਊਮਿਕ ਐਸਿਡ ਪਾਣੀ ਨਾਲ ਦਿਓ।\n3. **ਸਾਵਧਾਨੀ:** ਖੇਤ ਵਿੱਚ ਬਹੁਤ ਜ਼ਿਆਦਾ ਪਾਣੀ ਨਾ ਖੜ੍ਹਨ ਦਿਓ।';
+    }
+
+    // 13. Dairy / Livestock / Animals / Majh / Gai / Milk / Doodh
+    if (q.includes('majh') || q.includes('gai') || q.includes('cow') || q.includes('buffalo') || q.includes('milk') || q.includes('doodh') || q.includes('dood') || q.includes('pashu') || q.includes('ਦੁੱਧ') || q.includes('ਮੱਝ') || q.includes('ਗਾਂ') || q.includes('ਪਸ਼ੂ') || q.includes('दूध') || q.includes('गाय') || q.includes('भैंस') || q.includes('पशु')) {
+      if (lang === 'DEVANAGARI') {
+        return '🥛 **पशुपालन एवं दूध बढ़ाने की सलाह:**\n\n1. **मिनरल मिक्सचर:** गाय/भैंस को रोजाना 50g-100g मिनरल मिक्सचर दें।\n2. **चारा एवं पानी:** हरे चारे के साथ सूखा चारा दें और दिन में 4-5 बार ताजा पानी पिलाएं।';
+      }
+      if (lang === 'ENGLISH') {
+        return '🥛 **Livestock & Milk Yield Advisory:**\n\n1. **Mineral Supplement:** Provide 50-100g daily Mineral Mixture to cattle/buffalo.\n2. **Feed Balance:** Mix dry fodder with green forage for optimum digestion and milk output.';
+      }
+      return '🥛 **ਪਸ਼ੂ ਪਾਲਣ ਅਤੇ ਦੁੱਧ ਵਧਾਉਣ ਦੀ ਮਾਹਰ ਸਲਾਹ:**\n\n1. **ਖੁਰਾਕ & ਮਿਨਰਲ ਮਿਕਸਚਰ:** ਮੱਝ/ਗਾਂ ਨੂੰ ਰੋਜ਼ਾਨਾ 50g-100g ਚੰਗੀ ਕੁਆਲਿਟੀ ਦਾ Mineral Mixture ਖੁਰਾਕ ਵਿੱਚ ਦਿਓ।\n2. **ਹਰਾ ਚਾਰਾ:** ਹਰੇ ਚਾਰੇ ਨਾਲ 1kg ਤੂੜੀ ਅਤੇ ਸੁੱਕਾ ਚਾਰਾ ਜ਼ਰੂਰ ਮਿਲਾਓ।\n3. **ਪਾਣੀ:** ਪਸ਼ੂ ਨੂੰ ਦਿਨ ਵਿੱਚ 4-5 ਵਾਰ ਸਾਫ਼ ਅਤੇ ਤਾਜ਼ਾ ਪਾਣੀ ਪਿਲਾਓ।';
+    }
+
+    // 14. Weeds / Herbicide / Gulli Danda / Nadin
+    if (q.includes('nadin') || q.includes('gulli') || q.includes('danda') || q.includes('weed') || q.includes('ghas') || q.includes('herbicide') || q.includes('ਨਦੀਨ') || q.includes('ਗੁੱਲੀ') || q.includes('ਘਾਹ')) {
+      if (lang === 'DEVANAGARI') {
+        return '🌾 **खरपतवार (गुल्ली डंडा / चौड़ी पत्ती) नियंत्रण:**\n\n1. **गुल्ली डंडा:** सिंचाई के 3-4 दिन बाद एक्शियल (Axial) का छिड़काव करें।\n2. **चौड़ी पत्ती:** 2,4-D या एल्ग्रिप 8g प्रति एकड़ 200L पानी में छिड़कें।';
+      }
+      if (lang === 'ENGLISH') {
+        return '🌾 **Weed & Herbicide Advisory:**\n\n1. **Phalaris minor:** Spray Axial or Shogun 3-4 days after 1st irrigation.\n2. **Broadleaf Weeds:** Spray Algrip @ 8g per acre in 200L water.';
+      }
+      return '🌾 **ਖੇਤ ਵਿੱਚ ਨਦੀਨਾਂ (ਗੁੱਲੀ ਡੰਡਾ / ਚੌੜੇ ਪੱਤੇ) ਦਾ ਹੱਲ:**\n\n1. **ਗੁੱਲੀ ਡੰਡਾ:** ਕਣਕ ਵਿੱਚ ਪਹਿਲੇ ਪਾਣੀ ਤੋਂ 3-4 ਦਿਨ ਬਾਅਦ ਐਕਸੀਅਲ (Axial) ਜਾਂ ਸ਼ਗਨ ਪ੍ਰਤੀ ਏਕੜ ਸਪ੍ਰੇ ਕਰੋ।\n2. **ਚੌੜੇ ਪੱਤੇ ਵਾਲੇ ਨਦੀਨ:** 2,4-D ਜਾਂ ਐਲਗ੍ਰਿਪ (Algrip) 8g ਪ੍ਰਤੀ ਏਕੜ 200L ਪਾਣੀ ਵਿੱਚ ਛਿੜਕੋ।';
+    }
+
+    // 15. Seeds / Variety / Sowing / Bijai
+    if (q.includes('beej') || q.includes('variety') || q.includes('bijai') || q.includes('sowing') || q.includes('varieti') || q.includes('ਕਿਸਮ') || q.includes('ਬੀਜ') || q.includes('ਬਿਜਾਈ') || q.includes('बीज') || q.includes('बुआई')) {
+      if (lang === 'DEVANAGARI') {
+        return '🌱 **उन्नत बीज एवं बुआई सलाह (PAU/ICAR):**\n\n1. **बीज उपचार:** बुआई से पहले बीज को बाविस्टिन (Bavistin 2g/kg) से संशोधित करें।\n2. **बीज दर:** 1 एकड़ में 40kg गेहूं या 8kg धान का प्रमाणित बीज प्रयोग करें।';
+      }
+      if (lang === 'ENGLISH') {
+        return '🌱 **Certified Seeds & Sowing Guide:**\n\n1. **Seed Treatment:** Treat seeds with Bavistin @ 2g/kg before sowing.\n2. **Seed Rate:** Use 40kg wheat seed or 8kg paddy seed per acre.';
+      }
+      return '🌱 **ਉੱਤਮ ਬੀਜ ਅਤੇ ਬਿਜਾਈ ਦੀ ਸਲਾਹ (PAU Advisory):**\n\n1. **ਬੀਜ ਦੀ ਸੋਧ:** ਬਿਜਾਈ ਤੋਂ ਪਹਿਲਾਂ ਬੀਜ ਨੂੰ ਬਾਵਿਸਟਿਨ (Bavistin 2g/kg) ਨਾਲ ਸੋਧੋ।\n2. **ਬਿਜਾਈ ਦਾ ਸਮਾਂ:** ਸੁਧਰੀਆਂ ਕਿਸਮਾਂ ਦੀ ਬਿਜਾਈ ਸਮੇਂ ਸਿਰ ਕਰੋ ਅਤੇ ਪ੍ਰਤੀ ਏਕੜ ਸਿਫਾਰਿਸ਼ ਕੀਤਾ ਬੀਜ ਹੀ ਵਰਤੋ।';
+    }
+
+    // 16. Greetings & General Chat
+    if (q.includes('hi') || q.includes('hello') || q.includes('sat sri akal') || q.includes('namaste') || q.includes('dasso') || q.includes('batao') || q.includes('help') || q.includes('doctor')) {
+      if (lang === 'DEVANAGARI') {
+        return '🌾 **नमस्ते जी! (FarmsKing AI कृषि डॉक्टर 👨‍🌾):**\n\nबताएं, आज आपकी किस फसल, खाद, स्प्रे या मंडी भाव में सहायता करूँ?';
+      }
+      if (lang === 'ENGLISH') {
+        return '🌾 **Hello! Welcome to FarmsKing Agri AI Doctor 👨‍🌾:**\n\nHow can I assist your farm today? Ask about crops, pests, fertilizers, sprays, weather, or mandi rates!';
+      }
+      return '🌾 **ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ ਜੀ! (FarmsKing AI ਖੇਤੀ ਡਾਕਟਰ 👨‍🌾):**\n\nਦੱਸੋ ਜੀ, ਅੱਜ ਤੁਹਾਡੀ ਕਿਸ ਫਸਲ (ਕਣਕ, ਝੋਨਾ, ਨਰਮਾ, ਗੰਨਾ, ਆਲੂ, ਟਮਾਟਰ, ਗੇਂਦਾ), ਖਾਦ, ਸਪ੍ਰੇ ਜਾਂ ਮੰਡੀ ਭਾਵ ਵਿੱਚ ਮਦਦ ਕਰਾਂ?';
+    }
+
+    // 17. Default Advice across languages
     if (lang === 'DEVANAGARI') {
       return '🌾 **कृषि विशेषज्ञ सलाह:**\n\n1. **फसल देखभाल:** समय पर सिंचाई और संतुलित उर्वरक का प्रयोग करें।\n2. **रोग निगरानी:** हर 3 दिन में पत्तियों की जांच करें।\n3. **जैविक सुरक्षा:** 5% नीम अर्क या ट्राइकोडरमा का प्रयोग करें।\n4. **दवाइयां:** FarmsKing Store से असली उत्पाद मंगाएं।';
     }
-    if (lang === 'PUNJABI_ROMAN') {
-      return '🌾 **Kheti Baari Expert Advice:**\n\n1. **Fasal di dekhbhaal:** Same sir paani te PAU recommendation mutabiq khad paao.\n2. **Beemari check:** Har 3 din baad patteyan di jaanch karo. Shuru vich hi spray karo.\n3. **Desi Ilaaj:** 5% Neem extract ya Trichoderma di spray karo.\n4. **Dawai Order:** FarmsKing Store ton original products buy karo.';
+    if (lang === 'ENGLISH') {
+      return '🌾 **FarmsKing Agri Expert Advice:**\n\n1. **Crop Health:** Ensure timely irrigation and balanced NPK fertilizer application based on recommendations.\n2. **Disease Watch:** Inspect leaf surfaces every 3 days. Spot-spray early infected patches.\n3. **Organic Protection:** Use 5% Neem extract or Trichoderma to boost plant immunity.\n4. **FarmsKing AgriStore:** Order genuine sprays, seeds, and fertilizers with 24-hour delivery on FarmsKing Store.';
     }
-    if (lang === 'HINDI_ROMAN') {
-      return '🌾 **Kheti Baari Expert Advice:**\n\n1. **Fasal ki dekhbhal:** Samay par paani aur sifarish ke anusar khad dalein.\n2. **Rog jaanch:** Har 3 din me pattiyon ki jaanch karein. Shuru me hi spray karein.\n3. **Desi Ilaaj:** 5% Neem extract ya Trichoderma ki spray karein.\n4. **Dawa Order:** FarmsKing Store se original products khareedein.';
-    }
-    return '🌾 **FarmsKing Agri Expert Advice:**\n\n1. **Crop Health:** Ensure timely irrigation and balanced NPK fertilizer application based on recommendations.\n2. **Disease Watch:** Inspect leaf surfaces every 3 days. Spot-spray early infected patches.\n3. **Organic Protection:** Use 5% Neem extract or Trichoderma to boost plant immunity.\n4. **FarmsKing AgriStore:** Order genuine sprays, seeds, and fertilizers with 24-hour delivery on FarmsKing Store.';
+    return '🌾 **ਖੇਤੀਬਾੜੀ ਮਾਹਰ ਦੀ ਸਲਾਹ:**\n\n1. **ਫਸਲ ਦੀ ਦੇਖਭਾਲ:** ਸਮੇਂ ਸਿਰ ਪਾਣੀ ਅਤੇ PAU ਸਿਫਾਰਿਸ਼ ਅਨੁਸਾਰ ਖਾਦਾਂ ਦੀ ਵਰਤੋਂ ਕਰੋ।\n2. **ਬੀਮਾਰੀ ਦੀ ਜਾਂਚ:** ਹਰ 3 ਦਿਨਾਂ ਬਾਅਦ ਪੱਤਿਆਂ ਦੀ ਜਾਂਚ ਕਰੋ। ਸ਼ੁਰੂਆਤ \'ਚ ਹੀ ਸਪ੍ਰੇ ਕਰੋ।\n3. **ਜੈਵਿਕ ਸੁਰੱਖਿਆ:** 5% ਨਿੰਮ ਦਾ ਅਰਕ ਜਾਂ ਟ੍ਰਾਈਕੋਡਰਮਾ ਦੀ ਵਰਤੋਂ ਕਰੋ।\n4. **ਦਵਾਈਆਂ:** FarmsKing Store ਤੋਂ ਅਸਲੀ ਦਵਾਈਆਂ ਤੇ ਖਾਦਾਂ ਘਰ ਬੈਠੇ ਮੰਗਵਾਓ।';
   };
 
   const handleSend = (textToSend?: string) => {

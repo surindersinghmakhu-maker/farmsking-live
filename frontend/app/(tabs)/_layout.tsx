@@ -16,6 +16,7 @@ import { TranslationKey } from '@/src/constants/translations';
 import { useCart } from '@/src/store/cart-context';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { FloatingAgriAiChatbot } from '@/src/components/FloatingAgriAiChatbot';
 
 import { Ionicons } from '@expo/vector-icons';
 
@@ -425,6 +426,7 @@ export default function TabLayout() {
             }}
           />
         </Tabs>
+        <FloatingAgriAiChatbot />
       </View>
     </View>
   );

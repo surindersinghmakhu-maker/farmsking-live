@@ -204,6 +204,31 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
           </TouchableOpacity>
         ) : null}
 
+        {/* 🤖 FarmsKing Kheti Mitra AI Doctor Banner Card */}
+        <TouchableOpacity
+          style={styles.aiDoctorBannerCard}
+          activeOpacity={0.88}
+          onPress={() => router.push('/(tabs)/crop-disease-scanner')}
+        >
+          <View style={styles.aiBannerHeader}>
+            <View style={styles.aiBotIcon}>
+              <Ionicons name="sparkles" size={20} color="#ffffff" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={styles.aiBannerTitle}>🤖 FarmsKing Kheti Mitra AI Doctor</Text>
+                <View style={styles.freePill}>
+                  <Text style={styles.freePillText}>100% FREE 🌾</Text>
+                </View>
+              </View>
+              <Text style={styles.aiBannerSub}>
+                ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ! ਫਸਲ ਦੀ ਬੀਮਾਰੀ, ਖਾਦ-ਸਪ੍ਰੇ ਦੀ ਮਾਤਰਾ, ਬੀਜ ਅਤੇ ਮੰਡੀ ਭਾਵ ਬਾਰੇ 24/7 ਪੁੱਛੋ।
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#ffffff" />
+          </View>
+        </TouchableOpacity>
+
         {/* Live Open-Meteo Weather Card */}
         <OpenMeteoWeatherCard />
 
@@ -958,6 +983,53 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: FONT.bold,
     color: '#334155',
+  },
+  aiDoctorBannerCard: {
+    backgroundColor: '#14532d',
+    borderRadius: RADIUS.lg,
+    padding: 12,
+    borderWidth: 1.5,
+    borderColor: '#86efac',
+    marginVertical: 2,
+    ...premiumShadow('#16a34a', 'sm'),
+  },
+  aiBannerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  aiBotIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#16a34a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#86efac',
+  },
+  aiBannerTitle: {
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+  },
+  aiBannerSub: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: '#dcfce7',
+    marginTop: 2,
+    lineHeight: 15,
+  },
+  freePill: {
+    backgroundColor: '#fef08a',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+  },
+  freePillText: {
+    fontSize: 9,
+    fontFamily: FONT.extraBold,
+    color: '#854d0e',
   },
 });
 

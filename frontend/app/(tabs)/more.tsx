@@ -331,84 +331,60 @@ export default function MoreScreen() {
                 );
               })()}
 
-              {/* Main Account Accordion Toggle Button */}
+              {/* Account Sub-Items listed directly */}
+              {accountItems.map((item) => (
+                <TouchableOpacity
+                  key={item.key}
+                  style={styles.row}
+                  activeOpacity={0.7}
+                  onPress={() => item.href && router.push(item.href as any)}
+                >
+                  <View style={styles.rowIconBg}>
+                    <Ionicons name={item.icon} size={18} color={theme.primary} />
+                  </View>
+                  <Text style={styles.rowLabel}>{t(item.key, item.label)}</Text>
+                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                </TouchableOpacity>
+              ))}
+
+              {/* 🛡️ Farm Supervisors Sub-Accounts (VIP Feature) */}
               <TouchableOpacity
-                style={[styles.row, !isAccountExpanded && { borderBottomWidth: 0 }]}
-                activeOpacity={0.75}
-                onPress={() => setIsAccountExpanded((prev) => !prev)}
+                style={[styles.row, isAdminRole && { borderBottomWidth: 0 }]}
+                activeOpacity={0.7}
+                onPress={() => setShowSupervisorModal(true)}
               >
-                <View style={[styles.rowIconBg, { backgroundColor: '#f0fdf4' }]}>
-                  <Ionicons name="person-circle-outline" size={20} color={theme.primary} />
+                <View style={[styles.rowIconBg, { backgroundColor: '#eef2ff' }]}>
+                  <Ionicons name="shield-checkmark-outline" size={18} color="#4f46e5" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>👤 Account Settings & Profiles</Text>
-                  <Text style={styles.rowSubLabel}>{accountItems.length + (isAdminRole ? 1 : 2)} profile & security options available</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={styles.rowLabel}>Supervisor Management</Text>
+                    <View style={{ backgroundColor: '#f59e0b', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3 }}>
+                      <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#ffffff' }}>VIP</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.rowSubLabel}>Add & Manage Supervisor Sub-Accounts</Text>
                 </View>
-                <Ionicons
-                  name={isAccountExpanded ? 'chevron-up' : 'chevron-down'}
-                  size={20}
-                  color={theme.primary}
-                />
+                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
 
-              {/* Collapsible Sub-Items */}
-              {isAccountExpanded && (
-                <View style={{ backgroundColor: '#f8fafc', borderTopWidth: 1, borderTopColor: '#e2e8f0' }}>
-                  {accountItems.map((item) => (
-                    <TouchableOpacity
-                      key={item.key}
-                      style={[styles.row, { paddingLeft: 18 }]}
-                      activeOpacity={0.7}
-                      onPress={() => item.href && router.push(item.href as any)}
-                    >
-                      <View style={styles.rowIconBg}>
-                        <Ionicons name={item.icon} size={18} color={theme.primary} />
-                      </View>
-                      <Text style={styles.rowLabel}>{t(item.key, item.label)}</Text>
-                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                    </TouchableOpacity>
-                  ))}
-
-                  {/* 🛡️ Farm Supervisors Sub-Accounts (VIP Feature) */}
-                  <TouchableOpacity
-                    style={[styles.row, { paddingLeft: 18 }]}
-                    activeOpacity={0.7}
-                    onPress={() => setShowSupervisorModal(true)}
-                  >
-                    <View style={[styles.rowIconBg, { backgroundColor: '#eef2ff' }]}>
-                      <Ionicons name="shield-checkmark-outline" size={18} color="#4f46e5" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Text style={styles.rowLabel}>Supervisor Management</Text>
-                        <View style={{ backgroundColor: '#f59e0b', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3 }}>
-                          <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#ffffff' }}>VIP</Text>
-                        </View>
-                      </View>
-                      <Text style={styles.rowSubLabel}>Add & Manage Supervisor Sub-Accounts</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                  </TouchableOpacity>
-
-                  {/* 🗑️ Delete Account Row (Hidden for Admin & Super Admin) */}
-                  {!isAdminRole ? (
-                    <TouchableOpacity
-                      style={[styles.row, { paddingLeft: 18, borderBottomWidth: 0 }]}
-                      activeOpacity={0.7}
-                      onPress={handleOpenDeleteModal}
-                    >
-                      <View style={[styles.rowIconBg, { backgroundColor: '#fef2f2' }]}>
-                        <Ionicons name="trash-outline" size={18} color="#dc2626" />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={[styles.rowLabel, { color: '#dc2626' }]}>🗑️ Delete Account</Text>
-                        <Text style={styles.rowSubLabel}>Permanently remove profile & account data</Text>
-                      </View>
-                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
-              )}
+              {/* 🗑️ Delete Account Row (Hidden for Admin & Super Admin) */}
+              {!isAdminRole ? (
+                <TouchableOpacity
+                  style={[styles.row, { borderBottomWidth: 0 }]}
+                  activeOpacity={0.7}
+                  onPress={handleOpenDeleteModal}
+                >
+                  <View style={[styles.rowIconBg, { backgroundColor: '#fef2f2' }]}>
+                    <Ionicons name="trash-outline" size={18} color="#dc2626" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.rowLabel, { color: '#dc2626' }]}>🗑️ Delete Account</Text>
+                    <Text style={styles.rowSubLabel}>Permanently remove profile & account data</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                </TouchableOpacity>
+              ) : null}
             </View>
           </View>
 

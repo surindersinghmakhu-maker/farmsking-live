@@ -26,9 +26,54 @@ export class ProductsController {
     @Query('includeInactive') includeInactive?: string,
     @Query('sellerStoreId') sellerStoreId?: string,
     @Query('slug') slug?: string,
+    @Query('categorySlug') categorySlug?: string,
   ) {
     const canSeeInactive = Boolean(user && (user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN || user.role === Role.SELLER) && includeInactive === 'true');
-    return this.productsService.listAll(canSeeInactive, sellerStoreId, slug);
+    return this.productsService.listAll(canSeeInactive, sellerStoreId, slug, categorySlug);
+  }
+
+  /** Admin: List products pending moderation review */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Get('admin/pending')
+  listPendingForAdmin() {
+    return this.productsService.listPendingForAdmin();
+  }
+
+  /** Admin: Approve product */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Post('admin/approve/:id')
+  approveProductByAdmin(@Param('id') id: string) {
+    return this.productsService.approveProductByAdmin(id);
+  }
+
+  /** Admin: Reject product with reason */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Post('admin/reject/:id')
+  rejectProductByAdmin(@Param('id') id: string, @Body('reason') reason: string) {
+    return this.productsService.rejectProductByAdmin(id, reason);
+  }
+
+  /** Submit a Product Review */
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/reviews')
+  addReview(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body('rating') rating: number,
+    @Body('title') title?: string,
+    @Body('comment') comment?: string,
+    @Body('photoUrls') photoUrls?: string[],
+  ) {
+    return this.productsService.addReview(user, id, rating, title, comment, photoUrls);
+  }
+
+  /** Get Product Reviews */
+  @Get(':id/reviews')
+  getReviews(@Param('id') id: string) {
+    return this.productsService.getReviews(id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -45,4 +90,5 @@ export class ProductsController {
     return this.productsService.remove(id);
   }
 }
+
 

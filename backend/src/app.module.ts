@@ -59,6 +59,7 @@ import { TrainersModule } from './modules/trainers/trainers.module';
 import { SellerModule } from './modules/seller/seller.module';
 import { CashfreeModule } from './modules/cashfree/cashfree.module';
 import { ShiprocketModule } from './modules/shiprocket/shiprocket.module';
+import { EmailModule } from './modules/email/email.module';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 
 
@@ -122,6 +123,7 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
     SellerModule,
     CashfreeModule,
     ShiprocketModule,
+    EmailModule,
   ],
 
 

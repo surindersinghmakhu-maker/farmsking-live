@@ -35,17 +35,21 @@ export default function SellerDashboardScreen() {
   // Onboarding Wizard Step (1 to 5)
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
 
-  // Step 1: Business Identity & Entity Type
+  // Seller Type: FARMER vs COMMERCIAL
+  const [sellerType, setSellerType] = useState<'FARMER' | 'COMMERCIAL'>('FARMER');
+
+  // Step 1: Business Identity & Brand Details
   const [storeName, setStoreName] = useState('');
   const [slug, setSlug] = useState('');
-  const [entityType, setEntityType] = useState<'PROPRIETORSHIP' | 'PARTNERSHIP' | 'PVT_LTD' | 'INDIVIDUAL_FARMER'>('PROPRIETORSHIP');
+  const [entityType, setEntityType] = useState<'PROPRIETORSHIP' | 'PARTNERSHIP' | 'PVT_LTD' | 'INDIVIDUAL_FARMER'>('INDIVIDUAL_FARMER');
   const [legalName, setLegalName] = useState('');
-  const [businessRegNo, setBusinessRegNo] = useState('');
 
-  // Step 2: Legal & Tax Compliance
+  // Step 2: Legal & Tax Compliance & FSSAI
   const [gstin, setGstin] = useState('');
   const [panNumber, setPanNumber] = useState('');
+  const [wantsToSellFood, setWantsToSellFood] = useState(false);
   const [fssaiNo, setFssaiNo] = useState('');
+  const [fssaiExpiryDate, setFssaiExpiryDate] = useState('');
   const [agriLicenseNo, setAgriLicenseNo] = useState('');
   const [gstStateDetected, setGstStateDetected] = useState<string | null>(null);
 
@@ -72,58 +76,88 @@ export default function SellerDashboardScreen() {
   const [gstCertDoc, setGstCertDoc] = useState<string | null>(null);
   const [panCardDoc, setPanCardDoc] = useState<string | null>(null);
   const [chequeDoc, setChequeDoc] = useState<string | null>(null);
+  const [aadhaarFrontDoc, setAadhaarFrontDoc] = useState<string | null>(null);
+  const [aadhaarBackDoc, setAadhaarBackDoc] = useState<string | null>(null);
+  const [fssaiCertDoc, setFssaiCertDoc] = useState<string | null>(null);
+  const [tradeLicenseDoc, setTradeLicenseDoc] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Validation Error State
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Premium Amazon-Style Product Builder State
+  // Product Builder State with 4 Mandatory Photo Angles & Dimensional Metrics
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [productName, setProductName] = useState('');
   const [productPrice, setProductPrice] = useState('');
   const [newMrpPrice, setNewMrpPrice] = useState('');
-  const [productCategory, setProductCategory] = useState('Seeds');
-  const [newSubCategory, setNewSubCategory] = useState('Grain Seeds');
+  const [productCategorySlug, setProductCategorySlug] = useState<'bio-fertilizers' | 'handmade-products' | 'pesticides' | 'khad-spray' | 'food-products'>('bio-fertilizers');
   const [newBrand, setNewBrand] = useState('FarmsKing Certified');
-  const [newUnit, setNewUnit] = useState('bag');
+  const [newUnit, setNewUnit] = useState('kg');
   const [stockQty, setStockQty] = useState('50');
   const [hsnCode, setHsnCode] = useState('120991');
-  const [newGstRate, setNewGstRate] = useState('5% GST');
-  const [newTargetCrop, setNewTargetCrop] = useState('All Crops');
-  const [newTechnicalFormula, setNewTechnicalFormula] = useState('');
-  const [newDosageInstructions, setNewDosageInstructions] = useState('');
-  const [newProductDescription, setNewProductDescription] = useState('');
-  const [newProductImages, setNewProductImages] = useState<string[]>([]);
 
-  // Natural Organic Farmer Foods Section
-  const [isFarmerMadeProduct, setIsFarmerMadeProduct] = useState(false);
-  const [farmerProducerName, setFarmerProducerName] = useState('');
-  const [harvestBatchDate, setHarvestBatchDate] = useState('');
-  const [processingMethod, setProcessingMethod] = useState('Cold-Pressed / Traditional Desi Kohlu');
-  const [purityGuarantee, setPurityGuarantee] = useState('100% Organic & Chemical-Free · No Preservatives');
-  const [shelfLifeInfo, setShelfLifeInfo] = useState('Best before 6 months in cool dry place');
+  // Dimensional Metrics Inputs (in cm & kg)
+  const [deadWeightKg, setDeadWeightKg] = useState('0.5');
+  const [lengthCm, setLengthCm] = useState('10');
+  const [widthCm, setWidthCm] = useState('10');
+  const [heightCm, setHeightCm] = useState('10');
 
-  // Pack Size Variants Chips
-  const [packSizes, setPackSizes] = useState<string[]>(['1 Kg', '5 Kg', '50 Kg Bag']);
-  const [newPackSizeInput, setNewPackSizeInput] = useState('');
+  // Agri Technical Formulation & Dosage
+  const [technicalName, setTechnicalName] = useState('');
+  const [dosageInstructions, setDosageInstructions] = useState('');
+  const [suitableCrops, setSuitableCrops] = useState('');
+  const [targetPests, setTargetPests] = useState('');
+  const [batchNumber, setBatchNumber] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
+
+  // 4 Mandatory Photo Angles
+  const [imageFrontUrl, setImageFrontUrl] = useState<string | null>(null);
+  const [imageBackLabelUrl, setImageBackLabelUrl] = useState<string | null>(null);
+  const [imageDosageUrl, setImageDosageUrl] = useState<string | null>(null);
+  const [imageProductUrl, setImageProductUrl] = useState<string | null>(null);
+
+  const pickSingleImage = async (setter: (url: string) => void) => {
+    try {
+      const res = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.7,
+        base64: true,
+      });
+      if (!res.canceled && res.assets[0]?.uri) {
+        const uri = res.assets[0].base64 ? `data:image/jpeg;base64,${res.assets[0].base64}` : res.assets[0].uri;
+        setter(uri);
+      }
+    } catch (err) {
+      showAlert('Photo Picker Error', 'Could not open image gallery.');
+    }
+  };
+
+  // Live Dimensional Volumetric Weight & Billable Weight Calculation
+  const parsedDeadWeight = parseFloat(deadWeightKg || '0.5');
+  const parsedLength = parseFloat(lengthCm || '10');
+  const parsedWidth = parseFloat(widthCm || '10');
+  const parsedHeight = parseFloat(heightCm || '10');
+
+  const volumetricWeightKg = (parsedLength * parsedWidth * parsedHeight) / 5000;
+  const billableWeightKg = Math.max(parsedDeadWeight, volumetricWeightKg);
+  const isCodAllowedAuto = !(productCategorySlug === 'khad-spray' || billableWeightKg >= 25);
 
   const resetProductForm = () => {
     setProductName('');
     setProductPrice('');
     setNewMrpPrice('');
-    setProductCategory('Seeds');
-    setNewSubCategory('Grain Seeds');
-    setNewBrand('FarmsKing Certified');
-    setNewUnit('bag');
+    setProductCategorySlug('bio-fertilizers');
     setStockQty('50');
-    setHsnCode('120991');
-    setNewGstRate('5% GST');
-    setNewTargetCrop('All Crops');
-    setNewTechnicalFormula('');
-    setNewDosageInstructions('');
-    setNewProductDescription('');
-    setNewProductImages([]);
-    setIsFarmerMadeProduct(false);
+    setTechnicalName('');
+    setDosageInstructions('');
+    setSuitableCrops('');
+    setTargetPests('');
+    setBatchNumber('');
+    setExpiryDate('');
+    setImageFrontUrl(null);
+    setImageBackLabelUrl(null);
+    setImageDosageUrl(null);
+    setImageProductUrl(null);
   };
 
   useEffect(() => {
@@ -202,7 +236,6 @@ export default function SellerDashboardScreen() {
     }
   };
 
-  // Cross-platform Alert Helper (Works on Web & Native Mobile)
   const showAlert = (title: string, message: string) => {
     if (Platform.OS === 'web') {
       window.alert(`${title}\n\n${message}`);
@@ -211,7 +244,6 @@ export default function SellerDashboardScreen() {
     }
   };
 
-  // Live GSTIN State Identifier, PAN Auto-Extract & Firm Name Lookup
   const handleGstinChange = (val: string) => {
     const uppercase = val.trim().toUpperCase();
     setGstin(uppercase);
@@ -245,18 +277,40 @@ export default function SellerDashboardScreen() {
       setGstStateDetected(null);
     }
 
-    // Auto-extract 10-digit PAN from GSTIN (digits 3-12)
     if (uppercase.length >= 12) {
       const extractedPan = uppercase.substring(2, 12);
       if (/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(extractedPan)) {
         setPanNumber(extractedPan);
       }
     }
+  };
 
-    // Auto Firm Name check
-    if (uppercase.length === 15 && !legalName.trim() && storeName.trim()) {
-      setLegalName(`${storeName.trim()} (Verified GST Firm)`);
+  const [showProductPreviewModal, setShowProductPreviewModal] = useState(false);
+
+  const validateStep1 = () => {
+    if (!storeName.trim()) {
+      setErrors({ storeName: 'Store Name is required.' });
+      showAlert('Required Field ⚠️', 'Please enter your Store / Brand Name.');
+      return false;
     }
+    setErrors({});
+    return true;
+  };
+
+  const validateStep2 = () => {
+    if (wantsToSellFood && (!fssaiNo.trim() || !/^\d{14}$/.test(fssaiNo.trim()))) {
+      showAlert('FSSAI Code Error ⚠️', 'FSSAI License Number must be a valid 14-digit numeric code.');
+      return false;
+    }
+    return true;
+  };
+
+  const validateStep3 = () => {
+    if (!pickupPincode.trim() || !/^\d{6}$/.test(pickupPincode.trim())) {
+      showAlert('Pincode Required ⚠️', 'Please enter a valid 6-digit Pickup Pincode.');
+      return false;
+    }
+    return true;
   };
 
   const handleFinalSubmission = async () => {
@@ -272,17 +326,31 @@ export default function SellerDashboardScreen() {
       return;
     }
 
+    if (wantsToSellFood) {
+      if (!fssaiNo.trim() || !/^\d{14}$/.test(fssaiNo.trim())) {
+        setStep(2);
+        showAlert('FSSAI Code Error ⚠️', 'FSSAI License Number must be a valid 14-digit numeric code.');
+        return;
+      }
+    }
+
     try {
       setLoading(true);
       const rawSlug = slug.trim() || storeName.trim().toLowerCase().replace(/\s+/g, '-');
       const autoSlug = rawSlug.replace(/[^a-z0-9-]/g, '') || `seller-${Date.now().toString(36)}`;
 
       const payload = {
+        sellerType,
         storeName: storeName.trim(),
         slug: autoSlug,
         legalName: legalName.trim() || storeName.trim(),
         gstin: gstin.trim() || undefined,
         panNumber: panNumber.trim() || undefined,
+        wantsToSellFood,
+        fssaiNo: fssaiNo.trim() || undefined,
+        fssaiCertificateUrl: fssaiCertDoc || undefined,
+        fssaiExpiryDate: fssaiExpiryDate || undefined,
+        agriLicenseNo: agriLicenseNo.trim() || undefined,
         bankAccountNo: bankAccountNo.trim() || undefined,
         bankIfsc: bankIfsc.trim() || undefined,
         bankBeneficiaryName: bankHolderName.trim() || storeName.trim(),
@@ -293,10 +361,12 @@ export default function SellerDashboardScreen() {
         gstDocUrl: gstCertDoc || undefined,
         panDocUrl: panCardDoc || undefined,
         chequeDocUrl: chequeDoc || undefined,
+        aadhaarFrontUrl: aadhaarFrontDoc || undefined,
+        aadhaarBackUrl: aadhaarBackDoc || undefined,
+        tradeLicenseUrl: tradeLicenseDoc || undefined,
       };
 
       if (storeData?.id) {
-        // Update existing store or resubmit rejected KYC
         await apiClient.patch('/seller/store/kyc', payload);
       } else {
         try {
@@ -310,7 +380,7 @@ export default function SellerDashboardScreen() {
         }
       }
 
-      showAlert('🎉 Registration Submitted!', 'Your National Seller Store has been submitted successfully for Super Admin verification.');
+      showAlert('🎉 Application Submitted!', 'Your Seller Store application has been submitted successfully for Admin review.');
       await fetchStoreData();
     } catch (err: any) {
       const rawMsg = err?.response?.data?.message || err?.message || 'Failed to submit seller registration.';
@@ -327,20 +397,44 @@ export default function SellerDashboardScreen() {
       return;
     }
 
+    if (productCategorySlug === 'pesticides' && storeData?.sellerType !== 'COMMERCIAL') {
+      showAlert('Pesticide Restriction ⚠️', 'Pesticides can only be listed by COMMERCIAL dealers with a valid Agri License.');
+      return;
+    }
+
+    if (productCategorySlug === 'food-products' && !storeData?.isFssaiApproved) {
+      showAlert('FSSAI Approval Required ⚠️', 'Food Products require FSSAI certification approval by Admin.');
+      return;
+    }
+
     try {
       await apiClient.post('/products', {
         name: productName.trim(),
         price: parseFloat(productPrice),
-        category: productCategory,
+        categorySlug: productCategorySlug,
+        category: productCategorySlug,
         stockQty: parseInt(stockQty || '10', 10),
         hsnCode,
         sellerStoreId: storeData?.id,
+        deadWeightKg: parsedDeadWeight,
+        lengthCm: parsedLength,
+        widthCm: parsedWidth,
+        heightCm: parsedHeight,
+        technicalName,
+        dosageInstructions,
+        suitableCrops,
+        targetPests,
+        batchNumber,
+        expiryDate,
+        imageFrontUrl,
+        imageBackLabelUrl,
+        imageDosageUrl,
+        imageProductUrl,
       });
 
-      showAlert('Success 🎉', 'Product added to your Seller Store! It is now live in the Store catalog.');
+      showAlert('Success 🎉', 'Product added successfully! It is now under catalog review.');
       setShowAddProduct(false);
-      setProductName('');
-      setProductPrice('');
+      resetProductForm();
       fetchStats();
     } catch (err: any) {
       const rawMsg = err?.response?.data?.message || err?.message || 'Failed to add product.';
@@ -348,6 +442,7 @@ export default function SellerDashboardScreen() {
       showAlert('Error', msg);
     }
   };
+
 
   if (loading) {
     return (
@@ -867,53 +962,366 @@ export default function SellerDashboardScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Action Bar */}
-            <TouchableOpacity
-              style={styles.addProductBtn}
-              onPress={() => setShowAddProduct(!showAddProduct)}
-            >
-              <MaterialCommunityIcons name="plus-circle" size={22} color="#FFF" />
-              <Text style={styles.addProductBtnText}>+ Add New Product to Store</Text>
-            </TouchableOpacity>
+            {/* Action Bar & Quick Catalog Link */}
+            <View style={{ flexDirection: 'row', gap: 8, marginVertical: 12 }}>
+              <TouchableOpacity
+                style={[styles.addProductBtn, { flex: 1 }]}
+                onPress={() => setShowAddProduct(!showAddProduct)}
+              >
+                <MaterialCommunityIcons name="plus-circle" size={20} color="#FFF" />
+                <Text style={styles.addProductBtnText}>
+                  {showAddProduct ? 'Close Builder' : '+ Premium Product Builder'}
+                </Text>
+              </TouchableOpacity>
 
-            {/* Add Product Form */}
+              <TouchableOpacity
+                style={[styles.addProductBtn, { backgroundColor: '#1E40AF', paddingHorizontal: 12 }]}
+                onPress={() => router.push('/(tabs)/shop')}
+              >
+                <Ionicons name="storefront-outline" size={18} color="#FFF" />
+                <Text style={styles.addProductBtnText}>Go to SK Store</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Premium Amazon-Style Add Product Builder Form */}
             {showAddProduct && (
               <View style={styles.card}>
-                <Text style={styles.cardTitle}>📦 Add New Product</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <Text style={styles.cardTitle}>📦 Amazon-Grade Product Builder</Text>
+                  <TouchableOpacity onPress={() => setShowAddProduct(false)}>
+                    <Ionicons name="close-circle" size={24} color="#9CA3AF" />
+                  </TouchableOpacity>
+                </View>
+
+                {/* 1. NON-GST SELLER COMPLIANCE BANNER */}
+                {!storeData?.gstin ? (
+                  <View style={{ backgroundColor: '#064E3B', borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: '#10B981' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="leaf" size={18} color="#34D399" />
+                      <Text style={{ color: '#34D399', fontSize: 13, fontWeight: '800' }}>🌾 Non-GST Local Farmer Mode Active</Text>
+                    </View>
+                    <Text style={{ color: '#D1D5DB', fontSize: 11.5, marginTop: 4, lineHeight: 16 }}>
+                      You are listing as a Non-GST seller. Products are restricted to 100% Tax-Exempt Local Organic Foods & Fresh Farm Produce.
+                    </Text>
+                  </View>
+                ) : null}
+
+                {/* 2. FSSAI FOOD LICENSE NOTICE */}
+                {isFarmerMadeProduct || productCategory.includes('Food') ? (
+                  <View style={{ backgroundColor: storeData?.fssaiNo ? '#065F46' : '#78350F', borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: storeData?.fssaiNo ? '#10B981' : '#F59E0B' }}>
+                    <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '700' }}>
+                      {storeData?.fssaiNo ? `✅ FSSAI Licensed Seller (${storeData.fssaiNo}): National Delivery Active` : '⚠️ No FSSAI Food License Attached: Restricted to Intra-State Local Delivery'}
+                    </Text>
+                  </View>
+                ) : null}
+
+                {/* 3. MULTI-PHOTO GALLERY UPLOAD */}
+                <Text style={styles.inputLabel}>Product Gallery Photos (Select Multiple) *</Text>
+                <TouchableOpacity style={styles.uploadBox} onPress={pickProductPhotos}>
+                  <Ionicons name="images-outline" size={24} color="#10B981" />
+                  <Text style={styles.uploadText}>
+                    {newProductImages.length > 0 ? `Attach ${newProductImages.length} Photo(s)` : 'Browse & Upload Photos from Gallery'}
+                  </Text>
+                </TouchableOpacity>
+
+                {newProductImages.length > 0 ? (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 8 }}>
+                    {newProductImages.map((img, idx) => (
+                      <View key={idx} style={{ position: 'relative', marginRight: 8 }}>
+                        <Image source={{ uri: img }} style={{ width: 60, height: 60, borderRadius: 8, borderWidth: 1, borderColor: '#10B981' }} />
+                        <TouchableOpacity
+                          style={{ position: 'absolute', top: -4, right: -4, backgroundColor: '#EF4444', borderRadius: 10, padding: 2 }}
+                          onPress={() => setNewProductImages(newProductImages.filter((_, i) => i !== idx))}
+                        >
+                          <Ionicons name="close" size={12} color="#FFF" />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </ScrollView>
+                ) : null}
+
+                {/* 4. PRODUCT NAME */}
+                <Text style={styles.inputLabel}>Product Title / Name *</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Product Name (e.g. Hybrid Mustard Seeds)"
+                  placeholder="e.g. Pure Organic Desi Sugarcane Jaggery (Gur)"
                   placeholderTextColor="#9CA3AF"
                   value={productName}
                   onChangeText={setProductName}
                 />
+
+                {/* 5. BRAND SELECTOR */}
+                <Text style={styles.inputLabel}>Brand / Producer</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 }}>
+                  {['FarmsKing Certified', 'Syngenta', 'Bayer CropScience', 'UPL Ltd', 'Tata Rallis', 'IFFCO', 'Natural Farmer Direct'].map((b) => (
+                    <TouchableOpacity
+                      key={b}
+                      style={[styles.entityChip, newBrand === b && styles.activeEntityChip]}
+                      onPress={() => setNewBrand(b)}
+                    >
+                      <Text style={[styles.entityText, newBrand === b && styles.activeEntityText]}>{b}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* 6. CATEGORY & SUBCATEGORY SELECTOR */}
+                <Text style={styles.inputLabel}>Primary Category *</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 }}>
+                  {!storeData?.gstin ? (
+                    ['Natural Farmer Foods', 'Farmer Made Foods'].map((c) => (
+                      <TouchableOpacity
+                        key={c}
+                        style={[styles.entityChip, productCategory === c && styles.activeEntityChip]}
+                        onPress={() => {
+                          setProductCategory(c);
+                          setIsFarmerMadeProduct(true);
+                        }}
+                      >
+                        <Text style={[styles.entityText, productCategory === c && styles.activeEntityText]}>🌾 {c}</Text>
+                      </TouchableOpacity>
+                    ))
+                  ) : (
+                    ['Seeds', 'Fertilizers', 'Crop Protection', 'Farm Machinery & Tools', 'Bio & Organics', 'Natural Farmer Foods'].map((c) => (
+                      <TouchableOpacity
+                        key={c}
+                        style={[styles.entityChip, productCategory === c && styles.activeEntityChip]}
+                        onPress={() => {
+                          setProductCategory(c);
+                          setIsFarmerMadeProduct(c.includes('Food'));
+                        }}
+                      >
+                        <Text style={[styles.entityText, productCategory === c && styles.activeEntityText]}>{c}</Text>
+                      </TouchableOpacity>
+                    ))
+                  )}
+                </View>
+
+                {/* 7. PRICES & MRP */}
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Selling Price (₹) *</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="e.g. 450"
+                      placeholderTextColor="#9CA3AF"
+                      keyboardType="numeric"
+                      value={productPrice}
+                      onChangeText={setProductPrice}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>List MRP (₹) (Optional)</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="e.g. 600"
+                      placeholderTextColor="#9CA3AF"
+                      keyboardType="numeric"
+                      value={newMrpPrice}
+                      onChangeText={setNewMrpPrice}
+                    />
+                  </View>
+                </View>
+
+                {/* 8. PACK SIZE VARIANTS */}
+                <Text style={styles.inputLabel}>Pack Size Variants (Available Sizes)</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 }}>
+                  {['250 ml', '500 ml', '1 Litre', '5 Litres', '500 gram', '1 Kg', '5 Kg', '25 Kg Bag', '50 Kg Bag'].map((sz) => {
+                    const isSelected = packSizes.includes(sz);
+                    return (
+                      <TouchableOpacity
+                        key={sz}
+                        style={[styles.entityChip, isSelected && styles.activeEntityChip]}
+                        onPress={() => {
+                          if (isSelected) setPackSizes(packSizes.filter((s) => s !== sz));
+                          else setPackSizes([...packSizes, sz]);
+                        }}
+                      >
+                        <Text style={[styles.entityText, isSelected && styles.activeEntityText]}>{sz}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
+                {/* 9. GST % & HSN CODE */}
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>GST Tax Rate</Text>
+                    <TextInput style={styles.input} value={storeData?.gstin ? newGstRate : 'Exempt (0%)'} onChangeText={setNewGstRate} editable={Boolean(storeData?.gstin)} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>HSN Code</Text>
+                    <TextInput style={styles.input} value={hsnCode} onChangeText={setHsnCode} placeholder="120991" placeholderTextColor="#9CA3AF" />
+                  </View>
+                </View>
+
+                {/* 10. STOCK & UNIT */}
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Stock Quantity</Text>
+                    <TextInput style={styles.input} keyboardType="number-pad" value={stockQty} onChangeText={setStockQty} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Unit of Measure</Text>
+                    <TextInput style={styles.input} value={newUnit} onChangeText={setNewUnit} placeholder="bag / kg / litre" placeholderTextColor="#9CA3AF" />
+                  </View>
+                </View>
+
+                {/* 11. TARGET CROP & TECHNICAL FORMULA */}
+                <Text style={styles.inputLabel}>Target Crop</Text>
+                <TextInput style={styles.input} value={newTargetCrop} onChangeText={setNewTargetCrop} placeholder="e.g. Wheat, Cotton, Sugarcane, Vegetables" placeholderTextColor="#9CA3AF" />
+
+                <Text style={styles.inputLabel}>Technical Formula / Active Ingredients (Optional)</Text>
+                <TextInput style={styles.input} value={newTechnicalFormula} onChangeText={setNewTechnicalFormula} placeholder="e.g. Neem Oil 10000 PPM" placeholderTextColor="#9CA3AF" />
+
+                <Text style={styles.inputLabel}>Dosage Instructions per Acre (Optional)</Text>
+                <TextInput style={styles.input} value={newDosageInstructions} onChangeText={setNewDosageInstructions} placeholder="e.g. 250 ml per acre in 150L water" placeholderTextColor="#9CA3AF" />
+
+                {/* 12. NATURAL FARMER FOOD DETAILS */}
+                {isFarmerMadeProduct ? (
+                  <View style={{ backgroundColor: '#111827', borderRadius: 8, padding: 10, marginVertical: 8, borderWidth: 1, borderColor: '#059669' }}>
+                    <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '700', marginBottom: 6 }}>🌾 Natural Farmer Food Compliance Details</Text>
+                    
+                    <Text style={styles.inputLabel}>Producer / Farmer Name</Text>
+                    <TextInput style={styles.input} value={farmerProducerName} onChangeText={setFarmerProducerName} placeholder="Direct Farmer Name" placeholderTextColor="#9CA3AF" />
+
+                    <Text style={styles.inputLabel}>Harvest / Batch Date</Text>
+                    <TextInput style={styles.input} value={harvestBatchDate} onChangeText={setHarvestBatchDate} placeholder="e.g. Harvested Sept 2026" placeholderTextColor="#9CA3AF" />
+
+                    <Text style={styles.inputLabel}>Processing Method</Text>
+                    <TextInput style={styles.input} value={processingMethod} onChangeText={setProcessingMethod} placeholder="Cold-Pressed / Traditional Kohlu" placeholderTextColor="#9CA3AF" />
+                  </View>
+                ) : null}
+
+                {/* 13. FULL DESCRIPTION */}
+                <Text style={styles.inputLabel}>Full Product Description</Text>
                 <TextInput
-                  style={styles.input}
-                  placeholder="Price (₹)"
+                  style={[styles.input, { height: 80 }]}
+                  placeholder="Enter detailed benefits, usage guide, and storage instructions..."
                   placeholderTextColor="#9CA3AF"
-                  keyboardType="numeric"
-                  value={productPrice}
-                  onChangeText={setProductPrice}
+                  multiline
+                  value={newProductDescription}
+                  onChangeText={setNewProductDescription}
                 />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Stock Quantity"
-                  placeholderTextColor="#9CA3AF"
-                  keyboardType="number-pad"
-                  value={stockQty}
-                  onChangeText={setStockQty}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="HSN Code (Default: 120991)"
-                  placeholderTextColor="#9CA3AF"
-                  value={hsnCode}
-                  onChangeText={setHsnCode}
-                />
-                <TouchableOpacity style={styles.primaryBtn} onPress={handleAddProduct}>
-                  <Text style={styles.primaryBtnText}>Save Product to Store</Text>
-                </TouchableOpacity>
+
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+                  <TouchableOpacity
+                    style={[styles.primaryBtn, { flex: 1, backgroundColor: '#3B82F6' }]}
+                    onPress={() => setShowProductPreviewModal(true)}
+                  >
+                    <Ionicons name="eye-outline" size={18} color="#FFF" />
+                    <Text style={styles.primaryBtnText}> 👁 Live Customer View Preview</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity style={[styles.primaryBtn, { flex: 1 }]} onPress={handleAddProduct}>
+                    <Ionicons name="checkmark-circle" size={18} color="#FFF" />
+                    <Text style={styles.primaryBtnText}> Save Product to Store</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
+            )}
+
+            {/* LIVE CUSTOMER PRODUCT PREVIEW MODAL */}
+            <Modal visible={showProductPreviewModal} transparent animationType="slide" onRequestClose={() => setShowProductPreviewModal(false)}>
+              <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 16 }}>
+                <View style={{ backgroundColor: '#111827', borderRadius: 16, padding: 16, maxHeight: '90%', borderWidth: 1, borderColor: '#374151' }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, borderBottomWidth: 1, borderBottomColor: '#374151', paddingBottom: 10 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="eye" size={20} color="#10B981" />
+                      <Text style={{ color: '#FFF', fontSize: 16, fontWeight: '700' }}>Customer Live View Preview</Text>
+                    </View>
+                    <TouchableOpacity onPress={() => setShowProductPreviewModal(false)}>
+                      <Ionicons name="close-circle" size={26} color="#9CA3AF" />
+                    </TouchableOpacity>
+                  </View>
+
+                  <ScrollView showsVerticalScrollIndicator={false}>
+                    {/* Simulated Product Card */}
+                    <View style={{ backgroundColor: '#1F2937', borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#374151' }}>
+                      {/* Product Image & Overlay Badges */}
+                      <View style={{ height: 200, backgroundColor: '#374151', position: 'relative', justifyContent: 'center', alignItems: 'center' }}>
+                        {imageFrontUrl || newProductImages[0] ? (
+                          <Image source={{ uri: imageFrontUrl || newProductImages[0] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                        ) : (
+                          <View style={{ alignItems: 'center' }}>
+                            <Ionicons name="image-outline" size={48} color="#9CA3AF" />
+                            <Text style={{ color: '#9CA3AF', fontSize: 12, marginTop: 4 }}>No Image Attached</Text>
+                          </View>
+                        )}
+
+                        {/* Visual Highlighting Badges on Photo */}
+                        <View style={{ position: 'absolute', top: 8, left: 8, flexDirection: 'column', gap: 4 }}>
+                          {productCategory.includes('Food') && (
+                            <View style={{ backgroundColor: '#059669', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
+                              <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>🥦 Pure Food Product</Text>
+                            </View>
+                          )}
+                          {productCategory === 'Seeds' && (
+                            <View style={{ backgroundColor: '#D97706', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
+                              <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>🌾 Hybrid Seed (High Yield)</Text>
+                            </View>
+                          )}
+                          {newBrand === 'FarmsKing Certified' && (
+                            <View style={{ backgroundColor: '#1D4ED8', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
+                              <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>👑 FarmsKing Direct</Text>
+                            </View>
+                          )}
+                        </View>
+
+                        <View style={{ position: 'absolute', bottom: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.7)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 }}>
+                          <Text style={{ color: '#F59E0B', fontSize: 11, fontWeight: '700' }}>⭐ 4.0 Top Rated</Text>
+                        </View>
+                      </View>
+
+                      {/* Details Content */}
+                      <View style={{ padding: 14 }}>
+                        <Text style={{ color: '#9CA3AF', fontSize: 12, textTransform: 'uppercase', fontWeight: '700' }}>{newBrand || storeData?.storeName}</Text>
+                        <Text style={{ color: '#FFF', fontSize: 18, fontWeight: '800', marginVertical: 4 }}>{productName || 'Untitled Product'}</Text>
+                        
+                        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, marginVertical: 6 }}>
+                          <Text style={{ color: '#10B981', fontSize: 20, fontWeight: '900' }}>₹{productPrice || '0'}</Text>
+                          {newMrpPrice ? <Text style={{ color: '#9CA3AF', fontSize: 14, textDecorationLine: 'line-through' }}>₹{newMrpPrice}</Text> : null}
+                          <Text style={{ color: '#34D399', fontSize: 12, fontWeight: '700' }}>Per {newUnit || 'unit'}</Text>
+                        </View>
+
+                        {/* Logistics Metric */}
+                        <View style={{ backgroundColor: '#111827', borderRadius: 8, padding: 8, marginVertical: 6 }}>
+                          <Text style={{ color: '#D1D5DB', fontSize: 11 }}>📦 Billable Express Weight: <Text style={{ color: '#F59E0B', fontWeight: '700' }}>{billableWeightKg.toFixed(2)} kg</Text></Text>
+                          <Text style={{ color: '#D1D5DB', fontSize: 11, marginTop: 2 }}>
+                            🚚 Delivery Rule: {isCodAllowedAuto ? '✅ COD Available' : '⚠️ Online Payment Only (Heavy SKU / Khad)'}
+                          </Text>
+                        </View>
+
+                        {/* Technical info if chemical/seed */}
+                        {newTechnicalFormula ? (
+                          <Text style={{ color: '#A7F3D0', fontSize: 12, marginVertical: 4 }}>🧪 Technical: {newTechnicalFormula}</Text>
+                        ) : null}
+
+                        {/* Seller Trust Tag */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                          <Ionicons name="shield-checkmark" size={16} color="#10B981" />
+                          <Text style={{ color: '#10B981', fontSize: 12, fontWeight: '700' }}>🛡️ Trusted Seller: {storeData?.storeName || 'Verified Vendor'}</Text>
+                        </View>
+
+                        {/* Legal Intermediary Disclaimer Banner */}
+                        <View style={{ backgroundColor: '#374151', borderRadius: 8, padding: 10, marginTop: 12, borderWidth: 1, borderColor: '#4B5563' }}>
+                          <Text style={{ color: '#F3F4F6', fontSize: 11, fontWeight: '700', marginBottom: 2 }}>⚖️ Platform Legal Intermediary Disclaimer</Text>
+                          <Text style={{ color: '#9CA3AF', fontSize: 10, lineHeight: 14 }}>
+                            FarmsKing is an e-commerce marketplace platform connecting independent verified sellers with buyers. Efficacy, germination rates, and crop yield outcomes are the sole responsibility of the brand/seller under Section 79 of IT Act 2000.
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </ScrollView>
+
+                  <TouchableOpacity
+                    style={{ backgroundColor: '#10B981', paddingVertical: 12, borderRadius: 8, alignItems: 'center', marginTop: 14 }}
+                    onPress={() => setShowProductPreviewModal(false)}
+                  >
+                    <Text style={{ color: '#FFF', fontWeight: '800', fontSize: 14 }}>Looks Satisfactory! Return to Editing</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
             )}
 
             {/* Compliance Note */}

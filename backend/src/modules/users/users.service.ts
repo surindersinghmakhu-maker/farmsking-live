@@ -1063,9 +1063,35 @@ export class UsersService implements OnModuleInit {
    * specialization/bio) only ever touch fields on top of this.
    */
   async updateMyAddress(user: AuthUser, dto: UpdateMyAddressDto) {
+    let newPasswordHash: string | undefined = undefined;
+    if (dto.password && dto.password.trim().length >= 4) {
+      newPasswordHash = await argon2.hash(dto.password.trim());
+    }
+
+    let cleanMobile: string | undefined = undefined;
+    if (dto.mobile && dto.mobile.trim()) {
+      const rawDigits = dto.mobile.replace(/\D/g, '');
+      const num = rawDigits.slice(-10);
+      if (num.length === 10) {
+        cleanMobile = num;
+        const existing = await this.prisma.user.findFirst({
+          where: {
+            mobile: cleanMobile,
+            deletedAt: null,
+            id: { not: user.id },
+          },
+        });
+        if (existing) {
+          throw new ConflictException('An account with this mobile number already exists.');
+        }
+      }
+    }
+
     const updated = await this.prisma.user.update({
       where: { id: user.id },
       data: {
+        ...(cleanMobile ? { mobile: cleanMobile } : {}),
+        ...(newPasswordHash ? { passwordHash: newPasswordHash } : {}),
         ...(dto.name !== undefined ? { name: dto.name } : {}),
         ...(dto.email !== undefined ? { email: dto.email } : {}),
         ...(dto.photoUrl !== undefined ? { photoUrl: dto.photoUrl } : {}),

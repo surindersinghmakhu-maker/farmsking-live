@@ -165,6 +165,27 @@ export class CropsService {
         orderBy: { createdAt: 'desc' },
       });
 
+      if (user.role === Role.FARMER) {
+        const { plan } = await this.farmerPlansService.getEffectivePlan(user.id);
+        if (plan === FarmerSubscriptionPlan.FREE) {
+          let activeCount = 0;
+          return crops.map((c) => {
+            const isActiveStatus = ACTIVE_STATUSES.includes(c.status);
+            if (isActiveStatus) {
+              activeCount++;
+              if (activeCount > FREE_PLAN_MAX_ACTIVE_CROPS) {
+                return {
+                  ...c,
+                  isLockedByPlan: true,
+                  lockedReason: 'Plan limit exceeded: Only your 3 latest crops are active on Free Plan. Upgrade plan to edit older crops.',
+                };
+              }
+            }
+            return { ...c, isLockedByPlan: false };
+          });
+        }
+      }
+
       return crops || [];
     } catch (err: any) {
       console.error('[CropsService.listMineForFarmer] Safe fallback catch:', err);
@@ -247,6 +268,26 @@ export class CropsService {
     if (cropCycle.status === CropStatus.COMPLETED) {
       throw new ForbiddenException('This crop is completed and locked — no further changes allowed.');
     }
+
+    if (user.role === Role.FARMER) {
+      const { plan } = await this.farmerPlansService.getEffectivePlan(user.id);
+      if (plan === FarmerSubscriptionPlan.FREE && ACTIVE_STATUSES.includes(cropCycle.status)) {
+        const newerActiveCrops = await this.prisma.cropCycle.count({
+          where: {
+            deletedAt: null,
+            status: { in: ACTIVE_STATUSES },
+            createdAt: { gt: cropCycle.createdAt },
+            plot: { farm: { ownerId: user.id, deletedAt: null } },
+          },
+        });
+        if (newerActiveCrops >= FREE_PLAN_MAX_ACTIVE_CROPS) {
+          throw new ForbiddenException(
+            'This crop is locked in View-Only mode because your Free Plan active crop limit (3 max) is filled by newer crops. Please upgrade your plan to edit older crops.'
+          );
+        }
+      }
+    }
+
     const { sowingDate, transplantDate, expectedHarvestDate, actualHarvestDate, ...rest } = dto;
     return this.prisma.cropCycle.update({
       where: { id },

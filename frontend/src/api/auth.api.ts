@@ -64,3 +64,30 @@ export async function verifyAccountPassword(password: string, mobile?: string): 
   const { data } = await apiClient.post<{ success: boolean; message: string }>('/auth/verify-password', { password, mobile });
   return data;
 }
+
+export interface GoogleLoginPayload {
+  email: string;
+  name?: string;
+  photoUrl?: string;
+  googleId?: string;
+}
+
+export async function googleLoginApi(payload: GoogleLoginPayload): Promise<AuthResponse & { isProfileIncomplete?: boolean; missingFields?: string[] }> {
+  const { data } = await apiClient.post<AuthResponse & { isProfileIncomplete?: boolean; missingFields?: string[] }>('/auth/google-login', payload);
+  return data;
+}
+
+export async function linkGoogleApi(payload: GoogleLoginPayload): Promise<{ success: boolean; message: string; user: any }> {
+  const { data } = await apiClient.post<{ success: boolean; message: string; user: any }>('/auth/link-google', payload);
+  return data;
+}
+
+export async function sendMobileLinkOtpApi(mobile: string): Promise<{ success: boolean; message: string; devOtp?: string }> {
+  const { data } = await apiClient.post<{ success: boolean; message: string; devOtp?: string }>('/auth/send-mobile-link-otp', { mobile });
+  return data;
+}
+
+export async function verifyMobileLinkOtpApi(payload: { mobile: string; otp: string; password?: string }): Promise<{ success: boolean; message: string; isMerged?: boolean; user: any; accessToken?: string }> {
+  const { data } = await apiClient.post<{ success: boolean; message: string; isMerged?: boolean; user: any; accessToken?: string }>('/auth/verify-mobile-link-otp', payload);
+  return data;
+}

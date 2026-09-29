@@ -1,12 +1,18 @@
 import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ShiprocketService } from '../shiprocket/shiprocket.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { AuthUser } from '../../common/types/auth-user.type';
-import { CreateSellerStoreDto, UpdateSellerKycDto } from './dto/seller-store.dto';
-import { Role, SellerKycStatus, SellerPayoutStatus } from '@prisma/client';
+import { CreateSellerStoreDto, UpdateSellerKycDto, UpdateSellerSettingsDto } from './dto/seller-store.dto';
+import { Role, SellerKycStatus, SellerPayoutStatus, SellerType, NotificationType } from '@prisma/client';
 
 @Injectable()
 export class SellerService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly shiprocketService: ShiprocketService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   /** Register a new Seller Store for the authenticated user */
   async registerStore(user: AuthUser, dto: CreateSellerStoreDto) {
@@ -24,12 +30,19 @@ export class SellerService {
       throw new ConflictException('Store slug is already taken. Please choose another.');
     }
 
+    if (dto.wantsToSellFood) {
+      if (!dto.fssaiNo || !/^\d{14}$/.test(dto.fssaiNo.trim())) {
+        throw new BadRequestException('FSSAI License Number must be a valid 14-digit numeric code when listing food products.');
+      }
+    }
+
     // Create Seller Store
     const store = await this.prisma.sellerStore.create({
       data: {
         sellerId: user.id,
         storeName: dto.storeName,
         slug: dto.slug,
+        sellerType: dto.sellerType || SellerType.FARMER,
         legalName: dto.legalName,
         gstin: dto.gstin,
         panNumber: dto.panNumber,
@@ -40,10 +53,19 @@ export class SellerService {
         pickupCity: dto.pickupCity,
         pickupState: dto.pickupState,
         pickupPincode: dto.pickupPincode,
+        wantsToSellFood: dto.wantsToSellFood || false,
+        fssaiNo: dto.fssaiNo ? dto.fssaiNo.trim() : null,
+        fssaiCertificateUrl: dto.fssaiCertificateUrl,
+        fssaiExpiryDate: dto.fssaiExpiryDate ? new Date(dto.fssaiExpiryDate) : null,
+        agriLicenseNo: dto.agriLicenseNo,
         gstDocUrl: dto.gstDocUrl,
         panDocUrl: dto.panDocUrl,
         chequeDocUrl: dto.chequeDocUrl,
-        kycStatus: dto.gstin && dto.panNumber ? SellerKycStatus.SUBMITTED : SellerKycStatus.PENDING,
+        aadhaarFrontUrl: dto.aadhaarFrontUrl,
+        aadhaarBackUrl: dto.aadhaarBackUrl,
+        tradeLicenseUrl: dto.tradeLicenseUrl,
+        shiprocketPickupNickname: `FK_LOC_${user.id.substring(0, 8)}`,
+        kycStatus: SellerKycStatus.SUBMITTED,
       },
     });
 
@@ -88,10 +110,17 @@ export class SellerService {
   async updateKyc(user: AuthUser, dto: UpdateSellerKycDto) {
     const store = await this.getMyStore(user);
 
+    if (dto.wantsToSellFood) {
+      if (!dto.fssaiNo || !/^\d{14}$/.test(dto.fssaiNo.trim())) {
+        throw new BadRequestException('FSSAI License Number must be a valid 14-digit numeric code when listing food products.');
+      }
+    }
+
     return this.prisma.sellerStore.update({
       where: { id: store.id },
       data: {
         ...dto,
+        fssaiExpiryDate: dto.fssaiExpiryDate ? new Date(dto.fssaiExpiryDate) : undefined,
         kycStatus: SellerKycStatus.SUBMITTED,
         rejectionReason: null,
       },
@@ -117,9 +146,14 @@ export class SellerService {
 
     return {
       storeName: store.storeName,
+      sellerType: store.sellerType,
       kycStatus: store.kycStatus,
       rejectionReason: store.rejectionReason,
       commissionRate: store.commissionRate,
+      rtoBearer: store.rtoBearer,
+      rtoSharedVendorRatio: store.rtoSharedVendorRatio,
+      catalogApprovalMode: store.catalogApprovalMode,
+      isFssaiApproved: store.isFssaiApproved,
       activeProducts: productsCount,
       totalOrders: totalOrderItems,
       pendingPayoutsAmount: pendingPayouts._sum.netPayoutAmount || 0,
@@ -140,8 +174,54 @@ export class SellerService {
     });
   }
 
-  /** Admin: Verify or Reject Seller KYC with optional rejection reason */
+  /** Admin: Verify or Reject Seller KYC with mandatory reason & Punjabi welcome trigger */
   async verifyKycByAdmin(storeId: string, status: SellerKycStatus, commissionRate?: number, rejectionReason?: string) {
+    const store = await this.prisma.sellerStore.findUnique({ where: { id: storeId } });
+    if (!store) {
+      throw new NotFoundException('Seller store not found.');
+    }
+
+    if (status === SellerKycStatus.REJECTED && !rejectionReason?.trim()) {
+      throw new BadRequestException('A mandatory rejection reason is required when rejecting a seller application.');
+    }
+
+    const updatedStore = await this.prisma.sellerStore.update({
+      where: { id: storeId },
+      data: {
+        kycStatus: status,
+        commissionRate: commissionRate !== undefined ? commissionRate : store.commissionRate,
+        rejectionReason: status === SellerKycStatus.REJECTED ? rejectionReason : null,
+      },
+    });
+
+    if (status === SellerKycStatus.VERIFIED) {
+      // 1. Trigger Shiprocket Warehouse Pickup Registration
+      try {
+        await this.shiprocketService.addPickupLocation(storeId);
+      } catch (err) {
+        console.warn('Shiprocket pickup registration notice:', err);
+      }
+
+      // 2. Send Welcome Notification to Seller Store Owner
+      const welcomeMessage = `Welcome to FarmsKing Marketplace! Your seller store application has been verified successfully. You can now start listing and selling your products across India.`;
+      try {
+        await this.notificationsService.create(
+          store.sellerId,
+          NotificationType.SYSTEM,
+          '🎉 Seller Store Verification Approved!',
+          welcomeMessage,
+          { storeId, status: 'VERIFIED' },
+        );
+      } catch (err) {
+        console.warn('Welcome notification notice:', err);
+      }
+    }
+
+    return updatedStore;
+  }
+
+  /** Admin: Update Vendor Settings (Commission, RTO Policy, Catalog Mode, FSSAI Approval) */
+  async updateSellerSettings(storeId: string, dto: UpdateSellerSettingsDto) {
     const store = await this.prisma.sellerStore.findUnique({ where: { id: storeId } });
     if (!store) {
       throw new NotFoundException('Seller store not found.');
@@ -150,16 +230,17 @@ export class SellerService {
     return this.prisma.sellerStore.update({
       where: { id: storeId },
       data: {
-        kycStatus: status,
-        commissionRate: commissionRate !== undefined ? commissionRate : store.commissionRate,
-        rejectionReason: status === SellerKycStatus.REJECTED ? rejectionReason : null,
+        commissionRate: dto.commissionRate !== undefined ? dto.commissionRate : store.commissionRate,
+        rtoBearer: dto.rtoBearer !== undefined ? dto.rtoBearer : store.rtoBearer,
+        rtoSharedVendorRatio: dto.rtoSharedVendorRatio !== undefined ? dto.rtoSharedVendorRatio : store.rtoSharedVendorRatio,
+        catalogApprovalMode: dto.catalogApprovalMode !== undefined ? dto.catalogApprovalMode : store.catalogApprovalMode,
+        isFssaiApproved: dto.isFssaiApproved !== undefined ? dto.isFssaiApproved : store.isFssaiApproved,
       },
     });
   }
 
   /** CA/Admin: Generate GSTR-8 (1% GST TCS) Summary Report */
   async generateGstr8Report(sellerStoreId: string, month: number, year: number) {
-    // Self-heal any order items missing sellerStoreId
     try {
       await this.prisma.$executeRaw`
         UPDATE customer_order_items coi
@@ -251,3 +332,4 @@ export class SellerService {
     };
   }
 }
+

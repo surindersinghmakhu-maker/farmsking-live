@@ -20,6 +20,46 @@ export class AuthController {
     return this.authService.sendWhatsAppOtp(body.mobile, body.otp);
   }
 
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Post('send-email-otp')
+  sendEmailOtp(@Body() body: { email: string; otp: string }) {
+    return this.authService.sendEmailOtp(body.email, body.otp);
+  }
+
+  @Throttle({ default: { limit: 100, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post('google-login')
+  googleLogin(@Body() dto: { email: string; name?: string; photoUrl?: string; googleId?: string }) {
+    return this.authService.googleLogin(dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('link-google')
+  linkGoogleAccount(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: { email: string; name?: string; photoUrl?: string; googleId?: string },
+  ) {
+    return this.authService.linkGoogleAccount(user, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('send-mobile-link-otp')
+  sendMobileLinkOtp(@CurrentUser() user: AuthUser, @Body() body: { mobile: string }) {
+    return this.authService.sendMobileLinkOtp(user, body.mobile);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('verify-mobile-link-otp')
+  verifyMobileLinkOtp(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: { mobile: string; otp: string; password?: string },
+  ) {
+    return this.authService.verifyMobileLinkOtp(user, dto);
+  }
+
   @Throttle({ default: { limit: 1000, ttl: 60_000 } })
   @Post('register')
   register(@Body() dto: RegisterDto) {

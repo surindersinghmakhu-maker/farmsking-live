@@ -7,6 +7,14 @@ export class UpdateMyAddressDto {
   name?: string;
 
   @IsOptional()
+  @IsString()
+  mobile?: string;
+
+  @IsOptional()
+  @IsString()
+  password?: string;
+
+  @IsOptional()
   @IsEmail()
   email?: string;
 

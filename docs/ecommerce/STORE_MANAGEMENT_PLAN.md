@@ -9,7 +9,7 @@ FarmsKing Store Ecosystem provides an **Amazon & Shopify-grade multi-vendor agri
 ### Key Capabilities & Master Features
 1. **Amazon-Grade Product Listing & Variant Management**:
    - Multiple product images with automatic compression and zoom preview.
-   - Dynamic pack sizes & variant pricing (e.g. 250ml, 500ml, 1L, 5L, 50kg bag).
+   - Dynamic pack sizes & variant pricing (e.g. 250ml, 500ml, 1L, 5L, 500g, 1kg, 5kg, 50kg bag).
    - Category & subcategory classification (Seeds, Fertilizers, Crop Protection, Bio Organics, Farmer-Made Foods, Agri Tools).
    - MRP vs. Selling Price discounting & instant savings badge.
    - HSN Code, GST % rate selection (0%, 5%, 12%, 18%).
@@ -56,6 +56,8 @@ model SellerStore {
   pickupCity                 String?
   pickupState                String?
   pickupPincode              String?
+  fssaiNo                    String?
+  agriLicenseNo              String?
   gstDocUrl                  String?
   panDocUrl                  String?
   chequeDocUrl               String?
@@ -92,7 +94,23 @@ model Product {
 
 ---
 
-## 3. 🚀 Developer API Endpoints Summary
+## 3. ⚖️ Seller Compliance & Regulatory Rules
+
+### A. GSTIN Compliance & Product Category Restrictions
+- **GST Registered Sellers (`gstin` present)**: Unlocks full store capabilities to list all agricultural inputs (Seeds, Commercial Fertilizers, Pesticides, Agri Machinery & Tools, Bio Organics, Natural Foods).
+- **Non-GST Sellers (`gstin` missing)**: System automatically restricts product listing to **100% Tax-Exempt Local Organic Foods & Fresh Farm Produce** (Organic Jaggery, Cold-Pressed Mustard Oil, A2 Cow Ghee, Honey, Handmade Spices, Fresh Fruits & Vegetables). Non-GST accounts are blocked from listing commercial chemical inputs requiring GSTIN compliance.
+
+### B. FSSAI License & Delivery Scope Rules
+- **FSSAI Licensed Sellers (`fssaiNo` present)**: Food & organic produce items can be shipped **Nationally** across all states in India.
+- **Non-FSSAI Sellers (`fssaiNo` missing)**: Food & organic produce items are restricted to **Intra-State Local Delivery Only** (customer delivery state must match seller pickup warehouse state).
+
+### C. Store Subdomain Aggregation vs. Standalone Store View
+- **Main Store Option (`/shop`)**: Aggregates and displays ALL active products from ALL verified sellers across India.
+- **Seller Subdomain / Standalone Link (`/store/[slug]`)**: Filters and displays ONLY that specific seller's products when accessed via their custom store link (`?slug=xyz` or `?sellerStoreId=abc`).
+
+---
+
+## 4. 🚀 Developer API Endpoints Summary
 
 | Method | Route | Access | Description |
 | :--- | :--- | :--- | :--- |
@@ -103,11 +121,11 @@ model Product {
 | `PATCH` | `/api/seller/admin/stores/:id/kyc` | ADMIN | Verify or reject seller store KYC with custom commission % |
 | `GET` | `/api/seller/admin/gstr8` | ADMIN / CA | Generate monthly 1% GST TCS GSTR-8 tax report |
 | `POST` | `/api/products` | ADMIN / SELLER | Add Amazon-style product to store |
-| `GET` | `/api/products` | PUBLIC | Fetch active products for customer shop |
+| `GET` | `/api/products` | PUBLIC | Fetch active products for customer shop (`?slug=` or `?sellerStoreId=`) |
 
 ---
 
-## 4. 🎨 UI & UX Best Practices
+## 5. 🎨 UI & UX Best Practices
 
 1. **Cross-Platform Compatibility**:
    - `showAlert` helper guarantees modals work seamlessly across Web browsers (Chrome, Edge, Safari) and Expo Native Mobile Apps.

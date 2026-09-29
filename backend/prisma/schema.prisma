@@ -571,6 +571,10 @@ model User {
   ordersPacked                        CustomerOrder[]      @relation("OrdersPackedBy")
   ordersDispatched                    CustomerOrder[]      @relation("OrdersDispatchedBy")
   sellerStore                         SellerStore?
+  productReviews                      ProductReview[]
+  wishlists                           Wishlist[]
+  returnRequests                      ReturnRequest[]
+
 
   // Farmer Plan (3-tier)
   farmerPlan                                 FarmerPlan?
@@ -1667,13 +1671,57 @@ model GardenVisit {
   @@map("garden_visits")
 }
 
+enum SellerType {
+  FARMER
+  COMMERCIAL
+}
+
+enum RtoBearer {
+  ADMIN
+  VENDOR
+  SHARED
+}
+
+enum CatalogApprovalMode {
+  MANUAL
+  AUTO
+}
+
+enum ProductModerationStatus {
+  PENDING_REVIEW
+  ACTIVE
+  REJECTED
+  OUT_OF_STOCK
+}
+
+enum SubOrderStatus {
+  PLACED
+  ACCEPTED
+  PACKED
+  SHIPPED
+  DELIVERED
+  RTO_DELIVERED
+  CANCELLED
+}
+
+enum SettlementStatus {
+  HOLD
+  SETTLED
+  DEDUCTED
+}
+
 model Product {
   id          String   @id @default(uuid())
   name        String
+  title       String?
+  brand       String?
   description String?
   category    String?
+  categorySlug String?
   unit        String   @default("piece")
   price       Decimal  @db.Decimal(12, 2)
+  sellingPrice Decimal? @db.Decimal(12, 2)
+  mrp         Decimal? @db.Decimal(12, 2)
   rating      Float    @default(4.5)
   isTopSeller Boolean  @default(false)
   imageUrl    String?
@@ -1689,19 +1737,89 @@ model Product {
   hsnCode       String?
   gstPercentage Decimal      @default(18.00) @db.Decimal(5, 2)
   weightKg      Float        @default(0.5)
+  deadWeightKg  Float?       @default(0.5)
   lengthCm      Float        @default(10)
   widthCm       Float        @default(10)
   heightCm      Float        @default(10)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  // Agri Technical & Mandatory fields
+  technicalName      String?
+  dosageInstructions String?
+  suitableCrops      String?
+  targetPests        String?
+  expiryDate         DateTime?
+  batchNumber        String?
+
+  // COD & Commission
+  isCodAllowed                 Boolean  @default(true)
+  commissionOverridePercentage Decimal? @db.Decimal(5, 2)
+
+  // Photo Uploads
+  imageFrontUrl     String?
+  imageBackLabelUrl String?
+  imageDosageUrl    String?
+  imageProductUrl   String?
+  galleryImages     String[] @default([])
+
+  // Moderation
+  moderationStatus ProductModerationStatus @default(PENDING_REVIEW)
+  rejectionReason  String?
+
+  // Bulk Quantity Tier Discounts
+  bulkDiscountMinQty     Int?
+  bulkDiscountPercentage Decimal? @db.Decimal(5, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   orderItems CustomerOrderItem[]
+  reviews    ProductReview[]
+  wishlists  Wishlist[]
+
 
   @@index([category])
+  @@index([categorySlug])
   @@index([isActive])
   @@index([sellerStoreId])
+  @@index([moderationStatus])
   @@map("products")
+}
+
+enum ReturnStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REFUNDED
+}
+
+model ProductReview {
+  id         String   @id @default(uuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating     Int      @default(5)
+  title      String?
+  comment    String?  @db.Text
+  photoUrls  String[] @default([])
+  createdAt  DateTime @default(now())
+
+  @@index([productId])
+  @@index([userId])
+  @@map("product_reviews")
+}
+
+model Wishlist {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@map("wishlists")
 }
 
 model CustomerOrder {
@@ -1732,9 +1850,11 @@ model CustomerOrder {
   phonepeMerchantOrderId String?            @unique
   phonepePaymentState    String?
 
-  items        CustomerOrderItem[]
-  redemptions  CouponRedemption[]
-  shippingLogs ShippingLog[]
+  items          CustomerOrderItem[]
+  subOrders      SubOrder[]
+  redemptions    CouponRedemption[]
+  shippingLogs   ShippingLog[]
+  returnRequests ReturnRequest[]
 
   @@index([customerId])
   @@index([couponId])
@@ -1773,39 +1893,52 @@ model CustomerOrderItem {
 // ─── Multi-Vendor Marketplace Core Models ────────────────────────────────
 
 model SellerStore {
-  id                         String          @id @default(uuid())
-  sellerId                   String          @unique
-  seller                     User            @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  id                         String              @id @default(uuid())
+  sellerId                   String              @unique
+  seller                     User                @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   storeName                  String
-  slug                       String          @unique
+  slug                       String              @unique
+  sellerType                 SellerType          @default(FARMER)
   legalName                  String?
-  gstin                      String?         @unique
+  gstin                      String?             @unique
   panNumber                  String?
-  kycStatus                  SellerKycStatus @default(PENDING)
+  kycStatus                  SellerKycStatus     @default(PENDING)
   rejectionReason            String?
   bankAccountNo              String?
   bankIfsc                   String?
   bankBeneficiaryName        String?
-  cashfreeVendorId           String?         @unique
+  cashfreeVendorId           String?             @unique
   shiprocketPickupLocationId String?
+  shiprocketPickupNickname   String?
   pickupAddress              String?
   pickupCity                 String?
   pickupState                String?
   pickupPincode              String?
+  wantsToSellFood            Boolean             @default(false)
   fssaiNo                    String?
+  fssaiCertificateUrl        String?
+  fssaiExpiryDate            DateTime?
+  isFssaiApproved            Boolean             @default(false)
   agriLicenseNo              String?
   gstDocUrl                  String?
   panDocUrl                  String?
   chequeDocUrl               String?
-  commissionRate             Decimal         @default(5.00) @db.Decimal(5, 2)
-  rating                     Float           @default(4.8)
-  isActive                   Boolean         @default(true)
-  createdAt                  DateTime        @default(now())
-  updatedAt                  DateTime        @updatedAt
+  aadhaarFrontUrl            String?
+  aadhaarBackUrl             String?
+  tradeLicenseUrl            String?
+  commissionRate             Decimal             @default(8.00) @db.Decimal(5, 2)
+  rtoBearer                  RtoBearer           @default(VENDOR)
+  rtoSharedVendorRatio       Decimal             @default(50.00) @db.Decimal(5, 2)
+  catalogApprovalMode        CatalogApprovalMode @default(MANUAL)
+  rating                     Float               @default(4.8)
+  isActive                   Boolean             @default(true)
+  createdAt                  DateTime            @default(now())
+  updatedAt                  DateTime            @updatedAt
 
   products     Product[]
   payouts      SellerPayout[]
   orderItems   CustomerOrderItem[]
+  subOrders    SubOrder[]
   shippingLogs ShippingLog[]
   gstr8Reports Gstr8Report[]
 
@@ -1814,6 +1947,59 @@ model SellerStore {
   @@index([isActive])
   @@map("seller_stores")
 }
+
+model SubOrder {
+  id                   String           @id @default(uuid())
+  orderId              String
+  order                CustomerOrder    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  sellerStoreId        String
+  sellerStore          SellerStore      @relation(fields: [sellerStoreId], references: [id])
+  subtotal             Decimal          @db.Decimal(12, 2)
+  commissionAmount     Decimal          @db.Decimal(12, 2)
+  shippingFee          Decimal          @default(0.00) @db.Decimal(12, 2)
+  rtoFee               Decimal          @default(0.00) @db.Decimal(12, 2)
+  vendorNetPayout      Decimal          @db.Decimal(12, 2)
+  shiprocketOrderId    String?
+  shiprocketShipmentId String?
+  shiprocketAwbCode    String?
+  shippingLabelUrl     String?
+  orderStatus          SubOrderStatus   @default(PLACED)
+  settlementStatus     SettlementStatus @default(HOLD)
+  cashfreeTransferId   String?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  returnRequests ReturnRequest[]
+
+  @@index([orderId])
+  @@index([sellerStoreId])
+  @@index([orderStatus])
+  @@index([settlementStatus])
+  @@map("sub_orders")
+}
+
+model ReturnRequest {
+  id           String       @id @default(uuid())
+  orderId      String
+  order        CustomerOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  subOrderId   String?
+  subOrder     SubOrder?    @relation(fields: [subOrderId], references: [id], onDelete: SetNull)
+  customerId   String
+  customer     User         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  reason       String
+  photoUrl     String?
+  status       ReturnStatus @default(PENDING)
+  refundAmount Decimal      @db.Decimal(12, 2)
+  adminNote    String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([orderId])
+  @@index([customerId])
+  @@index([status])
+  @@map("return_requests")
+}
+
 
 model SellerPayout {
   id                    String             @id @default(uuid())

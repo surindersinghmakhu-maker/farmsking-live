@@ -2,7 +2,7 @@ import * as SecureStore from '../lib/storage';
 import { createContext, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import { AppState, Alert } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
-import { login as apiLogin, registerFarmer as apiRegister, logoutOtherSessions, LoginPayload, RegisterPayload } from '../api/auth.api';
+import { login as apiLogin, registerFarmer as apiRegister, logoutOtherSessions, googleLoginApi, linkGoogleApi, sendMobileLinkOtpApi, verifyMobileLinkOtpApi, LoginPayload, RegisterPayload, GoogleLoginPayload } from '../api/auth.api';
 import { getMe } from '../api/users.api';
 import { setUnauthorizedHandler, TOKEN_KEY } from '../api/client';
 import { disconnectChatSocket } from '../lib/socket';
@@ -12,6 +12,10 @@ interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
   login: (payload: LoginPayload) => Promise<void>;
+  googleLogin: (payload: GoogleLoginPayload) => Promise<{ isProfileIncomplete?: boolean }>;
+  linkGoogle: (payload: GoogleLoginPayload) => Promise<{ success: boolean; message: string }>;
+  sendMobileLinkOtp: (mobile: string) => Promise<{ success: boolean; message: string; devOtp?: string }>;
+  verifyMobileLinkOtp: (payload: { mobile: string; otp: string; password?: string }) => Promise<{ success: boolean; message: string; isMerged?: boolean }>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
   /** Merges fresh fields (e.g. after a profile-update API call) into the cached session user and persists them. */
@@ -134,6 +138,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             );
           }
         }
+      },
+      googleLogin: async (payload) => {
+        const response = await googleLoginApi(payload);
+        await persistSession(response.accessToken, response.user);
+        return { isProfileIncomplete: response.isProfileIncomplete };
+      },
+      linkGoogle: async (payload) => {
+        const response = await linkGoogleApi(payload);
+        if (response.user) {
+          if (!userRef.current) return { success: response.success, message: response.message };
+          const merged = { ...userRef.current, ...response.user };
+          await SecureStore.setItemAsync(USER_KEY, JSON.stringify(merged));
+          setUser(merged);
+        }
+        return { success: response.success, message: response.message };
+      },
+      sendMobileLinkOtp: async (mobile) => {
+        return sendMobileLinkOtpApi(mobile);
+      },
+      verifyMobileLinkOtp: async (payload) => {
+        const res = await verifyMobileLinkOtpApi(payload);
+        if (res.accessToken && res.user) {
+          await persistSession(res.accessToken, res.user);
+        } else if (res.user) {
+          await updateUser(res.user);
+        }
+        return { success: res.success, message: res.message, isMerged: res.isMerged };
       },
       register: async (payload) => {
         const response = await apiRegister(payload);

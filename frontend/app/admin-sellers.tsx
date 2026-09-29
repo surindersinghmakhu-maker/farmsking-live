@@ -111,10 +111,15 @@ export default function AdminSellersScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color="#FFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>👑 Admin Seller Control & Verification Hub</Text>
-        <TouchableOpacity style={styles.refreshBtn} onPress={fetchStores}>
-          <Ionicons name="refresh" size={20} color="#10B981" />
-        </TouchableOpacity>
+        <Text style={styles.headerTitle}>👑 Admin Seller Verification Hub</Text>
+        <View style={{ flexDirection: 'row', gap: 6 }}>
+          <TouchableOpacity style={styles.refreshBtn} onPress={() => router.push('/(tabs)/shop')}>
+            <Ionicons name="storefront" size={18} color="#10B981" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.refreshBtn} onPress={fetchStores}>
+            <Ionicons name="refresh" size={18} color="#10B981" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Filter Tabs */}

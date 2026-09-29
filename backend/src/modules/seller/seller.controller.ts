@@ -6,7 +6,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthUser } from '../../common/types/auth-user.type';
 import { SellerService } from './seller.service';
-import { CreateSellerStoreDto, UpdateSellerKycDto } from './dto/seller-store.dto';
+import { CreateSellerStoreDto, UpdateSellerKycDto, UpdateSellerSettingsDto } from './dto/seller-store.dto';
 
 @Controller('seller')
 export class SellerController {
@@ -61,6 +61,17 @@ export class SellerController {
     return this.sellerService.verifyKycByAdmin(storeId, status, commissionRate, rejectionReason);
   }
 
+  /** Admin: Update Seller Governance Settings (Commission, RTO Policy, Catalog Mode, FSSAI Approval) */
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Patch('admin/stores/:storeId/settings')
+  updateSellerSettings(
+    @Param('storeId') storeId: string,
+    @Body() dto: UpdateSellerSettingsDto,
+  ) {
+    return this.sellerService.updateSellerSettings(storeId, dto);
+  }
+
   /** CA/Admin: Generate GSTR-8 Report */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
@@ -77,3 +88,4 @@ export class SellerController {
     );
   }
 }
+

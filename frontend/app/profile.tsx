@@ -18,6 +18,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
+import * as AuthSession from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
 import { useAuth } from '@/src/store/auth-context';
 import { useUpdateMyAddress } from '@/src/hooks/useAdvisorProfile';
 import { useMyAddresses, useCreateAddress, useUpdateAddress, useDeleteAddress } from '@/src/hooks/useAddresses';
@@ -30,16 +32,164 @@ import { Avatar } from '@/src/components/Avatar';
 import { LabourFamilySwitcher } from '@/src/components/LabourFamilySwitcher';
 import { useLabourDashboard } from '@/src/hooks/useLabour';
 
+WebBrowser.maybeCompleteAuthSession();
+
+const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '';
+const discovery = {
+  authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+  tokenEndpoint: 'https://oauth2.googleapis.com/token',
+  revocationEndpoint: 'https://oauth2.googleapis.com/revoke',
+};
+
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+};
+
+const getCleanMobile = (mobile?: string | null) => {
+  if (!mobile || mobile.startsWith('G_')) return '';
+  return mobile;
 };
 
 export default function ProfileScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ tab?: string }>();
-  const { user, updateUser, refreshUser } = useAuth();
+  const { user, updateUser, refreshUser, linkGoogle, sendMobileLinkOtp, verifyMobileLinkOtp } = useAuth();
   const updateAddress = useUpdateMyAddress();
   const theme = RoleThemes[user?.role === 'ADVISOR' ? 'FARM_ADVISOR' : 'FARMER'] ?? RoleThemes.FARMER;
+
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [devOtpMsg, setDevOtpMsg] = useState<string | null>(null);
+
+  const handleSendOtp = async () => {
+    const num = userMobile.replace(/\D/g, '').slice(-10);
+    if (num.length !== 10) {
+      Alert.alert('Invalid Mobile', 'Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    setIsSendingOtp(true);
+    setOtpError(null);
+    try {
+      const res = await sendMobileLinkOtp(num);
+      if (res.devOtp) setDevOtpMsg(`Dev OTP: ${res.devOtp}`);
+      setIsOtpModalOpen(true);
+      Alert.alert('📲 OTP Sent', res.message || 'OTP sent via WhatsApp!');
+    } catch (err: any) {
+      Alert.alert('Error', err?.response?.data?.message || err?.message || 'Could not send OTP.');
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otpCode.trim() || otpCode.trim().length !== 6) {
+      setOtpError('Please enter 6-digit OTP code.');
+      return;
+    }
+    setIsVerifyingOtp(true);
+    setOtpError(null);
+    try {
+      const res = await verifyMobileLinkOtp({
+        mobile: userMobile,
+        otp: otpCode.trim(),
+        password: loginPassword.trim() || undefined,
+      });
+      setIsOtpModalOpen(false);
+      setOtpCode('');
+      Alert.alert(
+        res.isMerged ? '✅ Accounts Combined' : '✅ Mobile Linked',
+        res.message || 'Mobile number verified successfully!'
+      );
+    } catch (err: any) {
+      setOtpError(err?.response?.data?.message || err?.message || 'Failed to verify OTP.');
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
+
+  const redirectUri = AuthSession.makeRedirectUri(
+    Platform.OS === 'web'
+      ? { useProxy: false }
+      : { scheme: 'farmsking', path: 'auth' }
+  );
+
+  const [request, response, promptAsync] = AuthSession.useAuthRequest(
+    {
+      clientId: GOOGLE_CLIENT_ID,
+      scopes: ['openid', 'email', 'profile'],
+      responseType: AuthSession.ResponseType.Token,
+      redirectUri,
+      prompt: AuthSession.Prompt.SelectAccount,
+      usePKCE: false,
+    },
+    discovery
+  );
+
+  React.useEffect(() => {
+    if (!response) return;
+    const handleOAuthResponse = async () => {
+      if (response.type === 'success' && response.authentication?.accessToken) {
+        setGoogleLoading(true);
+        try {
+          const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${response.authentication!.accessToken}` },
+          });
+          const userInfo = await userInfoRes.json();
+          if (!userInfo?.email) {
+            Alert.alert('Error', 'Google account email missing. Please try again.');
+            return;
+          }
+
+          const res = await linkGoogle({
+            email: userInfo.email,
+            name: userInfo.name || userInfo.given_name,
+            photoUrl: userInfo.picture,
+            googleId: userInfo.sub,
+          });
+
+          if (res.success) {
+            setEmail(userInfo.email);
+            if (userInfo.picture && !photoUrl) setPhotoUrl(userInfo.picture);
+            Alert.alert('✅ Account Linked', res.message || 'Google account linked successfully!');
+          } else {
+            Alert.alert('Linking Failed', res.message || 'Could not link Google account.');
+          }
+        } catch (err: any) {
+          Alert.alert('Error', err?.response?.data?.message || err?.message || 'Failed to link Google account.');
+        } finally {
+          setGoogleLoading(false);
+        }
+      } else if (response.type === 'error') {
+        Alert.alert('Error', 'Google auth failed: ' + (response.error?.message || 'Unknown error'));
+        setGoogleLoading(false);
+      } else if (response.type === 'cancel' || response.type === 'dismiss') {
+        setGoogleLoading(false);
+      }
+    };
+
+    handleOAuthResponse();
+  }, [response]);
+
+  const handleLinkGoogle = async () => {
+    if (!GOOGLE_CLIENT_ID) {
+      Alert.alert('Notice', 'Google Sign-In is not configured.');
+      return;
+    }
+    setGoogleLoading(true);
+    try {
+      const result = await promptAsync({ showInRecents: true });
+      if (result?.type !== 'success') {
+        setGoogleLoading(false);
+      }
+    } catch (err: any) {
+      Alert.alert('Error', 'Google sign-in error: ' + (err?.message || 'Please retry.'));
+      setGoogleLoading(false);
+    }
+  };
 
   const [activeTab, setActiveTab] = useState<'PROFILE' | 'ADDRESSES'>(
     params.tab === 'ADDRESSES' ? 'ADDRESSES' : 'PROFILE'
@@ -56,12 +206,16 @@ export default function ProfileScreen() {
   // This screen is the single canonical profile for the account — one per mobile number, shared across
   // every role the account holds. Name/email/photo/address all write to the same User row on save.
   const [name, setName] = useState(user?.name ?? '');
+  const [userMobile, setUserMobile] = useState(getCleanMobile(user?.mobile) || '');
+  const [loginPassword, setLoginPassword] = useState('');
   const [email, setEmail] = useState(user?.email ?? '');
   const [farmName, setFarmName] = useState(user?.farmName || user?.name || '');
   const [farmAddress, setFarmAddress] = useState(
     user?.farmAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || ''
   );
-  const [farmMobile, setFarmMobile] = useState(user?.farmMobile || user?.mobile || '');
+  const [farmMobile, setFarmMobile] = useState(
+    getCleanMobile(user?.farmMobile) || getCleanMobile(user?.mobile) || ''
+  );
   const [upiId, setUpiId] = useState(user?.upiId || '');
   const [photoUrl, setPhotoUrl] = useState<string | null>(user?.photoUrl ?? null);
 
@@ -94,7 +248,7 @@ export default function ProfileScreen() {
       setEmail(user.email || '');
       setFarmName(user.farmName || user.name || '');
       setFarmAddress(user.farmAddress || [user.village, user.district, user.state].filter(Boolean).join(', ') || '');
-      setFarmMobile(user.farmMobile || user.mobile || '');
+      setFarmMobile(getCleanMobile(user.farmMobile) || getCleanMobile(user.mobile) || '');
       setUpiId(user.upiId || '');
       if (user.whatsappGroupEnabled !== undefined) {
         setWhatsappGroupEnabled(user.whatsappGroupEnabled);
@@ -206,6 +360,8 @@ export default function ProfileScreen() {
 
       const payload = {
         name: trimmedName,
+        mobile: userMobile.trim() || undefined,
+        password: loginPassword.trim() || undefined,
         email: email.trim() || undefined,
         photoUrl: finalPhotoUrl ?? undefined,
         pincode: pincode.trim() || undefined,
@@ -338,10 +494,10 @@ export default function ProfileScreen() {
                       🔑 King ID: {user?.kingId || '—'}
                     </Text>
                   </View>
-                  {user?.mobile ? (
+                  {getCleanMobile(user?.mobile) ? (
                     <View style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
                       <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569' }}>
-                        📞 Mobile: {user.mobile}
+                        📞 Mobile: {getCleanMobile(user?.mobile)}
                       </Text>
                     </View>
                   ) : null}
@@ -451,10 +607,10 @@ export default function ProfileScreen() {
                       🔑 King ID: {user?.kingId || '—'}
                     </Text>
                   </View>
-                  {user?.mobile ? (
+                  {getCleanMobile(user?.mobile) ? (
                     <View style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
                       <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569' }}>
-                        📞 Mobile: {user.mobile}
+                        📞 Mobile: {getCleanMobile(user?.mobile)}
                       </Text>
                     </View>
                   ) : null}
@@ -541,11 +697,11 @@ export default function ProfileScreen() {
                       King ID: {user?.kingId || '—'}
                     </Text>
                   </View>
-                  {user?.mobile ? (
+                  {getCleanMobile(user?.mobile) ? (
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f8fafc', paddingHorizontal: 8, paddingVertical: 3.5, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
                       <Ionicons name="call-outline" size={12} color="#16a34a" />
                       <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#475569' }}>
-                        Mobile: {user.mobile}
+                        Mobile: {getCleanMobile(user?.mobile)}
                       </Text>
                     </View>
                   ) : null}
@@ -565,6 +721,73 @@ export default function ProfileScreen() {
                   </View>
                 </View>
 
+                {/* 3b. Mobile Number Row */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <View style={{ width: 98, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Ionicons name="call-outline" size={14} color="#475569" />
+                    <Text style={[styles.inputLabel, { marginBottom: 0, fontSize: 11.5, color: '#334155' }]}>Mobile No.</Text>
+                  </View>
+                  {getCleanMobile(user?.mobile) ? (
+                    <View style={{ flex: 1, height: 34, backgroundColor: '#f8fafc', paddingHorizontal: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>
+                        {getCleanMobile(user?.mobile)}
+                      </Text>
+                      <Ionicons name="lock-closed" size={13} color="#94a3b8" />
+                    </View>
+                  ) : (
+                    <View style={{ flex: 1, flexDirection: 'row', gap: 6 }}>
+                      <TextInput
+                        style={[styles.input, { flex: 1, height: 34, fontSize: 12, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#ffffff', borderColor: '#cbd5e1', paddingVertical: 0 }]}
+                        value={userMobile}
+                        onChangeText={setUserMobile}
+                        placeholder="10-digit Mobile Number"
+                        placeholderTextColor="#94a3b8"
+                        keyboardType="phone-pad"
+                        maxLength={10}
+                      />
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: '#16a34a',
+                          paddingHorizontal: 10,
+                          height: 34,
+                          borderRadius: RADIUS.md,
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          flexDirection: 'row',
+                          gap: 4,
+                        }}
+                        onPress={handleSendOtp}
+                        disabled={isSendingOtp}
+                      >
+                        {isSendingOtp ? (
+                          <ActivityIndicator size="small" color="#FFF" />
+                        ) : (
+                          <>
+                            <Ionicons name="chatbubble-ellipses" size={13} color="#FFF" />
+                            <Text style={{ color: '#FFF', fontSize: 11, fontFamily: FONT.bold }}>Get OTP</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+
+                {/* 3c. Password Row for Mobile Login */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <View style={{ width: 98, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Ionicons name="key-outline" size={14} color="#475569" />
+                    <Text style={[styles.inputLabel, { marginBottom: 0, fontSize: 11.5, color: '#334155' }]}>Password</Text>
+                  </View>
+                  <TextInput
+                    style={[styles.input, { flex: 1, height: 34, fontSize: 12, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#ffffff', borderColor: '#cbd5e1', paddingVertical: 0 }]}
+                    value={loginPassword}
+                    onChangeText={setLoginPassword}
+                    placeholder="Create/Set Mobile Password"
+                    placeholderTextColor="#94a3b8"
+                    secureTextEntry
+                  />
+                </View>
+
                 {/* 4. Email Address Label & Editable Field in 1 row */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <View style={{ width: 98, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
@@ -580,6 +803,37 @@ export default function ProfileScreen() {
                     keyboardType="email-address"
                     autoCapitalize="none"
                   />
+                </View>
+
+                {/* 5. Link Google Account Button */}
+                <View style={{ marginTop: 8 }}>
+                  <TouchableOpacity
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                      backgroundColor: user?.email ? '#f0fdf4' : '#eff6ff',
+                      borderColor: user?.email ? '#bbf7d0' : '#bfdbfe',
+                      borderWidth: 1,
+                      paddingHorizontal: 12,
+                      paddingVertical: 7,
+                      borderRadius: RADIUS.md,
+                    }}
+                    onPress={handleLinkGoogle}
+                    disabled={googleLoading}
+                  >
+                    {googleLoading ? (
+                      <ActivityIndicator size="small" color="#0284c7" />
+                    ) : (
+                      <>
+                        <Ionicons name="logo-google" size={15} color={user?.email ? '#16a34a' : '#2563eb'} />
+                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: user?.email ? '#15803d' : '#1d4ed8' }}>
+                          {user?.email ? `Google Linked: ${user.email} (Tap to change)` : '🔗 Link Google Account'}
+                        </Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
                 </View>
               </View>
 
@@ -611,6 +865,75 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
           )}
+
+      {/* 📲 Mobile Number OTP Verification Modal */}
+      <Modal
+        visible={isOtpModalOpen}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setIsOtpModalOpen(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="chatbubble-ellipses" size={20} color="#16a34a" />
+                <Text style={styles.modalTitle}>Verify Mobile OTP</Text>
+              </View>
+              <TouchableOpacity onPress={() => setIsOtpModalOpen(false)}>
+                <Ionicons name="close" size={20} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#475569', marginBottom: 12 }}>
+              We sent a 6-digit OTP to WhatsApp number <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>{userMobile}</Text>.
+            </Text>
+
+            {devOtpMsg ? (
+              <View style={{ backgroundColor: '#fef3c7', padding: 8, borderRadius: RADIUS.md, marginBottom: 10 }}>
+                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#92400e' }}>{devOtpMsg}</Text>
+              </View>
+            ) : null}
+
+            <Text style={[styles.inputLabel, { fontSize: 11.5, color: '#334155' }]}>6-Digit OTP Code *</Text>
+            <TextInput
+              style={[styles.modalInput, { fontSize: 18, fontFamily: FONT.bold, letterSpacing: 4, textAlign: 'center' }]}
+              value={otpCode}
+              onChangeText={setOtpCode}
+              placeholder="123456"
+              placeholderTextColor="#cbd5e1"
+              keyboardType="number-pad"
+              maxLength={6}
+            />
+
+            {otpError ? (
+              <Text style={{ color: '#ef4444', fontSize: 12, fontFamily: FONT.bold, marginTop: 8 }}>{otpError}</Text>
+            ) : null}
+
+            <TouchableOpacity
+              style={[styles.modalSubmitBtn, { backgroundColor: '#16a34a' }]}
+              onPress={handleVerifyOtp}
+              disabled={isVerifyingOtp}
+            >
+              {isVerifyingOtp ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <Text style={styles.modalSubmitText}>Verify & Link Mobile</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={{ marginTop: 12, alignItems: 'center' }}
+              onPress={handleSendOtp}
+              disabled={isSendingOtp}
+            >
+              <Text style={{ color: '#0284c7', fontSize: 12, fontFamily: FONT.bold }}>
+                {isSendingOtp ? 'Resending...' : 'Didn\'t receive OTP? Resend via WhatsApp'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
           {/* Seller Store Hub Button */}
           <TouchableOpacity
@@ -801,7 +1124,7 @@ function AddAddressModal({
   const [fullName, setFullName] = useState(user?.name ?? '');
   const [line, setLine] = useState('');
   const [locality, setLocality] = useState('');
-  const [mobile, setMobile] = useState(user?.mobile ?? '');
+  const [mobile, setMobile] = useState(getCleanMobile(user?.mobile));
   const [pincode, setPincode] = useState('');
   const [postOffice, setPostOffice] = useState('');
   const [district, setDistrict] = useState('');
@@ -816,7 +1139,7 @@ function AddAddressModal({
       setTag(editingAddress.tag);
       setFullName(user?.name || '');
       setLine(editingAddress.line);
-      setMobile(editingAddress.mobile || user?.mobile || '');
+      setMobile(editingAddress.mobile || getCleanMobile(user?.mobile));
       setPincode(editingAddress.pincode);
       setPostOffice(editingAddress.postOffice);
       setDistrict(editingAddress.district);
@@ -831,7 +1154,7 @@ function AddAddressModal({
     setFullName(user?.name ?? '');
     setLine('');
     setLocality('');
-    setMobile(user?.mobile ?? '');
+    setMobile(getCleanMobile(user?.mobile));
     setPincode('');
     setPostOffice('');
     setDistrict('');

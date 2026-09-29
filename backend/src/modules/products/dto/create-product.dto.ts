@@ -7,6 +7,14 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsString()
+  title?: string;
+
+  @IsOptional()
+  @IsString()
+  brand?: string;
+
+  @IsOptional()
+  @IsString()
   description?: string;
 
   @IsOptional()
@@ -15,11 +23,23 @@ export class CreateProductDto {
 
   @IsOptional()
   @IsString()
+  categorySlug?: string;
+
+  @IsOptional()
+  @IsString()
   unit?: string;
 
   @IsNumber()
   @Min(0)
   price: number;
+
+  @IsOptional()
+  @IsNumber()
+  sellingPrice?: number;
+
+  @IsOptional()
+  @IsNumber()
+  mrp?: number;
 
   @IsOptional()
   @IsString()
@@ -49,4 +69,75 @@ export class CreateProductDto {
   @IsOptional()
   @IsNumber()
   weightKg?: number;
+
+  @IsOptional()
+  @IsNumber()
+  deadWeightKg?: number;
+
+  @IsOptional()
+  @IsNumber()
+  lengthCm?: number;
+
+  @IsOptional()
+  @IsNumber()
+  widthCm?: number;
+
+  @IsOptional()
+  @IsNumber()
+  heightCm?: number;
+
+  // Technical & Agri Details
+  @IsOptional()
+  @IsString()
+  technicalName?: string;
+
+  @IsOptional()
+  @IsString()
+  dosageInstructions?: string;
+
+  @IsOptional()
+  @IsString()
+  suitableCrops?: string;
+
+  @IsOptional()
+  @IsString()
+  targetPests?: string;
+
+  @IsOptional()
+  @IsString()
+  expiryDate?: string;
+
+  @IsOptional()
+  @IsString()
+  batchNumber?: string;
+
+  // 4 Mandatory Photo Angles
+  @IsOptional()
+  @IsString()
+  imageFrontUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  imageBackLabelUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  imageDosageUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  imageProductUrl?: string;
+
+  @IsOptional()
+  @IsNumber()
+  commissionOverridePercentage?: number;
+
+  @IsOptional()
+  @IsInt()
+  bulkDiscountMinQty?: number;
+
+  @IsOptional()
+  @IsNumber()
+  bulkDiscountPercentage?: number;
 }
+

@@ -16,6 +16,11 @@ import { UpiQrScannerModal } from '@/src/components/UpiQrScannerModal';
 
 const theme = RoleThemes.FARMER;
 
+const getCleanMobile = (mobile?: string | null) => {
+  if (!mobile || mobile.startsWith('G_')) return '';
+  return mobile;
+};
+
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 };
@@ -32,7 +37,7 @@ export default function FarmerProfileSetupScreen() {
   const [farmAddress, setFarmAddress] = useState<string>(
     user?.farmAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || ''
   );
-  const [farmMobile, setFarmMobile] = useState<string>(user?.farmMobile || user?.mobile || '');
+  const [farmMobile, setFarmMobile] = useState<string>(getCleanMobile(user?.farmMobile) || getCleanMobile(user?.mobile) || '');
   const [upiId, setUpiId] = useState<string>(user?.upiId || '');
   const [upiPayeeName, setUpiPayeeName] = useState<string | null>(null);
   const [showQrScanner, setShowQrScanner] = useState<boolean>(false);
@@ -60,7 +65,7 @@ export default function FarmerProfileSetupScreen() {
       setFarmAddress(
         user.farmAddress || [user.village, user.district, user.state].filter(Boolean).join(', ') || ''
       );
-      setFarmMobile(user.farmMobile || user.mobile || '');
+      setFarmMobile(getCleanMobile(user.farmMobile) || getCleanMobile(user.mobile) || '');
       setUpiId(user.upiId || '');
       if (user.whatsappGroupEnabled !== undefined) setWhatsappGroupEnabled(user.whatsappGroupEnabled);
       if (user.sprayTankSizeL) setSprayTankSizeL(user.sprayTankSizeL);
@@ -114,7 +119,7 @@ export default function FarmerProfileSetupScreen() {
 
       await updateUser(mergedUser as any);
       await refreshUser();
-      setSaveSuccessMsg('✨ ਕਿਸਾਨ ਪ੍ਰੋਫਾਈਲ ਜਾਣਕਾਰੀ ਅਤੇ UPI ID ਸਫ਼ਲਤਾਪੂਰਵਕ ਸੇਵ ਹੋ ਗਈ ਹੈ!');
+      setSaveSuccessMsg('✨ Farmer profile details & UPI ID saved successfully!');
     } catch (error: any) {
       const msg = error?.response?.data?.message ?? 'Could not save farmer profile details. Please try again.';
       Alert.alert('Error Saving Profile', typeof msg === 'string' ? msg : JSON.stringify(msg));
@@ -139,7 +144,7 @@ export default function FarmerProfileSetupScreen() {
 
   const handleConfirmPasswordAndSave = async () => {
     if (!verifyPassword.trim()) {
-      setPasswordError('Kripya apna account password darj karo.');
+      setPasswordError('Please enter your account password.');
       return;
     }
 
@@ -155,7 +160,7 @@ export default function FarmerProfileSetupScreen() {
       if (!res?.success) {
         setIsVerifyingPassword(false);
         setVerifyPassword(''); // 🔄 Clear input so user can re-enter immediately
-        setPasswordError(res?.message || '❌ ਪਾਸਵਰਡ ਗਲਤ ਹੈ! ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਸਹੀ ਪਾਸਵਰਡ ਭਰੋ (Re-enter Password).');
+        setPasswordError(res?.message || '❌ Password incorrect! Please re-enter your correct account password.');
         return;
       }
 
@@ -163,7 +168,7 @@ export default function FarmerProfileSetupScreen() {
     } catch (err: any) {
       setIsVerifyingPassword(false);
       setVerifyPassword('');
-      setPasswordError('❌ ਪਾਸਵਰਡ ਚੈੱਕ ਕਰਨ ਵਿੱਚ ਦਿੱਕਤ ਆਈ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਪਾਸਵਰਡ ਭਰੋ।');
+      setPasswordError('❌ Could not verify password. Please re-enter your password.');
       return;
     }
 
@@ -381,7 +386,7 @@ export default function FarmerProfileSetupScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.passwordTitle}>Verify Account Password</Text>
                     <Text style={styles.passwordSub}>
-                      UPI ID save karan lyi apna password enter karo
+                      Please enter your account password to verify saving UPI ID
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -398,7 +403,7 @@ export default function FarmerProfileSetupScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.passwordErrorText}>{passwordError}</Text>
                       <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#b91c1c', marginTop: 2 }}>
-                        👉 ਹੇਠਾਂ ਦਿੱਤੇ ਬਾਕਸ ਵਿੱਚ ਸਹੀ ਪਾਸਵਰਡ ਦੁਬਾਰਾ ਭਰੋ:
+                        👉 Please re-enter your correct password below:
                       </Text>
                     </View>
                   </View>

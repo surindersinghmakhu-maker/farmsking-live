@@ -12,6 +12,7 @@ import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordStartDto } from './dto/forgot-password-start.dto';
 import { ForgotPasswordVerifyDto } from './dto/forgot-password-verify.dto';
 import { ForgotPasswordResetDto } from './dto/forgot-password-reset.dto';
+import type { AuthUser } from '../../common/types/auth-user.type';
 
 const SAFE_USER_SELECT = {
   id: true,
@@ -49,13 +50,22 @@ interface ForgotPasswordOtpStore {
   verified: boolean;
 }
 
+interface MobileLinkOtpStore {
+  otp: string;
+  mobile: string;
+  expiresAt: number;
+  userId: string;
+}
+
 import { AppSettingsService } from '../app-settings/app-settings.service';
 import { WalletService } from '../wallet/wallet.service';
 import { UserSessionService } from './user-session.service';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class AuthService {
   private readonly otpStore = new Map<string, ForgotPasswordOtpStore>();
+  private readonly mobileLinkOtpStore = new Map<string, MobileLinkOtpStore>();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -65,12 +75,233 @@ export class AuthService {
     private readonly appSettingsService: AppSettingsService,
     private readonly walletService: WalletService,
     private readonly userSessionService: UserSessionService,
+    private readonly emailService: EmailService,
   ) {}
 
   async sendWhatsAppOtp(mobile: string, otpCode: string) {
     const success = await this.whatsappBotService.sendOtpMessage(mobile, otpCode);
     return { success, message: success ? 'WhatsApp OTP sent directly to mobile.' : 'WhatsApp Bot not connected.' };
   }
+
+  async sendEmailOtp(email: string, otpCode: string) {
+    const success = await this.emailService.sendEmailOtp(email, otpCode);
+    return { success, message: success ? 'Email OTP sent directly via Gmail SMTP.' : 'Failed to send Email OTP.' };
+  }
+
+  async googleLogin(dto: { email: string; name?: string; photoUrl?: string; googleId?: string }) {
+    const cleanEmail = dto.email.trim().toLowerCase();
+
+    let user = await this.prisma.user.findFirst({
+      where: { email: cleanEmail, deletedAt: null },
+    });
+
+    if (!user) {
+      const kingId = await generateUniqueKingId(this.prisma);
+      const passwordHash = await argon2.hash(Math.random().toString(36).slice(-10));
+      user = await this.prisma.user.create({
+        data: {
+          kingId,
+          email: cleanEmail,
+          name: dto.name || cleanEmail.split('@')[0],
+          photoUrl: dto.photoUrl || null,
+          mobile: `G_${Math.floor(1000000000 + Math.random() * 9000000000)}`,
+          passwordHash,
+          role: Role.CUSTOMER,
+          roles: [Role.CUSTOMER],
+          isPhoneVerified: true,
+        },
+      });
+    } else if (dto.photoUrl && !user.photoUrl) {
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: { photoUrl: dto.photoUrl },
+      });
+    }
+
+    const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = user;
+    const isProfileIncomplete = !user.mobile || user.mobile.startsWith('G_') || !user.village || !user.pincode;
+
+    return {
+      ...this.buildAuthResponse(safeUser as any),
+      isProfileIncomplete,
+      missingFields: [
+        ...(!user.mobile || user.mobile.startsWith('G_') ? ['mobile'] : []),
+        ...(!user.pincode ? ['pincode'] : []),
+        ...(!user.village ? ['village'] : []),
+      ],
+    };
+  }
+
+  async linkGoogleAccount(currentUser: AuthUser, dto: { email: string; name?: string; photoUrl?: string; googleId?: string }) {
+    const cleanEmail = dto.email.trim().toLowerCase();
+
+    // Check if another active user has this email
+    const existing = await this.prisma.user.findFirst({
+      where: { email: cleanEmail, deletedAt: null },
+    });
+
+    if (existing && existing.id !== currentUser.id) {
+      // If the existing user is an auto-created placeholder Google account (mobile starts with G_)
+      if (existing.mobile && existing.mobile.startsWith('G_')) {
+        await this.reassignUserRecords(existing.id, currentUser.id);
+        // Soft-delete the placeholder user account to allow merging email onto current account
+        await this.prisma.user.update({
+          where: { id: existing.id },
+          data: { deletedAt: new Date() },
+        });
+      } else {
+        throw new ConflictException('This Google account is already linked to another active FarmsKing user.');
+      }
+    }
+
+    const dbUser = await this.prisma.user.findUnique({ where: { id: currentUser.id } });
+    if (!dbUser) throw new NotFoundException('User not found.');
+
+    const updated = await this.prisma.user.update({
+      where: { id: currentUser.id },
+      data: {
+        email: cleanEmail,
+        ...(dto.photoUrl && !dbUser.photoUrl ? { photoUrl: dto.photoUrl } : {}),
+      },
+      select: SAFE_USER_SELECT,
+    });
+
+    return {
+      success: true,
+      message: 'Google account successfully linked!',
+      user: updated,
+    };
+  }
+
+  async sendMobileLinkOtp(user: AuthUser, mobile: string) {
+    const rawDigits = mobile.replace(/\D/g, '');
+    const cleanMobile = rawDigits.slice(-10);
+    if (cleanMobile.length !== 10) {
+      throw new BadRequestException('Please enter a valid 10-digit mobile number.');
+    }
+
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    this.mobileLinkOtpStore.set(user.id, {
+      otp: otpCode,
+      mobile: cleanMobile,
+      expiresAt: Date.now() + 10 * 60 * 1000,
+      userId: user.id,
+    });
+
+    const sent = await this.whatsappBotService.sendOtpMessage(cleanMobile, otpCode);
+
+    return {
+      success: true,
+      message: sent ? 'OTP sent via WhatsApp successfully!' : 'OTP generated (WhatsApp bot offline).',
+      devOtp: process.env.NODE_ENV !== 'production' ? otpCode : undefined,
+    };
+  }
+
+  async verifyMobileLinkOtp(user: AuthUser, dto: { mobile: string; otp: string; password?: string }) {
+    const rawDigits = dto.mobile.replace(/\D/g, '');
+    const cleanMobile = rawDigits.slice(-10);
+
+    const stored = this.mobileLinkOtpStore.get(user.id);
+    if (!stored || stored.mobile !== cleanMobile) {
+      throw new BadRequestException('OTP expired or not requested for this mobile number.');
+    }
+
+    if (Date.now() > stored.expiresAt) {
+      this.mobileLinkOtpStore.delete(user.id);
+      throw new BadRequestException('OTP has expired. Please request a new OTP.');
+    }
+
+    if (stored.otp !== dto.otp.trim()) {
+      throw new BadRequestException('Invalid OTP. Please check the 6-digit code and try again.');
+    }
+
+    let passwordHash: string | undefined = undefined;
+    if (dto.password && dto.password.trim().length >= 4) {
+      passwordHash = await argon2.hash(dto.password.trim());
+    }
+
+    // Check if an existing account already owns this mobile number
+    const existingMobileUser = await this.prisma.user.findFirst({
+      where: {
+        mobile: cleanMobile,
+        deletedAt: null,
+        id: { not: user.id },
+      },
+    });
+
+    let targetUser: any;
+    let isMerged = false;
+
+    if (existingMobileUser) {
+      // User verified OTP for existing mobile account -> Merge Google email onto existing mobile user
+      const currentUserData = await this.prisma.user.findUnique({ where: { id: user.id } });
+
+      // Transfer email and photoUrl if present
+      targetUser = await this.prisma.user.update({
+        where: { id: existingMobileUser.id },
+        data: {
+          ...(currentUserData?.email ? { email: currentUserData.email } : {}),
+          ...(currentUserData?.photoUrl && !existingMobileUser.photoUrl ? { photoUrl: currentUserData.photoUrl } : {}),
+          ...(passwordHash ? { passwordHash } : {}),
+        },
+        select: SAFE_USER_SELECT,
+      });
+
+      // Transfer any farms, orders, expenses, addresses created on Google account to existing mobile account
+      await this.reassignUserRecords(user.id, existingMobileUser.id);
+
+      // Soft-delete the temporary Google account
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { deletedAt: new Date() },
+      });
+
+      isMerged = true;
+    } else {
+      // Standard update on current user
+      targetUser = await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          mobile: cleanMobile,
+          isPhoneVerified: true,
+          ...(passwordHash ? { passwordHash } : {}),
+        },
+        select: SAFE_USER_SELECT,
+      });
+    }
+
+    this.mobileLinkOtpStore.delete(user.id);
+
+    const authResponse = this.buildAuthResponse(targetUser);
+
+    return {
+      success: true,
+      message: isMerged
+        ? 'Accounts merged successfully! On your Free Plan, your 3 latest crops remain active for editing. Older crops stay visible in View-Only mode (upgrade plan to edit older crops).'
+        : 'Mobile number verified and linked successfully!',
+      isMerged,
+      user: targetUser,
+      accessToken: authResponse.accessToken,
+    };
+  }
+
+  /** Reassigns all user-generated records (farms, orders, expenses, addresses, labour) when merging two accounts */
+  private async reassignUserRecords(sourceUserId: string, targetUserId: string) {
+    await this.prisma.$transaction([
+      this.prisma.farm.updateMany({ where: { ownerId: sourceUserId }, data: { ownerId: targetUserId } }),
+      this.prisma.customerOrder.updateMany({ where: { customerId: sourceUserId }, data: { customerId: targetUserId } }),
+      this.prisma.customerAddress.updateMany({ where: { ownerId: sourceUserId }, data: { ownerId: targetUserId } }),
+      this.prisma.expense.updateMany({ where: { recordedById: sourceUserId }, data: { recordedById: targetUserId } }),
+      this.prisma.sale.updateMany({ where: { recordedById: sourceUserId }, data: { recordedById: targetUserId } }),
+      this.prisma.payment.updateMany({ where: { recordedById: sourceUserId }, data: { recordedById: targetUserId } }),
+      this.prisma.party.updateMany({ where: { ownerId: sourceUserId }, data: { ownerId: targetUserId } }),
+      this.prisma.labourWorker.updateMany({ where: { farmerId: sourceUserId }, data: { farmerId: targetUserId } }),
+      this.prisma.cropProblem.updateMany({ where: { reportedById: sourceUserId }, data: { reportedById: targetUserId } }),
+      // Mobile account retains ONLY its own original wallet balance — discard temp Google account wallet transactions
+      this.prisma.walletTransaction.deleteMany({ where: { userId: sourceUserId } }),
+    ]);
+  }
+
 
   async register(dto: RegisterDto) {
     const rawMobileDigits = dto.mobile ? dto.mobile.replace(/\D/g, '') : '';

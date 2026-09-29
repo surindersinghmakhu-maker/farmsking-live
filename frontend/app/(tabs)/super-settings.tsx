@@ -1937,6 +1937,19 @@ export default function SuperSettingsScreen() {
               </Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
                 <TouchableOpacity
+                  style={{ flex: 1, minWidth: 140, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: RADIUS.md, backgroundColor: '#ecfdf5', borderWidth: 1.5, borderColor: '#10b981' }}
+                  onPress={() => router.push('/agristore' as any)}
+                >
+                  <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#065f46', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="storefront" size={16} color="#ffffff" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#064e3b' }}>AgriStore Hub</Text>
+                    <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#047857' }}>Seller & E-Com System</Text>
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
                   style={{ flex: 1, minWidth: 140, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: RADIUS.md, backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0' }}
                   onPress={() => router.push('/(tabs)/super-orders' as any)}
                 >

@@ -30,6 +30,11 @@ import * as Sharing from 'expo-sharing';
 
 const theme = RoleThemes.FARMER;
 
+const getCleanMobile = (mobile?: string | null) => {
+  if (!mobile || mobile.startsWith('G_')) return '';
+  return mobile;
+};
+
 type AccountItem = { key: TranslationKey; label: string; icon: keyof typeof Ionicons.glyphMap; href?: string };
 
 const MY_PROFILE_ITEM: AccountItem = { key: 'myProfile', label: 'My Profile', icon: 'person-outline', href: '/profile?tab=PROFILE' };
@@ -49,7 +54,8 @@ const SHOP_ITEMS: { key: TranslationKey; label: string; icon: keyof typeof Ionic
   { key: 'myOrders', label: 'My Orders', icon: 'receipt-outline', href: '/(tabs)/orders' },
 ];
 
-const SUPER_ADMIN_ITEMS: { key: TranslationKey | 'workspace'; label: string; icon: keyof typeof Ionicons.glyphMap; href?: string }[] = [
+const SUPER_ADMIN_ITEMS: { key: TranslationKey | 'workspace' | 'agristoreHub'; label: string; icon: keyof typeof Ionicons.glyphMap; href?: string }[] = [
+  { key: 'agristoreHub', label: '👑 National AgriStore Hub', icon: 'storefront-outline', href: '/agristore' },
   { key: 'workspace', label: '💼 Workspace (Backup & Tools)', icon: 'briefcase-outline' },
   { key: 'superSaleManagement', label: 'Sale / Order Management', icon: 'receipt-outline', href: '/(tabs)/super-orders' },
   { key: 'superAuditLog', label: 'Audit Log', icon: 'time-outline', href: '/(tabs)/super-audit-log' },
@@ -140,7 +146,7 @@ export default function MoreScreen() {
     setIsSendingDeleteOtp(true);
     setDeleteCaptchaError(null);
     setDeleteBotStatusText(null);
-    const targetMobile = user?.mobile || deleteKingIdInput.trim();
+    const targetMobile = getCleanMobile(user?.mobile) || deleteKingIdInput.trim();
     const cleanMobile = targetMobile.replace(/\D/g, '').slice(-10);
 
     const generatedCode = Math.floor(1000 + Math.random() * 9000).toString();
@@ -292,7 +298,7 @@ export default function MoreScreen() {
           <View style={styles.kingIdBadge}>
             <Ionicons name="key-outline" size={11} color="#ffffff" />
             <Text style={styles.kingIdText}>
-              KING ID: {user?.kingId ?? 'N/A'}{user?.mobile ? ` · 📞 ${user.mobile}` : ''}
+              KING ID: {user?.kingId ?? 'N/A'}{getCleanMobile(user?.mobile) ? ` · 📞 ${getCleanMobile(user?.mobile)}` : ''}
             </Text>
           </View>
         </LinearGradient>

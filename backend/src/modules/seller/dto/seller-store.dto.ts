@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsOptional, IsString, IsNumber, IsEmail, Min, Max } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsNumber, IsBoolean, IsEnum, Min, Max } from 'class-validator';
+import { SellerKycStatus, SellerType, RtoBearer, CatalogApprovalMode } from '@prisma/client';
 
 export class CreateSellerStoreDto {
   @IsNotEmpty()
@@ -8,6 +9,10 @@ export class CreateSellerStoreDto {
   @IsNotEmpty()
   @IsString()
   slug: string;
+
+  @IsOptional()
+  @IsEnum(SellerType)
+  sellerType?: SellerType;
 
   @IsOptional()
   @IsString()
@@ -50,8 +55,20 @@ export class CreateSellerStoreDto {
   pickupPincode?: string;
 
   @IsOptional()
+  @IsBoolean()
+  wantsToSellFood?: boolean;
+
+  @IsOptional()
   @IsString()
   fssaiNo?: string;
+
+  @IsOptional()
+  @IsString()
+  fssaiCertificateUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  fssaiExpiryDate?: string;
 
   @IsOptional()
   @IsString()
@@ -68,6 +85,18 @@ export class CreateSellerStoreDto {
   @IsOptional()
   @IsString()
   chequeDocUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  aadhaarFrontUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  aadhaarBackUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  tradeLicenseUrl?: string;
 }
 
 export class UpdateSellerKycDto {
@@ -78,6 +107,10 @@ export class UpdateSellerKycDto {
   @IsOptional()
   @IsString()
   slug?: string;
+
+  @IsOptional()
+  @IsEnum(SellerType)
+  sellerType?: SellerType;
 
   @IsOptional()
   @IsString()
@@ -120,6 +153,26 @@ export class UpdateSellerKycDto {
   pickupPincode?: string;
 
   @IsOptional()
+  @IsBoolean()
+  wantsToSellFood?: boolean;
+
+  @IsOptional()
+  @IsString()
+  fssaiNo?: string;
+
+  @IsOptional()
+  @IsString()
+  fssaiCertificateUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  fssaiExpiryDate?: string;
+
+  @IsOptional()
+  @IsString()
+  agriLicenseNo?: string;
+
+  @IsOptional()
   @IsString()
   gstDocUrl?: string;
 
@@ -130,11 +183,23 @@ export class UpdateSellerKycDto {
   @IsOptional()
   @IsString()
   chequeDocUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  aadhaarFrontUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  aadhaarBackUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  tradeLicenseUrl?: string;
 }
 
 export class VerifySellerKycDto {
   @IsNotEmpty()
-  @IsString()
+  @IsEnum(SellerKycStatus)
   status: SellerKycStatus;
 
   @IsOptional()
@@ -145,4 +210,27 @@ export class VerifySellerKycDto {
   @IsNumber()
   commissionRate?: number;
 }
+
+export class UpdateSellerSettingsDto {
+  @IsOptional()
+  @IsNumber()
+  commissionRate?: number;
+
+  @IsOptional()
+  @IsEnum(RtoBearer)
+  rtoBearer?: RtoBearer;
+
+  @IsOptional()
+  @IsNumber()
+  rtoSharedVendorRatio?: number;
+
+  @IsOptional()
+  @IsEnum(CatalogApprovalMode)
+  catalogApprovalMode?: CatalogApprovalMode;
+
+  @IsOptional()
+  @IsBoolean()
+  isFssaiApproved?: boolean;
+}
+
 

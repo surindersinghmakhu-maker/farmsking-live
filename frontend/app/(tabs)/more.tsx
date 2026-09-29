@@ -285,6 +285,29 @@ export default function MoreScreen() {
             }
           />
 
+          {/* 🤖 FarmsKing Kheti Mitra AI Doctor Row */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>🤖 FREE AI FARMING DOCTOR</Text>
+            <View style={styles.sectionCard}>
+              <TouchableOpacity
+                style={[styles.row, { borderBottomWidth: 0 }]}
+                activeOpacity={0.75}
+                onPress={() => router.push('/(tabs)/crop-disease-scanner')}
+              >
+                <View style={[styles.rowIconBg, { backgroundColor: '#dcfce7' }]}>
+                  <Ionicons name="sparkles" size={18} color="#15803d" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.rowLabel, { color: '#14532d', fontWeight: '800' }]}>🤖 FarmsKing Kheti Mitra AI Doctor</Text>
+                  <Text style={styles.rowSubLabel}>Free Crop Disease Leaf Scanner & 24/7 Agri AI Chatbot</Text>
+                </View>
+                <View style={{ backgroundColor: '#15803d', paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.pill }}>
+                  <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: '#ffffff' }}>FREE 🌾</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+
           {/* Account Section */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('accountSection')}</Text>

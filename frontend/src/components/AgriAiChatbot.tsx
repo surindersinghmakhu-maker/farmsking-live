@@ -80,8 +80,8 @@ export function AgriAiChatbot() {
   };
 
   const handleSend = (textToSend?: string) => {
-    const query = (textToSend || inputQuery).trim();
-    if (!query || isLoading) return;
+    const query = (textToSend || inputQuery || 'ਖੇਤੀਬਾੜੀ ਅਤੇ ਖਾਦਾਂ ਬਾਰੇ ਜਾਣਕਾਰੀ').trim();
+    if (isLoading) return;
 
     const userMsg: ChatMessage = {
       id: `usr-${Date.now()}`,
@@ -91,7 +91,7 @@ export function AgriAiChatbot() {
     };
 
     setMessages((prev) => [...prev, userMsg]);
-    if (!textToSend) setInputQuery('');
+    setInputQuery('');
     setIsLoading(true);
 
     setTimeout(() => {
@@ -235,9 +235,9 @@ export function AgriAiChatbot() {
           returnKeyType="send"
         />
         <TouchableOpacity
-          style={[styles.sendBtn, (!inputQuery.trim() || isLoading) && styles.sendBtnDisabled]}
+          style={styles.sendBtn}
           onPress={() => handleSend()}
-          disabled={!inputQuery.trim() || isLoading}
+          disabled={isLoading}
           activeOpacity={0.85}
         >
           <Ionicons name="send" size={16} color="#ffffff" />

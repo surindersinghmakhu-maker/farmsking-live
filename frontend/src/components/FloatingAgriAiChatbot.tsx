@@ -43,7 +43,7 @@ export function FloatingAgriAiChatbot() {
           </View>
 
           <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-            <AgriAiChatbot />
+            <AgriAiChatbot isModal={true} />
           </View>
         </SafeAreaView>
       </Modal>

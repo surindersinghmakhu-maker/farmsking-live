@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useCart } from '@/src/store/cart-context';
+import { AgriAiChatbot } from '@/src/components/AgriAiChatbot';
 
 export interface AiDiseaseDiagnostic {
   cropName: string;
@@ -557,6 +558,17 @@ export default function CropDiseaseScannerScreen() {
             </TouchableOpacity>
           </View>
         )}
+
+        {/* 🤖 FarmsKing Agri AI Doctor Chatbot (Strictly Agriculture Guardrail) */}
+        <View style={{ marginTop: 10 }}>
+          <Text style={{ fontSize: 15, fontWeight: '800', color: '#0f172a', marginBottom: 4 }}>
+            💬 Ask FarmsKing Kheti Mitra AI Doctor
+          </Text>
+          <Text style={{ fontSize: 11.5, color: '#64748b', marginBottom: 6 }}>
+            Ask any question about crops, fertilizers, sprays, disease remedies, or mandi rates in Punjabi, Hindi & English.
+          </Text>
+          <AgriAiChatbot />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

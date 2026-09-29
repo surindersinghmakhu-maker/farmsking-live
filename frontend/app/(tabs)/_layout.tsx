@@ -234,21 +234,22 @@ export default function TabLayout() {
           <View style={desktopStyles.headerRight}>
             {(() => {
               const isSellerRole = role === 'SELLER' || user?.role === 'SELLER' || Boolean((user as any)?.isSeller);
+              if (!isSellerRole) return null;
               return (
                 <TouchableOpacity
                   style={[
                     desktopStyles.headerActionBtn,
-                    { backgroundColor: isSellerRole ? '#059669' : '#d97706', borderStyle: 'solid' },
+                    { backgroundColor: '#059669', borderStyle: 'solid' },
                   ]}
                   onPress={() => router.push('/seller-dashboard')}
                 >
                   <Ionicons
-                    name={isSellerRole ? 'storefront-outline' : 'leaf-outline'}
+                    name="storefront-outline"
                     size={16}
                     color="#ffffff"
                   />
                   <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' }}>
-                    {isSellerRole ? '🏪 Seller Hub' : '🌾 Become a Seller'}
+                    🏪 Seller Hub
                   </Text>
                 </TouchableOpacity>
               );

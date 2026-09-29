@@ -21,17 +21,17 @@ export class ProductsService {
     const categorySlug = (dto.categorySlug || dto.category || '').toLowerCase().replace(/\s+/g, '-');
 
     if (sellerStore) {
-      // 1. Category Restriction: Pesticides strictly require COMMERCIAL dealer
-      if (categorySlug.includes('pesticide') || categorySlug === 'pesticides') {
-        if (sellerStore.sellerType !== SellerType.COMMERCIAL) {
-          throw new BadRequestException('Pesticides can only be listed by COMMERCIAL dealers holding a valid Agri/Pesticide License.');
+      // 1. Category Restriction: Seeds & Pesticides strictly require Agri Inputs License No.
+      if (categorySlug.includes('pesticide') || categorySlug === 'pesticides' || categorySlug.includes('seed') || categorySlug === 'seeds' || categorySlug.includes('crop-protection')) {
+        if (!sellerStore.agriLicenseNo || !sellerStore.agriLicenseNo.trim()) {
+          throw new BadRequestException('Agri Inputs License No. (Seeds / Pesticide License) is required to list Seeds & Agrochemical Pesticides. Please update your Agri License in Store Settings.');
         }
       }
 
-      // 2. Category Restriction: Food products require Admin FSSAI Approval
-      if (categorySlug.includes('food') || categorySlug === 'food-products') {
-        if (!sellerStore.isFssaiApproved) {
-          throw new BadRequestException('Food Products require Admin FSSAI Certification approval on your Seller Store before listing.');
+      // 2. Category Restriction: Food products require FSSAI License No.
+      if (categorySlug.includes('food') || categorySlug === 'food-products' || categorySlug.includes('organic-food')) {
+        if (!sellerStore.fssaiNo || !sellerStore.fssaiNo.trim()) {
+          throw new BadRequestException('FSSAI License No. is required to list Food Products. Please update your FSSAI License Number in Store Settings.');
         }
       }
     }

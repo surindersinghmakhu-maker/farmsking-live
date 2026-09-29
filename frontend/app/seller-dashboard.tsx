@@ -298,9 +298,42 @@ export default function SellerDashboardScreen() {
   };
 
   const validateStep2 = () => {
-    if (wantsToSellFood && (!fssaiNo.trim() || !/^\d{14}$/.test(fssaiNo.trim()))) {
-      showAlert('FSSAI Code Error ⚠️', 'FSSAI License Number must be a valid 14-digit numeric code.');
+    const isFarmerProducer = sellerType === 'FARMER' || entityType === 'INDIVIDUAL_FARMER';
+
+    // 1. GSTIN Validation: Optional for Farmer/Producer, Mandatory for Commercial Sellers
+    if (!isFarmerProducer) {
+      if (!gstin.trim()) {
+        showAlert('GSTIN Required ⚠️', '15-Digit GSTIN Number (GST ਨੰਬਰ) is mandatory for Commercial Sellers.');
+        return false;
+      }
+      if (gstin.trim().length !== 15) {
+        showAlert('Invalid GSTIN ⚠️', 'Please enter a valid 15-Digit GSTIN Number (GST ਨੰਬਰ).');
+        return false;
+      }
+    } else {
+      if (gstin.trim() && gstin.trim().length !== 15) {
+        showAlert('Invalid GSTIN ⚠️', 'Please enter a valid 15-Digit GSTIN Number (GST ਨੰਬਰ) or leave it empty.');
+        return false;
+      }
+    }
+
+    // 2. PAN Number Validation
+    if (!panNumber.trim() || !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panNumber.trim())) {
+      showAlert(
+        'PAN Required ⚠️',
+        isFarmerProducer
+          ? 'Please enter a valid 10-Digit PAN Number (ਪੈਨ ਨੰਬਰ).'
+          : 'Please enter a valid 10-Digit Business PAN Number (ਪੈਨ ਨੰਬਰ).'
+      );
       return false;
+    }
+
+    // 3. FSSAI Validation if provided
+    if (wantsToSellFood || fssaiNo.trim()) {
+      if (fssaiNo.trim() && !/^\d{14}$/.test(fssaiNo.trim())) {
+        showAlert('FSSAI Code Error ⚠️', 'FSSAI License Number must be a valid 14-digit numeric code.');
+        return false;
+      }
     }
     return true;
   };
@@ -326,12 +359,9 @@ export default function SellerDashboardScreen() {
       return;
     }
 
-    if (wantsToSellFood) {
-      if (!fssaiNo.trim() || !/^\d{14}$/.test(fssaiNo.trim())) {
-        setStep(2);
-        showAlert('FSSAI Code Error ⚠️', 'FSSAI License Number must be a valid 14-digit numeric code.');
-        return;
-      }
+    if (!validateStep2()) {
+      setStep(2);
+      return;
     }
 
     try {
@@ -397,13 +427,26 @@ export default function SellerDashboardScreen() {
       return;
     }
 
-    if (productCategorySlug === 'pesticides' && storeData?.sellerType !== 'COMMERCIAL') {
-      showAlert('Pesticide Restriction ⚠️', 'Pesticides can only be listed by COMMERCIAL dealers with a valid Agri License.');
+    const activeFssaiNo = storeData?.fssaiNo || fssaiNo;
+    const activeAgriLicenseNo = storeData?.agriLicenseNo || agriLicenseNo;
+
+    // FSSAI License Enforcement for Food Products
+    const isFoodCategory = productCategorySlug === 'food-products' || productCategory.toLowerCase().includes('food');
+    if (isFoodCategory && (!activeFssaiNo || !activeFssaiNo.trim())) {
+      showAlert(
+        'FSSAI License Required ⚠️',
+        'FSSAI License No. must be filled in store settings to enter and list Food Products.'
+      );
       return;
     }
 
-    if (productCategorySlug === 'food-products' && !storeData?.isFssaiApproved) {
-      showAlert('FSSAI Approval Required ⚠️', 'Food Products require FSSAI certification approval by Admin.');
+    // Agri Inputs License Enforcement for Seeds & Pesticides
+    const isAgriInputCategory = productCategorySlug === 'pesticides' || productCategory === 'Seeds' || productCategory.toLowerCase().includes('pesticide') || productCategory.toLowerCase().includes('protection');
+    if (isAgriInputCategory && (!activeAgriLicenseNo || !activeAgriLicenseNo.trim())) {
+      showAlert(
+        'Agri Inputs License Required ⚠️',
+        'Agri Inputs License No. (Seeds / Pesticide License) must be filled in store settings to select and list Seeds & Agrochemical Pesticides.'
+      );
       return;
     }
 
@@ -562,7 +605,11 @@ export default function SellerDashboardScreen() {
                   <Text style={styles.stepTitle}>2. Tax & Legal Compliance</Text>
                 </View>
 
-                <Text style={styles.inputLabel}>15-Digit GSTIN Number (GST ਨੰਬਰ)</Text>
+                <Text style={styles.inputLabel}>
+                  {sellerType === 'FARMER' || entityType === 'INDIVIDUAL_FARMER'
+                    ? '15-Digit GSTIN Number (GST ਨੰਬਰ) (Optional for Farmer/Producer)'
+                    : '15-Digit GSTIN Number (GST ਨੰਬਰ) *'}
+                </Text>
                 <TextInput
                   style={[styles.input, errors.gstin && styles.inputError]}
                   placeholder="03AAAAA0000A1Z5"
@@ -580,7 +627,11 @@ export default function SellerDashboardScreen() {
                 ) : null}
                 {errors.gstin ? <Text style={styles.errText}>{errors.gstin}</Text> : null}
 
-                <Text style={styles.inputLabel}>10-Digit Business PAN Number (ਪੈਨ ਨੰਬਰ)</Text>
+                <Text style={styles.inputLabel}>
+                  {sellerType === 'FARMER' || entityType === 'INDIVIDUAL_FARMER'
+                    ? '10-Digit PAN Number (ਪੈਨ ਨੰਬਰ) *'
+                    : '10-Digit Business PAN Number (ਪੈਨ ਨੰਬਰ) *'}
+                </Text>
                 <TextInput
                   style={[styles.input, errors.panNumber && styles.inputError]}
                   placeholder="ABCDE1234F"
@@ -1073,6 +1124,11 @@ export default function SellerDashboardScreen() {
                         key={c}
                         style={[styles.entityChip, productCategory === c && styles.activeEntityChip]}
                         onPress={() => {
+                          const activeFssaiNo = storeData?.fssaiNo || fssaiNo;
+                          if (!activeFssaiNo || !activeFssaiNo.trim()) {
+                            showAlert('FSSAI License Required ⚠️', 'FSSAI License No. must be filled in store settings to enter and list Food Products.');
+                            return;
+                          }
                           setProductCategory(c);
                           setIsFarmerMadeProduct(true);
                         }}
@@ -1086,6 +1142,19 @@ export default function SellerDashboardScreen() {
                         key={c}
                         style={[styles.entityChip, productCategory === c && styles.activeEntityChip]}
                         onPress={() => {
+                          const activeFssaiNo = storeData?.fssaiNo || fssaiNo;
+                          const activeAgriLicenseNo = storeData?.agriLicenseNo || agriLicenseNo;
+
+                          if (c.toLowerCase().includes('food') && (!activeFssaiNo || !activeFssaiNo.trim())) {
+                            showAlert('FSSAI License Required ⚠️', 'FSSAI License No. must be filled in store settings to enter and list Food Products.');
+                            return;
+                          }
+
+                          if ((c === 'Seeds' || c.includes('Protection')) && (!activeAgriLicenseNo || !activeAgriLicenseNo.trim())) {
+                            showAlert('Agri Inputs License Required ⚠️', 'Agri Inputs License No. (Seeds / Pesticide License) must be filled in store settings to select Seeds / Pesticides.');
+                            return;
+                          }
+
                           setProductCategory(c);
                           setIsFarmerMadeProduct(c.includes('Food'));
                         }}

@@ -53,6 +53,12 @@ export class OrdersController {
     return this.ordersService.getUpiLink(user, id);
   }
 
+  @Roles(Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.ADVISOR, ...STAFF_ROLES)
+  @Get(':id/farmer-bill-of-supply')
+  generateFarmerBillOfSupply(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.ordersService.generateFarmerBillOfSupply(user, id);
+  }
+
   @Roles(Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.ADVISOR)
   @Post(':id/phonepe/initiate')
   initiatePhonePePayment(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: InitiatePhonePePaymentDto) {

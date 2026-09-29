@@ -71,15 +71,7 @@ export class OrdersService {
         anyCodDisabled = true;
       }
 
-      // Intra-State Delivery Gate for Non-GST Farmer Sellers
-      if (product.sellerStore && product.sellerStore.sellerType === SellerType.FARMER) {
-        const pickupState = (product.sellerStore.pickupState || '').trim().toLowerCase();
-        if (pickupState && customerState && !deliveryAddressStr.toLowerCase().includes(pickupState) && pickupState !== customerState) {
-          throw new BadRequestException(
-            `Non-GST Farmer products ("${product.name}") are restricted to intra-state delivery within ${product.sellerStore.pickupState}. Please update your delivery address.`,
-          );
-        }
-      }
+
     }
 
     // COD Rule Engine Check
@@ -543,6 +535,64 @@ export class OrdersService {
         settlementStatus: 'DEDUCTED',
       },
     });
+  }
+
+  /** Generate Farmer Bill of Supply / Self-Declaration Invoice for Tax-Exempt Produce */
+  async generateFarmerBillOfSupply(user: AuthUser, orderId: string) {
+    const order = await this.findOneOrThrow(user, orderId);
+
+    const farmerItems = order.items.filter(
+      (item) => item.sellerStore?.sellerType === SellerType.FARMER || !item.sellerStore?.gstin,
+    );
+
+    const items = farmerItems.length > 0 ? farmerItems : order.items;
+
+    const invoices = items.map((item: any) => {
+      const store = item.sellerStore;
+      const unitPrice = Number(item.price || 0);
+      const totalPrice = unitPrice * item.quantity;
+
+      return {
+        invoiceNumber: `FARM-BOS-${order.orderNumber}-${item.id.substring(0, 4)}`,
+        invoiceDate: (order as any).createdAt || (order as any).created_at,
+        taxType: 'Tax Exempt (0% GST under Section 23 of CGST Act 2017)',
+        seller: {
+          storeName: store?.storeName || 'Registered Farmer Producer',
+          farmerName: store?.legalName || store?.bankBeneficiaryName || store?.storeName || 'Farmer Producer',
+          kingId: store?.sellerId ? `KING-${store.sellerId.substring(0, 8).toUpperCase()}` : 'FARMER-DIRECT',
+          pickupAddress: store?.pickupAddress || 'Farm Direct Pickup',
+          pickupCity: store?.pickupCity || '',
+          pickupState: store?.pickupState || '',
+          pickupPincode: store?.pickupPincode || '',
+          panNumber: store?.panNumber || 'EXEMPT_FARMER_PAN',
+          fssaiNo: store?.fssaiNo || undefined,
+          agriLicenseNo: store?.agriLicenseNo || undefined,
+        },
+        buyer: {
+          name: order.customer?.name || 'Valued Customer',
+          mobile: order.customer?.mobile || '',
+          deliveryAddress: order.deliveryAddress,
+        },
+        product: {
+          id: item.productId,
+          name: item.product?.name || item.productName || 'Farm Product',
+          hsnCode: item.product?.categorySlug === 'pesticides' ? '380899' : '120991',
+          quantity: item.quantity,
+          unitPrice,
+          totalPrice,
+        },
+        statutoryDeclaration:
+          'Self-certified agricultural produce / farm seed cultivated by registered farmer. Exempt from GST registration under Section 23(1)(b) of Central Goods and Services Tax (CGST) Act 2017. Shipped via Pan-India Courier Network.',
+      };
+    });
+
+    return {
+      orderNumber: order.orderNumber,
+      orderStatus: order.status,
+      paymentMode: order.paymentMode,
+      paymentStatus: order.paymentStatus,
+      invoices,
+    };
   }
 }
 

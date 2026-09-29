@@ -183,7 +183,7 @@ export function downloadJpgCouponCard({
 
         ctx.fillStyle = '#64748b';
         ctx.font = 'bold 12px sans-serif';
-        ctx.fillText('YOUR REFERRAL / COUPON CODE', 400, 212);
+        ctx.fillText('YOUR KING ID / INVITE CODE', 400, 212);
 
         ctx.fillStyle = '#14532d';
         ctx.font = 'bold 34px monospace';
@@ -198,10 +198,10 @@ export function downloadJpgCouponCard({
 
         ctx.fillStyle = '#14532d';
         ctx.font = 'bold 14px sans-serif';
-        ctx.fillText(`💡 HOW TO GET BENEFIT: Enter Code "${safeKingId}" while registering on FarmsKing`, 400, 310);
+        ctx.fillText(`💡 HOW TO GET BENEFIT: Register on FarmsKing platform`, 400, 310);
         ctx.fillStyle = '#15803d';
         ctx.font = '600 12px sans-serif';
-        ctx.fillText(`✨ Instant ₹${welcomeRewardAmount} Cash Bonus will be credited directly to your Wallet!`, 400, 328);
+        ctx.fillText(`✨ Instant ₹${welcomeRewardAmount} Welcome Bonus will be credited directly to your Wallet!`, 400, 328);
 
         // 8. Register Link Box
         ctx.fillStyle = '#ffffff';
@@ -217,12 +217,12 @@ export function downloadJpgCouponCard({
         // 9. Royal Footer Guarantee
         ctx.fillStyle = '#166534';
         ctx.font = 'italic 12.5px sans-serif';
-        ctx.fillText('👑 FarmsKing Agriculture Platform · Smart Farming, Higher Profits & Cash Rewards 🌾', 400, 420);
+        ctx.fillText('👑 FarmsKing Agriculture Platform · Smart Farming, Higher Profits & Digital Tools 🌾', 400, 420);
 
         // Download PNG / JPG File
         const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
         const link = document.createElement('a');
-        link.download = `farmsking-welcome-coupon-${safeKingId}.jpg`;
+        link.download = `farmsking-invite-card-${safeKingId}.jpg`;
         link.href = dataUrl;
         link.click();
       };
@@ -237,7 +237,7 @@ export function downloadJpgCouponCard({
         renderAndDownload();
       }
     } else {
-      alert('Welcome Coupon Code: ' + safeKingId + '\nGet ₹' + welcomeRewardAmount + ' Welcome Bonus when you register!');
+      alert('Invite Code (King ID): ' + safeKingId + '\nJoin FarmsKing Platform using this ID!');
     }
   } catch {
     alert('Could not generate JPG coupon.');
@@ -323,7 +323,7 @@ export default function WalletScreen() {
 
   const handleShareWhatsApp = async () => {
     tap();
-    const shareMessage = `👑 *WELCOME TO FARMSKING (Smart Farming Platform)!* 🌾✨\nRegister using my referral link and claim your *₹${welcomeRewardAmount} Welcome Cash Bonus!* 💶🎉\n👉 ${inviteLink}\n🏷️ Referral Code: \`${kingId}\``;
+    const shareMessage = `🌾 *FarmsKing (फ़ार्मਸਕਿੰਗ) — भारत का भरोसेमंद स्मार्ट डिजिटल कृषि प्लेटफॉर्म* 🚜✨\n\nनमस्ते! 👨‍🌾\nमैं FarmsKing App का उपयोग अपनी खेती के प्रबंधन और फसल सुरक्षा के लिए कर रहा हूँ। आप भी इस फ्री ऐप को जॉइन करें और पाएँ ये बेहतरीन सुविधाएँ:\n\n📊 *1. लाइव मंडी भाव व सटीक मौसम जानकारी:*\nपंजाब व देश की सभी मंडियों के रोजाना भाव और आपके गाँव के मौसम की पल-पल अपडेट।\n\n🩺 *2. AI Crop Doctor व रोग पहचान:*\nपौधे/फसल की फोटो खींचकर 2 सेकंड में रोग की पहचान करें और एक्सपर्ट डॉक्टरों से दवा/स्प्रे सलाह पाएँ।\n\n🏪 *3. एग्रीस्टोर व डायरेक्ट फसल बिक्री:*\nअसली बीज, खाद व कीटनाशक बेस्ट रेट पर ऑर्डर करें और अपनी फसल सीधे खरीदारों को बेचें।\n\n📘 *4. डिजिटल फार्म खाता व लेबर मैनेजमेंट:*\nखेती का पूरा हिसाब-किताब, डीजल-स्प्रे का खर्चा और मजदूरों की हाजिरी आसानी से मैनेज करें।\n\n👇 *नीचे दिए गए लिंक से मुफ़्त में ऐप डाउनलोड व रजिस्टर करें:*\n👉 ${inviteLink}\n\n---\n👑 *FarmsKing Platform* · _स्मार्ट खेती, बेहतर उपज, अधिक मुनाफ़ा!_ 🌾`;
     if (Platform.OS === 'web') {
       const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`;
       window.open(whatsappUrl, '_blank');
@@ -512,7 +512,7 @@ export default function WalletScreen() {
                     <Text style={styles.bannerBenefitTitleNew}>New User Benefits</Text>
                   </View>
                   <Text style={styles.bannerBenefitTextNew}>• <Text style={{ fontFamily: FONT.extraBold }}>₹{welcomeRewardAmount}</Text> Welcome Cash Bonus</Text>
-                  <Text style={styles.bannerBenefitSubNew}>(With your referral/coupon code)</Text>
+                  <Text style={styles.bannerBenefitSubNew}>(When joining with your King ID)</Text>
                 </View>
               </View>
             </LinearGradient>
@@ -667,14 +667,14 @@ function ReferralInviteCard({
               <Text style={styles.benefitBoxTitleNew}>New User Benefits</Text>
             </View>
             <Text style={styles.benefitItemTextNew}>• <Text style={{ fontFamily: FONT.extraBold }}>₹{welcomeRewardAmount}</Text> Welcome Cash Bonus</Text>
-            <Text style={styles.benefitItemSubNew}>(With your referral/coupon code)</Text>
+            <Text style={styles.benefitItemSubNew}>(When joining with your King ID)</Text>
           </View>
         </View>
 
         {/* Code & Coupon Box */}
         <View style={styles.refCodeBox}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.refCodeLabel}>YOUR REFERRAL / COUPON CODE</Text>
+            <Text style={styles.refCodeLabel}>YOUR KING ID / INVITE CODE</Text>
             <Text style={styles.refCodeValue}>{safeKingId}</Text>
           </View>
           <TouchableOpacity

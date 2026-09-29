@@ -289,12 +289,49 @@ export default function MoreScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('accountSection')}</Text>
             <View style={styles.sectionCard}>
-              {/* 🏪 DYNAMIC SELLER STORE / REGISTER STORE ITEM */}
+              {/* Account Sub-Items listed directly */}
+              {accountItems.map((item) => (
+                <TouchableOpacity
+                  key={item.key}
+                  style={styles.row}
+                  activeOpacity={0.7}
+                  onPress={() => item.href && router.push(item.href as any)}
+                >
+                  <View style={styles.rowIconBg}>
+                    <Ionicons name={item.icon} size={18} color={theme.primary} />
+                  </View>
+                  <Text style={styles.rowLabel}>{t(item.key, item.label)}</Text>
+                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                </TouchableOpacity>
+              ))}
+
+              {/* 🛡️ Farm Supervisors Sub-Accounts (VIP Feature) */}
+              <TouchableOpacity
+                style={styles.row}
+                activeOpacity={0.7}
+                onPress={() => setShowSupervisorModal(true)}
+              >
+                <View style={[styles.rowIconBg, { backgroundColor: '#eef2ff' }]}>
+                  <Ionicons name="shield-checkmark-outline" size={18} color="#4f46e5" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={styles.rowLabel}>Supervisor Management</Text>
+                    <View style={{ backgroundColor: '#f59e0b', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3 }}>
+                      <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#ffffff' }}>VIP</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.rowSubLabel}>Add & Manage Supervisor Sub-Accounts</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+              </TouchableOpacity>
+
+              {/* 🏪 DYNAMIC SELLER STORE / REGISTER STORE ITEM (Placed right above Delete Account) */}
               {(() => {
                 const isSellerRole = role === 'SELLER' || user?.role === 'SELLER' || Boolean((user as any)?.isSeller);
                 return (
                   <TouchableOpacity
-                    style={styles.row}
+                    style={[styles.row, isAdminRole && { borderBottomWidth: 0 }]}
                     activeOpacity={0.8}
                     onPress={() => router.push('/seller-dashboard')}
                   >
@@ -330,43 +367,6 @@ export default function MoreScreen() {
                   </TouchableOpacity>
                 );
               })()}
-
-              {/* Account Sub-Items listed directly */}
-              {accountItems.map((item) => (
-                <TouchableOpacity
-                  key={item.key}
-                  style={styles.row}
-                  activeOpacity={0.7}
-                  onPress={() => item.href && router.push(item.href as any)}
-                >
-                  <View style={styles.rowIconBg}>
-                    <Ionicons name={item.icon} size={18} color={theme.primary} />
-                  </View>
-                  <Text style={styles.rowLabel}>{t(item.key, item.label)}</Text>
-                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                </TouchableOpacity>
-              ))}
-
-              {/* 🛡️ Farm Supervisors Sub-Accounts (VIP Feature) */}
-              <TouchableOpacity
-                style={[styles.row, isAdminRole && { borderBottomWidth: 0 }]}
-                activeOpacity={0.7}
-                onPress={() => setShowSupervisorModal(true)}
-              >
-                <View style={[styles.rowIconBg, { backgroundColor: '#eef2ff' }]}>
-                  <Ionicons name="shield-checkmark-outline" size={18} color="#4f46e5" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={styles.rowLabel}>Supervisor Management</Text>
-                    <View style={{ backgroundColor: '#f59e0b', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3 }}>
-                      <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#ffffff' }}>VIP</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.rowSubLabel}>Add & Manage Supervisor Sub-Accounts</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-              </TouchableOpacity>
 
               {/* 🗑️ Delete Account Row (Hidden for Admin & Super Admin) */}
               {!isAdminRole ? (

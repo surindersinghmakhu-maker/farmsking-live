@@ -100,6 +100,8 @@ export default function ProfileScreen() {
       });
       setIsOtpModalOpen(false);
       setOtpCode('');
+      setLoginPassword('');
+      await refreshUser();
       Alert.alert(
         res.isMerged ? '✅ Accounts Combined' : '✅ Mobile Linked',
         res.message || 'Mobile number verified successfully!'
@@ -772,22 +774,6 @@ export default function ProfileScreen() {
                   )}
                 </View>
 
-                {/* 3c. Password Row for Mobile Login */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                  <View style={{ width: 98, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <Ionicons name="key-outline" size={14} color="#475569" />
-                    <Text style={[styles.inputLabel, { marginBottom: 0, fontSize: 11.5, color: '#334155' }]}>Password</Text>
-                  </View>
-                  <TextInput
-                    style={[styles.input, { flex: 1, height: 34, fontSize: 12, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#ffffff', borderColor: '#cbd5e1', paddingVertical: 0 }]}
-                    value={loginPassword}
-                    onChangeText={setLoginPassword}
-                    placeholder="Create/Set Mobile Password"
-                    placeholderTextColor="#94a3b8"
-                    secureTextEntry
-                  />
-                </View>
-
                 {/* 4. Email Address Label & Editable Field in 1 row */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <View style={{ width: 98, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
@@ -904,6 +890,16 @@ export default function ProfileScreen() {
               placeholderTextColor="#cbd5e1"
               keyboardType="number-pad"
               maxLength={6}
+            />
+
+            <Text style={[styles.inputLabel, { fontSize: 11.5, color: '#334155', marginTop: 10 }]}>Create Account Password (Optional)</Text>
+            <TextInput
+              style={[styles.modalInput, { fontSize: 14, fontFamily: FONT.bold }]}
+              value={loginPassword}
+              onChangeText={setLoginPassword}
+              placeholder="Create/Set Mobile Password"
+              placeholderTextColor="#cbd5e1"
+              secureTextEntry
             />
 
             {otpError ? (

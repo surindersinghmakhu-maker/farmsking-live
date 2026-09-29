@@ -21,13 +21,27 @@ export interface ChatMessage {
   category?: 'FARMING' | 'NON_FARMING_BLOCKED';
 }
 
+const EXPLICIT_NON_FARMING_KEYWORDS = [
+  'movie', 'film', 'song', 'gaana', 'cinema', 'bollywood', 'hollywood',
+  'cricket', 'ipl', 'match', 'score', 'football', 'game',
+  'politics', 'modi', 'bjp', 'congress', 'election', 'vote', 'minister',
+  'actress', 'actor', 'dance', 'comedy', 'pubg', 'freefire'
+];
+
 const FARMING_KEYWORDS = [
+  // Punjabi / Roman Punjabi
   'ਕਣਕ', 'ਝੋਨਾ', 'ਨਰਮਾ', 'ਗੰਨਾ', 'ਆਲੂ', 'ਟਮਾਟਰ', 'ਸਰ੍ਹੋਂ', 'ਫਸਲ', 'ਬੀਜ', 'ਖਾਦ', 'ਸਪ੍ਰੇ', 'ਕੀਟਨਾਸ਼ਕ', 'ਯੂਰੀਆ', 'ਡੀ.ਏ.ਪੀ',
   'ਮੰਡੀ', 'ਭਾਵ', 'ਮੌਸਮ', 'ਪੱਤੇ', 'ਕੁੰਗੀ', 'ਝੁਲਸ', 'ਸੁੰਡੀ', 'ਬੀਮਾਰੀ', 'ਪਾਣੀ', 'ਖੇਤੀ', 'ਟਰੈਕਟਰ', 'ਮਜ਼ਦੂਰੀ', 'ਖਰਚਾ',
+  'kanak', 'jhona', 'narma', 'ganna', 'aloo', 'tamatar', 'sarson', 'fasal', 'beej', 'khad', 'spray', 'keetnashak',
+  'urea', 'dap', 'mandi', 'bhav', 'mausam', 'patte', 'kungi', 'jhulas', 'sundi', 'beemari', 'paani', 'kheti',
+  'dawai', 'dawaii', 'ilaaj', 'ilaac', 'dawa', 'tika', 'keeda', 'khet', 'kisaan', 'farmer', 'paau', 'icar',
+  // English
   'wheat', 'paddy', 'rice', 'cotton', 'sugarcane', 'potato', 'tomato', 'mustard', 'crop', 'seed', 'fertilizer', 'spray',
   'pesticide', 'urea', 'dap', 'mandi', 'rate', 'price', 'weather', 'disease', 'rust', 'blight', 'fungicide', 'soil',
   'irrigation', 'farming', 'farm', 'yield', 'organic', 'fungus', 'insect', 'gulkand', 'vermicompost', 'cocopeat',
-  'गेहूं', 'धान', 'सरसों', 'फसल', 'खाद', 'बीज', 'स्प्रे', 'मंडी', 'भाव', 'मौसम', 'कीटनाशक', 'रोग', 'कृषि', 'खेती'
+  'help', 'hello', 'hi', 'hiii', 'doctor', 'medicine', 'pest', 'leaf', 'plant', 'tree', 'growth', 'npk', 'water',
+  // Hindi
+  'गेहूं', 'धान', 'सरसों', 'फसल', 'खाद', 'बीज', 'स्प्रे', 'मंडी', 'भाव', 'मौसम', 'कीटनाशक', 'रोग', 'कृषि', 'खेती', 'दवा', 'इलाज', 'कीड़ा'
 ];
 
 const QUICK_FARMING_SUGGESTIONS = [
@@ -52,31 +66,66 @@ export function AgriAiChatbot() {
   const [isLoading, setIsLoading] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
 
-  const isAgriRelated = (query: string): boolean => {
+  const isExplicitNonFarming = (query: string): boolean => {
     const qLower = query.toLowerCase();
-    return FARMING_KEYWORDS.some((kw) => qLower.includes(kw.toLowerCase()));
+    return EXPLICIT_NON_FARMING_KEYWORDS.some((kw) => qLower.includes(kw));
   };
 
   const generateAgriResponse = (query: string): string => {
     const q = query.toLowerCase();
 
+    // 1. Wheat / Yellow Rust / Kanak / Gehu
     if (q.includes('ਕਣਕ') || q.includes('wheat') || q.includes('ਕੁੰਗੀ') || q.includes('rust') || q.includes('ਗੇਂਹੂ') || q.includes('kanak') || q.includes('gehu')) {
-      return '🌾 **Wheat Yellow Rust (ਕਣਕ ਦੀ ਪੀਲੀ ਕੁੰਗੀ / गेहूं का पीला रतुआ) Solution:**\n\n1. **Chemical Spray:** Propiconazole 25% EC (Tilt) @ 200 ml per acre mixed in 200 Liters of water.\n2. **Precaution:** Avoid excessive Urea application during cloudy humid weather.\n3. **Organic Remedy:** Spray 5% Neem seed extract or sour buttermilk solution (5L in 200L water).';
+      return '🌾 **Wheat Yellow Rust (ਕਣਕ ਦੀ ਪੀਲੀ ਕੁੰਗੀ / गेहूं का पीला रतुआ) Solution:**\n\n1. **Chemical Spray:** Propiconazole 25% EC (Tilt / FarmsKing CropProtect) @ 200 ml per acre mixed in 200 Liters of water.\n2. **Precaution:** Avoid excessive Urea application during cloudy humid weather.\n3. **Organic Remedy:** Spray 5% Neem seed extract or sour buttermilk solution (5L in 200L water).\n4. **Recommended Product:** Tilt 25% EC Propiconazole (₹380) available on FarmsKing Store.';
     }
 
-    if (q.includes('ਮੰਡੀ') || q.includes('ਭਾਵ') || q.includes('mandi') || q.includes('price') || q.includes('rate')) {
-      return '📊 **Today Live Mandi Rates (ਪੰਜਾਬ / Haryana Mandi Updates):**\n\n• **Wheat (ਕਣਕ / गेहूं):** ₹2,275 - ₹2,450 / Quintal\n• **Paddy (ਝੋਨਾ / धान):** ₹3,800 - ₹4,250 / Quintal\n• **Tomato (ਟਮਾਟਰ / टमाटर):** ₹1,400 - ₹1,800 / Quintal\n• **Mustard (ਸਰ੍ਹੋਂ / सरसों):** ₹5,400 - ₹5,850 / Quintal\n\n💡 *Check live updates anytime in the "Mandi Rates" tab.*';
+    // 2. Paddy / Rice / Jhona / Dhan / Blast / Sundi
+    if (q.includes('ਝੋਨਾ') || q.includes('paddy') || q.includes('rice') || q.includes('dhan') || q.includes('jhona') || q.includes('blast') || q.includes('sheath')) {
+      return '🌱 **Paddy Leaf Blast & Sheath Blight (ਝੋਨੇ ਦਾ ਬਲਾਸਟ / धान का झुलसा) Solution:**\n\n1. **Chemical Spray:** Tricyclazole 75% WP (Baan / Beam) @ 120g per acre in 200 Liters of water.\n2. **Precaution:** Stop top-dressing Nitrogen fertilizers immediately when leaf spots appear.\n3. **Organic Remedy:** Apply Trichoderma viride bio-fungicide @ 1 kg per acre mixed with organic FYM compost.';
     }
 
-    if (q.includes('ਟਮਾਟਰ') || q.includes('tomato') || q.includes('ਸਬਜ਼ੀ') || q.includes('vegetable') || q.includes('blight')) {
+    // 3. Cotton / Narma / Kapas / Whitefly / Sundi
+    if (q.includes('ਨਰਮਾ') || q.includes('cotton') || q.includes('narma') || q.includes('kapas') || q.includes('whitefly') || q.includes('bollworm')) {
+      return '☁️ **Cotton Whitefly & Pink Bollworm (ਗੁਲਾਬੀ ਸੁੰਡੀ ਤੇ ਚਿੱਟੀ ਮੱਖੀ) Solution:**\n\n1. **Chemical Spray:** Emamectin Benzoate 5% SG (100g) + Afidopyropen (Sefina) @ 400ml per acre in 200L water.\n2. **Monitoring:** Install 5 Pheromone Traps per acre.\n3. **Organic Remedy:** Spray Neem Oil 10,000 PPM @ 500ml per acre.';
+    }
+
+    // 4. Sugarcane / Ganna / Kumaad / Red Rot
+    if (q.includes('ਗੰਨਾ') || q.includes('sugarcane') || q.includes('ganna') || q.includes('kumaad') || q.includes('red rot')) {
+      return '🎋 **Sugarcane Red Rot Disease (ਗੰਨੇ ਦਾ ਰੱਤਾ ਰੋਗ) Solution:**\n\n1. **Soil Drenching:** Mix 500g Carbendazim 50% WP per acre in water and drench cane roots.\n2. **Bio-Control:** Apply Trichoderma harzianum @ 2.5 kg/acre mixed with organic compost.\n3. **Sanitation:** Uproot and destroy severely reddened stalks to prevent field spore spread.';
+    }
+
+    // 5. Potato / Aloo / Blight
+    if (q.includes('ਆਲੂ') || q.includes('potato') || q.includes('aloo') || q.includes('potato blight')) {
+      return '🥔 **Potato Early & Late Blight (ਆਲੂਆਂ ਦਾ ਝੁਲਸ ਰੋਗ) Solution:**\n\n1. **Chemical Spray:** Dimethomorph 50% WP (Acrobat 400g) + Mancozeb 75% WP (600g) in 200L water per acre.\n2. **Precaution:** Apply protective contact fungicide before heavy morning fog or frost.';
+    }
+
+    // 6. Tomato / Vegetables / Sabzi / Blight
+    if (q.includes('ਟਮਾਟਰ') || q.includes('tomato') || q.includes('tamatar') || q.includes('ਸਬਜ਼ੀ') || q.includes('vegetable') || q.includes('blight')) {
       return '🍅 **Tomato & Vegetable Blight (ਝੁਲਸ ਰੋਗ / झुलसा रोग) Remedy:**\n\n1. **Chemical Spray:** Ridomil Gold (Mefenoxam + Mancozeb) @ 500g per acre in 200L water.\n2. **Bio-Remedy:** Trichoderma viride 1kg per acre mixed with organic FYM compost.';
     }
 
-    return '🌾 **FarmsKing Agri Expert Advice (ਖੇਤੀਬਾੜੀ ਸਲਾਹ):**\n\nYour agricultural query has been analyzed:\n• Ensure timely irrigation and balanced NPK fertilizer application.\n• Inspect field leaves every 3 days for early pest or fungal disease signs.\n• Order genuine chemical sprays and organic fertilizers directly from FarmsKing Store.';
+    // 7. Fertilizer / Khad / Urea / DAP / NPK / Spray / Medicine / Dawai
+    if (q.includes('ਖਾਦ') || q.includes('fertilizer') || q.includes('urea') || q.includes('dap') || q.includes('npk') || q.includes('khad') || q.includes('spray') || q.includes('dawai') || q.includes('medicine')) {
+      return '🌱 **Fertilizer & Spray Recommendation (PAU / ICAR Advisory):**\n\n• **Basal Sowing Dose:** 1 bag DAP (50kg) + 1/2 bag MOP (Potash) per acre.\n• **Urea Application:** Top-dress 45kg Urea per acre in 2-3 split doses at 1st & 2nd irrigation.\n• **Organic Soil Booster:** Apply Vermicompost (500kg/acre) or Humic Acid to double soil micro-nutrients.\n• **Order Genuine Products:** Buy genuine fertilizers and sprays directly on FarmsKing Store.';
+    }
+
+    // 8. Mandi Rates / Price / Market / Bhav
+    if (q.includes('ਮੰਡੀ') || q.includes('ਭਾਵ') || q.includes('mandi') || q.includes('price') || q.includes('rate') || q.includes('bhav')) {
+      return '📊 **Today Live Mandi Rates (Punjab & Haryana Mandi Updates):**\n\n• **Wheat (ਕਣਕ / गेहूं):** ₹2,275 - ₹2,450 / Quintal\n• **Paddy (ਝੋਨਾ / धान):** ₹3,800 - ₹4,250 / Quintal\n• **Tomato (ਟਮਾਟਰ / टमाटर):** ₹1,400 - ₹1,800 / Quintal\n• **Mustard (ਸਰ੍ਹੋਂ / सरसों):** ₹5,400 - ₹5,850 / Quintal\n\n💡 *Check live district-wise updates anytime in the "Mandi Rates" tab.*';
+    }
+
+    // 9. Weather / Mausam / Rain / Barish
+    if (q.includes('ਮੌਸਮ') || q.includes('mausam') || q.includes('weather') || q.includes('rain') || q.includes('barish')) {
+      return '🌤️ **FarmsKing Weather Advisory:**\n\n• Check live 7-day temperature, humidity & rainfall forecast on your FarmsKing Home Dashboard.\n• **Spraying Tip:** Avoid chemical sprays when wind speed exceeds 15 km/h or rain is expected within 4 hours.';
+    }
+
+    // 10. General Agri / Pest / Soil / Growth / Default Advice
+    return '🌾 **FarmsKing Agri Expert Advice (ਖੇਤੀਬਾੜੀ ਸਲਾਹ):**\n\nYour agricultural query has been analyzed:\n1. **Crop Health:** Ensure timely irrigation and balanced NPK fertilizer application based on PAU guidelines.\n2. **Disease & Pest Watch:** Inspect leaf surfaces every 3 days. Spot-spray early infected patches.\n3. **Organic Remedies:** Use 5% Neem extract or bio-control agent Trichoderma to improve plant immunity.\n4. **FarmsKing AgriStore:** You can order genuine chemical sprays, seeds, and organic fertilizers with 24-hour village delivery.';
   };
 
   const handleSend = (textToSend?: string) => {
-    const query = (textToSend || inputQuery || 'ਖੇਤੀਬਾੜੀ ਅਤੇ ਖਾਦਾਂ ਬਾਰੇ ਜਾਣਕਾਰੀ').trim();
+    const rawInput = (textToSend || inputQuery).trim();
+    const query = rawInput || 'Farming and fertilizer advisory';
     if (isLoading) return;
 
     const userMsg: ChatMessage = {
@@ -99,8 +148,8 @@ export function AgriAiChatbot() {
       let aiText = '';
       let category: 'FARMING' | 'NON_FARMING_BLOCKED' = 'FARMING';
 
-      if (!isAgriRelated(query) && query.length > 3) {
-        // Strict Guardrail Triggered for Non-Farming Question
+      if (isExplicitNonFarming(query)) {
+        // Explicit non-farming question blocked
         category = 'NON_FARMING_BLOCKED';
         aiText = '⚠️ **Agricultural Questions Only (ਸਿਰਫ਼ ਖੇਤੀਬਾੜੀ ਸਵਾਲ):**\n\nI am FarmsKing\'s AI Kheti Doctor 🌾.\nI can only answer questions related to crops, fertilizers, sprays, seeds, weather, and mandi rates in English, Punjabi (ਪੰਜਾਬੀ), and Hindi (हिंदी).\n\nPlease ask a question related to your crops or farming!';
       } else {
@@ -134,7 +183,7 @@ export function AgriAiChatbot() {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.headerTitle}>🤖 FarmsKing Kheti Mitra AI Doctor</Text>
-            <Text style={styles.headerSubtitle}>100% Free Smart Agricultural Assistant · 24/7 Farmer Help</Text>
+            <Text style={styles.headerSubtitle}>100% Free Smart Agricultural Assistant · Supports All Languages</Text>
           </View>
           <View style={styles.badgeFree}>
             <Text style={styles.badgeFreeText}>FREE 🌾</Text>
@@ -402,8 +451,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#16a34a',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  sendBtnDisabled: {
-    opacity: 0.5,
   },
 });

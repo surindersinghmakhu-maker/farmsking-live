@@ -171,7 +171,7 @@ export default function TabLayout() {
 
   const getTabTitle = (name: TabName): string => {
     if (name === 'index') return getHomeTitle(role);
-    if (name === 'more') return role === 'CUSTOMER' ? t('tabSettings', 'Settings') : t('tabMore', 'More');
+    if (name === 'more') return t('tabMore', 'More');
     if (name === 'farmers') return role === 'GARDEN_ADVISOR' ? t('tabGardens', 'Gardens') : t('tabFarmers', 'Farmers');
     if (name === 'shop' && (role === 'ADMIN' || role === 'SUPER_ADMIN')) return 'AgriStore';
     const meta = TAB_META[name];
@@ -232,6 +232,28 @@ export default function TabLayout() {
 
           {/* Right Header Actions */}
           <View style={desktopStyles.headerRight}>
+            {(() => {
+              const isSellerRole = role === 'SELLER' || user?.role === 'SELLER' || Boolean((user as any)?.isSeller);
+              return (
+                <TouchableOpacity
+                  style={[
+                    desktopStyles.headerActionBtn,
+                    { backgroundColor: isSellerRole ? '#059669' : '#d97706', borderStyle: 'solid' },
+                  ]}
+                  onPress={() => router.push('/seller-dashboard')}
+                >
+                  <Ionicons
+                    name={isSellerRole ? 'storefront-outline' : 'leaf-outline'}
+                    size={16}
+                    color="#ffffff"
+                  />
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' }}>
+                    {isSellerRole ? '🏪 Seller Hub' : '🌾 Become a Seller'}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })()}
+
             <View style={desktopStyles.langSwitcherBox}>
               <TouchableOpacity
                 style={[desktopStyles.langBtn, language === 'pa' && desktopStyles.langBtnActive]}
@@ -313,7 +335,7 @@ export default function TabLayout() {
                   key={name}
                   name="more"
                   options={{
-                    title: role === 'CUSTOMER' ? t('tabSettings', 'Settings') : t('tabMore', 'More'),
+                    title: t('tabMore', 'More'),
                     href: isShown ? undefined : null,
                     tabBarIcon: ({ color, focused }) => (
                       <Ionicons size={23} name={focused ? 'grid' : 'grid-outline'} color={color} />

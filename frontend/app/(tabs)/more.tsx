@@ -62,40 +62,7 @@ const SUPER_ADMIN_ITEMS: { key: TranslationKey | 'workspace' | 'agristoreHub'; l
   { key: 'superEditCrop', label: 'Edit Crop by Crop ID', icon: 'leaf-outline', href: '/(tabs)/super-crop-edit' },
 ];
 
-import { APP_VERSION } from '@/src/constants/version';
 
-function AppDownloadRow() {
-  const { data: settings } = useAppSettings();
-  const downloadUrl = settings?.appDownloadUrl || 'https://farmsking.in/download/farmsking.apk';
-  const version = settings?.latestAppVersion || APP_VERSION;
-
-  const handleDownload = async () => {
-    try {
-      await Linking.openURL(downloadUrl);
-    } catch {
-      alert('Could not open download link.');
-    }
-  };
-
-  return (
-    <TouchableOpacity
-      style={styles.row}
-      activeOpacity={0.7}
-      onPress={handleDownload}
-    >
-      <View style={[styles.rowIconBg, { backgroundColor: '#e0f2fe' }]}>
-        <Ionicons name="logo-android" size={18} color="#0284c7" />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.rowLabel}>📲 Download FarmsKing App (APK)</Text>
-        <Text style={styles.rowSubLabel}>Version {version} · ⚡ APK Size: ~18.5 MB</Text>
-      </View>
-      <View style={{ backgroundColor: '#0284c7', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill }}>
-        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Download</Text>
-      </View>
-    </TouchableOpacity>
-  );
-}
 
 export default function MoreScreen() {
   const { user, logout } = useAuth();
@@ -124,6 +91,7 @@ export default function MoreScreen() {
   const [contactModalMode, setContactModalMode] = useState<'SUPPORT' | 'CONTACT' | null>(null);
   const [isAccountExpanded, setIsAccountExpanded] = useState(false);
   const [isAppThemesExpanded, setIsAppThemesExpanded] = useState(false);
+  const [isSmartToolsExpanded, setIsSmartToolsExpanded] = useState(false);
   const [isGroupVoiceCallEnabled, setIsGroupVoiceCallEnabled] = useState(true);
 
   const [deletePincodeInput, setDeletePincodeInput] = useState('');
@@ -317,46 +285,52 @@ export default function MoreScreen() {
             }
           />
 
-          {/* Dedicated App Parts: Memberships & Crops Care */}
-          {role !== 'FARM_ADVISOR' && role !== 'GARDEN_ADVISOR' ? (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>👑 MEMBERSHIPS & CROPS CARE</Text>
-              <View style={styles.sectionCard}>
-                <TouchableOpacity
-                  style={styles.row}
-                  activeOpacity={0.7}
-                  onPress={() => router.push('/(tabs)/memberships' as any)}
-                >
-                  <View style={[styles.rowIconBg, { backgroundColor: '#fef3c7' }]}>
-                    <Ionicons name="ribbon-outline" size={18} color="#d97706" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.rowLabel}>👑 FarmsKing Membership</Text>
-                    <Text style={styles.rowSubLabel}>Farmer App Plans & Specialist Doctor Advisory</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.row, { borderBottomWidth: 0 }]}
-                  activeOpacity={0.7}
-                  onPress={() => router.push('/(tabs)/memberships' as any)}
-                >
-                  <View style={[styles.rowIconBg, { backgroundColor: '#dcfce7' }]}>
-                    <Ionicons name="medical-outline" size={18} color="#16a34a" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.rowLabel}>🩺 Crops Care Plan</Text>
-                    <Text style={styles.rowSubLabel}>Specialist Doctor Advisory & Coupon Offers</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          ) : null}
+          {/* Account Section */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('accountSection')}</Text>
             <View style={styles.sectionCard}>
+              {/* 🏪 DYNAMIC SELLER STORE / REGISTER STORE ITEM */}
+              {(() => {
+                const isSellerRole = role === 'SELLER' || user?.role === 'SELLER' || Boolean((user as any)?.isSeller);
+                return (
+                  <TouchableOpacity
+                    style={styles.row}
+                    activeOpacity={0.8}
+                    onPress={() => router.push('/seller-dashboard')}
+                  >
+                    <View style={[styles.rowIconBg, { backgroundColor: isSellerRole ? '#d1fae5' : '#fef3c7' }]}>
+                      <Ionicons
+                        name={isSellerRole ? 'storefront-outline' : 'leaf-outline'}
+                        size={18}
+                        color={isSellerRole ? '#059669' : '#d97706'}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.rowLabel}>
+                        {isSellerRole ? '🏪 Manage Seller Store' : '🌾 Register as Seller'}
+                      </Text>
+                      <Text style={styles.rowSubLabel}>
+                        {isSellerRole
+                          ? 'Add Products, Manage Orders & Cashfree Payouts'
+                          : 'Start Selling Farm Produce, Seeds & Organics Pan-India'}
+                      </Text>
+                    </View>
+                    <View
+                      style={{
+                        backgroundColor: isSellerRole ? '#059669' : '#d97706',
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        borderRadius: RADIUS.pill,
+                      }}
+                    >
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>
+                        {isSellerRole ? 'Open Store' : 'Register Free'}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })()}
+
               {/* Main Account Accordion Toggle Button */}
               <TouchableOpacity
                 style={[styles.row, !isAccountExpanded && { borderBottomWidth: 0 }]}
@@ -620,51 +594,22 @@ export default function MoreScreen() {
             </View>
           </View>
 
-          {/* Specialized Smart Tools Section — Hidden for Super Admin, Admin, Shopping (Customer), Business Partner & Advisor */}
-          {role !== 'SUPER_ADMIN' && role !== 'ADMIN' && role !== 'CUSTOMER' && role !== 'BUSINESS_PARTNER' && role !== 'FARM_ADVISOR' && role !== 'GARDEN_ADVISOR' ? (
+          {/* Dedicated App Parts: Memberships & Crops Care (Placed below Settings) */}
+          {role !== 'FARM_ADVISOR' && role !== 'GARDEN_ADVISOR' ? (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>🌟 SMART AI & SATELLITE TOOLS</Text>
+              <Text style={styles.sectionTitle}>👑 MEMBERSHIPS & CROPS CARE</Text>
               <View style={styles.sectionCard}>
                 <TouchableOpacity
                   style={styles.row}
                   activeOpacity={0.7}
-                  onPress={() => {
-                    const msg = 'AI Disease Scanner feature is coming soon! Stay tuned.';
-                    if (Platform.OS === 'web') {
-                      alert('Coming Soon 🚀\n\n' + msg);
-                    } else {
-                      Alert.alert('Coming Soon 🚀', msg, [{ text: 'OK' }]);
-                    }
-                  }}
+                  onPress={() => router.push('/(tabs)/memberships' as any)}
                 >
-                  <View style={[styles.rowIconBg, { backgroundColor: '#dcfce7' }]}>
-                    <Ionicons name="scan-circle-outline" size={18} color="#16a34a" />
+                  <View style={[styles.rowIconBg, { backgroundColor: '#fef3c7' }]}>
+                    <Ionicons name="ribbon-outline" size={18} color="#d97706" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.rowLabel}>🤖 AI Crop Disease Scanner</Text>
-                    <Text style={styles.rowSubLabel}>2-Sec Disease Detection & First-Aid Spray</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.row}
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    const msg = 'Authenticity Barcode Scanner feature is coming soon! Stay tuned.';
-                    if (Platform.OS === 'web') {
-                      alert('Coming Soon 🚀\n\n' + msg);
-                    } else {
-                      Alert.alert('Coming Soon 🚀', msg, [{ text: 'OK' }]);
-                    }
-                  }}
-                >
-                  <View style={[styles.rowIconBg, { backgroundColor: '#e0f2fe' }]}>
-                    <Ionicons name="qr-code-outline" size={18} color="#0284c7" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.rowLabel}>🔎 Authenticity Barcode Scanner</Text>
-                    <Text style={styles.rowSubLabel}>Verify Fertilizer & Spray Barcode Authenticity</Text>
+                    <Text style={styles.rowLabel}>👑 FarmsKing Membership</Text>
+                    <Text style={styles.rowSubLabel}>Farmer App Plans & Specialist Doctor Advisory</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
                 </TouchableOpacity>
@@ -672,24 +617,114 @@ export default function MoreScreen() {
                 <TouchableOpacity
                   style={[styles.row, { borderBottomWidth: 0 }]}
                   activeOpacity={0.7}
-                  onPress={() => {
-                    const msg = 'Satellite Scanner feature is coming soon! Stay tuned.';
-                    if (Platform.OS === 'web') {
-                      alert('Coming Soon 🚀\n\n' + msg);
-                    } else {
-                      Alert.alert('Coming Soon 🚀', msg, [{ text: 'OK' }]);
-                    }
-                  }}
+                  onPress={() => router.push('/(tabs)/memberships' as any)}
                 >
-                  <View style={[styles.rowIconBg, { backgroundColor: '#f0f9ff' }]}>
-                    <Ionicons name="planet-outline" size={18} color="#0284c7" />
+                  <View style={[styles.rowIconBg, { backgroundColor: '#dcfce7' }]}>
+                    <Ionicons name="medical-outline" size={18} color="#16a34a" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.rowLabel}>🛰️ Satellite Field Scanner (NDVI Map)</Text>
-                    <Text style={styles.rowSubLabel}>ISRO Satellite Heatmap & Soil Moisture Status</Text>
+                    <Text style={styles.rowLabel}>🩺 Crops Care Plan</Text>
+                    <Text style={styles.rowSubLabel}>Specialist Doctor Advisory & Coupon Offers</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
                 </TouchableOpacity>
+              </View>
+            </View>
+          ) : null}
+
+          {/* Specialized Smart Tools Section — Collapsible (Hidden for Super Admin, Admin, Shopping Customer, Business Partner & Advisor) */}
+          {role !== 'SUPER_ADMIN' && role !== 'ADMIN' && role !== 'CUSTOMER' && role !== 'BUSINESS_PARTNER' && role !== 'FARM_ADVISOR' && role !== 'GARDEN_ADVISOR' ? (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>🌟 SMART AI & SATELLITE TOOLS</Text>
+              <View style={styles.sectionCard}>
+                <TouchableOpacity
+                  style={[styles.row, !isSmartToolsExpanded && { borderBottomWidth: 0 }]}
+                  activeOpacity={0.75}
+                  onPress={() => setIsSmartToolsExpanded((prev) => !prev)}
+                >
+                  <View style={[styles.rowIconBg, { backgroundColor: '#dcfce7' }]}>
+                    <Ionicons name="sparkles-outline" size={18} color="#16a34a" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.rowLabel}>🤖 Smart AI & Satellite Field Tools</Text>
+                    <Text style={styles.rowSubLabel}>Disease detection, barcode scanner & satellite NDVI heatmap</Text>
+                  </View>
+                  <Ionicons
+                    name={isSmartToolsExpanded ? 'chevron-up' : 'chevron-down'}
+                    size={18}
+                    color="#16a34a"
+                  />
+                </TouchableOpacity>
+
+                {isSmartToolsExpanded && (
+                  <View style={{ backgroundColor: '#f8fafc', borderTopWidth: 1, borderTopColor: '#e2e8f0' }}>
+                    <TouchableOpacity
+                      style={[styles.row, { paddingLeft: 18 }]}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        const msg = 'AI Disease Scanner feature is coming soon! Stay tuned.';
+                        if (Platform.OS === 'web') {
+                          alert('Coming Soon 🚀\n\n' + msg);
+                        } else {
+                          Alert.alert('Coming Soon 🚀', msg, [{ text: 'OK' }]);
+                        }
+                      }}
+                    >
+                      <View style={[styles.rowIconBg, { backgroundColor: '#dcfce7' }]}>
+                        <Ionicons name="scan-circle-outline" size={18} color="#16a34a" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.rowLabel}>🤖 AI Crop Disease Scanner</Text>
+                        <Text style={styles.rowSubLabel}>2-Sec Disease Detection & First-Aid Spray</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.row, { paddingLeft: 18 }]}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        const msg = 'Authenticity Barcode Scanner feature is coming soon! Stay tuned.';
+                        if (Platform.OS === 'web') {
+                          alert('Coming Soon 🚀\n\n' + msg);
+                        } else {
+                          Alert.alert('Coming Soon 🚀', msg, [{ text: 'OK' }]);
+                        }
+                      }}
+                    >
+                      <View style={[styles.rowIconBg, { backgroundColor: '#e0f2fe' }]}>
+                        <Ionicons name="qr-code-outline" size={18} color="#0284c7" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.rowLabel}>🔎 Authenticity Barcode Scanner</Text>
+                        <Text style={styles.rowSubLabel}>Verify Fertilizer & Spray Barcode Authenticity</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.row, { paddingLeft: 18, borderBottomWidth: 0 }]}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        const msg = 'Satellite Scanner feature is coming soon! Stay tuned.';
+                        if (Platform.OS === 'web') {
+                          alert('Coming Soon 🚀\n\n' + msg);
+                        } else {
+                          Alert.alert('Coming Soon 🚀', msg, [{ text: 'OK' }]);
+                        }
+                      }}
+                    >
+                      <View style={[styles.rowIconBg, { backgroundColor: '#f0f9ff' }]}>
+                        <Ionicons name="planet-outline" size={18} color="#0284c7" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.rowLabel}>🛰️ Satellite Field Scanner (NDVI Map)</Text>
+                        <Text style={styles.rowSubLabel}>ISRO Satellite Heatmap & Soil Moisture Status</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
             </View>
           ) : null}
@@ -894,24 +929,7 @@ export default function MoreScreen() {
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
 
-              {/* App Download Row */}
-              <AppDownloadRow />
 
-              {/* User Guides & PDF Manuals Row */}
-              <TouchableOpacity
-                style={styles.row}
-                activeOpacity={0.7}
-                onPress={() => setShowGuidesModal(true)}
-              >
-                <View style={[styles.rowIconBg, { backgroundColor: '#f0fdf4' }]}>
-                  <Ionicons name="book-outline" size={18} color="#15803d" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>📘 Download User Guides & PDFs</Text>
-                  <Text style={styles.rowSubLabel}>Punjabi, English & Hindi PDF Manuals</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-              </TouchableOpacity>
 
               {/* Support Row */}
               <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => setContactModalMode('SUPPORT')}>

@@ -12,6 +12,7 @@ import {
   StatusBar,
   Image,
   Platform,
+  Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
@@ -29,11 +30,12 @@ export default function SellerDashboardScreen() {
     totalOrders: 0,
     pendingPayoutsAmount: 0,
     settledPayoutsAmount: 0,
-    commissionRate: 5.0,
+    commissionRate: 10.0,
   });
 
   // Onboarding Wizard Step (1 to 5)
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [showAgreementModal, setShowAgreementModal] = useState(false);
 
   // Seller Type: FARMER vs COMMERCIAL
   const [sellerType, setSellerType] = useState<'FARMER' | 'COMMERCIAL'>('FARMER');
@@ -115,6 +117,7 @@ export default function SellerDashboardScreen() {
   const [imageBackLabelUrl, setImageBackLabelUrl] = useState<string | null>(null);
   const [imageDosageUrl, setImageDosageUrl] = useState<string | null>(null);
   const [imageProductUrl, setImageProductUrl] = useState<string | null>(null);
+  const [newProductImages, setNewProductImages] = useState<string[]>([]);
 
   const pickSingleImage = async (setter: (url: string) => void) => {
     try {
@@ -126,6 +129,23 @@ export default function SellerDashboardScreen() {
       if (!res.canceled && res.assets[0]?.uri) {
         const uri = res.assets[0].base64 ? `data:image/jpeg;base64,${res.assets[0].base64}` : res.assets[0].uri;
         setter(uri);
+      }
+    } catch (err) {
+      showAlert('Photo Picker Error', 'Could not open image gallery.');
+    }
+  };
+
+  const pickProductPhotos = async () => {
+    try {
+      const res = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: true,
+        quality: 0.7,
+        base64: true,
+      });
+      if (!res.canceled && res.assets && res.assets.length > 0) {
+        const uris = res.assets.map((asset) => (asset.base64 ? `data:image/jpeg;base64,${asset.base64}` : asset.uri));
+        setNewProductImages((prev) => [...prev, ...uris]);
       }
     } catch (err) {
       showAlert('Photo Picker Error', 'Could not open image gallery.');
@@ -303,16 +323,16 @@ export default function SellerDashboardScreen() {
     // 1. GSTIN Validation: Optional for Farmer/Producer, Mandatory for Commercial Sellers
     if (!isFarmerProducer) {
       if (!gstin.trim()) {
-        showAlert('GSTIN Required ⚠️', '15-Digit GSTIN Number (GST ਨੰਬਰ) is mandatory for Commercial Sellers.');
+        showAlert('GSTIN Required ⚠️', '15-Digit GSTIN Number is mandatory for Commercial Sellers.');
         return false;
       }
       if (gstin.trim().length !== 15) {
-        showAlert('Invalid GSTIN ⚠️', 'Please enter a valid 15-Digit GSTIN Number (GST ਨੰਬਰ).');
+        showAlert('Invalid GSTIN ⚠️', 'Please enter a valid 15-Digit GSTIN Number.');
         return false;
       }
     } else {
       if (gstin.trim() && gstin.trim().length !== 15) {
-        showAlert('Invalid GSTIN ⚠️', 'Please enter a valid 15-Digit GSTIN Number (GST ਨੰਬਰ) or leave it empty.');
+        showAlert('Invalid GSTIN ⚠️', 'Please enter a valid 15-Digit GSTIN Number or leave it empty.');
         return false;
       }
     }
@@ -322,8 +342,8 @@ export default function SellerDashboardScreen() {
       showAlert(
         'PAN Required ⚠️',
         isFarmerProducer
-          ? 'Please enter a valid 10-Digit PAN Number (ਪੈਨ ਨੰਬਰ).'
-          : 'Please enter a valid 10-Digit Business PAN Number (ਪੈਨ ਨੰਬਰ).'
+          ? 'Please enter a valid 10-Digit PAN Number.'
+          : 'Please enter a valid 10-Digit Business PAN Number.'
       );
       return false;
     }
@@ -362,12 +382,43 @@ export default function SellerDashboardScreen() {
     return true;
   };
 
-  const handleFinalSubmission = async () => {
-    if (!termsAccepted) {
-      showAlert('Terms Required ⚠️', 'Please check the box to accept the Seller Code of Conduct & Platform Agreement.');
-      return;
+  const validateStep5 = () => {
+    const isFarmerProducer = sellerType === 'FARMER' || entityType === 'INDIVIDUAL_FARMER';
+    const isCommercial = sellerType === 'COMMERCIAL' || entityType !== 'INDIVIDUAL_FARMER';
+
+    // 1. Cheque / Passbook Copy is mandatory for all payout nodal accounts
+    if (!chequeDoc) {
+      showAlert('Passbook / Cheque Copy Required ⚠️', 'Please upload a clear photo of your Bank Passbook / Cancelled Cheque for payout verification.');
+      return false;
     }
 
+    // 2. PAN Card photo mandatory for all sellers
+    if (!panCardDoc) {
+      showAlert('PAN Card Photo Required ⚠️', 'Please upload a clear photo of your PAN Card.');
+      return false;
+    }
+
+    // 3. GST Certificate mandatory for Commercial sellers
+    if (isCommercial && !gstCertDoc) {
+      showAlert('GST Certificate Required ⚠️', 'Commercial Businesses must upload a copy of their GST Certificate.');
+      return false;
+    }
+
+    // 4. Aadhaar Front Photo mandatory for Farmers
+    if (isFarmerProducer && !aadhaarFrontDoc) {
+      showAlert('Aadhaar Card Required ⚠️', 'Farmer Producers must upload Aadhaar Card Front Photo for identity verification.');
+      return false;
+    }
+
+    if (!termsAccepted) {
+      showAlert('Agreement Acceptance Required ⚠️', 'Please read and accept the 10% Platform Commission & Section 79 Intermediary Indemnity Agreement.');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleFinalSubmission = async () => {
     if (!storeName.trim()) {
       setStep(1);
       setErrors({ storeName: 'Store Name is required.' });
@@ -377,6 +428,21 @@ export default function SellerDashboardScreen() {
 
     if (!validateStep2()) {
       setStep(2);
+      return;
+    }
+
+    if (!validateStep3()) {
+      setStep(3);
+      return;
+    }
+
+    if (!validateStep4()) {
+      setStep(4);
+      return;
+    }
+
+    if (!validateStep5()) {
+      setStep(5);
       return;
     }
 
@@ -550,7 +616,7 @@ export default function SellerDashboardScreen() {
                   <Text style={styles.stepTitle}>1. Business Identity & Brand</Text>
                 </View>
 
-                <Text style={styles.inputLabel}>Select Entity Type (ਵਪਾਰ ਦਾ ਕਿਸਮ) *</Text>
+                <Text style={styles.inputLabel}>Select Entity Type *</Text>
                 <View style={styles.entityRow}>
                   {[
                     { id: 'PROPRIETORSHIP', label: 'Proprietorship' },
@@ -570,7 +636,7 @@ export default function SellerDashboardScreen() {
                   ))}
                 </View>
 
-                <Text style={styles.inputLabel}>Store / Brand Name * (ਦੁਕਾਨ ਦਾ ਨਾਮ)</Text>
+                <Text style={styles.inputLabel}>Store / Brand Name *</Text>
                 <TextInput
                   style={[styles.input, errors.storeName && styles.inputError]}
                   placeholder="e.g. Royal Punjab Seeds & Agro"
@@ -593,7 +659,7 @@ export default function SellerDashboardScreen() {
                 />
                 {errors.slug ? <Text style={styles.errText}>{errors.slug}</Text> : null}
 
-                <Text style={styles.inputLabel}>Legal Registered Firm Name (ਰਜਿਸਟਰਡ ਫਰਮ ਦਾ ਨਾਮ)</Text>
+                <Text style={styles.inputLabel}>Legal Registered Firm Name</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="e.g. Royal Punjab Enterprises Private Limited"
@@ -623,8 +689,8 @@ export default function SellerDashboardScreen() {
 
                 <Text style={styles.inputLabel}>
                   {sellerType === 'FARMER' || entityType === 'INDIVIDUAL_FARMER'
-                    ? '15-Digit GSTIN Number (GST ਨੰਬਰ) (Optional for Farmer/Producer)'
-                    : '15-Digit GSTIN Number (GST ਨੰਬਰ) *'}
+                    ? '15-Digit GSTIN Number (Optional for Farmer/Producer)'
+                    : '15-Digit GSTIN Number *'}
                 </Text>
                 <TextInput
                   style={[styles.input, errors.gstin && styles.inputError]}
@@ -645,8 +711,8 @@ export default function SellerDashboardScreen() {
 
                 <Text style={styles.inputLabel}>
                   {sellerType === 'FARMER' || entityType === 'INDIVIDUAL_FARMER'
-                    ? '10-Digit PAN Number (ਪੈਨ ਨੰਬਰ) *'
-                    : '10-Digit Business PAN Number (ਪੈਨ ਨੰਬਰ) *'}
+                    ? '10-Digit PAN Number *'
+                    : '10-Digit Business PAN Number *'}
                 </Text>
                 <TextInput
                   style={[styles.input, errors.panNumber && styles.inputError]}
@@ -706,7 +772,7 @@ export default function SellerDashboardScreen() {
                   Cashfree Auto-Payout Nodal Account integration for direct daily earnings transfers.
                 </Text>
 
-                <Text style={styles.inputLabel}>11-Digit Bank IFSC Code (ਜਿਵੇਂ SBIN0001234) *</Text>
+                <Text style={styles.inputLabel}>11-Digit Bank IFSC Code (e.g. SBIN0001234) *</Text>
                 <View style={styles.inputWithLoader}>
                   <TextInput
                     style={[styles.input, { flex: 1 }, errors.bankIfsc && styles.inputError]}
@@ -733,7 +799,7 @@ export default function SellerDashboardScreen() {
                   </View>
                 )}
 
-                <Text style={styles.inputLabel}>Bank Account Number (ਬੈਂਕ ਅਕਾਊਂਟ ਨੰਬਰ) *</Text>
+                <Text style={styles.inputLabel}>Bank Account Number *</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="123456789012"
@@ -755,7 +821,7 @@ export default function SellerDashboardScreen() {
                 />
                 {errors.confirmAccountNo ? <Text style={styles.errText}>{errors.confirmAccountNo}</Text> : null}
 
-                <Text style={styles.inputLabel}>Account Holder Name (ਖਾਤਾਧਾਰਕ ਦਾ ਨਾਮ)</Text>
+                <Text style={styles.inputLabel}>Account Holder Name</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="As printed on Passbook / Cheque"
@@ -818,7 +884,7 @@ export default function SellerDashboardScreen() {
                   </View>
                 </View>
 
-                <Text style={styles.inputLabel}>Full Pickup Warehouse Address (ਪੂਰਾ ਪਤਾ)</Text>
+                <Text style={styles.inputLabel}>Full Pickup Warehouse Address</Text>
                 <TextInput
                   style={[styles.input, { height: 70 }]}
                   placeholder="Street, Building No, Industrial Area / Village"
@@ -873,16 +939,58 @@ export default function SellerDashboardScreen() {
                 </View>
 
                 {/* Upload Buttons */}
-                <Text style={styles.inputLabel}>Upload GST Certificate / Business Proof</Text>
+                <Text style={styles.inputLabel}>
+                  Upload Cancelled Cheque / Bank Passbook Copy * Mandatory
+                </Text>
+                <TouchableOpacity style={styles.uploadBox} onPress={() => pickDocPhoto(setChequeDoc)}>
+                  <Ionicons name={chequeDoc ? 'checkmark-circle' : 'cloud-upload-outline'} size={24} color="#10B981" />
+                  <Text style={styles.uploadText}>{chequeDoc ? 'Bank Cheque/Passbook Attached' : 'Select Photo from Gallery'}</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.inputLabel}>
+                  Upload PAN Card Photo * Mandatory
+                </Text>
+                <TouchableOpacity style={styles.uploadBox} onPress={() => pickDocPhoto(setPanCardDoc)}>
+                  <Ionicons name={panCardDoc ? 'checkmark-circle' : 'cloud-upload-outline'} size={24} color="#10B981" />
+                  <Text style={styles.uploadText}>{panCardDoc ? 'PAN Card Photo Attached' : 'Select Photo from Gallery'}</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.inputLabel}>
+                  Upload GST Certificate {sellerType === 'FARMER' || entityType === 'INDIVIDUAL_FARMER' ? '(Optional for Farmer/Producer)' : '* Mandatory'}
+                </Text>
                 <TouchableOpacity style={styles.uploadBox} onPress={() => pickDocPhoto(setGstCertDoc)}>
                   <Ionicons name={gstCertDoc ? 'checkmark-circle' : 'cloud-upload-outline'} size={24} color="#10B981" />
                   <Text style={styles.uploadText}>{gstCertDoc ? 'GST Certificate Attached' : 'Select Photo from Gallery'}</Text>
                 </TouchableOpacity>
 
-                <Text style={styles.inputLabel}>Upload Cancelled Cheque / Passbook Copy</Text>
-                <TouchableOpacity style={styles.uploadBox} onPress={() => pickDocPhoto(setChequeDoc)}>
-                  <Ionicons name={chequeDoc ? 'checkmark-circle' : 'cloud-upload-outline'} size={24} color="#10B981" />
-                  <Text style={styles.uploadText}>{chequeDoc ? 'Bank Cheque Attached' : 'Select Photo from Gallery'}</Text>
+                <Text style={styles.inputLabel}>
+                  Upload Aadhaar Card Front Photo {sellerType === 'FARMER' || entityType === 'INDIVIDUAL_FARMER' ? '* Mandatory for Farmer Identity' : '(Optional)'}
+                </Text>
+                <TouchableOpacity style={styles.uploadBox} onPress={() => pickDocPhoto(setAadhaarFrontDoc)}>
+                  <Ionicons name={aadhaarFrontDoc ? 'checkmark-circle' : 'cloud-upload-outline'} size={24} color="#10B981" />
+                  <Text style={styles.uploadText}>{aadhaarFrontDoc ? 'Aadhaar Front Photo Attached' : 'Select Photo from Gallery'}</Text>
+                </TouchableOpacity>
+
+                {/* Interactive Agreement Trigger Button */}
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#1e293b',
+                    padding: 12,
+                    borderRadius: RADIUS.md,
+                    marginVertical: 10,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                  onPress={() => setShowAgreementModal(true)}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Ionicons name="document-text" size={20} color="#10b981" />
+                    <Text style={{ color: '#FFF', fontSize: 12, fontFamily: FONT.bold }}>
+                      📄 Read Full 10% Commission & Section 79 Indemnity Bond
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
                 </TouchableOpacity>
 
                 {/* Seller Agreement Checkbox */}
@@ -897,7 +1005,7 @@ export default function SellerDashboardScreen() {
                     color={termsAccepted ? '#10B981' : '#6B7280'}
                   />
                   <Text style={styles.agreementText}>
-                    I accept FarmsKing Seller Code of Conduct, 5% Platform Commission Terms & 1% GST TCS Compliance.
+                    I accept FarmsKing Code of Conduct, 10% Platform Commission Terms & Section 79 IT Act Intermediary Safe Harbor & Statutory Indemnity Bond.
                   </Text>
                 </TouchableOpacity>
 
@@ -915,6 +1023,78 @@ export default function SellerDashboardScreen() {
                 </View>
               </View>
             )}
+
+            {/* FULL SELLER AGREEMENT & INDEMNITY BOND MODAL */}
+            <Modal visible={showAgreementModal} transparent animationType="slide" onRequestClose={() => setShowAgreementModal(false)}>
+              <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 16 }}>
+                <View style={{ backgroundColor: '#111827', borderRadius: 16, padding: 16, maxHeight: '90%', borderWidth: 1, borderColor: '#374151' }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, borderBottomWidth: 1, borderBottomColor: '#374151', paddingBottom: 10 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="shield-checkmark" size={22} color="#10B981" />
+                      <Text style={{ color: '#FFF', fontSize: 14, fontWeight: '700' }}>FarmsKing Seller Merchant Agreement & Indemnity</Text>
+                    </View>
+                    <TouchableOpacity onPress={() => setShowAgreementModal(false)}>
+                      <Ionicons name="close-circle" size={24} color="#9CA3AF" />
+                    </TouchableOpacity>
+                  </View>
+
+                  <ScrollView showsVerticalScrollIndicator={true} style={{ marginBottom: 12 }}>
+                    <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '700', marginBottom: 6 }}>
+                      📜 STATUTORY MERCHANT AGREEMENT & INDEMNIFICATION BOND
+                    </Text>
+                    
+                    <Text style={{ color: '#D1D5DB', fontSize: 11, lineHeight: 17, marginBottom: 10 }}>
+                      This Agreement is entered into between FarmsKing E-Commerce Marketplace ("Platform") and the Registering Vendor/Farmer Producer ("Seller"). By registering as a seller, you explicitly agree to the following legally binding terms:
+                    </Text>
+
+                    <Text style={{ color: '#FBBF24', fontSize: 11.5, fontWeight: '700', marginTop: 6 }}>
+                      1. Section 79 IT Act 2000 Intermediary Safe Harbor & Statutory Indemnity
+                    </Text>
+                    <Text style={{ color: '#9CA3AF', fontSize: 10.5, lineHeight: 16, marginBottom: 8 }}>
+                      FarmsKing operates as a neutral marketplace intermediary under Section 79 of the Information Technology Act, 2000. Seller warrants that all listed products, seeds, organic inputs, and farm produce are authentic, legally owned, and strictly compliant with the Seeds Act 1966, Insecticides Act 1968, PPV&FR Act 2001, and FSSAI rules. Seller hereby assumes sole legal responsibility for product efficacy, seed germination, and quality, and agrees to fully indemnify, defend, and hold harmless FarmsKing, its Directors, Admins, and Officers against any legal claims, consumer complaints, or regulatory proceedings.
+                    </Text>
+
+                    <Text style={{ color: '#FBBF24', fontSize: 11.5, fontWeight: '700', marginTop: 6 }}>
+                      2. 10% Platform Commission & Daily Automatic Cashfree Payouts
+                    </Text>
+                    <Text style={{ color: '#9CA3AF', fontSize: 10.5, lineHeight: 16, marginBottom: 8 }}>
+                      FarmsKing charges a standard 10% platform commission on settled customer orders. Net seller earnings (90%) are credited automatically to the seller's registered nodal bank account via Cashfree Payout API after order delivery confirmation.
+                    </Text>
+
+                    <Text style={{ color: '#FBBF24', fontSize: 11.5, fontWeight: '700', marginTop: 6 }}>
+                      3. Quality Assurance & Auto-Block Governance Policy
+                    </Text>
+                    <Text style={{ color: '#9CA3AF', fontSize: 10.5, lineHeight: 16, marginBottom: 8 }}>
+                      Products receiving 3 consecutive reviews rated ≤ 2 stars will be automatically suspended. If a seller accumulates 2 or more suspended products, the seller store will be deactivated pending mandatory KYC re-approval by Admin.
+                    </Text>
+
+                    <Text style={{ color: '#FBBF24', fontSize: 11.5, fontWeight: '700', marginTop: 6 }}>
+                      4. Truthfulness & Authenticity Warranties
+                    </Text>
+                    <Text style={{ color: '#9CA3AF', fontSize: 10.5, lineHeight: 16, marginBottom: 8 }}>
+                      Seller affirms under penalty of perjury that all uploaded documents (Aadhaar, PAN, GST, Passbook, Licenses) are authentic, accurate, and belong to the registering individual or business entity.
+                    </Text>
+                  </ScrollView>
+
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: '#10B981',
+                      paddingVertical: 10,
+                      borderRadius: 8,
+                      alignItems: 'center',
+                    }}
+                    onPress={() => {
+                      setTermsAccepted(true);
+                      setShowAgreementModal(false);
+                    }}
+                  >
+                    <Text style={{ color: '#FFF', fontSize: 12.5, fontWeight: '700' }}>
+                      ✅ I Have Read, Understood & Accept All Terms
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
           </View>
         ) : (
           /* Active Seller Dashboard */

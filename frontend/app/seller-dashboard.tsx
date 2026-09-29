@@ -1135,18 +1135,13 @@ export default function SellerDashboardScreen() {
                 <Text style={styles.inputLabel}>Primary Category *</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 }}>
                   {!storeData?.gstin ? (
-                    ['Natural Farmer Foods', 'Farmer Made Foods'].map((c) => (
+                    ['Natural Farmer Foods', 'Farmer Made Foods', 'Farm-Saved Seeds (Desi Seeds)', 'Bio & Organics (Vermicompost/Neem Cake)', 'Raw Farm Produce & Grains'].map((c) => (
                       <TouchableOpacity
                         key={c}
                         style={[styles.entityChip, productCategory === c && styles.activeEntityChip]}
                         onPress={() => {
-                          const activeFssaiNo = storeData?.fssaiNo || fssaiNo;
-                          if (!activeFssaiNo || !activeFssaiNo.trim()) {
-                            showAlert('FSSAI License Required ⚠️', 'FSSAI License No. must be filled in store settings to enter and list Food Products.');
-                            return;
-                          }
                           setProductCategory(c);
-                          setIsFarmerMadeProduct(true);
+                          setIsFarmerMadeProduct(c.includes('Food') || c.includes('Produce'));
                         }}
                       >
                         <Text style={[styles.entityText, productCategory === c && styles.activeEntityText]}>🌾 {c}</Text>
@@ -1158,16 +1153,10 @@ export default function SellerDashboardScreen() {
                         key={c}
                         style={[styles.entityChip, productCategory === c && styles.activeEntityChip]}
                         onPress={() => {
-                          const activeFssaiNo = storeData?.fssaiNo || fssaiNo;
                           const activeAgriLicenseNo = storeData?.agriLicenseNo || agriLicenseNo;
 
-                          if (c.toLowerCase().includes('food') && (!activeFssaiNo || !activeFssaiNo.trim())) {
-                            showAlert('FSSAI License Required ⚠️', 'FSSAI License No. must be filled in store settings to enter and list Food Products.');
-                            return;
-                          }
-
-                          if ((c === 'Seeds' || c.includes('Protection')) && (!activeAgriLicenseNo || !activeAgriLicenseNo.trim())) {
-                            showAlert('Agri Inputs License Required ⚠️', 'Agri Inputs License No. (Seeds / Pesticide License) must be filled in store settings to select Seeds / Pesticides.');
+                          if (c.includes('Protection') && (!activeAgriLicenseNo || !activeAgriLicenseNo.trim())) {
+                            showAlert('Agri Inputs License Required ⚠️', 'Agri Inputs License No. (Pesticide License) must be filled in store settings to select Chemical Crop Protection.');
                             return;
                           }
 

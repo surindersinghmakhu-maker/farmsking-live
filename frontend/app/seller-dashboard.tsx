@@ -339,6 +339,22 @@ export default function SellerDashboardScreen() {
   };
 
   const validateStep3 = () => {
+    if (!bankIfsc.trim() || bankIfsc.trim().length !== 11) {
+      showAlert('IFSC Code Required ⚠️', 'Please enter a valid 11-character Bank IFSC code (e.g. SBIN0001234).');
+      return false;
+    }
+    if (!bankAccountNo.trim()) {
+      showAlert('Account Number Required ⚠️', 'Please enter your Bank Account Number.');
+      return false;
+    }
+    if (confirmAccountNo.trim() && confirmAccountNo.trim() !== bankAccountNo.trim()) {
+      showAlert('Account Number Mismatch ⚠️', 'Re-entered Bank Account Number does not match.');
+      return false;
+    }
+    return true;
+  };
+
+  const validateStep4 = () => {
     if (!pickupPincode.trim() || !/^\d{6}$/.test(pickupPincode.trim())) {
       showAlert('Pincode Required ⚠️', 'Please enter a valid 6-digit Pickup Pincode.');
       return false;

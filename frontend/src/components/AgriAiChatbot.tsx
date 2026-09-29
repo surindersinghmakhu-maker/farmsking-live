@@ -89,23 +89,29 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
   };
 
   const detectLanguage = (query: string): LanguageCode => {
-    // 1. Script matching
-    if (/[\u0A00-\u0A7F]/.test(query)) return 'GURMUKHI';
+    const qLower = query.toLowerCase();
+
+    // Direct language switch request
+    if (qLower.includes('punjabi') || qLower.includes('gurmukhi') || /[\u0A00-\u0A7F]/.test(query)) {
+      return 'GURMUKHI';
+    }
+    if (qLower.includes('hindi') || qLower.includes('हिंदी') || /[\u0900-\u097F]/.test(query)) {
+      return 'DEVANAGARI';
+    }
+    if (qLower.includes('english')) {
+      return 'ENGLISH';
+    }
+
     if (/[\u0980-\u09FF]/.test(query)) return 'BENGALI';
     if (/[\u0C00-\u0C7F]/.test(query)) return 'TELUGU';
     if (/[\u0B80-\u0BFF]/.test(query)) return 'TAMIL';
     if (/[\u0C80-\u0CFF]/.test(query)) return 'KANNADA';
     if (/[\u0A80-\u0AFF]/.test(query)) return 'GUJARATI';
     if (/[\u0D00-\u0D7F]/.test(query)) return 'MALAYALAM';
-    if (/[\u0900-\u097F]/.test(query)) return 'DEVANAGARI';
 
-    // 2. Roman Transliteration differentiation
-    const qLower = query.toLowerCase();
-
-    // Punjabi Roman indicators (e.g. "me gende di kheti krda ha", "kanak da ilaaj")
-    const punjabiWords = ['krda', 'karda', 'krdi', 'kardi', 'ha', 'haan', 'han', 'hunda', 'hunde', 'vich', 'te', 'nu', 'saada', 'saadi', 'tuhanu', 'puaa', 'pao', 'karni', 'dasso', 'mera', 'meri', 'de', 'da', 'di', 'khet', 'khetan', 'laayi', 'layi', 'pind', 'kisaan'];
-    // Hindi Roman indicators (e.g. "me gende ki kheti krta hu", "kheti kaise kare")
-    const hindiWords = ['krta', 'karta', 'krti', 'karti', 'hu', 'hoon', 'hai', 'hain', 'kaise', 'kya', 'kaun', 'chahiye', 'batao', 'karein', 'kare', 'ki', 'ke', 'ko', 'mein', 'se', 'par', 'karte', 'hoge', 'karo', 'dijiye'];
+    // Roman Transliteration differentiation
+    const punjabiWords = ['krda', 'karda', 'krdi', 'kardi', 'ha', 'haan', 'han', 'hunda', 'hunde', 'vich', 'te', 'nu', 'saada', 'saadi', 'tuhanu', 'puaa', 'pao', 'karni', 'dasso', 'mera', 'meri', 'de', 'da', 'di', 'khet', 'khetan', 'laayi', 'layi', 'pind', 'kisaan', 'paude', 'kra', 'paani', 'din'];
+    const hindiWords = ['krta', 'karta', 'krti', 'karti', 'hu', 'hoon', 'hai', 'hain', 'kaise', 'kya', 'kaun', 'chahiye', 'batao', 'karein', 'kare', 'ki', 'ke', 'ko', 'mein', 'se', 'par', 'karte', 'hoge', 'karo', 'dijiye', 'paudhe'];
 
     let pCount = 0;
     let hCount = 0;
@@ -116,20 +122,19 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
       if (hindiWords.includes(w)) hCount++;
     });
 
-    if (qLower.includes('krda') || qLower.includes('karda') || qLower.includes('di kheti') || qLower.includes('da ilaaj')) {
-      return 'PUNJABI_ROMAN';
+    if (qLower.includes('krda') || qLower.includes('karda') || qLower.includes('di kheti') || qLower.includes('da ilaaj') || qLower.includes('paude') || qLower.includes('spray kra')) {
+      return 'GURMUKHI';
     }
     if (qLower.includes('krta') || qLower.includes('karta') || qLower.includes('ki kheti') || qLower.includes('kaise kare')) {
-      return 'HINDI_ROMAN';
+      return 'DEVANAGARI';
     }
 
-    if (pCount > hCount && pCount > 0) return 'PUNJABI_ROMAN';
-    if (hCount > pCount && hCount > 0) return 'HINDI_ROMAN';
+    if (pCount > hCount && pCount > 0) return 'GURMUKHI';
+    if (hCount > pCount && hCount > 0) return 'DEVANAGARI';
 
-    // If query has general transliterated crop/farming names in Roman
     const localCropWords = ['genda', 'kanak', 'jhona', 'narma', 'ganna', 'aloo', 'tamatar', 'sarson', 'fasal', 'beej', 'khad', 'kheti', 'mausam', 'mandi', 'bhav', 'dawai', 'ilaaj'];
     if (localCropWords.some(w => qLower.includes(w))) {
-      return 'PUNJABI_ROMAN';
+      return 'GURMUKHI';
     }
 
     return 'ENGLISH';
@@ -138,6 +143,22 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
   const generateAgriResponse = (query: string): string => {
     const q = query.toLowerCase();
     const lang = detectLanguage(query);
+
+    // 0. Language Request Command ("punjabi language vich gall kro", "use punjabi language")
+    if ((q.includes('punjabi') || q.includes('ਪੰਜਾਬੀ')) && (q.includes('language') || q.includes('gall') || q.includes('use') || q.includes('speak') || q.includes('vich'))) {
+      return '🌾 **ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ ਜੀ! (FarmsKing AI ਖੇਤੀ ਡਾਕਟਰ):**\n\nਜੀ ਹਾਂ, ਹੁਣ ਮੈਂ ਤੁਹਾਡੇ ਨਾਲ ਪੂਰੀ ਤਰ੍ਹਾਂ ਪੰਜਾਬੀ (ਗੁਰਮੁਖੀ) ਵਿੱਚ ਗੱਲਬਾਤ ਕਰਾਂਗਾ।\n\nਤੁਸੀਂ ਆਪਣੀ ਫਸਲ (ਕਣਕ, ਝੋਨਾ, ਨਰਮਾ, ਗੰਨਾ, ਆਲੂ, ਟਮਾਟਰ, ਗੇਂਦਾ), ਖਾਦਾਂ, ਯੂਰੀਆ, 20 ਦਿਨਾਂ ਦੇ ਪੌਦਿਆਂ ਲਈ ਸਪ੍ਰੇ, ਮੰਡੀ ਭਾਵ ਅਤੇ ਮੌਸਮ ਬਾਰੇ ਕੋਈ ਵੀ ਸਵਾਲ ਪੁੱਛੋ!';
+    }
+
+    // 0.1 Plant Age / 20-Day Crop Spray Advisory ("20 din de paude", "ki spray kra", "paude ho gye")
+    if (q.includes('20 din') || q.includes('paude') || q.includes('paudhe') || q.includes('spray kra') || q.includes('spray kare') || q.includes('15 din') || q.includes('25 din') || q.includes('30 din')) {
+      if (lang === 'DEVANAGARI') {
+        return '🌱 **20-25 दिनों के पौधों के लिए पहली सिंचाई और स्प्रे (PAU सलाह):**\n\n1. **पहली सिंचाई एवं यूरिया:** 20-22 दिनों के पौधों को पहला पानी दें और प्रति एकड़ 45kg (1 बोरी) यूरिया की टॉप-ड्रेसिंग करें।\n2. **खरपतवार नियंत्रण:** गुल्ली डंडा या चौड़ी पत्ती के खरपतवारों के लिए सिंचाई के 3-4 दिन बाद खरपतवार नाशक स्प्रे करें।\n3. **ग्रोथ बूस्टर स्प्रे:** पौधों के अच्छे फुटाव के लिए 1kg NPK (19:19:19) प्रति एकड़ 200L पानी में मिलाकर छिड़काव करें।\n4. **दवा ऑर्डर:** FarmsKing Store से असली 19:19:19 और खरपतवार नाशक मंगाएं।';
+      }
+      if (lang === 'ENGLISH') {
+        return '🌱 **20-25 Day Plant Growth & Spray Advisory (PAU Advisory):**\n\n1. **First Irrigation & Urea:** Apply 1st irrigation at 20-22 days followed by top-dressing 45kg Urea per acre.\n2. **Weed Control Spray:** Spray recommended post-emergence herbicide 3-4 days after irrigation.\n3. **Foliar Growth Spray:** Spray 1kg NPK (19:19:19) per acre in 200L water to boost root tillering and plant health.\n4. **Order Online:** Buy genuine NPK 19:19:19 and sprays on FarmsKing Store.';
+      }
+      return '🌱 **20-25 ਦਿਨਾਂ ਦੇ ਪੌਦਿਆਂ ਲਈ ਪਹਿਲਾ ਪਾਣੀ ਅਤੇ ਸਪ੍ਰੇ (PAU ਸਿਫਾਰਿਸ਼):**\n\n1. **ਪਹਿਲਾ ਪਾਣੀ ਅਤੇ ਯੂਰੀਆ:** 20-22 ਦਿਨਾਂ ਦੀ ਫਸਲ ਨੂੰ ਪਹਿਲਾ ਪਾਣੀ ਲਾਓ ਅਤੇ ਪਾਣੀ ਤੋਂ ਤੁਰੰਤ ਬਾਅਦ ਪ੍ਰਤੀ ਏਕੜ 45kg (1 ਗੱਟਾ) ਯੂਰੀਆ ਦਿਓ।\n2. **ਨਦੀਨ ਨਾਸ਼ਕ ਸਪ੍ਰੇ:** ਗੁੱਲੀ ਡੰਡਾ ਜਾਂ ਚੌੜੇ ਪੱਤੇ ਵਾਲੇ ਨਦੀਨਾਂ ਲਈ ਪਾਣੀ ਤੋਂ 3-4 ਦਿਨ ਬਾਅਦ ਨਦੀਨ ਨਾਸ਼ਕ ਦੀ ਸਪ੍ਰੇ ਕਰੋ।\n3. **ਗ੍ਰੋਥ ਬੂਸਟਰ ਸਪ੍ਰੇ:** ਪੌਦਿਆਂ ਦੇ ਚੰਗੇ ਫੁੱਟਾਰੇ ਲਈ 1kg NPK (19:19:19) ਪ੍ਰਤੀ ਏਕੜ 200L ਪਾਣੀ ਵਿੱਚ ਮਿਲਾ ਕੇ ਛਿੜਕਾਅ ਕਰੋ।\n4. **ਅਸਲੀ ਦਵਾਈਆਂ:** FarmsKing Store ਤੋਂ ਅਸਲੀ ਨਦੀਨ ਨਾਸ਼ਕ ਅਤੇ 19:19:19 ਖਾਦ ਮੰਗਵਾਓ।';
+    }
 
     // 1. Marigold / Genda Flower Farming (ਗੇਂਦਾ / गेंदा / Marigold)
     if (q.includes('genda') || q.includes('gende') || q.includes('marigold') || q.includes('ਗੇਂਦਾ') || q.includes('ਗੇਂਦੇ') || q.includes('गेंदा') || q.includes('गेंदे')) {

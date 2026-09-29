@@ -591,7 +591,7 @@ export default function MoreScreen() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.row, { borderBottomWidth: 0 }]}
+                  style={styles.row}
                   activeOpacity={0.7}
                   onPress={() => router.push('/(tabs)/memberships' as any)}
                 >
@@ -601,6 +601,22 @@ export default function MoreScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.rowLabel}>🩺 Crops Care Plan</Text>
                     <Text style={styles.rowSubLabel}>Specialist Doctor Advisory & Coupon Offers</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                </TouchableOpacity>
+
+                {/* 🤖 FarmsKing Kheti Mitra AI Doctor & Leaf Scanner */}
+                <TouchableOpacity
+                  style={[styles.row, { borderBottomWidth: 0 }]}
+                  activeOpacity={0.7}
+                  onPress={() => router.push('/(tabs)/crop-disease-scanner' as any)}
+                >
+                  <View style={[styles.rowIconBg, { backgroundColor: '#f0fdf4' }]}>
+                    <Ionicons name="sparkles-outline" size={18} color="#16a34a" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.rowLabel}>🤖 FarmsKing Kheti Mitra AI Doctor</Text>
+                    <Text style={styles.rowSubLabel}>100% Free AI Farming Chatbot & Leaf Scanner</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
                 </TouchableOpacity>

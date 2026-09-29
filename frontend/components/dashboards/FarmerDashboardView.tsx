@@ -298,12 +298,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
             activeOpacity={0.8}
             onPress={() => {
               tap();
-              const msg = 'AI Disease Scanner feature is coming soon! Stay tuned.';
-              if (Platform.OS === 'web') {
-                alert('Coming Soon 🚀\n\n' + msg);
-              } else {
-                Alert.alert('Coming Soon 🚀', msg, [{ text: 'OK' }]);
-              }
+              router.push('/(tabs)/crop-disease-scanner');
             }}
           >
             <View style={[styles.actionIconBg, { backgroundColor: '#dcfce7' }]}>
@@ -311,7 +306,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
             </View>
             <View style={styles.actionCardTextGroup}>
               <Text style={[styles.actionCardTitle, { color: colors.text }]} numberOfLines={1}>AI Disease Scanner</Text>
-              <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>Instant Leaf Scan</Text>
+              <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>Leaf Scan & AI Chat Doctor</Text>
             </View>
           </TouchableOpacity>
 

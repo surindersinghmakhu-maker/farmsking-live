@@ -225,7 +225,7 @@ export default function SellerDashboardScreen() {
       try {
         setIsPincodeLoading(true);
         const res = await lookupPincode(code);
-        setPickupCity(res.district);
+        setPickupCity(res.postOffice && res.postOffice !== res.district ? `${res.postOffice}, ${res.district}` : res.district);
         setPickupState(res.state);
         setPickupPostOffice(res.postOffice);
       } catch (err) {

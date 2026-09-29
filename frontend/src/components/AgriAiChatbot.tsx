@@ -31,10 +31,10 @@ const FARMING_KEYWORDS = [
 ];
 
 const QUICK_FARMING_SUGGESTIONS = [
-  { icon: "🌾", label: "ਕਣਕ ਵਿੱਚ ਪੀਲੀ ਕੁੰਗੀ ਦੀ ਰੋਕਥਾਮ" },
-  { icon: "🌱", label: "ਝੋਨੇ ਵਿੱਚ ਯੂਰੀਆ ਖਾਦ ਦੀ ਸਹੀ ਮਾਤਰਾ" },
-  { icon: "📊", label: "ਅੱਜ ਦਾ ਮੰਡੀ ਭਾਵ ਤੇ ਮੌਸਮ" },
-  { icon: "🍅", label: "ਟਮਾਟਰ ਦੇ ਪੱਤੇ ਸੁੱਕਣ ਦਾ ਹੱਲ" },
+  { icon: "🌾", label: "Wheat Yellow Rust Treatment" },
+  { icon: "🌱", label: "Paddy Urea Fertilizer Dosage" },
+  { icon: "📊", label: "Live Mandi Rates & Weather Today" },
+  { icon: "🍅", label: "Tomato Leaf Blight Remedy" },
 ];
 
 export function AgriAiChatbot() {
@@ -42,7 +42,7 @@ export function AgriAiChatbot() {
     {
       id: 'init-1',
       sender: 'AI',
-      text: "ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ! 👨‍🌾 ਮੈਂ FarmsKing ਏ.ਆਈ. ਖੇਤੀ ਡਾਕਟਰ (Kheti Mitra AI) ਹਾਂ।\n\nਮੈਂ ਤੁਹਾਡੀ ਫਸਲ ਦੀ ਬੀਮਾਰੀ, ਖਾਦ-ਸਪ੍ਰੇ ਦੀ ਮਾਤਰਾ, ਬੀਜ ਦੀ ਚੋਣ, ਮੰਡੀ ਭਾਵ ਅਤੇ ਖੇਤੀਬਾੜੀ ਦੇ ਹਰ ਸਵਾਲ ਦਾ ਜਵਾਬ ਦੇ ਸਕਦਾ ਹਾਂ। ਆਪਣਾ ਸਵਾਲ ਲਿਖੋ ਜਾਂ ਹੇਠਾਂ ਦਿੱਤੇ ਆਪਸ਼ਨ ਤੇ ਕਲਿੱਕ ਕਰੋ:",
+      text: "Welcome! 👨‍🌾 I am FarmsKing Agri AI Doctor (Kheti Mitra AI).\n\nI can answer all your questions about crop diseases, fertilizer dosage, seed selection, weather, and mandi rates in English, Punjabi (ਪੰਜਾਬੀ), and Hindi (हिंदी).\n\nType your question in any language below or select an option:",
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       category: 'FARMING',
     },
@@ -60,23 +60,19 @@ export function AgriAiChatbot() {
   const generateAgriResponse = (query: string): string => {
     const q = query.toLowerCase();
 
-    if (q.includes('ਕਣਕ') || q.includes('wheat') || q.includes('ਕੁੰਗੀ') || q.includes('rust') || q.includes('গেहूं')) {
-      return '🌾 **ਕਣਕ ਦੀ ਪੀਲੀ ਕੁੰਗੀ (Yellow Rust) ਦਾ ਹੱਲ:**\n\n1. **ਸਪ੍ਰੇ:** Propiconazole 25% EC (Tilt) @ 200 ml ਪ੍ਰਤੀ ਏਕੜ 200 ਲੀਟਰ ਪਾਣੀ ਵਿੱਚ ਮਿਲਾ ਕੇ ਸਪ੍ਰੇ ਕਰੋ।\n2. **ਸਾਵਧਾਨੀ:** ਬੱਦਲਵਾਈ ਵਾਲੇ ਮੌਸਮ ਵਿੱਚ ਯੂਰੀਆ ਦੀ ਜ਼ਿਆਦਾ ਵਰਤੋਂ ਤੋਂ ਬਚੋ।\n3. **ਦੇਸੀ ਹੱਲ:** 5% ਨਿੰਮ ਦਾ ਅਰਕ ਜਾਂ ਖੱਟੀ ਲੱਸੀ (5 ਲੀਟਰ/200 ਲੀਟਰ ਪਾਣੀ) ਦੀ ਪ੍ਰਤੀਰੋਧਕ ਸਪ੍ਰੇ ਕਰੋ।';
-    }
-
-    if (q.includes('ਯੂਰੀਆ') || q.includes('urea') || q.includes('ਡੀ.ਏ.ਪੀ') || q.includes('dap') || q.includes('ਖਾਦ') || q.includes('fertilizer')) {
-      return '🌱 **ਖਾਦ ਸਿਫ਼ਾਰਸ਼ (PAU / ICAR Advisory):**\n\n• **ਕਣਕ/ਝੋਨਾ:** ਬਿਜਾਈ ਵੇਲੇ 1 ਬੋਰੀ DAP (50kg) + 1/2 ਬੋਰੀ MOP ਪ੍ਰਤੀ ਏਕੜ।\n• **ਯੂਰੀਆ ਖਾਦ:** ਪਹਿਲੇ ਅਤੇ ਦੂਜੇ ਪਾਣੀ ਵੇਲੇ 45-45 ਕਿੱਲੋ ਪ੍ਰਤੀ ਏਕੜ 2-3 ਕਿਸ਼ਤਾਂ ਵਿੱਚ ਪਾਓ।\n• **ਜੈਵਿਕ ਖਾਦ:** ਵਰਮੀਕੰਪੋਸਟ (Vermicompost) 500kg ਪ੍ਰਤੀ ਏਕੜ ਮਿੱਟੀ ਦੀ ਉਪਜਾਊ ਸ਼ਕਤੀ ਵਧਾਉਂਦੀ ਹੈ।';
+    if (q.includes('ਕਣਕ') || q.includes('wheat') || q.includes('ਕੁੰਗੀ') || q.includes('rust') || q.includes('ਗੇਂਹੂ') || q.includes('kanak') || q.includes('gehu')) {
+      return '🌾 **Wheat Yellow Rust (ਕਣਕ ਦੀ ਪੀਲੀ ਕੁੰਗੀ / गेहूं का पीला रतुआ) Solution:**\n\n1. **Chemical Spray:** Propiconazole 25% EC (Tilt) @ 200 ml per acre mixed in 200 Liters of water.\n2. **Precaution:** Avoid excessive Urea application during cloudy humid weather.\n3. **Organic Remedy:** Spray 5% Neem seed extract or sour buttermilk solution (5L in 200L water).';
     }
 
     if (q.includes('ਮੰਡੀ') || q.includes('ਭਾਵ') || q.includes('mandi') || q.includes('price') || q.includes('rate')) {
-      return '📊 **ਅੱਜ ਦੇ ਲਾਈਵ ਮੰਡੀ ਭਾਵ (Punjab Mandi Updates):**\n\n• **ਕਣਕ (Wheat):** ₹2,275 - ₹2,450 / ਕੁਇੰਟਲ\n• **ਝੋਨਾ/ਬਾਸਮਤੀ (Paddy):** ₹3,800 - ₹4,250 / ਕੁਇੰਟਲ\n• **ਟਮਾਟਰ (Tomato):** ₹1,400 - ₹1,800 / ਕੁਇੰਟਲ\n• **ਸਰ੍ਹੋਂ (Mustard):** ₹5,400 - ₹5,850 / ਕੁਇੰਟਲ\n\n💡 *ਤੁਸੀਂ "Mandi Rates" ਟੈਬ ਵਿੱਚ ਆਪਣੇ ਜ਼ਿਲ੍ਹੇ ਦੇ ਪਲ-ਪਲ ਦੇ ਭਾਵ ਵੇਖ ਸਕਦੇ ਹੋ।*';
+      return '📊 **Today Live Mandi Rates (ਪੰਜਾਬ / Haryana Mandi Updates):**\n\n• **Wheat (ਕਣਕ / गेहूं):** ₹2,275 - ₹2,450 / Quintal\n• **Paddy (ਝੋਨਾ / धान):** ₹3,800 - ₹4,250 / Quintal\n• **Tomato (ਟਮਾਟਰ / टमाटर):** ₹1,400 - ₹1,800 / Quintal\n• **Mustard (ਸਰ੍ਹੋਂ / सरसों):** ₹5,400 - ₹5,850 / Quintal\n\n💡 *Check live updates anytime in the "Mandi Rates" tab.*';
     }
 
     if (q.includes('ਟਮਾਟਰ') || q.includes('tomato') || q.includes('ਸਬਜ਼ੀ') || q.includes('vegetable') || q.includes('blight')) {
-      return '🍅 **ਟਮਾਟਰ ਤੇ ਸਬਜ਼ੀਆਂ ਦੇ ਝੁਲਸ ਰੋਗ (Late Blight) ਦਾ ਹੱਲ:**\n\n1. **ਸਪ੍ਰੇ:** Ridomil Gold (Mefenoxam + Mancozeb) @ 500g ਪ੍ਰਤੀ ਏਕੜ 200L ਪਾਣੀ ਵਿੱਚ ਸਪ੍ਰੇ ਕਰੋ।\n2. **ਜੈਵਿਕ ਇਲਾਜ:** ਟ੍ਰਾਈਕੋਡਰਮਾ ਵਿਰਡੀ (Trichoderma viride) 1kg ਪ੍ਰਤੀ ਏਕੜ ਗੋਬਰ ਦੀ ਖਾਦ ਵਿੱਚ ਮਿਲਾ ਕੇ ਪਾਓ।';
+      return '🍅 **Tomato & Vegetable Blight (ਝੁਲਸ ਰੋਗ / झुलसा रोग) Remedy:**\n\n1. **Chemical Spray:** Ridomil Gold (Mefenoxam + Mancozeb) @ 500g per acre in 200L water.\n2. **Bio-Remedy:** Trichoderma viride 1kg per acre mixed with organic FYM compost.';
     }
 
-    return '🌾 **ਖੇਤੀਬਾੜੀ ਸਲਾਹ (FarmsKing Agri Expert):**\n\nਤੁਹਾਡੇ ਖੇਤੀ ਸਵਾਲ ਦਾ ਵਿਸ਼ਲੇਸ਼ਣ ਕੀਤਾ ਗਿਆ ਹੈ:\n• ਫਸਲ ਦੀ ਸਹੀ ਦੇਖਭਾਲ ਲਈ ਸਮੇਂ ਸਿਰ ਸਿੰਚਾਈ ਅਤੇ ਸੰਤੁਲਿਤ ਖਾਦਾਂ ਦੀ ਵਰਤੋਂ ਕਰੋ।\n• ਕਿਸੇ ਵੀ ਕੀਟਨਾਸ਼ਕ ਸਪ੍ਰੇ ਤੋਂ ਪਹਿਲਾਂ ਧੁੱਪ ਅਤੇ ਹਵਾ ਦੀ ਗਤੀ ਦਾ ਧਿਆਨ ਰੱਖੋ।\n• ਵਧੇਰੇ ਜਾਣਕਾਰੀ ਲਈ ਤੁਸੀਂ FarmsKing Store ਤੋਂ ਅਸਲੀ ਖਾਦ/ਸਪ੍ਰੇ ਆਰਡਰ कर ਸਕਦੇ ਹੋ।';
+    return '🌾 **FarmsKing Agri Expert Advice (ਖੇਤੀਬਾੜੀ ਸਲਾਹ):**\n\nYour agricultural query has been analyzed:\n• Ensure timely irrigation and balanced NPK fertilizer application.\n• Inspect field leaves every 3 days for early pest or fungal disease signs.\n• Order genuine chemical sprays and organic fertilizers directly from FarmsKing Store.';
   };
 
   const handleSend = (textToSend?: string) => {
@@ -106,7 +102,7 @@ export function AgriAiChatbot() {
       if (!isAgriRelated(query) && query.length > 3) {
         // Strict Guardrail Triggered for Non-Farming Question
         category = 'NON_FARMING_BLOCKED';
-        aiText = '⚠️ **ਸਿਰਫ਼ ਖੇਤੀਬਾੜੀ ਸਵਾਲ (Farming Only Notice):**\n\nਮੈਂ FarmsKing ਦਾ ਏ.ਆਈ. ਖੇਤੀ ਡਾਕਟਰ (Kheti Mitra AI) ਹਾਂ 🌾।\nਮੈਂ ਸਿਰਫ਼ ਖੇਤੀਬਾੜੀ, ਫਸਲਾਂ ਦੀਆਂ ਬੀਮਾਰੀਆਂ, ਖਾਦ-ਸਪ੍ਰੇ, ਬੀਜ, ਮੌਸਮ ਅਤੇ ਮੰਡੀ ਭਾਵ ਨਾਲ ਸਬੰਧਤ ਸਵਾਲਾਂ ਦੇ ਹੀ ਜਵਾਬ ਦੇ ਸਕਦਾ ਹਾਂ।\n\nਕਿਰਪਾ ਕਰਕੇ ਆਪਣੀ ਫਸਲ ਜਾਂ ਖੇਤੀ ਨਾਲ ਜੁੜਿਆ ਸਵਾਲ ਪੁੱਛੋ! 🙏';
+        aiText = '⚠️ **Agricultural Questions Only (ਸਿਰਫ਼ ਖੇਤੀਬਾੜੀ ਸਵਾਲ):**\n\nI am FarmsKing\'s AI Kheti Doctor 🌾.\nI can only answer questions related to crops, fertilizers, sprays, seeds, weather, and mandi rates in English, Punjabi (ਪੰਜਾਬੀ), and Hindi (हिंदी).\n\nPlease ask a question related to your crops or farming!';
       } else {
         aiText = generateAgriResponse(query);
       }
@@ -227,7 +223,7 @@ export function AgriAiChatbot() {
       <View style={styles.inputBar}>
         <TextInput
           style={styles.input}
-          placeholder="ਕਣਕ, ਝੋਨਾ, ਖਾਦ, ਸਪ੍ਰੇ ਜਾਂ ਮੰਡੀ ਭਾਵ ਬਾਰੇ ਪੁੱਛੋ..."
+          placeholder="Ask about wheat, paddy, fertilizers, sprays or mandi rates..."
           placeholderTextColor="#94a3b8"
           value={inputQuery}
           onChangeText={setInputQuery}

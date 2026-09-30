@@ -227,6 +227,18 @@ export default function SellerDashboardScreen() {
   const [shelfLife, setShelfLife] = useState('2 Years from Mfg');
   const [returnPolicy, setReturnPolicy] = useState('Replacement Only (Agri Inputs)');
 
+  // 12. FSSAI Packaged Food Compliance & Nutritional Matrix States
+  const [isVegProduct, setIsVegProduct] = useState(true);
+  const [ingredientsList, setIngredientsList] = useState('');
+  const [allergenInfo, setAllergenInfo] = useState('Gluten Free');
+  const [energyKcal, setEnergyKcal] = useState('380 Kcal');
+  const [proteinG, setProteinG] = useState('8.5 g');
+  const [carbsG, setCarbsG] = useState('72 g');
+  const [fatG, setFatG] = useState('4.2 g');
+  const [storageInstruction, setStorageInstruction] = useState('Store in a cool, dry place away from direct sunlight.');
+  const [foodShelfLife, setFoodShelfLife] = useState('9 Months from MFD');
+  const [organicCertStatus, setOrganicCertStatus] = useState<'Jaivik Bharat Certified' | 'Natural Farmer Direct' | 'Conventional / Regular'>('Jaivik Bharat Certified');
+
   // 4 Mandatory Photo Angles
   const [imageFrontUrl, setImageFrontUrl] = useState<string | null>(null);
   const [imageBackLabelUrl, setImageBackLabelUrl] = useState<string | null>(null);
@@ -2076,19 +2088,174 @@ export default function SellerDashboardScreen() {
                   </View>
                 </View>
 
-                {/* 12. NATURAL FARMER FOOD DETAILS */}
-                {isFarmerMadeProduct ? (
-                  <View style={{ backgroundColor: '#111827', borderRadius: 8, padding: 10, marginVertical: 8, borderWidth: 1, borderColor: '#059669' }}>
-                    <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '700', marginBottom: 6 }}>🌾 Natural Farmer Food Compliance Details</Text>
+                {/* 12. FSSAI PACKAGED FOOD COMPLIANCE & NUTRITIONAL MATRIX */}
+                {(isFarmerMadeProduct || productCategorySlug === 'food-products' || productCategory.includes('Food')) ? (
+                  <View style={{ backgroundColor: '#064E3B', borderRadius: 12, padding: 12, marginVertical: 10, borderWidth: 1.5, borderColor: '#10B981' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <MaterialCommunityIcons name="silverware-fork-knife" size={18} color="#34D399" />
+                        <Text style={{ color: '#FFF', fontSize: 13.5, fontWeight: '800' }}>
+                          🥗 FSSAI Packaged Food Compliance & Nutritional Matrix
+                        </Text>
+                      </View>
+                      <View style={{ backgroundColor: isVegProduct ? '#059669' : '#DC2626', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '800' }}>{isVegProduct ? '🟢 Veg' : '🔴 Non-Veg'}</Text>
+                      </View>
+                    </View>
 
-                    <Text style={styles.inputLabel}>Producer / Farmer Name</Text>
-                    <TextInput style={styles.input} value={farmerProducerName} onChangeText={setFarmerProducerName} placeholder="Direct Farmer Name" placeholderTextColor="#9CA3AF" />
+                    <Text style={{ color: '#A7F3D0', fontSize: 11, marginBottom: 8 }}>
+                      Mandatory FSSAI E-Commerce Regulations 2024 compliance parameters for processed food & farm items:
+                    </Text>
 
-                    <Text style={styles.inputLabel}>Harvest / Batch Date</Text>
-                    <TextInput style={styles.input} value={harvestBatchDate} onChangeText={setHarvestBatchDate} placeholder="e.g. Harvested Sept 2026" placeholderTextColor="#9CA3AF" />
+                    {/* Veg / Non-Veg Indicator Selector */}
+                    <Text style={styles.inputLabel}>FSSAI Veg / Non-Veg Classification *</Text>
+                    <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+                      <TouchableOpacity
+                        style={[styles.entityChip, isVegProduct && { backgroundColor: '#059669', borderColor: '#34D399' }, { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }]}
+                        onPress={() => setIsVegProduct(true)}
+                      >
+                        <View style={{ width: 14, height: 14, borderRadius: 2, borderWidth: 2, borderColor: '#34D399', justifyContent: 'center', alignItems: 'center' }}>
+                          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#34D399' }} />
+                        </View>
+                        <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '800' }}>🟢 100% Vegetarian (Green Dot)</Text>
+                      </TouchableOpacity>
 
-                    <Text style={styles.inputLabel}>Processing Method</Text>
-                    <TextInput style={styles.input} value={processingMethod} onChangeText={setProcessingMethod} placeholder="Cold-Pressed / Traditional Kohlu" placeholderTextColor="#9CA3AF" />
+                      <TouchableOpacity
+                        style={[styles.entityChip, !isVegProduct && { backgroundColor: '#991B1B', borderColor: '#EF4444' }, { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }]}
+                        onPress={() => setIsVegProduct(false)}
+                      >
+                        <View style={{ width: 14, height: 14, borderRadius: 2, borderWidth: 2, borderColor: '#EF4444', justifyContent: 'center', alignItems: 'center' }}>
+                          <View style={{ width: 6, height: 6, backgroundColor: '#EF4444' }} />
+                        </View>
+                        <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '800' }}>🔴 Non-Vegetarian (Red Mark)</Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* FSSAI License Confirmation Badge */}
+                    <View style={{ backgroundColor: '#111827', borderRadius: 8, padding: 8, marginBottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Ionicons name="shield-checkmark" size={18} color="#10B981" />
+                        <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '700' }}>
+                          FSSAI License: <Text style={{ color: '#F59E0B' }}>{storeData?.fssaiNo || fssaiNo || 'Exempt Direct Farmer'}</Text>
+                        </Text>
+                      </View>
+                      <Text style={{ color: '#34D399', fontSize: 10, fontWeight: '800' }}>FSSAI Verified</Text>
+                    </View>
+
+                    {/* Organic Certification Selector */}
+                    <Text style={styles.inputLabel}>Organic & Natural Certification Status</Text>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+                      {['Jaivik Bharat Certified', 'Natural Farmer Direct', 'Conventional / Regular'].map((status) => (
+                        <TouchableOpacity
+                          key={status}
+                          style={[styles.entityChip, organicCertStatus === status && styles.activeEntityChip]}
+                          onPress={() => setOrganicCertStatus(status as any)}
+                        >
+                          <Text style={[styles.entityText, organicCertStatus === status && styles.activeEntityText, { fontSize: 11 }]}>
+                            {status === 'Jaivik Bharat Certified' ? '🇮🇳 Jaivik Bharat Certified' : status}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+
+                    {/* Ingredients List & Allergen Warning */}
+                    <Text style={styles.inputLabel}>Ingredients List *</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={ingredientsList}
+                      onChangeText={setIngredientsList}
+                      placeholder="e.g. 100% Pure Mustard Seeds, Cold Pressed Oil"
+                      placeholderTextColor="#9CA3AF"
+                    />
+
+                    <Text style={styles.inputLabel}>Allergen Information</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={allergenInfo}
+                      onChangeText={setAllergenInfo}
+                      placeholder="e.g. Contains Mustard. Processed in a facility handling Nuts and Wheat."
+                      placeholderTextColor="#9CA3AF"
+                    />
+
+                    {/* Nutritional Information Grid (Per 100g / 100ml) */}
+                    <Text style={[styles.inputLabel, { marginTop: 8 }]}>Nutritional Facts (Per 100g / 100ml)</Text>
+                    <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: '#9CA3AF', fontSize: 10 }}>Energy (kcal)</Text>
+                        <TextInput
+                          style={[styles.input, { height: 36, fontSize: 11 }]}
+                          value={energyKcal}
+                          onChangeText={setEnergyKcal}
+                          placeholder="380 kcal"
+                          placeholderTextColor="#9CA3AF"
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: '#9CA3AF', fontSize: 10 }}>Protein (g)</Text>
+                        <TextInput
+                          style={[styles.input, { height: 36, fontSize: 11 }]}
+                          value={proteinG}
+                          onChangeText={setProteinG}
+                          placeholder="8.5 g"
+                          placeholderTextColor="#9CA3AF"
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: '#9CA3AF', fontSize: 10 }}>Carbs (g)</Text>
+                        <TextInput
+                          style={[styles.input, { height: 36, fontSize: 11 }]}
+                          value={carbsG}
+                          onChangeText={setCarbsG}
+                          placeholder="72 g"
+                          placeholderTextColor="#9CA3AF"
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: '#9CA3AF', fontSize: 10 }}>Fat (g)</Text>
+                        <TextInput
+                          style={[styles.input, { height: 36, fontSize: 11 }]}
+                          value={fatG}
+                          onChangeText={setFatG}
+                          placeholder="4.2 g"
+                          placeholderTextColor="#9CA3AF"
+                        />
+                      </View>
+                    </View>
+
+                    {/* Storage & Expiry / Best Before */}
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.inputLabel}>Storage Conditions</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={storageInstruction}
+                          onChangeText={setStorageInstruction}
+                          placeholder="Store in cool, dry place"
+                          placeholderTextColor="#9CA3AF"
+                        />
+                      </View>
+
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.inputLabel}>Best Before / Expiry</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={foodShelfLife}
+                          onChangeText={setFoodShelfLife}
+                          placeholder="9 Months from MFD"
+                          placeholderTextColor="#9CA3AF"
+                        />
+                      </View>
+                    </View>
+
+                    {/* Direct Farmer Producer Details */}
+                    <Text style={[styles.inputLabel, { marginTop: 8 }]}>Direct Farmer Producer Name</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={farmerProducerName}
+                      onChangeText={setFarmerProducerName}
+                      placeholder="Producer / Farmer Group Name"
+                      placeholderTextColor="#9CA3AF"
+                    />
                   </View>
                 ) : null}
 
@@ -2150,9 +2317,12 @@ export default function SellerDashboardScreen() {
 
                         {/* Visual Highlighting Badges on Photo */}
                         <View style={{ position: 'absolute', top: 8, left: 8, flexDirection: 'column', gap: 4 }}>
-                          {productCategorySlug === 'food-products' && (
-                            <View style={{ backgroundColor: '#059669', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
-                              <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>🥦 Pure Food Product</Text>
+                          {(productCategorySlug === 'food-products' || isFarmerMadeProduct || productCategory.includes('Food')) && (
+                            <View style={{ backgroundColor: isVegProduct ? '#059669' : '#DC2626', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                              <View style={{ width: 10, height: 10, borderRadius: isVegProduct ? 5 : 0, backgroundColor: '#FFF', justifyContent: 'center', alignItems: 'center' }}>
+                                <View style={{ width: 4, height: 4, borderRadius: isVegProduct ? 2 : 0, backgroundColor: isVegProduct ? '#059669' : '#DC2626' }} />
+                              </View>
+                              <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>{isVegProduct ? '🟢 100% Veg Food' : '🔴 Non-Veg Food'}</Text>
                             </View>
                           )}
                           {(productCategorySlug === 'pesticides' || productCategorySlug === 'bio-fertilizers') && (
@@ -2160,8 +2330,13 @@ export default function SellerDashboardScreen() {
                               <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>🌾 Organic / Bio Formula</Text>
                             </View>
                           )}
-                          {newBrand === 'FarmsKing Certified' && (
+                          {organicCertStatus && (
                             <View style={{ backgroundColor: '#1D4ED8', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
+                              <Text style={{ color: '#FFF', fontSize: 10.5, fontWeight: '800' }}>🇮🇳 {organicCertStatus}</Text>
+                            </View>
+                          )}
+                          {newBrand === 'FarmsKing Certified' && (
+                            <View style={{ backgroundColor: '#047857', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
                               <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>👑 FarmsKing Direct</Text>
                             </View>
                           )}
@@ -2182,6 +2357,46 @@ export default function SellerDashboardScreen() {
                           {newMrpPrice ? <Text style={{ color: '#9CA3AF', fontSize: 14, textDecorationLine: 'line-through' }}>₹{newMrpPrice}</Text> : null}
                           <Text style={{ color: '#34D399', fontSize: 12, fontWeight: '700' }}>Per {newUnit || 'unit'}</Text>
                         </View>
+
+                        {/* FSSAI & Packaged Food Preview Card */}
+                        {(productCategorySlug === 'food-products' || isFarmerMadeProduct || productCategory.includes('Food')) && (
+                          <View style={{ backgroundColor: '#064E3B', borderRadius: 10, padding: 10, marginVertical: 6, borderWidth: 1, borderColor: '#10B981' }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                              <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '800' }}>🥗 FSSAI License: {storeData?.fssaiNo || fssaiNo || 'Exempt Direct Farmer'}</Text>
+                              <Text style={{ color: '#34D399', fontSize: 10, fontWeight: '800' }}>{organicCertStatus}</Text>
+                            </View>
+                            {ingredientsList ? (
+                              <Text style={{ color: '#D1D5DB', fontSize: 11, marginTop: 2 }}>
+                                🥣 <Text style={{ fontWeight: '700' }}>Ingredients:</Text> {ingredientsList}
+                              </Text>
+                            ) : null}
+                            {allergenInfo ? (
+                              <Text style={{ color: '#FCA5A5', fontSize: 10.5, marginTop: 2 }}>
+                                ⚠️ <Text style={{ fontWeight: '700' }}>Allergens:</Text> {allergenInfo}
+                              </Text>
+                            ) : null}
+                            
+                            {/* Nutritional Matrix Table */}
+                            <View style={{ backgroundColor: '#111827', borderRadius: 6, padding: 6, marginTop: 6, flexDirection: 'row', justifyContent: 'space-around' }}>
+                              <View style={{ alignItems: 'center' }}>
+                                <Text style={{ color: '#9CA3AF', fontSize: 9 }}>Energy</Text>
+                                <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '700' }}>{energyKcal}</Text>
+                              </View>
+                              <View style={{ alignItems: 'center' }}>
+                                <Text style={{ color: '#9CA3AF', fontSize: 9 }}>Protein</Text>
+                                <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '700' }}>{proteinG}</Text>
+                              </View>
+                              <View style={{ alignItems: 'center' }}>
+                                <Text style={{ color: '#9CA3AF', fontSize: 9 }}>Carbs</Text>
+                                <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '700' }}>{carbsG}</Text>
+                              </View>
+                              <View style={{ alignItems: 'center' }}>
+                                <Text style={{ color: '#9CA3AF', fontSize: 9 }}>Fat</Text>
+                                <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '700' }}>{fatG}</Text>
+                              </View>
+                            </View>
+                          </View>
+                        )}
 
                         {/* Logistics Metric */}
                         <View style={{ backgroundColor: '#111827', borderRadius: 8, padding: 8, marginVertical: 6 }}>

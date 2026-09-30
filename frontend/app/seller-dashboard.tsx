@@ -94,6 +94,9 @@ export default function SellerDashboardScreen() {
   const [productPrice, setProductPrice] = useState('');
   const [newMrpPrice, setNewMrpPrice] = useState('');
   const [productCategorySlug, setProductCategorySlug] = useState<'bio-fertilizers' | 'handmade-products' | 'pesticides' | 'khad-spray' | 'food-products'>('bio-fertilizers');
+  const [productCategory, setProductCategory] = useState('Bio & Organics');
+  const [isFarmerMadeProduct, setIsFarmerMadeProduct] = useState(false);
+  const [packSizes, setPackSizes] = useState<string[]>([]);
   const [newBrand, setNewBrand] = useState('FarmsKing Certified');
   const [newUnit, setNewUnit] = useState('kg');
   const [stockQty, setStockQty] = useState('50');
@@ -120,6 +123,24 @@ export default function SellerDashboardScreen() {
   const [imageProductUrl, setImageProductUrl] = useState<string | null>(null);
   const [newProductImages, setNewProductImages] = useState<string[]>([]);
 
+  const pickProductPhotos = async () => {
+    try {
+      const res = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: true,
+        quality: 0.7,
+        base64: true,
+      });
+      if (!res.canceled && res.assets && res.assets.length > 0) {
+        const uris = res.assets.map((a) => (a.base64 ? `data:image/jpeg;base64,${a.base64}` : a.uri));
+        setNewProductImages((prev) => [...prev, ...uris]);
+        if (uris[0] && !imageFrontUrl) setImageFrontUrl(uris[0]);
+      }
+    } catch (err) {
+      showAlert('Photo Picker Error', 'Could not open image gallery.');
+    }
+  };
+
   const pickSingleImage = async (setter: (url: string) => void) => {
     try {
       const res = await ImagePicker.launchImageLibraryAsync({
@@ -137,23 +158,6 @@ export default function SellerDashboardScreen() {
   };
 
   const pickDocPhoto = pickSingleImage;
-
-  const pickProductPhotos = async () => {
-    try {
-      const res = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsMultipleSelection: true,
-        quality: 0.7,
-        base64: true,
-      });
-      if (!res.canceled && res.assets && res.assets.length > 0) {
-        const uris = res.assets.map((asset) => (asset.base64 ? `data:image/jpeg;base64,${asset.base64}` : asset.uri));
-        setNewProductImages((prev) => [...prev, ...uris]);
-      }
-    } catch (err) {
-      showAlert('Photo Picker Error', 'Could not open image gallery.');
-    }
-  };
 
   // Live Dimensional Volumetric Weight & Billable Weight Calculation
   const parsedDeadWeight = parseFloat(deadWeightKg || '0.5');
@@ -183,9 +187,118 @@ export default function SellerDashboardScreen() {
     setImageProductUrl(null);
   };
 
+  // Edit state for resubmitting rejected or modifying store
+  const [isEditingRejected, setIsEditingRejected] = useState(false);
+
   useEffect(() => {
     fetchStoreData();
+    restoreDraftLocal();
   }, []);
+
+  const populateStoreFields = (data: any) => {
+    if (!data) return;
+    if (data.sellerType) setSellerType(data.sellerType);
+    if (data.storeName) setStoreName(data.storeName);
+    if (data.slug) setSlug(data.slug);
+    if (data.legalName) setLegalName(data.legalName);
+    if (data.gstin) setGstin(data.gstin);
+    if (data.panNumber) setPanNumber(data.panNumber);
+    if (data.wantsToSellFood !== undefined) setWantsToSellFood(data.wantsToSellFood);
+    if (data.fssaiNo) setFssaiNo(data.fssaiNo);
+    if (data.agriLicenseNo) setAgriLicenseNo(data.agriLicenseNo);
+    if (data.bankAccountNo) setBankAccountNo(data.bankAccountNo);
+    if (data.bankIfsc) setBankIfsc(data.bankIfsc);
+    if (data.bankBeneficiaryName) setBankHolderName(data.bankBeneficiaryName);
+    if (data.pickupAddress) setPickupAddress(data.pickupAddress);
+    if (data.pickupCity) setPickupCity(data.pickupCity);
+    if (data.pickupState) setPickupState(data.pickupState);
+    if (data.pickupPincode) setPickupPincode(data.pickupPincode);
+    if (data.gstDocUrl) setGstCertDoc(data.gstDocUrl);
+    if (data.panDocUrl) setPanCardDoc(data.panDocUrl);
+    if (data.chequeDocUrl) setChequeDoc(data.chequeDocUrl);
+    if (data.aadhaarFrontUrl) setAadhaarFrontDoc(data.aadhaarFrontUrl);
+    if (data.aadhaarBackUrl) setAadhaarBackDoc(data.aadhaarBackUrl);
+    if (data.tradeLicenseUrl) setTradeLicenseDoc(data.tradeLicenseUrl);
+  };
+
+  const saveDraftLocal = (nextStep?: number) => {
+    try {
+      const draft = {
+        sellerType,
+        storeName,
+        slug,
+        entityType,
+        legalName,
+        gstin,
+        panNumber,
+        wantsToSellFood,
+        fssaiNo,
+        fssaiExpiryDate,
+        agriLicenseNo,
+        bankAccountNo,
+        confirmAccountNo,
+        bankIfsc,
+        bankHolderName,
+        pickupAddress,
+        pickupPincode,
+        pickupCity,
+        pickupState,
+        contactPerson,
+        contactMobile,
+        gstCertDoc,
+        panCardDoc,
+        chequeDoc,
+        aadhaarFrontDoc,
+        aadhaarBackDoc,
+        tradeLicenseDoc,
+        step: nextStep || step,
+      };
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem('farmsking_seller_onboarding_draft', JSON.stringify(draft));
+      }
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  const restoreDraftLocal = () => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const saved = window.localStorage.getItem('farmsking_seller_onboarding_draft');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.sellerType) setSellerType(parsed.sellerType);
+          if (parsed.storeName) setStoreName(parsed.storeName);
+          if (parsed.slug) setSlug(parsed.slug);
+          if (parsed.entityType) setEntityType(parsed.entityType);
+          if (parsed.legalName) setLegalName(parsed.legalName);
+          if (parsed.gstin) setGstin(parsed.gstin);
+          if (parsed.panNumber) setPanNumber(parsed.panNumber);
+          if (parsed.wantsToSellFood !== undefined) setWantsToSellFood(parsed.wantsToSellFood);
+          if (parsed.fssaiNo) setFssaiNo(parsed.fssaiNo);
+          if (parsed.agriLicenseNo) setAgriLicenseNo(parsed.agriLicenseNo);
+          if (parsed.bankAccountNo) setBankAccountNo(parsed.bankAccountNo);
+          if (parsed.bankIfsc) setBankIfsc(parsed.bankIfsc);
+          if (parsed.bankHolderName) setBankHolderName(parsed.bankHolderName);
+          if (parsed.pickupAddress) setPickupAddress(parsed.pickupAddress);
+          if (parsed.pickupCity) setPickupCity(parsed.pickupCity);
+          if (parsed.pickupState) setPickupState(parsed.pickupState);
+          if (parsed.pickupPincode) setPickupPincode(parsed.pickupPincode);
+          if (parsed.contactPerson) setContactPerson(parsed.contactPerson);
+          if (parsed.contactMobile) setContactMobile(parsed.contactMobile);
+          if (parsed.gstCertDoc) setGstCertDoc(parsed.gstCertDoc);
+          if (parsed.panCardDoc) setPanCardDoc(parsed.panCardDoc);
+          if (parsed.chequeDoc) setChequeDoc(parsed.chequeDoc);
+          if (parsed.aadhaarFrontDoc) setAadhaarFrontDoc(parsed.aadhaarFrontDoc);
+          if (parsed.aadhaarBackDoc) setAadhaarBackDoc(parsed.aadhaarBackDoc);
+          if (parsed.tradeLicenseDoc) setTradeLicenseDoc(parsed.tradeLicenseDoc);
+          if (parsed.step) setStep(parsed.step);
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  };
 
   const fetchStoreData = async () => {
     try {
@@ -193,6 +306,7 @@ export default function SellerDashboardScreen() {
       const res = await apiClient.get('/seller/store/me');
       setStoreData(res.data);
       setHasStore(true);
+      populateStoreFields(res.data);
       fetchStats();
     } catch (err: any) {
       setHasStore(false);
@@ -508,6 +622,12 @@ export default function SellerDashboardScreen() {
       }
 
       showAlert('🎉 Application Submitted!', 'Your Seller Store application has been submitted successfully for Admin review.');
+      setIsEditingRejected(false);
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          window.localStorage.removeItem('farmsking_seller_onboarding_draft');
+        }
+      } catch (e) {}
       await fetchStoreData();
     } catch (err: any) {
       const rawMsg = err?.response?.data?.message || err?.message || 'Failed to submit seller registration.';
@@ -528,7 +648,7 @@ export default function SellerDashboardScreen() {
     const activeAgriLicenseNo = storeData?.agriLicenseNo || agriLicenseNo;
 
     // FSSAI License Enforcement for Food Products
-    const isFoodCategory = productCategorySlug === 'food-products' || productCategory.toLowerCase().includes('food');
+    const isFoodCategory = productCategorySlug === 'food-products';
     if (isFoodCategory && (!activeFssaiNo || !activeFssaiNo.trim())) {
       showAlert(
         'FSSAI License Required ⚠️',
@@ -538,7 +658,7 @@ export default function SellerDashboardScreen() {
     }
 
     // Agri Inputs License Enforcement for Seeds & Pesticides
-    const isAgriInputCategory = productCategorySlug === 'pesticides' || productCategory === 'Seeds' || productCategory.toLowerCase().includes('pesticide') || productCategory.toLowerCase().includes('protection');
+    const isAgriInputCategory = productCategorySlug === 'pesticides' || productCategorySlug === 'bio-fertilizers' || productCategorySlug === 'khad-spray';
     if (isAgriInputCategory && (!activeAgriLicenseNo || !activeAgriLicenseNo.trim())) {
       showAlert(
         'Agri Inputs License Required ⚠️',
@@ -612,7 +732,7 @@ export default function SellerDashboardScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {!hasStore ? (
+        {!hasStore || isEditingRejected ? (
           /* Multi-Step International Seller Onboarding Wizard */
           <View style={styles.card}>
             {/* Step Progress Bar */}
@@ -1128,24 +1248,46 @@ export default function SellerDashboardScreen() {
                 <TouchableOpacity
                   style={styles.resubmitBtn}
                   onPress={() => {
-                    setStoreName(storeData?.storeName || '');
-                    setSlug(storeData?.slug || '');
-                    setLegalName(storeData?.legalName || '');
-                    setGstin(storeData?.gstin || '');
-                    setPanNumber(storeData?.panNumber || '');
-                    setBankAccountNo(storeData?.bankAccountNo || '');
-                    setBankIfsc(storeData?.bankIfsc || '');
-                    setPickupAddress(storeData?.pickupAddress || '');
-                    setPickupCity(storeData?.pickupCity || '');
-                    setPickupState(storeData?.pickupState || '');
-                    setPickupPincode(storeData?.pickupPincode || '');
-                    setHasStore(false);
+                    populateStoreFields(storeData);
+                    setIsEditingRejected(true);
                     setStep(1);
                   }}
                 >
                   <Ionicons name="refresh-circle-outline" size={20} color="#FFF" />
-                  <Text style={styles.resubmitBtnText}> 🔄 Edit & Resubmit Application</Text>
+                  <Text style={styles.resubmitBtnText}> ✏️ Edit & Resubmit Application</Text>
                 </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Pending Admin Verification Notice Card */}
+            {(storeData?.kycStatus === 'SUBMITTED' || storeData?.kycStatus === 'PENDING' || storeData?.kycStatus === 'UNVERIFIED') && (
+              <View style={[styles.card, { backgroundColor: '#111827', borderColor: '#374151', borderWidth: 1, marginBottom: 20 }]}>
+                <View style={{ alignItems: 'center', paddingVertical: 16 }}>
+                  <MaterialCommunityIcons name="clock-outline" size={56} color="#F59E0B" />
+                  <Text style={{ color: '#FBBF24', fontSize: 18, fontWeight: '800', marginTop: 10, textAlign: 'center' }}>
+                    ⏳ Application Under Official Review
+                  </Text>
+                  <Text style={{ color: '#9CA3AF', fontSize: 13, marginTop: 6, textAlign: 'center', lineHeight: 20, paddingHorizontal: 10 }}>
+                    Waiting for KYC Verification by FarmsKing Admin. Your store registration details and uploaded business documents (GST/PAN/Bank details) have been received officially.
+                  </Text>
+
+                  <View style={{ backgroundColor: '#1F2937', padding: 12, borderRadius: 8, width: '100%', marginTop: 14, borderWidth: 1, borderColor: '#374151' }}>
+                    <Text style={{ color: '#9CA3AF', fontSize: 12, marginBottom: 4 }}>🏪 Store Name: <Text style={{ color: '#FFF', fontWeight: '700' }}>{storeData?.storeName}</Text></Text>
+                    <Text style={{ color: '#9CA3AF', fontSize: 12, marginBottom: 4 }}>🏢 Registered Legal Firm: <Text style={{ color: '#FFF', fontWeight: '700' }}>{storeData?.legalName || storeData?.storeName}</Text></Text>
+                    <Text style={{ color: '#9CA3AF', fontSize: 12 }}>📋 Status: <Text style={{ color: '#F59E0B', fontWeight: '800' }}>Waiting for KYC Verification by FarmsKing Admin</Text></Text>
+                  </View>
+
+                  <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+                    <TouchableOpacity style={{ backgroundColor: '#10B981', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 6 }} onPress={fetchStoreData}>
+                      <Ionicons name="refresh" size={16} color="#FFF" />
+                      <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 12.5 }}>Check Status</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={{ backgroundColor: '#374151', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 6 }} onPress={() => { populateStoreFields(storeData); setIsEditingRejected(true); setStep(1); }}>
+                      <Ionicons name="create-outline" size={16} color="#FFF" />
+                      <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 12.5 }}>Edit Application</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
               </View>
             )}
 
@@ -1519,14 +1661,14 @@ export default function SellerDashboardScreen() {
 
                         {/* Visual Highlighting Badges on Photo */}
                         <View style={{ position: 'absolute', top: 8, left: 8, flexDirection: 'column', gap: 4 }}>
-                          {productCategory.includes('Food') && (
+                          {productCategorySlug === 'food-products' && (
                             <View style={{ backgroundColor: '#059669', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
                               <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>🥦 Pure Food Product</Text>
                             </View>
                           )}
-                          {productCategory === 'Seeds' && (
+                          {(productCategorySlug === 'pesticides' || productCategorySlug === 'bio-fertilizers') && (
                             <View style={{ backgroundColor: '#D97706', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}>
-                              <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>🌾 Hybrid Seed (High Yield)</Text>
+                              <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>🌾 Organic / Bio Formula</Text>
                             </View>
                           )}
                           {newBrand === 'FarmsKing Certified' && (
@@ -1561,8 +1703,8 @@ export default function SellerDashboardScreen() {
                         </View>
 
                         {/* Technical info if chemical/seed */}
-                        {newTechnicalFormula ? (
-                          <Text style={{ color: '#A7F3D0', fontSize: 12, marginVertical: 4 }}>🧪 Technical: {newTechnicalFormula}</Text>
+                        {technicalName ? (
+                          <Text style={{ color: '#A7F3D0', fontSize: 12, marginVertical: 4 }}>🧪 Technical: {technicalName}</Text>
                         ) : null}
 
                         {/* Seller Trust Tag */}

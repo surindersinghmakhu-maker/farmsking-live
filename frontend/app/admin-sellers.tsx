@@ -22,10 +22,11 @@ export default function AdminSellersScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [stores, setStores] = useState<any[]>([]);
-  const [selectedFilter, setSelectedFilter] = useState<'ALL' | 'PENDING' | 'VERIFIED'>('ALL');
+  const [selectedFilter, setSelectedFilter] = useState<'VERIFIED' | 'PENDING' | 'REJECTED' | 'ALL'>('VERIFIED');
   const [editingStoreId, setEditingStoreId] = useState<string | null>(null);
   const [customCommission, setCustomCommission] = useState('5.0');
   const [rejectionReasonInput, setRejectionReasonInput] = useState('');
+  const [expandedStoreIds, setExpandedStoreIds] = useState<Record<string, boolean>>({});
 
   // Document photo preview modal state
   const [previewDocUrl, setPreviewDocUrl] = useState<string | null>(null);
@@ -39,6 +40,13 @@ export default function AdminSellersScreen() {
   const [gstr8Year, setGstr8Year] = useState('2026');
 
   const [fetchError, setFetchError] = useState<string | null>(null);
+
+  const toggleExpandStore = (id: string, defaultExpanded: boolean) => {
+    setExpandedStoreIds((prev) => ({
+      ...prev,
+      [id]: prev[id] !== undefined ? !prev[id] : !defaultExpanded,
+    }));
+  };
 
   useEffect(() => {
     fetchStores();
@@ -133,7 +141,7 @@ export default function AdminSellersScreen() {
 
       {/* Filter Tabs */}
       <View style={styles.filterBar}>
-        {(['ALL', 'PENDING', 'VERIFIED', 'REJECTED'] as const).map((filter) => (
+        {(['VERIFIED', 'PENDING', 'REJECTED', 'ALL'] as const).map((filter) => (
           <TouchableOpacity
             key={filter}
             style={[styles.filterTab, selectedFilter === (filter as any) && styles.activeFilterTab]}
@@ -174,183 +182,222 @@ export default function AdminSellersScreen() {
             <Text style={styles.emptyText}>No seller stores found for filter: {selectedFilter}</Text>
           </View>
         ) : (
-          stores.map((store) => (
-            <View key={store.id} style={styles.storeCard}>
-              <View style={styles.storeHeader}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.storeName}>{store.storeName}</Text>
-                  <Text style={styles.sellerName}>
-                    👤 Owner: {store.seller?.name || 'Unknown'} (📞 {store.seller?.mobile})
-                  </Text>
-                  <Text style={styles.slugText}>🌐 farmsking.in/store/{store.slug}</Text>
-                </View>
+          stores.map((store) => {
+            const isVerified = store.kycStatus === 'VERIFIED';
+            const isRejected = store.kycStatus === 'REJECTED';
+            const defaultExpanded = !isVerified && !isRejected;
+            const isExpanded = expandedStoreIds[store.id] !== undefined ? expandedStoreIds[store.id] : defaultExpanded;
 
-                <View
-                  style={[
-                    styles.kycBadge,
-                    {
-                      backgroundColor:
-                        store.kycStatus === 'VERIFIED'
-                          ? '#065F46'
-                          : store.kycStatus === 'REJECTED'
-                          ? '#991B1B'
-                          : '#92400E',
-                    },
-                  ]}
+            return (
+              <View key={store.id} style={styles.storeCard}>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={styles.storeHeader}
+                  onPress={() => toggleExpandStore(store.id, defaultExpanded)}
                 >
-                  <Text style={styles.kycBadgeText}>{store.kycStatus}</Text>
-                </View>
-              </View>
-
-              {/* Verified Details Box */}
-              <View style={styles.detailsBox}>
-                <Text style={styles.detailText}>🏢 Registered Legal Firm Name: <Text style={styles.highlightText}>{store.legalName || 'N/A'}</Text></Text>
-                <Text style={styles.detailText}>📜 GSTIN Number: <Text style={styles.highlightText}>{store.gstin || 'N/A'}</Text></Text>
-                <Text style={styles.detailText}>💳 Business PAN: <Text style={styles.highlightText}>{store.panNumber || 'N/A'}</Text></Text>
-                <Text style={styles.detailText}>
-                  🏦 Bank Acc No: <Text style={styles.highlightText}>{store.bankAccountNo || 'N/A'}</Text> (IFSC: {store.bankIfsc || 'N/A'})
-                </Text>
-                <Text style={styles.detailText}>
-                  📍 Pickup Warehouse: <Text style={styles.highlightText}>{store.pickupAddress || 'N/A'} ({store.pickupCity}, {store.pickupState} - {store.pickupPincode})</Text>
-                </Text>
-                <Text style={styles.detailText}>
-                  💰 Current Platform Fee: <Text style={{ color: '#10B981', fontWeight: '800' }}>{store.commissionRate}%</Text>
-                </Text>
-              </View>
-
-              {/* Uploaded Documents Inspection Panel */}
-              <View style={styles.docPanel}>
-                <Text style={styles.docPanelTitle}>🖼️ Uploaded Documents & Certificates:</Text>
-                <View style={styles.docRow}>
-                  {/* GST Doc */}
-                  <TouchableOpacity
-                    style={styles.docThumbBox}
-                    onPress={() => {
-                      if (store.gstDocUrl) {
-                        setPreviewDocTitle(`GST Certificate - ${store.storeName}`);
-                        setPreviewDocUrl(store.gstDocUrl);
-                      } else {
-                        showAlert('No Document ⚠️', 'Seller has not attached a GST Certificate photo yet.');
-                      }
-                    }}
-                  >
-                    {store.gstDocUrl ? (
-                      <Image source={{ uri: store.gstDocUrl }} style={styles.docImage} />
-                    ) : (
-                      <Ionicons name="document-text-outline" size={24} color="#6B7280" />
-                    )}
-                    <Text style={styles.docThumbLabel}>GST Cert</Text>
-                  </TouchableOpacity>
-
-                  {/* PAN Card Doc */}
-                  <TouchableOpacity
-                    style={styles.docThumbBox}
-                    onPress={() => {
-                      if (store.panDocUrl) {
-                        setPreviewDocTitle(`PAN Card Photo - ${store.storeName}`);
-                        setPreviewDocUrl(store.panDocUrl);
-                      } else {
-                        showAlert('No Document ⚠️', 'Seller has not attached a PAN Card photo yet.');
-                      }
-                    }}
-                  >
-                    {store.panDocUrl ? (
-                      <Image source={{ uri: store.panDocUrl }} style={styles.docImage} />
-                    ) : (
-                      <Ionicons name="card-outline" size={24} color="#6B7280" />
-                    )}
-                    <Text style={styles.docThumbLabel}>PAN Card</Text>
-                  </TouchableOpacity>
-
-                  {/* Cancelled Cheque / Bank Passbook Doc */}
-                  <TouchableOpacity
-                    style={styles.docThumbBox}
-                    onPress={() => {
-                      if (store.chequeDocUrl) {
-                        setPreviewDocTitle(`Cancelled Cheque / Passbook - ${store.storeName}`);
-                        setPreviewDocUrl(store.chequeDocUrl);
-                      } else {
-                        showAlert('No Document ⚠️', 'Seller has not attached a Cancelled Cheque / Passbook photo yet.');
-                      }
-                    }}
-                  >
-                    {store.chequeDocUrl ? (
-                      <Image source={{ uri: store.chequeDocUrl }} style={styles.docImage} />
-                    ) : (
-                      <Ionicons name="cash-outline" size={24} color="#6B7280" />
-                    )}
-                    <Text style={styles.docThumbLabel}>Bank Cheque</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* Approval & Decision Actions */}
-              <View style={styles.actionRow}>
-                {editingStoreId === store.id ? (
-                  <View style={styles.editCommissionBox}>
-                    <Text style={{ color: '#FFF', fontSize: 12, marginBottom: 4, fontWeight: '700' }}>
-                      Set Custom Platform Commission (%):
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.storeName}>{store.storeName}</Text>
+                    <Text style={styles.sellerName}>
+                      👤 Owner: {store.seller?.name || 'Unknown'} (📞 {store.seller?.mobile})
                     </Text>
-                    <TextInput
-                      style={styles.commissionInput}
-                      keyboardType="numeric"
-                      value={customCommission}
-                      onChangeText={setCustomCommission}
-                    />
+                    <Text style={styles.slugText}>🌐 farmsking.in/store/{store.slug}</Text>
+                  </View>
 
-                    <Text style={{ color: '#F87171', fontSize: 12, marginTop: 10, marginBottom: 4, fontWeight: '700' }}>
-                      Rejection Reason (Required if Rejecting):
-                    </Text>
-                    <TextInput
-                      style={[styles.commissionInput, { borderColor: '#7F1D1D' }]}
-                      placeholder="e.g. Blurry GST certificate, IFSC code mismatch"
-                      placeholderTextColor="#9CA3AF"
-                      value={rejectionReasonInput}
-                      onChangeText={setRejectionReasonInput}
-                    />
-
-                    <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
-                      <TouchableOpacity
-                        style={[styles.btn, { backgroundColor: '#059669', flex: 1, justifyContent: 'center' }]}
-                        onPress={() => handleUpdateKyc(store.id, 'VERIFIED')}
-                      >
-                        <Ionicons name="checkmark-circle" size={16} color="#FFF" />
-                        <Text style={styles.btnText}> Approve KYC</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[styles.btn, { backgroundColor: '#DC2626', flex: 1, justifyContent: 'center' }]}
-                        onPress={() => handleUpdateKyc(store.id, 'REJECTED')}
-                      >
-                        <Ionicons name="close-circle" size={16} color="#FFF" />
-                        <Text style={styles.btnText}> Reject Application</Text>
-                      </TouchableOpacity>
+                  <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                    <View
+                      style={[
+                        styles.kycBadge,
+                        {
+                          backgroundColor: isVerified ? '#065F46' : isRejected ? '#991B1B' : '#92400E',
+                        },
+                      ]}
+                    >
+                      <Text style={styles.kycBadgeText}>{store.kycStatus}</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+                      <Text style={{ color: '#9CA3AF', fontSize: 11, fontWeight: '600' }}>
+                        {isExpanded ? 'Collapse' : 'Expand'}
+                      </Text>
+                      <Ionicons
+                        name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                        size={18}
+                        color="#10B981"
+                      />
                     </View>
                   </View>
-                ) : (
-                  <>
-                    <TouchableOpacity
-                      style={[styles.btn, { backgroundColor: '#059669' }]}
-                      onPress={() => {
-                        setEditingStoreId(store.id);
-                        setCustomCommission(store.commissionRate?.toString() || '5.0');
-                      }}
-                    >
-                      <Ionicons name="shield-checkmark" size={16} color="#FFF" />
-                      <Text style={styles.btnText}> Verify Data</Text>
-                    </TouchableOpacity>
+                </TouchableOpacity>
 
-                    <TouchableOpacity
-                      style={[styles.btn, { backgroundColor: '#2563EB' }]}
-                      onPress={() => handleDownloadGstr8(store.id)}
-                    >
-                      <FontAwesome5 name="file-invoice-dollar" size={14} color="#FFF" />
-                      <Text style={styles.btnText}> GSTR-8 Tax Report</Text>
-                    </TouchableOpacity>
-                  </>
+                {/* Expanded Details Body */}
+                {isExpanded && (
+                  <View style={{ marginTop: 12 }}>
+                    {/* Rejection Reason Alert if Rejected */}
+                    {isRejected && store.rejectionReason && (
+                      <View style={{ backgroundColor: '#450A0A', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#991B1B', marginBottom: 12 }}>
+                        <Text style={{ color: '#F87171', fontWeight: '700', fontSize: 12 }}>
+                          ⚠️ Rejection Reason: {store.rejectionReason}
+                        </Text>
+                      </View>
+                    )}
+
+                    {/* Details Box */}
+                    <View style={styles.detailsBox}>
+                      <Text style={styles.detailText}>🏢 Registered Legal Firm Name: <Text style={styles.highlightText}>{store.legalName || 'N/A'}</Text></Text>
+                      <Text style={styles.detailText}>📜 GSTIN Number: <Text style={styles.highlightText}>{store.gstin || 'N/A'}</Text></Text>
+                      <Text style={styles.detailText}>💳 Business PAN: <Text style={styles.highlightText}>{store.panNumber || 'N/A'}</Text></Text>
+                      <Text style={styles.detailText}>
+                        🏦 Bank Acc No: <Text style={styles.highlightText}>{store.bankAccountNo || 'N/A'}</Text> (IFSC: {store.bankIfsc || 'N/A'})
+                      </Text>
+                      <Text style={styles.detailText}>
+                        📍 Pickup Warehouse: <Text style={styles.highlightText}>{store.pickupAddress || 'N/A'} ({store.pickupCity}, {store.pickupState} - {store.pickupPincode})</Text>
+                      </Text>
+                      <Text style={styles.detailText}>
+                        💰 Current Platform Fee: <Text style={{ color: '#10B981', fontWeight: '800' }}>{store.commissionRate}%</Text>
+                      </Text>
+                    </View>
+
+                    {/* Uploaded Documents Inspection Panel - REMOVED FOR REJECTED STORES */}
+                    {!isRejected && (
+                      <View style={styles.docPanel}>
+                        <Text style={styles.docPanelTitle}>🖼️ Uploaded Documents & Certificates:</Text>
+                        <View style={styles.docRow}>
+                          {/* GST Doc */}
+                          <TouchableOpacity
+                            style={styles.docThumbBox}
+                            onPress={() => {
+                              if (store.gstDocUrl) {
+                                setPreviewDocTitle(`GST Certificate - ${store.storeName}`);
+                                setPreviewDocUrl(store.gstDocUrl);
+                              } else {
+                                showAlert('No Document ⚠️', 'Seller has not attached a GST Certificate photo yet.');
+                              }
+                            }}
+                          >
+                            {store.gstDocUrl ? (
+                              <Image source={{ uri: store.gstDocUrl }} style={styles.docImage} />
+                            ) : (
+                              <Ionicons name="document-text-outline" size={24} color="#6B7280" />
+                            )}
+                            <Text style={styles.docThumbLabel}>GST Cert</Text>
+                          </TouchableOpacity>
+
+                          {/* PAN Card Doc */}
+                          <TouchableOpacity
+                            style={styles.docThumbBox}
+                            onPress={() => {
+                              if (store.panDocUrl) {
+                                setPreviewDocTitle(`PAN Card Photo - ${store.storeName}`);
+                                setPreviewDocUrl(store.panDocUrl);
+                              } else {
+                                showAlert('No Document ⚠️', 'Seller has not attached a PAN Card photo yet.');
+                              }
+                            }}
+                          >
+                            {store.panDocUrl ? (
+                              <Image source={{ uri: store.panDocUrl }} style={styles.docImage} />
+                            ) : (
+                              <Ionicons name="card-outline" size={24} color="#6B7280" />
+                            )}
+                            <Text style={styles.docThumbLabel}>PAN Card</Text>
+                          </TouchableOpacity>
+
+                          {/* Cancelled Cheque / Bank Passbook Doc */}
+                          <TouchableOpacity
+                            style={styles.docThumbBox}
+                            onPress={() => {
+                              if (store.chequeDocUrl) {
+                                setPreviewDocTitle(`Cancelled Cheque / Passbook - ${store.storeName}`);
+                                setPreviewDocUrl(store.chequeDocUrl);
+                              } else {
+                                showAlert('No Document ⚠️', 'Seller has not attached a Cancelled Cheque / Passbook photo yet.');
+                              }
+                            }}
+                          >
+                            {store.chequeDocUrl ? (
+                              <Image source={{ uri: store.chequeDocUrl }} style={styles.docImage} />
+                            ) : (
+                              <Ionicons name="cash-outline" size={24} color="#6B7280" />
+                            )}
+                            <Text style={styles.docThumbLabel}>Bank Cheque</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    )}
+
+                    {/* Approval & Decision Actions */}
+                    {!isRejected && (
+                      <View style={styles.actionRow}>
+                        {editingStoreId === store.id ? (
+                          <View style={styles.editCommissionBox}>
+                            <Text style={{ color: '#FFF', fontSize: 12, marginBottom: 4, fontWeight: '700' }}>
+                              Set Custom Platform Commission (%):
+                            </Text>
+                            <TextInput
+                              style={styles.commissionInput}
+                              keyboardType="numeric"
+                              value={customCommission}
+                              onChangeText={setCustomCommission}
+                            />
+
+                            <Text style={{ color: '#F87171', fontSize: 12, marginTop: 10, marginBottom: 4, fontWeight: '700' }}>
+                              Rejection Reason (Required if Rejecting):
+                            </Text>
+                            <TextInput
+                              style={[styles.commissionInput, { borderColor: '#7F1D1D' }]}
+                              placeholder="e.g. Blurry GST certificate, IFSC code mismatch"
+                              placeholderTextColor="#9CA3AF"
+                              value={rejectionReasonInput}
+                              onChangeText={setRejectionReasonInput}
+                            />
+
+                            <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+                              <TouchableOpacity
+                                style={[styles.btn, { backgroundColor: '#059669', flex: 1, justifyContent: 'center' }]}
+                                onPress={() => handleUpdateKyc(store.id, 'VERIFIED')}
+                              >
+                                <Ionicons name="checkmark-circle" size={16} color="#FFF" />
+                                <Text style={styles.btnText}> Approve KYC</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity
+                                style={[styles.btn, { backgroundColor: '#DC2626', flex: 1, justifyContent: 'center' }]}
+                                onPress={() => handleUpdateKyc(store.id, 'REJECTED')}
+                              >
+                                <Ionicons name="close-circle" size={16} color="#FFF" />
+                                <Text style={styles.btnText}> Reject Application</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        ) : (
+                          <>
+                            {/* Verify Data Button is HIDDEN if store is ALREADY VERIFIED */}
+                            {!isVerified && (
+                              <TouchableOpacity
+                                style={[styles.btn, { backgroundColor: '#059669' }]}
+                                onPress={() => {
+                                  setEditingStoreId(store.id);
+                                  setCustomCommission(store.commissionRate?.toString() || '5.0');
+                                }}
+                              >
+                                <Ionicons name="shield-checkmark" size={16} color="#FFF" />
+                                <Text style={styles.btnText}> Verify Data</Text>
+                              </TouchableOpacity>
+                            )}
+
+                            <TouchableOpacity
+                              style={[styles.btn, { backgroundColor: '#2563EB' }]}
+                              onPress={() => handleDownloadGstr8(store.id)}
+                            >
+                              <FontAwesome5 name="file-invoice-dollar" size={14} color="#FFF" />
+                              <Text style={styles.btnText}> GSTR-8 Tax Report</Text>
+                            </TouchableOpacity>
+                          </>
+                        )}
+                      </View>
+                    )}
+                  </View>
                 )}
               </View>
-            </View>
-          ))
+            );
+          })
         )}
       </ScrollView>
 

@@ -239,529 +239,317 @@ export default function MoreScreen() {
         </LinearGradient>
 
         <View style={styles.body}>
-          <SwitchDashboardSection
-            extraRows={
-              showAdvisorBusinessSection
-                ? ADVISOR_BUSINESS_ITEMS.map((item) => ({
-                  key: item.key,
-                  label: t(item.key, item.label),
-                  icon: item.icon,
-                  onPress: () => item.href && router.push(item.href as any),
-                }))
-                : undefined
-            }
-          />
-
-          {/* 🤖 FarmsKing Kheti Mitra AI Doctor Row */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>🤖 FREE AI FARMING DOCTOR</Text>
-            <View style={styles.sectionCard}>
-              <TouchableOpacity
-                style={[styles.row, { borderBottomWidth: 0 }]}
-                activeOpacity={0.75}
-                onPress={() => router.push('/(tabs)/crop-disease-scanner')}
-              >
-                <View style={[styles.rowIconBg, { backgroundColor: '#dcfce7' }]}>
-                  <Ionicons name="sparkles" size={18} color="#15803d" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.rowLabel, { color: '#14532d', fontWeight: '800' }]}>🤖 FarmsKing Kheti Mitra AI Doctor</Text>
-                  <Text style={styles.rowSubLabel}>Free Crop Disease Leaf Scanner & 24/7 Agri AI Chatbot</Text>
-                </View>
-                <View style={{ backgroundColor: '#15803d', paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.pill }}>
-                  <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: '#ffffff' }}>FREE 🌾</Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Account Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('accountSection')}</Text>
-            <View style={styles.sectionCard}>
-              {/* Account Sub-Items listed directly */}
-              {accountItems.map((item) => (
-                <TouchableOpacity
-                  key={item.key}
-                  style={styles.row}
-                  activeOpacity={0.7}
-                  onPress={() => item.href && router.push(item.href as any)}
-                >
-                  <View style={styles.rowIconBg}>
-                    <Ionicons name={item.icon} size={18} color={theme.primary} />
-                  </View>
-                  <Text style={styles.rowLabel}>{t(item.key, item.label)}</Text>
-                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                </TouchableOpacity>
-              ))}
-
-              {/* 🛡️ Farm Supervisors Sub-Accounts (VIP Feature) */}
-              <TouchableOpacity
-                style={styles.row}
-                activeOpacity={0.7}
-                onPress={() => setShowSupervisorModal(true)}
-              >
-                <View style={[styles.rowIconBg, { backgroundColor: '#eef2ff' }]}>
-                  <Ionicons name="shield-checkmark-outline" size={18} color="#4f46e5" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={styles.rowLabel}>Supervisor Management</Text>
-                    <View style={{ backgroundColor: '#f59e0b', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3 }}>
-                      <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#ffffff' }}>VIP</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.rowSubLabel}>Add & Manage Supervisor Sub-Accounts</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-              </TouchableOpacity>
-
-              {/* 🏪 DYNAMIC SELLER STORE / REGISTER STORE ITEM (Placed right above Delete Account) */}
-              {(() => {
-                const isSellerRole = role === 'SELLER' || user?.role === 'SELLER' || Boolean((user as any)?.isSeller);
-                return (
-                  <TouchableOpacity
-                    style={[styles.row, isAdminRole && { borderBottomWidth: 0 }]}
-                    activeOpacity={0.8}
-                    onPress={() => router.push('/seller-dashboard')}
-                  >
-                    <View style={[styles.rowIconBg, { backgroundColor: isSellerRole ? '#d1fae5' : '#fef3c7' }]}>
-                      <Ionicons
-                        name={isSellerRole ? 'storefront-outline' : 'leaf-outline'}
-                        size={18}
-                        color={isSellerRole ? '#059669' : '#d97706'}
-                      />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.rowLabel}>
-                        {isSellerRole ? '🏪 Manage Seller Store' : '🌾 Register as Seller'}
-                      </Text>
-                      <Text style={styles.rowSubLabel}>
-                        {isSellerRole
-                          ? 'Add Products, Manage Orders & Cashfree Payouts'
-                          : 'Start Selling Farm Produce, Seeds & Organics Pan-India'}
-                      </Text>
-                    </View>
-                    <View
-                      style={{
-                        backgroundColor: isSellerRole ? '#059669' : '#d97706',
-                        paddingHorizontal: 10,
-                        paddingVertical: 4,
-                        borderRadius: RADIUS.pill,
+          {/* 👑 ADMIN MORE MENU (EXCLUSIVELY FOR ADMIN & SUPER_ADMIN) */}
+          {isAdminRole ? (
+            <>
+              {/* 👑 Admin Control Center & Fast Tools */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>👑 ADMIN CONTROL CENTER</Text>
+                <View style={styles.sectionCard}>
+                  {SUPER_ADMIN_ITEMS.map((item, idx) => (
+                    <TouchableOpacity
+                      key={item.key}
+                      style={[styles.row, idx === SUPER_ADMIN_ITEMS.length - 1 && { borderBottomWidth: 0 }]}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        if (item.key === 'workspace') {
+                          setShowWorkspaceModal(true);
+                        } else if (item.href) {
+                          router.push(item.href as any);
+                        }
                       }}
                     >
-                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>
-                        {isSellerRole ? 'Open Store' : 'Register Free'}
+                      <View style={[styles.rowIconBg, { backgroundColor: '#fef3c7' }]}>
+                        <Ionicons name={item.icon} size={18} color="#d97706" />
+                      </View>
+                      <Text style={[styles.rowLabel, { fontWeight: '700' }]}>
+                        {item.key === 'workspace' ? item.label : t(item.key as TranslationKey, item.label)}
                       </Text>
+                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* 🛠️ C-PANEL & MANAGEMENT */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>🛠️ C-PANEL & MANAGEMENT</Text>
+                <View style={styles.sectionCard}>
+                  {/* 🏷️ Expense Categories */}
+                  <TouchableOpacity
+                    style={styles.row}
+                    activeOpacity={0.7}
+                    onPress={() => setShowCategoriesModal(true)}
+                  >
+                    <View style={[styles.rowIconBg, { backgroundColor: '#fef2f2' }]}>
+                      <Ionicons name="pricetags-outline" size={18} color="#dc2626" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.rowLabel}>🏷️ Expense Categories</Text>
+                      <Text style={styles.rowSubLabel}>Add, edit & deactivate expense categories</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                  </TouchableOpacity>
+
+                  {/* 👑 Admin Info */}
+                  <TouchableOpacity
+                    style={styles.row}
+                    activeOpacity={0.7}
+                    onPress={() => setShowAboutModal(true)}
+                  >
+                    <View style={[styles.rowIconBg, { backgroundColor: '#eff6ff' }]}>
+                      <Ionicons name="shield-checkmark-outline" size={18} color="#2563eb" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.rowLabel}>👑 Admin Info</Text>
+                      <Text style={styles.rowSubLabel}>App Name, Brand Logo, Tagline, UPI & Admin Profile</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                  </TouchableOpacity>
+
+                  {/* 🎙️ Group Voice Call Toggle */}
+                  <TouchableOpacity
+                    style={styles.row}
+                    activeOpacity={0.7}
+                    onPress={() => setIsGroupVoiceCallEnabled(v => !v)}
+                  >
+                    <View style={[styles.rowIconBg, { backgroundColor: '#f0fdf4' }]}>
+                      <Ionicons name="mic-outline" size={18} color="#059669" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.rowLabel}>🎙️ Group Voice Call</Text>
+                      <Text style={styles.rowSubLabel}>{isGroupVoiceCallEnabled ? 'STATUS: ACTIVE' : 'STATUS: DISABLED'}</Text>
+                    </View>
+                    <Ionicons
+                      name={isGroupVoiceCallEnabled ? 'toggle' : 'toggle-outline'}
+                      size={28}
+                      color={isGroupVoiceCallEnabled ? '#10b981' : '#cbd5e1'}
+                    />
+                  </TouchableOpacity>
+
+                  {/* ⚙️ System Settings */}
+                  <TouchableOpacity
+                    style={styles.row}
+                    activeOpacity={0.7}
+                    onPress={() => router.push('/(tabs)/super-settings' as any)}
+                  >
+                    <View style={[styles.rowIconBg, { backgroundColor: '#f8fafc' }]}>
+                      <Ionicons name="options-outline" size={18} color="#0d9488" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.rowLabel}>⚙️ System Settings</Text>
+                      <Text style={styles.rowSubLabel}>Full system & feature flag controls</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                  </TouchableOpacity>
+
+                  {/* 💼 Workspace */}
+                  <TouchableOpacity
+                    style={styles.row}
+                    activeOpacity={0.7}
+                    onPress={() => setShowWorkspaceModal(true)}
+                  >
+                    <View style={[styles.rowIconBg, { backgroundColor: '#ccfbf1' }]}>
+                      <Ionicons name="briefcase-outline" size={18} color="#0d9488" />
+                    </View>
+                    <Text style={styles.rowLabel}>💼 Workspace (Backup & Tools)</Text>
+                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                  </TouchableOpacity>
+
+                  {/* 📖 User Guides */}
+                  <TouchableOpacity
+                    style={[styles.row, { borderBottomWidth: 0 }]}
+                    activeOpacity={0.7}
+                    onPress={() => setShowGuidesModal(true)}
+                  >
+                    <View style={[styles.rowIconBg, { backgroundColor: '#f0fdf4' }]}>
+                      <Ionicons name="book-outline" size={18} color="#15803d" />
+                    </View>
+                    <Text style={styles.rowLabel}>📖 User Guides</Text>
+                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </>
+          ) : (
+            /* 🌾 FARMER / REGULAR USER MORE MENU */
+            <>
+              <SwitchDashboardSection
+                extraRows={
+                  showAdvisorBusinessSection
+                    ? ADVISOR_BUSINESS_ITEMS.map((item) => ({
+                      key: item.key,
+                      label: t(item.key, item.label),
+                      icon: item.icon,
+                      onPress: () => item.href && router.push(item.href as any),
+                    }))
+                    : undefined
+                }
+              />
+
+              {/* 🤖 FarmsKing Kheti Mitra AI Doctor Row */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>🤖 FREE AI FARMING DOCTOR</Text>
+                <View style={styles.sectionCard}>
+                  <TouchableOpacity
+                    style={[styles.row, { borderBottomWidth: 0 }]}
+                    activeOpacity={0.75}
+                    onPress={() => router.push('/(tabs)/crop-disease-scanner')}
+                  >
+                    <View style={[styles.rowIconBg, { backgroundColor: '#dcfce7' }]}>
+                      <Ionicons name="sparkles" size={18} color="#15803d" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.rowLabel, { color: '#14532d', fontWeight: '800' }]}>🤖 FarmsKing Kheti Mitra AI Doctor</Text>
+                      <Text style={styles.rowSubLabel}>Free Crop Disease Leaf Scanner & 24/7 Agri AI Chatbot</Text>
+                    </View>
+                    <View style={{ backgroundColor: '#15803d', paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.pill }}>
+                      <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: '#ffffff' }}>FREE 🌾</Text>
                     </View>
                   </TouchableOpacity>
-                );
-              })()}
-
-              {/* 🗑️ Delete Account Row (Hidden for Admin & Super Admin) */}
-              {!isAdminRole ? (
-                <TouchableOpacity
-                  style={[styles.row, { borderBottomWidth: 0 }]}
-                  activeOpacity={0.7}
-                  onPress={handleOpenDeleteModal}
-                >
-                  <View style={[styles.rowIconBg, { backgroundColor: '#fef2f2' }]}>
-                    <Ionicons name="trash-outline" size={18} color="#dc2626" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.rowLabel, { color: '#dc2626' }]}>🗑️ Delete Account</Text>
-                    <Text style={styles.rowSubLabel}>Permanently remove profile & account data</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                </TouchableOpacity>
-              ) : null}
-            </View>
-          </View>
-
-          {/* ⚙️ SETTINGS Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>⚙️ SETTINGS</Text>
-            <View style={styles.sectionCard}>
-              {/* 🎨 App Themes Collapsible Accordion Row */}
-              <TouchableOpacity
-                style={[styles.row, !isAppThemesExpanded && { borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }]}
-                activeOpacity={0.75}
-                onPress={() => setIsAppThemesExpanded((prev) => !prev)}
-              >
-                <View style={[styles.rowIconBg, { backgroundColor: '#e0f2fe' }]}>
-                  <Ionicons name="color-palette-outline" size={18} color="#0284c7" />
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>🎨 App Themes</Text>
-                  <Text style={styles.rowSubLabel}>Executive color palettes & live theme preview ({EXECUTIVE_THEME_CONFIG[executiveTheme].name})</Text>
-                </View>
-                <Ionicons
-                  name={isAppThemesExpanded ? 'chevron-up' : 'chevron-down'}
-                  size={18}
-                  color="#0284c7"
-                />
-              </TouchableOpacity>
+              </View>
 
-              {/* Collapsible Content for App Themes */}
-              {isAppThemesExpanded && (
-                <View style={{ padding: 10, gap: 8, backgroundColor: '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}>
-                  {/* Compact Theme Selector Pills */}
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5 }}>
-                    {(Object.keys(EXECUTIVE_THEME_CONFIG) as ExecutiveTheme[]).map((tKey) => {
-                      const conf = EXECUTIVE_THEME_CONFIG[tKey];
-                      const isActive = executiveTheme === tKey;
+              {/* Account Section */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>{t('accountSection')}</Text>
+                <View style={styles.sectionCard}>
+                  {/* Account Sub-Items listed directly */}
+                  {accountItems.map((item) => (
+                    <TouchableOpacity
+                      key={item.key}
+                      style={styles.row}
+                      activeOpacity={0.7}
+                      onPress={() => item.href && router.push(item.href as any)}
+                    >
+                      <View style={styles.rowIconBg}>
+                        <Ionicons name={item.icon} size={18} color={theme.primary} />
+                      </View>
+                      <Text style={styles.rowLabel}>{t(item.key, item.label)}</Text>
+                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                    </TouchableOpacity>
+                  ))}
 
-                      return (
-                        <TouchableOpacity
-                          key={tKey}
-                          activeOpacity={0.8}
-                          onPress={() => setExecutiveTheme(tKey)}
-                          style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 3,
-                            paddingVertical: 4,
-                            paddingHorizontal: 8,
-                            borderRadius: RADIUS.pill,
-                            borderWidth: isActive ? 1.5 : 1,
-                            borderColor: isActive ? conf.primary : '#cbd5e1',
-                            backgroundColor: isActive
-                              ? conf.isDark
-                                ? '#1e293b'
-                                : conf.primaryLight
-                              : '#ffffff',
-                          }}
-                        >
-                          <View
-                            style={{
-                              width: 14,
-                              height: 14,
-                              borderRadius: 7,
-                              backgroundColor: conf.headerBg,
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            <Ionicons name={conf.icon} size={8} color="#ffffff" />
-                          </View>
+                  {/* 🛡️ Farm Supervisors Sub-Accounts (VIP Feature) */}
+                  <TouchableOpacity
+                    style={styles.row}
+                    activeOpacity={0.7}
+                    onPress={() => setShowSupervisorModal(true)}
+                  >
+                    <View style={[styles.rowIconBg, { backgroundColor: '#eef2ff' }]}>
+                      <Ionicons name="shield-checkmark-outline" size={18} color="#4f46e5" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={styles.rowLabel}>Supervisor Management</Text>
+                        <View style={{ backgroundColor: '#f59e0b', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3 }}>
+                          <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#ffffff' }}>VIP</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.rowSubLabel}>Add & Manage Supervisor Sub-Accounts</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                  </TouchableOpacity>
 
-                          <Text
-                            style={{
-                              fontSize: 9.5,
-                              fontFamily: isActive ? FONT.extraBold : FONT.semibold,
-                              color: isActive ? conf.primary : '#334155',
-                            }}
-                          >
-                            {tKey}
-                          </Text>
-
-                          {isActive && (
-                            <Ionicons name="checkmark-circle" size={10} color={conf.primary} />
-                          )}
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-
-                  {/* Compact Live Theme Preview Banner */}
+                  {/* 🏪 DYNAMIC SELLER STORE / REGISTER STORE ITEM */}
                   {(() => {
-                    const previewConf = EXECUTIVE_THEME_CONFIG[executiveTheme];
+                    const isSellerRole = role === 'SELLER' || user?.role === 'SELLER' || Boolean((user as any)?.isSeller);
                     return (
-                      <LinearGradient
-                        colors={previewConf.headerGradient}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={{
-                          padding: 8,
-                          borderRadius: 8,
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          borderWidth: 1,
-                          borderColor: previewConf.cardBorder,
-                        }}
+                      <TouchableOpacity
+                        style={styles.row}
+                        activeOpacity={0.8}
+                        onPress={() => router.push('/seller-dashboard')}
                       >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-                          <Ionicons name="eye-outline" size={14} color={previewConf.titleColor} />
-                          <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: previewConf.titleColor }} numberOfLines={1}>
-                            Active: {previewConf.name}
+                        <View style={[styles.rowIconBg, { backgroundColor: isSellerRole ? '#d1fae5' : '#fef3c7' }]}>
+                          <Ionicons
+                            name={isSellerRole ? 'storefront-outline' : 'leaf-outline'}
+                            size={18}
+                            color={isSellerRole ? '#059669' : '#d97706'}
+                          />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.rowLabel}>
+                            {isSellerRole ? '🏪 Manage Seller Store' : '🌾 Register as Seller'}
+                          </Text>
+                          <Text style={styles.rowSubLabel}>
+                            {isSellerRole
+                              ? 'Add Products, Manage Orders & Cashfree Payouts'
+                              : 'Start Selling Farm Produce, Seeds & Organics Pan-India'}
                           </Text>
                         </View>
                         <View
                           style={{
-                            backgroundColor: previewConf.btnBg,
-                            paddingHorizontal: 8,
-                            paddingVertical: 3,
+                            backgroundColor: isSellerRole ? '#059669' : '#d97706',
+                            paddingHorizontal: 10,
+                            paddingVertical: 4,
                             borderRadius: RADIUS.pill,
                           }}
                         >
-                          <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: previewConf.btnText }}>
-                            Live Theme
+                          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>
+                            {isSellerRole ? 'Open Store' : 'Register Free'}
                           </Text>
                         </View>
-                      </LinearGradient>
+                      </TouchableOpacity>
                     );
                   })()}
-                </View>
-              )}
 
-              {/* 🌐 App Language Switcher Row */}
-              <TouchableOpacity
-                style={styles.row}
-                activeOpacity={0.7}
-                onPress={() => setShowLanguageModal(true)}
-              >
-                <View style={[styles.rowIconBg, { backgroundColor: '#fef3c7' }]}>
-                  <Ionicons name="language-outline" size={18} color="#d97706" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>{t('languageSwitchLabel')}</Text>
-                  <Text style={styles.rowSubLabel}>{t('languageSwitchSub')}</Text>
-                </View>
-                <View style={styles.switchBadgeContainer}>
-                  <Text style={styles.langBadgeTextActive}>{currentLanguageName}</Text>
-                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                </View>
-              </TouchableOpacity>
-
-              {/* 🔔 Notifications & Weather Preferences Row */}
-              <TouchableOpacity
-                style={[styles.row, !showSuperAdminSection && { borderBottomWidth: 0 }]}
-                activeOpacity={0.7}
-                onPress={() => router.push(NOTIFICATIONS_ITEM.href as any)}
-              >
-                <View style={styles.rowIconBg}>
-                  <Ionicons name={NOTIFICATIONS_ITEM.icon} size={18} color={theme.primary} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>{t(NOTIFICATIONS_ITEM.key, NOTIFICATIONS_ITEM.label)}</Text>
-                  <Text style={styles.rowSubLabel}>Notification alerts & weather updates</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-              </TouchableOpacity>
-
-              {/* ⚙️ System Settings (Super Admin / Admin only) */}
-              {showSuperAdminSection ? (
-                <TouchableOpacity
-                  style={[styles.row, { borderBottomWidth: 0 }]}
-                  activeOpacity={0.7}
-                  onPress={() => router.push('/(tabs)/super-settings' as any)}
-                >
-                  <View style={[styles.rowIconBg, { backgroundColor: '#f8fafc' }]}>
-                    <Ionicons name="options-outline" size={18} color="#0d9488" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.rowLabel}>System Settings</Text>
-                    <Text style={styles.rowSubLabel}>Full system & feature flag controls</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                </TouchableOpacity>
-              ) : null}
-            </View>
-          </View>
-
-          {/* Dedicated App Parts: Memberships & Crops Care (Placed below Settings) */}
-          {role !== 'FARM_ADVISOR' && role !== 'GARDEN_ADVISOR' ? (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>👑 MEMBERSHIPS & CROPS CARE</Text>
-              <View style={styles.sectionCard}>
-                <TouchableOpacity
-                  style={styles.row}
-                  activeOpacity={0.7}
-                  onPress={() => router.push('/(tabs)/memberships' as any)}
-                >
-                  <View style={[styles.rowIconBg, { backgroundColor: '#fef3c7' }]}>
-                    <Ionicons name="ribbon-outline" size={18} color="#d97706" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.rowLabel}>👑 FarmsKing Membership</Text>
-                    <Text style={styles.rowSubLabel}>Farmer App Plans & Specialist Doctor Advisory</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.row}
-                  activeOpacity={0.7}
-                  onPress={() => router.push('/(tabs)/memberships' as any)}
-                >
-                  <View style={[styles.rowIconBg, { backgroundColor: '#dcfce7' }]}>
-                    <Ionicons name="medical-outline" size={18} color="#16a34a" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.rowLabel}>🩺 Crops Care Plan</Text>
-                    <Text style={styles.rowSubLabel}>Specialist Doctor Advisory & Coupon Offers</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                </TouchableOpacity>
-
-                {/* 🤖 FarmsKing Kheti Mitra AI Doctor & Leaf Scanner */}
-                <TouchableOpacity
-                  style={[styles.row, { borderBottomWidth: 0 }]}
-                  activeOpacity={0.7}
-                  onPress={() => router.push('/(tabs)/crop-disease-scanner' as any)}
-                >
-                  <View style={[styles.rowIconBg, { backgroundColor: '#f0fdf4' }]}>
-                    <Ionicons name="sparkles-outline" size={18} color="#16a34a" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.rowLabel}>🤖 FarmsKing Kheti Mitra AI Doctor</Text>
-                    <Text style={styles.rowSubLabel}>100% Free AI Farming Chatbot & Leaf Scanner</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          ) : null}
-
-          {/* Specialized Smart Tools Section — Hidden per user request */}
-
-
-
-          {/* Super Admin Tools Section */}
-          {showSuperAdminSection ? (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{t('superAdminSection')}</Text>
-              <View style={styles.sectionCard}>
-                {SUPER_ADMIN_ITEMS.map((item, idx) => (
+                  {/* 🗑️ Delete Account Row */}
                   <TouchableOpacity
-                    key={item.key}
-                    style={[styles.row, idx === SUPER_ADMIN_ITEMS.length - 1 && { borderBottomWidth: 0 }]}
+                    style={[styles.row, { borderBottomWidth: 0 }]}
                     activeOpacity={0.7}
-                    onPress={() => {
-                      if (item.key === 'workspace') {
-                        setShowWorkspaceModal(true);
-                      } else if (item.href) {
-                        router.push(item.href as any);
-                      }
-                    }}
+                    onPress={handleOpenDeleteModal}
                   >
-                    <View style={styles.rowIconBg}>
-                      <Ionicons name={item.icon} size={18} color={theme.primary} />
+                    <View style={[styles.rowIconBg, { backgroundColor: '#fef2f2' }]}>
+                      <Ionicons name="trash-outline" size={18} color="#dc2626" />
                     </View>
-                    <Text style={styles.rowLabel}>{item.key === 'workspace' ? item.label : t(item.key as TranslationKey, item.label)}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.rowLabel, { color: '#dc2626' }]}>🗑️ Delete Account</Text>
+                      <Text style={styles.rowSubLabel}>Permanently remove profile & account data</Text>
+                    </View>
                     <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
                   </TouchableOpacity>
-                ))}
+                </View>
               </View>
-            </View>
-          ) : null}
 
-          {/* ─── C-Panel Section (Super Admin / Admin only) ─── */}
-          {showSuperAdminSection ? (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>🛠️ C-PANEL</Text>
-              <View style={styles.sectionCard}>
+              {/* Dedicated App Parts: Memberships & Crops Care */}
+              {role !== 'FARM_ADVISOR' && role !== 'GARDEN_ADVISOR' ? (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>👑 MEMBERSHIPS & CROPS CARE</Text>
+                  <View style={styles.sectionCard}>
+                    <TouchableOpacity
+                      style={styles.row}
+                      activeOpacity={0.7}
+                      onPress={() => router.push('/(tabs)/memberships' as any)}
+                    >
+                      <View style={[styles.rowIconBg, { backgroundColor: '#fef3c7' }]}>
+                        <Ionicons name="ribbon-outline" size={18} color="#d97706" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.rowLabel}>👑 FarmsKing Membership</Text>
+                        <Text style={styles.rowSubLabel}>Farmer App Plans & Specialist Doctor Advisory</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                    </TouchableOpacity>
 
-                {/* 🏷️ Expense Categories */}
-                <TouchableOpacity
-                  style={styles.row}
-                  activeOpacity={0.7}
-                  onPress={() => setShowCategoriesModal(true)}
-                >
-                  <View style={[styles.rowIconBg, { backgroundColor: '#fef2f2' }]}>
-                    <Ionicons name="pricetags-outline" size={18} color="#dc2626" />
+                    <TouchableOpacity
+                      style={[styles.row, { borderBottomWidth: 0 }]}
+                      activeOpacity={0.7}
+                      onPress={() => router.push('/(tabs)/memberships' as any)}
+                    >
+                      <View style={[styles.rowIconBg, { backgroundColor: '#dcfce7' }]}>
+                        <Ionicons name="medical-outline" size={18} color="#16a34a" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.rowLabel}>🩺 Crops Care Plan</Text>
+                        <Text style={styles.rowSubLabel}>Specialist Doctor Advisory & Coupon Offers</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                    </TouchableOpacity>
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.rowLabel}>🏷️ Expense Categories</Text>
-                    <Text style={styles.rowSubLabel}>Add, edit & deactivate expense categories</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                </TouchableOpacity>
-
-                {/* 👑 Admin Info */}
-                <TouchableOpacity
-                  style={styles.row}
-                  activeOpacity={0.7}
-                  onPress={() => setShowAboutModal(true)}
-                >
-                  <View style={[styles.rowIconBg, { backgroundColor: '#eff6ff' }]}>
-                    <Ionicons name="shield-checkmark-outline" size={18} color="#2563eb" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.rowLabel}>👑 Admin Info</Text>
-                    <Text style={styles.rowSubLabel}>App Name, Brand Logo, Tagline, UPI & Admin Profile</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                </TouchableOpacity>
-
-                {/* 🎙️ Group Voice Call */}
-                <TouchableOpacity
-                  style={styles.row}
-                  activeOpacity={0.7}
-                  onPress={() => setIsGroupVoiceCallEnabled(v => !v)}
-                >
-                  <View style={[styles.rowIconBg, { backgroundColor: '#f0fdf4' }]}>
-                    <Ionicons name="mic-outline" size={18} color="#059669" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.rowLabel}>🎙️ Group Voice Call</Text>
-                    <Text style={styles.rowSubLabel}>{isGroupVoiceCallEnabled ? 'STATUS: ACTIVE' : 'STATUS: DISABLED'}</Text>
-                  </View>
-                  <Ionicons
-                    name={isGroupVoiceCallEnabled ? 'toggle' : 'toggle-outline'}
-                    size={28}
-                    color={isGroupVoiceCallEnabled ? '#10b981' : '#cbd5e1'}
-                  />
-                </TouchableOpacity>
-
-                {/* ⚙️ System Settings */}
-                <TouchableOpacity
-                  style={styles.row}
-                  activeOpacity={0.7}
-                  onPress={() => router.push('/(tabs)/super-settings' as any)}
-                >
-                  <View style={[styles.rowIconBg, { backgroundColor: '#f8fafc' }]}>
-                    <Ionicons name="options-outline" size={18} color="#0d9488" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.rowLabel}>⚙️ System Settings</Text>
-                    <Text style={styles.rowSubLabel}>Full system & feature flag controls</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                </TouchableOpacity>
-
-                {/* 💼 Workspace */}
-                <TouchableOpacity
-                  style={styles.row}
-                  activeOpacity={0.7}
-                  onPress={() => setShowWorkspaceModal(true)}
-                >
-                  <View style={[styles.rowIconBg, { backgroundColor: '#ccfbf1' }]}>
-                    <Ionicons name="briefcase-outline" size={18} color="#0d9488" />
-                  </View>
-                  <Text style={styles.rowLabel}>💼 Workspace (Backup & Tools)</Text>
-                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                </TouchableOpacity>
-
-                {/* 📖 User Guides */}
-                <TouchableOpacity
-                  style={styles.row}
-                  activeOpacity={0.7}
-                  onPress={() => setShowGuidesModal(true)}
-                >
-                  <View style={[styles.rowIconBg, { backgroundColor: '#f0fdf4' }]}>
-                    <Ionicons name="book-outline" size={18} color="#15803d" />
-                  </View>
-                  <Text style={styles.rowLabel}>📖 User Guides</Text>
-                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                </TouchableOpacity>
-
-                {/* 🧾 Sales Orders */}
-                <TouchableOpacity
-                  style={[styles.row, { borderBottomWidth: 0 }]}
-                  activeOpacity={0.7}
-                  onPress={() => router.push('/(tabs)/super-orders' as any)}
-                >
-                  <View style={[styles.rowIconBg, { backgroundColor: '#eef2ff' }]}>
-                    <Ionicons name="receipt-outline" size={18} color="#4f46e5" />
-                  </View>
-                  <Text style={styles.rowLabel}>🧾 Sales Orders</Text>
-                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          ) : null}
+                </View>
+              ) : null}
+            </>
+          )}
 
           {/* Developer & Support Section */}
           <View style={styles.section}>
@@ -777,24 +565,6 @@ export default function MoreScreen() {
                     <Ionicons name="hardware-chip-outline" size={18} color="#16a34a" />
                   </View>
                   <Text style={styles.rowLabel}>{t('serverIpConfig')}</Text>
-                  <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                </TouchableOpacity>
-              ) : null}
-
-              {/* General Settings — Super Admin only */}
-              {showSuperAdminSection ? (
-                <TouchableOpacity
-                  style={styles.row}
-                  activeOpacity={0.7}
-                  onPress={() => setShowAboutModal(true)}
-                >
-                  <View style={[styles.rowIconBg, { backgroundColor: '#eff6ff' }]}>
-                    <Ionicons name="shield-checkmark-outline" size={18} color="#2563eb" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.rowLabel}>👑 Admin Info</Text>
-                    <Text style={styles.rowSubLabel}>App Name, Brand Logo, Tagline, UPI & Admin Profile</Text>
-                  </View>
                   <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
                 </TouchableOpacity>
               ) : null}

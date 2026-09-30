@@ -191,7 +191,7 @@ export function SuperAdminExpenseCategoriesModal({ visible, onClose }: Props) {
               )}
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Name (English / Main) *</Text>
+                <Text style={styles.label}>Category Name (English) *</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="e.g. Crop Care & Protection"

@@ -895,17 +895,67 @@ export default function SellerDashboardScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#064E3B" />
 
-      {/* Header */}
+      {/* Header Row */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color="#FFF" />
+          <Ionicons name="arrow-back" size={22} color="#FFF" />
         </TouchableOpacity>
-        <View style={{ flex: 1, marginLeft: 12 }}>
-          <Text style={styles.headerTitle}>🏪 National Seller Hub</Text>
-          <Text style={styles.headerSub}>FarmsKing Direct Vendor Portal</Text>
-        </View>
+
+        {hasStore && storeData?.storeName ? (
+          /* Responsive Store Profile Header Component */
+          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', marginLeft: 10, marginRight: 8, gap: 10 }}>
+            {/* Avatar Circle */}
+            <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#059669', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#34D399' }}>
+              <Text style={{ color: '#FFF', fontSize: 18, fontWeight: '800' }}>
+                {storeData.storeName.charAt(0).toUpperCase()}
+              </Text>
+            </View>
+
+            {/* Store Details: Name, URL, Status Badge */}
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <Text style={{ color: '#FFF', fontSize: 15, fontWeight: '800' }} numberOfLines={1}>
+                  {storeData.storeName}
+                </Text>
+
+                {/* Status Badge */}
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 3,
+                  backgroundColor: storeData.kycStatus === 'BLOCKED' ? '#7F1D1D' : '#047857',
+                  paddingHorizontal: 6,
+                  paddingVertical: 2,
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  borderColor: storeData.kycStatus === 'BLOCKED' ? '#EF4444' : '#10B981',
+                }}>
+                  <Ionicons
+                    name={storeData.kycStatus === 'BLOCKED' ? 'ban-outline' : 'checkmark-circle'}
+                    size={11}
+                    color={storeData.kycStatus === 'BLOCKED' ? '#FCA5A5' : '#6EE7B7'}
+                  />
+                  <Text style={{ color: storeData.kycStatus === 'BLOCKED' ? '#FCA5A5' : '#6EE7B7', fontSize: 9.5, fontWeight: '800' }}>
+                    {storeData.kycStatus === 'BLOCKED' ? 'BLOCKED' : 'VERIFIED'}
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={{ color: '#6EE7B7', fontSize: 11, fontWeight: '600', marginTop: 1 }} numberOfLines={1}>
+                farmsking.in/store/{storeData.slug}
+              </Text>
+            </View>
+          </View>
+        ) : (
+          /* Default Vendor Hub Header */
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <Text style={styles.headerTitle}>🏪 National Seller Hub</Text>
+            <Text style={styles.headerSub}>FarmsKing Direct Vendor Portal</Text>
+          </View>
+        )}
+
         <TouchableOpacity style={styles.refreshBtn} onPress={fetchStoreData}>
-          <Ionicons name="refresh" size={20} color="#10B981" />
+          <Ionicons name="refresh" size={18} color="#10B981" />
         </TouchableOpacity>
       </View>
 
@@ -1556,31 +1606,6 @@ export default function SellerDashboardScreen() {
         ) : (
           /* Active Verified Seller Dashboard */
           <>
-            {/* Store Profile Card */}
-            <View style={styles.storeCard}>
-              <View style={styles.storeRow}>
-                <View style={styles.storeAvatar}>
-                  <Text style={styles.avatarText}>{storeData?.storeName?.charAt(0) || 'S'}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.storeNameText}>{storeData?.storeName}</Text>
-                  <Text style={styles.slugText}>farmsking.in/store/{storeData?.slug}</Text>
-                </View>
-
-                <View style={[styles.kycBadge, storeData?.kycStatus === 'BLOCKED'
-                  ? { backgroundColor: '#7F1D1D', borderColor: '#EF4444', borderWidth: 1, flexDirection: 'row', alignItems: 'center', gap: 4 }
-                  : { backgroundColor: '#065F46' }]}>
-                  <Ionicons
-                    name={storeData?.kycStatus === 'BLOCKED' ? 'ban-outline' : 'checkmark-circle'}
-                    size={14}
-                    color={storeData?.kycStatus === 'BLOCKED' ? '#FCA5A5' : '#FFF'}
-                  />
-                  <Text style={[styles.kycText, storeData?.kycStatus === 'BLOCKED' && { color: '#FCA5A5' }]}>
-                    {storeData?.kycStatus === 'BLOCKED' ? 'BLOCKED' : 'VERIFIED'}
-                  </Text>
-                </View>
-              </View>
-            </View>
 
             {/* Compact 4-Column Analytics Toolbar */}
             <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>

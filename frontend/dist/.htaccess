@@ -10,8 +10,10 @@
   RewriteEngine On
   RewriteBase /
 
-  # Serve you static HTML page directly
+  # Serve static HTML pages directly
   RewriteRule ^you/?$ you.html [L,NC]
+  RewriteRule ^sk/?$ sk.html [L,NC]
+  RewriteRule ^my/?$ my.html [L,NC]
 
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f

@@ -68,9 +68,9 @@ export default function DosePage() {
         .map(
           (item) => `
         <tr>
-          <td style="border: 1px solid #10b981; padding: 10px; text-align: center; font-weight: bold; width: 12%;">${item.srNo}</td>
-          <td style="border: 1px solid #10b981; padding: 10px; font-weight: 600; width: 58%;">${item.product}</td>
-          <td style="border: 1px solid #10b981; padding: 10px; text-align: center; color: #15803d; font-weight: bold; width: 30%;">${item.quantity}</td>
+          <td style="border: 1px solid #10b981; padding: 4.5px 8px; text-align: center; font-weight: bold; width: 10%;">${item.srNo}</td>
+          <td style="border: 1px solid #10b981; padding: 4.5px 8px; font-weight: 600; width: 62%;">${item.product}</td>
+          <td style="border: 1px solid #10b981; padding: 4.5px 8px; text-align: center; color: #15803d; font-weight: bold; width: 28%;">${item.quantity}</td>
         </tr>
       `
         )
@@ -82,23 +82,24 @@ export default function DosePage() {
         <head>
           <title>MARIGOLD PRODUCTION DRENCHING SCHEDULE REPORT - FarmsKing</title>
           <style>
-            body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 25px; color: #111827; background-color: #fff; }
-            .header-banner { background: linear-gradient(135deg, #14532d 0%, #166534 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
-            .header-banner h1 { margin: 0; font-size: 26px; letter-spacing: 1px; color: #facc15; text-transform: uppercase; }
-            .header-banner h2 { margin: 6px 0 0 0; font-size: 18px; color: #fef08a; font-weight: 500; }
-            .farmer-meta { display: flex; justify-content: space-between; background: #f0fdf4; border: 2px solid #16a34a; padding: 14px 20px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
+            @page { size: A4 portrait; margin: 6mm 8mm; }
+            body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 8px; color: #111827; background-color: #fff; line-height: 1.2; }
+            .header-banner { background: linear-gradient(135deg, #14532d 0%, #166534 100%); color: white; padding: 8px 12px; border-radius: 8px; text-align: center; margin-bottom: 8px; }
+            .header-banner h1 { margin: 0; font-size: 18px; letter-spacing: 0.5px; color: #facc15; text-transform: uppercase; }
+            .header-banner h2 { margin: 2px 0 0 0; font-size: 12px; color: #fef08a; font-weight: 600; }
+            .farmer-meta { display: flex; justify-content: space-between; background: #f0fdf4; border: 1.5px solid #16a34a; padding: 6px 14px; border-radius: 6px; margin-bottom: 8px; font-size: 11.5px; }
             .farmer-meta div { font-weight: bold; color: #14532d; }
-            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            th { background-color: #15803d; color: white; padding: 12px; border: 1px solid #15803d; font-size: 14px; text-transform: uppercase; }
-            td { font-size: 13.5px; }
-            .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 10px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 4px; page-break-inside: avoid; }
+            th { background-color: #15803d; color: white; padding: 6px 8px; border: 1px solid #15803d; font-size: 11.5px; text-transform: uppercase; }
+            td { font-size: 11px; }
+            .footer { margin-top: 8px; text-align: center; font-size: 10px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 4px; }
           </style>
         </head>
         <body>
           <div class="header-banner">
             <h1>🌼 MARIGOLD PRODUCTION 🌼</h1>
             <h2>(DRENCHING SCHEDULE / गेंदे का ड्रेंचिंग शेड्यूल)</h2>
-            <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9;">FarmsKing Enterprise Agri-Intelligence Platform</p>
+            <p style="margin: 2px 0 0 0; font-size: 10.5px; opacity: 0.9;">FarmsKing Enterprise Agri-Intelligence Platform • www.farmsking.in</p>
           </div>
 
           <div class="farmer-meta">
@@ -110,9 +111,9 @@ export default function DosePage() {
           <table>
             <thead>
               <tr>
-                <th style="width: 12%;">Sr. No. / क्र. सं.</th>
-                <th style="width: 58%;">Product / उत्पाद</th>
-                <th style="width: 30%;">Quantity / मात्रा</th>
+                <th style="width: 10%;">Sr. No. / क्र. सं.</th>
+                <th style="width: 62%;">Product / उत्पाद</th>
+                <th style="width: 28%;">Quantity / मात्रा</th>
               </tr>
             </thead>
             <tbody>

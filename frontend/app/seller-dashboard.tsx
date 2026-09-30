@@ -71,8 +71,10 @@ export default function SellerDashboardScreen() {
   const [pickupCity, setPickupCity] = useState('');
   const [pickupState, setPickupState] = useState('');
   const [pickupPostOffice, setPickupPostOffice] = useState('');
+  const [pickupLandmark, setPickupLandmark] = useState('');
   const [contactPerson, setContactPerson] = useState('');
   const [contactMobile, setContactMobile] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
   const [isPincodeLoading, setIsPincodeLoading] = useState(false);
 
   // Step 5: Document Uploads & Verification
@@ -91,6 +93,9 @@ export default function SellerDashboardScreen() {
   // Product Builder State with 4 Mandatory Photo Angles & Dimensional Metrics
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [productName, setProductName] = useState('');
+  const [skuCode, setSkuCode] = useState(`FK-${Math.floor(100000 + Math.random() * 900000)}`);
+  const [unitsInBox, setUnitsInBox] = useState('1');
+  const [isDangerousGood, setIsDangerousGood] = useState(false);
   const [productPrice, setProductPrice] = useState('');
   const [newMrpPrice, setNewMrpPrice] = useState('');
   const [productCategorySlug, setProductCategorySlug] = useState<'bio-fertilizers' | 'handmade-products' | 'pesticides' | 'khad-spray' | 'food-products'>('bio-fertilizers');
@@ -1034,9 +1039,9 @@ export default function SellerDashboardScreen() {
                   </View>
                 </View>
 
-                <Text style={styles.inputLabel}>Full Pickup Warehouse Address</Text>
+                <Text style={styles.inputLabel}>Full Pickup Warehouse Address *</Text>
                 <TextInput
-                  style={[styles.input, { height: 70 }]}
+                  style={[styles.input, { height: 60 }]}
                   placeholder="Street, Building No, Industrial Area / Village"
                   placeholderTextColor="#9CA3AF"
                   multiline
@@ -1044,23 +1049,48 @@ export default function SellerDashboardScreen() {
                   onChangeText={setPickupAddress}
                 />
 
-                <Text style={styles.inputLabel}>Dispatch Manager Name</Text>
+                <Text style={styles.inputLabel}>Warehouse Landmark (Near Market / GT Road)</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Contact Person Name"
+                  placeholder="e.g. Near Main Grain Market Gate No. 2"
                   placeholderTextColor="#9CA3AF"
-                  value={contactPerson}
-                  onChangeText={setContactPerson}
+                  value={pickupLandmark}
+                  onChangeText={setPickupLandmark}
                 />
 
-                <Text style={styles.inputLabel}>Dispatch Mobile Number</Text>
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Dispatch Manager Name *</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Contact Person Name"
+                      placeholderTextColor="#9CA3AF"
+                      value={contactPerson}
+                      onChangeText={setContactPerson}
+                    />
+                  </View>
+
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Dispatch Mobile Number *</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="10-digit Mobile"
+                      placeholderTextColor="#9CA3AF"
+                      keyboardType="phone-pad"
+                      value={contactMobile}
+                      onChangeText={setContactMobile}
+                    />
+                  </View>
+                </View>
+
+                <Text style={styles.inputLabel}>Dispatch Manager Email (Shiprocket SMS/Tracking Alerts)</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="10-digit Mobile Number"
+                  placeholder="dispatch@seller.com"
                   placeholderTextColor="#9CA3AF"
-                  keyboardType="phone-pad"
-                  value={contactMobile}
-                  onChangeText={setContactMobile}
+                  keyboardType="email-address"
+                  value={contactEmail}
+                  onChangeText={setContactEmail}
                 />
 
                 <View style={styles.wizardBtnRow}>
@@ -1687,14 +1717,77 @@ export default function SellerDashboardScreen() {
                   </Text>
                 </View>
 
-                {/* 9. GST % & HSN CODE */}
+                {/* 9. SHIPROCKET SKU CODE & MASTER BOX UNITS */}
+                <View style={{ flexDirection: 'row', gap: 10, marginVertical: 4 }}>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={styles.inputLabel}>Shiprocket SKU Code *</Text>
+                      <TouchableOpacity
+                        onPress={() => setSkuCode(`FK-${productCategorySlug.substring(0, 3).toUpperCase()}-${Math.floor(10000 + Math.random() * 90000)}`)}
+                      >
+                        <Text style={{ color: '#34D399', fontSize: 11, fontWeight: '700' }}>⚡ Auto SKU</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <TextInput
+                      style={styles.input}
+                      value={skuCode}
+                      onChangeText={setSkuCode}
+                      placeholder="FK-SEED-10023"
+                      placeholderTextColor="#9CA3AF"
+                    />
+                  </View>
+
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Inner Units per Box</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={unitsInBox}
+                      onChangeText={setUnitsInBox}
+                      placeholder="1"
+                      placeholderTextColor="#9CA3AF"
+                      keyboardType="number-pad"
+                    />
+                  </View>
+                </View>
+
+                {/* SHIPROCKET LIQUID / HAZARDOUS CARGO MODE TOGGLE */}
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: isDangerousGood ? '#78350F' : '#1F2937',
+                    borderRadius: 8,
+                    padding: 10,
+                    marginVertical: 6,
+                    borderWidth: 1,
+                    borderColor: isDangerousGood ? '#F59E0B' : '#374151',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                  onPress={() => setIsDangerousGood(!isDangerousGood)}
+                >
+                  <View style={{ flex: 1, marginRight: 8 }}>
+                    <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '700' }}>
+                      🧪 Liquid / Bio-Chemical Cargo Mode ({isDangerousGood ? 'Surface Transport Mandatory' : 'Standard'})
+                    </Text>
+                    <Text style={{ color: '#9CA3AF', fontSize: 10.5, marginTop: 2 }}>
+                      Enable for liquid sprays, bio-fertilizers, or oils (Air Cargo Restricted by IATA).
+                    </Text>
+                  </View>
+                  <Ionicons
+                    name={isDangerousGood ? 'checkbox' : 'square-outline'}
+                    size={22}
+                    color={isDangerousGood ? '#F59E0B' : '#9CA3AF'}
+                  />
+                </TouchableOpacity>
+
+                {/* 10. GST % & HSN CODE */}
                 <View style={{ flexDirection: 'row', gap: 10 }}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.inputLabel}>GST Tax Rate</Text>
                     <TextInput style={styles.input} value={storeData?.gstin ? newGstRate : 'Exempt (0%)'} onChangeText={setNewGstRate} editable={Boolean(storeData?.gstin)} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.inputLabel}>HSN Code</Text>
+                    <Text style={styles.inputLabel}>HSN Code *</Text>
                     <TextInput style={styles.input} value={hsnCode} onChangeText={setHsnCode} placeholder="120991" placeholderTextColor="#9CA3AF" />
                   </View>
                 </View>

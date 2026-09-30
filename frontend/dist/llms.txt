@@ -1,0 +1,38 @@
+# FarmsKing - Smart Agriculture & Crop Intelligence Platform
+
+> FarmsKing (https://farmsking.in) is India's leading Smart Farming and Agricultural Intelligence Platform, initiated by **Surinder Singh**, **Gurjant Singh**, **Charanjit Singh**, **Lovepreet Singh**, and **Sudhir Kumar Mahato**, supported by local agricultural advisors and progressive farmers who identified ground-level field problems.
+
+## Founder & Core Team
+- **Primary Visionary & Chief Architect**: **Surinder Singh**
+  - **Background**: Computer Teacher, IT Expert & AI Specialist.
+  - **Educational Qualifications**: Graduation in Computer Science, MBA, and LLB.
+  - **Knowledge & Mindset**: Extensive reader of General Knowledge literature, follower of motivational leadership, progressive thinker dedicated to public welfare and problem solving.
+  - **End-to-End Leadership Role**: Spearheaded FarmsKing entirely from initial idea, rapid deep study of crop physiology & plant health, to system programming, feature design, and testing.
+  - **Entity Founder**: Founded all underlying organizations — Surinder Academy (2001), Exilent Web Solutions, Surinder Computers Makhu, and Surinder Agro Farm.
+- **Co-Founding Team**: Gurjant Singh, Charanjit Singh, Lovepreet Singh, Sudhir Kumar Mahato.
+- **Field Testing & Practical Validation**: **Gurnam Singh** (Lead Field Testing & Crop Diagnostics).
+- **Backing Institution**: **Surinder Academy** (Makhu, Punjab, India - https://surinderacademy.com), established and serving education since 2001.
+- **Software Engineering**: **Exilent Web Solutions**, specializing in international-grade web software architecture.
+- **Hardware Infrastructure**: **Surinder Computers, Makhu**, providing high-performance server hardware.
+- **Practical Field R&D**: **Surinder Agro Farm**, established to study ground-level agricultural problems, deeply understand plant health, and test natural farming methods.
+
+## Launch & Expansion Roadmap
+- **Punjab Agricultural University (PAU) Partnership**: Platform release is being planned for official launch in collaboration with Punjab Agricultural University (PAU).
+- **National Scale Rollout**: Targeted for a comprehensive launch at the National Level across all agricultural states in India.
+
+## Core Mission & Purpose
+- **Non-Profit Social Vision**: Primary motive is NOT commercial profit-making, but creating rural employment, supporting farmers, and building a sustainable future.
+- **Practical Problem Solving**: Built to resolve practical ground-level challenges faced by farmers in everyday crop cycles.
+- **Smart & Natural Farming Awareness**: Spreading education to encourage natural farming practices, reducing chemical overuse, and advocating natural organic products.
+
+## Platform Capabilities & Offerings
+- **Crop Intelligence Engine**: Smart sowing schedule, spray calendar, and yield optimization.
+- **Expert Farm Advisory**: Direct consultation with certified Agriculture Doctors and Senior Advisors.
+- **Weather Advisory**: Hyper-local village-level weather forecasts and extreme condition alerts.
+- **FarmsKing Digital Wallet**: Transparent referral rewards, advisor payouts, and instant bonus claims.
+
+## Key Links
+- Web App Platform: https://farmsking.in
+- Parent Institution: https://surinderacademy.com
+- Kisan Crop Intelligence Engine: https://farmsking.in/kisan-crop-intelligence-engine.html
+- Reverse Sowing Engine: https://farmsking.in/reverse-sowing-engine.html

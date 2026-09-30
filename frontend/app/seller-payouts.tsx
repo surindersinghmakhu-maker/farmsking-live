@@ -103,7 +103,7 @@ export default function SellerPayoutsScreen() {
         </View>
 
         {/* Payout History List */}
-        <Text style={styles.sectionTitle}>📜 Cashfree Bank Transfer History</Text>
+        <Text style={styles.sectionTitle}>📜 FarmsKing Nodal Bank Transfer Ledger</Text>
 
         {loading ? (
           <ActivityIndicator size="large" color="#10B981" style={{ marginTop: 30 }} />

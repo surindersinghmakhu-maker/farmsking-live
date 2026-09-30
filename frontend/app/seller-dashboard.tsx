@@ -852,9 +852,21 @@ export default function SellerDashboardScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#10B981" />
-        <Text style={styles.loadingText}>Loading Seller Hub Ecosystem...</Text>
+      <View style={[styles.centerContainer, { backgroundColor: '#0B0F17' }]}>
+        <StatusBar barStyle="light-content" backgroundColor="#0B0F17" />
+        <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+          {/* Official FarmsKing Brand Logo */}
+          <Image
+            source={require('@/assets/images/farmsking_logo_round_goldring.png')}
+            style={{ width: 110, height: 110, marginBottom: 20 }}
+            resizeMode="contain"
+          />
+          <ActivityIndicator size="large" color="#10B981" style={{ marginVertical: 12 }} />
+          <Text style={{ color: '#F9FAFB', fontSize: 18, fontWeight: '800', letterSpacing: 0.5 }}>FarmsKing National Vendor Portal</Text>
+          <Text style={{ color: '#10B981', fontSize: 12, fontWeight: '700', marginTop: 4, letterSpacing: 1.5, textTransform: 'uppercase' }}>
+            Enterprise Seller Ecosystem
+          </Text>
+        </View>
       </View>
     );
   }
@@ -968,62 +980,79 @@ export default function SellerDashboardScreen() {
                   <Text style={styles.stepTitle}>2. Tax & Legal Compliance</Text>
                 </View>
 
-                <Text style={styles.inputLabel}>
-                  {sellerType === 'FARMER' || entityType === 'INDIVIDUAL_FARMER'
-                    ? '15-Digit GSTIN Number (Optional for Farmer/Producer)'
-                    : '15-Digit GSTIN Number *'}
-                </Text>
-                <TextInput
-                  style={[styles.input, errors.gstin && styles.inputError]}
-                  placeholder="03AAAAA0000A1Z5"
-                  placeholderTextColor="#9CA3AF"
-                  value={gstin}
-                  onChangeText={handleGstinChange}
-                  maxLength={15}
-                  autoCapitalize="characters"
-                />
-                {gstStateDetected ? (
-                  <View style={styles.verifiedBadgeRow}>
-                    <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-                    <Text style={styles.verifiedText}>State Detected: {gstStateDetected}</Text>
+                {/* Structured Tax & Legal Inputs Grid */}
+                <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start', marginVertical: 4 }}>
+                  <View style={{ flex: 1.2 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={styles.inputLabel}>
+                        {sellerType === 'FARMER' || entityType === 'INDIVIDUAL_FARMER' ? 'GSTIN (Optional)' : 'GSTIN Number *'}
+                      </Text>
+                      <Text style={{ color: '#10B981', fontSize: 10, fontWeight: '800' }}>15 Chars</Text>
+                    </View>
+                    <TextInput
+                      style={[styles.input, { letterSpacing: 1.5, fontWeight: '700', fontSize: 13 }, errors.gstin && styles.inputError]}
+                      placeholder="03AAAAA0000A1Z5"
+                      placeholderTextColor="#6B7280"
+                      value={gstin}
+                      onChangeText={handleGstinChange}
+                      maxLength={15}
+                      autoCapitalize="characters"
+                    />
+                    {gstStateDetected ? (
+                      <View style={styles.verifiedBadgeRow}>
+                        <Ionicons name="checkmark-circle" size={14} color="#10B981" />
+                        <Text style={styles.verifiedText}>State: {gstStateDetected}</Text>
+                      </View>
+                    ) : null}
+                    {errors.gstin ? <Text style={styles.errText}>{errors.gstin}</Text> : null}
                   </View>
-                ) : null}
-                {errors.gstin ? <Text style={styles.errText}>{errors.gstin}</Text> : null}
 
-                <Text style={styles.inputLabel}>
-                  {sellerType === 'FARMER' || entityType === 'INDIVIDUAL_FARMER'
-                    ? '10-Digit PAN Number *'
-                    : '10-Digit Business PAN Number *'}
-                </Text>
-                <TextInput
-                  style={[styles.input, errors.panNumber && styles.inputError]}
-                  placeholder="ABCDE1234F"
-                  placeholderTextColor="#9CA3AF"
-                  value={panNumber}
-                  onChangeText={(val) => setPanNumber(val.trim().toUpperCase())}
-                  maxLength={10}
-                  autoCapitalize="characters"
-                />
-                {errors.panNumber ? <Text style={styles.errText}>{errors.panNumber}</Text> : null}
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={styles.inputLabel}>PAN Number *</Text>
+                      <Text style={{ color: '#10B981', fontSize: 10, fontWeight: '800' }}>10 Chars</Text>
+                    </View>
+                    <TextInput
+                      style={[styles.input, { letterSpacing: 2, fontWeight: '800', fontSize: 13 }, errors.panNumber && styles.inputError]}
+                      placeholder="ABCDE1234F"
+                      placeholderTextColor="#6B7280"
+                      value={panNumber}
+                      onChangeText={(val) => setPanNumber(val.trim().toUpperCase())}
+                      maxLength={10}
+                      autoCapitalize="characters"
+                    />
+                    {errors.panNumber ? <Text style={styles.errText}>{errors.panNumber}</Text> : null}
+                  </View>
+                </View>
 
-                <Text style={styles.inputLabel}>FSSAI License No. (If Selling Foods / Organic Ghee/Honey)</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="14-digit FSSAI License Number"
-                  placeholderTextColor="#9CA3AF"
-                  value={fssaiNo}
-                  onChangeText={setFssaiNo}
-                  keyboardType="number-pad"
-                />
+                <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start', marginVertical: 4 }}>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={styles.inputLabel}>FSSAI License No.</Text>
+                      <Text style={{ color: '#F59E0B', fontSize: 10, fontWeight: '800' }}>14 Digits</Text>
+                    </View>
+                    <TextInput
+                      style={[styles.input, { letterSpacing: 1.5, fontWeight: '700', fontSize: 13 }]}
+                      placeholder="14-digit FSSAI License"
+                      placeholderTextColor="#6B7280"
+                      value={fssaiNo}
+                      onChangeText={setFssaiNo}
+                      keyboardType="number-pad"
+                      maxLength={14}
+                    />
+                  </View>
 
-                <Text style={styles.inputLabel}>Agri Inputs License No. (Seeds / Pesticide License)</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Department of Agriculture License Number"
-                  placeholderTextColor="#9CA3AF"
-                  value={agriLicenseNo}
-                  onChangeText={setAgriLicenseNo}
-                />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Agri Inputs License No.</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Seeds / Pesticide License"
+                      placeholderTextColor="#6B7280"
+                      value={agriLicenseNo}
+                      onChangeText={setAgriLicenseNo}
+                    />
+                  </View>
+                </View>
 
                 <View style={styles.wizardBtnRow}>
                   <TouchableOpacity style={styles.prevBtn} onPress={() => setStep(1)}>
@@ -1050,23 +1079,42 @@ export default function SellerDashboardScreen() {
                   <Text style={styles.stepTitle}>3. Bank Account & Live IFSC</Text>
                 </View>
                 <Text style={styles.cardSubtitle}>
-                  Cashfree Auto-Payout Nodal Account integration for direct daily earnings transfers.
+                  FarmsKing Daily Nodal Auto-Payout Nodal Account integration for direct earnings transfers.
                 </Text>
 
-                <Text style={styles.inputLabel}>11-Digit Bank IFSC Code (e.g. SBIN0001234) *</Text>
-                <View style={styles.inputWithLoader}>
-                  <TextInput
-                    style={[styles.input, { flex: 1 }, errors.bankIfsc && styles.inputError]}
-                    placeholder="SBIN0001234"
-                    placeholderTextColor="#9CA3AF"
-                    value={bankIfsc}
-                    onChangeText={handleIfscLookup}
-                    maxLength={11}
-                    autoCapitalize="characters"
-                  />
-                  {isIfscLoading && <ActivityIndicator size="small" color="#10B981" style={{ marginLeft: 8 }} />}
+                {/* Compact Bank IFSC & Account Number Grid */}
+                <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start', marginVertical: 4 }}>
+                  <View style={{ width: 190 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={styles.inputLabel}>Bank IFSC Code *</Text>
+                      <Text style={{ color: '#10B981', fontSize: 10, fontWeight: '800' }}>11 Chars</Text>
+                    </View>
+                    <View style={styles.inputWithLoader}>
+                      <TextInput
+                        style={[styles.input, { width: 190, letterSpacing: 2, fontWeight: '800', fontSize: 13, borderColor: '#059669' }, errors.bankIfsc && styles.inputError]}
+                        placeholder="SBIN0001234"
+                        placeholderTextColor="#6B7280"
+                        value={bankIfsc}
+                        onChangeText={handleIfscLookup}
+                        maxLength={11}
+                        autoCapitalize="characters"
+                      />
+                      {isIfscLoading && <ActivityIndicator size="small" color="#10B981" style={{ position: 'absolute', right: 8 }} />}
+                    </View>
+                    {ifscError ? <Text style={styles.errText}>{ifscError}</Text> : null}
+                  </View>
+
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Account Holder Name *</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="As printed on Passbook / Cheque"
+                      placeholderTextColor="#6B7280"
+                      value={bankHolderName}
+                      onChangeText={setBankHolderName}
+                    />
+                  </View>
                 </View>
-                {ifscError ? <Text style={styles.errText}>{ifscError}</Text> : null}
 
                 {/* Auto-Fetched Bank Branch Card */}
                 {ifscDetails && (
@@ -1080,36 +1128,32 @@ export default function SellerDashboardScreen() {
                   </View>
                 )}
 
-                <Text style={styles.inputLabel}>Bank Account Number *</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="123456789012"
-                  placeholderTextColor="#9CA3AF"
-                  keyboardType="number-pad"
-                  value={bankAccountNo}
-                  onChangeText={setBankAccountNo}
-                  secureTextEntry={false}
-                />
+                <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start', marginVertical: 4 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Bank Account Number *</Text>
+                    <TextInput
+                      style={[styles.input, { letterSpacing: 1.5, fontWeight: '700' }]}
+                      placeholder="123456789012"
+                      placeholderTextColor="#6B7280"
+                      keyboardType="number-pad"
+                      value={bankAccountNo}
+                      onChangeText={setBankAccountNo}
+                    />
+                  </View>
 
-                <Text style={styles.inputLabel}>Re-Enter Bank Account Number *</Text>
-                <TextInput
-                  style={[styles.input, errors.confirmAccountNo && styles.inputError]}
-                  placeholder="Re-enter to confirm"
-                  placeholderTextColor="#9CA3AF"
-                  keyboardType="number-pad"
-                  value={confirmAccountNo}
-                  onChangeText={setConfirmAccountNo}
-                />
-                {errors.confirmAccountNo ? <Text style={styles.errText}>{errors.confirmAccountNo}</Text> : null}
-
-                <Text style={styles.inputLabel}>Account Holder Name</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="As printed on Passbook / Cheque"
-                  placeholderTextColor="#9CA3AF"
-                  value={bankHolderName}
-                  onChangeText={setBankHolderName}
-                />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Re-Enter Account Number *</Text>
+                    <TextInput
+                      style={[styles.input, { letterSpacing: 1.5, fontWeight: '700' }, errors.confirmAccountNo && styles.inputError]}
+                      placeholder="Re-enter to confirm"
+                      placeholderTextColor="#6B7280"
+                      keyboardType="number-pad"
+                      value={confirmAccountNo}
+                      onChangeText={setConfirmAccountNo}
+                    />
+                    {errors.confirmAccountNo ? <Text style={styles.errText}>{errors.confirmAccountNo}</Text> : null}
+                  </View>
+                </View>
 
                 <View style={styles.wizardBtnRow}>
                   <TouchableOpacity style={styles.prevBtn} onPress={() => setStep(2)}>
@@ -1132,36 +1176,43 @@ export default function SellerDashboardScreen() {
             {step === 4 && (
               <View>
                 <View style={styles.stepHeaderRow}>
-                  <FontAwesome5 name="shipping-fast" size={22} color="#10B981" />
+                  <MaterialCommunityIcons name="truck-delivery" size={26} color="#10B981" />
                   <Text style={styles.stepTitle}>4. Pickup Warehouse Hub</Text>
                 </View>
                 <Text style={styles.cardSubtitle}>
-                  Shiprocket Multi-Origin courier pickup location for automated dispatch.
+                  FarmsKing Express Logistics Multi-Origin warehouse pickup location for automated dispatch.
                 </Text>
 
-                <Text style={styles.inputLabel}>6-Digit Pickup Pincode *</Text>
-                <View style={styles.inputWithLoader}>
-                  <TextInput
-                    style={[styles.input, { flex: 1 }, errors.pickupPincode && styles.inputError]}
-                    placeholder="141001"
-                    placeholderTextColor="#9CA3AF"
-                    keyboardType="number-pad"
-                    value={pickupPincode}
-                    onChangeText={handlePincodeLookup}
-                    maxLength={6}
-                  />
-                  {isPincodeLoading && <ActivityIndicator size="small" color="#10B981" style={{ marginLeft: 8 }} />}
-                </View>
-                {errors.pickupPincode ? <Text style={styles.errText}>{errors.pickupPincode}</Text> : null}
+                {/* Compact 6-Digit Pincode & Auto-City/State Grid */}
+                <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start', marginVertical: 4 }}>
+                  <View style={{ width: 170 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={styles.inputLabel}>Pickup Pincode *</Text>
+                      <Text style={{ color: '#10B981', fontSize: 10, fontWeight: '800' }}>6 Digits</Text>
+                    </View>
+                    <View style={styles.inputWithLoader}>
+                      <TextInput
+                        style={[styles.input, { width: 170, textAlign: 'center', letterSpacing: 3, fontWeight: '800', fontSize: 15, borderColor: '#059669' }, errors.pickupPincode && styles.inputError]}
+                        placeholder="141001"
+                        placeholderTextColor="#6B7280"
+                        keyboardType="number-pad"
+                        value={pickupPincode}
+                        onChangeText={handlePincodeLookup}
+                        maxLength={6}
+                      />
+                      {isPincodeLoading && <ActivityIndicator size="small" color="#10B981" style={{ position: 'absolute', right: 8 }} />}
+                    </View>
+                    {errors.pickupPincode ? <Text style={styles.errText}>{errors.pickupPincode}</Text> : null}
+                  </View>
 
-                <View style={{ flexDirection: 'row', gap: 10 }}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.inputLabel}>City / District</Text>
-                    <TextInput style={styles.input} value={pickupCity} onChangeText={setPickupCity} />
+                    <TextInput style={styles.input} value={pickupCity} onChangeText={setPickupCity} placeholder="Auto-detected city" placeholderTextColor="#6B7280" />
                   </View>
+
                   <View style={{ flex: 1 }}>
                     <Text style={styles.inputLabel}>State</Text>
-                    <TextInput style={styles.input} value={pickupState} onChangeText={setPickupState} />
+                    <TextInput style={styles.input} value={pickupState} onChangeText={setPickupState} placeholder="Auto-state" placeholderTextColor="#6B7280" />
                   </View>
                 </View>
 
@@ -1209,7 +1260,7 @@ export default function SellerDashboardScreen() {
                   </View>
                 </View>
 
-                <Text style={styles.inputLabel}>Dispatch Manager Email (Shiprocket SMS/Tracking Alerts)</Text>
+                <Text style={styles.inputLabel}>Dispatch Manager Email (SMS / Tracking Alerts)</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="dispatch@seller.com"
@@ -1502,38 +1553,52 @@ export default function SellerDashboardScreen() {
               </View>
             </View>
 
-            {/* KPI Grid */}
-            <View style={styles.kpiGrid}>
-              <View style={[styles.kpiCard, { borderColor: '#10B981' }]}>
-                <MaterialCommunityIcons name="cube-outline" size={24} color="#10B981" />
-                <Text style={styles.kpiValue}>{stats.activeProducts}</Text>
-                <Text style={styles.kpiLabel}>Active Products</Text>
+            {/* Compact 4-Column Analytics Toolbar */}
+            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+              <View style={{ flex: 1, backgroundColor: '#111827', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#10B981', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#064E3B', justifyContent: 'center', alignItems: 'center' }}>
+                  <MaterialCommunityIcons name="cube-outline" size={18} color="#34D399" />
+                </View>
+                <View>
+                  <Text style={{ color: '#FFF', fontSize: 16, fontWeight: '800' }}>{stats.activeProducts}</Text>
+                  <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600' }}>Active Products</Text>
+                </View>
               </View>
 
-              <View style={[styles.kpiCard, { borderColor: '#3B82F6' }]}>
-                <MaterialCommunityIcons name="cart-check" size={24} color="#3B82F6" />
-                <Text style={styles.kpiValue}>{stats.totalOrders}</Text>
-                <Text style={styles.kpiLabel}>Total Orders</Text>
+              <View style={{ flex: 1, backgroundColor: '#111827', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#3B82F6', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#1E3A8A', justifyContent: 'center', alignItems: 'center' }}>
+                  <MaterialCommunityIcons name="cart-check" size={18} color="#60A5FA" />
+                </View>
+                <View>
+                  <Text style={{ color: '#FFF', fontSize: 16, fontWeight: '800' }}>{stats.totalOrders}</Text>
+                  <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600' }}>Total Orders</Text>
+                </View>
               </View>
-            </View>
 
-            <View style={styles.kpiGrid}>
               <TouchableOpacity
-                style={[styles.kpiCard, { borderColor: '#F59E0B' }]}
+                style={{ flex: 1, backgroundColor: '#111827', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#F59E0B', flexDirection: 'row', alignItems: 'center', gap: 8 }}
                 onPress={() => router.push('/seller-payouts')}
               >
-                <FontAwesome5 name="wallet" size={20} color="#F59E0B" />
-                <Text style={styles.kpiValue}>₹{stats.pendingPayoutsAmount}</Text>
-                <Text style={styles.kpiLabel}>Pending Payouts</Text>
+                <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#78350F', justifyContent: 'center', alignItems: 'center' }}>
+                  <FontAwesome5 name="wallet" size={14} color="#FBBF24" />
+                </View>
+                <View>
+                  <Text style={{ color: '#FFF', fontSize: 15, fontWeight: '800' }}>₹{stats.pendingPayoutsAmount}</Text>
+                  <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600' }}>Pending Payouts</Text>
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.kpiCard, { borderColor: '#8B5CF6' }]}
+                style={{ flex: 1, backgroundColor: '#111827', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#8B5CF6', flexDirection: 'row', alignItems: 'center', gap: 8 }}
                 onPress={() => router.push('/seller-payouts')}
               >
-                <FontAwesome5 name="hand-holding-usd" size={20} color="#8B5CF6" />
-                <Text style={styles.kpiValue}>₹{stats.settledPayoutsAmount}</Text>
-                <Text style={styles.kpiLabel}>Settled Earnings</Text>
+                <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#4C1D95', justifyContent: 'center', alignItems: 'center' }}>
+                  <FontAwesome5 name="hand-holding-usd" size={14} color="#A78BFA" />
+                </View>
+                <View>
+                  <Text style={{ color: '#FFF', fontSize: 15, fontWeight: '800' }}>₹{stats.settledPayoutsAmount}</Text>
+                  <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600' }}>Settled Earnings</Text>
+                </View>
               </TouchableOpacity>
             </View>
 
@@ -1741,7 +1806,7 @@ export default function SellerDashboardScreen() {
                 <View style={{ backgroundColor: '#111827', borderRadius: 12, padding: 12, marginVertical: 10, borderWidth: 1, borderColor: '#059669' }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                     <Text style={{ color: '#10B981', fontSize: 13.5, fontWeight: '800' }}>
-                      📦 Product Variants Pricing & Shiprocket Logistics Matrix ({productVariants.length})
+                      📦 Product Variants Pricing & FarmsKing Express Logistics Matrix ({productVariants.length})
                     </Text>
                     <TouchableOpacity
                       style={{ backgroundColor: '#059669', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 4 }}
@@ -1891,7 +1956,7 @@ export default function SellerDashboardScreen() {
                               />
                             </View>
                             <View style={{ flex: 1.5 }}>
-                              <Text style={{ color: '#9CA3AF', fontSize: 10 }}>Shiprocket SKU *</Text>
+                              <Text style={{ color: '#9CA3AF', fontSize: 10 }}>Variant SKU *</Text>
                               <TextInput
                                 style={[styles.input, { height: 34, fontSize: 10 }]}
                                 value={v.sku}
@@ -1905,11 +1970,11 @@ export default function SellerDashboardScreen() {
                   })}
                 </View>
 
-                {/* 9. SHIPROCKET SKU CODE & MASTER BOX UNITS */}
+                {/* 9. FARMSKING SKU CODE & MASTER BOX UNITS */}
                 <View style={{ flexDirection: 'row', gap: 10, marginVertical: 4 }}>
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text style={styles.inputLabel}>Shiprocket SKU Code *</Text>
+                      <Text style={styles.inputLabel}>FarmsKing SKU Code *</Text>
                       <TouchableOpacity
                         onPress={() => setSkuCode(`FK-${productCategorySlug.substring(0, 3).toUpperCase()}-${Math.floor(10000 + Math.random() * 90000)}`)}
                       >
@@ -2442,7 +2507,7 @@ export default function SellerDashboardScreen() {
             <View style={styles.infoBox}>
               <Ionicons name="shield-checkmark" size={20} color="#10B981" />
               <View style={{ flex: 1, marginLeft: 8 }}>
-                <Text style={styles.infoTitle}>Cashfree Nodal Split & 1% GST TCS Active</Text>
+                <Text style={styles.infoTitle}>FarmsKing Nodal Settlement & 1% GST TCS Active</Text>
                 <Text style={styles.infoDesc}>
                   FarmsKing Platform Fee: {stats.commissionRate}% | 1% GST TCS tax automatically deducted & filed for your GSTR-8 returns.
                 </Text>

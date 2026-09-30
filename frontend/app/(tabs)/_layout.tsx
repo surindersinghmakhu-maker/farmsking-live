@@ -83,7 +83,7 @@ const badgeStyles = StyleSheet.create({
 });
 
 type TabName =
-  | 'index' | 'shop' | 'farm' | 'records' | 'market' | 'more'
+  | 'index' | 'shop' | 'farm' | 'records' | 'market' | 'more' | 'admin_more'
   | 'categories' | 'cart' | 'orders'
   | 'farmers' | 'schedule' | 'chat'
   | 'referrals' | 'wallet'
@@ -100,16 +100,16 @@ const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
   FARM_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
   GARDEN_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
   BUSINESS_PARTNER: { tabs: ['index', 'shop', 'referrals', 'wallet', 'more'] },
-  ADMIN: { tabs: ['index', 'shop', 'super-users', 'super-coupons', 'super-accounts', 'super-settings', 'more'] },
-  SUPER_ADMIN: { tabs: ['index', 'shop', 'super-users', 'super-coupons', 'super-accounts', 'super-settings', 'more'] },
-  MANAGER: { tabs: ['index', 'shop', 'super-users', 'super-coupons', 'super-accounts', 'super-settings', 'more'] },
+  ADMIN: { tabs: ['index', 'shop', 'super-users', 'super-coupons', 'super-accounts', 'super-settings', 'admin_more'] },
+  SUPER_ADMIN: { tabs: ['index', 'shop', 'super-users', 'super-coupons', 'super-accounts', 'super-settings', 'admin_more'] },
+  MANAGER: { tabs: ['index', 'shop', 'super-users', 'super-coupons', 'super-accounts', 'super-settings', 'admin_more'] },
   SUPERVISOR: { tabs: ['index', 'shop', 'farm', 'records', 'wallet', 'more'] },
   OPERATOR: { tabs: ['index', 'shop', 'operator-orders', 'wallet', 'more'] },
   LABOUR: { tabs: ['index', 'shop', 'wallet', 'more'] },
   TECHNICAL_TRAINER: { tabs: ['index', 'trainer-dashboard', 'shop', 'wallet', 'more'] },
 };
 
-const TAB_META: Record<Exclude<TabName, 'index' | 'more'>, { key: TranslationKey; title: string; icon: keyof typeof Ionicons.glyphMap; iconFilled: keyof typeof Ionicons.glyphMap }> = {
+const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key: TranslationKey; title: string; icon: keyof typeof Ionicons.glyphMap; iconFilled: keyof typeof Ionicons.glyphMap }> = {
   shop: { key: 'tabCustomerHome', title: 'Store', icon: 'bag-outline', iconFilled: 'bag' },
   farm: { key: 'tabCrops', title: 'Crops', icon: 'leaf-outline', iconFilled: 'leaf' },
   records: { key: 'tabRecords', title: 'Accounts', icon: 'document-text-outline', iconFilled: 'document-text' },
@@ -144,7 +144,7 @@ const ALL_TABS: TabName[] = [
   'super-users', 'super-coupons', 'super-accounts', 'super-settings',
   'super-orders', 'super-audit-log', 'super-crop-edit',
   'operator-orders', 'trainer-dashboard',
-  'more',
+  'more', 'admin_more',
 ];
 
 export default function TabLayout() {
@@ -341,6 +341,21 @@ export default function TabLayout() {
                     href: isShown ? undefined : null,
                     tabBarIcon: ({ color, focused }) => (
                       <Ionicons size={23} name={focused ? 'grid' : 'grid-outline'} color={color} />
+                    ),
+                  }}
+                />
+              );
+            }
+            if (name === 'admin_more') {
+              return (
+                <Tabs.Screen
+                  key={name}
+                  name="admin_more"
+                  options={{
+                    title: t('tabMore', 'More'),
+                    href: isShown ? undefined : null,
+                    tabBarIcon: ({ color, focused }) => (
+                      <Ionicons size={23} name={focused ? 'shield-checkmark' : 'shield-checkmark-outline'} color={color} />
                     ),
                   }}
                 />

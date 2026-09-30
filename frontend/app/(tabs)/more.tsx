@@ -239,153 +239,19 @@ export default function MoreScreen() {
         </LinearGradient>
 
         <View style={styles.body}>
-          {/* 👑 ADMIN MORE MENU (EXCLUSIVELY FOR ADMIN & SUPER_ADMIN) */}
-          {isAdminRole ? (
-            <>
-              {/* 👑 Admin Control Center & Fast Tools */}
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>👑 ADMIN CONTROL CENTER</Text>
-                <View style={styles.sectionCard}>
-                  {SUPER_ADMIN_ITEMS.map((item, idx) => (
-                    <TouchableOpacity
-                      key={item.key}
-                      style={[styles.row, idx === SUPER_ADMIN_ITEMS.length - 1 && { borderBottomWidth: 0 }]}
-                      activeOpacity={0.7}
-                      onPress={() => {
-                        if (item.key === 'workspace') {
-                          setShowWorkspaceModal(true);
-                        } else if (item.href) {
-                          router.push(item.href as any);
-                        }
-                      }}
-                    >
-                      <View style={[styles.rowIconBg, { backgroundColor: '#fef3c7' }]}>
-                        <Ionicons name={item.icon} size={18} color="#d97706" />
-                      </View>
-                      <Text style={[styles.rowLabel, { fontWeight: '700' }]}>
-                        {item.key === 'workspace' ? item.label : t(item.key as TranslationKey, item.label)}
-                      </Text>
-                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              {/* 🛠️ C-PANEL & MANAGEMENT */}
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>🛠️ C-PANEL & MANAGEMENT</Text>
-                <View style={styles.sectionCard}>
-                  {/* 🏷️ Expense Categories */}
-                  <TouchableOpacity
-                    style={styles.row}
-                    activeOpacity={0.7}
-                    onPress={() => setShowCategoriesModal(true)}
-                  >
-                    <View style={[styles.rowIconBg, { backgroundColor: '#fef2f2' }]}>
-                      <Ionicons name="pricetags-outline" size={18} color="#dc2626" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.rowLabel}>🏷️ Expense Categories</Text>
-                      <Text style={styles.rowSubLabel}>Add, edit & deactivate expense categories</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                  </TouchableOpacity>
-
-                  {/* 👑 Admin Info */}
-                  <TouchableOpacity
-                    style={styles.row}
-                    activeOpacity={0.7}
-                    onPress={() => setShowAboutModal(true)}
-                  >
-                    <View style={[styles.rowIconBg, { backgroundColor: '#eff6ff' }]}>
-                      <Ionicons name="shield-checkmark-outline" size={18} color="#2563eb" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.rowLabel}>👑 Admin Info</Text>
-                      <Text style={styles.rowSubLabel}>App Name, Brand Logo, Tagline, UPI & Admin Profile</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                  </TouchableOpacity>
-
-                  {/* 🎙️ Group Voice Call Toggle */}
-                  <TouchableOpacity
-                    style={styles.row}
-                    activeOpacity={0.7}
-                    onPress={() => setIsGroupVoiceCallEnabled(v => !v)}
-                  >
-                    <View style={[styles.rowIconBg, { backgroundColor: '#f0fdf4' }]}>
-                      <Ionicons name="mic-outline" size={18} color="#059669" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.rowLabel}>🎙️ Group Voice Call</Text>
-                      <Text style={styles.rowSubLabel}>{isGroupVoiceCallEnabled ? 'STATUS: ACTIVE' : 'STATUS: DISABLED'}</Text>
-                    </View>
-                    <Ionicons
-                      name={isGroupVoiceCallEnabled ? 'toggle' : 'toggle-outline'}
-                      size={28}
-                      color={isGroupVoiceCallEnabled ? '#10b981' : '#cbd5e1'}
-                    />
-                  </TouchableOpacity>
-
-                  {/* ⚙️ System Settings */}
-                  <TouchableOpacity
-                    style={styles.row}
-                    activeOpacity={0.7}
-                    onPress={() => router.push('/(tabs)/super-settings' as any)}
-                  >
-                    <View style={[styles.rowIconBg, { backgroundColor: '#f8fafc' }]}>
-                      <Ionicons name="options-outline" size={18} color="#0d9488" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.rowLabel}>⚙️ System Settings</Text>
-                      <Text style={styles.rowSubLabel}>Full system & feature flag controls</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                  </TouchableOpacity>
-
-                  {/* 💼 Workspace */}
-                  <TouchableOpacity
-                    style={styles.row}
-                    activeOpacity={0.7}
-                    onPress={() => setShowWorkspaceModal(true)}
-                  >
-                    <View style={[styles.rowIconBg, { backgroundColor: '#ccfbf1' }]}>
-                      <Ionicons name="briefcase-outline" size={18} color="#0d9488" />
-                    </View>
-                    <Text style={styles.rowLabel}>💼 Workspace (Backup & Tools)</Text>
-                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                  </TouchableOpacity>
-
-                  {/* 📖 User Guides */}
-                  <TouchableOpacity
-                    style={[styles.row, { borderBottomWidth: 0 }]}
-                    activeOpacity={0.7}
-                    onPress={() => setShowGuidesModal(true)}
-                  >
-                    <View style={[styles.rowIconBg, { backgroundColor: '#f0fdf4' }]}>
-                      <Ionicons name="book-outline" size={18} color="#15803d" />
-                    </View>
-                    <Text style={styles.rowLabel}>📖 User Guides</Text>
-                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </>
-          ) : (
-            /* 🌾 FARMER / REGULAR USER MORE MENU */
-            <>
-              <SwitchDashboardSection
-                extraRows={
-                  showAdvisorBusinessSection
-                    ? ADVISOR_BUSINESS_ITEMS.map((item) => ({
-                      key: item.key,
-                      label: t(item.key, item.label),
-                      icon: item.icon,
-                      onPress: () => item.href && router.push(item.href as any),
-                    }))
-                    : undefined
-                }
-              />
+          {/* 🌾 FARMER / REGULAR USER MORE MENU */}
+          <SwitchDashboardSection
+            extraRows={
+              showAdvisorBusinessSection
+                ? ADVISOR_BUSINESS_ITEMS.map((item) => ({
+                  key: item.key,
+                  label: t(item.key, item.label),
+                  icon: item.icon,
+                  onPress: () => item.href && router.push(item.href as any),
+                }))
+                : undefined
+            }
+          />
 
               {/* 🤖 FarmsKing Kheti Mitra AI Doctor Row */}
               <View style={styles.section}>
@@ -548,8 +414,6 @@ export default function MoreScreen() {
                   </View>
                 </View>
               ) : null}
-            </>
-          )}
 
           {/* Developer & Support Section */}
           <View style={styles.section}>

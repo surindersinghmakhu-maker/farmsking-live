@@ -1704,7 +1704,7 @@ export default function SellerDashboardScreen() {
                 onPress={() => router.push('/(tabs)/shop')}
               >
                 <Ionicons name="storefront-outline" size={16} color="#FFF" />
-                <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '700' }}>Go to FK Store</Text>
+                <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '700' }}>FK Store</Text>
               </TouchableOpacity>
             </View>
 
@@ -1866,40 +1866,47 @@ export default function SellerDashboardScreen() {
                   </View>
                 ) : null}
 
-                {/* 2. FSSAI FOOD LICENSE NOTICE */}
-                {isFarmerMadeProduct || productCategory.includes('Food') ? (
+                {/* 2. FSSAI FOOD LICENSE NOTICE (Food Mode Only) */}
+                {productType === 'FOOD' && (
                   <View style={{ backgroundColor: storeData?.fssaiNo ? '#065F46' : '#78350F', borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: storeData?.fssaiNo ? '#10B981' : '#F59E0B' }}>
                     <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '700' }}>
                       {storeData?.fssaiNo ? `✅ FSSAI Licensed Seller (${storeData.fssaiNo}): National Delivery Active` : '⚠️ No FSSAI Food License Attached: Restricted to Intra-State Local Delivery'}
                     </Text>
                   </View>
-                ) : null}
+                )}
 
                 {/* 3. MULTI-PHOTO GALLERY & PRESET SAMPLE PHOTOS */}
                 <Text style={styles.inputLabel}>Product Photo(s) * (Select Gallery, Angle Photo, or Preset Sample)</Text>
                 
                 {/* Preset Sample Photo Buttons */}
                 <View style={{ marginBottom: 8 }}>
-                  <Text style={{ color: '#9CA3AF', fontSize: 11, marginBottom: 4 }}>⚡ Quick Select Sample Agri Photo if device gallery photo is not ready:</Text>
+                  <Text style={{ color: '#9CA3AF', fontSize: 11, marginBottom: 4 }}>
+                    ⚡ Quick Select Sample {productType === 'FOOD' ? 'Food' : 'Agri'} Photo if gallery photo is not ready:
+                  </Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     <View style={{ flexDirection: 'row', gap: 6 }}>
-                      {[
-                        { label: '🌾 Seeds Bag', url: 'https://images.unsplash.com/photo-1592417817098-8f3d6ef23a80?q=80&w=600&auto=format&fit=crop' },
-                        { label: '🧪 Bio-Spray Bottle', url: 'https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?q=80&w=600&auto=format&fit=crop' },
-                        { label: '🍯 Organic Gur/Honey', url: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?q=80&w=600&auto=format&fit=crop' },
-                        { label: '🥦 Fresh Farm Produce', url: 'https://images.unsplash.com/photo-1610348725531-843dff563e2c?q=80&w=600&auto=format&fit=crop' },
-                        { label: '⚡ Fertilizer Sack', url: 'https://images.unsplash.com/photo-1628352081506-83c43123ed6d?q=80&w=600&auto=format&fit=crop' },
-                      ].map((item, i) => (
+                      {(productType === 'FOOD'
+                        ? [
+                            { label: '🍯 Organic Gur/Honey', url: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?q=80&w=600&auto=format&fit=crop' },
+                            { label: '🥦 Fresh Farm Produce', url: 'https://images.unsplash.com/photo-1610348725531-843dff563e2c?q=80&w=600&auto=format&fit=crop' },
+                            { label: '🌾 Desi Wheat Grains', url: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?q=80&w=600&auto=format&fit=crop' },
+                          ]
+                        : [
+                            { label: '🌾 Seeds Bag', url: 'https://images.unsplash.com/photo-1592417817098-8f3d6ef23a80?q=80&w=600&auto=format&fit=crop' },
+                            { label: '🧪 Bio-Spray Bottle', url: 'https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?q=80&w=600&auto=format&fit=crop' },
+                            { label: '⚡ Fertilizer Sack', url: 'https://images.unsplash.com/photo-1628352081506-83c43123ed6d?q=80&w=600&auto=format&fit=crop' },
+                          ]
+                      ).map((item, i) => (
                         <TouchableOpacity
                           key={i}
-                          style={{ backgroundColor: '#064E3B', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#10B981', flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                          style={{ backgroundColor: productType === 'FOOD' ? '#064E3B' : '#1E3A5F', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: productType === 'FOOD' ? '#10B981' : '#3B82F6', flexDirection: 'row', alignItems: 'center', gap: 4 }}
                           onPress={() => {
                             setImageFrontUrl(item.url);
                             setNewProductImages((prev) => Array.from(new Set([item.url, ...prev])));
                             showAlert('Sample Photo Selected 📸', `${item.label} photo set as primary product image!`);
                           }}
                         >
-                          <Text style={{ color: '#34D399', fontSize: 11, fontWeight: '700' }}>{item.label}</Text>
+                          <Text style={{ color: productType === 'FOOD' ? '#34D399' : '#60A5FA', fontSize: 11, fontWeight: '700' }}>{item.label}</Text>
                         </TouchableOpacity>
                       ))}
                     </View>
@@ -1972,7 +1979,10 @@ export default function SellerDashboardScreen() {
                 {/* 5. BRAND SELECTOR */}
                 <Text style={styles.inputLabel}>Brand / Producer</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 }}>
-                  {['FarmsKing Certified', 'Syngenta', 'Bayer CropScience', 'UPL Ltd', 'Tata Rallis', 'IFFCO', 'Natural Farmer Direct'].map((b) => (
+                  {(productType === 'FOOD'
+                    ? ['FarmsKing Certified', 'Natural Farmer Direct', 'Desi Organics', 'Gramin Udyog', 'Self Help Group (SHG)']
+                    : ['FarmsKing Certified', 'Syngenta', 'Bayer CropScience', 'UPL Ltd', 'Tata Rallis', 'IFFCO', 'Natural Farmer Direct']
+                  ).map((b) => (
                     <TouchableOpacity
                       key={b}
                       style={[styles.entityChip, newBrand === b && styles.activeEntityChip]}
@@ -1983,40 +1993,38 @@ export default function SellerDashboardScreen() {
                   ))}
                 </View>
 
-                {/* 6. CATEGORY & SUBCATEGORY SELECTOR */}
+                {/* 6. CATEGORY SELECTOR */}
                 <Text style={styles.inputLabel}>Primary Category *</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 }}>
-                  {!storeData?.gstin ? (
-                    ['Natural Farmer Foods', 'Farmer Made Foods', 'Farm-Saved Seeds (Desi Seeds)', 'Bio & Organics (Vermicompost/Neem Cake)', 'Raw Farm Produce & Grains'].map((c) => (
+                  {productType === 'FOOD' ? (
+                    ['Natural Farmer Foods', 'Farmer Made Foods', 'Organic Staples & Grocery', 'Fresh Fruits & Vegetables', 'Dairy & Edibles', 'Handmade Delicacies'].map((c) => (
                       <TouchableOpacity
                         key={c}
                         style={[styles.entityChip, productCategory === c && styles.activeEntityChip]}
                         onPress={() => {
                           setProductCategory(c);
-                          setIsFarmerMadeProduct(c.includes('Food') || c.includes('Produce'));
+                          setIsFarmerMadeProduct(true);
                         }}
                       >
-                        <Text style={[styles.entityText, productCategory === c && styles.activeEntityText]}>🌾 {c}</Text>
+                        <Text style={[styles.entityText, productCategory === c && styles.activeEntityText]}>🥗 {c}</Text>
                       </TouchableOpacity>
                     ))
                   ) : (
-                    ['Seeds', 'Fertilizers', 'Crop Protection', 'Farm Machinery & Tools', 'Bio & Organics', 'Natural Farmer Foods'].map((c) => (
+                    ['Seeds', 'Fertilizers', 'Crop Protection', 'Farm Machinery & Tools', 'Bio & Organics'].map((c) => (
                       <TouchableOpacity
                         key={c}
                         style={[styles.entityChip, productCategory === c && styles.activeEntityChip]}
                         onPress={() => {
                           const activeAgriLicenseNo = storeData?.agriLicenseNo || agriLicenseNo;
-
                           if (c.includes('Protection') && (!activeAgriLicenseNo || !activeAgriLicenseNo.trim())) {
                             showAlert('Agri Inputs License Required ⚠️', 'Agri Inputs License No. (Pesticide License) must be filled in store settings to select Chemical Crop Protection.');
                             return;
                           }
-
                           setProductCategory(c);
-                          setIsFarmerMadeProduct(c.includes('Food'));
+                          setIsFarmerMadeProduct(false);
                         }}
                       >
-                        <Text style={[styles.entityText, productCategory === c && styles.activeEntityText]}>{c}</Text>
+                        <Text style={[styles.entityText, productCategory === c && styles.activeEntityText]}>🌾 {c}</Text>
                       </TouchableOpacity>
                     ))
                   )}
@@ -2223,158 +2231,139 @@ export default function SellerDashboardScreen() {
                   </View>
                 </View>
 
-                {/* SHIPROCKET LIQUID / HAZARDOUS CARGO MODE TOGGLE */}
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: isDangerousGood ? '#78350F' : '#1F2937',
-                    borderRadius: 8,
-                    padding: 10,
-                    marginVertical: 6,
-                    borderWidth: 1,
-                    borderColor: isDangerousGood ? '#F59E0B' : '#374151',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}
-                  onPress={() => setIsDangerousGood(!isDangerousGood)}
-                >
-                  <View style={{ flex: 1, marginRight: 8 }}>
-                    <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '700' }}>
-                      🧪 Liquid / Bio-Chemical Cargo Mode ({isDangerousGood ? 'Surface Transport Mandatory' : 'Standard'})
-                    </Text>
-                    <Text style={{ color: '#9CA3AF', fontSize: 10.5, marginTop: 2 }}>
-                      Enable for liquid sprays, bio-fertilizers, or oils (Air Cargo Restricted by IATA).
-                    </Text>
-                  </View>
-                  <Ionicons
-                    name={isDangerousGood ? 'checkbox' : 'square-outline'}
-                    size={22}
-                    color={isDangerousGood ? '#F59E0B' : '#9CA3AF'}
-                  />
-                </TouchableOpacity>
-
-                {/* 10. GST % & HSN CODE */}
-                <View style={{ flexDirection: 'row', gap: 10 }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.inputLabel}>GST Tax Rate</Text>
-                    <TextInput style={styles.input} value={storeData?.gstin ? newGstRate : 'Exempt (0%)'} onChangeText={setNewGstRate} editable={Boolean(storeData?.gstin)} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.inputLabel}>HSN Code *</Text>
-                    <TextInput style={styles.input} value={hsnCode} onChangeText={setHsnCode} placeholder="120991" placeholderTextColor="#9CA3AF" />
-                  </View>
-                </View>
-
-                {/* 10. STOCK & UNIT */}
-                <View style={{ flexDirection: 'row', gap: 10 }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.inputLabel}>Stock Quantity</Text>
-                    <TextInput style={styles.input} keyboardType="number-pad" value={stockQty} onChangeText={setStockQty} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.inputLabel}>Unit of Measure</Text>
-                    <TextInput style={styles.input} value={newUnit} onChangeText={setNewUnit} placeholder="bag / kg / litre" placeholderTextColor="#9CA3AF" />
-                  </View>
-                </View>
-
-                {/* 11. TARGET CROP & TECHNICAL FORMULA */}
-                <Text style={styles.inputLabel}>Target Crop</Text>
-                <TextInput style={styles.input} value={newTargetCrop} onChangeText={setNewTargetCrop} placeholder="e.g. Wheat, Cotton, Sugarcane, Vegetables" placeholderTextColor="#9CA3AF" />
-
-                <Text style={styles.inputLabel}>Technical Formula / Active Ingredients (Optional)</Text>
-                <TextInput style={styles.input} value={newTechnicalFormula} onChangeText={setNewTechnicalFormula} placeholder="e.g. Neem Oil 10000 PPM" placeholderTextColor="#9CA3AF" />
-
-                <Text style={styles.inputLabel}>Dosage Instructions per Acre (Optional)</Text>
-                <TextInput style={styles.input} value={newDosageInstructions} onChangeText={setNewDosageInstructions} placeholder="e.g. 250 ml per acre in 150L water" placeholderTextColor="#9CA3AF" />
-
-                {/* 11.5 AGRI E-COMMERCE SPECIFICATIONS & CIBRC TOXICITY (BIGHAAT & AGROSTAR STANDARDS) */}
-                <View style={{ backgroundColor: '#111827', borderRadius: 10, padding: 12, marginVertical: 8, borderWidth: 1, borderColor: '#374151' }}>
-                  <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '800', marginBottom: 6 }}>
-                    🌿 Agri Specifications & CIBRC Safety Rating (BigHaat & AgroStar Standard)
-                  </Text>
-
-                  {/* Physical State Form & Mode of Action */}
-                  <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.inputLabel}>Physical Form / State</Text>
-                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-                        {['Liquid / Spray', 'Granules / Khad', 'Powder / WP', 'Fresh Produce'].map((f) => (
-                          <TouchableOpacity
-                            key={f}
-                            style={[styles.entityChip, physicalForm === f && styles.activeEntityChip]}
-                            onPress={() => setPhysicalForm(f)}
-                          >
-                            <Text style={[styles.entityText, physicalForm === f && styles.activeEntityText, { fontSize: 10 }]}>{f}</Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    </View>
-
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.inputLabel}>Mode of Action</Text>
-                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-                        {['Systemic Action', 'Contact Action', 'Preventive & Curative', 'Foliar Spray'].map((m) => (
-                          <TouchableOpacity
-                            key={m}
-                            style={[styles.entityChip, modeOfAction === m && styles.activeEntityChip]}
-                            onPress={() => setModeOfAction(m)}
-                          >
-                            <Text style={[styles.entityText, modeOfAction === m && styles.activeEntityText, { fontSize: 10 }]}>{m}</Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    </View>
-                  </View>
-
-                  {/* CIBRC Toxicity Warning Band */}
-                  <Text style={styles.inputLabel}>CIBRC Insecticide Toxicity Safety Rating</Text>
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 }}>
-                    {[
-                      { label: '🟢 Green (Safe / Organic)', color: '#059669' },
-                      { label: '🔵 Blue (Moderate Toxicity)', color: '#2563EB' },
-                      { label: '🟡 Yellow (High Toxicity)', color: '#D97706' },
-                      { label: '🔴 Red (Extremely Toxic)', color: '#DC2626' },
-                    ].map((b) => (
-                      <TouchableOpacity
-                        key={b.label}
-                        style={[styles.entityChip, toxicityBand === b.label && { backgroundColor: b.color, borderColor: '#FFF' }]}
-                        onPress={() => setToxicityBand(b.label)}
-                      >
-                        <Text style={[styles.entityText, toxicityBand === b.label && { color: '#FFF', fontWeight: '800' }, { fontSize: 10.5 }]}>
-                          {b.label}
+                {/* 11. AGRI SPECIFIC TECHNICAL FORMULATION & TOXICITY (Farm Mode Only) */}
+                {productType === 'FARM' && (
+                  <View>
+                    {/* LIQUID / HAZARDOUS CARGO MODE TOGGLE */}
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: isDangerousGood ? '#78350F' : '#1F2937',
+                        borderRadius: 8,
+                        padding: 10,
+                        marginVertical: 6,
+                        borderWidth: 1,
+                        borderColor: isDangerousGood ? '#F59E0B' : '#374151',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                      }}
+                      onPress={() => setIsDangerousGood(!isDangerousGood)}
+                    >
+                      <View style={{ flex: 1, marginRight: 8 }}>
+                        <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '700' }}>
+                          🧪 Liquid / Bio-Chemical Cargo Mode ({isDangerousGood ? 'Surface Transport Mandatory' : 'Standard'})
                         </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-
-                  {/* Shelf Life & Return Policy */}
-                  <View style={{ flexDirection: 'row', gap: 10, marginTop: 6 }}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.inputLabel}>Shelf Life / Expiry Duration</Text>
-                      <TextInput
-                        style={styles.input}
-                        value={shelfLife}
-                        onChangeText={setShelfLife}
-                        placeholder="e.g. 2 Years from Mfg Date"
-                        placeholderTextColor="#9CA3AF"
+                        <Text style={{ color: '#9CA3AF', fontSize: 10.5, marginTop: 2 }}>
+                          Enable for liquid sprays, bio-fertilizers, or oils (Air Cargo Restricted by IATA).
+                        </Text>
+                      </View>
+                      <Ionicons
+                        name={isDangerousGood ? 'checkbox' : 'square-outline'}
+                        size={22}
+                        color={isDangerousGood ? '#F59E0B' : '#9CA3AF'}
                       />
-                    </View>
+                    </TouchableOpacity>
 
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.inputLabel}>Return & Replacement Policy</Text>
-                      <TextInput
-                        style={styles.input}
-                        value={returnPolicy}
-                        onChangeText={setReturnPolicy}
-                        placeholder="Replacement Only (Agri Inputs)"
-                        placeholderTextColor="#9CA3AF"
-                      />
+                    {/* TARGET CROP & TECHNICAL FORMULA */}
+                    <Text style={styles.inputLabel}>Target Crop</Text>
+                    <TextInput style={styles.input} value={newTargetCrop} onChangeText={setNewTargetCrop} placeholder="e.g. Wheat, Cotton, Sugarcane, Vegetables" placeholderTextColor="#9CA3AF" />
+
+                    <Text style={styles.inputLabel}>Technical Formula / Active Ingredients (Optional)</Text>
+                    <TextInput style={styles.input} value={newTechnicalFormula} onChangeText={setNewTechnicalFormula} placeholder="e.g. Neem Oil 10000 PPM" placeholderTextColor="#9CA3AF" />
+
+                    <Text style={styles.inputLabel}>Dosage Instructions per Acre (Optional)</Text>
+                    <TextInput style={styles.input} value={newDosageInstructions} onChangeText={setNewDosageInstructions} placeholder="e.g. 250 ml per acre in 150L water" placeholderTextColor="#9CA3AF" />
+
+                    {/* AGRI E-COMMERCE SPECIFICATIONS & CIBRC TOXICITY */}
+                    <View style={{ backgroundColor: '#111827', borderRadius: 10, padding: 12, marginVertical: 8, borderWidth: 1, borderColor: '#374151' }}>
+                      <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '800', marginBottom: 6 }}>
+                        🌿 Agri Specifications & CIBRC Safety Rating (BigHaat & AgroStar Standard)
+                      </Text>
+
+                      {/* Physical State Form & Mode of Action */}
+                      <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.inputLabel}>Physical Form / State</Text>
+                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                            {['Liquid / Spray', 'Granules / Khad', 'Powder / WP'].map((f) => (
+                              <TouchableOpacity
+                                key={f}
+                                style={[styles.entityChip, physicalForm === f && styles.activeEntityChip]}
+                                onPress={() => setPhysicalForm(f)}
+                              >
+                                <Text style={[styles.entityText, physicalForm === f && styles.activeEntityText, { fontSize: 10 }]}>{f}</Text>
+                              </TouchableOpacity>
+                            ))}
+                          </View>
+                        </View>
+
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.inputLabel}>Mode of Action</Text>
+                          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                            {['Systemic Action', 'Contact Action', 'Preventive & Curative', 'Foliar Spray'].map((m) => (
+                              <TouchableOpacity
+                                key={m}
+                                style={[styles.entityChip, modeOfAction === m && styles.activeEntityChip]}
+                                onPress={() => setModeOfAction(m)}
+                              >
+                                <Text style={[styles.entityText, modeOfAction === m && styles.activeEntityText, { fontSize: 10 }]}>{m}</Text>
+                              </TouchableOpacity>
+                            ))}
+                          </View>
+                        </View>
+                      </View>
+
+                      {/* CIBRC Toxicity Warning Band */}
+                      <Text style={styles.inputLabel}>CIBRC Insecticide Toxicity Safety Rating</Text>
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 }}>
+                        {[
+                          { label: '🟢 Green (Safe / Organic)', color: '#059669' },
+                          { label: '🔵 Blue (Moderate Toxicity)', color: '#2563EB' },
+                          { label: '🟡 Yellow (High Toxicity)', color: '#D97706' },
+                          { label: '🔴 Red (Extremely Toxic)', color: '#DC2626' },
+                        ].map((b) => (
+                          <TouchableOpacity
+                            key={b.label}
+                            style={[styles.entityChip, toxicityBand === b.label && { backgroundColor: b.color, borderColor: '#FFF' }]}
+                            onPress={() => setToxicityBand(b.label)}
+                          >
+                            <Text style={[styles.entityText, toxicityBand === b.label && { color: '#FFF', fontWeight: '800' }, { fontSize: 10.5 }]}>
+                              {b.label}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+
+                      {/* Shelf Life & Return Policy */}
+                      <View style={{ flexDirection: 'row', gap: 10, marginTop: 6 }}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.inputLabel}>Shelf Life / Expiry Duration</Text>
+                          <TextInput
+                            style={styles.input}
+                            value={shelfLife}
+                            onChangeText={setShelfLife}
+                            placeholder="e.g. 2 Years from Mfg Date"
+                            placeholderTextColor="#9CA3AF"
+                          />
+                        </View>
+
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.inputLabel}>Return & Replacement Policy</Text>
+                          <TextInput
+                            style={styles.input}
+                            value={returnPolicy}
+                            onChangeText={setReturnPolicy}
+                            placeholder="Replacement Only (Agri Inputs)"
+                            placeholderTextColor="#9CA3AF"
+                          />
+                        </View>
+                      </View>
                     </View>
                   </View>
-                </View>
+                )}
 
-                {/* 12. FSSAI PACKAGED FOOD COMPLIANCE & NUTRITIONAL MATRIX */}
-                {(isFarmerMadeProduct || productCategorySlug === 'food-products' || productCategory.includes('Food')) ? (
+                {/* 12. FSSAI PACKAGED FOOD COMPLIANCE & NUTRITIONAL MATRIX (Food Mode Only) */}
+                {productType === 'FOOD' && (
                   <View style={{ backgroundColor: '#064E3B', borderRadius: 12, padding: 12, marginVertical: 10, borderWidth: 1.5, borderColor: '#10B981' }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -2542,7 +2531,7 @@ export default function SellerDashboardScreen() {
                       placeholderTextColor="#9CA3AF"
                     />
                   </View>
-                ) : null}
+                )}
 
                 {/* 13. FULL DESCRIPTION */}
                 <Text style={styles.inputLabel}>Full Product Description</Text>

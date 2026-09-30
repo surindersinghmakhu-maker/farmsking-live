@@ -21,6 +21,19 @@ import { lookupPincode } from '@/src/api/pincode.api';
 import * as ImagePicker from 'expo-image-picker';
 import { RADIUS, FONT } from '@/constants/theme';
 
+export interface ProductVariantItem {
+  id: string;
+  packSize: string;
+  price: string;
+  mrp: string;
+  stockQty: string;
+  sku: string;
+  deadWeightKg: string;
+  lengthCm: string;
+  widthCm: string;
+  heightCm: string;
+}
+
 export default function SellerDashboardScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -113,6 +126,84 @@ export default function SellerDashboardScreen() {
   const [lengthCm, setLengthCm] = useState('10');
   const [widthCm, setWidthCm] = useState('10');
   const [heightCm, setHeightCm] = useState('10');
+
+  // Dynamic Product Variants Matrix (Per-Variant Price, Stock, Weight & Shiprocket Dimensions)
+  const [productVariants, setProductVariants] = useState<ProductVariantItem[]>([
+    {
+      id: 'var-1',
+      packSize: '1 Kg',
+      price: '450',
+      mrp: '600',
+      stockQty: '50',
+      sku: `FK-${Math.floor(100000 + Math.random() * 900000)}`,
+      deadWeightKg: '1.0',
+      lengthCm: '15',
+      widthCm: '10',
+      heightCm: '8',
+    },
+  ]);
+
+  const addVariantByChip = (sz: string) => {
+    const exists = productVariants.some((v) => v.packSize === sz);
+    if (exists) {
+      if (productVariants.length > 1) {
+        setProductVariants(productVariants.filter((v) => v.packSize !== sz));
+      } else {
+        showAlert('Primary Variant Required ⚠️', 'At least 1 product variant is required.');
+      }
+    } else {
+      let w = '1.0', l = '15', wi = '10', h = '8';
+      if (sz.includes('250') || sz.includes('500 gram')) { w = '0.5'; l = '10'; wi = '10'; h = '5'; }
+      else if (sz.includes('5 Kg')) { w = '5.2'; l = '25'; wi = '20'; h = '15'; }
+      else if (sz.includes('25 Kg')) { w = '25.5'; l = '50'; wi = '35'; h = '20'; }
+      else if (sz.includes('50 Kg')) { w = '50.5'; l = '70'; wi = '45'; h = '30'; }
+      else if (sz.includes('5 Litre')) { w = '5.1'; l = '22'; wi = '18'; h = '30'; }
+
+      const newVar: ProductVariantItem = {
+        id: `var-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        packSize: sz,
+        price: productPrice || '450',
+        mrp: newMrpPrice || '600',
+        stockQty: '50',
+        sku: `FK-${sz.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`,
+        deadWeightKg: w,
+        lengthCm: l,
+        widthCm: wi,
+        heightCm: h,
+      };
+      setProductVariants([...productVariants, newVar]);
+    }
+  };
+
+  const updateVariantField = (id: string, field: keyof ProductVariantItem, val: string) => {
+    setProductVariants((prev) =>
+      prev.map((v) => (v.id === id ? { ...v, [field]: val } : v))
+    );
+  };
+
+  const removeVariant = (id: string) => {
+    if (productVariants.length <= 1) {
+      showAlert('Variant Required ⚠️', 'At least one variant must remain.');
+      return;
+    }
+    setProductVariants((prev) => prev.filter((v) => v.id !== id));
+  };
+
+  const addCustomVariant = () => {
+    const newVar: ProductVariantItem = {
+      id: `var-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      packSize: 'Custom Pack Size',
+      price: '500',
+      mrp: '650',
+      stockQty: '25',
+      sku: `FK-VAR-${Math.floor(1000 + Math.random() * 9000)}`,
+      deadWeightKg: '1.0',
+      lengthCm: '15',
+      widthCm: '10',
+      heightCm: '10',
+    };
+    setProductVariants([...productVariants, newVar]);
+  };
 
   // Agri Technical Formulation & Dosage
   const [technicalName, setTechnicalName] = useState('');
@@ -659,8 +750,15 @@ export default function SellerDashboardScreen() {
   };
 
   const handleAddProduct = async () => {
-    if (!productName || !productPrice) {
-      showAlert('Error ⚠️', 'Please enter Product Name and Price.');
+    if (!productName || productVariants.length === 0) {
+      showAlert('Error ⚠️', 'Please enter Product Title and add at least 1 Product Variant.');
+      return;
+    }
+
+    const primaryVariant = productVariants[0];
+    const basePrice = parseFloat(primaryVariant.price || '0');
+    if (!basePrice || basePrice <= 0) {
+      showAlert('Error ⚠️', 'Please enter a valid Selling Price for the primary variant.');
       return;
     }
 
@@ -688,31 +786,40 @@ export default function SellerDashboardScreen() {
     }
 
     try {
+      const variantPackNames = productVariants.map((v) => v.packSize);
+      const totalStock = productVariants.reduce((sum, v) => sum + parseInt(v.stockQty || '0', 10), 0);
+
+      const descMeta: string[] = [];
+      if (newProductDescription) descMeta.push(newProductDescription);
+      descMeta.push(`\nVARIANTS_MATRIX:${JSON.stringify(productVariants)}`);
+
       await apiClient.post('/products', {
         name: productName.trim(),
-        price: parseFloat(productPrice),
+        price: basePrice,
         categorySlug: productCategorySlug,
         category: productCategorySlug,
-        stockQty: parseInt(stockQty || '10', 10),
-        hsnCode,
+        stockQty: totalStock || 50,
+        hsnCode: hsnCode || '120991',
         sellerStoreId: storeData?.id,
-        deadWeightKg: parsedDeadWeight,
-        lengthCm: parsedLength,
-        widthCm: parsedWidth,
-        heightCm: parsedHeight,
+        deadWeightKg: parseFloat(primaryVariant.deadWeightKg || '1.0'),
+        lengthCm: parseFloat(primaryVariant.lengthCm || '15'),
+        widthCm: parseFloat(primaryVariant.widthCm || '10'),
+        heightCm: parseFloat(primaryVariant.heightCm || '8'),
+        skuCode: primaryVariant.sku,
         technicalName,
         dosageInstructions,
         suitableCrops,
         targetPests,
         batchNumber,
         expiryDate,
-        imageFrontUrl,
+        imageFrontUrl: imageFrontUrl || newProductImages[0],
         imageBackLabelUrl,
         imageDosageUrl,
         imageProductUrl,
+        description: descMeta.join('\n'),
       });
 
-      showAlert('Success 🎉', 'Product added successfully! It is now under catalog review.');
+      showAlert('Success 🎉', `Product with ${productVariants.length} Variants added successfully to AgriStore catalog!`);
       setShowAddProduct(false);
       resetProductForm();
       fetchStats();
@@ -1611,110 +1718,172 @@ export default function SellerDashboardScreen() {
                   )}
                 </View>
 
-                {/* 7. PRICES & MRP */}
-                <View style={{ flexDirection: 'row', gap: 10 }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.inputLabel}>Selling Price (₹) *</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="e.g. 450"
-                      placeholderTextColor="#9CA3AF"
-                      keyboardType="numeric"
-                      value={productPrice}
-                      onChangeText={setProductPrice}
-                    />
+                {/* 7 & 8. DYNAMIC PRODUCT VARIANTS MATRIX (PRICE, MRP, STOCK, WEIGHT & DIMENSIONS PER VARIANT) */}
+                <View style={{ backgroundColor: '#111827', borderRadius: 12, padding: 12, marginVertical: 10, borderWidth: 1, borderColor: '#059669' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <Text style={{ color: '#10B981', fontSize: 13.5, fontWeight: '800' }}>
+                      📦 Product Variants Pricing & Shiprocket Logistics Matrix ({productVariants.length})
+                    </Text>
+                    <TouchableOpacity
+                      style={{ backgroundColor: '#059669', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                      onPress={addCustomVariant}
+                    >
+                      <Ionicons name="add-circle-outline" size={14} color="#FFF" />
+                      <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>+ Custom Variant</Text>
+                    </TouchableOpacity>
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.inputLabel}>List MRP (₹) (Optional)</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="e.g. 600"
-                      placeholderTextColor="#9CA3AF"
-                      keyboardType="numeric"
-                      value={newMrpPrice}
-                      onChangeText={setNewMrpPrice}
-                    />
-                  </View>
-                </View>
+                  <Text style={{ color: '#9CA3AF', fontSize: 11, marginBottom: 8 }}>
+                    Click pack size chips below to add/remove variants. Set individual Price, Stock, Weight & Dimensions for each size variant:
+                  </Text>
 
-                {/* 8. PACK SIZE VARIANTS */}
-                <Text style={styles.inputLabel}>Pack Size Variants (Available Sizes)</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 }}>
-                  {['250 ml', '500 ml', '1 Litre', '5 Litres', '500 gram', '1 Kg', '5 Kg', '25 Kg Bag', '50 Kg Bag'].map((sz) => {
-                    const isSelected = packSizes.includes(sz);
+                  {/* Variant Quick Select Chips */}
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+                    {['250 ml', '500 ml', '1 Litre', '5 Litres', '500 gram', '1 Kg', '5 Kg Bag', '25 Kg Bag', '50 Kg Bag'].map((sz) => {
+                      const isAdded = productVariants.some((v) => v.packSize === sz);
+                      return (
+                        <TouchableOpacity
+                          key={sz}
+                          style={[styles.entityChip, isAdded && styles.activeEntityChip]}
+                          onPress={() => addVariantByChip(sz)}
+                        >
+                          <Text style={[styles.entityText, isAdded && styles.activeEntityText]}>
+                            {isAdded ? `✅ ${sz}` : `+ ${sz}`}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+
+                  {/* Render Variant Matrix Cards */}
+                  {productVariants.map((v, idx) => {
+                    const dW = parseFloat(v.deadWeightKg || '0.5');
+                    const l = parseFloat(v.lengthCm || '10');
+                    const w = parseFloat(v.widthCm || '10');
+                    const h = parseFloat(v.heightCm || '10');
+                    const volKg = (l * w * h) / 5000;
+                    const billableKg = Math.max(dW, volKg);
+
                     return (
-                      <TouchableOpacity
-                        key={sz}
-                        style={[styles.entityChip, isSelected && styles.activeEntityChip]}
-                        onPress={() => {
-                          if (isSelected) setPackSizes(packSizes.filter((s) => s !== sz));
-                          else setPackSizes([...packSizes, sz]);
-                        }}
-                      >
-                        <Text style={[styles.entityText, isSelected && styles.activeEntityText]}>{sz}</Text>
-                      </TouchableOpacity>
+                      <View key={v.id} style={{ backgroundColor: '#1F2937', borderRadius: 10, padding: 10, marginBottom: 10, borderWidth: 1, borderColor: '#374151' }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, borderBottomWidth: 1, borderBottomColor: '#374151', paddingBottom: 6 }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Ionicons name="cube" size={16} color="#34D399" />
+                            <Text style={{ color: '#34D399', fontSize: 13, fontWeight: '800' }}>Variant #{idx + 1}: {v.packSize}</Text>
+                          </View>
+                          {productVariants.length > 1 && (
+                            <TouchableOpacity onPress={() => removeVariant(v.id)}>
+                              <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                            </TouchableOpacity>
+                          )}
+                        </View>
+
+                        {/* Variant Pack Name, Price, MRP, Stock */}
+                        <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
+                          <View style={{ flex: 1.2 }}>
+                            <Text style={styles.inputLabel}>Pack Size Name *</Text>
+                            <TextInput
+                              style={[styles.input, { fontSize: 12 }]}
+                              value={v.packSize}
+                              onChangeText={(val) => updateVariantField(v.id, 'packSize', val)}
+                              placeholder="e.g. 5 Kg Bag"
+                              placeholderTextColor="#9CA3AF"
+                            />
+                          </View>
+
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.inputLabel}>Price (₹) *</Text>
+                            <TextInput
+                              style={[styles.input, { fontSize: 12 }]}
+                              value={v.price}
+                              onChangeText={(val) => updateVariantField(v.id, 'price', val)}
+                              placeholder="450"
+                              placeholderTextColor="#9CA3AF"
+                              keyboardType="numeric"
+                            />
+                          </View>
+
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.inputLabel}>MRP (₹)</Text>
+                            <TextInput
+                              style={[styles.input, { fontSize: 12 }]}
+                              value={v.mrp}
+                              onChangeText={(val) => updateVariantField(v.id, 'mrp', val)}
+                              placeholder="600"
+                              placeholderTextColor="#9CA3AF"
+                              keyboardType="numeric"
+                            />
+                          </View>
+
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.inputLabel}>Stock</Text>
+                            <TextInput
+                              style={[styles.input, { fontSize: 12 }]}
+                              value={v.stockQty}
+                              onChangeText={(val) => updateVariantField(v.id, 'stockQty', val)}
+                              placeholder="50"
+                              placeholderTextColor="#9CA3AF"
+                              keyboardType="number-pad"
+                            />
+                          </View>
+                        </View>
+
+                        {/* Variant Courier Dimensions & Weight */}
+                        <View style={{ backgroundColor: '#111827', borderRadius: 8, padding: 8 }}>
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                            <Text style={{ color: '#D1D5DB', fontSize: 11, fontWeight: '700' }}>🚚 Courier Size & Weight for {v.packSize}:</Text>
+                            <Text style={{ color: '#F59E0B', fontSize: 11, fontWeight: '800' }}>Billable: {billableKg.toFixed(2)} kg</Text>
+                          </View>
+
+                          <View style={{ flexDirection: 'row', gap: 6 }}>
+                            <View style={{ flex: 1 }}>
+                              <Text style={{ color: '#9CA3AF', fontSize: 10 }}>Weight (Kg) *</Text>
+                              <TextInput
+                                style={[styles.input, { height: 34, fontSize: 11 }]}
+                                value={v.deadWeightKg}
+                                onChangeText={(val) => updateVariantField(v.id, 'deadWeightKg', val)}
+                                keyboardType="numeric"
+                              />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <Text style={{ color: '#9CA3AF', fontSize: 10 }}>L (cm) *</Text>
+                              <TextInput
+                                style={[styles.input, { height: 34, fontSize: 11 }]}
+                                value={v.lengthCm}
+                                onChangeText={(val) => updateVariantField(v.id, 'lengthCm', val)}
+                                keyboardType="numeric"
+                              />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <Text style={{ color: '#9CA3AF', fontSize: 10 }}>W (cm) *</Text>
+                              <TextInput
+                                style={[styles.input, { height: 34, fontSize: 11 }]}
+                                value={v.widthCm}
+                                onChangeText={(val) => updateVariantField(v.id, 'widthCm', val)}
+                                keyboardType="numeric"
+                              />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <Text style={{ color: '#9CA3AF', fontSize: 10 }}>H (cm) *</Text>
+                              <TextInput
+                                style={[styles.input, { height: 34, fontSize: 11 }]}
+                                value={v.heightCm}
+                                onChangeText={(val) => updateVariantField(v.id, 'heightCm', val)}
+                                keyboardType="numeric"
+                              />
+                            </View>
+                            <View style={{ flex: 1.5 }}>
+                              <Text style={{ color: '#9CA3AF', fontSize: 10 }}>Shiprocket SKU *</Text>
+                              <TextInput
+                                style={[styles.input, { height: 34, fontSize: 10 }]}
+                                value={v.sku}
+                                onChangeText={(val) => updateVariantField(v.id, 'sku', val)}
+                              />
+                            </View>
+                          </View>
+                        </View>
+                      </View>
                     );
                   })}
-                </View>
-
-                {/* 8.5 SHIPROCKET PACKAGE SHIPPING SIZE & WEIGHT */}
-                <View style={{ backgroundColor: '#111827', borderRadius: 8, padding: 12, marginVertical: 8, borderWidth: 1, borderColor: '#374151' }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '700' }}>🚚 Shiprocket Package Courier Size & Weight</Text>
-                    <View style={{ backgroundColor: '#064E3B', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 }}>
-                      <Text style={{ color: '#34D399', fontSize: 11, fontWeight: '800' }}>Billable: {billableWeightKg.toFixed(2)} kg</Text>
-                    </View>
-                  </View>
-
-                  <View style={{ flexDirection: 'row', gap: 8 }}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.inputLabel}>Gross Weight (Kg) *</Text>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="0.5"
-                        placeholderTextColor="#9CA3AF"
-                        keyboardType="numeric"
-                        value={deadWeightKg}
-                        onChangeText={setDeadWeightKg}
-                      />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.inputLabel}>Length (cm) *</Text>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="10"
-                        placeholderTextColor="#9CA3AF"
-                        keyboardType="numeric"
-                        value={lengthCm}
-                        onChangeText={setLengthCm}
-                      />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.inputLabel}>Width (cm) *</Text>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="10"
-                        placeholderTextColor="#9CA3AF"
-                        keyboardType="numeric"
-                        value={widthCm}
-                        onChangeText={setWidthCm}
-                      />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.inputLabel}>Height (cm) *</Text>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="10"
-                        placeholderTextColor="#9CA3AF"
-                        keyboardType="numeric"
-                        value={heightCm}
-                        onChangeText={setHeightCm}
-                      />
-                    </View>
-                  </View>
-                  <Text style={{ color: '#9CA3AF', fontSize: 10, marginTop: 4 }}>
-                    * Shiprocket Volumetric Formula: (Length × Width × Height) / 5000 = {volumetricWeightKg.toFixed(2)} kg.
-                  </Text>
                 </View>
 
                 {/* 9. SHIPROCKET SKU CODE & MASTER BOX UNITS */}

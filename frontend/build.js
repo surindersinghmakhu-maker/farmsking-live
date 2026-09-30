@@ -145,19 +145,24 @@ try {
 
     fs.writeFileSync(distIndexPath, indexHtml, 'utf8');
 
-    // Create static dose.html, doses.html, and route subdirectories for direct URL access online
+    // Create static dose.html, doses.html, my.html, and route subdirectories for direct URL access online
     const doseHtmlPath = path.join(distDir, 'dose.html');
     const dosesHtmlPath = path.join(distDir, 'doses.html');
+    const myHtmlPath = path.join(distDir, 'my.html');
     fs.writeFileSync(doseHtmlPath, indexHtml, 'utf8');
     fs.writeFileSync(dosesHtmlPath, indexHtml, 'utf8');
+    fs.writeFileSync(myHtmlPath, indexHtml, 'utf8');
 
     const doseSubDir = path.join(distDir, 'dose');
     const dosesSubDir = path.join(distDir, 'doses');
+    const mySubDir = path.join(distDir, 'my');
     if (!fs.existsSync(doseSubDir)) fs.mkdirSync(doseSubDir, { recursive: true });
     if (!fs.existsSync(dosesSubDir)) fs.mkdirSync(dosesSubDir, { recursive: true });
+    if (!fs.existsSync(mySubDir)) fs.mkdirSync(mySubDir, { recursive: true });
     fs.writeFileSync(path.join(doseSubDir, 'index.html'), indexHtml, 'utf8');
     fs.writeFileSync(path.join(dosesSubDir, 'index.html'), indexHtml, 'utf8');
-    console.log('✅ Generated static dose.html, doses.html, and route subdirectories for online routing');
+    fs.writeFileSync(path.join(mySubDir, 'index.html'), indexHtml, 'utf8');
+    console.log('✅ Generated static dose.html, doses.html, my.html, and route subdirectories for online routing');
   }
 
   console.log('✅ Expo Web build completed successfully!');

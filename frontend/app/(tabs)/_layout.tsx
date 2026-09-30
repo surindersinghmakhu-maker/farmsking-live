@@ -111,7 +111,7 @@ const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
 
 const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key: TranslationKey; title: string; icon: keyof typeof Ionicons.glyphMap; iconFilled: keyof typeof Ionicons.glyphMap }> = {
   shop: { key: 'tabCustomerHome', title: 'Store', icon: 'bag-outline', iconFilled: 'bag' },
-  admin_shop: { key: 'agristoreHub' as any, title: 'AgriStore', icon: 'storefront-outline', iconFilled: 'storefront' },
+  admin_shop: { key: 'agristoreHub' as any, title: 'E-Commerce', icon: 'storefront-outline', iconFilled: 'storefront' },
   farm: { key: 'tabCrops', title: 'Crops', icon: 'leaf-outline', iconFilled: 'leaf' },
   records: { key: 'tabRecords', title: 'Accounts', icon: 'document-text-outline', iconFilled: 'document-text' },
   market: { key: 'tabMyAdvisor', title: 'Crop Doctor', icon: 'school-outline', iconFilled: 'school' },
@@ -175,7 +175,7 @@ export default function TabLayout() {
     if (name === 'index') return getHomeTitle(role);
     if (name === 'more') return t('tabMore', 'More');
     if (name === 'farmers') return role === 'GARDEN_ADVISOR' ? t('tabGardens', 'Gardens') : t('tabFarmers', 'Farmers');
-    if (name === 'shop' && (role === 'ADMIN' || role === 'SUPER_ADMIN')) return 'AgriStore';
+    if ((name === 'shop' || name === 'admin_shop') && (role === 'ADMIN' || role === 'SUPER_ADMIN')) return 'E-Commerce';
     const meta = TAB_META[name];
     return meta ? t(meta.key, meta.title) : name;
   };

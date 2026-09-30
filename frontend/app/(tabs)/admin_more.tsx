@@ -34,8 +34,8 @@ type AdminMenuItem = {
 const PLATFORM_CONTROL_ITEMS: AdminMenuItem[] = [
   {
     key: 'agristoreHub',
-    label: '👑 National AgriStore Hub',
-    subLabel: 'National store management & direct catalog',
+    label: '👑 National E-Commerce Hub',
+    subLabel: 'E-Commerce store management & direct catalog',
     icon: 'storefront-outline',
     iconBg: '#fef3c7',
     iconColor: '#d97706',

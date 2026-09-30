@@ -39,7 +39,7 @@ export default function AdminShopScreen() {
         <View style={styles.headerLeft}>
           <Ionicons name="storefront" size={24} color="#d97706" />
           <View>
-            <Text style={styles.headerTitle}>👑 National AgriStore Hub</Text>
+            <Text style={styles.headerTitle}>👑 National E-Commerce Hub</Text>
             <Text style={styles.headerSub}>Platform E-Commerce & Product Inventory Command</Text>
           </View>
         </View>

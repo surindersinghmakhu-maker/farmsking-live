@@ -37,7 +37,8 @@ import { PlanPricingSection } from './super-settings';
 import { RedeemForFarmerModal } from '@/src/components/RedeemForFarmerModal';
 import { CouponCardPreview, FarmerPlanCouponCardPreview, useShareCouponAsJpg } from '@/src/components/CouponCardPreview';
 import { usePendingFarmerPlanPayments } from '@/src/hooks/useFarmerPlanPayments';
-import { FarmerPlanPaymentCard, FarmerPlanPaymentReviewModal } from './super-accounts';
+import { FarmerPlanPaymentCard, FarmerPlanPaymentReviewModal, WithdrawalCard, ReviewModal, PlanPaymentCard } from './super-accounts';
+import { useAllWithdrawals } from '@/src/hooks/useWithdrawals';
 import type { FarmerPlanPaymentRequest } from '@/src/api/farmerPlanPayments.api';
 import { AdminStaffManagementModal } from '@/src/components/AdminStaffManagementModal';
 
@@ -175,7 +176,7 @@ function CategoryCollapse({
   );
 }
 
-type CouponsTab = 'GENERATE' | 'COUPONS' | 'PRICING' | 'FEATURES' | 'REFERRAL_SETTINGS' | 'REQUESTS' | 'SAVED_ENTRIES' | 'STAFF';
+type CouponsTab = 'MEMBERSHIP' | 'FINANCE' | 'GENERATE' | 'COUPONS' | 'PRICING' | 'FEATURES' | 'REFERRAL_SETTINGS' | 'REQUESTS' | 'SAVED_ENTRIES' | 'STAFF';
 
 const MAIN_SUB_TABS: {
   value: CouponsTab;
@@ -186,6 +187,24 @@ const MAIN_SUB_TABS: {
   color: string;
   softBg: string;
 }[] = [
+  {
+    value: 'MEMBERSHIP',
+    title: '👑 Farmer & Advisor Membership Plans',
+    sub: 'Farmer Lite & Pro Plans, Advisor Smart & Super Plans, Pricing & Features',
+    icon: 'ribbon-outline',
+    activeIcon: 'ribbon',
+    color: '#d97706',
+    softBg: '#fef3c7',
+  },
+  {
+    value: 'FINANCE',
+    title: '💰 Finance & Accounts Control',
+    sub: 'Partner Withdrawals, Farmer Claims & Financial Log',
+    icon: 'cash-outline',
+    activeIcon: 'cash',
+    color: '#16a34a',
+    softBg: '#f0fdf4',
+  },
   {
     value: 'STAFF',
     title: 'FarmsKing Admin Staff 👔',

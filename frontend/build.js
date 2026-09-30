@@ -145,18 +145,6 @@ try {
 
     fs.writeFileSync(distIndexPath, indexHtml, 'utf8');
 
-    // Ensure static my.html and route subdirectories use standalone static HTML content
-    const publicMyHtml = fs.existsSync(path.join(publicDir, 'my.html'))
-      ? fs.readFileSync(path.join(publicDir, 'my.html'), 'utf8')
-      : indexHtml;
-
-    const myHtmlPath = path.join(distDir, 'my.html');
-    fs.writeFileSync(myHtmlPath, publicMyHtml, 'utf8');
-
-    const mySubDir = path.join(distDir, 'my');
-    if (!fs.existsSync(mySubDir)) fs.mkdirSync(mySubDir, { recursive: true });
-    fs.writeFileSync(path.join(mySubDir, 'index.html'), publicMyHtml, 'utf8');
-    console.log('✅ Preserved and deployed static my.html and route subdirectories');
   }
 
   console.log('✅ Expo Web build completed successfully!');

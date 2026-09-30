@@ -10,9 +10,6 @@
   RewriteEngine On
   RewriteBase /
 
-  # Serve my static HTML page directly
-  RewriteRule ^my/?$ my.html [L,NC]
-
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d

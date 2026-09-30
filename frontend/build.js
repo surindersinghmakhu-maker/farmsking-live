@@ -145,13 +145,17 @@ try {
 
     fs.writeFileSync(distIndexPath, indexHtml, 'utf8');
 
-    // Create route fallbacks for /you so Apache serves index.html directly on https://farmsking.in/you
+    // Create static you.html and route subdirectories for direct URL access online
+    const publicYouHtml = fs.existsSync(path.join(publicDir, 'you.html'))
+      ? fs.readFileSync(path.join(publicDir, 'you.html'), 'utf8')
+      : indexHtml;
+
     const youHtmlPath = path.join(distDir, 'you.html');
     const youSubDir = path.join(distDir, 'you');
-    fs.writeFileSync(youHtmlPath, indexHtml, 'utf8');
+    fs.writeFileSync(youHtmlPath, publicYouHtml, 'utf8');
     if (!fs.existsSync(youSubDir)) fs.mkdirSync(youSubDir, { recursive: true });
-    fs.writeFileSync(path.join(youSubDir, 'index.html'), indexHtml, 'utf8');
-    console.log('✅ Generated /you route index fallback for online access');
+    fs.writeFileSync(path.join(youSubDir, 'index.html'), publicYouHtml, 'utf8');
+    console.log('✅ Preserved and deployed static you.html and route subdirectories');
 
   console.log('✅ Expo Web build completed successfully!');
 } catch (err) {

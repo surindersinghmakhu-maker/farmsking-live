@@ -91,10 +91,11 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
   const detectLanguage = (query: string): LanguageCode => {
     const qLower = query.toLowerCase();
 
-    // Direct language switch request
+    // Direct Gurmukhi or Punjabi triggers
     if (qLower.includes('punjabi') || qLower.includes('gurmukhi') || /[\u0A00-\u0A7F]/.test(query)) {
       return 'GURMUKHI';
     }
+    // Direct Hindi or Devanagari triggers
     if (qLower.includes('hindi') || qLower.includes('हिंदी') || /[\u0900-\u097F]/.test(query)) {
       return 'DEVANAGARI';
     }
@@ -110,7 +111,7 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
     if (/[\u0D00-\u0D7F]/.test(query)) return 'MALAYALAM';
 
     // Roman Transliteration differentiation
-    const punjabiWords = ['krda', 'karda', 'krdi', 'kardi', 'ha', 'haan', 'han', 'hunda', 'hunde', 'vich', 'te', 'nu', 'saada', 'saadi', 'tuhanu', 'puaa', 'pao', 'karni', 'dasso', 'mera', 'meri', 'de', 'da', 'di', 'khet', 'khetan', 'laayi', 'layi', 'pind', 'kisaan', 'paude', 'kra', 'paani', 'din'];
+    const punjabiWords = ['krda', 'karda', 'krdi', 'kardi', 'ha', 'haan', 'han', 'hunda', 'hunde', 'vich', 'te', 'nu', 'saada', 'saadi', 'tuhanu', 'puaa', 'pao', 'karni', 'dasso', 'mera', 'meri', 'de', 'da', 'di', 'khet', 'khetan', 'laayi', 'layi', 'pind', 'kisaan', 'paude', 'kra', 'paani', 'din', 'gende', 'genda'];
     const hindiWords = ['krta', 'karta', 'krti', 'karti', 'hu', 'hoon', 'hai', 'hain', 'kaise', 'kya', 'kaun', 'chahiye', 'batao', 'karein', 'kare', 'ki', 'ke', 'ko', 'mein', 'se', 'par', 'karte', 'hoge', 'karo', 'dijiye', 'paudhe'];
 
     let pCount = 0;
@@ -122,308 +123,236 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
       if (hindiWords.includes(w)) hCount++;
     });
 
-    if (qLower.includes('krda') || qLower.includes('karda') || qLower.includes('di kheti') || qLower.includes('da ilaaj') || qLower.includes('paude') || qLower.includes('spray kra')) {
+    if (qLower.includes('krda') || qLower.includes('karda') || qLower.includes('di kheti') || qLower.includes('da ilaaj') || qLower.includes('paude') || qLower.includes('spray kra') || qLower.includes('krda ha')) {
       return 'GURMUKHI';
     }
-    if (qLower.includes('krta') || qLower.includes('karta') || qLower.includes('ki kheti') || qLower.includes('kaise kare')) {
+    if (qLower.includes('krta') || qLower.includes('karta') || qLower.includes('ki kheti') || qLower.includes('kaise kare') || qLower.includes('krta hu')) {
       return 'DEVANAGARI';
     }
 
-    if (pCount > hCount && pCount > 0) return 'GURMUKHI';
-    if (hCount > pCount && hCount > 0) return 'DEVANAGARI';
+    if (pCount > hCount) return 'GURMUKHI';
+    if (hCount > pCount) return 'DEVANAGARI';
 
-    const localCropWords = ['genda', 'kanak', 'jhona', 'narma', 'ganna', 'aloo', 'tamatar', 'sarson', 'fasal', 'beej', 'khad', 'kheti', 'mausam', 'mandi', 'bhav', 'dawai', 'ilaaj'];
-    if (localCropWords.some(w => qLower.includes(w))) {
-      return 'GURMUKHI';
-    }
-
-    return 'ENGLISH';
+    // Default Roman Indian input to Gurmukhi script for Punjabi farmers
+    return 'GURMUKHI';
   };
 
   const generateAgriResponse = (query: string): string => {
-    const q = query.toLowerCase();
+    const q = query.toLowerCase().trim();
     const lang = detectLanguage(query);
+    const userQueryTitle = query.length > 40 ? query.substring(0, 40) + '...' : query;
 
-    // 0. Language Request Command ("punjabi language vich gall kro", "use punjabi language")
-    if ((q.includes('punjabi') || q.includes('ਪੰਜਾਬੀ')) && (q.includes('language') || q.includes('gall') || q.includes('use') || q.includes('speak') || q.includes('vich'))) {
-      return '🌾 **ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ ਜੀ! (FarmsKing AI ਖੇਤੀ ਡਾਕਟਰ):**\n\nਜੀ ਹਾਂ, ਹੁਣ ਮੈਂ ਤੁਹਾਡੇ ਨਾਲ ਪੂਰੀ ਤਰ੍ਹਾਂ ਪੰਜਾਬੀ (ਗੁਰਮੁਖੀ) ਵਿੱਚ ਗੱਲਬਾਤ ਕਰਾਂਗਾ।\n\nਤੁਸੀਂ ਆਪਣੀ ਫਸਲ (ਕਣਕ, ਝੋਨਾ, ਨਰਮਾ, ਗੰਨਾ, ਆਲੂ, ਟਮਾਟਰ, ਗੇਂਦਾ), ਖਾਦਾਂ, ਯੂਰੀਆ, 20 ਦਿਨਾਂ ਦੇ ਪੌਦਿਆਂ ਲਈ ਸਪ੍ਰੇ, ਮੰਡੀ ਭਾਵ, ਮੌਸਮ ਅਤੇ FarmsKing ਐਪ ਬਾਰੇ ਕੋਈ ਵੀ ਸਵਾਲ ਪੁੱਛੋ!';
+    // 1. Language Request / Switch Command
+    if ((q.includes('punjabi') || q.includes('ਪੰਜਾਬੀ')) && (q.includes('language') || q.includes('gall') || q.includes('use') || q.includes('speak') || q.includes('vich') || q.includes('ch'))) {
+      return `🌾 **ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ ਜੀ! (FarmsKing AI ਖੇਤੀ ਡਾਕਟਰ):**\n\nਜੀ ਹਾਂ, ਹੁਣ ਮੈਂ ਤੁਹਾਡੇ ਨਾਲ ਪੂਰੀ ਤਰ੍ਹਾਂ ਪੰਜਾਬੀ (ਗੁਰਮੁਖੀ) ਵਿੱਚ ਗੱਲਬਾਤ ਕਰਾਂਗਾ।\n\nਤੁਸੀਂ ਆਪਣੀ ਫਸਲ (ਕਣਕ, ਝੋਨਾ, ਨਰਮਾ, ਗੰਨਾ, ਆਲੂ, ਟਮਾਟਰ, ਗੇਂਦਾ), ਖਾਦਾਂ, ਯੂਰੀਆ, 20 ਦਿਨਾਂ ਦੇ ਪੌਦਿਆਂ ਲਈ ਸਪ੍ਰੇ, ਮੰਡੀ ਭਾਵ, ਮੌਸਮ ਅਤੇ FarmsKing ਐਪ ਬਾਰੇ ਕੋਈ ਵੀ ਸਵਾਲ ਪੁੱਛੋ!`;
     }
 
-    // 0.0 FarmsKing Web Application & Platform Queries
+    // 2. FarmsKing Web App & Platform Features
     if (q.includes('farmsking') || q.includes('app') || q.includes('website') || q.includes('web application') || q.includes('site') || q.includes('store') || q.includes('dukan') || q.includes('wallet')) {
       if (lang === 'DEVANAGARI') {
-        return '🌾 **FarmsKing ऐप और वेबसाइट के बारे में जानकारी:**\n\nFarmsKing किसानों का 100% निशुल्क कृषि प्लेटफॉर्म है:\n\n1. **एग्रीस्टोर (AgriStore):** असली बीज, यूरिया, DAP और कीटनाशक घर बैठे मंगाएं।\n2. **ताजा मंडी भाव (Live Mandi Rates):** प्रतिदिन जिलेवार मंडी भाव देखें।\n3. **सैटेलाइट खेत निगरानी (Satellite View):** खेत की नमी और फसल स्वास्थ्य जांचें।\n4. **मौसम पूर्वानुमान:** 7 दिनों की सटीक मौसम रिपोर्ट।\n5. **विक्रेता एवं वॉलेट (Seller Store):** अपनी दुकान रजिस्टर करें और डायरेक्ट पेमेंट पाएं।';
+        return `🌾 **FarmsKing ऐप और वेबसाइट जानकारी ("${userQueryTitle}"):**\n\n1. **एग्रीस्टोर (AgriStore):** असली बीज, यूरिया, DAP और कीटनाशक घर बैठे मंगाएं।\n2. **ताजा मंडी भाव (Live Mandi Rates):** प्रतिदिन जिलेवार मंडी भाव देखें।\n3. **सैटेलाइट खेत निगरानी (Satellite View):** खेत की नमी और फसल स्वास्थ्य जांचें।\n4. **मौसम पूर्वानुमान:** 7 दिनों की सटीक मौसम रिपोर्ट।\n5. **विक्रेता एवं वॉलेट (Seller Store):** अपनी दुकान रजिस्टर करें और डायरेक्ट पेमेंट पाएं।`;
       }
       if (lang === 'ENGLISH') {
-        return '🌾 **FarmsKing Web Application & Platform Guide:**\n\nFarmsKing is India\'s leading digital agricultural ecosystem:\n\n1. **AgriStore Shopping:** Order 100% genuine fertilizers, seeds, and sprays with fast village delivery.\n2. **Live Mandi Rates:** Real-time crop prices across Punjab, Haryana & North India mandis.\n3. **Satellite Crop Health:** Monitor field soil moisture & satellite NDVI greenness.\n4. **7-Day Weather Forecast:** Live temperature, wind speed & rain alerts.\n5. **Seller Store & Digital Wallet:** Register as an agri-seller to list products & receive instant wallet payouts!';
+        return `🌾 **FarmsKing Web Application & Platform Guide ("${userQueryTitle}"):**\n\n1. **AgriStore Shopping:** Order 100% genuine fertilizers, seeds, and sprays with fast village delivery.\n2. **Live Mandi Rates:** Real-time crop prices across Punjab, Haryana & North India mandis.\n3. **Satellite Crop Health:** Monitor field soil moisture & satellite NDVI greenness.\n4. **7-Day Weather Forecast:** Live temperature, wind speed & rain alerts.\n5. **Seller Store & Digital Wallet:** Register as an agri-seller to list products & receive instant wallet payouts!`;
       }
-      return '🌾 **FarmsKing ਸੁਪਰ ਐਪ ਬਾਰੇ ਜਾਣਕਾਰੀ:**\n\nFarmsKing ਭਾਰਤ ਦਾ ਨੰਬਰ 1 ਕਿਸਾਨ ਐਗਰੀਕਲਚਰ ਪਲੇਟਫਾਰਮ ਹੈ:\n\n1. **ਖੇਤੀ ਦਵਾਈਆਂ & ਖਾਦਾਂ (AgriStore):** ਅਸਲੀ ਯੂਰੀਆ, DAP, NPK, ਅਤੇ PAU ਸਿਫਾਰਿਸ਼ ਕੀਤੀਆਂ ਸਪ੍ਰੇਆਂ 24-48 ਘੰਟਿਆਂ ਵਿੱਚ ਪਿੰਡਾਂ \'ਚ ਡਿਲੀਵਰੀ।\n2. **ਤਾਜ਼ਾ ਮੰਡੀ ਭਾਵ (Live Mandi Rates):** ਪੰਜਾਬ, ਹਰਿਆਣਾ ਅਤੇ ਰਾਜਸਥਾਨ ਦੀਆਂ ਮੰਡੀਆਂ ਦੇ ਰੋਜ਼ਾਨਾ ਸਰਕਾਰੀ ਭਾਵ।\n3. **ਸੈਟੇਲਾਈਟ ਖੇਤ ਦੇਖਭਾਲ (Satellite Health):** ਸੈਟੇਲਾਈਟ ਰਾਹੀਂ ਆਪਣੇ ਖੇਤ ਦੀ ਹਰਿਆਲੀ ਅਤੇ ਪਾਣੀ ਦੀ ਜਾਂਚ ਕਰੋ।\n4. **ਮੌਸਮ ਜਾਣਕਾਰੀ (Weather Forecast):** 7 ਦਿਨਾਂ ਦਾ ਮੌਸਮ ਅਤੇ ਬਾਰਿਸ਼ ਦਾ ਪੂਰਵ-ਅਨੁਮਾਨ।\n5. **ਦੁਕਾਨਦਾਰ & ਵਾਲਿਟ (Seller Store):** ਦੁਕਾਨਦਾਰ ਆਪਣਾ ਸਮਾਨ ਵੇਚ ਸਕਦੇ ਹਨ ਅਤੇ ਵਾਲਿਟ ਵਿੱਚ ਪੈਸੇ ਪ੍ਰਾਪਤ ਕਰ ਸਕਦੇ ਹਨ।';
+      return `🌾 **FarmsKing ਸੁਪਰ ਐਪ ਜਾਣਕਾਰੀ ("${userQueryTitle}"):**\n\n1. **ਖੇਤੀ ਦਵਾਈਆਂ & ਖਾਦਾਂ (AgriStore):** ਅਸਲੀ ਯੂਰੀਆ, DAP, NPK, ਅਤੇ PAU ਸਿਫਾਰਿਸ਼ ਕੀਤੀਆਂ ਸਪ੍ਰੇਆਂ 24-48 ਘੰਟਿਆਂ ਵਿੱਚ ਪਿੰਡਾਂ 'ਚ ਡਿਲੀਵਰੀ।\n2. **ਤਾਜ਼ਾ ਮੰਡੀ ਭਾਵ (Live Mandi Rates):** ਪੰਜਾਬ, ਹਰਿਆਣਾ ਅਤੇ ਰਾਜਸਥਾਨ ਦੀਆਂ ਮੰਡੀਆਂ ਦੇ ਰੋਜ਼ਾਨਾ ਸਰਕਾਰੀ ਭਾਵ।\n3. **ਸੈਟੇਲਾਈਟ ਖੇਤ ਦੇਖਭਾਲ (Satellite Health):** ਸੈਟੇਲਾਈਟ ਰਾਹੀਂ ਆਪਣੇ ਖੇਤ ਦੀ ਹਰਿਆਲੀ ਅਤੇ ਪਾਣੀ ਦੀ ਜਾਂਚ ਕਰੋ।\n4. **ਮੌਸਮ ਜਾਣਕਾਰੀ (Weather Forecast):** 7 ਦਿਨਾਂ ਦਾ ਮੌਸਮ ਅਤੇ ਬਾਰਿਸ਼ ਦਾ ਪੂਰਵ-ਅਨੁਮਾਨ।\n5. **ਦੁਕਾਨਦਾਰ & ਵਾਲਿਟ (Seller Store):** ਦੁਕਾਨਦਾਰ ਆਪਣਾ ਸਮਾਨ ਵੇਚ ਸਕਦੇ ਹਨ ਅਤੇ ਵਾਲਿਟ ਵਿੱਚ ਪੈਸੇ ਪ੍ਰਾਪਤ ਕਰ ਸਕਦੇ ਹਨ।`;
     }
 
-    // 0.1 Plant Age / 20-Day Crop Spray Advisory ("20 din de paude", "ki spray kra", "paude ho gye")
-    if (q.includes('20 din') || q.includes('paude') || q.includes('paudhe') || q.includes('spray kra') || q.includes('spray kare') || q.includes('15 din') || q.includes('25 din') || q.includes('30 din')) {
+    // 3. Plant Age (15-30 Days) & First Water Advisory
+    if (q.includes('20 din') || q.includes('15 din') || q.includes('25 din') || q.includes('30 din') || q.includes('paude') || q.includes('paudhe') || q.includes('ਪੌਦੇ')) {
       if (lang === 'DEVANAGARI') {
-        return '🌱 **20-25 दिनों के पौधों के लिए पहली सिंचाई और स्प्रे (PAU सलाह):**\n\n1. **पहली सिंचाई एवं यूरिया:** 20-22 दिनों के पौधों को पहला पानी दें और प्रति एकड़ 45kg (1 बोरी) यूरिया की टॉप-ड्रेसिंग करें।\n2. **खरपतवार नियंत्रण:** गुल्ली डंडा या चौड़ी पत्ती के खरपतवारों के लिए सिंचाई के 3-4 दिन बाद खरपतवार नाशक स्प्रे करें।\n3. **ग्रोथ बूस्टर स्प्रे:** पौधों के अच्छे फुटाव के लिए 1kg NPK (19:19:19) प्रति एकड़ 200L पानी में मिलाकर छिड़काव करें।\n4. **दवा ऑर्डर:** FarmsKing Store से असली 19:19:19 और खरपतवार नाशक मंगाएं।';
+        return `🌱 **"${userQueryTitle}" — 20-25 दिनों के पौधों के लिए पहली सिंचाई एवं स्प्रे (PAU सलाह):**\n\n1. **पहली सिंचाई एवं यूरिया:** 20-22 दिनों के पौधों को पहला पानी दें और प्रति एकड़ 45kg (1 बोरी) यूरिया की टॉप-ड्रेसिंग करें।\n2. **खरपतवार नियंत्रण:** गुल्ली डंडा या चौड़ी पत्ती के खरपतवारों के लिए सिंचाई के 3-4 दिन बाद खरपतवार नाशक स्प्रे करें।\n3. **ग्रोथ बूस्टर स्प्रे:** पौधों के अच्छे फुटाव के लिए 1kg NPK (19:19:19) प्रति एकड़ 200L पानी में मिलाकर छिड़कें।\n4. **दवा ऑर्डर:** FarmsKing Store से असली 19:19:19 और खरपतवार नाशक मंगाएं।`;
       }
       if (lang === 'ENGLISH') {
-        return '🌱 **20-25 Day Plant Growth & Spray Advisory (PAU Advisory):**\n\n1. **First Irrigation & Urea:** Apply 1st irrigation at 20-22 days followed by top-dressing 45kg Urea per acre.\n2. **Weed Control Spray:** Spray recommended post-emergence herbicide 3-4 days after irrigation.\n3. **Foliar Growth Spray:** Spray 1kg NPK (19:19:19) per acre in 200L water to boost root tillering and plant health.\n4. **Order Online:** Buy genuine NPK 19:19:19 and sprays on FarmsKing Store.';
+        return `🌱 **"${userQueryTitle}" — 20-25 Day Plant Growth & Spray Advisory (PAU Advisory):**\n\n1. **First Irrigation & Urea:** Apply 1st irrigation at 20-22 days followed by top-dressing 45kg Urea per acre.\n2. **Weed Control Spray:** Spray recommended post-emergence herbicide 3-4 days after irrigation.\n3. **Foliar Growth Spray:** Spray 1kg NPK (19:19:19) per acre in 200L water to boost root tillering and plant health.\n4. **Order Online:** Buy genuine NPK 19:19:19 and sprays on FarmsKing Store.`;
       }
-      return '🌱 **20-25 ਦਿਨਾਂ ਦੇ ਪੌਦਿਆਂ ਲਈ ਪਹਿਲਾ ਪਾਣੀ ਅਤੇ ਸਪ੍ਰੇ (PAU ਸਿਫਾਰਿਸ਼):**\n\n1. **ਪਹਿਲਾ ਪਾਣੀ ਅਤੇ ਯੂਰੀਆ:** 20-22 ਦਿਨਾਂ ਦੀ ਫਸਲ ਨੂੰ ਪਹਿਲਾ ਪਾਣੀ ਲਾਓ ਅਤੇ ਪਾਣੀ ਤੋਂ ਤੁਰੰਤ ਬਾਅਦ ਪ੍ਰਤੀ ਏਕੜ 45kg (1 ਗੱਟਾ) ਯੂਰੀਆ ਦਿਓ।\n2. **ਨਦੀਨ ਨਾਸ਼ਕ ਸਪ੍ਰੇ:** ਗੁੱਲੀ ਡੰਡਾ ਜਾਂ ਚੌੜੇ ਪੱਤੇ ਵਾਲੇ ਨਦੀਨਾਂ ਲਈ ਪਾਣੀ ਤੋਂ 3-4 ਦਿਨ ਬਾਅਦ ਨਦੀਨ ਨਾਸ਼ਕ ਦੀ ਸਪ੍ਰੇ ਕਰੋ।\n3. **ਗ੍ਰੋਥ ਬੂਸਟਰ ਸਪ੍ਰੇ:** ਪੌਦਿਆਂ ਦੇ ਚੰਗੇ ਫੁੱਟਾਰੇ ਲਈ 1kg NPK (19:19:19) ਪ੍ਰਤੀ ਏਕੜ 200L ਪਾਣੀ ਵਿੱਚ ਮਿਲਾ ਕੇ ਛਿੜਕਾਅ ਕਰੋ।\n4. **ਅਸਲੀ ਦਵਾਈਆਂ:** FarmsKing Store ਤੋਂ ਅਸਲੀ ਨਦੀਨ ਨਾਸ਼ਕ ਅਤੇ 19:19:19 ਖਾਦ ਮੰਗਵਾਓ।';
+      return `🌱 **"${userQueryTitle}" — 20-25 ਦਿਨਾਂ ਦੇ ਪੌਦਿਆਂ ਲਈ ਪਹਿਲਾ ਪਾਣੀ ਅਤੇ ਸਪ੍ਰੇ (PAU ਸਿਫਾਰਿਸ਼):**\n\n1. **ਪਹਿਲਾ ਪਾਣੀ ਅਤੇ ਯੂਰੀਆ:** 20-22 ਦਿਨਾਂ ਦੀ ਫਸਲ ਨੂੰ ਪਹਿਲਾ ਪਾਣੀ ਲਾਓ ਅਤੇ ਪਾਣੀ ਤੋਂ ਤੁਰੰਤ ਬਾਅਦ ਪ੍ਰਤੀ ਏਕੜ 45kg (1 ਗੱਟਾ) ਯੂਰੀਆ ਦਿਓ।\n2. **ਨਦੀਨ ਨਾਸ਼ਕ ਸਪ੍ਰੇ:** ਗੁੱਲੀ ਡੰਡਾ ਜਾਂ ਚੌੜੇ ਪੱਤੇ ਵਾਲੇ ਨਦੀਨਾਂ ਲਈ ਪਾਣੀ ਤੋਂ 3-4 ਦਿਨ ਬਾਅਦ ਨਦੀਨ ਨਾਸ਼ਕ ਦੀ ਸਪ੍ਰੇ ਕਰੋ।\n3. **ਗ੍ਰੋਥ ਬੂਸਟਰ ਸਪ੍ਰੇ:** ਪੌਦਿਆਂ ਦੇ ਚੰਗੇ ਫੁੱਟਾਰੇ ਲਈ 1kg NPK (19:19:19) ਪ੍ਰਤੀ ਏਕੜ 200L ਪਾਣੀ ਵਿੱਚ ਮਿਲਾ ਕੇ ਛਿੜਕਾਅ ਕਰੋ।\n4. **ਅਸਲੀ ਦਵਾਈਆਂ:** FarmsKing Store ਤੋਂ ਅਸਲੀ ਨਦੀਨ ਨਾਸ਼ਕ ਅਤੇ 19:19:19 ਖਾਦ ਮੰਗਵਾਓ।`;
     }
 
-    // 1. Marigold / Genda Flower Farming (ਗੇਂਦਾ / गेंदा / Marigold)
+    // 4. Marigold / Genda Flower Farming
     if (q.includes('genda') || q.includes('gende') || q.includes('marigold') || q.includes('ਗੇਂਦਾ') || q.includes('ਗੇਂਦੇ') || q.includes('गेंदा') || q.includes('गेंदे')) {
-      if (lang === 'PUNJABI_ROMAN') {
-        return '🌼 **Gende di Kheti (Marigold Farming) Advisory:**\n\n1. **Vadiya Varieti:** Pusa Narangi Genda te Pusa Basanti Genda di kheti sab ton vadiya hai.\n2. **Khad & Paani:** Per acre 10 ton desi rudi khad + 40kg Nitrogen, 20kg Phosphorus paao. Paani 7-10 din baad devo.\n3. **Keeda & Spray:** Gende vich Sundi te Leaf Blight ton bachav layi Mancozeb (2g/L) te Neem Oil di spray karo.\n4. **Kamaayi:** 1 acre gende ton 80-100 quintal phool hunde han te bhot vadiya munafa milda hai.';
-      }
-      if (lang === 'HINDI_ROMAN') {
-        return '🌼 **Genda ki Kheti (Marigold Farming) Jankari:**\n\n1. **Unnat Kism:** Pusa Narangi Genda aur Pusa Basanti Genda ki kheti sabse behtareen hai.\n2. **Khad aur Sinchai:** Per acre 10 ton gobar khad + 40kg Nitrogen, 20kg Phosphorus dalein. 7-10 din me sinchai karein.\n3. **Kitaanu aur Spray:** Sundi aur leaf blight se bachav ke liye Mancozeb (2g/L paani) aur Neem Oil ki spray karein.\n4. **Munafa:** 1 acre genda ki kheti se 80-100 quintal phool hote hain aur achha labh milta hai.';
-      }
-      if (lang === 'GURMUKHI') {
-        return '🌼 **ਗੇਂਦੇ ਦੀ ਖੇਤੀ (Marigold Farming) ਮਾਹਰ ਸਲਾਹ:**\n\n1. **ਉੱਤਮ ਕਿਸਮਾਂ:** ਪੂਸਾ ਨਾਰੰਗੀ ਗੇਂਦਾ ਅਤੇ ਪੂਸਾ ਬਸੰਤੀ ਗੇਂਦਾ ਦੀ ਬਿਜਾਈ ਸਭ ਤੋਂ ਵਧੀਆ ਹੈ।\n2. **ਖਾਦ ਅਤੇ ਪਾਣੀ:** 1 ਏਕੜ ਵਿੱਚ 10 ਟਨ ਦੇਸੀ ਰੂੜੀ ਖਾਦ + 40kg ਨਾਈਟ੍ਰੋਜਨ ਅਤੇ 20kg ਫਾਸਫੋਰਸ ਪਾਓ। 7-10 ਦਿਨਾਂ ਬਾਅਦ ਪਾਣੀ ਦਿਓ।\n3. **ਕੀੜੇ ਅਤੇ ਬੀਮਾਰੀ:** ਸੁੰਡੀ ਅਤੇ ਝੁਲਸ ਰੋਗ ਤੋਂ ਬਚਾਅ ਲਈ ਮੈਂਕੋਜ਼ੇਬ (2g/L) ਅਤੇ ਨਿੰਮ ਦੇ ਤੇਲ ਦੀ ਸਪ੍ਰੇ ਕਰੋ।\n4. **ਮੁਨਾਫ਼ਾ:** 1 ਏਕੜ ਗੇਂਦੇ ਤੋਂ 80-100 ਕੁਇੰਟਲ ਫੁੱਲ ਪ੍ਰਾਪਤ ਹੁੰਦੇ ਹਨ।';
-      }
       if (lang === 'DEVANAGARI') {
-        return '🌼 **गेंदा खेती (Marigold Farming) सलाह:**\n\n1. **उन्नत किस्में:** पूसा नारंगी गेंदा और पूसा बसंती गेंदा की खेती सबसे उत्तम है।\n2. **खाद एवं सिंचाई:** प्रति एकड़ 10 टन गोबर खाद + 40kg नाइट्रोजन, 20kg फास्फोरस दें। 7-10 दिनों में सिंचाई करें।\n3. **कीट एवं रोग नियंत्रण:** झुलसा रोग से बचाव के लिए मैंकोज़ेब (2g/L) और नीम तेल का छिड़काव करें।\n4. **उत्पादन:** 1 एकड़ से 80-100 क्विंटल फूल प्राप्त होते हैं।';
+        return `🌼 **गेंदा खेती ("${userQueryTitle}") सलाह:**\n\n1. **उन्नत किस्में:** पूसा नारंगी गेंदा और पूसा बसंती गेंदा की खेती सबसे उत्तम है।\n2. **खाद एवं सिंचाई:** प्रति एकड़ 10 टन गोबर खाद + 40kg नाइट्रोजन, 20kg फास्फोरस दें। 7-10 दिनों में सिंचाई करें।\n3. **कीट एवं रोग नियंत्रण:** झुलसा रोग से बचाव के लिए मैंकोज़ेब (2g/L) और नीम तेल का छिड़काव करें।\n4. **उत्पादन:** 1 एकड़ से 80-100 क्विंटल फूल प्राप्त होते हैं।`;
       }
-      if (lang === 'BENGALI') {
-        return '🌼 **গাঁদা ফুল চাষ (Marigold Farming) নির্দেশিকা:**\n\n১. **উন্নত জাত:** পুসা নারঙ্গী গাঁদা এবং পুসা বাসন্তী গাঁদা চাষের জন্য সেরা।\n২. **সার ও সেচ:** একর প্রতি ১০ টন জৈব সার + ৪০ কেজি নাইট্রোজেন এবং ২০ কেজি ফসফরাস প্রয়োগ করুন।\n৩. **পোকা ও রোগ দমনে:** ম্যানকোজেব (২ গ্রাম/লিটার) এবং নিম তেলের স্প্রে করুন।\n৪. **ফলন:** প্রতি একরে ৮০-১০০ কুইন্টাল ফুল পাওয়া যায়।';
+      if (lang === 'ENGLISH') {
+        return `🌼 **Marigold ("${userQueryTitle}") Farming Guide:**\n\n1. **Best Varieties:** Pusa Narangi Gainda & Pusa Basanti Gainda yield high-quality blooms.\n2. **Fertilizer & Irrigation:** Apply 10 tons FYM compost + 40kg N, 20kg P per acre. Irrigate every 7-10 days.\n3. **Pest & Disease Control:** Spray Mancozeb @ 2g/L water for leaf blight and Neem Oil for aphid prevention.\n4. **Yield & Profit:** 1 acre produces 80-100 quintals of flowers with high market demand.`;
       }
-      if (lang === 'TELUGU') {
-        return '🌼 **బంతి పూల సాగు (Marigold Farming) సలహా:**\n\n1. **మేలైన రకాలు:** పూసా నారంగి బంతి మరియు పూసా బసంతి బంతి సాగుకు అనుకూలం.\n2. **ఎరువులు:** ఎకరాకు 10 టన్నుల పశువుల ఎరువు + 40 కిలోల నత్రజని, 20 కిలోల భాస్వరం వాడండి.\n3. **తెగుళ్ల నివారణ:** మ్యాంకోజెబ్ (2గ్రా/లీ) మరియు వేప నూనె పిచికారీ చేయండి.';
-      }
-      if (lang === 'TAMIL') {
-        return '🌼 **சாமந்திப் பூ சாகுபடி (Marigold Farming) வழிகாட்டி:**\n\n1. **சிறந்த ரகங்கள்:** பூசா நாரங்கி மற்றும் பூசா பசந்தி சாமந்தி சாகுபடிக்கு ஏற்றது.\n2. **உரம் மற்றும் பாசனம்:** ஏக்கருக்கு 10 டன் தொழு உரம் + 40 கிலோ நைட்ரஜன், 20 கிலோ பாஸ்பரஸ் இடவும்.\n3. **பூச்சி கட்டுப்பாடு:** மேன்கோசெப் (2 கிராம்/லிட்டர்) மற்றும் வேப்ப எண்ணெய் தெளிக்கவும்.';
-      }
-      if (lang === 'KANNADA') {
-        return '🌼 **ಚೆಂಡು ಹೂವು ಬೇಸಾಯ (Marigold Farming) ಸಲಹೆ:**\n\n1. **ಉತ್ತಮ ತಳಿಗಳು:** ಪೂಸಾ ನಾರಂಗಿ ಮತ್ತು ಪೂಸಾ ಬಸಂತಿ ತಳಿಗಳು ಅತ್ಯುತ್ತಮವಾಗಿವೆ.\n2. **ಗೊಬ್ಬರ ಮತ್ತು ನೀರಾವರಿ:** ಎಕರೆಗೆ 10 ಟನ್ ಸೌದೆ ಗೊಬ್ಬರ + 40 ಕೆಜಿ ಸಾರಜನಕ ಬಳಸಿ.\n3. **ಕೀಟ ನಿಯಂತ್ರಣ:** ಮ್ಯಾಂಕೋಜೆಬ್ (2ಗ್ರಾಂ/ಲೀಟರ್) ಮತ್ತು ಬೇವಿನ ಎಣ್ಣೆ ಸಿಂಪಡಿಸಿ.';
-      }
-      if (lang === 'GUJARATI') {
-        return '🌼 **ગલગોટાની ખેતી (Marigold Farming) માર્ગદર્શન:**\n\n૧. **ઉત્તમ જાતો:** પૂસા નારંગી ગલગોટા અને પૂસા બસંતી ગલગોટાની ખેતી ઉત્તમ છે.\n૨. **ખાતર અને પિયત:** એકર દીઠ ૧૦ ટન છાણિયું ખાતર + ૪૦ કિગ્રા નાઇટ્રોજન આપો.\n૩. **રોગ નિયંત્રણ:** મેન્કોઝેબ (૨ ગ્રામ/લીટર) અને લીમડાના તેલનો છંટકાવ કરો.';
-      }
-      return '🌼 **Marigold (Genda) Farming Complete Guide:**\n\n1. **Best Varieties:** Pusa Narangi Gainda & Pusa Basanti Gainda yield high-quality blooms.\n2. **Fertilizer & Irrigation:** Apply 10 tons FYM compost + 40kg N, 20kg P per acre. Irrigate every 7-10 days.\n3. **Pest & Disease Control:** Spray Mancozeb @ 2g/L water for leaf blight and Neem Oil for aphid prevention.\n4. **Yield & Profit:** 1 acre produces 80-100 quintals of flowers with high market demand.';
+      return `🌼 **ਗੇਂਦੇ ਦੀ ਖੇਤੀ ("${userQueryTitle}") ਮਾਹਰ ਸਲਾਹ:**\n\n1. **ਉੱਤਮ ਕਿਸਮਾਂ:** ਪੂਸਾ ਨਾਰੰਗੀ ਗੇਂਦਾ ਅਤੇ ਪੂਸਾ ਬਸੰਤੀ ਗੇਂਦਾ ਦੀ ਬਿਜਾਈ ਸਭ ਤੋਂ ਵਧੀਆ ਹੈ।\n2. **ਖਾਦ ਅਤੇ ਪਾਣੀ:** 1 ਏਕੜ ਵਿੱਚ 10 ਟਨ ਦੇਸੀ ਰੂੜੀ ਖਾਦ + 40kg ਨਾਈਟ੍ਰੋਜਨ ਅਤੇ 20kg ਫਾਸਫੋਰਸ ਪਾਓ। 7-10 ਦਿਨਾਂ ਬਾਅਦ ਪਾਣੀ ਦਿਓ।\n3. **ਕੀੜੇ ਅਤੇ ਬੀਮਾਰੀ:** ਸੁੰਡੀ ਅਤੇ ਝੁਲਸ ਰੋਗ ਤੋਂ ਬਚਾਅ ਲਈ ਮੈਂਕੋਜ਼ੇਬ (2g/L) ਅਤੇ ਨਿੰਮ ਦੇ ਤੇਲ ਦੀ ਸਪ੍ਰੇ ਕਰੋ।\n4. **ਮੁਨਾਫ਼ਾ:** 1 ਏਕੜ ਗੇਂਦੇ ਤੋਂ 80-100 ਕੁਇੰਟਲ ਫੁੱਲ ਪ੍ਰਾਪਤ ਹੁੰਦੇ ਹਨ।`;
     }
 
-    // 2. Wheat / Kanak / Gehu / Yellow Rust
+    // 5. Wheat / Kanak / Gehu / Yellow Rust
     if (q.includes('ਕਣਕ') || q.includes('wheat') || q.includes('ਕੁੰਗੀ') || q.includes('rust') || q.includes('ਗੇਂਹੂ') || q.includes('kanak') || q.includes('gehu')) {
-      if (lang === 'GURMUKHI') {
-        return '🌾 **ਕਣਕ ਦੀ ਪੀਲੀ ਕੁੰਗੀ ਦਾ ਹੱਲ (PAU ਸਿਫਾਰਿਸ਼):**\n\n1. **ਸਪ੍ਰੇ:** ਪ੍ਰੋਪੀਕੋਨਾਜ਼ੋਲ 25% EC (ਟਿਲਟ / Tilt) 200 ਮਿ.ਲੀ. ਪ੍ਰਤੀ ਏਕੜ 200 ਲੀਟਰ ਪਾਣੀ ਵਿੱਚ ਮਿਲਾ ਕੇ ਛਿੜਕਾਅ ਕਰੋ।\n2. **ਸਾਵਧਾਨੀ:** ਬੱਦਲਵਾਈ ਵਾਲੇ ਮੌਸਮ ਵਿੱਚ ਜ਼ਿਆਦਾ ਯੂਰੀਆ ਪਾਉਣ ਤੋਂ ਪਰਹੇਜ਼ ਕਰੋ।\n3. **ਦੇਸੀ ਹੱਲ:** 5% ਨਿੰਮ ਦਾ ਅਰਕ ਜਾਂ ਖੱਟੀ ਲੱਸੀ (5L/200L ਪਾਣੀ) ਦਾ ਛਿੜਕਾਅ ਕਰੋ।\n4. **ਦਵਾਈ ਖਰੀਦੋ:** FarmsKing Store ਤੋਂ ਅਸਲੀ ਟਿਲਟ 25% EC ਮੰਗਵਾਓ।';
-      }
       if (lang === 'DEVANAGARI') {
-        return '🌾 **गेहूं का पीला रतुआ (Yellow Rust) समाधान:**\n\n1. **स्प्रे:** प्रोपिकोनाज़ोल 25% EC (टिल्ट / Tilt) 200 मिली प्रति एकड़ 200 लीटर पानी में मिलाकर छिड़काव करें।\n2. **सावधानी:** बादलों वाले मौसम में अत्यधिक यूरिया का उपयोग न करें।\n3. **जैविक उपाय:** 5% नीम का अर्क या खट्टी छाछ का छिड़काव करें।\n4. **दवा खरीदें:** FarmsKing Store से असली दवा ऑर्डर करें।';
+        return `🌾 **गेहूं पीला रतुआ ("${userQueryTitle}") समाधान:**\n\n1. **स्प्रे:** प्रोपिकोनाज़ोल 25% EC (टिल्ट / Tilt) 200 मिली प्रति एकड़ 200 लीटर पानी में मिलाकर छिड़काव करें।\n2. **सावधानी:** बादलों वाले मौसम में अत्यधिक यूरिया का उपयोग न करें।\n3. **जैविक उपाय:** 5% नीम का अर्क या खट्टी छाछ का छिड़काव करें।\n4. **दवा खरीदें:** FarmsKing Store से असली दवा ऑर्डर करें।`;
       }
-      if (lang === 'PUNJABI_ROMAN') {
-        return '🌾 **Kanak di Peeli Kungi (Yellow Rust) da Ilaaj:**\n\n1. **Spray:** Propiconazole 25% EC (Tilt) @ 200ml per acre 200 Liters paani vich milake spray karo.\n2. **Parhez:** Badal wale mausam vich zyada Urea na paao.\n3. **Desi Ilaaj:** 5% Neem extract ya khatti lassi (5L in 200L paani) di spray karo.\n4. **Dawai Order:** FarmsKing Store ton original Tilt spray mangwaao.';
+      if (lang === 'ENGLISH') {
+        return `🌾 **Wheat Yellow Rust ("${userQueryTitle}") Advisory:**\n\n1. **Chemical Spray:** Propiconazole 25% EC (Tilt) @ 200 ml per acre in 200 Liters of water.\n2. **Precaution:** Avoid excessive Urea application during cloudy humid weather.\n3. **Organic Remedy:** Spray 5% Neem seed extract or sour buttermilk solution (5L in 200L water).\n4. **Order Online:** Genuine Tilt 25% EC is available on FarmsKing Store.`;
       }
-      if (lang === 'HINDI_ROMAN') {
-        return '🌾 **Gehun ka Peela Ratua (Yellow Rust) Ilaaj:**\n\n1. **Spray:** Propiconazole 25% EC (Tilt) @ 200ml per acre 200 Liters paani me milakar spray karein.\n2. **Parhez:** Badal wale mausam me zyada Urea mat dalein.\n3. **Desi Ilaaj:** 5% Neem extract ya khatti chach ki spray karein.\n4. **Dawa Order:** FarmsKing Store se original Tilt spray manguayein.';
-      }
-      return '🌾 **Wheat Yellow Rust Treatment Advisory:**\n\n1. **Chemical Spray:** Propiconazole 25% EC (Tilt / FarmsKing CropProtect) @ 200 ml per acre mixed in 200 Liters of water.\n2. **Precaution:** Avoid excessive Urea application during cloudy humid weather.\n3. **Organic Remedy:** Spray 5% Neem seed extract or sour buttermilk solution (5L in 200L water).\n4. **Order Online:** Genuine Tilt 25% EC is available on FarmsKing Store.';
+      return `🌾 **ਕਣਕ ਦੀ ਪੀਲੀ ਕੁੰਗੀ ("${userQueryTitle}") ਦਾ ਹੱਲ (PAU ਸਿਫਾਰਿਸ਼):**\n\n1. **ਸਪ੍ਰੇ:** ਪ੍ਰੋਪੀਕੋਨਾਜ਼ੋਲ 25% EC (ਟਿਲਟ / Tilt) 200 ਮਿ.ਲੀ. ਪ੍ਰਤੀ ਏਕੜ 200 ਲੀਟਰ ਪਾਣੀ ਵਿੱਚ ਮਿਲਾ ਕੇ ਛਿੜਕਾਅ ਕਰੋ।\n2. **ਸਾਵਧਾਨੀ:** ਬੱਦਲਵਾਈ ਵਾਲੇ ਮੌਸਮ ਵਿੱਚ ਜ਼ਿਆਦਾ ਯੂਰੀਆ ਪਾਉਣ ਤੋਂ ਪਰਹੇਜ਼ ਕਰੋ।\n3. **ਦੇਸੀ ਹੱਲ:** 5% ਨਿੰਮ ਦਾ ਅਰਕ ਜਾਂ ਖੱਟੀ ਲੱਸੀ (5L/200L ਪਾਣੀ) ਦਾ ਛਿੜਕਾਅ ਕਰੋ।\n4. **ਦਵਾਈ ਖਰੀਦੋ:** FarmsKing Store ਤੋਂ ਅਸਲੀ ਟਿਲਟ 25% EC ਮੰਗਵਾਓ।`;
     }
 
-    // 3. Paddy / Rice / Jhona / Dhan / Blast / Sheath Blight
+    // 6. Paddy / Rice / Jhona / Dhan / Blast
     if (q.includes('ਝੋਨਾ') || q.includes('paddy') || q.includes('rice') || q.includes('dhan') || q.includes('jhona') || q.includes('blast') || q.includes('sheath')) {
-      if (lang === 'GURMUKHI') {
-        return '🌱 **ਝੋਨੇ ਦਾ ਬਲਾਸਟ ਅਤੇ ਝੁਲਸ ਰੋਗ ਦਾ ਹੱਲ:**\n\n1. **ਸਪ੍ਰੇ:** ਟ੍ਰਾਈਸਾਈਕਲਾਜ਼ੋਲ 75% WP (ਬਾਨ / Beam) 120 ਗ੍ਰਾਮ ਪ੍ਰਤੀ ਏਕੜ 200 ਲੀਟਰ ਪਾਣੀ ਵਿੱਚ ਛਿੜਕੋ।\n2. **ਸਾਵਧਾਨੀ:** ਦਾਗ਼ ਦਿਸਣ ਤੇ ਯੂਰੀਆ ਪਾਉਣਾ ਤੁਰੰਤ ਬੰਦ ਕਰੋ।\n3. **ਜੈਵਿਕ ਹੱਲ:** ਟ੍ਰਾਈਕੋਡਰਮਾ ਵਿਰਡੀ 1 ਕਿੱਲੋ ਪ੍ਰਤੀ ਏਕੜ ਰੂੜੀ ਦੀ ਖਾਦ ਨਾਲ ਮਿਲਾ ਕੇ ਪਾਓ।';
-      }
       if (lang === 'DEVANAGARI') {
-        return '🌱 **धान का झुलसा (Leaf Blast) रोग समाधान:**\n\n1. **स्प्रे:** ट्राइसाइक्लाज़ोल 75% WP 120 ग्राम प्रति एकड़ 200 लीटर पानी में मिलाकर छिड़कें।\n2. **सावधानी:** धब्बे दिखने पर तुरंत नाइट्रोजन देना बंद करें।\n3. **जैविक उपाय:** ट्राइकोडरमा विरिडी 1 किग्रा प्रति एकड़ जैविक खाद के साथ प्रयोग करें।';
+        return `🌱 **धान का झुलसा/ब्लास्ट ("${userQueryTitle}") रोग समाधान:**\n\n1. **स्प्रे:** ट्राइसाइक्लाज़ोल 75% WP 120 ग्राम प्रति एकड़ 200 लीटर पानी में मिलाकर छिड़कें।\n2. **सावधानी:** धब्बे दिखने पर तुरंत नाइट्रोजन देना बंद करें।\n3. **जैविक उपाय:** ट्राइकोडरमा विरिडी 1 किग्रा प्रति एकड़ जैविक खाद के साथ प्रयोग करें।`;
       }
-      if (lang === 'PUNJABI_ROMAN') {
-        return '🌱 **Jhone da Blast & Jhulas Beemari da Ilaaj:**\n\n1. **Spray:** Tricyclazole 75% WP @ 120g per acre 200L paani vich milake spray karo.\n2. **Parhez:** Dhabbe dekhte hi Urea paana band karo.\n3. **Desi Ilaaj:** Trichoderma viride 1kg per acre desi rudi khad vich milake paao.';
+      if (lang === 'ENGLISH') {
+        return `🌱 **Paddy Leaf Blast ("${userQueryTitle}") Solution:**\n\n1. **Chemical Spray:** Tricyclazole 75% WP @ 120g per acre in 200 Liters of water.\n2. **Precaution:** Stop top-dressing Nitrogen fertilizers immediately when leaf spots appear.\n3. **Organic Remedy:** Apply Trichoderma viride bio-fungicide @ 1 kg per acre.`;
       }
-      if (lang === 'HINDI_ROMAN') {
-        return '🌱 **Dhan ka Jhulsa (Blast) Rog Ilaaj:**\n\n1. **Spray:** Tricyclazole 75% WP @ 120g per acre 200L paani me milakar spray karein.\n2. **Parhez:** Dhabbe dikhte hi Urea daalna band karein.\n3. **Desi Ilaaj:** Trichoderma viride 1kg per acre desi gobar khad me milakar dalein.';
-      }
-      return '🌱 **Paddy Leaf Blast & Sheath Blight Solution:**\n\n1. **Chemical Spray:** Tricyclazole 75% WP (Baan / Beam) @ 120g per acre in 200 Liters of water.\n2. **Precaution:** Stop top-dressing Nitrogen fertilizers immediately when leaf spots appear.\n3. **Organic Remedy:** Apply Trichoderma viride bio-fungicide @ 1 kg per acre mixed with organic FYM compost.';
+      return `🌱 **ਝੋਨੇ ਦਾ ਬਲਾਸਟ/ਝੁਲਸ ਰੋਗ ("${userQueryTitle}") ਦਾ ਹੱਲ:**\n\n1. **ਸਪ੍ਰੇ:** ਟ੍ਰਾਈਸਾਈਕਲਾਜ਼ੋਲ 75% WP (ਬਾਨ / Beam) 120 ਗ੍ਰਾਮ ਪ੍ਰਤੀ ਏਕੜ 200 ਲੀਟਰ ਪਾਣੀ ਵਿੱਚ ਛਿੜਕੋ।\n2. **ਸਾਵਧਾਨੀ:** ਦਾਗ਼ ਦਿਸਣ ਤੇ ਯੂਰੀਆ ਪਾਉਣਾ ਤੁਰੰਤ ਬੰਦ ਕਰੋ।\n3. **ਜੈਵਿਕ ਹੱਲ:** ਟ੍ਰਾਈਕੋਡਰਮਾ ਵਿਰਡੀ 1 ਕਿੱਲੋ ਪ੍ਰਤੀ ਏਕੜ ਰੂੜੀ ਦੀ ਖਾਦ ਨਾਲ ਮਿਲਾ ਕੇ ਪਾਓ।`;
     }
 
-    // 4. Cotton / Narma / Kapas / Whitefly / Sundi
+    // 7. Cotton / Narma / Kapas / Whitefly / Sundi
     if (q.includes('ਨਰਮਾ') || q.includes('cotton') || q.includes('narma') || q.includes('kapas') || q.includes('whitefly') || q.includes('bollworm')) {
-      if (lang === 'GURMUKHI') {
-        return '☁️ **ਨਰਮੇ ਦੀ ਗੁਲਾਬੀ ਸੁੰਡੀ ਅਤੇ ਚਿੱਟੀ ਮੱਖੀ ਦਾ ਹੱਲ:**\n\n1. **ਸਪ੍ਰੇ:** ਇਮਾਮੈਕਟਿਨ ਬੈਂਜ਼ੋਏਟ 5% SG (100g) + ਸੇਫੀਨਾ (Sefina) 400ml ਪ੍ਰਤੀ ਏਕੜ 200L ਪਾਣੀ ਵਿੱਚ ਛਿੜਕੋ।\n2. **ਦੇਸੀ ਹੱਲ:** ਨਿੰਮ ਦਾ ਤੇਲ (Neem Oil) 500ml ਪ੍ਰਤੀ ਏਕੜ ਛਿੜਕਾਅ ਕਰੋ।';
-      }
       if (lang === 'DEVANAGARI') {
-        return '☁️ **कपास की गुलाबी सुंडी और सफेद मक्खी का इलाज:**\n\n1. **स्प्रे:** इमामेक्टिन बेंजोएट 5% SG (100g) + सेफिना 400ml प्रति एकड़ 200L पानी में छिड़कें।\n2. **जैविक उपाय:** नीम का तेल 500ml प्रति एकड़ उपयोग करें।';
+        return `☁️ **कपास गुलाबी सुंडी/सफेद मक्खी ("${userQueryTitle}") इलाज:**\n\n1. **स्प्रे:** इमामेक्टिन बेंजोएट 5% SG (100g) + सेफिना 400ml प्रति एकड़ 200L पानी में छिड़कें।\n2. **जैविक उपाय:** नीम का तेल 500ml प्रति एकड़ उपयोग करें।`;
       }
-      if (lang === 'PUNJABI_ROMAN') {
-        return '☁️ **Narme di Gulabi Sundi & Chitti Makhi da Ilaaj:**\n\n1. **Spray:** Emamectin Benzoate 5% SG (100g) + Sefina 400ml per acre 200L paani vich milake spray karo.\n2. **Desi Ilaaj:** Neem Oil 500ml per acre di spray karo.';
+      if (lang === 'ENGLISH') {
+        return `☁️ **Cotton Whitefly & Pink Bollworm ("${userQueryTitle}") Remedy:**\n\n1. **Chemical Spray:** Emamectin Benzoate 5% SG (100g) + Sefina 400ml per acre in 200L water.\n2. **Monitoring:** Install 5 Pheromone Traps per acre.`;
       }
-      if (lang === 'HINDI_ROMAN') {
-        return '☁️ **Kapas ki Gulabi Sundi aur Safed Makhi Ilaaj:**\n\n1. **Spray:** Emamectin Benzoate 5% SG (100g) + Sefina 400ml per acre 200L paani me milakar spray karein.\n2. **Desi Ilaaj:** Neem Oil 500ml per acre ki spray karein.';
-      }
-      return '☁️ **Cotton Whitefly & Pink Bollworm Remedy:**\n\n1. **Chemical Spray:** Emamectin Benzoate 5% SG (100g) + Afidopyropen (Sefina) @ 400ml per acre in 200L water.\n2. **Monitoring:** Install 5 Pheromone Traps per acre.\n3. **Organic Remedy:** Spray Neem Oil 10,000 PPM @ 500ml per acre.';
+      return `☁️ **ਨਰਮੇ ਦੀ ਗੁਲਾਬੀ ਸੁੰਡੀ/ਚਿੱਟੀ ਮੱਖੀ ("${userQueryTitle}") ਦਾ ਹੱਲ:**\n\n1. **ਸਪ੍ਰੇ:** ਇਮਾਮੈਕਟਿਨ ਬੈਂਜ਼ੋਏਟ 5% SG (100g) + ਸੇਫੀਨਾ (Sefina) 400ml ਪ੍ਰਤੀ ਏਕੜ 200L ਪਾਣੀ ਵਿੱਚ ਛਿੜਕੋ।\n2. **ਦੇਸੀ ਹੱਲ:** ਨਿੰਮ ਦਾ ਤੇਲ (Neem Oil) 500ml ਪ੍ਰਤੀ ਏਕੜ ਛਿੜਕਾਅ ਕਰੋ।`;
     }
 
-    // 5. Sugarcane / Ganna / Kumaad / Red Rot
+    // 8. Sugarcane / Ganna / Kumaad / Red Rot
     if (q.includes('ਗੰਨਾ') || q.includes('sugarcane') || q.includes('ganna') || q.includes('kumaad') || q.includes('red rot')) {
-      if (lang === 'GURMUKHI') {
-        return '🎋 **ਗੰਨੇ ਦੇ ਰੱਤਾ ਰੋਗ (Red Rot) ਦਾ ਹੱਲ:**\n\n1. **ਸਪ੍ਰੇ / ਜੜ੍ਹਾਂ ਵਿੱਚ:** ਕਾਰਬੈਂਡਾਜ਼ਿਮ 50% WP (500g) ਪ੍ਰਤੀ ਏਕੜ ਪਾਣੀ ਵਿੱਚ ਮਿਲਾ ਕੇ ਜੜ੍ਹਾਂ \'ਚ ਪਾਓ।\n2. **ਜੈਵਿਕ ਹੱਲ:** ਟ੍ਰਾਈਕੋਡਰਮਾ 2.5 ਕਿੱਲੋ ਪ੍ਰਤੀ ਏਕੜ ਦੇਸੀ ਖਾਦ ਨਾਲ ਮਿਲਾ ਕੇ ਪਾਓ।';
-      }
       if (lang === 'DEVANAGARI') {
-        return '🎋 **गन्ने का लाल सड़न (Red Rot) रोग इलाज:**\n\n1. **उपचार:** कारबेन्डाजिम 50% WP (500g) प्रति एकड़ जड़ों में दें।\n2. **जैविक उपाय:** ट्राइकोडरमा 2.5 किग्रा प्रति एकड़ गोबर खाद में मिलाकर दें।';
+        return `🎋 **गन्ने का लाल सड़न ("${userQueryTitle}") रोग इलाज:**\n\n1. **उपचार:** कारबेन्डाजिम 50% WP (500g) प्रति एकड़ जड़ों में दें।\n2. **जैविक उपाय:** ट्राइकोडरमा 2.5 किग्रा प्रति एकड़ गोबर खाद में मिलाकर दें।`;
       }
-      if (lang === 'PUNJABI_ROMAN') {
-        return '🎋 **Ganne di Ratta Beemari (Red Rot) da Ilaaj:**\n\n1. **Ilaaj:** Carbendazim 50% WP 500g per acre paani vich milake jadah vich paao.\n2. **Desi Ilaaj:** Trichoderma 2.5kg per acre desi rudi khad vich milake paao.';
+      if (lang === 'ENGLISH') {
+        return `🎋 **Sugarcane Red Rot ("${userQueryTitle}") Disease Remedy:**\n\n1. **Soil Drenching:** Mix 500g Carbendazim 50% WP per acre in water and drench roots.\n2. **Bio-Control:** Apply Trichoderma harzianum @ 2.5 kg/acre.`;
       }
-      if (lang === 'HINDI_ROMAN') {
-        return '🎋 **Ganne ki Laal Sadan (Red Rot) Ilaaj:**\n\n1. **Ilaaj:** Carbendazim 50% WP 500g per acre paani me milakar jadon me dalein.\n2. **Desi Ilaaj:** Trichoderma 2.5kg per acre desi gobar khad me milakar dalein.';
-      }
-      return '🎋 **Sugarcane Red Rot Disease Remedy:**\n\n1. **Soil Drenching:** Mix 500g Carbendazim 50% WP per acre in water and drench cane roots.\n2. **Bio-Control:** Apply Trichoderma harzianum @ 2.5 kg/acre mixed with organic compost.';
+      return `🎋 **ਗੰਨੇ ਦੇ ਰੱਤਾ ਰੋਗ ("${userQueryTitle}") ਦਾ ਹੱਲ:**\n\n1. **ਸਪ੍ਰੇ / ਜੜ੍ਹਾਂ ਵਿੱਚ:** ਕਾਰਬੈਂਡਾਜ਼ਿਮ 50% WP (500g) ਪ੍ਰਤੀ ਏਕੜ ਪਾਣੀ ਵਿੱਚ ਮਿਲਾ ਕੇ ਜੜ੍ਹਾਂ 'ਚ ਪਾਓ।\n2. **ਜੈਵਿਕ ਹੱਲ:** ਟ੍ਰਾਈਕੋਡਰਮਾ 2.5 ਕਿੱਲੋ ਪ੍ਰਤੀ ਏਕੜ ਦੇਸੀ ਖਾਦ ਨਾਲ ਮਿਲਾ ਕੇ ਪਾਓ।`;
     }
 
-    // 6. Potato / Aloo / Blight
+    // 9. Potato / Aloo / Blight
     if (q.includes('ਆਲੂ') || q.includes('potato') || q.includes('aloo') || q.includes('blight')) {
-      if (lang === 'GURMUKHI') {
-        return '🥔 **ਆਲੂਆਂ ਦੇ ਝੁਲਸ ਰੋਗ ਦਾ ਹੱਲ:**\n\n1. **ਸਪ੍ਰੇ:** ਐਕਰੋਬੈਟ (Acrobat 400g) + ਮੈਂਕੋਜ਼ੇਬ (600g) 200 ਲੀਟਰ ਪਾਣੀ ਵਿੱਚ ਪ੍ਰਤੀ ਏਕੜ ਛਿੜਕੋ।\n2. **ਸਾਵਧਾਨੀ:** ਧੁੰਦ ਜਾਂ ਠੰਡ ਤੋਂ ਪਹਿਲਾਂ ਸਪ੍ਰੇ ਜ਼ਰੂਰ ਕਰੋ।';
-      }
       if (lang === 'DEVANAGARI') {
-        return '🥔 **आलू का झुलसा रोग इलाज:**\n\n1. **स्प्रे:** एक्रोबेट (400g) + मैंकोजेब (600g) 200 लीटर पानी में प्रति एकड़ छिड़कें।\n2. **सावधानी:** कोहरे से पहले फफूंदनाशक स्प्रे करें।';
+        return `🥔 **आलू का झुलसा रोग ("${userQueryTitle}") इलाज:**\n\n1. **स्प्रे:** एक्रोबेट (400g) + मैंकोजेब (600g) 200 लीटर पानी में प्रति एकड़ छिड़कें।\n2. **सावधानी:** कोहरे से पहले फफूंदनाशक स्प्रे करें।`;
       }
-      if (lang === 'PUNJABI_ROMAN') {
-        return '🥔 **Alooan de Jhulas Beemari da Ilaaj:**\n\n1. **Spray:** Acrobat (400g) + Mancozeb (600g) 200L paani vich per acre spray karo.\n2. **Parhez:** Dhund pehn ton pehle spray zaroor karo.';
+      if (lang === 'ENGLISH') {
+        return `🥔 **Potato Blight ("${userQueryTitle}") Remedy:**\n\n1. **Chemical Spray:** Acrobat (400g) + Mancozeb (600g) in 200L water per acre.\n2. **Precaution:** Apply protective fungicide before heavy morning frost.`;
       }
-      if (lang === 'HINDI_ROMAN') {
-        return '🥔 **Aloo ka Jhulsa Rog Ilaaj:**\n\n1. **Spray:** Acrobat (400g) + Mancozeb (600g) 200L paani me per acre spray karein.\n2. **Parhez:** Kohre se pehle spray zaroor karein.';
-      }
-      return '🥔 **Potato Early & Late Blight Remedy:**\n\n1. **Chemical Spray:** Dimethomorph 50% WP (Acrobat 400g) + Mancozeb 75% WP (600g) in 200L water per acre.\n2. **Precaution:** Apply protective contact fungicide before heavy morning fog or frost.';
+      return `🥔 **ਆਲੂਆਂ ਦੇ ਝੁਲਸ ਰੋਗ ("${userQueryTitle}") ਦਾ ਹੱਲ:**\n\n1. **ਸਪ੍ਰੇ:** ਐਕਰੋਬੈਟ (Acrobat 400g) + ਮੈਂਕੋਜ਼ੇਬ (600g) 200 ਲੀਟਰ ਪਾਣੀ ਵਿੱਚ ਪ੍ਰਤੀ ਏਕੜ ਛਿੜਕੋ।\n2. **ਸਾਵਧਾਨੀ:** ਧੁੰਦ ਜਾਂ ਠੰਡ ਤੋਂ ਪਹਿਲਾਂ ਸਪ੍ਰੇ ਜ਼ਰੂਰ ਕਰੋ।`;
     }
 
-    // 7. Tomato / Vegetables / Sabzi / Blight
-    if (q.includes('ਟਮਾਟਰ') || q.includes('tomato') || q.includes('tamatar') || q.includes('ਸਬਜ਼ੀ') || q.includes('vegetable') || q.includes('blight')) {
-      if (lang === 'GURMUKHI') {
-        return '🍅 **ਟਮਾਟਰ ਅਤੇ ਸਬਜ਼ੀਆਂ ਦੇ ਝੁਲਸ ਰੋਗ ਦਾ ਹੱਲ:**\n\n1. **ਸਪ੍ਰੇ:** ਰਿਡੋਮਿਲ ਗੋਲਡ (Ridomil Gold) 500g ਪ੍ਰਤੀ ਏਕੜ 200L ਪਾਣੀ ਵਿੱਚ ਛਿੜਕੋ।\n2. **ਜੈਵਿਕ ਹੱਲ:** ਟ੍ਰਾਈਕੋਡਰਮਾ 1 ਕਿੱਲੋ ਪ੍ਰਤੀ ਏਕੜ ਦੇਸੀ ਖਾਦ ਨਾਲ ਪਾਓ।';
-      }
+    // 10. Tomato / Vegetables / Sabzi
+    if (q.includes('ਟਮਾਟਰ') || q.includes('tomato') || q.includes('tamatar') || q.includes('ਸਬਜ਼ੀ') || q.includes('vegetable')) {
       if (lang === 'DEVANAGARI') {
-        return '🍅 **टमाटर और सब्जियों के झुलसा रोग का इलाज:**\n\n1. **स्प्रे:** रिडोमिल गोल्ड (Ridomil Gold) 500g प्रति एकड़ 200L पानी में छिड़कें।\n2. **जैविक उपाय:** ट्राइकोडरमा 1 किग्रा प्रति एकड़ देसी खाद में मिलाकर डालें।';
+        return `🍅 **टमाटर एवं सब्जी रोग ("${userQueryTitle}") का इलाज:**\n\n1. **स्प्रे:** रिडोमिल गोल्ड (Ridomil Gold) 500g प्रति एकड़ 200L पानी में छिड़कें।\n2. **जैविक उपाय:** ट्राइकोडरमा 1 किग्रा प्रति एकड़ देसी खाद में मिलाकर डालें।`;
       }
-      if (lang === 'PUNJABI_ROMAN') {
-        return '🍅 **Tamatar & Sabziyan de Jhulas Beemari da Ilaaj:**\n\n1. **Spray:** Ridomil Gold 500g per acre 200L paani vich milake spray karo.\n2. **Desi Ilaaj:** Trichoderma 1kg per acre rudi khad vich milake paao.';
+      if (lang === 'ENGLISH') {
+        return `🍅 **Tomato & Vegetable ("${userQueryTitle}") Remedy:**\n\n1. **Chemical Spray:** Ridomil Gold @ 500g per acre in 200L water.\n2. **Bio-Remedy:** Trichoderma viride 1kg per acre mixed with compost.`;
       }
-      if (lang === 'HINDI_ROMAN') {
-        return '🍅 **Tamatar aur Sabziyon ke Jhulsa Rog Ilaaj:**\n\n1. **Spray:** Ridomil Gold 500g per acre 200L paani me milakar spray karein.\n2. **Desi Ilaaj:** Trichoderma 1kg per acre gobar khad me milakar dalein.';
-      }
-      return '🍅 **Tomato & Vegetable Blight Remedy:**\n\n1. **Chemical Spray:** Ridomil Gold (Mefenoxam + Mancozeb) @ 500g per acre in 200L water.\n2. **Bio-Remedy:** Trichoderma viride 1kg per acre mixed with organic FYM compost.';
+      return `🍅 **ਟਮਾਟਰ ਅਤੇ ਸਬਜ਼ੀਆਂ ਦੇ ਰੋਗ ("${userQueryTitle}") ਦਾ ਹੱਲ:**\n\n1. **ਸਪ੍ਰੇ:** ਰਿਡੋਮਿਲ ਗੋਲਡ (Ridomil Gold) 500g ਪ੍ਰਤੀ ਏਕੜ 200L ਪਾਣੀ ਵਿੱਚ ਛਿੜਕੋ।\n2. **ਜੈਵਿਕ ਹੱਲ:** ਟ੍ਰਾਈਕੋਡਰਮਾ 1 ਕਿੱਲੋ ਪ੍ਰਤੀ ਏਕੜ ਦੇਸੀ ਖਾਦ ਨਾਲ ਪਾਓ।`;
     }
 
-    // 8. Fertilizer / Khad / Urea / DAP / NPK / Spray / Medicine / Dawai
-    if (q.includes('ਖਾਦ') || q.includes('fertilizer') || q.includes('urea') || q.includes('dap') || q.includes('npk') || q.includes('khad') || q.includes('spray') || q.includes('dawai') || q.includes('medicine')) {
-      if (lang === 'GURMUKHI') {
-        return '🌱 **ਖਾਦ ਅਤੇ ਸਪ੍ਰੇ ਦੀ ਸਿਫਾਰਿਸ਼ (PAU ਮਾਹਰ ਸਲਾਹ):**\n\n1. **ਬਿਜਾਈ ਵੇਲੇ:** 1 ਗੱਟਾ ਡੀ.ਏ.ਪੀ (50kg) + 1/2 ਗੱਟਾ ਪੋਟਾਸ਼ ਪ੍ਰਤੀ ਏਕੜ ਪਾਓ।\n2. **ਯੂਰੀਆ:** 45 ਕਿੱਲੋ ਯੂਰੀਆ ਪ੍ਰਤੀ ਏਕੜ ਪਹਿਲੇ ਅਤੇ ਦੂਜੇ ਪਾਣੀ ਨਾਲ 2-3 ਕਿਸ਼ਤਾਂ ਵਿੱਚ ਦਿਓ।\n3. **ਜੈਵਿਕ ਖਾਦ:** ਵਰਮੀਕੰਪੋਸਟ ਜਾਂ ਹਿਊਮਿਕ ਐਸਿਡ ਪਾ ਕੇ ਜ਼ਮੀਨ ਦੀ ਤਾਕਤ ਵਧਾਓ।\n4. **ਖਰੀਦਦਾਰੀ:** FarmsKing Store ਤੋਂ ਅਸਲੀ ਖਾਦਾਂ ਅਤੇ ਸਪ੍ਰੇਆਂ ਮੰਗਵਾਓ।';
-      }
+    // 11. Fertilizer / Khad / Urea / DAP / NPK
+    if (q.includes('ਖਾਦ') || q.includes('fertilizer') || q.includes('urea') || q.includes('dap') || q.includes('npk') || q.includes('khad')) {
       if (lang === 'DEVANAGARI') {
-        return '🌱 **खाद और स्प्रे की सिफारिश:**\n\n1. **बुआई के समय:** 1 बोरी डी.ए.पी (50kg) + 1/2 बोरी पोटाश प्रति एकड़ डालें।\n2. **यूरिया:** 45 किग्रा यूरिया प्रति एकड़ पहली और दूसरी सिंचाई पर 2-3 किस्तों में दें।\n3. **जैविक खाद:** वर्मीकंपोस्ट या ह्यूमिक एसिड का प्रयोग करें।\n4. **खरीददारी:** FarmsKing Store से असली दवाएं मंगाएं।';
+        return `🌱 **खाद एवं उर्वरक ("${userQueryTitle}") सिफारिश:**\n\n1. **बुआई के समय:** 1 बोरी डी.ए.पी (50kg) + 1/2 बोरी पोटाश प्रति एकड़ डालें।\n2. **यूरिया:** 45 किग्रा यूरिया प्रति एकड़ पहली और दूसरी सिंचाई पर 2-3 किस्तों में दें।\n3. **जैविक खाद:** वर्मीकंपोस्ट या ह्यूमिक एसिड का प्रयोग करें।`;
       }
-      if (lang === 'PUNJABI_ROMAN') {
-        return '🌱 **Khad & Spray di Recommendation:**\n\n1. **Bijai Wele:** 1 bag DAP (50kg) + 1/2 bag Potash per acre paao.\n2. **Urea:** 45kg Urea per acre pehle te dooje paani naal 2-3 kishtan vich devo.\n3. **Desi Khad:** Vermicompost ya Humic Acid paake zameen di taakat vadhao.\n4. **Order Online:** Genuine fertilizers te spray FarmsKing Store ton buy karo.';
+      if (lang === 'ENGLISH') {
+        return `🌱 **Fertilizer ("${userQueryTitle}") Recommendation:**\n\n1. **Basal Dose:** Apply 1 bag DAP (50kg) + 1/2 bag Potash per acre during sowing.\n2. **Urea Application:** Top-dress 45kg Urea per acre in 2-3 split doses at irrigation.`;
       }
-      if (lang === 'HINDI_ROMAN') {
-        return '🌱 **Khad & Spray di Recommendation:**\n\n1. **Buai ke Samay:** 1 bag DAP (50kg) + 1/2 bag Potash per acre dalein.\n2. **Urea:** 45kg Urea per acre pehle aur doosre paani me 2-3 kishton me dein.\n3. **Desi Khad:** Vermicompost ya Humic Acid dalkar zameen ki shakti badhayein.\n4. **Order Online:** FarmsKing Store se asli khad aur spray order karein.';
-      }
-      return '🌱 **Fertilizer & Spray Recommendation:**\n\n1. **Basal Dose:** Apply 1 bag DAP (50kg) + 1/2 bag Potash (MOP) per acre during sowing.\n2. **Urea Application:** Top-dress 45kg Urea per acre in 2-3 split doses at first & second irrigation.\n3. **Organic Booster:** Apply Vermicompost (500kg/acre) or Humic Acid to improve soil health.\n4. **Order Online:** Genuine fertilizers and sprays are available on FarmsKing Store.';
+      return `🌱 **ਖਾਦ ਅਤੇ ਯੂਰੀਆ ("${userQueryTitle}") ਦੀ ਸਿਫਾਰਿਸ਼ (PAU ਸਲਾਹ):**\n\n1. **ਬਿਜਾਈ ਵੇਲੇ:** 1 ਗੱਟਾ ਡੀ.ਏ.ਪੀ (50kg) + 1/2 ਗੱਟਾ ਪੋਟਾਸ਼ ਪ੍ਰਤੀ ਏਕੜ ਪਾਓ।\n2. **ਯੂਰੀਆ:** 45 ਕਿੱਲੋ ਯੂਰੀਆ ਪ੍ਰਤੀ ਏਕੜ ਪਹਿਲੇ ਅਤੇ ਦੂਜੇ ਪਾਣੀ ਨਾਲ 2-3 ਕਿਸ਼ਤਾਂ ਵਿੱਚ ਦਿਓ।\n3. **ਜੈਵਿਕ ਖਾਦ:** ਵਰਮੀਕੰਪੋਸਟ ਜਾਂ ਹਿਊਮਿਕ ਐਸਿਡ ਪਾ ਕੇ ਜ਼ਮੀਨ ਦੀ ਤਾਕਤ ਵਧਾਓ।`;
     }
 
-    // 9. Mandi Rates / Price / Rate / Bhav
+    // 12. Pesticides / Sundi / Keeda / Dawai / Spray
+    if (q.includes('dawai') || q.includes('dawaii') || q.includes('dawa') || q.includes('spray') || q.includes('sundi') || q.includes('keeda') || q.includes('beemari') || q.includes('ilaaj') || q.includes('ilac') || q.includes('ਸਪ੍ਰੇ') || q.includes('ਦਵਾਈ') || q.includes('ਬੀਮਾਰੀ') || q.includes('ਇਲਾਜ') || q.includes('ਕੀੜਾ') || q.includes('ਸੁੰਡੀ')) {
+      if (lang === 'DEVANAGARI') {
+        return `🐛 **कीटनाशक एवं स्प्रे ("${userQueryTitle}") सलाह:**\n\n1. **सुंडी/कीट स्प्रे:** इमामेक्टिन बेंजोएट 5% SG (100g प्रति एकड़) 200L पानी में मिलाकर छिड़कें।\n2. **फफूंद/झुलसा रोग:** एक्रोबेट (400g) + मैंकोजेब (600g) प्रति एकड़ छिड़कें।\n3. **जैविक उपाय:** नीम का तेल (500ml) का छिड़काव करें।`;
+      }
+      if (lang === 'ENGLISH') {
+        return `🐛 **Pesticide & Spray ("${userQueryTitle}") Advisory:**\n\n1. **Pest Control:** Spray Emamectin Benzoate 5% SG @ 100g per acre in 200L water.\n2. **Fungal Control:** Spray Acrobat (400g) + Mancozeb (600g) per acre.\n3. **Organic Protection:** Spray 5% Neem Oil @ 500ml/acre.`;
+      }
+      return `🐛 **ਖੇਤੀ ਦਵਾਈਆਂ ਅਤੇ ਸਪ੍ਰੇ ("${userQueryTitle}") ਦਾ ਹੱਲ (PAU ਮਾਹਰ ਸਲਾਹ):**\n\n1. **ਸੁੰਡੀ/ਕੀੜੇ ਦੀ ਸਪ੍ਰੇ:** ਇਮਾਮੈਕਟਿਨ ਬੈਂਜ਼ੋਏਟ 5% SG (100g ਪ੍ਰਤੀ ਏਕੜ) 200L ਪਾਣੀ ਵਿੱਚ ਮਿਲਾ ਕੇ ਛਿੜਕੋ।\n2. **ਝੁਲਸ/ਫੰਗਸ ਰੋਗ:** ਐਕਰੋਬੈਟ (400g) + ਮੈਂਕੋਜ਼ੇਬ (600g) ਪ੍ਰਤੀ ਏਕੜ ਸਪ੍ਰੇ ਕਰੋ।\n3. **ਜੈਵਿਕ ਹੱਲ:** ਨਿੰਮ ਦਾ ਤੇਲ (Neem Oil 500ml) ਛਿੜਕਾਅ ਕਰੋ।`;
+    }
+
+    // 13. Weeds / Herbicides / Gulli Danda / Nadin
+    if (q.includes('nadin') || q.includes('gulli') || q.includes('danda') || q.includes('weed') || q.includes('ghas') || q.includes('herbicide') || q.includes('ਨਦੀਨ') || q.includes('ਗੁੱਲੀ')) {
+      if (lang === 'DEVANAGARI') {
+        return `🌾 **खरपतवार ("${userQueryTitle}") नियंत्रण:**\n\n1. **गुल्ली डंडा:** सिंचाई के 3-4 दिन बाद एक्शियल (Axial) का छिड़काव करें।\n2. **चौड़ी पत्ती:** 2,4-D या एल्ग्रिप 8g प्रति एकड़ 200L पानी में छिड़कें।`;
+      }
+      if (lang === 'ENGLISH') {
+        return `🌾 **Weed & Herbicide ("${userQueryTitle}") Advisory:**\n\n1. **Grassy Weeds:** Spray Axial or Shogun 3-4 days after 1st irrigation.\n2. **Broadleaf Weeds:** Spray Algrip @ 8g per acre in 200L water.`;
+      }
+      return `🌾 **ਨਦੀਨ ਨਾਸ਼ਕ ("${userQueryTitle}") ਦਾ ਹੱਲ:**\n\n1. **ਗੁੱਲੀ ਡੰਡਾ:** ਕਣਕ ਵਿੱਚ ਪਹਿਲੇ ਪਾਣੀ ਤੋਂ 3-4 ਦਿਨ ਬਾਅਦ ਐਕਸੀਅਲ (Axial) ਜਾਂ ਸ਼ਗਨ ਪ੍ਰਤੀ ਏਕੜ ਸਪ੍ਰੇ ਕਰੋ।\n2. **ਚੌੜੇ ਪੱਤੇ ਵਾਲੇ ਨਦੀਨ:** 2,4-D ਜਾਂ ਐਲਗ੍ਰਿਪ (Algrip) 8g ਪ੍ਰਤੀ ਏਕੜ 200L ਪਾਣੀ ਵਿੱਚ ਛਿੜਕੋ।`;
+    }
+
+    // 14. Plant Growth / Tillering / Phutara
+    if (q.includes('growth') || q.includes('phutara') || q.includes('futara') || q.includes('vadhara') || q.includes('ਫੁੱਟਾਰਾ') || q.includes('ਗ੍ਰੋਥ')) {
+      if (lang === 'DEVANAGARI') {
+        return `🌱 **पौधों के फुटाव एवं बढ़वार ("${userQueryTitle}") की सलाह:**\n\n1. **ग्रोथ स्प्रे:** 1kg NPK (19:19:19) प्रति एकड़ 200L पानी में मिलाकर छिड़कें।\n2. **ह्यूमिक एसिड:** जड़ों की मजबूती के लिए 1 लीटर ह्यूमिक एसिड सिंचाई के साथ दें।`;
+      }
+      if (lang === 'ENGLISH') {
+        return `🌱 **Crop Growth & Tillering ("${userQueryTitle}") Advisory:**\n\n1. **Foliar Spray:** Spray 1kg NPK (19:19:19) per acre in 200L water.\n2. **Root Booster:** Apply 1L Humic Acid with irrigation water for vigorous root growth.`;
+      }
+      return `🌱 **ਫਸਲ ਦੇ ਵਧੀਆ ਫੁੱਟਾਰੇ ("${userQueryTitle}") ਲਈ ਸਲਾਹ:**\n\n1. **ਗ੍ਰੋਥ ਸਪ੍ਰੇ:** 1kg NPK (19:19:19) ਪ੍ਰਤੀ ਏਕੜ 200L ਪਾਣੀ ਵਿੱਚ ਮਿਲਾ ਕੇ ਛਿੜਕਾਅ ਕਰੋ।\n2. **ਹਿਊਮਿਕ ਐਸਿਡ:** ਜ਼ਮੀਨ 'ਚ ਜੜ੍ਹਾਂ ਦੀ ਮਜ਼ਬੂਤੀ ਲਈ 1 ਲੀਟਰ ਹਿਊਮਿਕ ਐਸਿਡ ਪਾਣੀ ਨਾਲ ਦਿਓ।`;
+    }
+
+    // 15. Dairy / Livestock / Majh / Gai / Milk
+    if (q.includes('majh') || q.includes('gai') || q.includes('cow') || q.includes('buffalo') || q.includes('milk') || q.includes('doodh') || q.includes('dood') || q.includes('pashu') || q.includes('ਦੁੱਧ') || q.includes('ਮੱਝ') || q.includes('ਗਾਂ')) {
+      if (lang === 'DEVANAGARI') {
+        return `🥛 **पशुपालन एवं दूध उत्पादन ("${userQueryTitle}") की सलाह:**\n\n1. **मिनरल मिक्सचर:** गाय/भैंस को रोजाना 50g-100g मिनरल मिक्सचर दें।\n2. **चारा एवं पानी:** हरे चारे के साथ सूखा चारा दें और दिन में 4-5 बार ताजा पानी पिलाएं।`;
+      }
+      if (lang === 'ENGLISH') {
+        return `🥛 **Livestock & Milk Yield ("${userQueryTitle}") Advisory:**\n\n1. **Mineral Supplement:** Provide 50-100g daily Mineral Mixture to cattle/buffalo.\n2. **Feed Balance:** Mix dry fodder with green forage for optimum digestion and milk output.`;
+      }
+      return `🥛 **ਪਸ਼ੂ ਪਾਲਣ ਅਤੇ ਦੁੱਧ ਵਧਾਉਣ ("${userQueryTitle}") ਦੀ ਮਾਹਰ ਸਲਾਹ:**\n\n1. **ਖੁਰਾਕ & ਮਿਨਰਲ ਮਿਕਸਚਰ:** ਮੱਝ/ਗਾਂ ਨੂੰ ਰੋਜ਼ਾਨਾ 50g-100g ਚੰਗੀ ਕੁਆਲਿਟੀ ਦਾ Mineral Mixture ਖੁਰਾਕ ਵਿੱਚ ਦਿਓ।\n2. **ਹਰਾ ਚਾਰਾ:** ਹਰੇ ਚਾਰੇ ਨਾਲ 1kg ਤੂੜੀ ਅਤੇ ਸੁੱਕਾ ਚਾਰਾ ਜ਼ਰੂਰ ਮਿਲਾਓ।\n3. **ਪਾਣੀ:** ਪਸ਼ੂ ਨੂੰ ਦਿਨ ਵਿੱਚ 4-5 ਵਾਰ ਸਾਫ਼ ਅਤੇ ਤਾਜ਼ਾ ਪਾਣੀ ਪਿਲਾਓ।`;
+    }
+
+    // 16. Seeds / Sowing / Varieties
+    if (q.includes('beej') || q.includes('variety') || q.includes('bijai') || q.includes('sowing') || q.includes('varieti') || q.includes('ਕਿਸਮ') || q.includes('ਬੀਜ') || q.includes('ਬਿਜਾਈ')) {
+      if (lang === 'DEVANAGARI') {
+        return `🌱 **उन्नत बीज एवं बुआई ("${userQueryTitle}") सलाह:**\n\n1. **बीज उपचार:** बुआई से पहले बीज को बाविस्टिन (Bavistin 2g/kg) से संशोधित करें।\n2. **बीज दर:** 1 एकड़ में 40kg गेहूं या 8kg धान का प्रमाणित बीज प्रयोग करें।`;
+      }
+      if (lang === 'ENGLISH') {
+        return `🌱 **Seeds & Sowing ("${userQueryTitle}") Guide:**\n\n1. **Seed Treatment:** Treat seeds with Bavistin @ 2g/kg before sowing.\n2. **Seed Rate:** Use 40kg wheat seed or 8kg paddy seed per acre.`;
+      }
+      return `🌱 **ਉੱਤਮ ਬੀਜ ਅਤੇ ਬਿਜਾਈ ("${userQueryTitle}") ਦੀ ਸਲਾਹ (PAU Advisory):**\n\n1. **ਬੀਜ ਦੀ ਸੋਧ:** ਬਿਜਾਈ ਤੋਂ ਪਹਿਲਾਂ ਬੀਜ ਨੂੰ ਬਾਵਿਸਟਿਨ (Bavistin 2g/kg) ਨਾਲ ਸੋਧੋ।\n2. **ਬਿਜਾਈ ਦਾ ਸਮਾਂ:** ਸੁਧਰੀਆਂ ਕਿਸਮਾਂ ਦੀ ਬਿਜਾਈ ਸਮੇਂ ਸਿਰ ਕਰੋ ਅਤੇ ਪ੍ਰਤੀ ਏਕੜ ਸਿਫਾਰਿਸ਼ ਕੀਤਾ ਬੀਜ ਹੀ ਵਰਤੋ।`;
+    }
+
+    // 17. Mandi Rates / Prices
     if (q.includes('ਮੰਡੀ') || q.includes('ਭਾਵ') || q.includes('mandi') || q.includes('price') || q.includes('rate') || q.includes('bhav')) {
-      if (lang === 'GURMUKHI') {
-        return '📊 **ਅੱਜ ਦੇ ਤਾਜ਼ਾ ਮੰਡੀ ਭਾਵ:**\n\n• **ਕਣਕ:** ₹2,275 - ₹2,450 / ਕੁਇੰਟਲ\n• **ਝੋਨਾ (ਬਾਸਮਤੀ):** ₹3,800 - ₹4,250 / ਕੁਇੰਟਲ\n• **ਟਮਾਟਰ:** ₹1,400 - ₹1,800 / ਕੁਇੰਟਲ\n• **ਸਰ੍ਹੋਂ:** ₹5,400 - ₹5,850 / ਕੁਇੰਟਲ\n\n💡 *ਜ਼ਿਲ੍ਹੇਵਾਰ ਤਾਜ਼ਾ ਭਾਵ ਦੇਖਣ ਲਈ "Mandi Rates" ਟੈਬ ਦੀ ਵਰਤੋਂ ਕਰੋ।*';
-      }
       if (lang === 'DEVANAGARI') {
-        return '📊 **आज के ताजा मंडी भाव:**\n\n• **गेहूं:** ₹2,275 - ₹2,450 / क्विंटल\n• **धान:** ₹3,800 - ₹4,250 / क्विंटल\n• **टमाटर:** ₹1,400 - ₹1,800 / क्विंटल\n• **सरसों:** ₹5,400 - ₹5,850 / क्विंटल\n\n💡 *ज़िलेवार ताज़ा भाव देखने के लिए "Mandi Rates" टैब का उपयोग करें।*';
+        return `📊 **आज के ताजा मंडी भाव ("${userQueryTitle}"):**\n\n• **गेहूं:** ₹2,275 - ₹2,450 / क्विंटल\n• **धान:** ₹3,800 - ₹4,250 / क्विंटल\n• **टमाटर:** ₹1,400 - ₹1,800 / क्विंटल\n• **सरसों:** ₹5,400 - ₹5,850 / क्विंटल\n\n💡 *ज़िलेवार ताज़ा भाव देखने के लिए FarmsKing "Mandi Rates" टैब का उपयोग करें।`;
       }
-      if (lang === 'PUNJABI_ROMAN') {
-        return '📊 **Ajj de Mandi Rate (Punjab & Haryana):**\n\n• **Kanak:** ₹2,275 - ₹2,450 / Quintal\n• **Jhona (Basmati):** ₹3,800 - ₹4,250 / Quintal\n• **Tamatar:** ₹1,400 - ₹1,800 / Quintal\n• **Sarson:** ₹5,400 - ₹5,850 / Quintal\n\n💡 *Live mandi rate dekhan layi "Mandi Rates" tab te jao.*';
+      if (lang === 'ENGLISH') {
+        return `📊 **Today Live Mandi Rates ("${userQueryTitle}"):**\n\n• **Wheat:** ₹2,275 - ₹2,450 / Quintal\n• **Paddy:** ₹3,800 - ₹4,250 / Quintal\n• **Tomato:** ₹1,400 - ₹1,800 / Quintal\n• **Mustard:** ₹5,400 - ₹5,850 / Quintal\n\n💡 *Check live district updates anytime in FarmsKing "Mandi Rates" tab.`;
       }
-      if (lang === 'HINDI_ROMAN') {
-        return '📊 **Aaj ke Mandi Rate:**\n\n• **Gehun:** ₹2,275 - ₹2,450 / Quintal\n• **Dhan (Basmati):** ₹3,800 - ₹4,250 / Quintal\n• **Tamatar:** ₹1,400 - ₹1,800 / Quintal\n• **Sarson:** ₹5,400 - ₹5,850 / Quintal\n\n💡 *Live mandi rate dekhne ke liye "Mandi Rates" tab par jayein.*';
-      }
-      return '📊 **Today Live Mandi Rates:**\n\n• **Wheat:** ₹2,275 - ₹2,450 / Quintal\n• **Paddy:** ₹3,800 - ₹4,250 / Quintal\n• **Tomato:** ₹1,400 - ₹1,800 / Quintal\n• **Mustard:** ₹5,400 - ₹5,850 / Quintal\n\n💡 *Check live district-wise updates anytime in the "Mandi Rates" tab.*';
+      return `📊 **ਅੱਜ ਦੇ ਤਾਜ਼ਾ ਮੰਡੀ ਭਾਵ ("${userQueryTitle}"):**\n\n• **ਕਣਕ:** ₹2,275 - ₹2,450 / ਕੁਇੰਟਲ\n• **ਝੋਨਾ (ਬਾਸਮਤੀ):** ₹3,800 - ₹4,250 / ਕੁਇੰਟਲ\n• **ਟਮਾਟਰ:** ₹1,400 - ₹1,800 / ਕੁਇੰਟਲ\n• **ਸਰ੍ਹੋਂ:** ₹5,400 - ₹5,850 / ਕੁਇੰਟਲ\n\n💡 *ਜ਼ਿਲ੍ਹੇਵਾਰ ਤਾਜ਼ਾ ਭਾਵ ਦੇਖਣ ਲਈ FarmsKing "Mandi Rates" ਟੈਬ ਦੀ ਵਰਤੋਂ ਕਰੋ।`;
     }
 
-    // 10. Weather / Mausam / Rain / Barish
+    // 18. Weather Advisory
     if (q.includes('ਮੌਸਮ') || q.includes('mausam') || q.includes('weather') || q.includes('rain') || q.includes('barish')) {
       if (lang === 'DEVANAGARI') {
-        return '🌤️ **मौसम और कृषि सलाह:**\n\n• 7 दिनों का मौसम पूर्वानुमान होम डैशबोर्ड पर देखें।\n• **स्प्रे सलाह:** तेज़ हवा या बारिश की संभावना होने पर स्प्रे न करें।';
+        return `🌤️ **मौसम एवं कृषि सलाह ("${userQueryTitle}"):**\n\n• 7 दिनों का मौसम पूर्वानुमान FarmsKing होम डैशबोर्ड पर देखें।\n• **स्प्रे सलाह:** तेज़ हवा या बारिश की संभावना होने पर स्प्रे न करें।`;
       }
       if (lang === 'ENGLISH') {
-        return '🌤️ **Weather & Agricultural Advisory:**\n\n• Check live 7-day temperature, humidity, and rainfall forecast on your FarmsKing Home Dashboard.\n• **Spraying Tip:** Avoid chemical sprays when wind speed exceeds 15 km/h or rain is expected within 4 hours.';
+        return `🌤️ **Weather Advisory ("${userQueryTitle}"):**\n\n• Check live 7-day temperature & rainfall forecast on FarmsKing Dashboard.\n• **Spraying Tip:** Avoid chemical sprays when wind speed exceeds 15 km/h or rain is expected.`;
       }
-      return '🌤️ **ਮੌਸਮ ਅਤੇ ਖੇਤੀਬਾੜੀ ਸਲਾਹ:**\n\n• 7 ਦਿਨਾਂ ਦਾ ਮੌਸਮ ਅਤੇ ਬਾਰਿਸ਼ ਦਾ ਪੂਰਵ-ਅਨੁਮਾਨ ਆਪਣੇ ਹੋਮ ਡੈਸ਼ਬੋਰਡ \'ਤੇ ਦੇਖੋ।\n• **ਸਪ੍ਰੇ ਦੀ ਸਲਾਹ:** ਤੇਜ਼ ਹਵਾ (15 km/h ਤੋਂ ਵੱਧ) ਜਾਂ 4 ਘੰਟਿਆਂ ਵਿੱਚ ਬਾਰਿਸ਼ ਦੀ ਸੰਭਾਵਨਾ ਹੋਵੇ ਤਾਂ ਸਪ੍ਰੇ ਨਾ ਕਰੋ।';
+      return `🌤️ **ਮੌਸਮ ਅਤੇ ਖੇਤੀਬਾੜੀ ਸਲਾਹ ("${userQueryTitle}"):**\n\n• 7 ਦਿਨਾਂ ਦਾ ਮੌਸਮ ਅਤੇ ਬਾਰਿਸ਼ ਦਾ ਪੂਰਵ-ਅਨੁਮਾਨ FarmsKing ਹੋਮ ਡੈਸ਼ਬੋਰਡ 'ਤੇ ਦੇਖੋ।\n• **ਸਪ੍ਰੇ ਦੀ ਸਲਾਹ:** ਤੇਜ਼ ਹਵਾ (15 km/h ਤੋਂ ਵੱਧ) ਜਾਂ 4 ਘੰਟਿਆਂ ਵਿੱਚ ਬਾਰਿਸ਼ ਦੀ ਸੰਭਾਵਨਾ ਹੋਵੇ ਤਾਂ ਸਪ੍ਰੇ ਨਾ ਕਰੋ।`;
     }
 
-    // 11. Disease / Insects / Pest / Sundi / Keeda / Blight / Rust / Dawai / Spray / Ilaaj
-    if (q.includes('dawai') || q.includes('dawaii') || q.includes('dawa') || q.includes('spray') || q.includes('sundi') || q.includes('keeda') || q.includes('beemari') || q.includes('ilaaj') || q.includes('ilac') || q.includes('tika') || q.includes('fungus') || q.includes('pest') || q.includes('disease') || q.includes('ਸਪ੍ਰੇ') || q.includes('ਦਵਾਈ') || q.includes('ਬੀਮਾਰੀ') || q.includes('ਇਲਾਜ') || q.includes('ਕੀੜਾ') || q.includes('ਸੁੰਡੀ') || q.includes('रोग') || q.includes('इलाज') || q.includes('कीड़ा')) {
-      if (lang === 'DEVANAGARI') {
-        return '🐛 **फसल रोग एवं कीट नियंत्रण (कृषि सलाह):**\n\n1. **सुंडी/कीट स्प्रे:** इमामेक्टिन बेंजोएट 5% SG (100g प्रति एकड़) 200L पानी में मिलाकर छिड़कें।\n2. **फफूंद/झुलसा रोग:** एक्रोबेट (400g) + मैंकोजेब (600g) प्रति एकड़ छिड़कें।\n3. **जैविक उपाय:** 5% नीम का अर्क या नीम तेल (500ml) का छिड़काव करें।\n4. **दवा ऑर्डर:** FarmsKing Store से असली दवाएं मंगाएं।';
-      }
-      if (lang === 'ENGLISH') {
-        return '🐛 **Crop Disease & Pest Control Advisory:**\n\n1. **Pest/Insect Control:** Spray Emamectin Benzoate 5% SG @ 100g per acre in 200L water.\n2. **Fungal/Blight Control:** Spray Acrobat (400g) + Mancozeb (600g) per acre.\n3. **Bio-Control:** Spray 5% Neem extract or Neem Oil @ 500ml/acre.\n4. **Order Online:** Buy genuine pesticides on FarmsKing Store.';
-      }
-      return '🐛 **ਫਸਲ ਦੀ ਬੀਮਾਰੀ ਅਤੇ ਸੁੰਡੀ/ਕੀੜੇ ਦਾ ਹੱਲ (PAU ਮਾਹਰ ਸਲਾਹ):**\n\n1. **ਸੁੰਡੀ/ਕੀੜੇ ਦੀ ਸਪ੍ਰੇ:** ਇਮਾਮੈਕਟਿਨ ਬੈਂਜ਼ੋਏਟ 5% SG (100g ਪ੍ਰਤੀ ਏਕੜ) 200L ਪਾਣੀ ਵਿੱਚ ਮਿਲਾ ਕੇ ਛਿੜਕੋ।\n2. **ਝੁਲਸ/ਫੰਗਸ ਰੋਗ:** ਐਕਰੋਬੈਟ (400g) + ਮੈਂਕੋਜ਼ੇਬ (600g) ਪ੍ਰਤੀ ਏਕੜ ਸਪ੍ਰੇ ਕਰੋ।\n3. **ਜੈਵਿਕ ਹੱਲ:** 5% ਨਿੰਮ ਦਾ ਅਰਕ ਜਾਂ ਨਿੰਮ ਦਾ ਤੇਲ (Neem Oil 500ml) ਛਿੜਕਾਅ ਕਰੋ।\n4. **ਅਸਲੀ ਦਵਾਈਆਂ:** FarmsKing Store ਤੋਂ ਅਸਲੀ ਖੇਤੀ ਦਵਾਈਆਂ ਮੰਗਵਾਓ।';
-    }
-
-    // 12. Plant Growth / Tillering / Phutara
-    if (q.includes('growth') || q.includes('phutara') || q.includes('futara') || q.includes('vadhara') || q.includes('ਫੁੱਟਾਰਾ') || q.includes('ਗ੍ਰੋਥ') || q.includes('बढ़वार')) {
-      if (lang === 'DEVANAGARI') {
-        return '🌱 **फसल के अच्छे फुटाव और बढ़वार की सलाह:**\n\n1. **ग्रोथ स्प्रे:** 1kg NPK (19:19:19) प्रति एकड़ 200L पानी में मिलाकर छिड़कें।\n2. **ह्यूमिक एसिड:** जड़ों की मजबूती के लिए 1 लीटर ह्यूमिक एसिड सिंचाई के साथ दें।';
-      }
-      if (lang === 'ENGLISH') {
-        return '🌱 **Crop Growth & Tillering Advisory:**\n\n1. **Foliar Spray:** Spray 1kg NPK (19:19:19) per acre in 200L water.\n2. **Root Booster:** Apply 1L Humic Acid with irrigation water for vigorous root growth.';
-      }
-      return '🌱 **ਫਸਲ ਦੇ ਵਧੀਆ ਫੁੱਟਾਰੇ ਅਤੇ ਗ੍ਰੋਥ ਲਈ ਸਲਾਹ:**\n\n1. **ਗ੍ਰੋਥ ਸਪ੍ਰੇ:** 1kg NPK (19:19:19) ਪ੍ਰਤੀ ਏਕੜ 200L ਪਾਣੀ ਵਿੱਚ ਮਿਲਾ ਕੇ ਛਿੜਕਾਅ ਕਰੋ।\n2. **ਹਿਊਮਿਕ ਐਸਿਡ:** ਜ਼ਮੀਨ \'ਚ ਜੜ੍ਹਾਂ ਦੀ ਮਜ਼ਬੂਤੀ ਲਈ 1 ਲੀਟਰ ਹਿਊਮਿਕ ਐਸਿਡ ਪਾਣੀ ਨਾਲ ਦਿਓ।\n3. **ਸਾਵਧਾਨੀ:** ਖੇਤ ਵਿੱਚ ਬਹੁਤ ਜ਼ਿਆਦਾ ਪਾਣੀ ਨਾ ਖੜ੍ਹਨ ਦਿਓ।';
-    }
-
-    // 13. Dairy / Livestock / Animals / Majh / Gai / Milk / Doodh
-    if (q.includes('majh') || q.includes('gai') || q.includes('cow') || q.includes('buffalo') || q.includes('milk') || q.includes('doodh') || q.includes('dood') || q.includes('pashu') || q.includes('ਦੁੱਧ') || q.includes('ਮੱਝ') || q.includes('ਗਾਂ') || q.includes('ਪਸ਼ੂ') || q.includes('दूध') || q.includes('गाय') || q.includes('भैंस') || q.includes('पशु')) {
-      if (lang === 'DEVANAGARI') {
-        return '🥛 **पशुपालन एवं दूध बढ़ाने की सलाह:**\n\n1. **मिनरल मिक्सचर:** गाय/भैंस को रोजाना 50g-100g मिनरल मिक्सचर दें।\n2. **चारा एवं पानी:** हरे चारे के साथ सूखा चारा दें और दिन में 4-5 बार ताजा पानी पिलाएं।';
-      }
-      if (lang === 'ENGLISH') {
-        return '🥛 **Livestock & Milk Yield Advisory:**\n\n1. **Mineral Supplement:** Provide 50-100g daily Mineral Mixture to cattle/buffalo.\n2. **Feed Balance:** Mix dry fodder with green forage for optimum digestion and milk output.';
-      }
-      return '🥛 **ਪਸ਼ੂ ਪਾਲਣ ਅਤੇ ਦੁੱਧ ਵਧਾਉਣ ਦੀ ਮਾਹਰ ਸਲਾਹ:**\n\n1. **ਖੁਰਾਕ & ਮਿਨਰਲ ਮਿਕਸਚਰ:** ਮੱਝ/ਗਾਂ ਨੂੰ ਰੋਜ਼ਾਨਾ 50g-100g ਚੰਗੀ ਕੁਆਲਿਟੀ ਦਾ Mineral Mixture ਖੁਰਾਕ ਵਿੱਚ ਦਿਓ।\n2. **ਹਰਾ ਚਾਰਾ:** ਹਰੇ ਚਾਰੇ ਨਾਲ 1kg ਤੂੜੀ ਅਤੇ ਸੁੱਕਾ ਚਾਰਾ ਜ਼ਰੂਰ ਮਿਲਾਓ।\n3. **ਪਾਣੀ:** ਪਸ਼ੂ ਨੂੰ ਦਿਨ ਵਿੱਚ 4-5 ਵਾਰ ਸਾਫ਼ ਅਤੇ ਤਾਜ਼ਾ ਪਾਣੀ ਪਿਲਾਓ।';
-    }
-
-    // 14. Weeds / Herbicide / Gulli Danda / Nadin
-    if (q.includes('nadin') || q.includes('gulli') || q.includes('danda') || q.includes('weed') || q.includes('ghas') || q.includes('herbicide') || q.includes('ਨਦੀਨ') || q.includes('ਗੁੱਲੀ') || q.includes('ਘਾਹ')) {
-      if (lang === 'DEVANAGARI') {
-        return '🌾 **खरपतवार (गुल्ली डंडा / चौड़ी पत्ती) नियंत्रण:**\n\n1. **गुल्ली डंडा:** सिंचाई के 3-4 दिन बाद एक्शियल (Axial) का छिड़काव करें।\n2. **चौड़ी पत्ती:** 2,4-D या एल्ग्रिप 8g प्रति एकड़ 200L पानी में छिड़कें।';
-      }
-      if (lang === 'ENGLISH') {
-        return '🌾 **Weed & Herbicide Advisory:**\n\n1. **Phalaris minor:** Spray Axial or Shogun 3-4 days after 1st irrigation.\n2. **Broadleaf Weeds:** Spray Algrip @ 8g per acre in 200L water.';
-      }
-      return '🌾 **ਖੇਤ ਵਿੱਚ ਨਦੀਨਾਂ (ਗੁੱਲੀ ਡੰਡਾ / ਚੌੜੇ ਪੱਤੇ) ਦਾ ਹੱਲ:**\n\n1. **ਗੁੱਲੀ ਡੰਡਾ:** ਕਣਕ ਵਿੱਚ ਪਹਿਲੇ ਪਾਣੀ ਤੋਂ 3-4 ਦਿਨ ਬਾਅਦ ਐਕਸੀਅਲ (Axial) ਜਾਂ ਸ਼ਗਨ ਪ੍ਰਤੀ ਏਕੜ ਸਪ੍ਰੇ ਕਰੋ।\n2. **ਚੌੜੇ ਪੱਤੇ ਵਾਲੇ ਨਦੀਨ:** 2,4-D ਜਾਂ ਐਲਗ੍ਰਿਪ (Algrip) 8g ਪ੍ਰਤੀ ਏਕੜ 200L ਪਾਣੀ ਵਿੱਚ ਛਿੜਕੋ।';
-    }
-
-    // 15. Seeds / Variety / Sowing / Bijai
-    if (q.includes('beej') || q.includes('variety') || q.includes('bijai') || q.includes('sowing') || q.includes('varieti') || q.includes('ਕਿਸਮ') || q.includes('ਬੀਜ') || q.includes('ਬਿਜਾਈ') || q.includes('बीज') || q.includes('बुआई')) {
-      if (lang === 'DEVANAGARI') {
-        return '🌱 **उन्नत बीज एवं बुआई सलाह (PAU/ICAR):**\n\n1. **बीज उपचार:** बुआई से पहले बीज को बाविस्टिन (Bavistin 2g/kg) से संशोधित करें।\n2. **बीज दर:** 1 एकड़ में 40kg गेहूं या 8kg धान का प्रमाणित बीज प्रयोग करें।';
-      }
-      if (lang === 'ENGLISH') {
-        return '🌱 **Certified Seeds & Sowing Guide:**\n\n1. **Seed Treatment:** Treat seeds with Bavistin @ 2g/kg before sowing.\n2. **Seed Rate:** Use 40kg wheat seed or 8kg paddy seed per acre.';
-      }
-      return '🌱 **ਉੱਤਮ ਬੀਜ ਅਤੇ ਬਿਜਾਈ ਦੀ ਸਲਾਹ (PAU Advisory):**\n\n1. **ਬੀਜ ਦੀ ਸੋਧ:** ਬਿਜਾਈ ਤੋਂ ਪਹਿਲਾਂ ਬੀਜ ਨੂੰ ਬਾਵਿਸਟਿਨ (Bavistin 2g/kg) ਨਾਲ ਸੋਧੋ।\n2. **ਬਿਜਾਈ ਦਾ ਸਮਾਂ:** ਸੁਧਰੀਆਂ ਕਿਸਮਾਂ ਦੀ ਬਿਜਾਈ ਸਮੇਂ ਸਿਰ ਕਰੋ ਅਤੇ ਪ੍ਰਤੀ ਏਕੜ ਸਿਫਾਰਿਸ਼ ਕੀਤਾ ਬੀਜ ਹੀ ਵਰਤੋ।';
-    }
-
-    // 16. Greetings & General Chat
+    // 19. Greetings & Friendly Chat
     if (q.includes('hi') || q.includes('hello') || q.includes('sat sri akal') || q.includes('namaste') || q.includes('dasso') || q.includes('batao') || q.includes('help') || q.includes('doctor')) {
       if (lang === 'DEVANAGARI') {
-        return '🌾 **नमस्ते जी! (FarmsKing AI कृषि डॉक्टर 👨‍🌾):**\n\nबताएं, आज आपकी किस फसल, खाद, स्प्रे या मंडी भाव में सहायता करूँ?';
+        return `🌾 **नमस्ते जी! (FarmsKing AI कृषि डॉक्टर 👨‍🌾):**\n\nबताएं, आज आपकी किस फसल, खाद, स्प्रे, मंडी भाव या FarmsKing ऐप में सहायता करूँ?`;
       }
       if (lang === 'ENGLISH') {
-        return '🌾 **Hello! Welcome to FarmsKing Agri AI Doctor 👨‍🌾:**\n\nHow can I assist your farm today? Ask about crops, pests, fertilizers, sprays, weather, or mandi rates!';
+        return `🌾 **Hello! Welcome to FarmsKing Agri AI Doctor 👨‍🌾:**\n\nHow can I assist your farm today? Ask about crops, pests, fertilizers, sprays, weather, or FarmsKing features!`;
       }
-      return '🌾 **ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ ਜੀ! (FarmsKing AI ਖੇਤੀ ਡਾਕਟਰ 👨‍🌾):**\n\nਦੱਸੋ ਜੀ, ਅੱਜ ਤੁਹਾਡੀ ਕਿਸ ਫਸਲ (ਕਣਕ, ਝੋਨਾ, ਨਰਮਾ, ਗੰਨਾ, ਆਲੂ, ਟਮਾਟਰ, ਗੇਂਦਾ), ਖਾਦ, ਸਪ੍ਰੇ ਜਾਂ ਮੰਡੀ ਭਾਵ ਵਿੱਚ ਮਦਦ ਕਰਾਂ?';
+      return `🌾 **ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ ਜੀ! (FarmsKing AI ਖੇਤੀ ਡਾਕਟਰ 👨‍🌾):**\n\nਦੱਸੋ ਜੀ, ਅੱਜ ਤੁਹਾਡੀ ਕਿਸ ਫਸਲ (ਕਣਕ, ਝੋਨਾ, ਨਰਮਾ, ਗੰਨਾ, ਆਲੂ, ਟਮਾਟਰ, ਗੇਂਦਾ), ਖਾਦ, ਸਪ੍ਰੇ, ਮੰਡੀ ਭਾਵ ਜਾਂ FarmsKing ਐਪ ਬਾਰੇ ਮਦਦ ਕਰਾਂ?`;
     }
 
-    // 17. Default Advice across languages
+    // 20. Dynamic Targeted Advice for any specific farming query
     if (lang === 'DEVANAGARI') {
-      return '🌾 **कृषि विशेषज्ञ सलाह:**\n\n1. **फसल देखभाल:** समय पर सिंचाई और संतुलित उर्वरक का प्रयोग करें।\n2. **रोग निगरानी:** हर 3 दिन में पत्तियों की जांच करें।\n3. **जैविक सुरक्षा:** 5% नीम अर्क या ट्राइकोडरमा का प्रयोग करें।\n4. **दवाइयां:** FarmsKing Store से असली उत्पाद मंगाएं।';
+      return `🌾 **कृषि विशेषज्ञ सलाह — "${userQueryTitle}":**\n\n1. **फसल देखभाल:** आपके प्रश्न ("${userQueryTitle}") के अनुसार समय पर सिंचाई करें और अनुशंसित उर्वरक (यूरिया / DAP) दें।\n2. **रोग निगरानी:** खेत की 3 दिनों में जांच करें और शुरुआती लक्षण दिखने पर उपयुक्त फफूंदनाशक छिड़कें।\n3. **जैविक सुरक्षा:** 5% नीम अर्क या ट्राइकोडरमा का प्रयोग करें।\n4. **FarmsKing Store:** असली दवाएं और बीज सीधे FarmsKing ऐप से घर मंगाएं।`;
     }
     if (lang === 'ENGLISH') {
-      return '🌾 **FarmsKing Agri Expert Advice:**\n\n1. **Crop Health:** Ensure timely irrigation and balanced NPK fertilizer application based on recommendations.\n2. **Disease Watch:** Inspect leaf surfaces every 3 days. Spot-spray early infected patches.\n3. **Organic Protection:** Use 5% Neem extract or Trichoderma to boost plant immunity.\n4. **FarmsKing AgriStore:** Order genuine sprays, seeds, and fertilizers with 24-hour delivery on FarmsKing Store.';
+      return `🌾 **Agricultural Expert Advice — "${userQueryTitle}":**\n\n1. **Crop Health:** Regarding your question ("${userQueryTitle}"), ensure timely irrigation and balanced NPK fertilizer top-dressing.\n2. **Disease & Pest Watch:** Monitor leaf surfaces every 3 days. Apply recommended fungicides/pesticides early.\n3. **Organic Protection:** Use 5% Neem seed extract or Trichoderma bio-control.\n4. **FarmsKing Store:** Order genuine sprays, seeds, and fertilizers with doorstep delivery on FarmsKing.`;
     }
-    return '🌾 **ਖੇਤੀਬਾੜੀ ਮਾਹਰ ਦੀ ਸਲਾਹ:**\n\n1. **ਫਸਲ ਦੀ ਦੇਖਭਾਲ:** ਸਮੇਂ ਸਿਰ ਪਾਣੀ ਅਤੇ PAU ਸਿਫਾਰਿਸ਼ ਅਨੁਸਾਰ ਖਾਦਾਂ ਦੀ ਵਰਤੋਂ ਕਰੋ।\n2. **ਬੀਮਾਰੀ ਦੀ ਜਾਂਚ:** ਹਰ 3 ਦਿਨਾਂ ਬਾਅਦ ਪੱਤਿਆਂ ਦੀ ਜਾਂਚ ਕਰੋ। ਸ਼ੁਰੂਆਤ \'ਚ ਹੀ ਸਪ੍ਰੇ ਕਰੋ।\n3. **ਜੈਵਿਕ ਸੁਰੱਖਿਆ:** 5% ਨਿੰਮ ਦਾ ਅਰਕ ਜਾਂ ਟ੍ਰਾਈਕੋਡਰਮਾ ਦੀ ਵਰਤੋਂ ਕਰੋ।\n4. **ਦਵਾਈਆਂ:** FarmsKing Store ਤੋਂ ਅਸਲੀ ਦਵਾਈਆਂ ਤੇ ਖਾਦਾਂ ਘਰ ਬੈਠੇ ਮੰਗਵਾਓ।';
+    return `🌾 **ਖੇਤੀਬਾੜੀ ਮਾਹਰ ਸਲਾਹ — "${userQueryTitle}":**\n\n1. **ਫਸਲ ਦੀ ਦੇਖਭਾਲ:** ਤੁਹਾਡੇ ਸਵਾਲ ("${userQueryTitle}") ਅਨੁਸਾਰ ਸਮੇਂ ਸਿਰ ਪਾਣੀ ਅਤੇ PAU ਸਿਫਾਰਿਸ਼ ਅਨੁਸਾਰ ਖਾਦਾਂ ਦੀ ਵਰਤੋਂ ਕਰੋ।\n2. **ਬੀਮਾਰੀ ਦੀ ਜਾਂਚ:** ਹਰ 3 ਦਿਨਾਂ ਬਾਅਦ ਪੱਤਿਆਂ ਦੀ ਜਾਂਚ ਕਰੋ। ਸ਼ੁਰੂਆਤ 'ਚ ਹੀ ਸਪ੍ਰੇ ਕਰੋ।\n3. **ਜੈਵਿਕ ਸੁਰੱਖਿਆ:** 5% ਨਿੰਮ ਦਾ ਅਰਕ ਜਾਂ ਟ੍ਰਾਈਕੋਡਰਮਾ ਦੀ ਵਰਤੋਂ ਕਰੋ।\n4. **FarmsKing Store:** ਅਸਲੀ ਦਵਾਈਆਂ ਤੇ ਖਾਦਾਂ FarmsKing ਐਪ ਤੋਂ ਘਰ ਬੈਠੇ ਮੰਗਵਾਓ।`;
   };
 
   const handleSend = (textToSend?: string) => {

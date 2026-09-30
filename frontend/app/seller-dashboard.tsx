@@ -1453,66 +1453,65 @@ export default function SellerDashboardScreen() {
               </View>
             </Modal>
           </View>
-        ) : (
-          /* Active Seller Dashboard */
-          <>
-            {/* Rejection Alert Box */}
-            {storeData?.kycStatus === 'REJECTED' && (
-              <View style={styles.rejectionCard}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-                  <Ionicons name="alert-circle" size={24} color="#EF4444" />
-                  <Text style={styles.rejectionTitle}>Application Rejected by Admin</Text>
-                </View>
-                <Text style={styles.rejectionReasonText}>
-                  <Text style={{ fontWeight: '700', color: '#FCA5A5' }}>Reason: </Text>
-                  {storeData?.rejectionReason || 'Uploaded documents or store details require correction.'}
-                </Text>
-                <TouchableOpacity
-                  style={styles.resubmitBtn}
-                  onPress={() => {
-                    populateStoreFields(storeData);
-                    setIsEditingRejected(true);
-                    setStep(1);
-                  }}
-                >
-                  <Ionicons name="refresh-circle-outline" size={20} color="#FFF" />
-                  <Text style={styles.resubmitBtnText}> ✏️ Edit & Resubmit Application</Text>
+        ) : storeData?.kycStatus === 'REJECTED' ? (
+          /* Application Rejected Screen */
+          <View style={styles.rejectionCard}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <Ionicons name="alert-circle" size={28} color="#EF4444" />
+              <Text style={styles.rejectionTitle}>Application Rejected by FarmsKing Admin</Text>
+            </View>
+            <Text style={styles.rejectionReasonText}>
+              <Text style={{ fontWeight: '800', color: '#FCA5A5' }}>Rejection Reason: </Text>
+              {storeData?.rejectionReason || 'Uploaded documents or store registration details require correction.'}
+            </Text>
+            <Text style={{ color: '#FEE2E2', fontSize: 12, marginTop: 10, lineHeight: 18 }}>
+              Your store details have been preserved. Please review the rejection reason, correct the required documents or business info, and resubmit for immediate review.
+            </Text>
+            <TouchableOpacity
+              style={[styles.resubmitBtn, { marginTop: 16 }]}
+              onPress={() => {
+                populateStoreFields(storeData);
+                setIsEditingRejected(true);
+                setStep(1);
+              }}
+            >
+              <Ionicons name="create" size={20} color="#FFF" />
+              <Text style={styles.resubmitBtnText}> ✏️ Edit & Resubmit Seller Application</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (storeData?.kycStatus === 'SUBMITTED' || storeData?.kycStatus === 'PENDING' || storeData?.kycStatus === 'UNVERIFIED') ? (
+          /* Pending Admin Verification Notice Card */
+          <View style={[styles.card, { backgroundColor: '#111827', borderColor: '#374151', borderWidth: 1, marginBottom: 20 }]}>
+            <View style={{ alignItems: 'center', paddingVertical: 16 }}>
+              <MaterialCommunityIcons name="clock-outline" size={56} color="#F59E0B" />
+              <Text style={{ color: '#FBBF24', fontSize: 18, fontWeight: '800', marginTop: 10, textAlign: 'center' }}>
+                ⏳ Application Under Official Review
+              </Text>
+              <Text style={{ color: '#9CA3AF', fontSize: 13, marginTop: 6, textAlign: 'center', lineHeight: 20, paddingHorizontal: 10 }}>
+                Waiting for KYC Verification by FarmsKing Admin. Your store registration details and uploaded business documents (GST/PAN/Bank details) have been received officially.
+              </Text>
+
+              <View style={{ backgroundColor: '#1F2937', padding: 12, borderRadius: 8, width: '100%', marginTop: 14, borderWidth: 1, borderColor: '#374151' }}>
+                <Text style={{ color: '#9CA3AF', fontSize: 12, marginBottom: 4 }}>🏪 Store Name: <Text style={{ color: '#FFF', fontWeight: '700' }}>{storeData?.storeName}</Text></Text>
+                <Text style={{ color: '#9CA3AF', fontSize: 12, marginBottom: 4 }}>🏢 Registered Legal Firm: <Text style={{ color: '#FFF', fontWeight: '700' }}>{storeData?.legalName || storeData?.storeName}</Text></Text>
+                <Text style={{ color: '#9CA3AF', fontSize: 12 }}>📋 Status: <Text style={{ color: '#F59E0B', fontWeight: '800' }}>Waiting for KYC Verification by FarmsKing Admin</Text></Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+                <TouchableOpacity style={{ backgroundColor: '#10B981', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 6 }} onPress={fetchStoreData}>
+                  <Ionicons name="refresh" size={16} color="#FFF" />
+                  <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 12.5 }}>Check Status</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={{ backgroundColor: '#374151', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 6 }} onPress={() => { populateStoreFields(storeData); setIsEditingRejected(true); setStep(1); }}>
+                  <Ionicons name="create-outline" size={16} color="#FFF" />
+                  <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 12.5 }}>Edit Application</Text>
                 </TouchableOpacity>
               </View>
-            )}
-
-            {/* Pending Admin Verification Notice Card */}
-            {(storeData?.kycStatus === 'SUBMITTED' || storeData?.kycStatus === 'PENDING' || storeData?.kycStatus === 'UNVERIFIED') && (
-              <View style={[styles.card, { backgroundColor: '#111827', borderColor: '#374151', borderWidth: 1, marginBottom: 20 }]}>
-                <View style={{ alignItems: 'center', paddingVertical: 16 }}>
-                  <MaterialCommunityIcons name="clock-outline" size={56} color="#F59E0B" />
-                  <Text style={{ color: '#FBBF24', fontSize: 18, fontWeight: '800', marginTop: 10, textAlign: 'center' }}>
-                    ⏳ Application Under Official Review
-                  </Text>
-                  <Text style={{ color: '#9CA3AF', fontSize: 13, marginTop: 6, textAlign: 'center', lineHeight: 20, paddingHorizontal: 10 }}>
-                    Waiting for KYC Verification by FarmsKing Admin. Your store registration details and uploaded business documents (GST/PAN/Bank details) have been received officially.
-                  </Text>
-
-                  <View style={{ backgroundColor: '#1F2937', padding: 12, borderRadius: 8, width: '100%', marginTop: 14, borderWidth: 1, borderColor: '#374151' }}>
-                    <Text style={{ color: '#9CA3AF', fontSize: 12, marginBottom: 4 }}>🏪 Store Name: <Text style={{ color: '#FFF', fontWeight: '700' }}>{storeData?.storeName}</Text></Text>
-                    <Text style={{ color: '#9CA3AF', fontSize: 12, marginBottom: 4 }}>🏢 Registered Legal Firm: <Text style={{ color: '#FFF', fontWeight: '700' }}>{storeData?.legalName || storeData?.storeName}</Text></Text>
-                    <Text style={{ color: '#9CA3AF', fontSize: 12 }}>📋 Status: <Text style={{ color: '#F59E0B', fontWeight: '800' }}>Waiting for KYC Verification by FarmsKing Admin</Text></Text>
-                  </View>
-
-                  <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-                    <TouchableOpacity style={{ backgroundColor: '#10B981', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 6 }} onPress={fetchStoreData}>
-                      <Ionicons name="refresh" size={16} color="#FFF" />
-                      <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 12.5 }}>Check Status</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={{ backgroundColor: '#374151', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 6 }} onPress={() => { populateStoreFields(storeData); setIsEditingRejected(true); setStep(1); }}>
-                      <Ionicons name="create-outline" size={16} color="#FFF" />
-                      <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 12.5 }}>Edit Application</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            )}
-
+            </View>
+          </View>
+        ) : (
+          /* Active Verified Seller Dashboard */
+          <>
             {/* Store Profile Card */}
             <View style={styles.storeCard}>
               <View style={styles.storeRow}>
@@ -1524,31 +1523,9 @@ export default function SellerDashboardScreen() {
                   <Text style={styles.slugText}>farmsking.in/store/{storeData?.slug}</Text>
                 </View>
 
-                <View
-                  style={[
-                    styles.kycBadge,
-                    {
-                      backgroundColor:
-                        storeData?.kycStatus === 'VERIFIED'
-                          ? '#065F46'
-                          : storeData?.kycStatus === 'REJECTED'
-                            ? '#991B1B'
-                            : '#92400E',
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    name={
-                      storeData?.kycStatus === 'VERIFIED'
-                        ? 'checkmark-circle'
-                        : storeData?.kycStatus === 'REJECTED'
-                          ? 'close-circle'
-                          : 'time'
-                    }
-                    size={14}
-                    color="#FFF"
-                  />
-                  <Text style={styles.kycText}>{storeData?.kycStatus || 'PENDING'}</Text>
+                <View style={[styles.kycBadge, { backgroundColor: '#065F46' }]}>
+                  <Ionicons name="checkmark-circle" size={14} color="#FFF" />
+                  <Text style={styles.kycText}>VERIFIED</Text>
                 </View>
               </View>
             </View>

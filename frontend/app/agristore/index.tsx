@@ -58,7 +58,7 @@ export default function AgriStoreEnterpriseHub() {
   const [selectedStoreForGstr8, setSelectedStoreForGstr8] = useState<string>('');
   const [isFetchingGstr8, setIsFetchingGstr8] = useState(false);
 
-  // Add Product Builder State (Amazon-Grade)
+  // Add Product Builder State (FarmsKing Direct)
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [productName, setProductName] = useState('');
   const [productPrice, setProductPrice] = useState('');
@@ -246,7 +246,7 @@ export default function AgriStoreEnterpriseHub() {
     }
   };
 
-  // Save Product Handler (Amazon-Grade)
+  // Save Product Handler (FarmsKing Direct)
   const handleSaveProduct = async () => {
     if (!productName.trim() || !productPrice) {
       showAlert('Error ⚠️', 'Please enter Product Name and Price.');
@@ -284,7 +284,7 @@ export default function AgriStoreEnterpriseHub() {
         sellerStoreId: selectedSellerStoreId || undefined,
       });
 
-      showAlert('Success 🎉', 'Amazon-grade product successfully published to AgriStore catalog!');
+      showAlert('Success 🎉', 'FarmsKing Direct product successfully published to AgriStore catalog!');
       setShowAddProductModal(false);
       setProductName('');
       setProductPrice('');
@@ -339,7 +339,7 @@ export default function AgriStoreEnterpriseHub() {
           {[
             { id: 'OVERVIEW', label: '📊 Overview', icon: 'speedometer-outline' },
             { id: 'SELLERS', label: '🏪 Sellers & KYC', icon: 'people-outline' },
-            { id: 'CATALOG', label: '📦 Amazon Catalog', icon: 'cube-outline' },
+            { id: 'CATALOG', label: '📦 FarmsKing Catalog', icon: 'cube-outline' },
             { id: 'ORDERS', label: '🛒 Orders Queue', icon: 'receipt-outline' },
             { id: 'DELIVERY', label: '🚚 Shiprocket Logistics', icon: 'bus-outline' },
             { id: 'PAYMENTS', label: '💳 Cashfree Payments', icon: 'wallet-outline' },
@@ -420,7 +420,7 @@ export default function AgriStoreEnterpriseHub() {
                   <TouchableOpacity style={styles.launcherCard} onPress={() => setShowAddProductModal(true)}>
                     <Ionicons name="add-circle-outline" size={26} color="#3B82F6" />
                     <Text style={styles.launcherTitle}>Product Builder</Text>
-                    <Text style={styles.launcherDesc}>Publish Amazon-grade product catalog</Text>
+                    <Text style={styles.launcherDesc}>Publish FarmsKing product catalog</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity style={styles.launcherCard} onPress={() => setActiveTab('DELIVERY')}>

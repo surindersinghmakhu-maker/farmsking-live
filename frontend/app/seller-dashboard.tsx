@@ -44,7 +44,7 @@ export default function SellerDashboardScreen() {
   // Step 1: Business Identity & Brand Details
   const [storeName, setStoreName] = useState('');
   const [slug, setSlug] = useState('');
-  const [entityType, setEntityType] = useState<'PROPRIETORSHIP' | 'PARTNERSHIP' | 'PVT_LTD' | 'INDIVIDUAL_FARMER'>('INDIVIDUAL_FARMER');
+  const [entityType, setEntityType] = useState<'PROPRIETORSHIP' | 'PARTNERSHIP' | 'PVT_LTD' | 'INDIVIDUAL_FARMER' | 'PESTICIDE_DEALER'>('INDIVIDUAL_FARMER');
   const [legalName, setLegalName] = useState('');
 
   // Step 2: Legal & Tax Compliance & FSSAI
@@ -147,6 +147,13 @@ export default function SellerDashboardScreen() {
     } catch (err) {
       showAlert('Photo Picker Error', 'Could not open image gallery.');
     }
+  };
+
+  const setDefaultSamplePhoto = () => {
+    const sampleUrl = 'https://images.unsplash.com/photo-1592417817098-8f3d6ef23a80?q=80&w=600&auto=format&fit=crop';
+    setImageFrontUrl(sampleUrl);
+    setNewProductImages((prev) => Array.from(new Set([sampleUrl, ...prev])));
+    showAlert('Sample Photo Attached 📸', 'Default high-resolution agricultural product sample photo attached successfully!');
   };
 
   const pickSingleImage = async (setter: (url: string) => void) => {
@@ -732,7 +739,7 @@ export default function SellerDashboardScreen() {
         </TouchableOpacity>
         <View style={{ flex: 1, marginLeft: 12 }}>
           <Text style={styles.headerTitle}>🏪 National Seller Hub</Text>
-          <Text style={styles.headerSub}>Amazon & Shopify Grade Vendor Portal</Text>
+          <Text style={styles.headerSub}>FarmsKing Direct Vendor Portal</Text>
         </View>
         <TouchableOpacity style={styles.refreshBtn} onPress={fetchStoreData}>
           <Ionicons name="refresh" size={20} color="#10B981" />
@@ -1399,7 +1406,7 @@ export default function SellerDashboardScreen() {
             {showAddProduct && (
               <View style={styles.card}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <Text style={styles.cardTitle}>📦 Amazon-Grade Product Builder</Text>
+                  <Text style={styles.cardTitle}>📦 FarmsKing Product Builder</Text>
                   <TouchableOpacity onPress={() => setShowAddProduct(false)}>
                     <Ionicons name="close-circle" size={24} color="#9CA3AF" />
                   </TouchableOpacity>
@@ -1427,23 +1434,82 @@ export default function SellerDashboardScreen() {
                   </View>
                 ) : null}
 
-                {/* 3. MULTI-PHOTO GALLERY UPLOAD */}
-                <Text style={styles.inputLabel}>Product Gallery Photos (Select Multiple) *</Text>
+                {/* 3. MULTI-PHOTO GALLERY & PRESET SAMPLE PHOTOS */}
+                <Text style={styles.inputLabel}>Product Photo(s) * (Select Gallery, Angle Photo, or Preset Sample)</Text>
+                
+                {/* Preset Sample Photo Buttons */}
+                <View style={{ marginBottom: 8 }}>
+                  <Text style={{ color: '#9CA3AF', fontSize: 11, marginBottom: 4 }}>⚡ Quick Select Sample Agri Photo if device gallery photo is not ready:</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    <View style={{ flexDirection: 'row', gap: 6 }}>
+                      {[
+                        { label: '🌾 Seeds Bag', url: 'https://images.unsplash.com/photo-1592417817098-8f3d6ef23a80?q=80&w=600&auto=format&fit=crop' },
+                        { label: '🧪 Bio-Spray Bottle', url: 'https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?q=80&w=600&auto=format&fit=crop' },
+                        { label: '🍯 Organic Gur/Honey', url: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?q=80&w=600&auto=format&fit=crop' },
+                        { label: '🥦 Fresh Farm Produce', url: 'https://images.unsplash.com/photo-1610348725531-843dff563e2c?q=80&w=600&auto=format&fit=crop' },
+                        { label: '⚡ Fertilizer Sack', url: 'https://images.unsplash.com/photo-1628352081506-83c43123ed6d?q=80&w=600&auto=format&fit=crop' },
+                      ].map((item, i) => (
+                        <TouchableOpacity
+                          key={i}
+                          style={{ backgroundColor: '#064E3B', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#10B981', flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                          onPress={() => {
+                            setImageFrontUrl(item.url);
+                            setNewProductImages((prev) => Array.from(new Set([item.url, ...prev])));
+                            showAlert('Sample Photo Selected 📸', `${item.label} photo set as primary product image!`);
+                          }}
+                        >
+                          <Text style={{ color: '#34D399', fontSize: 11, fontWeight: '700' }}>{item.label}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </ScrollView>
+                </View>
+
+                {/* Upload Gallery & Angle Pickers */}
                 <TouchableOpacity style={styles.uploadBox} onPress={pickProductPhotos}>
                   <Ionicons name="images-outline" size={24} color="#10B981" />
                   <Text style={styles.uploadText}>
-                    {newProductImages.length > 0 ? `Attach ${newProductImages.length} Photo(s)` : 'Browse & Upload Photos from Gallery'}
+                    {newProductImages.length > 0 ? `Attach ${newProductImages.length} Gallery Photo(s)` : 'Browse & Upload Photos from Gallery'}
                   </Text>
                 </TouchableOpacity>
 
-                {newProductImages.length > 0 ? (
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 8 }}>
-                    {newProductImages.map((img, idx) => (
+                {/* Individual Angle Slots */}
+                <View style={{ flexDirection: 'row', gap: 6, marginVertical: 8 }}>
+                  {[
+                    { label: 'Front Main', state: imageFrontUrl, setter: setImageFrontUrl },
+                    { label: 'Back Label', state: imageBackLabelUrl, setter: setImageBackLabelUrl },
+                    { label: 'Dosage Chart', state: imageDosageUrl, setter: setImageDosageUrl },
+                    { label: 'Pack Unit', state: imageProductUrl, setter: setImageProductUrl },
+                  ].map((ang, idx) => (
+                    <TouchableOpacity
+                      key={idx}
+                      style={{ flex: 1, height: 60, borderRadius: 8, backgroundColor: '#1F2937', borderWidth: 1, borderColor: ang.state ? '#10B981' : '#374151', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
+                      onPress={() => pickSingleImage(ang.setter)}
+                    >
+                      {ang.state ? (
+                        <Image source={{ uri: ang.state }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                      ) : (
+                        <View style={{ alignItems: 'center' }}>
+                          <Ionicons name="camera-outline" size={16} color="#9CA3AF" />
+                          <Text style={{ color: '#9CA3AF', fontSize: 9, marginTop: 2, textAlign: 'center' }}>{ang.label}</Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* Thumbnails list */}
+                {(newProductImages.length > 0 || imageFrontUrl) ? (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 6 }}>
+                    {Array.from(new Set([...(imageFrontUrl ? [imageFrontUrl] : []), ...newProductImages])).map((img, idx) => (
                       <View key={idx} style={{ position: 'relative', marginRight: 8 }}>
-                        <Image source={{ uri: img }} style={{ width: 60, height: 60, borderRadius: 8, borderWidth: 1, borderColor: '#10B981' }} />
+                        <Image source={{ uri: img }} style={{ width: 64, height: 64, borderRadius: 8, borderWidth: 1.5, borderColor: '#10B981' }} resizeMode="cover" />
                         <TouchableOpacity
-                          style={{ position: 'absolute', top: -4, right: -4, backgroundColor: '#EF4444', borderRadius: 10, padding: 2 }}
-                          onPress={() => setNewProductImages(newProductImages.filter((_, i) => i !== idx))}
+                          style={{ position: 'absolute', top: -4, right: -4, backgroundColor: '#EF4444', borderRadius: 10, padding: 3 }}
+                          onPress={() => {
+                            setNewProductImages(newProductImages.filter((i) => i !== img));
+                            if (imageFrontUrl === img) setImageFrontUrl(null);
+                          }}
                         >
                           <Ionicons name="close" size={12} color="#FFF" />
                         </TouchableOpacity>
@@ -1657,9 +1723,9 @@ export default function SellerDashboardScreen() {
                     {/* Simulated Product Card */}
                     <View style={{ backgroundColor: '#1F2937', borderRadius: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#374151' }}>
                       {/* Product Image & Overlay Badges */}
-                      <View style={{ height: 200, backgroundColor: '#374151', position: 'relative', justifyContent: 'center', alignItems: 'center' }}>
+                      <View style={{ height: 260, backgroundColor: '#0F172A', position: 'relative', justifyContent: 'center', alignItems: 'center' }}>
                         {imageFrontUrl || newProductImages[0] ? (
-                          <Image source={{ uri: imageFrontUrl || newProductImages[0] }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+                          <Image source={{ uri: imageFrontUrl || newProductImages[0] }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
                         ) : (
                           <View style={{ alignItems: 'center' }}>
                             <Ionicons name="image-outline" size={48} color="#9CA3AF" />

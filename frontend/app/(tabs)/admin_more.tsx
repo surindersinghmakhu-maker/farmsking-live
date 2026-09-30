@@ -1,51 +1,148 @@
 import { BrandLogo } from '@/src/components/BrandLogo';
-import { useState, useEffect, useRef } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, Linking, ActivityIndicator, TextInput, Alert } from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/src/store/auth-context';
 import { useRole } from '@/src/store/role-context';
 import { useLanguage } from '@/src/store/language-context';
-import { RoleThemes } from '@/constants/Colors';
-import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
-import { TranslationKey, LANGUAGE_OPTIONS } from '@/src/constants/translations';
-import { useAppSettings, useSupportContact, useUpdateAppSettings } from '@/src/hooks/useAppSettings';
+import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
+import { TranslationKey } from '@/src/constants/translations';
+import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { Avatar } from '@/src/components/Avatar';
 import { SuperAdminExpenseCategoriesModal } from '@/components/SuperAdminExpenseCategoriesModal';
 import { useExecutiveTheme } from '@/src/store/theme-context';
-
-const theme = RoleThemes.FARMER;
+import { SwitchDashboardSection } from '@/src/components/SwitchDashboardSection';
 
 const getCleanMobile = (mobile?: string | null) => {
   if (!mobile || mobile.startsWith('G_')) return '';
   return mobile;
 };
 
-const SUPER_ADMIN_ITEMS: { key: TranslationKey | 'workspace' | 'agristoreHub'; label: string; icon: keyof typeof Ionicons.glyphMap; href?: string }[] = [
-  { key: 'agristoreHub', label: '👑 National AgriStore Hub', icon: 'storefront-outline', href: '/agristore' },
-  { key: 'workspace', label: '💼 Workspace (Backup & Tools)', icon: 'briefcase-outline' },
-  { key: 'superSaleManagement', label: 'Sale / Order Management', icon: 'receipt-outline', href: '/(tabs)/super-orders' },
-  { key: 'superAuditLog', label: 'Audit Log', icon: 'time-outline', href: '/(tabs)/super-audit-log' },
-  { key: 'superEditCrop', label: 'Edit Crop by Crop ID', icon: 'leaf-outline', href: '/(tabs)/super-crop-edit' },
+type AdminMenuItem = {
+  key: string;
+  label: string;
+  subLabel?: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  iconBg: string;
+  iconColor: string;
+  href?: string;
+  isModal?: 'workspace' | 'categories' | 'about' | 'guides';
+};
+
+const PLATFORM_CONTROL_ITEMS: AdminMenuItem[] = [
+  {
+    key: 'agristoreHub',
+    label: '👑 National AgriStore Hub',
+    subLabel: 'National store management & direct catalog',
+    icon: 'storefront-outline',
+    iconBg: '#fef3c7',
+    iconColor: '#d97706',
+    href: '/agristore',
+  },
+  {
+    key: 'superUsers',
+    label: '👥 User & Role Management',
+    subLabel: 'Manage all users, farmers, advisors & role assignments',
+    icon: 'people-outline',
+    iconBg: '#eef2ff',
+    iconColor: '#4f46e5',
+    href: '/(tabs)/super-users',
+  },
+  {
+    key: 'superCoupons',
+    label: '🎟️ Farmers & Coupon Engine',
+    subLabel: 'Issue discount codes, vouchers & farmer schemes',
+    icon: 'ticket-outline',
+    iconBg: '#fdf4ff',
+    iconColor: '#c026d3',
+    href: '/(tabs)/super-coupons',
+  },
+  {
+    key: 'superAccounts',
+    label: '💰 Finance & Accounts Control',
+    subLabel: 'Approve withdrawal requests & plan claims',
+    icon: 'cash-outline',
+    iconBg: '#f0fdf4',
+    iconColor: '#16a34a',
+    href: '/(tabs)/super-accounts',
+  },
+  {
+    key: 'adminSellers',
+    label: '🏪 Seller Verification & Approvals',
+    subLabel: 'Approve new seller store registrations & Cashfree accounts',
+    icon: 'shield-checkmark-outline',
+    iconBg: '#fff7ed',
+    iconColor: '#ea580c',
+    href: '/admin-sellers',
+  },
+  {
+    key: 'adminProducts',
+    label: '📦 Product Catalog & Stock Approvals',
+    subLabel: 'Review, approve & manage store product inventory',
+    icon: 'cube-outline',
+    iconBg: '#eff6ff',
+    iconColor: '#2563eb',
+    href: '/(tabs)/admin-products',
+  },
+  {
+    key: 'adminOrders',
+    label: '🧾 Admin Orders & Fulfillment',
+    subLabel: 'Process customer orders & manage shipping status',
+    icon: 'receipt-outline',
+    iconBg: '#f5f3ff',
+    iconColor: '#7c3aed',
+    href: '/(tabs)/admin-orders',
+  },
+  {
+    key: 'sellerPayouts',
+    label: '💸 Seller Payouts & Commission',
+    subLabel: 'Release seller balances & monitor transaction payouts',
+    icon: 'wallet-outline',
+    iconBg: '#ecfdf5',
+    iconColor: '#059669',
+    href: '/seller-payouts',
+  },
+  {
+    key: 'superOrders',
+    label: '📊 Sales Order Analytics',
+    subLabel: 'View pan-India sales order logs & history',
+    icon: 'bar-chart-outline',
+    iconBg: '#f0f9ff',
+    iconColor: '#0284c7',
+    href: '/(tabs)/super-orders',
+  },
+  {
+    key: 'superAuditLog',
+    label: '🕒 System Audit Log',
+    subLabel: 'Track administrative actions & security logs',
+    icon: 'time-outline',
+    iconBg: '#f8fafc',
+    iconColor: '#475569',
+    href: '/(tabs)/super-audit-log',
+  },
+  {
+    key: 'superCropEdit',
+    label: '🌱 Edit Crop & Disease Data',
+    subLabel: 'Update crop master database & disease symptoms',
+    icon: 'leaf-outline',
+    iconBg: '#f0fdf4',
+    iconColor: '#15803d',
+    href: '/(tabs)/super-crop-edit',
+  },
 ];
 
 export default function AdminMoreScreen() {
   const { user, logout } = useAuth();
   const { role } = useRole();
-  const { colors } = useExecutiveTheme();
   const { data: appSettings } = useAppSettings();
   const brandLogoUri = appSettings?.logoUrl ?? null;
   const { t } = useLanguage();
   const router = useRouter();
 
   const [showWorkspaceModal, setShowWorkspaceModal] = useState(false);
-  const [showAboutModal, setShowAboutModal] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
-  const [showGuidesModal, setShowGuidesModal] = useState(false);
-  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
-  const [contactModalMode, setContactModalMode] = useState<'SUPPORT' | 'CONTACT' | null>(null);
   const [isGroupVoiceCallEnabled, setIsGroupVoiceCallEnabled] = useState(true);
 
   return (
@@ -72,38 +169,36 @@ export default function AdminMoreScreen() {
         </LinearGradient>
 
         <View style={styles.body}>
-          {/* 👑 Admin Control Center & Fast Tools */}
+          {/* Switch Role / Dashboard */}
+          <SwitchDashboardSection />
+
+          {/* 👑 PLATFORM CONTROL CENTER */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>👑 ADMIN CONTROL CENTER</Text>
+            <Text style={styles.sectionTitle}>👑 PLATFORM CONTROL CENTER (11 OPTIONS)</Text>
             <View style={styles.sectionCard}>
-              {SUPER_ADMIN_ITEMS.map((item, idx) => (
+              {PLATFORM_CONTROL_ITEMS.map((item, idx) => (
                 <TouchableOpacity
                   key={item.key}
-                  style={[styles.row, idx === SUPER_ADMIN_ITEMS.length - 1 && { borderBottomWidth: 0 }]}
+                  style={[styles.row, idx === PLATFORM_CONTROL_ITEMS.length - 1 && { borderBottomWidth: 0 }]}
                   activeOpacity={0.7}
-                  onPress={() => {
-                    if (item.key === 'workspace') {
-                      setShowWorkspaceModal(true);
-                    } else if (item.href) {
-                      router.push(item.href as any);
-                    }
-                  }}
+                  onPress={() => item.href && router.push(item.href as any)}
                 >
-                  <View style={[styles.rowIconBg, { backgroundColor: '#fef3c7' }]}>
-                    <Ionicons name={item.icon} size={18} color="#d97706" />
+                  <View style={[styles.rowIconBg, { backgroundColor: item.iconBg }]}>
+                    <Ionicons name={item.icon} size={18} color={item.iconColor} />
                   </View>
-                  <Text style={[styles.rowLabel, { fontWeight: '700' }]}>
-                    {item.key === 'workspace' ? item.label : t(item.key as TranslationKey, item.label)}
-                  </Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.rowLabel}>{item.label}</Text>
+                    {item.subLabel ? <Text style={styles.rowSubLabel}>{item.subLabel}</Text> : null}
+                  </View>
                   <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
                 </TouchableOpacity>
               ))}
             </View>
           </View>
 
-          {/* 🛠️ C-PANEL & MANAGEMENT */}
+          {/* 🛠️ C-PANEL & SYSTEM MANAGEMENT */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>🛠️ C-PANEL & MANAGEMENT</Text>
+            <Text style={styles.sectionTitle}>🛠️ C-PANEL & CONFIGURATION (6 OPTIONS)</Text>
             <View style={styles.sectionCard}>
               {/* 🏷️ Expense Categories */}
               <TouchableOpacity
@@ -115,24 +210,8 @@ export default function AdminMoreScreen() {
                   <Ionicons name="pricetags-outline" size={18} color="#dc2626" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>🏷️ Expense Categories</Text>
-                  <Text style={styles.rowSubLabel}>Add, edit & deactivate expense categories</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-              </TouchableOpacity>
-
-              {/* 👑 Admin Info */}
-              <TouchableOpacity
-                style={styles.row}
-                activeOpacity={0.7}
-                onPress={() => setShowAboutModal(true)}
-              >
-                <View style={[styles.rowIconBg, { backgroundColor: '#eff6ff' }]}>
-                  <Ionicons name="shield-checkmark-outline" size={18} color="#2563eb" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>👑 Admin Info</Text>
-                  <Text style={styles.rowSubLabel}>App Name, Brand Logo, Tagline, UPI & Admin Profile</Text>
+                  <Text style={styles.rowLabel}>🏷️ Expense Categories Manager</Text>
+                  <Text style={styles.rowSubLabel}>Add, edit & deactivate farm expense categories</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
@@ -147,7 +226,7 @@ export default function AdminMoreScreen() {
                   <Ionicons name="mic-outline" size={18} color="#059669" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>🎙️ Group Voice Call</Text>
+                  <Text style={styles.rowLabel}>🎙️ Group Voice Call Status</Text>
                   <Text style={styles.rowSubLabel}>{isGroupVoiceCallEnabled ? 'STATUS: ACTIVE' : 'STATUS: DISABLED'}</Text>
                 </View>
                 <Ionicons
@@ -167,80 +246,31 @@ export default function AdminMoreScreen() {
                   <Ionicons name="options-outline" size={18} color="#0d9488" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>⚙️ System Settings</Text>
-                  <Text style={styles.rowSubLabel}>Full system & feature flag controls</Text>
+                  <Text style={styles.rowLabel}>⚙️ System Settings & Feature Flags</Text>
+                  <Text style={styles.rowSubLabel}>Full system controls, feature toggles & API flags</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
 
               {/* 💼 Workspace */}
               <TouchableOpacity
-                style={styles.row}
+                style={[styles.row, { borderBottomWidth: 0 }]}
                 activeOpacity={0.7}
                 onPress={() => setShowWorkspaceModal(true)}
               >
                 <View style={[styles.rowIconBg, { backgroundColor: '#ccfbf1' }]}>
                   <Ionicons name="briefcase-outline" size={18} color="#0d9488" />
                 </View>
-                <Text style={styles.rowLabel}>💼 Workspace (Backup & Tools)</Text>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-              </TouchableOpacity>
-
-              {/* 📖 User Guides */}
-              <TouchableOpacity
-                style={[styles.row, { borderBottomWidth: 0 }]}
-                activeOpacity={0.7}
-                onPress={() => setShowGuidesModal(true)}
-              >
-                <View style={[styles.rowIconBg, { backgroundColor: '#f0fdf4' }]}>
-                  <Ionicons name="book-outline" size={18} color="#15803d" />
-                </View>
-                <Text style={styles.rowLabel}>📖 User Guides</Text>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Developer & Support Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('devSupportSection')}</Text>
-            <View style={styles.sectionCard}>
-              {/* Privacy Policy Row */}
-              <TouchableOpacity
-                style={styles.row}
-                activeOpacity={0.7}
-                onPress={() => setShowPrivacyModal(true)}
-              >
-                <View style={[styles.rowIconBg, { backgroundColor: '#f0fdf4' }]}>
-                  <Ionicons name="shield-checkmark-outline" size={18} color="#16a34a" />
-                </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>🛡️ Privacy Policy</Text>
-                  <Text style={styles.rowSubLabel}>Data Protection & Google Play Policy</Text>
+                  <Text style={styles.rowLabel}>💼 Workspace (Backup & Tools)</Text>
+                  <Text style={styles.rowSubLabel}>System data exports & developer diagnostics</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-              </TouchableOpacity>
-
-              {/* Support Row */}
-              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => setContactModalMode('SUPPORT')}>
-                <View style={styles.rowIconBg}>
-                  <Ionicons name="help-circle-outline" size={18} color="#0284c7" />
-                </View>
-                <Text style={styles.rowLabel}>Support</Text>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-              </TouchableOpacity>
-
-              {/* Contact Us Row */}
-              <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} activeOpacity={0.7} onPress={() => setContactModalMode('CONTACT')}>
-                <View style={styles.rowIconBg}>
-                  <Ionicons name="call-outline" size={18} color="#0284c7" />
-                </View>
-                <Text style={styles.rowLabel}>Contact Us</Text>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
             </View>
           </View>
 
+          {/* Account Logout */}
           <TouchableOpacity style={styles.logoutButton} activeOpacity={0.8} onPress={() => logout()}>
             <Ionicons name="log-out-outline" size={19} color="#dc2626" />
             <Text style={styles.logoutText}>{t('logout')}</Text>
@@ -284,7 +314,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 12, fontFamily: FONT.bold, color: '#64748b', marginBottom: 8, letterSpacing: 0.5 },
   sectionCard: { backgroundColor: '#ffffff', borderRadius: 16, overflow: 'hidden', ...premiumShadow('#0f172a', 'xs') },
   row: { flexDirection: 'row', alignItems: 'center', padding: 14, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', gap: 12 },
-  rowIconBg: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  rowIconBg: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   rowLabel: { fontSize: 14, fontFamily: FONT.bold, color: '#0f172a' },
   rowSubLabel: { fontSize: 11, fontFamily: FONT.regular, color: '#64748b', marginTop: 2 },
   logoutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#fef2f2', padding: 14, borderRadius: 16, marginTop: 10, marginBottom: 30 },

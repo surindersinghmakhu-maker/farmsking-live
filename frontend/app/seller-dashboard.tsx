@@ -123,6 +123,14 @@ export default function SellerDashboardScreen() {
   const [hsnCode, setHsnCode] = useState('120991');
   const [newGstRate, setNewGstRate] = useState('0%');
 
+  // Dropdown Toggle States
+  const [showBrandDropdown, setShowBrandDropdown] = useState(false);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [showOrganicCertDropdown, setShowOrganicCertDropdown] = useState(false);
+  const [showPhysicalFormDropdown, setShowPhysicalFormDropdown] = useState(false);
+  const [showModeOfActionDropdown, setShowModeOfActionDropdown] = useState(false);
+  const [showToxicityDropdown, setShowToxicityDropdown] = useState(false);
+
   // Dimensional Metrics Inputs (in cm & kg)
   const [deadWeightKg, setDeadWeightKg] = useState('0.5');
   const [lengthCm, setLengthCm] = useState('10');
@@ -904,12 +912,24 @@ export default function SellerDashboardScreen() {
         {hasStore && storeData?.storeName ? (
           /* Responsive Store Profile Header Component */
           <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', marginLeft: 10, marginRight: 8, gap: 10 }}>
-            {/* Avatar Circle */}
-            <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#059669', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#34D399' }}>
-              <Text style={{ color: '#FFF', fontSize: 18, fontWeight: '800' }}>
-                {storeData.storeName.charAt(0).toUpperCase()}
-              </Text>
-            </View>
+            {/* Avatar Circle / Round Logo Box - Touch to edit seller proforma */}
+            <TouchableOpacity
+              style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#059669', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#34D399' }}
+              onPress={() => {
+                populateStoreFields(storeData);
+                setIsEditingRejected(true);
+                setStep(1);
+              }}
+              activeOpacity={0.8}
+            >
+              {storeData?.logoDocUrl ? (
+                <Image source={{ uri: storeData.logoDocUrl }} style={{ width: 36, height: 36, borderRadius: 18 }} resizeMode="cover" />
+              ) : (
+                <Text style={{ color: '#FFF', fontSize: 18, fontWeight: '800' }}>
+                  {storeData.storeName.charAt(0).toUpperCase()}
+                </Text>
+              )}
+            </TouchableOpacity>
 
             {/* Store Details: Name, URL, Status Badge */}
             <View style={{ flex: 1 }}>
@@ -1950,59 +1970,120 @@ export default function SellerDashboardScreen() {
                   onChangeText={setProductName}
                 />
 
-                {/* 5. BRAND SELECTOR */}
-                <Text style={styles.inputLabel}>Brand / Producer</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 }}>
-                  {(productType === 'FOOD'
-                    ? ['FarmsKing Certified', 'Natural Farmer Direct', 'Desi Organics', 'Gramin Udyog', 'Self Help Group (SHG)']
-                    : ['FarmsKing Certified', 'Syngenta', 'Bayer CropScience', 'UPL Ltd', 'Tata Rallis', 'IFFCO', 'Natural Farmer Direct']
-                  ).map((b) => (
-                    <TouchableOpacity
-                      key={b}
-                      style={[styles.entityChip, newBrand === b && styles.activeEntityChip]}
-                      onPress={() => setNewBrand(b)}
-                    >
-                      <Text style={[styles.entityText, newBrand === b && styles.activeEntityText]}>{b}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                {/* 5. BRAND SELECTOR DROPDOWN */}
+                <Text style={styles.inputLabel}>Brand / Producer *</Text>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#1F2937',
+                    borderWidth: 1,
+                    borderColor: '#374151',
+                    borderRadius: 8,
+                    paddingHorizontal: 12,
+                    paddingVertical: 10,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 8,
+                  }}
+                  onPress={() => setShowBrandDropdown(!showBrandDropdown)}
+                >
+                  <Text style={{ color: '#F9FAFB', fontSize: 13, fontWeight: '600' }}>
+                    🏢 {newBrand || 'Select Brand / Producer'}
+                  </Text>
+                  <Ionicons name={showBrandDropdown ? 'chevron-up' : 'chevron-down'} size={18} color="#9CA3AF" />
+                </TouchableOpacity>
 
-                {/* 6. CATEGORY SELECTOR */}
-                <Text style={styles.inputLabel}>Primary Category *</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 }}>
-                  {productType === 'FOOD' ? (
-                    ['Natural Farmer Foods', 'Farmer Made Foods', 'Organic Staples & Grocery', 'Fresh Fruits & Vegetables', 'Dairy & Edibles', 'Handmade Delicacies'].map((c) => (
+                {showBrandDropdown && (
+                  <View style={{ backgroundColor: '#111827', borderRadius: 8, borderWidth: 1, borderColor: '#374151', padding: 4, marginBottom: 10 }}>
+                    {(productType === 'FOOD'
+                      ? ['FarmsKing Certified', 'Natural Farmer Direct', 'Desi Organics', 'Gramin Udyog', 'Self Help Group (SHG)']
+                      : ['FarmsKing Certified', 'Syngenta', 'Bayer CropScience', 'UPL Ltd', 'Tata Rallis', 'IFFCO', 'Natural Farmer Direct']
+                    ).map((b) => (
                       <TouchableOpacity
-                        key={c}
-                        style={[styles.entityChip, productCategory === c && styles.activeEntityChip]}
+                        key={b}
+                        style={{
+                          paddingVertical: 9,
+                          paddingHorizontal: 12,
+                          borderRadius: 6,
+                          backgroundColor: newBrand === b ? '#1E3A5F' : 'transparent',
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}
                         onPress={() => {
-                          setProductCategory(c);
-                          setIsFarmerMadeProduct(true);
+                          setNewBrand(b);
+                          setShowBrandDropdown(false);
                         }}
                       >
-                        <Text style={[styles.entityText, productCategory === c && styles.activeEntityText]}>🥗 {c}</Text>
+                        <Text style={{ color: newBrand === b ? '#60A5FA' : '#E5E7EB', fontSize: 13, fontWeight: newBrand === b ? '700' : '400' }}>
+                          {b}
+                        </Text>
+                        {newBrand === b && <Ionicons name="checkmark" size={16} color="#60A5FA" />}
                       </TouchableOpacity>
-                    ))
-                  ) : (
-                    ['Seeds', 'Fertilizers', 'Crop Protection', 'Farm Machinery & Tools', 'Bio & Organics'].map((c) => (
+                    ))}
+                  </View>
+                )}
+
+                {/* 6. CATEGORY SELECTOR DROPDOWN */}
+                <Text style={styles.inputLabel}>Primary Category *</Text>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#1F2937',
+                    borderWidth: 1,
+                    borderColor: '#374151',
+                    borderRadius: 8,
+                    paddingHorizontal: 12,
+                    paddingVertical: 10,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 8,
+                  }}
+                  onPress={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                >
+                  <Text style={{ color: '#F9FAFB', fontSize: 13, fontWeight: '600' }}>
+                    {productType === 'FOOD' ? '🥗' : '🌾'} {productCategory || 'Select Category'}
+                  </Text>
+                  <Ionicons name={showCategoryDropdown ? 'chevron-up' : 'chevron-down'} size={18} color="#9CA3AF" />
+                </TouchableOpacity>
+
+                {showCategoryDropdown && (
+                  <View style={{ backgroundColor: '#111827', borderRadius: 8, borderWidth: 1, borderColor: '#374151', padding: 4, marginBottom: 10 }}>
+                    {(productType === 'FOOD'
+                      ? ['Natural Farmer Foods', 'Farmer Made Foods', 'Organic Staples & Grocery', 'Fresh Fruits & Vegetables', 'Dairy & Edibles', 'Handmade Delicacies']
+                      : ['Seeds', 'Fertilizers', 'Crop Protection', 'Farm Machinery & Tools', 'Bio & Organics']
+                    ).map((c) => (
                       <TouchableOpacity
                         key={c}
-                        style={[styles.entityChip, productCategory === c && styles.activeEntityChip]}
+                        style={{
+                          paddingVertical: 9,
+                          paddingHorizontal: 12,
+                          borderRadius: 6,
+                          backgroundColor: productCategory === c ? '#1E3A5F' : 'transparent',
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}
                         onPress={() => {
                           const activeAgriLicenseNo = storeData?.agriLicenseNo || agriLicenseNo;
-                          if (c.includes('Protection') && (!activeAgriLicenseNo || !activeAgriLicenseNo.trim())) {
+                          if (productType === 'FARM' && c.includes('Protection') && (!activeAgriLicenseNo || !activeAgriLicenseNo.trim())) {
                             showAlert('Agri Inputs License Required ⚠️', 'Agri Inputs License No. (Pesticide License) must be filled in store settings to select Chemical Crop Protection.');
                             return;
                           }
                           setProductCategory(c);
-                          setIsFarmerMadeProduct(false);
+                          if (productType === 'FOOD') setIsFarmerMadeProduct(true);
+                          else setIsFarmerMadeProduct(false);
+                          setShowCategoryDropdown(false);
                         }}
                       >
-                        <Text style={[styles.entityText, productCategory === c && styles.activeEntityText]}>🌾 {c}</Text>
+                        <Text style={{ color: productCategory === c ? '#60A5FA' : '#E5E7EB', fontSize: 13, fontWeight: productCategory === c ? '700' : '400' }}>
+                          {productType === 'FOOD' ? '🥗' : '🌾'} {c}
+                        </Text>
+                        {productCategory === c && <Ionicons name="checkmark" size={16} color="#60A5FA" />}
                       </TouchableOpacity>
-                    ))
-                  )}
-                </View>
+                    ))}
+                  </View>
+                )}
 
                 {/* 7 & 8. DYNAMIC PRODUCT VARIANTS MATRIX (PRICE, MRP, STOCK, WEIGHT & DIMENSIONS PER VARIANT) */}
                 <View style={{ backgroundColor: '#111827', borderRadius: 12, padding: 12, marginVertical: 10, borderWidth: 1, borderColor: '#059669' }}>
@@ -2390,21 +2471,56 @@ export default function SellerDashboardScreen() {
                       <Text style={{ color: '#34D399', fontSize: 10, fontWeight: '800' }}>FSSAI Verified</Text>
                     </View>
 
-                    {/* Organic Certification Selector */}
+                    {/* Organic Certification Selector Dropdown */}
                     <Text style={styles.inputLabel}>Organic & Natural Certification Status</Text>
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
-                      {['Jaivik Bharat Certified', 'Natural Farmer Direct', 'Conventional / Regular'].map((status) => (
-                        <TouchableOpacity
-                          key={status}
-                          style={[styles.entityChip, organicCertStatus === status && styles.activeEntityChip]}
-                          onPress={() => setOrganicCertStatus(status as any)}
-                        >
-                          <Text style={[styles.entityText, organicCertStatus === status && styles.activeEntityText, { fontSize: 11 }]}>
-                            {status === 'Jaivik Bharat Certified' ? '🇮🇳 Jaivik Bharat Certified' : status}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: '#111827',
+                        borderWidth: 1,
+                        borderColor: '#374151',
+                        borderRadius: 8,
+                        paddingHorizontal: 12,
+                        paddingVertical: 10,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: 8,
+                      }}
+                      onPress={() => setShowOrganicCertDropdown(!showOrganicCertDropdown)}
+                    >
+                      <Text style={{ color: '#F9FAFB', fontSize: 12.5, fontWeight: '600' }}>
+                        📜 {organicCertStatus}
+                      </Text>
+                      <Ionicons name={showOrganicCertDropdown ? 'chevron-up' : 'chevron-down'} size={18} color="#9CA3AF" />
+                    </TouchableOpacity>
+
+                    {showOrganicCertDropdown && (
+                      <View style={{ backgroundColor: '#1F2937', borderRadius: 8, borderWidth: 1, borderColor: '#374151', padding: 4, marginBottom: 10 }}>
+                        {['Jaivik Bharat Certified', 'Natural Farmer Direct', 'Conventional / Regular'].map((status) => (
+                          <TouchableOpacity
+                            key={status}
+                            style={{
+                              paddingVertical: 8,
+                              paddingHorizontal: 12,
+                              borderRadius: 6,
+                              backgroundColor: organicCertStatus === status ? '#065F46' : 'transparent',
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                            }}
+                            onPress={() => {
+                              setOrganicCertStatus(status as any);
+                              setShowOrganicCertDropdown(false);
+                            }}
+                          >
+                            <Text style={{ color: organicCertStatus === status ? '#34D399' : '#E5E7EB', fontSize: 12, fontWeight: organicCertStatus === status ? '700' : '400' }}>
+                              {status === 'Jaivik Bharat Certified' ? '🇮🇳 Jaivik Bharat Certified' : status}
+                            </Text>
+                            {organicCertStatus === status && <Ionicons name="checkmark" size={16} color="#34D399" />}
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    )}
 
                     {/* Ingredients List & Allergen Warning */}
                     <Text style={styles.inputLabel}>Ingredients List *</Text>
@@ -2518,18 +2634,42 @@ export default function SellerDashboardScreen() {
                   onChangeText={setNewProductDescription}
                 />
 
-                <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+                {/* Compact & Responsive Action Buttons */}
+                <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
                   <TouchableOpacity
-                    style={[styles.primaryBtn, { flex: 1, backgroundColor: '#3B82F6' }]}
+                    style={{
+                      flex: 1,
+                      backgroundColor: '#1E40AF',
+                      paddingVertical: 10,
+                      paddingHorizontal: 8,
+                      borderRadius: 8,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                    }}
                     onPress={() => setShowProductPreviewModal(true)}
                   >
-                    <Ionicons name="eye-outline" size={18} color="#FFF" />
-                    <Text style={styles.primaryBtnText}> 👁 Live Customer View Preview</Text>
+                    <Ionicons name="eye-outline" size={16} color="#FFF" />
+                    <Text style={{ color: '#FFF', fontSize: 12.5, fontWeight: '700' }} numberOfLines={1}>👁 Preview</Text>
                   </TouchableOpacity>
 
-                  <TouchableOpacity style={[styles.primaryBtn, { flex: 1 }]} onPress={handleAddProduct}>
-                    <Ionicons name="checkmark-circle" size={18} color="#FFF" />
-                    <Text style={styles.primaryBtnText}> Save Product to Store</Text>
+                  <TouchableOpacity
+                    style={{
+                      flex: 1,
+                      backgroundColor: '#10B981',
+                      paddingVertical: 10,
+                      paddingHorizontal: 8,
+                      borderRadius: 8,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                    }}
+                    onPress={handleAddProduct}
+                  >
+                    <Ionicons name="checkmark-circle" size={16} color="#FFF" />
+                    <Text style={{ color: '#FFF', fontSize: 12.5, fontWeight: '700' }} numberOfLines={1}>💾 Save Product</Text>
                   </TouchableOpacity>
                 </View>
               </View>

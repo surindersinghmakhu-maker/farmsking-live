@@ -178,8 +178,18 @@ function CategoryCollapse({
 
 type CouponsTab = 'MEMBERSHIP' | 'FINANCE' | 'GENERATE' | 'COUPONS' | 'PRICING' | 'FEATURES' | 'REFERRAL_SETTINGS' | 'REQUESTS' | 'SAVED_ENTRIES' | 'STAFF';
 
+type CouponCategoryFilter = 'ALL' | 'COUPONS' | 'MEMBERSHIPS' | 'STAFF_ACCOUNTS';
+
+const CATEGORY_FILTERS: { value: CouponCategoryFilter; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { value: 'ALL', label: 'All Controls', icon: 'grid-outline' },
+  { value: 'COUPONS', label: 'Coupons & Vouchers', icon: 'pricetag-outline' },
+  { value: 'MEMBERSHIPS', label: 'Memberships & Plans', icon: 'ribbon-outline' },
+  { value: 'STAFF_ACCOUNTS', label: 'Staff & Accounts', icon: 'briefcase-outline' },
+];
+
 const MAIN_SUB_TABS: {
   value: CouponsTab;
+  category: CouponCategoryFilter;
   title: string;
   sub: string;
   icon: keyof typeof Ionicons.glyphMap;
@@ -188,8 +198,69 @@ const MAIN_SUB_TABS: {
   softBg: string;
 }[] = [
   {
+    value: 'GENERATE',
+    category: 'COUPONS',
+    title: 'Generate Coupon Codes ✨',
+    sub: 'Create & Issue Generic, Partner or Plan Codes',
+    icon: 'add-circle-outline',
+    activeIcon: 'add-circle',
+    color: '#10b981',
+    softBg: '#ecfdf5',
+  },
+  {
+    value: 'COUPONS',
+    category: 'COUPONS',
+    title: 'All Coupons & History 🎟️',
+    sub: 'Browse Referral, Commission & Plan Codes',
+    icon: 'pricetag-outline',
+    activeIcon: 'pricetag',
+    color: '#0284c7',
+    softBg: '#e0f2fe',
+  },
+  {
+    value: 'REFERRAL_SETTINGS',
+    category: 'COUPONS',
+    title: 'Partner Referral Coupon Rates 👥',
+    sub: 'Referral Discount % & Business Partner Share',
+    icon: 'people-outline',
+    activeIcon: 'people',
+    color: '#e11d48',
+    softBg: '#fff1f2',
+  },
+  {
+    value: 'PRICING',
+    category: 'MEMBERSHIPS',
+    title: 'Plan Pricing & Duration Rates 💵',
+    sub: 'Edit Prices & Partner Commission Splits',
+    icon: 'cash-outline',
+    activeIcon: 'cash',
+    color: '#d97706',
+    softBg: '#fffbe6',
+  },
+  {
+    value: 'FEATURES',
+    category: 'MEMBERSHIPS',
+    title: 'Plan Features & Benefits ⚙️',
+    sub: 'Limits, Advisor Toggles, Chat & Weather Options',
+    icon: 'options-outline',
+    activeIcon: 'options',
+    color: '#6d28d9',
+    softBg: '#f3e8ff',
+  },
+  {
+    value: 'REQUESTS',
+    category: 'STAFF_ACCOUNTS',
+    title: 'Payment Requests ⌛',
+    sub: 'Approve Plan Upgrade Claims & Partner Withdrawals',
+    icon: 'paper-plane-outline',
+    activeIcon: 'paper-plane',
+    color: '#8b5cf6',
+    softBg: '#f3e8ff',
+  },
+  {
     value: 'STAFF',
-    title: 'FarmsKing Admin Staff 👔',
+    category: 'STAFF_ACCOUNTS',
+    title: 'FarmsKing Admin Staff Payouts 👔',
     sub: 'Manage Admins, Managers & Operators',
     icon: 'shield-half-outline',
     activeIcon: 'shield-half',
@@ -198,66 +269,13 @@ const MAIN_SUB_TABS: {
   },
   {
     value: 'SAVED_ENTRIES',
-    title: 'Saved Entries',
+    category: 'STAFF_ACCOUNTS',
+    title: 'Saved Entries 📑',
     sub: 'Farmer, Date, State, Category & Subcategory Wise',
     icon: 'receipt-outline',
     activeIcon: 'receipt',
     color: '#059669',
     softBg: '#d1fae5',
-  },
-  {
-    value: 'REQUESTS',
-    title: 'Payment Requests',
-    sub: 'Approve Claims & Issue Coupons',
-    icon: 'paper-plane-outline',
-    activeIcon: 'paper-plane',
-    color: '#8b5cf6',
-    softBg: '#f3e8ff',
-  },
-  {
-    value: 'GENERATE',
-    title: 'Generate',
-    sub: 'Create & Issue Codes',
-    icon: 'add-circle-outline',
-    activeIcon: 'add-circle',
-    color: '#10b981',
-    softBg: '#ecfdf5',
-  },
-  {
-    value: 'COUPONS',
-    title: 'All Coupons',
-    sub: 'Browse Codes & History',
-    icon: 'pricetag-outline',
-    activeIcon: 'pricetag',
-    color: '#0284c7',
-    softBg: '#e0f2fe',
-  },
-  {
-    value: 'PRICING',
-    title: 'Plan Pricing & Splits',
-    sub: 'Prices & Commission Cuts',
-    icon: 'cash-outline',
-    activeIcon: 'cash',
-    color: '#d97706',
-    softBg: '#fffbe6',
-  },
-  {
-    value: 'FEATURES',
-    title: 'Plan Features',
-    sub: 'Limits & Advisory Toggles',
-    icon: 'options-outline',
-    activeIcon: 'options',
-    color: '#6d28d9',
-    softBg: '#f3e8ff',
-  },
-  {
-    value: 'REFERRAL_SETTINGS',
-    title: 'Partner Referral Coupon',
-    sub: 'Referral Discount & Rates',
-    icon: 'people-outline',
-    activeIcon: 'people',
-    color: '#e11d48',
-    softBg: '#fff1f2',
   },
 ];
 
@@ -267,6 +285,7 @@ export default function SuperCouponsScreen({ initialTab }: { initialTab?: Coupon
   const { data: pendingPayments = [], isLoading: isLoadingPendingPayments } = usePendingFarmerPlanPayments();
   const [activeFarmerPlanPayment, setActiveFarmerPlanPayment] = useState<FarmerPlanPaymentRequest | null>(null);
   const [activeTab, setActiveTab] = useState<CouponsTab | null>(initialTab ?? null);
+  const [categoryFilter, setCategoryFilter] = useState<CouponCategoryFilter>('ALL');
   const [showStaffModal, setShowStaffModal] = useState(false);
 
   const allCoupons = coupons ?? [];
@@ -277,6 +296,7 @@ export default function SuperCouponsScreen({ initialTab }: { initialTab?: Coupon
   const totalActive = activeGenericCount + activePlanCount;
   const totalRedeemed = allCoupons.reduce((sum, c) => sum + c.usedCount, 0) + allPlanCoupons.filter((c) => c.isUsed).length;
 
+  const filteredSubTabs = categoryFilter === 'ALL' ? MAIN_SUB_TABS : MAIN_SUB_TABS.filter((t) => t.category === categoryFilter);
   const activeMeta = MAIN_SUB_TABS.find((t) => t.value === activeTab);
 
   return (
@@ -299,11 +319,37 @@ export default function SuperCouponsScreen({ initialTab }: { initialTab?: Coupon
       </LinearGradient>
 
       <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
-        {/* If no section is open, show ONLY the Colorful Icon Cards Menu */}
+        {/* If no section is open, show Sub-Tab Category Chips and Icon Cards Menu */}
         {activeTab === null ? (
           <View style={{ gap: 16 }}>
+            {/* Sub-Tab Filter Chips Row */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
+              {CATEGORY_FILTERS.map((cat) => {
+                const isSelected = categoryFilter === cat.value;
+                return (
+                  <TouchableOpacity
+                    key={cat.value}
+                    style={[
+                      styles.subTabChip,
+                      isSelected && styles.subTabChipActive,
+                    ]}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      tap();
+                      setCategoryFilter(cat.value);
+                    }}
+                  >
+                    <Ionicons name={cat.icon} size={14} color={isSelected ? '#ffffff' : '#64748b'} />
+                    <Text style={[styles.subTabChipText, isSelected && styles.subTabChipTextActive]}>
+                      {cat.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
             <View style={styles.iconTabGrid}>
-              {MAIN_SUB_TABS.map((t) => (
+              {filteredSubTabs.map((t) => (
                 <TouchableOpacity
                   key={t.value}
                   style={[

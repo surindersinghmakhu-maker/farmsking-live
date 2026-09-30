@@ -8,6 +8,7 @@ import {
   StyleSheet,
   SafeAreaView,
   Platform,
+  Alert,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -37,16 +38,16 @@ const DEFAULT_SCHEDULE: DoseItem[] = [
   { id: '15', srNo: '15', product: 'Chelated Iron (Fe 12%)', quantity: '250 g' },
   { id: '16', srNo: '16', product: 'Chelated Zinc (Zn EDTA 12%)', quantity: '500 g' },
   { id: '17', srNo: '17', product: 'Chelated Calcium (10–12%)', quantity: '500 g' },
-  { id: '18', srNo: '18', product: 'Sai power plus/multiplex kranti', quantity: '500 ml' },
+  { id: '18', srNo: '18', product: 'Kranti', quantity: '500 ml' },
 ];
 
 export default function MyEditableSchedulePage() {
   const router = useRouter();
 
-  // Top Form States
-  const [farmerName, setFarmerName] = useState('');
+  // Top Form States - Name, Area, Plants
+  const [name, setName] = useState('');
   const [area, setArea] = useState('1 Acre');
-  const [plantsCount, setPlantsCount] = useState('10,000 Plants');
+  const [plants, setPlants] = useState('10,000 Plants');
 
   // Table Schedule Items State
   const [items, setItems] = useState<DoseItem[]>(DEFAULT_SCHEDULE);
@@ -73,11 +74,11 @@ export default function MyEditableSchedulePage() {
     setItems(updated);
   };
 
-  const handleMakePDF = () => {
+  const handleDownloadPDF = () => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
-        alert('Please allow popups to view and print the PDF report.');
+        alert('Please allow popups to download and print the PDF report.');
         return;
       }
 
@@ -85,9 +86,9 @@ export default function MyEditableSchedulePage() {
         .map(
           (item) => `
         <tr>
-          <td style="border: 1px solid #10b981; padding: 10px; text-align: center; font-weight: bold; width: 12%;">${item.srNo}</td>
-          <td style="border: 1px solid #10b981; padding: 10px; font-weight: 600; width: 58%;">${item.product}</td>
-          <td style="border: 1px solid #10b981; padding: 10px; text-align: center; color: #15803d; font-weight: bold; width: 30%;">${item.quantity}</td>
+          <td style="border: 1px solid #15803d; padding: 10px; text-align: center; font-weight: bold; width: 12%;">${item.srNo}</td>
+          <td style="border: 1px solid #15803d; padding: 10px; font-weight: 600; width: 58%;">${item.product}</td>
+          <td style="border: 1px solid #15803d; padding: 10px; text-align: center; color: #15803d; font-weight: bold; width: 30%;">${item.quantity}</td>
         </tr>
       `
         )
@@ -97,14 +98,14 @@ export default function MyEditableSchedulePage() {
         <!DOCTYPE html>
         <html>
         <head>
-          <title>MARIGOLD PRODUCTION DRENCHING SCHEDULE REPORT - FarmsKing</title>
+          <title>MARIGOLD PRODUCTION - DRENCHING SCHEDULE REPORT</title>
           <style>
             body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 25px; color: #111827; background-color: #fff; }
             .header-banner { background: linear-gradient(135deg, #14532d 0%, #166534 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
             .header-banner h1 { margin: 0; font-size: 26px; letter-spacing: 1px; color: #facc15; text-transform: uppercase; }
             .header-banner h2 { margin: 6px 0 0 0; font-size: 18px; color: #fef08a; font-weight: 500; }
-            .farmer-meta { display: flex; justify-content: space-between; background: #f0fdf4; border: 2px solid #16a34a; padding: 14px 20px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
-            .farmer-meta div { font-weight: bold; color: #14532d; }
+            .meta-card { display: flex; justify-content: space-between; background: #f0fdf4; border: 2px solid #16a34a; padding: 14px 20px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
+            .meta-card div { font-weight: bold; color: #14532d; }
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             th { background-color: #15803d; color: white; padding: 12px; border: 1px solid #15803d; font-size: 14px; text-transform: uppercase; }
             td { font-size: 13.5px; }
@@ -115,13 +116,13 @@ export default function MyEditableSchedulePage() {
           <div class="header-banner">
             <h1>🌼 MARIGOLD PRODUCTION 🌼</h1>
             <h2>(DRENCHING SCHEDULE)</h2>
-            <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9;">FarmsKing Enterprise Agri-Intelligence Platform</p>
+            <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9;">FarmsKing Agriculture Portal</p>
           </div>
 
-          <div class="farmer-meta">
-            <div>👤 Farmer Name: <span style="color: #15803d;">${farmerName || 'FarmsKing Partner Farmer'}</span></div>
-            <div>📏 Area: <span style="color: #15803d;">${area}</span></div>
-            <div>🌱 Total Plants: <span style="color: #15803d;">${plantsCount}</span></div>
+          <div class="meta-card">
+            <div>👤 Name: <span style="color: #15803d;">${name || 'N/A'}</span></div>
+            <div>📏 Area: <span style="color: #15803d;">${area || 'N/A'}</span></div>
+            <div>🌱 Plants: <span style="color: #15803d;">${plants || 'N/A'}</span></div>
           </div>
 
           <table>
@@ -138,7 +139,7 @@ export default function MyEditableSchedulePage() {
           </table>
 
           <div class="footer">
-            <p>Generated via FarmsKing National Seller & Farmer Portal • www.farmsking.in</p>
+            <p>Generated via FarmsKing Platform • www.farmsking.in</p>
           </div>
           <script>
             window.onload = function() {
@@ -152,7 +153,10 @@ export default function MyEditableSchedulePage() {
       printWindow.document.write(htmlContent);
       printWindow.document.close();
     } else {
-      alert(`PDF Report Ready!\n\nFarmer: ${farmerName || 'N/A'}\nArea: ${area}\nPlants: ${plantsCount}\nTotal Items: ${items.length}`);
+      Alert.alert(
+        'PDF Report Download',
+        `PDF Report Generated!\n\nName: ${name || 'N/A'}\nArea: ${area}\nPlants: ${plants}\nTotal Products: ${items.length}`
+      );
     }
   };
 
@@ -163,70 +167,70 @@ export default function MyEditableSchedulePage() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color="#FFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>✏️ Editable Marigold Schedule (/my)</Text>
+        <Text style={styles.headerTitle}>🌼 Marigold Production Form</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Banner */}
+        {/* Title Banner */}
         <View style={styles.bannerCard}>
           <Text style={styles.bannerTitle}>MARIGOLD PRODUCTION</Text>
-          <Text style={styles.bannerSubtitle}>(DRENCHING SCHEDULE - EDITABLE)</Text>
+          <Text style={styles.bannerSubtitle}>(DRENCHING SCHEDULE)</Text>
         </View>
 
-        {/* Input Details Header Card */}
+        {/* Input Details Text Boxes: Name, Area, Plants */}
         <View style={styles.inputCard}>
-          <Text style={styles.cardHeaderTitle}>📌 Farmer & Field Information (Editable)</Text>
+          <Text style={styles.cardHeaderTitle}>✏️ Details (Editable Text Boxes)</Text>
 
-          <View style={styles.inputRow}>
-            {/* Farmer Name */}
-            <View style={{ flex: 1.2 }}>
-              <Text style={styles.inputLabel}>👤 Farmer / Customer Name</Text>
+          <View style={styles.inputStack}>
+            {/* Name Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>👤 Name</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="Enter Farmer Name"
+                placeholder="Enter Name"
                 placeholderTextColor="#9CA3AF"
-                value={farmerName}
-                onChangeText={setFarmerName}
+                value={name}
+                onChangeText={setName}
               />
             </View>
 
-            {/* Area */}
-            <View style={{ flex: 1 }}>
-              <Text style={styles.inputLabel}>📏 Area (Acres/Bigha)</Text>
+            {/* Area Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>📏 Area</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="1 Acre"
+                placeholder="e.g. 1 Acre"
                 placeholderTextColor="#9CA3AF"
                 value={area}
                 onChangeText={setArea}
               />
             </View>
 
-            {/* Plants Heading & Count */}
-            <View style={{ flex: 1 }}>
-              <Text style={styles.inputLabel}>🌱 Total Plants Heading</Text>
+            {/* Plants Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>🌱 Plants</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="10,000 Plants"
+                placeholder="e.g. 10,000 Plants"
                 placeholderTextColor="#9CA3AF"
-                value={plantsCount}
-                onChangeText={setPlantsCount}
+                value={plants}
+                onChangeText={setPlants}
               />
             </View>
           </View>
         </View>
 
-        {/* Table Schedule Section */}
+        {/* Schedule Table (Price Removed) */}
         <View style={styles.tableCard}>
-          {/* Table Header Row */}
+          {/* Table Header */}
           <View style={styles.tableHeader}>
             <Text style={[styles.thText, { flex: 0.8, textAlign: 'center' }]}>Sr. No.</Text>
-            <Text style={[styles.thText, { flex: 3.2 }]}>Product Name (Editable)</Text>
+            <Text style={[styles.thText, { flex: 3.2 }]}>Product</Text>
             <Text style={[styles.thText, { flex: 1.8, textAlign: 'center' }]}>Quantity</Text>
             <Text style={[styles.thText, { flex: 0.6, textAlign: 'center' }]}>Action</Text>
           </View>
 
-          {/* Table Data Rows */}
+          {/* Table Rows */}
           {items.map((item, index) => (
             <View
               key={item.id}
@@ -235,7 +239,7 @@ export default function MyEditableSchedulePage() {
                 { backgroundColor: index % 2 === 0 ? '#111827' : '#1F2937' },
               ]}
             >
-              {/* Sr. No. Input Box */}
+              {/* Sr No */}
               <View style={{ flex: 0.8, paddingHorizontal: 2 }}>
                 <TextInput
                   style={[styles.cellInput, { textAlign: 'center', fontWeight: '800' }]}
@@ -244,7 +248,7 @@ export default function MyEditableSchedulePage() {
                 />
               </View>
 
-              {/* Product Name Input Box */}
+              {/* Product Name */}
               <View style={{ flex: 3.2, paddingHorizontal: 4 }}>
                 <TextInput
                   style={[styles.cellInput, { textAlign: 'left', fontWeight: '600' }]}
@@ -255,18 +259,18 @@ export default function MyEditableSchedulePage() {
                 />
               </View>
 
-              {/* Quantity Input Box */}
+              {/* Quantity */}
               <View style={{ flex: 1.8, paddingHorizontal: 4 }}>
                 <TextInput
                   style={styles.cellInput}
                   value={item.quantity}
                   onChangeText={(val) => updateItemField(index, 'quantity', val)}
-                  placeholder="Qty"
+                  placeholder="Quantity"
                   placeholderTextColor="#6B7280"
                 />
               </View>
 
-              {/* Delete Row Button */}
+              {/* Remove Row */}
               <TouchableOpacity style={{ flex: 0.6, alignItems: 'center' }} onPress={() => removeRow(index)}>
                 <Ionicons name="trash-outline" size={18} color="#EF4444" />
               </TouchableOpacity>
@@ -274,16 +278,16 @@ export default function MyEditableSchedulePage() {
           ))}
         </View>
 
-        {/* Action Buttons: Add Row & Make PDF */}
-        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
+        {/* Action Buttons: Add Row & Download PDF Report */}
+        <View style={{ gap: 12, marginBottom: 24 }}>
           <TouchableOpacity style={styles.addRowBtn} onPress={addNewRow}>
             <Ionicons name="add-circle-outline" size={20} color="#FFF" />
-            <Text style={styles.addRowBtnText}>+ Add Product Row</Text>
+            <Text style={styles.addRowBtnText}>+ Add New Row</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.pdfBtn, { flex: 1.5 }]} onPress={handleMakePDF} activeOpacity={0.85}>
-            <MaterialCommunityIcons name="file-pdf-box" size={22} color="#FFF" />
-            <Text style={styles.pdfBtnText}>📄 MAKE PDF REPORT</Text>
+          <TouchableOpacity style={styles.pdfBtn} onPress={handleDownloadPDF} activeOpacity={0.85}>
+            <MaterialCommunityIcons name="file-pdf-box" size={24} color="#FFF" />
+            <Text style={styles.pdfBtnText}>📥 PDF REPORT DOWNLOAD</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -327,14 +331,14 @@ const styles = StyleSheet.create({
   },
   bannerTitle: {
     color: '#FBBF24',
-    fontSize: 19,
+    fontSize: 20,
     fontWeight: '900',
     letterSpacing: 0.5,
     textAlign: 'center',
   },
   bannerSubtitle: {
     color: '#A7F3D0',
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '800',
     marginTop: 4,
     textAlign: 'center',
@@ -342,36 +346,39 @@ const styles = StyleSheet.create({
   inputCard: {
     backgroundColor: '#111827',
     borderRadius: 12,
-    padding: 12,
+    padding: 14,
     marginBottom: 14,
     borderWidth: 1,
     borderColor: '#374151',
   },
   cardHeaderTitle: {
     color: '#10B981',
-    fontSize: 13.5,
+    fontSize: 14,
     fontWeight: '800',
-    marginBottom: 10,
+    marginBottom: 12,
   },
-  inputRow: {
-    flexDirection: 'row',
-    gap: 8,
+  inputStack: {
+    flexDirection: Platform.OS === 'web' ? 'row' : 'column',
+    gap: 10,
+  },
+  inputGroup: {
+    flex: 1,
   },
   inputLabel: {
     color: '#D1D5DB',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   textInput: {
     backgroundColor: '#1F2937',
     borderWidth: 1,
     borderColor: '#374151',
     borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     color: '#FFF',
-    fontSize: 12.5,
+    fontSize: 13.5,
     fontWeight: '600',
   },
   tableCard: {
@@ -386,12 +393,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#065F46',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 11,
     paddingHorizontal: 12,
   },
   thText: {
     color: '#FFF',
-    fontSize: 13,
+    fontSize: 13.5,
     fontWeight: '800',
   },
   tableRow: {
@@ -410,14 +417,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 6,
     color: '#34D399',
-    fontSize: 12,
+    fontSize: 12.5,
     fontWeight: '700',
   },
   addRowBtn: {
-    flex: 1,
     backgroundColor: '#1E40AF',
     borderRadius: 10,
-    paddingVertical: 14,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -425,7 +431,7 @@ const styles = StyleSheet.create({
   },
   addRowBtnText: {
     color: '#FFF',
-    fontSize: 13.5,
+    fontSize: 14,
     fontWeight: '700',
   },
   pdfBtn: {
@@ -444,8 +450,8 @@ const styles = StyleSheet.create({
   },
   pdfBtnText: {
     color: '#FFF',
-    fontSize: 14.5,
-    fontWeight: '800',
+    fontSize: 15,
+    fontWeight: '900',
     letterSpacing: 0.5,
   },
 });

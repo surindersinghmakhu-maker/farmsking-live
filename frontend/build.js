@@ -156,6 +156,7 @@ try {
     if (!fs.existsSync(youSubDir)) fs.mkdirSync(youSubDir, { recursive: true });
     fs.writeFileSync(path.join(youSubDir, 'index.html'), publicYouHtml, 'utf8');
     console.log('✅ Preserved and deployed static you.html and route subdirectories');
+  }
 
   console.log('✅ Expo Web build completed successfully!');
 } catch (err) {

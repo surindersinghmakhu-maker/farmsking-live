@@ -329,6 +329,22 @@ export default function LoginScreen() {
               </View>
             </TouchableOpacity>
           </View>
+
+          {/* ── My Button: Marigold Editable Schedule Quick Link ── */}
+          <TouchableOpacity
+            style={styles.myButtonCard}
+            onPress={() => router.push('/my')}
+            activeOpacity={0.85}
+          >
+            <View style={styles.myButtonIconCircle}>
+              <Ionicons name="leaf" size={20} color="#15803d" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.myButtonTitle}>🌼 Marigold Drenching Schedule (My Button)</Text>
+              <Text style={styles.myButtonSubtitle}>Editable Form & PDF Report Download</Text>
+            </View>
+            <Ionicons name="arrow-forward-circle" size={22} color="#15803d" />
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -465,4 +481,26 @@ const styles = StyleSheet.create({
   downloadAppTitle: { fontSize: 12.5, fontFamily: FONT.extraBold, color: '#0369a1' },
   downloadBadge: { backgroundColor: '#0284c7', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill },
   downloadBadgeText: { fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' },
+
+  myButtonCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#f0fdf4',
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: '#86efac',
+    padding: 10,
+    marginTop: 10,
+  },
+  myButtonIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#dcfce7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  myButtonTitle: { fontSize: 12.5, fontFamily: FONT.extraBold, color: '#15803d' },
+  myButtonSubtitle: { fontSize: 11, fontFamily: FONT.medium, color: '#166534', marginTop: 1 },
 });

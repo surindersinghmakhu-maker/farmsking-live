@@ -101,6 +101,7 @@ export default function SellerDashboardScreen() {
   const [newUnit, setNewUnit] = useState('kg');
   const [stockQty, setStockQty] = useState('50');
   const [hsnCode, setHsnCode] = useState('120991');
+  const [newGstRate, setNewGstRate] = useState('0%');
 
   // Dimensional Metrics Inputs (in cm & kg)
   const [deadWeightKg, setDeadWeightKg] = useState('0.5');

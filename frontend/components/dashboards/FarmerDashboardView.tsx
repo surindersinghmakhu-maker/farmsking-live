@@ -306,6 +306,23 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
             activeOpacity={0.8}
             onPress={() => {
               tap();
+              router.push('/dose');
+            }}
+          >
+            <View style={[styles.actionIconBg, { backgroundColor: '#fef3c7' }]}>
+              <Ionicons name="flask" size={19} color="#d97706" />
+            </View>
+            <View style={styles.actionCardTextGroup}>
+              <Text style={[styles.actionCardTitle, { color: colors.text }]} numberOfLines={1}>Dose Schedule 🌾</Text>
+              <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>Marigold Drenching Schedule</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}
+            activeOpacity={0.8}
+            onPress={() => {
+              tap();
               setShowLocationProfileModal(true);
             }}
           >

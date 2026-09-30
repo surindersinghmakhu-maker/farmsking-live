@@ -36,7 +36,7 @@ const DEFAULT_SCHEDULE: DoseItem[] = [
   { srNo: 15, product: 'Chelated Iron (Fe 12%)', quantity: '250 g' },
   { srNo: 16, product: 'Chelated Zinc (Zn EDTA 12%)', quantity: '500 g' },
   { srNo: 17, product: 'Chelated Calcium (10–12%)', quantity: '500 g' },
-  { srNo: 18, product: 'Sai power plus/multiplex kranti', quantity: '500 ml' },
+  { srNo: 18, product: 'Kranti', quantity: '500 ml' },
 ];
 
 export default function DosePage() {
@@ -102,9 +102,9 @@ export default function DosePage() {
           </div>
 
           <div class="farmer-meta">
-            <div>👤 Farmer Name: <span style="color: #15803d;">${farmerName || 'FarmsKing Partner Farmer'}</span></div>
+            <div>👤 Name: <span style="color: #15803d;">${farmerName || 'FarmsKing Partner Farmer'}</span></div>
             <div>📏 Area: <span style="color: #15803d;">${area}</span></div>
-            <div>🌱 Total Plants: <span style="color: #15803d;">${plantsCount}</span></div>
+            <div>🌱 Plants: <span style="color: #15803d;">${plantsCount}</span></div>
           </div>
 
           <table>
@@ -135,7 +135,7 @@ export default function DosePage() {
       printWindow.document.write(htmlContent);
       printWindow.document.close();
     } else {
-      alert(`PDF Report Ready!\n\nFarmer: ${farmerName || 'N/A'}\nArea: ${area}\nPlants: ${plantsCount}\nTotal Items: ${items.length}`);
+      alert(`PDF Report Ready!\n\nName: ${farmerName || 'N/A'}\nArea: ${area}\nPlants: ${plantsCount}\nTotal Items: ${items.length}`);
     }
   };
 
@@ -158,15 +158,15 @@ export default function DosePage() {
 
         {/* Input Details Header Card */}
         <View style={styles.inputCard}>
-          <Text style={styles.cardHeaderTitle}>📌 Farmer & Field Information</Text>
+          <Text style={styles.cardHeaderTitle}>📌 Farmer Details / ਫਾਰਮਰ ਵੇਰਵੇ</Text>
 
           <View style={styles.inputRow}>
-            {/* Farmer Name */}
+            {/* Name */}
             <View style={{ flex: 1.2 }}>
-              <Text style={styles.inputLabel}>👤 Farmer / Customer Name</Text>
+              <Text style={styles.inputLabel}>Name</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="Enter Farmer Name"
+                placeholder="Enter Name"
                 placeholderTextColor="#9CA3AF"
                 value={farmerName}
                 onChangeText={setFarmerName}
@@ -175,7 +175,7 @@ export default function DosePage() {
 
             {/* Area */}
             <View style={{ flex: 1 }}>
-              <Text style={styles.inputLabel}>📏 Area (Acres/Bigha)</Text>
+              <Text style={styles.inputLabel}>Area</Text>
               <TextInput
                 style={styles.textInput}
                 placeholder="1 Acre"
@@ -185,12 +185,12 @@ export default function DosePage() {
               />
             </View>
 
-            {/* Plants Heading & Count */}
+            {/* Plants */}
             <View style={{ flex: 1 }}>
-              <Text style={styles.inputLabel}>🌱 Total Plants Heading</Text>
+              <Text style={styles.inputLabel}>Plants</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="10,000 Plants"
+                placeholder="10,000"
                 placeholderTextColor="#9CA3AF"
                 value={plantsCount}
                 onChangeText={setPlantsCount}
@@ -237,10 +237,10 @@ export default function DosePage() {
           ))}
         </View>
 
-        {/* Make PDF Button */}
+        {/* Make / Download PDF Button */}
         <TouchableOpacity style={styles.pdfBtn} onPress={handleMakePDF} activeOpacity={0.85}>
           <MaterialCommunityIcons name="file-pdf-box" size={24} color="#FFF" />
-          <Text style={styles.pdfBtnText}>📄 MAKE PDF REPORT</Text>
+          <Text style={styles.pdfBtnText}>📥 DOWNLOAD PDF REPORT</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     color: '#D1D5DB',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     marginBottom: 4,
   },
@@ -404,3 +404,4 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 });
+

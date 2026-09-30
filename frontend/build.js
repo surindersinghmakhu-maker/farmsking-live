@@ -145,16 +145,19 @@ try {
 
     fs.writeFileSync(distIndexPath, indexHtml, 'utf8');
 
-    // Create static dose.html and dose/index.html for direct URL access online
+    // Create static dose.html, doses.html, and route subdirectories for direct URL access online
     const doseHtmlPath = path.join(distDir, 'dose.html');
+    const dosesHtmlPath = path.join(distDir, 'doses.html');
     fs.writeFileSync(doseHtmlPath, indexHtml, 'utf8');
+    fs.writeFileSync(dosesHtmlPath, indexHtml, 'utf8');
 
     const doseSubDir = path.join(distDir, 'dose');
-    if (!fs.existsSync(doseSubDir)) {
-      fs.mkdirSync(doseSubDir, { recursive: true });
-    }
+    const dosesSubDir = path.join(distDir, 'doses');
+    if (!fs.existsSync(doseSubDir)) fs.mkdirSync(doseSubDir, { recursive: true });
+    if (!fs.existsSync(dosesSubDir)) fs.mkdirSync(dosesSubDir, { recursive: true });
     fs.writeFileSync(path.join(doseSubDir, 'index.html'), indexHtml, 'utf8');
-    console.log('✅ Generated static dose.html and dose/index.html for online routing');
+    fs.writeFileSync(path.join(dosesSubDir, 'index.html'), indexHtml, 'utf8');
+    console.log('✅ Generated static dose.html, doses.html, and route subdirectories for online routing');
   }
 
   console.log('✅ Expo Web build completed successfully!');

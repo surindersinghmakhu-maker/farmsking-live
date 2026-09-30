@@ -12,6 +12,59 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
+type Lang = 'pa' | 'hi' | 'en';
+
+const TRANSLATIONS = {
+  pa: {
+    headerTitle: '🌼 ਗੇਂਦੇ ਦੀ ਡ੍ਰੈਂਚਿੰਗ ਸ਼ਡਿਊਲ',
+    bannerTitle: 'MARIGOLD PRODUCTION',
+    bannerSubtitle: '(ਗੇਂਦੇ ਦੀ ਡ੍ਰੈਂਚਿੰਗ ਸ਼ਡਿਊਲ)',
+    cardHeaderTitle: '📌 ਕਿਸਾਨ ਅਤੇ ਖੇਤ ਦੇ ਵੇਰਵੇ',
+    nameLabel: 'ਨਾਮ (Name)',
+    namePlaceholder: 'ਨਾਮ ਦਰਜ ਕਰੋ',
+    areaLabel: 'ਖੇਤਰਫਲ (Area)',
+    areaPlaceholder: '1 ਏਕੜ',
+    plantsLabel: 'ਪੌਦੇ (Plants)',
+    plantsPlaceholder: '10,000',
+    thSrNo: 'ਲੜੀ ਨੰ.',
+    thProduct: 'ਉਤਪਾਦ (Product)',
+    thQuantity: 'ਮਾਤਰਾ (Quantity)',
+    pdfBtnText: '📥 PDF ਰਿਪੋਰਟ ਡਾਊਨਲੋਡ ਕਰੋ',
+  },
+  hi: {
+    headerTitle: '🌼 गेंदे का ड्रेंचिंग शेड्यूल',
+    bannerTitle: 'MARIGOLD PRODUCTION',
+    bannerSubtitle: '(गेंदे का ड्रेंचिंग शेड्यूल)',
+    cardHeaderTitle: '📌 किसान एवं खेत का विवरण',
+    nameLabel: 'नाम (Name)',
+    namePlaceholder: 'नाम दर्ज करें',
+    areaLabel: 'क्षेत्रफल (Area)',
+    areaPlaceholder: '1 एकड़',
+    plantsLabel: 'पौधे (Plants)',
+    plantsPlaceholder: '10,000',
+    thSrNo: 'क्र. सं.',
+    thProduct: 'उत्पाद (Product)',
+    thQuantity: 'मात्रा (Quantity)',
+    pdfBtnText: '📥 PDF रिपोर्ट डाउनलोड करें',
+  },
+  en: {
+    headerTitle: '🌼 Marigold Drenching Schedule',
+    bannerTitle: 'MARIGOLD PRODUCTION',
+    bannerSubtitle: '(DRENCHING SCHEDULE)',
+    cardHeaderTitle: '📌 Farmer & Field Details',
+    nameLabel: 'Name',
+    namePlaceholder: 'Enter Name',
+    areaLabel: 'Area',
+    areaPlaceholder: '1 Acre',
+    plantsLabel: 'Plants',
+    plantsPlaceholder: '10,000',
+    thSrNo: 'Sr. No.',
+    thProduct: 'Product',
+    thQuantity: 'Quantity',
+    pdfBtnText: '📥 DOWNLOAD PDF REPORT',
+  },
+};
+
 interface DoseItem {
   srNo: number;
   product: string;
@@ -41,6 +94,10 @@ const DEFAULT_SCHEDULE: DoseItem[] = [
 
 export default function DosePage() {
   const router = useRouter();
+
+  // Language state: 'pa' | 'hi' | 'en'
+  const [lang, setLang] = useState<Lang>('pa');
+  const t = TRANSLATIONS[lang];
 
   // Top Form States
   const [farmerName, setFarmerName] = useState('');
@@ -102,17 +159,17 @@ export default function DosePage() {
           </div>
 
           <div class="farmer-meta">
-            <div>👤 Name: <span style="color: #15803d;">${farmerName || 'FarmsKing Partner Farmer'}</span></div>
-            <div>📏 Area: <span style="color: #15803d;">${area}</span></div>
-            <div>🌱 Plants: <span style="color: #15803d;">${plantsCount}</span></div>
+            <div>👤 ${t.nameLabel}: <span style="color: #15803d;">${farmerName || 'FarmsKing Partner Farmer'}</span></div>
+            <div>📏 ${t.areaLabel}: <span style="color: #15803d;">${area}</span></div>
+            <div>🌱 ${t.plantsLabel}: <span style="color: #15803d;">${plantsCount}</span></div>
           </div>
 
           <table>
             <thead>
               <tr>
-                <th style="width: 12%;">Sr. No.</th>
-                <th style="width: 58%;">Product</th>
-                <th style="width: 30%;">Quantity</th>
+                <th style="width: 12%;">${t.thSrNo}</th>
+                <th style="width: 58%;">${t.thProduct}</th>
+                <th style="width: 30%;">${t.thQuantity}</th>
               </tr>
             </thead>
             <tbody>
@@ -141,32 +198,58 @@ export default function DosePage() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
+      {/* Header with Language Selector Pills */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color="#FFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>🌼 Marigold Drenching Schedule</Text>
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          {t.headerTitle}
+        </Text>
+
+        {/* Language Switcher Pills */}
+        <View style={styles.langPillContainer}>
+          <TouchableOpacity
+            style={[styles.langPill, lang === 'pa' && styles.langPillActive]}
+            onPress={() => setLang('pa')}
+          >
+            <Text style={[styles.langPillText, lang === 'pa' && styles.langPillTextActive]}>ਪੰਜਾਬੀ</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.langPill, lang === 'hi' && styles.langPillActive]}
+            onPress={() => setLang('hi')}
+          >
+            <Text style={[styles.langPillText, lang === 'hi' && styles.langPillTextActive]}>हिंदी</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.langPill, lang === 'en' && styles.langPillActive]}
+            onPress={() => setLang('en')}
+          >
+            <Text style={[styles.langPillText, lang === 'en' && styles.langPillTextActive]}>ENG</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Banner */}
         <View style={styles.bannerCard}>
-          <Text style={styles.bannerTitle}>MARIGOLD PRODUCTION</Text>
-          <Text style={styles.bannerSubtitle}>(DRENCHING SCHEDULE)</Text>
+          <Text style={styles.bannerTitle}>{t.bannerTitle}</Text>
+          <Text style={styles.bannerSubtitle}>{t.bannerSubtitle}</Text>
         </View>
 
         {/* Input Details Header Card */}
         <View style={styles.inputCard}>
-          <Text style={styles.cardHeaderTitle}>📌 Farmer Details / ਫਾਰਮਰ ਵੇਰਵੇ</Text>
+          <Text style={styles.cardHeaderTitle}>{t.cardHeaderTitle}</Text>
 
           <View style={styles.inputRow}>
             {/* Name */}
             <View style={{ flex: 1.2 }}>
-              <Text style={styles.inputLabel}>Name</Text>
+              <Text style={styles.inputLabel}>{t.nameLabel}</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="Enter Name"
+                placeholder={t.namePlaceholder}
                 placeholderTextColor="#9CA3AF"
                 value={farmerName}
                 onChangeText={setFarmerName}
@@ -175,10 +258,10 @@ export default function DosePage() {
 
             {/* Area */}
             <View style={{ flex: 1 }}>
-              <Text style={styles.inputLabel}>Area</Text>
+              <Text style={styles.inputLabel}>{t.areaLabel}</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="1 Acre"
+                placeholder={t.areaPlaceholder}
                 placeholderTextColor="#9CA3AF"
                 value={area}
                 onChangeText={setArea}
@@ -187,10 +270,10 @@ export default function DosePage() {
 
             {/* Plants */}
             <View style={{ flex: 1 }}>
-              <Text style={styles.inputLabel}>Plants</Text>
+              <Text style={styles.inputLabel}>{t.plantsLabel}</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="10,000"
+                placeholder={t.plantsPlaceholder}
                 placeholderTextColor="#9CA3AF"
                 value={plantsCount}
                 onChangeText={setPlantsCount}
@@ -203,9 +286,9 @@ export default function DosePage() {
         <View style={styles.tableCard}>
           {/* Table Header Row */}
           <View style={styles.tableHeader}>
-            <Text style={[styles.thText, { flex: 0.8, textAlign: 'center' }]}>Sr. No.</Text>
-            <Text style={[styles.thText, { flex: 3.2 }]}>Product</Text>
-            <Text style={[styles.thText, { flex: 1.8, textAlign: 'center' }]}>Quantity</Text>
+            <Text style={[styles.thText, { flex: 0.8, textAlign: 'center' }]}>{t.thSrNo}</Text>
+            <Text style={[styles.thText, { flex: 3.2 }]}>{t.thProduct}</Text>
+            <Text style={[styles.thText, { flex: 1.8, textAlign: 'center' }]}>{t.thQuantity}</Text>
           </View>
 
           {/* Table Data Rows */}
@@ -240,7 +323,7 @@ export default function DosePage() {
         {/* Make / Download PDF Button */}
         <TouchableOpacity style={styles.pdfBtn} onPress={handleMakePDF} activeOpacity={0.85}>
           <MaterialCommunityIcons name="file-pdf-box" size={24} color="#FFF" />
-          <Text style={styles.pdfBtnText}>📥 DOWNLOAD PDF REPORT</Text>
+          <Text style={styles.pdfBtnText}>{t.pdfBtnText}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -254,19 +337,45 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#064E3B',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    justifyContent: 'space-between',
+    gap: 8,
   },
   backBtn: {
     padding: 4,
   },
   headerTitle: {
     color: '#FFF',
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '800',
+    flex: 1,
+  },
+  langPillContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 20,
+    padding: 2,
+    gap: 2,
+  },
+  langPill: {
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 14,
+  },
+  langPillActive: {
+    backgroundColor: '#10B981',
+  },
+  langPillText: {
+    color: '#D1D5DB',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  langPillTextActive: {
+    color: '#FFF',
+    fontWeight: '900',
   },
   scrollContent: {
     padding: 14,
@@ -315,7 +424,7 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     color: '#D1D5DB',
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '700',
     marginBottom: 4,
   },

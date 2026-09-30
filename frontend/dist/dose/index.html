@@ -1,63 +1,6 @@
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
-
-// Walk up parent directories to locate frontend package.json
-let currentDir = __dirname;
-let targetDir = currentDir;
-
-while (currentDir !== path.parse(currentDir).root) {
-  if (fs.existsSync(path.join(currentDir, 'frontend', 'package.json'))) {
-    targetDir = path.join(currentDir, 'frontend');
-    break;
-  }
-  if (fs.existsSync(path.join(currentDir, 'package.json')) && (fs.existsSync(path.join(currentDir, 'app')) || fs.existsSync(path.join(currentDir, 'src')))) {
-    targetDir = currentDir;
-    break;
-  }
-  currentDir = path.dirname(currentDir);
-}
-
-// Trigger automatic version bump
-try {
-  const bumpScriptPath = path.join(currentDir, 'scripts', 'bump-version.js');
-  if (fs.existsSync(bumpScriptPath)) {
-    const { runVersionBump } = require(bumpScriptPath);
-    runVersionBump();
-  }
-} catch (bumpErr) {
-  console.warn('⚠️ Auto version bump skipped:', bumpErr.message);
-}
-
-console.log(`🚀 Starting Expo Web build in resolved directory: ${targetDir}`);
-
-process.env.CI = '1';
-process.env.NODE_OPTIONS = '--max-old-space-size=4096';
-process.env.EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK = '1';
-
-try {
-  console.log('📦 Running npm install...');
-  execSync('npm install --legacy-peer-deps', { cwd: targetDir, stdio: 'inherit' });
-
-  console.log('⚡ Running Expo Export...');
-  execSync('npx expo export -p web', { cwd: targetDir, env: { ...process.env, EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK: '1', CI: '1' }, stdio: 'inherit' });
-
-  const publicDir = path.join(targetDir, 'public');
-  const distDir = path.join(targetDir, 'dist');
-  if (fs.existsSync(publicDir) && fs.existsSync(distDir)) {
-    console.log('📂 Copying static assets from public to dist...');
-    try {
-      fs.cpSync(publicDir, distDir, { recursive: true, force: true, dereference: true, errorOnExist: false });
-    } catch (cpErr) {
-      console.warn('⚠️ Warning: Some static assets skipped due to locked file handles:', cpErr.message);
-    }
-  }
-
-  const distIndexPath = path.join(distDir, 'index.html');
-  if (fs.existsSync(distIndexPath)) {
-    let indexHtml = fs.readFileSync(distIndexPath, 'utf8');
-
-    const metaCacheHeaders = `
+<!DOCTYPE html>
+<html lang="en">
+  <head>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
@@ -69,11 +12,34 @@ try {
     <meta property="og:image" content="https://farmsking.in/farmsking_logo.png" />
     <meta property="og:url" content="https://farmsking.in" />
     <meta property="og:type" content="website" />
-    `;
+    
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>FarmsKing</title>
+    <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
+    <style id="expo-reset">
+      /* These styles make the body full-height */
+      html,
+      body {
+        height: 100%;
+      }
+      /* These styles disable body scrolling if you are using <ScrollView> */
+      body {
+        overflow: hidden;
+      }
+      /* These styles make the root element full-height */
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+  </head>
 
-    indexHtml = indexHtml.replace('<head>', `<head>${metaCacheHeaders}`);
-
-    const richNoscript = `
+  <body>
+    <!-- Use static rendering with Expo Router to support running without JavaScript. -->
+    
     <noscript>
       <div style="font-family: Arial, sans-serif; padding: 25px; line-height: 1.6; max-width: 900px; margin: 0 auto; color: #1e293b;">
         <header style="border-bottom: 2px solid #166534; padding-bottom: 15px; margin-bottom: 20px;">
@@ -135,30 +101,9 @@ try {
         </main>
       </div>
     </noscript>
-    `;
-
-    if (indexHtml.includes('<noscript>')) {
-      indexHtml = indexHtml.replace(/<noscript>[\s\S]*?<\/noscript>/, richNoscript);
-    } else {
-      indexHtml = indexHtml.replace('<body>', `<body>${richNoscript}`);
-    }
-
-    fs.writeFileSync(distIndexPath, indexHtml, 'utf8');
-
-    // Create static dose.html and dose/index.html for direct URL access online
-    const doseHtmlPath = path.join(distDir, 'dose.html');
-    fs.writeFileSync(doseHtmlPath, indexHtml, 'utf8');
-
-    const doseSubDir = path.join(distDir, 'dose');
-    if (!fs.existsSync(doseSubDir)) {
-      fs.mkdirSync(doseSubDir, { recursive: true });
-    }
-    fs.writeFileSync(path.join(doseSubDir, 'index.html'), indexHtml, 'utf8');
-    console.log('✅ Generated static dose.html and dose/index.html for online routing');
-  }
-
-  console.log('✅ Expo Web build completed successfully!');
-} catch (err) {
-  console.error('❌ Build failed:', err.message);
-  process.exit(1);
-}
+    
+    <!-- The root element for your Expo app. -->
+    <div id="root"></div>
+  <script src="/_expo/static/js/web/entry-baf34cd605d8f4f056980b748ef3599e.js" defer></script>
+</body>
+</html>

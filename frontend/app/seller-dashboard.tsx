@@ -1709,21 +1709,22 @@ export default function SellerDashboardScreen() {
             </View>
 
             {/* Radio Options: Select Product Category to Open Builder */}
-            <View style={{ backgroundColor: '#111827', borderRadius: 14, padding: 12, marginBottom: 16, borderWidth: 1, borderColor: '#374151' }}>
-              <Text style={{ color: '#9CA3AF', fontSize: 11.5, fontWeight: '600', marginBottom: 10 }}>
-                Select product type below to open listing builder:
-              </Text>
-
-              <View style={{ flexDirection: 'row', gap: 10 }}>
-                {/* LEFT CARD: Farm / Agri Use Product */}
+            <View style={{ backgroundColor: '#111827', borderRadius: 12, padding: 10, marginBottom: 16, borderWidth: 1, borderColor: '#374151' }}>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                {/* LEFT BUTTON: Farm / Agri Use Product */}
                 <TouchableOpacity
                   style={{
                     flex: 1,
                     backgroundColor: productType === 'FARM' ? '#1E3A5F' : '#1F2937',
-                    borderRadius: 12,
-                    padding: 12,
+                    borderRadius: 10,
+                    paddingHorizontal: 10,
+                    paddingVertical: 10,
                     borderWidth: 1.5,
                     borderColor: productType === 'FARM' ? '#3B82F6' : '#374151',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 6,
                     opacity: storeData?.kycStatus === 'BLOCKED' ? 0.5 : 1,
                   }}
                   activeOpacity={0.8}
@@ -1735,46 +1736,46 @@ export default function SellerDashboardScreen() {
                     setProductType(productType === 'FARM' ? null : 'FARM');
                   }}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <View style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: productType === 'FARM' ? '#1E3A5F' : '#374151', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: productType === 'FARM' ? '#3B82F6' : 'transparent' }}>
-                      <MaterialCommunityIcons name="sprout" size={20} color={productType === 'FARM' ? '#60A5FA' : '#9CA3AF'} />
-                    </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
                     <Ionicons
                       name={productType === 'FARM' ? 'radio-button-on' : 'radio-button-off'}
-                      size={20}
+                      size={18}
                       color={productType === 'FARM' ? '#3B82F6' : '#9CA3AF'}
                     />
+                    <View style={{ width: 30, height: 30, borderRadius: 6, backgroundColor: productType === 'FARM' ? '#1E3A5F' : '#374151', alignItems: 'center', justifyContent: 'center' }}>
+                      <MaterialCommunityIcons name="sprout" size={18} color={productType === 'FARM' ? '#60A5FA' : '#9CA3AF'} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: '#F9FAFB', fontSize: 13, fontWeight: '800' }} numberOfLines={1}>
+                        🌾 Farm / Agri
+                      </Text>
+                      <Text style={{ color: productType === 'FARM' ? '#BFDBFE' : '#9CA3AF', fontSize: 10, marginTop: 1 }} numberOfLines={1}>
+                        Seeds, Tools & Agri
+                      </Text>
+                    </View>
                   </View>
 
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    <Text style={{ color: '#F9FAFB', fontSize: 13.5, fontWeight: '800' }}>🌾 Farm / Agri Use</Text>
-                    {productType === 'FARM' && (
-                      <View style={{ backgroundColor: '#3B82F6', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 }}>
-                        <Text style={{ color: '#1E3A5F', fontSize: 8.5, fontWeight: '800' }}>ACTIVE</Text>
-                      </View>
-                    )}
-                  </View>
-                  <Text style={{ color: productType === 'FARM' ? '#BFDBFE' : '#9CA3AF', fontSize: 10.5, marginTop: 4, lineHeight: 14 }}>
-                    Seeds, fertilizers, pesticides, tools & machinery
-                  </Text>
-                  <View style={{ flexDirection: 'row', gap: 4, marginTop: 8, flexWrap: 'wrap' }}>
-                    {['Agri License', 'CIBRC / HSN'].map(tag => (
-                      <View key={tag} style={{ backgroundColor: productType === 'FARM' ? '#1E3A5F' : '#111827', paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: productType === 'FARM' ? '#3B82F6' : '#374151' }}>
-                        <Text style={{ color: productType === 'FARM' ? '#93C5FD' : '#6B7280', fontSize: 8.5, fontWeight: '700' }}>{tag}</Text>
-                      </View>
-                    ))}
-                  </View>
+                  {productType === 'FARM' && (
+                    <View style={{ backgroundColor: '#3B82F6', paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4 }}>
+                      <Text style={{ color: '#1E3A5F', fontSize: 8.5, fontWeight: '800' }}>ACTIVE</Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
 
-                {/* RIGHT CARD: Food Product */}
+                {/* RIGHT BUTTON: Food Product */}
                 <TouchableOpacity
                   style={{
                     flex: 1,
                     backgroundColor: productType === 'FOOD' ? '#064E3B' : '#1F2937',
-                    borderRadius: 12,
-                    padding: 12,
+                    borderRadius: 10,
+                    paddingHorizontal: 10,
+                    paddingVertical: 10,
                     borderWidth: 1.5,
                     borderColor: productType === 'FOOD' ? '#10B981' : '#374151',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 6,
                     opacity: storeData?.kycStatus === 'BLOCKED' ? 0.5 : 1,
                   }}
                   activeOpacity={0.8}
@@ -1786,35 +1787,30 @@ export default function SellerDashboardScreen() {
                     setProductType(productType === 'FOOD' ? null : 'FOOD');
                   }}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <View style={{ width: 36, height: 36, borderRadius: 8, backgroundColor: productType === 'FOOD' ? '#065F46' : '#374151', alignItems: 'center', justifyContent: 'center' }}>
-                      <MaterialCommunityIcons name="food-apple" size={20} color={productType === 'FOOD' ? '#34D399' : '#9CA3AF'} />
-                    </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
                     <Ionicons
                       name={productType === 'FOOD' ? 'radio-button-on' : 'radio-button-off'}
-                      size={20}
+                      size={18}
                       color={productType === 'FOOD' ? '#10B981' : '#9CA3AF'}
                     />
+                    <View style={{ width: 30, height: 30, borderRadius: 6, backgroundColor: productType === 'FOOD' ? '#065F46' : '#374151', alignItems: 'center', justifyContent: 'center' }}>
+                      <MaterialCommunityIcons name="food-apple" size={18} color={productType === 'FOOD' ? '#34D399' : '#9CA3AF'} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ color: '#F9FAFB', fontSize: 13, fontWeight: '800' }} numberOfLines={1}>
+                        🥗 Food Product
+                      </Text>
+                      <Text style={{ color: productType === 'FOOD' ? '#A7F3D0' : '#9CA3AF', fontSize: 10, marginTop: 1 }} numberOfLines={1}>
+                        Foods & Produce
+                      </Text>
+                    </View>
                   </View>
 
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    <Text style={{ color: '#F9FAFB', fontSize: 13.5, fontWeight: '800' }}>🥗 Food Product</Text>
-                    {productType === 'FOOD' && (
-                      <View style={{ backgroundColor: '#10B981', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 }}>
-                        <Text style={{ color: '#064E3B', fontSize: 8.5, fontWeight: '800' }}>ACTIVE</Text>
-                      </View>
-                    )}
-                  </View>
-                  <Text style={{ color: productType === 'FOOD' ? '#A7F3D0' : '#9CA3AF', fontSize: 10.5, marginTop: 4, lineHeight: 14 }}>
-                    Packaged foods, organic produce, grains & edible items
-                  </Text>
-                  <View style={{ flexDirection: 'row', gap: 4, marginTop: 8, flexWrap: 'wrap' }}>
-                    {['FSSAI Req.', 'Nutritional Label'].map(tag => (
-                      <View key={tag} style={{ backgroundColor: productType === 'FOOD' ? '#052E16' : '#111827', paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: productType === 'FOOD' ? '#10B981' : '#374151' }}>
-                        <Text style={{ color: productType === 'FOOD' ? '#6EE7B7' : '#6B7280', fontSize: 8.5, fontWeight: '700' }}>{tag}</Text>
-                      </View>
-                    ))}
-                  </View>
+                  {productType === 'FOOD' && (
+                    <View style={{ backgroundColor: '#10B981', paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4 }}>
+                      <Text style={{ color: '#064E3B', fontSize: 8.5, fontWeight: '800' }}>ACTIVE</Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>

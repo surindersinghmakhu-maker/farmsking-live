@@ -38,7 +38,7 @@ const DEFAULT_SCHEDULE: DoseItem[] = [
   { id: '15', srNo: '15', product: 'Chelated Iron (Fe 12%)', quantity: '250 g' },
   { id: '16', srNo: '16', product: 'Chelated Zinc (Zn EDTA 12%)', quantity: '500 g' },
   { id: '17', srNo: '17', product: 'Chelated Calcium (10–12%)', quantity: '500 g' },
-  { id: '18', srNo: '18', product: 'Kranti', quantity: '500 ml' },
+  { id: '18', srNo: '18', product: 'Sai power plus/multiplex kranti', quantity: '500 ml' },
 ];
 
 export default function SKEditableSchedulePage() {

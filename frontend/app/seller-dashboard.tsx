@@ -1609,50 +1609,30 @@ export default function SellerDashboardScreen() {
 
             {/* Compact 4-Column Analytics Toolbar */}
             <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
-              <View style={{ flex: 1, backgroundColor: '#111827', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#10B981', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#064E3B', justifyContent: 'center', alignItems: 'center' }}>
-                  <MaterialCommunityIcons name="cube-outline" size={18} color="#34D399" />
-                </View>
-                <View>
-                  <Text style={{ color: '#FFF', fontSize: 16, fontWeight: '800' }}>{stats.activeProducts}</Text>
-                  <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600' }}>Active Products</Text>
-                </View>
+              <View style={{ flex: 1, backgroundColor: '#111827', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#10B981', alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ color: '#FFF', fontSize: 16, fontWeight: '800' }}>{stats.activeProducts}</Text>
+                <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600', marginTop: 2 }}>Active Products</Text>
               </View>
 
-              <View style={{ flex: 1, backgroundColor: '#111827', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#3B82F6', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#1E3A8A', justifyContent: 'center', alignItems: 'center' }}>
-                  <MaterialCommunityIcons name="cart-check" size={18} color="#60A5FA" />
-                </View>
-                <View>
-                  <Text style={{ color: '#FFF', fontSize: 16, fontWeight: '800' }}>{stats.totalOrders}</Text>
-                  <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600' }}>Total Orders</Text>
-                </View>
+              <View style={{ flex: 1, backgroundColor: '#111827', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#3B82F6', alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ color: '#FFF', fontSize: 16, fontWeight: '800' }}>{stats.totalOrders}</Text>
+                <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600', marginTop: 2 }}>Total Orders</Text>
               </View>
 
               <TouchableOpacity
-                style={{ flex: 1, backgroundColor: '#111827', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#F59E0B', flexDirection: 'row', alignItems: 'center', gap: 8 }}
+                style={{ flex: 1, backgroundColor: '#111827', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#F59E0B', alignItems: 'center', justifyContent: 'center' }}
                 onPress={() => router.push('/seller-payouts')}
               >
-                <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#78350F', justifyContent: 'center', alignItems: 'center' }}>
-                  <FontAwesome5 name="wallet" size={14} color="#FBBF24" />
-                </View>
-                <View>
-                  <Text style={{ color: '#FFF', fontSize: 15, fontWeight: '800' }}>₹{stats.pendingPayoutsAmount}</Text>
-                  <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600' }}>Pending Payouts</Text>
-                </View>
+                <Text style={{ color: '#FFF', fontSize: 15, fontWeight: '800' }}>₹{stats.pendingPayoutsAmount}</Text>
+                <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600', marginTop: 2 }}>Pending Payouts</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={{ flex: 1, backgroundColor: '#111827', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#8B5CF6', flexDirection: 'row', alignItems: 'center', gap: 8 }}
+                style={{ flex: 1, backgroundColor: '#111827', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#8B5CF6', alignItems: 'center', justifyContent: 'center' }}
                 onPress={() => router.push('/seller-payouts')}
               >
-                <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#4C1D95', justifyContent: 'center', alignItems: 'center' }}>
-                  <FontAwesome5 name="hand-holding-usd" size={14} color="#A78BFA" />
-                </View>
-                <View>
-                  <Text style={{ color: '#FFF', fontSize: 15, fontWeight: '800' }}>₹{stats.settledPayoutsAmount}</Text>
-                  <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600' }}>Settled Earnings</Text>
-                </View>
+                <Text style={{ color: '#FFF', fontSize: 15, fontWeight: '800' }}>₹{stats.settledPayoutsAmount}</Text>
+                <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600', marginTop: 2 }}>Settled Earnings</Text>
               </TouchableOpacity>
             </View>
 
@@ -1742,15 +1722,12 @@ export default function SellerDashboardScreen() {
                       size={18}
                       color={productType === 'FARM' ? '#3B82F6' : '#9CA3AF'}
                     />
-                    <View style={{ width: 30, height: 30, borderRadius: 6, backgroundColor: productType === 'FARM' ? '#1E3A5F' : '#374151', alignItems: 'center', justifyContent: 'center' }}>
-                      <MaterialCommunityIcons name="sprout" size={18} color={productType === 'FARM' ? '#60A5FA' : '#9CA3AF'} />
-                    </View>
                     <View style={{ flex: 1 }}>
                       <Text style={{ color: '#F9FAFB', fontSize: 13, fontWeight: '800' }} numberOfLines={1}>
-                        🌾 Farm / Agri
+                        Farm / Agri Product
                       </Text>
                       <Text style={{ color: productType === 'FARM' ? '#BFDBFE' : '#9CA3AF', fontSize: 10, marginTop: 1 }} numberOfLines={1}>
-                        Seeds, Tools & Agri
+                        Seeds, Tools & Agri Inputs
                       </Text>
                     </View>
                   </View>
@@ -1793,15 +1770,12 @@ export default function SellerDashboardScreen() {
                       size={18}
                       color={productType === 'FOOD' ? '#10B981' : '#9CA3AF'}
                     />
-                    <View style={{ width: 30, height: 30, borderRadius: 6, backgroundColor: productType === 'FOOD' ? '#065F46' : '#374151', alignItems: 'center', justifyContent: 'center' }}>
-                      <MaterialCommunityIcons name="food-apple" size={18} color={productType === 'FOOD' ? '#34D399' : '#9CA3AF'} />
-                    </View>
                     <View style={{ flex: 1 }}>
                       <Text style={{ color: '#F9FAFB', fontSize: 13, fontWeight: '800' }} numberOfLines={1}>
-                        🥗 Food Product
+                        Food Product
                       </Text>
                       <Text style={{ color: productType === 'FOOD' ? '#A7F3D0' : '#9CA3AF', fontSize: 10, marginTop: 1 }} numberOfLines={1}>
-                        Foods & Produce
+                        Foods & Farm Produce
                       </Text>
                     </View>
                   </View>

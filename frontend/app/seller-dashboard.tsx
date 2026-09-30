@@ -320,6 +320,9 @@ export default function SellerDashboardScreen() {
   // Edit state for resubmitting rejected or modifying store
   const [isEditingRejected, setIsEditingRejected] = useState(false);
 
+  // Product Type selection before builder: 'FOOD' | 'FARM'
+  const [productType, setProductType] = useState<'FOOD' | 'FARM' | null>(null);
+
   useEffect(() => {
     fetchStoreData();
     restoreDraftLocal();
@@ -1523,9 +1526,17 @@ export default function SellerDashboardScreen() {
                   <Text style={styles.slugText}>farmsking.in/store/{storeData?.slug}</Text>
                 </View>
 
-                <View style={[styles.kycBadge, { backgroundColor: '#065F46' }]}>
-                  <Ionicons name="checkmark-circle" size={14} color="#FFF" />
-                  <Text style={styles.kycText}>VERIFIED</Text>
+                <View style={[styles.kycBadge, storeData?.kycStatus === 'BLOCKED'
+                  ? { backgroundColor: '#7F1D1D', borderColor: '#EF4444', borderWidth: 1, flexDirection: 'row', alignItems: 'center', gap: 4 }
+                  : { backgroundColor: '#065F46' }]}>
+                  <Ionicons
+                    name={storeData?.kycStatus === 'BLOCKED' ? 'ban-outline' : 'checkmark-circle'}
+                    size={14}
+                    color={storeData?.kycStatus === 'BLOCKED' ? '#FCA5A5' : '#FFF'}
+                  />
+                  <Text style={[styles.kycText, storeData?.kycStatus === 'BLOCKED' && { color: '#FCA5A5' }]}>
+                    {storeData?.kycStatus === 'BLOCKED' ? 'BLOCKED' : 'VERIFIED'}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -1579,15 +1590,62 @@ export default function SellerDashboardScreen() {
               </TouchableOpacity>
             </View>
 
+            {/* Blocked Store Alert Banner */}
+            {storeData?.kycStatus === 'BLOCKED' && (
+              <View style={{
+                backgroundColor: '#1C0505',
+                borderRadius: 12,
+                padding: 14,
+                marginBottom: 12,
+                borderWidth: 1.5,
+                borderColor: '#DC2626',
+                flexDirection: 'row',
+                alignItems: 'flex-start',
+                gap: 10,
+              }}>
+                <Ionicons name="ban" size={24} color="#EF4444" />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: '#EF4444', fontSize: 15, fontWeight: '800', marginBottom: 4 }}>
+                    Store Temporarily Blocked
+                  </Text>
+                  <Text style={{ color: '#FCA5A5', fontSize: 12, lineHeight: 18 }}>
+                    Your store has been blocked by FarmsKing Admin. Product listing is disabled until unblocked.
+                  </Text>
+                  {storeData?.rejectionReason && (
+                    <View style={{ backgroundColor: '#2D0A0A', borderRadius: 6, padding: 8, marginTop: 8, borderWidth: 1, borderColor: '#991B1B' }}>
+                      <Text style={{ color: '#F87171', fontSize: 11, fontWeight: '700' }}>
+                        Admin Note: {storeData.rejectionReason}
+                      </Text>
+                    </View>
+                  )}
+                  <Text style={{ color: '#9CA3AF', fontSize: 11, marginTop: 8 }}>
+                    Contact FarmsKing Support to resolve this block and restore your selling access.
+                  </Text>
+                </View>
+              </View>
+            )}
+
             {/* Action Bar & Quick Catalog Link */}
             <View style={{ flexDirection: 'row', gap: 8, marginVertical: 12 }}>
               <TouchableOpacity
-                style={[styles.addProductBtn, { flex: 1 }]}
-                onPress={() => setShowAddProduct(!showAddProduct)}
+                style={[
+                  styles.addProductBtn,
+                  { flex: 1 },
+                  storeData?.kycStatus === 'BLOCKED' && { backgroundColor: '#374151', opacity: 0.5 },
+                ]}
+                onPress={() => {
+                  if (storeData?.kycStatus === 'BLOCKED') {
+                    showAlert('Store Blocked 🚫', 'Your store is currently blocked by Admin. Product listing is disabled. Please contact FarmsKing Support.');
+                    return;
+                  }
+                  setProductType(null);
+                  setShowAddProduct(!showAddProduct);
+                }}
+                disabled={storeData?.kycStatus === 'BLOCKED'}
               >
-                <MaterialCommunityIcons name="plus-circle" size={20} color="#FFF" />
+                <MaterialCommunityIcons name={storeData?.kycStatus === 'BLOCKED' ? 'lock' : 'plus-circle'} size={20} color="#FFF" />
                 <Text style={styles.addProductBtnText}>
-                  {showAddProduct ? 'Close Builder' : '+ Premium Product Builder'}
+                  {storeData?.kycStatus === 'BLOCKED' ? 'Product Builder Locked' : showAddProduct ? 'Close Builder' : '+ Premium Product Builder'}
                 </Text>
               </TouchableOpacity>
 
@@ -1600,16 +1658,117 @@ export default function SellerDashboardScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Premium Amazon-Style Add Product Builder Form */}
+            {/* Premium Product Builder Form */}
             {showAddProduct && (
               <View style={styles.card}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                   <Text style={styles.cardTitle}>📦 FarmsKing Product Builder</Text>
-                  <TouchableOpacity onPress={() => setShowAddProduct(false)}>
+                  <TouchableOpacity onPress={() => { setShowAddProduct(false); setProductType(null); }}>
                     <Ionicons name="close-circle" size={24} color="#9CA3AF" />
                   </TouchableOpacity>
                 </View>
 
+                {/* STEP 0: Product Type Selection */}
+                {!productType ? (
+                  <View>
+                    <Text style={{ color: '#F9FAFB', fontSize: 14, fontWeight: '800', marginBottom: 4 }}>Select Product Type to Continue</Text>
+                    <Text style={{ color: '#9CA3AF', fontSize: 11, marginBottom: 14 }}>
+                      Choose the category your product belongs to. This determines the listing form, compliance requirements, and delivery rules.
+                    </Text>
+
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: '#064E3B',
+                        borderRadius: 12,
+                        padding: 16,
+                        marginBottom: 10,
+                        borderWidth: 1.5,
+                        borderColor: '#10B981',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 14,
+                      }}
+                      activeOpacity={0.8}
+                      onPress={() => setProductType('FOOD')}
+                    >
+                      <View style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: '#065F46', alignItems: 'center', justifyContent: 'center' }}>
+                        <MaterialCommunityIcons name="food-apple" size={26} color="#34D399" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: '#F9FAFB', fontSize: 14, fontWeight: '800' }}>🥗 Food Product</Text>
+                        <Text style={{ color: '#A7F3D0', fontSize: 11, marginTop: 2 }}>Packaged foods, organic farm produce, dairy, grains, edible items</Text>
+                        <View style={{ flexDirection: 'row', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+                          {['FSSAI Required', 'Nutritional Label', 'Veg/Non-Veg Badge', 'Shelf Life'].map(tag => (
+                            <View key={tag} style={{ backgroundColor: '#052E16', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#10B981' }}>
+                              <Text style={{ color: '#6EE7B7', fontSize: 9, fontWeight: '700' }}>{tag}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                      <Ionicons name="chevron-forward" size={20} color="#10B981" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: '#1E3A5F',
+                        borderRadius: 12,
+                        padding: 16,
+                        borderWidth: 1.5,
+                        borderColor: '#3B82F6',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 14,
+                      }}
+                      activeOpacity={0.8}
+                      onPress={() => setProductType('FARM')}
+                    >
+                      <View style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: '#1E3A5F', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#3B82F6' }}>
+                        <MaterialCommunityIcons name="sprout" size={26} color="#60A5FA" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: '#F9FAFB', fontSize: 14, fontWeight: '800' }}>🌾 Farm / Agri Use Product</Text>
+                        <Text style={{ color: '#BFDBFE', fontSize: 11, marginTop: 2 }}>Seeds, fertilizers, pesticides, agri tools, bio-inputs, farm machinery</Text>
+                        <View style={{ flexDirection: 'row', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+                          {['Agri License', 'CIBRC Rating', 'HSN Code', 'Dosage Guide'].map(tag => (
+                            <View key={tag} style={{ backgroundColor: '#1E3A5F', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#3B82F6' }}>
+                              <Text style={{ color: '#93C5FD', fontSize: 9, fontWeight: '700' }}>{tag}</Text>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                      <Ionicons name="chevron-forward" size={20} color="#3B82F6" />
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  /* Show selected type header + full form */
+                  <View>
+                    {/* Selected Type Banner */}
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 8,
+                        backgroundColor: productType === 'FOOD' ? '#064E3B' : '#1E3A5F',
+                        borderRadius: 8,
+                        padding: 8,
+                        marginBottom: 14,
+                        borderWidth: 1,
+                        borderColor: productType === 'FOOD' ? '#10B981' : '#3B82F6',
+                      }}
+                      onPress={() => setProductType(null)}
+                    >
+                      <MaterialCommunityIcons
+                        name={productType === 'FOOD' ? 'food-apple' : 'sprout'}
+                        size={18}
+                        color={productType === 'FOOD' ? '#34D399' : '#60A5FA'}
+                      />
+                      <Text style={{ color: '#F9FAFB', fontSize: 12, fontWeight: '800', flex: 1 }}>
+                        {productType === 'FOOD' ? '🥗 Food Product Mode Active' : '🌾 Farm / Agri Use Mode Active'}
+                      </Text>
+                      <View style={{ backgroundColor: '#374151', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
+                        <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '700' }}>Change</Text>
+                      </View>
+                    </TouchableOpacity>
                 {/* 1. NON-GST SELLER COMPLIANCE BANNER */}
                 {!storeData?.gstin ? (
                   <View style={{ backgroundColor: '#064E3B', borderRadius: 8, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: '#10B981' }}>
@@ -2326,8 +2485,11 @@ export default function SellerDashboardScreen() {
                     <Text style={styles.primaryBtnText}> Save Product to Store</Text>
                   </TouchableOpacity>
                 </View>
+                  </View>
+                )}
               </View>
             )}
+
 
             {/* LIVE CUSTOMER PRODUCT PREVIEW MODAL */}
             <Modal visible={showProductPreviewModal} transparent animationType="slide" onRequestClose={() => setShowProductPreviewModal(false)}>

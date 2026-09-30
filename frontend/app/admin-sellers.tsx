@@ -22,7 +22,7 @@ export default function AdminSellersScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [stores, setStores] = useState<any[]>([]);
-  const [selectedFilter, setSelectedFilter] = useState<'VERIFIED' | 'PENDING' | 'REJECTED' | 'ALL'>('VERIFIED');
+  const [selectedFilter, setSelectedFilter] = useState<'VERIFIED' | 'PENDING' | 'REJECTED' | 'BLOCKED' | 'ALL'>('VERIFIED');
   const [editingStoreId, setEditingStoreId] = useState<string | null>(null);
   const [customCommission, setCustomCommission] = useState('5.0');
   const [rejectionReasonInput, setRejectionReasonInput] = useState('');
@@ -103,6 +103,24 @@ export default function AdminSellersScreen() {
     }
   };
 
+  const handleBlockToggle = async (storeId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'BLOCKED' ? 'VERIFIED' : 'BLOCKED';
+    const action = newStatus === 'BLOCKED' ? 'block' : 'unblock';
+    try {
+      await apiClient.patch(`/seller/admin/stores/${storeId}/kyc`, {
+        status: newStatus,
+        commissionRate: parseFloat(customCommission || '5.0'),
+        rejectionReason: newStatus === 'BLOCKED' ? (rejectionReasonInput.trim() || 'Store blocked by Admin due to policy violation.') : undefined,
+      });
+      showAlert(`Store ${action === 'block' ? 'Blocked 🚫' : 'Unblocked ✅'}`, `Seller store has been ${action}ed successfully.`);
+      setRejectionReasonInput('');
+      fetchStores();
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || `Failed to ${action} store.`;
+      showAlert('Error', Array.isArray(msg) ? msg.join(', ') : msg);
+    }
+  };
+
   const handleDownloadGstr8 = async (sellerStoreId: string) => {
     try {
       setIsFetchingGstr8(true);
@@ -152,22 +170,26 @@ export default function AdminSellersScreen() {
       {/* Filter Chips Bar */}
       <View style={styles.filterBarContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterBar}>
-          {(['VERIFIED', 'PENDING', 'REJECTED', 'ALL'] as const).map((filter) => {
+          {(['VERIFIED', 'PENDING', 'REJECTED', 'BLOCKED', 'ALL'] as const).map((filter) => {
             const isActive = selectedFilter === filter;
+            const dotColor =
+              filter === 'VERIFIED' ? '#10B981' :
+              filter === 'PENDING' ? '#F59E0B' :
+              filter === 'REJECTED' ? '#EF4444' :
+              filter === 'BLOCKED' ? '#DC2626' :
+              '#6B7280';
             return (
               <TouchableOpacity
                 key={filter}
-                style={[styles.filterChip, isActive && styles.activeFilterChip]}
-                onPress={() => setSelectedFilter(filter)}
+                style={[
+                  styles.filterChip,
+                  isActive && styles.activeFilterChip,
+                  isActive && filter === 'BLOCKED' && { backgroundColor: '#7F1D1D', borderColor: '#DC2626' },
+                ]}
+                onPress={() => setSelectedFilter(filter as any)}
                 activeOpacity={0.7}
               >
-                <View style={[
-                  styles.filterDot,
-                  filter === 'VERIFIED' ? { backgroundColor: '#10B981' } :
-                  filter === 'PENDING' ? { backgroundColor: '#F59E0B' } :
-                  filter === 'REJECTED' ? { backgroundColor: '#EF4444' } :
-                  { backgroundColor: '#6B7280' }
-                ]} />
+                <View style={[styles.filterDot, { backgroundColor: dotColor }]} />
                 <Text style={[styles.filterText, isActive && styles.activeFilterText]}>
                   {filter}
                 </Text>
@@ -205,6 +227,7 @@ export default function AdminSellersScreen() {
           stores.map((store) => {
             const isVerified = store.kycStatus === 'VERIFIED';
             const isRejected = store.kycStatus === 'REJECTED';
+            const isBlocked = store.kycStatus === 'BLOCKED';
             const defaultExpanded = !isVerified && !isRejected;
             const isExpanded = expandedStoreIds[store.id] !== undefined ? expandedStoreIds[store.id] : defaultExpanded;
 
@@ -249,18 +272,19 @@ export default function AdminSellersScreen() {
                         styles.kycBadge,
                         isVerified ? styles.badgeVerified :
                         isRejected ? styles.badgeRejected :
+                        isBlocked ? styles.badgeBlocked :
                         styles.badgePending,
                       ]}
                     >
                       <View style={[
                         styles.statusDot,
-                        { backgroundColor: isVerified ? '#34D399' : isRejected ? '#F87171' : '#FBBF24' }
+                        { backgroundColor: isVerified ? '#34D399' : isRejected ? '#F87171' : isBlocked ? '#EF4444' : '#FBBF24' }
                       ]} />
                       <Text style={[
                         styles.kycBadgeText,
-                        { color: isVerified ? '#6EE7B7' : isRejected ? '#FCA5A5' : '#FDE68A' }
+                        { color: isVerified ? '#6EE7B7' : isRejected ? '#FCA5A5' : isBlocked ? '#FCA5A5' : '#FDE68A' }
                       ]}>
-                        {store.kycStatus}
+                        {isBlocked ? '🚫 BLOCKED' : store.kycStatus}
                       </Text>
                     </View>
 
@@ -285,6 +309,23 @@ export default function AdminSellersScreen() {
                         <Text style={styles.rejectionText}>
                           Reason: {store.rejectionReason}
                         </Text>
+                      </View>
+                    )}
+
+                    {/* Blocked Alert */}
+                    {isBlocked && (
+                      <View style={[styles.rejectionAlert, { backgroundColor: '#1C0303', borderColor: '#DC2626' }]}>
+                        <Ionicons name="ban-outline" size={16} color="#EF4444" />
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.rejectionText, { color: '#FCA5A5', fontWeight: '800' }]}>
+                            Store Blocked by Admin
+                          </Text>
+                          {store.rejectionReason && (
+                            <Text style={[styles.rejectionText, { color: '#FDA4AF', marginTop: 2 }]}>
+                              Reason: {store.rejectionReason}
+                            </Text>
+                          )}
+                        </View>
                       </View>
                     )}
 
@@ -331,7 +372,7 @@ export default function AdminSellersScreen() {
                     </View>
 
                     {/* Uploaded Documents Panel */}
-                    {!isRejected && (
+                    {!isRejected && !isBlocked && (
                       <View style={styles.docPanel}>
                         <Text style={styles.docPanelTitle}>Verified Verification Uploads</Text>
                         <View style={styles.docRow}>
@@ -462,7 +503,8 @@ export default function AdminSellersScreen() {
                           </View>
                         ) : (
                           <View style={styles.mainBtnGroup}>
-                            {!isVerified && (
+                            {/* Verify KYC button: only for PENDING stores, hidden if already VERIFIED or BLOCKED */}
+                            {!isVerified && !isBlocked && (
                               <TouchableOpacity
                                 style={[styles.btn, styles.btnVerify]}
                                 onPress={() => {
@@ -475,13 +517,42 @@ export default function AdminSellersScreen() {
                               </TouchableOpacity>
                             )}
 
-                            <TouchableOpacity
-                              style={[styles.btn, styles.btnGstr8]}
-                              onPress={() => handleDownloadGstr8(store.id)}
-                            >
-                              <MaterialCommunityIcons name="file-document-outline" size={15} color="#FFF" />
-                              <Text style={styles.btnText}> GSTR-8 Audit</Text>
-                            </TouchableOpacity>
+                            {/* Block / Unblock Toggle — shown for VERIFIED and BLOCKED stores */}
+                            {(isVerified || isBlocked) && (
+                              <TouchableOpacity
+                                style={[
+                                  styles.btn,
+                                  isBlocked
+                                    ? { backgroundColor: '#059669' }
+                                    : { backgroundColor: '#7C1D1D', borderWidth: 1, borderColor: '#DC2626' },
+                                ]}
+                                onPress={() => {
+                                  if (!isBlocked) {
+                                    setRejectionReasonInput('');
+                                  }
+                                  handleBlockToggle(store.id, store.kycStatus);
+                                }}
+                              >
+                                <Ionicons
+                                  name={isBlocked ? 'lock-open-outline' : 'ban-outline'}
+                                  size={15}
+                                  color="#FFF"
+                                />
+                                <Text style={styles.btnText}>
+                                  {isBlocked ? ' Unblock Store' : ' Block Store'}
+                                </Text>
+                              </TouchableOpacity>
+                            )}
+
+                            {!isBlocked && (
+                              <TouchableOpacity
+                                style={[styles.btn, styles.btnGstr8]}
+                                onPress={() => handleDownloadGstr8(store.id)}
+                              >
+                                <MaterialCommunityIcons name="file-document-outline" size={15} color="#FFF" />
+                                <Text style={styles.btnText}> GSTR-8 Audit</Text>
+                              </TouchableOpacity>
+                            )}
                           </View>
                         )}
                       </View>
@@ -833,6 +904,10 @@ const styles = StyleSheet.create({
   badgePending: {
     backgroundColor: '#78350F50',
     borderColor: '#D9770680',
+  },
+  badgeBlocked: {
+    backgroundColor: '#7F1D1D80',
+    borderColor: '#DC2626',
   },
   statusDot: {
     width: 5,

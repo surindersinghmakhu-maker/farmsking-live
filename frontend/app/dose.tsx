@@ -14,6 +14,34 @@ import { useRouter } from 'expo-router';
 
 type Lang = 'pa' | 'hi' | 'en';
 
+interface DoseItem {
+  srNo: number;
+  productKey: number;
+  product: string;
+  quantity: string;
+}
+
+const PRODUCT_NAMES: Record<number, { pa: string; hi: string; en: string }> = {
+  1: { pa: 'ਗੁੜ (Gud)', hi: 'गुड़ (Jaggery)', en: 'Jaggery (Gud)' },
+  2: { pa: 'ਫੁਲਵਿਕ ਐਸਿਡ (Fulvic Acid)', hi: 'फुलविक एसिड (Fulvic Acid)', en: 'Fulvic Acid' },
+  3: { pa: 'ਡੀ.ਏ.ਪੀ. ਖਾਦ (DAP)', hi: 'डी.ए.पी. खाद (DAP)', en: 'DAP Fertilizer' },
+  4: { pa: 'ਐਮ.ਓ.ਪੀ. ਪੋਟਾਸ਼ (MOP)', hi: 'एम.ओ.पी. पोटाश (MOP)', en: 'MOP (Muriate of Potash)' },
+  5: { pa: 'ਯੂਰੀਆ* (ਜਿੱਥੇ ਵਾਧਾ ਘੱਟ ਹੋਵੇ ਉੱਥੇ ਪਾਓ)', hi: 'यूरिया* (केवल कम विकास वाली जगह डालें)', en: 'Urea* (Apply only where growth is less)' },
+  6: { pa: 'ਸਰ੍ਹੋਂ ਦੀ ਖਲ (Mustard Cake)', hi: 'सरसों खली (Mustard Cake)', en: 'Mustard Cake' },
+  7: { pa: 'ਨੀਮ ਖਲ (Neem Cake)', hi: 'नीम खली (Neem Cake)', en: 'Neem Cake' },
+  8: { pa: 'ਸਲਫਰ (Sulphur)', hi: 'सल्फर (Sulphur)', en: 'Sulphur (80% WDG)' },
+  9: { pa: 'ਮੈਗਨੀਸ਼ੀਅਮ ਸਲਫੇਟ (Magnesium Sulphate)', hi: 'मैग्नीशियम सल्फेट (Magnesium Sulphate)', en: 'Magnesium Sulphate' },
+  10: { pa: 'ਰੋਕੋ ਫੰਗੀਸਾਈਡ (Roko Fungicide)', hi: 'रोको फफूंदनाशक (Roko Fungicide)', en: 'Roko Fungicide' },
+  11: { pa: 'ਹਿਊਮਿਕ ਐਸਿਡ (Humic Acid)', hi: 'ह्यूमिक एसिड (Humic Acid)', en: 'Humic Acid (98%)' },
+  12: { pa: 'ਬੋਰੋਨ 20% (Boron 20%)', hi: 'बोरोन 20% (Boron 20%)', en: 'Boron 20%' },
+  13: { pa: 'ਬਾਇਓਵਿਟਾ (Biovita)', hi: 'बायोविटा (Biovita)', en: 'Biovita (Bio-stimulant)' },
+  14: { pa: 'ਅਮੀਨੋ ਐਸਿਡ (ਤਰਲ 20%/50%)', hi: 'अमीनो एसिड (तरल 20%/50%)', en: 'Amino Acid (Liquid 20%/50%)' },
+  15: { pa: 'ਚਿਲੇਟਿਡ ਆਇਰਨ (Fe 12%)', hi: 'चिलेटेड आयरन (Fe 12%)', en: 'Chelated Iron (Fe 12%)' },
+  16: { pa: 'ਚਿਲੇਟਿਡ ਜ਼ਿੰਕ (Zn EDTA 12%)', hi: 'चिलेटेड जिंक (Zn EDTA 12%)', en: 'Chelated Zinc (Zn EDTA 12%)' },
+  17: { pa: 'ਚਿਲੇਟਿਡ ਕੈਲਸ਼ੀਅਮ (10–12%)', hi: 'चिलेटेड कैल्शियम (10–12%)', en: 'Chelated Calcium (10–12%)' },
+  18: { pa: 'ਸਾਈਂ ਪਾਵਰ ਪਲੱਸ / ਮਲਟੀਪਲੈਕਸ ਕ੍ਰਾਂਤੀ', hi: 'साईं पावर प्लस / मल्टीप्लेक्स क्रांति', en: 'Sai power plus / Multiplex Kranti' },
+};
+
 const TRANSLATIONS = {
   pa: {
     headerTitle: '🌼 ਗੇਂਦੇ ਦੀ ਡ੍ਰੈਂਚਿੰਗ ਸ਼ਡਿਊਲ',
@@ -65,31 +93,25 @@ const TRANSLATIONS = {
   },
 };
 
-interface DoseItem {
-  srNo: number;
-  product: string;
-  quantity: string;
-}
-
 const DEFAULT_SCHEDULE: DoseItem[] = [
-  { srNo: 1, product: 'Jaggery (Gud)', quantity: '3 kg' },
-  { srNo: 2, product: 'Fulvic Acid', quantity: '500 g' },
-  { srNo: 3, product: 'DAP', quantity: '10 kg' },
-  { srNo: 4, product: 'MOP', quantity: '15 kg' },
-  { srNo: 5, product: 'Urea* (Apply only where growth is less)', quantity: '5 kg' },
-  { srNo: 6, product: 'Mustard Cake', quantity: '10 kg' },
-  { srNo: 7, product: 'Neem Cake', quantity: '5 kg' },
-  { srNo: 8, product: 'Sulphur', quantity: '2 kg' },
-  { srNo: 9, product: 'Magnesium Sulphate', quantity: '2 kg' },
-  { srNo: 10, product: 'Roko Fungicide', quantity: '250 g' },
-  { srNo: 11, product: 'Humic Acid', quantity: '2 kg' },
-  { srNo: 12, product: 'Boron 20%', quantity: '500 g' },
-  { srNo: 13, product: 'Biovita', quantity: '500 g' },
-  { srNo: 14, product: 'Amino Acid (Liquid 20%/50%)', quantity: '500 ml' },
-  { srNo: 15, product: 'Chelated Iron (Fe 12%)', quantity: '250 g' },
-  { srNo: 16, product: 'Chelated Zinc (Zn EDTA 12%)', quantity: '500 g' },
-  { srNo: 17, product: 'Chelated Calcium (10–12%)', quantity: '500 g' },
-  { srNo: 18, product: 'Sai power plus/multiplex kranti', quantity: '500 ml' },
+  { srNo: 1, productKey: 1, product: 'Jaggery (Gud)', quantity: '3 kg' },
+  { srNo: 2, productKey: 2, product: 'Fulvic Acid', quantity: '500 g' },
+  { srNo: 3, productKey: 3, product: 'DAP', quantity: '10 kg' },
+  { srNo: 4, productKey: 4, product: 'MOP', quantity: '15 kg' },
+  { srNo: 5, productKey: 5, product: 'Urea* (Apply only where growth is less)', quantity: '5 kg' },
+  { srNo: 6, productKey: 6, product: 'Mustard Cake', quantity: '10 kg' },
+  { srNo: 7, productKey: 7, product: 'Neem Cake', quantity: '5 kg' },
+  { srNo: 8, productKey: 8, product: 'Sulphur', quantity: '2 kg' },
+  { srNo: 9, productKey: 9, product: 'Magnesium Sulphate', quantity: '2 kg' },
+  { srNo: 10, productKey: 10, product: 'Roko Fungicide', quantity: '250 g' },
+  { srNo: 11, productKey: 11, product: 'Humic Acid', quantity: '2 kg' },
+  { srNo: 12, productKey: 12, product: 'Boron 20%', quantity: '500 g' },
+  { srNo: 13, productKey: 13, product: 'Biovita', quantity: '500 g' },
+  { srNo: 14, productKey: 14, product: 'Amino Acid (Liquid 20%/50%)', quantity: '500 ml' },
+  { srNo: 15, productKey: 15, product: 'Chelated Iron (Fe 12%)', quantity: '250 g' },
+  { srNo: 16, productKey: 16, product: 'Chelated Zinc (Zn EDTA 12%)', quantity: '500 g' },
+  { srNo: 17, productKey: 17, product: 'Chelated Calcium (10–12%)', quantity: '500 g' },
+  { srNo: 18, productKey: 18, product: 'Sai power plus/multiplex kranti', quantity: '500 ml' },
 ];
 
 export default function DosePage() {
@@ -106,6 +128,12 @@ export default function DosePage() {
 
   // Table Schedule Items State
   const [items, setItems] = useState<DoseItem[]>(DEFAULT_SCHEDULE);
+
+  const getProductName = (item: DoseItem) => {
+    const trans = PRODUCT_NAMES[item.productKey];
+    if (trans && trans[lang]) return trans[lang];
+    return item.product;
+  };
 
   const updateItemQuantity = (index: number, value: string) => {
     const updated = [...items];
@@ -126,7 +154,7 @@ export default function DosePage() {
           (item) => `
         <tr>
           <td style="border: 1px solid #10b981; padding: 10px; text-align: center; font-weight: bold; width: 12%;">${item.srNo}</td>
-          <td style="border: 1px solid #10b981; padding: 10px; font-weight: 600; width: 58%;">${item.product}</td>
+          <td style="border: 1px solid #10b981; padding: 10px; font-weight: 600; width: 58%;">${getProductName(item)}</td>
           <td style="border: 1px solid #10b981; padding: 10px; text-align: center; color: #15803d; font-weight: bold; width: 30%;">${item.quantity}</td>
         </tr>
       `
@@ -303,7 +331,7 @@ export default function DosePage() {
               <Text style={styles.srNoText}>{item.srNo}</Text>
               
               <Text style={styles.productText} numberOfLines={2}>
-                {item.product}
+                {getProductName(item)}
               </Text>
 
               {/* Quantity Input Box */}

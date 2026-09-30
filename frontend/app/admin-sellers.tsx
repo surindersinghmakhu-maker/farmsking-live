@@ -15,7 +15,7 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { apiClient } from '@/src/api/client';
 
 export default function AdminSellersScreen() {
@@ -121,65 +121,85 @@ export default function AdminSellersScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#064E3B" />
+      <StatusBar barStyle="light-content" backgroundColor="#022C22" />
 
-      {/* Header */}
+      {/* Header Bar */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color="#FFF" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>👑 Admin Seller Verification Hub</Text>
-        <View style={{ flexDirection: 'row', gap: 6 }}>
-          <TouchableOpacity style={styles.refreshBtn} onPress={() => router.push('/(tabs)/shop')}>
-            <Ionicons name="storefront" size={18} color="#10B981" />
+        <View style={styles.headerLeft}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={20} color="#34D399" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.refreshBtn} onPress={fetchStores}>
-            <Ionicons name="refresh" size={18} color="#10B981" />
+          <View style={styles.headerTitleBox}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <MaterialCommunityIcons name="shield-check-outline" size={20} color="#10B981" />
+              <Text style={styles.headerTitle}>Seller Verification Control</Text>
+            </View>
+            <Text style={styles.headerSubtitle}>FarmsKing National Vendor Hub • Admin Console</Text>
+          </View>
+        </View>
+
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.headerActionBtn} onPress={() => router.push('/(tabs)/shop')}>
+            <Ionicons name="storefront" size={16} color="#10B981" />
+            <Text style={styles.headerActionText}>Shop</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.headerActionBtn, styles.refreshBtn]} onPress={fetchStores}>
+            <Ionicons name="refresh" size={16} color="#10B981" />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Filter Tabs */}
-      <View style={styles.filterBar}>
-        {(['VERIFIED', 'PENDING', 'REJECTED', 'ALL'] as const).map((filter) => (
-          <TouchableOpacity
-            key={filter}
-            style={[styles.filterTab, selectedFilter === (filter as any) && styles.activeFilterTab]}
-            onPress={() => setSelectedFilter(filter as any)}
-          >
-            <Text style={[styles.filterText, selectedFilter === (filter as any) && styles.activeFilterText]}>
-              {filter}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      {/* Filter Chips Bar */}
+      <View style={styles.filterBarContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterBar}>
+          {(['VERIFIED', 'PENDING', 'REJECTED', 'ALL'] as const).map((filter) => {
+            const isActive = selectedFilter === filter;
+            return (
+              <TouchableOpacity
+                key={filter}
+                style={[styles.filterChip, isActive && styles.activeFilterChip]}
+                onPress={() => setSelectedFilter(filter)}
+                activeOpacity={0.7}
+              >
+                <View style={[
+                  styles.filterDot,
+                  filter === 'VERIFIED' ? { backgroundColor: '#10B981' } :
+                  filter === 'PENDING' ? { backgroundColor: '#F59E0B' } :
+                  filter === 'REJECTED' ? { backgroundColor: '#EF4444' } :
+                  { backgroundColor: '#6B7280' }
+                ]} />
+                <Text style={[styles.filterText, isActive && styles.activeFilterText]}>
+                  {filter}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {loading ? (
-          <ActivityIndicator size="large" color="#10B981" style={{ marginTop: 40 }} />
+          <View style={styles.loadingBox}>
+            <ActivityIndicator size="large" color="#10B981" />
+            <Text style={styles.loadingText}>Loading Seller Verification Records...</Text>
+          </View>
         ) : fetchError ? (
           <View style={styles.emptyContainer}>
-            <MaterialCommunityIcons name="shield-lock" size={54} color="#EF4444" />
-            <Text style={[styles.emptyText, { color: '#F87171', marginTop: 12, textAlign: 'center', paddingHorizontal: 20 }]}>
-              {fetchError}
-            </Text>
+            <MaterialCommunityIcons name="shield-lock-outline" size={48} color="#EF4444" />
+            <Text style={styles.errorTitle}>Access Restricted</Text>
+            <Text style={styles.errorSubtext}>{fetchError}</Text>
             <TouchableOpacity
-              style={{
-                marginTop: 20,
-                backgroundColor: '#10B981',
-                paddingVertical: 10,
-                paddingHorizontal: 20,
-                borderRadius: 8,
-              }}
+              style={styles.loginBtn}
               onPress={() => router.push('/(auth)/sign-in' as any)}
             >
-              <Text style={{ color: '#FFF', fontWeight: '700' }}>🔑 Admin Log In</Text>
+              <Ionicons name="key-outline" size={16} color="#FFF" />
+              <Text style={styles.loginBtnText}> Admin Sign In</Text>
             </TouchableOpacity>
           </View>
         ) : stores.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <MaterialCommunityIcons name="store-search-outline" size={48} color="#6B7280" />
-            <Text style={styles.emptyText}>No seller stores found for filter: {selectedFilter}</Text>
+            <MaterialCommunityIcons name="store-search-outline" size={44} color="#4B5563" />
+            <Text style={styles.emptyText}>No seller accounts found under filter "{selectedFilter}"</Text>
           </View>
         ) : (
           stores.map((store) => {
@@ -190,38 +210,66 @@ export default function AdminSellersScreen() {
 
             return (
               <View key={store.id} style={styles.storeCard}>
+                {/* Compact Card Header Row */}
                 <TouchableOpacity
-                  activeOpacity={0.8}
+                  activeOpacity={0.7}
                   style={styles.storeHeader}
                   onPress={() => toggleExpandStore(store.id, defaultExpanded)}
                 >
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.storeName}>{store.storeName}</Text>
-                    <Text style={styles.sellerName}>
-                      👤 Owner: {store.seller?.name || 'Unknown'} (📞 {store.seller?.mobile})
-                    </Text>
-                    <Text style={styles.slugText}>🌐 farmsking.in/store/{store.slug}</Text>
+                  <View style={styles.storeHeaderMain}>
+                    <View style={styles.storeTitleRow}>
+                      <View style={styles.storeIconBox}>
+                        <Ionicons name="business" size={14} color="#10B981" />
+                      </View>
+                      <Text style={styles.storeName} numberOfLines={1}>{store.storeName}</Text>
+                    </View>
+
+                    <View style={styles.metaRow}>
+                      <View style={styles.metaItem}>
+                        <Ionicons name="person-outline" size={12} color="#9CA3AF" />
+                        <Text style={styles.metaText} numberOfLines={1}>{store.seller?.name || 'Seller'}</Text>
+                      </View>
+                      <Text style={styles.metaDot}>•</Text>
+                      <View style={styles.metaItem}>
+                        <Ionicons name="call-outline" size={12} color="#9CA3AF" />
+                        <Text style={styles.metaText}>{store.seller?.mobile || 'N/A'}</Text>
+                      </View>
+                      <Text style={styles.metaDot}>•</Text>
+                      <View style={styles.metaItem}>
+                        <Ionicons name="globe-outline" size={12} color="#059669" />
+                        <Text style={styles.slugText} numberOfLines={1}>{store.slug}</Text>
+                      </View>
+                    </View>
                   </View>
 
-                  <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                  {/* Status Badge + Expand Toggle Pill */}
+                  <View style={styles.badgeContainer}>
                     <View
                       style={[
                         styles.kycBadge,
-                        {
-                          backgroundColor: isVerified ? '#065F46' : isRejected ? '#991B1B' : '#92400E',
-                        },
+                        isVerified ? styles.badgeVerified :
+                        isRejected ? styles.badgeRejected :
+                        styles.badgePending,
                       ]}
                     >
-                      <Text style={styles.kycBadgeText}>{store.kycStatus}</Text>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-                      <Text style={{ color: '#9CA3AF', fontSize: 11, fontWeight: '600' }}>
-                        {isExpanded ? 'Collapse' : 'Expand'}
+                      <View style={[
+                        styles.statusDot,
+                        { backgroundColor: isVerified ? '#34D399' : isRejected ? '#F87171' : '#FBBF24' }
+                      ]} />
+                      <Text style={[
+                        styles.kycBadgeText,
+                        { color: isVerified ? '#6EE7B7' : isRejected ? '#FCA5A5' : '#FDE68A' }
+                      ]}>
+                        {store.kycStatus}
                       </Text>
+                    </View>
+
+                    <View style={styles.expandPill}>
+                      <Text style={styles.expandPillText}>{isExpanded ? 'Hide' : 'Inspect'}</Text>
                       <Ionicons
                         name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                        size={18}
-                        color="#10B981"
+                        size={14}
+                        color="#9CA3AF"
                       />
                     </View>
                   </View>
@@ -229,53 +277,83 @@ export default function AdminSellersScreen() {
 
                 {/* Expanded Details Body */}
                 {isExpanded && (
-                  <View style={{ marginTop: 12 }}>
-                    {/* Rejection Reason Alert if Rejected */}
+                  <View style={styles.expandedContent}>
+                    {/* Rejection Alert */}
                     {isRejected && store.rejectionReason && (
-                      <View style={{ backgroundColor: '#450A0A', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#991B1B', marginBottom: 12 }}>
-                        <Text style={{ color: '#F87171', fontWeight: '700', fontSize: 12 }}>
-                          ⚠️ Rejection Reason: {store.rejectionReason}
+                      <View style={styles.rejectionAlert}>
+                        <Ionicons name="alert-circle-outline" size={16} color="#F87171" />
+                        <Text style={styles.rejectionText}>
+                          Reason: {store.rejectionReason}
                         </Text>
                       </View>
                     )}
 
-                    {/* Details Box */}
-                    <View style={styles.detailsBox}>
-                      <Text style={styles.detailText}>🏢 Registered Legal Firm Name: <Text style={styles.highlightText}>{store.legalName || 'N/A'}</Text></Text>
-                      <Text style={styles.detailText}>📜 GSTIN Number: <Text style={styles.highlightText}>{store.gstin || 'N/A'}</Text></Text>
-                      <Text style={styles.detailText}>💳 Business PAN: <Text style={styles.highlightText}>{store.panNumber || 'N/A'}</Text></Text>
-                      <Text style={styles.detailText}>
-                        🏦 Bank Acc No: <Text style={styles.highlightText}>{store.bankAccountNo || 'N/A'}</Text> (IFSC: {store.bankIfsc || 'N/A'})
-                      </Text>
-                      <Text style={styles.detailText}>
-                        📍 Pickup Warehouse: <Text style={styles.highlightText}>{store.pickupAddress || 'N/A'} ({store.pickupCity}, {store.pickupState} - {store.pickupPincode})</Text>
-                      </Text>
-                      <Text style={styles.detailText}>
-                        💰 Current Platform Fee: <Text style={{ color: '#10B981', fontWeight: '800' }}>{store.commissionRate}%</Text>
-                      </Text>
+                    {/* Concise Details Grid */}
+                    <View style={styles.detailsGrid}>
+                      <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Firm Legal Name:</Text>
+                        <Text style={styles.detailVal} numberOfLines={1}>{store.legalName || 'N/A'}</Text>
+                      </View>
+                      
+                      <View style={styles.detailTwoCol}>
+                        <View style={styles.detailCol}>
+                          <Text style={styles.detailLabel}>GSTIN:</Text>
+                          <Text style={styles.detailValMonospace}>{store.gstin || 'N/A'}</Text>
+                        </View>
+                        <View style={styles.detailCol}>
+                          <Text style={styles.detailLabel}>PAN:</Text>
+                          <Text style={styles.detailValMonospace}>{store.panNumber || 'N/A'}</Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.detailTwoCol}>
+                        <View style={styles.detailCol}>
+                          <Text style={styles.detailLabel}>Bank Account:</Text>
+                          <Text style={styles.detailValMonospace}>{store.bankAccountNo || 'N/A'}</Text>
+                        </View>
+                        <View style={styles.detailCol}>
+                          <Text style={styles.detailLabel}>IFSC Code:</Text>
+                          <Text style={styles.detailValMonospace}>{store.bankIfsc || 'N/A'}</Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Warehouse:</Text>
+                        <Text style={styles.detailVal} numberOfLines={2}>
+                          {store.pickupAddress ? `${store.pickupAddress}, ${store.pickupCity}, ${store.pickupState} - ${store.pickupPincode}` : 'N/A'}
+                        </Text>
+                      </View>
+
+                      <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Platform Commission:</Text>
+                        <Text style={styles.commissionVal}>{store.commissionRate}%</Text>
+                      </View>
                     </View>
 
-                    {/* Uploaded Documents Inspection Panel - REMOVED FOR REJECTED STORES */}
+                    {/* Uploaded Documents Panel */}
                     {!isRejected && (
                       <View style={styles.docPanel}>
-                        <Text style={styles.docPanelTitle}>🖼️ Uploaded Documents & Certificates:</Text>
+                        <Text style={styles.docPanelTitle}>Verified Verification Uploads</Text>
                         <View style={styles.docRow}>
                           {/* GST Doc */}
                           <TouchableOpacity
                             style={styles.docThumbBox}
+                            activeOpacity={0.8}
                             onPress={() => {
                               if (store.gstDocUrl) {
                                 setPreviewDocTitle(`GST Certificate - ${store.storeName}`);
                                 setPreviewDocUrl(store.gstDocUrl);
                               } else {
-                                showAlert('No Document ⚠️', 'Seller has not attached a GST Certificate photo yet.');
+                                showAlert('No Document ⚠️', 'Seller has not attached a GST Certificate photo.');
                               }
                             }}
                           >
                             {store.gstDocUrl ? (
                               <Image source={{ uri: store.gstDocUrl }} style={styles.docImage} />
                             ) : (
-                              <Ionicons name="document-text-outline" size={24} color="#6B7280" />
+                              <View style={styles.docPlaceholder}>
+                                <Ionicons name="document-text-outline" size={20} color="#4B5563" />
+                              </View>
                             )}
                             <Text style={styles.docThumbLabel}>GST Cert</Text>
                           </TouchableOpacity>
@@ -283,19 +361,22 @@ export default function AdminSellersScreen() {
                           {/* PAN Card Doc */}
                           <TouchableOpacity
                             style={styles.docThumbBox}
+                            activeOpacity={0.8}
                             onPress={() => {
                               if (store.panDocUrl) {
-                                setPreviewDocTitle(`PAN Card Photo - ${store.storeName}`);
+                                setPreviewDocTitle(`PAN Card - ${store.storeName}`);
                                 setPreviewDocUrl(store.panDocUrl);
                               } else {
-                                showAlert('No Document ⚠️', 'Seller has not attached a PAN Card photo yet.');
+                                showAlert('No Document ⚠️', 'Seller has not attached a PAN Card photo.');
                               }
                             }}
                           >
                             {store.panDocUrl ? (
                               <Image source={{ uri: store.panDocUrl }} style={styles.docImage} />
                             ) : (
-                              <Ionicons name="card-outline" size={24} color="#6B7280" />
+                              <View style={styles.docPlaceholder}>
+                                <Ionicons name="card-outline" size={20} color="#4B5563" />
+                              </View>
                             )}
                             <Text style={styles.docThumbLabel}>PAN Card</Text>
                           </TouchableOpacity>
@@ -303,19 +384,22 @@ export default function AdminSellersScreen() {
                           {/* Cancelled Cheque / Bank Passbook Doc */}
                           <TouchableOpacity
                             style={styles.docThumbBox}
+                            activeOpacity={0.8}
                             onPress={() => {
                               if (store.chequeDocUrl) {
-                                setPreviewDocTitle(`Cancelled Cheque / Passbook - ${store.storeName}`);
+                                setPreviewDocTitle(`Bank Passbook / Cheque - ${store.storeName}`);
                                 setPreviewDocUrl(store.chequeDocUrl);
                               } else {
-                                showAlert('No Document ⚠️', 'Seller has not attached a Cancelled Cheque / Passbook photo yet.');
+                                showAlert('No Document ⚠️', 'Seller has not attached a Cancelled Cheque / Passbook photo.');
                               }
                             }}
                           >
                             {store.chequeDocUrl ? (
                               <Image source={{ uri: store.chequeDocUrl }} style={styles.docImage} />
                             ) : (
-                              <Ionicons name="cash-outline" size={24} color="#6B7280" />
+                              <View style={styles.docPlaceholder}>
+                                <Ionicons name="cash-outline" size={20} color="#4B5563" />
+                              </View>
                             )}
                             <Text style={styles.docThumbLabel}>Bank Cheque</Text>
                           </TouchableOpacity>
@@ -323,73 +407,82 @@ export default function AdminSellersScreen() {
                       </View>
                     )}
 
-                    {/* Approval & Decision Actions */}
+                    {/* Action Bar */}
                     {!isRejected && (
                       <View style={styles.actionRow}>
                         {editingStoreId === store.id ? (
                           <View style={styles.editCommissionBox}>
-                            <Text style={{ color: '#FFF', fontSize: 12, marginBottom: 4, fontWeight: '700' }}>
-                              Set Custom Platform Commission (%):
-                            </Text>
-                            <TextInput
-                              style={styles.commissionInput}
-                              keyboardType="numeric"
-                              value={customCommission}
-                              onChangeText={setCustomCommission}
-                            />
+                            <View style={styles.inputGroup}>
+                              <Text style={styles.inputLabel}>Platform Commission Rate (%)</Text>
+                              <TextInput
+                                style={styles.compactInput}
+                                keyboardType="numeric"
+                                value={customCommission}
+                                onChangeText={setCustomCommission}
+                                placeholder="5.0"
+                                placeholderTextColor="#6B7280"
+                              />
+                            </View>
 
-                            <Text style={{ color: '#F87171', fontSize: 12, marginTop: 10, marginBottom: 4, fontWeight: '700' }}>
-                              Rejection Reason (Required if Rejecting):
-                            </Text>
-                            <TextInput
-                              style={[styles.commissionInput, { borderColor: '#7F1D1D' }]}
-                              placeholder="e.g. Blurry GST certificate, IFSC code mismatch"
-                              placeholderTextColor="#9CA3AF"
-                              value={rejectionReasonInput}
-                              onChangeText={setRejectionReasonInput}
-                            />
+                            <View style={[styles.inputGroup, { marginTop: 8 }]}>
+                              <Text style={[styles.inputLabel, { color: '#F87171' }]}>Rejection Reason (Required if rejecting)</Text>
+                              <TextInput
+                                style={[styles.compactInput, { borderColor: '#991B1B' }]}
+                                placeholder="e.g. Invalid GSTIN or blurry document photo"
+                                placeholderTextColor="#6B7280"
+                                value={rejectionReasonInput}
+                                onChangeText={setRejectionReasonInput}
+                              />
+                            </View>
 
-                            <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+                            <View style={styles.drawerActions}>
                               <TouchableOpacity
-                                style={[styles.btn, { backgroundColor: '#059669', flex: 1, justifyContent: 'center' }]}
+                                style={[styles.btn, styles.btnApprove]}
                                 onPress={() => handleUpdateKyc(store.id, 'VERIFIED')}
                               >
-                                <Ionicons name="checkmark-circle" size={16} color="#FFF" />
-                                <Text style={styles.btnText}> Approve KYC</Text>
+                                <Ionicons name="checkmark-circle" size={15} color="#FFF" />
+                                <Text style={styles.btnText}> Approve Store</Text>
                               </TouchableOpacity>
+
                               <TouchableOpacity
-                                style={[styles.btn, { backgroundColor: '#DC2626', flex: 1, justifyContent: 'center' }]}
+                                style={[styles.btn, styles.btnReject]}
                                 onPress={() => handleUpdateKyc(store.id, 'REJECTED')}
                               >
-                                <Ionicons name="close-circle" size={16} color="#FFF" />
-                                <Text style={styles.btnText}> Reject Application</Text>
+                                <Ionicons name="close-circle" size={15} color="#FFF" />
+                                <Text style={styles.btnText}> Reject Store</Text>
+                              </TouchableOpacity>
+
+                              <TouchableOpacity
+                                style={[styles.btn, styles.btnCancel]}
+                                onPress={() => setEditingStoreId(null)}
+                              >
+                                <Text style={[styles.btnText, { color: '#9CA3AF' }]}>Cancel</Text>
                               </TouchableOpacity>
                             </View>
                           </View>
                         ) : (
-                          <>
-                            {/* Verify Data Button is HIDDEN if store is ALREADY VERIFIED */}
+                          <View style={styles.mainBtnGroup}>
                             {!isVerified && (
                               <TouchableOpacity
-                                style={[styles.btn, { backgroundColor: '#059669' }]}
+                                style={[styles.btn, styles.btnVerify]}
                                 onPress={() => {
                                   setEditingStoreId(store.id);
                                   setCustomCommission(store.commissionRate?.toString() || '5.0');
                                 }}
                               >
-                                <Ionicons name="shield-checkmark" size={16} color="#FFF" />
-                                <Text style={styles.btnText}> Verify Data</Text>
+                                <Ionicons name="shield-checkmark-outline" size={15} color="#FFF" />
+                                <Text style={styles.btnText}> Verify KYC</Text>
                               </TouchableOpacity>
                             )}
 
                             <TouchableOpacity
-                              style={[styles.btn, { backgroundColor: '#2563EB' }]}
+                              style={[styles.btn, styles.btnGstr8]}
                               onPress={() => handleDownloadGstr8(store.id)}
                             >
-                              <FontAwesome5 name="file-invoice-dollar" size={14} color="#FFF" />
-                              <Text style={styles.btnText}> GSTR-8 Tax Report</Text>
+                              <MaterialCommunityIcons name="file-document-outline" size={15} color="#FFF" />
+                              <Text style={styles.btnText}> GSTR-8 Audit</Text>
                             </TouchableOpacity>
-                          </>
+                          </View>
                         )}
                       </View>
                     )}
@@ -401,15 +494,15 @@ export default function AdminSellersScreen() {
         )}
       </ScrollView>
 
-      {/* Full-Screen Document Inspection Image Modal */}
+      {/* Document Inspection Image Modal */}
       {previewDocUrl ? (
         <Modal visible={true} transparent={true} animationType="fade">
           <View style={styles.modalOverlay}>
             <View style={styles.imageModalContainer}>
               <View style={styles.imageModalHeader}>
-                <Text style={styles.imageModalTitle}>{previewDocTitle}</Text>
+                <Text style={styles.imageModalTitle} numberOfLines={1}>{previewDocTitle}</Text>
                 <TouchableOpacity onPress={() => setPreviewDocUrl(null)} style={styles.closeBtn}>
-                  <Ionicons name="close-circle" size={28} color="#FFF" />
+                  <Ionicons name="close" size={22} color="#FFF" />
                 </TouchableOpacity>
               </View>
               <Image source={{ uri: previewDocUrl }} style={styles.fullDocImage} resizeMode="contain" />
@@ -418,15 +511,18 @@ export default function AdminSellersScreen() {
         </Modal>
       ) : null}
 
-      {/* GSTR-8 Tax Report Detail Modal */}
+      {/* GSTR-8 Tax Report Modal */}
       {gstr8ModalVisible ? (
         <Modal visible={true} transparent={true} animationType="slide">
           <View style={styles.modalOverlay}>
             <View style={styles.gstr8ModalBox}>
               <View style={styles.imageModalHeader}>
-                <Text style={styles.imageModalTitle}>📊 CA GSTR-8 (1% GST TCS) Tax Summary</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <MaterialCommunityIcons name="cash-register" size={20} color="#10B981" />
+                  <Text style={styles.imageModalTitle}>GSTR-8 (1% GST TCS) Audit Report</Text>
+                </View>
                 <TouchableOpacity onPress={() => setGstr8ModalVisible(false)} style={styles.closeBtn}>
-                  <Ionicons name="close-circle" size={28} color="#FFF" />
+                  <Ionicons name="close" size={22} color="#FFF" />
                 </TouchableOpacity>
               </View>
 
@@ -435,32 +531,45 @@ export default function AdminSellersScreen() {
               ) : gstr8Data ? (
                 <ScrollView style={{ maxHeight: 420, paddingVertical: 10 }}>
                   <View style={styles.gstrSummaryCard}>
-                    <Text style={styles.gstrValText}>Gross Sales Value: <Text style={{ color: '#10B981' }}>₹{gstr8Data.totalGrossSales}</Text></Text>
-                    <Text style={styles.gstrValText}>Net Taxable Supply: <Text style={{ color: '#3B82F6' }}>₹{gstr8Data.netTaxableValue}</Text></Text>
-                    <Text style={styles.gstrValText}>0.5% CGST TCS: ₹{gstr8Data.cgstTcs}</Text>
-                    <Text style={styles.gstrValText}>0.5% SGST TCS: ₹{gstr8Data.sgstTcs}</Text>
-                    <Text style={[styles.gstrValText, { fontSize: 16, marginTop: 4, fontWeight: '800' }]}>
-                      Total 1% GST TCS: <Text style={{ color: '#F59E0B' }}>₹{gstr8Data.totalTcs}</Text>
-                    </Text>
+                    <View style={styles.gstrRow}>
+                      <Text style={styles.gstrLabel}>Gross Sales Value:</Text>
+                      <Text style={[styles.gstrValText, { color: '#10B981' }]}>₹{gstr8Data.totalGrossSales}</Text>
+                    </View>
+                    <View style={styles.gstrRow}>
+                      <Text style={styles.gstrLabel}>Net Taxable Supply:</Text>
+                      <Text style={[styles.gstrValText, { color: '#60A5FA' }]}>₹{gstr8Data.netTaxableValue}</Text>
+                    </View>
+                    <View style={styles.gstrRow}>
+                      <Text style={styles.gstrLabel}>0.5% CGST TCS:</Text>
+                      <Text style={styles.gstrValText}>₹{gstr8Data.cgstTcs}</Text>
+                    </View>
+                    <View style={styles.gstrRow}>
+                      <Text style={styles.gstrLabel}>0.5% SGST TCS:</Text>
+                      <Text style={styles.gstrValText}>₹{gstr8Data.sgstTcs}</Text>
+                    </View>
+                    <View style={[styles.gstrRow, { marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: '#374151' }]}>
+                      <Text style={[styles.gstrLabel, { color: '#FFF', fontWeight: '800' }]}>Total 1% TCS Collected:</Text>
+                      <Text style={[styles.gstrValText, { color: '#F59E0B', fontSize: 15, fontWeight: '800' }]}>₹{gstr8Data.totalTcs}</Text>
+                    </View>
                   </View>
 
-                  <Text style={{ color: '#D1D5DB', fontSize: 13, fontWeight: '700', marginTop: 12, marginBottom: 6 }}>
-                    📦 Eligible Sales Orders ({gstr8Data.itemCount || 0} items):
+                  <Text style={styles.gstrSectionHeader}>
+                    Eligible Sales Orders ({gstr8Data.itemCount || 0} items)
                   </Text>
                   {gstr8Data.itemsSummary && gstr8Data.itemsSummary.length > 0 ? (
                     gstr8Data.itemsSummary.map((item: any, idx: number) => (
                       <View key={idx} style={styles.gstrItemRow}>
-                        <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '700' }}>{item.productName}</Text>
-                        <Text style={{ color: '#9CA3AF', fontSize: 11 }}>
+                        <Text style={{ color: '#F3F4F6', fontSize: 13, fontWeight: '700' }}>{item.productName}</Text>
+                        <Text style={{ color: '#9CA3AF', fontSize: 11, marginTop: 2 }}>
                           HSN: {item.hsnCode} | Qty: {item.quantity} | Subtotal: ₹{item.subtotal}
                         </Text>
-                        <Text style={{ color: '#F59E0B', fontSize: 11, fontWeight: '700' }}>
-                          1% TCS Share: ₹{item.tcsAmount} (Order: {item.orderNumber})
+                        <Text style={{ color: '#F59E0B', fontSize: 11, fontWeight: '700', marginTop: 2 }}>
+                          1% TCS Share: ₹{item.tcsAmount} (Order: #{item.orderNumber})
                         </Text>
                       </View>
                     ))
                   ) : (
-                    <Text style={{ color: '#9CA3AF', fontSize: 12 }}>No taxable sales recorded for selected period.</Text>
+                    <Text style={{ color: '#9CA3AF', fontSize: 12, marginTop: 4 }}>No taxable sales recorded for selected period.</Text>
                   )}
                 </ScrollView>
               ) : null}
@@ -473,90 +582,557 @@ export default function AdminSellersScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0B0F17' },
+  container: {
+    flex: 1,
+    backgroundColor: '#090D16',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#064E3B',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    backgroundColor: '#022C22',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#064E3B',
   },
-  backBtn: { padding: 4 },
-  refreshBtn: { backgroundColor: '#065F46', padding: 8, borderRadius: 8 },
-  headerTitle: { color: '#FFF', fontSize: 16, fontWeight: '700' },
-
-  filterBar: { flexDirection: 'row', backgroundColor: '#111827', padding: 6 },
-  filterTab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8 },
-  activeFilterTab: { backgroundColor: '#059669' },
-  filterText: { color: '#9CA3AF', fontSize: 13, fontWeight: '600' },
-  activeFilterText: { color: '#FFF', fontWeight: '700' },
-
-  scrollContent: { padding: 16 },
-  emptyContainer: { alignItems: 'center', marginTop: 60 },
-  emptyText: { color: '#9CA3AF', marginTop: 12, fontSize: 14 },
-
-  storeCard: {
-    backgroundColor: '#1F2937',
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 16,
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  backBtn: {
+    padding: 6,
+    borderRadius: 8,
+    backgroundColor: '#064E3B40',
+  },
+  headerTitleBox: {
+    flex: 1,
+  },
+  headerTitle: {
+    color: '#F9FAFB',
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: -0.2,
+  },
+  headerSubtitle: {
+    color: '#6EE7B7',
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 1,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  headerActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#064E3B60',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: '#05966940',
   },
-  storeHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  storeName: { color: '#F9FAFB', fontSize: 17, fontWeight: '700' },
-  sellerName: { color: '#D1D5DB', fontSize: 13, marginTop: 2 },
-  slugText: { color: '#10B981', fontSize: 12, marginTop: 2 },
-  kycBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, height: 26 },
-  kycBadgeText: { color: '#FFF', fontSize: 11, fontWeight: '700' },
+  refreshBtn: {
+    paddingHorizontal: 8,
+  },
+  headerActionText: {
+    color: '#D1D5DB',
+    fontSize: 11,
+    fontWeight: '700',
+  },
 
-  detailsBox: {
-    backgroundColor: '#111827',
+  // Filter Chips
+  filterBarContainer: {
+    backgroundColor: '#0F172A',
+    borderBottomWidth: 1,
+    borderBottomColor: '#1E293B',
+    paddingVertical: 8,
+  },
+  filterBar: {
+    paddingHorizontal: 12,
+    gap: 8,
+    flexDirection: 'row',
+  },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: '#1E293B',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  activeFilterChip: {
+    backgroundColor: '#064E3B',
+    borderColor: '#10B981',
+  },
+  filterDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  filterText: {
+    color: '#94A3B8',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  activeFilterText: {
+    color: '#ECFDF5',
+  },
+
+  scrollContent: {
+    padding: 12,
+  },
+  loadingBox: {
+    alignItems: 'center',
+    marginTop: 60,
+    gap: 12,
+  },
+  loadingText: {
+    color: '#9CA3AF',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    marginTop: 60,
+    paddingHorizontal: 20,
+  },
+  errorTitle: {
+    color: '#F87171',
+    fontSize: 16,
+    fontWeight: '800',
+    marginTop: 8,
+  },
+  errorSubtext: {
+    color: '#9CA3AF',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 4,
+    lineHeight: 18,
+  },
+  loginBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 16,
+    backgroundColor: '#10B981',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  loginBtnText: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  emptyText: {
+    color: '#6B7280',
+    marginTop: 10,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  // Store Card
+  storeCard: {
+    backgroundColor: '#0F172A',
+    borderRadius: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#1E293B',
+    overflow: 'hidden',
+  },
+  storeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: '#0F172A',
+  },
+  storeHeaderMain: {
+    flex: 1,
+    marginRight: 10,
+  },
+  storeTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  storeIconBox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    backgroundColor: '#064E3B40',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#05966930',
+  },
+  storeName: {
+    color: '#F1F5F9',
+    fontSize: 14,
+    fontWeight: '800',
+    flex: 1,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 4,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  metaText: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  metaDot: {
+    color: '#475569',
+    fontSize: 10,
+  },
+  slugText: {
+    color: '#34D399',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+
+  // Badges & Actions
+  badgeContainer: {
+    alignItems: 'flex-end',
+    gap: 4,
+  },
+  kycBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  badgeVerified: {
+    backgroundColor: '#064E3B50',
+    borderColor: '#05966980',
+  },
+  badgeRejected: {
+    backgroundColor: '#7F1D1D50',
+    borderColor: '#DC262680',
+  },
+  badgePending: {
+    backgroundColor: '#78350F50',
+    borderColor: '#D9770680',
+  },
+  statusDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+  },
+  kycBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  expandPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    backgroundColor: '#1E293B',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  expandPillText: {
+    color: '#94A3B8',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+
+  // Expanded Content
+  expandedContent: {
+    paddingHorizontal: 12,
+    paddingBottom: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#1E293B',
+    backgroundColor: '#090D16',
+  },
+  rejectionAlert: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#270C0C',
+    padding: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#7F1D1D',
+    marginTop: 8,
+  },
+  rejectionText: {
+    color: '#FCA5A5',
+    fontSize: 11,
+    fontWeight: '700',
+    flex: 1,
+  },
+
+  // Details Grid
+  detailsGrid: {
+    backgroundColor: '#0F172A',
     borderRadius: 8,
     padding: 10,
-    marginVertical: 8,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#1E293B',
+    gap: 6,
   },
-  detailText: { color: '#9CA3AF', fontSize: 12, marginVertical: 2 },
-  highlightText: { color: '#F3F4F6', fontWeight: '700' },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  detailTwoCol: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  detailCol: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  detailLabel: {
+    color: '#64748B',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  detailVal: {
+    color: '#E2E8F0',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  detailValMonospace: {
+    color: '#38BDF8',
+    fontSize: 11,
+    fontWeight: '700',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  commissionVal: {
+    color: '#10B981',
+    fontSize: 12,
+    fontWeight: '800',
+  },
 
-  docPanel: { backgroundColor: '#111827', borderRadius: 8, padding: 10, marginTop: 4, marginBottom: 8 },
-  docPanelTitle: { color: '#D1D5DB', fontSize: 12, fontWeight: '700', marginBottom: 8 },
-  docRow: { flexDirection: 'row', gap: 10 },
-  docThumbBox: { flex: 1, backgroundColor: '#1F2937', height: 75, borderRadius: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#374151', overflow: 'hidden' },
-  docImage: { width: '100%', height: 52, resizeMode: 'cover' },
-  docThumbLabel: { color: '#9CA3AF', fontSize: 10, fontWeight: '600', marginTop: 2 },
+  // Doc Panel
+  docPanel: {
+    backgroundColor: '#0F172A',
+    borderRadius: 8,
+    padding: 8,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#1E293B',
+  },
+  docPanelTitle: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  docRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  docThumbBox: {
+    flex: 1,
+    backgroundColor: '#1E293B',
+    height: 60,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#334155',
+    overflow: 'hidden',
+  },
+  docImage: {
+    width: '100%',
+    height: 42,
+    resizeMode: 'cover',
+  },
+  docPlaceholder: {
+    height: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  docThumbLabel: {
+    color: '#94A3B8',
+    fontSize: 9,
+    fontWeight: '700',
+    marginTop: 2,
+  },
 
-  actionRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 10 },
+  // Actions
+  actionRow: {
+    marginTop: 8,
+  },
+  mainBtnGroup: {
+    flexDirection: 'row',
+    gap: 8,
+    justifyContent: 'flex-end',
+  },
   btn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 6,
   },
-  btnText: { color: '#FFF', fontSize: 13, fontWeight: '700' },
-
-  editCommissionBox: { width: '100%', backgroundColor: '#111827', padding: 10, borderRadius: 8 },
-  commissionInput: {
-    backgroundColor: '#1F2937',
+  btnVerify: {
+    backgroundColor: '#059669',
+  },
+  btnGstr8: {
+    backgroundColor: '#2563EB',
+  },
+  btnApprove: {
+    backgroundColor: '#059669',
+    flex: 1,
+    justifyContent: 'center',
+  },
+  btnReject: {
+    backgroundColor: '#DC2626',
+    flex: 1,
+    justifyContent: 'center',
+  },
+  btnCancel: {
+    backgroundColor: '#1E293B',
+    paddingHorizontal: 10,
+  },
+  btnText: {
     color: '#FFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+
+  editCommissionBox: {
+    backgroundColor: '#0F172A',
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#1E293B',
+  },
+  inputGroup: {
+    gap: 4,
+  },
+  inputLabel: {
+    color: '#CBD5E1',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  compactInput: {
+    backgroundColor: '#1E293B',
+    color: '#F8FAFC',
     borderRadius: 6,
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 5,
+    fontSize: 12,
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: '#334155',
+  },
+  drawerActions: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: 10,
   },
 
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 16 },
-  imageModalContainer: { width: '100%', maxWidth: 500, backgroundColor: '#111827', borderRadius: 14, padding: 14 },
-  imageModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  imageModalTitle: { color: '#FFF', fontSize: 15, fontWeight: '700' },
-  closeBtn: { padding: 2 },
-  fullDocImage: { width: '100%', height: 350, borderRadius: 8 },
+  // Modals
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  imageModalContainer: {
+    width: '100%',
+    maxWidth: 480,
+    backgroundColor: '#0F172A',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#1E293B',
+  },
+  imageModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  imageModalTitle: {
+    color: '#F8FAFC',
+    fontSize: 14,
+    fontWeight: '700',
+    flex: 1,
+  },
+  closeBtn: {
+    padding: 2,
+  },
+  fullDocImage: {
+    width: '100%',
+    height: 320,
+    borderRadius: 6,
+  },
 
-  gstr8ModalBox: { width: '100%', maxWidth: 540, backgroundColor: '#111827', borderRadius: 14, padding: 16 },
-  gstrSummaryCard: { backgroundColor: '#1F2937', borderRadius: 8, padding: 12, gap: 4 },
-  gstrValText: { color: '#F3F4F6', fontSize: 13, fontWeight: '700' },
-  gstrItemRow: { backgroundColor: '#1F2937', borderRadius: 6, padding: 8, marginVertical: 4, borderWidth: 1, borderColor: '#374151' },
+  gstr8ModalBox: {
+    width: '100%',
+    maxWidth: 520,
+    backgroundColor: '#0F172A',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#1E293B',
+  },
+  gstrSummaryCard: {
+    backgroundColor: '#1E293B',
+    borderRadius: 8,
+    padding: 10,
+    gap: 6,
+  },
+  gstrRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  gstrLabel: {
+    color: '#94A3B8',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  gstrValText: {
+    color: '#F8FAFC',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  gstrSectionHeader: {
+    color: '#CBD5E1',
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 12,
+    marginBottom: 6,
+  },
+  gstrItemRow: {
+    backgroundColor: '#1E293B',
+    borderRadius: 6,
+    padding: 8,
+    marginVertical: 3,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
 });

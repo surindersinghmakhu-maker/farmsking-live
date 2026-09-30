@@ -330,18 +330,18 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* ── My Button: Marigold Editable Schedule Quick Link ── */}
+          {/* ── SK Button: Marigold Editable Schedule Quick Link ── */}
           <TouchableOpacity
             style={styles.myButtonCard}
-            onPress={() => router.push('/my')}
+            onPress={() => router.push('/sk')}
             activeOpacity={0.85}
           >
             <View style={styles.myButtonIconCircle}>
               <Ionicons name="leaf" size={20} color="#15803d" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.myButtonTitle}>🌼 Marigold Drenching Schedule (My Button)</Text>
-              <Text style={styles.myButtonSubtitle}>Editable Form & PDF Report Download</Text>
+              <Text style={styles.myButtonTitle}>🌼 Marigold Drenching Schedule (SK Button)</Text>
+              <Text style={styles.myButtonSubtitle}>Editable Form & PDF Report Download (/sk)</Text>
             </View>
             <Ionicons name="arrow-forward-circle" size={22} color="#15803d" />
           </TouchableOpacity>

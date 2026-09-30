@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const LIVE_API_URL = 'https://farmsking.tech/api/v1';
+const LIVE_API_URL = 'https://farmsking.in/api/v1';
 const SUPER_ADMIN_MOBILE = '9872066901';
 const SUPER_ADMIN_PASSWORD = '12345678';
 
@@ -95,7 +95,7 @@ async function main() {
 
   // 3. Final Verification
   console.log('\n================================================');
-  console.log('3. Verifying Online Products List on farmsking.tech...');
+  console.log('3. Verifying Online Products List on farmsking.in...');
   const verifyRes = await fetch(`${LIVE_API_URL}/products`);
   const verifyData = await verifyRes.json();
 

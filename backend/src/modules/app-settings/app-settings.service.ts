@@ -17,6 +17,31 @@ export class AppSettingsService {
     this.cache = null;
   }
 
+  async getSeo() {
+    const settings = await this.get();
+    return {
+      seoTitle: (settings as any).seoTitle || "FarmsKing - Direct Farmer Marketplace for All India | Makhu, Punjab (ਮੱਖੂ)",
+      metaDescription: (settings as any).metaDescription || "FarmsKing (farmsking.in) is operated from Makhu town (Ferozepur, Punjab). Farmers from ALL INDIA can list and sell their authentic handmade, organic, and direct farm products, access live mandi rates, Agri AI doctor advice, and genuine seeds & fertilizers.",
+      metaKeywords: (settings as any).metaKeywords || "FarmsKing, Makhu, Makhu Punjab, farmsking.in, www.farmsking.in, all india farmers marketplace, list farmer products India, handmade farmer products, organic jaggery gud, natural seeds, live mandi rates, crop doctor ai, buy genuine seeds fertilizers, farmer marketplace, kheti mitra, Surinder Agro Farm",
+      locationHeadquarters: (settings as any).locationHeadquarters || "Makhu Town, District Ferozepur, Punjab, India",
+      noscriptHtmlContent: (settings as any).noscriptHtmlContent || "🌾 FarmsKing (ਫਾਰਮਸਕਿੰਗ) - Direct Farmer Marketplace for All India | Headquartered in Makhu (Punjab). All India farmers can list crops, natural seeds, handmade products, organic jaggery, pure ghee. Includes Live Mandi Rates, Crop Records, Crop Doctors, and upcoming Gardener System with Plant Care Dose!",
+    };
+  }
+
+  async updateSeo(dto: { seoTitle?: string; metaDescription?: string; metaKeywords?: string; locationHeadquarters?: string; noscriptHtmlContent?: string }) {
+    this.clearCache();
+    return this.prisma.appSetting.upsert({
+      where: { id: SINGLETON_ID },
+      create: {
+        id: SINGLETON_ID,
+        ...(dto as any),
+      },
+      update: {
+        ...(dto as any),
+      },
+    });
+  }
+
   async get() {
     const now = Date.now();
     if (this.cache && now - this.cache.timestamp < this.CACHE_TTL_MS) {

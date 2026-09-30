@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, UseGuards } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -42,6 +42,18 @@ export class AppSettingsController {
   @Patch('feature-flags')
   updateFeatureFlags(@CurrentUser() user: AuthUser, @Body() flags: any) {
     return this.appSettingsService.updateFeatureFlags(user, flags);
+  }
+
+  /** Get active dynamic SEO settings */
+  @Get('seo')
+  getSeo() {
+    return this.appSettingsService.getSeo();
+  }
+
+  /** Update dynamic SEO settings */
+  @Post('seo')
+  updateSeo(@Body() dto: any) {
+    return this.appSettingsService.updateSeo(dto);
   }
 }
 

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
+import { getDefaultApiUrl } from '../constants/config';
 
 export interface ChatMessage {
   id: string;
@@ -29,16 +30,20 @@ const EXPLICIT_NON_FARMING_KEYWORDS = [
 ];
 
 const QUICK_FARMING_SUGGESTIONS = [
-  { icon: "🌾", label: "Wheat Yellow Rust Treatment" },
-  { icon: "🌱", label: "Paddy Urea Fertilizer Dosage" },
-  { icon: "📊", label: "Live Mandi Rates & Weather Today" },
-  { icon: "🍅", label: "Tomato Leaf Blight Remedy" },
+  { icon: "🌾", label: "Kanak ਦਾ ਪ੍ਰਤੀ ਏਕੜ ਝਾੜ ਕਿੰਨਾ ਹੁੰਦਾ ਹੈ?" },
+  { icon: "🌾", label: "Punjab vich kanak kado lagai jandi hai?" },
+  { icon: "🌼", label: "Gende di kheti kehde mahine kiti jandi hai?" },
+  { icon: "📊", label: "Live Mandi Rates Today" },
 ];
 
 export type LanguageCode = 'GURMUKHI' | 'DEVANAGARI' | 'ENGLISH';
 
 export type CropTopic =
   | 'GENDA'
+  | 'CHILLI'
+  | 'ONION'
+  | 'GOBHI'
+  | 'GARLIC'
   | 'WHEAT'
   | 'PADDY'
   | 'COTTON'
@@ -55,6 +60,8 @@ export type CropTopic =
   | 'GENERAL';
 
 export type ActionTopic =
+  | 'MONTH_SEASON'
+  | 'YIELD_PROFIT'
   | 'WATER'
   | 'SPRAY_DISEASE'
   | 'FERTILIZER_DOSAGE'
@@ -74,7 +81,7 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
     {
       id: 'init-1',
       sender: 'AI',
-      text: "🌾 **ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ ਜੀ! Welcome to FarmsKing Agri AI Doctor (Kheti Mitra AI)**\n\nI have active conversation memory! Ask me any farming question in Punjabi, Hindi, or English. If you ask follow-up questions (e.g. 'ehnu pani kadon laiye?'), I remember what crop we are discussing!",
+      text: "🌾 **Welcome to FarmsKing Agri AI Advisor!**\n\nAsk any farming question in English, Punjabi, or Hindi.\n\n*Note: This is an AI Advisor. Please consult a professional crop doctor or agricultural expert before applying treatments.*",
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       category: 'FARMING',
     },
@@ -105,14 +112,16 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
     const punjabiWords = [
       'krda', 'karda', 'krdi', 'kardi', 'ha', 'haan', 'han', 'hunda', 'hunde',
       'vich', 'te', 'nu', 'saada', 'saadi', 'tuhanu', 'puaa', 'pao', 'karni',
-      'dasso', 'mera', 'meri', 'de', 'da', 'di', 'khet', 'khetan', 'laayi',
+      'dasso', 'daso', 'mera', 'meri', 'de', 'da', 'di', 'khet', 'khetan', 'laayi',
       'layi', 'pind', 'kisaan', 'paude', 'kra', 'paani', 'din', 'gende', 'genda',
-      'ehnu', 'ehda', 'kadon', 'laiye', 'kera', 'krie', 'kini', 'pava'
+      'ehnu', 'ehda', 'kadon', 'kado', 'laiye', 'kera', 'krie', 'kini', 'pava', 'kehde',
+      'mahine', 'kiti', 'jandi', 'lagai', 'lagaye', 'kinna', 'kinni', 'jhaad', 'jhad', 'dindi', 'mircha', 'mirch'
     ];
     const hindiWords = [
       'krta', 'karta', 'krti', 'karti', 'hu', 'hoon', 'hai', 'hain', 'kaise',
       'kya', 'kaun', 'chahiye', 'batao', 'karein', 'kare', 'ki', 'ke', 'ko',
-      'mein', 'se', 'par', 'karte', 'hoge', 'karo', 'dijiye', 'paudhe', 'isme'
+      'mein', 'se', 'par', 'karte', 'hoge', 'karo', 'dijiye', 'paudhe', 'isme',
+      'kaunse', 'mahine', 'kab', 'kitna', 'kitni'
     ];
 
     let pCount = 0;
@@ -131,9 +140,13 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
     return 'GURMUKHI';
   };
 
-  // Extract crop entity from current text or conversation history memory
+  // Extract crop entity from current text
   const extractCropTopic = (text: string): CropTopic | null => {
     const q = text.toLowerCase();
+    if (q.includes('mirch') || q.includes('mircha') || q.includes('mirchan') || q.includes('chilli') || q.includes('chili') || q.includes('chillies') || q.includes('ਮਿਰਚ') || q.includes('ਮਿਰਚਾਂ') || q.includes('ਮਿਰਚਾ') || q.includes('मिर्च')) return 'CHILLI';
+    if (q.includes('pyaaz') || q.includes('piaz') || q.includes('gandha') || q.includes('onion') || q.includes('ਪਿਆਜ਼') || q.includes('ਗੰਢਾ') || q.includes('प्याज')) return 'ONION';
+    if (q.includes('lassan') || q.includes('lesan') || q.includes('garlic') || q.includes('ਲਸਣ') || q.includes('लहसुन')) return 'GARLIC';
+    if (q.includes('gobhi') || q.includes('cauliflower') || q.includes('cabbage') || q.includes('ਗੋਭੀ') || q.includes('गोभी')) return 'GOBHI';
     if (q.includes('genda') || q.includes('gende') || q.includes('marigold') || q.includes('ਗੇਂਦਾ') || q.includes('ਗੇਂਦੇ') || q.includes('गेंदा')) return 'GENDA';
     if (q.includes('kanak') || q.includes('gehu') || q.includes('wheat') || q.includes('ਕਣਕ') || q.includes('ਗੇਂਹੂ') || q.includes('rust') || q.includes('ਕੁੰਗੀ')) return 'WHEAT';
     if (q.includes('jhona') || q.includes('dhan') || q.includes('paddy') || q.includes('rice') || q.includes('ਝੋਨਾ') || q.includes('ਧਾਨ') || q.includes('blast')) return 'PADDY';
@@ -151,18 +164,35 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
     return null;
   };
 
-  // Find active crop context from recent conversation history
+  // Find active crop context from recent conversation history ONLY IF continuation pronoun is used
   const getContextCrop = (query: string, history: ChatMessage[]): { crop: CropTopic; fromMemory: boolean } => {
     const directCrop = extractCropTopic(query);
     if (directCrop) {
       return { crop: directCrop, fromMemory: false };
     }
 
-    // Look backwards in history for active crop topic
-    for (let i = history.length - 1; i >= 0; i--) {
-      const topic = extractCropTopic(history[i].text);
-      if (topic && topic !== 'STORE' && topic !== 'MANDI' && topic !== 'WEATHER') {
-        return { crop: topic, fromMemory: true };
+    const qLower = query.toLowerCase();
+    const hasContinuationWord =
+      qLower.includes('eh') ||
+      qLower.includes('ehda') ||
+      qLower.includes('ehnu') ||
+      qLower.includes('isda') ||
+      qLower.includes('isdi') ||
+      qLower.includes('isnu') ||
+      qLower.includes('isvich') ||
+      qLower.includes('ਇਹ') ||
+      qLower.includes('ਇਹਦਾ') ||
+      qLower.includes('ਇਹਨੂੰ') ||
+      qLower.includes('ਇਸਦਾ') ||
+      qLower.includes('ਇਸਦੀ');
+
+    // ONLY inherit previous crop from history IF the user used explicit continuation pronouns!
+    if (hasContinuationWord) {
+      for (let i = history.length - 1; i >= 0; i--) {
+        const topic = extractCropTopic(history[i].text);
+        if (topic && topic !== 'STORE' && topic !== 'MANDI' && topic !== 'WEATHER') {
+          return { crop: topic, fromMemory: true };
+        }
       }
     }
 
@@ -172,125 +202,307 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
   // Extract action/concern from query
   const extractActionTopic = (query: string): ActionTopic => {
     const q = query.toLowerCase();
-    if (q.includes('pani') || q.includes('paani') || q.includes('water') || q.includes('irrigation') || q.includes('ਪਾਣੀ') || q.includes('ਸਿੰਚਾਈ') || q.includes('पानी')) return 'WATER';
-    if (q.includes('spray') || q.includes('dawai') || q.includes('dawaii') || q.includes('dawa') || q.includes('sundi') || q.includes('keeda') || q.includes('beemari') || q.includes('ilaaj') || q.includes('ਸਪ੍ਰੇ') || q.includes('ਦਵਾਈ') || q.includes('ਬੀਮਾਰੀ') || q.includes('ਇਲਾਜ') || q.includes('ਕੀੜਾ') || q.includes('रोग') || q.includes('कीड़ा')) return 'SPRAY_DISEASE';
-    if (q.includes('khad') || q.includes('urea') || q.includes('dap') || q.includes('npk') || q.includes('kini') || q.includes('dosage') || q.includes('ਖਾਦ') || q.includes('ਯੂਰੀਆ') || q.includes('खाद')) return 'FERTILIZER_DOSAGE';
-    if (q.includes('growth') || q.includes('phutara') || q.includes('futara') || q.includes('vadhara') || q.includes('ਫੁੱਟਾਰਾ') || q.includes('ਗ੍ਰੋਥ') || q.includes('फुटाव')) return 'GROWTH_TILLERING';
-    if (q.includes('nadin') || q.includes('gulli') || q.includes('danda') || q.includes('weed') || q.includes('ghas') || q.includes('ਨਦੀਨ') || q.includes('ਗੁੱਲੀ') || q.includes('खरपतवार')) return 'WEED_CONTROL';
-    if (q.includes('beej') || q.includes('sowing') || q.includes('bijai') || q.includes('variety') || q.includes('ਕਿਸਮ') || q.includes('ਬੀਜ') || q.includes('ਬਿਜਾਈ') || q.includes('बीज')) return 'SEED_SOWING';
-    if (q.includes('mandi') || q.includes('rate') || q.includes('bhav') || q.includes('price') || q.includes('ਮੰਡੀ') || q.includes('ਭਾਵ')) return 'MANDI_RATE';
-    if (q.includes('weather') || q.includes('rain') || q.includes('mausam') || q.includes('ਮੌਸਮ') || q.includes('मौसम')) return 'WEATHER_INFO';
+
+    // Priority 1: Month / Season / Timing / Sowing questions
+    if (
+      q.includes('mahine') ||
+      q.includes('maheene') ||
+      q.includes('month') ||
+      q.includes('months') ||
+      q.includes('kab') ||
+      q.includes('kado') ||
+      q.includes('kadon') ||
+      q.includes('kad') ||
+      q.includes('kehde') ||
+      q.includes('kede') ||
+      q.includes('kaunse') ||
+      q.includes('samay') ||
+      q.includes('lagai') ||
+      q.includes('lagaye') ||
+      q.includes('lagaee') ||
+      q.includes('bijiye') ||
+      q.includes('bijai') ||
+      q.includes('bijaai') ||
+      q.includes('bije') ||
+      q.includes('sowing') ||
+      q.includes('ਸਮਾਂ') ||
+      q.includes('ਮਹੀਨੇ') ||
+      q.includes('ਮਹੀਨਾ') ||
+      q.includes('ਕਦੋਂ') ||
+      q.includes('ਕਦ') ||
+      q.includes('ਬਿਜਾਈ') ||
+      q.includes('ਮਹੀਨਿਆਂ') ||
+      q.includes('महीने')
+    ) {
+      return 'MONTH_SEASON';
+    }
+
+    // Priority 2: Yield / Profit / Production / Jhaad questions
+    if (
+      q.includes('jhad') ||
+      q.includes('jhaad') ||
+      q.includes('jhar') ||
+      q.includes('jhaar') ||
+      q.includes('jhadu') ||
+      q.includes('yield') ||
+      q.includes('production') ||
+      q.includes('output') ||
+      q.includes('kamai') ||
+      q.includes('profit') ||
+      q.includes('quintel') ||
+      q.includes('quintal') ||
+      q.includes('kuintal') ||
+      q.includes('ਕੁਇੰਟਲ') ||
+      q.includes('ਝਾੜ') ||
+      q.includes('ਕਮਾਈ') ||
+      q.includes('ਮੁਨਾਫ਼ਾ') ||
+      q.includes('झाड़') ||
+      q.includes('उपज')
+    ) {
+      return 'YIELD_PROFIT';
+    }
+
+    // Priority 3: Water / Irrigation questions
+    if (q.includes('pani') || q.includes('paani') || q.includes('water') || q.includes('irrigation') || q.includes('ਪਾਣੀ') || q.includes('ਸਿੰਚਾਈ') || q.includes('पानी')) {
+      return 'WATER';
+    }
+
+    // Priority 4: Spray / Disease / Pest / Leaf Drying / Cure questions
+    if (
+      q.includes('spray') ||
+      q.includes('dawai') ||
+      q.includes('dawaii') ||
+      q.includes('dawa') ||
+      q.includes('sundi') ||
+      q.includes('keeda') ||
+      q.includes('beemari') ||
+      q.includes('bimari') ||
+      q.includes('ilaaj') ||
+      q.includes('ilaj') ||
+      q.includes('sukk') ||
+      q.includes('sukke') ||
+      q.includes('sukkde') ||
+      q.includes('sukh') ||
+      q.includes('sukka') ||
+      q.includes('sukki') ||
+      q.includes('pila') ||
+      q.includes('peela') ||
+      q.includes('patte') ||
+      q.includes('patta') ||
+      q.includes('leaves') ||
+      q.includes('leaf') ||
+      q.includes('blight') ||
+      q.includes('wilt') ||
+      q.includes('ਸਪ੍ਰੇ') ||
+      q.includes('ਦਵਾਈ') ||
+      q.includes('ਬੀਮਾਰੀ') ||
+      q.includes('ਇਲਾਜ') ||
+      q.includes('ਕੀੜਾ') ||
+      q.includes('ਸੁੱਕ') ||
+      q.includes('ਪੱਤੇ') ||
+      q.includes('ਰੋਗ') ||
+      q.includes('कीड़ा') ||
+      q.includes('इलाज')
+    ) {
+      return 'SPRAY_DISEASE';
+    }
+
+    // Priority 5: Fertilizer questions
+    if (q.includes('khad') || q.includes('urea') || q.includes('dap') || q.includes('npk') || q.includes('kini') || q.includes('dosage') || q.includes('ਖਾਦ') || q.includes('ਯੂਰੀਆ') || q.includes('खाद')) {
+      return 'FERTILIZER_DOSAGE';
+    }
+
+    // Priority 6: Growth / Tillering
+    if (q.includes('growth') || q.includes('phutara') || q.includes('futara') || q.includes('vadhara') || q.includes('ਫੁੱਟਾਰਾ') || q.includes('ਗ੍ਰੋਥ') || q.includes('फुटाव')) {
+      return 'GROWTH_TILLERING';
+    }
+
+    // Priority 7: Weed control
+    if (q.includes('nadin') || q.includes('gulli') || q.includes('danda') || q.includes('weed') || q.includes('ghas') || q.includes('ਨਦੀਨ') || q.includes('ਗੁੱਲੀ') || q.includes('खरपतवार')) {
+      return 'WEED_CONTROL';
+    }
+
+    // Priority 8: Seeds & Sowing
+    if (q.includes('beej') || q.includes('sowing') || q.includes('bijai') || q.includes('variety') || q.includes('ਕਿਸਮ') || q.includes('ਬੀਜ') || q.includes('ਬਿਜਾਈ') || q.includes('बीज')) {
+      return 'SEED_SOWING';
+    }
+
+    // Priority 9: Mandi Rates
+    if (q.includes('mandi') || q.includes('rate') || q.includes('bhav') || q.includes('price') || q.includes('ਮੰਡੀ') || q.includes('ਭਾਵ')) {
+      return 'MANDI_RATE';
+    }
+
+    // Priority 10: Weather
+    if (q.includes('weather') || q.includes('rain') || q.includes('mausam') || q.includes('ਮੌਸਮ') || q.includes('मौसम')) {
+      return 'WEATHER_INFO';
+    }
+
     return 'GENERAL_CARE';
   };
 
   const generateAgriResponse = (query: string, history: ChatMessage[]): string => {
     const q = query.toLowerCase().trim();
     const lang = detectLanguage(query);
-    const { crop, fromMemory } = getContextCrop(query, history);
+    const { crop } = getContextCrop(query, history);
     const action = extractActionTopic(query);
-    const userQueryTitle = query.length > 35 ? query.substring(0, 35) + '...' : query;
-
-    const memoryNoticeGurmukhi = fromMemory ? `\n💡 *(ਪਿਛਲੀ ਗੱਲਬਾਤ ਦੀ ਯਾਦ ਦੇ ਅਧਾਰ 'ਤੇ)*` : '';
-    const memoryNoticeDevanagari = fromMemory ? `\n💡 *(पिछली बातचीत के आधार पर)*` : '';
-    const memoryNoticeEnglish = fromMemory ? `\n💡 *(Context remembered from conversation)*` : '';
 
     // 1. Language Request Command
     if ((q.includes('punjabi') || q.includes('ਪੰਜਾਬੀ')) && (q.includes('language') || q.includes('gall') || q.includes('use') || q.includes('speak') || q.includes('vich') || q.includes('ch'))) {
-      return `🌾 **ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ ਜੀ! (FarmsKing AI ਖੇਤੀ ਡਾਕਟਰ):**\n\nਜੀ ਹਾਂ, ਹੁਣ ਮੈਂ ਤੁਹਾਡੇ ਨਾਲ ਪੂਰੀ ਤਰ੍ਹਾਂ ਪੰਜਾਬੀ (ਗੁਰਮੁਖੀ) ਵਿੱਚ ਗੱਲਬਾਤ ਕਰਾਂਗਾ। ਮੈਨੂੰ ਤੁਹਾਡੀ ਪਿਛਲੀ ਗੱਲਬਾਤ ਵੀ ਯਾਦ ਰਹਿੰਦੀ ਹੈ!\n\nਤੁਸੀਂ ਆਪਣੀ ਫਸਲ (ਕਣਕ, ਝੋਨਾ, ਨਰਮਾ, ਗੰਨਾ, ਆਲੂ, ਟਮਾਟਰ, ਗੇਂਦਾ), ਖਾਦਾਂ, ਯੂਰੀਆ, 20 ਦਿਨਾਂ ਦੇ ਪੌਦਿਆਂ ਲਈ ਸਪ੍ਰੇ, ਮੰਡੀ ਭਾਵ, ਮੌਸਮ ਅਤੇ FarmsKing ਐਪ ਬਾਰੇ ਕੋਈ ਵੀ ਸਵਾਲ ਪੁੱਛੋ!`;
+      return `🌾 **ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ ਜੀ!**\n\nਜੀ ਹਾਂ, ਹੁਣ ਮੈਂ ਤੁਹਾਡੇ ਨਾਲ ਪੂਰੀ ਤਰ੍ਹਾਂ ਪੰਜਾਬੀ (ਗੁਰਮੁਖੀ) ਵਿੱਚ ਗੱਲਬਾਤ ਕਰਾਂਗਾ। ਤੁਸੀਂ ਆਪਣੀ ਫਸਲ ਬਾਰੇ ਕੋਈ ਵੀ ਸਵਾਲ ਪੁੱਛੋ!`;
     }
 
     // 2. MARIGOLD / GENDA FLOWER FARMING
     if (crop === 'GENDA') {
+      if (action === 'MONTH_SEASON') {
+        if (lang === 'DEVANAGARI') {
+          return `🌼 **गेंदा बुआई के महीने:**\n\n1. **बरसाती गेंदा:** जून - जुलाई में नर्सरी लगाएं (फूल: सितंबर - अक्टूबर)।\n2. **सर्दी का गेंदा:** सितंबर - अक्टूबर में नर्सरी लगाएं (फूल: दिसंबर - फरवरी)।\n3. **गर्मी का गेंदा:** जनवरी - फरवरी में नर्सरी लगाएं (फूल: अप्रैल - मई)।`;
+        }
+        if (lang === 'ENGLISH') {
+          return `🌼 **Marigold Sowing Months & Seasons:**\n\n1. **Rainy Crop:** Sow nursery in June - July (Harvest: Sept - Oct).\n2. **Winter Crop:** Sow nursery in Sept - Oct (Harvest: Dec - Feb).\n3. **Summer Crop:** Sow nursery in Jan - Feb (Harvest: April - May).`;
+        }
+        return `🌼 **ਗੇਂਦੇ ਦੀ ਬਿਜਾਈ ਦੇ ਮਹੀਨੇ (Sowing Months):**\n\n1. **ਬਰਸਾਤੀ ਗੇਂਦਾ:** ਜੂਨ - ਜੁਲਾਈ ਵਿੱਚ ਪਨੀਰੀ ਲਾਓ (ਫੁੱਲ: ਸਤੰਬਰ - ਅਕਤੂਬਰ)।\n2. **ਸਰਦੀਆਂ ਦਾ ਗੇਂਦਾ:** ਸਤੰਬਰ - ਅਕਤੂਬਰ ਵਿੱਚ ਪਨੀਰੀ ਲਾਓ (ਫੁੱਲ: ਦਸੰਬਰ - ਫਰਵਰੀ)।\n3. **ਗਰਮੀਆਂ ਦਾ ਗੇਂਦਾ:** ਜਨਵਰੀ - ਫਰਵਰੀ ਵਿੱਚ ਪਨੀਰੀ ਲਾਓ (ਫੁੱਲ: ਅਪ੍ਰੈਲ - ਮਈ)।`;
+      }
+      if (action === 'YIELD_PROFIT') {
+        return `🌼 **ਗੇਂਦੇ ਦੀ ਫਸਲ ਤੋਂ ਝਾੜ:**\n\n1. 1 ਏਕੜ ਗੇਂਦੇ ਤੋਂ 80 ਤੋਂ 100 ਕੁਇੰਟਲ ਤਾਜ਼ੇ ਫੁੱਲ ਪ੍ਰਾਪਤ ਹੁੰਦੇ ਹਨ।`;
+      }
       if (action === 'WATER') {
-        if (lang === 'DEVANAGARI') {
-          return `🌼 **गेंदा खेती — सिंचाई एवं पानी सलाह ("${userQueryTitle}"):${memoryNoticeDevanagari}**\n\n1. **पहली सिंचाई:** पौधे लगाने के तुरंत बाद हल्की सिंचाई करें। शुरुआती 15-20 दिनों में 7-8 दिनों के अंतर पर पानी दें।\n2. **जल निकासी:** खेत में पानी जमा न होने दें, इससे जड़ें सड़ने का खतरा रहता है।\n3. **उर्वरक की मात्रा:** सिंचाई के बाद प्रति एकड़ 20kg यूरिया की टॉप-ड्रेसिंग करें।\n4. **FarmsKing Store:** असली दवाएं और एनपीके सीधे ऐप से मंगाएं।`;
-        }
-        if (lang === 'ENGLISH') {
-          return `🌼 **Marigold Farming — Irrigation Advisory ("${userQueryTitle}"):${memoryNoticeEnglish}**\n\n1. **First Water:** Apply light irrigation immediately after transplanting. Irrigate every 7-8 days for initial 3 weeks.\n2. **Drainage:** Prevent stagnation of standing water to avoid root rot fungal attack.\n3. **Fertilizer Dose:** Top-dress 20kg Urea per acre post irrigation.\n4. **FarmsKing Store:** Order genuine NPK & fungicides on FarmsKing Store.`;
-        }
-        return `🌼 **ਗੇਂਦੇ ਦੀ ਖੇਤੀ — ਪਾਣੀ ਅਤੇ ਸਿੰਚਾਈ ਦੀ ਸਲਾਹ ("${userQueryTitle}"):${memoryNoticeGurmukhi}**\n\n1. **ਪਹਿਲਾ ਪਾਣੀ:** ਪੌਦੇ ਲਾਉਣ ਤੋਂ ਤੁਰੰਤ ਬਾਅਦ ਹਲਕਾ ਪਾਣੀ ਲਾਓ। ਸ਼ੁਰੂਆਤੀ 15-20 ਦਿਨਾਂ ਵਿੱਚ 7-8 ਦਿਨਾਂ ਦੇ ਫਾਸਲੇ 'ਤੇ ਪਾਣੀ ਦਿਓ।\n2. **ਨਮੀ ਦੀ ਜਾਂਚ:** ਗੇਂਦੇ ਦੇ ਖੇਤ ਵਿੱਚ ਬਹੁਤ ਜ਼ਿਆਦਾ ਪਾਣੀ ਖੜ੍ਹਨ ਨਾਲ ਜੜ੍ਹਾਂ ਗਲਣ ਦਾ ਖਤਰਾ ਹੁੰਦਾ ਹੈ। ਖੇਤ ਵਿੱਚੋਂ ਵਾਧੂ ਪਾਣੀ ਦੀ ਨਿਕਾਸੀ ਰੱਖੋ।\n3. **ਖਾਦ ਦੀ ਖੁਰਾਕ:** ਪਾਣੀ ਲਾਉਣ ਤੋਂ ਬਾਅਦ ਪ੍ਰਤੀ ਏਕੜ 20kg ਨਾਈਟ੍ਰੋਜਨ (ਯੂਰੀਆ) ਦੀ ਟਾਪ-ਡ੍ਰੈਸਿੰਗ ਕਰੋ।\n4. **FarmsKing Store:** ਅਸਲੀ ਖਾਦਾਂ ਅਤੇ ਗ੍ਰੋਥ ਪ੍ਰਮੋਟਰ FarmsKing ਐਪ ਤੋਂ ਮੰਗਵਾਓ।`;
+        return `🌼 **ਗੇਂਦੇ ਦੀ ਫਸਲ — ਪਾਣੀ ਦੀ ਸਲਾਹ:**\n\n1. **ਪਹਿਲਾ ਪਾਣੀ:** ਪੌਦੇ ਲਾਉਣ ਤੋਂ ਤੁਰੰਤ ਬਾਅਦ ਪਹਿਲਾ ਹਲਕਾ ਪਾਣੀ ਲਾਓ।\n2. **ਸਮਾਂ:** ਸ਼ੁਰੂਆਤੀ 20 ਦਿਨਾਂ ਵਿੱਚ ਹਰ 7-8 ਦਿਨਾਂ ਬਾਅਦ ਪਾਣੀ ਦਿਓ।`;
       }
-      if (action === 'SPRAY_DISEASE') {
+      if (action === 'SPRAY_DISEASE' || q.includes('sukk') || q.includes('sukh') || q.includes('patte') || q.includes('ilaj') || q.includes('ilaaj')) {
         if (lang === 'DEVANAGARI') {
-          return `🌼 **गेंदा फसल — झुलसा रोग एवं कीट नियंत्रण स्प्रे ("${userQueryTitle}"):${memoryNoticeDevanagari}**\n\n1. **झुलसा रोग (Leaf Blight):** पत्तियों पर काले धब्बे दिखने पर मैंकोज़ेब (Mancozeb 75% WP) 2g/L पानी (400g/एकड़) छिड़कें।\n2. **सुंडी एवं चेपा:** इमामेक्टिन बेंजोएट 5% SG (100g/एकड़) 200L पानी में छिड़कें।\n3. **जैविक उपाय:** 5% नीम तेल (500ml/एकड़) का छिड़काव करें।\n4. **दवा खरीदें:** FarmsKing Store से 100% असली दवाएं मंगाएं।`;
+          return `🌼 **गेंदे के पत्ते सूखने एवं बीमारी का इलाज:**\n\n1. **लीफ ब्लाइट (पत्ते सूखना):** मैन्कोजेब (Mancozeb 75% WP) 2 ग्राम प्रति लीटर पानी (400g/एकड़) में मिलाकर छिड़कें।\n2. **जड़ गलन/सूखा (Wilt):** बाविस्टिन (Bavistin) 1.5g/L पानी मिलाकर पौधों की जड़ों में दें।`;
         }
-        if (lang === 'ENGLISH') {
-          return `🌼 **Marigold Crop — Blight & Pest Spray Advisory ("${userQueryTitle}"):${memoryNoticeEnglish}**\n\n1. **Leaf Blight:** Spray Mancozeb 75% WP @ 2g/L water (400g/acre) at first sign of black spots.\n2. **Caterpillar & Aphids:** Spray Emamectin Benzoate 5% SG @ 100g/acre in 200L water.\n3. **Organic Protection:** Spray 5% Neem Oil @ 500ml/acre.\n4. **FarmsKing Store:** Buy genuine crop medicines on FarmsKing.`;
-        }
-        return `🌼 **ਗੇਂਦੇ ਦੀ ਫਸਲ — ਕੀੜੇ ਅਤੇ ਝੁਲਸ ਰੋਗ ਦੀ ਸਪ੍ਰੇ ("${userQueryTitle}"):${memoryNoticeGurmukhi}**\n\n1. **ਝੁਲਸ ਰੋਗ (Leaf Blight):** ਪੱਤਿਆਂ 'ਤੇ ਕਾਲੇ ਦਾਗ਼ ਦਿਸਣ 'ਤੇ ਮੈਂਕੋਜ਼ੇਬ (Mancozeb 75% WP) 2g ਪ੍ਰਤੀ ਲੀਟਰ ਪਾਣੀ (400g/ਏਕੜ) ਸਪ੍ਰੇ ਕਰੋ।\n2. **ਸੁੰਡੀ ਅਤੇ ਚੇਪਾ:** ਸੁੰਡੀ ਲਈ ਇਮਾਮੈਕਟਿਨ ਬੈਂਜ਼ੋਏਟ 5% SG (100g/ਏਕੜ) 200L ਪਾਣੀ ਵਿੱਚ ਛਿੜਕੋ।\n3. **ਜੈਵਿਕ ਸੁਰੱਖਿਆ:** 5% ਨਿੰਮ ਦਾ ਤੇਲ (500ml/ਏਕੜ) ਸਪ੍ਰੇ ਕਰਕੇ ਫਸਲ ਨੂੰ ਕੀੜਿਆਂ ਤੋਂ ਬਚਾਓ।\n4. **FarmsKing Store:** ਅਸਲੀ ਫੰਗਸਨਾਸ਼ਕ ਅਤੇ ਸਪ੍ਰੇਆਂ FarmsKing ਐਪ ਤੋਂ ਮੰਗਵਾਓ।`;
+        return `🌼 **ਗੇਂਦੇ ਦੇ ਪੱਤੇ ਸੁੱਕਣ ਅਤੇ ਝੁਲਸ ਰੋਗ ਦਾ ਇਲਾਜ:**\n\n1. **ਝੁਲਸ ਰੋਗ / ਪੱਤੇ ਸੁੱਕਣਾ (Leaf Blight):** ਪੱਤੇ ਸੁੱਕਣ ਜਾਂ ਕਾਲੇ ਦਾਗ਼ ਹੋਣ 'ਤੇ **ਮੈਂਕੋਜ਼ੇਬ (Mancozeb 75% WP)** 2 ਗ੍ਰਾਮ ਪ੍ਰਤੀ ਲੀਟਰ ਪਾਣੀ (400g ਪ੍ਰਤੀ ਏਕੜ) ਵਿੱਚ ਮਿਲਾ ਕੇ ਛਿੜਕਾਅ ਕਰੋ।\n2. **ਜੜ੍ਹ ਗਲਣ / ਸੁਕਾਅ (Wilt/Root Rot):** ਜੇਕਰ ਪੌਦਾ ਜੜ੍ਹ ਤੋਂ ਸੁੱਕ ਰਿਹਾ ਹੈ, ਤਾਂ **ਕਾਰਬੈਂਡਾਜ਼ਿਮ (Bavistin)** 1.5g ਪ੍ਰਤੀ ਲੀਟਰ ਪਾਣੀ ਨਾਲ ਜੜ੍ਹਾਂ ਨੂੰ ਭਿਓ ਦਿਓ।\n3. **ਕੀੜਿਆਂ ਦਾ ਛਿੜਕਾਅ:** ਜੇਕਰ ਤੇਲਾ/ਮੱਖੀ ਹੋਵੇ ਤਾਂ ਥਿਆਮੈਥੋਕਸਾਮ (Actara) 40g ਪ੍ਰਤੀ ਏਕੜ ਛਿੜਕੋ।`;
       }
-      return `🌼 **ਗੇਂਦੇ ਦੀ ਖੇਤੀ ("${userQueryTitle}") ਮਾਹਰ ਸਲਾਹ:${memoryNoticeGurmukhi}**\n\n1. **ਉੱਤਮ ਕਿਸਮਾਂ:** ਪੂਸਾ ਨਾਰੰਗੀ ਗੇਂਦਾ ਅਤੇ ਪੂਸਾ ਬਸੰਤੀ ਗੇਂਦਾ ਦੀ ਬਿਜਾਈ ਸਭ ਤੋਂ ਵਧੀਆ ਹੈ।\n2. **ਖਾਦ ਅਤੇ ਪਾਣੀ:** 1 ਏਕੜ ਵਿੱਚ 10 ਟਨ ਦੇਸੀ ਰੂੜੀ ਖਾਦ + 40kg ਨਾਈਟ੍ਰੋਜਨ ਅਤੇ 20kg ਫਾਸਫੋਰਸ ਪਾਓ। 7-10 ਦਿਨਾਂ ਬਾਅਦ ਪਾਣੀ ਦਿਓ।\n3. **ਕੀੜੇ ਅਤੇ ਬੀਮਾਰੀ:** ਸੁੰਡੀ ਅਤੇ ਝੁਲਸ ਰੋਗ ਤੋਂ ਬਚਾਅ ਲਈ ਮੈਂਕੋਜ਼ੇਬ (2g/L) ਅਤੇ ਨਿੰਮ ਦੇ ਤੇਲ ਦੀ ਸਪ੍ਰੇ ਕਰੋ।\n4. **ਮੁਨਾਫ਼ਾ:** 1 ਏਕੜ ਗੇਂਦੇ ਤੋਂ 80-100 ਕੁਇੰਟਲ ਫੁੱਲ ਪ੍ਰਾਪਤ ਹੁੰਦੇ ਹਨ।`;
+      return `🌼 **ਗੇਂਦੇ ਦੀ ਖੇਤੀ (Marigold Farming):**\n\n1. **ਬਿਜਾਈ ਦੇ ਮਹੀਨੇ:** ਜੂਨ-ਜੁਲਾਈ (ਬਰਸਾਤੀ) ਅਤੇ ਸਤੰਬਰ-ਅਕਤੂਬਰ (ਸਰਦੀਆਂ)।\n2. **ਉੱਤਮ ਕਿਸਮਾਂ:** ਪੂਸਾ ਨਾਰੰਗੀ ਅਤੇ ਪੂਸਾ ਬਸੰਤੀ ਗੇਂਦਾ।`;
+    }
+
+    // 3. CHILLI / MIRCH FARMING
+    if (crop === 'CHILLI') {
+      if (action === 'SPRAY_DISEASE' || q.includes('bimari') || q.includes('beemari') || q.includes('ilaj') || q.includes('ilaaj') || q.includes('sukk') || q.includes('patte') || q.includes('curling') || q.includes('churda')) {
+        return `🌶️ **ਮਿਰਚਾਂ ਦੀਆਂ ਆਮ ਬੀਮਾਰੀਆਂ ਅਤੇ ਇਲਾਜ (Chilli Diseases & Spray):**\n\n1. **ਚੂੜਾ-ਮੂੜਾ / ਪੱਤਾ ਮਰੋੜ ਰੋਗ (Leaf Curl Virus):** ਚਿੱਟੀ ਮੱਖੀ ਅਤੇ ਥ੍ਰਿਪਸ ਰਸ ਚੂਸਦੇ ਹਨ। ਇਸ ਲਈ **ਸੇਫੀਨਾ (Sefina)** 400ml/ਏਕੜ ਜਾਂ **ਇਮੀਡਾਕਲੋਪ੍ਰਿਡ (Confidor)** 0.5ml/L ਪਾਣੀ ਸਪ੍ਰੇ ਕਰੋ।\n2. **ਫ਼ਲ ਗਲਣ / ਡਾਈ-ਬੈਕ (Fruit Rot / Anthracnose):** ਫ਼ਲ ਗਲਣ 'ਤੇ **ਟੈਬੂਕੋਨਾਜ਼ੋਲ (Folicur)** 1ml/L ਪਾਣੀ ਵਿੱਚ ਛਿੜਕੋ।\n3. **ਜੜ੍ਹ ਗਲਣ / ਉਖੜਾ ਰੋਗ (Wilt):** **ਟ੍ਰਾਈਕੋਡਰਮਾ (Trichoderma)** 2kg/ਏਕੜ ਰੂੜੀ ਵਿੱਚ ਮਿਲਾ ਕੇ ਖੇਤ ਵਿੱਚ ਦਿਓ।`;
+      }
+      if (action === 'MONTH_SEASON') {
+        return `🌶️ **ਮਿਰਚਾਂ ਦੀ ਬਿਜਾਈ ਅਤੇ ਲਵਾਈ ਦੇ ਮਹੀਨੇ:**\n\n1. **ਪਨੀਰੀ ਬੀਜਣਾ:** ਅਕਤੂਬਰ - ਨਵੰਬਰ (ਸਰਦੀਆਂ) ਅਤੇ ਅਪ੍ਰੈਲ - ਮਈ (ਗਰਮੀਆਂ)।\n2. **ਖੇਤ ਵਿੱਚ ਲਵਾਈ:** ਫਰਵਰੀ - ਮਾਰਚ (ਬਸੰਤ) ਅਤੇ ਜੂਨ - ਜੁਲਾਈ (ਬਰਸਾਤ)।`;
+      }
+      if (action === 'YIELD_PROFIT') {
+        return `🌶️ **ਮਿਰਚਾਂ ਦਾ ਪ੍ਰਤੀ ਏਕੜ ਝਾੜ:**\n\n1. **ਹਰੀਆਂ ਮਿਰਚਾਂ:** 80 ਤੋਂ 100 ਕੁਇੰਟਲ ਪ੍ਰਤੀ ਏਕੜ।\n2. **ਸੁੱਕੀਆਂ ਲਾਲ ਮਿਰਚਾਂ:** 15 ਤੋਂ 18 ਕੁਇੰਟਲ ਪ੍ਰਤੀ ਏਕੜ।`;
+      }
+      return `🌶️ **ਮਿਰਚਾਂ ਦੀ ਖੇਤੀ ਸਲਾਹ (Chilli Advisory):**\n\n1. **ਆਮ ਬੀਮਾਰੀਆਂ:** ਪੱਤਾ ਮਰੋੜ (ਚੂੜਾ-ਮੂੜਾ), ਫ਼ਲ ਗਲਣ ਅਤੇ ਥ੍ਰਿਪਸ।\n2. **ਸਪ੍ਰੇ:** ਪੱਤਾ ਮਰੋੜ ਲਈ ਸੇਫੀਨਾ (400ml/ਏਕੜ) ਅਤੇ ਫ਼ਲ ਗਲਣ ਲਈ ਫੋਲੀਕੁਰ (Folicur) ਸਪ੍ਰੇ ਕਰੋ।`;
     }
 
     // 3. WHEAT / KANAK / GEHU
     if (crop === 'WHEAT') {
-      if (action === 'SPRAY_DISEASE') {
+      if (action === 'YIELD_PROFIT') {
         if (lang === 'DEVANAGARI') {
-          return `🌾 **गेहूं पीला रतुआ एवं स्प्रे ("${userQueryTitle}"):${memoryNoticeDevanagari}**\n\n1. **पीला रतुआ (Yellow Rust):** प्रोपिकोनाज़ोल 25% EC (टिल्ट / Tilt) 200 ml प्रति एकड़ 200L पानी में मिलाकर छिड़कें।\n2. **सावधानी:** बादलों वाले मौसम में अत्यधिक यूरिया का उपयोग न करें।\n3. **जैविक उपाय:** 5% नीम का अर्क या खट्टी छाछ (5L/200L पानी) छिड़कें।\n4. **FarmsKing Store:** असली टिल्ट दवा सीधे घर मंगाएं।`;
+          return `🌾 **गेहूं का प्रति एकड़ उत्पादन (Yield):**\n\n1. **औसत पैदावार:** 1 एकड़ से 22 से 26 क्विंटल गेहूं की पैदावार होती है।`;
         }
         if (lang === 'ENGLISH') {
-          return `🌾 **Wheat Yellow Rust & Spray Advisory ("${userQueryTitle}"):${memoryNoticeEnglish}**\n\n1. **Yellow Rust Remedy:** Spray Propiconazole 25% EC (Tilt) @ 200 ml per acre in 200 Liters of water.\n2. **Precaution:** Avoid excessive Urea application during cloudy humid weather.\n3. **Organic Spray:** Spray 5% Neem seed extract or sour buttermilk solution.\n4. **FarmsKing Store:** Order genuine Tilt 25% EC on FarmsKing Store.`;
+          return `🌾 **Wheat Yield per Acre:**\n\n1. **Average Yield:** 22 to 26 Quintals per acre with timely sowing and proper management.`;
         }
-        return `🌾 **ਕਣਕ ਦੀ ਪੀਲੀ ਕੁੰਗੀ ਅਤੇ ਸਪ੍ਰੇ ("${userQueryTitle}"):${memoryNoticeGurmukhi}**\n\n1. **ਪੀਲੀ ਕੁੰਗੀ ਦਾ ਹੱਲ:** ਪ੍ਰੋਪੀਕੋਨਾਜ਼ੋਲ 25% EC (ਟਿਲਟ / Tilt) 200 ਮਿ.ਲੀ. ਪ੍ਰਤੀ ਏਕੜ 200 ਲੀਟਰ ਪਾਣੀ ਵਿੱਚ ਮਿਲਾ ਕੇ ਛਿੜਕਾਅ ਕਰੋ।\n2. **ਸਾਵਧਾਨੀ:** ਬੱਦਲਵਾਈ ਵਾਲੇ ਮੌਸਮ ਵਿੱਚ ਜ਼ਿਆਦਾ ਯੂਰੀਆ ਪਾਉਣ ਤੋਂ ਪਰਹੇਜ਼ ਕਰੋ।\n3. **ਦੇਸੀ ਹੱਲ:** 5% ਨਿੰਮ ਦਾ ਅਰਕ ਜਾਂ ਖੱਟੀ ਲੱਸੀ (5L/200L ਪਾਣੀ) ਦਾ ਛਿੜਕਾਅ ਕਰੋ।\n4. **FarmsKing Store:** ਅਸਲੀ ਟਿਲਟ 25% EC FarmsKing Store ਤੋਂ ਮੰਗਵਾਓ।`;
+        return `🌾 **ਕਣਕ ਦਾ ਪ੍ਰਤੀ ਏਕੜ ਝਾੜ (Wheat Yield):**\n\n1. **ਔਸਤਨ ਝਾੜ:** 1 ਏਕੜ ਤੋਂ 22 ਤੋਂ 26 ਕੁਇੰਟਲ ਕਣਕ ਦਾ ਝਾੜ ਮਿਲਦਾ ਹੈ (ਚੰਗੀ ਦੇਖਭਾਲ ਅਤੇ ਸਮੇਂ ਸਿਰ ਬਿਜਾਈ ਨਾਲ)।`;
+      }
+      if (action === 'MONTH_SEASON') {
+        if (lang === 'DEVANAGARI') {
+          return `🌾 **गेहूं की बुआई का समय:**\n\n1. **सबसे उत्तम समय:** 25 अक्टूबर से 15 नवंबर।\n2. **पछेती बुआई:** 16 नवंबर से 10 दिसंबर।`;
+        }
+        if (lang === 'ENGLISH') {
+          return `🌾 **Wheat Sowing Period:**\n\n1. **Optimum Time:** 25th Oct to 15th Nov.\n2. **Late Sowing:** 16th Nov to 10th Dec.`;
+        }
+        return `🌾 **ਕਣਕ ਦੀ ਬਿਜਾਈ ਦਾ ਸਮਾਂ:**\n\n1. **ਸਭ ਤੋਂ ਉੱਤਮ ਸਮਾਂ:** 25 ਅਕਤੂਬਰ ਤੋਂ 15 ਨਵੰਬਰ।\n2. **ਪਛੇਤੀ ਬਿਜਾਈ (Late Sowing):** 16 ਨਵੰਬਰ ਤੋਂ 10 ਦਸੰਬਰ।`;
+      }
+      if (action === 'WATER') {
+        return `🌾 **ਕਣਕ ਨੂੰ ਪਾਣੀ (CRI Stage):**\n\n1. ਬਿਜਾਈ ਤੋਂ 20-22 ਦਿਨਾਂ ਬਾਅਦ ਪਹਿਲਾ ਪਾਣੀ ਲਾਓ।\n2. ਪਾਣੀ ਹਲਕਾ ਲਾਓ ਅਤੇ ਪਾਣੀ ਤੋਂ ਤੁਰੰਤ ਬਾਅਦ ਪ੍ਰਤੀ ਏਕੜ 45kg (1 ਗੱਟਾ) ਯੂਰੀਆ ਪਾਓ।`;
+      }
+      if (action === 'SPRAY_DISEASE') {
+        return `🌾 **ਕਣਕ ਦੀ ਪੀਲੀ ਕੁੰਗੀ ਦਾ ਇਲਾਜ:**\n\n1. ਪ੍ਰੋਪੀਕੋਨਾਜ਼ੋਲ 25% EC (ਟਿਲਟ / Tilt) 200 ਮਿ.ਲੀ. ਪ੍ਰਤੀ ਏਕੜ 200 ਲੀਟਰ ਪਾਣੀ ਵਿੱਚ ਮਿਲਾ ਕੇ ਛਿੜਕੋ।`;
       }
       if (action === 'WEED_CONTROL') {
-        return `🌾 **ਕਣਕ ਵਿੱਚ ਗੁੱਲੀ ਡੰਡਾ ਅਤੇ ਨਦੀਨ ਨਾਸ਼ਕ ("${userQueryTitle}"):${memoryNoticeGurmukhi}**\n\n1. **ਗੁੱਲੀ ਡੰਡਾ ਸਪ੍ਰੇ:** ਪਹਿਲੇ ਪਾਣੀ ਤੋਂ 3-4 ਦਿਨ ਬਾਅਦ ਐਕਸੀਅਲ (Axial 400ml/ਏਕੜ) ਜਾਂ ਸ਼ਗਨ ਪ੍ਰਤੀ ਏਕੜ ਸਪ੍ਰੇ ਕਰੋ।\n2. **ਚੌੜੇ ਪੱਤੇ ਵਾਲੇ ਨਦੀਨ:** 2,4-D ਜਾਂ ਐਲਗ੍ਰਿਪ (Algrip) 8g ਪ੍ਰਤੀ ਏਕੜ 200L ਪਾਣੀ ਵਿੱਚ ਛਿੜਕੋ।\n3. **FarmsKing Store:** ਅਸਲੀ ਨਦੀਨ ਨਾਸ਼ਕ FarmsKing Store ਤੋਂ ਮੰਗਵਾਓ।`;
+        return `🌾 **ਕਣਕ ਵਿੱਚ ਗੁੱਲੀ ਡੰਡਾ / ਨਦੀਨ:**\n\n1. ਪਹਿਲੇ ਪਾਣੀ ਤੋਂ 3-4 ਦਿਨ ਬਾਅਦ ਐਕਸੀਅਲ (Axial 400ml/ਏਕੜ) ਸਪ੍ਰੇ ਕਰੋ।`;
       }
-      return `🌾 **ਕਣਕ ਦੀ ਫਸਲ ਦੀ ਸੰਪੂਰਨ ਸਲਾਹ ("${userQueryTitle}"):${memoryNoticeGurmukhi}**\n\n1. **ਪਹਿਲਾ ਪਾਣੀ & ਯੂਰੀਆ:** ਬਿਜਾਈ ਤੋਂ 20-22 ਦਿਨਾਂ ਬਾਅਦ ਪਹਿਲਾ ਪਾਣੀ ਲਾਓ ਅਤੇ ਪ੍ਰਤੀ ਏਕੜ 45kg ਯੂਰੀਆ ਪਾਓ।\n2. **ਕੁੰਗੀ ਨਿਗਰਾਨੀ:** ਪੱਤਿਆਂ 'ਤੇ ਪੀਲਾ ਪਾਊਡਰ ਦਿਸਣ 'ਤੇ ਪ੍ਰੋਪੀਕੋਨਾਜ਼ੋਲ 25% EC (200ml/ਏਕੜ) ਸਪ੍ਰੇ ਕਰੋ।\n3. **ਗ੍ਰੋਥ ਸਪ੍ਰੇ:** 1kg NPK (19:19:19) 200L ਪਾਣੀ 'ਚ ਛਿੜਕ ਕੇ ਵਧੇਰੇ ਫੁੱਟਾਰਾ ਲਵੋ।`;
+      return `🌾 **ਕਣਕ ਦਾ ਪ੍ਰਤੀ ਏਕੜ ਝਾੜ:**\n\n1. 1 ਏਕੜ ਤੋਂ 22 ਤੋਂ 26 ਕੁਇੰਟਲ ਝਾੜ ਮਿਲਦਾ ਹੈ।`;
     }
 
     // 4. PADDY / RICE / JHONA
     if (crop === 'PADDY') {
-      if (lang === 'DEVANAGARI') {
-        return `🌱 **धान का झुलसा/ब्लास्ट रोग ("${userQueryTitle}"):${memoryNoticeDevanagari}**\n\n1. **स्प्रे:** ट्राइसाइक्लाज़ोल 75% WP (Beam) 120g प्रति एकड़ 200L पानी में मिलाकर छिड़कें।\n2. **सावधानी:** पत्तों पर धब्बे दिखने पर यूरिया का उपयोग रोकें।\n3. **जैविक उपाय:** ट्राइकोडरमा 1 किग्रा प्रति एकड़ जैविक खाद के साथ प्रयोग करें।`;
+      if (action === 'YIELD_PROFIT') {
+        return `🌱 **ਝੋਨੇ ਦਾ ਪ੍ਰਤੀ ਏਕੜ ਝਾੜ:**\n\n1. **ਪਰਮਲ ਝੋਨਾ:** 30 ਤੋਂ 35 ਕੁਇੰਟਲ ਪ੍ਰਤੀ ਏਕੜ।\n2. **ਬਾਸਮਤੀ:** 20 ਤੋਂ 25 ਕੁਇੰਟਲ ਪ੍ਰਤੀ ਏਕੜ।`;
       }
-      if (lang === 'ENGLISH') {
-        return `🌱 **Paddy Leaf Blast & Spray advisory ("${userQueryTitle}"):${memoryNoticeEnglish}**\n\n1. **Chemical Control:** Spray Tricyclazole 75% WP @ 120g per acre in 200L water.\n2. **Precaution:** Pause top-dressing Nitrogen fertilizers when spots appear.\n3. **Bio-Control:** Apply Trichoderma viride bio-fungicide @ 1 kg/acre.`;
+      if (action === 'MONTH_SEASON') {
+        return `🌱 **ਝੋਨੇ ਦੀ ਲਵਾਈ ਦੇ ਮਹੀਨੇ (PAU ਸਿਫਾਰਿਸ਼):**\n\n1. **ਪਨੀਰੀ ਬੀਜਣਾ:** 15 ਮਈ ਤੋਂ 30 ਮਈ।\n2. **ਖੇਤ ਵਿੱਚ ਲਵਾਈ:** 15 ਜੂਨ ਤੋਂ 30 ਜੂਨ।`;
       }
-      return `🌱 **ਝੋਨੇ ਦਾ ਬਲਾਸਟ/ਝੁਲਸ ਰੋਗ ("${userQueryTitle}"):${memoryNoticeGurmukhi}**\n\n1. **ਸਪ੍ਰੇ:** ਟ੍ਰਾਈਸਾਈਕਲਾਜ਼ੋਲ 75% WP (ਬਾਨ / Beam) 120 ਗ੍ਰਾਮ ਪ੍ਰਤੀ ਏਕੜ 200 ਲੀਟਰ ਪਾਣੀ ਵਿੱਚ ਛਿੜਕੋ।\n2. **ਸਾਵਧਾਨੀ:** ਦਾਗ਼ ਦਿਸਣ ਤੇ ਯੂਰੀਆ ਪਾਉਣਾ ਤੁਰੰਤ ਬੰਦ ਕਰੋ।\n3. **ਜੈਵਿਕ ਹੱਲ:** ਟ੍ਰਾਈਕੋਡਰਮਾ ਵਿਰਡੀ 1 ਕਿੱਲੋ ਪ੍ਰਤੀ ਏਕੜ ਰੂੜੀ ਦੀ ਖਾਦ ਨਾਲ ਮਿਲਾ ਕੇ ਪਾਓ।`;
+      return `🌱 **ਝੋਨੇ ਦਾ ਬਲਾਸਟ/ਝੁਲਸ ਰੋਗ:**\n\n1. **ਸਪ੍ਰੇ:** ਟ੍ਰਾਈਸਾਈਕਲਾਜ਼ੋਲ 75% WP (Beam) 120g ਪ੍ਰਤੀ ਏਕੜ 200L ਪਾਣੀ ਵਿੱਚ ਛਿੜਕੋ।`;
     }
 
     // 5. COTTON / NARMA
     if (crop === 'COTTON') {
-      return `☁️ **ਨਰਮੇ ਦੀ ਗੁਲਾਬੀ ਸੁੰਡੀ/ਚਿੱਟੀ ਮੱਖੀ ("${userQueryTitle}"):${memoryNoticeGurmukhi}**\n\n1. **ਸਪ੍ਰੇ:** ਇਮਾਮੈਕਟਿਨ ਬੈਂਜ਼ੋਏਟ 5% SG (100g) + ਸੇਫੀਨਾ (Sefina 400ml) ਪ੍ਰਤੀ ਏਕੜ 200L ਪਾਣੀ ਵਿੱਚ ਛਿੜਕੋ।\n2. **ਟਰੈਪ:** 1 ਏਕੜ ਵਿੱਚ 5 ਫੇਰੋਮੋਨ ਟਰੈਪ ਲਗਾਓ।\n3. **ਦੇਸੀ ਹੱਲ:** ਨਿੰਮ ਦਾ ਤੇਲ (Neem Oil 500ml) ਪ੍ਰਤੀ ਏਕੜ ਛਿੜਕਾਅ ਕਰੋ।`;
+      if (action === 'YIELD_PROFIT') {
+        return `☁️ **ਨਰਮੇ ਦਾ ਪ੍ਰਤੀ ਏਕੜ ਝਾੜ:**\n\n1. **ਔਸਤਨ ਝਾੜ:** 1 ਏਕੜ ਤੋਂ 10 ਤੋਂ 14 ਕੁਇੰਟਲ ਨਰਮਾ ਮਿਲਦਾ ਹੈ।`;
+      }
+      if (action === 'MONTH_SEASON') {
+        return `☁️ **ਨਰਮੇ ਦੀ ਬਿਜਾਈ ਦੇ ਮਹੀਨੇ:**\n\n1. **ਸਮਾਂ:** 15 ਅਪ੍ਰੈਲ ਤੋਂ 15 ਮਈ।`;
+      }
+      return `☁️ **ਨਰਮੇ ਦੀ ਗੁਲਾਬੀ ਸੁੰਡੀ/ਚਿੱਟੀ ਮੱਖੀ:**\n\n1. **ਸਪ੍ਰੇ:** ਇਮਾਮੈਕਟਿਨ ਬੈਂਜ਼ੋਏਟ 5% SG (100g) + ਸੇਫੀਨਾ (400ml) ਪ੍ਰਤੀ ਏਕੜ 200L ਪਾਣੀ ਵਿੱਚ ਛਿੜਕੋ।`;
     }
 
-    // 6. 20-30 DAY PLANT AGE ADVISORY
+    // 6. MUSTARD / SARSON
+    if (crop === 'MUSTARD') {
+      if (action === 'YIELD_PROFIT') {
+        return `🌼 **ਸਰ੍ਹੋਂ ਦਾ ਪ੍ਰਤੀ ਏਕੜ ਝਾੜ:**\n\n1. **ਔਸਤਨ ਝਾੜ:** 1 ਏਕੜ ਤੋਂ 8 ਤੋਂ 11 ਕੁਇੰਟਲ ਸਰ੍ਹੋਂ ਮਿਲਦੀ ਹੈ।`;
+      }
+      if (action === 'MONTH_SEASON') {
+        return `🌼 **ਸਰ੍ਹੋਂ ਦੀ ਬਿਜਾਈ ਦੇ ਮਹੀਨੇ:**\n\n1. **ਸਮਾਂ:** 25 ਸਤੰਬਰ ਤੋਂ 20 ਅਕਤੂਬਰ।`;
+      }
+      return `🌼 **ਸਰ੍ਹੋਂ ਦੀ ਫਸਲ ਤੇ ਤੇਲਾ/ਚੇਪਾ:**\n\n1. **ਸਪ੍ਰੇ:** ਥਿਆਮੈਥੋਕਸਾਮ (Actara) 40g ਪ੍ਰਤੀ ਏਕੜ 200L ਪਾਣੀ ਵਿੱਚ ਛਿੜਕੋ।`;
+    }
+
+    // 7. POTATO / ALOO
+    if (crop === 'POTATO') {
+      if (action === 'YIELD_PROFIT') {
+        return `🥔 **ਆਲੂਆਂ ਦਾ ਪ੍ਰਤੀ ਏਕੜ ਝਾੜ:**\n\n1. **ਔਸਤਨ ਝਾੜ:** 1 ਏਕੜ ਤੋਂ 120 ਤੋਂ 150 ਕੁਇੰਟਲ ਆਲੂ ਮਿਲਦੇ ਹਨ।`;
+      }
+      return `🥔 **ਆਲੂਆਂ ਦੇ ਝੁਲਸ ਰੋਗ ਦਾ ਹੱਲ:**\n\n1. **ਸਪ੍ਰੇ:** ਐਕਰੋਬੈਟ (400g) + ਮੈਂਕੋਜ਼ੇਬ (600g) 200L ਪਾਣੀ ਵਿੱਚ ਪ੍ਰਤੀ ਏਕੜ ਛਿੜਕੋ।`;
+    }
+
+    // 8. 20-30 DAY PLANT AGE ADVISORY
     if (crop === 'PLANT_AGE_20' || action === 'WATER') {
-      return `🌱 **20-25 ਦਿਨਾਂ ਦੇ ਪੌਦਿਆਂ ਲਈ ਪਹਿਲਾ ਪਾਣੀ ਅਤੇ ਸਪ੍ਰੇ ("${userQueryTitle}"):${memoryNoticeGurmukhi}**\n\n1. **ਪਹਿਲਾ ਪਾਣੀ ਅਤੇ ਯੂਰੀਆ:** 20-22 ਦਿਨਾਂ ਦੀ ਫਸਲ/ਪੌਦਿਆਂ ਨੂੰ ਪਹਿਲਾ ਪਾਣੀ ਲਾਓ ਅਤੇ ਪ੍ਰਤੀ ਏਕੜ 45kg (1 ਗੱਟਾ) ਯੂਰੀਆ ਦਿਓ।\n2. **ਨਦੀਨ ਨਾਸ਼ਕ ਸਪ੍ਰੇ:** ਨਦੀਨਾਂ ਲਈ ਪਾਣੀ ਤੋਂ 3-4 ਦਿਨ ਬਾਅਦ ਸਿਫਾਰਿਸ਼ ਕੀਤੀ ਨਦੀਨ ਨਾਸ਼ਕ ਸਪ੍ਰੇ ਕਰੋ।\n3. **ਗ੍ਰੋਥ ਬੂਸਟਰ:** ਵਧੀਆ ਫੁੱਟਾਰੇ ਲਈ 1kg NPK (19:19:19) ਪ੍ਰਤੀ ਏਕੜ 200L ਪਾਣੀ ਵਿੱਚ ਮਿਲਾ ਕੇ ਛਿੜਕੋ।\n4. **FarmsKing Store:** ਅਸਲੀ ਦਵਾਈਆਂ FarmsKing Store ਤੋਂ ਮੰਗਵਾਓ।`;
+      return `🌱 **20-25 ਦਿਨਾਂ ਦੇ ਪੌਦਿਆਂ ਲਈ ਪਾਣੀ & ਯੂਰੀਆ:**\n\n1. **ਪਹਿਲਾ ਪਾਣੀ:** 20-22 ਦਿਨਾਂ ਦੀ ਫਸਲ ਨੂੰ ਹਲਕਾ ਪਾਣੀ ਲਾਓ ਅਤੇ ਪ੍ਰਤੀ ਏਕੜ 45kg ਯੂਰੀਆ ਦਿਓ।`;
     }
 
-    // 7. DAIRY / LIVESTOCK
+    // 9. DAIRY / LIVESTOCK
     if (crop === 'DAIRY') {
-      return `🥛 **ਪਸ਼ੂ ਪਾਲਣ ਅਤੇ ਦੁੱਧ ਵਧਾਉਣ ("${userQueryTitle}") ਦੀ ਮਾਹਰ ਸਲਾਹ:${memoryNoticeGurmukhi}**\n\n1. **ਖੁਰਾਕ & ਮਿਨਰਲ ਮਿਕਸਚਰ:** ਮੱਝ/ਗਾਂ ਨੂੰ ਰੋਜ਼ਾਨਾ 50g-100g ਚੰਗੀ ਕੁਆਲਿਟੀ ਦਾ Mineral Mixture ਖੁਰਾਕ ਵਿੱਚ ਦਿਓ।\n2. **ਹਰਾ ਚਾਰਾ:** ਹਰੇ ਚਾਰੇ ਨਾਲ 1kg ਤੂੜੀ ਅਤੇ ਸੁੱਕਾ ਚਾਰਾ ਜ਼ਰੂਰ ਮਿਲਾਓ।\n3. **ਪਾਣੀ:** ਪਸ਼ੂ ਨੂੰ ਦਿਨ ਵਿੱਚ 4-5 ਵਾਰ ਸਾਫ਼ ਅਤੇ ਤਾਜ਼ਾ ਪਾਣੀ ਪਿਲਾਓ।`;
+      return `🥛 **ਪਸ਼ੂ ਦਾ ਦੁੱਧ ਵਧਾਉਣ ਦੀ ਸਲਾਹ:**\n\n1. **ਮਿਨਰਲ ਮਿਕਸਚਰ:** ਮੱਝ/ਗਾਂ ਨੂੰ ਰੋਜ਼ਾਨਾ 50g-100g ਮਿਨਰਲ ਮਿਕਸਚਰ ਖੁਰਾਕ ਵਿੱਚ ਦਿਓ।`;
     }
 
-    // 8. FARMSKING APP & STORE
-    if (crop === 'STORE') {
-      return `🌾 **FarmsKing ਸੁਪਰ ਐਪ ਜਾਣਕਾਰੀ ("${userQueryTitle}"):**\n\n1. **ਖੇਤੀ ਦਵਾਈਆਂ & ਖਾਦਾਂ (AgriStore):** ਅਸਲੀ ਯੂਰੀਆ, DAP, NPK, ਅਤੇ PAU ਸਿਫਾਰਿਸ਼ ਕੀਤੀਆਂ ਸਪ੍ਰੇਆਂ ਪਿੰਡਾਂ 'ਚ ਡਿਲੀਵਰੀ।\n2. **ਤਾਜ਼ਾ ਮੰਡੀ ਭਾਵ:** ਪੰਜਾਬ, ਹਰਿਆਣਾ ਦੇ ਰੋਜ਼ਾਨਾ ਸਰਕਾਰੀ ਭਾਵ।\n3. **ਸੈਟੇਲਾਈਟ ਖੇਤ ਦੇਖਭਾਲ:** ਸੈਟੇਲਾਈਟ ਰਾਹੀਂ ਆਪਣੇ ਖੇਤ ਦੀ ਹਰਿਆਲੀ ਅਤੇ ਪਾਣੀ ਦੀ ਜਾਂਚ ਕਰੋ।\n4. **ਦੁਕਾਨਦਾਰ & ਵਾਲਿਟ:** ਦੁਕਾਨਦਾਰ ਆਪਣਾ ਸਮਾਨ ਵੇਚ ਸਕਦੇ ਹਨ ਅਤੇ ਵਾਲਿਟ ਵਿੱਚ ਪੈਸੇ ਪ੍ਰਾਪਤ ਕਰ ਸਕਦੇ ਹਨ।`;
-    }
-
-    // 9. MANDI RATES
+    // 10. MANDI RATES
     if (crop === 'MANDI' || action === 'MANDI_RATE') {
-      return `📊 **ਅੱਜ ਦੇ ਤਾਜ਼ਾ ਮੰਡੀ ਭਾਵ ("${userQueryTitle}"):**\n\n• **ਕਣਕ:** ₹2,275 - ₹2,450 / ਕੁਇੰਟਲ\n• **ਝੋਨਾ (ਬਾਸਮਤੀ):** ₹3,800 - ₹4,250 / ਕੁਇੰਟਲ\n• **ਟਮਾਟਰ:** ₹1,400 - ₹1,800 / ਕੁਇੰਟਲ\n• **ਸਰ੍ਹੋਂ:** ₹5,400 - ₹5,850 / ਕੁਇੰਟਲ\n\n💡 *ਜ਼ਿਲ੍ਹੇਵਾਰ ਤਾਜ਼ਾ ਭਾਵ ਦੇਖਣ ਲਈ FarmsKing "Mandi Rates" ਟੈਬ ਦੀ ਵਰਤੋਂ ਕਰੋ।`;
+      return `📊 **ਅੱਜ ਦੇ ਮੰਡੀ ਭਾਵ:**\n\n• **ਕਣਕ:** ₹2,275 - ₹2,450 / ਕੁਇੰਟਲ\n• **ਝੋਨਾ (ਬਾਸਮਤੀ):** ₹3,800 - ₹4,250 / ਕੁਇੰਟਲ\n• **ਟਮਾਟਰ:** ₹1,400 - ₹1,800 / ਕੁਇੰਟਲ\n• **ਸਰ੍ਹੋਂ:** ₹5,400 - ₹5,850 / ਕੁਇੰਟਲ`;
     }
 
-    // 10. WEATHER ADVISORY
+    // 11. WEATHER ADVISORY
     if (crop === 'WEATHER' || action === 'WEATHER_INFO') {
-      return `🌤️ **ਮੌਸਮ ਅਤੇ ਖੇਤੀਬਾੜੀ ਸਲਾਹ ("${userQueryTitle}"):**\n\n• 7 ਦਿਨਾਂ ਦਾ ਮੌਸਮ ਅਤੇ ਬਾਰਿਸ਼ ਦਾ ਪੂਰਵ-ਅਨੁਮਾਨ FarmsKing ਹੋਮ ਡੈਸ਼ਬੋਰਡ 'ਤੇ ਦੇਖੋ।\n• **ਸਪ੍ਰੇ ਦੀ ਸਲਾਹ:** ਤੇਜ਼ ਹਵਾ (15 km/h ਤੋਂ ਵੱਧ) ਜਾਂ 4 ਘੰਟਿਆਂ ਵਿੱਚ ਬਾਰਿਸ਼ ਦੀ ਸੰਭਾਵਨਾ ਹੋਵੇ ਤਾਂ ਸਪ੍ਰੇ ਨਾ ਕਰੋ।`;
+      return `🌤️ **ਮੌਸਮ ਜਾਣਕਾਰੀ:**\n\n• ਤੇਜ਼ ਹਵਾ (15 km/h ਤੋਂ ਵੱਧ) ਜਾਂ ਬਾਰਿਸ਼ ਦੀ ਸੰਭਾਵਨਾ ਹੋਣ 'ਤੇ ਖੇਤ ਵਿੱਚ ਸਪ੍ਰੇ ਨਾ ਕਰੋ।`;
     }
 
-    // 11. GENERAL / DYNAMIC RESEARCH FALLBACK
+    // 12. GENERAL YIELD FALLBACK
+    if (action === 'YIELD_PROFIT') {
+      if (lang === 'DEVANAGARI') {
+        return `🌾 **प्रति एकड़ औसत पैदावार (Yield):**\n\n• **गेहूं:** 22 - 26 क्विंटल/एकड़।\n• **धान:** 30 - 35 क्विंटल/एकड़।\n• **गेंदा:** 80 - 100 क्विंटल/एकड़।`;
+      }
+      return `🌾 **ਫਸਲਾਂ ਦਾ ਪ੍ਰਤੀ ਏਕੜ ਔਸਤਨ ਝਾੜ:**\n\n• **ਕਣਕ:** 22 - 26 ਕੁਇੰਟਲ/ਏਕੜ।\n• **ਝੋਨਾ:** 30 - 35 ਕੁਇੰਟਲ/ਏਕੜ।\n• **ਗੇਂਦਾ:** 80 - 100 ਕੁਇੰਟਲ/ਏਕੜ।\n• **ਨਰਮਾ:** 10 - 14 ਕੁਇੰਟਲ/ਏਕੜ।`;
+    }
+
+    // 13. DIRECT TARGETED FALLBACK
     if (lang === 'DEVANAGARI') {
-      return `🌾 **कृषि विशेषज्ञ सलाह — "${userQueryTitle}":${memoryNoticeDevanagari}**\n\n1. **फसल देखभाल:** आपके प्रश्न ("${userQueryTitle}") के अनुसार समय पर सिंचाई करें और अनुशंसित उर्वरक (यूरिया / DAP) दें।\n2. **रोग निगरानी:** खेत की 3 दिनों में जांच करें और शुरुआती लक्षण दिखने पर उपयुक्त फफूंदनाशक छिड़कें।\n3. **जैविक सुरक्षा:** 5% नीम अर्क या ट्राइकोडरमा का प्रयोग करें।\n4. **FarmsKing Store:** असली दवाएं और बीज सीधे FarmsKing ऐप से घर मंगाएं।`;
+      return `🌾 **कृषि सलाह:**\n\n1. **सिंचाई एवं उर्वरक:** फसल को समय पर पानी दें और संतुलित यूरिया/DAP की खुराक डालें।`;
     }
     if (lang === 'ENGLISH') {
-      return `🌾 **Agricultural Expert Advice — "${userQueryTitle}":${memoryNoticeEnglish}**\n\n1. **Crop Health:** Regarding your question ("${userQueryTitle}"), ensure timely irrigation and balanced NPK fertilizer top-dressing.\n2. **Disease & Pest Watch:** Monitor leaf surfaces every 3 days. Apply recommended fungicides/pesticides early.\n3. **Organic Protection:** Use 5% Neem seed extract or Trichoderma bio-control.\n4. **FarmsKing Store:** Order genuine sprays, seeds, and fertilizers with doorstep delivery on FarmsKing.`;
+      return `🌾 **Agri Advisory:**\n\n1. **Irrigation & Fertilizer:** Irrigate on time and apply balanced NPK top-dressing.`;
     }
-    return `🌾 **ਖੇਤੀਬਾੜੀ ਮਾਹਰ ਸਲਾਹ — "${userQueryTitle}":${memoryNoticeGurmukhi}**\n\n1. **ਫਸਲ ਦੀ ਦੇਖਭਾਲ:** ਤੁਹਾਡੇ ਸਵਾਲ ("${userQueryTitle}") ਅਨੁਸਾਰ ਸਮੇਂ ਸਿਰ ਪਾਣੀ ਅਤੇ PAU ਸਿਫਾਰਿਸ਼ ਅਨੁਸਾਰ ਖਾਦਾਂ ਦੀ ਵਰਤੋਂ ਕਰੋ।\n2. **ਬੀਮਾਰੀ ਦੀ ਜਾਂਚ:** ਹਰ 3 ਦਿਨਾਂ ਬਾਅਦ ਪੱਤਿਆਂ ਦੀ ਜਾਂਚ ਕਰੋ। ਸ਼ੁਰੂਆਤ 'ਚ ਹੀ ਸਪ੍ਰੇ ਕਰੋ।\n3. **ਜੈਵਿਕ ਸੁਰੱਖਿਆ:** 5% ਨਿੰਮ ਦਾ ਅਰਕ ਜਾਂ ਟ੍ਰਾਈਕੋਡਰਮਾ ਦੀ ਵਰਤੋਂ ਕਰੋ।\n4. **FarmsKing Store:** ਅਸਲੀ ਦਵਾਈਆਂ ਤੇ ਖਾਦਾਂ FarmsKing ਐਪ ਤੋਂ ਘਰ ਬੈਠੇ ਮੰਗਵਾਓ।`;
+    return `🌾 **ਖੇਤੀਬਾੜੀ ਸਲਾਹ:**\n\n1. **ਪਾਣੀ ਅਤੇ ਖਾਦ:** ਫਸਲ ਨੂੰ ਸਮੇਂ ਸਿਰ ਹਲਕਾ ਪਾਣੀ ਲਾਓ ਅਤੇ ਸਿਫਾਰਿਸ਼ ਅਨੁਸਾਰ ਯੂਰੀਆ ਪਾਓ।`;
   };
 
-  const handleSend = (textToSend?: string) => {
+  const handleSend = async (textToSend?: string) => {
     const rawInput = (textToSend || inputQuery).trim();
     const query = rawInput || 'Farming and fertilizer advisory';
     if (isLoading) return;
@@ -311,41 +523,86 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 100);
 
-    // AI Processing with Active Context Memory & Exact Language Matching
-    setTimeout(() => {
-      let aiText = '';
-      let category: 'FARMING' | 'NON_FARMING_BLOCKED' = 'FARMING';
-      const lang = detectLanguage(query);
+    const lang = detectLanguage(query);
 
-      if (isExplicitNonFarming(query)) {
-        category = 'NON_FARMING_BLOCKED';
-        if (lang === 'GURMUKHI') {
-          aiText = '⚠️ **ਸਿਰਫ਼ ਖੇਤੀਬਾੜੀ ਸਵਾਲ / Sirf Kheti Sawal:**\n\nਮੈਂ FarmsKing ਦਾ AI ਖੇਤੀ ਡਾਕਟਰ 🌾 ਹਾਂ।\nਮੈਂ ਸਿਰਫ਼ ਫਸਲਾਂ, ਖਾਦਾਂ, ਸਪ੍ਰੇਆਂ, ਬੀਜਾਂ, ਮੌਸਮ ਅਤੇ ਮੰਡੀ ਭਾਵਾਂ ਨਾਲ ਸਬੰਧਤ ਸਵਾਲਾਂ ਦੇ ਜਵਾਬ ਦੇ ਸਕਦਾ ਹਾਂ।\n\nਕਿਰਪਾ ਕਰਕੇ ਆਪਣੀ ਫਸਲ ਜਾਂ ਖੇਤੀਬਾੜੀ ਨਾਲ ਸਬੰਧਤ ਸਵਾਲ ਪੁੱਛੋ!';
-        } else if (lang === 'DEVANAGARI') {
-          aiText = '⚠️ **केवल कृषि संबंधी प्रश्न / Sirf Kheti Sawal:**\n\nमैं FarmsKing का AI खेती डॉक्टर 🌾 हूँ।\nमैं केवल फसलों, उर्वरकों, स्प्रे, बीजों, मौसम और मंडी भावों से संबंधित प्रश्नों के उत्तर दे सकता हूँ।\n\nकृपया अपनी फसल या खेती से जुड़ा सवाल पूछें!';
-        } else {
-          aiText = '⚠️ **Agricultural Questions Only:**\n\nI am FarmsKing\'s AI Kheti Doctor 🌾.\nI can only answer questions related to crops, fertilizers, sprays, seeds, weather, and mandi rates.\n\nPlease ask a question related to your crops or farming!';
-        }
+    // Explicit non-farming filter on client side as first line of defense
+    if (isExplicitNonFarming(query)) {
+      let aiText = '';
+      if (lang === 'GURMUKHI') {
+        aiText = '⚠️ **ਸਿਰਫ਼ ਖੇਤੀਬਾੜੀ ਸਵਾਲ:**\n\nਮੈਂ ਸਿਰਫ਼ ਫਸਲਾਂ, ਖਾਦਾਂ, ਸਪ੍ਰੇਆਂ, ਬੀਜਾਂ, ਮੌਸਮ ਅਤੇ ਮੰਡੀ ਭਾਵਾਂ ਨਾਲ ਸਬੰਧਤ ਸਵਾਲਾਂ ਦੇ ਜਵਾਬ ਦੇ ਸਕਦਾ ਹਾਂ। ਕਿਰਪਾ ਕਰਕੇ ਆਪਣੀ ਖੇਤੀ ਬਾਰੇ ਸਵਾਲ ਪੁੱਛੋ!';
+      } else if (lang === 'DEVANAGARI') {
+        aiText = '⚠️ **केवल कृषि संबंधी प्रश्न:**\n\nमैं केवल फसलों, उर्वरकों, स्प्रे, बीजों, मौसम और मंडी भावों के उत्तर दे सकता हूँ। कृपया खेती से जुड़ा सवाल पूछें!';
       } else {
-        // Pass complete message history so AI remembers active crop/topic!
-        aiText = generateAgriResponse(query, updatedMessages);
+        aiText = '⚠️ **Agricultural Questions Only:**\n\nI can only answer questions related to crops, fertilizers, sprays, seeds, weather, and mandi rates. Please ask a farming question!';
       }
 
-      const aiMsg: ChatMessage = {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `ai-${Date.now()}`,
+          sender: 'AI',
+          text: aiText,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          category: 'NON_FARMING_BLOCKED',
+        },
+      ]);
+      setIsLoading(false);
+      return;
+    }
+
+    // Prepare conversation history for LLM API
+    const historyPayload = updatedMessages.slice(-6).map((m) => ({
+      role: m.sender === 'USER' ? ('user' as const) : ('assistant' as const),
+      content: m.text,
+    }));
+
+    try {
+      const baseUrl = getDefaultApiUrl();
+      const response = await fetch(`${baseUrl}/ai-chat/ask`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: query,
+          history: historyPayload,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.answer) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `ai-${Date.now()}`,
+              sender: 'AI',
+              text: data.answer,
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              category: 'FARMING',
+            },
+          ]);
+          setIsLoading(false);
+          setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('Backend AI Chat API failed, using fallback engine:', err);
+    }
+
+    // Fallback to internal rule-based engine if network/API fails
+    const fallbackText = generateAgriResponse(query, updatedMessages);
+    setMessages((prev) => [
+      ...prev,
+      {
         id: `ai-${Date.now()}`,
         sender: 'AI',
-        text: aiText,
+        text: fallbackText,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        category,
-      };
-
-      setMessages((prev) => [...prev, aiMsg]);
-      setIsLoading(false);
-
-      setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    }, 1200);
+        category: 'FARMING',
+      },
+    ]);
+    setIsLoading(false);
+    setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
   };
 
   return (
@@ -362,7 +619,7 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.headerTitle}>🤖 FarmsKing Kheti Mitra AI Doctor</Text>
-              <Text style={styles.headerSubtitle}>100% Free Smart Assistant · Active Conversation Memory</Text>
+              <Text style={styles.headerSubtitle}>100% Free Smart Assistant · Precise Agricultural Answers</Text>
             </View>
             <View style={styles.badgeFree}>
               <Text style={styles.badgeFreeText}>FREE 🌾</Text>
@@ -441,7 +698,7 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
             <View style={[styles.msgBubble, styles.bubbleAi, { flexDirection: 'row', alignItems: 'center', gap: 8 }]}>
               <ActivityIndicator size="small" color="#16a34a" />
               <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#15803d' }}>
-                AI Doctor is analyzing farming database & history...
+                AI Doctor is calculating answer...
               </Text>
             </View>
           </View>

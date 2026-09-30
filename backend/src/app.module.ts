@@ -60,6 +60,7 @@ import { SellerModule } from './modules/seller/seller.module';
 import { CashfreeModule } from './modules/cashfree/cashfree.module';
 import { ShiprocketModule } from './modules/shiprocket/shiprocket.module';
 import { EmailModule } from './modules/email/email.module';
+import { AiChatModule } from './modules/ai-chat/ai-chat.module';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 
 
@@ -124,6 +125,7 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
     CashfreeModule,
     ShiprocketModule,
     EmailModule,
+    AiChatModule,
   ],
 
 

@@ -47,8 +47,9 @@ function RootNavigation() {
   useEffect(() => {
     if (isLoading) return;
     const inAuthGroup = segments[0] === '(auth)';
+    const isPublicRoute = segments[0] === 'seo';
 
-    if (!user && !inAuthGroup) {
+    if (!user && !inAuthGroup && !isPublicRoute) {
       router.replace('/(auth)/login');
     } else if (user && inAuthGroup) {
       router.replace('/(tabs)');
@@ -63,6 +64,7 @@ function RootNavigation() {
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="seo" options={{ headerShown: false }} />
       <Stack.Screen name="+not-found" />
     </Stack>
   );

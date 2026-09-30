@@ -1002,9 +1002,17 @@ export class UsersService implements OnModuleInit {
       throw new ConflictException('User is already deactivated.');
     }
 
+    const timestamp = Date.now();
+    const newMobile = user.mobile.includes('_del_') ? user.mobile : `${user.mobile}_del_${timestamp}`;
+    const newEmail = user.email ? (user.email.includes('_del_') ? user.email : `${user.email}_del_${timestamp}`) : null;
+
     const updated = await this.prisma.user.update({
       where: { id },
-      data: { deletedAt: new Date() },
+      data: {
+        deletedAt: new Date(),
+        mobile: newMobile,
+        email: newEmail,
+      },
       select: SAFE_USER_SELECT,
     });
 
@@ -1021,9 +1029,23 @@ export class UsersService implements OnModuleInit {
       throw new ConflictException('User is already active.');
     }
 
+    const restoredMobile = user.mobile.replace(/_del_\d+$/, '');
+    const restoredEmail = user.email ? user.email.replace(/_del_\d+$/, '') : null;
+
+    const existing = await this.prisma.user.findFirst({
+      where: { mobile: restoredMobile, deletedAt: null, id: { not: id } },
+    });
+    if (existing) {
+      throw new ConflictException(`Cannot reactivate: Mobile ${restoredMobile} is already in use by another active account.`);
+    }
+
     const updated = await this.prisma.user.update({
       where: { id },
-      data: { deletedAt: null },
+      data: {
+        deletedAt: null,
+        mobile: restoredMobile,
+        email: restoredEmail,
+      },
       select: SAFE_USER_SELECT,
     });
 
@@ -1036,7 +1058,7 @@ export class UsersService implements OnModuleInit {
         .some((r) => eligibleRoles.includes(r));
 
     if (isEligible) {
-      this.whatsappGroupSyncService.autoAddNewUser(id, user.mobile ?? '', user.name ?? 'User').catch(() => {});
+      this.whatsappGroupSyncService.autoAddNewUser(id, updated.mobile ?? '', updated.name ?? 'User').catch(() => {});
     }
 
     return updated;
@@ -1307,16 +1329,20 @@ export class UsersService implements OnModuleInit {
 
     await this.prisma.$transaction(
       async (tx) => {
-        // 1. Clear referral links
+        // 1. Clear self-referencing user relations & doctor/supervisor links
         await tx.user.updateMany({ where: { referredById: id }, data: { referredById: null } });
+        await tx.user.updateMany({ where: { seniorDoctorId: id }, data: { seniorDoctorId: null } });
+        await tx.user.updateMany({ where: { employerFarmerId: id }, data: { employerFarmerId: null } });
 
         // 2. Delete child plans, subscriptions & assignments
+        await tx.farmerPlanHistory.deleteMany({ where: { farmerId: id } });
         await tx.farmerPlan.deleteMany({ where: { farmerId: id } });
         await tx.gardenerPlan.deleteMany({ where: { gardenerId: id } });
         await tx.advisorTierPlan.deleteMany({ where: { advisorId: id } });
         await tx.advisorAssignment.deleteMany({ where: { OR: [{ farmerId: id }, { advisorId: id }, { assignedById: id }] } });
         await tx.callRequest.deleteMany({ where: { OR: [{ farmerId: id }, { advisorId: id }] } });
         await tx.partnerAssignment.deleteMany({ where: { OR: [{ businessPartnerId: id }, { customerId: id }] } });
+        await tx.userReferral.deleteMany({ where: { OR: [{ referrerId: id }, { referredUserId: id }] } });
         await tx.advisorSubscription.deleteMany({ where: { OR: [{ farmerId: id }, { approvedById: id }] } });
 
         // 3. Delete financial requests, transactions & wallet data
@@ -1324,6 +1350,7 @@ export class UsersService implements OnModuleInit {
         await tx.withdrawalRequest.deleteMany({ where: { OR: [{ businessPartnerId: id }, { processedById: id }] } });
         await tx.planPaymentRequest.deleteMany({ where: { OR: [{ farmerId: id }, { confirmedById: id }] } });
         await tx.farmerPlanPaymentRequest.deleteMany({ where: { OR: [{ farmerId: id }, { confirmedById: id }] } });
+        await tx.arhtiyaTransaction.deleteMany({ where: { farmerId: id } });
         await tx.saleBill.deleteMany({ where: { farmerId: id } });
         await tx.paymentReceipt.deleteMany({ where: { farmerId: id } });
 
@@ -1333,6 +1360,7 @@ export class UsersService implements OnModuleInit {
         await tx.message.deleteMany({ where: { OR: [{ senderId: id }, { receiverId: id }] } });
         await tx.cropProblem.deleteMany({ where: { OR: [{ reportedById: id }, { assignedAdvisorId: id }] } });
         await tx.groupVoiceCallParticipant.deleteMany({ where: { userId: id } });
+        await tx.groupVoiceCall.deleteMany({ where: { hostId: id } });
 
         // 5. Delete labour records
         await tx.labourEntry.deleteMany({ where: { recordedById: id } });
@@ -1351,24 +1379,43 @@ export class UsersService implements OnModuleInit {
         // 7. Delete farms & related plots
         await tx.farm.deleteMany({ where: { ownerId: id } });
 
-        // 8. Delete orders, addresses, coupons & logs
+        // 8. Delete ecommerce products, reviews, wishlist & orders
+        await tx.productReview.deleteMany({ where: { userId: id } });
+        await tx.wishlist.deleteMany({ where: { userId: id } });
+        await tx.product.deleteMany({ where: { createdById: id } });
+        await tx.sellerStore.deleteMany({ where: { sellerId: id } });
+        await tx.customerOrder.updateMany({ where: { packedById: id }, data: { packedById: null } });
+        await tx.customerOrder.updateMany({ where: { dispatchedById: id }, data: { dispatchedById: null } });
         await tx.customerOrder.deleteMany({ where: { customerId: id } });
         await tx.customerAddress.deleteMany({ where: { ownerId: id } });
+
+        // 9. Delete coupons & logs
         await tx.couponRedemption.deleteMany({ where: { customerId: id } });
         await tx.coupon.deleteMany({ where: { OR: [{ businessPartnerId: id }, { createdById: id }] } });
-        await tx.farmerPlanCoupon.deleteMany({ where: { OR: [{ createdById: id }, { assignedFarmerId: id }, { assignedAdvisorId: id }, { assignedBusinessPartnerId: id }] } });
+        await tx.farmerPlanCoupon.deleteMany({ where: { OR: [{ createdById: id }, { assignedFarmerId: id }, { assignedAdvisorId: id }, { assignedBusinessPartnerId: id }, { usedByFarmerId: id }] } });
         await tx.gardenerPlanCoupon.deleteMany({ where: { OR: [{ createdById: id }, { assignedGardenerId: id }] } });
+        await tx.planRenewalCoupon.deleteMany({ where: { OR: [{ createdById: id }, { assignedFarmerId: id }, { assignedAdvisorId: id }] } });
+        await tx.basicPlanCoupon.deleteMany({ where: { OR: [{ createdById: id }, { purchasedById: id }, { usedByFarmerId: id }] } });
         await tx.auditLog.deleteMany({ where: { actorId: id } });
         await tx.upload.deleteMany({ where: { uploadedById: id } });
 
-        // 9. Delete KingConnect & Voice AI
+        // 10. Nullify system settings updatedById & weather tip templates
+        await tx.appSetting.updateMany({ where: { updatedById: id }, data: { updatedById: null } });
+        await tx.couponSystemSetting.updateMany({ where: { updatedById: id }, data: { updatedById: null } });
+        await tx.farmerPlanPricing.updateMany({ where: { updatedById: id }, data: { updatedById: null } });
+        await tx.weatherTipTemplate.deleteMany({ where: { createdById: id } });
+
+        // 11. Delete technical training, price lock, KingConnect & Voice AI logs
+        await tx.farmerTrainingLog.deleteMany({ where: { OR: [{ farmerId: id }, { trainerId: id }] } });
+        await tx.trainerAssignment.deleteMany({ where: { OR: [{ trainerId: id }, { uplineTrainerId: id }] } });
+        await tx.priceLockContract.deleteMany({ where: { OR: [{ farmerId: id }, { buyerId: id }] } });
         await tx.kingConnectLink.deleteMany({ where: { OR: [{ initiatorId: id }, { receiverId: id }] } });
         await tx.p2pLedgerSyncRequest.deleteMany({ where: { OR: [{ senderId: id }, { receiverId: id }] } });
         await tx.demandRequest.deleteMany({ where: { OR: [{ requesterId: id }, { farmerId: id }] } });
         await tx.kingPaymentRequest.deleteMany({ where: { OR: [{ senderId: id }, { receiverId: id }] } });
         await tx.voiceAILog.deleteMany({ where: { userId: id } });
 
-        // 10. Finally, hard delete the User record itself from the database
+        // 12. Finally, hard delete the User record itself from the database
         await tx.user.delete({ where: { id } });
       },
       {

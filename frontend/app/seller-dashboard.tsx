@@ -91,6 +91,8 @@ export default function SellerDashboardScreen() {
   const [isPincodeLoading, setIsPincodeLoading] = useState(false);
 
   // Step 5: Document Uploads & Verification
+  const [sellerPhotoDoc, setSellerPhotoDoc] = useState<string | null>(null);
+  const [businessLogoDoc, setBusinessLogoDoc] = useState<string | null>(null);
   const [gstCertDoc, setGstCertDoc] = useState<string | null>(null);
   const [panCardDoc, setPanCardDoc] = useState<string | null>(null);
   const [chequeDoc, setChequeDoc] = useState<string | null>(null);
@@ -346,6 +348,8 @@ export default function SellerDashboardScreen() {
     if (data.pickupCity) setPickupCity(data.pickupCity);
     if (data.pickupState) setPickupState(data.pickupState);
     if (data.pickupPincode) setPickupPincode(data.pickupPincode);
+    if (data.sellerPhotoUrl) setSellerPhotoDoc(data.sellerPhotoUrl);
+    if (data.logoDocUrl) setBusinessLogoDoc(data.logoDocUrl);
     if (data.gstDocUrl) setGstCertDoc(data.gstDocUrl);
     if (data.panDocUrl) setPanCardDoc(data.panDocUrl);
     if (data.chequeDocUrl) setChequeDoc(data.chequeDocUrl);
@@ -648,6 +652,17 @@ export default function SellerDashboardScreen() {
     const isFarmerProducer = sellerType === 'FARMER' || entityType === 'INDIVIDUAL_FARMER';
     const isCommercial = sellerType === 'COMMERCIAL' || entityType !== 'INDIVIDUAL_FARMER';
 
+    // 0. Seller/Owner Photo & Business Logo Mandatory
+    if (!sellerPhotoDoc) {
+      showAlert('Seller Photo Required ⚠️', 'Seller / Business Owner Photo is mandatory. Please upload a clear photo.');
+      return false;
+    }
+
+    if (!businessLogoDoc) {
+      showAlert('Business Logo Required ⚠️', 'Store / Business Logo is mandatory. Please upload your logo.');
+      return false;
+    }
+
     // 1. Cheque / Passbook Copy is mandatory for all payout nodal accounts
     if (!chequeDoc) {
       showAlert('Passbook / Cheque Copy Required ⚠️', 'Please upload a clear photo of your Bank Passbook / Cancelled Cheque for payout verification.');
@@ -732,6 +747,8 @@ export default function SellerDashboardScreen() {
         pickupCity: pickupCity.trim() || undefined,
         pickupState: pickupState.trim() || undefined,
         pickupPincode: pickupPincode.trim() || undefined,
+        sellerPhotoUrl: sellerPhotoDoc || undefined,
+        logoDocUrl: businessLogoDoc || undefined,
         gstDocUrl: gstCertDoc || undefined,
         panDocUrl: panCardDoc || undefined,
         chequeDocUrl: chequeDoc || undefined,
@@ -1307,6 +1324,22 @@ export default function SellerDashboardScreen() {
                 </View>
 
                 {/* Upload Buttons */}
+                <Text style={styles.inputLabel}>
+                  Upload Seller / Business Owner Photo * Mandatory
+                </Text>
+                <TouchableOpacity style={styles.uploadBox} onPress={() => pickDocPhoto(setSellerPhotoDoc)}>
+                  <Ionicons name={sellerPhotoDoc ? 'checkmark-circle' : 'cloud-upload-outline'} size={24} color="#10B981" />
+                  <Text style={styles.uploadText}>{sellerPhotoDoc ? 'Seller Photo Attached' : 'Select Seller/Owner Photo from Gallery'}</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.inputLabel}>
+                  Upload Store / Business Logo * Mandatory
+                </Text>
+                <TouchableOpacity style={styles.uploadBox} onPress={() => pickDocPhoto(setBusinessLogoDoc)}>
+                  <Ionicons name={businessLogoDoc ? 'checkmark-circle' : 'cloud-upload-outline'} size={24} color="#10B981" />
+                  <Text style={styles.uploadText}>{businessLogoDoc ? 'Business Logo Attached' : 'Select Store Logo from Gallery'}</Text>
+                </TouchableOpacity>
+
                 <Text style={styles.inputLabel}>
                   Upload Cancelled Cheque / Bank Passbook Copy * Mandatory
                 </Text>
@@ -2518,7 +2551,8 @@ export default function SellerDashboardScreen() {
                   </TouchableOpacity>
                 </View>
               </View>
-            )}
+            </View>
+          )}
 
 
             {/* LIVE CUSTOMER PRODUCT PREVIEW MODAL */}

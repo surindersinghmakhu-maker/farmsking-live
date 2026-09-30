@@ -12,114 +12,35 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-type Lang = 'pa' | 'hi' | 'en';
-
 interface DoseItem {
   srNo: number;
-  productKey: number;
   product: string;
   quantity: string;
 }
 
-const PRODUCT_NAMES: Record<number, { pa: string; hi: string; en: string }> = {
-  1: { pa: 'ਗੁੜ (Gud)', hi: 'गुड़ (Jaggery)', en: 'Jaggery (Gud)' },
-  2: { pa: 'ਫੁਲਵਿਕ ਐਸਿਡ (Fulvic Acid)', hi: 'फुलविक एसिड (Fulvic Acid)', en: 'Fulvic Acid' },
-  3: { pa: 'ਡੀ.ਏ.ਪੀ. ਖਾਦ (DAP)', hi: 'डी.ए.पी. खाद (DAP)', en: 'DAP Fertilizer' },
-  4: { pa: 'ਐਮ.ਓ.ਪੀ. ਪੋਟਾਸ਼ (MOP)', hi: 'एम.ओ.पी. पोटाश (MOP)', en: 'MOP (Muriate of Potash)' },
-  5: { pa: 'ਯੂਰੀਆ* (ਜਿੱਥੇ ਵਾਧਾ ਘੱਟ ਹੋਵੇ ਉੱਥੇ ਪਾਓ)', hi: 'यूरिया* (केवल कम विकास वाली जगह डालें)', en: 'Urea* (Apply only where growth is less)' },
-  6: { pa: 'ਸਰ੍ਹੋਂ ਦੀ ਖਲ (Mustard Cake)', hi: 'सरसों खली (Mustard Cake)', en: 'Mustard Cake' },
-  7: { pa: 'ਨੀਮ ਖਲ (Neem Cake)', hi: 'नीम खली (Neem Cake)', en: 'Neem Cake' },
-  8: { pa: 'ਸਲਫਰ (Sulphur)', hi: 'सल्फर (Sulphur)', en: 'Sulphur (80% WDG)' },
-  9: { pa: 'ਮੈਗਨੀਸ਼ੀਅਮ ਸਲਫੇਟ (Magnesium Sulphate)', hi: 'मैग्नीशियम सल्फेट (Magnesium Sulphate)', en: 'Magnesium Sulphate' },
-  10: { pa: 'ਰੋਕੋ ਫੰਗੀਸਾਈਡ (Roko Fungicide)', hi: 'रोको फफूंदनाशक (Roko Fungicide)', en: 'Roko Fungicide' },
-  11: { pa: 'ਹਿਊਮਿਕ ਐਸਿਡ (Humic Acid)', hi: 'ह्यूमिक एसिड (Humic Acid)', en: 'Humic Acid (98%)' },
-  12: { pa: 'ਬੋਰੋਨ 20% (Boron 20%)', hi: 'बोरोन 20% (Boron 20%)', en: 'Boron 20%' },
-  13: { pa: 'ਬਾਇਓਵਿਟਾ (Biovita)', hi: 'बायोविटा (Biovita)', en: 'Biovita (Bio-stimulant)' },
-  14: { pa: 'ਅਮੀਨੋ ਐਸਿਡ (ਤਰਲ 20%/50%)', hi: 'अमीनो एसिड (तरल 20%/50%)', en: 'Amino Acid (Liquid 20%/50%)' },
-  15: { pa: 'ਚਿਲੇਟਿਡ ਆਇਰਨ (Fe 12%)', hi: 'चिलेटेड आयरन (Fe 12%)', en: 'Chelated Iron (Fe 12%)' },
-  16: { pa: 'ਚਿਲੇਟਿਡ ਜ਼ਿੰਕ (Zn EDTA 12%)', hi: 'चिलेटेड जिंक (Zn EDTA 12%)', en: 'Chelated Zinc (Zn EDTA 12%)' },
-  17: { pa: 'ਚਿਲੇਟਿਡ ਕੈਲਸ਼ੀਅਮ (10–12%)', hi: 'चिलेटेड कैल्शियम (10–12%)', en: 'Chelated Calcium (10–12%)' },
-  18: { pa: 'ਸਾਈਂ ਪਾਵਰ ਪਲੱਸ / ਮਲਟੀਪਲੈਕਸ ਕ੍ਰਾਂਤੀ', hi: 'साईं पावर प्लस / मल्टीप्लेक्स क्रांति', en: 'Sai power plus / Multiplex Kranti' },
-};
-
-const TRANSLATIONS = {
-  pa: {
-    headerTitle: '🌼 ਗੇਂਦੇ ਦੀ ਡ੍ਰੈਂਚਿੰਗ ਸ਼ਡਿਊਲ',
-    bannerTitle: 'MARIGOLD PRODUCTION',
-    bannerSubtitle: '(ਗੇਂਦੇ ਦੀ ਡ੍ਰੈਂਚਿੰਗ ਸ਼ਡਿਊਲ)',
-    cardHeaderTitle: '📌 ਕਿਸਾਨ ਅਤੇ ਖੇਤ ਦੇ ਵੇਰਵੇ',
-    nameLabel: 'ਨਾਮ (Name)',
-    namePlaceholder: 'ਨਾਮ ਦਰਜ ਕਰੋ',
-    areaLabel: 'ਖੇਤਰਫਲ (Area)',
-    areaPlaceholder: '1 ਏਕੜ',
-    plantsLabel: 'ਪੌਦੇ (Plants)',
-    plantsPlaceholder: '10,000',
-    thSrNo: 'ਲੜੀ ਨੰ.',
-    thProduct: 'ਉਤਪਾਦ (Product)',
-    thQuantity: 'ਮਾਤਰਾ (Quantity)',
-    pdfBtnText: '📥 PDF ਰਿਪੋਰਟ ਡਾਊਨਲੋਡ ਕਰੋ',
-  },
-  hi: {
-    headerTitle: '🌼 गेंदे का ड्रेंचिंग शेड्यूल',
-    bannerTitle: 'MARIGOLD PRODUCTION',
-    bannerSubtitle: '(गेंदे का ड्रेंचिंग शेड्यूल)',
-    cardHeaderTitle: '📌 किसान एवं खेत का विवरण',
-    nameLabel: 'नाम (Name)',
-    namePlaceholder: 'नाम दर्ज करें',
-    areaLabel: 'क्षेत्रफल (Area)',
-    areaPlaceholder: '1 एकड़',
-    plantsLabel: 'पौधे (Plants)',
-    plantsPlaceholder: '10,000',
-    thSrNo: 'क्र. सं.',
-    thProduct: 'उत्पाद (Product)',
-    thQuantity: 'मात्रा (Quantity)',
-    pdfBtnText: '📥 PDF रिपोर्ट डाउनलोड करें',
-  },
-  en: {
-    headerTitle: '🌼 Marigold Drenching Schedule',
-    bannerTitle: 'MARIGOLD PRODUCTION',
-    bannerSubtitle: '(DRENCHING SCHEDULE)',
-    cardHeaderTitle: '📌 Farmer & Field Details',
-    nameLabel: 'Name',
-    namePlaceholder: 'Enter Name',
-    areaLabel: 'Area',
-    areaPlaceholder: '1 Acre',
-    plantsLabel: 'Plants',
-    plantsPlaceholder: '10,000',
-    thSrNo: 'Sr. No.',
-    thProduct: 'Product',
-    thQuantity: 'Quantity',
-    pdfBtnText: '📥 DOWNLOAD PDF REPORT',
-  },
-};
-
 const DEFAULT_SCHEDULE: DoseItem[] = [
-  { srNo: 1, productKey: 1, product: 'Jaggery (Gud)', quantity: '3 kg' },
-  { srNo: 2, productKey: 2, product: 'Fulvic Acid', quantity: '500 g' },
-  { srNo: 3, productKey: 3, product: 'DAP', quantity: '10 kg' },
-  { srNo: 4, productKey: 4, product: 'MOP', quantity: '15 kg' },
-  { srNo: 5, productKey: 5, product: 'Urea* (Apply only where growth is less)', quantity: '5 kg' },
-  { srNo: 6, productKey: 6, product: 'Mustard Cake', quantity: '10 kg' },
-  { srNo: 7, productKey: 7, product: 'Neem Cake', quantity: '5 kg' },
-  { srNo: 8, productKey: 8, product: 'Sulphur', quantity: '2 kg' },
-  { srNo: 9, productKey: 9, product: 'Magnesium Sulphate', quantity: '2 kg' },
-  { srNo: 10, productKey: 10, product: 'Roko Fungicide', quantity: '250 g' },
-  { srNo: 11, productKey: 11, product: 'Humic Acid', quantity: '2 kg' },
-  { srNo: 12, productKey: 12, product: 'Boron 20%', quantity: '500 g' },
-  { srNo: 13, productKey: 13, product: 'Biovita', quantity: '500 g' },
-  { srNo: 14, productKey: 14, product: 'Amino Acid (Liquid 20%/50%)', quantity: '500 ml' },
-  { srNo: 15, productKey: 15, product: 'Chelated Iron (Fe 12%)', quantity: '250 g' },
-  { srNo: 16, productKey: 16, product: 'Chelated Zinc (Zn EDTA 12%)', quantity: '500 g' },
-  { srNo: 17, productKey: 17, product: 'Chelated Calcium (10–12%)', quantity: '500 g' },
-  { srNo: 18, productKey: 18, product: 'Sai power plus/multiplex kranti', quantity: '500 ml' },
+  { srNo: 1, product: 'Jaggery (Gud) / गुड़', quantity: '3 kg' },
+  { srNo: 2, product: 'Fulvic Acid / फुलविक एसिड', quantity: '500 g' },
+  { srNo: 3, product: 'DAP Fertilizer / डी.ए.पी. खाद', quantity: '10 kg' },
+  { srNo: 4, product: 'MOP / एम.ਓ.ਪੀ. ਪੋਟਾਸ਼ (Potash)', quantity: '15 kg' },
+  { srNo: 5, product: 'Urea* (Apply where growth is less) / यूरिया*', quantity: '5 kg' },
+  { srNo: 6, product: 'Mustard Cake / सरसों खली', quantity: '10 kg' },
+  { srNo: 7, product: 'Neem Cake / नीम खली', quantity: '5 kg' },
+  { srNo: 8, product: 'Sulphur (80% WDG) / सल्फर', quantity: '2 kg' },
+  { srNo: 9, product: 'Magnesium Sulphate / मैग्नीशियम सल्फेट', quantity: '2 kg' },
+  { srNo: 10, product: 'Roko Fungicide / रोको फफूंदनाशक', quantity: '250 g' },
+  { srNo: 11, product: 'Humic Acid (98%) / ह्यूमिक एसिड', quantity: '2 kg' },
+  { srNo: 12, product: 'Boron 20% / बोरोन 20%', quantity: '500 g' },
+  { srNo: 13, product: 'Biovita / बायोविटा', quantity: '500 g' },
+  { srNo: 14, product: 'Amino Acid (Liquid 20%/50%) / अमीनो एसिड', quantity: '500 ml' },
+  { srNo: 15, product: 'Chelated Iron (Fe 12%) / चिलेटेड आयरन', quantity: '250 g' },
+  { srNo: 16, product: 'Chelated Zinc (Zn EDTA 12%) / चिलेटेड जिंक', quantity: '500 g' },
+  { srNo: 17, product: 'Chelated Calcium (10–12%) / चिलेटेड कैल्शियम', quantity: '500 g' },
+  { srNo: 18, product: 'Sai power plus / Multiplex Kranti / साईं पावर प्लस - क्रांति', quantity: '500 ml' },
 ];
 
 export default function DosePage() {
   const router = useRouter();
-
-  // Language state: 'pa' | 'hi' | 'en'
-  const [lang, setLang] = useState<Lang>('pa');
-  const t = TRANSLATIONS[lang];
 
   // Top Form States
   const [farmerName, setFarmerName] = useState('');
@@ -128,12 +49,6 @@ export default function DosePage() {
 
   // Table Schedule Items State
   const [items, setItems] = useState<DoseItem[]>(DEFAULT_SCHEDULE);
-
-  const getProductName = (item: DoseItem) => {
-    const trans = PRODUCT_NAMES[item.productKey];
-    if (trans && trans[lang]) return trans[lang];
-    return item.product;
-  };
 
   const updateItemQuantity = (index: number, value: string) => {
     const updated = [...items];
@@ -154,7 +69,7 @@ export default function DosePage() {
           (item) => `
         <tr>
           <td style="border: 1px solid #10b981; padding: 10px; text-align: center; font-weight: bold; width: 12%;">${item.srNo}</td>
-          <td style="border: 1px solid #10b981; padding: 10px; font-weight: 600; width: 58%;">${getProductName(item)}</td>
+          <td style="border: 1px solid #10b981; padding: 10px; font-weight: 600; width: 58%;">${item.product}</td>
           <td style="border: 1px solid #10b981; padding: 10px; text-align: center; color: #15803d; font-weight: bold; width: 30%;">${item.quantity}</td>
         </tr>
       `
@@ -182,22 +97,22 @@ export default function DosePage() {
         <body>
           <div class="header-banner">
             <h1>🌼 MARIGOLD PRODUCTION 🌼</h1>
-            <h2>(DRENCHING SCHEDULE)</h2>
+            <h2>(DRENCHING SCHEDULE / गेंदे का ड्रेंचिंग शेड्यूल)</h2>
             <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9;">FarmsKing Enterprise Agri-Intelligence Platform</p>
           </div>
 
           <div class="farmer-meta">
-            <div>👤 ${t.nameLabel}: <span style="color: #15803d;">${farmerName || 'FarmsKing Partner Farmer'}</span></div>
-            <div>📏 ${t.areaLabel}: <span style="color: #15803d;">${area}</span></div>
-            <div>🌱 ${t.plantsLabel}: <span style="color: #15803d;">${plantsCount}</span></div>
+            <div>👤 Name / नाम: <span style="color: #15803d;">${farmerName || 'FarmsKing Partner Farmer'}</span></div>
+            <div>📏 Area / क्षेत्रफल: <span style="color: #15803d;">${area}</span></div>
+            <div>🌱 Plants / पौधे: <span style="color: #15803d;">${plantsCount}</span></div>
           </div>
 
           <table>
             <thead>
               <tr>
-                <th style="width: 12%;">${t.thSrNo}</th>
-                <th style="width: 58%;">${t.thProduct}</th>
-                <th style="width: 30%;">${t.thQuantity}</th>
+                <th style="width: 12%;">Sr. No. / क्र. सं.</th>
+                <th style="width: 58%;">Product / उत्पाद</th>
+                <th style="width: 30%;">Quantity / मात्रा</th>
               </tr>
             </thead>
             <tbody>
@@ -226,58 +141,34 @@ export default function DosePage() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header with Language Selector Pills */}
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color="#FFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>
-          {t.headerTitle}
+          🌼 Marigold Schedule / गेंदे का ड्रेंचिंग शेड्यूल
         </Text>
-
-        {/* Language Switcher Pills */}
-        <View style={styles.langPillContainer}>
-          <TouchableOpacity
-            style={[styles.langPill, lang === 'pa' && styles.langPillActive]}
-            onPress={() => setLang('pa')}
-          >
-            <Text style={[styles.langPillText, lang === 'pa' && styles.langPillTextActive]}>ਪੰਜਾਬੀ</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.langPill, lang === 'hi' && styles.langPillActive]}
-            onPress={() => setLang('hi')}
-          >
-            <Text style={[styles.langPillText, lang === 'hi' && styles.langPillTextActive]}>हिंदी</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.langPill, lang === 'en' && styles.langPillActive]}
-            onPress={() => setLang('en')}
-          >
-            <Text style={[styles.langPillText, lang === 'en' && styles.langPillTextActive]}>ENG</Text>
-          </TouchableOpacity>
-        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Banner */}
         <View style={styles.bannerCard}>
-          <Text style={styles.bannerTitle}>{t.bannerTitle}</Text>
-          <Text style={styles.bannerSubtitle}>{t.bannerSubtitle}</Text>
+          <Text style={styles.bannerTitle}>MARIGOLD PRODUCTION</Text>
+          <Text style={styles.bannerSubtitle}>(DRENCHING SCHEDULE / गेंदे का ड्रेंचिंग शेड्यूल)</Text>
         </View>
 
         {/* Input Details Header Card */}
         <View style={styles.inputCard}>
-          <Text style={styles.cardHeaderTitle}>{t.cardHeaderTitle}</Text>
+          <Text style={styles.cardHeaderTitle}>📌 Farmer & Field Details / किसान एवं खेत का विवरण</Text>
 
           <View style={styles.inputRow}>
             {/* Name */}
             <View style={{ flex: 1.2 }}>
-              <Text style={styles.inputLabel}>{t.nameLabel}</Text>
+              <Text style={styles.inputLabel}>Name / नाम</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder={t.namePlaceholder}
+                placeholder="Enter Name / नाम दर्ज करें"
                 placeholderTextColor="#9CA3AF"
                 value={farmerName}
                 onChangeText={setFarmerName}
@@ -286,10 +177,10 @@ export default function DosePage() {
 
             {/* Area */}
             <View style={{ flex: 1 }}>
-              <Text style={styles.inputLabel}>{t.areaLabel}</Text>
+              <Text style={styles.inputLabel}>Area / क्षेत्रफल</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder={t.areaPlaceholder}
+                placeholder="1 Acre / 1 एकड़"
                 placeholderTextColor="#9CA3AF"
                 value={area}
                 onChangeText={setArea}
@@ -298,10 +189,10 @@ export default function DosePage() {
 
             {/* Plants */}
             <View style={{ flex: 1 }}>
-              <Text style={styles.inputLabel}>{t.plantsLabel}</Text>
+              <Text style={styles.inputLabel}>Plants / पौधे</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder={t.plantsPlaceholder}
+                placeholder="10,000"
                 placeholderTextColor="#9CA3AF"
                 value={plantsCount}
                 onChangeText={setPlantsCount}
@@ -314,9 +205,9 @@ export default function DosePage() {
         <View style={styles.tableCard}>
           {/* Table Header Row */}
           <View style={styles.tableHeader}>
-            <Text style={[styles.thText, { flex: 0.8, textAlign: 'center' }]}>{t.thSrNo}</Text>
-            <Text style={[styles.thText, { flex: 3.2 }]}>{t.thProduct}</Text>
-            <Text style={[styles.thText, { flex: 1.8, textAlign: 'center' }]}>{t.thQuantity}</Text>
+            <Text style={[styles.thText, { flex: 0.8, textAlign: 'center' }]}>Sr. No. / क्र. सं.</Text>
+            <Text style={[styles.thText, { flex: 3.2 }]}>Product / उत्पाद</Text>
+            <Text style={[styles.thText, { flex: 1.8, textAlign: 'center' }]}>Quantity / मात्रा</Text>
           </View>
 
           {/* Table Data Rows */}
@@ -331,7 +222,7 @@ export default function DosePage() {
               <Text style={styles.srNoText}>{item.srNo}</Text>
               
               <Text style={styles.productText} numberOfLines={2}>
-                {getProductName(item)}
+                {item.product}
               </Text>
 
               {/* Quantity Input Box */}
@@ -351,7 +242,7 @@ export default function DosePage() {
         {/* Make / Download PDF Button */}
         <TouchableOpacity style={styles.pdfBtn} onPress={handleMakePDF} activeOpacity={0.85}>
           <MaterialCommunityIcons name="file-pdf-box" size={24} color="#FFF" />
-          <Text style={styles.pdfBtnText}>{t.pdfBtnText}</Text>
+          <Text style={styles.pdfBtnText}>📥 DOWNLOAD PDF REPORT / PDF रिपोर्ट डाउनलोड करें</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -366,44 +257,19 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#064E3B',
     paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingVertical: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
+    gap: 10,
   },
   backBtn: {
     padding: 4,
   },
   headerTitle: {
     color: '#FFF',
-    fontSize: 15,
+    fontSize: 15.5,
     fontWeight: '800',
     flex: 1,
-  },
-  langPillContainer: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 20,
-    padding: 2,
-    gap: 2,
-  },
-  langPill: {
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 14,
-  },
-  langPillActive: {
-    backgroundColor: '#10B981',
-  },
-  langPillText: {
-    color: '#D1D5DB',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  langPillTextActive: {
-    color: '#FFF',
-    fontWeight: '900',
   },
   scrollContent: {
     padding: 14,
@@ -464,7 +330,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
     color: '#FFF',
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '600',
   },
   tableCard: {
@@ -484,7 +350,7 @@ const styles = StyleSheet.create({
   },
   thText: {
     color: '#FFF',
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '800',
   },
   tableRow: {
@@ -505,7 +371,7 @@ const styles = StyleSheet.create({
   productText: {
     flex: 3.2,
     color: '#F3F4F6',
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '600',
   },
   cellInput: {
@@ -536,9 +402,8 @@ const styles = StyleSheet.create({
   },
   pdfBtnText: {
     color: '#FFF',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
 });
-

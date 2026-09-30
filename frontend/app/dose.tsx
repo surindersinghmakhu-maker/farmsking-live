@@ -12,7 +12,13 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-const DEFAULT_SCHEDULE = [
+interface DoseItem {
+  srNo: number;
+  product: string;
+  quantity: string;
+}
+
+const DEFAULT_SCHEDULE: DoseItem[] = [
   { srNo: 1, product: 'Jaggery (Gud)', quantity: '3 kg' },
   { srNo: 2, product: 'Fulvic Acid', quantity: '500 g' },
   { srNo: 3, product: 'DAP', quantity: '10 kg' },
@@ -42,9 +48,9 @@ export default function DosePage() {
   const [plantsCount, setPlantsCount] = useState('10,000');
 
   // Table Schedule Items State
-  const [items, setItems] = useState(DEFAULT_SCHEDULE);
+  const [items, setItems] = useState<DoseItem[]>(DEFAULT_SCHEDULE);
 
-  const updateItemQuantity = (index, value) => {
+  const updateItemQuantity = (index: number, value: string) => {
     const updated = [...items];
     updated[index].quantity = value;
     setItems(updated);

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Link, Stack, useRouter } from 'expo-router';
 import { StyleSheet, Platform } from 'react-native';
-import YouPage from './you';
+import YouPage from './you/index';
 
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';

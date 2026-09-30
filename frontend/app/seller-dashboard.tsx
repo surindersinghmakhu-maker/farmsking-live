@@ -1627,6 +1627,66 @@ export default function SellerDashboardScreen() {
                   })}
                 </View>
 
+                {/* 8.5 SHIPROCKET PACKAGE SHIPPING SIZE & WEIGHT */}
+                <View style={{ backgroundColor: '#111827', borderRadius: 8, padding: 12, marginVertical: 8, borderWidth: 1, borderColor: '#374151' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '700' }}>🚚 Shiprocket Package Courier Size & Weight</Text>
+                    <View style={{ backgroundColor: '#064E3B', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 }}>
+                      <Text style={{ color: '#34D399', fontSize: 11, fontWeight: '800' }}>Billable: {billableWeightKg.toFixed(2)} kg</Text>
+                    </View>
+                  </View>
+
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.inputLabel}>Gross Weight (Kg) *</Text>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="0.5"
+                        placeholderTextColor="#9CA3AF"
+                        keyboardType="numeric"
+                        value={deadWeightKg}
+                        onChangeText={setDeadWeightKg}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.inputLabel}>Length (cm) *</Text>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="10"
+                        placeholderTextColor="#9CA3AF"
+                        keyboardType="numeric"
+                        value={lengthCm}
+                        onChangeText={setLengthCm}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.inputLabel}>Width (cm) *</Text>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="10"
+                        placeholderTextColor="#9CA3AF"
+                        keyboardType="numeric"
+                        value={widthCm}
+                        onChangeText={setWidthCm}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.inputLabel}>Height (cm) *</Text>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="10"
+                        placeholderTextColor="#9CA3AF"
+                        keyboardType="numeric"
+                        value={heightCm}
+                        onChangeText={setHeightCm}
+                      />
+                    </View>
+                  </View>
+                  <Text style={{ color: '#9CA3AF', fontSize: 10, marginTop: 4 }}>
+                    * Shiprocket Volumetric Formula: (Length × Width × Height) / 5000 = {volumetricWeightKg.toFixed(2)} kg.
+                  </Text>
+                </View>
+
                 {/* 9. GST % & HSN CODE */}
                 <View style={{ flexDirection: 'row', gap: 10 }}>
                   <View style={{ flex: 1 }}>

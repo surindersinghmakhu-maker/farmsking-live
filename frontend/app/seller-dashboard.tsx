@@ -116,6 +116,13 @@ export default function SellerDashboardScreen() {
   const [targetPests, setTargetPests] = useState('');
   const [batchNumber, setBatchNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
+  const [newTargetCrop, setNewTargetCrop] = useState('');
+  const [newTechnicalFormula, setNewTechnicalFormula] = useState('');
+  const [newDosageInstructions, setNewDosageInstructions] = useState('');
+  const [farmerProducerName, setFarmerProducerName] = useState('');
+  const [harvestBatchDate, setHarvestBatchDate] = useState('');
+  const [processingMethod, setProcessingMethod] = useState('');
+  const [newProductDescription, setNewProductDescription] = useState('');
 
   // 4 Mandatory Photo Angles
   const [imageFrontUrl, setImageFrontUrl] = useState<string | null>(null);

@@ -83,7 +83,7 @@ const badgeStyles = StyleSheet.create({
 });
 
 type TabName =
-  | 'index' | 'shop' | 'farm' | 'records' | 'market' | 'more' | 'admin_more'
+  | 'index' | 'shop' | 'admin_shop' | 'farm' | 'records' | 'market' | 'more' | 'admin_more'
   | 'categories' | 'cart' | 'orders'
   | 'farmers' | 'schedule' | 'chat'
   | 'referrals' | 'wallet'
@@ -100,9 +100,9 @@ const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
   FARM_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
   GARDEN_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
   BUSINESS_PARTNER: { tabs: ['index', 'shop', 'referrals', 'wallet', 'more'] },
-  ADMIN: { tabs: ['index', 'shop', 'super-users', 'super-coupons', 'super-accounts', 'super-settings', 'admin_more'] },
-  SUPER_ADMIN: { tabs: ['index', 'shop', 'super-users', 'super-coupons', 'super-accounts', 'super-settings', 'admin_more'] },
-  MANAGER: { tabs: ['index', 'shop', 'super-users', 'super-coupons', 'super-accounts', 'super-settings', 'admin_more'] },
+  ADMIN: { tabs: ['index', 'admin_shop', 'super-users', 'super-coupons', 'super-accounts', 'super-settings', 'admin_more'] },
+  SUPER_ADMIN: { tabs: ['index', 'admin_shop', 'super-users', 'super-coupons', 'super-accounts', 'super-settings', 'admin_more'] },
+  MANAGER: { tabs: ['index', 'admin_shop', 'super-users', 'super-coupons', 'super-accounts', 'super-settings', 'admin_more'] },
   SUPERVISOR: { tabs: ['index', 'shop', 'farm', 'records', 'wallet', 'more'] },
   OPERATOR: { tabs: ['index', 'shop', 'operator-orders', 'wallet', 'more'] },
   LABOUR: { tabs: ['index', 'shop', 'wallet', 'more'] },
@@ -111,6 +111,7 @@ const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
 
 const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key: TranslationKey; title: string; icon: keyof typeof Ionicons.glyphMap; iconFilled: keyof typeof Ionicons.glyphMap }> = {
   shop: { key: 'tabCustomerHome', title: 'Store', icon: 'bag-outline', iconFilled: 'bag' },
+  admin_shop: { key: 'agristoreHub' as any, title: 'AgriStore', icon: 'storefront-outline', iconFilled: 'storefront' },
   farm: { key: 'tabCrops', title: 'Crops', icon: 'leaf-outline', iconFilled: 'leaf' },
   records: { key: 'tabRecords', title: 'Accounts', icon: 'document-text-outline', iconFilled: 'document-text' },
   market: { key: 'tabMyAdvisor', title: 'Crop Doctor', icon: 'school-outline', iconFilled: 'school' },
@@ -136,7 +137,7 @@ const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key:
 };
 
 const ALL_TABS: TabName[] = [
-  'index', 'shop', 'farm', 'records', 'market',
+  'index', 'shop', 'admin_shop', 'farm', 'records', 'market',
   'categories', 'cart', 'orders',
   'farmers', 'schedule', 'chat',
   'referrals', 'wallet',

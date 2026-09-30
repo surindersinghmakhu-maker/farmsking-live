@@ -14,6 +14,7 @@ import { Avatar } from '@/src/components/Avatar';
 import { SuperAdminExpenseCategoriesModal } from '@/components/SuperAdminExpenseCategoriesModal';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { SwitchDashboardSection } from '@/src/components/SwitchDashboardSection';
+import { UserGuidesModal, SuperAdminWorkspaceModal, AdminInfoModal } from './more';
 
 const getCleanMobile = (mobile?: string | null) => {
   if (!mobile || mobile.startsWith('G_')) return '';
@@ -28,7 +29,6 @@ type AdminMenuItem = {
   iconBg: string;
   iconColor: string;
   href?: string;
-  isModal?: 'workspace' | 'categories' | 'about' | 'guides';
 };
 
 const PLATFORM_CONTROL_ITEMS: AdminMenuItem[] = [
@@ -143,6 +143,8 @@ export default function AdminMoreScreen() {
 
   const [showWorkspaceModal, setShowWorkspaceModal] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
+  const [showAboutModal, setShowAboutModal] = useState(false);
+  const [showGuidesModal, setShowGuidesModal] = useState(false);
   const [isGroupVoiceCallEnabled, setIsGroupVoiceCallEnabled] = useState(true);
 
   return (
@@ -216,6 +218,22 @@ export default function AdminMoreScreen() {
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
 
+              {/* 👑 Admin Info */}
+              <TouchableOpacity
+                style={styles.row}
+                activeOpacity={0.7}
+                onPress={() => setShowAboutModal(true)}
+              >
+                <View style={[styles.rowIconBg, { backgroundColor: '#eff6ff' }]}>
+                  <Ionicons name="shield-checkmark-outline" size={18} color="#2563eb" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowLabel}>👑 Admin Info & Branding Console</Text>
+                  <Text style={styles.rowSubLabel}>App name, brand logo, tagline, payment UPI & profile</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+              </TouchableOpacity>
+
               {/* 🎙️ Group Voice Call Toggle */}
               <TouchableOpacity
                 style={styles.row}
@@ -254,7 +272,7 @@ export default function AdminMoreScreen() {
 
               {/* 💼 Workspace */}
               <TouchableOpacity
-                style={[styles.row, { borderBottomWidth: 0 }]}
+                style={styles.row}
                 activeOpacity={0.7}
                 onPress={() => setShowWorkspaceModal(true)}
               >
@@ -264,6 +282,22 @@ export default function AdminMoreScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.rowLabel}>💼 Workspace (Backup & Tools)</Text>
                   <Text style={styles.rowSubLabel}>System data exports & developer diagnostics</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+              </TouchableOpacity>
+
+              {/* 📖 User Guides */}
+              <TouchableOpacity
+                style={[styles.row, { borderBottomWidth: 0 }]}
+                activeOpacity={0.7}
+                onPress={() => setShowGuidesModal(true)}
+              >
+                <View style={[styles.rowIconBg, { backgroundColor: '#f0fdf4' }]}>
+                  <Ionicons name="book-outline" size={18} color="#15803d" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.rowLabel}>📖 Admin User Guides</Text>
+                  <Text style={styles.rowSubLabel}>Guidelines, docs & platform manual</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
@@ -279,6 +313,9 @@ export default function AdminMoreScreen() {
       </ScrollView>
 
       <SuperAdminExpenseCategoriesModal visible={showCategoriesModal} onClose={() => setShowCategoriesModal(false)} />
+      <SuperAdminWorkspaceModal visible={showWorkspaceModal} onClose={() => setShowWorkspaceModal(false)} />
+      <UserGuidesModal visible={showGuidesModal} onClose={() => setShowGuidesModal(false)} />
+      <AdminInfoModal visible={showAboutModal} onClose={() => setShowAboutModal(false)} />
     </>
   );
 }

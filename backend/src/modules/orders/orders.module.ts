@@ -8,6 +8,7 @@ import { ShiprocketModule } from '../shiprocket/shiprocket.module';
 import { CashfreeModule } from '../cashfree/cashfree.module';
 import { OrdersController } from './orders.controller';
 import { OrdersService } from './orders.service';
+import { BillingService } from './billing.service';
 
 @Module({
   imports: [
@@ -20,7 +21,8 @@ import { OrdersService } from './orders.service';
     CashfreeModule,
   ],
   controllers: [OrdersController],
-  providers: [OrdersService],
+  providers: [OrdersService, BillingService],
+  exports: [OrdersService, BillingService],
 })
 export class OrdersModule {}
 

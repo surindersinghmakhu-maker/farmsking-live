@@ -1444,17 +1444,24 @@ model PartnerAssignment {
 
 // ─── Phase 7: Farmer Advisor Plan (Subscription, Schedule, Uploads) ─────
 
+enum HiringModelType {
+  PAY_PER_CONSULTATION
+  PER_CROP
+  MONTHLY_SUBSCRIPTION
+}
+
 model AdvisorPlan {
-  id           String         @id @default(uuid())
+  id           String          @id @default(uuid())
   name         String
   description  String?
-  price        Decimal        @db.Decimal(12, 2)
-  billingCycle String         @default("MONTHLY")
-  planType     FarmerPlanType @default(WITH_ADVISOR)
-  maxFarms     Int            @default(10)
-  isActive     Boolean        @default(true)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  price        Decimal         @db.Decimal(12, 2)
+  billingCycle String          @default("MONTHLY")
+  hiringModel  HiringModelType @default(MONTHLY_SUBSCRIPTION)
+  planType     FarmerPlanType  @default(WITH_ADVISOR)
+  maxFarms     Int             @default(10)
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
 
   subscriptions AdvisorSubscription[]
 
@@ -1750,8 +1757,13 @@ model Product {
   expiryDate         DateTime?
   batchNumber        String?
 
-  // COD & Commission
+  // COD, Return, Replacement & Commission
   isCodAllowed                 Boolean  @default(true)
+  isReturnable                 Boolean  @default(true)
+  returnWindowDays             Int      @default(7)
+  isReplaceable                Boolean  @default(true)
+  replacementWindowDays        Int      @default(7)
+  returnPolicyNotes            String?
   commissionOverridePercentage Decimal? @db.Decimal(5, 2)
 
   // Photo Uploads
@@ -1855,6 +1867,7 @@ model CustomerOrder {
   redemptions    CouponRedemption[]
   shippingLogs   ShippingLog[]
   returnRequests ReturnRequest[]
+  invoices       OrderInvoice[]
 
   @@index([customerId])
   @@index([couponId])
@@ -1920,6 +1933,11 @@ model SellerStore {
   fssaiExpiryDate            DateTime?
   isFssaiApproved            Boolean             @default(false)
   agriLicenseNo              String?
+  agriLicenseExpiryDate      DateTime?
+  additionalDoc1Title        String?
+  additionalDoc1Url          String?
+  additionalDoc2Title        String?
+  additionalDoc2Url          String?
   gstDocUrl                  String?
   panDocUrl                  String?
   chequeDocUrl               String?
@@ -1932,6 +1950,10 @@ model SellerStore {
   catalogApprovalMode        CatalogApprovalMode @default(MANUAL)
   rating                     Float               @default(4.8)
   isActive                   Boolean             @default(true)
+  isOfficialStore            Boolean             @default(false)
+  officialBadgeText          String?             @default("FarmsKing Official Store")
+  invoicePrefix              String?
+  invoiceLastSequence        Int                 @default(0)
   createdAt                  DateTime            @default(now())
   updatedAt                  DateTime            @updatedAt
 
@@ -1941,6 +1963,7 @@ model SellerStore {
   subOrders    SubOrder[]
   shippingLogs ShippingLog[]
   gstr8Reports Gstr8Report[]
+  invoices     OrderInvoice[]
 
   @@index([sellerId])
   @@index([kycStatus])
@@ -2069,6 +2092,59 @@ model Gstr8Report {
   @@index([sellerStoreId])
   @@index([month, year])
   @@map("gstr8_reports")
+}
+
+enum InvoiceType {
+  CUSTOMER_INVOICE
+  COMMISSION_INVOICE
+  PAYOUT_STATEMENT
+  CREDIT_NOTE
+}
+
+model InvoiceSequence {
+  id            String   @id // e.g. FY2627_CUSTOMER_INVOICE
+  financialYear String   // e.g. 2627
+  type          String   // CUSTOMER_INVOICE | COMMISSION_INVOICE | PAYOUT_STATEMENT | CREDIT_NOTE
+  lastSequence  Int      @default(0)
+  updatedAt     DateTime @updatedAt
+
+  @@unique([financialYear, type])
+  @@map("invoice_sequences")
+}
+
+model OrderInvoice {
+  id                   String      @id @default(uuid())
+  orderId              String?
+  order                CustomerOrder? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  subOrderId           String?
+  sellerStoreId        String?
+  sellerStore          SellerStore?   @relation(fields: [sellerStoreId], references: [id], onDelete: SetNull)
+  invoiceNumber        String      @unique
+  invoiceType          InvoiceType @default(CUSTOMER_INVOICE)
+  financialYear        String
+  customerName         String
+  customerGstin        String?
+  sellerName           String
+  sellerGstin          String?
+  grossAmount          Decimal     @db.Decimal(12, 2)
+  netTaxableAmount     Decimal     @db.Decimal(12, 2)
+  gstAmount            Decimal     @db.Decimal(12, 2)
+  cgstAmount           Decimal     @default(0) @db.Decimal(12, 2)
+  sgstAmount           Decimal     @default(0) @db.Decimal(12, 2)
+  igstAmount           Decimal     @default(0) @db.Decimal(12, 2)
+  tcsAmount            Decimal     @default(0) @db.Decimal(12, 2)
+  commissionAmount     Decimal     @default(0) @db.Decimal(12, 2)
+  commissionGstAmount  Decimal     @default(0) @db.Decimal(12, 2)
+  pdfUrl               String?
+  issuedAt             DateTime    @default(now())
+  createdAt            DateTime    @default(now())
+
+  @@index([orderId])
+  @@index([subOrderId])
+  @@index([sellerStoreId])
+  @@index([invoiceNumber])
+  @@index([invoiceType])
+  @@map("order_invoices")
 }
 
 model PartnerReferral {
@@ -2217,6 +2293,7 @@ model AppSetting {
   appDownloadUrl         String?  @default("https://farmsking.in/download/farmsking.apk")
   latestAppVersion       String?  @default("1.0.0")
   storefrontMaintenanceMode Boolean @default(false)
+  allowDirectPlatformSales  Boolean @default(false)
   freeTrialEnabled       Boolean  @default(true)
   freeTrialDays          Int      @default(10)
   freeTrialPlan          String   @default("SUPER")

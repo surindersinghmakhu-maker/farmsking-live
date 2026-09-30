@@ -14,9 +14,11 @@ import { buildUpiPaymentLink } from '../../common/utils/upi.util';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { DispatchOrderDto } from './dto/dispatch-order.dto';
 
+import { BillingService } from './billing.service';
+
 const DETAIL_INCLUDE = {
-  items: { include: { product: { select: { id: true, name: true, imageUrl: true, categorySlug: true, weightKg: true, isCodAllowed: true } }, sellerStore: true } },
-  subOrders: { include: { sellerStore: { select: { id: true, storeName: true, slug: true, sellerType: true, rtoBearer: true, rtoSharedVendorRatio: true } } } },
+  items: { include: { product: { select: { id: true, name: true, imageUrl: true, categorySlug: true, weightKg: true, isCodAllowed: true, gstPercentage: true } }, sellerStore: true } },
+  subOrders: { include: { sellerStore: { select: { id: true, storeName: true, slug: true, sellerType: true, rtoBearer: true, rtoSharedVendorRatio: true, gstin: true, commissionRate: true } } } },
   customer: { select: { id: true, name: true, mobile: true, state: true } },
   packedBy: { select: { id: true, name: true } },
   dispatchedBy: { select: { id: true, name: true } },
@@ -37,6 +39,7 @@ export class OrdersService {
     private readonly phonePeService: PhonePeService,
     private readonly shiprocketService: ShiprocketService,
     private readonly cashfreeService: CashfreeService,
+    private readonly billingService: BillingService,
   ) {}
 
   async create(customer: AuthUser, dto: CreateOrderDto) {
@@ -186,6 +189,11 @@ export class OrdersService {
 
       return created;
     });
+
+    // Auto-generate Tax Invoices / Bills of Supply, Commission Invoices, & Payout Statements
+    this.billingService.createInvoicesForOrder(order.id).catch((err) =>
+      console.warn('Billing & GST Invoice auto-generation notice:', err),
+    );
 
     // Asynchronous Shiprocket Adhoc Order Dispatch per SubOrder
     this.triggerShiprocketSubOrders(order.id).catch((err) =>
@@ -593,6 +601,26 @@ export class OrdersService {
       paymentStatus: order.paymentStatus,
       invoices,
     };
+  }
+
+  /** Retrieve all auto-generated GST / Tax Invoices for an Order */
+  async getOrderInvoices(user: AuthUser, orderId: string) {
+    await this.findOneOrThrow(user, orderId);
+    return this.prisma.orderInvoice.findMany({
+      where: { orderId },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  /** Render HTML representation of a specific invoice */
+  async getInvoiceHtml(invoiceId: string) {
+    const invoice = await this.prisma.orderInvoice.findUnique({
+      where: { id: invoiceId },
+    });
+    if (!invoice) {
+      throw new NotFoundException('Invoice not found.');
+    }
+    return this.billingService.renderInvoiceHtml(invoice);
   }
 }
 

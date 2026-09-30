@@ -76,6 +76,26 @@ export class CreateSellerStoreDto {
 
   @IsOptional()
   @IsString()
+  agriLicenseExpiryDate?: string;
+
+  @IsOptional()
+  @IsString()
+  additionalDoc1Title?: string;
+
+  @IsOptional()
+  @IsString()
+  additionalDoc1Url?: string;
+
+  @IsOptional()
+  @IsString()
+  additionalDoc2Title?: string;
+
+  @IsOptional()
+  @IsString()
+  additionalDoc2Url?: string;
+
+  @IsOptional()
+  @IsString()
   gstDocUrl?: string;
 
   @IsOptional()
@@ -171,6 +191,26 @@ export class UpdateSellerKycDto {
   @IsOptional()
   @IsString()
   agriLicenseNo?: string;
+
+  @IsOptional()
+  @IsString()
+  agriLicenseExpiryDate?: string;
+
+  @IsOptional()
+  @IsString()
+  additionalDoc1Title?: string;
+
+  @IsOptional()
+  @IsString()
+  additionalDoc1Url?: string;
+
+  @IsOptional()
+  @IsString()
+  additionalDoc2Title?: string;
+
+  @IsOptional()
+  @IsString()
+  additionalDoc2Url?: string;
 
   @IsOptional()
   @IsString()

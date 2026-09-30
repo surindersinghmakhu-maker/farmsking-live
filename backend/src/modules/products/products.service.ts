@@ -18,6 +18,13 @@ export class ProductsService {
       sellerStore = await this.prisma.sellerStore.findUnique({ where: { sellerId: creator.id } });
     }
 
+    if (!sellerStore) {
+      const appSettings = await this.prisma.appSetting.findUnique({ where: { id: 'default' } });
+      if (!appSettings?.allowDirectPlatformSales) {
+        throw new BadRequestException('Direct FarmsKing self-selling is currently inactive. Please list products under a registered seller store (e.g. Surinder Agro Store).');
+      }
+    }
+
     const categorySlug = (dto.categorySlug || dto.category || '').toLowerCase().replace(/\s+/g, '-');
 
     if (sellerStore) {
@@ -91,6 +98,11 @@ export class ProductsService {
         expiryDate: dto.expiryDate ? new Date(dto.expiryDate) : null,
         batchNumber: dto.batchNumber,
         isCodAllowed,
+        isReturnable: dto.isReturnable ?? true,
+        returnWindowDays: dto.returnWindowDays ?? 7,
+        isReplaceable: dto.isReplaceable ?? true,
+        replacementWindowDays: dto.replacementWindowDays ?? 7,
+        returnPolicyNotes: dto.returnPolicyNotes,
         commissionOverridePercentage: dto.commissionOverridePercentage,
         bulkDiscountMinQty: dto.bulkDiscountMinQty,
         bulkDiscountPercentage: dto.bulkDiscountPercentage,

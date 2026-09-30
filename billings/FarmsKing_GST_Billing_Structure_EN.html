@@ -1,0 +1,207 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FarmsKing — GST & Billing Architecture Document</title>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+Gurmukhi:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap');
+    body {
+      font-family: 'Inter', 'Noto Sans Gurmukhi', 'Noto Sans Devanagari', sans-serif;
+      margin: 40px;
+      color: #1e293b;
+      line-height: 1.6;
+      background-color: #ffffff;
+    }
+    h1 {
+      color: #15803d;
+      border-bottom: 3px solid #22c55e;
+      padding-bottom: 10px;
+      font-size: 26px;
+    }
+    h2 {
+      color: #0f766e;
+      margin-top: 25px;
+      font-size: 20px;
+      border-bottom: 1px solid #cbd5e1;
+      padding-bottom: 5px;
+    }
+    h3 {
+      color: #334155;
+      font-size: 16px;
+      margin-top: 15px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 14px;
+    }
+    th {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      font-weight: 600;
+    }
+    tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+    .box {
+      background-color: #f0fdf4;
+      border-left: 4px solid #22c55e;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+    .highlight {
+      font-weight: bold;
+      color: #166534;
+    }
+    .step-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 12px;
+      background: #fafafa;
+    }
+    .step-title {
+      font-weight: bold;
+      color: #0f766e;
+      font-size: 15px;
+    }
+    .footer {
+      margin-top: 40px;
+      font-size: 12px;
+      text-align: center;
+      color: #64748b;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 10px;
+    }
+  </style>
+
+</head>
+<body>
+  <h1>FarmsKing — Complete GST & Billing Architecture</h1>
+  <p><strong>Document Date:</strong> September 30, 2026 | <strong>Platform:</strong> FarmsKing Agriculture Marketplace</p>
+
+  <div class="box">
+    <strong>Regulatory Position:</strong> FarmsKing operates as an <strong>Electronic Commerce Operator (ECO)</strong> under <strong>Section 52 of the CGST Act, 2017</strong>.
+  </div>
+
+  <h2>1. Invoice Numbering Architecture (GST Rule 46 Compliance)</h2>
+  <p>As per GST Rule 46, invoice serial numbers must be consecutive, maximum 16 characters, unique per financial year, resetting on April 1st.</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Invoice Type</th>
+        <th>Code Format</th>
+        <th>Example</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Customer Sales Invoice</td>
+        <td>FK-INV-{FY}-{SeqNo}</td>
+        <td>FK-INV-2627-000001</td>
+        <td>Issued to Buyer on behalf of Seller with Seller's GSTIN.</td>
+      </tr>
+      <tr>
+        <td>Platform Commission Invoice</td>
+        <td>FK-COM-{FY}-{SeqNo}</td>
+        <td>FK-COM-2627-000001</td>
+        <td>Issued by FarmsKing to Seller for Platform Fee + 18% GST.</td>
+      </tr>
+      <tr>
+        <td>Seller Payout Voucher</td>
+        <td>FK-PAY-{FY}-{SeqNo}</td>
+        <td>FK-PAY-2627-000001</td>
+        <td>Payout settlement voucher detailing net earnings transfer.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>2. Seller's Own Invoice Serial Number Handling</h2>
+  <p>Under GST Rule 46, taxpayers are permitted to maintain <strong>Multiple Invoice Series</strong> for different sales channels:</p>
+  <ul>
+    <li><strong>Option A (Standard Marketplace Series - Recommended):</strong> Sellers maintain <code>OFF-2627-0001</code> for offline shop sales and <code>FK-S101-2627-000001</code> for FarmsKing online sales. This avoids invoice number collision between physical store and online sales.</li>
+    <li><strong>Option B (Custom Seller Prefix):</strong> Sellers can configure their own custom invoice prefix in the FarmsKing Seller Dashboard (e.g., <code>GUPTA-2627-</code>) and FarmsKing auto-increments using that series.</li>
+  </ul>
+
+  <h2>3. End-to-End Money & Transaction Flow (Step 1 to Step 6)</h2>
+  <div class="step-card">
+    <div class="step-title">Step 1: Order Placement & Escrow Payment</div>
+    <p>Customer orders on FarmsKing App (e.g. ₹10,000 product inclusive of GST). Customer pays ₹10,000 via online payment gateway into FarmsKing's Escrow/Nodal Bank Account.</p>
+  </div>
+  <div class="step-card">
+    <div class="step-title">Step 2: Order Delivery & Document Generation</div>
+    <p>Seller ships item. Upon delivery, FarmsKing automatically generates Customer Invoice, Commission Invoice, and Payout Voucher.</p>
+  </div>
+  <div class="step-card">
+    <div class="step-title">Step 3: 7-Day Return Lock Period</div>
+    <p>Funds remain held in FarmsKing Escrow during the 7-day customer return/exchange window.</p>
+  </div>
+  <div class="step-card">
+    <div class="step-title">Step 4: Automated Split Settlement & Payout</div>
+    <p>FarmsKing retains Platform Commission + 18% GST on commission + 1% TCS. The net payout is transferred directly to the seller's bank account/wallet via Auto-Payout API.</p>
+  </div>
+  <div class="step-card">
+    <div class="step-title">Step 5: Monthly Government Return Filing</div>
+    <p>FarmsKing files monthly GSTR-8 return by 10th of every month to deposit 1% TCS with the Govt. FarmsKing files GSTR-3B by 20th to deposit GST collected on commission.</p>
+  </div>
+  <div class="step-card">
+    <div class="step-title">Step 6: Seller Accounting & Tax Credit Claim</div>
+    <p>Seller files GSTR-1 & GSTR-3B. Seller claims ₹100 TCS credit (in Electronic Cash Ledger) and 18% Input Tax Credit (ITC) on FarmsKing's commission invoice.</p>
+  </div>
+
+  <h2>4. Detailed Transaction Calculation Models</h2>
+  <h3>Model A: Exclusive of GST (Base Price ₹10,000 + 5% GST = ₹10,500)</h3>
+  <ul>
+    <li><strong>Customer Pays:</strong> ₹10,500</li>
+    <li><strong>Net Taxable Base Price:</strong> ₹10,000</li>
+    <li><strong>Product GST (5%):</strong> ₹500</li>
+    <li><strong>TCS (1% of ₹10,000 Base):</strong> ₹100</li>
+    <li><strong>Platform Commission (5% of ₹10,000 Base):</strong> ₹500</li>
+    <li><strong>GST on Commission (18% of ₹500):</strong> ₹90</li>
+    <li><strong>Total Deductions:</strong> ₹100 + ₹500 + ₹90 = ₹690</li>
+    <li><strong>Net Seller Payout:</strong> ₹10,500 - ₹690 = <strong>₹9,810</strong></li>
+  </ul>
+
+  <h3>Model B: Inclusive of GST (Total Price ₹10,000 including 5% GST)</h3>
+  <ul>
+    <li><strong>Customer Pays:</strong> ₹10,000</li>
+    <li><strong>Base Price (₹10,000 / 1.05):</strong> ₹9,523.81</li>
+    <li><strong>Product GST (5%):</strong> ₹476.19</li>
+    <li><strong>TCS (1% of ₹9,523.81 Base):</strong> ₹95.24</li>
+    <li><strong>Platform Commission (5% of ₹9,523.81 Base):</strong> ₹476.19</li>
+    <li><strong>GST on Commission (18% of ₹476.19):</strong> ₹85.71</li>
+    <li><strong>Total Deductions:</strong> ₹657.14</li>
+    <li><strong>Net Seller Payout:</strong> ₹10,000 - ₹657.14 = <strong>₹9,342.86</strong></li>
+  </ul>
+
+  <h3>Model C: Farmers Selling Raw Produce (Exempt under GST Notification 2/2017)</h3>
+  <ul>
+    <li>Raw agricultural produce (wheat, paddy, fresh vegetables) is 0% GST exempt.</li>
+    <li>Unregistered farmers have <strong>0% TCS</strong>. FarmsKing only charges platform commission + 18% GST on commission.</li>
+  </ul>
+
+  <h2>5. Key Takeaways & Additional Technical Details</h2>
+  <div class="box">
+    <ul>
+      <li><strong>Commission Rule:</strong> FarmsKing charges commission <em>only on the net base item price</em>, NEVER on the government tax portion.</li>
+      <li><strong>TCS Benefit to Seller:</strong> The 1% TCS deposited by FarmsKing is not a loss to the seller; it is deposited into their Govt GST Cash Ledger to pay their monthly tax.</li>
+      <li><strong>Input Tax Credit (ITC):</strong> The 18% GST charged on FarmsKing commission can be claimed back by GST-registered sellers as ITC.</li>
+      <li><strong>Credit Notes:</strong> In case of product returns, FarmsKing automatically issues Credit Notes (<code>FK-CDN-2627-000001</code>) and reverses TCS/Commission accordingly.</li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    FarmsKing Agriculture Ecosystem — Billing & GST Specifications Document | Confidential
+  </div>
+</body>
+</html>

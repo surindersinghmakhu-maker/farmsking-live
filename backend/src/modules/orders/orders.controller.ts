@@ -59,6 +59,18 @@ export class OrdersController {
     return this.ordersService.generateFarmerBillOfSupply(user, id);
   }
 
+  @Roles(Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.ADVISOR, Role.SELLER, ...STAFF_ROLES)
+  @Get(':id/invoices')
+  getOrderInvoices(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.ordersService.getOrderInvoices(user, id);
+  }
+
+  @Roles(Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.ADVISOR, Role.SELLER, ...STAFF_ROLES)
+  @Get('invoices/:invoiceId/html')
+  getInvoiceHtml(@Param('invoiceId') invoiceId: string) {
+    return this.ordersService.getInvoiceHtml(invoiceId);
+  }
+
   @Roles(Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.ADVISOR)
   @Post(':id/phonepe/initiate')
   initiatePhonePePayment(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: InitiatePhonePePaymentDto) {

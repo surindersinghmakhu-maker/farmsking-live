@@ -65,6 +65,10 @@ function RootNavigation() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="seo" options={{ headerShown: false }} />
+      <Stack.Screen name="seller-dashboard" options={{ headerShown: false }} />
+      <Stack.Screen name="farmer-profile-setup" options={{ headerShown: false }} />
+      <Stack.Screen name="crop-intelligence" options={{ headerShown: false }} />
+      <Stack.Screen name="admin-sellers" options={{ headerShown: false }} />
       <Stack.Screen name="+not-found" />
     </Stack>
   );
@@ -91,7 +95,11 @@ export default function RootLayout() {
   }, [loaded, fontError]);
 
   if (!loaded && !fontError) {
-    return null;
+    return (
+      <QueryClientProvider client={queryClient}>
+        <SplashView />
+      </QueryClientProvider>
+    );
   }
 
   // If shortcut webview mode is enabled on native mobile build

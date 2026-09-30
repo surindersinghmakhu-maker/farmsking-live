@@ -19,6 +19,7 @@ import { MaterialCommunityIcons, Ionicons, FontAwesome5 } from '@expo/vector-ico
 import { apiClient } from '@/src/api/client';
 import { lookupPincode } from '@/src/api/pincode.api';
 import * as ImagePicker from 'expo-image-picker';
+import { RADIUS, FONT } from '@/constants/theme';
 
 export default function SellerDashboardScreen() {
   const router = useRouter();
@@ -134,6 +135,8 @@ export default function SellerDashboardScreen() {
       showAlert('Photo Picker Error', 'Could not open image gallery.');
     }
   };
+
+  const pickDocPhoto = pickSingleImage;
 
   const pickProductPhotos = async () => {
     try {
@@ -377,6 +380,18 @@ export default function SellerDashboardScreen() {
   const validateStep4 = () => {
     if (!pickupPincode.trim() || !/^\d{6}$/.test(pickupPincode.trim())) {
       showAlert('Pincode Required ⚠️', 'Please enter a valid 6-digit Pickup Pincode.');
+      return false;
+    }
+    if (!pickupAddress.trim()) {
+      showAlert('Pickup Address Required ⚠️', 'Please enter your Full Pickup Warehouse Address.');
+      return false;
+    }
+    if (!contactPerson.trim()) {
+      showAlert('Dispatch Manager Required ⚠️', 'Please enter Dispatch Manager Name.');
+      return false;
+    }
+    if (!contactMobile.trim() || !/^\d{10}$/.test(contactMobile.trim())) {
+      showAlert('Dispatch Mobile Required ⚠️', 'Please enter a valid 10-digit Dispatch Manager Mobile Number.');
       return false;
     }
     return true;
@@ -1042,7 +1057,7 @@ export default function SellerDashboardScreen() {
                     <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '700', marginBottom: 6 }}>
                       📜 STATUTORY MERCHANT AGREEMENT & INDEMNIFICATION BOND
                     </Text>
-                    
+
                     <Text style={{ color: '#D1D5DB', fontSize: 11, lineHeight: 17, marginBottom: 10 }}>
                       This Agreement is entered into between FarmsKing E-Commerce Marketplace ("Platform") and the Registering Vendor/Farmer Producer ("Seller"). By registering as a seller, you explicitly agree to the following legally binding terms:
                     </Text>
@@ -1153,8 +1168,8 @@ export default function SellerDashboardScreen() {
                         storeData?.kycStatus === 'VERIFIED'
                           ? '#065F46'
                           : storeData?.kycStatus === 'REJECTED'
-                          ? '#991B1B'
-                          : '#92400E',
+                            ? '#991B1B'
+                            : '#92400E',
                     },
                   ]}
                 >
@@ -1163,8 +1178,8 @@ export default function SellerDashboardScreen() {
                       storeData?.kycStatus === 'VERIFIED'
                         ? 'checkmark-circle'
                         : storeData?.kycStatus === 'REJECTED'
-                        ? 'close-circle'
-                        : 'time'
+                          ? 'close-circle'
+                          : 'time'
                     }
                     size={14}
                     color="#FFF"
@@ -1434,7 +1449,7 @@ export default function SellerDashboardScreen() {
                 {isFarmerMadeProduct ? (
                   <View style={{ backgroundColor: '#111827', borderRadius: 8, padding: 10, marginVertical: 8, borderWidth: 1, borderColor: '#059669' }}>
                     <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '700', marginBottom: 6 }}>🌾 Natural Farmer Food Compliance Details</Text>
-                    
+
                     <Text style={styles.inputLabel}>Producer / Farmer Name</Text>
                     <TextInput style={styles.input} value={farmerProducerName} onChangeText={setFarmerProducerName} placeholder="Direct Farmer Name" placeholderTextColor="#9CA3AF" />
 
@@ -1530,7 +1545,7 @@ export default function SellerDashboardScreen() {
                       <View style={{ padding: 14 }}>
                         <Text style={{ color: '#9CA3AF', fontSize: 12, textTransform: 'uppercase', fontWeight: '700' }}>{newBrand || storeData?.storeName}</Text>
                         <Text style={{ color: '#FFF', fontSize: 18, fontWeight: '800', marginVertical: 4 }}>{productName || 'Untitled Product'}</Text>
-                        
+
                         <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, marginVertical: 6 }}>
                           <Text style={{ color: '#10B981', fontSize: 20, fontWeight: '900' }}>₹{productPrice || '0'}</Text>
                           {newMrpPrice ? <Text style={{ color: '#9CA3AF', fontSize: 14, textDecorationLine: 'line-through' }}>₹{newMrpPrice}</Text> : null}
@@ -1576,7 +1591,6 @@ export default function SellerDashboardScreen() {
                 </View>
               </View>
             </Modal>
-            )}
 
             {/* Compliance Note */}
             <View style={styles.infoBox}>

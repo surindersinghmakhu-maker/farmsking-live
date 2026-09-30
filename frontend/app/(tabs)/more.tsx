@@ -95,6 +95,8 @@ export default function MoreScreen() {
   const [isGroupVoiceCallEnabled, setIsGroupVoiceCallEnabled] = useState(true);
 
   const [deletePincodeInput, setDeletePincodeInput] = useState('');
+  const [deletePasswordInput, setDeletePasswordInput] = useState('');
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleteOtpInput, setDeleteOtpInput] = useState('');
   const [deleteGeneratedOtp, setDeleteGeneratedOtp] = useState('');
   const [isDeleteOtpSent, setIsDeleteOtpSent] = useState(false);
@@ -140,6 +142,8 @@ export default function MoreScreen() {
 
   const handleOpenDeleteModal = () => {
     setDeleteKingIdInput('');
+    setDeletePasswordInput('');
+    setDeleteConfirmText('');
     setDeletePincodeInput('');
     setDeleteOtpInput('');
     setDeleteGeneratedOtp('');
@@ -152,65 +156,28 @@ export default function MoreScreen() {
 
   const handleVerifyDeleteSecurity = () => {
     setDeleteCaptchaError(null);
-    const inputKingId = deleteKingIdInput.trim().toLowerCase();
-    const cleanInput = inputKingId.replace(/[^a-z0-9]/g, '');
 
-    const cleanUserKingId = (user?.kingId || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-    const cleanUserMobile = (user?.mobile || '').trim().toLowerCase().replace(/[^0-9]/g, '');
-    const cleanUserRefCode = String(user?.refCode || user?.referralCode || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-    const cleanUserId = String(user?.id || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-
-    // 1. King ID / Mobile Check
+    // Step 1: King ID must match
+    const inputKingId = deleteKingIdInput.trim().toUpperCase();
+    const cleanUserKingId = (user?.kingId || '').trim().toUpperCase();
     if (!inputKingId) {
-      setDeleteCaptchaError('Kripya apni King ID ja Mobile Number darj karo.');
+      setDeleteCaptchaError('Please enter your King ID (e.g. FK100234).');
+      return;
+    }
+    if (inputKingId !== cleanUserKingId) {
+      setDeleteCaptchaError('King ID is incorrect. Please enter your exact King ID.');
       return;
     }
 
-    const isKingIdOrMobileMatch = Boolean(
-      (cleanUserKingId && (cleanInput === cleanUserKingId || cleanInput.replace(/^fk/, '') === cleanUserKingId.replace(/^fk/, ''))) ||
-      (cleanUserMobile && (cleanInput === cleanUserMobile || cleanInput.endsWith(cleanUserMobile.slice(-10)))) ||
-      (cleanUserRefCode && cleanInput === cleanUserRefCode) ||
-      (cleanUserId && cleanInput === cleanUserId)
-    );
-
-    if (!isKingIdOrMobileMatch) {
-      setDeleteCaptchaError('King ID / Mobile Number incorrect hai!');
+    // Step 2: Password must be provided
+    if (!deletePasswordInput.trim()) {
+      setDeleteCaptchaError('Please enter your account password.');
       return;
     }
 
-    // 2. Postal PIN Code Check
-    const expectedPincode = (user?.pincode || '').trim().replace(/[^0-9]/g, '');
-    const inputPincode = deletePincodeInput.trim().replace(/[^0-9]/g, '');
-    if (!inputPincode || inputPincode.length !== 6) {
-      setDeleteCaptchaError('Kripya 6-digit Postal PIN Code darj karo.');
-      return;
-    }
-    if (expectedPincode && expectedPincode.length === 6 && inputPincode !== expectedPincode) {
-      setDeleteCaptchaError('Postal PIN Code incorrect hai!');
-      return;
-    }
-
-    // 3. Captcha Security Code Check
-    if (captchaRef.current && !captchaRef.current.validate()) {
-      setDeleteCaptchaError('Invalid Captcha code! Screen te ditta 4-character code sahi darj karo.');
-      return;
-    }
-
-    // 4. Mobile WhatsApp/SMS OTP Verification Check
-    const cleanOtp = deleteOtpInput.trim();
-    if (!cleanOtp) {
-      setDeleteCaptchaError('Kripya 4-digit Mobile OTP darj karo. "Send OTP" ਬਟਨ ਤੇ ਕਲਿੱਕ ਕਰੋ।');
-      return;
-    }
-
-    const isValidOtp = Boolean(
-      (deleteGeneratedOtp && cleanOtp === deleteGeneratedOtp) ||
-      cleanOtp === '1234' ||
-      cleanOtp === '9999'
-    );
-
-    if (!isValidOtp) {
-      setDeleteCaptchaError('Invalid OTP code! WhatsApp / Mobile te aaya 4-digit code sahi darj karo.');
+    // Step 3: User must type DELETE exactly
+    if (deleteConfirmText.trim() !== 'DELETE') {
+      setDeleteCaptchaError('Please type DELETE (in uppercase) exactly to confirm.');
       return;
     }
 
@@ -962,10 +929,10 @@ export default function MoreScreen() {
                 <Ionicons name="shield-checkmark-outline" size={24} color="#dc2626" />
               </View>
               <Text style={{ fontSize: 17, fontFamily: FONT.extraBold, color: '#991b1b', textAlign: 'center' }}>
-                Account Deletion Security
+                Delete Account
               </Text>
               <Text style={{ fontSize: 11.5, color: '#64748b', fontFamily: FONT.medium, textAlign: 'center', marginTop: 2 }}>
-                4-Step Security Check: King ID, PIN Code, Captcha & OTP
+                3-Step Verification: King ID, Password & Confirm DELETE
               </Text>
             </View>
 
@@ -990,83 +957,47 @@ export default function MoreScreen() {
                   </View>
                 </View>
 
-                {/* 2. Input Postal PIN Code */}
+                {/* Step 2: Password */}
                 <View>
                   <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#334155', marginBottom: 3 }}>
-                    2. Enter Postal PIN Code *
+                    2. Enter Your Account Password *
                   </Text>
                   <View style={{ height: 38, flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, backgroundColor: '#ffffff', paddingHorizontal: 10 }}>
-                    <Ionicons name="location-outline" size={17} color="#94a3b8" style={{ marginRight: 6 }} />
+                    <Ionicons name="lock-closed-outline" size={17} color="#94a3b8" style={{ marginRight: 6 }} />
                     <TextInput
                       style={{ flex: 1, fontSize: 13, fontFamily: FONT.medium, color: '#0f172a' }}
-                      placeholder="6-digit Postal PIN Code"
+                      placeholder="Your account password"
                       placeholderTextColor="#94a3b8"
-                      keyboardType="numeric"
-                      maxLength={6}
-                      value={deletePincodeInput}
-                      onChangeText={setDeletePincodeInput}
+                      secureTextEntry
+                      value={deletePasswordInput}
+                      onChangeText={setDeletePasswordInput}
                     />
                   </View>
                 </View>
 
-                {/* 3. Captcha Security Challenge */}
-                <View>
-                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#334155', marginBottom: 3 }}>
-                    3. Security Captcha *
+                {/* Step 3: Type DELETE */}
+                <View style={{ backgroundColor: '#fef2f2', borderWidth: 1.5, borderColor: '#fecaca', borderRadius: RADIUS.md, padding: 9, gap: 6 }}>
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#991b1b' }}>
+                    3. Type DELETE to confirm *
                   </Text>
-                  <CaptchaChallenge ref={captchaRef} onSubmitEditing={handleVerifyDeleteSecurity} />
-                </View>
-
-                {/* 4. WhatsApp / Mobile OTP Verification */}
-                <View style={{ backgroundColor: '#f0fdf4', borderWidth: 1.5, borderColor: '#bbf7d0', borderRadius: RADIUS.md, padding: 9, gap: 5 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#166534' }}>
-                      4. WhatsApp / Mobile OTP *
-                    </Text>
-                    <TouchableOpacity
-                      onPress={handleSendDeleteOtp}
-                      disabled={isSendingDeleteOtp || deleteOtpTimer > 0}
-                      style={{ backgroundColor: deleteOtpTimer > 0 ? '#cbd5e1' : '#16a34a', paddingHorizontal: 9, paddingVertical: 4, borderRadius: RADIUS.pill }}
-                    >
-                      {isSendingDeleteOtp ? (
-                        <ActivityIndicator size="small" color="#ffffff" />
-                      ) : (
-                        <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>
-                          {deleteOtpTimer > 0 ? `Resend (${deleteOtpTimer}s)` : isDeleteOtpSent ? 'Resend OTP' : 'Send OTP'}
-                        </Text>
-                      )}
-                    </TouchableOpacity>
-                  </View>
-
-                  {deleteBotStatusText ? (
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#15803d' }}>
-                      {deleteBotStatusText}
-                    </Text>
-                  ) : null}
-
-                  <View style={{ height: 36, flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#16a34a', borderRadius: RADIUS.md, backgroundColor: '#ffffff', paddingHorizontal: 10 }}>
-                    <Ionicons name="chatbox-ellipses-outline" size={16} color="#16a34a" style={{ marginRight: 6 }} />
+                  <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' }}>
+                    ⚠️ This action is irreversible. Your personal data will be permanently removed. Your King ID and historical records will be retained for audit.
+                  </Text>
+                  <View style={{ height: 38, flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#f87171', borderRadius: RADIUS.md, backgroundColor: '#ffffff', paddingHorizontal: 10 }}>
+                    <Ionicons name="warning-outline" size={17} color="#ef4444" style={{ marginRight: 6 }} />
                     <TextInput
-                      style={{ flex: 1, fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a', letterSpacing: 4 }}
-                      placeholder="4-digit OTP"
-                      placeholderTextColor="#94a3b8"
-                      keyboardType="numeric"
-                      maxLength={4}
-                      value={deleteOtpInput}
+                      style={{ flex: 1, fontSize: 14, fontFamily: FONT.extraBold, color: '#dc2626', letterSpacing: 2 }}
+                      placeholder="Type: DELETE"
+                      placeholderTextColor="#fca5a5"
+                      autoCapitalize="characters"
+                      value={deleteConfirmText}
                       onChangeText={(t) => {
-                        setDeleteOtpInput(t);
+                        setDeleteConfirmText(t.toUpperCase());
                         setDeleteCaptchaError(null);
                       }}
                     />
-                    {deleteGeneratedOtp ? (
-                      <TouchableOpacity
-                        onPress={() => setDeleteOtpInput(deleteGeneratedOtp)}
-                        style={{ backgroundColor: '#fef3c7', borderWidth: 1, borderColor: '#fde68a', paddingHorizontal: 7, paddingVertical: 3, borderRadius: RADIUS.xs }}
-                      >
-                        <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#b45309' }}>
-                          ⚡ Quick-Fill ({deleteGeneratedOtp})
-                        </Text>
-                      </TouchableOpacity>
+                    {deleteConfirmText === 'DELETE' ? (
+                      <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
                     ) : null}
                   </View>
                 </View>
@@ -1087,11 +1018,12 @@ export default function MoreScreen() {
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={{ flex: 1.3, paddingVertical: 10, borderRadius: RADIUS.md, backgroundColor: '#0284c7', alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 4 }}
+                    style={{ flex: 1.3, paddingVertical: 10, borderRadius: RADIUS.md, backgroundColor: deleteConfirmText === 'DELETE' ? '#0284c7' : '#cbd5e1', alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 4 }}
                     onPress={handleVerifyDeleteSecurity}
+                    disabled={deleteConfirmText !== 'DELETE'}
                   >
                     <Ionicons name="shield-checkmark" size={16} color="#ffffff" />
-                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>Verify 4 Checks</Text>
+                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>Verify & Continue</Text>
                   </TouchableOpacity>
                 </View>
               </View>

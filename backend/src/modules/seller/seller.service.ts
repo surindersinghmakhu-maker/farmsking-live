@@ -162,9 +162,21 @@ export class SellerService {
   }
 
   /** Admin: List all registered Seller Stores */
-  async listStoresForAdmin(kycStatus?: SellerKycStatus) {
+  async listStoresForAdmin(kycStatus?: string) {
+    let whereClause: any = {};
+    if (kycStatus && kycStatus !== 'ALL') {
+      if (kycStatus === 'PENDING') {
+        whereClause = {
+          kycStatus: {
+            in: [SellerKycStatus.PENDING, SellerKycStatus.SUBMITTED, SellerKycStatus.UNVERIFIED],
+          },
+        };
+      } else {
+        whereClause = { kycStatus: kycStatus as SellerKycStatus };
+      }
+    }
     return this.prisma.sellerStore.findMany({
-      where: kycStatus ? { kycStatus } : {},
+      where: whereClause,
       include: {
         seller: {
           select: { id: true, name: true, mobile: true, email: true },

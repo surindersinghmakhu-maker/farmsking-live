@@ -132,6 +132,25 @@ export class CreateProductDto {
   @IsNumber()
   commissionOverridePercentage?: number;
 
+  // Return & Replacement Policy Fields
+  @IsOptional()
+  isReturnable?: boolean;
+
+  @IsOptional()
+  @IsInt()
+  returnWindowDays?: number;
+
+  @IsOptional()
+  isReplaceable?: boolean;
+
+  @IsOptional()
+  @IsInt()
+  replacementWindowDays?: number;
+
+  @IsOptional()
+  @IsString()
+  returnPolicyNotes?: string;
+
   @IsOptional()
   @IsInt()
   bulkDiscountMinQty?: number;

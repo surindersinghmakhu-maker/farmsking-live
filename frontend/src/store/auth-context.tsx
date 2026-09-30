@@ -48,14 +48,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     (async () => {
-      const [token, storedUser] = await Promise.all([
-        SecureStore.getItemAsync(TOKEN_KEY),
-        SecureStore.getItemAsync(USER_KEY),
-      ]);
-      if (token && storedUser) {
-        setUser(JSON.parse(storedUser));
+      try {
+        const [token, storedUser] = await Promise.all([
+          SecureStore.getItemAsync(TOKEN_KEY),
+          SecureStore.getItemAsync(USER_KEY),
+        ]);
+        if (token && storedUser) {
+          try {
+            setUser(JSON.parse(storedUser));
+          } catch (e) {
+            console.warn('Corrupt user session in storage, resetting:', e);
+            await SecureStore.deleteItemAsync(TOKEN_KEY);
+            await SecureStore.deleteItemAsync(USER_KEY);
+          }
+        }
+      } catch (err) {
+        console.warn('Error reading storage session:', err);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     })();
   }, []);
 
@@ -161,8 +172,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const res = await verifyMobileLinkOtpApi(payload);
         if (res.accessToken && res.user) {
           await persistSession(res.accessToken, res.user);
-        } else if (res.user) {
-          await updateUser(res.user);
+        } else if (res.user && userRef.current) {
+          const merged = { ...userRef.current, ...res.user };
+          await SecureStore.setItemAsync(USER_KEY, JSON.stringify(merged));
+          setUser(merged);
         }
         return { success: res.success, message: res.message, isMerged: res.isMerged };
       },

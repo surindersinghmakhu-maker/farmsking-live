@@ -343,23 +343,24 @@ export class UsersService implements OnModuleInit {
   async deleteMe(user: AuthUser) {
     const dbUser = await this.prisma.user.findUnique({
       where: { id: user.id },
-      select: { id: true, mobile: true, name: true },
+      select: { id: true, mobile: true, email: true, name: true, kingId: true },
     });
 
     if (!dbUser) {
       throw new NotFoundException('User account not found.');
     }
 
-    // 1. Zero out & clear remaining wallet balance
+    // 1. Zero out & clear remaining wallet balance — mark transaction clearly for audit
     try {
       const currentBalance = await this.walletService.getBalance(user.id);
       if (currentBalance > 0) {
         await this.walletService.debit(
           user.id,
           currentBalance,
-          'Wallet balance zeroed out upon self-service account deletion',
+          `Account Deleted — Wallet balance of ₹${currentBalance} debited. Reason: Account deletion by user.`,
         );
       }
+      // If balance is already 0, nothing to debit — wallet is already clean
     } catch (e) {
       console.warn('Failed to clear wallet balance during account deletion:', e);
     }
@@ -374,13 +375,22 @@ export class UsersService implements OnModuleInit {
       console.warn('Failed to soft-delete supervisor sub-accounts:', e);
     }
 
-    // 3. Scrub & anonymize PII (Google Play Store Account Deletion Policy Compliance)
+    // 3. Scrub & anonymize PII — Google Play Store Account Deletion Policy Compliance.
+    //    IMPORTANT: kingId is intentionally NOT changed — all linked historical records
+    //    (bills, orders, salary entries, workers, wallet transactions) stay traceable.
+    //    Mobile & Email get a DEL_ prefix so they are unusable for login
+    //    but still uniquely distinguishable in the DB for auditing.
+    const ts = Date.now();
+    const delMobile = dbUser.mobile ? `DEL_${dbUser.mobile}_${ts}` : `DEL_UNKNOWN_${user.id}_${ts}`;
+    const delEmail  = dbUser.email  ? `DEL_${dbUser.email}_${ts}`  : null;
+
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
         name: 'Deleted Account',
-        mobile: `deleted_${user.id}_${Date.now()}`,
-        email: null,
+        mobile: delMobile,       // DEL_ prefix — login blocked; number is identifiable for audit
+        email: delEmail,         // DEL_ prefix — login blocked; email identifiable for audit
+        // kingId → intentionally unchanged so all linked records remain traceable
         photoUrl: null,
         village: null,
         district: null,
@@ -410,7 +420,7 @@ export class UsersService implements OnModuleInit {
 
     return {
       success: true,
-      message: 'Account, profile info, photo, wallet balance, and personal data deleted successfully in accordance with Google Play Store User Data Policy.',
+      message: 'Account deleted successfully. Your King ID and all linked historical records (orders, bills, workers, wallet) are retained for audit. Personal information has been permanently removed in accordance with Google Play Store policy.',
     };
   }
 
@@ -1308,7 +1318,9 @@ export class UsersService implements OnModuleInit {
     return { ...computePartnerProfileStatus(partner), profile: partner };
   }
 
-  /** Super Admin: permanently deletes user and ALL associated records from the database */
+  /** Super Admin: anonymizes & soft-deletes a user account. KingID and all linked historical records
+   *  (orders, bills, workers, wallet transactions) are retained for audit. Only PII is scrubbed.
+   *  Mobile/Email get a DEL_ prefix so login is permanently blocked. Hard removal from DB is NOT done. */
   async deleteUserByAdmin(caller: AuthUser, id: string) {
     if (caller.role !== Role.SUPER_ADMIN && !caller.roles?.includes(Role.SUPER_ADMIN)) {
       throw new ForbiddenException('Only Super Admin can delete user records.');
@@ -1324,109 +1336,54 @@ export class UsersService implements OnModuleInit {
       throw new ConflictException('Primary Super Admin account 9872066901 cannot be deleted.');
     }
     if (!user.deletedAt) {
-      throw new BadRequestException('User must be deactivated before permanent deletion. Please deactivate the user first.');
+      throw new BadRequestException('User must be soft-deleted (deactivated) before this operation. Please deactivate the user first.');
     }
 
-    await this.prisma.$transaction(
-      async (tx) => {
-        // 1. Clear self-referencing user relations & doctor/supervisor links
-        await tx.user.updateMany({ where: { referredById: id }, data: { referredById: null } });
-        await tx.user.updateMany({ where: { seniorDoctorId: id }, data: { seniorDoctorId: null } });
-        await tx.user.updateMany({ where: { employerFarmerId: id }, data: { employerFarmerId: null } });
+    // Soft-delete — same policy as self-service deleteMe:
+    // KingID stays intact so all linked historical records (bills, orders, salary,
+    // workers, wallet transactions) remain fully traceable for audit.
+    // Mobile & Email get a DEL_ prefix — login is permanently blocked.
+    const ts = Date.now();
+    const delMobile = user.mobile ? `DEL_${user.mobile}_${ts}` : `DEL_UNKNOWN_${id}_${ts}`;
+    const delEmail  = user.email  ? `DEL_${user.email}_${ts}`  : null;
 
-        // 2. Delete child plans, subscriptions & assignments
-        await tx.farmerPlanHistory.deleteMany({ where: { farmerId: id } });
-        await tx.farmerPlan.deleteMany({ where: { farmerId: id } });
-        await tx.gardenerPlan.deleteMany({ where: { gardenerId: id } });
-        await tx.advisorTierPlan.deleteMany({ where: { advisorId: id } });
-        await tx.advisorAssignment.deleteMany({ where: { OR: [{ farmerId: id }, { advisorId: id }, { assignedById: id }] } });
-        await tx.callRequest.deleteMany({ where: { OR: [{ farmerId: id }, { advisorId: id }] } });
-        await tx.partnerAssignment.deleteMany({ where: { OR: [{ businessPartnerId: id }, { customerId: id }] } });
-        await tx.userReferral.deleteMany({ where: { OR: [{ referrerId: id }, { referredUserId: id }] } });
-        await tx.advisorSubscription.deleteMany({ where: { OR: [{ farmerId: id }, { approvedById: id }] } });
-
-        // 3. Delete financial requests, transactions & wallet data
-        await tx.walletTransaction.deleteMany({ where: { OR: [{ userId: id }, { relatedUserId: id }] } });
-        await tx.withdrawalRequest.deleteMany({ where: { OR: [{ businessPartnerId: id }, { processedById: id }] } });
-        await tx.planPaymentRequest.deleteMany({ where: { OR: [{ farmerId: id }, { confirmedById: id }] } });
-        await tx.farmerPlanPaymentRequest.deleteMany({ where: { OR: [{ farmerId: id }, { confirmedById: id }] } });
-        await tx.arhtiyaTransaction.deleteMany({ where: { farmerId: id } });
-        await tx.saleBill.deleteMany({ where: { farmerId: id } });
-        await tx.paymentReceipt.deleteMany({ where: { farmerId: id } });
-
-        // 4. Delete messages, notifications & chats
-        await tx.notification.deleteMany({ where: { userId: id } });
-        await tx.adminChatMessage.deleteMany({ where: { OR: [{ farmerId: id }, { adminId: id }] } });
-        await tx.message.deleteMany({ where: { OR: [{ senderId: id }, { receiverId: id }] } });
-        await tx.cropProblem.deleteMany({ where: { OR: [{ reportedById: id }, { assignedAdvisorId: id }] } });
-        await tx.groupVoiceCallParticipant.deleteMany({ where: { userId: id } });
-        await tx.groupVoiceCall.deleteMany({ where: { hostId: id } });
-
-        // 5. Delete labour records
-        await tx.labourEntry.deleteMany({ where: { recordedById: id } });
-        await tx.labourWorkEntry.deleteMany({ where: { OR: [{ recordedById: id }, { farmerId: id }] } });
-        await tx.labourPayment.deleteMany({ where: { OR: [{ recordedById: id }, { farmerId: id }] } });
-        await tx.labourWorker.deleteMany({ where: { OR: [{ farmerId: id }, { userId: id }] } });
-
-        // 6. Delete expenses, sales & parties
-        await tx.expense.deleteMany({ where: { recordedById: id } });
-        await tx.sale.deleteMany({ where: { recordedById: id } });
-        await tx.payment.deleteMany({ where: { recordedById: id } });
-        await tx.party.deleteMany({ where: { ownerId: id } });
-        await tx.unifiedParty.deleteMany({ where: { OR: [{ ownerFarmerId: id }, { userId: id }] } });
-        await tx.customer.deleteMany({ where: { farmerId: id } });
-
-        // 7. Delete farms & related plots
-        await tx.farm.deleteMany({ where: { ownerId: id } });
-
-        // 8. Delete ecommerce products, reviews, wishlist & orders
-        await tx.productReview.deleteMany({ where: { userId: id } });
-        await tx.wishlist.deleteMany({ where: { userId: id } });
-        await tx.product.deleteMany({ where: { createdById: id } });
-        await tx.sellerStore.deleteMany({ where: { sellerId: id } });
-        await tx.customerOrder.updateMany({ where: { packedById: id }, data: { packedById: null } });
-        await tx.customerOrder.updateMany({ where: { dispatchedById: id }, data: { dispatchedById: null } });
-        await tx.customerOrder.deleteMany({ where: { customerId: id } });
-        await tx.customerAddress.deleteMany({ where: { ownerId: id } });
-
-        // 9. Delete coupons & logs
-        await tx.couponRedemption.deleteMany({ where: { customerId: id } });
-        await tx.coupon.deleteMany({ where: { OR: [{ businessPartnerId: id }, { createdById: id }] } });
-        await tx.farmerPlanCoupon.deleteMany({ where: { OR: [{ createdById: id }, { assignedFarmerId: id }, { assignedAdvisorId: id }, { assignedBusinessPartnerId: id }, { usedByFarmerId: id }] } });
-        await tx.gardenerPlanCoupon.deleteMany({ where: { OR: [{ createdById: id }, { assignedGardenerId: id }] } });
-        await tx.planRenewalCoupon.deleteMany({ where: { OR: [{ createdById: id }, { assignedFarmerId: id }, { assignedAdvisorId: id }] } });
-        await tx.basicPlanCoupon.deleteMany({ where: { OR: [{ createdById: id }, { purchasedById: id }, { usedByFarmerId: id }] } });
-        await tx.auditLog.deleteMany({ where: { actorId: id } });
-        await tx.upload.deleteMany({ where: { uploadedById: id } });
-
-        // 10. Nullify system settings updatedById & weather tip templates
-        await tx.appSetting.updateMany({ where: { updatedById: id }, data: { updatedById: null } });
-        await tx.couponSystemSetting.updateMany({ where: { updatedById: id }, data: { updatedById: null } });
-        await tx.farmerPlanPricing.updateMany({ where: { updatedById: id }, data: { updatedById: null } });
-        await tx.weatherTipTemplate.deleteMany({ where: { createdById: id } });
-
-        // 11. Delete technical training, price lock, KingConnect & Voice AI logs
-        await tx.farmerTrainingLog.deleteMany({ where: { OR: [{ farmerId: id }, { trainerId: id }] } });
-        await tx.trainerAssignment.deleteMany({ where: { OR: [{ trainerId: id }, { uplineTrainerId: id }] } });
-        await tx.priceLockContract.deleteMany({ where: { OR: [{ farmerId: id }, { buyerId: id }] } });
-        await tx.kingConnectLink.deleteMany({ where: { OR: [{ initiatorId: id }, { receiverId: id }] } });
-        await tx.p2pLedgerSyncRequest.deleteMany({ where: { OR: [{ senderId: id }, { receiverId: id }] } });
-        await tx.demandRequest.deleteMany({ where: { OR: [{ requesterId: id }, { farmerId: id }] } });
-        await tx.kingPaymentRequest.deleteMany({ where: { OR: [{ senderId: id }, { receiverId: id }] } });
-        await tx.voiceAILog.deleteMany({ where: { userId: id } });
-
-        // 12. Finally, hard delete the User record itself from the database
-        await tx.user.delete({ where: { id } });
+    await this.prisma.user.update({
+      where: { id },
+      data: {
+        name: 'Deleted Account',
+        mobile: delMobile,
+        email: delEmail,
+        // kingId → intentionally unchanged
+        photoUrl: null,
+        village: null,
+        district: null,
+        state: null,
+        pincode: null,
+        postOffice: null,
+        upiId: null,
+        billPrintingAddress: null,
+        farmName: null,
+        farmAddress: null,
+        farmMobile: null,
+        specialization: null,
+        bio: null,
+        yearsExperience: null,
+        gpsLat: null,
+        gpsLng: null,
+        gpsLocationName: null,
+        securityQuestion: null,
+        securityAnswerHash: null,
+        passwordHash: 'ACCOUNT_DELETED_PERMANENTLY',
+        deletedAt: new Date(),
       },
-      {
-        timeout: 30000,
-        maxWait: 10000,
-      },
-    );
+    });
 
     // 📲 WhatsApp Group: remove deleted user from WhatsApp group if present
     this.whatsappGroupSyncService.autoRemoveUser(id, user.mobile ?? '', user.name ?? 'User').catch(() => {});
 
-    return { success: true, message: `User ${user.name} (${user.mobile}) and all associated records deleted permanently.` };
+    return {
+      success: true,
+      message: `Account for ${user.name} (${user.kingId ?? user.mobile}) has been anonymized. King ID and all linked historical records are retained for audit. Personal information permanently removed.`,
+    };
   }
 }

@@ -46,7 +46,7 @@ export function BrandLogo({
   useFastBundledOnly = false,
   useGoldRing = false,
 }: BrandLogoProps) {
-  const { data: settings } = useAppSettings();
+  const settings = useFastBundledOnly ? null : useAppSettings().data;
   const { user } = useAuth();
   const [imageError, setImageError] = useState(false);
 

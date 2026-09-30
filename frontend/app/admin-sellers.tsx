@@ -38,6 +38,8 @@ export default function AdminSellersScreen() {
   const [gstr8Month, setGstr8Month] = useState('9');
   const [gstr8Year, setGstr8Year] = useState('2026');
 
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
   useEffect(() => {
     fetchStores();
   }, [selectedFilter]);
@@ -53,11 +55,18 @@ export default function AdminSellersScreen() {
   const fetchStores = async () => {
     try {
       setLoading(true);
+      setFetchError(null);
       const kycParam = selectedFilter !== 'ALL' ? `?kycStatus=${selectedFilter}` : '';
       const res = await apiClient.get(`/seller/admin/stores${kycParam}`);
       setStores(res.data);
     } catch (err: any) {
       console.log('Error fetching seller stores for admin:', err?.response?.data || err.message);
+      const status = err?.response?.status;
+      if (status === 401 || status === 403) {
+        setFetchError('⚠️ Admin Access Required. Please log in with an Admin account (Mobile: 9872066901) to view and approve seller applications.');
+      } else {
+        setFetchError(err?.response?.data?.message || err?.message || 'Failed to connect to backend server.');
+      }
     } finally {
       setLoading(false);
     }
@@ -124,14 +133,14 @@ export default function AdminSellersScreen() {
 
       {/* Filter Tabs */}
       <View style={styles.filterBar}>
-        {(['ALL', 'PENDING', 'VERIFIED'] as const).map((filter) => (
+        {(['ALL', 'PENDING', 'VERIFIED', 'REJECTED'] as const).map((filter) => (
           <TouchableOpacity
             key={filter}
-            style={[styles.filterTab, selectedFilter === filter && styles.activeFilterTab]}
-            onPress={() => setSelectedFilter(filter)}
+            style={[styles.filterTab, selectedFilter === (filter as any) && styles.activeFilterTab]}
+            onPress={() => setSelectedFilter(filter as any)}
           >
-            <Text style={[styles.filterText, selectedFilter === filter && styles.activeFilterText]}>
-              {filter} Stores
+            <Text style={[styles.filterText, selectedFilter === (filter as any) && styles.activeFilterText]}>
+              {filter}
             </Text>
           </TouchableOpacity>
         ))}
@@ -140,6 +149,25 @@ export default function AdminSellersScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {loading ? (
           <ActivityIndicator size="large" color="#10B981" style={{ marginTop: 40 }} />
+        ) : fetchError ? (
+          <View style={styles.emptyContainer}>
+            <MaterialCommunityIcons name="shield-lock" size={54} color="#EF4444" />
+            <Text style={[styles.emptyText, { color: '#F87171', marginTop: 12, textAlign: 'center', paddingHorizontal: 20 }]}>
+              {fetchError}
+            </Text>
+            <TouchableOpacity
+              style={{
+                marginTop: 20,
+                backgroundColor: '#10B981',
+                paddingVertical: 10,
+                paddingHorizontal: 20,
+                borderRadius: 8,
+              }}
+              onPress={() => router.push('/(auth)/sign-in' as any)}
+            >
+              <Text style={{ color: '#FFF', fontWeight: '700' }}>🔑 Admin Log In</Text>
+            </TouchableOpacity>
+          </View>
         ) : stores.length === 0 ? (
           <View style={styles.emptyContainer}>
             <MaterialCommunityIcons name="store-search-outline" size={48} color="#6B7280" />

@@ -1,0 +1,204 @@
+
+<!DOCTYPE html>
+<html lang="pa">
+<head>
+  <meta charset="UTF-8">
+  <title>FarmsKing — GST ਅਤੇ ਬਿਲਿੰਗ ਪ੍ਰਣਾਲੀ ਦਸਤਾਵੇਜ਼</title>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+Gurmukhi:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap');
+    body {
+      font-family: 'Inter', 'Noto Sans Gurmukhi', 'Noto Sans Devanagari', sans-serif;
+      margin: 40px;
+      color: #1e293b;
+      line-height: 1.6;
+      background-color: #ffffff;
+    }
+    h1 {
+      color: #15803d;
+      border-bottom: 3px solid #22c55e;
+      padding-bottom: 10px;
+      font-size: 26px;
+    }
+    h2 {
+      color: #0f766e;
+      margin-top: 25px;
+      font-size: 20px;
+      border-bottom: 1px solid #cbd5e1;
+      padding-bottom: 5px;
+    }
+    h3 {
+      color: #334155;
+      font-size: 16px;
+      margin-top: 15px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 14px;
+    }
+    th {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      font-weight: 600;
+    }
+    tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+    .box {
+      background-color: #f0fdf4;
+      border-left: 4px solid #22c55e;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+    .highlight {
+      font-weight: bold;
+      color: #166534;
+    }
+    .step-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 12px;
+      background: #fafafa;
+    }
+    .step-title {
+      font-weight: bold;
+      color: #0f766e;
+      font-size: 15px;
+    }
+    .footer {
+      margin-top: 40px;
+      font-size: 12px;
+      text-align: center;
+      color: #64748b;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 10px;
+    }
+  </style>
+
+</head>
+<body>
+  <h1>FarmsKing — ਪੂਰਾ GST ਅਤੇ ਬਿਲਿੰਗ ਸਿਸਟਮ ਢਾਂਚਾ</h1>
+  <p><strong>ਦਸਤਾਵੇਜ਼ ਮਿਤੀ:</strong> 30 ਸਤੰਬਰ 2026 | <strong>ਪਲੇਟਫਾਰਮ:</strong> ਫਾਰਮਸਕਿੰਗ ਐਗਰੀਕਲਚਰ ਮਾਰਕੀਟਪਲੇਸ</p>
+
+  <div class="box">
+    <strong>ਕਾਨੂੰਨੀ ਸਥਿਤੀ:</strong> FarmsKing GST ਕਾਨੂੰਨ ਦੀ <strong>Section 52</strong> ਦੇ ਤਹਿਤ **Electronic Commerce Operator (ECO)** ਵਜੋਂ ਕੰਮ ਕਰਦਾ ਹੈ।
+  </div>
+
+  <h2>1. ਬਿਲ ਨੰਬਰ ਪ੍ਰਣਾਲੀ (GST Rule 46 ਅਨੁਸਾਰ)</h2>
+  <p>GST ਨਿਯਮਾਂ ਅਨੁਸਾਰ ਬਿਲ ਨੰਬਰ ਲਗਾਤਾਰ ਸੀਰੀਅਲ ਵਿੱਚ, ਵੱਧ ਤੋਂ ਵੱਧ 16 ਅੱਖਰਾਂ ਦਾ, ਅਤੇ ਹਰ ਵਿੱਤੀ ਸਾਲ (1 ਅਪ੍ਰੈਲ) ਵਿੱਚ ਰੀਸੈਟ ਹੋਣ ਵਾਲਾ ਹੋਣਾ ਚਾਹੀਦਾ ਹੈ।</p>
+  <table>
+    <thead>
+      <tr>
+        <th>ਬਿਲ ਦੀ ਕਿਸਮ</th>
+        <th>ਕੋਡ ਫਾਰਮੈਟ</th>
+        <th>ਉਦਾਹਰਨ</th>
+        <th>ਵੇਰਵਾ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Customer Sales Invoice (ਗਾਹਕ ਬਿਲ)</td>
+        <td>FK-INV-{FY}-{SeqNo}</td>
+        <td>FK-INV-2627-000001</td>
+        <td>ਖਰੀਦਦਾਰ ਨੂੰ ਸੇਲਰ ਦੇ GSTIN ਨਾਲ ਦਿੱਤਾ ਜਾਣ ਵਾਲਾ ਬਿਲ।</td>
+      </tr>
+      <tr>
+        <td>Commission Tax Invoice (ਕਮੀਸ਼ਨ ਬਿਲ)</td>
+        <td>FK-COM-{FY}-{SeqNo}</td>
+        <td>FK-COM-2627-000001</td>
+        <td>FarmsKing ਵੱਲੋਂ ਸੇਲਰ ਲਈ (5% ਕਮੀਸ਼ਨ + 18% GST)।</td>
+      </tr>
+      <tr>
+        <td>Seller Payout Voucher (ਪੇਆਉਟ ਬਿਲ)</td>
+        <td>FK-PAY-{FY}-{SeqNo}</td>
+        <td>FK-PAY-2627-000001</td>
+        <td>ਸੇਲਰ ਦੇ ਖਾਤੇ 'ਚ ਪੈਸੇ ਟ੍ਰਾਂਸਫਰ ਕਰਨ ਦਾ ਹਿਸਾਬ-ਕਿਤਾਬ।</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>2. ਸੇਲਰ ਦੇ ਆਪਣੇ ਬਿਲ ਨੰਬਰ (Invoice Series) ਦਾ ਕੀ ਬਣੇਗਾ?</h2>
+  <p>GST Rule 46 ਅਨੁਸਾਰ ਹਰੇਕ ਵਪਾਰੀ ਇੱਕ ਤੋਂ ਵੱਧ ਬਿਲ ਸੀਰੀਜ਼ (Multiple Invoice Series) ਰੱਖ ਸਕਦਾ ਹੈ:</p>
+  <ul>
+    <li><strong>ਤਰੀਕਾ A (ਸਿਫ਼ਾਰਸ਼ੀ / Automatic Series):</strong> ਸੇਲਰ ਦੁਕਾਨ ਦੀ ਆਫ਼ਲਾਈਨ ਵਿਕਰੀ ਲਈ ਆਪਣੀ ਸੀਰੀਜ਼ (ਜਿਵੇਂ <code>OFF-2627-0001</code>) ਚਲਾਏਗਾ ਅਤੇ FarmsKing ਆਨਲਾਈਨ ਵਿਕਰੀ ਲਈ ਵੱਖਰੀ ਸੀਰੀਜ਼ (ਜਿਵੇਂ <code>FK-S101-2627-000001</code>) ਚਲਾਏਗਾ। ਇਸ ਨਾਲ ਦੁਕਾਨ ਅਤੇ ਆਨਲਾਈਨ ਬਿਲ ਮਿਕਸ ਨਹੀਂ ਹੁੰਦੇ।</li>
+    <li><strong>ਤਰੀਕਾ B (Custom Seller Prefix):</strong> ਸੇਲਰ FarmsKing Seller Dashboard 'ਚ ਆਪਣਾ ਪ੍ਰੀਫ਼ਿਕਸ (ਜਿਵੇਂ <code>GUPTA-2627-</code>) ਸੈੱਟ ਕਰ ਸਕਦਾ ਹੈ, ਅਤੇ FarmsKing ਉਸੇ ਸੀਰੀਜ਼ ਨੂੰ ਅੱਗੇ ਚਲਾਏਗਾ।</li>
+  </ul>
+
+  <h2>3. ਪਹਿਲੇ ਸਟੈੱਪ ਤੋਂ ਲੈ ਕੇ ਆਖਰੀ ਸਟੈੱਪ ਤੱਕ ਪੈਸਿਆਂ ਦਾ ਲੈਣ-ਦੇਣ (End-to-End Money Flow)</h2>
+  <div class="step-card">
+    <div class="step-title">ਸਟੈੱਪ 1: ਆਰਡਰ ਅਤੇ ਗਾਹਕ ਭੁਗਤਾਨ (Order Placement)</div>
+    <p>ਗਾਹਕ ਐਪ 'ਤੇ ₹10,000 ਦਾ ਆਰਡਰ ਕਰਦਾ ਹੈ ਅਤੇ ਪੇਮੈਂਟ ਗੇਟਵੇ ਰਾਹੀਂ FarmsKing ਦੇ Escrow/Nodal ਬੈਂਕ ਖਾਤੇ 'ਚ ਪੈਸੇ ਜਮ੍ਹਾਂ ਹੁੰਦੇ ਹਨ।</p>
+  </div>
+  <div class="step-card">
+    <div class="step-title">ਸਟੈੱਪ 2: ਡਿਲੀਵਰੀ ਅਤੇ ਬਿਲ ਜਨਰੇਸ਼ਨ (Delivery & Invoices)</div>
+    <p>ਸਮਾਨ ਡਿਲੀਵਰ ਹੁੰਦੇ ਹੀ ਸਿਸਟਮ 3 ਇਨਵੌਇਸ (Customer Invoice, Commission Invoice, Payout Voucher) ਆਟੋਮੈਟਿਕ ਬਣਾਉਂਦਾ ਹੈ।</p>
+  </div>
+  <div class="step-card">
+    <div class="step-title">ਸਟੈੱਪ 3: 7-ਦਿਨ ਰਿਟਰਨ ਹੋਲਡ ਪੀਰੀਅਡ (Return Lock)</div>
+    <p>7 ਦਿਨਾਂ ਦੀ ਰਿਟਰਨ ਵਿੰਡੋ ਤੱਕ ਪੈਸੇ FarmsKing ਦੇ Escrow ਖਾਤੇ ਵਿੱਚ ਸੁਰੱਖਿਅਤ ਰਹਿੰਦੇ ਹਨ।</p>
+  </div>
+  <div class="step-card">
+    <div class="step-title">ਸਟੈੱਪ 4: ਪੈਸਿਆਂ ਦੀ ਵੰਡ ਅਤੇ ਪੇਆਉਟ (Automated Payout)</div>
+    <p>FarmsKing ਆਪਣੀ ਕਮੀਸ਼ਨ (5%) + ਕਮੀਸ਼ਨ 'ਤੇ GST (18%) + TCS (1%) ਕੱਟ ਕੇ ਬਾਕੀ ਰਕਮ ਸੇਲਰ ਦੇ ਬੈਂਕ ਖਾਤੇ/ਵਾਲਿਟ 'ਚ ਆਟੋ-ਟ੍ਰਾਂਸਫਰ ਕਰਦਾ ਹੈ।</p>
+  </div>
+  <div class="step-card">
+    <div class="step-title">ਸਟੈੱਪ 5: ਮਾਸਿਕ ਸਰਕਾਰੀ ਰਿਟਰਨਾਂ (Govt Returns)</div>
+    <p>FarmsKing 10 ਤਾਰੀਖ ਤੱਕ GSTR-8 ਭਰ ਕੇ 1% TCS ਸਰਕਾਰ ਕੋਲ ਜਮ੍ਹਾਂ ਕਰਵਾਉਂਦਾ ਹੈ, ਅਤੇ 20 ਤਾਰੀਖ ਤੱਕ GSTR-3B ਰਾਹੀਂ ਕਮੀਸ਼ਨ 'ਤੇ ਇਕੱਠਾ ਹੋਇਆ 18% GST ਜਮ੍ਹਾਂ ਕਰਵਾਉਂਦਾ ਹੈ।</p>
+  </div>
+  <div class="step-card">
+    <div class="step-title">ਸਟੈੱਪ 6: ਸੇਲਰ ਦਾ ਟੈਕਸ ਕਲੇਮ (Seller Accounting)</div>
+    <p>ਸੇਲਰ ਆਪਣੀ GSTR-1 ਅਤੇ GSTR-3B ਭਰਦਾ ਹੈ। ਸੇਲਰ ਨੂੰ ₹100 TCS ਦਾ ਕੈਸ਼ ਕ੍ਰੈਡਿਟ ਅਤੇ FarmsKing ਕਮੀਸ਼ਨ ਦੇ ₹90 GST ਦਾ ITC ਕ੍ਰੈਡਿਟ ਮਿਲਦਾ ਹੈ।</p>
+  </div>
+
+  <h2>4. ਕੈਲਕੁਲੇਸ਼ਨ ਉਦਾਹਰਨਾਂ (Calculation Models)</h2>
+  <h3>ਮਾਡਲ A: GST ਤੋਂ ਬਿਨਾਂ ਅਸਲ ਕੀਮਤ ₹10,000 (+ 5% GST = ₹10,500)</h3>
+  <ul>
+    <li><strong>ਗਾਹਕ ਨੇ ਦਿੱਤੇ:</strong> ₹10,500</li>
+    <li><strong>ਅਸਲ ਕੀਮਤ (Base Price):</strong> ₹10,000 | <strong>GST (5%):</strong> ₹500</li>
+    <li><strong>TCS (1% of Base):</strong> ₹100 | <strong>FarmsKing ਕਮੀਸ਼ਨ (5% of Base):</strong> ₹500</li>
+    <li><strong>ਕਮੀਸ਼ਨ 'ਤੇ GST (18% of ₹500):</strong> ₹90</li>
+    <li><strong>ਕੁੱਲ ਕਟੌਤੀ:</strong> ₹100 + ₹500 + ₹90 = ₹690</li>
+    <li><strong>ਸੇਲਰ ਪੇਆਉਟ (Net Payout):</strong> ₹10,500 - ₹690 = <strong>₹9,810</strong></li>
+  </ul>
+
+  <h3>ਮਾਡਲ B: GST ਸਮੇਤ ਕੁੱਲ ਰੇਟ ₹10,000 (Inclusive of 5% GST)</h3>
+  <ul>
+    <li><strong>ਗਾਹਕ ਨੇ ਦਿੱਤੇ:</strong> ₹10,000</li>
+    <li><strong>ਅਸਲ ਕੀਮਤ (Base Price = ₹10,000 / 1.05):</strong> ₹9,523.81</li>
+    <li><strong>ਸਮਾਨ ਦਾ GST (5%):</strong> ₹476.19</li>
+    <li><strong>TCS (1% of Base ₹9,523.81):</strong> ₹95.24</li>
+    <li><strong>FarmsKing ਕਮੀਸ਼ਨ (5% of Base ₹9,523.81):</strong> ₹476.19</li>
+    <li><strong>ਕਮੀਸ਼ਨ 'ਤੇ GST (18% of ₹476.19):</strong> ₹85.71</li>
+    <li><strong>ਕੁੱਲ ਕਟੌਤੀ:</strong> ₹657.14</li>
+    <li><strong>ਸੇਲਰ ਪੇਆਉਟ (Net Payout):</strong> ₹10,000 - ₹657.14 = <strong>₹9,342.86</strong></li>
+  </ul>
+
+  <h3>ਮਾਡਲ C: ਕਿਸਾਨਾਂ ਦੀ ਕੱਚੀ ਫ਼ਸਲ (Raw Produce - 0% GST Exempt)</h3>
+  <ul>
+    <li>ਕਣਕ, ਝੋਨਾ, ਹਰੀਆਂ ਸਬਜ਼ੀਆਂ GST ਤੋਂ 0% ਮੁਕਤ ਹਨ। ਅਣ-ਰਜਿਸਟਰਡ ਕਿਸਾਨਾਂ 'ਤੇ <strong>0% TCS</strong> ਲੱਗੇਗਾ। FarmsKing ਸਿਰਫ਼ ਆਪਣੀ ਕਮੀਸ਼ਨ + 18% GST ਚਾਰਜ ਕਰੇਗਾ।</li>
+  </ul>
+
+  <h2>5. ਹੋਰ ਜ਼ਰੂਰੀ ਗੱਲਾਂ (Key Takeaways)</h2>
+  <div class="box">
+    <ul>
+      <li><strong>ਕਮੀਸ਼ਨ ਦਾ ਨਿਯਮ:</strong> FarmsKing ਆਪਣੀ ਕਮੀਸ਼ਨ <em>ਸਿਰਫ਼ ਅਸਲ ਕੀਮਤ (Base Price)</em> 'ਤੇ ਹੀ ਲਾਵੇਗਾ, ਸਰਕਾਰੀ GST ਵਾਲੀ ਰਕਮ 'ਤੇ ਨਹੀਂ।</li>
+      <li><strong>TCS ਦਾ ਫਾਇਦਾ:</strong> FarmsKing ਵੱਲੋਂ ਕੱਟਿਆ 1% TCS ਸੇਲਰ ਦਾ ਨੁਕਸਾਨ ਨਹੀਂ ਹੈ, ਉਹ ਸੇਲਰ ਦੇ GST Cash Ledger ਵਿੱਚ ਜਮ੍ਹਾਂ ਹੁੰਦਾ ਹੈ।</li>
+      <li><strong>ITC ਦਾ ਲਾਭ:</strong> FarmsKing ਦੀ ਕਮੀਸ਼ਨ ਉੱਤੇ ਲੱਗੇ 18% GST ਦਾ ਕਲੇਮ ਸੇਲਰ ਆਪਣੀ ਰਿਟਰਨ 'ਚ ਲੈ ਸਕਦਾ ਹੈ।</li>
+      <li><strong>ਆਰਡਰ ਰਿਟਰਨ:</strong> ਆਰਡਰ ਰੱਦ/ਰਿਟਰਨ ਹੋਣ 'ਤੇ FarmsKing ਆਟੋਮੈਟਿਕ Credit Note (<code>FK-CDN-2627-000001</code>) ਜਾਰੀ ਕਰੇਗਾ।</li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    FarmsKing Agriculture Ecosystem — Billing & GST Specifications Document | ਗੁਪਤ
+  </div>
+</body>
+</html>

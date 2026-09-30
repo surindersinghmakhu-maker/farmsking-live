@@ -47,7 +47,7 @@ function RootNavigation() {
   useEffect(() => {
     if (isLoading) return;
     const inAuthGroup = segments[0] === '(auth)';
-    const isPublicRoute = segments[0] === 'seo' || segments[0] === 'dose' || segments[0] === 'doses' || segments[0] === 'my';
+    const isPublicRoute = segments[0] === 'seo' || segments[0] === 'dose' || segments[0] === 'doses' || segments[0] === 'my' || segments[0] === 'you';
 
     if (!user && !inAuthGroup && !isPublicRoute) {
       router.replace('/(auth)/login');
@@ -68,6 +68,7 @@ function RootNavigation() {
       <Stack.Screen name="dose" options={{ headerShown: false }} />
       <Stack.Screen name="doses" options={{ headerShown: false }} />
       <Stack.Screen name="my" options={{ headerShown: false }} />
+      <Stack.Screen name="you" options={{ headerShown: false }} />
       <Stack.Screen name="seller-dashboard" options={{ headerShown: false }} />
       <Stack.Screen name="farmer-profile-setup" options={{ headerShown: false }} />
       <Stack.Screen name="crop-intelligence" options={{ headerShown: false }} />

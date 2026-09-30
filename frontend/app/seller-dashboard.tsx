@@ -892,6 +892,14 @@ export default function SellerDashboardScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Compact Compliance Info Strip */}
+      <View style={{ backgroundColor: '#022C22', paddingHorizontal: 14, paddingVertical: 5, flexDirection: 'row', alignItems: 'center', gap: 6, borderBottomWidth: 1, borderBottomColor: '#064E3B' }}>
+        <Ionicons name="shield-checkmark" size={11} color="#34D399" />
+        <Text style={{ color: '#6EE7B7', fontSize: 10, fontWeight: '800' }}>FarmsKing Nodal Settlement</Text>
+        <Text style={{ color: '#374151', fontSize: 10 }}>•</Text>
+        <Text style={{ color: '#9CA3AF', fontSize: 10, fontWeight: '600' }}>Platform Fee: {stats.commissionRate}%  •  1% GST TCS auto-filed (GSTR-8)</Text>
+      </View>
+
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {!hasStore || isEditingRejected ? (
           /* Multi-Step International Seller Onboarding Wizard */
@@ -2642,16 +2650,6 @@ export default function SellerDashboardScreen() {
               </View>
             </Modal>
 
-            {/* Compliance Note */}
-            <View style={styles.infoBox}>
-              <Ionicons name="shield-checkmark" size={20} color="#10B981" />
-              <View style={{ flex: 1, marginLeft: 8 }}>
-                <Text style={styles.infoTitle}>FarmsKing Nodal Settlement & 1% GST TCS Active</Text>
-                <Text style={styles.infoDesc}>
-                  FarmsKing Platform Fee: {stats.commissionRate}% | 1% GST TCS tax automatically deducted & filed for your GSTR-8 returns.
-                </Text>
-              </View>
-            </View>
           </>
         )}
       </ScrollView>

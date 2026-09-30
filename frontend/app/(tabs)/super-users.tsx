@@ -338,7 +338,7 @@ export default function SuperUsersScreen() {
 
       <PickerModal
         visible={isPageSizePickerOpen}
-        title="Select Users Per Page (ਹਰ ਪੇਜ 'ਤੇ ਯੂਜ਼ਰ ਗਿਣਤੀ)"
+        title="Select Users Per Page"
         options={[
           { value: 10, label: '10 Users per page' },
           { value: 20, label: '20 Users per page' },
@@ -1392,7 +1392,7 @@ function AddTrainerModal({ visible, onClose }: { visible: boolean; onClose: () =
       <View style={styles.modalOverlay}>
         <View style={styles.modalCard}>
           <View style={styles.modalHeaderRow}>
-            <Text style={styles.modalTitle}>Appoint Technical Staff (ਤਕਨੀਕੀ ਸਟਾਫ)</Text>
+            <Text style={styles.modalTitle}>Appoint Technical Staff</Text>
             <TouchableOpacity onPress={() => { reset(); onClose(); }}>
               <Ionicons name="close-circle" size={24} color="#64748b" />
             </TouchableOpacity>

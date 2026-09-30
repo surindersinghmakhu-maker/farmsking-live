@@ -188,24 +188,6 @@ const MAIN_SUB_TABS: {
   softBg: string;
 }[] = [
   {
-    value: 'MEMBERSHIP',
-    title: '👑 Farmer & Advisor Membership Plans',
-    sub: 'Farmer Lite & Pro Plans, Advisor Smart & Super Plans, Pricing & Features',
-    icon: 'ribbon-outline',
-    activeIcon: 'ribbon',
-    color: '#d97706',
-    softBg: '#fef3c7',
-  },
-  {
-    value: 'FINANCE',
-    title: '💰 Finance & Accounts Control',
-    sub: 'Partner Withdrawals, Farmer Claims & Financial Log',
-    icon: 'cash-outline',
-    activeIcon: 'cash',
-    color: '#16a34a',
-    softBg: '#f0fdf4',
-  },
-  {
     value: 'STAFF',
     title: 'FarmsKing Admin Staff 👔',
     sub: 'Manage Admins, Managers & Operators',
@@ -216,7 +198,7 @@ const MAIN_SUB_TABS: {
   },
   {
     value: 'SAVED_ENTRIES',
-    title: 'Saved Entries (ਸਾਰੀਆਂ ਐਂਟਰੀਆਂ)',
+    title: 'Saved Entries',
     sub: 'Farmer, Date, State, Category & Subcategory Wise',
     icon: 'receipt-outline',
     activeIcon: 'receipt',
@@ -279,12 +261,12 @@ const MAIN_SUB_TABS: {
   },
 ];
 
-export default function SuperCouponsScreen() {
+export default function SuperCouponsScreen({ initialTab }: { initialTab?: CouponsTab | null } = {}) {
   const { data: coupons, isLoading } = useAllCoupons();
   const { data: farmerPlanCoupons } = useAllFarmerPlanCoupons();
   const { data: pendingPayments = [], isLoading: isLoadingPendingPayments } = usePendingFarmerPlanPayments();
   const [activeFarmerPlanPayment, setActiveFarmerPlanPayment] = useState<FarmerPlanPaymentRequest | null>(null);
-  const [activeTab, setActiveTab] = useState<CouponsTab | null>(null);
+  const [activeTab, setActiveTab] = useState<CouponsTab | null>(initialTab ?? null);
   const [showStaffModal, setShowStaffModal] = useState(false);
 
   const allCoupons = coupons ?? [];
@@ -3476,16 +3458,16 @@ function SavedEntriesSection() {
 
   // Common subcategories mapping per category
   const categorySubcategoriesMap: Record<string, string[]> = {
-    cat_fertilizer: ['Urea', 'DAP', 'NPK 12:32:16', 'Zinc', 'Potash', 'FYM / Organic Manure (ਰੂੜੀ ਖਾਦ)', 'Bio Fertilizer'],
+    cat_fertilizer: ['Urea', 'DAP', 'NPK 12:32:16', 'Zinc', 'Potash', 'FYM / Organic Manure', 'Bio Fertilizer'],
     cat_sowing_seeds: ['Wheat Seeds', 'Paddy Seeds', 'Mustard Seeds', 'Cotton Seeds', 'Potato Seeds', 'Vegetable Seeds', 'Fodder Seeds'],
-    cat_labour: ['Harvesting Labour', 'Sowing Labour', 'Weeding Labour', 'Spraying Labour', 'Loading & Packing', 'Daily Wages (ਦਿਹਾੜੀ)'],
+    cat_labour: ['Harvesting Labour', 'Sowing Labour', 'Weeding Labour', 'Spraying Labour', 'Loading & Packing', 'Daily Wages'],
     cat_irrig_power: ['Diesel Fuel', 'Electricity Bill', 'Pipe Repair', 'Borewell Motor', 'Tractor Fuel'],
-    cat_spray_pest: ['Insecticide', 'Fungicide', 'Weedicide (ਨਦੀਨ ਨਾਸ਼ਕ)', 'Growth Tonic', 'Spray Pump'],
+    cat_spray_pest: ['Insecticide', 'Fungicide', 'Weedicide', 'Growth Tonic', 'Spray Pump'],
     cat_machinery: ['Tractor Rent', 'Combine Harvester', 'Rotavator', 'Laser Leveler', 'Straw Reaper', 'Machine Repair'],
-    cat_cultivation: ['Plowing (ਹਲ ਵਾਹੁਣਾ)', 'Planking (ਸੁਹਾਗਾ)', 'Deep Tillage', 'Laser Leveling'],
+    cat_cultivation: ['Plowing', 'Planking', 'Deep Tillage', 'Laser Leveling'],
     cat_harvesting: ['Combine Harvesting', 'Manual Cutting', 'Threshing', 'Baling'],
     cat_transport: ['Tractor Trolley Freight', 'Truck Freight', 'Mandi Transport'],
-    cat_mandi_pack: ['Gunny Bags (ਬੋਰੀਆਂ)', 'Packing String', 'Mandi Charges', 'Arhtiya Fee'],
+    cat_mandi_pack: ['Gunny Bags', 'Packing String', 'Mandi Charges', 'Arhtiya Fee'],
   };
 
   // Subcategories available
@@ -3505,7 +3487,7 @@ function SavedEntriesSection() {
   // Options arrays for PickerModals
   const farmerOptions = useMemo(() => {
     return [
-      { value: 'ALL', label: '🌾 All Farmers (ਸਾਰੇ ਕਿਸਾਨ)' },
+      { value: 'ALL', label: '🌾 All Farmers' },
       ...uniqueFarmers.map((f) => ({
         value: f.id,
         label: `${f.name} (${f.mobile || 'No Mobile'})${f.state ? ` • ${f.state}` : ''}`,
@@ -3514,34 +3496,34 @@ function SavedEntriesSection() {
   }, [uniqueFarmers]);
 
   const dateOptions = [
-    { value: 'ALL', label: '📅 All Dates (ਸਾਰੀਆਂ ਤਾਰੀਖਾਂ)' },
-    { value: 'TODAY', label: '☀️ Today (ਅੱਜ)' },
-    { value: 'YESTERDAY', label: '⌛ Yesterday (ਕੱਲ੍ਹ)' },
-    { value: 'THIS_WEEK', label: '📆 This Week (ਇਸ ਹਫ਼ਤੇ)' },
-    { value: 'THIS_MONTH', label: '🗓️ This Month (ਇਸ ਮਹੀਨੇ)' },
-    { value: 'LAST_30_DAYS', label: '🕒 Last 30 Days (ਪਿਛਲੇ 30 ਦਿਨ)' },
+    { value: 'ALL', label: '📅 All Dates' },
+    { value: 'TODAY', label: '☀️ Today' },
+    { value: 'YESTERDAY', label: '⌛ Yesterday' },
+    { value: 'THIS_WEEK', label: '📆 This Week' },
+    { value: 'THIS_MONTH', label: '🗓️ This Month' },
+    { value: 'LAST_30_DAYS', label: '🕒 Last 30 Days' },
   ];
 
   const stateOptions = useMemo(() => {
     return [
-      { value: 'ALL', label: '📍 All States (ਸਾਰੇ ਰਾਜ)' },
+      { value: 'ALL', label: '📍 All States' },
       ...uniqueStates.map((s) => ({ value: s, label: s })),
     ];
   }, [uniqueStates]);
 
   const categoryOptions = useMemo(() => {
     return [
-      { value: 'ALL', label: '🏷️ All Categories (ਸਾਰੀਆਂ ਕੈਟੇਗਰੀਆਂ)' },
+      { value: 'ALL', label: '🏷️ All Categories' },
       ...COMBINED_EXPENSE_CATEGORIES.map((c) => ({
         value: c.id,
-        label: c.labelEn || c.labelPa,
+        label: c.labelEn,
       })),
     ];
   }, []);
 
   const subcategoryOptions = useMemo(() => {
     return [
-      { value: 'ALL', label: '📂 All Subcategories (ਸਾਰੀਆਂ ਸਬ-ਕੈਟੇਗਰੀਆਂ)' },
+      { value: 'ALL', label: '📂 All Subcategories' },
       ...availableSubcategories.map((s) => ({ value: s, label: s })),
     ];
   }, [availableSubcategories]);
@@ -3927,7 +3909,7 @@ function SavedEntriesSection() {
       {/* 5 Dropdown Picker Modals */}
       <PickerModal
         visible={activePicker === 'FARMER'}
-        title="Select Farmer (ਕਿਸਾਨ ਚੁਣੋ)"
+        title="Select Farmer"
         options={farmerOptions}
         selectedValue={selectedFarmerId}
         onSelect={(val) => setSelectedFarmerId(val)}
@@ -3936,7 +3918,7 @@ function SavedEntriesSection() {
 
       <PickerModal
         visible={activePicker === 'DATE'}
-        title="Select Date Range (ਮਿਤੀ ਚੁਣੋ)"
+        title="Select Date Range"
         options={dateOptions}
         selectedValue={selectedDateRange}
         onSelect={(val) => setSelectedDateRange(val)}
@@ -3945,7 +3927,7 @@ function SavedEntriesSection() {
 
       <PickerModal
         visible={activePicker === 'STATE'}
-        title="Select State (ਰਾਜ ਚੁਣੋ)"
+        title="Select State"
         options={stateOptions}
         selectedValue={selectedState}
         onSelect={(val) => setSelectedState(val)}
@@ -3954,7 +3936,7 @@ function SavedEntriesSection() {
 
       <PickerModal
         visible={activePicker === 'CATEGORY'}
-        title="Select Category (ਕੈਟੇਗਰੀ ਚੁਣੋ)"
+        title="Select Category"
         options={categoryOptions}
         selectedValue={selectedCategoryKey}
         onSelect={(val) => {
@@ -3966,7 +3948,7 @@ function SavedEntriesSection() {
 
       <PickerModal
         visible={activePicker === 'SUBCATEGORY'}
-        title="Select Subcategory (ਸਬ-ਕੈਟੇਗਰੀ ਚੁਣੋ)"
+        title="Select Subcategory"
         options={subcategoryOptions}
         selectedValue={selectedSubcategory}
         onSelect={(val) => setSelectedSubcategory(val)}

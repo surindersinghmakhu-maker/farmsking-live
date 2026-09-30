@@ -16,6 +16,7 @@ import { useAdminBonusReport, useCreditWallet, useDebitWallet, useWalletForUser 
 import { AdminUser } from '@/src/types/api';
 
 import { AdminWalletManagementView } from '@/src/components/AdminWalletManagementView';
+import SuperCouponsScreen from './super-coupons';
 
 const theme = RoleThemes.SUPER_ADMIN;
 
@@ -67,10 +68,19 @@ function IdentityBadge({ name, sub, tint }: { name: string; sub?: string; tint?:
   );
 }
 
+type MainTab = 'MEMBERSHIPS' | 'COUPONS' | 'FINANCE';
+
+const MAIN_TABS: { value: MainTab; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { value: 'MEMBERSHIPS', label: 'Memberships & Plans', icon: 'ribbon-outline' },
+  { value: 'COUPONS', label: 'Coupons & Vouchers', icon: 'pricetag-outline' },
+  { value: 'FINANCE', label: 'Finance & Wallet', icon: 'wallet-outline' },
+];
+
 export default function SuperAccountsScreen() {
   const { data: withdrawals, isLoading } = useAllWithdrawals();
   const { data: planPayments, isLoading: isLoadingPlanPayments } = usePendingPlanPayments();
   const { data: farmerPlanPayments, isLoading: isLoadingFarmerPlanPayments } = usePendingFarmerPlanPayments();
+  const [mainTab, setMainTab] = useState<MainTab>('FINANCE');
   const [activeRequest, setActiveRequest] = useState<WithdrawalRequest | null>(null);
   const [activePlanPayment, setActivePlanPayment] = useState<PlanPaymentRequest | null>(null);
   const [activeFarmerPlanPayment, setActiveFarmerPlanPayment] = useState<FarmerPlanPaymentRequest | null>(null);
@@ -100,8 +110,8 @@ export default function SuperAccountsScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient colors={theme.gradient} style={styles.hero}>
-        <Text style={styles.heroTitle}>Partners</Text>
-        <Text style={styles.heroSubtitle}>Manage Staff, Doctors, Vendors, Memberships & Payout Ledgers</Text>
+        <Text style={styles.heroTitle}>Finance Control Center</Text>
+        <Text style={styles.heroSubtitle}>Memberships & Plans, Coupons & Vouchers, Finance & Wallet</Text>
 
         <View style={styles.statRow}>
           <View style={styles.statCard}>
@@ -123,31 +133,32 @@ export default function SuperAccountsScreen() {
           </View>
         </View>
 
+        {/* 3 Top Main Tabs Bar */}
         <View style={styles.sectionTabRow}>
-          {SECTIONS.map((s) => {
-            const badgeCount = s.value === 'REQUESTS' ? totalPendingRequests : undefined;
-            const active = section === s.value;
+          {MAIN_TABS.map((t) => {
+            const active = mainTab === t.value;
             return (
               <TouchableOpacity
-                key={s.value}
-                style={[styles.sectionTab, active && styles.sectionTabActive]}
+                key={t.value}
+                style={[styles.sectionTab, active && styles.sectionTabActive, { flex: 1, paddingVertical: 10 }]}
                 activeOpacity={0.85}
-                onPress={() => { tap(); setSection(s.value); }}
+                onPress={() => { tap(); setMainTab(t.value); }}
               >
-                <Ionicons name={s.icon} size={14} color={active ? theme.primary : '#fff'} />
-                <Text style={[styles.sectionTabText, active && { color: theme.primary }]}>{s.label}</Text>
-                {badgeCount ? (
-                  <View style={[styles.tabBadge, active && { backgroundColor: theme.primary }]}>
-                    <Text style={[styles.tabBadgeText, active && { color: '#fff' }]}>{badgeCount}</Text>
-                  </View>
-                ) : null}
+                <Ionicons name={t.icon} size={15} color={active ? theme.primary : '#fff'} />
+                <Text style={[styles.sectionTabText, active && { color: theme.primary }, { fontSize: 12, fontFamily: FONT.bold }]}>{t.label}</Text>
               </TouchableOpacity>
             );
           })}
         </View>
       </LinearGradient>
 
-      <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+      {mainTab === 'MEMBERSHIPS' ? (
+        <SuperCouponsScreen initialTab="PRICING" />
+      ) : mainTab === 'COUPONS' ? (
+        <SuperCouponsScreen initialTab="COUPONS" />
+      ) : (
+        <>
+          <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
         {section === 'SEARCH' ? (
           <>
             <View style={styles.searchWrap}>
@@ -391,6 +402,8 @@ export default function SuperAccountsScreen() {
       <PlanPaymentReviewModal request={activePlanPayment} onClose={() => setActivePlanPayment(null)} />
       <FarmerPlanPaymentReviewModal request={activeFarmerPlanPayment} onClose={() => setActiveFarmerPlanPayment(null)} />
       <PartnerWalletModal partner={walletPartner} initialMode={walletPartnerInitialMode} onClose={() => { setWalletPartner(null); setWalletPartnerInitialMode(null); }} />
+        </>
+      )}
     </View>
   );
 }

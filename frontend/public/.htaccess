@@ -13,6 +13,7 @@
   # Serve static HTML pages directly
   RewriteRule ^you/?$ you.html [L,NC]
   RewriteRule ^sk/?$ sk.html [L,NC]
+  RewriteRule ^dose/?$ dose.html [L,NC]
   RewriteRule ^my/?$ my.html [L,NC]
 
   RewriteRule ^index\.html$ - [L]

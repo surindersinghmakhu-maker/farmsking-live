@@ -310,8 +310,8 @@ export async function getFarmerPlanHistory(farmerId?: string): Promise<FarmerPla
 
 export const PLAN_DISPLAY_MAP: Record<string, { title: string; badge: string; icon: string; color: string; desc: string }> = {
   FREE: {
-    title: 'Farmer Pass Card',
-    badge: '🟢 Farmer Pass Card',
+    title: 'Free Pass',
+    badge: '🟢 Free Pass',
     icon: 'ticket-outline',
     color: '#10b981',
     desc: 'ਮੁਫ਼ਤ ਐਂਟਰੀ (ਮੰਡੀ ਰੇਟ, ਬੁਨਿਆਦੀ ਮੌਸਮ ਜਾਣਕਾਰੀ, 30 ਫ੍ਰੀ ਬਿਲ ਡਾਊਨਲੋਡ/ਸ਼ੇਅਰ)',
@@ -407,7 +407,7 @@ export function checkCardPermission(
         return {
           allowed: false,
           requiredCard: 'Kisan Card',
-          message: 'Farmer Pass Card ਵਿੱਚ 30 ਬਿਲਾਂ ਤੱਕ ਹੀ ਫ੍ਰੀ ਡਾਊਨਲੋਡ/ਸ਼ੇਅਰ ਮਿਲਦਾ ਹੈ। ਅਨਲਿਮਟਿਡ ਬਿਲਾਂ ਲਈ Kisan Card ਅਨਲੌਕ ਕਰੋ!',
+          message: 'Free Pass ਵਿੱਚ 30 ਬਿਲਾਂ ਤੱਕ ਹੀ ਫ੍ਰੀ ਡਾਊਨਲੋਡ/ਸ਼ੇਅਰ ਮਿਲਦਾ ਹੈ। ਅਨਲਿਮਟਿਡ ਬਿਲਾਂ ਲਈ Kisan Card ਅਨਲੌਕ ਕਰੋ!',
         };
       }
       return { allowed: true, requiredCard: 'Kisan Card', message: '' };

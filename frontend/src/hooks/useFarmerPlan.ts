@@ -32,7 +32,7 @@ import {
 /** Plan display config */
 export const PLAN_META: Record<FarmerPlanType, { label: string; emoji: string; color: string; bg: string; borderColor: string }> = {
   FREE: {
-    label: 'Farmer Pass Card',
+    label: 'Free Pass',
     emoji: '🌱',
     color: '#166534',
     bg: '#ffffff',

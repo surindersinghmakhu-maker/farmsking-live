@@ -171,7 +171,7 @@ export default function SKPage() {
             <View style={styles.gridHeaderRow}>
               <Text style={[styles.gridTh, { flex: 0.6, textAlign: 'center' }]}>SR.</Text>
               <Text style={[styles.gridTh, { flex: 3.4, borderLeftWidth: 1, borderColor: '#166534', paddingLeft: 8 }]}>PRODUCT NAME / उत्पाद</Text>
-              <Text style={[styles.gridTh, { flex: 1.8, textAlign: 'center', borderLeftWidth: 1, borderColor: '#166534' }]}>QTY / मात्रा</Text>
+              <Text style={[styles.gridTh, { flex: 1.8, textAlign: 'center', borderLeftWidth: 1, borderColor: '#166534' }]}>QTY (grams) / मात्रा (ग्राम)</Text>
             </View>
 
             {/* Table Data Rows */}

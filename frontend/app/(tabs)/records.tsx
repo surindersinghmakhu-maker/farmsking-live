@@ -1050,8 +1050,8 @@ export default function RecordsScreen() {
   const showUpgradePrompt = (kind: 'bill' | 'receipt') => {
     const message =
       kind === 'bill'
-        ? `Free Pass ਵਿੱਚ ਤੁਸੀਂ max ${FREE_SHARE_LIMIT} ਸੇਲ ਬਿਲ ਹੀ ਡਾਊਨਲੋਡ/ਸ਼ੇਅਰ ਕਰ ਸਕਦੇ ਹੋ। ਅਨਲਿਮਟਿਡ ਬਿਲਾਂ ਲਈ Kisan Card ਅਨਲੌਕ ਕਰੋ!`
-        : `Free Pass ਵਿੱਚ ਤੁਸੀਂ max ${FREE_SHARE_LIMIT} ਪੇਮੈਂਟ ਰਸੀਦਾਂ ਹੀ ਡਾਊਨਲੋਡ/ਸ਼ੇਅਰ ਕਰ ਸਕਦੇ ਹੋ। ਅਨਲਿਮਟਿਡ ਰਸੀਦਾਂ ਲਈ Kisan Card ਅਨਲੌਕ ਕਰੋ!`;
+        ? `Farmer Pass Card ਵਿੱਚ ਤੁਸੀਂ max ${FREE_SHARE_LIMIT} ਸੇਲ ਬਿਲ ਹੀ ਡਾਊਨਲੋਡ/ਸ਼ੇਅਰ ਕਰ ਸਕਦੇ ਹੋ। ਅਨਲਿਮਟਿਡ ਬਿਲਾਂ ਲਈ Kisan Card ਅਨਲੌਕ ਕਰੋ!`
+        : `Farmer Pass Card ਵਿੱਚ ਤੁਸੀਂ max ${FREE_SHARE_LIMIT} ਪੇਮੈਂਟ ਰਸੀਦਾਂ ਹੀ ਡਾਊਨਲੋਡ/ਸ਼ੇਅਰ ਕਰ ਸਕਦੇ ਹੋ। ਅਨਲਿਮਟਿਡ ਰਸੀਦਾਂ ਲਈ Kisan Card ਅਨਲੌਕ ਕਰੋ!`;
     if (Platform.OS === 'web') {
       alert(`🔒 Upgrade Your Kisan Card\n\n${message}`);
     } else {

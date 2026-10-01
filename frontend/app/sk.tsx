@@ -164,9 +164,9 @@ export default function SKPage() {
           <View style={styles.scheduleGridTable}>
             {/* Table Header Row */}
             <View style={styles.gridHeaderRow}>
-              <Text style={[styles.gridTh, { flex: 0.7, textAlign: 'center' }]}>SR.</Text>
-              <Text style={[styles.gridTh, { flex: 3.3, borderLeftWidth: 1, borderColor: '#166534', paddingLeft: 8 }]}>PRODUCT NAME / उत्पाद</Text>
-              <Text style={[styles.gridTh, { flex: 1.5, textAlign: 'center', borderLeftWidth: 1, borderColor: '#166534' }]}>QTY / मात्रा</Text>
+              <Text style={[styles.gridTh, { flex: 0.6, textAlign: 'center' }]}>SR.</Text>
+              <Text style={[styles.gridTh, { flex: 3.4, borderLeftWidth: 1, borderColor: '#166534', paddingLeft: 8 }]}>PRODUCT NAME / उत्पाद</Text>
+              <Text style={[styles.gridTh, { flex: 1.8, textAlign: 'center', borderLeftWidth: 1, borderColor: '#166534' }]}>QTY / मात्रा</Text>
             </View>
 
             {/* Table Data Rows */}
@@ -346,21 +346,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#E2E8F0',
-    minHeight: 28,
+    minHeight: 30,
   },
   srCellText: {
-    flex: 0.7,
+    flex: 0.6,
     color: '#0F172A',
     fontSize: 11,
     fontWeight: '800',
     textAlign: 'center',
   },
   productCellContainer: {
-    flex: 3.3,
+    flex: 3.4,
     borderLeftWidth: 1,
     borderColor: '#E2E8F0',
     paddingHorizontal: 6,
-    paddingVertical: 3,
+    paddingVertical: 2,
     justifyContent: 'center',
   },
   productInputText: {
@@ -369,13 +369,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     padding: 0,
     margin: 0,
+    minHeight: 24,
   },
   qtyCellContainer: {
-    flex: 1.5,
+    flex: 1.8,
     borderLeftWidth: 1,
     borderColor: '#E2E8F0',
     paddingHorizontal: 4,
-    paddingVertical: 3,
+    paddingVertical: 2,
     justifyContent: 'center',
   },
   qtyInputText: {
@@ -385,6 +386,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     padding: 0,
     margin: 0,
+    minHeight: 24,
   },
   reportFooter: {
     marginTop: 8,

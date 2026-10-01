@@ -50,8 +50,6 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
     user?.farmAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || ''
   );
   const [farmMobile, setFarmMobile] = useState<string>(user?.farmMobile || user?.mobile || '');
-  const [village, setVillage] = useState<string>(user?.village ?? '');
-  const [district, setDistrict] = useState<string>(user?.district ?? '');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   React.useEffect(() => {
@@ -68,19 +66,19 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
   const handleSubmit = async () => {
     tap();
     if (!isValid) {
-      setErrorMessage('ਕਿਰਪਾ ਕਰਕੇ Spray Tank ਦਾ ਸਾਈਜ਼ ਚੁਣੋ।');
+      setErrorMessage('Please select Spray Tank size.');
       return;
     }
     if (!farmName.trim()) {
-      setErrorMessage('ਕਿਰਪਾ ਕਰਕੇ ਫਰਮ ਦਾ ਨਾਮ (Farm Name) ਦਰਜ ਕਰੋ।');
+      setErrorMessage('Please enter Farm Name.');
       return;
     }
     if (!farmAddress.trim()) {
-      setErrorMessage('ਕਿਰਪਾ ਕਰਕੇ ਫਰਮ ਦਾ ਪਤਾ (Farm Address) ਦਰਜ ਕਰੋ।');
+      setErrorMessage('Please enter Farm Address.');
       return;
     }
     if (!farmMobile.trim()) {
-      setErrorMessage('ਕਿਰਪਾ ਕਰਕੇ ਫਰਮ ਦਾ ਮੋਬਾਈਲ ਨੰਬਰ (Farm Mobile) ਦਰਜ ਕਰੋ।');
+      setErrorMessage('Please enter Farm Mobile.');
       return;
     }
     setErrorMessage(null);
@@ -92,14 +90,12 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
         farmName: farmName.trim(),
         farmAddress: farmAddress.trim(),
         farmMobile: farmMobile.trim(),
-        village: village.trim() || undefined,
-        district: district.trim() || undefined,
       });
 
       onSuccess(updatedUser);
     } catch (err: any) {
       const msg =
-        err?.response?.data?.message ?? 'ਕਿਸਾਨ ਪ੍ਰੋਫਾਈਲ ਸੇਵ ਕਰਨ ਵਿੱਚ ਦਿੱਕਤ ਆਈ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।';
+        err?.response?.data?.message ?? 'Could not save farmer profile details. Please try again.';
       setErrorMessage(typeof msg === 'string' ? msg : JSON.stringify(msg));
     }
   };
@@ -114,29 +110,29 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
               <View style={[styles.headerIconBg, { backgroundColor: theme.primaryLight }]}>
-                <Ionicons name="leaf" size={20} color={theme.primary} />
+                <Ionicons name="leaf" size={18} color={theme.primary} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.headerTitle}>🌾 Become a Farmer Profile Setup</Text>
-                <Text style={styles.headerSub}>ਕਿਸਾਨ ਪ੍ਰੋਫਾਈਲ ਜਾਣਕਾਰੀ</Text>
+                <Text style={styles.headerSub}>Farmer Profile & Printing Settings</Text>
               </View>
             </View>
             <TouchableOpacity style={styles.closeBtn} activeOpacity={0.7} onPress={onClose}>
-              <Ionicons name="close" size={20} color="#64748b" />
+              <Ionicons name="close" size={18} color="#64748b" />
             </TouchableOpacity>
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
             <View style={styles.noticeBanner}>
-              <Ionicons name="information-circle-outline" size={18} color="#0369a1" />
+              <Ionicons name="information-circle-outline" size={16} color="#0369a1" />
               <Text style={styles.noticeText}>
-                ਕਿਸਾਨ ਡੈਸ਼ਬੋਰਡ ਚਾਲੂ ਕਰਨ ਲਈ ਹੇਠਾਂ ਦਿੱਤੀ ਜਾਣਕਾਰੀ ਭਰਨਾ ਲਾਜ਼ਮੀ ਹੈ।
+                Fill required details to activate your Farmer Dashboard.
               </Text>
             </View>
 
             {errorMessage ? (
               <View style={styles.errorBox}>
-                <Ionicons name="alert-circle" size={16} color="#ef4444" />
+                <Ionicons name="alert-circle" size={15} color="#ef4444" />
                 <Text style={styles.errorText}>{errorMessage}</Text>
               </View>
             ) : null}
@@ -144,7 +140,7 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
             {/* Spray Tank Size */}
             <View style={styles.fieldSection}>
               <Text style={styles.label}>
-                Spray Tank Size (ਛਿੜਕਾਅ ਟੈਂਕ ਦਾ ਸਾਈਜ਼) <Text style={styles.req}>*</Text>
+                Spray Tank Size <Text style={styles.req}>*</Text>
               </Text>
               <View style={styles.chipRow}>
                 {SPRAY_TANK_SIZE_OPTIONS.map((size) => {
@@ -161,9 +157,8 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
                     >
                       <Ionicons
                         name="flask"
-                        size={15}
+                        size={13}
                         color={isSelected ? '#ffffff' : theme.primary}
-                        style={{ marginBottom: 2 }}
                       />
                       <Text style={[styles.chipText, isSelected && { color: '#ffffff' }]}>{size} Litres</Text>
                     </TouchableOpacity>
@@ -173,37 +168,53 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
             </View>
 
             {/* Use in Printing Section */}
-            <View style={[styles.fieldSection, { backgroundColor: '#f0fdf4', borderRadius: RADIUS.md, padding: 12, borderWidth: 1.5, borderColor: '#bbf7d0' }]}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-                <Ionicons name="print" size={18} color="#15803d" />
-                <Text style={[styles.label, { color: '#15803d', marginBottom: 0 }]}>
-                  Use in Printing
-                </Text>
+            <View style={styles.printingCard}>
+              <View style={styles.printingHeaderRow}>
+                <Ionicons name="print" size={16} color="#15803d" />
+                <Text style={styles.printingTitle}>🖨️ Use in Printing (Bills / Receipts)</Text>
               </View>
 
-              {/* Farm Name */}
-              <View style={{ marginBottom: 10 }}>
-                <Text style={[styles.label, { fontSize: 12, color: '#0f172a' }]}>Farm Name * (Printed on Bill/Voucher/Receipt)</Text>
-                <View style={[styles.inputContainer, { backgroundColor: '#ffffff' }]}>
-                  <Ionicons name="business-outline" size={18} color="#64748b" />
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="e.g. Surinder Agro Farm"
-                    placeholderTextColor="#94a3b8"
-                    value={farmName}
-                    onChangeText={setFarmName}
-                  />
+              {/* 2-Column Row for Farm Name & Farm Mobile */}
+              <View style={styles.twoColRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.compactLabel}>Farm Name *</Text>
+                  <View style={styles.inputContainerCompact}>
+                    <Ionicons name="business-outline" size={16} color="#64748b" />
+                    <TextInput
+                      style={styles.textInputCompact}
+                      placeholder="Surinder Agro Farm"
+                      placeholderTextColor="#94a3b8"
+                      value={farmName}
+                      onChangeText={setFarmName}
+                    />
+                  </View>
+                </View>
+
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.compactLabel}>Farm Mobile *</Text>
+                  <View style={styles.inputContainerCompact}>
+                    <Ionicons name="call-outline" size={16} color="#64748b" />
+                    <TextInput
+                      style={styles.textInputCompact}
+                      placeholder="9876543210"
+                      placeholderTextColor="#94a3b8"
+                      keyboardType="phone-pad"
+                      maxLength={10}
+                      value={farmMobile}
+                      onChangeText={setFarmMobile}
+                    />
+                  </View>
                 </View>
               </View>
 
               {/* Farm Address */}
-              <View style={{ marginBottom: 10 }}>
-                <Text style={[styles.label, { fontSize: 12, color: '#0f172a' }]}>Farm Address * (Printed on Bill/Voucher/Receipt)</Text>
-                <View style={[styles.inputContainer, { backgroundColor: '#ffffff' }]}>
-                  <Ionicons name="location-outline" size={18} color="#64748b" />
+              <View style={{ marginTop: 6 }}>
+                <Text style={styles.compactLabel}>Farm Address *</Text>
+                <View style={styles.inputContainerCompact}>
+                  <Ionicons name="location-outline" size={16} color="#64748b" />
                   <TextInput
-                    style={styles.textInput}
-                    placeholder="e.g. Grain Market, Shop No. 12, Phul"
+                    style={styles.textInputCompact}
+                    placeholder="Grain Market, Shop No. 12, Phul"
                     placeholderTextColor="#94a3b8"
                     value={farmAddress}
                     onChangeText={setFarmAddress}
@@ -211,56 +222,28 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
                 </View>
               </View>
 
-              {/* Farm Mobile */}
-              <View style={{ marginBottom: 10 }}>
-                <Text style={[styles.label, { fontSize: 12, color: '#0f172a' }]}>Farm Mobile * (Printed on Bill/Voucher/Receipt)</Text>
-                <View style={[styles.inputContainer, { backgroundColor: '#ffffff' }]}>
-                  <Ionicons name="call-outline" size={18} color="#64748b" />
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="e.g. 9876543210"
-                    placeholderTextColor="#94a3b8"
-                    keyboardType="phone-pad"
-                    value={farmMobile}
-                    onChangeText={setFarmMobile}
-                  />
-                </View>
-              </View>
-
               {/* UPI ID */}
-              <View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 4 }}>
-                  <Text style={[styles.label, { fontSize: 12, color: '#0f172a', flex: 1, marginBottom: 0 }]}>
-                    UPI ID (Optional - Printed for QR Code)
-                  </Text>
+              <View style={{ marginTop: 6 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+                  <Text style={styles.compactLabel}>UPI ID (Optional - For Bill QR Code)</Text>
                   <TouchableOpacity
                     activeOpacity={0.8}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 4,
-                      backgroundColor: '#ecfdf5',
-                      borderWidth: 1,
-                      borderColor: '#a7f3d0',
-                      borderRadius: RADIUS.pill,
-                      paddingHorizontal: 8,
-                      paddingVertical: 3,
-                    }}
+                    style={styles.scanQrBtnCompact}
                     onPress={() => {
                       tap();
                       setShowQrScanner(true);
                     }}
                   >
-                    <Ionicons name="camera-outline" size={13} color="#059669" />
-                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#059669' }}>📷 Scan QR</Text>
+                    <Ionicons name="camera-outline" size={12} color="#059669" />
+                    <Text style={styles.scanQrBtnTextCompact}>📷 Scan QR</Text>
                   </TouchableOpacity>
                 </View>
 
-                <View style={[styles.inputContainer, { backgroundColor: '#ffffff' }]}>
-                  <Ionicons name="qr-code-outline" size={18} color="#64748b" />
+                <View style={styles.inputContainerCompact}>
+                  <Ionicons name="qr-code-outline" size={16} color="#64748b" />
                   <TextInput
-                    style={styles.textInput}
-                    placeholder="e.g. 9876543210@paytm, name@oksbi"
+                    style={styles.textInputCompact}
+                    placeholder="e.g. name@paytm"
                     placeholderTextColor="#94a3b8"
                     value={upiId}
                     onChangeText={(val) => {
@@ -272,10 +255,10 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
                 </View>
 
                 {upiPayeeName ? (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 5, marginTop: 4 }}>
-                    <Ionicons name="checkmark-circle" size={14} color="#16a34a" />
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#166534' }}>
-                      Verified Payee: <Text style={{ fontFamily: FONT.extraBold, color: '#15803d' }}>{upiPayeeName}</Text>
+                  <View style={styles.payeeBadgeCompact}>
+                    <Ionicons name="checkmark-circle" size={13} color="#16a34a" />
+                    <Text style={styles.payeeTextCompact}>
+                      Verified: <Text style={{ fontFamily: FONT.extraBold, color: '#15803d' }}>{upiPayeeName}</Text>
                     </Text>
                   </View>
                 ) : null}
@@ -294,35 +277,6 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
                 }}
               />
             </View>
-
-            {/* Village / District */}
-            <View style={styles.fieldSection}>
-              <Text style={styles.label}>Village / Location (ਪਿੰਡ / ਸ਼ਹਿਰ)</Text>
-              <View style={styles.inputContainer}>
-                <Ionicons name="location-outline" size={18} color="#64748b" />
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="e.g. Rampura Phul"
-                  placeholderTextColor="#94a3b8"
-                  value={village}
-                  onChangeText={setVillage}
-                />
-              </View>
-            </View>
-
-            <View style={styles.fieldSection}>
-              <Text style={styles.label}>District (ਜ਼ਿਲ੍ਹਾ)</Text>
-              <View style={styles.inputContainer}>
-                <Ionicons name="map-outline" size={18} color="#64748b" />
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="e.g. Bathinda"
-                  placeholderTextColor="#94a3b8"
-                  value={district}
-                  onChangeText={setDistrict}
-                />
-              </View>
-            </View>
           </ScrollView>
 
           {/* Footer Action */}
@@ -335,7 +289,7 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
                 styles.saveBtn,
                 { backgroundColor: theme.primary },
                 !isValid && styles.saveBtnDisabled,
-                premiumShadow(theme.primary, 'md'),
+                premiumShadow(theme.primary, 'sm'),
               ]}
               activeOpacity={0.85}
               disabled={!isValid || becomeFarmer.isPending}
@@ -345,8 +299,8 @@ export function BecomeFarmerModal({ visible, onClose, onSuccess }: BecomeFarmerM
                 <ActivityIndicator color="#ffffff" size="small" />
               ) : (
                 <>
-                  <Ionicons name="checkmark-circle" size={18} color="#ffffff" />
-                  <Text style={styles.saveBtnText}>Save & Activate Farmer</Text>
+                  <Ionicons name="checkmark-circle" size={16} color="#ffffff" />
+                  <Text style={styles.saveBtnText}>Save & Activate</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -363,23 +317,23 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.65)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: SPACING.md,
+    padding: SPACING.xs,
   },
   card: {
     width: '100%',
-    maxWidth: 480,
-    maxHeight: '90%',
+    maxWidth: 460,
+    maxHeight: '92%',
     backgroundColor: '#ffffff',
-    borderRadius: RADIUS.xl,
+    borderRadius: RADIUS.lg,
     overflow: 'hidden',
-    ...premiumShadow('#0f172a', 'lg'),
+    ...premiumShadow('#0f172a', 'md'),
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9',
     backgroundColor: '#f8fafc',
@@ -387,199 +341,219 @@ const styles = StyleSheet.create({
   headerTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
     flex: 1,
   },
   headerIconBg: {
-    width: 36,
-    height: 36,
+    width: 32,
+    height: 32,
     borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontFamily: FONT.bold,
     color: '#0f172a',
   },
   headerSub: {
-    fontSize: 11.5,
+    fontSize: 11,
     fontFamily: FONT.medium,
     color: '#64748b',
-    marginTop: 1,
   },
   closeBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#f1f5f9',
     alignItems: 'center',
     justifyContent: 'center',
   },
   scrollContent: {
-    padding: SPACING.lg,
-    gap: 14,
+    padding: 12,
+    gap: 10,
   },
   noticeBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     backgroundColor: '#e0f2fe',
     borderRadius: RADIUS.md,
-    padding: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
     borderWidth: 1,
     borderColor: '#bae6fd',
   },
   noticeText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: 11.5,
     fontFamily: FONT.medium,
     color: '#0369a1',
   },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     backgroundColor: '#fef2f2',
     borderRadius: RADIUS.md,
-    padding: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
     borderWidth: 1,
     borderColor: '#fecaca',
   },
   errorText: {
     flex: 1,
-    fontSize: 12,
+    fontSize: 11.5,
     fontFamily: FONT.medium,
     color: '#ef4444',
   },
   fieldSection: {
-    gap: 6,
+    gap: 4,
   },
   label: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontFamily: FONT.bold,
     color: '#334155',
+  },
+  compactLabel: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#334155',
+    marginBottom: 3,
   },
   req: {
     color: '#ef4444',
   },
   chipRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
   },
   chip: {
     flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 8,
+    gap: 4,
+    paddingVertical: 7,
+    paddingHorizontal: 6,
     borderRadius: RADIUS.md,
     borderWidth: 1.5,
     borderColor: '#e2e8f0',
     backgroundColor: '#ffffff',
   },
   chipText: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontFamily: FONT.bold,
     color: '#0f172a',
   },
-  selectField: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
-    borderRadius: RADIUS.md,
-    borderWidth: 1.5,
-    borderColor: '#cbd5e1',
-    paddingVertical: 12,
-    paddingHorizontal: SPACING.md,
-  },
-  selectLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flex: 1,
-  },
-  selectText: {
-    fontSize: 13.5,
-    fontFamily: FONT.medium,
-    color: '#0f172a',
-    flex: 1,
-  },
-  placeholder: {
-    color: '#94a3b8',
-  },
-  upiHighlightBox: {
+  printingCard: {
     backgroundColor: '#f0fdf4',
-    borderWidth: 1.5,
-    borderColor: '#bbf7d0',
     borderRadius: RADIUS.md,
     padding: 10,
+    borderWidth: 1.5,
+    borderColor: '#bbf7d0',
+    gap: 2,
   },
-  upiHeaderRow: {
+  printingHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 2,
-  },
-  upiHelpSub: {
-    fontSize: 11,
-    fontFamily: FONT.medium,
-    color: '#166534',
     marginBottom: 8,
   },
-  inputContainer: {
+  printingTitle: {
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+    color: '#15803d',
+  },
+  twoColRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  inputContainerCompact: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     backgroundColor: '#ffffff',
     borderRadius: RADIUS.md,
     borderWidth: 1.5,
     borderColor: '#cbd5e1',
-    paddingHorizontal: SPACING.md,
-    height: 44,
+    paddingHorizontal: 10,
+    height: 38,
   },
-  textInput: {
+  textInputCompact: {
     flex: 1,
-    fontSize: 13.5,
+    fontSize: 13,
     fontFamily: FONT.medium,
     color: '#0f172a',
     height: '100%',
+  },
+  scanQrBtnCompact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#ecfdf5',
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+    borderRadius: RADIUS.pill,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+  },
+  scanQrBtnTextCompact: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#059669',
+  },
+  payeeBadgeCompact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginTop: 4,
+  },
+  payeeTextCompact: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#166534',
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    gap: 10,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: 12,
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderTopWidth: 1,
     borderTopColor: '#f1f5f9',
     backgroundColor: '#f8fafc',
   },
   cancelBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderRadius: RADIUS.md,
   },
   cancelBtnText: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontFamily: FONT.bold,
     color: '#64748b',
   },
   saveBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 18,
+    gap: 5,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     borderRadius: RADIUS.md,
   },
   saveBtnDisabled: {
     opacity: 0.5,
   },
   saveBtnText: {
-    fontSize: 13.5,
+    fontSize: 13,
     fontFamily: FONT.bold,
     color: '#ffffff',
   },

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -8,9 +8,12 @@ import {
   StyleSheet,
   SafeAreaView,
   Platform,
+  Alert,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 
 interface DoseItem {
   id: string;
@@ -38,10 +41,14 @@ const DEFAULT_SCHEDULE: DoseItem[] = [
   { id: '16', srNo: '16', product: 'Chelated Zinc (Zn EDTA 12%)', quantity: '500 g' },
   { id: '17', srNo: '17', product: 'Chelated Calcium (10–12%)', quantity: '500 g' },
   { id: '18', srNo: '18', product: 'Sai power plus/multiplex kranti', quantity: '500 ml' },
+  { id: '19', srNo: '19', product: 'Chelated Micronutrient', quantity: '500 g' },
+  { id: '20', srNo: '20', product: '', quantity: '' },
+  { id: '21', srNo: '21', product: '', quantity: '' },
 ];
 
 export default function YouPage() {
   const router = useRouter();
+  const scheduleShotRef = useRef<any>(null);
 
   // Top Form States
   const [farmerName, setFarmerName] = useState('');
@@ -73,86 +80,34 @@ export default function YouPage() {
     setItems(updated);
   };
 
-  const handleMakePDF = () => {
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) {
-        alert('Please allow popups to view and print the PDF report.');
-        return;
+  const handleDownloadJPG = async () => {
+    if (!scheduleShotRef.current) return;
+    try {
+      const uri = await captureRef(scheduleShotRef, {
+        format: 'jpg',
+        quality: 1.0,
+        result: Platform.OS === 'web' ? 'data-uri' : 'tmpfile',
+      });
+
+      const fileName = `Marigold_Drenching_Schedule_${(farmerName || 'Report').replace(/\s+/g, '_')}.jpg`;
+
+      if (Platform.OS === 'web') {
+        const link = document.createElement('a');
+        link.href = uri;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(uri, { mimeType: 'image/jpeg', dialogTitle: 'Download Marigold Schedule' });
+        } else {
+          Alert.alert('JPG Image Download', `Marigold Schedule image captured! File: ${fileName}`);
+        }
       }
-
-      const rowsHtml = items
-        .map(
-          (item) => `
-        <tr>
-          <td style="border: 1px solid #10b981; padding: 10px; text-align: center; font-weight: bold; width: 12%;">${item.srNo}</td>
-          <td style="border: 1px solid #10b981; padding: 10px; font-weight: 600; width: 58%;">${item.product}</td>
-          <td style="border: 1px solid #10b981; padding: 10px; text-align: center; color: #15803d; font-weight: bold; width: 30%;">${item.quantity}</td>
-        </tr>
-      `
-        )
-        .join('');
-
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>MARIGOLD PRODUCTION DRENCHING SCHEDULE REPORT - FarmsKing</title>
-          <style>
-            body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 25px; color: #111827; background-color: #fff; }
-            .header-banner { background: linear-gradient(135deg, #14532d 0%, #166534 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
-            .header-banner h1 { margin: 0; font-size: 26px; letter-spacing: 1px; color: #facc15; text-transform: uppercase; }
-            .header-banner h2 { margin: 6px 0 0 0; font-size: 18px; color: #fef08a; font-weight: 500; }
-            .farmer-meta { display: flex; justify-content: space-between; background: #f0fdf4; border: 2px solid #16a34a; padding: 14px 20px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
-            .farmer-meta div { font-weight: bold; color: #14532d; }
-            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            th { background-color: #15803d; color: white; padding: 12px; border: 1px solid #15803d; font-size: 14px; text-transform: uppercase; }
-            td { font-size: 13.5px; }
-            .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 10px; }
-          </style>
-        </head>
-        <body>
-          <div class="header-banner">
-            <h1>🌼 MARIGOLD PRODUCTION 🌼</h1>
-            <h2>(DRENCHING SCHEDULE)</h2>
-            <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9;">FarmsKing Enterprise Agri-Intelligence Platform</p>
-          </div>
-
-          <div class="farmer-meta">
-            <div>👤 Farmer Name: <span style="color: #15803d;">${farmerName || 'FarmsKing Partner Farmer'}</span></div>
-            <div>📏 Area: <span style="color: #15803d;">${area}</span></div>
-            <div>🌱 Total Plants: <span style="color: #15803d;">${plantsCount}</span></div>
-          </div>
-
-          <table>
-            <thead>
-              <tr>
-                <th style="width: 12%;">Sr. No.</th>
-                <th style="width: 58%;">Product</th>
-                <th style="width: 30%;">Quantity</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rowsHtml}
-            </tbody>
-          </table>
-
-          <div class="footer">
-            <p>Generated via FarmsKing National Seller & Farmer Portal • www.farmsking.in</p>
-          </div>
-          <script>
-            window.onload = function() {
-              window.print();
-            }
-          </script>
-        </body>
-        </html>
-      `;
-
-      printWindow.document.write(htmlContent);
-      printWindow.document.close();
-    } else {
-      alert(`PDF Report Ready!\n\nFarmer: ${farmerName || 'N/A'}\nArea: ${area}\nPlants: ${plantsCount}\nTotal Items: ${items.length}`);
+    } catch (err: any) {
+      console.error('JPG capture error:', err);
+      Alert.alert('Download Failed', 'Could not generate JPG image report. Please try again.');
     }
   };
 
@@ -167,123 +122,126 @@ export default function YouPage() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Banner */}
-        <View style={styles.bannerCard}>
-          <Text style={styles.bannerTitle}>MARIGOLD PRODUCTION</Text>
-          <Text style={styles.bannerSubtitle}>(DRENCHING SCHEDULE - EDITABLE)</Text>
-        </View>
+        {/* Capturable Card Section */}
+        <View ref={scheduleShotRef} collapsable={false} style={{ backgroundColor: '#0B0F17', padding: 4, borderRadius: 12 }}>
+          {/* Banner */}
+          <View style={styles.bannerCard}>
+            <Text style={styles.bannerTitle}>MARIGOLD PRODUCTION</Text>
+            <Text style={styles.bannerSubtitle}>(DRENCHING SCHEDULE - EDITABLE)</Text>
+          </View>
 
-        {/* Input Details Header Card */}
-        <View style={styles.inputCard}>
-          <Text style={styles.cardHeaderTitle}>📌 Farmer & Field Information (Editable)</Text>
+          {/* Input Details Header Card */}
+          <View style={styles.inputCard}>
+            <Text style={styles.cardHeaderTitle}>📌 Farmer & Field Information (Editable)</Text>
 
-          <View style={styles.inputRow}>
-            {/* Farmer Name */}
-            <View style={{ flex: 1.2 }}>
-              <Text style={styles.inputLabel}>👤 Farmer / Customer Name</Text>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Enter Farmer Name"
-                placeholderTextColor="#9CA3AF"
-                value={farmerName}
-                onChangeText={setFarmerName}
-              />
+            <View style={styles.inputRow}>
+              {/* Farmer Name */}
+              <View style={{ flex: 1.2 }}>
+                <Text style={styles.inputLabel}>👤 Farmer / Customer Name</Text>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Enter Farmer Name"
+                  placeholderTextColor="#9CA3AF"
+                  value={farmerName}
+                  onChangeText={setFarmerName}
+                />
+              </View>
+
+              {/* Area */}
+              <View style={{ flex: 1 }}>
+                <Text style={styles.inputLabel}>📏 Area (Acres/Bigha)</Text>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="1 Acre"
+                  placeholderTextColor="#9CA3AF"
+                  value={area}
+                  onChangeText={setArea}
+                />
+              </View>
+
+              {/* Plants Heading & Count */}
+              <View style={{ flex: 1 }}>
+                <Text style={styles.inputLabel}>🌱 Total Plants Heading</Text>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="10,000 Plants"
+                  placeholderTextColor="#9CA3AF"
+                  value={plantsCount}
+                  onChangeText={setPlantsCount}
+                />
+              </View>
+            </View>
+          </View>
+
+          {/* Table Schedule Section */}
+          <View style={styles.tableCard}>
+            {/* Table Header Row */}
+            <View style={styles.tableHeader}>
+              <Text style={[styles.thText, { flex: 0.8, textAlign: 'center' }]}>Sr. No.</Text>
+              <Text style={[styles.thText, { flex: 3.2 }]}>Product Name (Editable)</Text>
+              <Text style={[styles.thText, { flex: 1.8, textAlign: 'center' }]}>Quantity</Text>
+              <Text style={[styles.thText, { flex: 0.6, textAlign: 'center' }]}>Action</Text>
             </View>
 
-            {/* Area */}
-            <View style={{ flex: 1 }}>
-              <Text style={styles.inputLabel}>📏 Area (Acres/Bigha)</Text>
-              <TextInput
-                style={styles.textInput}
-                placeholder="1 Acre"
-                placeholderTextColor="#9CA3AF"
-                value={area}
-                onChangeText={setArea}
-              />
-            </View>
+            {/* Table Data Rows */}
+            {items.map((item, index) => (
+              <View
+                key={item.id}
+                style={[
+                  styles.tableRow,
+                  { backgroundColor: index % 2 === 0 ? '#111827' : '#1F2937' },
+                ]}
+              >
+                {/* Sr. No. Input Box */}
+                <View style={{ flex: 0.8, paddingHorizontal: 2 }}>
+                  <TextInput
+                    style={[styles.cellInput, { textAlign: 'center', fontWeight: '800' }]}
+                    value={item.srNo}
+                    onChangeText={(val) => updateItemField(index, 'srNo', val)}
+                  />
+                </View>
 
-            {/* Plants Heading & Count */}
-            <View style={{ flex: 1 }}>
-              <Text style={styles.inputLabel}>🌱 Total Plants Heading</Text>
-              <TextInput
-                style={styles.textInput}
-                placeholder="10,000 Plants"
-                placeholderTextColor="#9CA3AF"
-                value={plantsCount}
-                onChangeText={setPlantsCount}
-              />
-            </View>
+                {/* Product Name Input Box */}
+                <View style={{ flex: 3.2, paddingHorizontal: 4 }}>
+                  <TextInput
+                    style={[styles.cellInput, { textAlign: 'left', fontWeight: '600' }]}
+                    value={item.product}
+                    onChangeText={(val) => updateItemField(index, 'product', val)}
+                    placeholder="Product Name"
+                    placeholderTextColor="#6B7280"
+                  />
+                </View>
+
+                {/* Quantity Input Box */}
+                <View style={{ flex: 1.8, paddingHorizontal: 4 }}>
+                  <TextInput
+                    style={styles.cellInput}
+                    value={item.quantity}
+                    onChangeText={(val) => updateItemField(index, 'quantity', val)}
+                    placeholder="Qty"
+                    placeholderTextColor="#6B7280"
+                  />
+                </View>
+
+                {/* Delete Row Button */}
+                <TouchableOpacity style={{ flex: 0.6, alignItems: 'center' }} onPress={() => removeRow(index)}>
+                  <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                </TouchableOpacity>
+              </View>
+            ))}
           </View>
         </View>
 
-        {/* Table Schedule Section */}
-        <View style={styles.tableCard}>
-          {/* Table Header Row */}
-          <View style={styles.tableHeader}>
-            <Text style={[styles.thText, { flex: 0.8, textAlign: 'center' }]}>Sr. No.</Text>
-            <Text style={[styles.thText, { flex: 3.2 }]}>Product Name (Editable)</Text>
-            <Text style={[styles.thText, { flex: 1.8, textAlign: 'center' }]}>Quantity</Text>
-            <Text style={[styles.thText, { flex: 0.6, textAlign: 'center' }]}>Action</Text>
-          </View>
-
-          {/* Table Data Rows */}
-          {items.map((item, index) => (
-            <View
-              key={item.id}
-              style={[
-                styles.tableRow,
-                { backgroundColor: index % 2 === 0 ? '#111827' : '#1F2937' },
-              ]}
-            >
-              {/* Sr. No. Input Box */}
-              <View style={{ flex: 0.8, paddingHorizontal: 2 }}>
-                <TextInput
-                  style={[styles.cellInput, { textAlign: 'center', fontWeight: '800' }]}
-                  value={item.srNo}
-                  onChangeText={(val) => updateItemField(index, 'srNo', val)}
-                />
-              </View>
-
-              {/* Product Name Input Box */}
-              <View style={{ flex: 3.2, paddingHorizontal: 4 }}>
-                <TextInput
-                  style={[styles.cellInput, { textAlign: 'left', fontWeight: '600' }]}
-                  value={item.product}
-                  onChangeText={(val) => updateItemField(index, 'product', val)}
-                  placeholder="Product Name"
-                  placeholderTextColor="#6B7280"
-                />
-              </View>
-
-              {/* Quantity Input Box */}
-              <View style={{ flex: 1.8, paddingHorizontal: 4 }}>
-                <TextInput
-                  style={styles.cellInput}
-                  value={item.quantity}
-                  onChangeText={(val) => updateItemField(index, 'quantity', val)}
-                  placeholder="Qty"
-                  placeholderTextColor="#6B7280"
-                />
-              </View>
-
-              {/* Delete Row Button */}
-              <TouchableOpacity style={{ flex: 0.6, alignItems: 'center' }} onPress={() => removeRow(index)}>
-                <Ionicons name="trash-outline" size={18} color="#EF4444" />
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
-
-        {/* Action Buttons: Add Row & Make PDF */}
-        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
+        {/* Action Buttons: Add Row & Make JPG */}
+        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16, marginTop: 12 }}>
           <TouchableOpacity style={styles.addRowBtn} onPress={addNewRow}>
             <Ionicons name="add-circle-outline" size={20} color="#FFF" />
             <Text style={styles.addRowBtnText}>+ Add Product Row</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.pdfBtn, { flex: 1.5 }]} onPress={handleMakePDF} activeOpacity={0.85}>
-            <MaterialCommunityIcons name="file-pdf-box" size={22} color="#FFF" />
-            <Text style={styles.pdfBtnText}>📄 MAKE PDF REPORT</Text>
+          <TouchableOpacity style={[styles.jpgBtn, { flex: 1.5 }]} onPress={handleDownloadJPG} activeOpacity={0.85}>
+            <Ionicons name="image-outline" size={22} color="#FFF" />
+            <Text style={styles.jpgBtnText}>🖼️ DOWNLOAD JPG SCHEDULE</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

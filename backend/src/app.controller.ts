@@ -3,6 +3,8 @@ import { AppService } from './app.service';
 import { PrismaService } from './modules/prisma/prisma.service';
 import { Role } from '@prisma/client';
 import * as argon2 from 'argon2';
+import { DYNAMIC_SYSTEM_MODULES, generateDynamicPrivacyPolicyHtml, generateAccountDeletionHtml } from './privacy-policy-generator';
+
 
 @Controller()
 export class AppController {
@@ -296,4 +298,74 @@ export class AppController {
     });
     return { success: true, action: 'created', userId: created.id, mobile: created.mobile };
   }
+
+  @Get('privacy-policy')
+  @Get('privacy-policy.html')
+  @Get('privacy')
+  @Header('Content-Type', 'text/html')
+  getPrivacyPolicyPage(): string {
+    return generateDynamicPrivacyPolicyHtml('https://farmsking.in');
+  }
+
+  @Get('account-deletion')
+  @Get('account-deletion.html')
+  @Header('Content-Type', 'text/html')
+  getAccountDeletionPage(): string {
+    return generateAccountDeletionHtml('https://farmsking.in');
+  }
+
+  @Get('api/privacy-policy')
+  getPrivacyPolicyJson() {
+    return {
+      success: true,
+      appName: 'FarmsKing (ਫਾਰਮਜ਼ਕਿੰਗ)',
+      version: '1.0.0',
+      lastUpdated: new Date().toISOString(),
+      modules: DYNAMIC_SYSTEM_MODULES,
+      deletionUrl: 'https://farmsking.in/account-deletion',
+      supportEmail: 'support@farmsking.in',
+      helpline: '+91 9872066901',
+    };
+  }
+
+  @Post('api/request-account-deletion')
+  async requestAccountDeletion(@Body() body: { mobile?: string; password?: string; reason?: string }) {
+    if (!body.mobile || body.mobile.trim().length !== 10) {
+      throw new BadRequestException('Please provide a valid 10-digit mobile number.');
+    }
+    const cleanMobile = body.mobile.trim();
+    const user = await this.prisma.user.findFirst({
+      where: { mobile: cleanMobile },
+    });
+
+    if (!user) {
+      throw new BadRequestException('No registered FarmsKing account found for this mobile number.');
+    }
+
+    // Verify password if provided
+    if (body.password && user.passwordHash) {
+      const isValid = await argon2.verify(user.passwordHash, body.password);
+      if (!isValid && body.password !== user.kingId) {
+        throw new BadRequestException('Invalid password or King ID.');
+      }
+    }
+
+    // Soft delete / anonymize user data
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        deletedAt: new Date(),
+        name: 'Deleted User',
+        email: null,
+        upiId: null,
+      },
+    });
+
+    return {
+      success: true,
+      message: `Account for mobile ${cleanMobile} has been successfully deleted and unlinked from FarmsKing.`,
+      deletedAt: new Date().toISOString(),
+    };
+  }
 }
+

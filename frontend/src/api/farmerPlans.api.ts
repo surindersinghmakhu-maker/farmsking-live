@@ -307,10 +307,157 @@ export async function getFarmerPlanHistory(farmerId?: string): Promise<FarmerPla
   return data;
 }
 
-export async function activateTrial(): Promise<{ success: boolean; message: string; plan: FarmerPlanType; endDate: string }> {
-  const { data } = await apiClient.post<{ success: boolean; message: string; plan: FarmerPlanType; endDate: string }>('/farmer-plans/activate-trial');
-  return data;
+
+export const PLAN_DISPLAY_MAP: Record<string, { title: string; badge: string; icon: string; color: string; desc: string }> = {
+  FREE: {
+    title: 'Free Pass',
+    badge: '🟢 Free Pass',
+    icon: 'ticket-outline',
+    color: '#10b981',
+    desc: 'ਮੁਫ਼ਤ ਐਂਟਰੀ (ਮੰਡੀ ਰੇਟ, ਬੁਨਿਆਦੀ ਮੌਸਮ ਜਾਣਕਾਰੀ, 30 ਫ੍ਰੀ ਬਿਲ ਡਾਊਨਲੋਡ/ਸ਼ੇਅਰ)',
+  },
+  PRO: {
+    title: 'Kisan Card',
+    badge: '📝 Kisan Card',
+    icon: 'card-outline',
+    color: '#0284c7',
+    desc: 'ਫਸਲ ਡਿਜੀਟਲ ਖਾਤਾ (ਸਾਰੀਆਂ ਫਸਲਾਂ ਦੀ ਲਿਸਟ, ਐਕਟਿਵ ਲਿਮਟ max 5 ਫਸਲਾਂ)',
+  },
+  BASIC: {
+    title: 'Kisan Card',
+    badge: '📝 Kisan Card',
+    icon: 'card-outline',
+    color: '#0284c7',
+    desc: 'ਫਸਲ ਡਿਜੀਟਲ ਖਾਤਾ (ਸਾਰੀਆਂ ਫਸਲਾਂ ਦੀ ਲਿਸਟ, ਐਕਟਿਵ ਲਿਮਟ max 5 ਫਸਲਾਂ)',
+  },
+  SMART: {
+    title: 'Boss Card',
+    badge: '👷 Boss Card',
+    icon: 'briefcase-outline',
+    color: '#d97706',
+    desc: 'ਫਸਲ + ਲੇਬਰ ਮੈਨੇਜਮੈਂਟ (ਸਾਰੀਆਂ ਅਨਲਿਮਟਿਡ ਫਸਲਾਂ + ਲੇਬਰ ਹਿਸਾਬ ਤੇ ਲੌਗਇਨ)',
+  },
+  SILVER: {
+    title: 'Boss Card',
+    badge: '👷 Boss Card',
+    icon: 'briefcase-outline',
+    color: '#d97706',
+    desc: 'ਫਸਲ + ਲੇਬਰ ਮੈਨੇਜਮੈਂਟ (ਸਾਰੀਆਂ ਅਨਲਿਮਟਿਡ ਫਸਲਾਂ + ਲੇਬਰ ਹਿਸਾਬ ਤੇ ਲੌਗਇਨ)',
+  },
+  SUPER: {
+    title: 'King Card',
+    badge: '👑 King Card',
+    icon: 'ribbon-outline',
+    color: '#6d28d9',
+    desc: 'ਸੁਪਰ ਫਾਰਮਰ ਐਸਟੇਟ (ਸਾਰੀਆਂ ਫਸਲਾਂ + ਲੇਬਰ ਹਿਸਾਬ + ਆਪਣੇ ਨਾਲ 5 ਟੀਮ ਮੈਂਬਰ ਐਕਸੈਸ)',
+  },
+  VIP: {
+    title: 'King Card',
+    badge: '👑 King Card',
+    icon: 'ribbon-outline',
+    color: '#6d28d9',
+    desc: 'ਸੁਪਰ ਫਾਰਮਰ ਐਸਟੇਟ (ਸਾਰੀਆਂ ਫਸਲਾਂ + ਲੇਬਰ ਹਿਸਾਬ + ਆਪਣੇ ਨਾਲ 5 ਟੀਮ ਮੈਂਬਰ ਐਕਸੈਸ)',
+  },
+  ROYAL: {
+    title: 'King Card',
+    badge: '👑 King Card',
+    icon: 'ribbon-outline',
+    color: '#6d28d9',
+    desc: 'ਸੁਪਰ ਫਾਰਮਰ ਐਸਟੇਟ (ਸਾਰੀਆਂ ਫਸਲਾਂ + ਲੇਬਰ ਹਿਸਾਬ + ਆਪਣੇ ਨਾਲ 5 ਟੀਮ ਮੈਂਬਰ ਐਕਸੈਸ)',
+  },
+};
+
+export type CardFeatureKey =
+  | 'OTHER_STATES_MANDI_RATES'
+  | 'PDF_DOWNLOAD'
+  | 'WHATSAPP_SHARE'
+  | 'UNLIMITED_ACTIVE_CROPS'
+  | 'PHOTO_UPLOAD'
+  | 'LABOUR_MANAGEMENT'
+  | 'TEAM_SUPERVISORS';
+
+export function checkCardPermission(
+  plan: string | undefined | null,
+  feature: CardFeatureKey,
+  options?: { billCount?: number }
+): { allowed: boolean; requiredCard: 'Kisan Card' | 'Boss Card' | 'King Card'; message: string } {
+  const currentPlan = (plan || 'FREE').toUpperCase();
+  const isPaid = currentPlan !== 'FREE';
+  const isBossOrHigher = ['SMART', 'SILVER', 'SUPER', 'VIP', 'ROYAL', 'GOLD', 'PLATINUM', 'DIAMOND'].includes(currentPlan);
+  const isKingOrHigher = ['SUPER', 'VIP', 'ROYAL', 'PLATINUM', 'DIAMOND'].includes(currentPlan);
+
+  switch (feature) {
+    case 'OTHER_STATES_MANDI_RATES':
+      if (!isPaid) {
+        return {
+          allowed: false,
+          requiredCard: 'Kisan Card',
+          message: 'ਦੂਜੇ ਰਾਜਾਂ (ਹਰਿਆਣਾ, ਰਾਜਸਥਾਨ, MP, ਦਿੱਲੀ) ਦੇ ਮੰਡੀ ਰੇਟ ਵੇਖਣ ਲਈ Kisan Card ਅਨਲੌਕ ਕਰੋ!',
+        };
+      }
+      return { allowed: true, requiredCard: 'Kisan Card', message: '' };
+
+    case 'PDF_DOWNLOAD':
+    case 'WHATSAPP_SHARE':
+      if (!isPaid) {
+        const count = options?.billCount ?? 0;
+        if (count <= 30) {
+          return { allowed: true, requiredCard: 'Kisan Card', message: '' };
+        }
+        return {
+          allowed: false,
+          requiredCard: 'Kisan Card',
+          message: 'Free Pass ਵਿੱਚ 30 ਬਿਲਾਂ ਤੱਕ ਹੀ ਫ੍ਰੀ ਡਾਊਨਲੋਡ/ਸ਼ੇਅਰ ਮਿਲਦਾ ਹੈ। ਅਨਲਿਮਟਿਡ ਬਿਲਾਂ ਲਈ Kisan Card ਅਨਲੌਕ ਕਰੋ!',
+        };
+      }
+      return { allowed: true, requiredCard: 'Kisan Card', message: '' };
+
+    case 'UNLIMITED_ACTIVE_CROPS':
+      if (!isBossOrHigher) {
+        return {
+          allowed: false,
+          requiredCard: 'Boss Card',
+          message: 'ਮੈਕਸੀਮਮ 5 ਫਸਲਾਂ (Kisan Card) ਤੋਂ ਵੱਧ ਅਨਲਿਮਟਿਡ ਫਸਲਾਂ ਜੋੜਨ ਲਈ Boss Card ਅਪਗ੍ਰੇਡ ਕਰੋ!',
+        };
+      }
+      return { allowed: true, requiredCard: 'Boss Card', message: '' };
+
+    case 'PHOTO_UPLOAD':
+      if (!isBossOrHigher) {
+        return {
+          allowed: false,
+          requiredCard: 'Boss Card',
+          message: 'ਫੋਟੋ ਅਪਲੋਡ (ਬੀਮਾਰ ਫਸਲ, ਬਿਲ ਸਕੈਨ) ਅਤੇ AI ਜਾਂਚ ਲਈ Boss Card ਅਪਗ੍ਰੇਡ ਕਰੋ!',
+        };
+      }
+      return { allowed: true, requiredCard: 'Boss Card', message: '' };
+
+    case 'LABOUR_MANAGEMENT':
+      if (!isBossOrHigher) {
+        return {
+          allowed: false,
+          requiredCard: 'Boss Card',
+          message: 'ਮਜ਼ਦੂਰ/ਲੇਬਰ ਹਿਸਾਬ, ਹਾਜ਼ਰੀ ਅਤੇ Labour Login ਚਾਲੂ ਕਰਨ ਲਈ Boss Card ਅਪਗ੍ਰੇਡ ਕਰੋ!',
+        };
+      }
+      return { allowed: true, requiredCard: 'Boss Card', message: '' };
+
+    case 'TEAM_SUPERVISORS':
+      if (!isKingOrHigher) {
+        return {
+          allowed: false,
+          requiredCard: 'King Card',
+          message: 'ਆਪਣੇ ਨਾਲ 5 ਟੀਮ ਮੈਂਬਰ/ਸੁਪਰਵਾਈਜ਼ਰ ਜੋੜਨ ਲਈ King Card ਅਪਗ੍ਰੇਡ ਕਰੋ!',
+        };
+      }
+      return { allowed: true, requiredCard: 'King Card', message: '' };
+
+    default:
+      return { allowed: true, requiredCard: 'Kisan Card', message: '' };
+  }
 }
+
+
 
 
 

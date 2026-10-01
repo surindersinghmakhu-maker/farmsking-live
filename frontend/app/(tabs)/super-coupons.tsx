@@ -458,18 +458,18 @@ export default function SuperCouponsScreen({ initialTab }: { initialTab?: Coupon
                     emptyText="No personal invite coupons yet."
                   />
                 </CategoryCollapse>
-                <CategoryCollapse title="Farmer Plan" icon="leaf-outline">
+                <CategoryCollapse title="Farmer Card" icon="leaf-outline">
                   <FarmerPlanCouponBrowseSection
-                    title="Farmer Plan Coupons"
+                    title="Farmer Card Coupons"
                     plans={['PRO', 'SMART']}
-                    emptyText="No Farmer Plan coupons generated yet."
+                    emptyText="No Farmer Card coupons generated yet."
                   />
                 </CategoryCollapse>
                 <CategoryCollapse title="Advisor Plan" icon="school-outline">
                   <FarmerPlanCouponBrowseSection
-                    title="Advisor Plan Coupons"
+                    title="Advisor Card Coupons"
                     plans={['SMART', 'SUPER']}
-                    emptyText="No Advisor Plan coupons generated yet."
+                    emptyText="No Advisor Card coupons generated yet."
                   />
                 </CategoryCollapse>
               </View>
@@ -478,12 +478,12 @@ export default function SuperCouponsScreen({ initialTab }: { initialTab?: Coupon
             ) : activeTab === 'FEATURES' ? (
               <View style={{ gap: 12 }}>
                 <View style={[styles.couponCard, premiumShadow('#0f172a', 'sm')]}>
-                  <Text style={styles.sectionTitle}>🌾 Farmer Plan Features</Text>
+                  <Text style={styles.sectionTitle}>🌾 Farmer Card Features</Text>
                   <PlanFeaturesSection category="FARMER" only={['PRO', 'SMART']} />
                 </View>
 
                 <View style={[styles.couponCard, premiumShadow('#0f172a', 'sm')]}>
-                  <Text style={styles.sectionTitle}>🎓 Advisor Plan Features</Text>
+                  <Text style={styles.sectionTitle}>🎓 Advisor Card Features</Text>
                   <PlanFeaturesSection category="ADVISOR" only={['SMART', 'SUPER']} />
                 </View>
               </View>

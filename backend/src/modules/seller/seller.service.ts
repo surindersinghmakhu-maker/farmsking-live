@@ -168,7 +168,7 @@ export class SellerService {
       if (kycStatus === 'PENDING') {
         whereClause = {
           kycStatus: {
-            in: [SellerKycStatus.PENDING, SellerKycStatus.SUBMITTED, SellerKycStatus.UNVERIFIED],
+            in: [SellerKycStatus.PENDING, SellerKycStatus.SUBMITTED],
           },
         };
       } else {

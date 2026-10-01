@@ -1040,8 +1040,8 @@ export default function RecordsScreen() {
   const [billPreviewVisible, setBillPreviewVisible] = useState(false);
   const [isLoadingBillPreview, setIsLoadingBillPreview] = useState(false);
 
-  // FREE plan share limits — 50 bills + 50 receipts, then prompt to upgrade.
-  const FREE_SHARE_LIMIT = 50;
+  // FREE plan share limits — 30 bills + 30 receipts, then prompt to upgrade.
+  const FREE_SHARE_LIMIT = 30;
   const { plan } = useFarmerPlan();
   const isFreePlan = plan === 'FREE';
   const { data: billCountData } = useMySaleBillCount();
@@ -1050,12 +1050,12 @@ export default function RecordsScreen() {
   const showUpgradePrompt = (kind: 'bill' | 'receipt') => {
     const message =
       kind === 'bill'
-        ? `On the Free plan, you can share up to ${FREE_SHARE_LIMIT} sale bills. Please upgrade your plan to share unlimited bills.`
-        : `On the Free plan, you can share up to ${FREE_SHARE_LIMIT} payment receipts. Please upgrade your plan to share unlimited receipts.`;
+        ? `Free Pass ਵਿੱਚ ਤੁਸੀਂ max ${FREE_SHARE_LIMIT} ਸੇਲ ਬਿਲ ਹੀ ਡਾਊਨਲੋਡ/ਸ਼ੇਅਰ ਕਰ ਸਕਦੇ ਹੋ। ਅਨਲਿਮਟਿਡ ਬਿਲਾਂ ਲਈ Kisan Card ਅਨਲੌਕ ਕਰੋ!`
+        : `Free Pass ਵਿੱਚ ਤੁਸੀਂ max ${FREE_SHARE_LIMIT} ਪੇਮੈਂਟ ਰਸੀਦਾਂ ਹੀ ਡਾਊਨਲੋਡ/ਸ਼ੇਅਰ ਕਰ ਸਕਦੇ ਹੋ। ਅਨਲਿਮਟਿਡ ਰਸੀਦਾਂ ਲਈ Kisan Card ਅਨਲੌਕ ਕਰੋ!`;
     if (Platform.OS === 'web') {
-      alert(`🔒 Upgrade Your Plan\n\n${message}`);
+      alert(`🔒 Upgrade Your Kisan Card\n\n${message}`);
     } else {
-      Alert.alert('🔒 Upgrade Your Plan', message);
+      Alert.alert('🔒 Upgrade Your Kisan Card', message);
     }
   };
 

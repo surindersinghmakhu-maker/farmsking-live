@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -9,154 +9,95 @@ import {
   SafeAreaView,
   Platform,
   Alert,
+  Image,
 } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 
 interface DoseItem {
-  id: string;
-  srNo: string;
+  srNo: number;
   product: string;
   quantity: string;
 }
 
-const DEFAULT_SCHEDULE: DoseItem[] = [
-  { id: '1', srNo: '1', product: 'Jaggery (Gud)', quantity: '3 kg' },
-  { id: '2', srNo: '2', product: 'Fulvic Acid', quantity: '500 g' },
-  { id: '3', srNo: '3', product: 'DAP', quantity: '10 kg' },
-  { id: '4', srNo: '4', product: 'MOP', quantity: '15 kg' },
-  { id: '5', srNo: '5', product: 'Urea* (Apply only where growth is less)', quantity: '5 kg' },
-  { id: '6', srNo: '6', product: 'Mustard Cake', quantity: '10 kg' },
-  { id: '7', srNo: '7', product: 'Neem Cake', quantity: '5 kg' },
-  { id: '8', srNo: '8', product: 'Sulphur', quantity: '2 kg' },
-  { id: '9', srNo: '9', product: 'Magnesium Sulphate', quantity: '2 kg' },
-  { id: '10', srNo: '10', product: 'Roko Fungicide', quantity: '250 g' },
-  { id: '11', srNo: '11', product: 'Humic Acid', quantity: '2 kg' },
-  { id: '12', srNo: '12', product: 'Boron 20%', quantity: '500 g' },
-  { id: '13', srNo: '13', product: 'Biovita', quantity: '500 g' },
-  { id: '14', srNo: '14', product: 'Amino Acid (Liquid 20%/50%)', quantity: '500 ml' },
-  { id: '15', srNo: '15', product: 'Chelated Iron (Fe 12%)', quantity: '250 g' },
-  { id: '16', srNo: '16', product: 'Chelated Zinc (Zn EDTA 12%)', quantity: '500 g' },
-  { id: '17', srNo: '17', product: 'Chelated Calcium (10–12%)', quantity: '500 g' },
-  { id: '18', srNo: '18', product: 'Sai power plus/multiplex kranti', quantity: '500 ml' },
+const FARMSKING_LOGO = require('../assets/images/farmsking_logo_transparent_bg.png');
+const FARMSKING_ICON = require('../assets/images/farmsking_logo_icon.png');
+
+const INITIAL_SCHEDULE: DoseItem[] = [
+  { srNo: 1, product: 'Jaggery (Gud) / गुड़', quantity: '3 kg' },
+  { srNo: 2, product: 'Fulvic Acid / फुलविक एसिड', quantity: '500 g' },
+  { srNo: 3, product: 'DAP Fertilizer / डी.ए.पी. खाद', quantity: '10 kg' },
+  { srNo: 4, product: 'MOP / एम.ਓ.ਪੀ. ਪੋਟਾਸ਼ (Potash)', quantity: '15 kg' },
+  { srNo: 5, product: 'Urea* (Apply where growth is less) / यूरिया*', quantity: '5 kg' },
+  { srNo: 6, product: 'Mustard Cake / सरसों खली', quantity: '10 kg' },
+  { srNo: 7, product: 'Neem Cake / नीम खली', quantity: '5 kg' },
+  { srNo: 8, product: 'Sulphur (80% WDG) / सल्फर', quantity: '2 kg' },
+  { srNo: 9, product: 'Magnesium Sulphate / मैग्नीशियम सल्फेट', quantity: '2 kg' },
+  { srNo: 10, product: 'Roko Fungicide / रोको फफूंदनाशक', quantity: '250 g' },
+  { srNo: 11, product: 'Humic Acid (98%) / ह्यूमिक एसिड', quantity: '2 kg' },
+  { srNo: 12, product: 'Boron 20% / बोरोन 20%', quantity: '500 g' },
+  { srNo: 13, product: 'Biovita / बायोविटा', quantity: '500 g' },
+  { srNo: 14, product: 'Amino Acid (Liquid 20%/50%) / अमीनो एसिड', quantity: '500 ml' },
+  { srNo: 15, product: 'Chelated Iron (Fe 12%) / चिलेटेड आयरन', quantity: '250 g' },
+  { srNo: 16, product: 'Chelated Zinc (Zn EDTA 12%) / चिलेटेड जिंक', quantity: '500 g' },
+  { srNo: 17, product: 'Chelated Calcium (10–12%) / चिलेटेड कैल्शियम', quantity: '500 g' },
+  { srNo: 18, product: 'Sai power plus / Multiplex Kranti / साईं पावर प्लस - क्रांति', quantity: '500 ml' },
+  { srNo: 19, product: 'Chelated Micronutrient / चिलेटेड माइक्रोन्यूट्रिएंट', quantity: '500 g' },
+  { srNo: 20, product: '', quantity: '' },
+  { srNo: 21, product: '', quantity: '' },
 ];
 
-export default function SKEditableSchedulePage() {
+export default function SKPage() {
   const router = useRouter();
+  const scheduleShotRef = useRef<any>(null);
 
-  // Top Form States - Name, Area, Plants
   const [name, setName] = useState('');
   const [area, setArea] = useState('1 Acre');
-  const [plants, setPlants] = useState('10,000 Plants');
+  const [plants, setPlants] = useState('10,000');
+  const [items, setItems] = useState<DoseItem[]>(INITIAL_SCHEDULE);
 
-  // Table Schedule Items State
-  const [items, setItems] = useState<DoseItem[]>(DEFAULT_SCHEDULE);
-
-  const updateItemField = (index: number, field: keyof DoseItem, value: string) => {
+  const updateItemProduct = (index: number, val: string) => {
     const updated = [...items];
-    updated[index][field] = value;
+    updated[index].product = val;
     setItems(updated);
   };
 
-  const addNewRow = () => {
-    const nextSrNo = (items.length + 1).toString();
-    const newItem: DoseItem = {
-      id: Date.now().toString(),
-      srNo: nextSrNo,
-      product: '',
-      quantity: '',
-    };
-    setItems([...items, newItem]);
-  };
-
-  const removeRow = (index: number) => {
-    const updated = items.filter((_, idx) => idx !== index);
+  const updateItemQty = (index: number, val: string) => {
+    const updated = [...items];
+    updated[index].quantity = val;
     setItems(updated);
   };
 
-  const handleDownloadPDF = () => {
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) {
-        alert('Please allow popups to download and print the PDF report.');
-        return;
+  const handleDownloadJPG = async () => {
+    if (!scheduleShotRef.current) return;
+    try {
+      const uri = await captureRef(scheduleShotRef, {
+        format: 'jpg',
+        quality: 1.0,
+        result: Platform.OS === 'web' ? 'data-uri' : 'tmpfile',
+      });
+
+      const fileName = `Marigold_Drenching_Schedule_${(name || 'Report').replace(/\s+/g, '_')}.jpg`;
+
+      if (Platform.OS === 'web') {
+        const link = document.createElement('a');
+        link.href = uri;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(uri, { mimeType: 'image/jpeg', dialogTitle: 'Download Marigold Schedule Report' });
+        } else {
+          Alert.alert('JPG Report Download', `Marigold Schedule image captured! File: ${fileName}`);
+        }
       }
-
-      const rowsHtml = items
-        .map(
-          (item) => `
-        <tr>
-          <td style="border: 1px solid #15803d; padding: 10px; text-align: center; font-weight: bold; width: 12%;">${item.srNo}</td>
-          <td style="border: 1px solid #15803d; padding: 10px; font-weight: 600; width: 58%;">${item.product}</td>
-          <td style="border: 1px solid #15803d; padding: 10px; text-align: center; color: #15803d; font-weight: bold; width: 30%;">${item.quantity}</td>
-        </tr>
-      `
-        )
-        .join('');
-
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>MARIGOLD PRODUCTION - DRENCHING SCHEDULE REPORT</title>
-          <style>
-            body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 25px; color: #111827; background-color: #fff; }
-            .header-banner { background: linear-gradient(135deg, #14532d 0%, #166534 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
-            .header-banner h1 { margin: 0; font-size: 26px; letter-spacing: 1px; color: #facc15; text-transform: uppercase; }
-            .header-banner h2 { margin: 6px 0 0 0; font-size: 18px; color: #fef08a; font-weight: 500; }
-            .meta-card { display: flex; justify-content: space-between; background: #f0fdf4; border: 2px solid #16a34a; padding: 14px 20px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
-            .meta-card div { font-weight: bold; color: #14532d; }
-            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            th { background-color: #15803d; color: white; padding: 12px; border: 1px solid #15803d; font-size: 14px; text-transform: uppercase; }
-            td { font-size: 13.5px; }
-            .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 10px; }
-          </style>
-        </head>
-        <body>
-          <div class="header-banner">
-            <h1>🌼 MARIGOLD PRODUCTION 🌼</h1>
-            <h2>(DRENCHING SCHEDULE)</h2>
-            <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9;">FarmsKing Agriculture Portal</p>
-          </div>
-
-          <div class="meta-card">
-            <div>👤 Name: <span style="color: #15803d;">${name || 'N/A'}</span></div>
-            <div>📏 Area: <span style="color: #15803d;">${area || 'N/A'}</span></div>
-            <div>🌱 Plants: <span style="color: #15803d;">${plants || 'N/A'}</span></div>
-          </div>
-
-          <table>
-            <thead>
-              <tr>
-                <th style="width: 12%;">Sr. No.</th>
-                <th style="width: 58%;">Product</th>
-                <th style="width: 30%;">Quantity</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rowsHtml}
-            </tbody>
-          </table>
-
-          <div class="footer">
-            <p>Generated via FarmsKing Platform • www.farmsking.in</p>
-          </div>
-          <script>
-            window.onload = function() {
-              window.print();
-            }
-          </script>
-        </body>
-        </html>
-      `;
-
-      printWindow.document.write(htmlContent);
-      printWindow.document.close();
-    } else {
-      Alert.alert(
-        'PDF Report Download',
-        `PDF Report Generated!\n\nName: ${name || 'N/A'}\nArea: ${area}\nPlants: ${plants}\nTotal Products: ${items.length}`
-      );
+    } catch (err: any) {
+      console.error('JPG capture error:', err);
+      Alert.alert('Download Failed', 'Could not generate JPG image report. Please try again.');
     }
   };
 
@@ -167,129 +108,118 @@ export default function SKEditableSchedulePage() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color="#FFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>🌼 Marigold Production Form (/sk)</Text>
+        <Text style={styles.headerTitle}>🌼 Marigold Schedule / गेंदे का ड्रेंचिंग शेड्यूल</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Title Banner */}
-        <View style={styles.bannerCard}>
-          <Text style={styles.bannerTitle}>MARIGOLD PRODUCTION</Text>
-          <Text style={styles.bannerSubtitle}>(DRENCHING SCHEDULE)</Text>
-        </View>
+        {/* Capturable Master Unified Report Card */}
+        <View ref={scheduleShotRef} collapsable={false} style={styles.masterReportCard}>
+          {/* Official Report Title Header with Official Logo */}
+          <View style={styles.reportHeaderBox}>
+            <Image source={FARMSKING_ICON} style={styles.logoIcon} resizeMode="contain" />
+            <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 4 }}>
+              <Text style={styles.reportMainTitle}>FARMSKING OFFICIAL DRENCHING REPORT</Text>
+              <Text style={styles.reportSubTitle}>MARIGOLD PRODUCTION (गेंदे का ड्रेंचिंग शेड्यूल)</Text>
+            </View>
+            <Image source={FARMSKING_LOGO} style={styles.logoBrand} resizeMode="contain" />
+          </View>
 
-        {/* Input Details Text Boxes: Name, Area, Plants */}
-        <View style={styles.inputCard}>
-          <Text style={styles.cardHeaderTitle}>✏️ Details (Editable Text Boxes)</Text>
+          {/* Farmer & Field Details Metadata Table */}
+          <View style={styles.metaTable}>
+            <View style={styles.metaRow}>
+              <View style={[styles.metaCell, { flex: 1.3 }]}>
+                <Text style={styles.metaLabel}>FARMER NAME / किसान</Text>
+                <TextInput
+                  style={styles.metaInput}
+                  placeholder="Enter Farmer Name"
+                  placeholderTextColor="#94A3B8"
+                  value={name}
+                  onChangeText={setName}
+                />
+              </View>
+              <View style={[styles.metaCell, { flex: 0.9, borderLeftWidth: 1, borderColor: '#CBD5E1' }]}>
+                <Text style={styles.metaLabel}>AREA / क्षेत्रफल</Text>
+                <TextInput
+                  style={styles.metaInput}
+                  placeholder="1 Acre"
+                  placeholderTextColor="#94A3B8"
+                  value={area}
+                  onChangeText={setArea}
+                />
+              </View>
+              <View style={[styles.metaCell, { flex: 0.9, borderLeftWidth: 1, borderColor: '#CBD5E1' }]}>
+                <Text style={styles.metaLabel}>PLANTS / पौधे</Text>
+                <TextInput
+                  style={styles.metaInput}
+                  placeholder="10,000"
+                  placeholderTextColor="#94A3B8"
+                  value={plants}
+                  onChangeText={setPlants}
+                />
+              </View>
+            </View>
+          </View>
 
-          <View style={styles.inputStack}>
-            {/* Name Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>👤 Name</Text>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Enter Name"
-                placeholderTextColor="#9CA3AF"
-                value={name}
-                onChangeText={setName}
-              />
+          {/* Main Drenching Schedule Grid Table */}
+          <View style={styles.scheduleGridTable}>
+            {/* Table Header Row */}
+            <View style={styles.gridHeaderRow}>
+              <Text style={[styles.gridTh, { flex: 0.7, textAlign: 'center' }]}>SR.</Text>
+              <Text style={[styles.gridTh, { flex: 3.3, borderLeftWidth: 1, borderColor: '#166534', paddingLeft: 8 }]}>PRODUCT NAME / उत्पाद</Text>
+              <Text style={[styles.gridTh, { flex: 1.5, textAlign: 'center', borderLeftWidth: 1, borderColor: '#166534' }]}>QTY / मात्रा</Text>
             </View>
 
-            {/* Area Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>📏 Area</Text>
-              <TextInput
-                style={styles.textInput}
-                placeholder="e.g. 1 Acre"
-                placeholderTextColor="#9CA3AF"
-                value={area}
-                onChangeText={setArea}
-              />
-            </View>
+            {/* Table Data Rows */}
+            {items.map((item, index) => (
+              <View
+                key={item.srNo}
+                style={[
+                  styles.gridDataRow,
+                  { backgroundColor: index % 2 === 0 ? '#FFFFFF' : '#F0FDF4' },
+                ]}
+              >
+                {/* Sr. No */}
+                <Text style={styles.srCellText}>{item.srNo}</Text>
 
-            {/* Plants Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>🌱 Plants</Text>
-              <TextInput
-                style={styles.textInput}
-                placeholder="e.g. 10,000 Plants"
-                placeholderTextColor="#9CA3AF"
-                value={plants}
-                onChangeText={setPlants}
-              />
-            </View>
+                {/* Product Name Input */}
+                <View style={styles.productCellContainer}>
+                  <TextInput
+                    style={styles.productInputText}
+                    value={item.product}
+                    onChangeText={(val) => updateItemProduct(index, val)}
+                    placeholder="Enter Product / उत्पाद नाम"
+                    placeholderTextColor="#A1A1AA"
+                    multiline={true}
+                    scrollEnabled={false}
+                  />
+                </View>
+
+                {/* Quantity Input */}
+                <View style={styles.qtyCellContainer}>
+                  <TextInput
+                    style={styles.qtyInputText}
+                    value={item.quantity}
+                    onChangeText={(val) => updateItemQty(index, val)}
+                    placeholder="Qty"
+                    placeholderTextColor="#A1A1AA"
+                  />
+                </View>
+              </View>
+            ))}
+          </View>
+
+          {/* Report Stamp & Footer Badge */}
+          <View style={styles.reportFooter}>
+            <Image source={FARMSKING_ICON} style={{ width: 14, height: 14, marginRight: 6 }} resizeMode="contain" />
+            <Text style={styles.footerText}>FARMSKING AGRICULTURAL ADVISORY • OFFICIAL REPORT</Text>
           </View>
         </View>
 
-        {/* Schedule Table (Price Removed) */}
-        <View style={styles.tableCard}>
-          {/* Table Header */}
-          <View style={styles.tableHeader}>
-            <Text style={[styles.thText, { flex: 0.8, textAlign: 'center' }]}>Sr. No.</Text>
-            <Text style={[styles.thText, { flex: 3.2 }]}>Product</Text>
-            <Text style={[styles.thText, { flex: 1.8, textAlign: 'center' }]}>Quantity</Text>
-            <Text style={[styles.thText, { flex: 0.6, textAlign: 'center' }]}>Action</Text>
-          </View>
-
-          {/* Table Rows */}
-          {items.map((item, index) => (
-            <View
-              key={item.id}
-              style={[
-                styles.tableRow,
-                { backgroundColor: index % 2 === 0 ? '#111827' : '#1F2937' },
-              ]}
-            >
-              {/* Sr No */}
-              <View style={{ flex: 0.8, paddingHorizontal: 2 }}>
-                <TextInput
-                  style={[styles.cellInput, { textAlign: 'center', fontWeight: '800' }]}
-                  value={item.srNo}
-                  onChangeText={(val) => updateItemField(index, 'srNo', val)}
-                />
-              </View>
-
-              {/* Product Name */}
-              <View style={{ flex: 3.2, paddingHorizontal: 4 }}>
-                <TextInput
-                  style={[styles.cellInput, { textAlign: 'left', fontWeight: '600' }]}
-                  value={item.product}
-                  onChangeText={(val) => updateItemField(index, 'product', val)}
-                  placeholder="Product Name"
-                  placeholderTextColor="#6B7280"
-                />
-              </View>
-
-              {/* Quantity */}
-              <View style={{ flex: 1.8, paddingHorizontal: 4 }}>
-                <TextInput
-                  style={styles.cellInput}
-                  value={item.quantity}
-                  onChangeText={(val) => updateItemField(index, 'quantity', val)}
-                  placeholder="Quantity"
-                  placeholderTextColor="#6B7280"
-                />
-              </View>
-
-              {/* Remove Row */}
-              <TouchableOpacity style={{ flex: 0.6, alignItems: 'center' }} onPress={() => removeRow(index)}>
-                <Ionicons name="trash-outline" size={18} color="#EF4444" />
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
-
-        {/* Action Buttons: Add Row & Download PDF Report */}
-        <View style={{ gap: 12, marginBottom: 24 }}>
-          <TouchableOpacity style={styles.addRowBtn} onPress={addNewRow}>
-            <Ionicons name="add-circle-outline" size={20} color="#FFF" />
-            <Text style={styles.addRowBtnText}>+ Add New Row</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.pdfBtn} onPress={handleDownloadPDF} activeOpacity={0.85}>
-            <MaterialCommunityIcons name="file-pdf-box" size={24} color="#FFF" />
-            <Text style={styles.pdfBtnText}>📥 PDF REPORT DOWNLOAD</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Download JPG Report Button */}
+        <TouchableOpacity style={styles.jpgBtn} onPress={handleDownloadJPG} activeOpacity={0.85}>
+          <Ionicons name="image-outline" size={22} color="#FFF" />
+          <Text style={styles.jpgBtnText}>🖼️ DOWNLOAD REPORT JPG / ਡਾਊਨਲੋਡ ਕਰੋ</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -298,159 +228,196 @@ export default function SKEditableSchedulePage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B0F17',
+    backgroundColor: '#F1F5F9',
   },
   header: {
-    backgroundColor: '#064E3B',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    backgroundColor: '#15803D',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
+    elevation: 3,
   },
   backBtn: {
-    padding: 4,
+    padding: 2,
   },
   headerTitle: {
-    color: '#FFF',
-    fontSize: 17,
+    color: '#FFFFFF',
+    fontSize: 15,
     fontWeight: '800',
+    flex: 1,
   },
   scrollContent: {
-    padding: 14,
-    paddingBottom: 40,
+    padding: 8,
+    paddingBottom: 28,
   },
-  bannerCard: {
-    backgroundColor: '#064E3B',
-    borderRadius: 12,
-    padding: 14,
+  masterReportCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#15803D',
+    padding: 8,
+    elevation: 3,
+  },
+  reportHeaderBox: {
+    backgroundColor: '#15803D',
+    borderRadius: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 14,
-    borderWidth: 1.5,
-    borderColor: '#10B981',
+    justifyContent: 'space-between',
+    marginBottom: 8,
   },
-  bannerTitle: {
-    color: '#FBBF24',
-    fontSize: 20,
+  logoIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 4,
+  },
+  logoBrand: {
+    width: 60,
+    height: 28,
+  },
+  reportMainTitle: {
+    color: '#FEF08A',
+    fontSize: 13.5,
     fontWeight: '900',
     letterSpacing: 0.5,
     textAlign: 'center',
   },
-  bannerSubtitle: {
-    color: '#A7F3D0',
-    fontSize: 14,
+  reportSubTitle: {
+    color: '#FFFFFF',
+    fontSize: 10.5,
     fontWeight: '800',
-    marginTop: 4,
+    marginTop: 2,
     textAlign: 'center',
   },
-  inputCard: {
-    backgroundColor: '#111827',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 14,
+  metaTable: {
     borderWidth: 1,
-    borderColor: '#374151',
-  },
-  cardHeaderTitle: {
-    color: '#10B981',
-    fontSize: 14,
-    fontWeight: '800',
-    marginBottom: 12,
-  },
-  inputStack: {
-    flexDirection: Platform.OS === 'web' ? 'row' : 'column',
-    gap: 10,
-  },
-  inputGroup: {
-    flex: 1,
-  },
-  inputLabel: {
-    color: '#D1D5DB',
-    fontSize: 12,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  textInput: {
-    backgroundColor: '#1F2937',
-    borderWidth: 1,
-    borderColor: '#374151',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    color: '#FFF',
-    fontSize: 13.5,
-    fontWeight: '600',
-  },
-  tableCard: {
-    backgroundColor: '#111827',
-    borderRadius: 12,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#10B981',
-    marginBottom: 16,
-  },
-  tableHeader: {
-    backgroundColor: '#065F46',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 11,
-    paddingHorizontal: 12,
-  },
-  thText: {
-    color: '#FFF',
-    fontSize: 13.5,
-    fontWeight: '800',
-  },
-  tableRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 7,
-    paddingHorizontal: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1F2937',
-  },
-  cellInput: {
-    backgroundColor: '#0F172A',
-    borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: '#CBD5E1',
     borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    color: '#34D399',
-    fontSize: 12.5,
-    fontWeight: '700',
+    backgroundColor: '#F8FAFC',
+    marginBottom: 8,
+    overflow: 'hidden',
   },
-  addRowBtn: {
-    backgroundColor: '#1E40AF',
-    borderRadius: 10,
-    paddingVertical: 12,
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  metaCell: {
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+  },
+  metaLabel: {
+    color: '#15803D',
+    fontSize: 9.5,
+    fontWeight: '800',
+    marginBottom: 2,
+  },
+  metaInput: {
+    color: '#0F172A',
+    fontSize: 11.5,
+    fontWeight: '700',
+    padding: 0,
+    margin: 0,
+  },
+  scheduleGridTable: {
+    borderWidth: 1.5,
+    borderColor: '#15803D',
+    borderRadius: 6,
+    overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
+  },
+  gridHeaderRow: {
+    backgroundColor: '#15803D',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+  },
+  gridTh: {
+    color: '#FFFFFF',
+    fontSize: 11.5,
+    fontWeight: '800',
+  },
+  gridDataRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    minHeight: 28,
+  },
+  srCellText: {
+    flex: 0.7,
+    color: '#0F172A',
+    fontSize: 11,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  productCellContainer: {
+    flex: 3.3,
+    borderLeftWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    justifyContent: 'center',
+  },
+  productInputText: {
+    color: '#0F172A',
+    fontSize: 11.5,
+    fontWeight: '600',
+    padding: 0,
+    margin: 0,
+  },
+  qtyCellContainer: {
+    flex: 1.5,
+    borderLeftWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 4,
+    paddingVertical: 3,
+    justifyContent: 'center',
+  },
+  qtyInputText: {
+    color: '#15803D',
+    fontSize: 11.5,
+    fontWeight: '800',
+    textAlign: 'center',
+    padding: 0,
+    margin: 0,
+  },
+  reportFooter: {
+    marginTop: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    backgroundColor: '#F0FDF4',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
   },
-  addRowBtnText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: '700',
+  footerText: {
+    color: '#166534',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.4,
   },
-  pdfBtn: {
-    backgroundColor: '#059669',
-    borderRadius: 10,
-    paddingVertical: 14,
+  jpgBtn: {
+    backgroundColor: '#16A34A',
+    borderRadius: 8,
+    paddingVertical: 11,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    shadowColor: '#10B981',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
+    marginTop: 10,
+    elevation: 3,
   },
-  pdfBtnText: {
-    color: '#FFF',
-    fontSize: 15,
+  jpgBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '900',
     letterSpacing: 0.5,
   },

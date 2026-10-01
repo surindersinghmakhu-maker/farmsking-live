@@ -132,17 +132,20 @@ export default function DosePage() {
           {/* Farmer & Field Details Metadata Table */}
           <View style={styles.metaTable}>
             <View style={styles.metaRow}>
-              <View style={[styles.metaCell, { flex: 1.3 }]}>
+              {/* Farmer Name */}
+              <View style={[styles.metaCell, { flex: 1.4 }]}>
                 <Text style={styles.metaLabel}>FARMER NAME / किसान</Text>
                 <TextInput
                   style={styles.metaInput}
-                  placeholder="Enter Farmer Name"
+                  placeholder="Enter Name / ਨਾਮ ਦਰਜ ਕਰੋ"
                   placeholderTextColor="#94A3B8"
                   value={farmerName}
                   onChangeText={setFarmerName}
                 />
               </View>
-              <View style={[styles.metaCell, { flex: 0.9, borderLeftWidth: 1, borderColor: '#CBD5E1' }]}>
+
+              {/* Area */}
+              <View style={[styles.metaCell, { flex: 1, borderLeftWidth: 1, borderColor: '#CBD5E1' }]}>
                 <Text style={styles.metaLabel}>AREA / क्षेत्रफल</Text>
                 <TextInput
                   style={styles.metaInput}
@@ -152,7 +155,9 @@ export default function DosePage() {
                   onChangeText={setArea}
                 />
               </View>
-              <View style={[styles.metaCell, { flex: 0.9, borderLeftWidth: 1, borderColor: '#CBD5E1' }]}>
+
+              {/* Plants */}
+              <View style={[styles.metaCell, { flex: 1, borderLeftWidth: 1, borderColor: '#CBD5E1' }]}>
                 <Text style={styles.metaLabel}>PLANTS / पौधे</Text>
                 <TextInput
                   style={styles.metaInput}
@@ -211,6 +216,14 @@ export default function DosePage() {
                 </View>
               </View>
             ))}
+          </View>
+
+          {/* Highlighted Advised By Badge */}
+          <View style={styles.advisorHighlightBox}>
+            <Ionicons name="shield-checkmark" size={16} color="#B45309" />
+            <Text style={styles.advisorHighlightText}>
+              👨‍🌾 Advised By / ਸਲਾਹਕਾਰ: <Text style={{ fontWeight: '900', color: '#15803D' }}>Sudhir Kumar Mahato</Text>
+            </Text>
           </View>
 
           {/* Report Stamp & Footer Badge */}
@@ -311,8 +324,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   metaCell: {
-    paddingHorizontal: 6,
-    paddingVertical: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
   },
   metaLabel: {
     color: '#15803D',
@@ -322,7 +335,7 @@ const styles = StyleSheet.create({
   },
   metaInput: {
     color: '#0F172A',
-    fontSize: 11.5,
+    fontSize: 12,
     fontWeight: '700',
     padding: 0,
     margin: 0,
@@ -393,8 +406,28 @@ const styles = StyleSheet.create({
     margin: 0,
     minHeight: 24,
   },
-  reportFooter: {
+  advisorHighlightBox: {
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1.5,
+    borderColor: '#F59E0B',
+    borderRadius: 6,
+    paddingVertical: 7,
+    paddingHorizontal: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
     marginTop: 8,
+    marginBottom: 4,
+  },
+  advisorHighlightText: {
+    color: '#78350F',
+    fontSize: 12,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  reportFooter: {
+    marginTop: 4,
     paddingVertical: 4,
     paddingHorizontal: 8,
     backgroundColor: '#F0FDF4',

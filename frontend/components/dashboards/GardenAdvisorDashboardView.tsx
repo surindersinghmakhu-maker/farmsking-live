@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 15.5, fontFamily: FONT.bold, color: '#0f172a', letterSpacing: -0.1 },
   viewAllText: { fontSize: 12.5, fontFamily: FONT.bold },
   taskItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  checkbox: { width: 20, height: 20, borderRadius: 5, borderWidth: 1.8, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+  checkbox: { width: 20, height: 20, borderRadius: 5, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
   taskIconBg: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   taskInfo: { flex: 1, marginLeft: 10 },
   taskTitle: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },

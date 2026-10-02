@@ -6,6 +6,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthUser } from '../../common/types/auth-user.type';
 import { GardenerPlansService } from './gardener-plans.service';
+import { GardenerSubscriptionPlan } from '@prisma/client';
 import { CreateGardenerPlanCouponDto } from './dto/create-gardener-plan-coupon.dto';
 import { RedeemGardenerPlanCouponDto } from './dto/redeem-gardener-plan-coupon.dto';
 
@@ -18,6 +19,18 @@ export class GardenerPlansController {
   @Get('my-plan')
   getMyPlan(@CurrentUser() user: AuthUser) {
     return this.gardenerPlansService.getMyPlan(user);
+  }
+
+  @Roles(Role.GARDENER)
+  @Post('buy')
+  initiatePayment(@CurrentUser() user: AuthUser, @Body('plan') plan: GardenerSubscriptionPlan) {
+    return this.gardenerPlansService.initiatePayment(user, plan);
+  }
+
+  @Roles(Role.GARDENER)
+  @Post('trial')
+  activateVipTrial(@CurrentUser() user: AuthUser) {
+    return this.gardenerPlansService.activateVipTrial(user);
   }
 
   @Roles(Role.GARDENER)

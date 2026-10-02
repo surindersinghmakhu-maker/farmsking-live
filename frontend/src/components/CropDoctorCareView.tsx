@@ -256,7 +256,7 @@ export function CropDoctorCareView() {
   const handleHire = () => {
     tap();
     if (!advisorIncluded) {
-      setIsUpgradeModalOpen(true);
+      setIsCropCareModalOpen(true);
     }
   };
 
@@ -379,10 +379,10 @@ export function CropDoctorCareView() {
             <TouchableOpacity style={[styles.hireBtnWrap, { flex: 1 }]} activeOpacity={0.85} onPress={handleHire}>
               <LinearGradient colors={theme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.hireBtn}>
                 <Ionicons name="person-add" size={18} color="#fff" />
-                <Text style={styles.hireBtnText}>Upgrade to PRO</Text>
+                <Text style={styles.hireBtnText}>Hire Doctor/Advisor</Text>
               </LinearGradient>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.hireBtnWrap, { flex: 1 }]} activeOpacity={0.85} onPress={() => setIsUpgradeModalOpen(true)}>
+            <TouchableOpacity style={[styles.hireBtnWrap, { flex: 1 }]} activeOpacity={0.85} onPress={() => setIsCropCareModalOpen(true)}>
               <View style={[styles.hireBtn, { backgroundColor: '#25D366' }]}>
                 <Ionicons name="qr-code-outline" size={18} color="#fff" />
                 <Text style={styles.hireBtnText}>Get Plan Coupon</Text>
@@ -652,6 +652,71 @@ export function CropDoctorCareView() {
                 </View>
               </View>
               <Ionicons name="chevron-forward" size={18} color="#16a34a" />
+            </TouchableOpacity>
+
+            {/* Agri Doctor Video Call Button (Disabled) */}
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                backgroundColor: '#f1f5f9',
+                borderWidth: 1.5,
+                borderColor: '#cbd5e1',
+                borderRadius: RADIUS.lg,
+                padding: 12,
+                marginTop: 10,
+                opacity: 0.7,
+              }}
+              activeOpacity={1}
+              disabled={true}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="videocam" size={20} color="#64748b" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: '#475569' }}>Agri Doctor Call</Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 }}>
+                    1-Tap Video Consultation (Coming Soon)
+                  </Text>
+                </View>
+              </View>
+              <Ionicons name="lock-closed" size={16} color="#94a3b8" />
+            </TouchableOpacity>
+
+            {/* Dose Schedule Button */}
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                backgroundColor: '#fffbeb',
+                borderWidth: 1.5,
+                borderColor: '#fde68a',
+                borderRadius: RADIUS.lg,
+                padding: 12,
+                marginTop: 10,
+                ...premiumShadow('#d97706', 'sm'),
+              }}
+              activeOpacity={0.88}
+              onPress={() => {
+                tap();
+                router.push('/dose');
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#fef3c7', alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="flask" size={20} color="#d97706" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: '#b45309' }}>Dose Schedule</Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#d97706', marginTop: 1 }}>
+                    View your active crop care schedules
+                  </Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#d97706" />
             </TouchableOpacity>
           </View>
 

@@ -18,10 +18,10 @@ const theme = RoleThemes.FARMER;
 
 const PLAN_RANK: Record<FarmerPlanType, number> = { FREE: 0, PRO: 1, SMART: 2, SUPER: 3, SILVER: 1, GOLD: 2, ROYAL: 3 };
 const PLAN_COLUMN_META: Record<FarmerPlanType, { label: string; emoji: string; color: string; price: string }> = {
-  FREE: { label: 'Free Membership', emoji: '🌱', color: '#166534', price: '₹0' },
-  PRO: { label: 'Basic', emoji: '⚡', color: '#0284c7', price: '₹199/yr' },
-  SMART: { label: 'Pro', emoji: '👑', color: '#1d4ed8', price: '₹499/yr' },
-  SUPER: { label: 'VIP', emoji: '👑', color: '#b45309', price: '₹999/30d' },
+  FREE: { label: 'Free Pass', emoji: '🌱', color: '#166534', price: '₹0' },
+  PRO: { label: 'Kisan Card', emoji: '🌾', color: '#0284c7', price: '₹199/yr' },
+  SMART: { label: 'Boss Card', emoji: '👷', color: '#1d4ed8', price: '₹499/yr' },
+  SUPER: { label: 'Farmer VIP Card', emoji: '👑', color: '#b45309', price: '₹999/30d' },
   SILVER: { label: 'Crop Advisor', emoji: '🩺', color: '#64748b', price: '₹999/yr' },
   GOLD: { label: 'Crop Doctor', emoji: '🌾', color: '#d97706', price: '₹1999/yr' },
   ROYAL: { label: 'Crop Doctor VIP', emoji: '👑', color: '#7c3aed', price: '₹3499/yr' },
@@ -365,7 +365,7 @@ export function FarmerPlanUpgradeModal({
       setPlanCategory('FARMER');
       setSelectedOptionId('FARMER_SUPER');
     }
-    const activeVariants = pricingList.filter((it) => it.plan === plan && it.isActive !== false);
+    const activeVariants = pricingList.filter((it: FarmerPlanPricing) => it.plan === plan && it.isActive !== false);
     if (activeVariants.length > 0 && !selectedDaysMap[plan]) {
       setSelectedDaysMap((prev) => ({ ...prev, [plan]: Number(activeVariants[0].billingPeriodDays) }));
     }
@@ -415,7 +415,7 @@ export function FarmerPlanUpgradeModal({
             <View style={{ flex: 1, gap: 4 }}>
               <View style={styles.highlightVipLabelWrap}>
                 <Ionicons name="sparkles" size={13} color="#f59e0b" />
-                <Text style={styles.highlightVipLabelText}>FARMSKING MEMBERSHIP</Text>
+                <Text style={styles.highlightVipLabelText}>FARMSKING VIP PASS SCHEME</Text>
               </View>
               {tabMode === 'REDEEM_CODE' ? (
                 <Text style={styles.headerTitleText}>Redeem Coupon Code 🎟️</Text>
@@ -432,8 +432,8 @@ export function FarmerPlanUpgradeModal({
               billingPeriodDays={
                 selectedDaysMap[pickedPlan] ?? (
                   pricingList
-                    .filter((it) => it.plan === pickedPlan && it.isActive !== false)
-                    .sort((a, b) => Number(a.billingPeriodDays) - Number(b.billingPeriodDays))[0]?.billingPeriodDays
+                    .filter((it: FarmerPlanPricing) => it.plan === pickedPlan && it.isActive !== false)
+                    .sort((a: FarmerPlanPricing, b: FarmerPlanPricing) => Number(a.billingPeriodDays) - Number(b.billingPeriodDays))[0]?.billingPeriodDays
                 )
               }
               onDone={closeAndReset}
@@ -452,7 +452,7 @@ export function FarmerPlanUpgradeModal({
               <View style={styles.successBox}>
                 <Ionicons name="checkmark-circle" size={20} color="#16a34a" />
                 <Text style={styles.successText}>
-                  {result.plan.plan} membership active! New expiry: {new Date(result.newEndDate).toLocaleDateString('en-IN')}
+                  {result.plan.plan} VIP Pass active! New expiry: {new Date(result.newEndDate).toLocaleDateString('en-IN')}
                   {result.advisorHired ? ' A Farm Advisor has been assigned to you.' : ''}
                   {selectedAdvisorId ? ' Your hire request has been sent to the selected advisor.' : ''}
                 </Text>
@@ -466,7 +466,7 @@ export function FarmerPlanUpgradeModal({
               <View style={styles.successBox}>
                 <Ionicons name="pricetag" size={20} color="#16a34a" />
                 <Text style={styles.successText}>
-                  This code activates the {previewResult.plan} membership for {previewResult.daysGranted} day(s). New expiry:{' '}
+                  This code activates the {previewResult.plan} VIP Pass for {previewResult.daysGranted} day(s). New expiry:{' '}
                   {new Date(previewResult.newEndDate).toLocaleDateString('en-IN')}.
                   {previewResult.includesAdvisor ? ' Includes a Farm Advisor.' : ''}
                 </Text>
@@ -534,59 +534,26 @@ export function FarmerPlanUpgradeModal({
               </TouchableOpacity>
             </ScrollView>
           ) : tabMode === 'GET_COUPON' ? (
-            /* GET MEMBERSHIP COUPON FLOW: Category + Sub-category Plan Selection + Generate UPI QR Code */
+            /* GET VIP PASS COUPON FLOW: Generate UPI QR Code */
             <View style={{ gap: 10 }}>
-              <Text style={styles.label}>Select Membership Category:</Text>
-              <View style={styles.chipRow}>
-                {(['FARMER', 'ADVISOR'] as const).map((cat) => (
-                  <TouchableOpacity
-                    key={cat}
-                    style={[
-                      styles.partnerChip,
-                      planCategory === cat && { backgroundColor: theme.primary, borderColor: theme.primary },
-                    ]}
-                    onPress={() => {
-                      setPlanCategory(cat);
-                      if (cat === 'FARMER') {
-                        setSelectedOptionId('FARMER_LITE');
-                        setPickedPlan('PRO');
-                      } else {
-                        setSelectedOptionId('ADVISOR_SMART');
-                        setPickedPlan('SMART');
-                      }
-                    }}
-                  >
-                    <Text style={[styles.partnerChipText, planCategory === cat && { color: '#ffffff' }]}>
-                      {cat === 'FARMER' ? '🎫 FarmsKing Membership' : '🩺 Hire Doctor'}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <Text style={styles.label}>👑 SELECT FARMSKING MEMBERSHIP PLAN</Text>
+              <Text style={styles.label}>👑 SELECT FARMSKING VIP PASS SCHEME</Text>
               <View style={{ gap: 8 }}>
-                {(planCategory === 'FARMER'
-                  ? [
-                      { id: 'FARMER_BASIC', key: 'PRO', label: '⚡ Basic Membership', iconName: 'flash', color: '#0284c7', sub: 'Bookkeeping & Expense Logs + Voice AI Mic 🧾' },
-                      { id: 'FARMER_PRO', key: 'SMART', label: '👑 Pro Membership 🚀', iconName: 'sparkles', color: '#1d4ed8', sub: 'All Bookkeeping + Labour Record & Worker Login 👥 🚀' },
-                      { id: 'FARMER_SUPER', key: 'SUPER', label: '👑 VIP Membership 💎', iconName: 'shield-checkmark', color: '#b45309', sub: 'Unlimited Crops, Mandi AI & Supervisor Sub-Accounts Delegation 🛡️' },
-                      ...(isTrialEligible ? [{ id: 'FARMER_FREE', key: 'FREE', label: '🌱 Free Membership Trial 🎁', iconName: 'leaf', color: '#166534', sub: `Full ${freeTrialPlan} Plan Access (${freeTrialDays}-Day Free Demo Trial) 🎁` }] : []),
-                    ]
-                  : [
-                      { id: 'CARE_SILVER', key: 'SILVER', label: 'Crop Advisor 🩺', iconName: 'medical', color: '#64748b', sub: '5 Crops Supervision + Soil Health & Leaf Scan 🌿' },
-                      { id: 'CARE_GOLD', key: 'GOLD', label: 'Crop Doctor 🏆', iconName: 'ribbon', color: '#d97706', sub: '5 Crops Priority Doctor Care + Advisor Chat & Call Requests 📞' },
-                      { id: 'CARE_ROYAL', key: 'ROYAL', label: 'Crop Doctor VIP 👑', iconName: 'shield-checkmark', color: '#7c3aed', sub: '10 Crops Full Senior Doctor Supervision & Custom Spray Schedule 💊' },
+                {([
+                      { id: 'FARMER_BASIC', key: 'PRO', label: '🌾 Kisan Card', iconName: 'flash', color: '#0284c7', sub: 'Bookkeeping & Expense Logs + Voice AI Mic 🧾' },
+                      { id: 'FARMER_PRO', key: 'SMART', label: '👷 Boss Card 🚀', iconName: 'sparkles', color: '#1d4ed8', sub: 'All Bookkeeping + Labour Record & Worker Login 👥 🚀' },
+                      { id: 'FARMER_SUPER', key: 'SUPER', label: '👑 Farmer VIP Card 💎', iconName: 'shield-checkmark', color: '#b45309', sub: 'Unlimited Crops, Mandi AI & Supervisor Sub-Accounts Delegation 🛡️' },
+                      ...(isTrialEligible ? [{ id: 'FARMER_FREE', key: 'FREE', label: '🌱 Free VIP Pass Trial 🎁', iconName: 'leaf', color: '#166534', sub: `Full ${freeTrialPlan} Plan Access (${freeTrialDays}-Day Free Demo Trial) 🎁` }] : []),
                     ]
                 ).map((item) => {
                   const p = item.key as FarmerPlanType;
                   const availableVariants = pricingList
-                    .filter((it) => it.plan === p && it.isActive !== false)
-                    .sort((a, b) => Number(a.billingPeriodDays) - Number(b.billingPeriodDays));
+                    .filter((it: FarmerPlanPricing) => it.plan === p && it.isActive !== false)
+                    .sort((a: FarmerPlanPricing, b: FarmerPlanPricing) => Number(a.billingPeriodDays) - Number(b.billingPeriodDays));
                   
                   const selectedDays = selectedDaysMap[item.id];
                   const currentVariant =
                     (selectedDays != null
-                      ? availableVariants.find((v) => Number(v.billingPeriodDays) === Number(selectedDays))
+                      ? availableVariants.find((v: FarmerPlanPricing) => Number(v.billingPeriodDays) === Number(selectedDays))
                       : null) ||
                     availableVariants[0] ||
                     { price: p === 'FREE' ? '0' : p === 'SUPER' ? '999' : p === 'SMART' ? '499' : '299', billingPeriodDays: planCategory === 'FARMER' ? 365 : 30 };
@@ -595,7 +562,7 @@ export function FarmerPlanUpgradeModal({
 
                   return (
                     <TouchableOpacity
-                      key={`${planCategory}-${item.id}`}
+                      key={`FARMER-${item.id}`}
                       style={[
                         styles.advisorPickRow,
                         isSelected && { borderColor: item.color, backgroundColor: '#f5f3ff' },
@@ -663,7 +630,7 @@ export function FarmerPlanUpgradeModal({
                         {/* Duration Variant Selector Chips */}
                         {availableVariants.length > 1 ? (
                           <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
-                            {availableVariants.map((v) => {
+                            {availableVariants.map((v: FarmerPlanPricing) => {
                               const isDurSelected = isSelected && Number(currentVariant.billingPeriodDays) === Number(v.billingPeriodDays);
                               return (
                                 <TouchableOpacity
@@ -714,25 +681,25 @@ export function FarmerPlanUpgradeModal({
               >
                   <Ionicons name="qr-code-outline" size={18} color="#ffffff" />
                   <Text style={styles.submitBtnText}>
-                    Activate Membership via UPI ⚡ — {
+                    Activate VIP Pass via UPI ⚡ — {
                       (() => {
                         const allOpts = [
-                          { id: 'FARMER_FREE', label: 'Free Membership 🎁', key: 'FREE' },
-                          { id: 'FARMER_BASIC', label: 'Basic Plan ⚡', key: 'PRO' },
-                          { id: 'FARMER_PRO', label: 'Pro Plan 🚀', key: 'SMART' },
-                          { id: 'FARMER_SUPER', label: 'VIP Membership 👑', key: 'SUPER' },
+                          { id: 'FARMER_FREE', label: 'Free VIP Pass 🎁', key: 'FREE' },
+                          { id: 'FARMER_BASIC', label: 'Kisan Card 🌾', key: 'PRO' },
+                          { id: 'FARMER_PRO', label: 'Boss Card 👷', key: 'SMART' },
+                          { id: 'FARMER_SUPER', label: 'Farmer VIP Card 👑', key: 'SUPER' },
                           { id: 'CARE_SILVER', label: 'Crop Advisor 🩺', key: 'SILVER' },
                           { id: 'CARE_GOLD', label: 'Crop Doctor 🏆', key: 'GOLD' },
                           { id: 'CARE_ROYAL', label: 'Crop Doctor VIP 👑', key: 'ROYAL' },
                         ];
                         const selOpt = allOpts.find((o) => o.id === selectedOptionId) || allOpts[0];
                         const availableVariants = pricingList
-                          .filter((it) => it.plan === selOpt.key && it.isActive !== false)
-                          .sort((a, b) => Number(a.billingPeriodDays) - Number(b.billingPeriodDays));
+                          .filter((it: FarmerPlanPricing) => it.plan === selOpt.key && it.isActive !== false)
+                          .sort((a: FarmerPlanPricing, b: FarmerPlanPricing) => Number(a.billingPeriodDays) - Number(b.billingPeriodDays));
                         const selectedDays = selectedDaysMap[selOpt.id];
                         const currentVariant =
                           (selectedDays != null
-                            ? availableVariants.find((v) => Number(v.billingPeriodDays) === Number(selectedDays))
+                            ? availableVariants.find((v: FarmerPlanPricing) => Number(v.billingPeriodDays) === Number(selectedDays))
                             : null) ||
                           availableVariants[0] ||
                           { price: selOpt.key === 'SUPER' ? '999' : selOpt.key === 'SMART' ? '499' : '299' };
@@ -751,7 +718,7 @@ export function FarmerPlanUpgradeModal({
           ) : (
             /* REDEEM CODE / UPGRADE MEMBERSHIP FLOW: Enter Coupon Code */
             <View style={{ gap: 12 }}>
-              <Text style={styles.label}>Enter your membership coupon code to upgrade or extend your membership:</Text>
+              <Text style={styles.label}>Enter your VIP Pass coupon code to upgrade or extend your VIP Pass:</Text>
 
               <TextInput
                 ref={codeInputRef}
@@ -769,12 +736,12 @@ export function FarmerPlanUpgradeModal({
 
               <TouchableOpacity style={styles.seePlansBtn} onPress={() => setTabMode('GET_COUPON')}>
                 <Ionicons name="qr-code-outline" size={14} color={theme.primary} />
-                <Text style={styles.seePlansBtnText}>Don't have a coupon code? Get Membership Coupon via UPI</Text>
+                <Text style={styles.seePlansBtnText}>Don't have a coupon code? Get VIP Pass Coupon via UPI</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.seePlansBtn} onPress={() => setShowChart((v) => !v)}>
                 <Ionicons name="stats-chart-outline" size={14} color={theme.primary} />
-                <Text style={styles.seePlansBtnText}>{showChart ? 'Hide Membership Features' : 'Compare Membership Features'}</Text>
+                <Text style={styles.seePlansBtnText}>{showChart ? 'Hide VIP Pass Features' : 'Compare VIP Pass Features'}</Text>
                 <Ionicons name={showChart ? 'chevron-up' : 'chevron-down'} size={14} color={theme.primary} />
               </TouchableOpacity>
 
@@ -838,7 +805,7 @@ function UpiUpgradeFlow({
   }, [plan, billingPeriodDays]);
 
   const handleOpenUpiApp = async () => {
-    if (!request) return;
+    if (!request || !request.upiLink) return;
     try {
       await Linking.openURL(request.upiLink);
     } catch {
@@ -951,7 +918,7 @@ function UpiUpgradeFlow({
         </Text>
 
         <View style={styles.qrBox}>
-          <QRCode value={request.upiLink} size={160} />
+          <QRCode value={request.upiLink || 'upi://pay'} size={160} />
         </View>
 
         <View style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.md, alignItems: 'center', gap: 2, width: '100%' }}>

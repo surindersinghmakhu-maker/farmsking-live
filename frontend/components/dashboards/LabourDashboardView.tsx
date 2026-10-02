@@ -458,8 +458,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: RADIUS.lg,
     padding: 12,
-    borderWidth: 1,
-    borderColor: '#fed7aa',
   },
   farmerPhoto: {
     width: 46,
@@ -613,8 +611,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: RADIUS.lg,
     padding: 10,
-    borderWidth: 1.5,
-    borderColor: '#fed7aa',
   },
   switcherHeaderTitle: {
     fontSize: 12.5,
@@ -631,8 +627,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     backgroundColor: '#f8fafc',
-    borderWidth: 1.5,
-    borderColor: '#cbd5e1',
     borderRadius: RADIUS.md,
     paddingHorizontal: 10,
     paddingVertical: 8,
@@ -640,7 +634,6 @@ const styles = StyleSheet.create({
   },
   profilePillCardActive: {
     backgroundColor: '#ea580c',
-    borderColor: '#c2410c',
   },
   profilePillName: {
     fontSize: 13,

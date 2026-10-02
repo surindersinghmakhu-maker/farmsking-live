@@ -93,9 +93,15 @@ export class AppSettingsService {
       partnerOfferNewUserBonus: (settings as any).partnerOfferNewUserBonus ?? 20,
       partnerOfferPaidPlanBonus: (settings as any).partnerOfferPaidPlanBonus ?? 100,
       storefrontMaintenanceMode: (settings as any).storefrontMaintenanceMode ?? false,
+      agriMaintenanceMode: (settings as any).agriMaintenanceMode ?? false,
+      gardenMaintenanceMode: (settings as any).gardenMaintenanceMode ?? false,
+      walletMaintenanceMode: (settings as any).walletMaintenanceMode ?? false,
       freeTrialEnabled: (settings as any).freeTrialEnabled ?? true,
       freeTrialDays: (settings as any).freeTrialDays ?? 10,
       freeTrialPlan: ((settings as any).freeTrialPlan === 'FARMER_FREE' || !(settings as any).freeTrialPlan) ? 'SUPER' : (settings as any).freeTrialPlan,
+      gardenExpertPlatformFeePercent: (settings as any).gardenExpertPlatformFeePercent ?? 20.0,
+      gardenerProCardPrice: (settings as any).gardenerProCardPrice ?? 299.00,
+      gardenerVipCardPrice: (settings as any).gardenerVipCardPrice ?? 999.00,
     };
 
     this.cache = { data: result, timestamp: now };
@@ -168,6 +174,9 @@ export class AppSettingsService {
       'appDownloadUrl',
       'latestAppVersion',
       'storefrontMaintenanceMode',
+      'agriMaintenanceMode',
+      'gardenMaintenanceMode',
+      'walletMaintenanceMode',
       'freeTrialEnabled',
       'freeTrialDays',
       'freeTrialPlan',
@@ -254,9 +263,21 @@ export class AppSettingsService {
       'appDownloadUrl',
       'latestAppVersion',
       'storefrontMaintenanceMode',
+      'agriMaintenanceMode',
+      'gardenMaintenanceMode',
+      'walletMaintenanceMode',
       'freeTrialEnabled',
       'freeTrialDays',
       'freeTrialPlan',
+      'gardenExpertPlatformFeePercent',
+      'gardenerProCardPrice',
+      'gardenerVipCardPrice',
+      // Wallet Tax / Platform Expense fields
+      'withdrawalPlatformFeePercent',
+      'withdrawalGstPercent',
+      'walletUsagePlatformFeePercent',
+      'walletUsageGstPercent',
+      'walletTaxEnabled',
     ]);
 
     const prismaPayload: Record<string, unknown> = {};

@@ -89,7 +89,39 @@ export class OrdersService {
 
     const couponResult = dto.couponCode ? await this.couponsService.getActiveForOrder(dto.couponCode, subtotal) : null;
     const discountAmount = couponResult?.discountAmount ?? 0;
-    const totalAmount = subtotal - discountAmount;
+    let totalAmount = subtotal - discountAmount;
+    let walletDeduction = 0;
+    let walletPlatformFee = 0;
+    let walletGstAmount = 0;
+    let platformExpense = false;
+    let totalWalletDeduction = 0;
+
+    if (dto.useWalletBalance) {
+      const walletBalance = await this.walletService.getBalance(customer.id);
+      if (walletBalance > 0) {
+        const settings = await this.appSettingsService.get() as any;
+        const taxEnabled = settings.walletTaxEnabled ?? true;
+        let feeRate = 0;
+        let gstRate = 0;
+
+        if (taxEnabled) {
+          feeRate = (settings.walletUsagePlatformFeePercent ?? 2.0) / 100;
+          gstRate = (settings.walletUsageGstPercent ?? 18.0) / 100;
+          platformExpense = true;
+        }
+
+        const costMultiplier = 1 + feeRate + feeRate * gstRate;
+        const maxUsableForOrder = walletBalance / costMultiplier;
+
+        walletDeduction = Math.min(totalAmount, maxUsableForOrder);
+        
+        walletPlatformFee = parseFloat((walletDeduction * feeRate).toFixed(2));
+        walletGstAmount = parseFloat((walletPlatformFee * gstRate).toFixed(2));
+        totalWalletDeduction = parseFloat((walletDeduction + walletPlatformFee + walletGstAmount).toFixed(2));
+        
+        totalAmount = parseFloat((totalAmount - walletDeduction).toFixed(2));
+      }
+    }
 
     // Master Order & Vendor Sub-Orders Splitting
     const order = await this.prisma.$transaction(async (tx) => {
@@ -102,6 +134,10 @@ export class OrdersService {
           paymentMode: dto.paymentMode ?? OrderPaymentMode.COD,
           couponId: couponResult?.coupon.id,
           discountAmount: couponResult ? discountAmount : undefined,
+          walletUsedAmount: walletDeduction > 0 ? walletDeduction : undefined,
+          walletPlatformFee: walletPlatformFee > 0 ? walletPlatformFee : undefined,
+          walletGstAmount: walletGstAmount > 0 ? walletGstAmount : undefined,
+          platformExpense,
           items: {
             create: dto.items.map((item) => {
               const product = productMap.get(item.productId)!;
@@ -142,6 +178,11 @@ export class OrdersService {
             commissionAmount: couponResult.commissionAmount,
           },
         });
+      }
+
+      // Wallet deduction
+      if (walletDeduction > 0) {
+        await this.walletService.debit(customer.id, walletDeduction, `Paid for Order #${created.orderNumber}`, { orderId: created.id }, tx as any);
       }
 
       // Split order into Vendor SubOrders
@@ -323,8 +364,8 @@ export class OrdersService {
     return { upiLink, amount: Number(order.totalAmount), orderNumber: order.orderNumber };
   }
 
-  /** Starts a PhonePe Standard Checkout session for this order and returns the URL to redirect the customer to. */
-  async initiatePhonePePayment(user: AuthUser, id: string, redirectUrl: string) {
+  /** Starts a Cashfree Checkout session for this order with Split Payments */
+  async initiateCashfreePayment(user: AuthUser, id: string) {
     const order = await this.findOneOrThrow(user, id);
     if (order.customerId !== user.id) {
       throw new ForbiddenException('You cannot pay for this order.');
@@ -333,31 +374,42 @@ export class OrdersService {
       throw new ConflictException('This order has already been paid for.');
     }
 
-    const merchantOrderId = `${order.orderNumber}-${Date.now().toString(36).toUpperCase()}`;
-    const result = await this.phonePeService.createPayment(merchantOrderId, Number(order.totalAmount), redirectUrl);
+    const splits = order.subOrders.map(subOrder => ({
+      cashfreeVendorId: subOrder.sellerStore.cashfreeVendorId,
+      itemSubtotal: Number(subOrder.subtotal),
+      commissionRate: Number(subOrder.sellerStore.commissionRate || 8.0)
+    })).filter(s => s.cashfreeVendorId); // Only include suborders with a cashfree vendor
+
+    const result = await this.cashfreeService.createSplitOrder({
+      orderId: order.orderNumber,
+      amount: Number(order.totalAmount),
+      customerId: order.customerId,
+      customerPhone: order.customer.mobile,
+      customerName: order.customer.name,
+      splits: splits as any,
+    });
 
     await this.prisma.customerOrder.update({
       where: { id },
-      data: { phonepeMerchantOrderId: merchantOrderId, phonepePaymentState: result.state, paymentStatus: OrderPaymentStatus.PENDING },
+      data: { phonepeMerchantOrderId: result.orderId, phonepePaymentState: result.orderStatus, paymentStatus: OrderPaymentStatus.PENDING },
     });
 
-    return { redirectUrl: result.redirectUrl, merchantOrderId };
+    return { paymentSessionId: result.paymentSessionId, orderId: result.orderId };
   }
 
-  /** Re-checks the live PhonePe status for this order's most recent payment attempt and syncs it locally. */
-  async getPhonePePaymentStatus(user: AuthUser, id: string) {
+  /** Re-checks the live Cashfree status for this order's most recent payment attempt and syncs it locally. */
+  async getCashfreePaymentStatus(user: AuthUser, id: string) {
     const order = await this.findOneOrThrow(user, id);
-    if (!order.phonepeMerchantOrderId) {
-      return { paymentStatus: order.paymentStatus };
-    }
-
-    const result = await this.phonePeService.checkStatus(order.phonepeMerchantOrderId);
-    const paymentStatus = result.state === 'COMPLETED' ? OrderPaymentStatus.PAID : result.state === 'FAILED' ? OrderPaymentStatus.FAILED : OrderPaymentStatus.PENDING;
+    
+    // We used phonepeMerchantOrderId column to store the cashfree order id, because the schema is not updated.
+    // The actual Cashfree order id is just order.orderNumber.
+    const result = await this.cashfreeService.verifyPayment(order.orderNumber);
+    const paymentStatus = result.order_status === 'PAID' ? OrderPaymentStatus.PAID : result.order_status === 'FAILED' ? OrderPaymentStatus.FAILED : OrderPaymentStatus.PENDING;
 
     if (order.paymentStatus !== paymentStatus) {
       await this.prisma.customerOrder.update({
         where: { id },
-        data: { paymentStatus, phonepePaymentState: result.state },
+        data: { paymentStatus, phonepePaymentState: result.order_status },
       });
     }
 

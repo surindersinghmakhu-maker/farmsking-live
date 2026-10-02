@@ -106,7 +106,7 @@ export function UniversalVoucherSlipModal({ visible, data, onClose }: UniversalV
   const now = new Date();
   const yy = String(now.getFullYear()).slice(-2);
   const mm = String(now.getMonth() + 1).padStart(2, '0');
-  const defaultPrefix = isExpense ? `E${yy}${mm}` : isReceipt ? `R${yy}${mm}` : isPayment ? `P${yy}${mm}` : isSale ? `${yy}${mm}` : `V${yy}${mm}`;
+  const defaultPrefix = isExpense ? `E${yy}${mm}` : isReceipt ? `R${yy}${mm}` : isPaymentOut ? `P${yy}${mm}` : isSale ? `${yy}${mm}` : `V${yy}${mm}`;
   const defaultSeqNo = `${defaultPrefix}-01`;
   const rawVoucherNo = data.voucherNo || defaultSeqNo;
   const voucherNoText = rawVoucherNo.replace(/^EXP-?/i, '');

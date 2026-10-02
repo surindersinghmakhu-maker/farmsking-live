@@ -5,6 +5,7 @@ import { GardenerPlansService, FREE_PLAN_MAX_PLANTS } from '../gardener-plans/ga
 import { AuthUser } from '../../common/types/auth-user.type';
 import { CreateGardenDto } from './dto/create-garden.dto';
 import { CreatePlantDto } from './dto/create-plant.dto';
+import { CreateGardenExpenseDto } from './dto/create-garden-expense.dto';
 
 @Injectable()
 export class GardensService {
@@ -64,5 +65,38 @@ export class GardensService {
     return this.findOneOrThrow(user, gardenId).then(() =>
       this.prisma.plant.findMany({ where: { gardenId, deletedAt: null }, orderBy: { createdAt: 'desc' } }),
     );
+  }
+
+  addExpense(user: AuthUser, dto: CreateGardenExpenseDto) {
+    return this.prisma.gardenExpense.create({
+      data: {
+        gardenerId: user.id,
+        gardenId: dto.gardenId,
+        plantId: dto.plantId,
+        title: dto.title,
+        amount: dto.amount,
+        category: dto.category,
+        note: dto.note,
+      },
+    });
+  }
+
+  listExpenses(user: AuthUser) {
+    return this.prisma.gardenExpense.findMany({
+      where: { gardenerId: user.id },
+      include: {
+        garden: { select: { id: true, name: true } },
+        plant: { select: { id: true, name: true } },
+      },
+      orderBy: { date: 'desc' },
+    });
+  }
+
+  async deleteExpense(user: AuthUser, id: string) {
+    const expense = await this.prisma.gardenExpense.findUnique({ where: { id } });
+    if (!expense || expense.gardenerId !== user.id) {
+      throw new NotFoundException('Expense not found.');
+    }
+    return this.prisma.gardenExpense.delete({ where: { id } });
   }
 }

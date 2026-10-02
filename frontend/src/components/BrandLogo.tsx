@@ -3,7 +3,7 @@ import { Image, ImageStyle, StyleProp, View, ViewStyle } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { resolveMediaUrl } from '@/src/api/client';
-import { useAuth } from '@/src/store/auth-context';
+
 
 const LOGO_ICON_FAST = require('@/assets/images/farmsking_logo_icon.png');
 const LOGO_STANDARD = require('@/assets/images/farmsking_logo.png');
@@ -47,7 +47,7 @@ export function BrandLogo({
   useGoldRing = false,
 }: BrandLogoProps) {
   const settings = useFastBundledOnly ? null : useAppSettings().data;
-  const { user } = useAuth();
+
   const [imageError, setImageError] = useState(false);
 
   const rawLogo = settings?.logoUrl;

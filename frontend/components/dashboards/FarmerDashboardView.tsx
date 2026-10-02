@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ActivityIndicator, View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Platform, Alert } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { ActivityIndicator, View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Platform, Alert, Modal, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
@@ -21,8 +21,9 @@ import { useParties } from '@/src/hooks/useParties';
 import { KisanCropIntelligenceCard } from '@/src/components/KisanCropIntelligenceCard';
 import { CropAdvisoryPromoCard } from '@/src/components/CropAdvisoryPromoCard';
 import { OpenMeteoWeatherCard } from '@/src/components/OpenMeteoWeatherCard';
+import { AgriAiChatbot } from '@/src/components/AgriAiChatbot';
 import { FarmLocationProfileModal } from '@/src/components/FarmLocationProfileModal';
-import { FarmerPortalUpgradeSection } from '@/src/components/FarmerPortalUpgradeSection';
+import { FarmerPortalUpgradeSection, FarmerPortalUpgradeSectionRef } from '@/src/components/FarmerPortalUpgradeSection';
 import { SupervisorManagementModal } from '@/src/components/SupervisorManagementModal';
 import { WelcomeBonusModal } from '@/src/components/WelcomeBonusModal';
 import { FarmerTrainingRatingBanner } from '@/src/components/FarmerTrainingRatingBanner';
@@ -47,6 +48,7 @@ const PLAN_ICON_MAP: Record<string, { icon: keyof typeof Ionicons.glyphMap; colo
 };
 
 export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpenAdminChat }) => {
+  const upgradeSectionRef = useRef<FarmerPortalUpgradeSectionRef>(null);
   const router = useRouter();
   const { user } = useAuth();
   const { executiveTheme, setExecutiveTheme, colors } = useExecutiveTheme();
@@ -90,6 +92,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
   const [showPaymentVoucherModal, setShowPaymentVoucherModal] = useState(false);
   const [showLocationProfileModal, setShowLocationProfileModal] = useState(false);
   const [showSupervisorModal, setShowSupervisorModal] = useState(false);
+  const [showAiChatModal, setShowAiChatModal] = useState(false);
   const [voucherInitialType, setVoucherInitialType] = useState<VoucherType>('RECEIPT_IN');
   const { data: labourWorkers = [] } = useLabourWorkers();
   const { data: parties = [] } = useParties();
@@ -100,17 +103,17 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
     : null;
   const formattedExpiry = endDate
     ? (() => {
-        const d = new Date(endDate);
-        const day = String(d.getDate()).padStart(2, '0');
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const year = String(d.getFullYear()).slice(-2);
-        return `${day}/${month}/${year}`;
-      })()
+      const d = new Date(endDate);
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = String(d.getFullYear()).slice(-2);
+      return `${day}/${month}/${year}`;
+    })()
     : null;
   const pricingList = Array.isArray(pricing) ? pricing : (pricing as any)?.items || (pricing as any)?.data || [];
   const planPrice = pricingList.find((p: any) => p.plan === plan)?.price;
 
-  const planActionLabel = 'Membership';
+  const planActionLabel = 'VIP Pass';
 
   const [modalInitialMode, setModalInitialMode] = useState<'GET_COUPON' | 'REDEEM_CODE'>('GET_COUPON');
 
@@ -204,30 +207,41 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
           </TouchableOpacity>
         ) : null}
 
-        {/* 🤖 FarmsKing Kheti Mitra AI Doctor Banner Card */}
-        <TouchableOpacity
-          style={styles.aiDoctorBannerCard}
-          activeOpacity={0.88}
-          onPress={() => router.push('/(tabs)/crop-disease-scanner')}
+
+
+
+        {/* AI Chat Popup Modal */}
+        <Modal
+          visible={showAiChatModal}
+          animationType="slide"
+          transparent={false}
+          onRequestClose={() => setShowAiChatModal(false)}
         >
-          <View style={styles.aiBannerHeader}>
-            <View style={styles.aiBotIcon}>
-              <Ionicons name="sparkles" size={20} color="#ffffff" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={styles.aiBannerTitle}>🤖 FarmsKing Kheti Mitra AI Doctor</Text>
-                <View style={styles.freePill}>
-                  <Text style={styles.freePillText}>100% FREE 🌾</Text>
+          <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
+            <View style={styles.aiModalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <View style={styles.compactAiAvatar}>
+                  <Ionicons name="sparkles" size={18} color="#ffffff" />
+                </View>
+                <View>
+                  <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: '#0f172a' }}>
+                    ✨ Farmsking Kisan AI Doctor
+                  </Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#16a34a' }}>
+                    Google Search Grounded · Agriculture & FarmsKing
+                  </Text>
                 </View>
               </View>
-              <Text style={styles.aiBannerSub}>
-                ਸਤਿ ਸ਼੍ਰੀ ਅਕਾਲ! ਫਸਲ ਦੀ ਬੀਮਾਰੀ, ਖਾਦ-ਸਪ੍ਰੇ ਦੀ ਮਾਤਰਾ, ਬੀਜ ਅਤੇ ਮੰਡੀ ਭਾਵ ਬਾਰੇ 24/7 ਪੁੱਛੋ।
-              </Text>
+              <TouchableOpacity
+                style={styles.aiModalCloseBtn}
+                onPress={() => setShowAiChatModal(false)}
+              >
+                <Ionicons name="close" size={22} color="#0f172a" />
+              </TouchableOpacity>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#ffffff" />
-          </View>
-        </TouchableOpacity>
+            <AgriAiChatbot isModal={true} />
+          </SafeAreaView>
+        </Modal>
 
         {/* Live Open-Meteo Weather Card */}
         <OpenMeteoWeatherCard />
@@ -299,79 +313,85 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         {/* Your Crop Prices LIVE */}
         <MarketRatesCard />
 
-        {/* Farm Action Grid — Executive Compact Tool Layout */}
-        <View style={styles.actionGrid}>
-          <TouchableOpacity
-            style={[styles.actionCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}
-            activeOpacity={0.8}
-            onPress={() => {
-              tap();
-              router.push('/dose');
-            }}
-          >
-            <View style={[styles.actionIconBg, { backgroundColor: '#fef3c7' }]}>
-              <Ionicons name="flask" size={19} color="#d97706" />
-            </View>
-            <View style={styles.actionCardTextGroup}>
-              <Text style={[styles.actionCardTitle, { color: colors.text }]} numberOfLines={1}>Dose Schedule 🌾</Text>
-              <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>Marigold Drenching Schedule</Text>
-            </View>
-          </TouchableOpacity>
+        {/* Farm Action Grid — All buttons in ONE unified card */}
+        <View style={[styles.toolsContainerCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}>
+          <View style={styles.actionGridInner}>
+            <TouchableOpacity
+              style={[styles.actionCardUnified, { backgroundColor: 'rgba(148, 163, 184, 0.08)' }]}
+              activeOpacity={0.8}
+              onPress={() => {
+                tap();
+                router.push('/(tabs)/ai-doctor' as any);
+              }}
+            >
+              <View style={[styles.actionIconBgUnified, { backgroundColor: '#dcfce7' }]}>
+                <Ionicons name="sparkles" size={16} color="#15803d" />
+              </View>
+              <View style={styles.actionCardTextGroup}>
+                <Text style={[styles.actionCardTitle, { color: colors.text }]} numberOfLines={1}>Kisan AI</Text>
+                <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>Ask Expert</Text>
+              </View>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.actionCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}
-            activeOpacity={0.8}
-            onPress={() => {
-              tap();
-              setShowLocationProfileModal(true);
-            }}
-          >
-            <View style={[styles.actionIconBg, { backgroundColor: '#fef3c7' }]}>
-              <Ionicons name="location" size={19} color="#b45309" />
-            </View>
-            <View style={styles.actionCardTextGroup}>
-              <Text style={[styles.actionCardTitle, { color: colors.text }]} numberOfLines={1}>Farm GPS Location</Text>
-              <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>1-Tap GPS Lock</Text>
-            </View>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionCardUnified, { backgroundColor: 'rgba(148, 163, 184, 0.08)' }]}
+              activeOpacity={0.8}
+              onPress={() => {
+                tap();
+                setShowLocationProfileModal(true);
+              }}
+            >
+              <View style={[styles.actionIconBgUnified, { backgroundColor: '#fef3c7' }]}>
+                <Ionicons name="location" size={16} color="#b45309" />
+              </View>
+              <View style={styles.actionCardTextGroup}>
+                <Text style={[styles.actionCardTitle, { color: colors.text }]} numberOfLines={1}>Farm GPS</Text>
+                <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>1-Tap Lock</Text>
+              </View>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.actionCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}
-            activeOpacity={0.8}
-            onPress={() => {
-              tap();
-              router.push('/(tabs)/crop-disease-scanner');
-            }}
-          >
-            <View style={[styles.actionIconBg, { backgroundColor: '#dcfce7' }]}>
-              <Ionicons name="scan-circle" size={19} color="#15803d" />
-            </View>
-            <View style={styles.actionCardTextGroup}>
-              <Text style={[styles.actionCardTitle, { color: colors.text }]} numberOfLines={1}>AI Disease Scanner</Text>
-              <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>Leaf Scan & AI Chat Doctor</Text>
-            </View>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionCardUnified, { backgroundColor: 'rgba(148, 163, 184, 0.08)' }]}
+              activeOpacity={0.8}
+              onPress={() => {
+                tap();
+                onOpenAdminChat?.();
+              }}
+            >
+              <View style={[styles.actionIconBgUnified, { backgroundColor: '#dcfce7' }]}>
+                <Ionicons name="chatbubbles" size={16} color="#15803d" />
+              </View>
+              <View style={styles.actionCardTextGroup}>
+                <Text style={[styles.actionCardTitle, { color: colors.text }]} numberOfLines={1}>Admin Support</Text>
+                <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>Chat Live</Text>
+              </View>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.actionCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}
-            activeOpacity={0.8}
-            onPress={() => {
-              tap();
-              onOpenAdminChat?.();
-            }}
-          >
-            <View style={[styles.actionIconBg, { backgroundColor: '#dcfce7' }]}>
-              <Ionicons name="chatbubbles" size={19} color="#15803d" />
-            </View>
-            <View style={styles.actionCardTextGroup}>
-              <Text style={[styles.actionCardTitle, { color: colors.text }]} numberOfLines={1}>Admin Support</Text>
-              <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>Chat Live</Text>
-            </View>
-          </TouchableOpacity>
+
+
+            <TouchableOpacity
+              style={[styles.actionCardUnified, { backgroundColor: 'rgba(148, 163, 184, 0.08)', opacity: 0.7 }]}
+              activeOpacity={1}
+              disabled={true}
+              onPress={() => {
+                tap();
+                upgradeSectionRef.current?.openScanner();
+              }}
+            >
+              <View style={[styles.actionIconBgUnified, { backgroundColor: '#e0f2fe' }]}>
+                <Ionicons name="qr-code" size={16} color="#0284c7" />
+              </View>
+              <View style={styles.actionCardTextGroup}>
+                <Text style={[styles.actionCardTitle, { color: colors.text }]} numberOfLines={1}>Verify Product</Text>
+                <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>Scan Barcode</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* 🌟 Executive Smart Farming Portal 7-Feature Upgrade Section */}
-        <FarmerPortalUpgradeSection />
+        <FarmerPortalUpgradeSection ref={upgradeSectionRef} />
+
 
       </View>
 
@@ -413,8 +433,6 @@ const styles = StyleSheet.create({
   welcomeBannerCard: {
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
-    borderWidth: 1.5,
-    borderColor: '#86efac',
     marginVertical: 2,
     ...premiumShadow('#16a34a', 'sm'),
   },
@@ -463,18 +481,28 @@ const styles = StyleSheet.create({
   },
   quickAccountsCard: {
     backgroundColor: '#ffffff',
-    borderRadius: RADIUS.lg,
-    padding: 10,
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-    gap: 8,
-    ...premiumShadow('#0f172a', 'sm'),
+    borderRadius: 24, // iOS Squircle
+    padding: 16,
+    gap: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 3,
+      },
+      default: premiumShadow('#0f172a', 'sm'),
+    }),
   },
   quickAccountsTitle: {
-    fontSize: 12,
+    fontSize: 15,
     fontFamily: FONT.extraBold,
     color: '#0f172a',
-    letterSpacing: -0.2,
+    letterSpacing: -0.3,
+    marginBottom: 4,
   },
   quickAccountsGrid: {
     flexDirection: 'row',
@@ -482,17 +510,17 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   quickAccountsBtn: {
-    width: '48.8%',
+    width: '48.5%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    paddingVertical: 9,
-    borderRadius: RADIUS.md,
+    gap: 6,
+    paddingVertical: 14,
+    borderRadius: 16,
   },
   quickAccountsBtnText: {
     color: '#ffffff',
-    fontSize: 11.5,
+    fontSize: 13,
     fontFamily: FONT.bold,
   },
   actionGrid: {
@@ -501,21 +529,56 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionCard: {
-    width: '48.8%',
+    width: '48.5%',
     backgroundColor: '#ffffff',
-    borderRadius: RADIUS.md,
-    paddingHorizontal: 10,
-    paddingVertical: 9,
+    borderRadius: 20, // iOS Squircle
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+    flexDirection: 'column', // iOS style cards usually stack icon and text
+    alignItems: 'flex-start',
+    gap: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 10,
+      },
+      android: { elevation: 2 },
+    }),
+  },
+  toolsContainerCard: {
+    borderRadius: 24, // iOS Squircle style
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    padding: 16,
+    gap: 12,
+    marginTop: 4,
+  },
+  actionGridInner: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  actionCardUnified: {
+    width: '48.5%',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 9,
+    gap: 8,
+  },
+  actionIconBgUnified: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   actionIconBg: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -524,16 +587,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   actionCardTitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: FONT.bold,
     color: '#0f172a',
-    letterSpacing: -0.1,
+    letterSpacing: -0.2,
   },
   actionCardSub: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: FONT.medium,
     color: '#64748b',
-    marginTop: 0.5,
+    marginTop: 2,
   },
   // Plan badge styles — frosted-glass pills so they read cleanly against the gradient header, in any theme.
   planRow: {
@@ -651,8 +714,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
-    borderWidth: 1.5,
-    borderColor: '#cbd5e1',
     marginTop: 10,
     marginBottom: 16,
   },
@@ -783,8 +844,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fffbeb',
     borderRadius: RADIUS.lg,
     padding: 12,
-    borderWidth: 1.5,
-    borderColor: '#fde68a',
     gap: 10,
   },
   trialBannerHeader: {
@@ -829,8 +888,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 3.5,
     borderRadius: RADIUS.pill,
-    borderWidth: 1.5,
-    borderColor: '#fde68a',
     ...premiumShadow('#000000', 'xs'),
   },
   highlightPlanBadgeText: {
@@ -846,16 +903,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4.5,
     borderRadius: RADIUS.pill,
-    borderWidth: 1.5,
-    borderColor: '#f59e0b',
     ...premiumShadow('#000000', 'sm'),
   },
   compactTrialBannerCard: {
     backgroundColor: '#fffbeb',
     borderRadius: RADIUS.md,
     padding: 10,
-    borderWidth: 1.5,
-    borderColor: '#fde68a',
   },
   compactTrialIconContainer: {
     width: 32,
@@ -919,8 +972,6 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md,
     paddingHorizontal: 9,
     paddingVertical: 5,
-    borderWidth: 1.2,
-    borderColor: '#f59e0b',
     alignItems: 'flex-end',
     gap: 2,
     ...premiumShadow('#000000', 'xs'),
@@ -943,8 +994,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 1.5,
     borderRadius: RADIUS.pill,
-    borderWidth: 1,
-    borderColor: '#86efac',
   },
   combinedCardTrialText: {
     fontSize: 8.5,
@@ -966,8 +1015,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: RADIUS.lg,
     padding: 12,
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
     marginVertical: 4,
     gap: 8,
   },
@@ -1005,8 +1052,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#14532d',
     borderRadius: RADIUS.lg,
     padding: 12,
-    borderWidth: 1.5,
-    borderColor: '#86efac',
     marginVertical: 2,
     ...premiumShadow('#16a34a', 'sm'),
   },
@@ -1047,6 +1092,78 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontFamily: FONT.extraBold,
     color: '#854d0e',
+  },
+  compactAiCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    padding: 10,
+    marginVertical: 4,
+    borderWidth: 1.5,
+    borderColor: '#bbf7d0',
+  },
+  compactAiHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  compactAiAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#16a34a',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  compactAiTitle: {
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+  },
+  compactFreeBadge: {
+    backgroundColor: '#fef08a',
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: RADIUS.pill,
+  },
+  compactFreeBadgeText: {
+    fontSize: 8.5,
+    fontFamily: FONT.extraBold,
+    color: '#854d0e',
+  },
+  compactAiSub: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    marginTop: 1,
+  },
+  compactAskBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#16a34a',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+  },
+  compactAskBtnText: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+  },
+  aiModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  aiModalCloseBtn: {
+    padding: 6,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 18,
   },
 });
 

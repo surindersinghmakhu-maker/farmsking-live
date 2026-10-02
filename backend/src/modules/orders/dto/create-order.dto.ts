@@ -29,4 +29,7 @@ export class CreateOrderDto {
   @IsOptional()
   @IsEnum(OrderPaymentMode)
   paymentMode?: OrderPaymentMode;
+
+  @IsOptional()
+  useWalletBalance?: boolean;
 }

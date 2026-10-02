@@ -307,6 +307,11 @@ export async function getFarmerPlanHistory(farmerId?: string): Promise<FarmerPla
   return data;
 }
 
+export async function activateTrial(): Promise<{ message: string; plan: string; endDate: string }> {
+  const { data } = await apiClient.post<{ message: string; plan: string; endDate: string }>('/farmer-plans/activate-trial');
+  return data;
+}
+
 
 export const PLAN_DISPLAY_MAP: Record<string, { title: string; badge: string; icon: string; color: string; desc: string }> = {
   FREE: {

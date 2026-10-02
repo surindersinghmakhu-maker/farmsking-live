@@ -33,6 +33,9 @@ export interface AppSettings {
   appDownloadUrl?: string | null;
   latestAppVersion?: string | null;
   storefrontMaintenanceMode?: boolean;
+  agriMaintenanceMode?: boolean;
+  gardenMaintenanceMode?: boolean;
+  walletMaintenanceMode?: boolean;
   freeTrialEnabled?: boolean;
   freeTrialDays?: number;
   freeTrialPlan?: 'PRO' | 'SMART' | 'SUPER';
@@ -75,6 +78,9 @@ export interface UpdateAppSettingsPayload {
   appDownloadUrl?: string;
   latestAppVersion?: string;
   storefrontMaintenanceMode?: boolean;
+  agriMaintenanceMode?: boolean;
+  gardenMaintenanceMode?: boolean;
+  walletMaintenanceMode?: boolean;
   freeTrialEnabled?: boolean;
   freeTrialDays?: number;
   freeTrialPlan?: 'PRO' | 'SMART' | 'SUPER';

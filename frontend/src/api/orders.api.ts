@@ -44,23 +44,23 @@ export async function getOrderUpiLink(id: string): Promise<OrderUpiLink> {
   return data;
 }
 
-export interface PhonePeInitiateResult {
-  redirectUrl: string;
-  merchantOrderId: string;
+export interface CashfreeInitiateResult {
+  paymentSessionId: string;
+  orderId: string;
 }
 
-/** Starts a PhonePe Standard Checkout session; the caller should navigate the user to `redirectUrl`. */
-export async function initiatePhonePePayment(id: string, redirectUrl: string): Promise<PhonePeInitiateResult> {
-  const { data } = await apiClient.post<PhonePeInitiateResult>(`/orders/${id}/phonepe/initiate`, { redirectUrl });
+/** Starts a Cashfree Checkout session. The caller should redirect the user to Cashfree web checkout. */
+export async function initiateCashfreePayment(id: string): Promise<CashfreeInitiateResult> {
+  const { data } = await apiClient.post<CashfreeInitiateResult>(`/orders/${id}/cashfree/initiate`);
   return data;
 }
 
-export interface PhonePePaymentStatus {
+export interface CashfreePaymentStatus {
   paymentStatus: 'UNPAID' | 'PENDING' | 'PAID' | 'FAILED';
 }
 
-export async function getPhonePePaymentStatus(id: string): Promise<PhonePePaymentStatus> {
-  const { data } = await apiClient.get<PhonePePaymentStatus>(`/orders/${id}/phonepe/status`);
+export async function getCashfreePaymentStatus(id: string): Promise<CashfreePaymentStatus> {
+  const { data } = await apiClient.get<CashfreePaymentStatus>(`/orders/${id}/cashfree/status`);
   return data;
 }
 

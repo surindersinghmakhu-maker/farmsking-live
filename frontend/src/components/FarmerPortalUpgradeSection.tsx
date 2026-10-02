@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import {
   View,
   Text,
@@ -23,17 +23,27 @@ const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 };
 
+export interface FarmerPortalUpgradeSectionRef {
+  openVideoCall: () => void;
+  openScanner: () => void;
+}
+
 interface FarmerPortalUpgradeSectionProps {
   executiveTheme?: ExecutiveTheme;
 }
 
-export const FarmerPortalUpgradeSection: React.FC<FarmerPortalUpgradeSectionProps> = () => {
+export const FarmerPortalUpgradeSection = forwardRef<FarmerPortalUpgradeSectionRef, FarmerPortalUpgradeSectionProps>((props, ref) => {
   const { executiveTheme: currentTheme, setExecutiveTheme, colors: tConfig } = useExecutiveTheme();
 
   // Modal Visibility States
   const [showDoctorVideoModal, setShowDoctorVideoModal] = useState(false);
   const [showScannerModal, setShowScannerModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  useImperativeHandle(ref, () => ({
+    openVideoCall: () => setShowDoctorVideoModal(true),
+    openScanner: () => setShowScannerModal(true),
+  }));
 
   // Video Call State
   const [isVideoCalling, setIsVideoCalling] = useState(false);
@@ -256,54 +266,9 @@ export const FarmerPortalUpgradeSection: React.FC<FarmerPortalUpgradeSectionProp
         </View>
       </Modal>
 
-      {/* 📹 5. Agri Doctor Video Call & 🔎 6. Authenticity Scanner Buttons (Single Row at Bottom, Disabled by Default) */}
-      <View style={styles.actionButtonsRow}>
-        <TouchableOpacity
-          style={[
-            styles.actionBtn,
-            { backgroundColor: '#047857' },
-            styles.actionBtnDisabled,
-            premiumShadow('#047857', 'sm'),
-          ]}
-          activeOpacity={0.88}
-          disabled={true}
-          onPress={() => {
-            tap();
-            setShowDoctorVideoModal(true);
-          }}
-        >
-          <Ionicons name="videocam" size={18} color="#ffffff" />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.actionBtnTitle} numberOfLines={1} adjustsFontSizeToFit>Agri Doctor Video Call</Text>
-            <Text style={styles.actionBtnSub} numberOfLines={1} adjustsFontSizeToFit>1-Tap Video Consultation</Text>
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.actionBtn,
-            { backgroundColor: '#0284c7' },
-            styles.actionBtnDisabled,
-            premiumShadow('#0284c7', 'sm'),
-          ]}
-          activeOpacity={0.88}
-          disabled={true}
-          onPress={() => {
-            tap();
-            setScanResult(null);
-            setShowScannerModal(true);
-          }}
-        >
-          <Ionicons name="qr-code" size={18} color="#ffffff" />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.actionBtnTitle} numberOfLines={1} adjustsFontSizeToFit>Authenticity Scanner</Text>
-            <Text style={styles.actionBtnSub} numberOfLines={1} adjustsFontSizeToFit>Verify Barcode & Spray</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: { gap: 10 },

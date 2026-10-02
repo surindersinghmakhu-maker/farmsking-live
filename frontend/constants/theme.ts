@@ -1,11 +1,11 @@
 import { Platform, ViewStyle } from 'react-native';
 
 export const RADIUS = {
-  xs: 6,
-  sm: 12,
-  md: 16,
-  lg: 20,
-  xl: 26,
+  xs: 8,
+  sm: 14,
+  md: 18,
+  lg: 24,
+  xl: 32,
   pill: 999,
 };
 
@@ -33,9 +33,9 @@ export const FONT = {
  */
 export function premiumShadow(color: string, level: 'sm' | 'md' | 'lg' = 'md'): ViewStyle {
   const shadowMap = {
-    sm: { opacity: 0.08, radius: 10, offsetY: 4, elevation: 3 },
-    md: { opacity: 0.12, radius: 18, offsetY: 8, elevation: 6 },
-    lg: { opacity: 0.18, radius: 28, offsetY: 14, elevation: 10 },
+    sm: { opacity: 0.04, radius: 12, offsetY: 4, elevation: 2 },
+    md: { opacity: 0.06, radius: 20, offsetY: 8, elevation: 4 },
+    lg: { opacity: 0.08, radius: 30, offsetY: 12, elevation: 8 },
   };
   const levels = shadowMap[level] ?? shadowMap.sm;
 

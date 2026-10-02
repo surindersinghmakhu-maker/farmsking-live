@@ -104,7 +104,7 @@ export default function PrivacyPolicyScreen() {
   const [loading, setLoading] = useState(false);
   const [modules, setModules] = useState<PolicyModule[]>(FALLBACK_MODULES);
   const [lastUpdated, setLastUpdated] = useState<string>(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }));
-  
+
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');

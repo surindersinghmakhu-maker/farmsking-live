@@ -68,6 +68,13 @@ const SAFE_USER_SELECT = {
   doctorConsultationFee: true,
   createdAt: true,
   deletedAt: true,
+  sellerStore: {
+    select: {
+      id: true,
+      storeName: true,
+      kycStatus: true,
+    },
+  },
 } as const;
 
 function generateTempPassword(): string {

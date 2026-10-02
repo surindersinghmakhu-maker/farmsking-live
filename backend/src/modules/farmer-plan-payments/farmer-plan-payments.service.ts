@@ -13,6 +13,7 @@ import { SubmitFarmerPlanPaymentDto } from './dto/submit-farmer-plan-payment.dto
 import { RejectFarmerPlanPaymentDto } from './dto/reject-farmer-plan-payment.dto';
 
 import { WalletService } from '../wallet/wallet.service';
+import { CashfreeService } from '../cashfree/cashfree.service';
 
 const DETAIL_INCLUDE = {
   farmer: { select: { id: true, name: true, mobile: true, kingId: true } },
@@ -27,6 +28,7 @@ export class FarmerPlanPaymentsService {
     private readonly appSettingsService: AppSettingsService,
     private readonly farmerPlansService: FarmerPlansService,
     private readonly walletService: WalletService,
+    private readonly cashfreeService: CashfreeService,
   ) {}
 
   /** Farmer (or their advisor) taps "Upgrade" and picks BASIC/STANDARD/PREMIUM — generates a fixed-amount UPI link and opens a pending payment claim. */
@@ -83,18 +85,15 @@ export class FarmerPlanPaymentsService {
       include: DETAIL_INCLUDE,
     });
 
-    const settings = await this.appSettingsService.get();
-    if (!settings.upiId) {
-      throw new BadRequestException('UPI payment is not configured yet. Please contact support.');
-    }
-    const upiLink = buildUpiPaymentLink({
+    const cashfreeRes = await this.cashfreeService.createStandardOrder({
+      orderId: `PLAN-${request.id}`,
       amount,
-      note: `${dto.targetPlan} Plan, ID=${farmer.kingId ?? farmer.id}, ${farmer.name}`,
-      transactionRef: request.id,
-      payeeVpa: settings.upiId,
-      payeeName: settings.upiPayeeName ?? undefined,
+      customerId: farmer.id,
+      customerPhone: farmer.mobile,
+      customerName: farmer.name,
     });
-    return { ...request, upiLink };
+
+    return { ...request, cashfreeSessionId: cashfreeRes.paymentSessionId };
   }
 
   listMine(user: AuthUser) {

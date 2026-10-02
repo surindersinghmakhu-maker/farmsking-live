@@ -283,7 +283,7 @@ export function CropPerformanceStatementModal({ visible, data, onClose }: CropPe
 
               {/* Official Seal / Verification Footer */}
               <View style={styles.slipFooter}>
-                <Ionicons name="checkmark-seal" size={18} color={colors.primary} />
+                <Ionicons name="checkmark-circle" size={18} color={colors.primary} />
                 <Text style={styles.slipFooterText}>
                   Verified Official Statement generated via FarmsKing Platform (Ref. {refNumber})
                 </Text>

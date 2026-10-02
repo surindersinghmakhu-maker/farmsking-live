@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { GoogleGenAI } from '@google/genai';
 import {
   View,
   Text,
@@ -9,10 +10,17 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { getDefaultApiUrl } from '../constants/config';
+import { useFarmerPlan } from '@/src/hooks/useFarmerPlan';
+import { useAuth } from '@/src/store/auth-context';
+import { FarmerPlanUpgradeModal } from '@/src/components/FarmerPlanUpgradeModal';
+
+const googleAiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY || '';
+const googleAi = new GoogleGenAI({ apiKey: googleAiKey });
 
 export interface ChatMessage {
   id: string;
@@ -30,10 +38,10 @@ const EXPLICIT_NON_FARMING_KEYWORDS = [
 ];
 
 const QUICK_FARMING_SUGGESTIONS = [
-  { icon: "🌾", label: "Kanak ਦਾ ਪ੍ਰਤੀ ਏਕੜ ਝਾੜ ਕਿੰਨਾ ਹੁੰਦਾ ਹੈ?" },
-  { icon: "🌾", label: "Punjab vich kanak kado lagai jandi hai?" },
-  { icon: "🌼", label: "Gende di kheti kehde mahine kiti jandi hai?" },
-  { icon: "📊", label: "Live Mandi Rates Today" },
+  { icon: "🌾", label: "What is the average yield of Wheat per acre?" },
+  { icon: "🌾", label: "Which month is best for Paddy sowing?" },
+  { icon: "🌼", label: "How to prevent Marigold leaf drying disease?" },
+  { icon: "📊", label: "Today's Live Mandi Rates" },
 ];
 
 export type LanguageCode = 'GURMUKHI' | 'DEVANAGARI' | 'ENGLISH';
@@ -77,11 +85,43 @@ interface AgriAiChatbotProps {
 }
 
 export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
+  const { width: windowWidth } = useWindowDimensions();
+  const isMobile = windowWidth < 768;
+  const { user } = useAuth();
+  const { plan, isExpired, hasActiveSoftwarePlan } = useFarmerPlan();
+  
+  const isPaidUser = React.useMemo(() => {
+    if (!user) return false;
+    const role = (user.role || '').toUpperCase();
+    if (['SUPER_ADMIN', 'ADMIN', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'SUPERVISOR', 'BUSINESS_PARTNER'].includes(role)) {
+      return true;
+    }
+    if (hasActiveSoftwarePlan) return true;
+    if (plan && plan.toUpperCase() !== 'FREE' && !isExpired) return true;
+    const userPlan = ((user as any)?.plan || (user as any)?.activePlan || (user as any)?.softwarePlan || (user as any)?.membership || '').toUpperCase();
+    if (userPlan && userPlan !== 'FREE') return true;
+    if (typeof window !== 'undefined' && window.localStorage && localStorage.getItem('farmsking_vip_plan_active') === 'true') {
+      return true;
+    }
+    return false;
+  }, [user, plan, isExpired, hasActiveSoftwarePlan]);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  const [askedCount, setAskedCount] = useState<number>(() => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const val = localStorage.getItem('farmsking_ai_free_asked_count');
+        return val ? parseInt(val, 10) || 0 : 0;
+      }
+    } catch {}
+    return 0;
+  });
+
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'init-1',
       sender: 'AI',
-      text: "🌾 **Welcome to FarmsKing Agri AI Advisor!**\n\nAsk any farming question in English, Punjabi, or Hindi.\n\n*Note: This is an AI Advisor. Please consult a professional crop doctor or agricultural expert before applying treatments.*",
+      text: "🌾 **Farmsking Kisan AI Doctor (National Farmers Expert)**\n\nHello / Namaste! I am the AI Agriculture Doctor for farmers across India.\n\nAsk your question about any crop, disease, fertilizer (Urea/DAP), spray, weather, or mandi prices — you will get a short & direct answer instantly!",
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       category: 'FARMING',
     },
@@ -492,20 +532,61 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
       return `🌾 **ਫਸਲਾਂ ਦਾ ਪ੍ਰਤੀ ਏਕੜ ਔਸਤਨ ਝਾੜ:**\n\n• **ਕਣਕ:** 22 - 26 ਕੁਇੰਟਲ/ਏਕੜ।\n• **ਝੋਨਾ:** 30 - 35 ਕੁਇੰਟਲ/ਏਕੜ।\n• **ਗੇਂਦਾ:** 80 - 100 ਕੁਇੰਟਲ/ਏਕੜ।\n• **ਨਰਮਾ:** 10 - 14 ਕੁਇੰਟਲ/ਏਕੜ।`;
     }
 
-    // 13. DIRECT TARGETED FALLBACK
-    if (lang === 'DEVANAGARI') {
-      return `🌾 **कृषि सलाह:**\n\n1. **सिंचाई एवं उर्वरक:** फसल को समय पर पानी दें और संतुलित यूरिया/DAP की खुराक डालें।`;
+    // 13. DIRECT TARGETED DYNAMIC FALLBACK WITH KEYWORD CHECK
+    const farmingKeywords = [
+      'kheti', 'baadi', 'kisan', 'fasal', 'khet', 'paani', 'beej', 'mitti', 'tractor', 'hal',
+      'guddai', 'katai', 'bijai', 'mandi', 'dhaan', 'kanak', 'narma', 'kapas', 'makki', 'jowar',
+      'bajra', 'ganna', 'sarson', 'aaloo', 'sabzi', 'fal', 'pashu', 'majh', 'gaaw', 'motor',
+      'tubewell', 'khad', 'khaad', 'urea', 'dap', 'spray', 'dawai', 'disease', 'bimari', 'ilaj',
+      'rate', 'bhav', 'price', 'weed', 'nadin', 'machhli', 'murgi', 'dairy', 'pashupalan',
+      'krishi', 'kisaan', 'fasle', 'beejai', 'sinchai', 'boai', 'kheti-badi', 'jhaad', 'yield',
+      'kuintal', 'genda', 'marigold', 'chilli', 'mirch', 'wheat', 'paddy', 'rice', 'dhan',
+      'jhona', 'cotton', 'mustard', 'potato', 'onion', 'pyaaz', 'garlic', 'lasan', 'gobhi',
+      'tomato', 'tamatar', 'baingan', 'bhindi', 'moong', 'chana', 'matar', 'agriculture',
+      'farm', 'crop', 'soil', 'water', 'weather', 'mausam', 'baarish', 'rain', 'dudh',
+      'milk', 'cow', 'buffalo', 'goat', 'sheep', 'bee', 'honey', 'poultry', 'fish', 'meat',
+      'kisan', 'farmer', 'kisaani', 'faslan', 'boota', 'paude', 'patte', 'jad'
+    ];
+
+    const isFarmingRelated = farmingKeywords.some(kw => q.includes(kw));
+    const cleanQ = query.trim();
+
+    if (isFarmingRelated) {
+      if (lang === 'DEVANAGARI') {
+        return `🌾 **कृषि सलाह:**\n\n1. **सिंचाई एवं पानी:** फसल की आवश्यकता अनुसार हल्का पानी दें। जलजमाव न होने दें।\n2. **उर्वरक की मात्रा:** 45kg यूरिया प्रति एकड़ सिंचाई के साथ दें और micronutrient स्प्रे करें।\n3. **कीट/बीमारी सुरक्षा:** सुबह के समय पत्तों की जांच करें। सुंडी या तेले का लक्षण होने पर सिफारिश के अनुसार स्प्रे करें।`;
+      }
+      if (lang === 'ENGLISH') {
+        return `🌾 **FarmsKing Kisan Advisory:**\n\n1. **Irrigation:** Water early morning or late evening depending on soil moisture.\n2. **Fertilizer:** Top-dress 45kg Urea per acre during vegetative growth stage.\n3. **Pest Control:** Inspect crop regularly for thrips or fungal spots; apply recommended PAU/ICAR sprays.`;
+      }
+      return `🌾 **ਖੇਤੀਬਾੜੀ ਸਲਾਹ:**\n\n1. **ਪਾਣੀ ਅਤੇ ਸਿੰਚਾਈ:** ਫਸਲ ਨੂੰ ਲੋੜ ਅਨੁਸਾਰ ਹਲਕਾ ਪਾਣੀ ਲਾਓ। ਜੜ੍ਹਾਂ ਵਿੱਚ ਪਾਣੀ ਖੜ੍ਹਾ ਨਾ ਹੋਣ ਦਿਓ।\n2. **ਯੂਰੀਆ / ਖਾਦ ਦੀ ਖੁਰਾਕ:** ਸਿਫਾਰਿਸ਼ ਅਨੁਸਾਰ ਯੂਰੀਆ ਜਾਂ DAP ਖਾਦ ਦੀ ਵਰਤੋਂ ਕਰੋ।\n3. **ਬੀਮਾਰੀ ਅਤੇ ਕੀੜਿਆਂ ਦੀ ਰੋਕਥਾਮ:** ਸਵੇਰੇ ਫਸਲ ਦੇ ਪੱਤੇ ਚੈੱਕ ਕਰੋ। ਤੇਲਾ ਜਾਂ ਝੁਲਸ ਰੋਗ ਦਿਸਣ 'ਤੇ ਸਮੇਂ ਸਿਰ ਸਿਫਾਰਿਸ਼ ਕੀਤੀ ਸਪ੍ਰੇ ਕਰੋ।`;
+    } else {
+      if (lang === 'DEVANAGARI') return "⚠️ **केवल कृषि प्रश्न:**\n\nमैं केवल कृषि, फसलों, उर्वरक, स्प्रे, मौसम और मंडी भाव से संबंधित प्रश्नों का उत्तर दे सकता हूँ। कृपया कृषि से संबंधित प्रश्न पूछें।";
+      if (lang === 'ENGLISH') return "⚠️ **Agricultural Questions Only:**\n\nI can only answer questions related to crops, fertilizers, sprays, seeds, weather, and mandi rates. Please ask a farming-related question!";
+      return "⚠️ **ਸਿਰਫ਼ ਖੇਤੀਬਾੜੀ ਸਵਾਲ:**\n\nਮੈਂ ਸਿਰਫ਼ ਖੇਤੀ, ਫਸਲਾਂ, ਖਾਦਾਂ, ਸਪ੍ਰੇ, ਮੌਸਮ ਅਤੇ ਮੰਡੀ ਭਾਵ ਨਾਲ ਸਬੰਧਤ ਸਵਾਲਾਂ ਦੇ ਜਵਾਬ ਦੇ ਸਕਦਾ ਹਾਂ। ਕਿਰਪਾ ਕਰਕੇ ਖੇਤੀ ਨਾਲ ਸਬੰਧਤ ਕੋਈ ਸਵਾਲ ਪੁੱਛੋ।";
     }
-    if (lang === 'ENGLISH') {
-      return `🌾 **Agri Advisory:**\n\n1. **Irrigation & Fertilizer:** Irrigate on time and apply balanced NPK top-dressing.`;
-    }
-    return `🌾 **ਖੇਤੀਬਾੜੀ ਸਲਾਹ:**\n\n1. **ਪਾਣੀ ਅਤੇ ਖਾਦ:** ਫਸਲ ਨੂੰ ਸਮੇਂ ਸਿਰ ਹਲਕਾ ਪਾਣੀ ਲਾਓ ਅਤੇ ਸਿਫਾਰਿਸ਼ ਅਨੁਸਾਰ ਯੂਰੀਆ ਪਾਓ।`;
   };
 
   const handleSend = async (textToSend?: string) => {
     const rawInput = (textToSend || inputQuery).trim();
     const query = rawInput || 'Farming and fertilizer advisory';
     if (isLoading) return;
+
+    // Check Free User 10 Question Limit
+    if (!isPaidUser && askedCount >= 10) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `ai-${Date.now()}`,
+          sender: 'AI',
+          text: "🔒 **Free AI Consultation Limit Reached (10/10 Used)**\n\nYou have used your 10 free AI questions on the Free Plan.\n\n✨ **Upgrade to FarmsKing VIP Pass / Paid Card** to unlock **UNLIMITED AI Doctor Consultations**, live mandi predictions, and priority PAU expert guidance!",
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          category: 'NON_FARMING_BLOCKED',
+        },
+      ]);
+      setIsLoading(false);
+      setShowUpgradeModal(true);
+      return;
+    }
 
     const userMsg: ChatMessage = {
       id: `usr-${Date.now()}`,
@@ -519,6 +600,16 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
     setInputQuery('');
     setIsLoading(true);
 
+    if (!isPaidUser) {
+      const nextCount = askedCount + 1;
+      setAskedCount(nextCount);
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          localStorage.setItem('farmsking_ai_free_asked_count', nextCount.toString());
+        }
+      } catch {}
+    }
+
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 100);
@@ -527,14 +618,7 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
 
     // Explicit non-farming filter on client side as first line of defense
     if (isExplicitNonFarming(query)) {
-      let aiText = '';
-      if (lang === 'GURMUKHI') {
-        aiText = '⚠️ **ਸਿਰਫ਼ ਖੇਤੀਬਾੜੀ ਸਵਾਲ:**\n\nਮੈਂ ਸਿਰਫ਼ ਫਸਲਾਂ, ਖਾਦਾਂ, ਸਪ੍ਰੇਆਂ, ਬੀਜਾਂ, ਮੌਸਮ ਅਤੇ ਮੰਡੀ ਭਾਵਾਂ ਨਾਲ ਸਬੰਧਤ ਸਵਾਲਾਂ ਦੇ ਜਵਾਬ ਦੇ ਸਕਦਾ ਹਾਂ। ਕਿਰਪਾ ਕਰਕੇ ਆਪਣੀ ਖੇਤੀ ਬਾਰੇ ਸਵਾਲ ਪੁੱਛੋ!';
-      } else if (lang === 'DEVANAGARI') {
-        aiText = '⚠️ **केवल कृषि संबंधी प्रश्न:**\n\nमैं केवल फसलों, उर्वरकों, स्प्रे, बीजों, मौसम और मंडी भावों के उत्तर दे सकता हूँ। कृपया खेती से जुड़ा सवाल पूछें!';
-      } else {
-        aiText = '⚠️ **Agricultural Questions Only:**\n\nI can only answer questions related to crops, fertilizers, sprays, seeds, weather, and mandi rates. Please ask a farming question!';
-      }
+      const aiText = '⚠️ **Agricultural Questions Only:**\n\nI can only answer questions related to crops, fertilizers, sprays, seeds, weather, mandi rates, and FarmsKing app features. Please ask a farming-related question!';
 
       setMessages((prev) => [
         ...prev,
@@ -550,14 +634,74 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
       return;
     }
 
-    // Prepare conversation history for LLM API
-    const historyPayload = updatedMessages.slice(-6).map((m) => ({
-      role: m.sender === 'USER' ? ('user' as const) : ('assistant' as const),
-      content: m.text,
-    }));
+    // Direct Google Gemini 2.5 Flash AI call with Search Grounding
+    const isRealGoogleAiKey = Boolean(googleAiKey && !googleAiKey.includes('your_gemini_api_key'));
+    if (isRealGoogleAiKey) {
+      try {
+        const response = await googleAi.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: query,
+          config: {
+            systemInstruction: `You are "Farmsking Kisan AI Doctor", an elite National AI Agriculture & Farming Expert serving ALL Indian Farmers across all states (Punjab, Haryana, UP, MP, MH, RJ, AP, TS, KA, TN, WB, Bihar, Gujarat, etc.) powered by Google Gemini 2.5 Flash with Live Google Search Grounding.
 
+CRITICAL RULES:
+1. SHORT, DIRECT, AND CONCISE ANSWERS:
+   - Provide clear bullet points, exact chemical/organic spray names, exact fertilizer dosages (kg/acre), CRI irrigation dates, and yield estimates per acre.
+   - Keep answers short, structured, and easy for farmers to read quickly without unnecessary fluff.
+2. NATIONAL FARMERS COVERAGE:
+   - Cover all Indian crops (Wheat, Paddy, Cotton, Sugarcane, Potato, Marigold, Mustard, Tomato, Chilli, Vegetables, Fruits, Spices, Pulses, Dairy).
+3. STRICT TOPIC GUARDRAIL:
+   - Only answer agriculture, farming, crop disease, fertilizer, spray, livestock, weather, mandi rates, and FarmsKing platform queries.
+   - Refuse non-farming questions politely: "I can only assist with agriculture, crops, fertilizers, sprays, livestock, weather, mandi rates, and FarmsKing app queries. Please ask a farming-related question."`,
+            tools: [{ googleSearch: {} }],
+          },
+        });
+
+        const answerText = response.text?.trim();
+        if (answerText) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `ai-${Date.now()}`,
+              sender: 'AI',
+              text: answerText,
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              category: 'FARMING',
+            },
+          ]);
+          setIsLoading(false);
+          setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
+          return;
+        }
+      } catch (gErr: any) {
+        console.warn('Google GenAI Direct Call Error, checking quota error or fallback:', gErr);
+        const errStr = (gErr?.message || '') + JSON.stringify(gErr || '');
+        const errLower = errStr.toLowerCase();
+        if (errLower.includes('429') || errLower.includes('quota') || errLower.includes('resource_exhausted') || errLower.includes('api_key_invalid') || errLower.includes('invalid_argument')) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `ai-${Date.now()}`,
+              sender: 'AI',
+              text: "⚠️ **FarmsKing Kisan AI Doctor is temporarily unavailable due to daily Google AI quota limits.**\n\nPlease try again shortly or contact FarmsKing support for assistance.",
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              category: 'NON_FARMING_BLOCKED',
+            },
+          ]);
+          setIsLoading(false);
+          setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
+          return;
+        }
+      }
+    }
+
+    // Try backend NestJS AI API route
     try {
       const baseUrl = getDefaultApiUrl();
+      const historyPayload = updatedMessages.slice(-6).map((m) => ({
+        role: m.sender === 'USER' ? ('user' as const) : ('assistant' as const),
+        content: m.text,
+      }));
       const response = await fetch(`${baseUrl}/ai-chat/ask`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -586,7 +730,7 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
         }
       }
     } catch (err) {
-      console.warn('Backend AI Chat API failed, using fallback engine:', err);
+      console.warn('Backend AI Chat API failed, using fallback generator:', err);
     }
 
     // Fallback to internal rule-based engine if network/API fails
@@ -607,22 +751,26 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, isModal && styles.containerModal]}
+      style={[styles.container, styles.containerModal]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       {/* Header Banner */}
       {!isModal && (
-        <View style={styles.header}>
+        <View style={[styles.header, isMobile && { paddingHorizontal: 10, paddingVertical: 8 }]}>
           <View style={styles.headerTitleRow}>
-            <View style={styles.botAvatarCircle}>
-              <Ionicons name="sparkles" size={18} color="#ffffff" />
+            <View style={[styles.botAvatarCircle, isMobile && { width: 28, height: 28, borderRadius: 14 }]}>
+              <Ionicons name="sparkles" size={isMobile ? 14 : 18} color="#ffffff" />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.headerTitle}>🤖 FarmsKing Kheti Mitra AI Doctor</Text>
-              <Text style={styles.headerSubtitle}>100% Free Smart Assistant · Precise Agricultural Answers</Text>
+            <View style={{ flex: 1, flexShrink: 1, paddingRight: 4 }}>
+              <Text style={[styles.headerTitle, isMobile && { fontSize: 12.5 }]} numberOfLines={1}>
+                ✨ Farmsking Kisan AI Doctor
+              </Text>
+              <Text style={[styles.headerSubtitle, isMobile && { fontSize: 9.5 }]} numberOfLines={1}>
+                100% Free · Google Search Grounded
+              </Text>
             </View>
-            <View style={styles.badgeFree}>
-              <Text style={styles.badgeFreeText}>FREE 🌾</Text>
+            <View style={[styles.badgeFree, isMobile && { paddingHorizontal: 6, paddingVertical: 2 }]}>
+              <Text style={[styles.badgeFreeText, isMobile && { fontSize: 8.5 }]}>FREE 🌾</Text>
             </View>
           </View>
         </View>
@@ -705,11 +853,41 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
         )}
       </ScrollView>
 
+      {/* Free Plan 10 Questions Usage Counter Banner */}
+      {!isPaidUser ? (
+        <View style={styles.askedCounterBar}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Ionicons name="help-circle" size={14} color="#d97706" />
+            <Text style={styles.askedCounterText}>
+              Free Plan: <Text style={{ fontFamily: FONT.extraBold, color: '#b45309' }}>{askedCount}/10</Text> AI Questions Used
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.upgradeInlineBtn}
+            onPress={() => setShowUpgradeModal(true)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="sparkles" size={11} color="#ffffff" />
+            <Text style={styles.upgradeInlineBtnText}>VIP Pass 👑</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <View style={[styles.askedCounterBar, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}>
+          <Ionicons name="checkmark-circle" size={14} color="#16a34a" />
+          <Text style={[styles.askedCounterText, { color: '#15803d' }]}>
+            FarmsKing Paid VIP Card: <Text style={{ fontFamily: FONT.extraBold }}>UNLIMITED AI Consultations</Text> ✨
+          </Text>
+        </View>
+      )}
+
       {/* Input Bar */}
-      <View style={styles.inputBar}>
+      <View style={[styles.inputBar, isMobile && { paddingHorizontal: 10, paddingVertical: 8 }]}>
         <TextInput
-          style={styles.input}
-          placeholder="Ask about wheat, paddy, fertilizers, sprays or mandi rates..."
+          style={[
+            styles.input,
+            { height: isMobile ? 42 : 46, fontSize: isMobile ? 12.5 : 13.5, paddingHorizontal: 14 },
+          ]}
+          placeholder={isMobile ? "Ask about crops, sprays, mandi rates..." : "Ask about wheat, paddy, fertilizers, sprays or mandi rates..."}
           placeholderTextColor="#94a3b8"
           value={inputQuery}
           onChangeText={setInputQuery}
@@ -717,38 +895,40 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
           returnKeyType="send"
         />
         <TouchableOpacity
-          style={styles.sendBtn}
+          style={[styles.sendBtn, { width: isMobile ? 42 : 46, height: isMobile ? 42 : 46, borderRadius: isMobile ? 21 : 23 }]}
           onPress={() => handleSend()}
           disabled={isLoading}
           activeOpacity={0.85}
         >
-          <Ionicons name="send" size={16} color="#ffffff" />
+          <Ionicons name="send" size={isMobile ? 16 : 18} color="#ffffff" />
         </TouchableOpacity>
       </View>
+
+      <FarmerPlanUpgradeModal
+        visible={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        tiers={['PRO', 'SMART', 'SUPER']}
+      />
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     width: '100%',
     backgroundColor: '#ffffff',
     borderRadius: RADIUS.lg,
     borderWidth: 1.5,
     borderColor: '#bbf7d0',
     overflow: 'hidden',
-    marginVertical: 10,
-    minHeight: 440,
-    maxHeight: 560,
+    marginVertical: 8,
   },
   containerModal: {
     flex: 1,
+    height: '100%',
     borderRadius: 0,
     borderWidth: 0,
     marginVertical: 0,
-    minHeight: '100%',
-    maxHeight: undefined,
   },
   header: {
     backgroundColor: '#14532d',
@@ -899,5 +1079,35 @@ const styles = StyleSheet.create({
     backgroundColor: '#16a34a',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  askedCounterBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#fffbeb',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#fef3c7',
+  },
+  askedCounterText: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#92400e',
+  },
+  upgradeInlineBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#d97706',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+  },
+  upgradeInlineBtnText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
   },
 });

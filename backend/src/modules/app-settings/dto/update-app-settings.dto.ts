@@ -131,6 +131,18 @@ export class UpdateAppSettingsDto {
 
   @IsOptional()
   @IsBoolean()
+  agriMaintenanceMode?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  gardenMaintenanceMode?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  walletMaintenanceMode?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
   freeTrialEnabled?: boolean;
 
   @IsOptional()

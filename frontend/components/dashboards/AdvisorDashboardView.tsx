@@ -27,7 +27,7 @@ import { useGroupVoiceCall } from '@/src/hooks/useGroupVoiceCall';
 import { GroupVoiceCallModal } from '@/src/components/chat/GroupVoiceCallModal';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 
-type TabKey = 'SUBMISSIONS' | 'DELAYED' | 'TODAY' | 'WEATHER' | 'NO_SCHEDULE' | 'PROBLEMS';
+type TabKey = 'SUBMISSIONS' | 'DELAYED' | 'TODAY' | 'WEATHER' | 'NO_SCHEDULE' | 'PROBLEMS' | 'FEES';
 
 function isScheduleFinishedOrMissing(crop: AdvisorReviewCropCycle): boolean {
   if (!crop.assignedSchedule || !crop.assignedSchedule.trim()) {
@@ -96,8 +96,9 @@ const TAB_META: Record<TabKey, { label: string; icon: keyof typeof Ionicons.glyp
   WEATHER: { label: 'Weather Alerts', icon: 'rainy-outline', color: '#0284c7', bg: '#eff6ff', border: '#bae6fd' },
   NO_SCHEDULE: { label: 'No Schedule Crops ⚠️', icon: 'warning-outline', color: '#b45309', bg: '#fff7ed', border: '#fed7aa' },
   PROBLEMS: { label: 'Problem Reports', icon: 'medkit-outline', color: '#e11d48', bg: '#ffe4e6', border: '#fecdd3' },
+  FEES: { label: 'My Fees & Settings', icon: 'wallet-outline', color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
 };
-const TAB_ORDER: TabKey[] = ['SUBMISSIONS', 'DELAYED', 'TODAY', 'WEATHER', 'NO_SCHEDULE', 'PROBLEMS'];
+const TAB_ORDER: TabKey[] = ['SUBMISSIONS', 'DELAYED', 'TODAY', 'WEATHER', 'NO_SCHEDULE', 'PROBLEMS', 'FEES'];
 
 const theme = RoleThemes.FARM_ADVISOR;
 
@@ -892,6 +893,45 @@ export const AdvisorDashboardView: React.FC = () => {
                     </View>
                   )}
                 </View>
+              ) : activeTab === 'FEES' ? (
+                <View style={{ gap: 14 }}>
+                  <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a' }}>My Earnings & Commission</Text>
+                  
+                  <View style={{ backgroundColor: '#ffffff', borderRadius: 8, padding: 12, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#1e293b', marginBottom: 8 }}>E-Parchi (Prescription) Calculation Example</Text>
+                    
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#475569' }}>Kisan Ton Fees Aayegi:</Text>
+                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>₹100.00</Text>
+                    </View>
+                    
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#ef4444' }}>FarmsKing Platform Fee (15%):</Text>
+                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ef4444' }}>- ₹15.00</Text>
+                    </View>
+
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#ef4444' }}>+ 18% GST (On Platform Fee):</Text>
+                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ef4444' }}>- ₹2.70</Text>
+                    </View>
+                    
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#ef4444' }}>Payment Gateway Fee (2%):</Text>
+                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ef4444' }}>- ₹2.00</Text>
+                    </View>
+                    
+                    <View style={{ height: 1, backgroundColor: '#e2e8f0', marginBottom: 8 }} />
+                    
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#15803d' }}>🟢 Tuhade Wallet Vich Aunge:</Text>
+                      <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#15803d' }}>₹80.30</Text>
+                    </View>
+                  </View>
+                  
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
+                    Note: Eh calculation tuhadi set kitti hui fees (₹100) de aadhar te hai. Platform commission te payment gateway fees automatically cut ho jandi hai.
+                  </Text>
+                </View>
               ) : (
                 <ScheduleList
                   items={activeTab === 'DELAYED' ? delayedSchedule : todaySchedule}
@@ -915,7 +955,7 @@ export const AdvisorDashboardView: React.FC = () => {
           <View style={[styles.proModalCard, { maxWidth: 460 }]}>
             <LinearGradient colors={['#1e3a8a', '#1d4ed8']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.proModalHeaderBanner}>
               <View style={{ flex: 1, gap: 2 }}>
-                <Text style={styles.proModalHeaderTag}>CROP CARE MEMBERSHIP PLAN</Text>
+                <Text style={styles.proModalHeaderTag}>CROP CARE VIP PASS PLAN</Text>
                 <Text style={styles.proModalHeaderTitle} numberOfLines={1}>
                   🩺 Confirm & Attach Farmer
                 </Text>
@@ -1874,7 +1914,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  sectionCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.md, borderWidth: 1, borderColor: '#f1f5f9' },
+  sectionCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.md, },
   tabRow: { gap: 6, paddingBottom: 10 },
   tabChip: {
     flexDirection: 'row',
@@ -2048,8 +2088,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: RADIUS.lg,
     padding: 12,
-    borderWidth: 1.5,
-    borderColor: '#bfdbfe',
     gap: 10,
   },
   reviewCardHeader: {
@@ -2076,8 +2114,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     borderRadius: RADIUS.md,
     padding: 10,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
     gap: 6,
   },
   landProfileHeaderTitle: {
@@ -2131,8 +2167,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: RADIUS.md,
     padding: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
     gap: 8,
   },
   reviewModalSectionTitle: {
@@ -2282,8 +2316,6 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.md,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
   },
   proFarmerName: {
     fontSize: 12,
@@ -2313,8 +2345,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: RADIUS.md,
     padding: 8,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
     gap: 6,
   },
   proCardSectionHeader: {
@@ -2340,8 +2370,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     borderRadius: RADIUS.sm,
     padding: 6,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
     gap: 1,
   },
   proGridLabel: {
@@ -2359,8 +2387,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
     borderRadius: RADIUS.sm,
     padding: 6,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
     marginTop: 2,
     gap: 1,
   },

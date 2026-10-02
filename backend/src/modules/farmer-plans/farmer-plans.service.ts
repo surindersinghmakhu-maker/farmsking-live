@@ -351,7 +351,7 @@ export class FarmerPlansService implements OnModuleInit {
     const isCropCareOnly = coupon.category === PlanCouponCategory.DOCTOR_CONSULTATION && !coupon.includeMembership;
     if (isCropCareOnly && !isMembershipActive) {
       throw new BadRequestException(
-        'Active Membership Required! Farmer does not have an active Membership plan. Please get a Membership plan from Admin first, or ask your Doctor to generate a combined Membership + Crop Care Plan coupon.',
+        'Active VIP Pass Required! Farmer does not have an active VIP Pass. Please get a VIP Pass from Admin first, or ask your Doctor to generate a combined VIP Pass + Crop Care Plan coupon.',
       );
     }
 
@@ -479,7 +479,7 @@ export class FarmerPlansService implements OnModuleInit {
       await this.notificationsService.create(
         farmerId,
         NotificationType.SYSTEM,
-        'Membership Upgraded! 👑',
+        'VIP Pass Upgraded! 👑',
         `Your previous ${currentPlanType} plan (${daysRemaining} days remaining) has been placed in Sleep Mode. Your new ${targetPlan} plan is now active!`,
       );
     }
@@ -972,7 +972,7 @@ export class FarmerPlansService implements OnModuleInit {
     const isCropCareOnly = coupon.category === PlanCouponCategory.DOCTOR_CONSULTATION && !coupon.includeMembership;
     if (isCropCareOnly && !isMembershipActive) {
       throw new BadRequestException(
-        'Active Membership Required! Farmer does not have an active Membership plan. Please get a Membership plan from Admin first, or ask your Doctor to generate a combined Membership + Crop Care Plan coupon.',
+        'Active VIP Pass Required! Farmer does not have an active VIP Pass. Please get a VIP Pass from Admin first, or ask your Doctor to generate a combined VIP Pass + Crop Care Plan coupon.',
       );
     }
 

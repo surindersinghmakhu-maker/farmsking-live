@@ -1,4 +1,9 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { GoogleGenAI } from "@google/genai";
+
+// FarmsKing Agri AI — Gemini 2.5 Flash with Google Search Grounding
+const ai = new GoogleGenAI({ apiKey: process.env.EXPO_PUBLIC_GEMINI_API_KEY || '' });
+
 import {
   View,
   Text,
@@ -49,6 +54,35 @@ const getCleanMobile = (mobile?: string | null) => {
   if (!mobile || mobile.startsWith('G_')) return '';
   return mobile;
 };
+async function askFarmerAI(userQuestion: string): Promise<string> {
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: userQuestion,
+      config: {
+        systemInstruction: `You are an elite, highly knowledgeable Agriculture and Farming Expert AI. 
+        Your absolute and sole duty is to answer questions related to crops, soil, weather, fertilizers, pesticides, livestock, mandi/market rates, and farming techniques.
+        
+        CRITICAL RULES:
+        1. Language: Automatically detect the language of the user's question (e.g., English, Hindi, Punjabi, Telugu) and respond fluently in that exact same language.
+        2. Filtering: If the user asks anything outside of agriculture, farming, or rural development, you must politely refuse. Respond with: "I can only assist with agriculture and farming-related queries. Please ask about crops, weather, or farming." translated accurately into the user's detected language.
+        3. Tone: Helpful, professional, and easy to understand for farmers.`,
+
+        tools: [{ googleSearch: {} }],
+
+        safetySettings: [
+          { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_LOW_AND_ABOVE" },
+          { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_LOW_AND_ABOVE" }
+        ]
+      }
+    });
+
+    return response.text || "No response generated.";
+  } catch (error) {
+    console.error("Gemini API Error:", error);
+    return "Error connecting to AI Assistant.";
+  }
+}
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -64,6 +98,29 @@ export default function ProfileScreen() {
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [otpError, setOtpError] = useState<string | null>(null);
   const [devOtpMsg, setDevOtpMsg] = useState<string | null>(null);
+
+  // ===== FarmsKing Agri AI Chat State =====
+  const [aiQuestion, setAiQuestion] = useState('');
+  const [aiAnswer, setAiAnswer] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  /** Sends user's question to Gemini 2.5 Flash Agri AI and stores the reply */
+  const handleChatSubmit = async (text?: string) => {
+    const question = (text ?? aiQuestion).trim();
+    if (!question) return;
+    setAiLoading(true);
+    setAiAnswer(null);
+    try {
+      const reply = await askFarmerAI(question);
+      setAiAnswer(reply);
+      console.log('[FarmsKing Agri AI]', reply);
+    } catch (err) {
+      console.error('[FarmsKing Agri AI Error]', err);
+      setAiAnswer('Error connecting to AI. Please try again.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const handleSendOtp = async () => {
     const num = userMobile.replace(/\D/g, '').slice(-10);
@@ -428,10 +485,10 @@ export default function ProfileScreen() {
           {activeTab === 'ADDRESSES'
             ? 'My Registered Addresses'
             : isAdmin
-            ? 'System Admin Profile'
-            : isWorker
-            ? 'Worker & Labour Profile'
-            : 'Personal Profile'}
+              ? 'System Admin Profile'
+              : isWorker
+                ? 'Worker & Labour Profile'
+                : 'Personal Profile'}
         </Text>
         <View style={{ width: 36 }} />
       </LinearGradient>
@@ -852,84 +909,84 @@ export default function ProfileScreen() {
             </View>
           )}
 
-      {/* 📲 Mobile Number OTP Verification Modal */}
-      <Modal
-        visible={isOtpModalOpen}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setIsOtpModalOpen(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Ionicons name="chatbubble-ellipses" size={20} color="#16a34a" />
-                <Text style={styles.modalTitle}>Verify Mobile OTP</Text>
+          {/* 📲 Mobile Number OTP Verification Modal */}
+          <Modal
+            visible={isOtpModalOpen}
+            animationType="fade"
+            transparent
+            onRequestClose={() => setIsOtpModalOpen(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="chatbubble-ellipses" size={20} color="#16a34a" />
+                    <Text style={styles.modalTitle}>Verify Mobile OTP</Text>
+                  </View>
+                  <TouchableOpacity onPress={() => setIsOtpModalOpen(false)}>
+                    <Ionicons name="close" size={20} color="#64748b" />
+                  </TouchableOpacity>
+                </View>
+
+                <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#475569', marginBottom: 12 }}>
+                  We sent a 6-digit OTP to WhatsApp number <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>{userMobile}</Text>.
+                </Text>
+
+                {devOtpMsg ? (
+                  <View style={{ backgroundColor: '#fef3c7', padding: 8, borderRadius: RADIUS.md, marginBottom: 10 }}>
+                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#92400e' }}>{devOtpMsg}</Text>
+                  </View>
+                ) : null}
+
+                <Text style={[styles.inputLabel, { fontSize: 11.5, color: '#334155' }]}>6-Digit OTP Code *</Text>
+                <TextInput
+                  style={[styles.modalInput, { fontSize: 18, fontFamily: FONT.bold, letterSpacing: 4, textAlign: 'center' }]}
+                  value={otpCode}
+                  onChangeText={setOtpCode}
+                  placeholder="123456"
+                  placeholderTextColor="#cbd5e1"
+                  keyboardType="number-pad"
+                  maxLength={6}
+                />
+
+                <Text style={[styles.inputLabel, { fontSize: 11.5, color: '#334155', marginTop: 10 }]}>Create Account Password (Optional)</Text>
+                <TextInput
+                  style={[styles.modalInput, { fontSize: 14, fontFamily: FONT.bold }]}
+                  value={loginPassword}
+                  onChangeText={setLoginPassword}
+                  placeholder="Create/Set Mobile Password"
+                  placeholderTextColor="#cbd5e1"
+                  secureTextEntry
+                />
+
+                {otpError ? (
+                  <Text style={{ color: '#ef4444', fontSize: 12, fontFamily: FONT.bold, marginTop: 8 }}>{otpError}</Text>
+                ) : null}
+
+                <TouchableOpacity
+                  style={[styles.modalSubmitBtn, { backgroundColor: '#16a34a' }]}
+                  onPress={handleVerifyOtp}
+                  disabled={isVerifyingOtp}
+                >
+                  {isVerifyingOtp ? (
+                    <ActivityIndicator color="#ffffff" />
+                  ) : (
+                    <Text style={styles.modalSubmitText}>Verify & Link Mobile</Text>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={{ marginTop: 12, alignItems: 'center' }}
+                  onPress={handleSendOtp}
+                  disabled={isSendingOtp}
+                >
+                  <Text style={{ color: '#0284c7', fontSize: 12, fontFamily: FONT.bold }}>
+                    {isSendingOtp ? 'Resending...' : 'Didn\'t receive OTP? Resend via WhatsApp'}
+                  </Text>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity onPress={() => setIsOtpModalOpen(false)}>
-                <Ionicons name="close" size={20} color="#64748b" />
-              </TouchableOpacity>
             </View>
-
-            <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#475569', marginBottom: 12 }}>
-              We sent a 6-digit OTP to WhatsApp number <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>{userMobile}</Text>.
-            </Text>
-
-            {devOtpMsg ? (
-              <View style={{ backgroundColor: '#fef3c7', padding: 8, borderRadius: RADIUS.md, marginBottom: 10 }}>
-                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#92400e' }}>{devOtpMsg}</Text>
-              </View>
-            ) : null}
-
-            <Text style={[styles.inputLabel, { fontSize: 11.5, color: '#334155' }]}>6-Digit OTP Code *</Text>
-            <TextInput
-              style={[styles.modalInput, { fontSize: 18, fontFamily: FONT.bold, letterSpacing: 4, textAlign: 'center' }]}
-              value={otpCode}
-              onChangeText={setOtpCode}
-              placeholder="123456"
-              placeholderTextColor="#cbd5e1"
-              keyboardType="number-pad"
-              maxLength={6}
-            />
-
-            <Text style={[styles.inputLabel, { fontSize: 11.5, color: '#334155', marginTop: 10 }]}>Create Account Password (Optional)</Text>
-            <TextInput
-              style={[styles.modalInput, { fontSize: 14, fontFamily: FONT.bold }]}
-              value={loginPassword}
-              onChangeText={setLoginPassword}
-              placeholder="Create/Set Mobile Password"
-              placeholderTextColor="#cbd5e1"
-              secureTextEntry
-            />
-
-            {otpError ? (
-              <Text style={{ color: '#ef4444', fontSize: 12, fontFamily: FONT.bold, marginTop: 8 }}>{otpError}</Text>
-            ) : null}
-
-            <TouchableOpacity
-              style={[styles.modalSubmitBtn, { backgroundColor: '#16a34a' }]}
-              onPress={handleVerifyOtp}
-              disabled={isVerifyingOtp}
-            >
-              {isVerifyingOtp ? (
-                <ActivityIndicator color="#ffffff" />
-              ) : (
-                <Text style={styles.modalSubmitText}>Verify & Link Mobile</Text>
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={{ marginTop: 12, alignItems: 'center' }}
-              onPress={handleSendOtp}
-              disabled={isSendingOtp}
-            >
-              <Text style={{ color: '#0284c7', fontSize: 12, fontFamily: FONT.bold }}>
-                {isSendingOtp ? 'Resending...' : 'Didn\'t receive OTP? Resend via WhatsApp'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+          </Modal>
 
           {/* Privacy Policy & Google Play Store Compliance Button */}
           <TouchableOpacity
@@ -989,8 +1046,8 @@ export default function ProfileScreen() {
                 link.click();
                 document.body.removeChild(link);
                 return;
-                }
-              Linking.openURL(url).catch(() => {});
+              }
+              Linking.openURL(url).catch(() => { });
             }}
             activeOpacity={0.85}
           >

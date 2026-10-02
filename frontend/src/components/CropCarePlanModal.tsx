@@ -108,10 +108,15 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
         advisorKingId: !isSeniorDoctor ? (selectedAdv?.kingId ?? undefined) : undefined,
       });
 
-      setPaymentData(res);
-      setShowUpiPay(true);
+      if (res.cashfreeSessionId) {
+        if (Platform.OS === 'web') {
+          window.location.href = `https://payments.cashfree.com/order/#${res.cashfreeSessionId}`;
+        } else {
+          await Linking.openURL(`https://payments.cashfree.com/order/#${res.cashfreeSessionId}`);
+        }
+      }
     } catch (err: any) {
-      setCouponStatus(`❌ ${err?.response?.data?.message || 'Could not generate UPI QR code.'}`);
+      setCouponStatus(`❌ ${err?.response?.data?.message || 'Could not initiate Cashfree payment.'}`);
     } finally {
       setIsGeneratingQr(false);
     }
@@ -168,7 +173,7 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Ionicons name="medical" size={20} color="#38bdf8" />
-                <Text style={styles.headerTitle}>Crops Care Plan & Doctor Advisory</Text>
+                <Text style={styles.headerTitle}>CROP CARE SCHEME</Text>
               </View>
               <Text style={styles.headerSub}>Specialist Doctor Supervision for Your Crops</Text>
             </View>
@@ -414,58 +419,64 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
                 ) : (
                   /* TAB 2: BUY COUPON (SELECT PLAN & DOCTOR/ADVISOR) */
                   <View style={{ gap: 12 }}>
-                    <Text style={styles.sectionTitle}>🩺 SELECT CROPS CARE PLAN & ADVISOR</Text>
+                    <Text style={styles.sectionTitle}>🩺 SELECT CROP CARE SCHEME</Text>
 
-                    {/* Plan A: 5-Crop Doctor Care */}
+                    {/* Plan A: Crop Advisor */}
                     <TouchableOpacity
                       style={[
                         styles.planOptionCard,
-                        selectedPlanKey === 'GOLD' && { borderColor: '#0284c7', backgroundColor: '#f0f9ff' },
+                        selectedPlanKey === 'SILVER' && { borderColor: '#16a34a', backgroundColor: '#f0fdf4' },
+                      ]}
+                      activeOpacity={0.88}
+                      onPress={() => setSelectedPlanKey('SILVER')}
+                    >
+                      <View style={styles.planHeaderRow}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.planTitleText, { color: '#16a34a' }]}>👨‍🌾 Crop Advisor Plan</Text>
+                          <Text style={styles.planPriceText}>₹299 <Text style={styles.planPeriodText}>/ Full Crop Season</Text></Text>
+                        </View>
+                        <Ionicons
+                          name={selectedPlanKey === 'SILVER' ? 'radio-button-on' : 'radio-button-off'}
+                          size={22}
+                          color={selectedPlanKey === 'SILVER' ? '#16a34a' : '#cbd5e1'}
+                        />
+                      </View>
+                      <Text style={[styles.planDescText, { color: '#15803d', fontWeight: 'bold' }]}>
+                        Expert in: Wheat, Paddy, Cotton, Mustard & Traditional Crops
+                      </Text>
+                      <Text style={styles.planDescText}>
+                        Covers up to 5 active crops with dedicated advisor supervision, soil health tracking, and spray guidance.
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Plan B: Expert Doctor */}
+                    <TouchableOpacity
+                      style={[
+                        styles.planOptionCard,
+                        selectedPlanKey === 'GOLD' && { borderColor: '#d97706', backgroundColor: '#fffbeb' },
                       ]}
                       activeOpacity={0.88}
                       onPress={() => setSelectedPlanKey('GOLD')}
                     >
+                      <View style={[styles.vipTagPill, { backgroundColor: '#d97706' }]}>
+                        <Text style={styles.vipTagText}>🌟 EXPERT SUPERVISION</Text>
+                      </View>
                       <View style={styles.planHeaderRow}>
                         <View style={{ flex: 1 }}>
-                          <Text style={[styles.planTitleText, { color: '#0284c7' }]}>🩺 5-Crop Care Advisory</Text>
+                          <Text style={[styles.planTitleText, { color: '#d97706' }]}>🩺 Expert Doctor Plan</Text>
                           <Text style={styles.planPriceText}>₹499 <Text style={styles.planPeriodText}>/ Full Crop Season</Text></Text>
                         </View>
                         <Ionicons
                           name={selectedPlanKey === 'GOLD' ? 'radio-button-on' : 'radio-button-off'}
                           size={22}
-                          color={selectedPlanKey === 'GOLD' ? '#0284c7' : '#cbd5e1'}
+                          color={selectedPlanKey === 'GOLD' ? '#d97706' : '#cbd5e1'}
                         />
                       </View>
-                      <Text style={styles.planDescText}>
-                        Covers up to 5 active crops with 1-on-1 dedicated Doctor supervision and spray guidance.
+                      <Text style={[styles.planDescText, { color: '#b45309', fontWeight: 'bold' }]}>
+                        Expert in: Vegetables, Fruits, Horticulture, Polyhouse & All Cash Crops
                       </Text>
-                    </TouchableOpacity>
-
-                    {/* Plan B: 10-Crop VIP Doctor Care */}
-                    <TouchableOpacity
-                      style={[
-                        styles.planOptionCard,
-                        selectedPlanKey === 'ROYAL' && { borderColor: '#7c3aed', backgroundColor: '#f5f3ff' },
-                      ]}
-                      activeOpacity={0.88}
-                      onPress={() => setSelectedPlanKey('ROYAL')}
-                    >
-                      <View style={styles.vipTagPill}>
-                        <Text style={styles.vipTagText}>🌟 VIP FULL FARM ADVISORY</Text>
-                      </View>
-                      <View style={styles.planHeaderRow}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={[styles.planTitleText, { color: '#7c3aed' }]}>🩺 10-Crop VIP Advisory</Text>
-                          <Text style={styles.planPriceText}>₹999 <Text style={styles.planPeriodText}>/ Full Crop Season</Text></Text>
-                        </View>
-                        <Ionicons
-                          name={selectedPlanKey === 'ROYAL' ? 'radio-button-on' : 'radio-button-off'}
-                          size={22}
-                          color={selectedPlanKey === 'ROYAL' ? '#7c3aed' : '#cbd5e1'}
-                        />
-                      </View>
                       <Text style={styles.planDescText}>
-                        Covers up to 10 crop plots daily, direct audio/video call requests, and emergency disease visits.
+                        Covers up to 10 crop plots with Senior Doctor priority care, direct audio/video call requests, and emergency disease visits.
                       </Text>
                     </TouchableOpacity>
 
@@ -519,9 +530,9 @@ export function CropCarePlanModal({ visible, onClose }: CropCarePlanModalProps) 
                         <ActivityIndicator color="#ffffff" />
                       ) : (
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          <Ionicons name="qr-code-outline" size={18} color="#ffffff" />
+                          <Ionicons name="card-outline" size={18} color="#ffffff" />
                           <Text style={styles.buyBtnText}>
-                            Generate Admin QR Code ({selectedPlanKey === 'ROYAL' ? '₹999' : '₹499'})
+                            Pay securely via Cashfree ({selectedPlanKey === 'GOLD' ? '₹499' : '₹299'})
                           </Text>
                         </View>
                       )}

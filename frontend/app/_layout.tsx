@@ -52,7 +52,13 @@ function RootNavigation() {
     if (!user && !inAuthGroup && !isPublicRoute) {
       router.replace('/(auth)/login');
     } else if (user && inAuthGroup) {
-      router.replace('/(tabs)');
+      if (['SUPER_ADMIN', 'ADMIN', 'OPERATOR'].includes(user.role)) {
+        router.replace('/(admin)/(tabs)');
+      } else if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user.role)) {
+        router.replace('/(partner)/(tabs)');
+      } else {
+        router.replace('/(user)/(tabs)');
+      }
     }
   }, [user, isLoading, segments]);
 
@@ -62,7 +68,9 @@ function RootNavigation() {
 
   return (
     <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="(admin)" options={{ headerShown: false }} />
+      <Stack.Screen name="(partner)" options={{ headerShown: false }} />
+      <Stack.Screen name="(user)" options={{ headerShown: false }} />
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="seo" options={{ headerShown: false }} />
       <Stack.Screen name="dose" options={{ headerShown: false }} />

@@ -204,7 +204,7 @@ export function SupervisorManagementModal({
             <View style={{ flex: 1, gap: 2 }}>
               <View style={styles.vipBadgeRow}>
                 <Ionicons name="shield-checkmark" size={13} color="#f59e0b" />
-                <Text style={styles.vipBadgeText}>VIP MEMBERSHIP EXCLUSIVE</Text>
+                <Text style={styles.vipBadgeText}>VIP PASS SCHEME EXCLUSIVE</Text>
               </View>
               <Text style={styles.headerTitle}>My Farm Supervisors 🚜</Text>
             </View>
@@ -402,7 +402,7 @@ export function SupervisorManagementModal({
                     <Ionicons name="people-outline" size={36} color="#94a3b8" />
                     <Text style={styles.emptyTitle}>No Supervisors Added Yet</Text>
                     <Text style={styles.emptySub}>
-                      As a VIP Member, you can add sub-accounts for your farm supervisors and delegate powers to them.
+                      As a VIP Pass holder, you can add sub-accounts for your farm supervisors and delegate powers to them.
                     </Text>
                   </View>
                 ) : (

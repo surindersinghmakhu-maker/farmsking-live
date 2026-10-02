@@ -299,7 +299,8 @@ enum AdvisorSubscriptionPlan {
 
 enum GardenerSubscriptionPlan {
   FREE
-  PREMIUM
+  PRO
+  VIP
 }
 
 enum PartnerAssignmentStatus {
@@ -359,6 +360,7 @@ enum SellerKycStatus {
   SUBMITTED
   VERIFIED
   REJECTED
+  BLOCKED
 }
 
 enum SellerPayoutStatus {
@@ -398,6 +400,13 @@ enum WaterType {
   POND_LAKE
   RAINFED
   TAP_MUNICIPAL
+}
+
+enum ExpertApplicationStatus {
+  INVITED
+  FORM_SUBMITTED
+  APPROVED
+  REJECTED
 }
 
 // ─── Phase 1: Users, Farms, Plots, Crops ────────────────────────────────
@@ -464,6 +473,20 @@ model User {
   seniorDoctor              User?                @relation("DoctorHierarchy", fields: [seniorDoctorId], references: [id], onDelete: SetNull)
   juniorDoctors             User[]               @relation("DoctorHierarchy")
   doctorConsultationFee     Decimal?             @db.Decimal(10, 2)
+  
+  // --- Advisor / Doctor Feature Permissions ---
+  canAdoptCrop              Boolean              @default(false)
+  canGiveEPrescription      Boolean              @default(false)
+  canTakeCalls              Boolean              @default(false)
+  canDoFarmVisits           Boolean              @default(false)
+  isDemoAllowed             Boolean              @default(false)
+
+  // --- Advisor Pricing & Commission Slabs ---
+  commissionPercent         Float?               @default(15.0)
+  eParchiFee                Decimal?             @db.Decimal(10, 2) @default(50)
+  callConsultationFee       Decimal?             @db.Decimal(10, 2) @default(100)
+  farmVisitFee              Decimal?             @db.Decimal(10, 2) @default(500)
+
   operatorPermissions   OperatorPermission[]   @default([])
   adminStaffPermissions AdminStaffPermission[] @default([])
   supervisorPermissions SupervisorPermission[] @default([])
@@ -528,8 +551,8 @@ model User {
   farmerPriceLockContracts      PriceLockContract[]    @relation("FarmerPriceLock")
   buyerPriceLockContracts       PriceLockContract[]    @relation("BuyerPriceLock")
   advisorSubscriptionsAsFarmer  AdvisorSubscription[]  @relation("SubscriptionFarmer")
-
-
+  expertApplicationsAsUser      ExpertApplication[]    @relation("ExpertAppUser")
+  expertInvitesSent             ExpertApplication[]    @relation("ExpertAppAdmin")
   advisorSubscriptionsApproved  AdvisorSubscription[]  @relation("SubscriptionApprovedBy")
   planPaymentRequestsAsFarmer   PlanPaymentRequest[]   @relation("PlanPaymentFarmer")
   planPaymentRequestsConfirmed  PlanPaymentRequest[]   @relation("PlanPaymentConfirmedBy")
@@ -616,6 +639,12 @@ model User {
   @@index([role])
   @@index([kingId, role])
   @@index([deletedAt])
+
+  gardenExpenses                GardenExpense[]
+  gardenExpertPlans             GardenExpertPlan[]       @relation("ExpertPlanOwner")
+  expertAssignments             GardenExpertAssignment[] @relation("ExpertAssignment")
+  gardenerAssignments           GardenExpertAssignment[] @relation("GardenerAssignment")
+  gardenerPlanPayments          GardenerPlanPaymentRequest[]
   @@map("users")
 }
 
@@ -1641,8 +1670,9 @@ model Garden {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  visits GardenVisit[]
-  plants Plant[]
+  visits   GardenVisit[]
+  plants   Plant[]
+  expenses GardenExpense[]
 
   @@index([gardenerId])
   @@map("gardens")
@@ -1659,6 +1689,8 @@ model Plant {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
+
+  expenses  GardenExpense[]
 
   @@index([gardenId])
   @@map("plants")
@@ -1856,6 +1888,11 @@ model CustomerOrder {
   couponId        String?
   coupon          Coupon?     @relation(fields: [couponId], references: [id], onDelete: SetNull)
   discountAmount  Decimal?    @db.Decimal(12, 2)
+
+  walletUsedAmount       Decimal? @db.Decimal(12, 2)
+  walletPlatformFee      Decimal? @db.Decimal(12, 2)
+  walletGstAmount        Decimal? @db.Decimal(12, 2)
+  platformExpense        Boolean  @default(false)
 
   paymentMode            OrderPaymentMode   @default(COD)
   paymentStatus          OrderPaymentStatus @default(UNPAID)
@@ -2293,6 +2330,9 @@ model AppSetting {
   appDownloadUrl         String?  @default("https://farmsking.in/download/farmsking.apk")
   latestAppVersion       String?  @default("1.0.0")
   storefrontMaintenanceMode Boolean @default(false)
+  agriMaintenanceMode    Boolean @default(false)
+  gardenMaintenanceMode  Boolean @default(false)
+  walletMaintenanceMode  Boolean @default(false)
   allowDirectPlatformSales  Boolean @default(false)
   freeTrialEnabled       Boolean  @default(true)
   freeTrialDays          Int      @default(10)
@@ -2301,6 +2341,19 @@ model AppSetting {
   updatedAt             DateTime @updatedAt
   updatedById           String?
   updatedBy             User?    @relation("AppSettingUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  gardenExpertPlatformFeePercent Float @default(20.0)
+  gardenerProCardPrice          Decimal  @default(299.00) @db.Decimal(12, 2)
+  gardenerVipCardPrice          Decimal  @default(999.00) @db.Decimal(12, 2)
+
+  /// Platform TDS/fee deducted on wallet withdrawal (%) — Indian standard: 2% TDS (Sec 194N)
+  withdrawalPlatformFeePercent  Float    @default(2.0)
+  /// GST on platform service fee for wallet payout — 18% as per Indian GST rules
+  withdrawalGstPercent          Float    @default(18.0)
+  /// GST on wallet-used-at-checkout transaction (platform payment processing fee 2% + 18% GST on that fee)
+  walletUsagePlatformFeePercent Float    @default(2.0)
+  walletUsageGstPercent         Float    @default(18.0)
+  /// Whether to apply platform fee+GST on wallet actions (can be toggled by superadmin)
+  walletTaxEnabled              Boolean  @default(true)
 
   @@map("app_settings")
 }
@@ -2345,6 +2398,10 @@ model WithdrawalRequest {
   businessPartner   User             @relation("WithdrawalRequestsPartner", fields: [businessPartnerId], references: [id], onDelete: Cascade)
   requestedAmount   Decimal          @db.Decimal(10, 2)
   approvedAmount    Decimal?         @db.Decimal(10, 2)
+  platformFeeAmount Decimal?         @db.Decimal(10, 2) // Platform processing fee (e.g. 2%)
+  gstAmount         Decimal?         @db.Decimal(10, 2) // GST on platform fee (18%)
+  netPayableAmount  Decimal?         @db.Decimal(10, 2) // Amount actually paid out after deductions
+  platformExpense   Boolean          @default(true)    // Always a platform expense
   status            WithdrawalStatus @default(PENDING)
   requestedAt       DateTime         @default(now())
   processedAt       DateTime?
@@ -2576,17 +2633,19 @@ model FarmerPlanPricing {
 
 /// Gardener ki current active plan record. Har gardener ka ek hi row hoga (unique on gardenerId).
 model GardenerPlan {
-  id         String                   @id @default(uuid())
-  gardenerId String                   @unique
-  gardener   User                     @relation(fields: [gardenerId], references: [id], onDelete: Cascade)
-  plan       GardenerSubscriptionPlan @default(FREE)
-  startDate  DateTime                 @default(now())
-  endDate    DateTime? // null = FREE plan (no expiry)
-  expiredAt  DateTime? // when this plan actually lapsed — drives the 2-day grace / 3-month renew-history window
-  couponId   String?
-  coupon     GardenerPlanCoupon?      @relation(fields: [couponId], references: [id], onDelete: SetNull)
-  createdAt  DateTime                 @default(now())
-  updatedAt  DateTime                 @updatedAt
+  id              String                   @id @default(uuid())
+  gardenerId      String                   @unique
+  gardener        User                     @relation(fields: [gardenerId], references: [id], onDelete: Cascade)
+  plan            GardenerSubscriptionPlan @default(FREE)
+  startDate       DateTime                 @default(now())
+  endDate         DateTime? // null = FREE plan (no expiry)
+  expiredAt       DateTime? // when this plan actually lapsed
+  couponId        String?
+  coupon          GardenerPlanCoupon?      @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  hasUsedVipTrial Boolean                  @default(false) // 30-day free VIP demo
+  trialStartedAt  DateTime?                // when demo was activated
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
 
   @@map("gardener_plans")
 }
@@ -3083,5 +3142,107 @@ model FarmerTrainingLog {
   @@index([district])
   @@index([status])
   @@map("farmer_training_logs")
+}
+
+model ExpertApplication {
+  id               String                  @id @default(uuid())
+  userId           String                  @unique
+  user             User                    @relation("ExpertAppUser", fields: [userId], references: [id], onDelete: Cascade)
+  invitedByAdminId String?
+  invitedByAdmin   User?                   @relation("ExpertAppAdmin", fields: [invitedByAdminId], references: [id], onDelete: SetNull)
+  status           ExpertApplicationStatus @default(INVITED)
+  qualification    String?
+  experienceYears  Int?
+  expertise        String?
+  bio              String?
+  
+  // KYC & Verification Documents
+  googleEmail          String?
+  isPhoneVerified      Boolean                 @default(false)
+  aadhaarCardUrl       String?
+  passportPhotoUrl     String?
+  optionalDocument1Url String?
+  optionalDocument2Url String?
+
+  rejectionReason  String?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+
+  @@index([status])
+  @@map("expert_applications")
+}
+model GardenExpense {
+  id              String          @id @default(uuid())
+  gardenId        String
+  garden          Garden          @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+  plantId         String?
+  plant           Plant?          @relation(fields: [plantId], references: [id], onDelete: SetNull)
+  categoryName    String
+  amount          Decimal         @db.Decimal(12, 2)
+  expenseDate     DateTime
+  description     String?
+  receiptPhotoUrl String?
+  recordedById    String
+  recordedBy      User            @relation(fields: [recordedById], references: [id])
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([gardenId])
+  @@index([plantId])
+  @@map("garden_expenses")
+}
+
+model GardenExpertPlan {
+  id             String                   @id @default(uuid())
+  expertId       String
+  expert         User                     @relation("ExpertPlanOwner", fields: [expertId], references: [id], onDelete: Cascade)
+  title          String
+  description    String?
+  price          Decimal                  @db.Decimal(12, 2)
+  durationMonths Int                      @default(6)
+  isActive       Boolean                  @default(true)
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+
+  assignments    GardenExpertAssignment[]
+
+  @@index([expertId])
+  @@map("garden_expert_plans")
+}
+
+model GardenExpertAssignment {
+  id             String                 @id @default(uuid())
+  gardenerId     String
+  gardener       User                   @relation("GardenerAssignment", fields: [gardenerId], references: [id], onDelete: Cascade)
+  expertId       String
+  expert         User                   @relation("ExpertAssignment", fields: [expertId], references: [id])
+  planId         String?
+  plan           GardenExpertPlan?      @relation(fields: [planId], references: [id], onDelete: SetNull)
+  status         AdvisorAssignmentStatus @default(PENDING)
+  amountPaid     Decimal                @default(0) @db.Decimal(12, 2)
+  platformFee    Decimal                @default(0) @db.Decimal(12, 2)
+  startDate      DateTime
+  endDate        DateTime?
+  notes          String?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  @@index([gardenerId])
+  @@index([expertId])
+  @@map("garden_expert_assignments")
+}
+model GardenerPlanPaymentRequest {
+  id              String                   @id @default(uuid())
+  gardenerId      String
+  gardener        User                     @relation(fields: [gardenerId], references: [id], onDelete: Cascade)
+  plan            GardenerSubscriptionPlan
+  amount          Decimal                  @db.Decimal(12, 2)
+  status          PlanPaymentStatus        @default(PENDING)
+  requestedAt     DateTime                 @default(now())
+  paidAt          DateTime?
+  
+  @@index([gardenerId])
+  @@index([status])
+  @@map("gardener_plan_payments")
 }
 

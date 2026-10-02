@@ -156,6 +156,53 @@ export class CashfreeService {
   }
 
   /**
+   * Create Standard Cashfree Order (No Splits) - Used for Plan Payments
+   */
+  async createStandardOrder(dto: { orderId: string; amount: number; customerId: string; customerPhone: string; customerName?: string }) {
+    const endpoint = `${this.baseUrl}/orders`;
+
+    const payload = {
+      order_id: dto.orderId,
+      order_amount: dto.amount,
+      order_currency: 'INR',
+      customer_details: {
+        customer_id: dto.customerId,
+        customer_name: dto.customerName || 'FarmsKing User',
+        customer_phone: dto.customerPhone || '9999999999',
+      },
+      order_meta: {
+        return_url: `https://farmsking.in/payment-status?order_id={order_id}`,
+        notify_url: `https://api.farmsking.in/cashfree/webhook`,
+      },
+    };
+
+    try {
+      this.logger.log(`Creating Cashfree Standard Order: ${dto.orderId}`);
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(payload),
+      });
+
+      const resData = await response.json();
+
+      if (!response.ok) {
+        this.logger.error(`Cashfree Order Creation Failed: ${JSON.stringify(resData)}`);
+        throw new BadRequestException(resData?.message || 'Cashfree Order creation failed.');
+      }
+
+      return {
+        orderId: resData.order_id,
+        paymentSessionId: resData.payment_session_id,
+        orderStatus: resData.order_status,
+      };
+    } catch (error) {
+      this.logger.error('Error creating Cashfree standard order:', error);
+      throw new InternalServerErrorException(error.message || 'Cashfree Order creation failed.');
+    }
+  }
+
+  /**
    * Verify Payment Session Status from Cashfree
    */
   async verifyPayment(orderId: string) {
@@ -286,9 +333,93 @@ export class CashfreeService {
     const orderStatus = body?.data?.order?.order_status;
 
     if (orderId && orderStatus === 'PAID') {
-      await this.handlePaymentSuccess(orderId, body.data.order);
+      if (orderId.startsWith('PLAN-')) {
+        await this.handlePlanPaymentSuccess(orderId);
+      } else if (orderId.startsWith('GCARD-')) {
+        await this.handleGardenerPlanPaymentSuccess(orderId);
+      } else {
+        await this.handlePaymentSuccess(orderId, body.data.order);
+      }
     }
 
     return { status: 'SUCCESS' };
+  }
+
+  /**
+   * Handle Plan Payment Success
+   */
+  async handlePlanPaymentSuccess(orderId: string) {
+    const requestId = orderId.replace('PLAN-', '');
+    // We will update the status to PAID. The actual confirmation (coupon generation) can be triggered separately or handled directly.
+    await this.prisma.farmerPlanPaymentRequest.updateMany({
+      where: { id: requestId, status: 'PENDING' },
+      data: { status: 'SUBMITTED', utr: 'CASHFREE-AUTO', submittedAt: new Date() },
+    });
+  }
+
+  async handleGardenerPlanPaymentSuccess(orderId: string) {
+    const requestId = orderId.replace('GCARD-', '');
+    const request = await this.prisma.gardenerPlanPaymentRequest.findUnique({
+      where: { id: requestId },
+    });
+    if (!request || request.status !== 'PENDING') return;
+
+    await this.prisma.$transaction(async (tx) => {
+      // Mark as paid
+      await tx.gardenerPlanPaymentRequest.update({
+        where: { id: requestId },
+        data: { status: 'APPROVED', paidAt: new Date() },
+      });
+      
+      const now = new Date();
+      // Directly activate the plan
+      await tx.gardenerPlan.upsert({
+        where: { gardenerId: request.gardenerId },
+        create: {
+          gardenerId: request.gardenerId,
+          plan: request.plan,
+          startDate: now,
+          endDate: null,
+          expiredAt: null,
+        },
+        update: {
+          plan: request.plan,
+          startDate: now,
+          endDate: null,
+          expiredAt: null,
+        },
+      });
+
+      // Fetch user to get their address and role
+      const gardener = await tx.user.findUnique({ where: { id: request.gardenerId } });
+      const address = gardener ? [gardener.village, gardener.tehsil, gardener.district, gardener.state, gardener.pincode].filter(Boolean).join(', ') : 'Registered Address';
+
+      // Place a free order for Flower Seeds Gift Pack ONLY for GARDENER role
+      if (gardener?.role === 'GARDENER') {
+        const giftOrderNumber = `GIFT-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+        await tx.customerOrder.create({
+          data: {
+            customerId: request.gardenerId,
+            orderNumber: giftOrderNumber,
+            totalAmount: 0,
+            discountAmount: request.amount, // MRP is discounted to 0
+            deliveryAddress: address,
+            paymentMode: 'PREPAID', // It's free, effectively prepaid
+            paymentStatus: 'PAID',
+            items: {
+              create: [
+                {
+                  productName: `Flower Seeds Gift Pack (${request.plan} Plan Offer)`,
+                  quantity: 1,
+                  price: request.amount, // MRP is same as plan price
+                  sellerStoreId: null, // Platform is the seller
+                  subtotal: request.amount,
+                }
+              ]
+            }
+          }
+        });
+      }
+    });
   }
 }

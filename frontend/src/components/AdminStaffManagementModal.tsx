@@ -43,7 +43,7 @@ const STAFF_PERMISSIONS: { id: AdminStaffPermission; label: string; sub: string;
   { id: 'MANAGE_USERS', label: '👥 User Accounts Management', sub: 'Edit, block, or reactivate platform users', icon: 'people-outline' },
   { id: 'MANAGE_STAFF', label: '👔 Staff & Roles Management', sub: 'Super admin only: manage staff privileges', icon: 'shield-half-outline' },
   { id: 'MANAGE_PAYMENTS', label: '💳 Payments & Withdrawals', sub: 'Approve advisor/partner withdrawal requests', icon: 'card-outline' },
-  { id: 'MANAGE_PLANS', label: '📜 Membership Plans & Coupons', sub: 'Create coupons and adjust plan prices', icon: 'pricetag-outline' },
+  { id: 'MANAGE_PLANS', label: '📜 VIP Pass Plans & Coupons', sub: 'Create coupons and adjust plan prices', icon: 'pricetag-outline' },
   { id: 'MANAGE_DOCTORS', label: '🩺 Crop Doctors & Advisors', sub: 'Approve advisor profiles and consultation fees', icon: 'medical-outline' },
   { id: 'MANAGE_ORDERS', label: '📦 Store Orders & Dispatch', sub: 'Process customer orders, pack & dispatch', icon: 'cube-outline' },
   { id: 'VIEW_FINANCES', label: '📊 Financial Stats & Revenue', sub: 'View platform revenue and wallet ledgers', icon: 'stats-chart-outline' },

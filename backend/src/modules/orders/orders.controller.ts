@@ -8,7 +8,7 @@ import type { AuthUser } from '../../common/types/auth-user.type';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { DispatchOrderDto } from './dto/dispatch-order.dto';
-import { InitiatePhonePePaymentDto } from './dto/initiate-phonepe-payment.dto';
+import { DispatchOrderDto } from './dto/dispatch-order.dto';
 
 const STAFF_ROLES = [Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR];
 
@@ -72,15 +72,15 @@ export class OrdersController {
   }
 
   @Roles(Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.ADVISOR)
-  @Post(':id/phonepe/initiate')
-  initiatePhonePePayment(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() dto: InitiatePhonePePaymentDto) {
-    return this.ordersService.initiatePhonePePayment(user, id, dto.redirectUrl);
+  @Post(':id/cashfree/initiate')
+  initiateCashfreePayment(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.ordersService.initiateCashfreePayment(user, id);
   }
 
   @Roles(Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.ADVISOR, ...STAFF_ROLES)
-  @Get(':id/phonepe/status')
-  getPhonePePaymentStatus(@CurrentUser() user: AuthUser, @Param('id') id: string) {
-    return this.ordersService.getPhonePePaymentStatus(user, id);
+  @Get(':id/cashfree/status')
+  getCashfreePaymentStatus(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.ordersService.getCashfreePaymentStatus(user, id);
   }
 
   @Roles(Role.OPERATOR, Role.ADMIN, Role.SUPER_ADMIN)

@@ -5,15 +5,14 @@ import { AgriAiChatbot } from '@/src/components/AgriAiChatbot';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 
 export function FloatingAgriAiChatbot() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   return (
     <>
-      {/* Floating Action Button */}
       <TouchableOpacity
         style={[styles.floatingBtn, premiumShadow('#15803d', 'lg')]}
         activeOpacity={0.88}
-        onPress={() => setIsOpen(true)}
+        onPress={() => setVisible(true)}
       >
         <View style={styles.badgePulse}>
           <Ionicons name="sparkles" size={18} color="#ffffff" />
@@ -24,8 +23,12 @@ export function FloatingAgriAiChatbot() {
         </View>
       </TouchableOpacity>
 
-      {/* AI Chatbot Full Screen Modal */}
-      <Modal visible={isOpen} animationType="slide" transparent={false} onRequestClose={() => setIsOpen(false)}>
+      <Modal
+        visible={visible}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={() => setVisible(false)}
+      >
         <SafeAreaView style={styles.modalSafeArea}>
           <View style={styles.modalHeader}>
             <View style={styles.headerLeft}>
@@ -37,11 +40,14 @@ export function FloatingAgriAiChatbot() {
                 <Text style={styles.modalSub}>100% Free Agri AI Assistant · PAU & ICAR Advisory</Text>
               </View>
             </View>
-            <TouchableOpacity style={styles.closeBtn} onPress={() => setIsOpen(false)} activeOpacity={0.8}>
+            <TouchableOpacity
+              style={styles.closeBtn}
+              onPress={() => setVisible(false)}
+              activeOpacity={0.8}
+            >
               <Ionicons name="close" size={22} color="#0f172a" />
             </TouchableOpacity>
           </View>
-
           <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
             <AgriAiChatbot isModal={true} />
           </View>

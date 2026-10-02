@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import { Role, WithdrawalStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { WalletService } from '../wallet/wallet.service';
+import { AppSettingsService } from '../app-settings/app-settings.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { CreateWithdrawalDto } from './dto/create-withdrawal.dto';
 import { ApproveWithdrawalDto } from './dto/approve-withdrawal.dto';
@@ -17,7 +18,23 @@ export class WithdrawalsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly walletService: WalletService,
+    private readonly appSettingsService: AppSettingsService,
   ) {}
+
+  /** Calculate platform fee + GST on a withdrawal amount */
+  private async calcWithdrawalCharges(amount: number) {
+    const s = await this.appSettingsService.get();
+    const taxEnabled = (s as any).walletTaxEnabled ?? true;
+    if (!taxEnabled) {
+      return { platformFee: 0, gstAmount: 0, netPayable: amount };
+    }
+    const feeRate = ((s as any).withdrawalPlatformFeePercent ?? 2.0) / 100;
+    const gstRate = ((s as any).withdrawalGstPercent ?? 18.0) / 100;
+    const platformFee = parseFloat((amount * feeRate).toFixed(2));
+    const gstAmount = parseFloat((platformFee * gstRate).toFixed(2));
+    const netPayable = parseFloat((amount - platformFee - gstAmount).toFixed(2));
+    return { platformFee, gstAmount, netPayable };
+  }
 
   /** Blocks withdrawal until the caller's payout profile (UPI/bank/PAN/alt mobile/email — plus display fields for Advisors) is complete. */
   private async assertPayoutProfileComplete(user: AuthUser) {
@@ -39,6 +56,10 @@ export class WithdrawalsService {
   }
 
   async create(user: AuthUser, dto: CreateWithdrawalDto) {
+    if (dto.requestedAmount < 50) {
+      throw new BadRequestException('Minimum withdrawal limit is ₹50.');
+    }
+
     await this.assertPayoutProfileComplete(user);
 
     const balance = await this.walletService.getBalance(user.id);
@@ -46,8 +67,17 @@ export class WithdrawalsService {
       throw new BadRequestException(`Requested amount exceeds your wallet balance of ₹${balance.toFixed(2)}.`);
     }
 
+    const { platformFee, gstAmount, netPayable } = await this.calcWithdrawalCharges(dto.requestedAmount);
+
     return this.prisma.withdrawalRequest.create({
-      data: { businessPartnerId: user.id, requestedAmount: dto.requestedAmount },
+      data: {
+        businessPartnerId: user.id,
+        requestedAmount: dto.requestedAmount,
+        platformFeeAmount: platformFee,
+        gstAmount: gstAmount,
+        netPayableAmount: netPayable,
+        platformExpense: true,
+      },
     });
   }
 
@@ -157,25 +187,32 @@ export class WithdrawalsService {
       throw new BadRequestException(`Approved amount exceeds the partner's wallet balance of ₹${balance.toFixed(2)}.`);
     }
 
+    // Recalculate charges on approved amount
+    const { platformFee, gstAmount, netPayable } = await this.calcWithdrawalCharges(approvedAmount);
+
     const updated = await this.prisma.withdrawalRequest.update({
       where: { id },
       data: {
         status: WithdrawalStatus.APPROVED,
         approvedAmount,
+        platformFeeAmount: platformFee,
+        gstAmount: gstAmount,
+        netPayableAmount: netPayable,
         processedAt: new Date(),
         processedById: admin.id,
         notes: dto.notes,
       },
     });
 
+    // Debit full approved amount from wallet (net payout happens externally via UPI)
     await this.walletService.debit(
       request.businessPartnerId,
       approvedAmount,
-      `Withdrawal payout approved`,
+      `Withdrawal payout approved (Platform fee: ₹${platformFee} + GST: ₹${gstAmount} | Net: ₹${netPayable})`,
       { withdrawalRequestId: id },
     );
 
-    return updated;
+    return { ...updated, platformFeeAmount: platformFee, gstAmount, netPayableAmount: netPayable };
   }
 
   async reject(admin: AuthUser, id: string, notes?: string) {

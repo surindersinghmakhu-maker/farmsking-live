@@ -51,6 +51,10 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       finalRoles = ['CUSTOMER'];
     }
 
+    if (finalRoles.includes('FARMER') && finalRoles.includes('GARDENER')) {
+      finalRoles = finalRoles.filter(r => r !== 'GARDENER');
+    }
+
     if (isAdminUser) {
       finalRoles = finalRoles.filter((r) => r !== 'FARMER' && r !== 'CUSTOMER');
       if (finalRoles.length === 0) finalRoles = [rawPrimary];

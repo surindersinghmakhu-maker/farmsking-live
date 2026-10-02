@@ -10,9 +10,11 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { CreateGardenerPlanCouponDto } from './dto/create-gardener-plan-coupon.dto';
 import { RedeemGardenerPlanCouponDto } from './dto/redeem-gardener-plan-coupon.dto';
+import { AppSettingsService } from '../app-settings/app-settings.service';
+import { CashfreeService } from '../cashfree/cashfree.service';
 
 /** Plan limits for FREE tier */
-export const FREE_PLAN_MAX_PLANTS = 3;
+export const FREE_PLAN_MAX_PLANTS = 5;
 
 export const EXPIRY_WARNING_DAYS = 5;
 export const GRACE_PERIOD_DAYS = 2;
@@ -27,7 +29,11 @@ function generateCode(): string {
 
 @Injectable()
 export class GardenerPlansService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly appSettingsService: AppSettingsService,
+    private readonly cashfreeService: CashfreeService,
+  ) {}
 
   /** Same lifecycle as FarmerPlansService.getEffectivePlan (5-day warning, 2-day grace, 3-month renew-history window). */
   async getEffectivePlan(gardenerId: string): Promise<{
@@ -93,9 +99,12 @@ export class GardenerPlansService {
 
   async getMyPlan(user: AuthUser) {
     const effective = await this.getEffectivePlan(user.id);
+    const record = await this.prisma.gardenerPlan.findUnique({ where: { gardenerId: user.id } });
     return {
       gardenerId: user.id,
       ...effective,
+      hasUsedVipTrial: record?.hasUsedVipTrial ?? false,
+      trialStartedAt: record?.trialStartedAt ?? null,
       limits:
         effective.plan === GardenerSubscriptionPlan.FREE
           ? { maxPlants: FREE_PLAN_MAX_PLANTS, advisorIncluded: false }
@@ -141,14 +150,13 @@ export class GardenerPlansService {
       this.prisma.gardenerPlan.upsert({
         where: { gardenerId: user.id },
         create: {
-          gardenerId: user.id,
-          plan: GardenerSubscriptionPlan.PREMIUM,
+          plan: coupon.plan,
           startDate: now,
           endDate: newEndDate,
           couponId: coupon.id,
         },
         update: {
-          plan: GardenerSubscriptionPlan.PREMIUM,
+          plan: coupon.plan,
           startDate: extended ? currentPlan!.startDate : now,
           endDate: newEndDate,
           expiredAt: null,
@@ -180,7 +188,7 @@ export class GardenerPlansService {
     return this.prisma.gardenerPlanCoupon.create({
       data: {
         code,
-        plan: GardenerSubscriptionPlan.PREMIUM,
+        plan: dto.plan,
         daysGranted: dto.daysGranted,
         assignedGardenerId: dto.assignedGardenerId,
         expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : null,
@@ -221,5 +229,80 @@ export class GardenerPlansService {
       throw new ForbiddenException('This coupon is assigned to a different gardener.');
     }
     return coupon;
+  }
+
+  async initiatePayment(user: AuthUser, plan: GardenerSubscriptionPlan) {
+    if (plan === GardenerSubscriptionPlan.FREE) {
+      throw new BadRequestException('Cannot purchase FREE plan.');
+    }
+
+    const settings = await this.appSettingsService.get();
+    const price = plan === GardenerSubscriptionPlan.VIP ? settings.gardenerVipCardPrice : settings.gardenerProCardPrice;
+
+    const request = await this.prisma.gardenerPlanPaymentRequest.create({
+      data: {
+        gardenerId: user.id,
+        plan,
+        amount: price,
+      },
+    });
+
+    const orderId = `GCARD-${request.id}`;
+    
+    // Request Cashfree Order Creation
+    const cfOrder = await this.cashfreeService.createStandardOrder({
+      orderId,
+      orderAmount: Number(price),
+      customerId: user.id,
+      customerPhone: user.mobile,
+      customerName: user.name || 'Gardener',
+      customerEmail: 'gardener@farmsking.in',
+      orderNote: `Gardener ${plan} Card - ${user.kingId}`,
+    });
+
+    return { paymentSessionId: cfOrder.payment_session_id, orderId };
+  }
+
+  /** Activate FREE 30-day VIP Trial — only once per gardener */
+  async activateVipTrial(user: AuthUser) {
+    const existing = await this.prisma.gardenerPlan.findUnique({ where: { gardenerId: user.id } });
+
+    if (existing?.hasUsedVipTrial) {
+      throw new BadRequestException('VIP Trial ਪਹਿਲਾਂ ਹੀ ਵਰਤਿਆ ਜਾ ਚੁੱਕਾ ਹੈ। ਹੁਣ PRO ਜਾਂ VIP Card ਖਰੀਦੋ।');
+    }
+
+    if (existing?.plan === GardenerSubscriptionPlan.VIP && existing.endDate && existing.endDate > new Date()) {
+      throw new BadRequestException('ਤੁਹਾਡੇ ਕੋਲ ਪਹਿਲਾਂ ਹੀ ਐਕਟਿਵ VIP Plan ਹੈ।');
+    }
+
+    const now = new Date();
+    const trialEndDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
+    await this.prisma.gardenerPlan.upsert({
+      where: { gardenerId: user.id },
+      create: {
+        gardenerId: user.id,
+        plan: GardenerSubscriptionPlan.VIP,
+        startDate: now,
+        endDate: trialEndDate,
+        hasUsedVipTrial: true,
+        trialStartedAt: now,
+      },
+      update: {
+        plan: GardenerSubscriptionPlan.VIP,
+        startDate: now,
+        endDate: trialEndDate,
+        expiredAt: null,
+        hasUsedVipTrial: true,
+        trialStartedAt: now,
+      },
+    });
+
+    return {
+      success: true,
+      plan: GardenerSubscriptionPlan.VIP,
+      trialEndDate,
+      message: '🎉 VIP Trial 30 ਦਿਨਾਂ ਲਈ ਐਕਟਿਵ ਹੋ ਗਿਆ!',
+    };
   }
 }

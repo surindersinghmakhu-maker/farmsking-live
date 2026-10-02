@@ -46,9 +46,9 @@ export const MembershipHistoryModal: React.FC<MembershipHistoryModalProps> = ({
               <Ionicons name="time" size={24} color="#0284c7" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.title}>📜 Membership & Care Plan History</Text>
+              <Text style={styles.title}>📜 VIP Pass & Care Plan History</Text>
               <Text style={styles.subtitle}>
-                Track Active, Sleep Mode (Paused), and Past Memberships
+                Track Active, Sleep Mode (Paused), and Past VIP Passes
               </Text>
             </View>
             <TouchableOpacity onPress={onClose}>
@@ -66,7 +66,7 @@ export const MembershipHistoryModal: React.FC<MembershipHistoryModalProps> = ({
                   <View style={styles.sectionHeaderRow}>
                     <Ionicons name="moon" size={18} color="#d97706" />
                     <Text style={styles.sleepSectionTitle}>
-                      🌙 SLEEP MODE MEMBERSHIPS ({sleepRecords.length})
+                      🌙 SLEEP MODE VIP PASSES ({sleepRecords.length})
                     </Text>
                   </View>
                   <Text style={styles.sleepSectionDesc}>
@@ -100,7 +100,7 @@ export const MembershipHistoryModal: React.FC<MembershipHistoryModalProps> = ({
 
               {/* 2. ACTIVE MEMBERSHIP */}
               <View style={styles.activeSection}>
-                <Text style={styles.sectionTitle}>🟢 CURRENT ACTIVE MEMBERSHIP</Text>
+                <Text style={styles.sectionTitle}>🟢 CURRENT ACTIVE VIP PASS</Text>
                 {activeRecord ? (
                   <View style={styles.activeCard}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -124,16 +124,16 @@ export const MembershipHistoryModal: React.FC<MembershipHistoryModalProps> = ({
                   </View>
                 ) : (
                   <View style={styles.emptyBox}>
-                    <Text style={styles.emptyText}>No paid membership currently active (Free Tier)</Text>
+                    <Text style={styles.emptyText}>No paid VIP Pass currently active (Free Tier)</Text>
                   </View>
                 )}
               </View>
 
               {/* 3. FULL HISTORY LOG */}
               <View style={styles.historySection}>
-                <Text style={styles.sectionTitle}>📜 ALL MEMBERSHIP RECORDS ({allHistory.length})</Text>
+                <Text style={styles.sectionTitle}>📜 ALL VIP PASS RECORDS ({allHistory.length})</Text>
                 {allHistory.length === 0 ? (
-                  <Text style={styles.emptyText}>No membership history records found.</Text>
+                  <Text style={styles.emptyText}>No VIP Pass history records found.</Text>
                 ) : (
                   allHistory.map((rec) => {
                     const meta = PLAN_META[rec.plan as FarmerPlanType] || { label: rec.plan, emoji: '🌾', color: '#0284c7' };

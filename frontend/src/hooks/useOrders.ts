@@ -47,14 +47,14 @@ export function useOrderUpiLink() {
   return useMutation({ mutationFn: api.getOrderUpiLink });
 }
 
-export function useInitiatePhonePePayment() {
+export function useInitiateCashfreePayment() {
   return useMutation({
-    mutationFn: ({ id, redirectUrl }: { id: string; redirectUrl: string }) => api.initiatePhonePePayment(id, redirectUrl),
+    mutationFn: ({ id }: { id: string }) => api.initiateCashfreePayment(id),
   });
 }
 
-export function usePhonePePaymentStatus() {
-  return useMutation({ mutationFn: api.getPhonePePaymentStatus });
+export function useCashfreePaymentStatus() {
+  return useMutation({ mutationFn: api.getCashfreePaymentStatus });
 }
 
 export function useCreateOrder() {

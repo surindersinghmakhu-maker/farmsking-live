@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -8,6 +8,7 @@ import type { AuthUser } from '../../common/types/auth-user.type';
 import { GardensService } from './gardens.service';
 import { CreateGardenDto } from './dto/create-garden.dto';
 import { CreatePlantDto } from './dto/create-plant.dto';
+import { CreateGardenExpenseDto } from './dto/create-garden-expense.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.GARDENER, Role.ADMIN, Role.SUPER_ADMIN)
@@ -38,5 +39,20 @@ export class GardensController {
   @Get(':id/plants')
   listPlants(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.gardensService.listPlants(user, id);
+  }
+
+  @Post('expenses')
+  addExpense(@CurrentUser() user: AuthUser, @Body() dto: CreateGardenExpenseDto) {
+    return this.gardensService.addExpense(user, dto);
+  }
+
+  @Get('expenses')
+  listExpenses(@CurrentUser() user: AuthUser) {
+    return this.gardensService.listExpenses(user);
+  }
+
+  @Delete('expenses/:id')
+  deleteExpense(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.gardensService.deleteExpense(user, id);
   }
 }

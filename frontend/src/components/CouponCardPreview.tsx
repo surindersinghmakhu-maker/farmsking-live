@@ -96,7 +96,7 @@ export function FarmerPlanCouponCardPreview({
 
   // Dynamic MRP & Benefit Tagline Calculator based on Plan Tier & Days
   let mrpAmount = 299;
-  let planBenefitTitle = `${coupon.plan} MEMBERSHIP (${coupon.daysGranted} DAYS)`;
+  let planBenefitTitle = `${coupon.plan} VIP PASS (${coupon.daysGranted} DAYS)`;
   let promoTagline = `*Up to ₹500 Extra Savings on Farm Advisory`;
   let gradientColors: [string, string, ...string[]] = ['#0f172a', '#1e293b'];
   let codeBoxBg = '#f0fdf4';
@@ -108,7 +108,7 @@ export function FarmerPlanCouponCardPreview({
     mrpAmount = doctorFee + ((coupon as any).includeMembership ? 299 : 0);
     planBenefitTitle = `DOCTOR CARE CONSULTATION (${coupon.daysGranted} DAYS)`;
     promoTagline = (coupon as any).includeMembership
-      ? `*Includes Doctor Care (5 Crops) + App Membership`
+      ? `*Includes Doctor Care (5 Crops) + App VIP Pass`
       : `*Includes Dedicated Doctor Supervision (Up to 5 Crops)`;
     gradientColors = ['#047857', '#10b981', '#065f46'];
     codeBoxBg = '#ecfdf5';
@@ -116,7 +116,7 @@ export function FarmerPlanCouponCardPreview({
     codeLabelColor = '#047857';
   } else if (coupon.plan === 'PRO') {
     mrpAmount = coupon.daysGranted >= 365 ? 299 : 199;
-    planBenefitTitle = `LITE MEMBERSHIP (${coupon.daysGranted} DAYS)`;
+    planBenefitTitle = `LITE VIP PASS (${coupon.daysGranted} DAYS)`;
     promoTagline = `*Up to ₹500 Savings on Ledger Logs & Voice AI Mic`;
     gradientColors = ['#3730a3', '#4f46e5', '#6366f1'];
     codeBoxBg = '#eep2ff';
@@ -124,7 +124,7 @@ export function FarmerPlanCouponCardPreview({
     codeLabelColor = '#4338ca';
   } else if (coupon.plan === 'SMART') {
     mrpAmount = coupon.daysGranted >= 365 ? 3999 : 499;
-    planBenefitTitle = `SMART MEMBERSHIP (${coupon.daysGranted} DAYS)`;
+    planBenefitTitle = `SMART VIP PASS (${coupon.daysGranted} DAYS)`;
     promoTagline = `*Up to ₹1,000 Savings on Satellite Crop Radar & Doctor`;
     gradientColors = ['#0369a1', '#0284c7', '#0369a1'];
     codeBoxBg = '#e0f2fe';
@@ -132,7 +132,7 @@ export function FarmerPlanCouponCardPreview({
     codeLabelColor = '#0369a1';
   } else if (coupon.plan === 'SUPER') {
     mrpAmount = coupon.daysGranted >= 365 ? 6999 : 999;
-    planBenefitTitle = `SUPER MEMBERSHIP (${coupon.daysGranted} DAYS)`;
+    planBenefitTitle = `SUPER VIP PASS (${coupon.daysGranted} DAYS)`;
     promoTagline = `*Up to ₹2,500 Extra Savings on Mandi AI Predictions`;
     gradientColors = ['#92400e', '#d97706', '#b45309'];
     codeBoxBg = '#fffbe6';
@@ -170,7 +170,7 @@ export function FarmerPlanCouponCardPreview({
         </LinearGradient>
 
         <View style={cardStyles.cardBody}>
-          <Text style={cardStyles.title}>OFFICIAL MEMBERSHIP VOUCHER</Text>
+          <Text style={cardStyles.title}>OFFICIAL VIP PASS VOUCHER</Text>
           
           {/* Main Benefit Highlighted in Big Bold Text */}
           <Text style={cardStyles.headline}>{planBenefitTitle}</Text>
@@ -187,7 +187,7 @@ export function FarmerPlanCouponCardPreview({
           <View style={[cardStyles.codeBox, { backgroundColor: codeBoxBg, borderColor: codeBoxBorder }]}>
             <Text style={[cardStyles.codeLabel, { color: codeLabelColor }]}>REDEEM CODE</Text>
             <Text style={cardStyles.codeValue}>{coupon.code}</Text>
-            <Text style={cardStyles.codeHint}>Redeem in app under "Get Membership Coupon"</Text>
+            <Text style={cardStyles.codeHint}>Redeem in app under "Get VIP Pass Coupon"</Text>
           </View>
 
           {/* Validity Date */}

@@ -20,7 +20,8 @@ export interface FarmerPlanPaymentRequest {
 }
 
 export interface InitiateFarmerPlanPaymentResponse extends FarmerPlanPaymentRequest {
-  upiLink: string;
+  cashfreeSessionId: string;
+  upiLink?: string;
 }
 
 export async function initiateFarmerPlanPayment(

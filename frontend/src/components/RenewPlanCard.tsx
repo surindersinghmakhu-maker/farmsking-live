@@ -33,7 +33,7 @@ export function RenewMembershipCard() {
           <Ionicons name="refresh-circle" size={22} color={isExpired ? '#dc2626' : theme.primary} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>{subscription.plan?.name ?? 'Advisor Membership'}</Text>
+          <Text style={styles.title}>{subscription.plan?.name ?? 'Advisor VIP Pass'}</Text>
           {endDate ? (
             <Text style={[styles.subtitle, isExpired && { color: '#dc2626' }]}>
               {isExpired ? 'Expired' : `${daysRemaining} day(s) left`} · {endDate.toLocaleDateString('en-IN')}
@@ -75,7 +75,7 @@ export function RenewModal({ visible, onClose, farmerId }: { visible: boolean; o
       <View style={styles.modalOverlay}>
         <View style={styles.modalCard}>
           <View style={styles.modalHeaderRow}>
-            <Text style={styles.modalTitle}>Renew {farmerId ? "Farmer's" : 'Your'} Membership</Text>
+            <Text style={styles.modalTitle}>Renew {farmerId ? "Farmer's" : 'Your'} VIP Pass</Text>
             <TouchableOpacity onPress={closeAndReset}>
               <Ionicons name="close-circle" size={24} color="#64748b" />
             </TouchableOpacity>
@@ -172,7 +172,7 @@ function UpiPaymentFlow({ farmerId, onDone }: { farmerId?: string; onDone: () =>
 
   return (
     <View style={{ gap: 10 }}>
-      <Text style={styles.label}>Pay the fixed membership amount via UPI. An admin verifies it and confirms your renewal.</Text>
+      <Text style={styles.label}>Pay the fixed VIP Pass amount via UPI. An admin verifies it and confirms your renewal.</Text>
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
       <TouchableOpacity style={styles.submitBtn} disabled={initiate.isPending} onPress={handleGenerate}>
         {initiate.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Get UPI Payment Link</Text>}
@@ -192,7 +192,7 @@ function CodeRedeemFlow({ farmerId, onDone }: { farmerId?: string; onDone: () =>
 
   const handleCheckCode = async () => {
     if (!code.trim()) {
-      setError('Enter your membership code.');
+      setError('Enter your VIP Pass code.');
       return;
     }
     setError(null);
@@ -221,7 +221,7 @@ function CodeRedeemFlow({ farmerId, onDone }: { farmerId?: string; onDone: () =>
         <View style={styles.successBox}>
           <Ionicons name="checkmark-circle" size={20} color="#16a34a" />
           <Text style={styles.successText}>
-            {result.plan.plan} membership active! New expiry: {new Date(result.newEndDate).toLocaleDateString('en-IN')}
+            {result.plan.plan} VIP Pass active! New expiry: {new Date(result.newEndDate).toLocaleDateString('en-IN')}
             {result.advisorHired ? ' A Farm Advisor has been assigned.' : ''}
           </Text>
         </View>
@@ -241,8 +241,8 @@ function CodeRedeemFlow({ farmerId, onDone }: { farmerId?: string; onDone: () =>
           <Ionicons name="pricetag" size={20} color="#16a34a" />
           <Text style={styles.successText}>
             {isDowngradeKept
-              ? `This code adds ${previewResult.daysGranted} day(s) to your ${previewResult.resultPlan} membership.`
-              : `This code activates the ${previewResult.plan} membership for ${previewResult.daysGranted} day(s).`}
+              ? `This code adds ${previewResult.daysGranted} day(s) to your ${previewResult.resultPlan} VIP Pass.`
+              : `This code activates the ${previewResult.plan} VIP Pass for ${previewResult.daysGranted} day(s).`}
             {' '}New expiry will be {new Date(previewResult.newEndDate).toLocaleDateString('en-IN')}.
             {previewResult.includesAdvisor ? ' Includes a Farm Advisor.' : ''}
           </Text>
@@ -251,14 +251,14 @@ function CodeRedeemFlow({ farmerId, onDone }: { farmerId?: string; onDone: () =>
           <View style={styles.warningBox}>
             <Ionicons name="alert-circle" size={18} color="#b45309" />
             <Text style={styles.warningText}>
-              You already have the {previewResult.resultPlan} membership active, which is higher than this {previewResult.plan} code — your membership won't be downgraded, this code's {previewResult.daysGranted} day(s) will just be added to your current {previewResult.resultPlan} membership.
+              You already have the {previewResult.resultPlan} VIP Pass active, which is higher than this {previewResult.plan} code — your VIP Pass won't be downgraded, this code's {previewResult.daysGranted} day(s) will just be added to your current {previewResult.resultPlan} VIP Pass.
             </Text>
           </View>
         ) : isSamePlan ? (
           <View style={styles.warningBox}>
             <Ionicons name="alert-circle" size={18} color="#b45309" />
             <Text style={styles.warningText}>
-              You already have the {previewResult.plan} membership active — applying this code won't change your membership, it will just add {previewResult.daysGranted} day(s) to your current validity.
+              You already have the {previewResult.plan} VIP Pass active — applying this code won't change your VIP Pass, it will just add {previewResult.daysGranted} day(s) to your current validity.
             </Text>
           </View>
         ) : null}
@@ -272,7 +272,7 @@ function CodeRedeemFlow({ farmerId, onDone }: { farmerId?: string; onDone: () =>
 
   return (
     <>
-      <Text style={styles.label}>Enter the membership code {farmerId ? 'for this farmer' : 'your admin gave you'}</Text>
+      <Text style={styles.label}>Enter the VIP Pass code {farmerId ? 'for this farmer' : 'your admin gave you'}</Text>
       <TextInput
         style={styles.input}
         placeholder="e.g. P738610"

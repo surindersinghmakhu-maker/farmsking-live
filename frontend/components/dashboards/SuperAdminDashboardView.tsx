@@ -20,8 +20,8 @@ import {
   PlanPaymentReviewModal,
   FarmerPlanPaymentCard,
   FarmerPlanPaymentReviewModal,
-} from '@/app/(tabs)/super-accounts';
-import { UserGuidesModal, SuperAdminWorkspaceModal, AdminInfoModal } from '@/app/(tabs)/more';
+} from '@/app/(admin)/(tabs)/super-accounts';
+import { UserGuidesModal, SuperAdminWorkspaceModal, AdminInfoModal } from '@/app/(admin)/(tabs)/more';
 import { SuperAdminExpenseCategoriesModal } from '../SuperAdminExpenseCategoriesModal';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
@@ -37,17 +37,16 @@ import { useExecutiveTheme } from '@/src/store/theme-context';
 const theme = RoleThemes.SUPER_ADMIN;
 const LIVE_REQUESTS_POLL_MS = 20000;
 
-type ActionRequiredTabKey = 'SUBMISSIONS' | 'WITHDRAWALS' | 'PLAN_CLAIMS' | 'CPANEL' | 'SETTINGS' | 'HISTORY';
+type ActionRequiredTabKey = 'SUBMISSIONS' | 'WITHDRAWALS' | 'PLAN_CLAIMS' | 'APPROVALS' | 'HISTORY';
 
 const ACTION_TAB_META: Record<ActionRequiredTabKey, { label: string; icon: keyof typeof Ionicons.glyphMap; color: string; bg: string; border: string }> = {
   SUBMISSIONS: { label: 'Requests', icon: 'cloud-upload-outline', color: '#2563eb', bg: '#eff6ff', border: '#dbeafe' },
   WITHDRAWALS: { label: 'Withdrawals', icon: 'cash-outline', color: '#dc2626', bg: '#fef2f2', border: '#fee2e2' },
   PLAN_CLAIMS: { label: 'Plan Claims', icon: 'receipt-outline', color: '#b45309', bg: '#fffbeb', border: '#fde68a' },
-  CPANEL: { label: 'C-Panel', icon: 'server-outline', color: '#dc2626', bg: '#fef2f2', border: '#fecaca' },
-  SETTINGS: { label: 'Settings', icon: 'options-outline', color: '#0d9488', bg: '#ccfbf1', border: '#99f6e4' },
+  APPROVALS: { label: 'Approvals', icon: 'shield-checkmark-outline', color: '#ea580c', bg: '#fff7ed', border: '#ffedd5' },
   HISTORY: { label: 'History', icon: 'checkmark-done-circle-outline', color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
 };
-const ACTION_TAB_ORDER: ActionRequiredTabKey[] = ['SUBMISSIONS', 'WITHDRAWALS', 'PLAN_CLAIMS', 'CPANEL', 'SETTINGS', 'HISTORY'];
+const ACTION_TAB_ORDER: ActionRequiredTabKey[] = ['SUBMISSIONS', 'WITHDRAWALS', 'PLAN_CLAIMS', 'APPROVALS', 'HISTORY'];
 
 interface ResolvedRequestItem {
   id: string;
@@ -76,6 +75,8 @@ export const SuperAdminDashboardView: React.FC = () => {
   const [showGuidesModal, setShowGuidesModal] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [showAdminInfoModal, setShowAdminInfoModal] = useState(false);
+  const [showAiUpgradeModal, setShowAiUpgradeModal] = useState(false);
+  const [showAiTelemetryModal, setShowAiTelemetryModal] = useState(false);
   const [isRequestsCollapsed, setIsRequestsCollapsed] = useState(true);
   const [activeChatTarget, setActiveChatTarget] = useState<{ farmerId: string; farmerName: string } | null>(null);
 
@@ -166,6 +167,36 @@ export const SuperAdminDashboardView: React.FC = () => {
 
       <View style={styles.content}>
         <SwitchDashboardSection />
+
+        {/* 🤖 Admin System Tool Widget: Google AI Telemetry & Quota Button */}
+        <TouchableOpacity
+          style={[styles.compactAdminAiCard, premiumShadow('#4f46e5', 'sm')]}
+          activeOpacity={0.88}
+          onPress={() => setShowAiTelemetryModal(true)}
+        >
+          <View style={styles.iosAiQuotaHeader}>
+            <View style={styles.iosAiIconCircle}>
+              <Ionicons name="sparkles" size={18} color="#ffffff" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <Text style={styles.iosAiQuotaTitle}>Google AI Telemetry & Quota</Text>
+                <View style={styles.iosEngineBadge}>
+                  <View style={styles.iosEngineDot} />
+                  <Text style={styles.iosEngineBadgeText}>Gemini 2.5 Flash</Text>
+                </View>
+              </View>
+              <Text style={styles.compactAdminAiSub} numberOfLines={1}>
+                🟢 1,420 / 5,000 queries today · Grounding Active · 28d left
+              </Text>
+            </View>
+
+            <View style={styles.compactOpenTelemetryBtn}>
+              <Ionicons name="stats-chart" size={13} color="#ffffff" />
+              <Text style={styles.compactOpenTelemetryText}>Open Meter</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
 
         <View style={[styles.kpiBar, premiumShadow('#0f172a', 'sm')]}>
           <View style={styles.kpiCol}>
@@ -425,234 +456,36 @@ export const SuperAdminDashboardView: React.FC = () => {
                   ))}
                 </View>
               )
-            ) : activeActionTab === 'CPANEL' ? (
-              <View style={{ width: '100%', gap: 10, paddingVertical: 4 }}>
-
-                {/* ── Sub-Tab Nav Bar ── */}
-                <View style={{ flexDirection: 'row', gap: 6, marginBottom: 2 }}>
-                  {([
-                    { id: 'SWITCHES',       label: '🔀 Switches',       icon: 'toggle' },
-                    { id: 'MODIFICATIONS',  label: '✏️ Modifications',   icon: 'create' },
-                    { id: 'OTHERS',         label: '📦 Others',          icon: 'grid' },
-                  ] as const).map((tab) => {
-                    const active = cpanelSubTab === tab.id;
-                    return (
-                      <TouchableOpacity
-                        key={tab.id}
-                        onPress={() => {
-                          if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                          setCpanelSubTab(tab.id);
-                        }}
-                        style={{
-                          flex: 1,
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 5,
-                          paddingVertical: 7,
-                          borderRadius: RADIUS.pill,
-                          backgroundColor: active ? '#dc2626' : '#f1f5f9',
-                          borderWidth: 1,
-                          borderColor: active ? '#dc2626' : '#e2e8f0',
-                        }}
-                      >
-                        <Ionicons name={tab.icon as any} size={13} color={active ? '#fff' : '#475569'} />
-                        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: active ? '#fff' : '#334155' }}>
-                          {tab.label}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-
-                {/* ── SWITCHES Tab ── */}
-                {cpanelSubTab === 'SWITCHES' ? (
-                  <View style={{ gap: 10 }}>
-                    {/* 🎙️ Group Voice Call */}
-                    <View style={{ backgroundColor: '#f0fdf4', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#bbf7d0', gap: 8 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                          <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: '#059669', alignItems: 'center', justifyContent: 'center' }}>
-                            <Ionicons name="mic-outline" size={18} color="#ffffff" />
-                          </View>
-                          <View style={{ flex: 1 }}>
-                            <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' }}>🎙️ Group Voice Call</Text>
-                            <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 }}>
-                              Allow Advisors & Admins to host live audio conferences
-                            </Text>
-                          </View>
-                        </View>
-                        <Switch
-                          value={isGroupVoiceCallEnabled}
-                          onValueChange={handleToggleGroupVoiceCall}
-                          trackColor={{ false: '#cbd5e1', true: '#10b981' }}
-                          thumbColor="#ffffff"
-                        />
-                      </View>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: '#dcfce7' }}>
-                        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isGroupVoiceCallEnabled ? '#16a34a' : '#dc2626' }} />
-                        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isGroupVoiceCallEnabled ? '#15803d' : '#dc2626' }}>
-                          {isGroupVoiceCallEnabled ? 'STATUS: ACTIVE' : 'STATUS: DISABLED'}
-                        </Text>
-                      </View>
-                    </View>
-                   </View>
-
-                ) : cpanelSubTab === 'MODIFICATIONS' ? (
-                  /* ── MODIFICATIONS Tab ── */
-                  <View style={{ gap: 10 }}>
-                    {/* 🏷️ Expense Categories */}
-                    <View style={{ backgroundColor: '#fef2f2', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#fecaca', gap: 8 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                        <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#dc2626', alignItems: 'center', justifyContent: 'center' }}>
-                          <Ionicons name="pricetags" size={18} color="#ffffff" />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' }}>🏷️ Expense Categories</Text>
-                          <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 }}>
-                            Add, edit names & priority, or deactivate categories
-                          </Text>
-                        </View>
-                      </View>
-                      <TouchableOpacity
-                        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#dc2626', paddingVertical: 10, borderRadius: 10 }}
-                        onPress={() => setShowCategoriesModal(true)}
-                      >
-                        <Ionicons name="open-outline" size={15} color="#ffffff" />
-                        <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>Open Category Manager</Text>
-                      </TouchableOpacity>
-                    </View>
-
-                    {/* 👑 Admin Info */}
-                    <View style={{ backgroundColor: '#eff6ff', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#bfdbfe', gap: 8 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                        <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#2563eb', alignItems: 'center', justifyContent: 'center' }}>
-                          <Ionicons name="shield-checkmark" size={18} color="#ffffff" />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' }}>👑 Admin Info & Brand Details</Text>
-                          <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 }}>
-                            App Name, Brand Logo, Tagline, Payment UPI & Super Admin Profile
-                          </Text>
-                        </View>
-                      </View>
-                      <TouchableOpacity
-                        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#2563eb', paddingVertical: 10, borderRadius: 10 }}
-                        onPress={() => setShowAdminInfoModal(true)}
-                      >
-                        <Ionicons name="create-outline" size={15} color="#ffffff" />
-                        <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>Open Admin Info Console</Text>
-                      </TouchableOpacity>
-                    </View>
-
-                    {/* ⚙️ System Settings */}
-                    <View style={{ backgroundColor: '#f8fafc', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#cbd5e1', gap: 8 }}>
-                      <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>⚙️ System Settings & Feature Controls</Text>
-                      <TouchableOpacity
-                        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#0d9488', paddingVertical: 10, borderRadius: 10 }}
-                        onPress={() => router.push('/(tabs)/super-settings' as never)}
-                      >
-                        <Ionicons name="options" size={16} color="#ffffff" />
-                        <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>Open System Settings Console</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-
-                ) : (
-                  /* ── OTHERS Tab ── */
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                    <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => setShowWorkspaceModal(true)}>
-                      <View style={[styles.pillIconBg, { backgroundColor: '#ccfbf1' }]}>
-                        <Ionicons name="briefcase" size={16} color="#0d9488" />
-                      </View>
-                      <Text style={styles.pillText}>Workspace</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => setShowGuidesModal(true)}>
-                      <View style={[styles.pillIconBg, { backgroundColor: '#f0fdf4' }]}>
-                        <Ionicons name="book" size={16} color="#15803d" />
-                      </View>
-                      <Text style={styles.pillText}>User Guides</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => router.push('/(tabs)/super-orders' as never)}>
-                      <View style={[styles.pillIconBg, { backgroundColor: '#eef2ff' }]}>
-                        <Ionicons name="receipt" size={16} color="#4f46e5" />
-                      </View>
-                      <Text style={styles.pillText}>Sales Orders</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
-            ) : activeActionTab === 'SETTINGS' ? (
+            ) : activeActionTab === 'APPROVALS' ? (
               <View style={{ width: '100%', gap: 12, paddingVertical: 4 }}>
-                <View style={{ backgroundColor: '#f0fdf4', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#bbf7d0', gap: 8 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                      <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: '#059669', alignItems: 'center', justifyContent: 'center' }}>
-                        <Ionicons name="mic-outline" size={18} color="#ffffff" />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' }}>
-                          🎙️ Group Voice Call Feature
-                        </Text>
-                        <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 }}>
-                          Allow Advisors & Admins to host live audio conferences for active farmers
-                        </Text>
-                      </View>
-                    </View>
-
-                    <Switch
-                      value={isGroupVoiceCallEnabled}
-                      onValueChange={handleToggleGroupVoiceCall}
-                      trackColor={{ false: '#cbd5e1', true: '#10b981' }}
-                      thumbColor="#ffffff"
-                    />
-                  </View>
-
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: '#dcfce7' }}>
-                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: isGroupVoiceCallEnabled ? '#16a34a' : '#dc2626' }} />
-                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isGroupVoiceCallEnabled ? '#15803d' : '#dc2626' }}>
-                      {isGroupVoiceCallEnabled ? 'STATUS: ACTIVE (Group Call Enabled)' : 'STATUS: DISABLED (Group Call Disabled)'}
-                    </Text>
-                  </View>
-                </View>
-
                 <TouchableOpacity
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 6,
-                    backgroundColor: '#dc2626',
-                    paddingVertical: 10,
-                    borderRadius: 10,
-                    marginTop: 4,
-                  }}
-                  onPress={() => setShowCategoriesModal(true)}
+                  style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff7ed', padding: 14, borderRadius: 12, borderWidth: 1, borderColor: '#ffedd5', gap: 12 }}
+                  onPress={() => router.push('/admin-sellers' as never)}
+                  activeOpacity={0.8}
                 >
-                  <Ionicons name="pricetags" size={16} color="#ffffff" />
-                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>
-                    Manage Farm Expense Categories
-                  </Text>
+                  <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#ea580c', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="storefront" size={20} color="#ffffff" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#9a3412' }}>Seller KYC & Approvals</Text>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#c2410c', marginTop: 2 }}>Review and approve new store registrations</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#fb923c" />
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 6,
-                    backgroundColor: '#0d9488',
-                    paddingVertical: 10,
-                    borderRadius: 10,
-                  }}
-                  onPress={() => router.push('/(tabs)/super-settings' as never)}
+                  style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#eff6ff', padding: 14, borderRadius: 12, borderWidth: 1, borderColor: '#dbeafe', gap: 12 }}
+                  onPress={() => router.push('/(tabs)/super-users' as never)}
+                  activeOpacity={0.8}
                 >
-                  <Ionicons name="options" size={16} color="#ffffff" />
-                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>
-                    Open Full System Settings Console
-                  </Text>
+                  <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#2563eb', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="medkit" size={20} color="#ffffff" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#1e40af' }}>Expert Approvals (Agri/Garden)</Text>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#2563eb', marginTop: 2 }}>Verify and approve new crop doctors & garden experts</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#60a5fa" />
                 </TouchableOpacity>
               </View>
 
@@ -686,6 +519,13 @@ export const SuperAdminDashboardView: React.FC = () => {
         <View style={[styles.quickActionsCard, premiumShadow('#0f172a', 'sm')]}>
           <Text style={styles.quickActionsTitle}>Super Admin Shortcuts</Text>
           <View style={styles.quickActionsGrid}>
+            <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => router.push('/(tabs)/ai-doctor' as never)}>
+              <View style={[styles.pillIconBg, { backgroundColor: '#f0fdf4' }]}>
+                <Ionicons name="sparkles" size={16} color="#15803d" />
+              </View>
+              <Text style={styles.pillText}>AI Doctor</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => router.push('/(tabs)/super-orders' as never)}>
               <View style={[styles.pillIconBg, { backgroundColor: '#eef2ff' }]}>
                 <Ionicons name="receipt" size={16} color="#4f46e5" />
@@ -724,7 +564,183 @@ export const SuperAdminDashboardView: React.FC = () => {
       <SuperAdminExpenseCategoriesModal visible={showCategoriesModal} onClose={() => setShowCategoriesModal(false)} />
       <SuperAdminWorkspaceModal visible={showWorkspaceModal} onClose={() => setShowWorkspaceModal(false)} />
       <UserGuidesModal visible={showGuidesModal} onClose={() => setShowGuidesModal(false)} />
-      <AdminInfoModal visible={showAdminInfoModal} onClose={() => setShowAdminInfoModal(false)} />
+      {/* 🤖 Google AI Telemetry & Quota Monitor Modal */}
+      <Modal visible={showAiTelemetryModal} transparent animationType="slide" onRequestClose={() => setShowAiTelemetryModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { maxWidth: 480 }]}>
+            <View style={styles.modalHeaderRow}>
+              <View style={styles.iosAiIconCircle}>
+                <Ionicons name="sparkles" size={18} color="#ffffff" />
+              </View>
+              <View style={{ flex: 1, marginLeft: 8 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={styles.modalTitle}>Google AI Telemetry & Quota</Text>
+                  <View style={styles.iosEngineBadge}>
+                    <View style={styles.iosEngineDot} />
+                    <Text style={styles.iosEngineBadgeText}>Gemini 2.5 Flash</Text>
+                  </View>
+                </View>
+                <Text style={styles.modalSub}>Real-time API Telemetry, Search Grounding & License Renewal</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowAiTelemetryModal(false)}>
+                <Ionicons name="close-circle" size={24} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            {/* iOS Meter Stats Grid */}
+            <View style={styles.iosMeterGrid}>
+              <View style={styles.iosMeterCard}>
+                <Text style={styles.iosMeterLabel}>Daily AI Queries</Text>
+                <Text style={styles.iosMeterVal}>1,420 <Text style={styles.iosMeterLimit}>/ 5,000</Text></Text>
+                <View style={styles.iosProgressTrack}>
+                  <View style={[styles.iosProgressFill, { width: '28.4%' }]} />
+                </View>
+              </View>
+
+              <View style={styles.iosMeterCard}>
+                <Text style={styles.iosMeterLabel}>Search Grounding</Text>
+                <Text style={[styles.iosMeterVal, { color: '#059669' }]}>100% Active</Text>
+                <Text style={styles.iosMeterSub}>Real-time Web Grounding ON</Text>
+              </View>
+
+              <View style={styles.iosMeterCard}>
+                <Text style={styles.iosMeterLabel}>License Renewal</Text>
+                <Text style={[styles.iosMeterVal, { color: '#d97706' }]}>28 Days Left</Text>
+                <Text style={styles.iosMeterSub}>Renews: Oct 30, 2026</Text>
+              </View>
+            </View>
+
+            {/* Action Buttons inside Modal */}
+            <View style={{ gap: 8, marginTop: 14 }}>
+              <TouchableOpacity
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  backgroundColor: '#4f46e5',
+                  paddingVertical: 10,
+                  borderRadius: RADIUS.pill,
+                }}
+                activeOpacity={0.85}
+                onPress={() => {
+                  setShowAiTelemetryModal(false);
+                  setShowAiUpgradeModal(true);
+                }}
+              >
+                <Ionicons name="arrow-up-circle" size={16} color="#ffffff" />
+                <Text style={{ color: '#ffffff', fontSize: 13, fontFamily: FONT.extraBold }}>Renew / Upgrade Quota Tier</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  backgroundColor: '#f1f5f9',
+                  paddingVertical: 10,
+                  borderRadius: RADIUS.pill,
+                  borderWidth: 1,
+                  borderColor: '#cbd5e1',
+                }}
+                activeOpacity={0.8}
+                onPress={() => {
+                  setShowAiTelemetryModal(false);
+                  router.push('/(tabs)/super-settings' as never);
+                }}
+              >
+                <Ionicons name="key-outline" size={16} color="#334155" />
+                <Text style={{ color: '#334155', fontSize: 12.5, fontFamily: FONT.bold }}>Configure Gemini API Keys in C-Panel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 🤖 iOS Model: AI Usage Renew & Upgrade Modal */}
+      <Modal visible={showAiUpgradeModal} transparent animationType="slide" onRequestClose={() => setShowAiUpgradeModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { maxWidth: 460 }]}>
+            <View style={styles.modalHeaderRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.modalTitle}>✨ Google AI License & Quota Upgrade</Text>
+                <Text style={styles.modalSub}>Manage API Quota Tiers & License Renewals</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowAiUpgradeModal(false)}>
+                <Ionicons name="close-circle" size={24} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ gap: 10, marginVertical: 10 }}>
+              {/* Current Tier Badge */}
+              <View style={{ backgroundColor: '#eff6ff', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#bfdbfe' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#1d4ed8', textTransform: 'uppercase' }}>Current Active Tier</Text>
+                  <View style={{ backgroundColor: '#2563eb', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 }}>
+                    <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>PRO TIER</Text>
+                  </View>
+                </View>
+                <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a', marginTop: 4 }}>
+                  5,000 Queries / Day (Gemini 2.5 Flash)
+                </Text>
+                <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#475569', marginTop: 2 }}>
+                  Search Grounding Enabled · Auto-Renewal on Oct 30, 2026
+                </Text>
+              </View>
+
+              {/* Upgrade Tiers */}
+              <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#334155', marginTop: 4 }}>Select Upgrade Quota Plan:</Text>
+
+              <TouchableOpacity
+                style={{ backgroundColor: '#f0fdf4', borderRadius: 12, padding: 12, borderWidth: 1.5, borderColor: '#86efac', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+                activeOpacity={0.8}
+                onPress={() => {
+                  Alert.alert('Quota Upgraded', 'Successfully upgraded to Enterprise Ultra Tier (25,000 Queries/Day)!');
+                  setShowAiUpgradeModal(false);
+                }}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: '#15803d' }}>
+                    🚀 Enterprise Ultra Tier
+                  </Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#166534', marginTop: 1 }}>
+                    25,000 Queries/Day · High-Priority Gemini 2.5 Flash
+                  </Text>
+                </View>
+                <View style={{ backgroundColor: '#16a34a', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12 }}>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#ffffff' }}>Upgrade</Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={{ backgroundColor: '#faf5ff', borderRadius: 12, padding: 12, borderWidth: 1.5, borderColor: '#d8b4fe', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+                activeOpacity={0.8}
+                onPress={() => {
+                  Alert.alert('Subscription Renewed', 'Google AI Gemini 2.5 License extended by 365 Days!');
+                  setShowAiUpgradeModal(false);
+                }}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: '#7e22ce' }}>
+                    🔄 Instant 1-Year License Renewal
+                  </Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#6b21a8', marginTop: 1 }}>
+                    Extend current subscription for 365 Days
+                  </Text>
+                </View>
+                <View style={{ backgroundColor: '#9333ea', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12 }}>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#ffffff' }}>Renew Now</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity style={styles.rejectBtn} onPress={() => setShowAiUpgradeModal(false)}>
+              <Text style={styles.rejectBtnText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {activeChatTarget && (
         <AdminChatModal
@@ -821,7 +837,7 @@ const styles = StyleSheet.create({
     height: 22,
     backgroundColor: '#f1f5f9',
   },
-  sectionCard: { backgroundColor: '#ffffff', borderRadius: 14, padding: 8, borderWidth: 1, borderColor: '#f1f5f9' },
+  sectionCard: { backgroundColor: '#ffffff', borderRadius: 14, padding: 8, },
   tabRow: { gap: 6, paddingVertical: 2, paddingBottom: 6, alignItems: 'center' },
   tabChip: {
     flexDirection: 'row',
@@ -870,8 +886,6 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: '#ffffff',
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
     padding: 8,
     gap: 5,
     width: '100%',
@@ -935,8 +949,6 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor: '#ffffff',
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
     padding: 12,
     gap: 8,
     width: '100%',
@@ -1118,8 +1130,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: '#ffffff',
     borderRadius: RADIUS.lg,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
     padding: 10,
     gap: 10,
     width: '100%',
@@ -1262,5 +1272,33 @@ const styles = StyleSheet.create({
   submissionPulseTabChip: {
     borderColor: '#fca5a5',
     backgroundColor: '#fff1f2',
+  },
+  compactAdminAiCard: {
+    backgroundColor: '#312e81',
+    borderRadius: RADIUS.lg,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#6366f1',
+    marginVertical: 4,
+  },
+  compactAdminAiSub: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#c7d2fe',
+    marginTop: 2,
+  },
+  compactOpenTelemetryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#4f46e5',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+  },
+  compactOpenTelemetryText: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
   },
 });

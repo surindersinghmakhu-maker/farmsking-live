@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
   addBtnText: { fontSize: 13, fontFamily: FONT.bold },
   scheduleItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   scheduleItemCompleted: { opacity: 0.75 },
-  checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+  checkbox: { width: 22, height: 22, borderRadius: 6, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
   schedIconBg: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   schedInfo: { flex: 1, marginLeft: 10 },
   schedTask: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },

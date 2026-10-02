@@ -171,7 +171,7 @@ export class SellerService {
             in: [SellerKycStatus.PENDING, SellerKycStatus.SUBMITTED],
           },
         };
-      } else {
+      } else if (Object.values(SellerKycStatus).includes(kycStatus as SellerKycStatus)) {
         whereClause = { kycStatus: kycStatus as SellerKycStatus };
       }
     }

@@ -11,7 +11,7 @@ export class AppController {
   constructor(
     private readonly appService: AppService,
     private readonly prisma: PrismaService,
-  ) {}
+  ) { }
 
   @Get()
   getHello(): string {

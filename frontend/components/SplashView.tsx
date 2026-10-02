@@ -1,8 +1,8 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
+import { BrandLogo } from '@/src/components/BrandLogo';
 
 const theme = RoleThemes.FARMER;
 
@@ -10,7 +10,7 @@ export function SplashView() {
   return (
     <LinearGradient colors={['#0a2417', '#15803d', theme.primary]} style={styles.container}>
       <View style={[styles.badge, premiumShadow('#000000', 'md')]}>
-        <MaterialCommunityIcons name="crown" size={56} color="#15803d" />
+        <BrandLogo size={68} useHdQuality={true} />
       </View>
       <Text style={styles.title}>FarmsKing</Text>
       <Text style={styles.tagline}>Smart Farming, Better Future</Text>

@@ -25,6 +25,7 @@ import { useAuth } from '@/src/store/auth-context';
 import { CopyButton } from '@/src/components/CopyButton';
 import { DoctorChangeDisclaimerModal } from '@/src/components/DoctorChangeDisclaimerModal';
 import { CropCarePlanModal } from '@/src/components/CropCarePlanModal';
+import { FarmerPlanUpgradeModal } from '@/src/components/FarmerPlanUpgradeModal';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const theme = RoleThemes.FARMER;
@@ -53,6 +54,7 @@ export default function MembershipsScreen() {
   const [appliedCouponNotice, setAppliedCouponNotice] = useState<string | null>(null);
   const [isChoosingAdvisor, setIsChoosingAdvisor] = useState(false);
   const [isCropCareModalOpen, setIsCropCareModalOpen] = useState(false);
+  const [isFarmerPlanModalOpen, setIsFarmerPlanModalOpen] = useState(false);
   const [disclaimerModalVisible, setDisclaimerModalVisible] = useState(false);
   const [targetAdvisorToRequest, setTargetAdvisorToRequest] = useState<{ id: string; name: string } | null>(null);
 
@@ -274,7 +276,7 @@ export default function MembershipsScreen() {
               </View>
               <TouchableOpacity
                 style={[styles.upgradeBtn, { backgroundColor: '#0284c7' }]}
-                onPress={() => router.push('/(tabs)/farm')}
+                onPress={() => setIsFarmerPlanModalOpen(true)}
               >
                 <Text style={styles.upgradeBtnText}>Upgrade to Lite Plan ⚡</Text>
               </TouchableOpacity>
@@ -313,7 +315,7 @@ export default function MembershipsScreen() {
                 ) : null}
                 <TouchableOpacity
                   style={[styles.upgradeBtn, { backgroundColor: '#10b981', flex: 1 }]}
-                  onPress={() => router.push('/(tabs)/farm')}
+                  onPress={() => setIsFarmerPlanModalOpen(true)}
                 >
                   <Text style={styles.upgradeBtnText}>Upgrade VIP 👑</Text>
                 </TouchableOpacity>
@@ -380,14 +382,14 @@ export default function MembershipsScreen() {
                   <View style={styles.doctorActionsRow}>
                     <TouchableOpacity
                       style={[styles.doctorActionBtn, { backgroundColor: '#e0f2fe' }]}
-                      onPress={() => router.push('/(tabs)/chat')}
+                      onPress={() => router.push('/chat' as any)}
                     >
                       <Ionicons name="chatbubble-ellipses" size={16} color="#0284c7" />
                       <Text style={[styles.doctorActionText, { color: '#0284c7' }]}>Chat Doctor</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[styles.doctorActionBtn, { backgroundColor: '#dcfce7' }]}
-                      onPress={() => router.push('/(tabs)/market')}
+                      onPress={() => router.push('/market' as any)}
                     >
                       <Ionicons name="call" size={16} color="#16a34a" />
                       <Text style={[styles.doctorActionText, { color: '#16a34a' }]}>Call Doctor</Text>
@@ -535,6 +537,12 @@ export default function MembershipsScreen() {
       <CropCarePlanModal
         visible={isCropCareModalOpen}
         onClose={() => setIsCropCareModalOpen(false)}
+      />
+      
+      <FarmerPlanUpgradeModal 
+        visible={isFarmerPlanModalOpen}
+        onClose={() => setIsFarmerPlanModalOpen(false)}
+        initialMode="GET_COUPON"
       />
     </View>
   );

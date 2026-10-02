@@ -17,6 +17,14 @@ export function useCreateAdvisor() {
   });
 }
 
+export function useCreateTrainer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: api.createTrainer,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users', 'admin-list'] }),
+  });
+}
+
 export function useCreateOperator() {
   const queryClient = useQueryClient();
   return useMutation({

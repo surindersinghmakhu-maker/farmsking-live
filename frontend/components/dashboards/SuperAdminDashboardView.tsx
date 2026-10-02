@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Modal, TextInput, Alert, Image as RNImage, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Modal, TextInput, Alert, Image as RNImage, Switch, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
@@ -79,6 +79,12 @@ export const SuperAdminDashboardView: React.FC = () => {
   const [showAiTelemetryModal, setShowAiTelemetryModal] = useState(false);
   const [isRequestsCollapsed, setIsRequestsCollapsed] = useState(true);
   const [activeChatTarget, setActiveChatTarget] = useState<{ farmerId: string; farmerName: string } | null>(null);
+
+  // Faked AI Quota States
+  const [aiTier, setAiTier] = useState<'PRO' | 'ULTRA'>('PRO');
+  const [aiDaysLeft, setAiDaysLeft] = useState(28);
+  const [isUpgradingAi, setIsUpgradingAi] = useState(false);
+  const [isRenewingAi, setIsRenewingAi] = useState(false);
 
   const [resolvingTarget, setResolvingTarget] = useState<{ id: string; name: string } | null>(null);
   const [resolveComment, setResolveComment] = useState('');
@@ -187,7 +193,7 @@ export const SuperAdminDashboardView: React.FC = () => {
                 </View>
               </View>
               <Text style={styles.compactAdminAiSub} numberOfLines={1}>
-                🟢 1,420 / 5,000 queries today · Grounding Active · 28d left
+                🟢 {aiTier === 'ULTRA' ? '7,150 / 25,000' : '1,420 / 5,000'} queries today · Grounding Active · {aiDaysLeft}d left
               </Text>
             </View>
 
@@ -519,7 +525,7 @@ export const SuperAdminDashboardView: React.FC = () => {
         <View style={[styles.quickActionsCard, premiumShadow('#0f172a', 'sm')]}>
           <Text style={styles.quickActionsTitle}>Super Admin Shortcuts</Text>
           <View style={styles.quickActionsGrid}>
-            <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => router.push('/(tabs)/ai-doctor' as never)}>
+            <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => router.push('/crop-intelligence' as any as never)}>
               <View style={[styles.pillIconBg, { backgroundColor: '#f0fdf4' }]}>
                 <Ionicons name="sparkles" size={16} color="#15803d" />
               </View>
@@ -591,9 +597,9 @@ export const SuperAdminDashboardView: React.FC = () => {
             <View style={styles.iosMeterGrid}>
               <View style={styles.iosMeterCard}>
                 <Text style={styles.iosMeterLabel}>Daily AI Queries</Text>
-                <Text style={styles.iosMeterVal}>1,420 <Text style={styles.iosMeterLimit}>/ 5,000</Text></Text>
+                <Text style={styles.iosMeterVal}>{aiTier === 'ULTRA' ? '7,150' : '1,420'} <Text style={styles.iosMeterLimit}>/ {aiTier === 'ULTRA' ? '25,000' : '5,000'}</Text></Text>
                 <View style={styles.iosProgressTrack}>
-                  <View style={[styles.iosProgressFill, { width: '28.4%' }]} />
+                  <View style={[styles.iosProgressFill, { width: aiTier === 'ULTRA' ? '28.6%' : '28.4%' }]} />
                 </View>
               </View>
 
@@ -605,8 +611,8 @@ export const SuperAdminDashboardView: React.FC = () => {
 
               <View style={styles.iosMeterCard}>
                 <Text style={styles.iosMeterLabel}>License Renewal</Text>
-                <Text style={[styles.iosMeterVal, { color: '#d97706' }]}>28 Days Left</Text>
-                <Text style={styles.iosMeterSub}>Renews: Oct 30, 2026</Text>
+                <Text style={[styles.iosMeterVal, { color: '#d97706' }]}>{aiDaysLeft} Days Left</Text>
+                <Text style={styles.iosMeterSub}>Renews: {new Date(new Date().getTime() + aiDaysLeft * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</Text>
               </View>
             </View>
 
@@ -678,14 +684,14 @@ export const SuperAdminDashboardView: React.FC = () => {
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#1d4ed8', textTransform: 'uppercase' }}>Current Active Tier</Text>
                   <View style={{ backgroundColor: '#2563eb', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 }}>
-                    <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>PRO TIER</Text>
+                    <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>{aiTier === 'ULTRA' ? 'ENTERPRISE ULTRA' : 'PRO TIER'}</Text>
                   </View>
                 </View>
                 <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a', marginTop: 4 }}>
-                  5,000 Queries / Day (Gemini 2.5 Flash)
+                  {aiTier === 'ULTRA' ? '25,000 Queries / Day (Gemini 2.5 Flash)' : '5,000 Queries / Day (Gemini 2.5 Flash)'}
                 </Text>
                 <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#475569', marginTop: 2 }}>
-                  Search Grounding Enabled · Auto-Renewal on Oct 30, 2026
+                  Search Grounding Enabled · Auto-Renewal on {new Date(new Date().getTime() + aiDaysLeft * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </Text>
               </View>
 
@@ -693,11 +699,17 @@ export const SuperAdminDashboardView: React.FC = () => {
               <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#334155', marginTop: 4 }}>Select Upgrade Quota Plan:</Text>
 
               <TouchableOpacity
-                style={{ backgroundColor: '#f0fdf4', borderRadius: 12, padding: 12, borderWidth: 1.5, borderColor: '#86efac', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+                style={{ backgroundColor: '#f0fdf4', borderRadius: 12, padding: 12, borderWidth: 1.5, borderColor: '#86efac', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', opacity: aiTier === 'ULTRA' ? 0.5 : 1 }}
                 activeOpacity={0.8}
+                disabled={aiTier === 'ULTRA' || isUpgradingAi}
                 onPress={() => {
-                  Alert.alert('Quota Upgraded', 'Successfully upgraded to Enterprise Ultra Tier (25,000 Queries/Day)!');
-                  setShowAiUpgradeModal(false);
+                  setIsUpgradingAi(true);
+                  setTimeout(() => {
+                    setAiTier('ULTRA');
+                    setIsUpgradingAi(false);
+                    Alert.alert('Quota Upgraded', 'Successfully upgraded to Enterprise Ultra Tier (25,000 Queries/Day)!');
+                    setShowAiUpgradeModal(false);
+                  }, 1000);
                 }}
               >
                 <View style={{ flex: 1 }}>
@@ -708,17 +720,23 @@ export const SuperAdminDashboardView: React.FC = () => {
                     25,000 Queries/Day · High-Priority Gemini 2.5 Flash
                   </Text>
                 </View>
-                <View style={{ backgroundColor: '#16a34a', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12 }}>
-                  <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#ffffff' }}>Upgrade</Text>
+                <View style={{ backgroundColor: aiTier === 'ULTRA' ? '#94a3b8' : '#16a34a', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12 }}>
+                  {isUpgradingAi ? <ActivityIndicator size="small" color="#ffffff" /> : <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#ffffff' }}>{aiTier === 'ULTRA' ? 'Active' : 'Upgrade'}</Text>}
                 </View>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={{ backgroundColor: '#faf5ff', borderRadius: 12, padding: 12, borderWidth: 1.5, borderColor: '#d8b4fe', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
                 activeOpacity={0.8}
+                disabled={isRenewingAi}
                 onPress={() => {
-                  Alert.alert('Subscription Renewed', 'Google AI Gemini 2.5 License extended by 365 Days!');
-                  setShowAiUpgradeModal(false);
+                  setIsRenewingAi(true);
+                  setTimeout(() => {
+                    setAiDaysLeft((prev) => prev + 365);
+                    setIsRenewingAi(false);
+                    Alert.alert('Subscription Renewed', 'Google AI Gemini 2.5 License extended by 365 Days!');
+                    setShowAiUpgradeModal(false);
+                  }, 1000);
                 }}
               >
                 <View style={{ flex: 1 }}>
@@ -730,7 +748,7 @@ export const SuperAdminDashboardView: React.FC = () => {
                   </Text>
                 </View>
                 <View style={{ backgroundColor: '#9333ea', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12 }}>
-                  <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#ffffff' }}>Renew Now</Text>
+                  {isRenewingAi ? <ActivityIndicator size="small" color="#ffffff" /> : <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#ffffff' }}>Renew Now</Text>}
                 </View>
               </TouchableOpacity>
             </View>

@@ -1701,7 +1701,7 @@ export default function SellerDashboardScreen() {
               </View>
               <TouchableOpacity
                 style={{ backgroundColor: '#1E40AF', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 6 }}
-                onPress={() => router.push('/(tabs)/shop')}
+                onPress={() => router.push('/shop')}
               >
                 <Ionicons name="storefront-outline" size={16} color="#FFF" />
                 <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '700' }}>FK Store</Text>

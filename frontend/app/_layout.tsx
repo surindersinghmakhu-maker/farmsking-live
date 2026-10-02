@@ -68,20 +68,20 @@ function RootNavigation() {
 
   return (
     <Stack>
-      <Stack.Screen name="(admin)" options={{ headerShown: false }} />
-      <Stack.Screen name="(partner)" options={{ headerShown: false }} />
-      <Stack.Screen name="(user)" options={{ headerShown: false }} />
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="seo" options={{ headerShown: false }} />
-      <Stack.Screen name="dose" options={{ headerShown: false }} />
-      <Stack.Screen name="doses" options={{ headerShown: false }} />
-      <Stack.Screen name="my" options={{ headerShown: false }} />
-      <Stack.Screen name="you" options={{ headerShown: false }} />
-      <Stack.Screen name="seller-dashboard" options={{ headerShown: false }} />
-      <Stack.Screen name="farmer-profile-setup" options={{ headerShown: false }} />
-      <Stack.Screen name="crop-intelligence" options={{ headerShown: false }} />
-      <Stack.Screen name="admin-sellers" options={{ headerShown: false }} />
-      <Stack.Screen name="+not-found" />
+      <Stack.Screen name="(admin)" options={{ headerShown: false, title: 'FarmsKing Admin' }} />
+      <Stack.Screen name="(partner)" options={{ headerShown: false, title: 'FarmsKing Partner' }} />
+      <Stack.Screen name="(user)" options={{ headerShown: false, title: 'FarmsKing' }} />
+      <Stack.Screen name="(auth)" options={{ headerShown: false, title: 'FarmsKing Login' }} />
+      <Stack.Screen name="seo" options={{ headerShown: false, title: 'FarmsKing' }} />
+      <Stack.Screen name="dose" options={{ headerShown: false, title: 'FarmsKing' }} />
+      <Stack.Screen name="doses" options={{ headerShown: false, title: 'FarmsKing' }} />
+      <Stack.Screen name="my" options={{ headerShown: false, title: 'FarmsKing' }} />
+      <Stack.Screen name="you" options={{ headerShown: false, title: 'FarmsKing' }} />
+      <Stack.Screen name="seller-dashboard" options={{ headerShown: false, title: 'FarmsKing Seller' }} />
+      <Stack.Screen name="farmer-profile-setup" options={{ headerShown: false, title: 'FarmsKing Setup' }} />
+      <Stack.Screen name="crop-intelligence" options={{ headerShown: false, title: 'FarmsKing AI' }} />
+      <Stack.Screen name="admin-sellers" options={{ headerShown: false, title: 'FarmsKing' }} />
+      <Stack.Screen name="+not-found" options={{ title: 'Not Found' }} />
     </Stack>
   );
 }

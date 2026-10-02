@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 export default function CartScreen() {
   const router = useRouter();
   useEffect(() => {
-    router.replace('/(tabs)/shop');
+    router.replace('/(user)/(tabs)/shop');
   }, []);
 
   return null;

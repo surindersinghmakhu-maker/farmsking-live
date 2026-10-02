@@ -88,7 +88,6 @@ export default function FarmListScreen() {
   const { plan, limits } = useFarmerPlan();
   const isPaid = plan !== 'FREE';
 
-  const [activeSubTab, setActiveSubTab] = useState<'CROPS' | 'CROP_CARE'>('CROPS');
   const [isChoosingAdvisor, setIsChoosingAdvisor] = useState(false);
   const { data: myAdvisorData } = useMyAdvisor();
   const { data: availableAdvisors = [] } = useAvailableAdvisors();
@@ -730,37 +729,14 @@ export default function FarmListScreen() {
       <LinearGradient colors={theme.gradient} style={styles.hero}>
         <View pointerEvents="none" style={[styles.glow, styles.glowTop]} />
         <View style={styles.heroTopRow}>
-          <Text style={styles.heroGreeting} numberOfLines={1}>🌾 My Crops & Doctor Advisory</Text>
+          <Text style={styles.heroGreeting} numberOfLines={1}>🌾 My Crops & Fields</Text>
         </View>
 
-        {/* Sub-Tab Switcher: Active Crops vs Crop Doctor Care */}
-        <View style={styles.subTabBar}>
-          <TouchableOpacity
-            style={[styles.subTabItem, activeSubTab === 'CROPS' && styles.subTabItemActive]}
-            onPress={() => { tap(); setActiveSubTab('CROPS'); }}
-          >
-            <Ionicons name="leaf" size={14} color={activeSubTab === 'CROPS' ? '#15803d' : '#ffffff'} />
-            <Text style={[styles.subTabText, activeSubTab === 'CROPS' && styles.subTabTextActive]}>
-              🌾 Active Crops ({activeCropFields.length})
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.subTabItem, activeSubTab === 'CROP_CARE' && styles.subTabItemActive]}
-            onPress={() => { tap(); setActiveSubTab('CROP_CARE'); }}
-          >
-            <Ionicons name="medical" size={14} color={activeSubTab === 'CROP_CARE' ? '#15803d' : '#ffffff'} />
-            <Text style={[styles.subTabText, activeSubTab === 'CROP_CARE' && styles.subTabTextActive]}>
-              🩺 Crops Care
-            </Text>
-          </TouchableOpacity>
-        </View>
       </LinearGradient>
 
-      {activeSubTab === 'CROPS' ? (
-        /* Main Active Crops & Completed History List */
-        <FlatList
-          data={activeCropFields}
+      {/* Main Active Crops & Completed History List */}
+      <FlatList
+        data={activeCropFields}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
           ListHeaderComponent={
@@ -1017,7 +993,7 @@ export default function FarmListScreen() {
                             onPress={() => {
                               tap();
                               router.push({
-                                pathname: '/(tabs)/satellite-map',
+                                pathname: '/satellite-map' as any,
                                 params: {
                                   cropId: item.id,
                                   cropName: item.cropName,
@@ -1288,10 +1264,6 @@ export default function FarmListScreen() {
             </View>
           }
         />
-      ) : (
-        /* CROP DOCTOR / CROP CARE ADVISORY SECTION */
-        <CropDoctorCareView />
-      )}
 
       {/* STAGE CHANGE WARNING CONFIRMATION MODAL */}
       <Modal visible={stageConfirmModalVisible} transparent animationType="fade">

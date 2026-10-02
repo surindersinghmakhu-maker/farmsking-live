@@ -329,7 +329,7 @@ export default function CropDiseaseScannerScreen() {
     });
     setAddedToCartNotice(`🛒 Added ${scanResult.recommendedProductName} (₹${scanResult.recommendedPrice}) to Cart! Redirecting to checkout...`);
     setTimeout(() => {
-      router.push('/(tabs)/shop');
+      router.push('/(user)/(tabs)/shop' as any);
     }, 1200);
   };
 

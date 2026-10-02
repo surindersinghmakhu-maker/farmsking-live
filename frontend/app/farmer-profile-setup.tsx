@@ -79,7 +79,7 @@ export default function FarmerProfileSetupScreen() {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace('/(tabs)');
+      router.replace('/(user)/(tabs)' as any);
     }
   };
 

@@ -256,7 +256,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
               activeOpacity={0.85}
               onPress={() => {
                 tap();
-                router.push({ pathname: '/(tabs)/records', params: { action: 'NEW_SALE', t: Date.now() } });
+                router.push({ pathname: '/(user)/(tabs)/records' as any, params: { action: 'NEW_SALE', t: Date.now() } });
               }}
             >
               <Ionicons name="add-circle" size={15} color="#ffffff" />
@@ -269,7 +269,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
               activeOpacity={0.85}
               onPress={() => {
                 tap();
-                router.push({ pathname: '/(tabs)/records', params: { action: 'NEW_EXPENSE', t: Date.now() } });
+                router.push({ pathname: '/(user)/(tabs)/records' as any, params: { action: 'NEW_EXPENSE', t: Date.now() } });
               }}
             >
               <Ionicons name="remove-circle" size={15} color="#ffffff" />
@@ -321,7 +321,7 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
               activeOpacity={0.8}
               onPress={() => {
                 tap();
-                router.push('/(tabs)/ai-doctor' as any);
+                router.push('/crop-intelligence' as any as any);
               }}
             >
               <View style={[styles.actionIconBgUnified, { backgroundColor: '#dcfce7' }]}>

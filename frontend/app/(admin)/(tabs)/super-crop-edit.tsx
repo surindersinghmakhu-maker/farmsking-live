@@ -140,8 +140,8 @@ export default function SuperCropEditScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient colors={theme.gradient} style={styles.hero}>
-        <Text style={styles.heroTitle}>Super Admin — Edit Crop</Text>
-        <Text style={styles.heroSubtitle}>Enter Crop ID to pre-fill farmer's full crop details and edit safely</Text>
+        <Text style={styles.heroTitle}>🌾 Edit Farmer Crop Data</Text>
+        <Text style={styles.heroSubtitle}>Enter Crop ID to look up a farmer's crop and override data safely</Text>
 
         <View style={styles.searchWrap}>
           <Ionicons name="search" size={16} color="rgba(255,255,255,0.8)" />

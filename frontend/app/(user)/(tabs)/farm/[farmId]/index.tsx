@@ -200,7 +200,7 @@ export default function FarmDetailScreen() {
               activeOpacity={0.8}
               onPress={() =>
                 router.push({
-                  pathname: '/(tabs)/farm/[farmId]/plots/[plotId]',
+                  pathname: '/(user)/(tabs)/farm/[farmId]/plots/[plotId]' as any,
                   params: { farmId: farmId as string, plotId: item.id },
                 })
               }>

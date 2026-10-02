@@ -157,7 +157,7 @@ export default function AdminSellersScreen() {
         </View>
 
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.headerActionBtn} onPress={() => router.push('/(tabs)/shop')}>
+          <TouchableOpacity style={styles.headerActionBtn} onPress={() => router.push('/shop')}>
             <Ionicons name="storefront" size={16} color="#10B981" />
             <Text style={styles.headerActionText}>Shop</Text>
           </TouchableOpacity>

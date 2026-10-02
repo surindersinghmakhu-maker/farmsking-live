@@ -18,6 +18,7 @@ import { OperatorDashboardView } from '@/components/dashboards/OperatorDashboard
 import { LabourDashboardView } from '@/components/dashboards/LabourDashboardView';
 import { AdminChatModal } from '@/src/components/AdminChatModal';
 import { WelcomeBonusModal } from '@/src/components/WelcomeBonusModal';
+import { TechnicalTrainerDashboardView } from '@/components/dashboards/TechnicalTrainerDashboardView';
 
 import { useExecutiveTheme } from '@/src/store/theme-context';
 
@@ -88,6 +89,8 @@ export default function HomeScreen() {
         return <OperatorDashboardView />;
       case 'LABOUR':
         return <LabourDashboardView />;
+      case 'TECHNICAL_TRAINER':
+        return <TechnicalTrainerDashboardView />;
       default:
         return <FarmerDashboardView onOpenAdminChat={() => setShowAdminChatModal(true)} />;
     }

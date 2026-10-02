@@ -217,7 +217,7 @@ export default function CouponsScreen() {
         <TouchableOpacity
           style={styles.membershipBanner}
           activeOpacity={0.88}
-          onPress={() => router.push('/(tabs)/memberships')}
+          onPress={() => router.push('/memberships' as any)}
         >
           <View style={{ flex: 1 }}>
             <Text style={styles.bannerTitle}>👑 Ready to Use Your Coupon?</Text>

@@ -315,7 +315,7 @@ export default function AgriStoreEnterpriseHub() {
         </View>
 
         <View style={{ flexDirection: 'row', gap: 8 }}>
-          <TouchableOpacity style={styles.actionHeaderBtn} onPress={() => router.push('/(tabs)/shop')}>
+          <TouchableOpacity style={styles.actionHeaderBtn} onPress={() => router.push('/shop')}>
             <Ionicons name="storefront" size={16} color="#34D399" />
             <Text style={styles.actionHeaderBtnText}>Live Shop</Text>
           </TouchableOpacity>

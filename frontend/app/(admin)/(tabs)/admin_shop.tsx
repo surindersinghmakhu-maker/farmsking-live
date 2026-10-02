@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, Alert, ActivityIndicator, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/src/store/auth-context';
@@ -93,7 +93,7 @@ export default function AdminShopScreen() {
             <Text style={styles.headerSub}>Platform E-Commerce & Product Inventory Command</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.viewStoreBtn} onPress={() => router.push('/(tabs)/shop')}>
+        <TouchableOpacity style={styles.viewStoreBtn} onPress={() => router.push('/shop' as any)}>
           <Ionicons name="eye-outline" size={16} color="#ffffff" />
           <Text style={styles.viewStoreBtnText}>View Customer Store</Text>
         </TouchableOpacity>
@@ -145,9 +145,9 @@ export default function AdminShopScreen() {
             <View style={styles.card}>
               <Text style={styles.cardTitle}>⚡ Admin Quick Actions</Text>
               <View style={styles.actionGrid}>
-                <TouchableOpacity style={styles.actionPill} onPress={() => router.push('/(tabs)/admin-products')}>
+                <TouchableOpacity style={styles.actionPill} onPress={() => router.push('/(admin)/(tabs)/admin-products' as any)}>
                   <Ionicons name="cube-outline" size={18} color="#2563eb" />
-                  <Text style={styles.actionPillText}>Product Catalog</Text>
+                  <Text style={styles.actionPillText}>Product Inventory</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.actionPill} onPress={() => router.push('/admin-sellers')}>
@@ -160,7 +160,7 @@ export default function AdminShopScreen() {
                   <Text style={styles.actionPillText}>Seller Payouts</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.actionPill} onPress={() => router.push('/(tabs)/admin-orders')}>
+                <TouchableOpacity style={styles.actionPill} onPress={() => router.push('/(admin)/(tabs)/admin-orders' as any)}>
                   <Ionicons name="receipt-outline" size={18} color="#7c3aed" />
                   <Text style={styles.actionPillText}>Order Processing</Text>
                 </TouchableOpacity>
@@ -260,7 +260,7 @@ export default function AdminShopScreen() {
             <View style={styles.card}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Text style={styles.cardTitle}>🔔 Pending Orders Action Required ({pendingOrders.length})</Text>
-                <TouchableOpacity onPress={() => router.push('/(tabs)/admin-orders')}>
+                <TouchableOpacity onPress={() => router.push('/(admin)/(tabs)/admin-orders' as any)}>
                   <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#2563eb' }}>View All →</Text>
                 </TouchableOpacity>
               </View>
@@ -296,7 +296,7 @@ export default function AdminShopScreen() {
               />
             </View>
 
-            <TouchableOpacity style={styles.addProductFullBtn} onPress={() => router.push('/(tabs)/admin-products')}>
+            <TouchableOpacity style={styles.addProductFullBtn} onPress={() => router.push('/(admin)/(tabs)/admin-products' as any)}>
               <Ionicons name="open-outline" size={20} color="#ffffff" />
               <Text style={styles.addProductFullBtnText}>Open Advanced Catalog Manager</Text>
             </TouchableOpacity>
@@ -320,12 +320,12 @@ export default function AdminShopScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.prodName}>{p.name}</Text>
                       <Text style={styles.prodSub}>
-                        Cat: {p.category ?? 'General'} · Price: ₹{p.sellingPrice} (MRP ₹{p.mrpPrice})
+                        Cat: {p.category ?? 'General'} · Price: ₹{p.price}
                       </Text>
                     </View>
-                    <View style={[styles.stockTag, p.stockQuantity < 5 && { backgroundColor: '#fef2f2' }]}>
-                      <Text style={[styles.stockTagText, p.stockQuantity < 5 && { color: '#dc2626' }]}>
-                        Stock: {p.stockQuantity}
+                    <View style={[styles.stockTag, p.stockQty < 5 && { backgroundColor: '#fef2f2' }]}>
+                      <Text style={[styles.stockTagText, p.stockQty < 5 && { color: '#dc2626' }]}>
+                        Stock: {p.stockQty}
                       </Text>
                     </View>
                   </View>
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
   navTabText: { fontSize: 11, fontFamily: FONT.bold, color: '#475569' },
   navTabTextActive: { color: '#ffffff' },
   content: { flex: 1, paddingHorizontal: 12 },
-  card: { backgroundColor: '#ffffff', borderRadius: 14, padding: 14, marginBottom: 12, ...premiumShadow('#0f172a', 'xs') },
+  card: { backgroundColor: '#ffffff', borderRadius: 14, padding: 14, marginBottom: 12, ...premiumShadow('#0f172a', 'sm') as any },
   cardTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a', marginBottom: 10 },
   actionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   actionPill: {

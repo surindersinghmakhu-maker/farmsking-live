@@ -74,6 +74,11 @@ export async function createAdvisor(payload: CreateAdvisorPayload): Promise<Crea
   return data;
 }
 
+export async function createTrainer(payload: CreateStaffPayload): Promise<CreateAdvisorResponse> {
+  const { data } = await apiClient.post<CreateAdvisorResponse>('/users/trainers', payload);
+  return data;
+}
+
 export async function createOperator(payload: CreateStaffPayload): Promise<CreateAdvisorResponse> {
   const { data } = await apiClient.post<CreateAdvisorResponse>('/users/operators', payload);
   return data;

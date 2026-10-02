@@ -62,6 +62,9 @@ export interface User {
   soilType?: SoilType | null;
   waterType?: WaterType | null;
   upiId?: string | null;
+  locationPreference?: string | null;
+  gpsLat?: string | null;
+  gpsLng?: string | null;
   billPrintingAddress?: string | null;
   isSeniorDoctor?: boolean | null;
   farmName?: string | null;

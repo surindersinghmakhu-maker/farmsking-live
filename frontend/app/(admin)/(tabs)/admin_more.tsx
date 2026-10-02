@@ -9,7 +9,7 @@ import { useRole } from '@/src/store/role-context';
 import { useLanguage } from '@/src/store/language-context';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { TranslationKey } from '@/src/constants/translations';
-import { useAppSettings } from '@/src/hooks/useAppSettings';
+import { useAppSettings, useUpdateAppSettings } from '@/src/hooks/useAppSettings';
 import { Avatar } from '@/src/components/Avatar';
 import { SuperAdminExpenseCategoriesModal } from '@/components/SuperAdminExpenseCategoriesModal';
 import { useExecutiveTheme } from '@/src/store/theme-context';
@@ -35,7 +35,8 @@ export default function AdminMoreScreen() {
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showGuidesModal, setShowGuidesModal] = useState(false);
-  const [isGroupVoiceCallEnabled, setIsGroupVoiceCallEnabled] = useState(true);
+  const updateSettings = useUpdateAppSettings();
+  const isGroupVoiceCallEnabled = (appSettings as any)?.groupVoiceCallEnabled ?? true;
 
   return (
     <>
@@ -64,55 +65,60 @@ export default function AdminMoreScreen() {
           {/* Switch Role / Dashboard */}
           <SwitchDashboardSection />
 
-          {/* 📦 E-COMMERCE & ORDERS */}
+          {/* 📦 E-COMMERCE & MARKETPLACE */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>📦 E-COMMERCE & ORDERS (6 OPTIONS)</Text>
+            <Text style={styles.sectionTitle}>📦 E-COMMERCE & MARKETPLACE</Text>
             <View style={styles.sectionCard}>
               <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/agristore')}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#fef3c7' }]}><Ionicons name="storefront-outline" size={18} color="#d97706" /></View>
-                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>👑 National E-Commerce Hub</Text><Text style={styles.rowSubLabel}>E-Commerce store management & direct catalog</Text></View>
+                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>👑 National E-Commerce Hub</Text><Text style={styles.rowSubLabel}>E-Commerce store overview & management dashboard</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/(tabs)/admin-products')}>
+              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/(admin)/(tabs)/admin-products' as any)}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#eff6ff' }]}><Ionicons name="cube-outline" size={18} color="#2563eb" /></View>
-                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>📦 Product Catalog & Stock</Text><Text style={styles.rowSubLabel}>Review, approve & manage store product inventory</Text></View>
+                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>📦 Product Inventory & Catalog</Text><Text style={styles.rowSubLabel}>Manage platform products, stock levels & pricing</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/(tabs)/admin-orders')}>
+              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/(admin)/(tabs)/admin-orders' as any)}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#f5f3ff' }]}><Ionicons name="receipt-outline" size={18} color="#7c3aed" /></View>
-                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🧾 Admin Orders & Fulfillment</Text><Text style={styles.rowSubLabel}>Process customer orders & manage shipping status</Text></View>
+                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🧾 Order Processing & Fulfillment</Text><Text style={styles.rowSubLabel}>Process customer orders & update shipping status</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
               <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/admin-sellers')}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#fff7ed' }]}><Ionicons name="shield-checkmark-outline" size={18} color="#ea580c" /></View>
-                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🏪 Seller Verification & Approvals</Text><Text style={styles.rowSubLabel}>Approve new seller store registrations & KYC</Text></View>
+                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🏪 Seller KYC & Approvals</Text><Text style={styles.rowSubLabel}>Approve new seller store registrations & verify KYC</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
               <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/seller-payouts')}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#ecfdf5' }]}><Ionicons name="wallet-outline" size={18} color="#059669" /></View>
-                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>💸 Seller Payouts & Commission</Text><Text style={styles.rowSubLabel}>Release seller balances & monitor transaction payouts</Text></View>
+                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>💸 Seller Payouts & Commission</Text><Text style={styles.rowSubLabel}>Release seller balances & monitor payout transactions</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} activeOpacity={0.7} onPress={() => router.push('/(tabs)/super-orders')}>
+              <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} activeOpacity={0.7} onPress={() => router.push('/(admin)/(tabs)/super-orders' as any)}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#f0f9ff' }]}><Ionicons name="bar-chart-outline" size={18} color="#0284c7" /></View>
-                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>📊 Sales Order Analytics</Text><Text style={styles.rowSubLabel}>View pan-India sales order logs & history</Text></View>
+                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>📊 Sales Order Analytics</Text><Text style={styles.rowSubLabel}>View pan-India sales order logs & revenue history</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* 👥 USERS & MARKETING */}
+          {/* 👥 USERS & FARMER MANAGEMENT */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>👥 USERS & MARKETING (2 OPTIONS)</Text>
+            <Text style={styles.sectionTitle}>👥 USERS & FARMER MANAGEMENT</Text>
             <View style={styles.sectionCard}>
-              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/(tabs)/super-users')}>
+              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/(admin)/(tabs)/super-users' as any)}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#eef2ff' }]}><Ionicons name="people-outline" size={18} color="#4f46e5" /></View>
                 <View style={{ flex: 1 }}><Text style={styles.rowLabel}>👥 User & Role Management</Text><Text style={styles.rowSubLabel}>Manage all users, farmers, advisors & role assignments</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} activeOpacity={0.7} onPress={() => router.push('/(tabs)/super-coupons')}>
+              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/(admin)/(tabs)/super-crop-edit' as any)}>
+                <View style={[styles.rowIconBg, { backgroundColor: '#f0fdf4' }]}><Ionicons name="leaf-outline" size={18} color="#15803d" /></View>
+                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🌾 Edit Farmer Crop Data</Text><Text style={styles.rowSubLabel}>Look up farmer's live crop by ID and override field data</Text></View>
+                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} activeOpacity={0.7} onPress={() => router.push('/(admin)/(tabs)/super-coupons' as any)}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#fdf4ff' }]}><Ionicons name="ticket-outline" size={18} color="#c026d3" /></View>
-                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🎟️ Farmers & Coupon Engine</Text><Text style={styles.rowSubLabel}>Issue discount codes, vouchers & farmer schemes</Text></View>
+                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🎟️ VIP Pass & Coupon Manager</Text><Text style={styles.rowSubLabel}>Issue VIP passes, discount codes & farmer schemes</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
             </View>
@@ -120,21 +126,16 @@ export default function AdminMoreScreen() {
 
           {/* ⚙️ SYSTEM & MASTER DATA */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>⚙️ SYSTEM & MASTER DATA (3 OPTIONS)</Text>
+            <Text style={styles.sectionTitle}>⚙️ SYSTEM & MASTER DATA</Text>
             <View style={styles.sectionCard}>
-              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/(tabs)/super-crop-edit')}>
-                <View style={[styles.rowIconBg, { backgroundColor: '#f0fdf4' }]}><Ionicons name="leaf-outline" size={18} color="#15803d" /></View>
-                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🌱 Edit Crop & Disease Data</Text><Text style={styles.rowSubLabel}>Update crop master database & disease symptoms</Text></View>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/(tabs)/super-audit-log')}>
-                <View style={[styles.rowIconBg, { backgroundColor: '#f8fafc' }]}><Ionicons name="time-outline" size={18} color="#475569" /></View>
-                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🕒 System Audit Log</Text><Text style={styles.rowSubLabel}>Track administrative actions & security logs</Text></View>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} activeOpacity={0.7} onPress={() => setShowCategoriesModal(true)}>
+              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => setShowCategoriesModal(true)}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#fef2f2' }]}><Ionicons name="pricetags-outline" size={18} color="#dc2626" /></View>
                 <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🏷️ Expense Categories Manager</Text><Text style={styles.rowSubLabel}>Add, edit & deactivate farm expense categories</Text></View>
+                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} activeOpacity={0.7} onPress={() => router.push('/(admin)/(tabs)/super-audit-log' as any)}>
+                <View style={[styles.rowIconBg, { backgroundColor: '#f8fafc' }]}><Ionicons name="time-outline" size={18} color="#475569" /></View>
+                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🕒 System Audit Log</Text><Text style={styles.rowSubLabel}>Track all administrative actions & security events</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
             </View>
@@ -144,7 +145,7 @@ export default function AdminMoreScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>🛠️ C-PANEL & CONFIGURATION (5 OPTIONS)</Text>
             <View style={styles.sectionCard}>
-              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/(tabs)/super-settings' as any)}>
+              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/(admin)/(tabs)/super-settings' as any as any)}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#f8fafc' }]}><Ionicons name="options-outline" size={18} color="#0d9488" /></View>
                 <View style={{ flex: 1 }}><Text style={styles.rowLabel}>⚙️ System Settings & Feature Flags</Text><Text style={styles.rowSubLabel}>Full system controls, feature toggles & API flags</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
@@ -154,7 +155,7 @@ export default function AdminMoreScreen() {
                 <View style={{ flex: 1 }}><Text style={styles.rowLabel}>👑 Admin Info & Branding Console</Text><Text style={styles.rowSubLabel}>App name, brand logo, tagline, payment UPI & profile</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => setIsGroupVoiceCallEnabled(v => !v)}>
+              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => updateSettings.mutateAsync({ groupVoiceCallEnabled: !isGroupVoiceCallEnabled } as any)}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#f0fdf4' }]}><Ionicons name="mic-outline" size={18} color="#059669" /></View>
                 <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🎙️ Group Voice Call Status</Text><Text style={styles.rowSubLabel}>{isGroupVoiceCallEnabled ? 'STATUS: ACTIVE' : 'STATUS: DISABLED'}</Text></View>
                 <Ionicons name={isGroupVoiceCallEnabled ? 'toggle' : 'toggle-outline'} size={28} color={isGroupVoiceCallEnabled ? '#10b981' : '#cbd5e1'} />
@@ -217,7 +218,7 @@ const styles = StyleSheet.create({
   body: { padding: 16 },
   section: { marginBottom: 20 },
   sectionTitle: { fontSize: 12, fontFamily: FONT.bold, color: '#64748b', marginBottom: 8, letterSpacing: 0.5 },
-  sectionCard: { backgroundColor: '#ffffff', borderRadius: 16, overflow: 'hidden', ...premiumShadow('#0f172a', 'xs') },
+  sectionCard: { backgroundColor: '#ffffff', borderRadius: 16, overflow: 'hidden', ...premiumShadow('#0f172a', 'sm') as any },
   row: { flexDirection: 'row', alignItems: 'center', padding: 14, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', gap: 12 },
   rowIconBg: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   rowLabel: { fontSize: 14, fontFamily: FONT.bold, color: '#0f172a' },

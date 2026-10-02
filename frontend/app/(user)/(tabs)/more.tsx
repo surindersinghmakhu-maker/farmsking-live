@@ -41,6 +41,7 @@ const MY_PROFILE_ITEM: AccountItem = { key: 'myProfile', label: 'My Profile', ic
 const MY_ADDRESSES_ITEM: AccountItem = { key: 'myAddresses' as any, label: 'My Addresses', icon: 'location-outline', href: '/profile?tab=ADDRESSES' };
 const NOTIFICATIONS_ITEM: AccountItem = { key: 'notifications', label: 'Notification & Weather Preferences', icon: 'notifications-outline', href: '/notification-settings' };
 const FARMER_ONLY_ITEM: AccountItem = { key: 'editFarmProfile', label: 'Farmer Special Profile', icon: 'flask-outline', href: '/farmer-profile-setup' };
+const FARMER_WALLET_ITEM: AccountItem = { key: 'royalWallet' as any, label: 'FarmsKing Royal Wallet', icon: 'wallet-outline', href: '/(tabs)/wallet' };
 const LABOUR_ITEM: AccountItem = { key: 'tabLabour' as any, label: 'Labour & Worker Management', icon: 'people-outline', href: '/(tabs)/records' };
 const ADVISOR_PROFILE_ITEM: AccountItem = { key: 'advisorProfile', label: 'Advisor Profile', icon: 'briefcase-outline', href: '/advisor-profile' };
 
@@ -49,9 +50,9 @@ const ADVISOR_BUSINESS_ITEMS: { key: TranslationKey; label: string; icon: keyof 
 ];
 
 const SHOP_ITEMS: { key: TranslationKey; label: string; icon: keyof typeof Ionicons.glyphMap; href?: string }[] = [
-  { key: 'browseCategories', label: 'Browse Categories', icon: 'grid-outline', href: '/(tabs)/shop' },
-  { key: 'myCart', label: 'My Cart', icon: 'cart-outline', href: '/(tabs)/cart' },
-  { key: 'myOrders', label: 'My Orders', icon: 'receipt-outline', href: '/(tabs)/orders' },
+  { key: 'browseCategories', label: 'Browse Categories', icon: 'grid-outline', href: '/(user)/(tabs)/shop' },
+  { key: 'myCart', label: 'My Cart', icon: 'cart-outline', href: '/(user)/(tabs)/cart' },
+  { key: 'myOrders', label: 'My Orders', icon: 'receipt-outline', href: '/(user)/(tabs)/orders' },
 ];
 
 const SUPER_ADMIN_ITEMS: { key: TranslationKey | 'workspace' | 'agristoreHub'; label: string; icon: keyof typeof Ionicons.glyphMap; href?: string }[] = [
@@ -211,6 +212,7 @@ export default function MoreScreen() {
   const accountItems: AccountItem[] = [
     MY_PROFILE_ITEM,
     MY_ADDRESSES_ITEM,
+    ...(role === 'FARMER' || role === 'GARDENER' || role === 'CUSTOMER' ? [FARMER_WALLET_ITEM] : []),
     FARMER_ONLY_ITEM,
     ...(isAdvisorRole ? [ADVISOR_PROFILE_ITEM] : []),
     ...(isLabourRole ? [LABOUR_ITEM] : []),

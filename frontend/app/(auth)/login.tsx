@@ -25,7 +25,7 @@ import { CaptchaChallenge, CaptchaRef } from '@/src/components/CaptchaChallenge'
 // Required for expo-auth-session to close auth browser after redirect
 WebBrowser.maybeCompleteAuthSession();
 
-const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '';
+const GOOGLE_CLIENT_ID = '526414717221-j7s76lkacilevmucm0npnehrnqtqu0f3.apps.googleusercontent.com';
 
 // Google OAuth2 discovery document
 const discovery = {
@@ -299,52 +299,6 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Download APK */}
-          <View style={{ marginTop: 10 }}>
-            <TouchableOpacity
-              style={styles.downloadAppBtn}
-              onPress={async () => {
-                const url = appSettings?.appDownloadUrl || 'https://farmsking.in/download/farmsking.apk';
-                try {
-                  if (Platform.OS === 'web' && typeof window !== 'undefined') {
-                    const a = document.createElement('a');
-                    a.href = url; a.setAttribute('download', 'farmsking.apk');
-                    a.setAttribute('target', '_self'); document.body.appendChild(a);
-                    a.click(); document.body.removeChild(a); return;
-                  }
-                  const can = await Linking.canOpenURL(url);
-                  if (can) await Linking.openURL(url); else window.location.href = url;
-                } catch { if (typeof window !== 'undefined') window.location.href = url; }
-              }}
-              activeOpacity={0.85}
-            >
-              <View style={styles.downloadIconCircle}>
-                <Ionicons name="logo-android" size={20} color="#0284c7" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.downloadAppTitle}>📲 Download Android App (APK) · ~18.5 MB</Text>
-              </View>
-              <View style={styles.downloadBadge}>
-                <Text style={styles.downloadBadgeText}>Download</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          {/* ── SK Button: Marigold Editable Schedule Quick Link ── */}
-          <TouchableOpacity
-            style={styles.myButtonCard}
-            onPress={() => router.push('/sk')}
-            activeOpacity={0.85}
-          >
-            <View style={styles.myButtonIconCircle}>
-              <Ionicons name="leaf" size={20} color="#15803d" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.myButtonTitle}>🌼 Marigold Drenching Schedule (SK Button)</Text>
-              <Text style={styles.myButtonSubtitle}>Editable Form & PDF Report Download (/sk)</Text>
-            </View>
-            <Ionicons name="arrow-forward-circle" size={22} color="#15803d" />
-          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -468,39 +422,4 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
   },
   registerHighlightBtnText: { color: '#ffffff', fontSize: 13, fontFamily: FONT.extraBold },
-
-  downloadAppBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: '#f0f9ff', borderRadius: RADIUS.md,
-    borderWidth: 1.5, borderColor: '#bae6fd', padding: 10, marginTop: 10,
-  },
-  downloadIconCircle: {
-    width: 32, height: 32, borderRadius: 16,
-    backgroundColor: '#e0f2fe', alignItems: 'center', justifyContent: 'center',
-  },
-  downloadAppTitle: { fontSize: 12.5, fontFamily: FONT.extraBold, color: '#0369a1' },
-  downloadBadge: { backgroundColor: '#0284c7', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill },
-  downloadBadgeText: { fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' },
-
-  myButtonCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: '#f0fdf4',
-    borderRadius: RADIUS.md,
-    borderWidth: 1.5,
-    borderColor: '#86efac',
-    padding: 10,
-    marginTop: 10,
-  },
-  myButtonIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#dcfce7',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  myButtonTitle: { fontSize: 12.5, fontFamily: FONT.extraBold, color: '#15803d' },
-  myButtonSubtitle: { fontSize: 11, fontFamily: FONT.medium, color: '#166534', marginTop: 1 },
 });

@@ -215,7 +215,7 @@ export default function SatelliteMapScreen() {
             <TouchableOpacity
               style={styles.addCropBtn}
               activeOpacity={0.85}
-              onPress={() => router.push('/(tabs)/farm')}
+              onPress={() => router.push('/farm' as any)}
             >
               <Ionicons name="add-circle" size={18} color="#ffffff" />
               <Text style={styles.addCropBtnText}>+ Add Crop in My Crops & Fields</Text>

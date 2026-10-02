@@ -9,6 +9,7 @@ import {
   useAdminUpdateUser,
   useCreateAdmin,
   useCreateAdvisor,
+  useCreateTrainer,
   useCreateOperator,
   useDeactivateUser,
   useDeleteUser,
@@ -253,7 +254,7 @@ export default function SuperUsersScreen() {
             <TouchableOpacity
               style={[styles.addAdvisorBtn, { flex: 1 }, premiumShadow(theme.primary, 'sm')]}
               activeOpacity={0.85}
-              onPress={() => setIsAddTrainerOpen(true)}
+              onPress={() => setIsAddStaffOpen(true)}
             >
               <Ionicons name="add-circle" size={16} color="#ffffff" />
               <Text style={styles.addAdvisorBtnText}>Appoint Technical Staff</Text>
@@ -363,7 +364,7 @@ export default function SuperUsersScreen() {
 
       <AddStaffModal
         visible={isAddStaffOpen}
-        kind={filter === 'OPERATOR' ? 'OPERATOR' : 'ADMIN'}
+        kind={filter === 'OPERATOR' ? 'OPERATOR' : filter === 'TECHNICAL_TRAINER' ? 'TECHNICAL_TRAINER' : 'ADMIN'}
         onClose={() => setIsAddStaffOpen(false)}
       />
 
@@ -1237,10 +1238,11 @@ function AddAdvisorModal({ visible, advisorType, onClose }: { visible: boolean; 
   );
 }
 
-function AddStaffModal({ visible, kind, onClose }: { visible: boolean; kind: 'OPERATOR' | 'ADMIN'; onClose: () => void }) {
+function AddStaffModal({ visible, kind, onClose }: { visible: boolean; kind: 'OPERATOR' | 'ADMIN' | 'TECHNICAL_TRAINER'; onClose: () => void }) {
   const createOperator = useCreateOperator();
   const createAdmin = useCreateAdmin();
-  const createStaff = kind === 'OPERATOR' ? createOperator : createAdmin;
+  const createTrainer = useCreateTrainer();
+  const createStaff = kind === 'OPERATOR' ? createOperator : kind === 'ADMIN' ? createAdmin : createTrainer;
   const [mobile, setMobile] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -1277,11 +1279,11 @@ function AddStaffModal({ visible, kind, onClose }: { visible: boolean; kind: 'OP
       });
       setTempPasswordResult(result.tempPassword);
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? `Could not create ${kind === 'OPERATOR' ? 'operator' : 'admin'}.`);
+      setError(err?.response?.data?.message ?? `Could not create staff.`);
     }
   };
 
-  const label = kind === 'OPERATOR' ? 'Operator' : 'Admin';
+  const label = kind === 'OPERATOR' ? 'Operator' : kind === 'ADMIN' ? 'Admin' : 'Technical Trainer';
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={() => { reset(); onClose(); }}>

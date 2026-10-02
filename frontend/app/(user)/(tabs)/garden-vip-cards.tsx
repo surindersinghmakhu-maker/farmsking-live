@@ -280,8 +280,8 @@ export default function GardenVipCardsScreen() {
                 <Text style={[styles.brandName, { color: '#fff' }]}>FarmsKing</Text>
               </View>
               <View style={styles.proMiddle}>
-                {user?.profilePhotoUrl ? (
-                  <Image source={{ uri: user.profilePhotoUrl }} style={styles.cardAvatar} />
+                {user?.photoUrl ? (
+                  <Image source={{ uri: user.photoUrl }} style={styles.cardAvatar} />
                 ) : (
                   <View style={styles.cardAvatarPlaceholder}>
                     <Ionicons name="person" size={24} color="#94a3b8" />
@@ -321,8 +321,8 @@ export default function GardenVipCardsScreen() {
                 )}
               </View>
               <View style={styles.proMiddle}>
-                {user?.profilePhotoUrl ? (
-                  <Image source={{ uri: user.profilePhotoUrl }} style={[styles.cardAvatar, { borderColor: '#fff' }]} />
+                {user?.photoUrl ? (
+                  <Image source={{ uri: user.photoUrl }} style={[styles.cardAvatar, { borderColor: '#fff' }]} />
                 ) : (
                   <View style={[styles.cardAvatarPlaceholder, { borderColor: '#fff' }]}>
                     <Ionicons name="person" size={24} color="#fff" />

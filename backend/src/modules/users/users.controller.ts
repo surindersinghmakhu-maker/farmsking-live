@@ -264,6 +264,12 @@ export class UsersController {
 
 
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Post('trainers')
+  createTrainer(@Body() dto: CreateStaffDto) {
+    return this.usersService.createTrainer(dto);
+  }
+
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Post('operators')
   createOperator(@Body() dto: CreateStaffDto) {
     return this.usersService.createOperator(dto);

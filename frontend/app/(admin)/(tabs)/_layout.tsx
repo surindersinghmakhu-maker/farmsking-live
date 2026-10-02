@@ -94,7 +94,7 @@ type TabName =
 
 const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
   FARMER: { tabs: ['index', 'shop', 'farm', 'records', 'market', 'more'] },
-  GARDENER: { tabs: ['index', 'shop', 'garden', 'records', 'market', 'more'] },
+  GARDENER: { tabs: ['index', 'shop', 'farm', 'records', 'market', 'more'] },
   CUSTOMER: { tabs: ['shop', 'wallet', 'more'] },
   ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
   FARM_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
@@ -190,9 +190,9 @@ export default function TabLayout() {
 
   const handleNavigate = (tabName: TabName) => {
     if (tabName === 'index') {
-      router.push('/(tabs)');
+      router.push('/(admin)/(tabs)' as any);
     } else {
-      router.push(`/(tabs)/${tabName}` as any);
+      router.push(`/(admin)/(tabs)/${tabName}` as any);
     }
   };
 
@@ -202,7 +202,7 @@ export default function TabLayout() {
       {isDesktop && (
         <View style={[desktopStyles.headerBar, { backgroundColor: colors.headerBg, borderBottomColor: colors.cardBorder }]}>
           <View style={desktopStyles.headerLeft}>
-            <TouchableOpacity style={desktopStyles.brandLogoBox} activeOpacity={0.8} onPress={() => router.push('/(tabs)')}>
+            <TouchableOpacity style={desktopStyles.brandLogoBox} activeOpacity={0.8} onPress={() => router.push('/(admin)/(tabs)' as any)}>
               <BrandLogo size={36} useFastBundledOnly={true} />
               <Text style={desktopStyles.brandTitle}>FarmsKing</Text>
             </TouchableOpacity>
@@ -235,7 +235,7 @@ export default function TabLayout() {
           {/* Right Header Actions */}
           <View style={desktopStyles.headerRight}>
             {(() => {
-              const isSellerRole = role === 'SELLER' || user?.role === 'SELLER' || Boolean((user as any)?.isSeller);
+              const isSellerRole = (role as string) === 'SELLER' || (user?.role as string) === 'SELLER' || Boolean((user as any)?.isSeller);
               if (!isSellerRole) return null;
               return (
                 <TouchableOpacity

@@ -31,15 +31,13 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   const primaryRole = user ? toUserRole(user.role, user.advisorType) : 'CUSTOMER';
   const assignedRoles = useMemo<UserRole[]>(() => {
     if (!user) return ['CUSTOMER'];
-    const isAdminUser = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || (user.roles && (user.roles.includes('ADMIN') || user.roles.includes('SUPER_ADMIN')));
+    
+    const staffRoles = ['ADMIN', 'SUPER_ADMIN', 'TECHNICAL_TRAINER', 'OPERATOR', 'MANAGER', 'SUPERVISOR', 'ADVISOR'];
+    const isStaffUser = staffRoles.some(r => user.role === r || (user.roles && user.roles.includes(r as Role)));
 
     const granted = user.roles && user.roles.length > 0 ? user.roles : [user.role];
     const deactivated = user.deactivatedRoles ?? [];
     let activeRoles = granted.filter((r) => !deactivated.includes(r));
-
-    if (isAdminUser) {
-      activeRoles = activeRoles.filter((r) => r !== 'FARMER' && r !== 'CUSTOMER');
-    }
 
     const mapped = activeRoles.map((r) => toUserRole(r, user.advisorType));
 
@@ -55,14 +53,19 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       finalRoles = finalRoles.filter(r => r !== 'GARDENER');
     }
 
-    if (isAdminUser) {
-      finalRoles = finalRoles.filter((r) => r !== 'FARMER' && r !== 'CUSTOMER');
-      if (finalRoles.length === 0) finalRoles = [rawPrimary];
+    if (isStaffUser) {
+      // Remove FARMER and GARDENER for any staff, but make sure they have CUSTOMER
+      finalRoles = finalRoles.filter((r) => r !== 'FARMER' && r !== 'GARDENER');
+      if (!finalRoles.includes('CUSTOMER')) {
+        finalRoles.push('CUSTOMER');
+      }
     }
     return finalRoles;
   }, [user]);
 
-  const isAdminUser = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+  const isStaffUser = ['ADMIN', 'SUPER_ADMIN', 'TECHNICAL_TRAINER', 'OPERATOR', 'MANAGER', 'SUPERVISOR'].some(
+    r => user?.role === r || (user?.roles && user.roles.includes(r as Role))
+  );
 
   const isAdvisorOrDoctor = (r: UserRole) => r === 'ADVISOR' || r === 'FARM_ADVISOR' || r === 'GARDEN_ADVISOR';
   const hasAdvisorRole = assignedRoles.some(isAdvisorOrDoctor);
@@ -70,7 +73,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
 
   const advisorRoleToUse = assignedRoles.find(isAdvisorOrDoctor) || (isAdvisorOrDoctor(primaryRole) ? primaryRole : 'FARM_ADVISOR');
 
-  const defaultInitialRole = isAdminUser
+  const defaultInitialRole = isStaffUser
     ? (user?.role as UserRole)
     : (user?.role === 'LABOUR'
       ? 'LABOUR'
@@ -88,7 +91,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN') {
+    if (isStaffUser) {
       setRoleState(user.role as UserRole);
       return;
     }
@@ -113,7 +116,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
 
     // Priority 3: Customer role only -> Default to CUSTOMER (opens Store tab)
     setRoleState(primaryRole);
-  }, [user?.id, user?.role, primaryRole, assignedRoles]);
+  }, [user?.id, user?.role, primaryRole, assignedRoles, isStaffUser]);
 
   const setRole = (next: UserRole) => {
     if (assignedRoles.includes(next)) {

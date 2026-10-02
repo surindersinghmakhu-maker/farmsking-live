@@ -49,9 +49,9 @@ const ADVISOR_BUSINESS_ITEMS: { key: TranslationKey; label: string; icon: keyof 
 ];
 
 const SHOP_ITEMS: { key: TranslationKey; label: string; icon: keyof typeof Ionicons.glyphMap; href?: string }[] = [
-  { key: 'browseCategories', label: 'Browse Categories', icon: 'grid-outline', href: '/(tabs)/shop' },
-  { key: 'myCart', label: 'My Cart', icon: 'cart-outline', href: '/(tabs)/cart' },
-  { key: 'myOrders', label: 'My Orders', icon: 'receipt-outline', href: '/(tabs)/orders' },
+  { key: 'browseCategories', label: 'Browse Categories', icon: 'grid-outline', href: '/(user)/(tabs)/shop' },
+  { key: 'myCart', label: 'My Cart', icon: 'cart-outline', href: '/(user)/(tabs)/cart' },
+  { key: 'myOrders', label: 'My Orders', icon: 'receipt-outline', href: '/(user)/(tabs)/orders' },
 ];
 
 const SUPER_ADMIN_ITEMS: { key: TranslationKey | 'workspace' | 'agristoreHub'; label: string; icon: keyof typeof Ionicons.glyphMap; href?: string }[] = [
@@ -92,7 +92,7 @@ export default function MoreScreen() {
   const [isAccountExpanded, setIsAccountExpanded] = useState(false);
   const [isAppThemesExpanded, setIsAppThemesExpanded] = useState(false);
   const [isSmartToolsExpanded, setIsSmartToolsExpanded] = useState(false);
-  const [isGroupVoiceCallEnabled, setIsGroupVoiceCallEnabled] = useState(true);
+
 
   const [deletePincodeInput, setDeletePincodeInput] = useState('');
   const [deletePasswordInput, setDeletePasswordInput] = useState('');
@@ -205,7 +205,7 @@ export default function MoreScreen() {
   const showAdvisorBusinessSection = role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR';
 
 
-  const isAdvisorRole = role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR' || user?.role === 'FARM_ADVISOR' || user?.role === 'GARDEN_ADVISOR' || (Array.isArray(user?.roles) && (user.roles.includes('FARM_ADVISOR') || user.roles.includes('GARDEN_ADVISOR')));
+  const isAdvisorRole = (role as string) === 'FARM_ADVISOR' || (role as string) === 'GARDEN_ADVISOR' || (user?.role as string) === 'FARM_ADVISOR' || (user?.role as string) === 'GARDEN_ADVISOR' || (Array.isArray(user?.roles) && (user.roles.includes('FARM_ADVISOR' as any) || user.roles.includes('GARDEN_ADVISOR' as any)));
   const isLabourRole = role === 'LABOUR' || role === 'OPERATOR' || user?.role === 'LABOUR' || user?.role === 'OPERATOR' || (Array.isArray(user?.roles) && (user.roles.includes('LABOUR') || user.roles.includes('OPERATOR')));
 
   const accountItems: AccountItem[] = [
@@ -298,7 +298,7 @@ export default function MoreScreen() {
 
                   {/* 🏪 DYNAMIC SELLER STORE / REGISTER STORE ITEM */}
                   {(() => {
-                    const isSellerRole = role === 'SELLER' || user?.role === 'SELLER' || (Array.isArray(user?.roles) && user.roles.includes('SELLER' as any)) || Boolean((user as any)?.isSeller) || Boolean((user as any)?.sellerStore);
+                    const isSellerRole = (role as string) === 'SELLER' || (user?.role as string) === 'SELLER' || (Array.isArray(user?.roles) && user.roles.includes('SELLER' as any)) || Boolean((user as any)?.isSeller) || Boolean((user as any)?.sellerStore);
                     return (
                       <TouchableOpacity
                         style={styles.row}
@@ -1475,6 +1475,31 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
                   </TouchableOpacity>
                 </View>
               )}
+            </View>
+
+            {/* Section 4: Corporate Registration & Trademarks */}
+            <View style={{ backgroundColor: '#ffffff', padding: 14, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', gap: 8 }}>
+              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                🏛️ Corporate Registration & Trademarks
+              </Text>
+              <View style={{ backgroundColor: '#f8fafc', padding: 10, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#cbd5e1' }}>
+                <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>PARENT COMPANY:</Text>
+                <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a', marginTop: 1 }}>CoreKing Technologies Private Limited</Text>
+                
+                <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b', marginTop: 8 }}>REGISTERED PRODUCTS & TRADEMARKS:</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                  {['FarmsKing', 'TailorKing', 'LabKing', 'TrainingKing'].map((brand) => (
+                    <View key={brand} style={{ backgroundColor: '#e0f2fe', paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#7dd3fc' }}>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0369a1' }}>{brand}™</Text>
+                    </View>
+                  ))}
+                </View>
+                
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, backgroundColor: '#dcfce7', padding: 6, borderRadius: RADIUS.md }}>
+                  <Ionicons name="checkmark-circle" size={16} color="#15803d" />
+                  <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#166534' }}>ISO-Compliant Corporate UI Standards Applied</Text>
+                </View>
+              </View>
             </View>
 
             {/* Action Buttons when editing */}

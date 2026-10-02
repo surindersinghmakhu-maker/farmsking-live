@@ -485,6 +485,10 @@ export class UsersService implements OnModuleInit {
     return this.prisma.user.findUniqueOrThrow({ where: { id }, select: SAFE_USER_SELECT });
   }
 
+  createTrainer(dto: CreateStaffDto) {
+    return this.createStaff(dto, Role.TECHNICAL_TRAINER);
+  }
+
   createOperator(dto: CreateStaffDto) {
     return this.createStaff(dto, Role.OPERATOR);
   }

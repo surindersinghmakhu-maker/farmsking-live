@@ -11,7 +11,7 @@ import { useMyWallet, useReferralStatement } from '@/src/hooks/useWallet';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useCreateWithdrawal, useMyWithdrawals } from '@/src/hooks/useWithdrawals';
 import { useCouponRedemptions, useMyCoupons } from '@/src/hooks/useCoupons';
-import { useMineFarmerPlanCoupons, useMinePartnerFarmerPlanCoupons, useGenerateOwnFarmerPlanCoupon, useFarmerPlanPricing } from '@/src/hooks/useFarmerPlan';
+import { useMineFarmerPlanCoupons, useMinePartnerFarmerPlanCoupons, useFarmerPlanPricing } from '@/src/hooks/useFarmerPlan';
 import { useFarmersList } from '@/src/hooks/useAdvisorAssignments';
 import { useSearchBusinessPartners } from '@/src/hooks/useUsersAdmin';
 import type { FarmerPlanPricing, FarmerPlanType } from '@/src/api/farmerPlans.api';
@@ -1542,7 +1542,6 @@ function MyUnifiedPlanCouponsSection({ theme }: { theme: RoleTheme }) {
   const { data: partnerCoupons, isLoading: isLoadingPartner } = useMinePartnerFarmerPlanCoupons();
   const { data: pricing = [] } = useFarmerPlanPricing();
   
-  const [isGenerateOpen, setIsGenerateOpen] = useState(false);
   const [isRedeemForFarmerOpen, setIsRedeemForFarmerOpen] = useState(false);
   const [statusTab, setStatusTab] = useState<'UNUSED' | 'USED'>('UNUSED');
   const [shareCoupon, setShareCoupon] = useState<{ code: string; plan: string; daysGranted: number; expiresAt?: string | Date | null; mrp?: number | string | null } | null>(null);
@@ -1565,18 +1564,6 @@ function MyUnifiedPlanCouponsSection({ theme }: { theme: RoleTheme }) {
 
       {/* Unified Action Buttons */}
       <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
-        <TouchableOpacity
-          style={[styles.generateBtn, { flex: 1, backgroundColor: theme.primary, marginTop: 0 }]}
-          activeOpacity={0.85}
-          onPress={() => {
-            tap();
-            setIsGenerateOpen(true);
-          }}
-        >
-          <Ionicons name="add-circle" size={16} color="#ffffff" />
-          <Text style={styles.generateBtnText}>Generate Coupon</Text>
-        </TouchableOpacity>
-
         <TouchableOpacity
           style={[styles.generateBtn, { flex: 1, backgroundColor: '#f0fdf4', borderWidth: 1.5, borderColor: '#86efac', marginTop: 0 }]}
           activeOpacity={0.85}
@@ -1655,7 +1642,6 @@ function MyUnifiedPlanCouponsSection({ theme }: { theme: RoleTheme }) {
         )}
       </View>
 
-      <GenerateCouponModal visible={isGenerateOpen} onClose={() => setIsGenerateOpen(false)} />
       <RedeemForFarmerModal visible={isRedeemForFarmerOpen} onClose={() => setIsRedeemForFarmerOpen(false)} theme={theme} />
       <ShareFarmerPlanCouponModal coupon={shareCoupon} visible={!!shareCoupon} onClose={() => setShareCoupon(null)} theme={theme} />
     </>
@@ -1667,263 +1653,6 @@ function MyRenewalCouponsSection() {
   return null;
 }
 
-/** Advisor self-service: generate their own Farmer Plan (BASIC) or Advisor Plan (STANDARD/PREMIUM) coupon — price minus their Coupon Setting fee % is debited from their wallet. */
-function GenerateCouponModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
-  const generate = useGenerateOwnFarmerPlanCoupon();
-  const { data: pricing = [] } = useFarmerPlanPricing();
-  const { data: farmersData } = useFarmersList('ACTIVE');
-  const farmers = farmersData ?? [];
-
-  const [plan, setPlan] = useState<FarmerPlanType>('PRO');
-  const [daysGranted, setDaysGranted] = useState('30');
-  const [quantityStr, setQuantityStr] = useState('1');
-  const [assignedFarmerId, setAssignedFarmerId] = useState<string | undefined>(undefined);
-  const [farmerSearch, setFarmerSearch] = useState('');
-  const [assignedPartnerId, setAssignedPartnerId] = useState<string | undefined>(undefined);
-  const [partnerSearch, setPartnerSearch] = useState('');
-  const { data: partnerResults = [] } = useSearchBusinessPartners(partnerSearch);
-  const [error, setError] = useState<string | null>(null);
-  const [successCode, setSuccessCode] = useState<string | null>(null);
-  const { user } = useAuth();
-  const { role: currentRole } = useRole();
-  const userDeactivated = user?.deactivatedRoles ?? [];
-  const userRoles: string[] = (Array.isArray(user?.roles) && user.roles.length > 0 ? user.roles : [user?.role || currentRole])
-    .filter((r) => r && !userDeactivated.includes(r as any)) as string[];
-
-  const isAdvisorOrAdmin = userRoles.includes('ADVISOR') || userRoles.includes('FARM_ADVISOR') || userRoles.includes('GARDEN_ADVISOR') || userRoles.includes('ADMIN') || userRoles.includes('SUPER_ADMIN');
-  const availablePlans = isAdvisorOrAdmin ? (['PRO', 'SMART', 'SUPER'] as const) : (['PRO', 'SMART'] as const);
-
-  const reset = () => {
-    setPlan('PRO');
-    setDaysGranted('30');
-    setQuantityStr('1');
-    setAssignedFarmerId(undefined);
-    setFarmerSearch('');
-    setAssignedPartnerId(undefined);
-    setPartnerSearch('');
-    setError(null);
-    setSuccessCode(null);
-  };
-
-  const quantity = Math.max(1, parseInt(quantityStr, 10) || 1);
-  const planPricing = pricing.find((p) => p.plan === plan);
-  const ratio = planPricing ? Number(daysGranted) / planPricing.billingPeriodDays : 0;
-  const basePrice = planPricing ? Math.round(Number(planPricing.price) * ratio * 100) / 100 : 0;
-
-  let commission = 0;
-  if (planPricing) {
-    if (!isAdvisorOrAdmin && userRoles.includes('BUSINESS_PARTNER')) {
-      commission = planPricing.partnerShareType === 'PERCENTAGE'
-        ? (basePrice * Number(planPricing.partnerShareValue)) / 100
-        : Number(planPricing.partnerShareValue || 0) * ratio;
-    } else {
-      commission = Number(planPricing.advisorShareValue || 0) * ratio;
-    }
-  }
-  const netPricePerCoupon = Math.max(0, Math.round((basePrice - commission) * 100) / 100);
-  const totalNetDebit = netPricePerCoupon * quantity;
-
-  const filteredFarmers = farmers.filter((f) => (f.farmer?.name ?? '').toLowerCase().includes(farmerSearch.toLowerCase()));
-
-  const handleSubmit = async () => {
-    setError(null);
-    const days = Number(daysGranted);
-    if (!days || days <= 0) {
-      setError('Enter a valid number of days.');
-      return;
-    }
-    try {
-      const res = await generate.mutateAsync({
-        plan,
-        daysGranted: days,
-        quantity,
-        assignedFarmerId: assignedPartnerId ? undefined : assignedFarmerId,
-        assignedBusinessPartnerId: assignedPartnerId,
-      });
-      const count = Array.isArray(res) ? res.length : 1;
-      const firstCode = Array.isArray(res) ? res[0]?.code : res?.code;
-      setSuccessCode(count > 1 ? `${count} Coupons generated successfully!` : firstCode);
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Could not generate coupon.');
-    }
-  };
-
-  return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={() => { reset(); onClose(); }}>
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalCard}>
-          <View style={styles.modalHeaderRow}>
-            <Text style={styles.modalTitle}>Generate Plan Coupon</Text>
-            <TouchableOpacity onPress={() => { reset(); onClose(); }}>
-              <Ionicons name="close-circle" size={24} color="#64748b" />
-            </TouchableOpacity>
-          </View>
-
-          {successCode ? (
-            <View style={{ gap: 10 }}>
-              <View style={styles.successBox}>
-                <Ionicons name="checkmark-circle" size={20} color="#16a34a" />
-                <Text style={styles.successText}>
-                  {successCode}
-                </Text>
-              </View>
-              <TouchableOpacity style={styles.submitBtn} onPress={() => { reset(); onClose(); }}>
-                <Text style={styles.submitBtnText}>Done</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-              <Text style={styles.label}>Plan</Text>
-              <View style={styles.chipRow}>
-                {availablePlans.map((p) => (
-                  <TouchableOpacity
-                    key={p}
-                    style={[styles.chip, plan === p && { backgroundColor: staticTheme.primary, borderColor: staticTheme.primary }]}
-                    onPress={() => setPlan(p)}
-                  >
-                    <Text style={[styles.chipText, plan === p && { color: '#ffffff' }]}>
-                      {p === 'PRO' ? 'Lite Plan' : p === 'SMART' ? 'Pro Plan' : 'Smart Plan'}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <Text style={styles.label}>Days to Grant</Text>
-              <View style={styles.chipRow}>
-                {(['30', '90', '180', '365'] as const).map((d) => (
-                  <TouchableOpacity
-                    key={d}
-                    style={[styles.chip, daysGranted === d && { backgroundColor: staticTheme.primary, borderColor: staticTheme.primary }]}
-                    onPress={() => setDaysGranted(d)}
-                  >
-                    <Text style={[styles.chipText, daysGranted === d && { color: '#ffffff' }]}>{d} days</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <Text style={styles.label}>Quantity</Text>
-              <View style={styles.chipRow}>
-                {(['1', '2', '5', '10'] as const).map((q) => (
-                  <TouchableOpacity
-                    key={q}
-                    style={[styles.chip, quantityStr === q && { backgroundColor: staticTheme.primary, borderColor: staticTheme.primary }]}
-                    onPress={() => setQuantityStr(q)}
-                  >
-                    <Text style={[styles.chipText, quantityStr === q && { color: '#ffffff' }]}>{q} Coupon{q !== '1' ? 's' : ''}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <View style={{ backgroundColor: '#f8fafc', padding: 10, borderRadius: RADIUS.md, marginTop: 4, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>MRP Base Price:</Text>
-                  <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0f172a' }}>₹{basePrice.toLocaleString('en-IN')}</Text>
-                </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#16a34a' }}>Your Commission Cut:</Text>
-                  <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#16a34a' }}>-₹{commission.toLocaleString('en-IN')}</Text>
-                </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#e2e8f0', paddingTop: 4, marginTop: 2 }}>
-                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>Net Cost per Coupon:</Text>
-                  <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#0f172a' }}>₹{netPricePerCoupon.toLocaleString('en-IN')}</Text>
-                </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 }}>
-                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: staticTheme.primary }}>Total Wallet Debit ({quantity}x):</Text>
-                  <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: staticTheme.primary }}>₹{totalNetDebit.toLocaleString('en-IN')}</Text>
-                </View>
-              </View>
-
-              {!assignedPartnerId ? (
-                <>
-                  <Text style={styles.label}>Lock to a Farmer (optional)</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Search your farmers by name..."
-                    placeholderTextColor="#94a3b8"
-                    value={farmerSearch}
-                    onChangeText={setFarmerSearch}
-                  />
-                  {farmerSearch ? (
-                    <View style={styles.chipRow}>
-                      {filteredFarmers.slice(0, 8).map((f) => (
-                        <TouchableOpacity
-                          key={f.farmerId}
-                          style={[styles.chip, assignedFarmerId === f.farmerId && { backgroundColor: staticTheme.primary, borderColor: staticTheme.primary }]}
-                          onPress={() => setAssignedFarmerId(f.farmerId)}
-                        >
-                          <Text style={[styles.chipText, assignedFarmerId === f.farmerId && { color: '#ffffff' }]}>{f.farmer?.name}</Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  ) : null}
-                  {assignedFarmerId ? (
-                    <Text style={styles.emptyText}>Locked to: {farmers.find((f) => f.farmerId === assignedFarmerId)?.farmer?.name}</Text>
-                  ) : (
-                    <Text style={styles.emptyText}>Leave blank for an open code you can hand to any of your farmers.</Text>
-                  )}
-                </>
-              ) : null}
-
-              {!assignedFarmerId ? (
-                <>
-                  <Text style={styles.label}>Share with a Business Partner (optional)</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Search by name or king id..."
-                    placeholderTextColor="#94a3b8"
-                    value={partnerSearch}
-                    onChangeText={(v) => {
-                      setPartnerSearch(v);
-                      if (!v) setAssignedPartnerId(undefined);
-                    }}
-                  />
-                  {partnerSearch && !assignedPartnerId ? (
-                    <View style={styles.chipRow}>
-                      {partnerResults.map((p) => (
-                        <TouchableOpacity
-                          key={p.id}
-                          style={styles.chip}
-                          onPress={() => {
-                            setAssignedPartnerId(p.id);
-                            setPartnerSearch(p.name);
-                          }}
-                        >
-                          <Text style={styles.chipText}>
-                            {p.name} {p.kingId ? `(${p.kingId})` : ''}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                      {partnerResults.length === 0 ? <Text style={styles.emptyText}>No matches.</Text> : null}
-                    </View>
-                  ) : null}
-                  {assignedPartnerId ? (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Text style={styles.emptyText}>Sharing with: {partnerSearch}</Text>
-                      <TouchableOpacity
-                        onPress={() => {
-                          setAssignedPartnerId(undefined);
-                          setPartnerSearch('');
-                        }}
-                      >
-                        <Ionicons name="close-circle" size={16} color="#64748b" />
-                      </TouchableOpacity>
-                    </View>
-                  ) : null}
-                </>
-              ) : null}
-
-              {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-              <TouchableOpacity style={styles.submitBtn} disabled={generate.isPending} onPress={handleSubmit}>
-                {generate.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Generate Code</Text>}
-              </TouchableOpacity>
-            </ScrollView>
-          )}
-        </View>
-      </View>
-    </Modal>
-  );
-}
 
 /** Plan coupons issued by admin to this business partner — they earn a commission whenever a farmer redeems one. */
 function BasicPlanCouponMarketSection({ theme, balance }: { theme: RoleTheme; balance: number }) {

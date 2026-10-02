@@ -1,8 +1,4 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { GoogleGenAI } from "@google/genai";
-
-// FarmsKing Agri AI — Gemini 2.5 Flash with Google Search Grounding
-const ai = new GoogleGenAI({ apiKey: process.env.EXPO_PUBLIC_GEMINI_API_KEY || '' });
 
 import {
   View,
@@ -39,7 +35,7 @@ import { useLabourDashboard } from '@/src/hooks/useLabour';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '';
+const GOOGLE_CLIENT_ID = '526414717221-j7s76lkacilevmucm0npnehrnqtqu0f3.apps.googleusercontent.com';
 const discovery = {
   authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
   tokenEndpoint: 'https://oauth2.googleapis.com/token',
@@ -54,35 +50,6 @@ const getCleanMobile = (mobile?: string | null) => {
   if (!mobile || mobile.startsWith('G_')) return '';
   return mobile;
 };
-async function askFarmerAI(userQuestion: string): Promise<string> {
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: userQuestion,
-      config: {
-        systemInstruction: `You are an elite, highly knowledgeable Agriculture and Farming Expert AI. 
-        Your absolute and sole duty is to answer questions related to crops, soil, weather, fertilizers, pesticides, livestock, mandi/market rates, and farming techniques.
-        
-        CRITICAL RULES:
-        1. Language: Automatically detect the language of the user's question (e.g., English, Hindi, Punjabi, Telugu) and respond fluently in that exact same language.
-        2. Filtering: If the user asks anything outside of agriculture, farming, or rural development, you must politely refuse. Respond with: "I can only assist with agriculture and farming-related queries. Please ask about crops, weather, or farming." translated accurately into the user's detected language.
-        3. Tone: Helpful, professional, and easy to understand for farmers.`,
-
-        tools: [{ googleSearch: {} }],
-
-        safetySettings: [
-          { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_LOW_AND_ABOVE" },
-          { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_LOW_AND_ABOVE" }
-        ]
-      }
-    });
-
-    return response.text || "No response generated.";
-  } catch (error) {
-    console.error("Gemini API Error:", error);
-    return "Error connecting to AI Assistant.";
-  }
-}
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -99,28 +66,6 @@ export default function ProfileScreen() {
   const [otpError, setOtpError] = useState<string | null>(null);
   const [devOtpMsg, setDevOtpMsg] = useState<string | null>(null);
 
-  // ===== FarmsKing Agri AI Chat State =====
-  const [aiQuestion, setAiQuestion] = useState('');
-  const [aiAnswer, setAiAnswer] = useState<string | null>(null);
-  const [aiLoading, setAiLoading] = useState(false);
-
-  /** Sends user's question to Gemini 2.5 Flash Agri AI and stores the reply */
-  const handleChatSubmit = async (text?: string) => {
-    const question = (text ?? aiQuestion).trim();
-    if (!question) return;
-    setAiLoading(true);
-    setAiAnswer(null);
-    try {
-      const reply = await askFarmerAI(question);
-      setAiAnswer(reply);
-      console.log('[FarmsKing Agri AI]', reply);
-    } catch (err) {
-      console.error('[FarmsKing Agri AI Error]', err);
-      setAiAnswer('Error connecting to AI. Please try again.');
-    } finally {
-      setAiLoading(false);
-    }
-  };
 
   const handleSendOtp = async () => {
     const num = userMobile.replace(/\D/g, '').slice(-10);
@@ -723,7 +668,8 @@ export default function ProfileScreen() {
           ) : (
             /* ─── ROLE TYPE 3: REGULAR USER PROFILE (FARMER, ADVISOR, CUSTOMER, GARDENER) ─── */
             <View style={{ width: '100%', maxWidth: 460, gap: 12 }}>
-              {/* Photo Avatar */}
+
+              {/* ── Section 1: Avatar / Photo ── */}
               <View style={styles.avatarSection}>
                 <TouchableOpacity style={styles.avatarWrap} activeOpacity={0.85} onPress={() => setIsPhotoModalOpen(true)}>
                   <Avatar key={photoUrl ?? 'avatar'} uri={photoUrl ?? undefined} size={88} />
@@ -736,109 +682,50 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
               </View>
 
-              {/* Personal Details Card */}
-              <View style={[styles.card, { borderRadius: RADIUS.xl, padding: 10, paddingHorizontal: 12, backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderWidth: 1 }, premiumShadow('#0f172a', 'sm')]}>
-                {/* 1. Header Title */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                  <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#f0f9ff', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#bae6fd' }}>
-                    <Ionicons name="person" size={14} color="#0284c7" />
+              {/* ── Section 2: Personal Details Card ── */}
+              <View style={[styles.card, { padding: 12, gap: 8 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                  <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#eff6ff', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="person" size={14} color="#2563eb" />
                   </View>
-                  <Text style={[styles.sectionHeaderTitle, { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#0f172a', marginBottom: 0 }]}>
-                    Personal Details
-                  </Text>
+                  <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' }}>👤 Personal Details</Text>
                 </View>
 
-                {/* 2. King ID & Mobile Number Badges right under Title */}
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 6 }}>
+                {/* King ID + Mobile badges */}
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 4 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f8fafc', paddingHorizontal: 8, paddingVertical: 3.5, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
                     <Ionicons name="key-outline" size={12} color="#0284c7" />
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#475569' }}>
-                      King ID: {user?.kingId || '—'}
-                    </Text>
+                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#475569' }}>King ID: {user?.kingId || '—'}</Text>
                   </View>
                   {getCleanMobile(user?.mobile) ? (
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f8fafc', paddingHorizontal: 8, paddingVertical: 3.5, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
                       <Ionicons name="call-outline" size={12} color="#16a34a" />
-                      <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#475569' }}>
-                        Mobile: {getCleanMobile(user?.mobile)}
-                      </Text>
+                      <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#475569' }}>{getCleanMobile(user?.mobile)}</Text>
                     </View>
                   ) : null}
-                </View>
-
-                {/* 3. Full Name displayed as a clean Label / Info row */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                  <View style={{ width: 98, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <Ionicons name="person-circle-outline" size={14} color="#475569" />
-                    <Text style={[styles.inputLabel, { marginBottom: 0, fontSize: 11.5, color: '#334155' }]}>Full Name *</Text>
-                  </View>
-                  <View style={{ flex: 1, height: 34, backgroundColor: '#f8fafc', paddingHorizontal: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
-                      {name || user?.name || '—'}
-                    </Text>
-                    <Ionicons name="checkmark-circle" size={13} color="#16a34a" />
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f0fdf4', paddingHorizontal: 8, paddingVertical: 3.5, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#bbf7d0' }}>
+                    <Ionicons name="ribbon-outline" size={12} color="#16a34a" />
+                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#15803d' }}>{user?.role?.replace('_', ' ') || 'FARMER'}</Text>
                   </View>
                 </View>
 
-                {/* 3b. Mobile Number Row */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                  <View style={{ width: 98, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <Ionicons name="call-outline" size={14} color="#475569" />
-                    <Text style={[styles.inputLabel, { marginBottom: 0, fontSize: 11.5, color: '#334155' }]}>Mobile No.</Text>
-                  </View>
-                  {getCleanMobile(user?.mobile) ? (
-                    <View style={{ flex: 1, height: 34, backgroundColor: '#f8fafc', paddingHorizontal: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>
-                        {getCleanMobile(user?.mobile)}
-                      </Text>
-                      <Ionicons name="lock-closed" size={13} color="#94a3b8" />
-                    </View>
-                  ) : (
-                    <View style={{ flex: 1, flexDirection: 'row', gap: 6 }}>
-                      <TextInput
-                        style={[styles.input, { flex: 1, height: 34, fontSize: 12, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#ffffff', borderColor: '#cbd5e1', paddingVertical: 0 }]}
-                        value={userMobile}
-                        onChangeText={setUserMobile}
-                        placeholder="10-digit Mobile Number"
-                        placeholderTextColor="#94a3b8"
-                        keyboardType="phone-pad"
-                        maxLength={10}
-                      />
-                      <TouchableOpacity
-                        style={{
-                          backgroundColor: '#16a34a',
-                          paddingHorizontal: 10,
-                          height: 34,
-                          borderRadius: RADIUS.md,
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          flexDirection: 'row',
-                          gap: 4,
-                        }}
-                        onPress={handleSendOtp}
-                        disabled={isSendingOtp}
-                      >
-                        {isSendingOtp ? (
-                          <ActivityIndicator size="small" color="#FFF" />
-                        ) : (
-                          <>
-                            <Ionicons name="chatbubble-ellipses" size={13} color="#FFF" />
-                            <Text style={{ color: '#FFF', fontSize: 11, fontFamily: FONT.bold }}>Get OTP</Text>
-                          </>
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                </View>
-
-                {/* 4. Email Address Label & Editable Field in 1 row */}
+                {/* Full Name */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View style={{ width: 98, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <Ionicons name="mail-outline" size={14} color="#475569" />
-                    <Text style={[styles.inputLabel, { marginBottom: 0, fontSize: 11.5, color: '#334155' }]}>Email Address</Text>
-                  </View>
+                  <Text style={{ width: 80, fontSize: 11.5, fontFamily: FONT.bold, color: '#475569' }}>Full Name *</Text>
                   <TextInput
-                    style={[styles.input, { flex: 1, height: 34, fontSize: 12, fontFamily: FONT.bold, color: '#0f172a', backgroundColor: '#ffffff', borderColor: '#cbd5e1', paddingVertical: 0 }]}
+                    style={[styles.input, { flex: 1, height: 36, fontSize: 13, paddingVertical: 0, backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }]}
+                    value={name}
+                    onChangeText={(v) => { isUserInteractingRef.current = true; setName(v); }}
+                    placeholder="Your full name"
+                    placeholderTextColor="#94a3b8"
+                  />
+                </View>
+
+                {/* Email */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Text style={{ width: 80, fontSize: 11.5, fontFamily: FONT.bold, color: '#475569' }}>Email</Text>
+                  <TextInput
+                    style={[styles.input, { flex: 1, height: 36, fontSize: 13, paddingVertical: 0, backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }]}
                     value={email}
                     onChangeText={setEmail}
                     placeholder="yourname@domain.com"
@@ -848,41 +735,206 @@ export default function ProfileScreen() {
                   />
                 </View>
 
-                {/* 5. Link Google Account Button */}
-                <View style={{ marginTop: 8 }}>
-                  <TouchableOpacity
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 8,
-                      backgroundColor: user?.email ? '#f0fdf4' : '#eff6ff',
-                      borderColor: user?.email ? '#bbf7d0' : '#bfdbfe',
-                      borderWidth: 1,
-                      paddingHorizontal: 12,
-                      paddingVertical: 7,
-                      borderRadius: RADIUS.md,
-                    }}
-                    onPress={handleLinkGoogle}
-                    disabled={googleLoading}
-                  >
-                    {googleLoading ? (
-                      <ActivityIndicator size="small" color="#0284c7" />
-                    ) : (
-                      <>
-                        <Ionicons name="logo-google" size={15} color={user?.email ? '#16a34a' : '#2563eb'} />
-                        <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: user?.email ? '#15803d' : '#1d4ed8' }}>
-                          {user?.email ? `Google Linked: ${user.email} (Tap to change)` : '🔗 Link Google Account'}
-                        </Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
+                {/* Mobile Link / Add */}
+                {!getCleanMobile(user?.mobile) ? (
+                  <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                    <TextInput
+                      style={[styles.input, { flex: 1, height: 36, fontSize: 13, paddingVertical: 0, backgroundColor: '#ffffff', borderColor: '#cbd5e1' }]}
+                      value={userMobile}
+                      onChangeText={setUserMobile}
+                      placeholder="Add 10-digit mobile"
+                      placeholderTextColor="#94a3b8"
+                      keyboardType="phone-pad"
+                      maxLength={10}
+                    />
+                    <TouchableOpacity
+                      style={{ backgroundColor: '#16a34a', paddingHorizontal: 10, height: 36, borderRadius: RADIUS.md, justifyContent: 'center', alignItems: 'center', flexDirection: 'row', gap: 4 }}
+                      onPress={handleSendOtp}
+                      disabled={isSendingOtp}
+                    >
+                      {isSendingOtp ? <ActivityIndicator size="small" color="#FFF" /> : <Text style={{ color: '#FFF', fontSize: 11, fontFamily: FONT.bold }}>Get OTP</Text>}
+                    </TouchableOpacity>
+                  </View>
+                ) : null}
+
+                {/* Link Google */}
+                <TouchableOpacity
+                  style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: user?.email ? '#f0fdf4' : '#eff6ff', borderColor: user?.email ? '#bbf7d0' : '#bfdbfe', borderWidth: 1, paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.md }}
+                  onPress={handleLinkGoogle}
+                  disabled={googleLoading}
+                >
+                  {googleLoading ? <ActivityIndicator size="small" color="#0284c7" /> : (
+                    <>
+                      <Ionicons name="logo-google" size={14} color={user?.email ? '#16a34a' : '#2563eb'} />
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: user?.email ? '#15803d' : '#1d4ed8' }}>
+                        {user?.email ? `Google: ${user.email}` : '🔗 Link Google Account'}
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+
+              {/* ── Section 3: Farm Details Card ── */}
+              <View style={[styles.card, { padding: 12, gap: 8 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                  <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#f0fdf4', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="leaf" size={14} color="#16a34a" />
+                  </View>
+                  <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' }}>🌾 Farm Details</Text>
+                </View>
+
+                <Text style={styles.inputLabel}>Farm / Business Name</Text>
+                <TextInput
+                  style={styles.input}
+                  value={farmName}
+                  onChangeText={(v) => { isUserInteractingRef.current = true; setFarmName(v); }}
+                  placeholder="e.g. Singh Farms / ABC Agri"
+                  placeholderTextColor="#94a3b8"
+                />
+
+                <Text style={styles.inputLabel}>Farm Address / Village</Text>
+                <TextInput
+                  style={styles.input}
+                  value={farmAddress}
+                  onChangeText={(v) => { isUserInteractingRef.current = true; setFarmAddress(v); }}
+                  placeholder="e.g. Village Khanna, Ludhiana"
+                  placeholderTextColor="#94a3b8"
+                />
+
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Farm Mobile</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={farmMobile}
+                      onChangeText={(v) => { isUserInteractingRef.current = true; setFarmMobile(v); }}
+                      placeholder="Contact number"
+                      placeholderTextColor="#94a3b8"
+                      keyboardType="phone-pad"
+                      maxLength={10}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>UPI ID (Payments)</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={upiId}
+                      onChangeText={(v) => { isUserInteractingRef.current = true; setUpiId(v); }}
+                      placeholder="name@upi"
+                      placeholderTextColor="#94a3b8"
+                      autoCapitalize="none"
+                    />
+                  </View>
                 </View>
               </View>
 
+              {/* ── Section 4: Location / Pincode Card ── */}
+              <View style={[styles.card, { padding: 12, gap: 8 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                  <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#fff7ed', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="location" size={14} color="#ea580c" />
+                  </View>
+                  <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' }}>📍 Location Details</Text>
+                </View>
 
+                <Text style={styles.inputLabel}>PIN Code (Auto-fills District & State)</Text>
+                <View style={styles.pincodeRow}>
+                  <TextInput
+                    style={[styles.input, { flex: 1, borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 10, backgroundColor: '#f8fafc' }]}
+                    value={pincode}
+                    onChangeText={(t) => {
+                      isUserInteractingRef.current = true;
+                      setPincode(t);
+                      if (t.length === 6) fetchLocationFromPincode(t);
+                    }}
+                    placeholder="6-digit PIN Code"
+                    placeholderTextColor="#94a3b8"
+                    keyboardType="numeric"
+                    maxLength={6}
+                  />
+                  <TouchableOpacity
+                    style={[styles.fetchBtn, { backgroundColor: theme.primary }]}
+                    onPress={() => fetchLocationFromPincode()}
+                    disabled={isPincodeLoading || pincode.length !== 6}
+                  >
+                    {isPincodeLoading ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.fetchBtnText}>Fetch</Text>}
+                  </TouchableOpacity>
+                </View>
+                {pincodeStatus ? <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: pincodeStatus.startsWith('❌') ? '#dc2626' : '#15803d' }}>{pincodeStatus}</Text> : null}
 
+                {/* Post Office Selector */}
+                {officeOptions.length > 0 && (
+                  postOffice && !isPostOfficeExpanded ? (
+                    <TouchableOpacity
+                      style={[styles.selectedOfficeCard, { borderColor: theme.primary, backgroundColor: theme.primaryLight ?? '#f0fdf4' }]}
+                      onPress={() => { tap(); setIsPostOfficeExpanded(true); }}
+                    >
+                      <Ionicons name="checkmark-circle" size={16} color={theme.primary} />
+                      <Text style={[styles.selectedOfficeText, { color: theme.primary }]} numberOfLines={1}>{postOffice} ({district})</Text>
+                      <View style={[styles.changePill, { borderColor: theme.primary }]}>
+                        <Text style={[styles.changePillText, { color: theme.primary }]}>Change</Text>
+                        <Ionicons name="chevron-down" size={11} color={theme.primary} />
+                      </View>
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={styles.expandedOfficeList}>
+                      {officeOptions.map((office) => {
+                        const isSel = postOffice === office.name;
+                        return (
+                          <TouchableOpacity
+                            key={office.name}
+                            style={[styles.expandedOfficeCard, isSel && { backgroundColor: theme.primaryLight ?? '#f0fdf4', borderColor: theme.primary }]}
+                            onPress={() => { tap(); setPostOffice(office.name); setDistrict(office.district); setState(office.state); setIsPostOfficeExpanded(false); }}
+                          >
+                            <Ionicons name={isSel ? 'radio-button-on' : 'radio-button-off'} size={15} color={isSel ? theme.primary : '#94a3b8'} />
+                            <Text style={[styles.expandedOfficeText, isSel && { color: theme.primary, fontFamily: FONT.bold }]}>{office.name} ({office.district})</Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  )
+                )}
 
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>District</Text>
+                    <View style={styles.readOnlySelector}>
+                      <Ionicons name="location-outline" size={14} color="#64748b" />
+                      <Text style={styles.readOnlyText} numberOfLines={1}>{district || '—'}</Text>
+                      <Ionicons name="lock-closed-outline" size={12} color="#94a3b8" />
+                    </View>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>State</Text>
+                    <View style={styles.readOnlySelector}>
+                      <Text style={styles.readOnlyText} numberOfLines={1}>{state || '—'}</Text>
+                      <Ionicons name="lock-closed-outline" size={12} color="#94a3b8" />
+                    </View>
+                  </View>
+                </View>
+              </View>
+
+              {/* ── Section 5: Notifications & Preferences ── */}
+              <View style={[styles.card, { padding: 12 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                  <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#f0fdf4', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="notifications" size={14} color="#16a34a" />
+                  </View>
+                  <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' }}>🔔 Notifications & Preferences</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 4 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>📱 WhatsApp Group Alerts</Text>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 }}>Receive mandi rates, weather & farm alerts</Text>
+                  </View>
+                  <Switch
+                    value={whatsappGroupEnabled}
+                    onValueChange={(v) => { isUserInteractingRef.current = true; setWhatsappGroupEnabled(v); }}
+                    trackColor={{ false: '#e2e8f0', true: '#86efac' }}
+                    thumbColor={whatsappGroupEnabled ? '#16a34a' : '#94a3b8'}
+                  />
+                </View>
+              </View>
 
               {isSaved && (
                 <View style={styles.savedNotice}>
@@ -909,7 +961,9 @@ export default function ProfileScreen() {
             </View>
           )}
 
+
           {/* 📲 Mobile Number OTP Verification Modal */}
+
           <Modal
             visible={isOtpModalOpen}
             animationType="fade"

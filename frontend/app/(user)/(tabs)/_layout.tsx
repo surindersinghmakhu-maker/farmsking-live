@@ -116,7 +116,6 @@ const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key:
   farm: { key: 'tabCrops', title: 'Crops', icon: 'leaf-outline', iconFilled: 'leaf' },
   garden: { key: 'tabGardens' as any, title: 'Gardens', icon: 'flower-outline', iconFilled: 'flower' },
   records: { key: 'tabRecords', title: 'Accounts', icon: 'document-text-outline', iconFilled: 'document-text' },
-  market: { key: 'tabMyAdvisor', title: 'Crop Doctor', icon: 'school-outline', iconFilled: 'school' },
   categories: { key: 'tabCategories', title: 'Categories', icon: 'grid-outline', iconFilled: 'grid' },
   cart: { key: 'tabCart', title: 'Cart', icon: 'cart-outline', iconFilled: 'cart' },
   orders: { key: 'tabOrders', title: 'Orders', icon: 'receipt-outline', iconFilled: 'receipt' },
@@ -139,7 +138,7 @@ const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key:
 };
 
 const ALL_TABS: TabName[] = [
-  'index', 'shop', 'ai-doctor', 'admin_shop', 'farm', 'garden', 'records', 'market',
+  'index', 'shop', 'ai-doctor', 'admin_shop', 'farm', 'garden', 'records',
   'categories', 'cart', 'orders',
   'farmers', 'schedule', 'chat',
   'referrals', 'wallet',
@@ -444,6 +443,11 @@ export default function TabLayout() {
             }}
           />
           <Tabs.Screen name="garden-vip-cards" options={{ href: null }} />
+          
+          {/* Explicitly hide auto-discovered screens that shouldn't be main tabs */}
+          <Tabs.Screen name="market" options={{ href: null }} />
+          <Tabs.Screen name="garden/expenses" options={{ href: null }} />
+          <Tabs.Screen name="garden/[id]" options={{ href: null }} />
         </Tabs>
 
       </View>

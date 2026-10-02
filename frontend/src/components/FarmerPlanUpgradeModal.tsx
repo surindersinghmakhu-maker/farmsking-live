@@ -911,148 +911,43 @@ function UpiUpgradeFlow({
     const planName = (PLAN_COLUMN_META[plan]?.label ?? plan).toUpperCase();
     const paymentRefCode = `FK-${kingId}-${planName}-${request.id.slice(0, 6).toUpperCase()}`;
 
+    const handlePayOnline = async () => {
+      if (request.cashfreeSessionId) {
+        try {
+          await Linking.openURL(`https://payments.cashfree.com/order/#${request.cashfreeSessionId}`);
+        } catch {
+          setError('Could not open payment page.');
+        }
+      } else {
+        setError('Payment session could not be initialized.');
+      }
+    };
+
     return (
-      <ScrollView style={{ maxHeight: 460 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 10, alignItems: 'center' }}>
+      <ScrollView style={{ maxHeight: 460 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 10, alignItems: 'center', paddingBottom: 20 }}>
         <Text style={[styles.label, { alignSelf: 'flex-start', color: '#0f172a', fontWeight: '700' }]}>
           {planName} Plan Price: ₹{request.amount}
         </Text>
 
-        <View style={styles.qrBox}>
-          <QRCode value={request.upiLink || 'upi://pay'} size={160} />
-        </View>
-
-        <View style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.md, alignItems: 'center', gap: 2, width: '100%' }}>
-          <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#1e293b' }}>
-            UPI ID: surindersinghmakhu-5@oksbi
+        <View style={{ backgroundColor: '#f8fafc', padding: 20, borderRadius: RADIUS.lg, alignItems: 'center', gap: 10, width: '100%', borderWidth: 1.5, borderColor: '#cbd5e1' }}>
+          <Ionicons name="card-outline" size={48} color="#475569" />
+          <Text style={{ fontSize: 14, fontFamily: FONT.bold, color: '#1e293b', textAlign: 'center' }}>
+            Complete your VIP Pass purchase securely via Cashfree.
           </Text>
-          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#6d28d9' }}>
-            Payment Ref Code: {paymentRefCode}
+          <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center' }}>
+            Payment Ref: {paymentRefCode}
           </Text>
         </View>
 
-        <TouchableOpacity style={[styles.submitBtn, { width: '100%' }]} onPress={handleOpenUpiApp}>
-          <Text style={styles.submitBtnText}>Open in UPI App (Google Pay / PhonePe / Paytm)</Text>
-        </TouchableOpacity>
-
-        {/* Button to toggle Payment Info Submission Form */}
-        <TouchableOpacity
-          style={[styles.submitBtn, { backgroundColor: showForm ? '#1e293b' : '#0f172a', width: '100%', flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 4 }]}
-          onPress={() => setShowForm((v) => !v)}
+        <TouchableOpacity 
+          style={[styles.submitBtn, { width: '100%', backgroundColor: '#6d28d9', marginTop: 10, flexDirection: 'row', justifyContent: 'center', gap: 8 }]} 
+          onPress={handlePayOnline}
         >
-          <Ionicons name={showForm ? 'chevron-up-circle' : 'paper-plane'} size={18} color="#ffffff" />
-          <Text style={styles.submitBtnText}>
-            {showForm ? 'Hide Payment Info Form' : '📩 Send Payment Information to Admin'}
-          </Text>
+          <Ionicons name="lock-closed" size={16} color="#ffffff" />
+          <Text style={styles.submitBtnText}>Pay Online Now (Cashfree)</Text>
         </TouchableOpacity>
 
-        {/* Payment Information Form Section */}
-        {showForm ? (
-          <View style={{ gap: 10, width: '100%', padding: 12, backgroundColor: '#f8fafc', borderRadius: RADIUS.lg, borderWidth: 1.5, borderColor: '#cbd5e1', marginTop: 4 }}>
-            <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a', marginBottom: 2 }}>
-              📩 Send Payment Information to Admin
-            </Text>
-
-            {/* Auto-filled Payment Ref Code */}
-            <View style={{ gap: 4 }}>
-              <Text style={styles.label}>Payment Ref Code (Auto-filled):</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#e2e8f0', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#cbd5e1', paddingHorizontal: 10 }}>
-                <Ionicons name="lock-closed" size={15} color="#64748b" style={{ marginRight: 6 }} />
-                <TextInput
-                  style={[styles.input, { flex: 1, backgroundColor: 'transparent', borderWidth: 0, color: '#1e293b', fontFamily: FONT.bold, paddingVertical: 8 }]}
-                  value={paymentRefCode}
-                  editable={false}
-                />
-              </View>
-            </View>
-
-            {/* Auto-filled Amount */}
-            <View style={{ gap: 4 }}>
-              <Text style={styles.label}>Amount (Auto-filled):</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#e2e8f0', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#cbd5e1', paddingHorizontal: 10 }}>
-                <Ionicons name="lock-closed" size={15} color="#64748b" style={{ marginRight: 6 }} />
-                <TextInput
-                  style={[styles.input, { flex: 1, backgroundColor: 'transparent', borderWidth: 0, color: '#1e293b', fontFamily: FONT.bold, paddingVertical: 8 }]}
-                  value={`₹${request.amount}`}
-                  editable={false}
-                />
-              </View>
-            </View>
-
-            {/* Mandatory UPI Transaction ID */}
-            <View style={{ gap: 4 }}>
-              <Text style={[styles.label, { color: '#0f172a' }]}>
-                UPI Transaction ID / UTR <Text style={{ color: '#dc2626' }}>* (Required)</Text>:
-              </Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: '#ffffff', borderColor: !utr.trim() && error ? '#dc2626' : '#cbd5e1' }]}
-                placeholder="Enter 12-digit UTR or UPI Transaction ID"
-                placeholderTextColor="#94a3b8"
-                value={utr}
-                onChangeText={(val) => { setUtr(val); setError(null); }}
-              />
-            </View>
-
-            {/* Optional Screenshot Upload */}
-            <View style={{ gap: 6 }}>
-              <Text style={styles.label}>Upload Payment Screenshot (Optional):</Text>
-              {screenshotUri ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#cbd5e1' }}>
-                  <Image source={{ uri: screenshotUri }} style={{ width: 42, height: 42, borderRadius: 6 }} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#16a34a' }}>
-                      {isUploadingPhoto ? 'Uploading screenshot...' : '✓ Screenshot attached'}
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => { setScreenshotUri(null); setScreenshotUrl(null); }}
-                    style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: '#fee2e2', borderRadius: RADIUS.pill }}
-                  >
-                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#dc2626' }}>Remove</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <TouchableOpacity
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 6,
-                    backgroundColor: '#ffffff',
-                    paddingVertical: 10,
-                    borderRadius: RADIUS.md,
-                    borderWidth: 1.5,
-                    borderColor: '#cbd5e1',
-                    borderStyle: 'dashed',
-                  }}
-                  disabled={isUploadingPhoto}
-                  onPress={handlePickScreenshot}
-                >
-                  <Ionicons name="camera-outline" size={18} color="#475569" />
-                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#475569' }}>
-                    {isUploadingPhoto ? 'Uploading...' : '📷 Attach Screenshot (Optional)'}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-            <TouchableOpacity
-              style={[styles.submitBtn, { backgroundColor: '#16a34a', width: '100%', flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 4 }]}
-              disabled={submit.isPending || isUploadingPhoto}
-              onPress={handleSubmit}
-            >
-              {submit.isPending ? (
-                <ActivityIndicator color="#ffffff" />
-              ) : (
-                <>
-                  <Ionicons name="paper-plane" size={16} color="#ffffff" />
-                  <Text style={styles.submitBtnText}>Submit Payment Info to Admin</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
-        ) : null}
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </ScrollView>
     );
   }

@@ -1014,7 +1014,7 @@ export default function ProfileScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#065f46' }}>🛡️ Privacy Policy & Play Store Terms</Text>
-              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#047857' }}>ਪ੍ਰਾਈਵੇਸੀ ਅਤੇ ਡਾਟਾ ਸੁਰੱਖਿਆ ਨੀਤੀ • Auto-Dynamic</Text>
+              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#047857' }}>Privacy & Data Security Policy • Auto-Dynamic</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color="#059669" />
           </TouchableOpacity>

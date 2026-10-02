@@ -2281,90 +2281,62 @@ export default function RecordsScreen() {
         <Text style={styles.heroSubtitle}>Track sales revenue & combined farm expenses</Text>
 
         {/* Tab Switcher */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', gap: 8, marginTop: 12, paddingRight: 16 }}>
-          <TouchableOpacity
-            style={[styles.tabBtn, recordType === 'OVERVIEW' && styles.tabBtnActive]}
-            activeOpacity={0.8}
-            onPress={() => {
-              tap();
-              setRecordType('OVERVIEW');
-            }}
-          >
-            <Ionicons name="bar-chart" size={15} color={recordType === 'OVERVIEW' ? theme.primary : '#fff'} />
-            <Text style={[styles.tabBtnText, recordType === 'OVERVIEW' && styles.tabBtnTextActive]}>
-              Overview
-            </Text>
-          </TouchableOpacity>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ marginTop: 16 }}>
+          <View style={styles.subTabBar}>
+            <TouchableOpacity
+              style={[styles.subTabItem, recordType === 'OVERVIEW' && styles.subTabItemActive]}
+              activeOpacity={0.8}
+              onPress={() => { tap(); setRecordType('OVERVIEW'); }}
+            >
+              <Ionicons name="bar-chart" size={14} color={recordType === 'OVERVIEW' ? theme.primary : '#ffffff'} />
+              <Text style={[styles.subTabText, recordType === 'OVERVIEW' && styles.subTabTextActive]}>Overview</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.tabBtn, recordType === 'SALES' && styles.tabBtnActive]}
-            activeOpacity={0.8}
-            onPress={() => {
-              tap();
-              setRecordType('SALES');
-            }}
-          >
-            <Ionicons name="trending-up" size={15} color={recordType === 'SALES' ? theme.primary : '#fff'} />
-            <Text style={[styles.tabBtnText, recordType === 'SALES' && styles.tabBtnTextActive]}>
-              Sales
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.subTabItem, recordType === 'SALES' && styles.subTabItemActive]}
+              activeOpacity={0.8}
+              onPress={() => { tap(); setRecordType('SALES'); }}
+            >
+              <Ionicons name="trending-up" size={14} color={recordType === 'SALES' ? theme.primary : '#ffffff'} />
+              <Text style={[styles.subTabText, recordType === 'SALES' && styles.subTabTextActive]}>Sales</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.tabBtn, recordType === 'EXPENSES' && styles.tabBtnActive]}
-            activeOpacity={0.8}
-            onPress={() => {
-              tap();
-              setRecordType('EXPENSES');
-            }}
-          >
-            <Ionicons name="receipt" size={15} color={recordType === 'EXPENSES' ? theme.primary : '#fff'} />
-            <Text style={[styles.tabBtnText, recordType === 'EXPENSES' && styles.tabBtnTextActive]}>
-              Expenses
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.subTabItem, recordType === 'EXPENSES' && styles.subTabItemActive]}
+              activeOpacity={0.8}
+              onPress={() => { tap(); setRecordType('EXPENSES'); }}
+            >
+              <Ionicons name="receipt" size={14} color={recordType === 'EXPENSES' ? theme.primary : '#ffffff'} />
+              <Text style={[styles.subTabText, recordType === 'EXPENSES' && styles.subTabTextActive]}>Expenses</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.tabBtn, recordType === 'ANALYSIS' && styles.tabBtnActive]}
-            activeOpacity={0.8}
-            onPress={() => {
-              tap();
-              setRecordType('ANALYSIS');
-            }}
-          >
-            <Ionicons name="stats-chart" size={15} color={recordType === 'ANALYSIS' ? theme.primary : '#fff'} />
-            <Text style={[styles.tabBtnText, recordType === 'ANALYSIS' && styles.tabBtnTextActive]}>
-              Payments
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.subTabItem, recordType === 'ANALYSIS' && styles.subTabItemActive]}
+              activeOpacity={0.8}
+              onPress={() => { tap(); setRecordType('ANALYSIS'); }}
+            >
+              <Ionicons name="stats-chart" size={14} color={recordType === 'ANALYSIS' ? theme.primary : '#ffffff'} />
+              <Text style={[styles.subTabText, recordType === 'ANALYSIS' && styles.subTabTextActive]}>Payments</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.tabBtn, recordType === 'LABOUR' && styles.tabBtnActive]}
-            activeOpacity={0.8}
-            onPress={() => {
-              tap();
-              setRecordType('LABOUR');
-            }}
-          >
-            <Ionicons name="people" size={15} color={recordType === 'LABOUR' ? theme.primary : '#fff'} />
-            <Text style={[styles.tabBtnText, recordType === 'LABOUR' && styles.tabBtnTextActive]}>
-              Labour
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.subTabItem, recordType === 'LABOUR' && styles.subTabItemActive]}
+              activeOpacity={0.8}
+              onPress={() => { tap(); setRecordType('LABOUR'); }}
+            >
+              <Ionicons name="people" size={14} color={recordType === 'LABOUR' ? theme.primary : '#ffffff'} />
+              <Text style={[styles.subTabText, recordType === 'LABOUR' && styles.subTabTextActive]}>Labour</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.tabBtn, recordType === 'PARTIES' && styles.tabBtnActive]}
-            activeOpacity={0.8}
-            onPress={() => {
-              tap();
-              setRecordType('PARTIES');
-            }}
-          >
-            <Ionicons name="people-circle-outline" size={15} color={recordType === 'PARTIES' ? theme.primary : '#fff'} />
-            <Text style={[styles.tabBtnText, recordType === 'PARTIES' && styles.tabBtnTextActive]}>
-              Parties
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.subTabItem, recordType === 'PARTIES' && styles.subTabItemActive]}
+              activeOpacity={0.8}
+              onPress={() => { tap(); setRecordType('PARTIES'); }}
+            >
+              <Ionicons name="people-circle-outline" size={14} color={recordType === 'PARTIES' ? theme.primary : '#ffffff'} />
+              <Text style={[styles.subTabText, recordType === 'PARTIES' && styles.subTabTextActive]}>Parties</Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </LinearGradient>
 
@@ -4542,18 +4514,24 @@ const styles = StyleSheet.create({
   heroTitle: { color: '#fff', fontSize: 20, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
   heroSubtitle: { color: 'rgba(255,255,255,0.85)', fontSize: 12.5, fontFamily: FONT.medium, marginTop: 2 },
   tabRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
-  tabBtn: {
+  subTabBar: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 8,
+    padding: 4,
+  },
+  subTabItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
     gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: RADIUS.pill,
-    backgroundColor: 'rgba(255,255,255,0.18)',
   },
-  tabBtnActive: { backgroundColor: '#ffffff' },
-  tabBtnText: { fontSize: 12.5, fontFamily: FONT.bold, color: '#ffffff' },
-  tabBtnTextActive: { color: theme.primary },
+  subTabItemActive: { backgroundColor: '#ffffff' },
+  subTabText: { fontSize: 12.5, fontFamily: FONT.semiBold, color: '#ffffff' },
+  subTabTextActive: { color: theme.primary },
   summaryBar: {
     flexDirection: 'row',
     alignItems: 'center',

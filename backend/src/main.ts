@@ -39,21 +39,24 @@ async function bootstrap() {
   app.setGlobalPrefix(apiPrefix);
   app.useStaticAssets(join(process.cwd(), 'uploads'), {
     prefix: '/uploads/',
-    maxAge: '7d',
+    maxAge: '30d',
+    immutable: true,
     etag: true,
   });
   app.useStaticAssets(join(process.cwd(), 'uploads'), {
     prefix: '/api/uploads/',
-    maxAge: '7d',
+    maxAge: '30d',
+    immutable: true,
     etag: true,
   });
   app.useStaticAssets(join(process.cwd(), 'uploads'), {
     prefix: '/api/v1/uploads/',
-    maxAge: '7d',
+    maxAge: '30d',
+    immutable: true,
     etag: true,
   });
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-  app.use(compression());
+  app.use(compression({ level: 6, threshold: 256 }));
   app.enableCors({
     origin: true,
     credentials: true,

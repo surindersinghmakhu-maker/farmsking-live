@@ -29,9 +29,10 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
 
   const primaryRole = user ? toUserRole(user.role, user.advisorType) : 'CUSTOMER';
+
   const assignedRoles = useMemo<UserRole[]>(() => {
     if (!user) return ['CUSTOMER'];
-    
+
     const staffRoles = ['ADMIN', 'SUPER_ADMIN', 'TECHNICAL_TRAINER', 'OPERATOR', 'MANAGER', 'SUPERVISOR', 'ADVISOR'];
     const isStaffUser = staffRoles.some(r => user.role === r || (user.roles && user.roles.includes(r as Role)));
 
@@ -40,22 +41,20 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     let activeRoles = granted.filter((r) => !deactivated.includes(r));
 
     const mapped = activeRoles.map((r) => toUserRole(r, user.advisorType));
-
     const rawPrimary = toUserRole(user.role, user.advisorType);
     const isPrimaryActive = !deactivated.includes(user.role);
 
     let finalRoles = isPrimaryActive ? Array.from(new Set([rawPrimary, ...mapped])) : mapped;
+
+    // Filter out GARDENER so Gardener dashboard is completely hidden and FARMER is default
+    finalRoles = finalRoles.filter((r) => r !== 'GARDENER');
+
     if (finalRoles.length === 0) {
       finalRoles = ['CUSTOMER'];
     }
 
-    if (finalRoles.includes('FARMER') && finalRoles.includes('GARDENER')) {
-      finalRoles = finalRoles.filter(r => r !== 'GARDENER');
-    }
-
     if (isStaffUser) {
-      // Remove FARMER and GARDENER for any staff, but make sure they have CUSTOMER
-      finalRoles = finalRoles.filter((r) => r !== 'FARMER' && r !== 'GARDENER');
+      finalRoles = finalRoles.filter((r) => r !== 'FARMER');
       if (!finalRoles.includes('CUSTOMER')) {
         finalRoles.push('CUSTOMER');
       }
@@ -108,14 +107,13 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Priority 2: If Farmer role is assigned -> Default to Farmer tab
+    // Priority 2: Default to FARMER if available or primaryRole
     if (assignedRoles.includes('FARMER')) {
       setRoleState('FARMER');
       return;
     }
 
-    // Priority 3: Customer role only -> Default to CUSTOMER (opens Store tab)
-    setRoleState(primaryRole);
+    setRoleState(primaryRole === 'GARDENER' ? 'FARMER' : primaryRole);
   }, [user?.id, user?.role, primaryRole, assignedRoles, isStaffUser]);
 
   const setRole = (next: UserRole) => {

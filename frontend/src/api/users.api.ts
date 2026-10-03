@@ -165,7 +165,7 @@ export async function resetUserPassword(id: string, newPassword?: string): Promi
 }
 
 /** The checkbox-toggleable roles — staff roles (Admin/Super Admin/Operator) have their own dedicated flows. */
-export const ASSIGNABLE_CHECKBOX_ROLES: Role[] = ['CUSTOMER', 'FARMER', 'GARDENER', 'ADVISOR', 'BUSINESS_PARTNER'];
+export const ASSIGNABLE_CHECKBOX_ROLES: Role[] = ['CUSTOMER', 'FARMER', 'GARDENER', 'ADVISOR', 'BUSINESS_PARTNER', 'TECHNICAL_TRAINER'];
 
 export async function updateActiveRoles(id: string, activeRoles: Role[]): Promise<AdminUser> {
   const { data } = await apiClient.patch<AdminUser>(`/users/${id}/active-roles`, { activeRoles });

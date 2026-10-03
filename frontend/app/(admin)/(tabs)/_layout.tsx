@@ -93,8 +93,8 @@ type TabName =
   | 'operator-orders' | 'trainer-dashboard';
 
 const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
-  FARMER: { tabs: ['index', 'shop', 'farm', 'records', 'market', 'more'] },
-  GARDENER: { tabs: ['index', 'shop', 'farm', 'records', 'market', 'more'] },
+  FARMER: { tabs: ['index', 'shop', 'farm', 'records', 'more'] },
+  GARDENER: { tabs: ['index', 'shop', 'garden', 'records', 'more'] },
   CUSTOMER: { tabs: ['shop', 'wallet', 'more'] },
   ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
   FARM_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },

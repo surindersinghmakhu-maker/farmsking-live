@@ -3,6 +3,8 @@ import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, Swit
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useRouter } from 'expo-router';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAuth } from '@/src/store/auth-context';
@@ -17,6 +19,7 @@ export default function AdvisorProfileScreen() {
   const router = useRouter();
   const { user, updateUser, refreshUser } = useAuth();
   const updateProfile = useUpdateAdvisorProfile();
+  const certRef = React.useRef<View>(null);
 
   const [localPhotoUri, setLocalPhotoUri] = useState<string | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(user?.photoUrl ?? null);
@@ -120,6 +123,22 @@ export default function AdvisorProfileScreen() {
     }
   };
 
+  const handleDownloadCertificate = async () => {
+    try {
+      if (!certRef.current) return;
+      const uri = await captureRef(certRef.current, {
+        format: 'jpg',
+        quality: 1,
+      });
+      await Sharing.shareAsync(uri, {
+        dialogTitle: 'My Advisor Certificate',
+        mimeType: 'image/jpeg',
+      });
+    } catch (err) {
+      Alert.alert('Error', 'Failed to generate certificate.');
+    }
+  };
+
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.bg }]} contentContainerStyle={styles.content}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -129,6 +148,38 @@ export default function AdvisorProfileScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Advisor Profile</Text>
         <View style={{ width: 34 }} />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Your Certificate</Text>
+        <View 
+          ref={certRef}
+          style={styles.certificateBox}
+          collapsable={false}
+        >
+          <View style={styles.certInner}>
+            <Ionicons name="ribbon" size={40} color="#15803d" style={{ alignSelf: 'center', marginBottom: 8 }} />
+            <Text style={styles.certTitle}>CERTIFICATE OF EXCELLENCE</Text>
+            <Text style={styles.certSub}>This certifies that</Text>
+            <Text style={styles.certName}>{user?.name || 'Garden Advisor'}</Text>
+            <Text style={styles.certBody}>has successfully passed the Horticulture Expert Assessment and is officially recognized as a Certified Garden Advisor on FarmsKing.</Text>
+            <View style={styles.certFooter}>
+              <View>
+                <Text style={styles.certFooterVal}>{new Date().toLocaleDateString()}</Text>
+                <Text style={styles.certFooterLabel}>Date</Text>
+              </View>
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={styles.certFooterVal}>FarmsKing Team</Text>
+                <Text style={styles.certFooterLabel}>Authorized</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+        
+        <TouchableOpacity style={styles.downloadCertBtn} onPress={handleDownloadCertificate}>
+          <Ionicons name="download-outline" size={16} color="#ffffff" />
+          <Text style={styles.downloadCertBtnText}>Download as JPG</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.section}>
@@ -280,6 +331,19 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a' },
   section: { gap: 8 },
   sectionLabel: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
+  
+  certificateBox: { backgroundColor: '#f0fdf4', padding: 4, borderRadius: RADIUS.lg, borderWidth: 2, borderColor: '#15803d', overflow: 'hidden' },
+  certInner: { backgroundColor: '#ffffff', padding: 20, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#bbf7d0', alignItems: 'center' },
+  certTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#15803d', textAlign: 'center', marginBottom: 4, letterSpacing: 1 },
+  certSub: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center', marginBottom: 12 },
+  certName: { fontSize: 22, fontFamily: FONT.extraBold, color: '#0f172a', textAlign: 'center', marginBottom: 16 },
+  certBody: { fontSize: 12, fontFamily: FONT.medium, color: '#475569', textAlign: 'center', lineHeight: 18, marginBottom: 24, paddingHorizontal: 10 },
+  certFooter: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', borderTopWidth: 1, borderTopColor: '#e2e8f0', paddingTop: 12 },
+  certFooterLabel: { fontSize: 10, fontFamily: FONT.medium, color: '#94a3b8' },
+  certFooterVal: { fontSize: 12, fontFamily: FONT.bold, color: '#334155' },
+  downloadCertBtn: { backgroundColor: '#0f172a', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: RADIUS.md },
+  downloadCertBtnText: { fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' },
+
   notificationRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   notificationIconBg: { width: 32, height: 32, borderRadius: RADIUS.md, backgroundColor: '#f0fdf4', alignItems: 'center', justifyContent: 'center' },
   notificationLabel: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },

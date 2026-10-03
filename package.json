@@ -9,6 +9,7 @@
     "deploy": "node frontend/build.js && git add . && git commit -m \"deploy: live update\" && git push origin main && git push hostinger main"
   },
   "dependencies": {
-    "@google/genai": "^2.25.0"
+    "@google/genai": "^2.25.0",
+    "firebase": "^12.19.0"
   }
 }

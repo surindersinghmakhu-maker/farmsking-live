@@ -91,3 +91,13 @@ export async function verifyMobileLinkOtpApi(payload: { mobile: string; otp: str
   const { data } = await apiClient.post<{ success: boolean; message: string; isMerged?: boolean; user: any; accessToken?: string }>('/auth/verify-mobile-link-otp', payload);
   return data;
 }
+
+export async function sendLoginOtpApi(mobile: string): Promise<{ success: boolean; message: string; devOtp?: string }> {
+  const { data } = await apiClient.post<{ success: boolean; message: string; devOtp?: string }>('/auth/send-login-otp', { mobile });
+  return data;
+}
+
+export async function verifyLoginOtpApi(payload: { mobile: string; otp: string }): Promise<AuthResponse> {
+  const { data } = await apiClient.post<AuthResponse>('/auth/verify-login-otp', payload);
+  return data;
+}

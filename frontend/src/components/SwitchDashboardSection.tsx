@@ -9,6 +9,7 @@ import { useAuth } from '../store/auth-context';
 import { useBecomeFarmer, useBecomeGardener } from '../hooks/useBecomeRole';
 
 import { BecomeFarmerModal } from './BecomeFarmerModal';
+import { BecomeGardenerModal } from './BecomeGardenerModal';
 
 const ROLE_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   CUSTOMER: 'cart',
@@ -45,6 +46,7 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
   const [pending, setPending] = useState<'FARMER' | 'GARDENER' | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isFarmerModalOpen, setIsFarmerModalOpen] = useState(false);
+  const [isGardenerModalOpen, setIsGardenerModalOpen] = useState(false);
 
   const isCustomerOnly = user?.role === 'CUSTOMER' && assignedRoles.length <= 1;
 
@@ -54,27 +56,21 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
     setRole('FARMER');
   };
 
+  const handleGardenerSuccess = async (updatedUser: any) => {
+    setIsGardenerModalOpen(false);
+    await updateUser(updatedUser);
+    setRole('GARDENER');
+  };
+
   const grantRole = async (target: 'FARMER' | 'GARDENER') => {
     tap();
     if (target === 'FARMER') {
       setIsFarmerModalOpen(true);
       return;
     }
-
-    setPending(target);
-    try {
-      const updated = await becomeGardener.mutateAsync();
-      await updateUser(updated);
-      setRole(target);
-    } catch (err: any) {
-      const message = err?.response?.data?.message ?? `Could not activate the Gardener dashboard.`;
-      if (Platform.OS === 'web') {
-        alert(message);
-      } else {
-        Alert.alert('Could not switch', message);
-      }
-    } finally {
-      setPending(null);
+    if (target === 'GARDENER') {
+      setIsGardenerModalOpen(true);
+      return;
     }
   };
 
@@ -119,6 +115,11 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
           visible={isFarmerModalOpen}
           onClose={() => setIsFarmerModalOpen(false)}
           onSuccess={handleFarmerSuccess}
+        />
+        <BecomeGardenerModal
+          visible={isGardenerModalOpen}
+          onClose={() => setIsGardenerModalOpen(false)}
+          onSuccess={handleGardenerSuccess}
         />
       </View>
     );

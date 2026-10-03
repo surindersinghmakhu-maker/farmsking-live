@@ -906,6 +906,10 @@ const ROLE_LABELS: Record<Role, string> = {
   SUPER_ADMIN: 'Super Admin',
   OPERATOR: 'Operator',
   LABOUR: 'Labour Worker',
+  TECHNICAL_TRAINER: 'Technical Trainer',
+  MANAGER: 'Manager',
+  SUPERVISOR: 'Supervisor',
+  SELLER: 'Seller',
 };
 
 function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose: () => void }) {
@@ -949,7 +953,9 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
     const message = `${target.name} ke roles update ho jayenge:\n${roleLabels.join(', ') || 'None'}\n\nConfirm karein?`;
     const doSave = async () => {
       try {
-        await updateActiveRoles.mutateAsync({ id: target.id, activeRoles: selected });
+        // Filter to only roles the backend allows via checkbox assignment
+        const assignableSelected = selected.filter((r) => ASSIGNABLE_CHECKBOX_ROLES.includes(r));
+        await updateActiveRoles.mutateAsync({ id: target.id, activeRoles: assignableSelected });
         if (selected.includes('ADVISOR') && advisorType) {
           await updateUser.mutateAsync({ id: target.id, payload: { advisorType } });
         }

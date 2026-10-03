@@ -1581,7 +1581,7 @@ function MyUnifiedPlanCouponsSection({ theme }: { theme: RoleTheme }) {
           }}
         >
           <Ionicons name="pricetag" size={16} color="#15803d" />
-          <Text style={[styles.generateBtnText, { color: '#15803d' }]}>Apply for Farmer</Text>
+          <Text style={[styles.generateBtnText, { color: '#15803d' }]}>🎟️ Redeem Coupon for Farmer</Text>
         </TouchableOpacity>
       </View>
 

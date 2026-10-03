@@ -765,6 +765,9 @@ function PlatformMaintenancePanel() {
   const [garden, setGarden] = useState(false);
   const [wallet, setWallet] = useState(false);
   const [trainer, setTrainer] = useState(false);
+  const [doctor, setDoctor] = useState(false);
+  const [gardenAdvisor, setGardenAdvisor] = useState(false);
+  const [accounts, setAccounts] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -773,7 +776,10 @@ function PlatformMaintenancePanel() {
       setAgri(!!settings.agriMaintenanceMode);
       setGarden(!!settings.gardenMaintenanceMode);
       setWallet(!!settings.walletMaintenanceMode);
-      setTrainer(!!settings.trainerMaintenanceMode);
+      setTrainer(!!(settings as any).trainerMaintenanceMode);
+      setDoctor(!!(settings as any).doctorMaintenanceMode);
+      setGardenAdvisor(!!(settings as any).gardenAdvisorMaintenanceMode);
+      setAccounts(!!(settings as any).accountsMaintenanceMode);
     }
   }, [settings]);
 
@@ -786,7 +792,10 @@ function PlatformMaintenancePanel() {
         gardenMaintenanceMode: garden,
         walletMaintenanceMode: wallet,
         trainerMaintenanceMode: trainer,
-      });
+        doctorMaintenanceMode: doctor,
+        gardenAdvisorMaintenanceMode: gardenAdvisor,
+        accountsMaintenanceMode: accounts,
+      } as any);
       alert('Platform Maintenance Modes saved successfully.');
     } catch (err: any) {
       alert('Failed to save maintenance modes.');
@@ -850,6 +859,30 @@ function PlatformMaintenancePanel() {
               <Text style={styles.subToggleDesc}>Pause Trainer dashboard and logs</Text>
             </View>
             <Switch value={trainer} onValueChange={setTrainer} trackColor={{ false: '#cbd5e1', true: '#ef4444' }} thumbColor="#ffffff" />
+          </View>
+
+          <View style={styles.subToggleRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.subToggleTitle}>🩺 Doctor Module (Farmer Doctor)</Text>
+              <Text style={styles.subToggleDesc}>Pause Doctor consultations & prescriptions</Text>
+            </View>
+            <Switch value={doctor} onValueChange={setDoctor} trackColor={{ false: '#cbd5e1', true: '#ef4444' }} thumbColor="#ffffff" />
+          </View>
+
+          <View style={styles.subToggleRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.subToggleTitle}>🌿 Garden Advisor Module</Text>
+              <Text style={styles.subToggleDesc}>Pause Garden Advisor listings & hire flow</Text>
+            </View>
+            <Switch value={gardenAdvisor} onValueChange={setGardenAdvisor} trackColor={{ false: '#cbd5e1', true: '#ef4444' }} thumbColor="#ffffff" />
+          </View>
+
+          <View style={styles.subToggleRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.subToggleTitle}>📒 Accounts Module</Text>
+              <Text style={styles.subToggleDesc}>Pause Garden/Farm expense & harvest accounts</Text>
+            </View>
+            <Switch value={accounts} onValueChange={setAccounts} trackColor={{ false: '#cbd5e1', true: '#ef4444' }} thumbColor="#ffffff" />
           </View>
 
           <TouchableOpacity style={[wStyles.btn, { backgroundColor: '#ef4444' }]} onPress={handleSave} disabled={saving}>
@@ -1740,6 +1773,94 @@ function FreeTrialSettingsPanel() {
   );
 }
 
+function AdvisorCertificationSettingsPanel() {
+  const { data: settings } = useAppSettings();
+  const updateSettings = useUpdateAppSettings();
+  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [fee, setFee] = useState('999');
+  const [discount, setDiscount] = useState('2000');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (settings) {
+      if (settings.advisorCertificationFee !== undefined) setFee(settings.advisorCertificationFee.toString());
+      if (settings.advisorCertificationDiscount !== undefined) setDiscount(settings.advisorCertificationDiscount.toString());
+    }
+  }, [settings]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await updateSettings.mutateAsync({
+        advisorCertificationFee: Number(fee) || 0,
+        advisorCertificationDiscount: Number(discount) || 0,
+      });
+      alert('Advisor Certification Settings saved successfully.');
+    } catch (err: any) {
+      alert('Failed to save settings.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <View style={[styles.card, { borderColor: '#dcfce7', borderWidth: 1.5 }, premiumShadow('#000000', 'sm')]}>
+      <TouchableOpacity style={styles.cardHeader} onPress={() => setIsCollapsed(!isCollapsed)} activeOpacity={0.7}>
+        <View style={[styles.iconCircle, { backgroundColor: '#16a34a' }]}>
+          <Ionicons name="school" size={20} color="#ffffff" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardTitle}>Advisor Certification Fee</Text>
+          <Text style={styles.cardSub}>Set the fee users pay to take the expert test & get listed</Text>
+        </View>
+        <Ionicons name={isCollapsed ? 'chevron-down-outline' : 'chevron-up-outline'} size={22} color="#94a3b8" />
+      </TouchableOpacity>
+
+      {!isCollapsed && (
+        <View style={{ marginTop: 12, gap: 12, borderTopWidth: 1, borderTopColor: '#f1f5f9', paddingTop: 12 }}>
+          <View>
+            <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#475569', marginBottom: 4 }}>Payable Fee (₹)</Text>
+            <TextInput
+              style={styles.input}
+              value={fee}
+              onChangeText={setFee}
+              keyboardType="numeric"
+              placeholder="e.g. 999"
+            />
+            <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b', marginTop: 4 }}>This is what the user actually pays via Cashfree.</Text>
+          </View>
+          <View>
+            <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#475569', marginBottom: 4 }}>Discount Amount shown (₹)</Text>
+            <TextInput
+              style={styles.input}
+              value={discount}
+              onChangeText={setDiscount}
+              keyboardType="numeric"
+              placeholder="e.g. 2000"
+            />
+            <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b', marginTop: 4 }}>Strikethrough total will be Fee + Discount.</Text>
+          </View>
+
+          <TouchableOpacity
+            style={[{ backgroundColor: '#16a34a', marginTop: 8, padding: 12, borderRadius: 8, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 }]}
+            onPress={handleSave}
+            disabled={saving}
+          >
+            {saving ? (
+              <ActivityIndicator color="#ffffff" size="small" />
+            ) : (
+              <React.Fragment>
+                <Ionicons name="save-outline" size={16} color="#ffffff" />
+                <Text style={{color: '#ffffff', fontWeight: 'bold'}}>Save Certification Settings</Text>
+              </React.Fragment>
+            )}
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
+}
+
 
 export default function SuperSettingsScreen() {
   const router = useRouter();
@@ -2057,6 +2178,9 @@ export default function SuperSettingsScreen() {
 
             {/* 🎁 Free Membership Trial Settings Panel */}
             <FreeTrialSettingsPanel />
+
+            {/* 🎓 Advisor Certification Panel */}
+            <AdvisorCertificationSettingsPanel />
 
             {/* 🏷️ Expense Categories Manager */}
             <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#fef2f2', borderColor: '#fecaca', borderWidth: 1 }]}>

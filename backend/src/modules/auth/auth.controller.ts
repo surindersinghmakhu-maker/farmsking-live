@@ -21,6 +21,20 @@ export class AuthController {
   }
 
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post('send-login-otp')
+  sendLoginOtp(@Body() body: { mobile: string }) {
+    return this.authService.sendLoginOtp(body.mobile);
+  }
+
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post('verify-login-otp')
+  verifyLoginOtp(@Body() body: { mobile: string; otp: string }) {
+    return this.authService.verifyLoginOtp(body.mobile, body.otp);
+  }
+
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('send-email-otp')
   sendEmailOtp(@Body() body: { email: string; otp: string }) {
     return this.authService.sendEmailOtp(body.email, body.otp);

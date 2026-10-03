@@ -66,6 +66,7 @@ import { EmailService } from '../email/email.service';
 export class AuthService {
   private readonly otpStore = new Map<string, ForgotPasswordOtpStore>();
   private readonly mobileLinkOtpStore = new Map<string, MobileLinkOtpStore>();
+  private readonly loginOtpStore = new Map<string, { otp: string; expiresAt: number }>();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -791,6 +792,85 @@ export class AuthService {
       success: true,
       message: 'Password verified successfully.',
     };
+  }
+
+  // ─── OTP-based Login ──────────────────────────────────────────────────────
+  /** Step 1: Send 6-digit WhatsApp OTP for login */
+  async sendLoginOtp(mobile: string) {
+    const rawDigits = mobile.replace(/\D/g, '');
+    const cleanMobile = rawDigits.slice(-10);
+    if (cleanMobile.length !== 10) {
+      throw new BadRequestException('Please enter a valid 10-digit mobile number.');
+    }
+
+    const user = await this.prisma.user.findFirst({
+      where: { mobile: cleanMobile, deletedAt: null },
+    });
+    if (!user) {
+      throw new NotFoundException('No account found with this mobile number. Please register first.');
+    }
+
+    // Check lockout/block
+    if (user.isPermanentlyBlocked) {
+      throw new UnauthorizedException('🔒 Your account has been permanently blocked. Please contact Admin.');
+    }
+    if (user.lockoutUntil && new Date(user.lockoutUntil) > new Date()) {
+      const msLeft = new Date(user.lockoutUntil).getTime() - Date.now();
+      const minutesLeft = Math.ceil(msLeft / (1000 * 60));
+      throw new UnauthorizedException(`⏳ Account is locked for ${minutesLeft} minutes. Please try later.`);
+    }
+
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    this.loginOtpStore.set(cleanMobile, {
+      otp: otpCode,
+      expiresAt: Date.now() + 10 * 60 * 1000,
+    });
+
+    const sent = await this.whatsappBotService.sendOtpMessage(cleanMobile, otpCode);
+
+    return {
+      success: true,
+      message: sent ? 'OTP sent via WhatsApp!' : 'OTP generated (WhatsApp bot offline).',
+      devOtp: process.env.NODE_ENV !== 'production' ? otpCode : undefined,
+    };
+  }
+
+  /** Step 2: Verify OTP and return auth session */
+  async verifyLoginOtp(mobile: string, otp: string) {
+    const rawDigits = mobile.replace(/\D/g, '');
+    const cleanMobile = rawDigits.slice(-10);
+
+    const stored = this.loginOtpStore.get(cleanMobile);
+    if (!stored) {
+      throw new BadRequestException('OTP expired or not requested. Please request a new OTP.');
+    }
+    if (Date.now() > stored.expiresAt) {
+      this.loginOtpStore.delete(cleanMobile);
+      throw new BadRequestException('OTP has expired. Please request a new OTP.');
+    }
+    if (stored.otp !== otp.trim()) {
+      throw new BadRequestException('Invalid OTP. Please check the 6-digit code sent to your WhatsApp.');
+    }
+
+    this.loginOtpStore.delete(cleanMobile);
+
+    let user = await this.prisma.user.findFirst({
+      where: { mobile: cleanMobile, deletedAt: null },
+    });
+    if (!user) {
+      throw new NotFoundException('User account not found.');
+    }
+
+    // Reset any failed login attempts on successful OTP login
+    if (user.failedLoginAttempts > 0 || user.lockoutUntil !== null) {
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: { failedLoginAttempts: 0, lockoutUntil: null },
+      });
+    }
+
+    const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = user;
+    return this.buildAuthResponse(safeUser as any);
   }
 
   private buildAuthResponse(

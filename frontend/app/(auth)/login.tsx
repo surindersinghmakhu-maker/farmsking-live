@@ -34,24 +34,50 @@ const discovery = {
   revocationEndpoint: 'https://oauth2.googleapis.com/revoke',
 };
 
+type LoginTab = 'password' | 'otp';
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function LoginScreen() {
-  const { login, googleLogin } = useAuth();
+  const { login, sendLoginOtp, otpLogin, googleLogin } = useAuth();
   const { data: appSettings } = useAppSettings();
   const router = useRouter();
   const captchaRef = useRef<CaptchaRef>(null);
+  const otpInputRef = useRef<TextInput>(null);
 
+  const [activeTab, setActiveTab] = useState<LoginTab>('password');
   const [mobile, setMobile] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [focusedField, setFocusedField] = useState<'mobile' | 'password' | null>(null);
+  const [focusedField, setFocusedField] = useState<'mobile' | 'password' | 'otp' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  // OTP state
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpSending, setOtpSending] = useState(false);
+  const [devOtp, setDevOtp] = useState<string | null>(null);
+  const [resendTimer, setResendTimer] = useState(0);
+
+  // Resend countdown
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const t = setTimeout(() => setResendTimer(v => v - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendTimer]);
+
+  // Reset OTP state when switching tabs or changing mobile
+  useEffect(() => {
+    setOtpSent(false);
+    setOtpCode('');
+    setDevOtp(null);
+    setResendTimer(0);
+    setError(null);
+  }, [activeTab]);
+
   // ── expo-auth-session Google OAuth request ────────────────────────────────
-  // On web: use current page origin as redirect URI (must match Google Console)
   const redirectUri = AuthSession.makeRedirectUri(
     Platform.OS === 'web'
       ? { useProxy: false }
@@ -65,7 +91,7 @@ export default function LoginScreen() {
       responseType: AuthSession.ResponseType.Token,
       redirectUri,
       prompt: AuthSession.Prompt.SelectAccount,
-      usePKCE: false,  // Token flow does not support PKCE
+      usePKCE: false,
     },
     discovery
   );
@@ -79,7 +105,6 @@ export default function LoginScreen() {
         setGoogleLoading(true);
         setError(null);
         try {
-          // Fetch user info from Google using the access token
           const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
             headers: { Authorization: `Bearer ${response.authentication!.accessToken}` },
           });
@@ -126,7 +151,6 @@ export default function LoginScreen() {
     }
     setError(null);
     setGoogleLoading(true);
-    // Log redirect URI so you can add it to Google Console if needed
     console.log('[Google OAuth] Using redirect URI:', redirectUri);
     try {
       const result = await promptAsync({ showInRecents: true });
@@ -138,6 +162,53 @@ export default function LoginScreen() {
       console.error('[Google OAuth] Error:', err);
       setError('Google Sign-In failed: ' + (err?.message || 'Please retry.'));
       setGoogleLoading(false);
+    }
+  };
+
+  // ── Send OTP ──────────────────────────────────────────────────────────────
+  const handleSendOtp = async () => {
+    setError(null);
+    if (!mobile.trim() || mobile.trim().length < 10) {
+      setError('ਕਿਰਪਾ ਕਰਕੇ 10-digit mobile number ਭਰੋ।');
+      return;
+    }
+    setOtpSending(true);
+    try {
+      const res = await sendLoginOtp(mobile.trim());
+      setOtpSent(true);
+      setResendTimer(60);
+      setDevOtp(res.devOtp || null);
+      setTimeout(() => otpInputRef.current?.focus(), 300);
+    } catch (err: any) {
+      const isNet = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
+      setError(isNet
+        ? 'Network error! Internet check karo.'
+        : (err?.response?.data?.message ?? err?.message ?? 'OTP bhejn vich error.')
+      );
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  // ── Verify OTP login ─────────────────────────────────────────────────────
+  const handleOtpLogin = async () => {
+    setError(null);
+    if (!otpCode.trim() || otpCode.trim().length < 6) {
+      setError('ਕਿਰਪਾ ਕਰਕੇ 6-digit OTP ਭਰੋ।');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await otpLogin({ mobile: mobile.trim(), otp: otpCode.trim() });
+      router.replace('/(tabs)');
+    } catch (err: any) {
+      const isNet = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
+      setError(isNet
+        ? 'Network error! Internet check karo.'
+        : (err?.response?.data?.message ?? err?.message ?? 'OTP verify failed.')
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -197,7 +268,6 @@ export default function LoginScreen() {
             ) : (
               <>
                 <View style={styles.googleIconBox}>
-                  {/* Google G colored icon using SVG-like approach */}
                   <Text style={styles.googleG}>G</Text>
                 </View>
                 <Text style={styles.googleBtnText}>Continue with Google</Text>
@@ -216,7 +286,27 @@ export default function LoginScreen() {
             <View style={styles.dividerLine} />
           </View>
 
-          {/* Mobile Field */}
+          {/* ─── Login Method Tabs ─── */}
+          <View style={styles.tabRow}>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'password' && styles.tabActive]}
+              onPress={() => setActiveTab('password')}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="lock-closed" size={15} color={activeTab === 'password' ? '#16a34a' : '#94a3b8'} />
+              <Text style={[styles.tabText, activeTab === 'password' && styles.tabTextActive]}>Password</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'otp' && styles.tabActive]}
+              onPress={() => setActiveTab('otp')}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="chatbubble-ellipses" size={15} color={activeTab === 'otp' ? '#16a34a' : '#94a3b8'} />
+              <Text style={[styles.tabText, activeTab === 'otp' && styles.tabTextActive]}>WhatsApp OTP</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Mobile Field (shared) */}
           <Text style={styles.label}>Mobile Number</Text>
           <View style={[styles.inputWrap, focusedField === 'mobile' && styles.inputWrapFocused]}>
             <Ionicons name="call-outline" size={18} color={focusedField === 'mobile' ? '#16a34a' : '#94a3b8'} style={styles.inputIcon} />
@@ -227,42 +317,124 @@ export default function LoginScreen() {
               placeholder="10-digit mobile number"
               placeholderTextColor="#94a3b8"
               value={mobile}
-              onChangeText={setMobile}
+              onChangeText={(t) => { setMobile(t); if (otpSent) { setOtpSent(false); setOtpCode(''); setDevOtp(null); } }}
               onFocus={() => setFocusedField('mobile')}
               onBlur={() => setFocusedField(null)}
               returnKeyType="next"
-              onSubmitEditing={onSubmit}
+              editable={!(activeTab === 'otp' && otpSent)}
             />
+            {activeTab === 'otp' && otpSent && (
+              <TouchableOpacity onPress={() => { setOtpSent(false); setOtpCode(''); setDevOtp(null); }} style={{ padding: 4 }}>
+                <Ionicons name="pencil" size={16} color="#16a34a" />
+              </TouchableOpacity>
+            )}
           </View>
 
-          {/* Password Field */}
-          <Text style={styles.label}>Password</Text>
-          <View style={[styles.inputWrap, focusedField === 'password' && styles.inputWrapFocused]}>
-            <Ionicons name="lock-closed-outline" size={18} color={focusedField === 'password' ? '#16a34a' : '#94a3b8'} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              secureTextEntry={!showPassword}
-              placeholder="Password"
-              placeholderTextColor="#94a3b8"
-              value={password}
-              onChangeText={setPassword}
-              onFocus={() => setFocusedField('password')}
-              onBlur={() => setFocusedField(null)}
-              returnKeyType="done"
-              onSubmitEditing={onSubmit}
-            />
-            <TouchableOpacity onPress={() => setShowPassword(v => !v)} style={{ padding: 4 }}>
-              <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#64748b" />
-            </TouchableOpacity>
-          </View>
+          {/* ─── PASSWORD TAB ─── */}
+          {activeTab === 'password' && (
+            <>
+              <Text style={styles.label}>Password</Text>
+              <View style={[styles.inputWrap, focusedField === 'password' && styles.inputWrapFocused]}>
+                <Ionicons name="lock-closed-outline" size={18} color={focusedField === 'password' ? '#16a34a' : '#94a3b8'} style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  secureTextEntry={!showPassword}
+                  placeholder="Password"
+                  placeholderTextColor="#94a3b8"
+                  value={password}
+                  onChangeText={setPassword}
+                  onFocus={() => setFocusedField('password')}
+                  onBlur={() => setFocusedField(null)}
+                  returnKeyType="done"
+                  onSubmitEditing={onSubmit}
+                />
+                <TouchableOpacity onPress={() => setShowPassword(v => !v)} style={{ padding: 4 }}>
+                  <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#64748b" />
+                </TouchableOpacity>
+              </View>
 
-          {/* Captcha */}
-          <CaptchaChallenge ref={captchaRef} onValueChange={() => {}} onSubmitEditing={onSubmit} />
+              {/* Captcha */}
+              <CaptchaChallenge ref={captchaRef} onValueChange={() => {}} onSubmitEditing={onSubmit} />
 
-          {/* Forgot Password */}
-          <TouchableOpacity style={styles.forgotLink} activeOpacity={0.7} onPress={() => router.push('/(auth)/forgot-password')}>
-            <Text style={styles.forgotText}>Forgot Password?</Text>
-          </TouchableOpacity>
+              {/* Forgot Password */}
+              <TouchableOpacity style={styles.forgotLink} activeOpacity={0.7} onPress={() => router.push('/(auth)/forgot-password')}>
+                <Text style={styles.forgotText}>Forgot Password?</Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+          {/* ─── OTP TAB ─── */}
+          {activeTab === 'otp' && (
+            <>
+              {!otpSent ? (
+                <>
+                  <Text style={styles.otpHint}>
+                    📱 ਤੁਹਾਡੇ WhatsApp ਤੇ 6-digit OTP ਆਵੇਗਾ। ਬਿਨਾ password ਤੋਂ login ਕਰੋ!
+                  </Text>
+                  <TouchableOpacity
+                    onPress={handleSendOtp}
+                    disabled={otpSending || !mobile.trim()}
+                    activeOpacity={0.85}
+                    style={[styles.sendOtpBtn, (!mobile.trim() || otpSending) && { opacity: 0.6 }]}
+                  >
+                    <LinearGradient colors={['#0ea5e9', '#0284c7']} style={styles.gradientBtn}>
+                      {otpSending ? (
+                        <ActivityIndicator color="#ffffff" />
+                      ) : (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <Ionicons name="chatbubble-ellipses" size={18} color="#ffffff" />
+                          <Text style={styles.buttonText}>Send WhatsApp OTP</Text>
+                        </View>
+                      )}
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.otpSentMsg}>
+                    ✅ OTP ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ {mobile} ਤੇ WhatsApp ਰਾਹੀਂ
+                  </Text>
+
+                  {devOtp && (
+                    <View style={styles.devOtpBox}>
+                      <Text style={styles.devOtpLabel}>🧪 Dev OTP:</Text>
+                      <Text style={styles.devOtpCode}>{devOtp}</Text>
+                    </View>
+                  )}
+
+                  <Text style={styles.label}>Enter 6-Digit OTP</Text>
+                  <View style={[styles.inputWrap, focusedField === 'otp' && styles.inputWrapFocused]}>
+                    <Ionicons name="keypad-outline" size={18} color={focusedField === 'otp' ? '#16a34a' : '#94a3b8'} style={styles.inputIcon} />
+                    <TextInput
+                      ref={otpInputRef}
+                      style={[styles.input, { letterSpacing: 6, fontSize: 18, fontFamily: FONT.extraBold }]}
+                      keyboardType="number-pad"
+                      maxLength={6}
+                      placeholder="● ● ● ● ● ●"
+                      placeholderTextColor="#cbd5e1"
+                      value={otpCode}
+                      onChangeText={setOtpCode}
+                      onFocus={() => setFocusedField('otp')}
+                      onBlur={() => setFocusedField(null)}
+                      returnKeyType="done"
+                      onSubmitEditing={handleOtpLogin}
+                    />
+                  </View>
+
+                  {/* Resend */}
+                  <View style={styles.resendRow}>
+                    {resendTimer > 0 ? (
+                      <Text style={styles.resendTimer}>Resend in {resendTimer}s</Text>
+                    ) : (
+                      <TouchableOpacity onPress={handleSendOtp} disabled={otpSending}>
+                        <Text style={styles.resendLink}>🔄 Resend OTP</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </>
+              )}
+            </>
+          )}
 
           {/* Error */}
           {error ? (
@@ -272,19 +444,34 @@ export default function LoginScreen() {
             </View>
           ) : null}
 
-          {/* Login Button */}
-          <TouchableOpacity onPress={onSubmit} disabled={isSubmitting} activeOpacity={0.85} style={styles.button}>
-            <LinearGradient colors={['#16a34a', '#15803d']} style={styles.gradientBtn}>
-              {isSubmitting ? (
-                <ActivityIndicator color="#ffffff" />
-              ) : (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Text style={styles.buttonText}>Login</Text>
-                  <Ionicons name="arrow-forward" size={18} color="#ffffff" />
-                </View>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
+          {/* Login / Verify Button */}
+          {activeTab === 'password' ? (
+            <TouchableOpacity onPress={onSubmit} disabled={isSubmitting} activeOpacity={0.85} style={styles.button}>
+              <LinearGradient colors={['#16a34a', '#15803d']} style={styles.gradientBtn}>
+                {isSubmitting ? (
+                  <ActivityIndicator color="#ffffff" />
+                ) : (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Text style={styles.buttonText}>Login</Text>
+                    <Ionicons name="arrow-forward" size={18} color="#ffffff" />
+                  </View>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          ) : otpSent ? (
+            <TouchableOpacity onPress={handleOtpLogin} disabled={isSubmitting} activeOpacity={0.85} style={styles.button}>
+              <LinearGradient colors={['#16a34a', '#15803d']} style={styles.gradientBtn}>
+                {isSubmitting ? (
+                  <ActivityIndicator color="#ffffff" />
+                ) : (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Ionicons name="checkmark-circle" size={18} color="#ffffff" />
+                    <Text style={styles.buttonText}>Verify OTP & Login</Text>
+                  </View>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          ) : null}
 
           {/* Register Card */}
           <View style={styles.registerHighlightCard}>
@@ -383,6 +570,37 @@ const styles = StyleSheet.create({
   dividerLine: { flex: 1, height: 1, backgroundColor: '#e2e8f0' },
   dividerText: { color: '#94a3b8', fontSize: 10.5, fontFamily: FONT.bold, letterSpacing: 0.3 },
 
+  // ── Tabs ───────────────────────────────────────────────────────────────────
+  tabRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
+  },
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 9,
+    borderRadius: RADIUS.md,
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    backgroundColor: '#f8fafc',
+  },
+  tabActive: {
+    borderColor: '#16a34a',
+    backgroundColor: '#f0fdf4',
+  },
+  tabText: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#94a3b8',
+  },
+  tabTextActive: {
+    color: '#16a34a',
+  },
+
   label: { fontSize: 11.5, color: '#334155', fontFamily: FONT.bold, marginBottom: 4, marginTop: 8 },
   inputWrap: {
     width: '100%', height: 42,
@@ -397,6 +615,60 @@ const styles = StyleSheet.create({
 
   forgotLink: { alignSelf: 'flex-end', marginTop: 6 },
   forgotText: { color: '#16a34a', fontSize: 11.5, fontFamily: FONT.bold },
+
+  // ── OTP specific ──────────────────────────────────────────────────────────
+  otpHint: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#0369a1',
+    backgroundColor: '#f0f9ff',
+    borderWidth: 1,
+    borderColor: '#bae6fd',
+    borderRadius: RADIUS.md,
+    padding: 10,
+    marginTop: 8,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  sendOtpBtn: {
+    width: '100%',
+    marginTop: 12,
+    borderRadius: RADIUS.md,
+    overflow: 'hidden',
+  },
+  otpSentMsg: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#16a34a',
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    borderRadius: RADIUS.md,
+    padding: 10,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  devOtpBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#fefce8',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    borderRadius: RADIUS.md,
+    padding: 8,
+    marginTop: 6,
+  },
+  devOtpLabel: { fontSize: 11, fontFamily: FONT.bold, color: '#92400e' },
+  devOtpCode: { fontSize: 18, fontFamily: FONT.extraBold, color: '#b45309', letterSpacing: 4 },
+  resendRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 6,
+  },
+  resendTimer: { fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8' },
+  resendLink: { fontSize: 12, fontFamily: FONT.bold, color: '#0284c7' },
 
   errorBox: {
     flexDirection: 'row', alignItems: 'center', gap: 6,

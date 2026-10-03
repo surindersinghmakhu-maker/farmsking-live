@@ -419,13 +419,10 @@ export default function ShopScreen() {
   const { addItem, items, itemCount, subtotal, updateQuantity, removeItem, clearCart } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
-  const [activeSubTab, setActiveSubTab] = useState<'CATALOG' | 'CHECKOUT' | 'ORDERS' | 'CALCULATOR' | 'AI_DOCTOR' | 'KHATA'>('CATALOG');
+  const [activeSubTab, setActiveSubTab] = useState<'CATALOG' | 'CHECKOUT' | 'ORDERS'>('CATALOG');
   const [storeLayoutMode, setStoreLayoutMode] = useState<'GRID' | 'COMPACT_LIST'>('GRID');
 
-  // 📏 Acreage & Dosage Calculator State
-  const [calcLandAcres, setCalcLandAcres] = useState('5');
-  const [calcCropType, setCalcCropType] = useState('Wheat (ਕਣਕ)');
-  const [calcInputType, setCalcInputType] = useState('Pesticide Spray (ਦਵਾਈ ਸਪਰੇਅ)');
+
 
   // 📸 AI Crop Doctor Diagnostic State
   const [diseasePhotoUri, setDiseasePhotoUri] = useState<string | null>(null);
@@ -2303,7 +2300,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
 
           {/* Sub Nav Bar */}
           <View style={styles.subTabBar}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', width: '100%', maxWidth: 1200, alignSelf: 'center', paddingHorizontal: 8 }}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', minWidth: '100%', maxWidth: 1200, alignSelf: 'center' }}>
               <TouchableOpacity
                 style={[styles.subTabItem, activeSubTab === 'CATALOG' && styles.subTabItemActive]}
                 onPress={() => {
@@ -2311,41 +2308,8 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   setActiveSubTab('CATALOG');
                 }}
               >
-                <Ionicons name="grid-outline" size={15} color={activeSubTab === 'CATALOG' ? '#15803d' : '#64748b'} />
-                <Text style={[styles.subTabText, activeSubTab === 'CATALOG' && styles.subTabTextActive]}>Products</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.subTabItem, activeSubTab === 'AI_DOCTOR' && styles.subTabItemActive]}
-                onPress={() => {
-                  tap();
-                  setActiveSubTab('AI_DOCTOR');
-                }}
-              >
-                <Ionicons name="camera-outline" size={15} color={activeSubTab === 'AI_DOCTOR' ? '#15803d' : '#64748b'} />
-                <Text style={[styles.subTabText, activeSubTab === 'AI_DOCTOR' && styles.subTabTextActive]}>📸 AI Crop Doctor</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.subTabItem, activeSubTab === 'CALCULATOR' && styles.subTabItemActive]}
-                onPress={() => {
-                  tap();
-                  setActiveSubTab('CALCULATOR');
-                }}
-              >
-                <Ionicons name="calculator-outline" size={15} color={activeSubTab === 'CALCULATOR' ? '#15803d' : '#64748b'} />
-                <Text style={[styles.subTabText, activeSubTab === 'CALCULATOR' && styles.subTabTextActive]}>📏 Dosage Calc</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.subTabItem, activeSubTab === 'KHATA' && styles.subTabItemActive]}
-                onPress={() => {
-                  tap();
-                  setActiveSubTab('KHATA');
-                }}
-              >
-                <Ionicons name="wallet-outline" size={15} color={activeSubTab === 'KHATA' ? '#15803d' : '#64748b'} />
-                <Text style={[styles.subTabText, activeSubTab === 'KHATA' && styles.subTabTextActive]}>📑 Farmer Khata</Text>
+                <Ionicons name="grid-outline" size={14} color={activeSubTab === 'CATALOG' ? '#15803d' : '#64748b'} />
+                <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.subTabText, activeSubTab === 'CATALOG' && styles.subTabTextActive]}>Products</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -2355,10 +2319,8 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   setActiveSubTab('CHECKOUT');
                 }}
               >
-                <Ionicons name="bag-check-outline" size={15} color={activeSubTab === 'CHECKOUT' ? '#15803d' : '#64748b'} />
-                <Text style={[styles.subTabText, activeSubTab === 'CHECKOUT' && styles.subTabTextActive]}>
-                  Cart ({itemCount})
-                </Text>
+                <Ionicons name="bag-check-outline" size={14} color={activeSubTab === 'CHECKOUT' ? '#15803d' : '#64748b'} />
+                <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.subTabText, activeSubTab === 'CHECKOUT' && styles.subTabTextActive]}>Cart ({itemCount})</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -2368,11 +2330,11 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   setActiveSubTab('ORDERS');
                 }}
               >
-                <Ionicons name="receipt-outline" size={15} color={activeSubTab === 'ORDERS' ? '#15803d' : '#64748b'} />
-                <Text style={[styles.subTabText, activeSubTab === 'ORDERS' && styles.subTabTextActive]}>
-                  My Orders
-                </Text>
+                <Ionicons name="receipt-outline" size={14} color={activeSubTab === 'ORDERS' ? '#15803d' : '#64748b'} />
+                <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.subTabText, activeSubTab === 'ORDERS' && styles.subTabTextActive]}>My Orders</Text>
               </TouchableOpacity>
+
+
             </ScrollView>
           </View>
 
@@ -2540,226 +2502,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                 )}
               </ScrollView>
             </View>
-          ) : activeSubTab === 'AI_DOCTOR' ? (
-            /* 📸 AI CROP DOCTOR & DISEASE PHOTO DIAGNOSTIC */
-            <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }} showsVerticalScrollIndicator={false}>
-              <View style={{ backgroundColor: '#064E3B', borderRadius: 14, padding: 16, borderLeftWidth: 6, borderLeftColor: '#10B981' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Ionicons name="camera" size={24} color="#34D399" />
-                  <Text style={{ fontSize: 17, fontFamily: FONT.extraBold, color: '#FFF' }}>📸 FarmsKing AI Crop Doctor</Text>
-                </View>
-                <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#A7F3D0', marginTop: 4, lineHeight: 18 }}>
-                  Take a photo of diseased leaves or select symptoms. AI will diagnose the crop problem & recommend exact verified medicines from FarmsKing Store.
-                </Text>
-              </View>
 
-              <View style={[styles.settingsCard, { backgroundColor: '#FFF', gap: 10 }]}>
-                <Text style={{ fontSize: 14, fontFamily: FONT.bold, color: '#0F172A' }}>Step 1: Select Symptom or Crop Disease</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-                  {[
-                    'Yellow Leaves (ਪੀਲੇ ਪੱਤੇ / ਈਲੋ ਰੱਸਟ)',
-                    'Fungus / Black Spots (ਕਾਲੇ ਧੱਬੇ)',
-                    'Pink Bollworm in Cotton (ਗੁਲਾਬੀ ਸੁੰਡੀ)',
-                    'Stem Borer / Whitefly (ਚਿੱਟੀ ਮੱਖੀ)',
-                  ].map((sym) => (
-                    <TouchableOpacity
-                      key={sym}
-                      style={{
-                        paddingHorizontal: 12,
-                        paddingVertical: 8,
-                        borderRadius: 8,
-                        borderWidth: 1.5,
-                        borderColor: selectedSymptom === sym ? '#15803D' : '#CBD5E1',
-                        backgroundColor: selectedSymptom === sym ? '#F0FDF4' : '#FFF',
-                      }}
-                      onPress={() => setSelectedSymptom(sym)}
-                    >
-                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: selectedSymptom === sym ? '#15803D' : '#334155' }}>{sym}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                <TouchableOpacity
-                  style={{ backgroundColor: '#15803D', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 8 }}
-                  onPress={() => {
-                    setIsDiagnosing(true);
-                    setTimeout(() => {
-                      setIsDiagnosing(false);
-                      setDiagnosedResult({
-                        diseaseName: 'Yellow Rust / Nitrogen Deficiency',
-                        confidence: '98% Accurate',
-                        treatment: 'Spray Hexaconazole 5% SC or Bio-NPK Liquid Formulation',
-                        recommendedProductName: 'FarmsKing Bio-Fungicide Protect 500ml',
-                        price: 450,
-                      });
-                    }, 1200);
-                  }}
-                >
-                  <Text style={{ color: '#FFF', fontSize: 14, fontFamily: FONT.extraBold }}>
-                    {isDiagnosing ? '⚡ Analyzing Crop Photo & AI Database...' : '🔍 Run Instant AI Disease Diagnosis'}
-                  </Text>
-                </TouchableOpacity>
-
-                {diagnosedResult && (
-                  <View style={{ backgroundColor: '#ECFDF5', borderRadius: 12, padding: 14, borderWidth: 1.5, borderColor: '#6EE7B7', gap: 6, marginTop: 10 }}>
-                    <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: '#065F46' }}>✅ AI Diagnosis Result: {diagnosedResult.diseaseName}</Text>
-                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#047857' }}>🎯 AI Match Confidence: {diagnosedResult.confidence}</Text>
-                    <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#064E3B', marginVertical: 2 }}>💊 Recommended Solution: {diagnosedResult.treatment}</Text>
-
-                    <TouchableOpacity
-                      style={{ backgroundColor: '#059669', borderRadius: 8, paddingVertical: 10, alignItems: 'center', marginTop: 6 }}
-                      onPress={() => {
-                        addItem({
-                          productId: 'ai-doc-rec-1',
-                          name: diagnosedResult.recommendedProductName,
-                          price: diagnosedResult.price,
-                          unit: 'bottle',
-                          imageUrl: 'https://images.unsplash.com/photo-1585314062340-f1a5a7c9328d?w=300',
-                        });
-                        setActiveSubTab('CHECKOUT');
-                      }}
-                    >
-                      <Text style={{ color: '#FFF', fontSize: 13, fontFamily: FONT.extraBold }}>🛒 Add Recommended Treatment (₹{diagnosedResult.price}) to Cart</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
-            </ScrollView>
-          ) : activeSubTab === 'CALCULATOR' ? (
-            /* 📏 ACREAGE & DOSAGE CALCULATOR */
-            <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }} showsVerticalScrollIndicator={false}>
-              <View style={{ backgroundColor: '#1E3A8A', borderRadius: 14, padding: 16, borderLeftWidth: 6, borderLeftColor: '#3B82F6' }}>
-                <Text style={{ fontSize: 17, fontFamily: FONT.extraBold, color: '#FFF' }}>📏 Crop Land Acreage & Spray Dosage Calculator</Text>
-                <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#93C5FD', marginTop: 4 }}>
-                  Enter your farm land size to automatically compute exact seed bags or pesticide spray dosage needed.
-                </Text>
-              </View>
-
-              <View style={[styles.settingsCard, { backgroundColor: '#FFF', gap: 10 }]}>
-                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#334155' }}>Total Farm Size (in Acres / ਏਕੜ)</Text>
-                <TextInput
-                  style={[styles.modalInput, { backgroundColor: '#FFF' }]}
-                  keyboardType="numeric"
-                  value={calcLandAcres}
-                  onChangeText={setCalcLandAcres}
-                  placeholder="e.g. 5"
-                />
-
-                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#334155', marginTop: 6 }}>Select Target Crop</Text>
-                <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
-                  {['Wheat (ਕਣਕ)', 'Paddy (ਝੋਨਾ)', 'Cotton (ਨਰਮਾ)', 'Sugarcane (ਕਮਾਦ)'].map((c) => (
-                    <TouchableOpacity
-                      key={c}
-                      style={{
-                        paddingHorizontal: 10,
-                        paddingVertical: 6,
-                        borderRadius: 6,
-                        borderWidth: 1,
-                        borderColor: calcCropType === c ? '#2563EB' : '#CBD5E1',
-                        backgroundColor: calcCropType === c ? '#EFF6FF' : '#FFF',
-                      }}
-                      onPress={() => setCalcCropType(c)}
-                    >
-                      <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: calcCropType === c ? '#1E40AF' : '#334155' }}>{c}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                {/* Calculated Output Box */}
-                {(() => {
-                  const acres = parseFloat(calcLandAcres || '1');
-                  const totalSprayLiters = acres * 150; // 150L water per acre
-                  const totalMedicineMl = acres * 250; // 250ml spray per acre
-                  const seedBagsNeeded = Math.ceil(acres * 1); // 1 bag per acre
-
-                  return (
-                    <View style={{ backgroundColor: '#F0F9FF', borderRadius: 12, padding: 14, borderWidth: 1.5, borderColor: '#93C5FD', gap: 6, marginTop: 8 }}>
-                      <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#1E3A8A' }}>📊 Dosage Recommendation for {acres} Acre(s):</Text>
-                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#1E40AF' }}>• Total Water Volume: {totalSprayLiters} Litres</Text>
-                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#1E40AF' }}>• Total Medicine Required: {totalMedicineMl} ml ({totalMedicineMl / 1000} Litres)</Text>
-                      <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#1E40AF' }}>• Recommended Seeds: {seedBagsNeeded} Bag(s)</Text>
-                    </View>
-                  );
-                })()}
-              </View>
-            </ScrollView>
-          ) : activeSubTab === 'KHATA' ? (
-            /* 📑 FARMER DIGITAL EXPENSE KHATA */
-            <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }} showsVerticalScrollIndicator={false}>
-              <View style={{ backgroundColor: '#78350F', borderRadius: 14, padding: 16, borderLeftWidth: 6, borderLeftColor: '#F59E0B' }}>
-                <Text style={{ fontSize: 17, fontFamily: FONT.extraBold, color: '#FFF' }}>📑 Farmer Seasonal Khata / Hisaab Tracker</Text>
-                <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#FDE68A', marginTop: 4 }}>
-                  Track your total crop input expenses (fertilizers, seeds, spray, diesel) to manage farm profitability.
-                </Text>
-              </View>
-
-              {/* Expense Ledger Summary */}
-              <View style={{ flexDirection: 'row', gap: 10 }}>
-                <View style={{ flex: 1, backgroundColor: '#FFF', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
-                  <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#64748B' }}>Total Season Expense</Text>
-                  <Text style={{ fontSize: 20, fontFamily: FONT.extraBold, color: '#DC2626', marginTop: 2 }}>
-                    ₹{khataEntries.reduce((acc, item) => acc + item.amount, 0).toLocaleString('en-IN')}
-                  </Text>
-                </View>
-                <View style={{ flex: 1, backgroundColor: '#FFF', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#E2E8F0' }}>
-                  <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#64748B' }}>Total Khata Items</Text>
-                  <Text style={{ fontSize: 20, fontFamily: FONT.extraBold, color: '#15803D', marginTop: 2 }}>{khataEntries.length} Items</Text>
-                </View>
-              </View>
-
-              {/* Add New Expense Entry */}
-              <View style={[styles.settingsCard, { backgroundColor: '#FFF', gap: 8 }]}>
-                <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0F172A' }}>+ Add Custom Farm Expense Entry</Text>
-                <TextInput
-                  style={[styles.modalInput, { backgroundColor: '#FFF' }]}
-                  placeholder="Expense Title (e.g. Tractor Diesel / Labour)"
-                  value={newKhataTitle}
-                  onChangeText={setNewKhataTitle}
-                />
-                <TextInput
-                  style={[styles.modalInput, { backgroundColor: '#FFF' }]}
-                  placeholder="Amount in ₹ (e.g. 2500)"
-                  keyboardType="numeric"
-                  value={newKhataAmount}
-                  onChangeText={setNewKhataAmount}
-                />
-
-                <TouchableOpacity
-                  style={{ backgroundColor: '#D97706', borderRadius: 8, paddingVertical: 10, alignItems: 'center', marginTop: 4 }}
-                  onPress={() => {
-                    if (newKhataTitle && newKhataAmount) {
-                      setKhataEntries([
-                        ...khataEntries,
-                        {
-                          id: Date.now().toString(),
-                          title: newKhataTitle,
-                          category: newKhataCategory,
-                          amount: parseFloat(newKhataAmount),
-                          date: new Date().toISOString().split('T')[0],
-                        },
-                      ]);
-                      setNewKhataTitle('');
-                      setNewKhataAmount('');
-                    }
-                  }}
-                >
-                  <Text style={{ color: '#FFF', fontSize: 13, fontFamily: FONT.bold }}>Add to Seasonal Khata</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Khata List */}
-              <View style={{ gap: 8 }}>
-                {khataEntries.map((item) => (
-                  <View key={item.id} style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0' }}>
-                    <View>
-                      <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0F172A' }}>{item.title}</Text>
-                      <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748B', marginTop: 2 }}>Category: {item.category} · Date: {item.date}</Text>
-                    </View>
-                    <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#DC2626' }}>₹{item.amount.toLocaleString('en-IN')}</Text>
-                  </View>
-                ))}
-              </View>
-            </ScrollView>
           ) : activeSubTab === 'CHECKOUT' ? (
             /* 🛒 COMPLETE CUSTOMER DASHBOARD CART SYSTEM */
             <ScrollView contentContainerStyle={{ padding: SPACING.md, gap: 12, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
@@ -6134,8 +5877,8 @@ const styles = StyleSheet.create({
   trustItemText: { fontSize: 10, fontFamily: FONT.bold, color: '#ffffff' },
   trustDivider: { width: 1, height: 12, backgroundColor: 'rgba(255,255,255,0.3)' },
 
-  subTabBar: { flexDirection: 'row', backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0', paddingHorizontal: SPACING.md },
-  subTabItem: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 11, borderBottomWidth: 2, borderBottomColor: 'transparent' },
+  subTabBar: { backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
+  subTabItem: { flexGrow: 1, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 11, borderBottomWidth: 2, borderBottomColor: 'transparent' },
   subTabItemActive: { borderBottomColor: '#15803d' },
   subTabText: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
   subTabTextActive: { color: '#15803d', fontFamily: FONT.bold },

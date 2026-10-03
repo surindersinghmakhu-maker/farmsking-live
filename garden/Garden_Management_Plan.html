@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garden Management System - Implementation Plan</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background-color: #fcfcfc;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #27ae60;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+        h2 {
+            color: #27ae60;
+            margin-top: 30px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        h3 {
+            color: #2980b9;
+            margin-top: 20px;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        strong {
+            color: #2c3e50;
+        }
+        .doc-header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Garden Management System <br> Implementation Plan</h1>
+    <div class="doc-header">
+        <p>ISO Standard Document | Premium Web Application Architecture</p>
+    </div>
+
+    <p>This document outlines the architecture and features required to build the comprehensive "Garden Management" system, integrating the <strong>Gardener Dashboard</strong> and <strong>Garden Advisor</strong> modules.</p>
+
+    <h2>1. Target Audience & Scope</h2>
+    <ul>
+        <li><strong>Target Audience:</strong> Home Kitchen Gardeners, hobbyists with potted plants, and professional gardeners.</li>
+        <li><strong>Core Value:</strong> Providing direct, continuous, and expert guidance for plant care, disease management, and correct dosing of fertilizers/medicines.</li>
+    </ul>
+
+    <h2>2. Kitchen Garden Profile & Setup</h2>
+    <ul>
+        <li><strong>Onboarding Requirement:</strong> Users must add a minimum of <strong>5 items/plants</strong> to initialize their Kitchen Garden profile.</li>
+        <li><strong>Plant Details:</strong> For each plant, the user will input:
+            <ul>
+                <li>Plant Name / Type</li>
+                <li>Variety / Species</li>
+                <li>Location (e.g., Balcony, Backyard, Pot)</li>
+                <li>Date planted</li>
+            </ul>
+        </li>
+        <li><strong>Media Uploads:</strong> Users can upload continuous progress pictures of their plants for tracking.</li>
+    </ul>
+
+    <h2>3. Issue Reporting & Tracking</h2>
+    <ul>
+        <li><strong>Problem Reporting:</strong> A dedicated feature to report issues (e.g., yellowing leaves, pests).</li>
+        <li><strong>Direct Link to Advisor:</strong> When a problem is reported, it instantly alerts the subscribed Garden Advisor with all historical data (past pics, plant details).</li>
+    </ul>
+
+    <h2>4. Garden Advisor (Doctor/Guide) Integration</h2>
+    <ul>
+        <li><strong>Automatic Suggestion Algorithm:</strong> Once a user adds their initial 5 items, the system will automatically recommend Advisors whose expertise matches the planted items.</li>
+        <li><strong>Routine Scheduling & To-Do Lists:</strong> Advisors will create a recurring care calendar (e.g., watering schedules). Gardeners see this as a daily "To-Do List".</li>
+        <li><strong>Seasonal Alerts:</strong> Push notifications for weather changes.</li>
+        <li><strong>Prescription System:</strong> When a user reports an issue with a photo, the advisor can reply with a precise "Prescription" detailing medicine, dosage, and application method.</li>
+        <li><strong>AI Garden Doctor (First Filter):</strong> Users can optionally use the AI Camera to scan a disease before messaging the human advisor.</li>
+        <li><strong>E-Commerce Integration:</strong> Any medicine or seed recommended features a direct "Buy Now" button linked to the platform's Shop.</li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <h2>5. Subscription & 3-Tier Pricing Model</h2>
+    <p>The platform will operate on a hybrid SaaS + Marketplace 3-tier model:</p>
+    
+    <h3>Tier 1: Free Plan (Platform Base)</h3>
+    <ul>
+        <li><strong>Limits:</strong> Maximum of 5 plants lifetime (active slots).</li>
+        <li><strong>AI Features:</strong> Limited AI Scans and limited AI Chats (e.g., 10-20 queries per week).</li>
+        <li><strong>Lifecycle:</strong> When a plant dies or is harvested, its status is marked as "Lifecycle Complete".</li>
+    </ul>
+
+    <h3>Tier 2: Basic Plan (Platform Premium)</h3>
+    <ul>
+        <li><strong>Limits:</strong> Unlimited plants can be added to the digital garden.</li>
+        <li><strong>AI Features:</strong> Unlimited AI Scans and Unlimited AI Chats.</li>
+        <li><strong>Revenue:</strong> Fixed monthly/yearly SaaS subscription fee directly to FarmsKing.</li>
+    </ul>
+
+    <h3>Tier 3: Advisor Plan (Service Marketplace)</h3>
+    <ul>
+        <li><strong>Pricing:</strong> Advisors set their own customized fees. All advisor plans are listed in the marketplace.</li>
+        <li><strong>Plant Adoption System:</strong> Even if a user has "Unlimited" plants, an Advisor will only "Adopt" and guide a specific number of plants (based on the fee).</li>
+        <li><strong>Swap Requests:</strong> If a gardener wants the advisor to guide a different plant, they must send a "Change Adopted Plant Request" to the advisor for approval.</li>
+    </ul>
+
+    <h2>6. Advanced Engagement Features (To Be Developed Later)</h2>
+    <ul>
+        <li><strong>Harvest & Savings Tracker:</strong> Users log harvested produce. The app calculates monetary savings based on local market rates.</li>
+        <li><strong>Smart Weather Alerts:</strong> Predictive alerts for rain, frost, or heatwaves.</li>
+        <li><strong>Community Showcase (Social Feed):</strong> A gallery to share photos of blooming flowers or large vegetables.</li>
+        <li><strong>Gamification & Badges:</strong> Digital badges (e.g., "Master Gardener") for maintaining healthy plants.</li>
+        <li><strong>Seed & Plant Exchange (Barter):</strong> A hyper-local feature to swap seeds or saplings for free.</li>
+        <li><strong>Pest & Disease Outbreak Radar:</strong> Automated alert system warning gardeners if a pest is reported by multiple users in their city.</li>
+        <li><strong>DIY Home Composting Guide:</strong> Tracking system for kitchen waste compost bins.</li>
+        <li><strong>Kid's Corner (Family Gardening):</strong> Gamified sub-profile for children with simple tasks to earn digital stars.</li>
+        <li><strong>Vacation Mode:</strong> Specific watering techniques before a user leaves for a trip, or alerting a neighbor.</li>
+        <li><strong>Upcycling & DIY Planters:</strong> AI and Advisor tips on converting household plastic waste into pots.</li>
+        <li><strong>100% Organic Certificate:</strong> A digital certificate awarded to Kitchen Gardens logging no chemical pesticide usage for 6 months.</li>
+        <li><strong>Garden Short Videos (Reels):</strong> A dedicated feed where Advisors post 60-second educational videos.</li>
+        <li><strong>Plant Adoption & Rescue Center:</strong> A local marketplace to give away dying or unwanted plants for rescue.</li>
+        <li><strong>Garden Layout Planner:</strong> AI-generated layout maps showing where to place pots for optimal sunlight.</li>
+        <li><strong>Indoor Microgreens & Sprouts:</strong> A guide for users with zero outdoor space.</li>
+        <li><strong>Monthly Gardening Challenges:</strong> Photo contests with rewards like free organic fertilizer.</li>
+        <li><strong>Garden Scrapbook (Time-lapse):</strong> Stitch photos of plant growth into a shareable video.</li>
+        <li><strong>Companion Planting Guide:</strong> Recommendations on which plants to grow together to naturally repel pests.</li>
+        <li><strong>Eco & Water Savings Tracker:</strong> Display exact liters of water saved by following the advisor's schedule.</li>
+        <li><strong>Pollinator Attractor Mode:</strong> Guidance on planting flowers to attract bees/butterflies for pollination.</li>
+        <li><strong>Ready-to-Grow Seasonal Kits:</strong> Curated e-commerce kits that automatically add the correct items and an advisor to the profile.</li>
+        <li><strong>Subscription Freeze/Pause:</strong> Allow users to pause their advisor subscription during non-gardening months.</li>
+        <li><strong>Weed vs Plant AI Checker:</strong> AI tool to help identify and remove weeds growing alongside main plants.</li>
+        <li><strong>Advisor Rating & Review System:</strong> 5-star rating and written review after subscription expires.</li>
+        <li><strong>Drag-and-Drop Garden Grid Planner:</strong> Interactive tool to map out seed/pot placement.</li>
+        <li><strong>Offline Accessibility:</strong> Ensure core features work seamlessly without internet connectivity.</li>
+        <li><strong>B2B Nursery Integration:</strong> Partner with local nurseries for targeted ads or direct purchase links.</li>
+    </ul>
+
+    <h2>7. Platform Monetization (Direct FarmsKing Revenue)</h2>
+    <ul>
+        <li><strong>Advisor Certification Course:</strong> "FarmsKing Certified Expert" course with a one-time certification fee.</li>
+        <li><strong>FarmsKing Seller Products (Marketplace Integration):</strong> Direct prescriptions from verified Sellers generating marketplace commission.</li>
+        <li><strong>Corporate "Green" Tie-ups:</strong> Bulk packages sold to IT companies.</li>
+        <li><strong>Data Monetization & Targeted Ads:</strong> Aggregate user crop data to sell targeted advertising spots to major brands.</li>
+        <li><strong>Premium Done-For-You Setup:</strong> Physical team sent to the user's house to set up their balcony garden for a premium fee.</li>
+        <li><strong>Plant Replacement Insurance:</strong> Premium (e.g., ₹200) when buying a costly plant for free replacement if it dies within 3 months.</li>
+        <li><strong>Soil Health Testing Kit:</strong> DIY soil testing kits connected to specific FarmsKing fertilizer recommendations.</li>
+    </ul>
+
+    <h2>8. Required UI/UX Updates</h2>
+    <ul>
+        <li><strong>Terminology:</strong> Ensure all references strictly use "Gardener", "Garden", "Kitchen Garden", and "Garden Advisor".</li>
+        <li><strong>New Screens to Build:</strong>
+            <ol>
+                <li><code>Kitchen Garden Setup Wizard</code> (to mandate the 5-plant minimum).</li>
+                <li><code>Plant Detail & Media Gallery</code> (for picture uploads).</li>
+                <li><code>Report a Problem</code> (ticket system linked to the advisor).</li>
+                <li><code>Advisor Subscription Marketplace</code> (to choose 6-month, yearly, or per-plant plans).</li>
+            </ol>
+        </li>
+    </ul>
+
+</body>
+</html>

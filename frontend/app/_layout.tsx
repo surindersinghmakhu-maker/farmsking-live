@@ -50,16 +50,37 @@ function RootNavigation() {
     const currentGroup = segments[0];
     const inAuthGroup = currentGroup === '(auth)';
     const isPublicRoute = currentGroup === 'seo' || currentGroup === 'dose' || currentGroup === 'doses' || currentGroup === 'my' || currentGroup === 'you';
+    const isStaffSetupRoute = segments.join('/') === 'staff-profile-setup';
+
+    const STAFF_ROLES = ['TECHNICAL_TRAINER', 'FARM_ADVISOR', 'DOCTOR'];
 
     if (!user && !inAuthGroup && !isPublicRoute) {
       router.replace('/(auth)/login');
-    } else if (user && inAuthGroup) {
-      if (['SUPER_ADMIN', 'ADMIN', 'OPERATOR'].includes(user.role)) {
-        router.replace('/(admin)/(tabs)');
-      } else if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user.role)) {
-        router.replace('/(partner)/(tabs)');
-      } else {
-        router.replace('/(user)/(tabs)');
+    } else if (user) {
+      const userRoles = [user.role, ...(user.roles || [])];
+      const isStaff = STAFF_ROLES.includes(user.role);
+      const profileSubmitted = !!(user as any).staffProfileSubmitted;
+
+      // Redirect unsubmitted staff to profile setup
+      if (isStaff && !profileSubmitted && !isStaffSetupRoute && !inAuthGroup) {
+        router.replace('/staff-profile-setup' as any);
+        return;
+      }
+
+      if (currentGroup === '(admin)') {
+        const hasAdminAccess = userRoles.some(r => ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'MANAGER', 'SUPERVISOR'].includes(r));
+        if (!hasAdminAccess) router.replace('/(user)/(tabs)');
+      } else if (currentGroup === '(partner)') {
+        const hasPartnerAccess = userRoles.some(r => ['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(r));
+        if (!hasPartnerAccess) router.replace('/(user)/(tabs)');
+      } else if (inAuthGroup) {
+        if (['SUPER_ADMIN', 'ADMIN', 'OPERATOR'].includes(user.role)) {
+          router.replace('/(admin)/(tabs)');
+        } else if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user.role)) {
+          router.replace('/(partner)/(tabs)');
+        } else {
+          router.replace('/(user)/(tabs)');
+        }
       }
     }
   }, [user, isLoading, segmentsPath]);
@@ -81,6 +102,7 @@ function RootNavigation() {
       <Stack.Screen name="you" options={{ headerShown: false, title: 'FarmsKing' }} />
       <Stack.Screen name="seller-dashboard" options={{ headerShown: false, title: 'FarmsKing Seller' }} />
       <Stack.Screen name="farmer-profile-setup" options={{ headerShown: false, title: 'FarmsKing Setup' }} />
+      <Stack.Screen name="staff-profile-setup" options={{ headerShown: false, title: 'Staff Profile Setup' }} />
       <Stack.Screen name="crop-intelligence" options={{ headerShown: false, title: 'FarmsKing AI' }} />
       <Stack.Screen name="admin-sellers" options={{ headerShown: false, title: 'FarmsKing' }} />
       <Stack.Screen name="+not-found" options={{ title: 'Not Found' }} />

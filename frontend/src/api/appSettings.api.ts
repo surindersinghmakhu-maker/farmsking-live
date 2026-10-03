@@ -36,9 +36,14 @@ export interface AppSettings {
   agriMaintenanceMode?: boolean;
   gardenMaintenanceMode?: boolean;
   walletMaintenanceMode?: boolean;
+  doctorMaintenanceMode?: boolean;
+  gardenAdvisorMaintenanceMode?: boolean;
+  accountsMaintenanceMode?: boolean;
   freeTrialEnabled?: boolean;
   freeTrialDays?: number;
   freeTrialPlan?: 'PRO' | 'SMART' | 'SUPER';
+  advisorCertificationFee?: number;
+  advisorCertificationDiscount?: number;
   updatedAt: string;
   updatedById: string | null;
 }
@@ -81,9 +86,14 @@ export interface UpdateAppSettingsPayload {
   agriMaintenanceMode?: boolean;
   gardenMaintenanceMode?: boolean;
   walletMaintenanceMode?: boolean;
+  doctorMaintenanceMode?: boolean;
+  gardenAdvisorMaintenanceMode?: boolean;
+  accountsMaintenanceMode?: boolean;
   freeTrialEnabled?: boolean;
   freeTrialDays?: number;
   freeTrialPlan?: 'PRO' | 'SMART' | 'SUPER';
+  advisorCertificationFee?: number;
+  advisorCertificationDiscount?: number;
 }
 
 export async function getAppSettings(): Promise<AppSettings> {

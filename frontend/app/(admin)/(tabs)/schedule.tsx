@@ -1,4 +1,4 @@
 import { Redirect } from 'expo-router';
 export default function Dummy() {
-  return <Redirect href="/schedule" />;
+  return <Redirect href="/(admin)/(tabs)" />;
 }

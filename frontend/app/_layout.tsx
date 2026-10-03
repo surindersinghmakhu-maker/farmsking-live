@@ -43,11 +43,13 @@ function RootNavigation() {
   const { user, isLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const segmentsPath = segments.join('/');
 
   useEffect(() => {
     if (isLoading) return;
-    const inAuthGroup = segments[0] === '(auth)';
-    const isPublicRoute = segments[0] === 'seo' || segments[0] === 'dose' || segments[0] === 'doses' || segments[0] === 'my' || segments[0] === 'you';
+    const currentGroup = segments[0];
+    const inAuthGroup = currentGroup === '(auth)';
+    const isPublicRoute = currentGroup === 'seo' || currentGroup === 'dose' || currentGroup === 'doses' || currentGroup === 'my' || currentGroup === 'you';
 
     if (!user && !inAuthGroup && !isPublicRoute) {
       router.replace('/(auth)/login');
@@ -60,7 +62,7 @@ function RootNavigation() {
         router.replace('/(user)/(tabs)');
       }
     }
-  }, [user, isLoading, segments]);
+  }, [user, isLoading, segmentsPath]);
 
   if (isLoading) {
     return <SplashView />;

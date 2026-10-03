@@ -1,4 +1,4 @@
 import { Redirect } from 'expo-router';
 export default function Dummy() {
-  return <Redirect href="/farm" />;
+  return <Redirect href="/(user)/(tabs)/farm" />;
 }

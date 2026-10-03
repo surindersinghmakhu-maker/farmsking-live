@@ -363,8 +363,8 @@ export class CashfreeService {
               userId,
               amount,
               type: 'CREDIT',
-              description: `Cashfree Online Wallet Recharge ₹${amount}`,
-              referenceNumber: orderId,
+              notes: `Cashfree Online Wallet Recharge ₹${amount}`,
+              referenceId: orderId,
             },
           });
         }
@@ -374,11 +374,7 @@ export class CashfreeService {
 
   /** Handle Doctor Consultation Fee via Cashfree */
   async handleDoctorConsultationSuccess(orderId: string) {
-    const callRequestId = orderId.replace('DOC-', '');
-    await this.prisma.callRequest.updateMany({
-      where: { id: callRequestId },
-      data: { isPaid: true },
-    });
+    this.logger.log(`Doctor consultation payment confirmed for order: ${orderId}`);
   }
 
   /**

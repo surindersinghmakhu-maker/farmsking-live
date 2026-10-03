@@ -363,7 +363,7 @@ export class CashfreeService {
               userId,
               amount,
               type: 'CREDIT',
-              notes: `Cashfree Online Wallet Recharge ₹${amount}`,
+              reason: `Cashfree Online Wallet Recharge ₹${amount}`,
               referenceId: orderId,
             },
           });

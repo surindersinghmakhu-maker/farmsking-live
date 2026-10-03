@@ -505,9 +505,15 @@ model User {
   failedLoginAttempts  Int                  @default(0)
   lockoutUntil         DateTime?
   isPermanentlyBlocked Boolean              @default(false)
+  isApproved           Boolean              @default(false)
+  profileStatus        String?              @default("APPROVED") // PENDING_COMPLETION, UNDER_REVIEW, APPROVED, REJECTED
+  assignedStaffId      String?
+  profileRejectionReason String?
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
   deletedAt            DateTime?
+
+  isoControlsUpdated   IsoModuleControl[]   @relation("IsoControlUpdatedBy")
 
   farms Farm[]
 
@@ -2333,6 +2339,7 @@ model AppSetting {
   agriMaintenanceMode    Boolean @default(false)
   gardenMaintenanceMode  Boolean @default(false)
   walletMaintenanceMode  Boolean @default(false)
+  trainerMaintenanceMode Boolean @default(false)
   allowDirectPlatformSales  Boolean @default(false)
   freeTrialEnabled       Boolean  @default(true)
   freeTrialDays          Int      @default(10)
@@ -3243,6 +3250,32 @@ model GardenerPlanPaymentRequest {
   
   @@index([gardenerId])
   @@index([status])
-  @@map("gardener_plan_payments")
 }
+
+model IsoModuleControl {
+  id                 String   @id @default(uuid())
+  moduleKey          String   @unique // ADMIN, ECOMMERCE, CUSTOMER_FARMER_DASHBOARD, FARMER_DOCTOR, GARDENER_DASHBOARD, GARDEN_ADVISOR, STAFF_PORTAL, WALLET, ACCOUNTS
+  moduleName         String
+  isEnabled          Boolean  @default(true)
+  maintenanceMessage String?  @default("This module is currently in ISO scheduled maintenance mode.")
+  updatedById        String?
+  updatedBy          User?    @relation("IsoControlUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedAt          DateTime @updatedAt
+  createdAt          DateTime @default(now())
+
+  @@map("iso_module_controls")
+}
+
+model IsoAuditLog {
+  id         String   @id @default(uuid())
+  action     String   // MODULE_TOGGLE, PROFILE_SUBMISSION, PROFILE_APPROVAL, PROFILE_REJECTION, STAFF_ASSIGNMENT
+  moduleKey  String?
+  actorId    String
+  actorName  String?
+  details    Json?
+  createdAt  DateTime @default(now())
+
+  @@map("iso_audit_logs")
+}
+
 

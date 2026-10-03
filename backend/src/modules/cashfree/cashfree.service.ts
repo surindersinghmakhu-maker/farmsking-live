@@ -2,7 +2,7 @@ import { Injectable, Logger, BadRequestException, InternalServerErrorException, 
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCashfreeVendorDto, CreateSplitOrderDto } from './dto/cashfree.dto';
-import { OrderPaymentStatus, SellerPayoutStatus } from '@prisma/client';
+import { OrderPaymentMode, OrderPaymentStatus, PlanPaymentStatus, SellerPayoutStatus } from '@prisma/client';
 
 @Injectable()
 export class CashfreeService {
@@ -337,12 +337,48 @@ export class CashfreeService {
         await this.handlePlanPaymentSuccess(orderId);
       } else if (orderId.startsWith('GCARD-')) {
         await this.handleGardenerPlanPaymentSuccess(orderId);
+      } else if (orderId.startsWith('WALLET-')) {
+        await this.handleWalletTopupSuccess(orderId, body.data?.order);
+      } else if (orderId.startsWith('DOC-')) {
+        await this.handleDoctorConsultationSuccess(orderId);
       } else {
-        await this.handlePaymentSuccess(orderId, body.data.order);
+        await this.handlePaymentSuccess(orderId, body.data?.order);
       }
     }
 
     return { status: 'SUCCESS' };
+  }
+
+  /** Handle Wallet Top-up via Cashfree */
+  async handleWalletTopupSuccess(orderId: string, cashfreeData: any) {
+    const parts = orderId.split('-');
+    if (parts.length >= 3) {
+      const userId = parts[1];
+      const amount = Number(cashfreeData?.order_amount || parts[2]);
+      if (userId && amount > 0) {
+        const user = await this.prisma.user.findUnique({ where: { id: userId } });
+        if (user) {
+          await this.prisma.walletTransaction.create({
+            data: {
+              userId,
+              amount,
+              type: 'CREDIT',
+              description: `Cashfree Online Wallet Recharge ₹${amount}`,
+              referenceNumber: orderId,
+            },
+          });
+        }
+      }
+    }
+  }
+
+  /** Handle Doctor Consultation Fee via Cashfree */
+  async handleDoctorConsultationSuccess(orderId: string) {
+    const callRequestId = orderId.replace('DOC-', '');
+    await this.prisma.callRequest.updateMany({
+      where: { id: callRequestId },
+      data: { isPaid: true },
+    });
   }
 
   /**
@@ -368,7 +404,7 @@ export class CashfreeService {
       // Mark as paid
       await tx.gardenerPlanPaymentRequest.update({
         where: { id: requestId },
-        data: { status: 'APPROVED', paidAt: new Date() },
+        data: { status: PlanPaymentStatus.CONFIRMED, paidAt: new Date() },
       });
       
       const now = new Date();
@@ -392,7 +428,7 @@ export class CashfreeService {
 
       // Fetch user to get their address and role
       const gardener = await tx.user.findUnique({ where: { id: request.gardenerId } });
-      const address = gardener ? [gardener.village, gardener.tehsil, gardener.district, gardener.state, gardener.pincode].filter(Boolean).join(', ') : 'Registered Address';
+      const address = gardener ? [gardener.village, gardener.district, gardener.state, gardener.pincode].filter(Boolean).join(', ') : 'Registered Address';
 
       // Place a free order for Flower Seeds Gift Pack ONLY for GARDENER role
       if (gardener?.role === 'GARDENER') {
@@ -404,7 +440,7 @@ export class CashfreeService {
             totalAmount: 0,
             discountAmount: request.amount, // MRP is discounted to 0
             deliveryAddress: address,
-            paymentMode: 'PREPAID', // It's free, effectively prepaid
+            paymentMode: OrderPaymentMode.ONLINE, // Pre-paid via plan card
             paymentStatus: 'PAID',
             items: {
               create: [

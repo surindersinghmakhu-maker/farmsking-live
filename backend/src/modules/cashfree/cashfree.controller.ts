@@ -23,6 +23,22 @@ export class CashfreeController {
     return this.cashfreeService.createSplitOrder(dto);
   }
 
+  /** Create a Standard/Generic Cashfree Payment Session for Plans, Cards, Wallet, Doctor Consultations & Shopping */
+  @UseGuards(JwtAuthGuard)
+  @Post('orders/create')
+  createOrder(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: { orderId: string; amount: number; purpose?: string; customerName?: string; customerPhone?: string },
+  ) {
+    return this.cashfreeService.createStandardOrder({
+      orderId: dto.orderId,
+      amount: dto.amount,
+      customerId: user.id,
+      customerPhone: dto.customerPhone || user.mobile,
+      customerName: dto.customerName || user.name,
+    });
+  }
+
   /** Verify Cashfree Payment Status */
   @Get('orders/:orderId/verify')
   verifyPayment(@Param('orderId') orderId: string) {
@@ -35,3 +51,4 @@ export class CashfreeController {
     return this.cashfreeService.handleWebhook(body);
   }
 }
+

@@ -44,7 +44,8 @@ import { CropCompletionReviewModal } from '@/src/components/CropCompletionReview
 import { CropCompletionReview } from '@/src/store/crops-context';
 import { CropDoctorCareView } from '@/src/components/CropDoctorCareView';
 import { CropCarePlanModal } from '@/src/components/CropCarePlanModal';
-
+import { useAppSettings } from '@/src/hooks/useAppSettings';
+import { UnderMaintenanceView } from '@/src/components/UnderMaintenanceView';
 const theme = RoleThemes.FARMER;
 
 const tap = () => {
@@ -87,6 +88,13 @@ export default function FarmListScreen() {
   const { cropFields, cropHistory, salesRecords, cropGpsDataMap, unlockedCropIds, lockCropGps, unlockCropDirectly, addCrop, editCrop, removeCrop, updateCropStage, recordSale, recordCompletionReview } = useCrops();
   const { plan, limits } = useFarmerPlan();
   const isPaid = plan !== 'FREE';
+  const { data: settings } = useAppSettings();
+
+  const isMaintenanceOn = Boolean(settings?.agriMaintenanceMode);
+
+  if (isMaintenanceOn && !isAdminOrSuperAdmin) {
+    return <UnderMaintenanceView moduleName="Farmer & Agri Experts Module" />;
+  }
 
   const [activeSubTab, setActiveSubTab] = useState<'CROPS' | 'CROP_CARE'>('CROPS');
   const [isChoosingAdvisor, setIsChoosingAdvisor] = useState(false);

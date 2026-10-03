@@ -26,6 +26,8 @@ import * as Haptics from 'expo-haptics';
 import { SuperAdminExpenseCategoriesModal } from '@/components/SuperAdminExpenseCategoriesModal';
 import { AdminInfoModal, SuperAdminWorkspaceModal, UserGuidesModal } from '@/app/(admin)/(tabs)/more';
 import { APP_VERSION } from '@/src/constants/version';
+import { IsoControlCenterPanel } from '@/src/components/IsoControlCenterPanel';
+import { IsoStaffApprovalPanel } from '@/src/components/IsoStaffApprovalPanel';
 
 const theme = RoleThemes.SUPER_ADMIN;
 
@@ -762,6 +764,7 @@ function PlatformMaintenancePanel() {
   const [agri, setAgri] = useState(false);
   const [garden, setGarden] = useState(false);
   const [wallet, setWallet] = useState(false);
+  const [trainer, setTrainer] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -770,6 +773,7 @@ function PlatformMaintenancePanel() {
       setAgri(!!settings.agriMaintenanceMode);
       setGarden(!!settings.gardenMaintenanceMode);
       setWallet(!!settings.walletMaintenanceMode);
+      setTrainer(!!settings.trainerMaintenanceMode);
     }
   }, [settings]);
 
@@ -781,6 +785,7 @@ function PlatformMaintenancePanel() {
         agriMaintenanceMode: agri,
         gardenMaintenanceMode: garden,
         walletMaintenanceMode: wallet,
+        trainerMaintenanceMode: trainer,
       });
       alert('Platform Maintenance Modes saved successfully.');
     } catch (err: any) {
@@ -837,6 +842,14 @@ function PlatformMaintenancePanel() {
               <Text style={styles.subToggleDesc}>Pause Ledger, Referral payouts, Withdrawals</Text>
             </View>
             <Switch value={wallet} onValueChange={setWallet} trackColor={{ false: '#cbd5e1', true: '#ef4444' }} thumbColor="#ffffff" />
+          </View>
+
+          <View style={styles.subToggleRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.subToggleTitle}>Technical Trainer Module</Text>
+              <Text style={styles.subToggleDesc}>Pause Trainer dashboard and logs</Text>
+            </View>
+            <Switch value={trainer} onValueChange={setTrainer} trackColor={{ false: '#cbd5e1', true: '#ef4444' }} thumbColor="#ffffff" />
           </View>
 
           <TouchableOpacity style={[wStyles.btn, { backgroundColor: '#ef4444' }]} onPress={handleSave} disabled={saving}>
@@ -2084,6 +2097,12 @@ export default function SuperSettingsScreen() {
                 <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 }}>Open Admin Info Console</Text>
               </TouchableOpacity>
             </View>
+
+            {/* 🛡️ ISO 9001 Module Control Center */}
+            <IsoControlCenterPanel />
+
+            {/* 📋 ISO Staff & Expert Profile Approval Center */}
+            <IsoStaffApprovalPanel />
 
             {/* 🩺 Doctor Change Approvals Section */}
             <PendingDoctorChangeApprovalsSection />

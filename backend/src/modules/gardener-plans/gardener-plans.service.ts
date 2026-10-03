@@ -150,6 +150,7 @@ export class GardenerPlansService {
       this.prisma.gardenerPlan.upsert({
         where: { gardenerId: user.id },
         create: {
+          gardenerId: user.id,
           plan: coupon.plan,
           startDate: now,
           endDate: newEndDate,
@@ -252,15 +253,13 @@ export class GardenerPlansService {
     // Request Cashfree Order Creation
     const cfOrder = await this.cashfreeService.createStandardOrder({
       orderId,
-      orderAmount: Number(price),
+      amount: Number(price),
       customerId: user.id,
       customerPhone: user.mobile,
       customerName: user.name || 'Gardener',
-      customerEmail: 'gardener@farmsking.in',
-      orderNote: `Gardener ${plan} Card - ${user.kingId}`,
     });
 
-    return { paymentSessionId: cfOrder.payment_session_id, orderId };
+    return { paymentSessionId: cfOrder.paymentSessionId, orderId };
   }
 
   /** Activate FREE 30-day VIP Trial — only once per gardener */

@@ -19,6 +19,7 @@ import { LabourDashboardView } from '@/components/dashboards/LabourDashboardView
 import { AdminChatModal } from '@/src/components/AdminChatModal';
 import { WelcomeBonusModal } from '@/src/components/WelcomeBonusModal';
 import { TechnicalTrainerDashboardView } from '@/components/dashboards/TechnicalTrainerDashboardView';
+import { PendingApprovalView } from '@/src/components/PendingApprovalView';
 
 import { useExecutiveTheme } from '@/src/store/theme-context';
 
@@ -69,6 +70,17 @@ export default function HomeScreen() {
   }
 
   const renderDashboardView = () => {
+    const isStaffRole = ['ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(currentRole);
+    if (isStaffRole && user && !user.isApproved) {
+      const roleNames: Record<string, string> = {
+        'ADVISOR': 'Crop Advisor',
+        'FARM_ADVISOR': 'Crop Doctor',
+        'GARDEN_ADVISOR': 'Garden Advisor',
+        'TECHNICAL_TRAINER': 'Technical Trainer'
+      };
+      return <PendingApprovalView roleName={roleNames[currentRole] || currentRole} />;
+    }
+
     switch (currentRole) {
       case 'FARMER':
         return <FarmerDashboardView onOpenAdminChat={() => setShowAdminChatModal(true)} />;

@@ -8,7 +8,6 @@ import type { AuthUser } from '../../common/types/auth-user.type';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { DispatchOrderDto } from './dto/dispatch-order.dto';
-import { DispatchOrderDto } from './dto/dispatch-order.dto';
 
 const STAFF_ROLES = [Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR];
 

@@ -143,6 +143,10 @@ export class UpdateAppSettingsDto {
 
   @IsOptional()
   @IsBoolean()
+  trainerMaintenanceMode?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
   freeTrialEnabled?: boolean;
 
   @IsOptional()

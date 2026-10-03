@@ -66,6 +66,9 @@ const SAFE_USER_SELECT = {
   isSeniorDoctor: true,
   seniorDoctorId: true,
   doctorConsultationFee: true,
+  assignedStaffId: true,
+  profileStatus: true,
+  profileRejectionReason: true,
   createdAt: true,
   deletedAt: true,
   sellerStore: {
@@ -1397,4 +1400,164 @@ export class UsersService implements OnModuleInit {
       message: `Account for ${user.name} (${user.kingId ?? user.mobile}) has been anonymized. King ID and all linked historical records are retained for audit. Personal information permanently removed.`,
     };
   }
+
+  /** Admin: Assign Staff Role & Staff ID to user, requiring profile completion & approval */
+  async assignStaffRole(caller: AuthUser, dto: { userId: string; role: Role; staffId?: string; advisorType?: 'FARM' | 'GARDEN' }) {
+    const user = await this.findActiveOrThrow(dto.userId);
+    this.assertCanManageTarget(caller, user);
+
+    const updated = await this.prisma.user.update({
+      where: { id: dto.userId },
+      data: {
+        role: dto.role,
+        roles: Array.from(new Set([...(user.roles || []), dto.role])),
+        assignedStaffId: dto.staffId || `STAFF-${Date.now().toString(36).toUpperCase()}`,
+        advisorType: dto.advisorType || user.advisorType,
+        profileStatus: 'PENDING_COMPLETION',
+        isApproved: false,
+      },
+      select: SAFE_USER_SELECT,
+    });
+
+    await this.prisma.isoAuditLog.create({
+      data: {
+        action: 'STAFF_ASSIGNMENT',
+        actorId: caller.id,
+        actorName: caller.name,
+        details: {
+          assignedUserId: user.id,
+          assignedRole: dto.role,
+          staffId: updated.assignedStaffId,
+        },
+      },
+    });
+
+    return updated;
+  }
+
+  /** Staff / Expert: Submit full profile completion for Admin verification */
+  async submitProfileCompletion(currentUser: AuthUser, data: {
+    qualification?: string;
+    profileTitle?: string;
+    specialization?: string;
+    yearsExperience?: number;
+    bio?: string;
+    photoUrl?: string;
+    upiId?: string;
+    bankAccountNumber?: string;
+    bankIfsc?: string;
+    bankAccountHolderName?: string;
+    panNumber?: string;
+    alternativeMobile?: string;
+    billPrintingAddress?: string;
+  }) {
+    const user = await this.findActiveOrThrow(currentUser.id);
+
+    const updated = await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        qualification: data.qualification ?? user.qualification,
+        profileTitle: data.profileTitle ?? user.profileTitle,
+        specialization: data.specialization ?? user.specialization,
+        yearsExperience: data.yearsExperience ?? user.yearsExperience,
+        bio: data.bio ?? user.bio,
+        photoUrl: data.photoUrl ?? user.photoUrl,
+        upiId: data.upiId ?? user.upiId,
+        bankAccountNumber: data.bankAccountNumber ?? user.bankAccountNumber,
+        bankIfsc: data.bankIfsc ?? user.bankIfsc,
+        bankAccountHolderName: data.bankAccountHolderName ?? user.bankAccountHolderName,
+        panNumber: data.panNumber ?? user.panNumber,
+        alternativeMobile: data.alternativeMobile ?? user.alternativeMobile,
+        billPrintingAddress: data.billPrintingAddress ?? user.billPrintingAddress,
+        profileStatus: 'UNDER_REVIEW',
+      },
+      select: SAFE_USER_SELECT,
+    });
+
+    await this.prisma.isoAuditLog.create({
+      data: {
+        action: 'PROFILE_SUBMISSION',
+        actorId: currentUser.id,
+        actorName: currentUser.name,
+        details: {
+          role: user.role,
+          profileStatus: 'UNDER_REVIEW',
+        },
+      },
+    });
+
+    return updated;
+  }
+
+  /** Admin: List all pending staff/expert profile submissions */
+  async getPendingApprovals() {
+    return this.prisma.user.findMany({
+      where: {
+        profileStatus: 'UNDER_REVIEW',
+        deletedAt: null,
+      },
+      select: SAFE_USER_SELECT,
+      orderBy: { updatedAt: 'desc' },
+    });
+  }
+
+  /** Admin: Approve staff/expert profile */
+  async approveProfile(caller: AuthUser, userId: string) {
+    const user = await this.findActiveOrThrow(userId);
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        isApproved: true,
+        profileStatus: 'APPROVED',
+        profileRejectionReason: null,
+      },
+      select: SAFE_USER_SELECT,
+    });
+
+    await this.prisma.isoAuditLog.create({
+      data: {
+        action: 'PROFILE_APPROVAL',
+        actorId: caller.id,
+        actorName: caller.name,
+        details: {
+          approvedUserId: userId,
+          role: user.role,
+          assignedStaffId: user.assignedStaffId,
+        },
+      },
+    });
+
+    return updated;
+  }
+
+  /** Admin: Reject staff/expert profile */
+  async rejectProfile(caller: AuthUser, userId: string, reason: string) {
+    const user = await this.findActiveOrThrow(userId);
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        isApproved: false,
+        profileStatus: 'REJECTED',
+        profileRejectionReason: reason,
+      },
+      select: SAFE_USER_SELECT,
+    });
+
+    await this.prisma.isoAuditLog.create({
+      data: {
+        action: 'PROFILE_REJECTION',
+        actorId: caller.id,
+        actorName: caller.name,
+        details: {
+          rejectedUserId: userId,
+          reason,
+        },
+      },
+    });
+
+    return updated;
+  }
 }
+

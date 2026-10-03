@@ -67,34 +67,34 @@ export class GardensService {
     );
   }
 
-  addExpense(user: AuthUser, dto: CreateGardenExpenseDto) {
+  addExpense(user: AuthUser, dto: any) {
     return this.prisma.gardenExpense.create({
       data: {
-        gardenerId: user.id,
         gardenId: dto.gardenId,
         plantId: dto.plantId,
-        title: dto.title,
+        categoryName: dto.category || dto.title || 'General',
         amount: dto.amount,
-        category: dto.category,
-        note: dto.note,
+        expenseDate: dto.date ? new Date(dto.date) : new Date(),
+        description: dto.note || dto.description,
+        recordedById: user.id,
       },
     });
   }
 
   listExpenses(user: AuthUser) {
     return this.prisma.gardenExpense.findMany({
-      where: { gardenerId: user.id },
+      where: { recordedById: user.id },
       include: {
         garden: { select: { id: true, name: true } },
         plant: { select: { id: true, name: true } },
       },
-      orderBy: { date: 'desc' },
+      orderBy: { expenseDate: 'desc' },
     });
   }
 
   async deleteExpense(user: AuthUser, id: string) {
     const expense = await this.prisma.gardenExpense.findUnique({ where: { id } });
-    if (!expense || expense.gardenerId !== user.id) {
+    if (!expense || expense.recordedById !== user.id) {
       throw new NotFoundException('Expense not found.');
     }
     return this.prisma.gardenExpense.delete({ where: { id } });

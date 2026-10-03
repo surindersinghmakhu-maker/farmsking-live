@@ -51,6 +51,7 @@ import { useCart } from '@/src/store/cart-context';
 import { Product, CustomerOrder, OrderStatus } from '@/src/types/api';
 import { SuperAdminExpenseCategoriesModal } from '@/components/SuperAdminExpenseCategoriesModal';
 import { BrandLogo } from '@/src/components/BrandLogo';
+import { UnderMaintenanceView } from '@/src/components/UnderMaintenanceView';
 
 const theme = RoleThemes.CUSTOMER;
 
@@ -377,28 +378,10 @@ export default function ShopScreen() {
     setViewMode(isAdminOrSuperAdmin ? 'MANAGEMENT' : 'STORE');
   }, [isAdminOrSuperAdmin]);
 
-  const isMaintenanceOn = Boolean(settings?.storefrontMaintenance);
+  const isMaintenanceOn = Boolean(settings?.storefrontMaintenanceMode);
 
   if (isMaintenanceOn && !isAdminOrSuperAdmin) {
-    return (
-      <View style={{ flex: 1, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-        <Image
-          source={require('@/assets/images/store_maintenance.png')}
-          style={{ width: 280, height: 280, resizeMode: 'contain', marginBottom: 16 }}
-        />
-        <View style={{ backgroundColor: '#fffbeb', borderRadius: 12, padding: 14, borderWidth: 1.5, borderColor: '#fcd34d', alignItems: 'center', width: '100%', maxWidth: 420 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-            <Ionicons name="build" size={18} color="#d97706" />
-            <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: '#92400e' }}>
-              Store Under Maintenance
-            </Text>
-          </View>
-          <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#b45309', textAlign: 'center' }}>
-            We are currently updating our agricultural product catalog & inventory. Shopping features will automatically resume shortly!
-          </Text>
-        </View>
-      </View>
-    );
+    return <UnderMaintenanceView moduleName="E-Commerce Store" />;
   }
 
   // E-Commerce Admin Sub-tab

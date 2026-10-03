@@ -182,7 +182,7 @@ export class OrdersService {
 
       // Wallet deduction
       if (walletDeduction > 0) {
-        await this.walletService.debit(customer.id, walletDeduction, `Paid for Order #${created.orderNumber}`, { orderId: created.id }, tx as any);
+        await this.walletService.debit(customer.id, walletDeduction, `Paid for Order #${created.orderNumber}`);
       }
 
       // Split order into Vendor SubOrders
@@ -375,7 +375,7 @@ export class OrdersService {
     }
 
     const splits = order.subOrders.map(subOrder => ({
-      cashfreeVendorId: subOrder.sellerStore.cashfreeVendorId,
+      cashfreeVendorId: (subOrder.sellerStore as any)?.cashfreeVendorId,
       itemSubtotal: Number(subOrder.subtotal),
       commissionRate: Number(subOrder.sellerStore.commissionRate || 8.0)
     })).filter(s => s.cashfreeVendorId); // Only include suborders with a cashfree vendor

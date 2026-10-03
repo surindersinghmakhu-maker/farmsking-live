@@ -44,8 +44,8 @@ export class SubscriptionsService {
       const endDate = new Date(baseDate.getTime() + durationDays * DAY_MS);
       await this.prisma.gardenerPlan.upsert({
         where: { gardenerId: userId },
-        create: { gardenerId: userId, plan: GardenerSubscriptionPlan.PREMIUM, endDate },
-        update: { plan: GardenerSubscriptionPlan.PREMIUM, endDate },
+        create: { gardenerId: userId, plan: GardenerSubscriptionPlan.VIP, endDate },
+        update: { plan: GardenerSubscriptionPlan.VIP, endDate },
       });
     }
   }

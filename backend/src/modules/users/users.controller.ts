@@ -355,4 +355,55 @@ export class UsersController {
   deleteUserByAdmin(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.usersService.deleteUserByAdmin(user, id);
   }
+
+  /** Admin: Assign Staff Role & Staff ID */
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Post('assign-staff-role')
+  assignStaffRole(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: { userId: string; role: Role; staffId?: string; advisorType?: 'FARM' | 'GARDEN' },
+  ) {
+    return this.usersService.assignStaffRole(user, dto);
+  }
+
+  /** Any logged-in user: Submit profile completion */
+  @Roles(
+    Role.CUSTOMER,
+    Role.FARMER,
+    Role.GARDENER,
+    Role.ADVISOR,
+    Role.BUSINESS_PARTNER,
+    Role.ADMIN,
+    Role.SUPER_ADMIN,
+    Role.OPERATOR,
+    Role.TECHNICAL_TRAINER,
+    Role.SUPERVISOR,
+    Role.LABOUR,
+  )
+  @Post('submit-profile-completion')
+  submitProfileCompletion(@CurrentUser() user: AuthUser, @Body() body: any) {
+    return this.usersService.submitProfileCompletion(user, body);
+  }
+
+  /** Admin: Get pending profile approvals */
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Get('pending-approvals')
+  getPendingApprovals() {
+    return this.usersService.getPendingApprovals();
+  }
+
+  /** Admin: Approve staff/expert profile */
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Post(':id/approve-profile')
+  approveProfile(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.usersService.approveProfile(user, id);
+  }
+
+  /** Admin: Reject staff/expert profile */
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Post(':id/reject-profile')
+  rejectProfile(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body('reason') reason: string) {
+    return this.usersService.rejectProfile(user, id, reason || 'Profile details incomplete or unverified');
+  }
 }
+

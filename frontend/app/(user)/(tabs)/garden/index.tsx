@@ -8,6 +8,8 @@ import { useMyGardens, useCreateGarden } from '@/src/hooks/useGardens';
 import { useMyGardenerPlan } from '@/src/hooks/useGardenerPlan';
 import { GardenAIChatbot } from '@/src/components/GardenAIChatbot';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
+import { useRole } from '@/src/store/role-context';
+import { UnderMaintenanceView } from '@/src/components/UnderMaintenanceView';
 
 const theme = RoleThemes.GARDENER;
 
@@ -19,9 +21,17 @@ export default function GardensScreen() {
   const { data: planData } = useMyGardenerPlan();
   const { data: settings } = useAppSettings();
   const isVip = planData?.plan === 'VIP';
+  const { role } = useRole();
   const [showAdd, setShowAdd] = useState(false);
   const [name, setName] = useState('');
   const [location, setLocation] = useState('');
+
+  const isAdminOrSuperAdmin = role === 'SUPER_ADMIN' || role === 'ADMIN';
+  const isMaintenanceOn = Boolean(settings?.gardenMaintenanceMode);
+
+  if (isMaintenanceOn && !isAdminOrSuperAdmin) {
+    return <UnderMaintenanceView moduleName="Gardener & Garden Experts" />;
+  }
 
   const handleCreate = async () => {
     if (!name.trim()) return alert('Please enter a garden name');

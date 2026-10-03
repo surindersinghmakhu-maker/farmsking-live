@@ -31,6 +31,7 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { WelcomeBonusModal } from '@/src/components/WelcomeBonusModal';
 import { AdminWalletManagementView } from '@/src/components/AdminWalletManagementView';
+import { UnderMaintenanceView } from '@/src/components/UnderMaintenanceView';
 
 type RoleTheme = (typeof RoleThemes)[keyof typeof RoleThemes];
 const staticTheme = RoleThemes.BUSINESS_PARTNER;
@@ -276,6 +277,13 @@ export default function WalletScreen() {
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 3000);
   };
+
+  const isMaintenanceOn = Boolean(appSettings?.walletMaintenanceMode);
+  const isAdminOrSuperAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
+
+  if (isMaintenanceOn && !isAdminOrSuperAdmin) {
+    return <UnderMaintenanceView moduleName="Wallet System" />;
+  }
 
   const handleDownloadJpgCoupon = () => {
     downloadJpgCouponCard({

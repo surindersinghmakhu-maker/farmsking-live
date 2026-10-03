@@ -4,9 +4,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { useAppSettings } from '@/src/hooks/useAppSettings';
+import { useRole } from '@/src/store/role-context';
+import { UnderMaintenanceView } from '@/src/components/UnderMaintenanceView';
 
 export function TechnicalTrainerDashboardView() {
   const { colors } = useExecutiveTheme();
+  const { data: settings } = useAppSettings();
+  const { role } = useRole();
+
+  const isAdminOrSuperAdmin = role === 'SUPER_ADMIN' || role === 'ADMIN';
+  const isMaintenanceOn = Boolean(settings?.trainerMaintenanceMode);
+
+  if (isMaintenanceOn && !isAdminOrSuperAdmin) {
+    return <UnderMaintenanceView moduleName="Technical Trainer" />;
+  }
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} showsVerticalScrollIndicator={false}>

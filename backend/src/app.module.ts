@@ -61,6 +61,7 @@ import { CashfreeModule } from './modules/cashfree/cashfree.module';
 import { ShiprocketModule } from './modules/shiprocket/shiprocket.module';
 import { EmailModule } from './modules/email/email.module';
 import { AiChatModule } from './modules/ai-chat/ai-chat.module';
+import { IsoControlsModule } from './modules/iso-controls/iso-controls.module';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 
 
@@ -71,6 +72,7 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
     ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 60 }]),
     PrismaModule,
+    IsoControlsModule,
     AuthModule,
     FarmsModule,
     PlotsModule,

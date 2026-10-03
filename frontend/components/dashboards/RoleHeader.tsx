@@ -24,6 +24,20 @@ interface RoleHeaderProps {
   onSecondaryAvatarPress?: () => void;
 }
 
+const ROLE_DISPLAY: Record<string, { label: string; icon: string }> = {
+  FARMER: { label: 'Farmer', icon: '🌾' },
+  GARDENER: { label: 'Gardener', icon: '🏡' },
+  FARM_ADVISOR: { label: 'Crop Doctor / Advisor', icon: '🩺' },
+  GARDEN_ADVISOR: { label: 'Garden Advisor', icon: '🌱' },
+  TECHNICAL_TRAINER: { label: 'Technical Trainer', icon: '🎓' },
+  BUSINESS_PARTNER: { label: 'Business Partner', icon: '💼' },
+  CUSTOMER: { label: 'Customer', icon: '🛒' },
+  ADMIN: { label: 'Admin', icon: '🛡️' },
+  SUPER_ADMIN: { label: 'Super Admin', icon: '👑' },
+  OPERATOR: { label: 'Operator', icon: '⚙️' },
+  LABOUR: { label: 'Labour / Worker', icon: '👷' },
+};
+
 function getTimeBasedGreeting(): string {
   const hour = new Date().getHours();
   if (hour < 12) return 'Good Morning';
@@ -50,6 +64,8 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
   const { data: unreadData } = useUnreadNotificationCount();
   const unreadCount = unreadData?.count ?? 0;
   const { data: settings } = useAppSettings();
+
+  const roleMeta = ROLE_DISPLAY[currentRole] || { label: currentRole, icon: '👤' };
 
   return (
     <LinearGradient colors={colors.headerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.headerContainer}>
@@ -79,14 +95,20 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
       {/* User Header Block */}
       <View style={styles.userHeaderBlock}>
         <View style={styles.mainUserRow}>
-          {/* Left Block: Greeting + Name + Subtitle (Grouped together with zero gap) */}
+          {/* Left Block: Greeting + Name + Assigned Role Tag + Subtitle */}
           <View style={styles.userInfoLeftBlock}>
             <Text style={styles.greetingText}>{greeting}</Text>
             <Text style={styles.nameText} numberOfLines={1}>{profileName}</Text>
+            
+            {/* 🏷️ Role Tag Badge directly under user's name */}
+            <View style={styles.roleTagPill}>
+              <Text style={styles.roleTagText}>{roleMeta.icon} {roleMeta.label}</Text>
+            </View>
+
             {subtitle ? <Text style={styles.subtitleText}>{subtitle}</Text> : null}
           </View>
 
-          {/* Center Block: Selected Worker Profile Photo Avatar */}
+          {/* Center Block: Profile Photo Avatar */}
           <View style={styles.avatarContainer}>
             <TouchableOpacity
               style={styles.avatarRing}
@@ -110,7 +132,7 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
             ) : null}
           </View>
 
-          {/* Right Block: Selected Farmer Profile Photo (Avatar) */}
+          {/* Right Block: Secondary Avatar or Plan Badge */}
           {secondaryAvatarUrl !== undefined || secondaryName ? (
             <View style={styles.secondaryAvatarBlock}>
               <TouchableOpacity
@@ -229,10 +251,27 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     marginVertical: 0.5,
   },
+  roleTagPill: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.35)',
+    borderRadius: RADIUS.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginVertical: 2,
+  },
+  roleTagText: {
+    color: '#ffffff',
+    fontSize: 10.5,
+    fontFamily: FONT.extraBold,
+    letterSpacing: 0.2,
+  },
   subtitleText: {
     color: 'rgba(255,255,255,0.95)',
     fontSize: 11,
     fontFamily: FONT.bold,
+    marginTop: 1,
   },
   avatarContainer: {
     position: 'relative',

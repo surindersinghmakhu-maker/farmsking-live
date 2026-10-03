@@ -111,7 +111,7 @@ export default function LoginScreen() {
           const userInfo = await userInfoRes.json();
 
           if (!userInfo?.email) {
-            setError('Google account email nahi mili. Dobara try karo.');
+            setError('Google account email not found. Please try again.');
             return;
           }
 
@@ -169,7 +169,7 @@ export default function LoginScreen() {
   const handleSendOtp = async () => {
     setError(null);
     if (!mobile.trim() || mobile.trim().length < 10) {
-      setError('ਕਿਰਪਾ ਕਰਕੇ 10-digit mobile number ਭਰੋ।');
+      setError('Please enter a 10-digit mobile number.');
       return;
     }
     setOtpSending(true);
@@ -182,8 +182,8 @@ export default function LoginScreen() {
     } catch (err: any) {
       const isNet = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
       setError(isNet
-        ? 'Network error! Internet check karo.'
-        : (err?.response?.data?.message ?? err?.message ?? 'OTP bhejn vich error.')
+        ? 'Network error! Please check your internet connection.'
+        : (err?.response?.data?.message ?? err?.message ?? 'Failed to send OTP. Please try again.')
       );
     } finally {
       setOtpSending(false);
@@ -194,7 +194,7 @@ export default function LoginScreen() {
   const handleOtpLogin = async () => {
     setError(null);
     if (!otpCode.trim() || otpCode.trim().length < 6) {
-      setError('ਕਿਰਪਾ ਕਰਕੇ 6-digit OTP ਭਰੋ।');
+      setError('Please enter the 6-digit OTP.');
       return;
     }
     setIsSubmitting(true);
@@ -204,8 +204,8 @@ export default function LoginScreen() {
     } catch (err: any) {
       const isNet = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
       setError(isNet
-        ? 'Network error! Internet check karo.'
-        : (err?.response?.data?.message ?? err?.message ?? 'OTP verify failed.')
+        ? 'Network error! Please check your internet connection.'
+        : (err?.response?.data?.message ?? err?.message ?? 'OTP verification failed.')
       );
     } finally {
       setIsSubmitting(false);
@@ -276,7 +276,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <Text style={styles.googleHint}>
-            🔐 Apna Google account select karo — bina password ke login ho jao!
+            🔐 Select your Google account to log in instantly without a password!
           </Text>
 
           {/* OR Divider */}
@@ -369,7 +369,7 @@ export default function LoginScreen() {
               {!otpSent ? (
                 <>
                   <Text style={styles.otpHint}>
-                    📱 ਤੁਹਾਡੇ WhatsApp ਤੇ 6-digit OTP ਆਵੇਗਾ। ਬਿਨਾ password ਤੋਂ login ਕਰੋ!
+                    📱 A 6-digit OTP will be sent to your WhatsApp. Log in instantly without a password!
                   </Text>
                   <TouchableOpacity
                     onPress={handleSendOtp}
@@ -392,7 +392,7 @@ export default function LoginScreen() {
               ) : (
                 <>
                   <Text style={styles.otpSentMsg}>
-                    ✅ OTP ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ {mobile} ਤੇ WhatsApp ਰਾਹੀਂ
+                    ✅ OTP sent successfully to {mobile} via WhatsApp
                   </Text>
 
                   {devOtp && (

@@ -1,5 +1,4 @@
 import React, { useState, useRef } from 'react';
-import { GoogleGenAI } from '@google/genai';
 import {
   View,
   Text,
@@ -18,9 +17,6 @@ import { getDefaultApiUrl } from '../constants/config';
 import { useFarmerPlan } from '@/src/hooks/useFarmerPlan';
 import { useAuth } from '@/src/store/auth-context';
 import { FarmerPlanUpgradeModal } from '@/src/components/FarmerPlanUpgradeModal';
-
-const googleAiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY || '';
-const googleAi = new GoogleGenAI({ apiKey: googleAiKey });
 
 export interface ChatMessage {
   id: string;
@@ -632,67 +628,6 @@ export function AgriAiChatbot({ isModal = false }: AgriAiChatbotProps) {
       ]);
       setIsLoading(false);
       return;
-    }
-
-    // Direct Google Gemini 2.5 Flash AI call with Search Grounding
-    const isRealGoogleAiKey = Boolean(googleAiKey && !googleAiKey.includes('your_gemini_api_key'));
-    if (isRealGoogleAiKey) {
-      try {
-        const response = await googleAi.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: query,
-          config: {
-            systemInstruction: `You are "Farmsking Kisan AI Doctor", an elite National AI Agriculture & Farming Expert serving ALL Indian Farmers across all states (Punjab, Haryana, UP, MP, MH, RJ, AP, TS, KA, TN, WB, Bihar, Gujarat, etc.) powered by Google Gemini 2.5 Flash with Live Google Search Grounding.
-
-CRITICAL RULES:
-1. SHORT, DIRECT, AND CONCISE ANSWERS:
-   - Provide clear bullet points, exact chemical/organic spray names, exact fertilizer dosages (kg/acre), CRI irrigation dates, and yield estimates per acre.
-   - Keep answers short, structured, and easy for farmers to read quickly without unnecessary fluff.
-2. NATIONAL FARMERS COVERAGE:
-   - Cover all Indian crops (Wheat, Paddy, Cotton, Sugarcane, Potato, Marigold, Mustard, Tomato, Chilli, Vegetables, Fruits, Spices, Pulses, Dairy).
-3. STRICT TOPIC GUARDRAIL:
-   - Only answer agriculture, farming, crop disease, fertilizer, spray, livestock, weather, mandi rates, and FarmsKing platform queries.
-   - Refuse non-farming questions politely: "I can only assist with agriculture, crops, fertilizers, sprays, livestock, weather, mandi rates, and FarmsKing app queries. Please ask a farming-related question."`,
-            tools: [{ googleSearch: {} }],
-          },
-        });
-
-        const answerText = response.text?.trim();
-        if (answerText) {
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `ai-${Date.now()}`,
-              sender: 'AI',
-              text: answerText,
-              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              category: 'FARMING',
-            },
-          ]);
-          setIsLoading(false);
-          setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
-          return;
-        }
-      } catch (gErr: any) {
-        console.warn('Google GenAI Direct Call Error, checking quota error or fallback:', gErr);
-        const errStr = (gErr?.message || '') + JSON.stringify(gErr || '');
-        const errLower = errStr.toLowerCase();
-        if (errLower.includes('429') || errLower.includes('quota') || errLower.includes('resource_exhausted') || errLower.includes('api_key_invalid') || errLower.includes('invalid_argument')) {
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `ai-${Date.now()}`,
-              sender: 'AI',
-              text: "⚠️ **FarmsKing Kisan AI Doctor is temporarily unavailable due to daily Google AI quota limits.**\n\nPlease try again shortly or contact FarmsKing support for assistance.",
-              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              category: 'NON_FARMING_BLOCKED',
-            },
-          ]);
-          setIsLoading(false);
-          setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
-          return;
-        }
-      }
     }
 
     // Try backend NestJS AI API route

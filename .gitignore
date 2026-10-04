@@ -42,3 +42,7 @@ docs/app/
 # Stray backup/scratch files that shouldn't live in the repo
 *.zip
 *_token.txt
+
+# Runtime data
+whatsapp_auth_session/
+uploads/

@@ -6,10 +6,31 @@ export interface ChatMessageDto {
   content: string;
 }
 
+export type AiChatMode = 'agri' | 'garden';
+
 export class AiChatRequestDto {
   message: string;
   history?: ChatMessageDto[];
+  mode?: AiChatMode;
 }
+
+const MAX_MESSAGE_LENGTH = 1000;
+const MAX_HISTORY_ITEM_LENGTH = 2000;
+
+const GARDEN_SYSTEM_PROMPT = `You are "FarmsKing Garden Expert AI" — a premium, highly knowledgeable assistant exclusively for VIP Gardeners on the FarmsKing platform.
+
+YOUR ALLOWED TOPICS — answer ONLY these:
+1. Home Garden — flower plants, seasonal plants, terrace gardens, balcony gardens
+2. Kitchen Garden — vegetables, herbs (tulsi, mint, coriander, etc.), home-grown fruits
+3. Plant care — watering, sunlight, fertilizers for garden plants, soil preparation, pots, pruning
+4. Pests & diseases on garden plants — home remedies, organic solutions
+5. FarmsKing platform features — how to track plants, how to record expenses, how to use Garden VIP card, how to hire a Garden Expert, how to upgrade plan
+
+CRITICAL RULES:
+1. LANGUAGE: Detect the user's language automatically (Punjabi, Hindi, or English) and reply in EXACTLY the same language. If Punjabi — reply in Punjabi. If Hindi — reply in Hindi. If English — reply in English.
+2. STRICT FILTER: If the user asks anything outside the above allowed topics (e.g. farming crops, politics, coding, general knowledge), POLITELY REFUSE in their language. Example: "ਮੈਂ ਸਿਰਫ਼ ਬਾਗਬਾਨੀ ਅਤੇ FarmsKing ਨਾਲ ਸੰਬੰਧਿਤ ਸਵਾਲਾਂ ਦੀ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ।"
+3. TONE: Friendly, encouraging, like a personal garden guide speaking to a VIP member.
+4. Be concise but complete. Use bullet points when listing steps.`;
 
 @Injectable()
 export class AiChatService {
@@ -18,17 +39,36 @@ export class AiChatService {
   constructor(private readonly configService: ConfigService) {}
 
   async generateAiResponse(dto: AiChatRequestDto): Promise<{ answer: string; isFarming: boolean }> {
+    // Basic input hygiene: this endpoint is public, so cap sizes to limit abuse / API cost.
+    const message = typeof dto?.message === 'string' ? dto.message.trim().slice(0, MAX_MESSAGE_LENGTH) : '';
+    if (!message) {
+      return { answer: 'Please type a question.', isFarming: false };
+    }
+    dto = {
+      ...dto,
+      message,
+      history: Array.isArray(dto.history)
+        ? dto.history
+            .filter((m) => m && typeof m.content === 'string')
+            .map((m) => ({ ...m, content: m.content.slice(0, MAX_HISTORY_ITEM_LENGTH) }))
+        : [],
+    };
+    const isGarden = dto.mode === 'garden';
+
     const openaiKey = this.configService.get<string>('OPENAI_API_KEY') || process.env.OPENAI_API_KEY;
-    const rawGeminiKey = this.configService.get<string>('GEMINI_API_KEY') || process.env.GEMINI_API_KEY || process.env.EXPO_PUBLIC_GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    // Server-side keys only. Never read EXPO_PUBLIC_* here: those values are bundled into the client app.
+    const rawGeminiKey = this.configService.get<string>('GEMINI_API_KEY') || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
     const geminiKey = rawGeminiKey && !rawGeminiKey.includes('your_gemini_api_key') ? rawGeminiKey : undefined;
 
-    const systemPrompt = `You are "Farmsking Kisan AI Doctor", an elite AI Agriculture & Farming Expert powered by Google Gemini 2.5 Flash with Live Google Search Grounding for National Farmers across all Indian states.
+    const farmingSystemPrompt = `You are "Farmsking Kisan AI Doctor", an elite AI Agriculture & Farming Expert powered by Google Gemini 2.5 Flash with Live Google Search Grounding for National Farmers across all Indian states.
 
 CRITICAL INSTRUCTIONS:
 1. SHORT & CONCISE ANSWERS: Provide direct, short bullet points with exact chemical/organic spray names, fertilizer dosages (kg/acre), irrigation timing, and yield per acre. Keep responses brief and straight to the point so farmers can read quickly on mobile devices.
 2. NATIONAL COVERAGE: Cover all Indian crops (Wheat, Paddy, Cotton, Sugarcane, Potatoes, Marigold, Mustard, Tomatoes, Chilli, Vegetables, Fruits, Spices, Dairy, etc.) for all Indian states.
 3. STRICT TOPIC GUARDRAIL: Only answer questions related to crops, fertilizers, sprays, pest management, weather, live mandi rates, and FarmsKing app features.
 4. If asked a non-farming query, reject politely with: "⚠️ Agricultural Questions Only: I can only answer questions related to crops, fertilizers, sprays, seeds, weather, and mandi rates."`;
+
+    const systemPrompt = isGarden ? GARDEN_SYSTEM_PROMPT : farmingSystemPrompt;
 
     // 1. Try Google Gemini 2.5 Flash / 1.5 Flash API if key is present
     if (geminiKey) {
@@ -58,6 +98,7 @@ CRITICAL INSTRUCTIONS:
               parts: [{ text: systemPrompt }],
             },
             contents: contentsPayload,
+            tools: [{ google_search: {} }],
             generationConfig: {
               temperature: 0.3,
               maxOutputTokens: 600,
@@ -134,6 +175,14 @@ CRITICAL INSTRUCTIONS:
     }
 
     const msgLower = (dto.message || '').toLowerCase();
+
+    // Garden mode has no built-in offline knowledge base; fail politely instead of giving crop advice.
+    if (isGarden) {
+      return {
+        answer: 'ਮਾਫ਼ ਕਰਨਾ, Garden AI ਹੁਣ ਉਪਲਬਧ ਨਹੀਂ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਥੋੜ੍ਹਾ ਸਮਾਂ ਬਾਅਦ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ ਜਾਂ Admin ਨੂੰ ਸੰਪਰਕ ਕਰੋ।',
+        isFarming: false,
+      };
+    }
 
     // 3. Built-In National AI Agriculture Knowledge Engine
     if (msgLower.includes('genda') || msgLower.includes('marigold')) {

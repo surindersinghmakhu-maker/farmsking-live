@@ -15,46 +15,25 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { GoogleGenAI } from '@google/genai';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
+import { getDefaultApiUrl } from '../constants/config';
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 };
 
-// ===== Garden AI (Gemini 2.5 Flash) =====
-const gardenAi = new GoogleGenAI({ apiKey: process.env.EXPO_PUBLIC_GEMINI_API_KEY || '' });
-
-const GARDEN_SYSTEM_PROMPT = `You are "FarmsKing Garden Expert AI" — a premium, highly knowledgeable assistant exclusively for VIP Gardeners on the FarmsKing platform.
-
-YOUR ALLOWED TOPICS — answer ONLY these:
-1. Home Garden — flower plants, seasonal plants, terrace gardens, balcony gardens
-2. Kitchen Garden — vegetables, herbs (tulsi, mint, coriander, etc.), home-grown fruits
-3. Plant care — watering, sunlight, fertilizers for garden plants, soil preparation, pots, pruning
-4. Pests & diseases on garden plants — home remedies, organic solutions
-5. FarmsKing platform features — how to track plants, how to record expenses, how to use Garden VIP card, how to hire a Garden Expert, how to upgrade plan
-
-CRITICAL RULES:
-1. LANGUAGE: Detect the user's language automatically (Punjabi, Hindi, or English) and reply in EXACTLY the same language. If Punjabi — reply in Punjabi. If Hindi — reply in Hindi. If English — reply in English.
-2. STRICT FILTER: If the user asks anything outside the above allowed topics (e.g. farming crops, politics, coding, general knowledge), POLITELY REFUSE in their language. Example: "ਮੈਂ ਸਿਰਫ਼ ਬਾਗਬਾਨੀ ਅਤੇ FarmsKing ਨਾਲ ਸੰਬੰਧਿਤ ਸਵਾਲਾਂ ਦੀ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ।"
-3. TONE: Friendly, encouraging, like a personal garden guide speaking to a VIP member.
-4. Be concise but complete. Use bullet points when listing steps.`;
-
+// ===== Garden AI (served by backend /ai-chat/ask, mode: 'garden') =====
+// The Gemini API key lives only on the server; the garden system prompt is defined there too.
 async function askGardenAI(question: string): Promise<string> {
   try {
-    const response = await gardenAi.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: question,
-      config: {
-        systemInstruction: GARDEN_SYSTEM_PROMPT,
-        tools: [{ googleSearch: {} }],
-        safetySettings: [
-          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_LOW_AND_ABOVE' },
-          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_LOW_AND_ABOVE' },
-        ],
-      },
+    const response = await fetch(`${getDefaultApiUrl()}/ai-chat/ask`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: question, mode: 'garden' }),
     });
-    return response.text || 'No response generated.';
+    if (!response.ok) throw new Error(`AI request failed: ${response.status}`);
+    const data = await response.json();
+    return data?.answer || 'No response generated.';
   } catch (err) {
     console.error('[Garden AI Error]', err);
     return 'AI ਨਾਲ ਜੁੜਨ ਵਿੱਚ ਗੜਬੜ ਆਈ। ਕਿਰਪਾ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।';
@@ -397,7 +376,7 @@ const styles = StyleSheet.create({
   },
   msgBubble: { borderRadius: 16, padding: 12, maxWidth: 280 },
   msgBubbleUser: { backgroundColor: '#16a34a', borderBottomRightRadius: 4 },
-  msgBubbleAI: { backgroundColor: '#fff', borderBottomLeftRadius: 4, ...premiumShadow('#000', 'xs') },
+  msgBubbleAI: { backgroundColor: '#fff', borderBottomLeftRadius: 4, ...premiumShadow('#000', 'sm') },
   typingBubble: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   msgText: { fontSize: 13.5, fontFamily: FONT.medium, lineHeight: 20 },
   msgTime: { fontSize: 10, fontFamily: FONT.medium, marginTop: 4, textAlign: 'right' },

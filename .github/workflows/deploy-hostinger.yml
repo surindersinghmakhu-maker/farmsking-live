@@ -25,6 +25,11 @@ jobs:
           cd frontend
           npm ci --legacy-peer-deps
 
+      - name: 🧪 Verify Frontend TypeScript
+        run: |
+          cd frontend
+          npx tsc --noEmit
+
       - name: ⚡ Export Expo Web Build
         env:
           CI: '1'

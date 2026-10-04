@@ -46,15 +46,12 @@ export function RoleProvider({ children }: { children: ReactNode }) {
 
     let finalRoles = isPrimaryActive ? Array.from(new Set([rawPrimary, ...mapped])) : mapped;
 
-    // Filter out GARDENER so Gardener dashboard is completely hidden and FARMER is default
-    finalRoles = finalRoles.filter((r) => r !== 'GARDENER');
-
     if (finalRoles.length === 0) {
       finalRoles = ['CUSTOMER'];
     }
 
     if (isStaffUser) {
-      finalRoles = finalRoles.filter((r) => r !== 'FARMER');
+      finalRoles = finalRoles.filter((r) => r !== 'FARMER' && r !== 'GARDENER');
       if (!finalRoles.includes('CUSTOMER')) {
         finalRoles.push('CUSTOMER');
       }
@@ -107,13 +104,8 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Priority 2: Default to FARMER if available or primaryRole
-    if (assignedRoles.includes('FARMER')) {
-      setRoleState('FARMER');
-      return;
-    }
-
-    setRoleState(primaryRole === 'GARDENER' ? 'FARMER' : primaryRole);
+    // Priority 2: Use user's assigned primary role (GARDENER or FARMER or CUSTOMER)
+    setRoleState(primaryRole);
   }, [user?.id, user?.role, primaryRole, assignedRoles, isStaffUser]);
 
   const setRole = (next: UserRole) => {

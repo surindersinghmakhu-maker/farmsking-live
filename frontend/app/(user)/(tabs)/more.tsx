@@ -194,38 +194,30 @@ export default function MoreScreen() {
       alert(err?.response?.data?.message ?? 'Could not delete account. Please try again.');
     } finally {
       setIsDeletingAccount(false);
-      setShowDeleteConfirmModal(false);
     }
   };
 
-
-  const currentLanguageName = LANGUAGE_OPTIONS.find((opt) => opt.code === language)?.nativeName ?? 'English';
-
-  const showShopSection = role !== 'CUSTOMER' && role !== 'ADMIN' && role !== 'SUPER_ADMIN';
-  const showSuperAdminSection = role === 'SUPER_ADMIN' || role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
-  const showAdvisorBusinessSection = role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR';
-
-
-  const isAdvisorRole = role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR' || user?.role === 'FARM_ADVISOR' || user?.role === 'GARDEN_ADVISOR' || (Array.isArray(user?.roles) && (user.roles.includes('FARM_ADVISOR') || user.roles.includes('GARDEN_ADVISOR')));
-  const isLabourRole = role === 'LABOUR' || role === 'OPERATOR' || user?.role === 'LABOUR' || user?.role === 'OPERATOR' || (Array.isArray(user?.roles) && (user.roles.includes('LABOUR') || user.roles.includes('OPERATOR')));
+  const showAdvisorBusinessSection =
+    role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR' || role === 'ADVISOR';
 
   const accountItems: AccountItem[] = [
     MY_PROFILE_ITEM,
     MY_ADDRESSES_ITEM,
-    ...(role === 'FARMER' || role === 'GARDENER' || role === 'CUSTOMER' ? [FARMER_WALLET_ITEM] : []),
-    FARMER_ONLY_ITEM,
-    ...(isAdvisorRole ? [ADVISOR_PROFILE_ITEM] : []),
-    ...(isLabourRole ? [LABOUR_ITEM] : []),
+    NOTIFICATIONS_ITEM,
+    ...(role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR' ? [ADVISOR_PROFILE_ITEM] : []),
+    FARMER_WALLET_ITEM,
+    LABOUR_ITEM,
   ];
 
   return (
     <>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <LinearGradient colors={theme.gradient} style={styles.hero}>
+        <LinearGradient
+          colors={theme.gradient}
+          style={styles.hero}
+        >
           <View style={styles.avatarCircle}>
-            {isAdminRole && brandLogoUri ? (
-              <Avatar uri={brandLogoUri} size={52} />
-            ) : user?.photoUrl ? (
+            {user?.photoUrl ? (
               <Avatar uri={user.photoUrl} size={52} />
             ) : (
               <Ionicons name="person" size={24} color="#fff" />

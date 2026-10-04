@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="pa" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FarmsKing — Software Planning Guide 🏗️</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+    :root {
+      --green: #16a34a;
+      --green-dark: #15803d;
+      --green-light: #dcfce7;
+      --blue: #2563eb;
+      --blue-light: #eff6ff;
+      --red: #dc2626;
+      --red-light: #fef2f2;
+      --yellow: #d97706;
+      --yellow-light: #fef3c7;
+      --slate-900: #0f172a;
+      --slate-700: #334155;
+      --slate-500: #64748b;
+      --slate-200: #e2e8f0;
+      --slate-50: #f8fafc;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, 'Noto Sans Gurmukhi', sans-serif;
+      background: linear-gradient(135deg, #f0fdf4 0%, #eff6ff 100%);
+      color: var(--slate-900);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, #15803d 0%, #1d4ed8 100%);
+      border-radius: 20px;
+      padding: 48px 40px;
+      color: white;
+      text-align: center;
+      margin-bottom: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 200px; height: 200px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 50%;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 100px;
+      padding: 6px 18px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .hero h1 {
+      font-size: 30px;
+      font-weight: 900;
+      line-height: 1.3;
+      margin-bottom: 12px;
+    }
+    .hero p {
+      font-size: 15px;
+      opacity: 0.85;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .hero-meta {
+      margin-top: 24px;
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      font-size: 13px;
+      opacity: 0.75;
+    }
+
+    /* ── SECTIONS ── */
+    .section {
+      margin-bottom: 40px;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--slate-200);
+    }
+    .section-icon {
+      width: 42px; height: 42px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .section-icon.green { background: var(--green-light); }
+    .section-icon.blue { background: var(--blue-light); }
+    .section-icon.red { background: var(--red-light); }
+    .section-icon.yellow { background: var(--yellow-light); }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--slate-900);
+    }
+    h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--slate-700);
+      margin-bottom: 12px;
+      margin-top: 24px;
+    }
+    h3:first-child { margin-top: 0; }
+
+    /* ── CARDS ── */
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px 24px;
+      border: 1px solid var(--slate-200);
+      box-shadow: 0 2px 8px rgba(15,23,42,0.06);
+      margin-bottom: 16px;
+    }
+    .card.green-border { border-left: 4px solid var(--green); }
+    .card.blue-border  { border-left: 4px solid var(--blue); }
+    .card.red-border   { border-left: 4px solid var(--red); }
+    .card.yellow-border { border-left: 4px solid var(--yellow); }
+
+    /* ── PHASE STEPS ── */
+    .phase-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .phase-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px 18px;
+      border: 1px solid var(--slate-200);
+      box-shadow: 0 1px 4px rgba(15,23,42,0.05);
+    }
+    .phase-number {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--green);
+      margin-bottom: 4px;
+    }
+    .phase-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--slate-900);
+      margin-bottom: 4px;
+    }
+    .phase-duration {
+      font-size: 11px;
+      color: var(--slate-500);
+      margin-bottom: 8px;
+    }
+    .phase-desc {
+      font-size: 12px;
+      color: var(--slate-700);
+      line-height: 1.6;
+    }
+
+    /* ── TABLES ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(15,23,42,0.05);
+      margin-bottom: 16px;
+    }
+    th {
+      background: var(--slate-900);
+      color: white;
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #f1f5f9;
+      color: var(--slate-700);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: var(--slate-50); }
+
+    /* ── MISTAKE CARDS ── */
+    .mistake-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px 20px;
+      border: 1px solid #fecaca;
+      margin-bottom: 12px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+    .mistake-num {
+      width: 32px; height: 32px;
+      background: var(--red-light);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800;
+      font-size: 13px;
+      color: var(--red);
+      flex-shrink: 0;
+    }
+    .mistake-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--red);
+      margin-bottom: 4px;
+    }
+    .mistake-prob, .mistake-result, .mistake-fix {
+      font-size: 12px;
+      margin-bottom: 3px;
+      color: var(--slate-700);
+    }
+    .mistake-fix { color: var(--green-dark); font-weight: 600; }
+
+    /* ── TIMELINE ── */
+    .timeline {
+      position: relative;
+      padding-left: 28px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 8px; top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, var(--green), var(--blue));
+      border-radius: 2px;
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    .timeline-dot {
+      position: absolute;
+      left: -24px;
+      top: 4px;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--green);
+      border: 2px solid white;
+      box-shadow: 0 0 0 2px var(--green);
+    }
+    .timeline-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--green);
+      margin-bottom: 2px;
+    }
+    .timeline-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--slate-900);
+      margin-bottom: 4px;
+    }
+    .timeline-tasks {
+      font-size: 12px;
+      color: var(--slate-500);
+      line-height: 1.7;
+    }
+
+    /* ── RULES ── */
+    .rules-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .rules-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: white;
+      border-radius: 10px;
+      padding: 12px 16px;
+      border: 1px solid var(--slate-200);
+      font-size: 13px;
+    }
+    .rule-num {
+      width: 26px; height: 26px;
+      background: var(--green);
+      border-radius: 50%;
+      color: white;
+      font-weight: 800;
+      font-size: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ── ALERT BOXES ── */
+    .alert {
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .alert.note   { background: #f0f9ff; border: 1px solid #bae6fd; color: #0369a1; }
+    .alert.tip    { background: var(--green-light); border: 1px solid #86efac; color: var(--green-dark); }
+    .alert.caution { background: var(--red-light); border: 1px solid #fecaca; color: var(--red); }
+    .alert.important { background: var(--yellow-light); border: 1px solid #fcd34d; color: var(--yellow); }
+    .alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── CONCLUSION ── */
+    .conclusion {
+      background: linear-gradient(135deg, #15803d, #1d4ed8);
+      border-radius: 16px;
+      padding: 36px 40px;
+      color: white;
+      text-align: center;
+      margin-top: 48px;
+    }
+    .conclusion h2 {
+      color: white;
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+    .conclusion p {
+      opacity: 0.9;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    .conclusion-points {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .conclusion-point {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 10px;
+      padding: 14px 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* ── CODE BLOCK ── */
+    .code-block {
+      background: var(--slate-900);
+      color: #86efac;
+      border-radius: 10px;
+      padding: 16px 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.8;
+      overflow-x: auto;
+      margin-bottom: 16px;
+      white-space: pre;
+    }
+
+    /* ── PRINT ── */
+    .print-btn {
+      position: fixed;
+      bottom: 30px; right: 30px;
+      background: var(--green);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 14px 28px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(22,163,74,0.4);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .print-btn:hover {
+      background: var(--green-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(22,163,74,0.5);
+    }
+
+    @media print {
+      .print-btn { display: none; }
+      body { background: white; }
+      .page { padding: 20px; }
+      .hero, .conclusion { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">📋 FarmsKing · Project Planning Guide</div>
+    <h1>🏗️ ਵੱਡੀ Software Company ਕਿਵੇਂ ਬਣਾਉਂਦੀ ਹੈ?<br/>Solo Developer ਲਈ Complete Roadmap</h1>
+    <p>Enterprise SDLC, FarmsKing ਵਿੱਚ ਕੀ ਗਲਤੀਆਂ ਹੋਈਆਂ, ਅਤੇ ਅਗਲੀ ਵਾਰ ਕਿਵੇਂ ਸਹੀ ਕਰਨਾ ਹੈ</p>
+    <div class="hero-meta">
+      <span>📅 October 2026</span>
+      <span>👤 Solo Developer Guide</span>
+      <span>🌾 FarmsKing Project</span>
+    </div>
+  </div>
+
+  <!-- PART 1: ENTERPRISE SDLC -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon green">🏢</div>
+      <div>
+        <h2>ਭਾਗ 1: ਵੱਡੀ Company ਦੀ Planning — Enterprise SDLC</h2>
+        <p style="font-size:13px;color:var(--slate-500);margin-top:2px">Software Development Life Cycle — ਪੂਰਾ ਪ੍ਰੋਸੈੱਸ</p>
+      </div>
+    </div>
+
+    <!-- Phases -->
+    <div class="phase-grid">
+      <div class="phase-card">
+        <div class="phase-number">Phase 1</div>
+        <div class="phase-title">🔍 Discovery &amp; Research</div>
+        <div class="phase-duration">⏱️ 4–8 Weeks</div>
+        <div class="phase-desc">Market Research, User Interviews, Competitor Analysis, Business Model decide</div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-number">Phase 2</div>
+        <div class="phase-title">📐 Architecture &amp; Design</div>
+        <div class="phase-duration">⏱️ 4–6 Weeks</div>
+        <div class="phase-desc">Tech Stack, Database Schema (ERD), API Design, Team Structure define</div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-number">Phase 3</div>
+        <div class="phase-title">🎨 UI/UX Design</div>
+        <div class="phase-duration">⏱️ 4–6 Weeks</div>
+        <div class="phase-desc">Figma Wireframes, Design System, Prototype, User Testing</div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-number">Phase 4</div>
+        <div class="phase-title">⚙️ Development</div>
+        <div class="phase-duration">⏱️ 3–6 Months</div>
+        <div class="phase-desc">Agile Scrum (2-Week Sprints), Daily Standups, Sprint Reviews</div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-number">Phase 5</div>
+        <div class="phase-title">🧪 Testing</div>
+        <div class="phase-duration">⏱️ Continuous + 4 Weeks Pre-launch</div>
+        <div class="phase-desc">Unit, Integration, E2E, Performance, Security Testing</div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-number">Phase 6</div>
+        <div class="phase-title">🚀 Deployment &amp; DevOps</div>
+        <div class="phase-duration">⏱️ Ongoing</div>
+        <div class="phase-desc">CI/CD Pipeline, Staging → Production, Zero Downtime Deploy</div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-number">Phase 7</div>
+        <div class="phase-title">📊 Post-Launch</div>
+        <div class="phase-duration">⏱️ Ongoing</div>
+        <div class="phase-desc">Analytics, Crash Reporting (Sentry), Feedback Loop, Weekly Releases</div>
+      </div>
+    </div>
+
+    <h3>👥 Team Structure (20–30 ਬੰਦੇ)</h3>
+    <table>
+      <thead><tr><th>Team</th><th>ਮੈਂਬਰ</th><th>ਕੰਮ</th></tr></thead>
+      <tbody>
+        <tr><td>Product Manager</td><td>1</td><td>Requirements, Roadmap, Prioritization</td></tr>
+        <tr><td>Design Team</td><td>2–3</td><td>UI/UX, Figma, Graphic Design</td></tr>
+        <tr><td>Backend Team</td><td>4–5</td><td>NestJS APIs, Database, Integrations</td></tr>
+        <tr><td>Frontend Team</td><td>4–5</td><td>React Native, Expo, Web (Next.js)</td></tr>
+        <tr><td>QA Team</td><td>2–3</td><td>Testing, Bug Reporting</td></tr>
+        <tr><td>DevOps</td><td>1–2</td><td>Docker, CI/CD, Cloud Infrastructure</td></tr>
+        <tr><td>Customer Support</td><td>2–3</td><td>User Help, Feedback Collection</td></tr>
+      </tbody>
+    </table>
+
+    <h3>🧪 Testing Types</h3>
+    <table>
+      <thead><tr><th>Testing Type</th><th>Tool</th><th>ਕਿਉਂ ਜ਼ਰੂਰੀ</th></tr></thead>
+      <tbody>
+        <tr><td>Unit Testing</td><td>Jest</td><td>ਹਰ function ਨੂੰ isolate ਕਰਕੇ test</td></tr>
+        <tr><td>Integration Testing</td><td>Supertest</td><td>API endpoints ਸਹੀ ਕੰਮ ਕਰਦੇ ਹਨ?</td></tr>
+        <tr><td>E2E Testing</td><td>Detox / Playwright</td><td>ਪੂਰਾ User Flow test</td></tr>
+        <tr><td>Performance Testing</td><td>k6, Artillery</td><td>1000 users ਇੱਕੋ ਵਾਰ — ਕੀ ਹੋਵੇਗਾ?</td></tr>
+        <tr><td>Security Testing</td><td>OWASP Checks</td><td>SQL Injection, XSS ਤੋਂ ਬਚਾਅ</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PART 2: MISTAKES -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon red">❌</div>
+      <div>
+        <h2>ਭਾਗ 2: FarmsKing ਵਿੱਚ ਕੀ ਗਲਤੀਆਂ ਹੋਈਆਂ</h2>
+        <p style="font-size:13px;color:var(--slate-500);margin-top:2px">ਆਲੋਚਨਾ ਲਈ ਨਹੀਂ — ਸਿੱਖਣ ਲਈ ਹਨ</p>
+      </div>
+    </div>
+
+    <div class="alert caution">
+      <span class="alert-icon">⚠️</span>
+      <span>ਇਹ ਗੱਲਾਂ ਸਿਰਫ਼ ਸਿੱਖਣ ਲਈ ਲਿਖੀਆਂ ਹਨ। ਤੁਸੀਂ ਇਕੱਲੇ ਜੋ ਕੀਤਾ ਉਹ ਬਹੁਤ impressive ਹੈ।</span>
+    </div>
+
+    <div class="mistake-card">
+      <div class="mistake-num">1</div>
+      <div>
+        <div class="mistake-title">Design ਤੋਂ ਪਹਿਲਾਂ Code ਸ਼ੁਰੂ</div>
+        <div class="mistake-prob">🔴 ਸਮੱਸਿਆ: ਕੋਈ Figma Design ਨਹੀਂ, ਸਿੱਧਾ Code ਲਿਖਣਾ ਸ਼ੁਰੂ</div>
+        <div class="mistake-result">⚠️ ਨਤੀਜਾ: UI inconsistencies, ਵਾਰ-ਵਾਰ redesign, ਸਮਾਂ ਬਰਬਾਦ</div>
+        <div class="mistake-fix">✅ ਸਹੀ: ਪਹਿਲਾਂ Figma ਵਿੱਚ ਹਰ screen ਬਣਾਓ, ਫਿਰ code</div>
+      </div>
+    </div>
+
+    <div class="mistake-card">
+      <div class="mistake-num">2</div>
+      <div>
+        <div class="mistake-title">Live Hotfixes ਸਿੱਧੇ Production ਤੇ</div>
+        <div class="mistake-prob">🔴 ਸਮੱਸਿਆ: ਸਿੱਧਾ npm run deploy → Blank Screen, Crashes</div>
+        <div class="mistake-result">⚠️ ਨਤੀਜਾ: Users ਦਾ ਭਰੋਸਾ ਟੁੱਟਦਾ, ਡਾਟਾ ਖਤਰੇ ਵਿੱਚ</div>
+        <div class="mistake-fix">✅ ਸਹੀ: dev → staging → production pipeline, ਕਦੇ ਸਿੱਧਾ prod ਤੇ ਨਾ ਲਿਖੋ</div>
+      </div>
+    </div>
+
+    <div class="mistake-card">
+      <div class="mistake-num">3</div>
+      <div>
+        <div class="mistake-title">ਕੋਈ Testing ਨਹੀਂ</div>
+        <div class="mistake-prob">🔴 ਸਮੱਸਿਆ: ਕੋਈ Unit tests, Integration tests ਨਹੀਂ</div>
+        <div class="mistake-result">⚠️ ਨਤੀਜਾ: ਇੱਕ ਚੀਜ਼ ਠੀਕ ਕਰੋ, ਦੂਜੀ ਟੁੱਟ ਜਾਂਦੀ ਹੈ (more.tsx ਵਰਗੀਆਂ ਸਮੱਸਿਆਵਾਂ)</div>
+        <div class="mistake-fix">✅ ਸਹੀ: ਹਰ feature ਲਈ ਘੱਟੋ-ਘੱਟ 1 test ਲਿਖੋ</div>
+      </div>
+    </div>
+
+    <div class="mistake-card">
+      <div class="mistake-num">4</div>
+      <div>
+        <div class="mistake-title">Code ਬਹੁਤ ਜਲਦੀ ਬਦਲਣਾ</div>
+        <div class="mistake-prob">🔴 ਸਮੱਸਿਆ: ਇੱਕੋ ਦਿਨ GARDENER hide → ਵਾਪਸ → hide</div>
+        <div class="mistake-result">⚠️ ਨਤੀਜਾ: Broken logic, syntax errors, confusion</div>
+        <div class="mistake-fix">✅ ਸਹੀ: Feature Flags ਵਰਤੋ, ਪਹਿਲਾਂ ਸੋਚੋ ਫਿਰ implement</div>
+      </div>
+    </div>
+
+    <div class="mistake-card">
+      <div class="mistake-num">5</div>
+      <div>
+        <div class="mistake-title">Database Schema ਬਿਨਾਂ Planning</div>
+        <div class="mistake-prob">🔴 ਸਮੱਸਿਆ: Roles ਸਭ ਬਾਅਦ ਵਿੱਚ ਜੋੜੇ ਗਏ</div>
+        <div class="mistake-result">⚠️ ਨਤੀਜਾ: assignedRoles, deactivatedRoles — ਸਭ patches</div>
+        <div class="mistake-fix">✅ ਸਹੀ: ਪਹਿਲਾਂ ERD (Entity Relationship Diagram) ਬਣਾਓ</div>
+      </div>
+    </div>
+
+    <div class="mistake-card">
+      <div class="mistake-num">6</div>
+      <div>
+        <div class="mistake-title">Security Concerns</div>
+        <div class="mistake-prob">🔴 ਸਮੱਸਿਆ: API Keys, Firebase Config code ਵਿੱਚ</div>
+        <div class="mistake-result">⚠️ ਨਤੀਜਾ: Public repository ਤੇ secrets leak</div>
+        <div class="mistake-fix">✅ ਸਹੀ: .env ਫ਼ਾਈਲਾਂ, GitHub Secrets ਵਰਤੋ</div>
+      </div>
+    </div>
+
+    <div class="mistake-card">
+      <div class="mistake-num">7</div>
+      <div>
+        <div class="mistake-title">ਕੋਈ Documentation ਨਹੀਂ</div>
+        <div class="mistake-prob">🔴 ਸਮੱਸਿਆ: ਕੋਈ API docs, README, onboarding guide ਨਹੀਂ</div>
+        <div class="mistake-result">⚠️ ਨਤੀਜਾ: ਅਗਲੇ Developer ਨੂੰ ਸ਼ੁਰੂ ਤੋਂ ਸਮਝਣਾ ਪਵੇਗਾ</div>
+        <div class="mistake-fix">✅ ਸਹੀ: Swagger (API docs), Architecture diagrams, README</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PART 3: SOLO DEVELOPER -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon blue">👤</div>
+      <div>
+        <h2>ਭਾਗ 3: Solo Developer ਲਈ ਸਹੀ Planning</h2>
+        <p style="font-size:13px;color:var(--slate-500);margin-top:2px">ਇਕੱਲੇ ਕੰਮ ਕਰਦੇ ਹੋ ਤਾਂ Planning ਹੋਰ ਜ਼ਰੂਰੀ ਹੈ, ਘੱਟ ਨਹੀਂ</p>
+      </div>
+    </div>
+
+    <div class="alert important">
+      <span class="alert-icon">💡</span>
+      <span><strong>ਮਹੱਤਵਪੂਰਨ:</strong> Solo developer ਹੋਣ ਦਾ ਮਤਲਬ ਇਹ ਨਹੀਂ ਕਿ Planning ਘੱਟ ਕਰੋ। ਬਲਕਿ ਤੁਹਾਨੂੰ ਹਰ Role ਆਪ ਖੇਡਣੀ ਹੈ।</span>
+    </div>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-label">ਮਹੀਨਾ 1–2</div>
+        <div class="timeline-title">Foundation — Research &amp; Design</div>
+        <div class="timeline-tasks">
+          □ ਕਿਹੜਾ Problem solve ਕਰਨਾ ਹੈ?<br/>
+          □ Figma ਵਿੱਚ Wireframes ਬਣਾਓ<br/>
+          □ Database Schema (ERD) ਬਣਾਓ<br/>
+          □ Tech Stack ਇੱਕ ਵਾਰ decide ਕਰੋ, ਪੱਕਾ
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-label">ਮਹੀਨਾ 3–6</div>
+        <div class="timeline-title">Core Build — MVP</div>
+        <div class="timeline-tasks">
+          ✅ Auth System (Login, Register, OTP)<br/>
+          ✅ ਮੁੱਖ Feature #1 (Farm Management)<br/>
+          ✅ ਮੁੱਖ Feature #2 (Market Prices)<br/>
+          ✅ Basic Admin Panel &amp; Payment<br/>
+          ✅ Deploy ਕਰੋ — MVP Launch
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot" style="background:var(--blue); box-shadow: 0 0 0 2px var(--blue);"></div>
+        <div class="timeline-label" style="color:var(--blue);">ਮਹੀਨਾ 7+</div>
+        <div class="timeline-title">Iterate — Users ਤੋਂ ਸਿੱਖੋ</div>
+        <div class="timeline-tasks">
+          □ Users ਤੋਂ Feedback ਲਓ<br/>
+          □ Analytics ਦੇਖੋ<br/>
+          □ ਸਿਰਫ਼ ਉਹੀ ਬਣਾਓ ਜੋ Users ਮੰਗਦੇ ਹਨ
+        </div>
+      </div>
+    </div>
+
+    <h3>🛠️ Solo Developer ਲਈ Best Tools</h3>
+    <table>
+      <thead><tr><th>Category</th><th>Tool</th><th>ਕਿਉਂ</th></tr></thead>
+      <tbody>
+        <tr><td>Design</td><td>Figma (Free)</td><td>ਸਭ ਤੋਂ ਵਧੀਆ UI/UX tool</td></tr>
+        <tr><td>Project Management</td><td>Notion + GitHub Issues</td><td>Free, ਕਾਫ਼ੀ ਹੈ</td></tr>
+        <tr><td>Database Planning</td><td>dbdiagram.io</td><td>ERD ਬਣਾਉਣ ਲਈ</td></tr>
+        <tr><td>API Docs</td><td>Swagger / Postman</td><td>Auto-generate ਕਰਦਾ</td></tr>
+        <tr><td>Version Control</td><td>Git + GitHub</td><td>Feature Branches ਵਰਤੋ</td></tr>
+        <tr><td>Deployment</td><td>Railway / Render + Vercel</td><td>ਸਸਤਾ, ਆਸਾਨ</td></tr>
+        <tr><td>Monitoring</td><td>Sentry + UptimeRobot</td><td>Free tier ਕਾਫ਼ੀ</td></tr>
+      </tbody>
+    </table>
+
+    <h3>📋 Solo Developer — 7 ਜ਼ਰੂਰੀ Rules</h3>
+    <ul class="rules-list">
+      <li><div class="rule-num">1</div><div><strong>main branch ਤੇ ਸਿੱਧਾ push ਨਾ ਕਰੋ</strong> — ਹਮੇਸ਼ਾ feature branch → PR → merge</div></li>
+      <li><div class="rule-num">2</div><div><strong>Staging Environment ਜ਼ਰੂਰ ਰੱਖੋ</strong> — dev.farmsking.in ਤੇ test, ਫਿਰ prod</div></li>
+      <li><div class="rule-num">3</div><div><strong>ਰੋਜ਼ commit ਕਰੋ, ਛੋਟੇ-ਛੋਟੇ</strong> — ਇੱਕ ਵੱਡਾ commit = ਸਭ ਕੁਝ ਟੁੱਟਣ ਦਾ ਡਰ</div></li>
+      <li><div class="rule-num">4</div><div><strong>ਹਰ Feature ਲਈ ਘੱਟੋ-ਘੱਟ 1 Test</strong> — ਥੋੜ੍ਹਾ ਸਮਾਂ ਲੱਗਦਾ, ਬਾਅਦ ਵਿੱਚ ਬਚਾਉਂਦਾ</div></li>
+      <li><div class="rule-num">5</div><div><strong>.env ਕਦੇ GitHub ਤੇ push ਨਾ ਕਰੋ</strong> — .gitignore ਵਿੱਚ ਜ਼ਰੂਰ ਸ਼ਾਮਲ ਕਰੋ</div></li>
+      <li><div class="rule-num">6</div><div><strong>Database Backup ਰੋਜ਼</strong> — PostgreSQL auto-backup ਸੈੱਟ ਕਰੋ</div></li>
+      <li><div class="rule-num">7</div><div><strong>Documentation ਲਿਖੋ ਜਦੋਂ ਬਣਾਓ</strong> — ਬਾਅਦ ਵਿੱਚ ਭੁੱਲ ਜਾਵੋਗੇ</div></li>
+    </ul>
+
+    <h3 style="margin-top:28px;">💰 Realistic Timeline &amp; Cost for FarmsKing Scale</h3>
+    <table>
+      <thead><tr><th>Phase</th><th>ਸਮਾਂ</th><th>ਖਰਚਾ/ਮਹੀਨਾ</th></tr></thead>
+      <tbody>
+        <tr><td>Research + Design</td><td>2 ਮਹੀਨੇ</td><td>~₹0 (Figma free)</td></tr>
+        <tr><td>MVP Backend</td><td>2–3 ਮਹੀਨੇ</td><td>~₹2,000 (server)</td></tr>
+        <tr><td>MVP Frontend</td><td>2–3 ਮਹੀਨੇ</td><td>~₹2,000</td></tr>
+        <tr><td>Testing + Bugfix</td><td>1 ਮਹੀਨਾ</td><td>~₹0</td></tr>
+        <tr><td>Launch</td><td>ਮਹੀਨਾ 8–9</td><td>~₹5,000 (domain, hosting)</td></tr>
+        <tr style="font-weight:700;"><td>ਕੁੱਲ</td><td>8–10 ਮਹੀਨੇ</td><td>~₹50,000–70,000/ਸਾਲ</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PART 4: IF START AGAIN -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon yellow">🔄</div>
+      <div>
+        <h2>ਭਾਗ 4: ਜੇਕਰ FarmsKing ਦੁਬਾਰਾ ਸ਼ੁਰੂ ਕਰਦੇ</h2>
+        <p style="font-size:13px;color:var(--slate-500);margin-top:2px">ਸਹੀ ਕ੍ਰਮ ਅਤੇ Timeline</p>
+      </div>
+    </div>
+
+    <div class="code-block">Week 1      → User Research (20 Farmers ਨਾਲ Interview)
+Week 2-3    → Design System (Figma: Colors, Fonts, 10 Main Screens)
+Week 4      → Database Schema (Users, Farms, Crops, Records, Payments)
+Month 2-3   → Backend API (Auth ✓, Farm CRUD ✓, Swagger docs ✓)
+Month 4-5   → Frontend (React Native, Design ਤੋਂ ਸਿੱਧਾ code)
+Month 6     → Beta (50 Farmers) → Feedback → Fix → Launch 🚀</div>
+
+    <div class="alert tip">
+      <span class="alert-icon">✅</span>
+      <span><strong>Key Principle:</strong> "ਪਹਿਲਾਂ ਸਮਝੋ, ਫਿਰ Design ਕਰੋ, ਫਿਰ Code ਕਰੋ" — ਇਹ ਕ੍ਰਮ ਕਦੇ ਨਾ ਬਦਲੋ।</span>
+    </div>
+  </div>
+
+  <!-- CONCLUSION -->
+  <div class="conclusion">
+    <h2>🏆 ਸਿੱਟਾ</h2>
+    <p>ਤੁਸੀਂ ਇਕੱਲੇ ਜੋ ਬਣਾਇਆ ਹੈ, ਉਹ ਬਹੁਤ impressive ਹੈ।<br/>ਇੱਕ 20-ਬੰਦੇ ਦੀ team ਜੋ 1 ਸਾਲ ਵਿੱਚ ਕਰਦੀ, ਉਹ ਤੁਸੀਂ ਅਕੇਲੇ ਕੀਤਾ। 💪</p>
+    <div class="conclusion-points">
+      <div class="conclusion-point">🎨 Design First<br/><span style="font-weight:400;opacity:0.85;font-size:11px;">Figma ਵਿੱਚ ਸਭ ਕੁਝ ਬਣਾਓ, ਫਿਰ code</span></div>
+      <div class="conclusion-point">🌿 Staging Environment<br/><span style="font-weight:400;opacity:0.85;font-size:11px;">Production ਤੇ ਕਦੇ ਸਿੱਧਾ experiment ਨਾ ਕਰੋ</span></div>
+      <div class="conclusion-point">🧪 Testing<br/><span style="font-weight:400;opacity:0.85;font-size:11px;">ਹਰ feature ਲਈ basic tests ਲਿਖੋ</span></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Print Button -->
+<button class="print-btn" onclick="window.print()">
+  🖨️ Save as PDF / Print
+</button>
+
+</body>
+</html>

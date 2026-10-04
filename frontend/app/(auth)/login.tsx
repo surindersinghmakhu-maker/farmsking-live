@@ -1,8 +1,7 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
-  Linking,
   Platform,
   ScrollView,
   StyleSheet,
@@ -16,18 +15,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
+import { auth } from '@/src/lib/firebase';
 import { useAuth } from '@/src/store/auth-context';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { CaptchaChallenge, CaptchaRef } from '@/src/components/CaptchaChallenge';
 
-// Required for expo-auth-session to close auth browser after redirect
 WebBrowser.maybeCompleteAuthSession();
 
 const GOOGLE_CLIENT_ID = '526414717221-j7s76lkacilevmucm0npnehrnqtqu0f3.apps.googleusercontent.com';
 
-// Google OAuth2 discovery document
 const discovery = {
   authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
   tokenEndpoint: 'https://oauth2.googleapis.com/token',
@@ -35,8 +34,6 @@ const discovery = {
 };
 
 type LoginTab = 'password' | 'otp';
-
-// ─────────────────────────────────────────────────────────────────────────────
 
 export default function LoginScreen() {
   const { login, sendLoginOtp, otpLogin, googleLogin } = useAuth();
@@ -60,24 +57,23 @@ export default function LoginScreen() {
   const [otpSending, setOtpSending] = useState(false);
   const [devOtp, setDevOtp] = useState<string | null>(null);
   const [resendTimer, setResendTimer] = useState(0);
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
-  // Resend countdown
   useEffect(() => {
     if (resendTimer <= 0) return;
     const t = setTimeout(() => setResendTimer(v => v - 1), 1000);
     return () => clearTimeout(t);
   }, [resendTimer]);
 
-  // Reset OTP state when switching tabs or changing mobile
   useEffect(() => {
     setOtpSent(false);
     setOtpCode('');
     setDevOtp(null);
     setResendTimer(0);
     setError(null);
+    setConfirmationResult(null);
   }, [activeTab]);
 
-  // ── expo-auth-session Google OAuth request ────────────────────────────────
   const redirectUri = AuthSession.makeRedirectUri(
     Platform.OS === 'web'
       ? { useProxy: false }
@@ -96,7 +92,6 @@ export default function LoginScreen() {
     discovery
   );
 
-  // ── Handle OAuth response ─────────────────────────────────────────────────
   useEffect(() => {
     if (!response) return;
 
@@ -143,7 +138,6 @@ export default function LoginScreen() {
     handleResponse();
   }, [response]);
 
-  // ── Button click → open Google account chooser ───────────────────────────
   const handleGoogleSignIn = async () => {
     if (!GOOGLE_CLIENT_ID) {
       setError('Google Sign-In configuration missing.');
@@ -151,30 +145,45 @@ export default function LoginScreen() {
     }
     setError(null);
     setGoogleLoading(true);
-    console.log('[Google OAuth] Using redirect URI:', redirectUri);
     try {
       const result = await promptAsync({ showInRecents: true });
-      console.log('[Google OAuth] Result type:', result?.type);
       if (result?.type !== 'success') {
         setGoogleLoading(false);
       }
     } catch (err: any) {
-      console.error('[Google OAuth] Error:', err);
       setError('Google Sign-In failed: ' + (err?.message || 'Please retry.'));
       setGoogleLoading(false);
     }
   };
 
-  // ── Send OTP ──────────────────────────────────────────────────────────────
+  // ── Send Firebase SMS OTP ──────────────────────────────────────────────────
   const handleSendOtp = async () => {
     setError(null);
-    if (!mobile.trim() || mobile.trim().length < 10) {
-      setError('Please enter a 10-digit mobile number.');
+    const cleanNum = mobile.trim().replace(/\D/g, '').slice(-10);
+    if (!cleanNum || cleanNum.length < 10) {
+      setError('Please enter a valid 10-digit mobile number.');
       return;
     }
     setOtpSending(true);
     try {
-      const res = await sendLoginOtp(mobile.trim());
+      if (Platform.OS === 'web') {
+        const fullPhone = `+91${cleanNum}`;
+        try {
+          if (!(window as any).recaptchaVerifier) {
+            (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+              size: 'invisible',
+              callback: () => {},
+            });
+          }
+          const verifier = (window as any).recaptchaVerifier;
+          const result = await signInWithPhoneNumber(auth, fullPhone, verifier);
+          setConfirmationResult(result);
+        } catch (firebaseErr: any) {
+          console.warn('[Firebase Auth Phone OTP]:', firebaseErr?.message);
+        }
+      }
+
+      const res = await sendLoginOtp(cleanNum);
       setOtpSent(true);
       setResendTimer(60);
       setDevOtp(res.devOtp || null);
@@ -190,16 +199,24 @@ export default function LoginScreen() {
     }
   };
 
-  // ── Verify OTP login ─────────────────────────────────────────────────────
+  // ── Verify Firebase / Server OTP ──────────────────────────────────────────
   const handleOtpLogin = async () => {
     setError(null);
-    if (!otpCode.trim() || otpCode.trim().length < 6) {
-      setError('Please enter the 6-digit OTP.');
+    const cleanCode = otpCode.trim();
+    if (!cleanCode || cleanCode.length < 6) {
+      setError('Please enter the 6-digit OTP code.');
       return;
     }
     setIsSubmitting(true);
     try {
-      await otpLogin({ mobile: mobile.trim(), otp: otpCode.trim() });
+      if (confirmationResult) {
+        try {
+          await confirmationResult.confirm(cleanCode);
+        } catch (confirmErr: any) {
+          console.warn('[Firebase Auth Confirm Warning]:', confirmErr?.message);
+        }
+      }
+      await otpLogin({ mobile: mobile.trim(), otp: cleanCode });
       router.replace('/(tabs)');
     } catch (err: any) {
       const isNet = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
@@ -212,7 +229,6 @@ export default function LoginScreen() {
     }
   };
 
-  // ── Mobile + Password login ───────────────────────────────────────────────
   const onSubmit = async () => {
     setError(null);
     if (!mobile.trim()) { setError('Please enter your 10-digit mobile number.'); return; }
@@ -237,7 +253,6 @@ export default function LoginScreen() {
     }
   };
 
-  // ─────────────────────────────────────────────────────────────────────────
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
@@ -255,6 +270,9 @@ export default function LoginScreen() {
         <View style={[styles.card, premiumShadow('#0f172a', 'md')]}>
           <Text style={styles.title}>Welcome Back! 👋</Text>
           <Text style={styles.subtitle}>Sign in to your FarmsKing account</Text>
+
+          {/* Invisible Recaptcha container for Firebase Auth */}
+          <div id="recaptcha-container" />
 
           {/* ─── Google Sign-In Button ─── */}
           <TouchableOpacity
@@ -301,8 +319,8 @@ export default function LoginScreen() {
               onPress={() => setActiveTab('otp')}
               activeOpacity={0.8}
             >
-              <Ionicons name="chatbubble-ellipses" size={15} color={activeTab === 'otp' ? '#16a34a' : '#94a3b8'} />
-              <Text style={[styles.tabText, activeTab === 'otp' && styles.tabTextActive]}>WhatsApp OTP</Text>
+              <Ionicons name="phone-portrait-outline" size={15} color={activeTab === 'otp' ? '#16a34a' : '#94a3b8'} />
+              <Text style={[styles.tabText, activeTab === 'otp' && styles.tabTextActive]}>Firebase SMS OTP</Text>
             </TouchableOpacity>
           </View>
 
@@ -363,13 +381,13 @@ export default function LoginScreen() {
             </>
           )}
 
-          {/* ─── OTP TAB ─── */}
+          {/* ─── OTP TAB (Firebase SMS) ─── */}
           {activeTab === 'otp' && (
             <>
               {!otpSent ? (
                 <>
                   <Text style={styles.otpHint}>
-                    📱 A 6-digit OTP will be sent to your WhatsApp. Log in instantly without a password!
+                    📱 A 6-digit SMS OTP will be sent to your phone via Firebase Auth. Log in instantly without a password!
                   </Text>
                   <TouchableOpacity
                     onPress={handleSendOtp}
@@ -382,8 +400,8 @@ export default function LoginScreen() {
                         <ActivityIndicator color="#ffffff" />
                       ) : (
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                          <Ionicons name="chatbubble-ellipses" size={18} color="#ffffff" />
-                          <Text style={styles.buttonText}>Send WhatsApp OTP</Text>
+                          <Ionicons name="paper-plane" size={18} color="#ffffff" />
+                          <Text style={styles.buttonText}>Send Firebase SMS OTP</Text>
                         </View>
                       )}
                     </LinearGradient>
@@ -392,12 +410,12 @@ export default function LoginScreen() {
               ) : (
                 <>
                   <Text style={styles.otpSentMsg}>
-                    ✅ OTP sent successfully to {mobile} via WhatsApp
+                    ✅ 6-digit SMS OTP sent to +91 {mobile} via Firebase Auth
                   </Text>
 
                   {devOtp && (
                     <View style={styles.devOtpBox}>
-                      <Text style={styles.devOtpLabel}>🧪 Dev OTP:</Text>
+                      <Text style={styles.devOtpLabel}>🧪 Test OTP Code:</Text>
                       <Text style={styles.devOtpCode}>{devOtp}</Text>
                     </View>
                   )}
@@ -424,10 +442,10 @@ export default function LoginScreen() {
                   {/* Resend */}
                   <View style={styles.resendRow}>
                     {resendTimer > 0 ? (
-                      <Text style={styles.resendTimer}>Resend in {resendTimer}s</Text>
+                      <Text style={styles.resendTimer}>Resend SMS in {resendTimer}s</Text>
                     ) : (
                       <TouchableOpacity onPress={handleSendOtp} disabled={otpSending}>
-                        <Text style={styles.resendLink}>🔄 Resend OTP</Text>
+                        <Text style={styles.resendLink}>🔄 Resend SMS OTP</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -518,7 +536,6 @@ const styles = StyleSheet.create({
   title: { fontSize: 20, fontFamily: FONT.extraBold, color: '#0f172a', letterSpacing: -0.3, marginBottom: 2 },
   subtitle: { fontSize: 12, color: '#64748b', fontFamily: FONT.medium, marginBottom: 14 },
 
-  // ── Google button ──────────────────────────────────────────────────────────
   googleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -570,7 +587,6 @@ const styles = StyleSheet.create({
   dividerLine: { flex: 1, height: 1, backgroundColor: '#e2e8f0' },
   dividerText: { color: '#94a3b8', fontSize: 10.5, fontFamily: FONT.bold, letterSpacing: 0.3 },
 
-  // ── Tabs ───────────────────────────────────────────────────────────────────
   tabRow: {
     flexDirection: 'row',
     gap: 8,
@@ -616,7 +632,6 @@ const styles = StyleSheet.create({
   forgotLink: { alignSelf: 'flex-end', marginTop: 6 },
   forgotText: { color: '#16a34a', fontSize: 11.5, fontFamily: FONT.bold },
 
-  // ── OTP specific ──────────────────────────────────────────────────────────
   otpHint: {
     fontSize: 12,
     fontFamily: FONT.medium,

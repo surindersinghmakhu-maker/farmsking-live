@@ -1,0 +1,74 @@
+name: Continuous Integration (CI)
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+
+jobs:
+  backend-ci:
+    name: Backend Type-Check & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🚚 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: 📦 Install Backend Dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: 🔍 Prisma Generate
+        run: |
+          cd backend
+          npx prisma generate
+
+      - name: 🧪 TypeScript Verification
+        run: |
+          cd backend
+          npx tsc --noEmit
+
+      - name: ⚙️ Test Build Production
+        run: |
+          cd backend
+          npm run build
+
+  frontend-ci:
+    name: Frontend Type-Check & Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🚚 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📦 Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm ci --legacy-peer-deps
+
+      - name: 🧪 TypeScript Verification
+        run: |
+          cd frontend
+          npx tsc --noEmit

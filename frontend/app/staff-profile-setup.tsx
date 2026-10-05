@@ -73,7 +73,7 @@ export default function StaffProfileSetupScreen() {
 
     setSaving(true);
     try {
-      await apiClient.post('/users/staff-profile-submit', {
+      await apiClient.post('/users/submit-profile-completion', {
         name: fullName.trim(),
         bio: isTechnicalTrainer ? 'Technical Trainer employee for web application training.' : bio.trim(),
         qualification: isTechnicalTrainer ? 'Technical Employee' : qualification.trim(),

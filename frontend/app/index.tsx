@@ -4,8 +4,8 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import PublicHeader from '@/components/PublicHeader';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence, withRepeat, withTiming, withDelay } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
+import { BlurView } from 'expo-blur';
 
 function AnimatedCropAsset({ imgSrc, style, label, index = 0 }: { imgSrc: any, style: any, label: string, index?: number }) {
   const scale = useSharedValue(1);
@@ -104,14 +104,50 @@ export default function PublicLandingPage() {
         overScrollMode="never"
       >
         
+        {/* Floating Glowing Orbs (Web effect) */}
+        {Platform.OS === 'web' && (
+          <>
+            <View style={{ position: 'absolute', top: -20, left: '10%', width: 250, height: 250, borderRadius: 125, backgroundColor: 'rgba(16, 185, 129, 0.2)', filter: 'blur(60px)' as any, zIndex: -1 }} />
+            <View style={{ position: 'absolute', top: 150, right: '10%', width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(2, 132, 199, 0.2)', filter: 'blur(60px)' as any, zIndex: -1 }} />
+          </>
+        )}
+
         {/* TOP TEXT AREA */}
         <View style={styles.heroTextContainer}>
-          <Text style={[styles.heroTitle, !isDesktop && styles.heroTitleMobile]}>
+          {/* Trust Badges */}
+          <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'center', marginBottom: 16 }}>
+            <View style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.3)', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Ionicons name="leaf" size={12} color="#10b981" />
+              <Text style={{ color: '#10b981', fontSize: 10, fontFamily: FONT.bold }}>10k+ Farmers</Text>
+            </View>
+            <View style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(245, 158, 11, 0.3)', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Ionicons name="trophy" size={12} color="#f59e0b" />
+              <Text style={{ color: '#f59e0b', fontSize: 10, fontFamily: FONT.bold }}>Premium AI</Text>
+            </View>
+          </View>
+
+          <Text style={[styles.heroTitle, !isDesktop && styles.heroTitleMobile, { color: '#fef08a', textShadowColor: 'rgba(234, 179, 8, 0.4)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 10 }]}>
             Revolutionizing Indian Agriculture
           </Text>
           <Text style={[styles.heroSubtitle, !isDesktop && styles.heroSubtitleMobile]}>
             Complete Agri-Platform: From Seeds to Harvest & Pure Farmer-Made Foods.
           </Text>
+
+          {/* Action Buttons */}
+          <View style={{ flexDirection: 'row', gap: 16, justifyContent: 'center', marginTop: 28 }}>
+            <TouchableOpacity 
+              style={{ backgroundColor: '#10b981', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 30, ...premiumShadow('#10b981', 'md') }}
+              onPress={() => router.push('/shop')}
+            >
+              <Text style={{ color: '#fff', fontFamily: FONT.bold, fontSize: 15 }}>Shop Now</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={{ backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 30, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }}
+              onPress={() => router.push('/topic/Crop-Doctors')}
+            >
+              <Text style={{ color: '#fff', fontFamily: FONT.bold, fontSize: 15 }}>Ask Agri-AI</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* BOTTOM CARDS ROW */}
@@ -169,7 +205,8 @@ function GlassCard({ imgSrcs, title, desc }: { imgSrcs: any[], title: string, de
   const cardWidth = isMobile ? (width / 2) - 24 : 175;
   
   return (
-    <View style={[styles.glassCard, { width: cardWidth }]}>
+    <View style={[styles.glassCard, { width: cardWidth, overflow: 'hidden' }]}>
+      <BlurView intensity={25} tint="dark" style={StyleSheet.absoluteFill} />
       <View style={styles.glassCardTopRow}>
         <View style={{ flexDirection: 'row', gap: 12 }}>
           {imgSrcs.map((src, idx) => (
@@ -347,7 +384,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   glassCard: {
-    backgroundColor: 'rgba(20, 30, 45, 0.65)',
+    backgroundColor: 'rgba(20, 30, 45, 0.3)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.15)',
     borderRadius: 16,

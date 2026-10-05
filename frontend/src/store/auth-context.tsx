@@ -1,4 +1,5 @@
 import * as SecureStore from '../lib/storage';
+import { router } from 'expo-router';
 import { createContext, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import { AppState, Alert } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
@@ -203,6 +204,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         disconnectChatSocket();
         queryClient.clear();
+        router.replace('/');
       },
       updateUser: async (patch) => {
         if (!userRef.current) return;

@@ -114,17 +114,7 @@ export default function PublicLandingPage() {
 
         {/* TOP TEXT AREA */}
         <View style={styles.heroTextContainer}>
-          {/* Trust Badges */}
-          <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'center', marginBottom: 16 }}>
-            <View style={{ backgroundColor: 'rgba(16, 185, 129, 0.15)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.3)', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Ionicons name="leaf" size={12} color="#10b981" />
-              <Text style={{ color: '#10b981', fontSize: 10, fontFamily: FONT.bold }}>10k+ Farmers</Text>
-            </View>
-            <View style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(245, 158, 11, 0.3)', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Ionicons name="trophy" size={12} color="#f59e0b" />
-              <Text style={{ color: '#f59e0b', fontSize: 10, fontFamily: FONT.bold }}>Premium AI</Text>
-            </View>
-          </View>
+
 
           <Text style={[styles.heroTitle, !isDesktop && styles.heroTitleMobile, { color: '#fef08a', textShadowColor: 'rgba(234, 179, 8, 0.4)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 10 }]}>
             Revolutionizing Indian Agriculture

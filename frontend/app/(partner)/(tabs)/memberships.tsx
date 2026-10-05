@@ -274,7 +274,7 @@ export default function MembershipsScreen() {
               </View>
               <TouchableOpacity
                 style={[styles.upgradeBtn, { backgroundColor: '#0284c7' }]}
-                onPress={() => router.push('/(tabs)/farm')}
+                onPress={() => router.push('/(tabs)/farm' as any)}
               >
                 <Text style={styles.upgradeBtnText}>Upgrade to Lite Plan ⚡</Text>
               </TouchableOpacity>
@@ -313,7 +313,7 @@ export default function MembershipsScreen() {
                 ) : null}
                 <TouchableOpacity
                   style={[styles.upgradeBtn, { backgroundColor: '#10b981', flex: 1 }]}
-                  onPress={() => router.push('/(tabs)/farm')}
+                  onPress={() => router.push('/(tabs)/farm' as any)}
                 >
                   <Text style={styles.upgradeBtnText}>Upgrade VIP 👑</Text>
                 </TouchableOpacity>
@@ -380,14 +380,14 @@ export default function MembershipsScreen() {
                   <View style={styles.doctorActionsRow}>
                     <TouchableOpacity
                       style={[styles.doctorActionBtn, { backgroundColor: '#e0f2fe' }]}
-                      onPress={() => router.push('/(tabs)/chat')}
+                      onPress={() => router.push('/(tabs)/chat' as any)}
                     >
                       <Ionicons name="chatbubble-ellipses" size={16} color="#0284c7" />
                       <Text style={[styles.doctorActionText, { color: '#0284c7' }]}>Chat Doctor</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[styles.doctorActionBtn, { backgroundColor: '#dcfce7' }]}
-                      onPress={() => router.push('/(tabs)/market')}
+                      onPress={() => router.push('/(tabs)/market' as any)}
                     >
                       <Ionicons name="call" size={16} color="#16a34a" />
                       <Text style={[styles.doctorActionText, { color: '#16a34a' }]}>Call Doctor</Text>

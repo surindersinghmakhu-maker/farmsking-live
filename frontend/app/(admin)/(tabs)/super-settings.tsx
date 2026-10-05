@@ -938,22 +938,22 @@ function GardenSettingsPanel() {
       </TouchableOpacity>
       
       {!isCollapsed && (
-        <View style={styles.cardBody}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>PRO Card Price (₹)</Text>
-            <TextInput style={styles.textInput} keyboardType="numeric" value={proPrice} onChangeText={setProPrice} placeholder="e.g. 299" />
+        <View style={{ gap: 12, marginTop: 12, padding: 4 }}>
+          <View style={{ gap: 4 }}>
+            <Text style={styles.label}>PRO Card Price (₹)</Text>
+            <TextInput style={styles.input} keyboardType="numeric" value={proPrice} onChangeText={setProPrice} placeholder="e.g. 299" />
           </View>
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>VIP Card Price (₹)</Text>
-            <TextInput style={styles.textInput} keyboardType="numeric" value={vipPrice} onChangeText={setVipPrice} placeholder="e.g. 999" />
+          <View style={{ gap: 4 }}>
+            <Text style={styles.label}>VIP Card Price (₹)</Text>
+            <TextInput style={styles.input} keyboardType="numeric" value={vipPrice} onChangeText={setVipPrice} placeholder="e.g. 999" />
           </View>
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Garden Expert Platform Fee (%)</Text>
-            <TextInput style={styles.textInput} keyboardType="numeric" value={feePercent} onChangeText={setFeePercent} placeholder="e.g. 20" />
+          <View style={{ gap: 4 }}>
+            <Text style={styles.label}>Garden Expert Platform Fee (%)</Text>
+            <TextInput style={styles.input} keyboardType="numeric" value={feePercent} onChangeText={setFeePercent} placeholder="e.g. 20" />
           </View>
 
-          <TouchableOpacity style={[styles.saveBtn, saving && styles.saveBtnDisabled, { backgroundColor: '#f59e0b' }]} onPress={handleSave} disabled={saving}>
-            {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.saveBtnText}>Save Garden Settings</Text>}
+          <TouchableOpacity style={[wStyles.btn, saving && { opacity: 0.5 }, { backgroundColor: '#f59e0b', marginTop: 12 }]} onPress={handleSave} disabled={saving}>
+            {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={wStyles.btnText}>Save Garden Settings</Text>}
           </TouchableOpacity>
         </View>
       )}

@@ -1,0 +1,288 @@
+// ─── Business Partner coupons, wallet & withdrawals ─────────────────────
+
+model Coupon {
+  id                String            @id @default(uuid())
+  code              String            @unique
+  businessPartnerId String
+  businessPartner   User              @relation("BusinessPartnerCoupons", fields: [businessPartnerId], references: [id], onDelete: Cascade)
+  commissionType    DiscountValueType
+  commissionValue   Decimal           @db.Decimal(10, 2)
+  commissionMaxCap  Decimal?          @db.Decimal(10, 2)
+  discountType      DiscountValueType
+  discountValue     Decimal           @db.Decimal(10, 2)
+  discountMaxCap    Decimal?          @db.Decimal(10, 2)
+  minOrderAmount    Decimal?          @db.Decimal(10, 2)
+  kind              CouponKind        @default(GENERIC)
+  expiresAt         DateTime
+  usageLimit        Int
+  usedCount         Int               @default(0)
+  isActive          Boolean           @default(true)
+  createdAt         DateTime          @default(now())
+  createdById       String
+  createdBy         User              @relation("CouponsCreatedByAdmin", fields: [createdById], references: [id])
+
+  redemptions   CouponRedemption[]
+  CustomerOrder CustomerOrder[]
+
+  @@index([businessPartnerId])
+  @@map("coupons")
+}
+
+model CouponRedemption {
+  id               String         @id @default(uuid())
+  couponId         String
+  coupon           Coupon         @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  customerId       String?
+  customer         User?          @relation("CouponRedemptionsCustomer", fields: [customerId], references: [id], onDelete: SetNull)
+  orderId          String?
+  order            CustomerOrder? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  orderAmount      Decimal        @db.Decimal(10, 2)
+  discountAmount   Decimal        @db.Decimal(10, 2)
+  commissionAmount Decimal        @db.Decimal(10, 2)
+  creditedAt       DateTime?
+  redeemedAt       DateTime       @default(now())
+
+  @@index([couponId])
+  @@index([orderId])
+  @@map("coupon_redemptions")
+}
+
+model WalletTransaction {
+  id                  String                @id @default(uuid())
+  userId              String
+  user                User                  @relation("WalletTransactions", fields: [userId], references: [id], onDelete: Cascade)
+  type                WalletTransactionType
+  amount              Decimal               @db.Decimal(10, 2)
+  reason              String
+  couponRedemptionId  String?
+  withdrawalRequestId String?
+  /**
+   * The farmer whose coupon redemption (or other action) triggered this transaction, when applicable — lets the wallet owner see "which farmer's ID this happened on" in Full Details.
+   */
+  relatedUserId       String?
+  relatedUser         User?                 @relation("WalletTransactionsRelatedUser", fields: [relatedUserId], references: [id], onDelete: SetNull)
+  createdAt           DateTime              @default(now())
+
+  @@index([userId])
+  @@index([relatedUserId])
+  @@map("wallet_transactions")
+}
+
+/// Platform-wide activity/audit trail — one row per mutating API request (POST/PATCH/PUT/DELETE).
+/// Written by a global interceptor, never blocks the actual request if logging itself fails.
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  actor      User?    @relation("AuditLogsActor", fields: [actorId], references: [id], onDelete: SetNull)
+  actorRole  Role?
+  method     String
+  path       String
+  action     String
+  targetId   String?
+  statusCode Int
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+/// A saved delivery address for the shopping/orders flow — one account can have several (Home/Farm/Work),
+/// picked at checkout. Unrelated to the farmer-side `Customer` model above (that's a farmer's own buyer).
+model CustomerAddress {
+  id         String   @id @default(uuid())
+  ownerId    String
+  owner      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  tag        String
+  line       String
+  mobile     String?
+  postOffice String
+  district   String
+  state      String
+  pincode    String
+  createdAt  DateTime @default(now())
+
+  @@index([ownerId])
+  @@map("customer_addresses")
+}
+
+/// Singleton row of app-wide, Super-Admin-editable settings — currently just the UPI ID that receives
+/// order/plan payments. Always exactly one row, id fixed to "default".
+model AppSetting {
+  id                             String   @id @default("default")
+  appName                        String   @default("FarmsKing")
+  logoUrl                        String?
+  tagline                        String?
+  upiId                          String?
+  upiPayeeName                   String?
+  adminName                      String?
+  adminMobile                    String?
+  adminEmail                     String?
+  groupVoiceCallEnabled          Boolean  @default(true)
+  whatsappGroupSyncEnabled       Boolean  @default(true)
+  whatsappAutoAddEnabled         Boolean  @default(true)
+  whatsappAutoRemoveEnabled      Boolean  @default(true)
+  whatsappGroupJid               String?
+  otpDeliveryChannel             String   @default("WHATSAPP")
+  referralSignupBonusAmount      Float    @default(10)
+  newUserSignupBonusAmount       Float    @default(10)
+  referralPaidPlanBonusAmount    Float    @default(50)
+  appDownloadUrl                 String?  @default("https://farmsking.in/download/farmsking.apk")
+  latestAppVersion               String?  @default("1.0.0")
+  storefrontMaintenanceMode      Boolean  @default(false)
+  agriMaintenanceMode            Boolean  @default(false)
+  gardenMaintenanceMode          Boolean  @default(false)
+  walletMaintenanceMode          Boolean  @default(false)
+  trainerMaintenanceMode         Boolean  @default(false)
+  allowDirectPlatformSales       Boolean  @default(false)
+  freeTrialEnabled               Boolean  @default(true)
+  freeTrialDays                  Int      @default(10)
+  freeTrialPlan                  String   @default("SUPER")
+  featureFlags                   Json?
+  updatedAt                      DateTime @updatedAt
+  updatedById                    String?
+  updatedBy                      User?    @relation("AppSettingUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  gardenExpertPlatformFeePercent Float    @default(20.0)
+  gardenerProCardPrice           Decimal  @default(299.00) @db.Decimal(12, 2)
+  gardenerVipCardPrice           Decimal  @default(999.00) @db.Decimal(12, 2)
+
+  /// Platform TDS/fee deducted on wallet withdrawal (%) — Indian standard: 2% TDS (Sec 194N)
+  withdrawalPlatformFeePercent  Float   @default(2.0)
+  /// GST on platform service fee for wallet payout — 18% as per Indian GST rules
+  withdrawalGstPercent          Float   @default(18.0)
+  /// GST on wallet-used-at-checkout transaction (platform payment processing fee 2% + 18% GST on that fee)
+  walletUsagePlatformFeePercent Float   @default(2.0)
+  walletUsageGstPercent         Float   @default(18.0)
+  /// Whether to apply platform fee+GST on wallet actions (can be toggled by superadmin)
+  walletTaxEnabled              Boolean @default(true)
+
+  @@map("app_settings")
+}
+
+/// Single unified home for every coupon-kind's default rates/validity — Referral, Commission-Based, and
+/// Special (personal invite). Farmer/Advisor Plan pricing lives separately in FarmerPlanPricing (one row
+/// per plan tier, a different shape), but both are reachable from the same Coupon Setting screen.
+model CouponSystemSetting {
+  id                                String   @id @default("default")
+  partnerCouponDiscountPercent      Decimal  @default(10) @db.Decimal(5, 2)
+  partnerCouponCommissionPercent    Decimal  @default(5) @db.Decimal(5, 2)
+  partnerCouponMinOrderAmount       Decimal  @default(500) @db.Decimal(10, 2)
+  partnerCouponMaxDiscountCap       Decimal  @default(100) @db.Decimal(10, 2)
+  partnerCouponValidityDays         Int      @default(365)
+  referralCommissionPercent         Decimal  @default(5) @db.Decimal(5, 2)
+  referralDiscountPercent           Decimal  @default(10) @db.Decimal(5, 2)
+  referralMaxDiscountCap            Decimal  @default(100) @db.Decimal(10, 2)
+  referralOrderLimit                Int      @default(5)
+  referralCouponValidityDays        Int      @default(365)
+  /// Defaults for admin-issued "Commission Based" (GENERIC kind) partner coupons — prefill only, each coupon can still override every field.
+  commissionCouponDiscountPercent   Decimal  @default(10) @db.Decimal(5, 2)
+  commissionCouponCommissionPercent Decimal  @default(5) @db.Decimal(5, 2)
+  commissionCouponMinOrderAmount    Decimal  @default(0) @db.Decimal(10, 2)
+  commissionCouponMaxDiscountCap    Decimal  @default(100) @db.Decimal(10, 2)
+  commissionCouponValidityDays      Int      @default(30)
+  /// Defaults for the auto-issued "Special" (PERSONAL_INVITE kind) coupon every user gets.
+  inviteCouponDiscountPercent       Decimal  @default(5) @db.Decimal(5, 2)
+  inviteCouponCommissionPercent     Decimal  @default(5) @db.Decimal(5, 2)
+  inviteCouponValidityDays          Int      @default(3650)
+  inviteCouponUsageLimit            Int      @default(100000)
+  updatedAt                         DateTime @updatedAt
+  updatedById                       String?
+  updatedBy                         User?    @relation("CouponSystemSettingUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("coupon_system_settings")
+}
+
+model WithdrawalRequest {
+  id                String           @id @default(uuid())
+  businessPartnerId String
+  businessPartner   User             @relation("WithdrawalRequestsPartner", fields: [businessPartnerId], references: [id], onDelete: Cascade)
+  requestedAmount   Decimal          @db.Decimal(10, 2)
+  approvedAmount    Decimal?         @db.Decimal(10, 2)
+  platformFeeAmount Decimal?         @db.Decimal(10, 2) // Platform processing fee (e.g. 2%)
+  gstAmount         Decimal?         @db.Decimal(10, 2) // GST on platform fee (18%)
+  netPayableAmount  Decimal?         @db.Decimal(10, 2) // Amount actually paid out after deductions
+  platformExpense   Boolean          @default(true) // Always a platform expense
+  status            WithdrawalStatus @default(PENDING)
+  requestedAt       DateTime         @default(now())
+  processedAt       DateTime?
+  processedById     String?
+  processedBy       User?            @relation("WithdrawalRequestsProcessedBy", fields: [processedById], references: [id], onDelete: SetNull)
+  notes             String?
+
+  @@index([businessPartnerId])
+  @@map("withdrawal_requests")
+}
+
+model WeatherTipTemplate {
+  id          String            @id @default(uuid())
+  title       String
+  message     String
+  triggerType WeatherTipTrigger
+  thresholdC  Int?
+  isActive    Boolean           @default(true)
+  createdById String
+  createdBy   User              @relation("WeatherTipTemplatesCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@map("weather_tip_templates")
+}
+
+model Message {
+  id         String    @id @default(uuid())
+  senderId   String
+  sender     User      @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User      @relation("MessagesReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+  content    String
+  isRead     Boolean   @default(false)
+  readAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([senderId, receiverId])
+  @@index([receiverId, senderId])
+  @@map("messages")
+}
+
+model PlanRenewalCoupon {
+  id                String    @id @default(uuid())
+  code              String    @unique
+  daysGranted       Int
+  createdById       String
+  createdBy         User      @relation("PlanRenewalCouponsCreatedBy", fields: [createdById], references: [id])
+  assignedFarmerId  String?
+  assignedFarmer    User?     @relation("PlanRenewalCouponsAssignedFarmer", fields: [assignedFarmerId], references: [id], onDelete: SetNull)
+  assignedAdvisorId String?
+  assignedAdvisor   User?     @relation("PlanRenewalCouponsAssignedAdvisor", fields: [assignedAdvisorId], references: [id], onDelete: SetNull)
+  isUsed            Boolean   @default(false)
+  usedAt            DateTime?
+  bonusDayApplied   Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+
+  @@map("plan_renewal_coupons")
+}
+
+/// A farmer's BASIC-plan-days coupon. Admin/Super Admin generates it at a flat ₹2/day list price;
+/// a Business Partner may then buy it at a 10% discount (debited from their wallet) before handing
+/// the code to a farmer, who redeems it for BASIC-plan days. Redemption does not require a purchase —
+/// an admin-gifted code can be redeemed directly too.
+model BasicPlanCoupon {
+  id             String    @id @default(uuid())
+  code           String    @unique
+  daysGranted    Int
+  listPrice      Decimal   @db.Decimal(10, 2)
+  createdById    String
+  createdBy      User      @relation("BasicPlanCouponsCreatedBy", fields: [createdById], references: [id])
+  purchasedById  String?
+  purchasedBy    User?     @relation("BasicPlanCouponsPurchasedBy", fields: [purchasedById], references: [id], onDelete: SetNull)
+  purchasePrice  Decimal?  @db.Decimal(10, 2)
+  purchasedAt    DateTime?
+  isUsed         Boolean   @default(false)
+  usedByFarmerId String?
+  usedByFarmer   User?     @relation("BasicPlanCouponsUsedByFarmer", fields: [usedByFarmerId], references: [id], onDelete: SetNull)
+  usedAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@map("basic_plan_coupons")
+}

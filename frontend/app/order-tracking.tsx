@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    justify: 'center',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   timelineLine: { width: 2, flex: 1, marginTop: 4 },

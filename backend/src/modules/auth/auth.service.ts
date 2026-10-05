@@ -13,6 +13,14 @@ import { ForgotPasswordStartDto } from './dto/forgot-password-start.dto';
 import { ForgotPasswordVerifyDto } from './dto/forgot-password-verify.dto';
 import { ForgotPasswordResetDto } from './dto/forgot-password-reset.dto';
 import type { AuthUser } from '../../common/types/auth-user.type';
+import { getApps, initializeApp } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
+
+if (!getApps().length) {
+  initializeApp({
+    projectId: 'farmsking-510606',
+  });
+}
 
 const SAFE_USER_SELECT = {
   id: true,
@@ -89,8 +97,31 @@ export class AuthService {
     return { success, message: success ? 'Email OTP sent directly via Gmail SMTP.' : 'Failed to send Email OTP.' };
   }
 
-  async googleLogin(dto: { email: string; name?: string; photoUrl?: string; googleId?: string }) {
-    const cleanEmail = dto.email.trim().toLowerCase();
+  async googleLogin(dto: { email?: string; name?: string; photoUrl?: string; googleId?: string; accessToken?: string }) {
+    let verifiedEmail = dto.email;
+    let verifiedName = dto.name;
+    let verifiedPhoto = dto.photoUrl;
+
+    if (dto.accessToken) {
+      try {
+        const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${dto.accessToken}` },
+        });
+        if (!response.ok) throw new UnauthorizedException('Invalid Google access token.');
+        const userInfo = await response.json();
+        verifiedEmail = userInfo.email;
+        verifiedName = userInfo.name || userInfo.given_name || verifiedEmail?.split('@')[0];
+        verifiedPhoto = userInfo.picture;
+      } catch (err) {
+        throw new UnauthorizedException('Failed to verify Google access token.');
+      }
+    }
+
+    if (!verifiedEmail) {
+      throw new BadRequestException('Google email is required.');
+    }
+
+    const cleanEmail = verifiedEmail.trim().toLowerCase();
 
     let user = await this.prisma.user.findFirst({
       where: { email: cleanEmail, deletedAt: null },
@@ -112,10 +143,10 @@ export class AuthService {
           isPhoneVerified: true,
         },
       });
-    } else if (dto.photoUrl && !user.photoUrl) {
+    } else if (verifiedPhoto && !user.photoUrl) {
       user = await this.prisma.user.update({
         where: { id: user.id },
-        data: { photoUrl: dto.photoUrl },
+        data: { photoUrl: verifiedPhoto },
       });
     }
 
@@ -871,6 +902,38 @@ export class AuthService {
 
     const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = user;
     return this.buildAuthResponse(safeUser as any);
+  }
+
+  async firebaseLogin(idToken: string) {
+    if (!idToken) throw new BadRequestException('Firebase ID Token is required.');
+    try {
+      const decodedToken = await getAuth().verifyIdToken(idToken);
+      const phone = decodedToken.phone_number;
+      if (!phone) throw new UnauthorizedException('No phone number attached to this Firebase credential.');
+
+      const cleanMobile = phone.replace(/\D/g, '').slice(-10);
+      
+      let user = await this.prisma.user.findFirst({
+        where: { mobile: cleanMobile, deletedAt: null },
+      });
+      
+      if (!user) {
+        throw new NotFoundException('Account not found. Please register first.');
+      }
+
+      // Reset any failed login attempts on successful OTP login
+      if (user.failedLoginAttempts > 0 || user.lockoutUntil !== null) {
+        user = await this.prisma.user.update({
+          where: { id: user.id },
+          data: { failedLoginAttempts: 0, lockoutUntil: null },
+        });
+      }
+
+      const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = user;
+      return this.buildAuthResponse(safeUser as any);
+    } catch (err: any) {
+      throw new UnauthorizedException('Invalid Firebase ID Token: ' + err.message);
+    }
   }
 
   private buildAuthResponse(

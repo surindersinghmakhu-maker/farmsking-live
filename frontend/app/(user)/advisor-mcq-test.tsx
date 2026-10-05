@@ -28,7 +28,7 @@ function CertificateView({
   userName: string;
   score: number;
   date: string;
-  certRef: React.RefObject<ViewShot>;
+  certRef: React.RefObject<any>;
 }) {
   return (
     <ViewShot ref={certRef} options={{ format: 'jpg', quality: 0.95 }}>
@@ -120,7 +120,7 @@ export default function AdvisorMCQTestScreen() {
   const [showCertificate, setShowCertificate] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
-  const certRef = useRef<ViewShot>(null);
+  const certRef = useRef<any>(null);
   const issueDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
 
   useEffect(() => {
@@ -312,7 +312,7 @@ export default function AdvisorMCQTestScreen() {
           </View>
 
           {/* Per-Question Review */}
-          <View style={[styles.reviewCard, premiumShadow('#0f172a', 'xs')]}>
+          <View style={[styles.reviewCard, premiumShadow('#0f172a', 'sm')]}>
             <Text style={styles.reviewTitle}>📋 Question-wise Review</Text>
             {questions.map((q, idx) => {
               const userAns = selectedAnswers[idx];
@@ -545,7 +545,7 @@ const styles = StyleSheet.create({
   optionText: { flex: 1, fontSize: 15, fontFamily: FONT.semiBold, color: '#334155', lineHeight: 22 },
   optionTextSelected: { color: theme.primary },
   footer: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#fff', padding: SPACING.md, paddingHorizontal: SPACING.lg, flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#e2e8f0' },
-  navBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 12, paddingHorizontal: 18, borderRadius: RADIUS.full, backgroundColor: '#f1f5f9' },
+  navBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 12, paddingHorizontal: 18, borderRadius: RADIUS.pill, backgroundColor: '#f1f5f9' },
   navBtnText: { fontSize: 14, fontFamily: FONT.bold, color: '#334155' },
   nextBtn: { backgroundColor: '#0f172a' },
   submitBtn: { backgroundColor: '#10b981', flex: 1, marginLeft: 10, justifyContent: 'center' },

@@ -1,0 +1,142 @@
+// ─── Farmer 3-Tier Plan System ───────────────────────────────────────────
+
+/// Farmer ki current active plan record. Har farmer ka ek hi row hoga (unique on farmerId).
+model FarmerPlan {
+  id        String                 @id @default(uuid())
+  farmerId  String                 @unique
+  farmer    User                   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  plan      FarmerSubscriptionPlan @default(FREE)
+  startDate DateTime               @default(now())
+  endDate   DateTime? // null = FREE plan (no expiry)
+  expiredAt DateTime? // when this plan actually lapsed — drives the 2-day grace / 3-month renew-history window
+  couponId  String? // which coupon activated this plan
+  coupon    FarmerPlanCoupon?      @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+
+  @@map("farmer_plans")
+}
+
+enum FarmerPlanRecordStatus {
+  ACTIVE
+  SLEEP
+  EXPIRED
+  REVOKED
+}
+
+/// Detailed history of all farmer plan purchases, extensions, and sleep-mode paused plans.
+model FarmerPlanHistory {
+  id            String                 @id @default(uuid())
+  farmerId      String
+  farmer        User                   @relation("FarmerPlanHistoryFarmer", fields: [farmerId], references: [id], onDelete: Cascade)
+  plan          FarmerSubscriptionPlan
+  status        FarmerPlanRecordStatus @default(ACTIVE)
+  daysGranted   Int
+  remainingDays Int? // Remaining days saved when plan was placed in SLEEP mode
+  startDate     DateTime               @default(now())
+  endDate       DateTime?
+  sleptAt       DateTime? // Timestamp when plan entered SLEEP mode
+  resumedAt     DateTime? // Timestamp when plan resumed from SLEEP mode
+  couponId      String?
+  coupon        FarmerPlanCoupon?      @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  notes         String?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+
+  @@index([farmerId])
+  @@index([status])
+  @@map("farmer_plan_history")
+}
+
+/// Advisor ki current active plan record (LITE or PLUS).
+model AdvisorTierPlan {
+  id        String                  @id @default(uuid())
+  advisorId String                  @unique
+  advisor   User                    @relation(fields: [advisorId], references: [id], onDelete: Cascade)
+  plan      AdvisorSubscriptionPlan @default(LITE)
+  startDate DateTime                @default(now())
+  endDate   DateTime? // null = LITE plan (no expiry)
+  createdAt DateTime                @default(now())
+  updatedAt DateTime                @updatedAt
+
+  @@map("advisor_tier_plans")
+}
+
+/// Super admin creates these coupons to give farmers BASIC or PREMIUM plans.
+model FarmerPlanCoupon {
+  id                        String                  @id @default(uuid())
+  code                      String                  @unique
+  category                  PlanCouponCategory      @default(FARMER_PLAN)
+  plan                      FarmerSubscriptionPlan // BASIC or PREMIUM
+  daysGranted               Int // how many days to activate
+  assignedFarmerId          String? // optional: lock to a specific farmer
+  assignedFarmer            User?                   @relation("FarmerPlanCouponsAssignedFarmer", fields: [assignedFarmerId], references: [id], onDelete: SetNull)
+  assignedAdvisorId         String? // optional: issue to an advisor instead, who can apply it to any of their farmers
+  assignedAdvisor           User?                   @relation("FarmerPlanCouponsAssignedAdvisor", fields: [assignedAdvisorId], references: [id], onDelete: SetNull)
+  assignedBusinessPartnerId String? // optional: issue to a business partner instead, who earns a commission when it's redeemed
+  assignedBusinessPartner   User?                   @relation("FarmerPlanCouponsAssignedBusinessPartner", fields: [assignedBusinessPartnerId], references: [id], onDelete: SetNull)
+  isUsed                    Boolean                 @default(false)
+  usedAt                    DateTime?
+  usedByFarmerId            String? // which farmer actually redeemed
+  usedByFarmer              User?                   @relation("FarmerPlanCouponsUsedBy", fields: [usedByFarmerId], references: [id], onDelete: SetNull)
+  expiresAt                 DateTime? // coupon validity (optional)
+  generationCostAmount      Decimal?                @db.Decimal(10, 2) // snapshot of what was debited from the assignee's wallet at creation time, if any
+  doctorFeeAmount           Decimal?                @db.Decimal(10, 2)
+  adminPlatformFeePercent   Decimal?                @db.Decimal(5, 2)
+  adminPlatformFeeAmount    Decimal?                @db.Decimal(10, 2)
+  includeMembership         Boolean                 @default(false)
+  includedMembershipPlan    FarmerSubscriptionPlan?
+  includedMembershipDays    Int?
+  createdById               String
+  createdBy                 User                    @relation("FarmerPlanCouponsCreatedBy", fields: [createdById], references: [id])
+  createdByRole             Role?
+  payoutAmount              Decimal?                @db.Decimal(10, 2)
+  payoutRecipientId         String?
+  doctorKingId              String?
+  advisorKingId             String?
+  createdAt                 DateTime                @default(now())
+
+  farmerPlans         FarmerPlan[]
+  farmerPlanHistories FarmerPlanHistory[]
+
+  @@index([assignedFarmerId])
+  @@index([assignedBusinessPartnerId])
+  @@index([createdById])
+  @@map("farmer_plan_coupons")
+}
+
+/// Super-admin-editable price + commission-split config, one row per paid Farmer plan tier.
+/// Redeeming a coupon prorates these shares by daysGranted / billingPeriodDays and credits the
+/// business partner's/advisor's wallet accordingly — the remainder is the platform's (admin) share.
+model FarmerPlanPricing {
+  id                           String                 @id @default(uuid())
+  plan                         FarmerSubscriptionPlan
+  mrp                          Decimal?               @db.Decimal(10, 2)
+  price                        Decimal                @db.Decimal(10, 2)
+  billingPeriodDays            Int // e.g. 365 for a yearly plan, 30 for a monthly one
+  isOffer                      Boolean                @default(false)
+  offerName                    String?
+  offerPrice                   Decimal?               @db.Decimal(10, 2)
+  offerValidTill               DateTime?
+  partnerShareType             DiscountValueType // PERCENTAGE (e.g. BASIC's 10%) or FIXED (e.g. STANDARD/PREMIUM's flat ₹ cut)
+  partnerShareValue            Decimal                @db.Decimal(10, 2)
+  advisorShareValue            Decimal?               @db.Decimal(10, 2) // null when the plan has no advisor (e.g. BASIC)
+  adminShareValue              Decimal?               @db.Decimal(10, 2) // informational — platform's own cut / fee
+  partnerGenerationCostPercent Decimal?               @db.Decimal(5, 2) // % of price debited from a Business Partner's wallet the moment they're issued a coupon for this plan
+  advisorGenerationCostPercent Decimal?               @db.Decimal(5, 2) // % of price debited from an Advisor's wallet the moment they're issued a coupon for this plan
+  maxTotalCrops                Int? // null = unlimited
+  maxActiveCrops               Int? // null = unlimited
+  maxDoctorCrops               Int? // Doctor care crops limit: e.g. 5 for Diamond, 10 for Royal
+  seniorDoctorShareValue       Decimal?               @db.Decimal(10, 2)
+  advisorIncluded              Boolean                @default(true)
+  chatEnabled                  Boolean                @default(true)
+  weatherEnabled               Boolean                @default(true)
+  gardenAdvisorIncluded        Boolean                @default(false)
+  isActive                     Boolean                @default(true)
+  updatedAt                    DateTime               @updatedAt
+  updatedById                  String?
+  updatedBy                    User?                  @relation("FarmerPlanPricingUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@unique([plan, billingPeriodDays])
+  @@map("farmer_plan_pricing")
+}

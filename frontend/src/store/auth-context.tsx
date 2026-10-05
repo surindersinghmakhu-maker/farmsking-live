@@ -2,7 +2,7 @@ import * as SecureStore from '../lib/storage';
 import { createContext, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import { AppState, Alert } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
-import { login as apiLogin, registerFarmer as apiRegister, logoutOtherSessions, googleLoginApi, linkGoogleApi, sendMobileLinkOtpApi, verifyMobileLinkOtpApi, sendLoginOtpApi, verifyLoginOtpApi, LoginPayload, RegisterPayload, GoogleLoginPayload } from '../api/auth.api';
+import { login as apiLogin, registerFarmer as apiRegister, logoutOtherSessions, googleLoginApi, linkGoogleApi, sendMobileLinkOtpApi, verifyMobileLinkOtpApi, sendLoginOtpApi, verifyLoginOtpApi, firebaseLoginApi, LoginPayload, RegisterPayload, GoogleLoginPayload } from '../api/auth.api';
 import { getMe } from '../api/users.api';
 import { setUnauthorizedHandler, TOKEN_KEY } from '../api/client';
 import { disconnectChatSocket } from '../lib/socket';
@@ -14,6 +14,7 @@ interface AuthContextValue {
   login: (payload: LoginPayload) => Promise<void>;
   sendLoginOtp: (mobile: string) => Promise<{ success: boolean; message: string; devOtp?: string }>;
   otpLogin: (payload: { mobile: string; otp: string }) => Promise<void>;
+  firebaseLogin: (idToken: string) => Promise<void>;
   googleLogin: (payload: GoogleLoginPayload) => Promise<{ isProfileIncomplete?: boolean }>;
   linkGoogle: (payload: GoogleLoginPayload) => Promise<{ success: boolean; message: string }>;
   sendMobileLinkOtp: (mobile: string) => Promise<{ success: boolean; message: string; devOtp?: string }>;
@@ -157,6 +158,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       otpLogin: async (payload) => {
         const response = await verifyLoginOtpApi(payload);
+        await persistSession(response.accessToken, response.user);
+      },
+      firebaseLogin: async (idToken) => {
+        const response = await firebaseLoginApi(idToken);
         await persistSession(response.accessToken, response.user);
       },
       googleLogin: async (payload) => {

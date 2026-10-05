@@ -139,7 +139,7 @@ export default function SuperCropEditScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={theme.gradient} style={styles.hero}>
+      <LinearGradient colors={['#0f172a', '#1e293b']} style={styles.hero}>
         <Text style={styles.heroTitle}>🌾 Edit Farmer Crop Data</Text>
         <Text style={styles.heroSubtitle}>Enter Crop ID to look up a farmer's crop and override data safely</Text>
 

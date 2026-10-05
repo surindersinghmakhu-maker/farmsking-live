@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   saveBtnText: { fontSize: 14, fontFamily: FONT.bold, color: '#ffffff' },
   typeCard: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: '#f8fafc', borderRadius: RADIUS.lg, borderWidth: 2, borderColor: 'transparent', gap: 12 },
   typeCardActive: { borderColor: theme.primary, backgroundColor: '#f0fdf4' },
-  typeIconBg: { width: 44, height: 44, borderRadius: RADIUS.full, alignItems: 'center', justifyContent: 'center' },
+  typeIconBg: { width: 44, height: 44, borderRadius: RADIUS.pill, alignItems: 'center', justifyContent: 'center' },
   typeTitle: { fontSize: 15, fontFamily: FONT.bold, color: '#0f172a' },
   typeSub: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 },
   

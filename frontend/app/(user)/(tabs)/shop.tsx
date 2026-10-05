@@ -1359,7 +1359,7 @@ export default function ShopScreen() {
         couponCode: appliedDiscount?.code || couponCode.trim() || undefined,
         paymentMode: paymentMethod === 'COD' ? 'COD' : 'ONLINE',
         useWalletBalance,
-      });
+      } as any);
 
       if (paymentMethod === 'ONLINE') {
         try {
@@ -2210,7 +2210,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   }}
                   onPress={() => {
                     tap();
-                    router.push('/(tabs)/super-coupons');
+                    router.push('/(tabs)/super-coupons' as never);
                   }}
                 >
                   <Ionicons name="pricetag" size={16} color="#ffffff" />

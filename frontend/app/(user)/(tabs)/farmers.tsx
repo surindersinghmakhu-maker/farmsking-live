@@ -162,8 +162,8 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 20, fontFamily: FONT.extraBold, color: '#ffffff' },
   headerSubtitle: { fontSize: 13, fontFamily: FONT.medium, color: '#cbd5e1', marginTop: 4 },
   
-  tabContainer: { flexDirection: 'row', backgroundColor: '#ffffff', marginHorizontal: SPACING.lg, marginTop: -20, borderRadius: RADIUS.full, padding: 4, ...premiumShadow('#0f172a', 'sm') },
-  tabBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: RADIUS.full },
+  tabContainer: { flexDirection: 'row', backgroundColor: '#ffffff', marginHorizontal: SPACING.lg, marginTop: -20, borderRadius: RADIUS.pill, padding: 4, ...premiumShadow('#0f172a', 'sm') },
+  tabBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: RADIUS.pill },
   tabText: { fontSize: 12, fontFamily: FONT.bold, color: '#64748b' },
   tabTextActive: { color: '#ffffff' },
   

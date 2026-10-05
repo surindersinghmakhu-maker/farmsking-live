@@ -14,7 +14,7 @@ import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getDefaultApiUrl } from '../src/constants/config';
 import { useAuth } from '../src/store/auth-context';
-import { FONT, RADIUS, SPACING, COLORS, premiumShadow } from '../constants/theme';
+import { FONT, RADIUS, SPACING, premiumShadow } from '../constants/theme';
 
 export default function SeoManagementScreen() {
   const router = useRouter();

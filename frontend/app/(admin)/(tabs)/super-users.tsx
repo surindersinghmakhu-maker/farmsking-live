@@ -23,6 +23,7 @@ import {
 import { formatInr } from '@/src/utils/formatInr';
 import { ASSIGNABLE_CHECKBOX_ROLES, lookupByKingId } from '@/src/api/users.api';
 import { assignTrainerState, getAdminTrainerReports } from '@/src/api/trainers.api';
+import { Role, AdminUser, OperatorPermission, AdvisorType } from '@/src/types/api';
 import { useAuth } from '@/src/store/auth-context';
 import { PickerModal } from '@/src/components/PickerModal';
 
@@ -277,7 +278,7 @@ export default function SuperUsersScreen() {
         {isLoading ? (
           <ActivityIndicator color={theme.primary} style={{ marginTop: 30 }} />
         ) : items.length === 0 ? (
-          <View style={styles.emptyCenter}>
+          <View style={{ alignItems: 'center', marginVertical: 30 }}>
             <Ionicons name="people-outline" size={40} color="#cbd5e1" />
             <Text style={styles.emptyText}>No users found.</Text>
           </View>
@@ -510,7 +511,7 @@ function UserDetailModal({ userId, onClose }: { userId: string | null; onClose: 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
               <Text style={styles.detailName}>{data.user.name}</Text>
               <Text style={styles.detailMeta}>📱 {data.user.mobile} {data.user.kingId ? `· 🔑 ${data.user.kingId}` : ''}</Text>
-              <Text style={styles.detailMeta}>Role: {data.user.role}{data.user.roles && data.user.roles.length > 1 ? ` (also: ${data.user.roles.filter((r) => r !== data.user.role).join(', ')})` : ''}</Text>
+              <Text style={styles.detailMeta}>Role: {data.user.role}{data.user.roles && data.user.roles.length > 1 ? ` (also: ${data.user.roles.filter((r: any) => r !== data.user.role).join(', ')})` : ''}</Text>
               {data.user.village ? <Text style={styles.detailMeta}>📍 {data.user.village}, {data.user.district}, {data.user.state}</Text> : null}
               <Text style={styles.detailMeta}>Joined: {new Date(data.user.createdAt).toLocaleDateString('en-IN')}</Text>
 
@@ -578,7 +579,7 @@ function EditUserForm({ user, onDone }: { user: AdminUser; onDone: () => void })
   const [district, setDistrict] = useState(user.district ?? '');
   const [state, setState] = useState(user.state ?? '');
 
-  const activeRoles = (user.roles ?? [user.role]).filter((r) => !(user.deactivatedRoles ?? []).includes(r));
+  const activeRoles = (user.roles ?? [user.role]).filter((r: any) => !(user.deactivatedRoles ?? []).includes(r));
   const isFarmer = activeRoles.includes('FARMER');
   const isAdvisor = activeRoles.includes('ADVISOR');
   const isPartner = activeRoles.includes('BUSINESS_PARTNER');
@@ -922,7 +923,7 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
   useEffect(() => {
     if (!target) return;
     setError(null);
-    const active = (target.roles ?? [target.role]).filter((r) => !(target.deactivatedRoles ?? []).includes(r));
+    const active = (target.roles ?? [target.role]).filter((r: any) => !(target.deactivatedRoles ?? []).includes(r));
     setSelected(active.includes('CUSTOMER') ? active : [...active, 'CUSTOMER']);
     setAdvisorType(target.advisorType ?? null);
   }, [target]);
@@ -1051,11 +1052,11 @@ function UserRow({
   onOpenDetail?: () => void;
 }) {
   const isDeactivated = !!user.deletedAt;
-  const initials = (user.name ?? '').trim().split(/\s+/).slice(0, 2).map((p) => p[0] ?? '').join('').toUpperCase() || '?';
+  const initials = (user.name ?? '').trim().split(/\s+/).slice(0, 2).map((p: any) => p[0] ?? '').join('').toUpperCase() || '?';
   const activeAssignedRoles = Array.from(
     new Set([
       user.role,
-      ...(user.roles ?? []).filter((r) => !(user.deactivatedRoles ?? []).includes(r)),
+      ...(user.roles ?? []).filter((r: any) => !(user.deactivatedRoles ?? []).includes(r)),
     ]),
   );
 

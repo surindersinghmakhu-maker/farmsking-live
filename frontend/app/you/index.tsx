@@ -239,9 +239,9 @@ export default function YouPage() {
             <Text style={styles.addRowBtnText}>+ Add Product Row</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.jpgBtn, { flex: 1.5 }]} onPress={handleDownloadJPG} activeOpacity={0.85}>
+          <TouchableOpacity style={[styles.pdfBtn, { flex: 1.5 }]} onPress={handleDownloadJPG} activeOpacity={0.85}>
             <Ionicons name="image-outline" size={22} color="#FFF" />
-            <Text style={styles.jpgBtnText}>🖼️ DOWNLOAD JPG SCHEDULE</Text>
+            <Text style={styles.pdfBtnText}>🖼️ DOWNLOAD JPG SCHEDULE</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

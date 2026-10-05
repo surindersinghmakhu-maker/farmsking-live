@@ -59,7 +59,7 @@ function toScheduleFarmCard(crop: AdvisorReviewCropCycle): RegisteredCropField {
     sowingDate: sowingDateDisplay,
     variety: crop.variety ?? undefined,
     unit: (crop.unit as RegisteredCropField['unit']) ?? 'KG',
-    pricePerUnit: crop.pricePerUnit ?? '',
+    pricePerUnit: (crop as any).pricePerUnit ?? '',
     stage: crop.stage,
     status: crop.stage === 'COMPLETED' ? 'INACTIVE' : 'ACTIVE',
     advisorStatus: crop.advisorReviewStatus ?? 'NONE',

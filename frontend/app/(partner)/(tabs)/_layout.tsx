@@ -83,7 +83,7 @@ const badgeStyles = StyleSheet.create({
 });
 
 type TabName =
-  | 'index' | 'shop' | 'ai-doctor' | 'admin_shop' | 'farm' | 'records' | 'market' | 'more' | 'admin_more'
+  | 'index' | 'shop' | 'ai-doctor' | 'admin_shop' | 'farm' | 'garden' | 'records' | 'market' | 'more' | 'admin_more'
   | 'categories' | 'cart' | 'orders'
   | 'farmers' | 'schedule' | 'chat'
   | 'referrals' | 'wallet'
@@ -114,6 +114,7 @@ const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key:
   'ai-doctor': { key: 'tabMyAdvisor' as any, title: 'AI Doctor', icon: 'sparkles-outline', iconFilled: 'sparkles' },
   admin_shop: { key: 'agristoreHub' as any, title: 'E-Commerce', icon: 'storefront-outline', iconFilled: 'storefront' },
   farm: { key: 'tabCrops', title: 'Crops', icon: 'leaf-outline', iconFilled: 'leaf' },
+  garden: { key: 'tabCrops', title: 'Garden', icon: 'leaf-outline', iconFilled: 'leaf' },
   records: { key: 'tabRecords', title: 'Accounts', icon: 'document-text-outline', iconFilled: 'document-text' },
   market: { key: 'tabMyAdvisor', title: 'Crop Doctor', icon: 'school-outline', iconFilled: 'school' },
   categories: { key: 'tabCategories', title: 'Categories', icon: 'grid-outline', iconFilled: 'grid' },
@@ -138,7 +139,7 @@ const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key:
 };
 
 const ALL_TABS: TabName[] = [
-  'index', 'shop', 'ai-doctor', 'admin_shop', 'farm', 'records', 'market',
+  'index', 'shop', 'ai-doctor', 'admin_shop', 'farm', 'garden', 'records', 'market',
   'categories', 'cart', 'orders',
   'farmers', 'schedule', 'chat',
   'referrals', 'wallet',
@@ -177,7 +178,7 @@ export default function TabLayout() {
     if (name === 'more') return t('tabMore', 'More');
     if (name === 'farmers') return role === 'GARDEN_ADVISOR' ? t('tabGardens', 'Gardens') : t('tabFarmers', 'Farmers');
     if ((name === 'shop' || name === 'admin_shop') && (role === 'ADMIN' || role === 'SUPER_ADMIN')) return 'E-Commerce';
-    const meta = TAB_META[name];
+    const meta = (TAB_META as any)[name];
     return meta ? t(meta.key, meta.title) : name;
   };
 
@@ -185,13 +186,13 @@ export default function TabLayout() {
     if (name === 'index') return focused ? 'home' : 'home-outline';
     if (name === 'more') return focused ? 'grid' : 'grid-outline';
     if (name === 'farmers') return focused ? 'leaf' : 'leaf-outline';
-    const meta = TAB_META[name];
+    const meta = (TAB_META as any)[name];
     return meta ? (focused ? meta.iconFilled : meta.icon) : 'square-outline';
   };
 
   const handleNavigate = (tabName: TabName) => {
     if (tabName === 'index') {
-      router.push('/(tabs)');
+      router.push('/(tabs)' as any);
     } else {
       router.push(`/(tabs)/${tabName}` as any);
     }
@@ -203,7 +204,7 @@ export default function TabLayout() {
       {isDesktop && (
         <View style={[desktopStyles.headerBar, { backgroundColor: colors.headerBg, borderBottomColor: colors.cardBorder }]}>
           <View style={desktopStyles.headerLeft}>
-            <TouchableOpacity style={desktopStyles.brandLogoBox} activeOpacity={0.8} onPress={() => router.push('/(tabs)')}>
+            <TouchableOpacity style={desktopStyles.brandLogoBox} activeOpacity={0.8} onPress={() => router.push('/(tabs)' as any)}>
               <BrandLogo size={36} useFastBundledOnly={true} />
               <Text style={desktopStyles.brandTitle}>FarmsKing</Text>
             </TouchableOpacity>
@@ -236,7 +237,7 @@ export default function TabLayout() {
           {/* Right Header Actions */}
           <View style={desktopStyles.headerRight}>
             {(() => {
-              const isSellerRole = role === 'SELLER' || user?.role === 'SELLER' || Boolean((user as any)?.isSeller);
+              const isSellerRole = role === ('SELLER' as any) || user?.role === ('SELLER' as any) || Boolean((user as any)?.isSeller);
               if (!isSellerRole) return null;
               return (
                 <TouchableOpacity

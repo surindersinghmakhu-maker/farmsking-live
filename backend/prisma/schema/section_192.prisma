@@ -1,0 +1,255 @@
+// ─── Multi-Vendor Marketplace Core Models ────────────────────────────────
+
+model SellerStore {
+  id                         String              @id @default(uuid())
+  sellerId                   String              @unique
+  seller                     User                @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  storeName                  String
+  slug                       String              @unique
+  sellerType                 SellerType          @default(FARMER)
+  legalName                  String?
+  gstin                      String?             @unique
+  panNumber                  String?
+  kycStatus                  SellerKycStatus     @default(PENDING)
+  rejectionReason            String?
+  bankAccountNo              String?
+  bankIfsc                   String?
+  bankBeneficiaryName        String?
+  cashfreeVendorId           String?             @unique
+  shiprocketPickupLocationId String?
+  shiprocketPickupNickname   String?
+  pickupAddress              String?
+  pickupCity                 String?
+  pickupState                String?
+  pickupPincode              String?
+  wantsToSellFood            Boolean             @default(false)
+  fssaiNo                    String?
+  fssaiCertificateUrl        String?
+  fssaiExpiryDate            DateTime?
+  isFssaiApproved            Boolean             @default(false)
+  agriLicenseNo              String?
+  agriLicenseExpiryDate      DateTime?
+  additionalDoc1Title        String?
+  additionalDoc1Url          String?
+  additionalDoc2Title        String?
+  additionalDoc2Url          String?
+  gstDocUrl                  String?
+  panDocUrl                  String?
+  chequeDocUrl               String?
+  aadhaarFrontUrl            String?
+  aadhaarBackUrl             String?
+  tradeLicenseUrl            String?
+  commissionRate             Decimal             @default(8.00) @db.Decimal(5, 2)
+  rtoBearer                  RtoBearer           @default(VENDOR)
+  rtoSharedVendorRatio       Decimal             @default(50.00) @db.Decimal(5, 2)
+  catalogApprovalMode        CatalogApprovalMode @default(MANUAL)
+  rating                     Float               @default(4.8)
+  isActive                   Boolean             @default(true)
+  isOfficialStore            Boolean             @default(false)
+  officialBadgeText          String?             @default("FarmsKing Official Store")
+  invoicePrefix              String?
+  invoiceLastSequence        Int                 @default(0)
+  createdAt                  DateTime            @default(now())
+  updatedAt                  DateTime            @updatedAt
+
+  products     Product[]
+  payouts      SellerPayout[]
+  orderItems   CustomerOrderItem[]
+  subOrders    SubOrder[]
+  shippingLogs ShippingLog[]
+  gstr8Reports Gstr8Report[]
+  invoices     OrderInvoice[]
+
+  @@index([sellerId])
+  @@index([kycStatus])
+  @@index([isActive])
+  @@map("seller_stores")
+}
+
+model SubOrder {
+  id                   String           @id @default(uuid())
+  orderId              String
+  order                CustomerOrder    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  sellerStoreId        String
+  sellerStore          SellerStore      @relation(fields: [sellerStoreId], references: [id])
+  subtotal             Decimal          @db.Decimal(12, 2)
+  commissionAmount     Decimal          @db.Decimal(12, 2)
+  shippingFee          Decimal          @default(0.00) @db.Decimal(12, 2)
+  rtoFee               Decimal          @default(0.00) @db.Decimal(12, 2)
+  vendorNetPayout      Decimal          @db.Decimal(12, 2)
+  shiprocketOrderId    String?
+  shiprocketShipmentId String?
+  shiprocketAwbCode    String?
+  shippingLabelUrl     String?
+  orderStatus          SubOrderStatus   @default(PLACED)
+  settlementStatus     SettlementStatus @default(HOLD)
+  cashfreeTransferId   String?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  returnRequests ReturnRequest[]
+
+  @@index([orderId])
+  @@index([sellerStoreId])
+  @@index([orderStatus])
+  @@index([settlementStatus])
+  @@map("sub_orders")
+}
+
+model ReturnRequest {
+  id           String        @id @default(uuid())
+  orderId      String
+  order        CustomerOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  subOrderId   String?
+  subOrder     SubOrder?     @relation(fields: [subOrderId], references: [id], onDelete: SetNull)
+  customerId   String
+  customer     User          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  reason       String
+  photoUrl     String?
+  status       ReturnStatus  @default(PENDING)
+  refundAmount Decimal       @db.Decimal(12, 2)
+  adminNote    String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([orderId])
+  @@index([customerId])
+  @@index([status])
+  @@map("return_requests")
+}
+
+model SellerPayout {
+  id                    String             @id @default(uuid())
+  sellerStoreId         String
+  sellerStore           SellerStore        @relation(fields: [sellerStoreId], references: [id], onDelete: Cascade)
+  payoutRefNo           String             @unique
+  totalGrossAmount      Decimal            @db.Decimal(12, 2)
+  totalCommissionAmount Decimal            @db.Decimal(12, 2)
+  totalTcsAmount        Decimal            @db.Decimal(12, 2)
+  netPayoutAmount       Decimal            @db.Decimal(12, 2)
+  status                SellerPayoutStatus @default(PENDING)
+  cashfreeTransferId    String?
+  cashfreeUtrNo         String?
+  paidAt                DateTime?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  orderItems CustomerOrderItem[]
+
+  @@index([sellerStoreId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("seller_payouts")
+}
+
+model ShippingLog {
+  id                   String         @id @default(uuid())
+  orderId              String
+  order                CustomerOrder  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  sellerStoreId        String?
+  sellerStore          SellerStore?   @relation(fields: [sellerStoreId], references: [id], onDelete: SetNull)
+  shiprocketOrderId    String?
+  shiprocketShipmentId String?
+  awbCode              String?
+  courierName          String?
+  status               ShipmentStatus @default(UNASSIGNED)
+  labelUrl             String?
+  manifestUrl          String?
+  pickupScheduledAt    DateTime?
+  deliveredAt          DateTime?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  @@index([orderId])
+  @@index([sellerStoreId])
+  @@index([status])
+  @@map("shipping_logs")
+}
+
+model Gstr8Report {
+  id               String      @id @default(uuid())
+  sellerStoreId    String
+  sellerStore      SellerStore @relation(fields: [sellerStoreId], references: [id], onDelete: Cascade)
+  month            Int
+  year             Int
+  totalGrossSales  Decimal     @db.Decimal(12, 2)
+  totalSalesReturn Decimal     @db.Decimal(12, 2)
+  netTaxableValue  Decimal     @db.Decimal(12, 2)
+  cgstTcs          Decimal     @db.Decimal(12, 2)
+  sgstTcs          Decimal     @db.Decimal(12, 2)
+  igstTcs          Decimal     @db.Decimal(12, 2)
+  totalTcs         Decimal     @db.Decimal(12, 2)
+  status           String      @default("GENERATED")
+  createdAt        DateTime    @default(now())
+
+  @@unique([sellerStoreId, month, year])
+  @@index([sellerStoreId])
+  @@index([month, year])
+  @@map("gstr8_reports")
+}
+
+enum InvoiceType {
+  CUSTOMER_INVOICE
+  COMMISSION_INVOICE
+  PAYOUT_STATEMENT
+  CREDIT_NOTE
+}
+
+model InvoiceSequence {
+  id            String   @id // e.g. FY2627_CUSTOMER_INVOICE
+  financialYear String // e.g. 2627
+  type          String // CUSTOMER_INVOICE | COMMISSION_INVOICE | PAYOUT_STATEMENT | CREDIT_NOTE
+  lastSequence  Int      @default(0)
+  updatedAt     DateTime @updatedAt
+
+  @@unique([financialYear, type])
+  @@map("invoice_sequences")
+}
+
+model OrderInvoice {
+  id                  String         @id @default(uuid())
+  orderId             String?
+  order               CustomerOrder? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  subOrderId          String?
+  sellerStoreId       String?
+  sellerStore         SellerStore?   @relation(fields: [sellerStoreId], references: [id], onDelete: SetNull)
+  invoiceNumber       String         @unique
+  invoiceType         InvoiceType    @default(CUSTOMER_INVOICE)
+  financialYear       String
+  customerName        String
+  customerGstin       String?
+  sellerName          String
+  sellerGstin         String?
+  grossAmount         Decimal        @db.Decimal(12, 2)
+  netTaxableAmount    Decimal        @db.Decimal(12, 2)
+  gstAmount           Decimal        @db.Decimal(12, 2)
+  cgstAmount          Decimal        @default(0) @db.Decimal(12, 2)
+  sgstAmount          Decimal        @default(0) @db.Decimal(12, 2)
+  igstAmount          Decimal        @default(0) @db.Decimal(12, 2)
+  tcsAmount           Decimal        @default(0) @db.Decimal(12, 2)
+  commissionAmount    Decimal        @default(0) @db.Decimal(12, 2)
+  commissionGstAmount Decimal        @default(0) @db.Decimal(12, 2)
+  pdfUrl              String?
+  issuedAt            DateTime       @default(now())
+  createdAt           DateTime       @default(now())
+
+  @@index([orderId])
+  @@index([subOrderId])
+  @@index([sellerStoreId])
+  @@index([invoiceNumber])
+  @@index([invoiceType])
+  @@map("order_invoices")
+}
+
+model PartnerReferral {
+  id           String   @id @default(uuid())
+  partnerId    String
+  partner      User     @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  referredName String
+  joinDate     DateTime @default(now())
+  commission   Decimal  @default(750) @db.Decimal(12, 2)
+  status       String   @default("Active")
+
+  @@index([partnerId])
+  @@map("partner_referrals")
+}

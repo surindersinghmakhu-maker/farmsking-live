@@ -18,7 +18,7 @@ import { Stack, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useAuth } from '@/src/store/auth-context';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
-import { client } from '@/src/api/client';
+import { apiClient } from '@/src/api/client';
 
 interface PolicyModule {
   id: string;
@@ -117,7 +117,7 @@ export default function PrivacyPolicyScreen() {
     const fetchPolicyData = async () => {
       setLoading(true);
       try {
-        const res = await client.get('/api/privacy-policy');
+        const res = await apiClient.get('/api/privacy-policy');
         if (res.data?.success && Array.isArray(res.data.modules)) {
           setModules(res.data.modules);
           if (res.data.lastUpdated) {
@@ -140,7 +140,7 @@ export default function PrivacyPolicyScreen() {
     }
     setIsDeleting(true);
     try {
-      await client.delete('/users/me');
+      await apiClient.delete('/users/me');
       setIsDeleteModalOpen(false);
       Alert.alert(
         'Account Deleted',

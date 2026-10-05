@@ -332,7 +332,7 @@ export default function PlotDetailScreen() {
                       alignItems: 'center',
                       gap: 6,
                     }}
-                    onPress={() => router.push('/(tabs)/wallet')}
+                    onPress={() => router.push('/(tabs)/wallet' as any)}
                   >
                     <Ionicons name="sparkles" size={15} color="#ffffff" />
                     <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 }}>Upgrade Plan Now 👑</Text>

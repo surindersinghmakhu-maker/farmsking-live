@@ -205,7 +205,7 @@ export default function MoreScreen() {
   const showAdvisorBusinessSection = role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR';
 
 
-  const isAdvisorRole = role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR' || user?.role === 'FARM_ADVISOR' || user?.role === 'GARDEN_ADVISOR' || (Array.isArray(user?.roles) && (user.roles.includes('FARM_ADVISOR') || user.roles.includes('GARDEN_ADVISOR')));
+  const isAdvisorRole = role === ('FARM_ADVISOR' as any) || role === ('GARDEN_ADVISOR' as any) || user?.role === ('FARM_ADVISOR' as any) || user?.role === ('GARDEN_ADVISOR' as any) || (Array.isArray(user?.roles) && (user.roles.includes('FARM_ADVISOR' as any) || user.roles.includes('GARDEN_ADVISOR' as any)));
   const isLabourRole = role === 'LABOUR' || role === 'OPERATOR' || user?.role === 'LABOUR' || user?.role === 'OPERATOR' || (Array.isArray(user?.roles) && (user.roles.includes('LABOUR') || user.roles.includes('OPERATOR')));
 
   const accountItems: AccountItem[] = [
@@ -298,7 +298,7 @@ export default function MoreScreen() {
 
                   {/* 🏪 DYNAMIC SELLER STORE / REGISTER STORE ITEM */}
                   {(() => {
-                    const isSellerRole = role === 'SELLER' || user?.role === 'SELLER' || (Array.isArray(user?.roles) && user.roles.includes('SELLER' as any)) || Boolean((user as any)?.isSeller) || Boolean((user as any)?.sellerStore);
+                    const isSellerRole = role === ('SELLER' as any) || user?.role === ('SELLER' as any) || (Array.isArray(user?.roles) && user.roles.includes('SELLER' as any)) || Boolean((user as any)?.isSeller) || Boolean((user as any)?.sellerStore);
                     return (
                       <TouchableOpacity
                         style={styles.row}

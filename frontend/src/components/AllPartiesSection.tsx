@@ -22,7 +22,7 @@ import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { Avatar } from '@/src/components/Avatar';
 import { useAuth } from '@/src/store/auth-context';
 import { BrandLogo } from '@/src/components/BrandLogo';
-import { buildPartyLedgerRows, GroupedLedgerRow } from '@/src/utils/partyLedger';
+import { buildPartyLedgerRows, GroupedLedgerRow, PopulatedLedgerEntry } from '@/src/utils/partyLedger';
 import { useFetchSaleBill } from '@/src/hooks/useSaleBills';
 import { useFetchPaymentReceipt } from '@/src/hooks/usePaymentReceipts';
 import { formatDateDDMMYYYY } from '@/src/utils/formatDate';
@@ -908,7 +908,7 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
 
-  const ledgerRows = useMemo(() => buildPartyLedgerRows(entries), [entries]);
+  const ledgerRows = useMemo(() => buildPartyLedgerRows(entries as unknown as PopulatedLedgerEntry[]), [entries]);
 
   const farmerName = user?.farmName || user?.name || 'Farm Owner';
   const farmerMobile = user?.farmMobile || user?.mobile || '';
@@ -976,7 +976,7 @@ function PartyStatementModalInner({ partyId, partyName, onClose }: { partyId: st
       }
 
       // Fallback: reconstruct Sale Bill preview from row data
-      const rAmt = Number(rawEntry?.amountReceived || 0);
+      const rAmt = Number((rawEntry as any)?.amountReceived || 0);
       const drAmt = row.drAmount || Number(rawEntry?.amount) || 0;
       setPreviewInvoice({
         billNo: row.billNo && row.billNo !== '—' ? row.billNo : `FK-${row.id.slice(0, 6).toUpperCase()}`,

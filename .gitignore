@@ -46,3 +46,7 @@ docs/app/
 # Runtime data
 whatsapp_auth_session/
 uploads/
+scratch/
+reports/
+videos/
+billings/

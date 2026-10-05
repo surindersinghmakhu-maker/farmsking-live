@@ -1,0 +1,64 @@
+// ─── Phase 4: Advisor assignment (schema only) ──────────────────────────
+
+model AdvisorAssignment {
+  id             String                  @id @default(uuid())
+  advisorId      String
+  advisor        User                    @relation("AdvisorAssignmentAdvisor", fields: [advisorId], references: [id])
+  farmerId       String
+  farmer         User                    @relation("AdvisorAssignmentFarmer", fields: [farmerId], references: [id])
+  status         AdvisorAssignmentStatus @default(PENDING)
+  assignedById   String?
+  assignedBy     User?                   @relation("AdvisorAssignmentAssignedBy", fields: [assignedById], references: [id], onDelete: SetNull)
+  subscriptionId String?                 @unique
+  subscription   AdvisorSubscription?    @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  startDate      DateTime
+  endDate        DateTime?
+  notes          String?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  deletedAt      DateTime?
+
+  @@index([advisorId])
+  @@index([farmerId])
+  @@map("advisor_assignments")
+}
+
+enum CallRequestStatus {
+  PENDING
+  RESOLVED
+}
+
+/// Farmer taps "Request Call" on their advisor's profile — shows as a pending alert on the advisor's
+/// dashboard until the advisor resolves it with a comment, then it moves to history.
+model CallRequest {
+  id              String            @id @default(uuid())
+  farmerId        String
+  farmer          User              @relation("CallRequestsFarmer", fields: [farmerId], references: [id], onDelete: Cascade)
+  advisorId       String
+  advisor         User              @relation("CallRequestsAdvisor", fields: [advisorId], references: [id], onDelete: Cascade)
+  status          CallRequestStatus @default(PENDING)
+  resolvedComment String?
+  resolvedAt      DateTime?
+  createdAt       DateTime          @default(now())
+
+  @@index([advisorId])
+  @@index([farmerId])
+  @@map("call_requests")
+}
+
+/// Links a CUSTOMER to the BUSINESS_PARTNER whose coupon they first redeemed.
+model PartnerAssignment {
+  id                String                  @id @default(uuid())
+  businessPartnerId String
+  businessPartner   User                    @relation("PartnerAssignmentPartner", fields: [businessPartnerId], references: [id])
+  customerId        String                  @unique
+  customer          User                    @relation("PartnerAssignmentCustomer", fields: [customerId], references: [id])
+  status            PartnerAssignmentStatus @default(ACTIVE)
+  startDate         DateTime                @default(now())
+  endDate           DateTime?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  @@index([businessPartnerId])
+  @@map("partner_assignments")
+}

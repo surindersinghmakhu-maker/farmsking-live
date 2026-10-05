@@ -44,6 +44,9 @@ export interface AppSettings {
   freeTrialPlan?: 'PRO' | 'SMART' | 'SUPER';
   advisorCertificationFee?: number;
   advisorCertificationDiscount?: number;
+  gardenExpertPlatformFeePercent?: number;
+  gardenerProCardPrice?: number;
+  gardenerVipCardPrice?: number;
   updatedAt: string;
   updatedById: string | null;
 }
@@ -94,6 +97,9 @@ export interface UpdateAppSettingsPayload {
   freeTrialPlan?: 'PRO' | 'SMART' | 'SUPER';
   advisorCertificationFee?: number;
   advisorCertificationDiscount?: number;
+  gardenExpertPlatformFeePercent?: number;
+  gardenerProCardPrice?: number;
+  gardenerVipCardPrice?: number;
 }
 
 export async function getAppSettings(): Promise<AppSettings> {

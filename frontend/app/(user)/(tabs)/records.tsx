@@ -38,7 +38,7 @@ import { PartyPicker } from '@/src/components/PartyPicker';
 import { PaymentVoucherModal, type VoucherType } from '@/src/components/PaymentVoucherModal';
 import { LabourManagementSection } from '@/src/components/LabourManagementSection';
 import { AllPartiesSection } from '@/src/components/AllPartiesSection';
-import { buildPartyLedgerRows } from '@/src/utils/partyLedger';
+import { buildPartyLedgerRows, PopulatedLedgerEntry } from '@/src/utils/partyLedger';
 import { ProfessionalOverviewView } from '@/src/components/ProfessionalOverviewView';
 import { PaymentMode } from '@/src/types/api';
 import { useLabourWorkers } from '@/src/hooks/useLabour';
@@ -1220,7 +1220,7 @@ export default function RecordsScreen() {
   const [statementSortAsc, setStatementSortAsc] = useState(false);
   const { data: statement, isLoading: isLoadingStatement } = usePartyStatement(statementPartyId ?? undefined);
   const statementLedgerRows = useMemo(() => {
-    const rows = buildPartyLedgerRows(statement?.entries || []);
+    const rows = buildPartyLedgerRows((statement?.entries as any as PopulatedLedgerEntry[]) || []);
     if (statementSortAsc) {
       return [...rows].sort((a, b) => a.srNo - b.srNo);
     }
@@ -3861,7 +3861,7 @@ export default function RecordsScreen() {
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                           {activeCrops.map((c, index) => {
                             const isSelected = expenseCropType === 'CROP' && expenseCropId === c.id;
-                            const plotName = c.plot?.name || c.fieldName || (plots && plots[index]?.name) || `Plot ${index + 1}`;
+                            const plotName = c.plot?.name || (c as any).fieldName || (plots && plots[index]?.name) || `Plot ${index + 1}`;
                             const chipTitle = c.cropName ? `${plotName} (${c.cropName})` : plotName;
                             return (
                               <TouchableOpacity
@@ -4353,12 +4353,12 @@ export default function RecordsScreen() {
                                         activeOpacity={0.7}
                                         onPress={() => {
                                           const raw = row.rawEntries?.[0];
-                                          if (row.saleBillId || raw?.type === 'SALE_CREDIT' || raw?.type === 'CREDIT' || row.drAmount > 0) {
+                                          if (row.saleBillId || (raw as any)?.type === 'SALE_CREDIT' || (raw as any)?.type === 'CREDIT' || row.drAmount > 0) {
                                             shareStatementSaleEntry({
                                               id: raw?.id || row.id,
                                               reason: raw?.reason || row.reason,
                                               amount: String(raw?.amount || row.drAmount || row.crAmount),
-                                              createdAt: raw?.createdAt || row.date,
+                                              createdAt: (raw?.createdAt as any) || row.date,
                                               saleBillId: row.saleBillId || (raw as any)?.saleBillId,
                                             });
                                           } else {
@@ -4366,7 +4366,7 @@ export default function RecordsScreen() {
                                               id: raw?.id || row.id,
                                               type: raw?.type || 'PAYMENT',
                                               amount: String(raw?.amount || row.crAmount || row.drAmount),
-                                              createdAt: raw?.createdAt || row.date,
+                                              createdAt: (raw?.createdAt as any) || row.date,
                                               paymentReceiptId: row.paymentReceiptId || (raw as any)?.paymentReceiptId,
                                             });
                                           }

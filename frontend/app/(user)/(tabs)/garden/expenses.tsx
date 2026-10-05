@@ -304,7 +304,7 @@ export default function GardenExpensesScreen() {
               filtered.map((expense: any) => {
                 const cat = CAT_MAP[expense.category] || CAT_MAP['OTHER'];
                 return (
-                  <View key={expense.id} style={[styles.expenseCard, { borderLeftColor: cat.color, borderLeftWidth: 4 }, premiumShadow('#000', 'xs')]}>
+                  <View key={expense.id} style={[styles.expenseCard, { borderLeftColor: cat.color, borderLeftWidth: 4 }, premiumShadow('#000', 'sm')]}>
                     <View style={[styles.catIcon, { backgroundColor: cat.color + '20' }]}>
                       <Ionicons name={cat.icon as any} size={20} color={cat.color} />
                     </View>
@@ -401,14 +401,14 @@ export default function GardenExpensesScreen() {
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>🌿 Plant Kharch Jodo</Text>
               <TouchableOpacity onPress={() => setShowAddModal(false)}>
-                <Ionicons name="close-circle" size={26} color={colors.textSecondary} />
+                <Ionicons name="close-circle" size={26} color={(colors as any).textSecondary} />
               </TouchableOpacity>
             </View>
 
             <TextInput
               style={[styles.input, { color: colors.text, borderColor: colors.cardBorder }]}
               placeholder="Kharch da Title e.g. Tomato Seeds"
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor={(colors as any).textSecondary}
               value={title}
               onChangeText={setTitle}
             />
@@ -416,13 +416,13 @@ export default function GardenExpensesScreen() {
             <TextInput
               style={[styles.input, { color: colors.text, borderColor: colors.cardBorder }]}
               placeholder="Amount (₹)"
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor={(colors as any).textSecondary}
               value={amount}
               onChangeText={setAmount}
               keyboardType="numeric"
             />
 
-            <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Category</Text>
+            <Text style={[styles.inputLabel, { color: (colors as any).textSecondary }]}>Category</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
               {EXPENSE_CATEGORIES.map(cat => (
                 <TouchableOpacity
@@ -438,7 +438,7 @@ export default function GardenExpensesScreen() {
 
             {(gardens as any[]).length > 0 && (
               <>
-                <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Garden Select Karo (Optional)</Text>
+                <Text style={[styles.inputLabel, { color: (colors as any).textSecondary }]}>Garden Select Karo (Optional)</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
                   {(gardens as any[]).map((g: any) => (
                     <TouchableOpacity
@@ -456,7 +456,7 @@ export default function GardenExpensesScreen() {
             <TextInput
               style={[styles.input, { color: colors.text, borderColor: colors.cardBorder }]}
               placeholder="Note (Optional)"
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor={(colors as any).textSecondary}
               value={note}
               onChangeText={setNote}
             />

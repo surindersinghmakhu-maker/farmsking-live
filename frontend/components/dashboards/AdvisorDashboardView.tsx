@@ -174,6 +174,7 @@ export const AdvisorDashboardView: React.FC = () => {
     WEATHER: weatherAlerts?.length ?? 0,
     NO_SCHEDULE: noScheduleCrops.length,
     PROBLEMS: pendingProblems.length,
+    FEES: 0,
   };
   const isLoadingByTab: Record<TabKey, boolean> = {
     SUBMISSIONS: isLoadingPendingCrops || isLoadingCallRequests || isLoadingPendingFarmers || isLoadingProblems,
@@ -182,6 +183,7 @@ export const AdvisorDashboardView: React.FC = () => {
     WEATHER: isLoadingWeatherAlerts,
     NO_SCHEDULE: isLoadingAcceptedCrops,
     PROBLEMS: isLoadingProblems,
+    FEES: false,
   };
 
   const defaultTab = useMemo<TabKey>(() => TAB_ORDER.find((k) => counts[k] > 0) ?? 'TODAY', []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -222,23 +224,23 @@ export const AdvisorDashboardView: React.FC = () => {
             </View>
 
             <View style={styles.rosterMetricsGroup}>
-              <TouchableOpacity style={styles.rosterStatChip} activeOpacity={0.85} onPress={() => router.push('/(tabs)/farmers')}>
+              <TouchableOpacity style={styles.rosterStatChip} activeOpacity={0.85} onPress={() => router.push('/(tabs)/farmers' as never)}>
                 <Text style={[styles.rosterStatVal, { color: stats.total === 0 ? '#60a5fa' : '#ef4444' }]}>{stats.total}</Text>
                 <Text style={styles.rosterStatLbl}>Total</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.rosterStatChip} activeOpacity={0.85} onPress={() => router.push('/(tabs)/farmers')}>
+              <TouchableOpacity style={styles.rosterStatChip} activeOpacity={0.85} onPress={() => router.push('/(tabs)/farmers' as never)}>
                 <Text style={[styles.rosterStatVal, { color: stats.active === 0 ? '#60a5fa' : '#ef4444' }]}>{stats.active}</Text>
                 <Text style={styles.rosterStatLbl}>Active</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.rosterStatChip} activeOpacity={0.85} onPress={() => router.push('/(tabs)/farmers')}>
+              <TouchableOpacity style={styles.rosterStatChip} activeOpacity={0.85} onPress={() => router.push('/(tabs)/farmers' as never)}>
                 <Text style={[styles.rosterStatVal, { color: stats.inactive === 0 ? '#60a5fa' : '#fca5a5' }]}>{stats.inactive}</Text>
                 <Text style={styles.rosterStatLbl}>Inactive</Text>
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.rosterViewAllBtn} activeOpacity={0.85} onPress={() => router.push('/(tabs)/farmers')}>
+            <TouchableOpacity style={styles.rosterViewAllBtn} activeOpacity={0.85} onPress={() => router.push('/(tabs)/farmers' as never)}>
               <Ionicons name="chevron-forward" size={13} color="#ffffff" />
             </TouchableOpacity>
           </LinearGradient>
@@ -818,7 +820,7 @@ export const AdvisorDashboardView: React.FC = () => {
                           <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 6 }}>
                             <TouchableOpacity
                               style={[styles.acceptCropBtn, { backgroundColor: theme.primary, paddingHorizontal: 14, height: 34 }]}
-                              onPress={() => router.push('/(tabs)/schedule')}
+                              onPress={() => router.push('/(tabs)/schedule' as never)}
                             >
                               <Ionicons name="calendar-outline" size={15} color="#ffffff" />
                               <Text style={styles.acceptCropBtnText}>Assign / Update Schedule 📅</Text>
@@ -1236,7 +1238,7 @@ export const AdvisorDashboardView: React.FC = () => {
                     <View style={styles.proGridBox}>
                       <Text style={styles.proGridLabel}>💰 Target Price</Text>
                       <Text style={styles.proGridVal}>
-                        {selectedReviewCrop.pricePerUnit ? `₹${selectedReviewCrop.pricePerUnit} / ${selectedReviewCrop.unit || 'KG'}` : 'Not specified'}
+                        {(selectedReviewCrop as any).pricePerUnit ? `₹${(selectedReviewCrop as any).pricePerUnit} / ${(selectedReviewCrop as any).unit || 'KG'}` : 'Not specified'}
                       </Text>
                     </View>
                   </View>

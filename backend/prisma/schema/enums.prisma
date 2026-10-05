@@ -1,0 +1,401 @@
+// ─── Enums ───────────────────────────────────────────────────────────────
+
+enum Role {
+  FARMER
+  ADVISOR
+  GARDENER
+  CUSTOMER
+  BUSINESS_PARTNER
+  ADMIN
+  SUPER_ADMIN
+  MANAGER
+  OPERATOR
+  SUPERVISOR
+  LABOUR
+  TECHNICAL_TRAINER
+  SELLER
+}
+
+/// Fixed, read-only capabilities an Admin/Super Admin can grant to a specific Operator account.
+/// An Operator sees nothing beyond whichever of these they've been granted — no per-capability
+/// customization beyond this list.
+enum OperatorPermission {
+  VIEW_ORDERS
+  VIEW_COUPONS
+  VIEW_USERS
+  VIEW_WALLETS
+  VIEW_FARMER_PLANS
+}
+
+enum AdminStaffPermission {
+  MANAGE_USERS
+  MANAGE_STAFF
+  MANAGE_PAYMENTS
+  MANAGE_PLANS
+  MANAGE_ADVISORS
+  VIEW_FINANCES
+  MANAGE_ORDERS
+  MANAGE_WEATHER_MARKET
+  MANAGE_DOCTORS
+  VIEW_AUDIT_LOGS
+}
+
+enum SupervisorPermission {
+  ASSIGNED_FARMS_ONLY
+  MANAGE_SPRAY_SCHEDULE
+  MANAGE_LABOUR_EXPENSES
+  CROP_DOCTOR_CHAT
+  MANAGE_HARVEST_SALES
+  VIEW_FINANCES
+}
+
+enum AreaUnit {
+  ACRE
+  HECTARE
+  BIGHA
+  GUNTA
+}
+
+enum CropStatus {
+  PLANNED
+  ACTIVE
+  HARVESTING
+  COMPLETED
+  FAILED
+  DEACTIVE
+}
+
+enum CropCategory {
+  FLOWERS
+  VEGETABLES
+  FRUITS
+  GRAINS
+  PULSES
+  SPICES
+  CASH_CROP
+  OTHER
+}
+
+enum PaymentMode {
+  CASH
+  UPI
+  BANK_TRANSFER
+  CHEQUE
+  CARD
+  CREDIT
+  OTHER
+}
+
+enum LabourWageType {
+  DAILY
+  CONTRACT
+  PIECE_RATE
+}
+
+enum FertilizerType {
+  ORGANIC
+  CHEMICAL
+  BIO
+}
+
+enum SprayType {
+  PESTICIDE
+  FUNGICIDE
+  HERBICIDE
+  INSECTICIDE
+  GROWTH_REGULATOR
+  OTHER
+}
+
+enum SprayScheduleStatus {
+  PENDING
+  COMPLETED
+  SKIPPED
+  OVERDUE
+}
+
+enum CropProblemSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum CropProblemStatus {
+  REPORTED
+  UNDER_REVIEW
+  ADVISOR_RESPONDED
+  RESOLVED
+  CLOSED
+}
+
+enum InventoryItemType {
+  SEED
+  FERTILIZER
+  PESTICIDE
+  PRODUCE
+  EQUIPMENT_PART
+  OTHER
+}
+
+enum InventoryTransactionType {
+  STOCK_IN
+  STOCK_OUT
+  ADJUSTMENT
+  WASTAGE
+}
+
+enum MachineryOwnership {
+  OWNED
+  RENTED
+}
+
+enum AdvisorAssignmentStatus {
+  PENDING
+  ADMIN_APPROVAL_PENDING
+  ACTIVE
+  REVOKED
+}
+
+enum NotificationType {
+  SPRAY_REMINDER
+  PAYMENT_DUE
+  ADVISOR_MESSAGE
+  CROP_PROBLEM_UPDATE
+  MARKET_RATE_ALERT
+  SYSTEM
+}
+
+enum SubscriptionPlanStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+  CANCELLED
+  EXPIRED
+}
+
+enum PlanPaymentStatus {
+  PENDING
+  SUBMITTED
+  CONFIRMED
+  REJECTED
+}
+
+enum ActivityType {
+  IRRIGATION
+  FERTILIZER
+  SPRAY
+  MONITORING
+  HARVEST
+  OTHER
+}
+
+enum ActivityStatus {
+  PENDING
+  COMPLETED
+  SKIPPED
+  OVERDUE
+}
+
+enum AdvisorType {
+  FARM
+  GARDEN
+}
+
+enum WalletTransactionType {
+  CREDIT
+  DEBIT
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum DiscountValueType {
+  PERCENTAGE
+  FIXED
+}
+
+enum CouponKind {
+  GENERIC
+  PERSONAL_INVITE
+  PARTNER_REFERRAL
+  REFERRAL_WELCOME
+}
+
+enum PlanCouponCategory {
+  FARMER_PLAN
+  ADVISOR_PLAN
+  DOCTOR_CONSULTATION
+}
+
+enum PartyType {
+  INDIVIDUAL
+  FIRM
+}
+
+enum PartyRole {
+  FARMER
+  CUSTOMER
+  SUPPLIER
+  VENDOR
+  LABOUR
+  ARHTIYA
+  BUSINESS_PARTNER
+  ADVISOR
+}
+
+enum ArhtiyaTransactionType {
+  ADVANCE_TAKEN
+  ADVANCE_REPAID
+  CROP_SALE_CREDIT
+  COMMISSION_FEE
+  MANDI_CHARGES
+  SETTLEMENT_PAYOUT
+}
+
+enum MandiUnit {
+  QUINTAL
+  BAG_50KG
+  BAG_35KG
+  MANN
+  KG
+}
+
+enum FarmerPlanType {
+  RECORD_ONLY
+  WITH_ADVISOR
+}
+
+enum FarmerSubscriptionPlan {
+  FREE
+  PRO
+  SMART
+  SUPER
+  VIP
+  BASIC
+  SILVER
+  GOLD
+  PLATINUM
+  DIAMOND
+  ROYAL
+}
+
+enum AdvisorSubscriptionPlan {
+  LITE
+  PLUS
+}
+
+enum GardenerSubscriptionPlan {
+  FREE
+  PRO
+  VIP
+}
+
+enum PartnerAssignmentStatus {
+  ACTIVE
+  REVOKED
+}
+
+enum CropAdvisorReviewStatus {
+  NONE
+  PENDING
+  ACCEPTED
+}
+
+enum CropHarvestType {
+  ONE_TIME
+  CONTINUOUS
+}
+
+enum CropCycleStage {
+  PLANTATION
+  VEGETATIVE
+  FLOWERING
+  HARVESTING
+  COMPLETED
+}
+
+enum WeatherTipTrigger {
+  HIGH_TEMPERATURE
+  RAIN
+  COLD
+}
+
+enum OrderStatus {
+  PLACED
+  CONFIRMED
+  PACKING
+  PACKED
+  DISPATCHED
+  DELIVERED
+  CANCELLED
+}
+
+enum OrderPaymentMode {
+  COD
+  ONLINE
+}
+
+enum OrderPaymentStatus {
+  UNPAID
+  PENDING
+  PAID
+  FAILED
+}
+
+enum SellerKycStatus {
+  PENDING
+  SUBMITTED
+  VERIFIED
+  REJECTED
+  BLOCKED
+}
+
+enum SellerPayoutStatus {
+  PENDING
+  PROCESSING
+  SETTLED
+  FAILED
+}
+
+enum ShipmentStatus {
+  UNASSIGNED
+  MANIFESTED
+  PICKUP_SCHEDULED
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  RTO_INITIATED
+  RTO_DELIVERED
+  CANCELLED
+}
+
+enum SoilType {
+  ALLUVIAL
+  BLACK
+  RED
+  LATERITE
+  SANDY
+  CLAY
+  LOAMY
+  SALINE_ALKALINE
+}
+
+enum WaterType {
+  BOREWELL_TUBEWELL
+  CANAL
+  RIVER
+  POND_LAKE
+  RAINFED
+  TAP_MUNICIPAL
+}
+
+enum ExpertApplicationStatus {
+  INVITED
+  FORM_SUBMITTED
+  APPROVED
+  REJECTED
+}

@@ -188,9 +188,9 @@ export function OpenMeteoWeatherCard() {
       
       if (user?.locationPreference === 'GPS' && user?.gpsLat && user?.gpsLng) {
         location = {
-          lat: user.gpsLat,
-          lon: user.gpsLng,
-          name: user.gpsLocationName || `GPS (${user.gpsLat.toFixed(2)}°, ${user.gpsLng.toFixed(2)}°)`,
+          lat: Number(user.gpsLat),
+          lon: Number(user.gpsLng),
+          name: (user as any).gpsLocationName || `GPS (${Number(user.gpsLat).toFixed(2)}°, ${Number(user.gpsLng).toFixed(2)}°)`,
         };
       } else {
         location = await getCoordsForPincode(

@@ -1,0 +1,209 @@
+// ─── Technical Trainer & Verification System ──────────────────────────────────
+
+enum TrainingStatus {
+  PENDING_CALL
+  IN_PROGRESS
+  WAITING_VERIFICATION
+  VERIFIED_AND_PAID
+  UNREACHABLE
+}
+
+enum TrainerLevel {
+  BASELINE
+  UPLINE
+}
+
+enum TrainerGrade {
+  GRADE_A
+  GRADE_B
+  GRADE_C
+}
+
+model TrainerAssignment {
+  id              String       @id @default(uuid())
+  trainerId       String
+  trainer         User         @relation("TrainerAssignmentUser", fields: [trainerId], references: [id], onDelete: Cascade)
+  level           TrainerLevel @default(BASELINE)
+  uplineTrainerId String?
+  uplineTrainer   User?        @relation("TrainerHierarchy", fields: [uplineTrainerId], references: [id], onDelete: SetNull)
+  grade           TrainerGrade @default(GRADE_B)
+  averageRating   Float        @default(5.0)
+  state           String
+  district        String?
+  commissionRate  Float        @default(20.0)
+  isAvailable     Boolean      @default(true)
+  availableFrom   String?      @default("09:00")
+  availableTo     String?      @default("18:00")
+  shiftType       String?      @default("PART_TIME")
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([trainerId])
+  @@index([level])
+  @@index([state])
+  @@index([district])
+  @@map("trainer_assignments")
+}
+
+model FarmerTrainingLog {
+  id                String         @id @default(uuid())
+  farmerId          String         @unique
+  farmer            User           @relation("TrainedFarmer", fields: [farmerId], references: [id], onDelete: Cascade)
+  trainerId         String
+  trainer           User           @relation("TrainerLogs", fields: [trainerId], references: [id], onDelete: Cascade)
+  isCallRequested   Boolean        @default(false)
+  preferredCallSlot String?        @default("ANYTIME")
+  callRequestedAt   DateTime?
+  calledAt          DateTime?
+  isForwarded       Boolean        @default(false)
+  forwardedToId     String?
+  forwardedTo       User?          @relation("ForwardedTrainingLogs", fields: [forwardedToId], references: [id], onDelete: SetNull)
+  forwardReason     String?
+  state             String
+  district          String?
+  status            TrainingStatus @default(PENDING_CALL)
+  rating            Int?
+  verificationCode  String?
+  callNotes         String?
+  payoutAmount      Float          @default(0.0)
+  payoutTxId        String?
+  verifiedAt        DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([trainerId])
+  @@index([forwardedToId])
+  @@index([state])
+  @@index([district])
+  @@index([status])
+  @@map("farmer_training_logs")
+}
+
+model ExpertApplication {
+  id               String                  @id @default(uuid())
+  userId           String                  @unique
+  user             User                    @relation("ExpertAppUser", fields: [userId], references: [id], onDelete: Cascade)
+  invitedByAdminId String?
+  invitedByAdmin   User?                   @relation("ExpertAppAdmin", fields: [invitedByAdminId], references: [id], onDelete: SetNull)
+  status           ExpertApplicationStatus @default(INVITED)
+  qualification    String?
+  experienceYears  Int?
+  expertise        String?
+  bio              String?
+
+  // KYC & Verification Documents
+  googleEmail          String?
+  isPhoneVerified      Boolean @default(false)
+  aadhaarCardUrl       String?
+  passportPhotoUrl     String?
+  optionalDocument1Url String?
+  optionalDocument2Url String?
+
+  rejectionReason String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([status])
+  @@map("expert_applications")
+}
+
+model GardenExpense {
+  id              String   @id @default(uuid())
+  gardenId        String
+  garden          Garden   @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+  plantId         String?
+  plant           Plant?   @relation(fields: [plantId], references: [id], onDelete: SetNull)
+  categoryName    String
+  amount          Decimal  @db.Decimal(12, 2)
+  expenseDate     DateTime
+  description     String?
+  receiptPhotoUrl String?
+  recordedById    String
+  recordedBy      User     @relation(fields: [recordedById], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([gardenId])
+  @@index([plantId])
+  @@map("garden_expenses")
+}
+
+model GardenExpertPlan {
+  id             String   @id @default(uuid())
+  expertId       String
+  expert         User     @relation("ExpertPlanOwner", fields: [expertId], references: [id], onDelete: Cascade)
+  title          String
+  description    String?
+  price          Decimal  @db.Decimal(12, 2)
+  durationMonths Int      @default(6)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  assignments GardenExpertAssignment[]
+
+  @@index([expertId])
+  @@map("garden_expert_plans")
+}
+
+model GardenExpertAssignment {
+  id          String                  @id @default(uuid())
+  gardenerId  String
+  gardener    User                    @relation("GardenerAssignment", fields: [gardenerId], references: [id], onDelete: Cascade)
+  expertId    String
+  expert      User                    @relation("ExpertAssignment", fields: [expertId], references: [id])
+  planId      String?
+  plan        GardenExpertPlan?       @relation(fields: [planId], references: [id], onDelete: SetNull)
+  status      AdvisorAssignmentStatus @default(PENDING)
+  amountPaid  Decimal                 @default(0) @db.Decimal(12, 2)
+  platformFee Decimal                 @default(0) @db.Decimal(12, 2)
+  startDate   DateTime
+  endDate     DateTime?
+  notes       String?
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+
+  @@index([gardenerId])
+  @@index([expertId])
+  @@map("garden_expert_assignments")
+}
+
+model GardenerPlanPaymentRequest {
+  id          String                   @id @default(uuid())
+  gardenerId  String
+  gardener    User                     @relation(fields: [gardenerId], references: [id], onDelete: Cascade)
+  plan        GardenerSubscriptionPlan
+  amount      Decimal                  @db.Decimal(12, 2)
+  status      PlanPaymentStatus        @default(PENDING)
+  requestedAt DateTime                 @default(now())
+  paidAt      DateTime?
+
+  @@index([gardenerId])
+  @@index([status])
+}
+
+model IsoModuleControl {
+  id                 String   @id @default(uuid())
+  moduleKey          String   @unique // ADMIN, ECOMMERCE, CUSTOMER_FARMER_DASHBOARD, FARMER_DOCTOR, GARDENER_DASHBOARD, GARDEN_ADVISOR, STAFF_PORTAL, WALLET, ACCOUNTS
+  moduleName         String
+  isEnabled          Boolean  @default(true)
+  maintenanceMessage String?  @default("This module is currently in ISO scheduled maintenance mode.")
+  updatedById        String?
+  updatedBy          User?    @relation("IsoControlUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedAt          DateTime @updatedAt
+  createdAt          DateTime @default(now())
+
+  @@map("iso_module_controls")
+}
+
+model IsoAuditLog {
+  id        String   @id @default(uuid())
+  action    String // MODULE_TOGGLE, PROFILE_SUBMISSION, PROFILE_APPROVAL, PROFILE_REJECTION, STAFF_ASSIGNMENT
+  moduleKey String?
+  actorId   String
+  actorName String?
+  details   Json?
+  createdAt DateTime @default(now())
+
+  @@map("iso_audit_logs")
+}

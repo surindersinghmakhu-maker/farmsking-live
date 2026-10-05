@@ -15,6 +15,7 @@ export interface CreateCropPayload {
   status?: CropStatus;
   stage?: 'PLANTATION' | 'VEGETATIVE' | 'FLOWERING' | 'HARVESTING' | 'COMPLETED';
   unit?: string;
+  pricePerUnit?: number;
   harvestType?: 'ONE_TIME' | 'CONTINUOUS';
   notes?: string;
 }
@@ -46,6 +47,7 @@ export async function getCrop(id: string): Promise<CropCycle> {
 
 export interface CropLookupResult extends CropCycle {
   cropId?: string | null;
+  pricePerUnit?: number | null;
   minPrice?: number | null;
   maxPrice?: number | null;
   plot: {

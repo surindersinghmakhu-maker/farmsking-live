@@ -14,7 +14,7 @@ export function TechnicalTrainerDashboardView() {
   const { role } = useRole();
 
   const isAdminOrSuperAdmin = role === 'SUPER_ADMIN' || role === 'ADMIN';
-  const isMaintenanceOn = Boolean(settings?.trainerMaintenanceMode);
+  const isMaintenanceOn = Boolean(settings?.agriMaintenanceMode);
 
   if (isMaintenanceOn && !isAdminOrSuperAdmin) {
     return <UnderMaintenanceView moduleName="Technical Trainer" />;
@@ -59,7 +59,7 @@ export function TechnicalTrainerDashboardView() {
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Action Center</Text>
         <View style={styles.grid}>
-          <TouchableOpacity style={[styles.gridItem, premiumShadow(colors.shadow, 'sm'), { backgroundColor: colors.cardBg }]} activeOpacity={0.8}>
+          <TouchableOpacity style={[styles.gridItem, premiumShadow('#0f172a', 'sm'), { backgroundColor: colors.cardBg }]} activeOpacity={0.8}>
             <LinearGradient colors={['#e0e7ff', '#c7d2fe']} style={styles.gridIconBox}>
               <Ionicons name="headset" size={28} color="#4338ca" />
             </LinearGradient>
@@ -67,7 +67,7 @@ export function TechnicalTrainerDashboardView() {
             <Text style={styles.gridItemDesc}>Pending training calls</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={[styles.gridItem, premiumShadow(colors.shadow, 'sm'), { backgroundColor: colors.cardBg }]} activeOpacity={0.8}>
+          <TouchableOpacity style={[styles.gridItem, premiumShadow('#0f172a', 'sm'), { backgroundColor: colors.cardBg }]} activeOpacity={0.8}>
             <LinearGradient colors={['#dcfce7', '#bbf7d0']} style={styles.gridIconBox}>
               <Ionicons name="document-text" size={28} color="#15803d" />
             </LinearGradient>
@@ -75,7 +75,7 @@ export function TechnicalTrainerDashboardView() {
             <Text style={styles.gridItemDesc}>View session history</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.gridItem, premiumShadow(colors.shadow, 'sm'), { backgroundColor: colors.cardBg }]} activeOpacity={0.8}>
+          <TouchableOpacity style={[styles.gridItem, premiumShadow('#0f172a', 'sm'), { backgroundColor: colors.cardBg }]} activeOpacity={0.8}>
             <LinearGradient colors={['#ffedd5', '#fed7aa']} style={styles.gridIconBox}>
               <Ionicons name="ribbon" size={28} color="#c2410c" />
             </LinearGradient>
@@ -83,7 +83,7 @@ export function TechnicalTrainerDashboardView() {
             <Text style={styles.gridItemDesc}>Verify expert farmers</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={[styles.gridItem, premiumShadow(colors.shadow, 'sm'), { backgroundColor: colors.cardBg }]} activeOpacity={0.8}>
+          <TouchableOpacity style={[styles.gridItem, premiumShadow('#0f172a', 'sm'), { backgroundColor: colors.cardBg }]} activeOpacity={0.8}>
             <LinearGradient colors={['#f3e8ff', '#e9d5ff']} style={styles.gridIconBox}>
               <Ionicons name="analytics" size={28} color="#7e22ce" />
             </LinearGradient>
@@ -99,7 +99,7 @@ export function TechnicalTrainerDashboardView() {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Pending Calls</Text>
           <TouchableOpacity><Text style={{ color: '#4f46e5', fontFamily: FONT.bold, fontSize: 13 }}>View All</Text></TouchableOpacity>
         </View>
-        <View style={[styles.listCard, premiumShadow(colors.shadow, 'sm'), { backgroundColor: colors.cardBg }]}>
+        <View style={[styles.listCard, premiumShadow('#0f172a', 'sm'), { backgroundColor: colors.cardBg }]}>
           {[1,2,3].map((i, index) => (
             <View key={i} style={[styles.listItem, index === 2 && { borderBottomWidth: 0 }]}>
               <View style={styles.listAvatar}>

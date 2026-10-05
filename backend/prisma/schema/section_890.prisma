@@ -1,0 +1,32 @@
+// ─── Customer Referral & 2-Tier Lifetime Royalty Engine ──────────────────────
+
+model UserReferral {
+  id              String   @id @default(uuid())
+  referrerId      String
+  referrer        User     @relation("ReferrerUser", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredUserId  String   @unique
+  referredUser    User     @relation("ReferredUser", fields: [referredUserId], references: [id], onDelete: Cascade)
+  level           Int      @default(1) // 1 = Direct, 2 = Indirect
+  isGuarantor     Boolean  @default(false)
+  trustScoreBonus Int      @default(10)
+  createdAt       DateTime @default(now())
+
+  @@index([referrerId])
+  @@index([referredUserId])
+  @@map("user_referrals")
+}
+
+model ReferralRoyalty {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation("RoyaltyBeneficiary", fields: [userId], references: [id], onDelete: Cascade)
+  sourceUserId  String
+  sourceUser    User     @relation("RoyaltySourceUser", fields: [sourceUserId], references: [id], onDelete: Cascade)
+  amount        Decimal  @db.Decimal(10, 2)
+  royaltyType   String // 'PLAN_PURCHASE' | 'STORE_PURCHASE' | 'SERVICE_HIRE'
+  referenceCode String?
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+  @@map("referral_royalties")
+}

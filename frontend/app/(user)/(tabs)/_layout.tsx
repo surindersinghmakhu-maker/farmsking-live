@@ -117,6 +117,7 @@ const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key:
   garden: { key: 'tabGardens' as any, title: 'Gardens', icon: 'flower-outline', iconFilled: 'flower' },
   records: { key: 'tabRecords', title: 'Accounts', icon: 'document-text-outline', iconFilled: 'document-text' },
   categories: { key: 'tabCategories', title: 'Categories', icon: 'grid-outline', iconFilled: 'grid' },
+  market: { key: 'tabMarket' as any, title: 'Market', icon: 'cart-outline', iconFilled: 'cart' },
   cart: { key: 'tabCart', title: 'Cart', icon: 'cart-outline', iconFilled: 'cart' },
   orders: { key: 'tabOrders', title: 'Orders', icon: 'receipt-outline', iconFilled: 'receipt' },
   farmers: { key: 'tabFarms', title: 'Farms', icon: 'leaf-outline', iconFilled: 'leaf' },
@@ -177,7 +178,7 @@ export default function TabLayout() {
     if (name === 'more') return t('tabMore', 'More');
     if (name === 'farmers') return role === 'GARDEN_ADVISOR' ? t('tabGardens', 'Gardens') : t('tabFarmers', 'Farmers');
     if ((name === 'shop' || name === 'admin_shop') && (role === 'ADMIN' || role === 'SUPER_ADMIN')) return 'E-Commerce';
-    const meta = TAB_META[name];
+    const meta = (TAB_META as any)[name];
     return meta ? t(meta.key, meta.title) : name;
   };
 
@@ -185,13 +186,13 @@ export default function TabLayout() {
     if (name === 'index') return focused ? 'home' : 'home-outline';
     if (name === 'more') return focused ? 'grid' : 'grid-outline';
     if (name === 'farmers') return focused ? 'leaf' : 'leaf-outline';
-    const meta = TAB_META[name];
+    const meta = (TAB_META as any)[name];
     return meta ? (focused ? meta.iconFilled : meta.icon) : 'square-outline';
   };
 
   const handleNavigate = (tabName: TabName) => {
     if (tabName === 'index') {
-      router.push('/(tabs)');
+      router.push('/(tabs)' as any);
     } else {
       router.push(`/(tabs)/${tabName}` as any);
     }
@@ -203,7 +204,7 @@ export default function TabLayout() {
       {isDesktop && (
         <View style={[desktopStyles.headerBar, { backgroundColor: colors.headerBg, borderBottomColor: colors.cardBorder }]}>
           <View style={desktopStyles.headerLeft}>
-            <TouchableOpacity style={desktopStyles.brandLogoBox} activeOpacity={0.8} onPress={() => router.push('/(tabs)')}>
+            <TouchableOpacity style={desktopStyles.brandLogoBox} activeOpacity={0.8} onPress={() => router.push('/(tabs)' as any)}>
               <BrandLogo size={36} useFastBundledOnly={true} />
               <Text style={desktopStyles.brandTitle}>FarmsKing</Text>
             </TouchableOpacity>
@@ -236,7 +237,7 @@ export default function TabLayout() {
           {/* Right Header Actions */}
           <View style={desktopStyles.headerRight}>
             {(() => {
-              const isSellerRole = role === 'SELLER' || user?.role === 'SELLER' || Boolean((user as any)?.isSeller);
+              const isSellerRole = role === ('SELLER' as any) || user?.role === ('SELLER' as any) || Boolean((user as any)?.isSeller);
               if (!isSellerRole) return null;
               return (
                 <TouchableOpacity

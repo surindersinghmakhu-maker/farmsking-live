@@ -1,8 +1,9 @@
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import compression from 'compression';
 import { AppModule } from './app.module';
@@ -57,14 +58,15 @@ async function bootstrap() {
   });
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   app.use(compression({ level: 6, threshold: 256 }));
+  const allowedOrigins = corsOrigins ? corsOrigins.split(',') : ['https://farmsking.in'];
   app.enableCors({
-    origin: true,
+    origin: allowedOrigins,
     credentials: true,
   });
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: false,
-      forbidNonWhitelisted: false,
+      whitelist: true,
+      forbidNonWhitelisted: true,
       forbidUnknownValues: false,
       skipMissingProperties: true,
       transform: true,
@@ -78,7 +80,11 @@ async function bootstrap() {
   try {
     const prisma = app.get(PrismaService);
     const superAdminMobile = '9872066901';
-    const passwordHash = await argon2.hash('12345678');
+    const superAdminPassword = configService.get<string>('SUPER_ADMIN_PASSWORD');
+    if (!superAdminPassword) {
+      Logger.warn('WARNING: SUPER_ADMIN_PASSWORD is not set in .env! Using insecure fallback.', 'Bootstrap');
+    }
+    const passwordHash = await argon2.hash(superAdminPassword || '12345678');
     const existing = await prisma.user.findUnique({ where: { mobile: superAdminMobile } });
     if (existing) {
       const currentRoles = existing.roles ?? [];
@@ -92,7 +98,7 @@ async function bootstrap() {
           deletedAt: null,
         },
       });
-      console.log('[Bootstrap] Super Admin 9872066901 initialized/updated.');
+      Logger.log('Super Admin 9872066901 initialized/updated.', 'Bootstrap');
     } else {
       await prisma.user.create({
         data: {
@@ -104,11 +110,21 @@ async function bootstrap() {
           name: 'FarmsKing Super Admin',
         },
       });
-      console.log('[Bootstrap] Super Admin 9872066901 created.');
+      Logger.log('Super Admin 9872066901 created.', 'Bootstrap');
     }
   } catch (err) {
-    console.warn('[Bootstrap] Super Admin check warning:', err);
+    Logger.warn(`Super Admin check warning: ${err}`, 'Bootstrap');
   }
+
+  // Set up Swagger API Documentation
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('FarmsKing API')
+    .setDescription('FarmsKing Backend API Documentation')
+    .setVersion('2.0')
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api/docs', app, document);
 
   await app.listen(port, host);
 }

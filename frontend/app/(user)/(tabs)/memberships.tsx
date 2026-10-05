@@ -107,7 +107,7 @@ export default function MembershipsScreen() {
     }
   };
 
-  const handlePurchasePlan = async (targetPlan: FarmerPlanType, billingPeriodDays: number) => {
+  const handlePurchasePlan = async (targetPlan: any, billingPeriodDays: number) => {
     tap();
     try {
       const res = await initiatePlanPayment.mutateAsync({
@@ -411,14 +411,14 @@ export default function MembershipsScreen() {
                   <View style={styles.doctorActionsRow}>
                     <TouchableOpacity
                       style={[styles.doctorActionBtn, { backgroundColor: '#e0f2fe' }]}
-                      onPress={() => router.push('/(tabs)/chat')}
+                      onPress={() => router.push('/(tabs)/chat' as never)}
                     >
                       <Ionicons name="chatbubble-ellipses" size={16} color="#0284c7" />
                       <Text style={[styles.doctorActionText, { color: '#0284c7' }]}>Chat Doctor</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[styles.doctorActionBtn, { backgroundColor: '#dcfce7' }]}
-                      onPress={() => router.push('/(tabs)/market')}
+                      onPress={() => router.push('/(tabs)/market' as never)}
                     >
                       <Ionicons name="call" size={16} color="#16a34a" />
                       <Text style={[styles.doctorActionText, { color: '#16a34a' }]}>Call Doctor</Text>

@@ -1,3 +1,16 @@
+import type { PartyLedgerEntry, SaleBill, PaymentReceipt } from '@backend-types';
+
+// We create a composite type for the populated entry that comes from the backend API.
+export type PopulatedLedgerEntry = PartyLedgerEntry & {
+  saleBill?: SaleBill;
+  paymentReceipt?: PaymentReceipt;
+  referenceNo?: string;
+  billNo?: string;
+  date?: Date | string; // For older fallback entries
+  drAmount?: number;
+  crAmount?: number;
+};
+
 export interface GroupedLedgerRow {
   id: string;
   srNo: number;
@@ -11,7 +24,7 @@ export interface GroupedLedgerRow {
   runningBalance: number;
   saleBillId?: string;
   paymentReceiptId?: string;
-  rawEntries: any[];
+  rawEntries: PopulatedLedgerEntry[];
 }
 
 export function cleanParticulars(reason: string, drAmount: number = 0, crAmount: number = 0): string {
@@ -55,7 +68,7 @@ export function cleanParticulars(reason: string, drAmount: number = 0, crAmount:
   return drAmount > 0 ? 'Sale' : 'Payment';
 }
 
-function extractRefNo(e: any): string {
+function extractRefNo(e: PopulatedLedgerEntry): string {
   if (e.saleBill?.billNo) return e.saleBill.billNo.trim().toUpperCase();
   if (e.paymentReceipt?.receiptNo) return e.paymentReceipt.receiptNo.trim().toUpperCase();
   if (e.referenceNo && String(e.referenceNo).trim()) return String(e.referenceNo).trim().toUpperCase();
@@ -69,7 +82,7 @@ function extractRefNo(e: any): string {
   return '';
 }
 
-export function buildPartyLedgerRows(entries: any[]): GroupedLedgerRow[] {
+export function buildPartyLedgerRows(entries: PopulatedLedgerEntry[]): GroupedLedgerRow[] {
   if (!entries || entries.length === 0) return [];
 
   // Sort entries chronologically (oldest first) for accurate running balance & sequential Sr No.
@@ -78,7 +91,7 @@ export function buildPartyLedgerRows(entries: any[]): GroupedLedgerRow[] {
   );
 
   // Group entries by reference/bill number, saleBillId, or paymentReceiptId
-  const groupedMap = new Map<string, any[]>();
+  const groupedMap = new Map<string, PopulatedLedgerEntry[]>();
   const groupOrder: string[] = [];
 
   sorted.forEach((e) => {
@@ -116,7 +129,8 @@ export function buildPartyLedgerRows(entries: any[]): GroupedLedgerRow[] {
     let billNo = '';
     let saleBillId = undefined;
     let paymentReceiptId = undefined;
-    const date = group[0].createdAt || group[0].date;
+    const rawDate = group[0].createdAt || group[0].date;
+    const date = rawDate ? new Date(rawDate).toISOString() : new Date().toISOString();
 
     group.forEach((e) => {
       if (e.type === 'SALE_CREDIT' || e.type === 'EXPENSE_PAYMENT') {

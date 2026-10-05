@@ -71,7 +71,7 @@ export default function HomeScreen() {
 
   const renderDashboardView = () => {
     const isStaffRole = ['ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(currentRole);
-    if (isStaffRole && user && !user.isApproved) {
+    if (isStaffRole && user && !(user as any).isApproved) {
       const roleNames: Record<string, string> = {
         'ADVISOR': 'Crop Advisor',
         'FARM_ADVISOR': 'Crop Doctor',

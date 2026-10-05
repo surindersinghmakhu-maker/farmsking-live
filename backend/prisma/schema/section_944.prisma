@@ -1,0 +1,75 @@
+// ─── Unified Party System & Arhtiya Management ──────────────────────────────
+
+model UnifiedParty {
+  id         String      @id @default(uuid())
+  kingId     String      @unique // Uniform format: FK-100238
+  type       PartyType   @default(INDIVIDUAL)
+  name       String
+  mandiName  String?
+  shopNumber String?
+  mobile     String?
+  address    String?
+  village    String?
+  district   String?
+  state      String?
+  roles      PartyRole[]
+
+  ownerFarmerId String?
+  ownerFarmer   User?   @relation("FarmerPrivateParties", fields: [ownerFarmerId], references: [id], onDelete: Cascade)
+
+  userId String? @unique
+  user   User?   @relation("UserUnifiedParty", fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  arhtiyaTransactions ArhtiyaTransaction[]
+
+  @@index([kingId])
+  @@index([ownerFarmerId])
+  @@map("unified_parties")
+}
+
+model ArhtiyaTransaction {
+  id              String                 @id @default(uuid())
+  farmerId        String
+  farmer          User                   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  partyId         String
+  party           UnifiedParty           @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  type            ArhtiyaTransactionType
+  amount          Decimal                @db.Decimal(12, 2)
+  transactionDate DateTime
+
+  /// Feature 1: Advance Cash & Auto Interest Engine
+  interestRateMonthly Decimal? @db.Decimal(5, 2) // e.g. 1.50 (% per month)
+  interestAccruedDays Int?
+  interestAmount      Decimal? @db.Decimal(10, 2)
+
+  /// Feature 2: Crop Sale Details & Mandi Unit Converter
+  cropCycleId       String?
+  cropName          String?
+  inputUnit         MandiUnit? @default(QUINTAL)
+  inputQuantity     Float?
+  quantityQuintals  Float?
+  ratePerQuintal    Decimal?   @db.Decimal(10, 2)
+  grossAmount       Decimal?   @db.Decimal(12, 2)
+  commissionPercent Decimal?   @db.Decimal(5, 2)
+  commissionAmount  Decimal?   @db.Decimal(10, 2)
+  otherCharges      Decimal?   @db.Decimal(10, 2)
+  netAmount         Decimal?   @db.Decimal(12, 2)
+
+  /// Feature 3: Digital J-Form Record
+  jFormNumber   String?
+  jFormDate     DateTime?
+  jFormPhotoUrl String?
+
+  notes     String?
+  createdAt DateTime @default(now())
+
+  @@index([farmerId])
+  @@index([partyId])
+  @@index([transactionDate])
+  @@index([farmerId, partyId, transactionDate])
+  @@map("arhtiya_transactions")
+}

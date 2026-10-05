@@ -222,15 +222,15 @@ export default function FarmListScreen() {
 
   const handleOpenDoctorDialog = (hItem: RegisteredCropField, advisorName?: string | null) => {
     tap();
-    const docName = advisorName || hItem.completionReview?.doctorName || activeAdvisor?.name || 'Dr. Preet Singh';
+    const docName = advisorName || (hItem as any).completionReview?.doctorName || activeAdvisor?.name || 'Dr. Preet Singh';
     const spec = activeAdvisor?.specialization || 'Crop Protection & Plant Pathology Specialist';
     const overallRating = activeAdvisor?.ratingLabel || (activeAdvisor?.rating ? `${activeAdvisor.rating} ★` : '4.9 ★');
 
-    const cropRatingNum = hItem.completionReview?.doctorRating || 5;
-    const cropRatingGrade = hItem.completionReview?.doctorGrade || 'EXCELLENT';
+    const cropRatingNum = (hItem as any).completionReview?.doctorRating || 5;
+    const cropRatingGrade = (hItem as any).completionReview?.doctorGrade || 'EXCELLENT';
     const cropDoctorRating = `${'⭐'.repeat(Math.min(5, Math.max(1, cropRatingNum)))} ${cropRatingNum}/5 Stars (Grade: ${cropRatingGrade})`;
 
-    const cropFeedback = hItem.completionReview?.doctorFeedback || hItem.completionReview?.farmskingFeedback || 'Doctor provided full spray schedule & crop protection advice for this crop cycle.';
+    const cropFeedback = (hItem as any).completionReview?.doctorFeedback || (hItem as any).completionReview?.farmskingFeedback || 'Doctor provided full spray schedule & crop protection advice for this crop cycle.';
 
     setViewingDoctorInfo({
       name: docName,
@@ -536,7 +536,7 @@ export default function FarmListScreen() {
 
     // For CONTINUOUS (daily) crops, sale entry is NOT mandatory to complete
     tap();
-    setPendingStageUpdate({ id: crop.id, targetStage: 'COMPLETED', cropName: crop.cropName });
+    setPendingStageUpdate({ id: crop.id, currentStage: crop.stage, targetStage: 'COMPLETED', cropName: crop.cropName });
     setStageConfirmModalVisible(true);
   };
 

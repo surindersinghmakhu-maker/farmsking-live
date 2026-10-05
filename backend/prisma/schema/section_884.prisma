@@ -1,0 +1,42 @@
+// ─── Group Voice Call & Live Audio Room ───────────────────────────────────────
+
+enum GroupVoiceCallStatus {
+  ACTIVE
+  ENDED
+}
+
+model GroupVoiceCall {
+  id          String               @id @default(uuid())
+  title       String
+  channelName String               @unique
+  hostId      String
+  host        User                 @relation("VoiceCallHost", fields: [hostId], references: [id], onDelete: Cascade)
+  status      GroupVoiceCallStatus @default(ACTIVE)
+  startedAt   DateTime             @default(now())
+  endedAt     DateTime?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  participants GroupVoiceCallParticipant[]
+
+  @@index([hostId])
+  @@index([status])
+  @@map("group_voice_calls")
+}
+
+model GroupVoiceCallParticipant {
+  id           String         @id @default(uuid())
+  callId       String
+  call         GroupVoiceCall @relation(fields: [callId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User           @relation("VoiceCallParticipant", fields: [userId], references: [id], onDelete: Cascade)
+  role         String         @default("LISTENER") // HOST, SPEAKER, LISTENER
+  isMuted      Boolean        @default(true)
+  isHandRaised Boolean        @default(false)
+  joinedAt     DateTime       @default(now())
+  leftAt       DateTime?
+
+  @@index([callId])
+  @@index([userId])
+  @@map("group_voice_call_participants")
+}

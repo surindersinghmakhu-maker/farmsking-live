@@ -1,0 +1,61 @@
+// ─── 3 Disruption Modules ───────────────────────────────────────────────────
+
+model VoiceAILog {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transcribedText String
+  parsedIntent    String
+  spokenResponse  String?
+  audioUrl        String?
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@map("voice_ai_logs")
+}
+
+model PlotSatelliteScan {
+  id            String   @id @default(uuid())
+  plotId        String
+  plot          Plot     @relation(fields: [plotId], references: [id], onDelete: Cascade)
+  scanDate      DateTime @default(now())
+  meanNdvi      Float
+  healthStatus  String // 'HEALTHY' | 'MODERATE_STRESS' | 'HIGH_DISEASE'
+  tileLayerUrl  String
+  redZoneAlerts Json?
+  createdAt     DateTime @default(now())
+
+  @@index([plotId])
+  @@map("plot_satellite_scans")
+}
+
+model MandiPricePrediction {
+  id              String   @id @default(uuid())
+  cropName        String
+  mandiName       String
+  predictedDate   DateTime
+  predictedPrice  Decimal  @db.Decimal(10, 2)
+  confidenceScore Float
+  createdAt       DateTime @default(now())
+
+  @@index([cropName, mandiName])
+  @@map("mandi_price_predictions")
+}
+
+model PriceLockContract {
+  id              String   @id @default(uuid())
+  farmerId        String
+  farmer          User     @relation("FarmerPriceLock", fields: [farmerId], references: [id], onDelete: Cascade)
+  buyerId         String
+  buyer           User     @relation("BuyerPriceLock", fields: [buyerId], references: [id], onDelete: Cascade)
+  cropName        String
+  quantityQuintal Decimal  @db.Decimal(10, 2)
+  lockedRate      Decimal  @db.Decimal(10, 2)
+  status          String // 'ACTIVE' | 'FULFILLED' | 'CANCELLED'
+  escrowDeposit   Decimal  @db.Decimal(10, 2)
+  createdAt       DateTime @default(now())
+
+  @@index([farmerId])
+  @@index([buyerId])
+  @@map("price_lock_contracts")
+}

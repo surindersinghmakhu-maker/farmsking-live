@@ -681,7 +681,7 @@ export function LabourManagementSection() {
                               backgroundColor: '#ffffff',
                               paddingHorizontal: 8,
                               paddingVertical: 4,
-                              borderRadius: RADIUS.full,
+                              borderRadius: RADIUS.pill,
                               borderWidth: 1,
                               borderColor: '#cbd5e1',
                             }}
@@ -731,7 +731,7 @@ export function LabourManagementSection() {
                     <TouchableOpacity
                       key={r.key}
                       style={[
-                        { paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.full, borderWidth: 1, borderColor: '#cbd5e1', backgroundColor: '#f8fafc' },
+                        { paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#cbd5e1', backgroundColor: '#f8fafc' },
                         isSelected && { backgroundColor: '#16a34a', borderColor: '#16a34a' },
                       ]}
                       onPress={() => setWorkerRelation(r.key)}

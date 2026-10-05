@@ -12,11 +12,8 @@
     "build:web": "node build.js",
     "deploy:hostinger": "cd .. && node build.js && git add . && git commit -m \"deploy: hostinger live update\" && git push origin main",
     "serve:web": "npx serve dist -s",
-    "test": "jest --watchAll",
+    "test": "jest",
     "lint": "expo lint"
-  },
-  "jest": {
-    "preset": "jest-expo"
   },
   "dependencies": {
     "@expo-google-fonts/manrope": "^0.4.2",
@@ -68,6 +65,8 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-native": "^14.0.1",
     "@types/jest": "^29.5.12",
     "@types/react": "~19.2.4",
     "@types/react-test-renderer": "^18.3.0",

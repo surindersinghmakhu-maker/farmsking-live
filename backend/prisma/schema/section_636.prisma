@@ -1,0 +1,156 @@
+// ─── King Connect — Multi-Party P2P Ecosystem ───────────────────────────────
+
+enum KingConnectStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  BLOCKED
+}
+
+enum SyncRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  COUNTER_PROPOSED
+}
+
+enum TrustLevel {
+  NONE
+  BASIC
+  TRUSTED
+  AUTO_ACCEPT
+}
+
+enum DemandStatus {
+  PENDING
+  ACCEPTED
+  PARTIALLY_ACCEPTED
+  REJECTED
+  CONVERTED_TO_ORDER
+  EXPIRED
+}
+
+enum PaymentRequestStatus {
+  PENDING
+  ACCEPTED
+  PARTIALLY_ACCEPTED
+  POSTPONED
+  REJECTED
+  EXPIRED
+}
+
+/// Bidirectional link between two FarmsKing users (Farmer <-> Shopkeeper/Arhtiya/Customer/Labour)
+model KingConnectLink {
+  id                  String            @id @default(uuid())
+  initiatorId         String
+  initiator           User              @relation("KingConnectInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
+  receiverId          String
+  receiver            User              @relation("KingConnectReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  status              KingConnectStatus @default(PENDING)
+  trustLevel          TrustLevel        @default(NONE)
+  initiatorAutoAccept Boolean           @default(false)
+  receiverAutoAccept  Boolean           @default(false)
+  acceptedCount       Int               @default(0)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  syncRequests    P2pLedgerSyncRequest[]
+  demandRequests  DemandRequest[]
+  paymentRequests KingPaymentRequest[]
+
+  @@unique([initiatorId, receiverId])
+  @@index([initiatorId])
+  @@index([receiverId])
+  @@map("king_connect_links")
+}
+
+/// P2P Ledger Sync Request — when User A records a transaction for connected User B
+model P2pLedgerSyncRequest {
+  id              String               @id @default(uuid())
+  linkId          String
+  link            KingConnectLink      @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  senderId        String
+  sender          User                 @relation("SyncSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId      String
+  receiver        User                 @relation("SyncReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  transactionType PartyLedgerEntryType
+  amount          Decimal              @db.Decimal(12, 2)
+  reason          String
+  refBillNo       String?
+  notes           String?
+  status          SyncRequestStatus    @default(PENDING)
+  rejectionReason String?
+  counterAmount   Decimal?             @db.Decimal(12, 2)
+  counterNote     String?
+  isVerified      Boolean              @default(false)
+  expiresAt       DateTime
+  acceptedAt      DateTime?
+  rejectedAt      DateTime?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([linkId])
+  @@index([status])
+  @@map("p2p_ledger_sync_requests")
+}
+
+/// Product Demand Request — Shopkeeper/Customer raises demand to connected Farmer
+model DemandRequest {
+  id              String          @id @default(uuid())
+  linkId          String
+  link            KingConnectLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  requesterId     String
+  requester       User            @relation("DemandRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  farmerId        String
+  farmer          User            @relation("DemandFarmer", fields: [farmerId], references: [id], onDelete: Cascade)
+  cropName        String
+  quantity        Float
+  unit            String
+  offeredPrice    Decimal?        @db.Decimal(12, 2)
+  requiredByDate  DateTime?
+  notes           String?
+  status          DemandStatus    @default(PENDING)
+  acceptedQty     Float?
+  counterNote     String?
+  rejectionReason String?
+  orderId         String?
+  expiresAt       DateTime
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([requesterId])
+  @@index([farmerId])
+  @@index([linkId])
+  @@map("demand_requests")
+}
+
+/// Payment Request between connected King users (Accept / Partial / Postpone / Reject)
+model KingPaymentRequest {
+  id              String               @id @default(uuid())
+  linkId          String
+  link            KingConnectLink      @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  senderId        String
+  sender          User                 @relation("KingPaymentSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId      String
+  receiver        User                 @relation("KingPaymentReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  amount          Decimal              @db.Decimal(12, 2)
+  acceptedAmount  Decimal?             @db.Decimal(12, 2)
+  reason          String
+  refBillNo       String?
+  dueDate         DateTime?
+  postponedDate   DateTime?
+  status          PaymentRequestStatus @default(PENDING)
+  rejectionReason String?
+  notes           String?
+  expiresAt       DateTime
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([linkId])
+  @@map("king_payment_requests")
+}

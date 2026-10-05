@@ -67,7 +67,7 @@ export default function TechnicalTrainerDashboardScreen() {
         <TouchableOpacity
           activeOpacity={0.8}
           style={styles.walletBadge}
-          onPress={() => router.push('/(tabs)/wallet')}
+          onPress={() => router.push('/(tabs)/wallet' as any)}
         >
           <Ionicons name="wallet-outline" size={16} color="#15803d" />
           <Text style={styles.walletBadgeText}>₹{walletBalance}</Text>
@@ -99,7 +99,7 @@ export default function TechnicalTrainerDashboardScreen() {
             </View>
             <TouchableOpacity
               style={styles.withdrawBtn}
-              onPress={() => router.push('/(tabs)/wallet')}
+              onPress={() => router.push('/(tabs)/wallet' as any)}
             >
               <Text style={styles.withdrawBtnText}>Withdraw</Text>
             </TouchableOpacity>
@@ -186,22 +186,7 @@ export default function TechnicalTrainerDashboardScreen() {
                     <Text style={styles.whatsappBtnText}>WhatsApp</Text>
                   </TouchableOpacity>
 
-                  <TouchableOpacity
-                    style={styles.forwardBtn}
-                    activeOpacity={0.8}
-                    onPress={async () => {
-                      try {
-                        const res = await forwardToUplineTrainer(log.farmer.id, 'Escalated by Baseline Trainer');
-                        alert(res.message);
-                        loadDashboardData();
-                      } catch (e: any) {
-                        alert(e?.response?.data?.message || 'Escalation failed');
-                      }
-                    }}
-                  >
-                    <Ionicons name="arrow-redo" size={14} color="#0f172a" />
-                    <Text style={styles.forwardBtnText}>Forward</Text>
-                  </TouchableOpacity>
+
                 </View>
               </View>
             );

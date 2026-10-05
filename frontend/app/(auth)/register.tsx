@@ -181,7 +181,7 @@ export default function RegisterScreen() {
         referralCode: referralCode.trim() || undefined,
       });
       if (accountType === 'CUSTOMER') {
-        router.replace('/(tabs)');
+        router.replace('/(tabs)' as any);
       } else {
         router.replace('/(auth)/onboarding');
       }

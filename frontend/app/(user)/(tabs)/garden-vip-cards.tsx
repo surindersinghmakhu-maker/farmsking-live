@@ -153,7 +153,7 @@ export default function GardenVipCardsScreen() {
                 colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)', 'rgba(255,255,255,0.08)']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                style={StyleSheet.absoluteFillObject}
+                style={StyleSheet.absoluteFill}
               />
 
               <View style={styles.welcomeLeft}>
@@ -226,7 +226,7 @@ export default function GardenVipCardsScreen() {
           </View>
         )}
 
-        <Text style={[styles.sectionSubtitle, { color: colors.textSecondary, marginTop: 16 }]}>
+        <Text style={[styles.sectionSubtitle, { color: colors.textMuted, marginTop: 16 }]}>
           ਆਪਣਾ FarmsKing Gardener Card ਚੁਣੋ
         </Text>
 
@@ -244,7 +244,7 @@ export default function GardenVipCardsScreen() {
               onPress={() => { tap(); setSelectedPlan(p); }}
             >
               {p === 'VIP' && <Ionicons name="star" size={12} color={selectedPlan === p ? '#fff' : '#94a3b8'} />}
-              <Text style={[styles.toggleText, { color: selectedPlan === p ? '#fff' : colors.textSecondary }]}>
+              <Text style={[styles.toggleText, { color: selectedPlan === p ? '#fff' : colors.textMuted }]}>
                 {p}
               </Text>
             </TouchableOpacity>
@@ -301,12 +301,12 @@ export default function GardenVipCardsScreen() {
               <LinearGradient
                 colors={['#f59e0b', '#d97706', '#b45309']}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                style={StyleSheet.absoluteFillObject}
+                style={StyleSheet.absoluteFill}
               />
               <LinearGradient
                 colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.0)', 'rgba(0,0,0,0.2)']}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                style={StyleSheet.absoluteFillObject}
+                style={StyleSheet.absoluteFill}
               />
               <View style={styles.cardHeader}>
                 <Ionicons name="star" size={24} color="#fff" />
@@ -390,11 +390,11 @@ export default function GardenVipCardsScreen() {
             <View style={styles.priceRow}>
               <Text style={[styles.priceText, { color: colors.text }]}>
                 ₹{selectedPlan === 'VIP'
-                  ? (settings?.gardenerVipCardPrice ?? '999')
-                  : (settings?.gardenerProCardPrice ?? '299')}
+                  ? ((settings as any)?.gardenerVipCardPrice ?? '999')
+                  : ((settings as any)?.gardenerProCardPrice ?? '299')}
               </Text>
               <View>
-                <Text style={[styles.priceDuration, { color: colors.textSecondary }]}>/ Lifetime</Text>
+                <Text style={[styles.priceDuration, { color: colors.textMuted }]}>/ Lifetime</Text>
                 {selectedPlan === 'VIP' && !hasUsedTrial && (
                   <View style={styles.freeTrialPill}>
                     <Text style={styles.freeTrialPillText}>🎁 30 ਦਿਨ ਫ਼੍ਰੀ Trial ਵੀ ਉਪਲਬਧ</Text>
@@ -434,7 +434,7 @@ export default function GardenVipCardsScreen() {
             {selectedPlan === 'VIP' && !hasUsedTrial && (
               <View style={styles.orRow}>
                 <View style={styles.orLine} />
-                <Text style={[styles.orText, { color: colors.textSecondary }]}>ਜਾਂ ਸਿੱਧਾ ਖਰੀਦੋ</Text>
+                <Text style={[styles.orText, { color: colors.textMuted }]}>ਜਾਂ ਸਿੱਧਾ ਖਰੀਦੋ</Text>
                 <View style={styles.orLine} />
               </View>
             )}
@@ -455,7 +455,7 @@ export default function GardenVipCardsScreen() {
               )}
             </TouchableOpacity>
 
-            <Text style={[styles.secureText, { color: colors.textSecondary }]}>
+            <Text style={[styles.secureText, { color: colors.textMuted }]}>
               <Ionicons name="lock-closed" size={12} /> 100% Secure · Seeds Home Delivery ਸ਼ਾਮਲ
             </Text>
           </View>

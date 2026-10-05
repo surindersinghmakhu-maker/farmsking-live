@@ -6,8 +6,12 @@ export type Role =
   | 'BUSINESS_PARTNER'
   | 'ADMIN'
   | 'SUPER_ADMIN'
+  | 'MANAGER'
+  | 'SUPERVISOR'
+  | 'SELLER'
   | 'OPERATOR'
-  | 'LABOUR';
+  | 'LABOUR'
+  | 'TECHNICAL_TRAINER';
 export type AdvisorType = 'FARM' | 'GARDEN';
 export type AreaUnit = 'ACRE' | 'HECTARE' | 'BIGHA' | 'GUNTA';
 export type SoilType =

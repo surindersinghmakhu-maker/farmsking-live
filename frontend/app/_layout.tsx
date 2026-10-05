@@ -47,7 +47,7 @@ function RootNavigation() {
 
   useEffect(() => {
     if (isLoading) return;
-    const currentGroup = segments[0];
+    const currentGroup = segments[0] as string;
     const inAuthGroup = currentGroup === '(auth)';
     const isPublicRoute = currentGroup === 'seo' || currentGroup === 'dose' || currentGroup === 'doses' || currentGroup === 'my' || currentGroup === 'you';
     const isStaffSetupRoute = segments.join('/') === 'staff-profile-setup';
@@ -166,3 +166,6 @@ export default function RootLayout() {
     </QueryClientProvider>
   );
 }
+
+import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary';
+export { GlobalErrorBoundary as ErrorBoundary };

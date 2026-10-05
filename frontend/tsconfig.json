@@ -5,6 +5,9 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@backend-types": [
+        "../backend/node_modules/.prisma/client/index.d.ts"
       ]
     }
   },

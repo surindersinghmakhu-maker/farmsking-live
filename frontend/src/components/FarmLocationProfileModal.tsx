@@ -68,10 +68,10 @@ export const FarmLocationProfileModal: React.FC<FarmLocationProfileModalProps> =
       setState(user.state || '');
 
       if (user.gpsLat && user.gpsLng) {
-        setGpsLat(user.gpsLat);
-        setGpsLng(user.gpsLng);
-        setGpsCoordsText(`${user.gpsLat.toFixed(4)}° N, ${user.gpsLng.toFixed(4)}° E`);
-        setGpsLocationName(user.gpsLocationName || `${user.district || 'District'}, India`);
+        setGpsLat(Number(user.gpsLat));
+        setGpsLng(Number(user.gpsLng));
+        setGpsCoordsText(`${Number(user.gpsLat).toFixed(4)}° N, ${Number(user.gpsLng).toFixed(4)}° E`);
+        setGpsLocationName((user as any).gpsLocationName || `${user.district || 'District'}, India`);
       } else if (user.district && user.state) {
         setGpsCoordsText(`30.9010° N, 75.8573° E (${user.district}, ${user.state})`);
         setGpsLocationName(`${user.district}, ${user.state}`);

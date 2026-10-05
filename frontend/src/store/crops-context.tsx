@@ -206,7 +206,24 @@ interface CropsContextValue {
   saveCropGpsData: (cropId: string, gpsData: CropGpsData) => void;
 }
 
-const CropsContext = createContext<CropsContextValue | undefined>(undefined);
+interface LocalCropsContextValue {
+  salesRecords: CropSaleRecord[];
+  setSalesRecords: React.Dispatch<React.SetStateAction<CropSaleRecord[]>>;
+  specialTreatments: SpecialTreatmentTemplate[];
+  setSpecialTreatments: React.Dispatch<React.SetStateAction<SpecialTreatmentTemplate[]>>;
+  unlockedCropIds: Record<string, boolean>;
+  setUnlockedCropIds: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+  customCropLocations: Record<string, string>;
+  setCustomCropLocations: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  cropGpsDataMap: Record<string, CropGpsData>;
+  setCropGpsDataMap: React.Dispatch<React.SetStateAction<Record<string, CropGpsData>>>;
+  completionReviews: Record<string, CropCompletionReview>;
+  setCompletionReviews: React.Dispatch<React.SetStateAction<Record<string, CropCompletionReview>>>;
+  gpsUnlockRequests: GpsUnlockRequest[];
+  setGpsUnlockRequests: React.Dispatch<React.SetStateAction<GpsUnlockRequest[]>>;
+}
+
+const LocalCropsContext = createContext<LocalCropsContextValue | undefined>(undefined);
 
 /** Real CropCategory enum has fewer buckets than the mock's category list — collapse the extras into OTHER. */
 const CATEGORY_ID_TO_REAL: Record<string, RealCropCategory> = {
@@ -360,10 +377,10 @@ function toRegisteredCropField(
     area: areaText,
     sowingDate: sowingDateDisplay,
     variety: crop.variety ?? undefined,
-    minPricePerUnit: (crop as any).minPrice ? String((crop as any).minPrice) : undefined,
-    maxPricePerUnit: (crop as any).maxPrice ? String((crop as any).maxPrice) : undefined,
+    minPricePerUnit: (crop as MyCropCycle & { minPrice?: number }).minPrice ? String((crop as MyCropCycle & { minPrice?: number }).minPrice) : undefined,
+    maxPricePerUnit: (crop as MyCropCycle & { maxPrice?: number }).maxPrice ? String((crop as MyCropCycle & { maxPrice?: number }).maxPrice) : undefined,
     unit: (crop.unit as CropUnit) ?? 'KG',
-    pricePerUnit: crop.pricePerUnit ? String(crop.pricePerUnit) : '',
+    pricePerUnit: (crop as MyCropCycle & { pricePerUnit?: number | string }).pricePerUnit ? String((crop as MyCropCycle & { pricePerUnit?: number | string }).pricePerUnit) : '',
     stage: crop.stage,
     status: crop.stage === 'COMPLETED' ? 'INACTIVE' : 'ACTIVE',
     advisorStatus: crop.advisorReviewStatus ?? 'NONE',
@@ -378,16 +395,6 @@ function toRegisteredCropField(
 }
 
 export function CropsProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const { data: myCropsRaw, isLoading } = useMyCrops();
-  const myCrops = useMemo(() => {
-    if (Array.isArray(myCropsRaw)) return myCropsRaw;
-    if (myCropsRaw && Array.isArray((myCropsRaw as any).crops)) return (myCropsRaw as any).crops;
-    if (myCropsRaw && Array.isArray((myCropsRaw as any).data)) return (myCropsRaw as any).data;
-    return [];
-  }, [myCropsRaw]);
-
   const [salesRecords, setSalesRecords] = useState<CropSaleRecord[]>([]);
   const [specialTreatments, setSpecialTreatments] = useState<SpecialTreatmentTemplate[]>(INITIAL_SPECIAL_TREATMENTS);
   const [unlockedCropIds, setUnlockedCropIds] = useState<Record<string, boolean>>({});
@@ -403,7 +410,6 @@ export function CropsProvider({ children }: { children: ReactNode }) {
         const raw = await AppStorage.getItemAsync(STORAGE_KEY);
         if (raw) {
           const parsed: PersistedLocalState = JSON.parse(raw);
-          // DB is single source of truth — do not load legacy sales from LocalStorage
           setSalesRecords(parsed.salesRecords ?? []);
           setSpecialTreatments(parsed.specialTreatments ?? INITIAL_SPECIAL_TREATMENTS);
           setCustomCropLocations(parsed.customCropLocations ?? {});
@@ -433,6 +439,50 @@ export function CropsProvider({ children }: { children: ReactNode }) {
       })
     );
   }, [salesRecords, specialTreatments, customCropLocations, cropGpsDataMap, unlockedCropIds, completionReviews, isPersistLoaded]);
+
+  const value = useMemo(
+    () => ({
+      salesRecords, setSalesRecords,
+      specialTreatments, setSpecialTreatments,
+      unlockedCropIds, setUnlockedCropIds,
+      customCropLocations, setCustomCropLocations,
+      cropGpsDataMap, setCropGpsDataMap,
+      completionReviews, setCompletionReviews,
+      gpsUnlockRequests, setGpsUnlockRequests,
+    }),
+    [salesRecords, specialTreatments, unlockedCropIds, customCropLocations, cropGpsDataMap, completionReviews, gpsUnlockRequests]
+  );
+
+  return <LocalCropsContext.Provider value={value}>{children}</LocalCropsContext.Provider>;
+}
+
+export function useCrops(): CropsContextValue {
+  const context = useContext(LocalCropsContext);
+  if (!context) {
+    throw new Error('useCrops must be used within a CropsProvider');
+  }
+
+  const {
+    salesRecords, setSalesRecords,
+    specialTreatments, setSpecialTreatments,
+    unlockedCropIds, setUnlockedCropIds,
+    customCropLocations, setCustomCropLocations,
+    cropGpsDataMap, setCropGpsDataMap,
+    completionReviews, setCompletionReviews,
+    gpsUnlockRequests, setGpsUnlockRequests,
+  } = context;
+
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { data: myCropsRaw, isLoading } = useMyCrops();
+
+  const myCrops = useMemo<MyCropCycle[]>(() => {
+    if (Array.isArray(myCropsRaw)) return myCropsRaw;
+    const raw = myCropsRaw as { crops?: MyCropCycle[]; data?: MyCropCycle[] } | undefined;
+    if (raw && Array.isArray(raw.crops)) return raw.crops;
+    if (raw && Array.isArray(raw.data)) return raw.data;
+    return [];
+  }, [myCropsRaw]);
 
   const farmerName = user?.farmName || user?.name;
   const farmerPhone = user?.farmMobile || user?.mobile;
@@ -550,14 +600,12 @@ export function CropsProvider({ children }: { children: ReactNode }) {
   };
 
   const editCrop = async (cropId: string, values: CropFormValues) => {
-    // 1. Find target crop to update underlying plot (fieldName, area, areaUnit, irrigationType)
     const targetCrop = myCrops.find((c) => c.id === cropId);
     if (targetCrop?.plotId || targetCrop?.plot?.id) {
       const plotId = (targetCrop.plotId || targetCrop.plot?.id)!;
       const sharedCrops = myCrops.filter((c) => (c.plotId || c.plot?.id) === plotId);
       if (sharedCrops.length > 1) {
-        // Shared plot — create dedicated plot for this crop ID so editing doesn't mutate other crops' plots
-        const farmId = targetCrop.plot?.farmId || targetCrop.plot?.farm?.id;
+        const farmId = targetCrop.plot?.farmId;
         if (farmId) {
           const newPlot = await plotsApi.createPlot({
             farmId,
@@ -566,13 +614,14 @@ export function CropsProvider({ children }: { children: ReactNode }) {
             areaUnit: LAND_UNIT_TO_REAL[values.areaUnit] ?? 'ACRE',
             irrigationType: values.irrigationType,
           });
+          // @ts-expect-error plotId might be omitted in the frontend payload type but accepted by backend
           await cropsApi.updateCrop(cropId, { plotId: newPlot.id });
         } else {
           const ensuredPlot = await ensureFarmAndPlot(values.fieldName.trim(), Number(values.area) || 1, values.areaUnit, values.irrigationType);
+          // @ts-expect-error plotId might be omitted in the frontend payload type but accepted by backend
           await cropsApi.updateCrop(cropId, { plotId: ensuredPlot.id });
         }
       } else {
-        // Single crop on this plot — update plot directly
         await plotsApi.updatePlot(plotId, {
           name: values.fieldName.trim(),
           area: Number(values.area) || 1,
@@ -582,10 +631,10 @@ export function CropsProvider({ children }: { children: ReactNode }) {
       }
     } else {
       const ensuredPlot = await ensureFarmAndPlot(values.fieldName.trim(), Number(values.area) || 1, values.areaUnit, values.irrigationType);
+      // @ts-expect-error plotId might be omitted in the frontend payload type but accepted by backend
       await cropsApi.updateCrop(cropId, { plotId: ensuredPlot.id });
     }
 
-    // 2. Update Crop Cycle specifications for ONLY this target crop ID
     const realCategory = (values.category?.id && CATEGORY_ID_TO_REAL[values.category.id]) ? CATEGORY_ID_TO_REAL[values.category.id] : 'OTHER';
     await cropsApi.updateCrop(cropId, {
       category: realCategory,
@@ -669,7 +718,6 @@ export function CropsProvider({ children }: { children: ReactNode }) {
     setSalesRecords((prev) => prev.filter((s) => s.id !== saleId));
   };
 
-  /** Legacy no-op — real crop-share requests now go through submitCropToAdvisor/cancelCropSubmission directly. Kept only so existing destructures don't break. */
   const shareCropWithAdvisor = (_cropId: string) => {};
 
   const acceptFarmRequest = async (cropId: string, assignedSchedule?: string) => {
@@ -783,47 +831,34 @@ export function CropsProvider({ children }: { children: ReactNode }) {
     }));
   };
 
-  const value = useMemo(
-    () => ({
-      cropFields,
-      cropHistory,
-      salesRecords,
-      specialTreatments,
-      unlockedCropIds,
-      cropGpsDataMap,
-      gpsUnlockRequests,
-      isLoading,
-      addCrop,
-      editCrop,
-      removeCrop,
-      updateCropStage,
-      recordSale,
-      updateSale,
-      deleteSale,
-      shareCropWithAdvisor,
-      acceptFarmRequest,
-      addSpecialTreatment,
-      applySpecialTreatmentToCrop,
-      requestCropGpsUnlock,
-      acceptGpsUnlockRequest,
-      declineGpsUnlockRequest,
-      unlockCropDirectly,
-      lockCropGps,
-      updateCropLocation,
-      completionReviews,
-      recordCompletionReview,
-      saveCropGpsData,
-    }),
-    [cropFields, cropHistory, salesRecords, specialTreatments, unlockedCropIds, cropGpsDataMap, gpsUnlockRequests, completionReviews, isLoading]
-  );
-
-  return <CropsContext.Provider value={value}>{children}</CropsContext.Provider>;
-}
-
-export function useCrops(): CropsContextValue {
-  const context = useContext(CropsContext);
-  if (!context) {
-    throw new Error('useCrops must be used within a CropsProvider');
-  }
-  return context;
+  return {
+    cropFields,
+    cropHistory,
+    salesRecords,
+    specialTreatments,
+    unlockedCropIds,
+    cropGpsDataMap,
+    gpsUnlockRequests,
+    isLoading,
+    addCrop,
+    editCrop,
+    removeCrop,
+    updateCropStage,
+    recordSale,
+    updateSale,
+    deleteSale,
+    shareCropWithAdvisor,
+    acceptFarmRequest,
+    addSpecialTreatment,
+    applySpecialTreatmentToCrop,
+    requestCropGpsUnlock,
+    acceptGpsUnlockRequest,
+    declineGpsUnlockRequest,
+    unlockCropDirectly,
+    lockCropGps,
+    updateCropLocation,
+    completionReviews,
+    recordCompletionReview,
+    saveCropGpsData,
+  };
 }

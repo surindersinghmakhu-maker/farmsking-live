@@ -1,0 +1,351 @@
+// ─── Phase 1: Users, Farms, Plots, Crops ────────────────────────────────
+
+model User {
+  id                      String       @id @default(uuid())
+  kingId                  String?      @unique
+  mobile                  String       @unique
+  passwordHash            String
+  role                    Role         @default(FARMER)
+  /// Every role this account has ever been granted (e.g. a Customer who became a Farmer and was also
+  /// made a Business Partner holds both) — `role` above stays the "current/primary" dashboard.
+  roles                   Role[]       @default([])
+  /// Roles an Admin has deactivated — stays in `roles` for history (never deleted), just excluded
+  /// from what RolesGuard treats as active until an Admin reactivates it.
+  deactivatedRoles        Role[]       @default([])
+  name                    String
+  email                   String?
+  village                 String?
+  district                String?
+  state                   String?
+  pincode                 String?
+  postOffice              String?
+  securityQuestion        String?
+  securityAnswerHash      String?
+  preferredLanguage       String       @default("en")
+  notificationsEnabled    Boolean      @default(true)
+  whatsappGroupEnabled    Boolean      @default(true)
+  whatsappGroupJid        String?
+  /// Self-service weather-alert thresholds (any role). Null threshold = that side of the check is off;
+  /// a set value both enables and defines it. Advisors additionally use these to flag farmers whose
+  /// current temperature/rain falls outside the configured range.
+  weatherAlertMinTempC    Float?
+  weatherAlertMaxTempC    Float?
+  weatherAlertRainEnabled Boolean      @default(false)
+  locationPreference      String?      @default("GPS")
+  gpsLat                  Float?
+  gpsLng                  Float?
+  gpsLocationName         String?
+  photoUrl                String?
+  sprayTankSizeL          Int?
+  soilType                SoilType?
+  waterType               WaterType?
+  specialization          String?
+  bio                     String?
+  yearsExperience         Int?
+  advisorType             AdvisorType?
+  /// Advisor-only display profile — required (alongside the payout fields below) before an Advisor's wallet can be withdrawn from.
+  qualification           String?
+  profileTitle            String?
+  /// Business Partner / Advisor payout profile — all required before their wallet can be withdrawn from (see WithdrawalsService.create).
+  upiId                   String?
+  billPrintingAddress     String?
+  farmName                String?
+  farmAddress             String?
+  farmMobile              String?
+  panNumber               String?
+  alternativeMobile       String?
+  bankAccountNumber       String?
+  bankIfsc                String?
+  bankAccountHolderName   String?
+  isSeniorDoctor          Boolean      @default(false)
+  seniorDoctorId          String?
+  seniorDoctor            User?        @relation("DoctorHierarchy", fields: [seniorDoctorId], references: [id], onDelete: SetNull)
+  juniorDoctors           User[]       @relation("DoctorHierarchy")
+  doctorConsultationFee   Decimal?     @db.Decimal(10, 2)
+
+  // --- Advisor / Doctor Feature Permissions ---
+  canAdoptCrop         Boolean @default(false)
+  canGiveEPrescription Boolean @default(false)
+  canTakeCalls         Boolean @default(false)
+  canDoFarmVisits      Boolean @default(false)
+  isDemoAllowed        Boolean @default(false)
+
+  // --- Advisor Pricing & Commission Slabs ---
+  commissionPercent   Float?   @default(15.0)
+  eParchiFee          Decimal? @default(50) @db.Decimal(10, 2)
+  callConsultationFee Decimal? @default(100) @db.Decimal(10, 2)
+  farmVisitFee        Decimal? @default(500) @db.Decimal(10, 2)
+
+  operatorPermissions    OperatorPermission[]   @default([])
+  adminStaffPermissions  AdminStaffPermission[] @default([])
+  supervisorPermissions  SupervisorPermission[] @default([])
+  employerFarmerId       String?
+  employerFarmer         User?                  @relation("FarmerSupervisors", fields: [employerFarmerId], references: [id], onDelete: SetNull)
+  supervisors            User[]                 @relation("FarmerSupervisors")
+  /// Who referred this account in — set once at signup (referral code) or by a Super Admin afterwards, never changed again.
+  referredById           String?
+  referredBy             User?                  @relation("UserReferrals", fields: [referredById], references: [id], onDelete: SetNull)
+  referrals              User[]                 @relation("UserReferrals")
+  /// Denormalized for quick display to the referred customer — the code of their auto-issued REFERRAL_WELCOME coupon.
+  /// WhatsApp / Phone verification status & temporary OTP storage
+  isPhoneVerified        Boolean                @default(false)
+  otpCodeHash            String?
+  otpExpiresAt           DateTime?
+  failedLoginAttempts    Int                    @default(0)
+  lockoutUntil           DateTime?
+  isPermanentlyBlocked   Boolean                @default(false)
+  isApproved             Boolean                @default(false)
+  profileStatus          String?                @default("APPROVED") // PENDING_COMPLETION, UNDER_REVIEW, APPROVED, REJECTED
+  assignedStaffId        String?
+  profileRejectionReason String?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  deletedAt              DateTime?
+
+  isoControlsUpdated IsoModuleControl[] @relation("IsoControlUpdatedBy")
+
+  farms Farm[]
+
+  customers                          Customer[]
+  expensesRecorded                   Expense[]
+  salesRecorded                      Sale[]
+  paymentsRecorded                   Payment[]
+  labourEntriesRecorded              LabourEntry[]
+  labourWorkersCreated               LabourWorker[]             @relation("FarmerLabourWorkers")
+  labourWorkerUser                   LabourWorker[]             @relation("LabourWorkerUser")
+  labourWorkEntriesRecorded          LabourWorkEntry[]          @relation("WorkEntriesRecordedBy")
+  labourWorkEntriesAsFarmer          LabourWorkEntry[]          @relation("FarmerWorkEntries")
+  labourPaymentsRecorded             LabourPayment[]            @relation("LabourPaymentsRecordedBy")
+  labourPaymentsAsFarmer             LabourPayment[]            @relation("FarmerLabourPayments")
+  fertilizersAdded                   Fertilizer[]
+  fertilizerUsagesRecorded           FertilizerUsage[]
+  spraysRecorded                     Spray[]
+  spraySchedulesCreated              SpraySchedule[]
+  sprayItemTemplates                 SprayItemTemplate[]
+  cropProblemsReported               CropProblem[]              @relation("CropProblemReporter")
+  cropProblemsAssigned               CropProblem[]              @relation("CropProblemAdvisor")
+  harvestsRecorded                   Harvest[]
+  inventoryTransactionsRecorded      InventoryTransaction[]
+  irrigationRecordsRecorded          IrrigationRecord[]
+  advisorAssignmentsAsAdvisor        AdvisorAssignment[]        @relation("AdvisorAssignmentAdvisor")
+  advisorAssignmentsAsFarmer         AdvisorAssignment[]        @relation("AdvisorAssignmentFarmer")
+  advisorAssignmentsCreated          AdvisorAssignment[]        @relation("AdvisorAssignmentAssignedBy")
+  callRequestsAsFarmer               CallRequest[]              @relation("CallRequestsFarmer")
+  callRequestsAsAdvisor              CallRequest[]              @relation("CallRequestsAdvisor")
+  partnerAssignmentsAsPartner        PartnerAssignment[]        @relation("PartnerAssignmentPartner")
+  partnerAssignmentAsCustomer        PartnerAssignment?         @relation("PartnerAssignmentCustomer")
+  notifications                      Notification[]
+  gardens                            Garden[]
+  customerOrders                     CustomerOrder[]
+  partnerReferrals                   PartnerReferral[]
+  referralsSent                      UserReferral[]             @relation("ReferrerUser")
+  referralReceived                   UserReferral?              @relation("ReferredUser")
+  royaltiesReceived                  ReferralRoyalty[]          @relation("RoyaltyBeneficiary")
+  royaltiesGenerated                 ReferralRoyalty[]          @relation("RoyaltySourceUser")
+  voiceAILogs                        VoiceAILog[]
+  farmerPriceLockContracts           PriceLockContract[]        @relation("FarmerPriceLock")
+  buyerPriceLockContracts            PriceLockContract[]        @relation("BuyerPriceLock")
+  advisorSubscriptionsAsFarmer       AdvisorSubscription[]      @relation("SubscriptionFarmer")
+  expertApplicationsAsUser           ExpertApplication[]        @relation("ExpertAppUser")
+  expertInvitesSent                  ExpertApplication[]        @relation("ExpertAppAdmin")
+  advisorSubscriptionsApproved       AdvisorSubscription[]      @relation("SubscriptionApprovedBy")
+  planPaymentRequestsAsFarmer        PlanPaymentRequest[]       @relation("PlanPaymentFarmer")
+  planPaymentRequestsConfirmed       PlanPaymentRequest[]       @relation("PlanPaymentConfirmedBy")
+  farmerPlanPaymentRequestsAsFarmer  FarmerPlanPaymentRequest[] @relation("FarmerPlanPaymentFarmer")
+  farmerPlanPaymentRequestsConfirmed FarmerPlanPaymentRequest[] @relation("FarmerPlanPaymentConfirmedBy")
+  activitySchedulesCreated           CropActivitySchedule[]     @relation("ActivityCreatedByAdvisor")
+  activitySchedulesCompleted         CropActivitySchedule[]     @relation("ActivityCompletedBy")
+  uploads                            Upload[]
+
+  couponsAsBusinessPartner            Coupon[]              @relation("BusinessPartnerCoupons")
+  couponsCreatedByAdmin               Coupon[]              @relation("CouponsCreatedByAdmin")
+  couponRedemptionsAsCustomer         CouponRedemption[]    @relation("CouponRedemptionsCustomer")
+  walletTransactions                  WalletTransaction[]   @relation("WalletTransactions")
+  walletTransactionsRelated           WalletTransaction[]   @relation("WalletTransactionsRelatedUser")
+  auditLogs                           AuditLog[]            @relation("AuditLogsActor")
+  parties                             Party[]
+  unifiedPartiesCreated               UnifiedParty[]        @relation("FarmerPrivateParties")
+  unifiedPartyAccount                 UnifiedParty?         @relation("UserUnifiedParty")
+  arhtiyaTransactions                 ArhtiyaTransaction[]
+  saleBills                           SaleBill[]
+  paymentReceipts                     PaymentReceipt[]
+  withdrawalRequestsAsPartner         WithdrawalRequest[]   @relation("WithdrawalRequestsPartner")
+  withdrawalRequestsProcessed         WithdrawalRequest[]   @relation("WithdrawalRequestsProcessedBy")
+  planRenewalCouponsCreated           PlanRenewalCoupon[]   @relation("PlanRenewalCouponsCreatedBy")
+  planRenewalCouponsAssigned          PlanRenewalCoupon[]   @relation("PlanRenewalCouponsAssignedFarmer")
+  planRenewalCouponsAssignedAsAdvisor PlanRenewalCoupon[]   @relation("PlanRenewalCouponsAssignedAdvisor")
+  basicPlanCouponsCreated             BasicPlanCoupon[]     @relation("BasicPlanCouponsCreatedBy")
+  basicPlanCouponsPurchased           BasicPlanCoupon[]     @relation("BasicPlanCouponsPurchasedBy")
+  basicPlanCouponsUsed                BasicPlanCoupon[]     @relation("BasicPlanCouponsUsedByFarmer")
+  appSettingsUpdated                  AppSetting[]          @relation("AppSettingUpdatedBy")
+  couponSystemSettingsUpdated         CouponSystemSetting[] @relation("CouponSystemSettingUpdatedBy")
+  adminChatsAsFarmer                  AdminChatMessage[]    @relation("AdminChatFarmer")
+  adminChatsAsAdmin                   AdminChatMessage[]    @relation("AdminChatAdmin")
+  customerAddresses                   CustomerAddress[]
+  messagesSent                        Message[]             @relation("MessagesSent")
+  messagesReceived                    Message[]             @relation("MessagesReceived")
+  weatherTipTemplatesCreated          WeatherTipTemplate[]  @relation("WeatherTipTemplatesCreatedBy")
+  productsCreated                     Product[]             @relation("ProductsCreatedBy")
+  ordersPacked                        CustomerOrder[]       @relation("OrdersPackedBy")
+  ordersDispatched                    CustomerOrder[]       @relation("OrdersDispatchedBy")
+  sellerStore                         SellerStore?
+  productReviews                      ProductReview[]
+  wishlists                           Wishlist[]
+  returnRequests                      ReturnRequest[]
+
+  // Farmer Plan (3-tier)
+  farmerPlan                                 FarmerPlan?
+  farmerPlanHistory                          FarmerPlanHistory[]  @relation("FarmerPlanHistoryFarmer")
+  farmerPlanCouponsCreated                   FarmerPlanCoupon[]   @relation("FarmerPlanCouponsCreatedBy")
+  farmerPlanCouponsAssigned                  FarmerPlanCoupon[]   @relation("FarmerPlanCouponsAssignedFarmer")
+  farmerPlanCouponsAssignedAsAdvisor         FarmerPlanCoupon[]   @relation("FarmerPlanCouponsAssignedAdvisor")
+  farmerPlanCouponsAssignedAsBusinessPartner FarmerPlanCoupon[]   @relation("FarmerPlanCouponsAssignedBusinessPartner")
+  farmerPlanPricingUpdated                   FarmerPlanPricing[]  @relation("FarmerPlanPricingUpdatedBy")
+  farmerPlanCouponsUsed                      FarmerPlanCoupon[]   @relation("FarmerPlanCouponsUsedBy")
+  gardenerPlan                               GardenerPlan?
+  gardenerPlanCouponsCreated                 GardenerPlanCoupon[] @relation("GardenerPlanCouponsCreatedBy")
+  gardenerPlanCouponsAssigned                GardenerPlanCoupon[] @relation("GardenerPlanCouponsAssignedGardener")
+  gardenerPlanCouponsUsed                    GardenerPlanCoupon[] @relation("GardenerPlanCouponsUsedBy")
+  advisorTierPlan                            AdvisorTierPlan?
+
+  // King Connect Relations
+  kingConnectInitiated         KingConnectLink[]           @relation("KingConnectInitiator")
+  kingConnectReceived          KingConnectLink[]           @relation("KingConnectReceiver")
+  syncRequestsSent             P2pLedgerSyncRequest[]      @relation("SyncSender")
+  syncRequestsReceived         P2pLedgerSyncRequest[]      @relation("SyncReceiver")
+  demandsRequested             DemandRequest[]             @relation("DemandRequester")
+  demandsAsFarmer              DemandRequest[]             @relation("DemandFarmer")
+  kingPaymentsSent             KingPaymentRequest[]        @relation("KingPaymentSender")
+  kingPaymentsReceived         KingPaymentRequest[]        @relation("KingPaymentReceiver")
+  // Group Voice Call Relations
+  groupVoiceCallsHosted        GroupVoiceCall[]            @relation("VoiceCallHost")
+  groupVoiceCallParticipations GroupVoiceCallParticipant[] @relation("VoiceCallParticipant")
+
+  // Technical Trainer Relations
+  trainerAssignments       TrainerAssignment[] @relation("TrainerAssignmentUser")
+  uplineTrainerAssignments TrainerAssignment[] @relation("TrainerHierarchy")
+  trainerLogs              FarmerTrainingLog[] @relation("TrainerLogs")
+  forwardedTrainingLogs    FarmerTrainingLog[] @relation("ForwardedTrainingLogs")
+  farmerTrainingLog        FarmerTrainingLog?  @relation("TrainedFarmer")
+
+  gardenExpenses       GardenExpense[]
+  gardenExpertPlans    GardenExpertPlan[]           @relation("ExpertPlanOwner")
+  expertAssignments    GardenExpertAssignment[]     @relation("ExpertAssignment")
+  gardenerAssignments  GardenExpertAssignment[]     @relation("GardenerAssignment")
+  gardenerPlanPayments GardenerPlanPaymentRequest[]
+
+  @@index([kingId])
+  @@index([mobile])
+  @@index([role])
+  @@index([kingId, role])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+model Farm {
+  id               String    @id @default(uuid())
+  ownerId          String
+  owner            User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name             String
+  village          String?
+  district         String?
+  state            String?
+  totalArea        Float
+  areaUnit         AreaUnit  @default(ACRE)
+  soilType         String?
+  irrigationSource String?
+  notes            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  plots Plot[]
+
+  expenses          Expense[]
+  sales             Sale[]
+  labourWorkers     LabourWorker[]
+  labourEntries     LabourEntry[]
+  labourWorkEntries LabourWorkEntry[]
+  inventoryItems    InventoryItem[]
+  machinery         Machinery[]
+
+  @@index([ownerId])
+  @@index([ownerId, deletedAt])
+  @@map("farms")
+}
+
+model Plot {
+  id             String    @id @default(uuid())
+  farmId         String
+  farm           Farm      @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  name           String
+  area           Float
+  areaUnit       AreaUnit  @default(ACRE)
+  soilType       String?
+  irrigationType String?
+  waterSource    String?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  cropCycles CropCycle[]
+
+  expenses          Expense[]
+  sales             Sale[]
+  labourEntries     LabourEntry[]
+  labourWorkEntries LabourWorkEntry[]
+  irrigationRecords IrrigationRecord[]
+  satelliteScans    PlotSatelliteScan[]
+
+  @@index([farmId])
+  @@index([farmId, deletedAt])
+  @@map("plots")
+}
+
+model CropCycle {
+  id                   String                  @id @default(uuid())
+  cropId               String?                 @unique
+  plotId               String
+  plot                 Plot                    @relation(fields: [plotId], references: [id], onDelete: Cascade)
+  category             CropCategory?
+  cropName             String
+  variety              String?
+  area                 Float?
+  plantCount           Int?
+  sowingDate           DateTime?
+  transplantDate       DateTime?
+  expectedHarvestDate  DateTime?
+  actualHarvestDate    DateTime?
+  status               CropStatus              @default(PLANNED)
+  stage                CropCycleStage          @default(PLANTATION)
+  unit                 String?
+  harvestType          CropHarvestType         @default(CONTINUOUS)
+  notes                String?
+  assignedSchedule     String?                 @db.Text
+  advisorReviewStatus  CropAdvisorReviewStatus @default(NONE)
+  submittedToAdvisorAt DateTime?
+  advisorAcceptedAt    DateTime?
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt
+  deletedAt            DateTime?
+
+  expenses              Expense[]
+  sales                 Sale[]
+  labourEntries         LabourEntry[]
+  labourWorkEntries     LabourWorkEntry[]
+  fertilizerUsages      FertilizerUsage[]
+  sprays                Spray[]
+  spraySchedules        SpraySchedule[]
+  cropProblems          CropProblem[]
+  harvests              Harvest[]
+  irrigationRecords     IrrigationRecord[]
+  inventoryTransactions InventoryTransaction[]
+  activitySchedules     CropActivitySchedule[]
+
+  @@index([plotId])
+  @@index([cropName])
+  @@index([status])
+  @@index([plotId, status, deletedAt])
+  @@map("crop_cycles")
+}

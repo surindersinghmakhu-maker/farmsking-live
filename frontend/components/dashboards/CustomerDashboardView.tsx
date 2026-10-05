@@ -65,7 +65,7 @@ export const CustomerDashboardView: React.FC = () => {
         <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm')]}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>All Products</Text>
-            <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/(tabs)/shop')}>
+            <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/(tabs)/shop' as never)}>
               <Text style={[styles.viewAllText, { color: theme.primary }]}>Open Shop</Text>
             </TouchableOpacity>
           </View>
@@ -95,7 +95,7 @@ export const CustomerDashboardView: React.FC = () => {
 
               <View style={styles.productGrid}>
                 {visibleProducts.map((p) => (
-                  <TouchableOpacity key={p.id} style={styles.productCard} activeOpacity={0.8} onPress={() => router.push('/(tabs)/shop')}>
+                  <TouchableOpacity key={p.id} style={styles.productCard} activeOpacity={0.8} onPress={() => router.push('/(tabs)/shop' as never)}>
                     {p.imageUrl ? (
                       <Image source={{ uri: p.imageUrl }} style={styles.productImg} />
                     ) : (

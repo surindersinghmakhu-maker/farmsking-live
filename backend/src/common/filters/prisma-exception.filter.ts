@@ -25,13 +25,17 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     const status = exception?.status || STATUS_BY_CODE[exception?.code] || HttpStatus.INTERNAL_SERVER_ERROR;
     const message = exception?.response?.message || exception?.message || 'Unexpected server error';
 
-    this.logger.error(`Exception caught: ${message}`, exception?.stack);
+    if (status >= 500) {
+      this.logger.error(`Exception caught: ${message}`, exception?.stack);
+    } else {
+      this.logger.warn(`Exception caught (HTTP ${status}): ${message}`);
+    }
 
     response.status(status).json({
       statusCode: status,
       message,
       code: exception?.code,
-      details: process.env.NODE_ENV === 'production' ? (exception?.message || String(exception)) : exception,
+      details: process.env.NODE_ENV === 'production' ? undefined : exception,
     });
   }
 }

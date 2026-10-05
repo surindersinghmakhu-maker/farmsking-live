@@ -1,0 +1,243 @@
+// ─── Phase 2: Expenses, Sales, Customers, Payments ──────────────────────
+
+model ExpenseCategory {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  labelEn   String
+  labelHi   String
+  icon      String?
+  isSystem  Boolean  @default(true)
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  expenses Expense[]
+
+  @@map("expense_categories")
+}
+
+model Expense {
+  id              String          @id @default(uuid())
+  farmId          String
+  farm            Farm            @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  plotId          String?
+  plot            Plot?           @relation(fields: [plotId], references: [id], onDelete: SetNull)
+  cropCycleId     String?
+  cropCycle       CropCycle?      @relation(fields: [cropCycleId], references: [id], onDelete: SetNull)
+  categoryId      String
+  category        ExpenseCategory @relation(fields: [categoryId], references: [id])
+  machineryId     String?
+  machinery       Machinery?      @relation(fields: [machineryId], references: [id], onDelete: SetNull)
+  partyId         String?
+  party           Party?          @relation(fields: [partyId], references: [id], onDelete: SetNull)
+  amount          Decimal         @db.Decimal(12, 2)
+  expenseDate     DateTime
+  paymentMode     PaymentMode?
+  vendorName      String?
+  description     String?
+  quantity        Float?
+  unit            String?
+  receiptPhotoUrl String?
+  recordedById    String
+  recordedBy      User            @relation(fields: [recordedById], references: [id])
+  notes           String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  deletedAt       DateTime?
+
+  fertilizerUsages      FertilizerUsage[]
+  sprays                Spray[]
+  irrigationRecords     IrrigationRecord[]
+  inventoryTransactions InventoryTransaction[]
+  ledgerEntries         PartyLedgerEntry[]
+
+  @@index([farmId])
+  @@index([plotId])
+  @@index([cropCycleId])
+  @@index([categoryId])
+  @@index([machineryId])
+  @@index([partyId])
+  @@index([recordedById])
+  @@index([expenseDate])
+  @@index([farmId, expenseDate, deletedAt])
+  @@map("expenses")
+}
+
+model Party {
+  id        String    @id @default(uuid())
+  ownerId   String
+  owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name      String
+  address   String?
+  mobile    String?
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  ledgerEntries PartyLedgerEntry[]
+  expenses      Expense[]
+
+  @@index([ownerId])
+  @@map("parties")
+}
+
+enum PartyLedgerEntryType {
+  SALE_CREDIT
+  SALE_PAYMENT
+  EXPENSE_CREDIT
+  EXPENSE_PAYMENT
+}
+
+model PartyLedgerEntry {
+  id               String               @id @default(uuid())
+  partyId          String
+  party            Party                @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  type             PartyLedgerEntryType
+  amount           Decimal              @db.Decimal(12, 2)
+  reason           String
+  expenseId        String?
+  expense          Expense?             @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+  saleBillId       String?
+  saleBill         SaleBill?            @relation(fields: [saleBillId], references: [id], onDelete: SetNull)
+  paymentReceiptId String?
+  paymentReceipt   PaymentReceipt?      @relation(fields: [paymentReceiptId], references: [id], onDelete: SetNull)
+  createdAt        DateTime             @default(now())
+
+  @@index([partyId])
+  @@map("party_ledger_entries")
+}
+
+model PaymentReceipt {
+  id              String   @id @default(uuid())
+  farmerId        String
+  farmer          User     @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  receiptNo       String
+  partyId         String
+  partyName       String
+  isReceived      Boolean
+  previousBalance Decimal  @db.Decimal(12, 2)
+  paymentAmount   Decimal  @db.Decimal(12, 2)
+  netBalance      Decimal  @db.Decimal(12, 2)
+  createdAt       DateTime @default(now())
+
+  ledgerEntries PartyLedgerEntry[]
+
+  @@index([farmerId])
+  @@map("payment_receipts")
+}
+
+model SaleBill {
+  id                 String   @id @default(uuid())
+  farmerId           String
+  farmer             User     @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  billNo             String
+  farmerName         String
+  partyId            String?
+  partyName          String
+  partyMobile        String?
+  partyAddress       String?
+  isCash             Boolean
+  amountReceivedMode String?  @default("CASH")
+  items              Json
+  totalItems         Int
+  totalAmount        Decimal  @db.Decimal(12, 2)
+  amountReceived     Decimal  @db.Decimal(12, 2)
+  thisSaleBalance    Decimal  @db.Decimal(12, 2)
+  previousBalance    Decimal  @db.Decimal(12, 2)
+  netReceivable      Decimal  @db.Decimal(12, 2)
+  discountAmount     Decimal? @default(0) @db.Decimal(12, 2)
+  deliveryCharge     Decimal? @default(0) @db.Decimal(12, 2)
+  notes              String?
+  createdAt          DateTime @default(now())
+
+  ledgerEntries PartyLedgerEntry[]
+
+  @@index([farmerId])
+  @@map("sale_bills")
+}
+
+model Customer {
+  id        String    @id @default(uuid())
+  farmerId  String
+  farmer    User      @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  name      String
+  mobile    String?
+  village   String?
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  sales    Sale[]
+  payments Payment[]
+
+  @@index([farmerId])
+  @@map("customers")
+}
+
+model Sale {
+  id           String       @id @default(uuid())
+  farmId       String
+  farm         Farm         @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  plotId       String?
+  plot         Plot?        @relation(fields: [plotId], references: [id], onDelete: SetNull)
+  cropCycleId  String?
+  cropCycle    CropCycle?   @relation(fields: [cropCycleId], references: [id], onDelete: SetNull)
+  customerId   String
+  customer     Customer     @relation(fields: [customerId], references: [id])
+  saleDate     DateTime
+  totalAmount  Decimal      @default(0) @db.Decimal(12, 2)
+  paymentMode  PaymentMode?
+  notes        String?
+  recordedById String
+  recordedBy   User         @relation(fields: [recordedById], references: [id])
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deletedAt    DateTime?
+
+  items    SaleItem[]
+  payments Payment[]
+
+  @@index([farmId])
+  @@index([plotId])
+  @@index([cropCycleId])
+  @@index([customerId])
+  @@map("sales")
+}
+
+model SaleItem {
+  id           String   @id @default(uuid())
+  saleId       String
+  sale         Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productName  String
+  quantity     Float
+  unit         String
+  pricePerUnit Decimal  @db.Decimal(12, 2)
+  amount       Decimal  @db.Decimal(12, 2)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([saleId])
+  @@map("sale_items")
+}
+
+model Payment {
+  id           String       @id @default(uuid())
+  customerId   String
+  customer     Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  saleId       String?
+  sale         Sale?        @relation(fields: [saleId], references: [id], onDelete: SetNull)
+  amount       Decimal      @db.Decimal(12, 2)
+  paymentDate  DateTime
+  paymentMode  PaymentMode?
+  notes        String?
+  recordedById String
+  recordedBy   User         @relation(fields: [recordedById], references: [id])
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deletedAt    DateTime?
+
+  @@index([customerId])
+  @@index([saleId])
+  @@map("payments")
+}

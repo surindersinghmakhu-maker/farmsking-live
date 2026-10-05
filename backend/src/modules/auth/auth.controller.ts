@@ -43,8 +43,15 @@ export class AuthController {
   @Throttle({ default: { limit: 100, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @Post('google-login')
-  googleLogin(@Body() dto: { email: string; name?: string; photoUrl?: string; googleId?: string }) {
+  googleLogin(@Body() dto: { email?: string; name?: string; photoUrl?: string; googleId?: string; accessToken?: string }) {
     return this.authService.googleLogin(dto);
+  }
+
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post('firebase-login')
+  firebaseLogin(@Body() body: { idToken: string }) {
+    return this.authService.firebaseLogin(body.idToken);
   }
 
   @UseGuards(JwtAuthGuard)

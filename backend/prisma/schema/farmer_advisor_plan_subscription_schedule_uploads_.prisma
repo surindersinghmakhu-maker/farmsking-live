@@ -1,0 +1,147 @@
+// ─── Phase 7: Farmer Advisor Plan (Subscription, Schedule, Uploads) ─────
+
+enum HiringModelType {
+  PAY_PER_CONSULTATION
+  PER_CROP
+  MONTHLY_SUBSCRIPTION
+}
+
+model AdvisorPlan {
+  id           String          @id @default(uuid())
+  name         String
+  description  String?
+  price        Decimal         @db.Decimal(12, 2)
+  billingCycle String          @default("MONTHLY")
+  hiringModel  HiringModelType @default(MONTHLY_SUBSCRIPTION)
+  planType     FarmerPlanType  @default(WITH_ADVISOR)
+  maxFarms     Int             @default(10)
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  subscriptions AdvisorSubscription[]
+
+  @@map("advisor_plans")
+}
+
+model AdvisorSubscription {
+  id           String                 @id @default(uuid())
+  farmerId     String
+  farmer       User                   @relation("SubscriptionFarmer", fields: [farmerId], references: [id], onDelete: Cascade)
+  planId       String
+  plan         AdvisorPlan            @relation(fields: [planId], references: [id])
+  status       SubscriptionPlanStatus @default(PENDING)
+  requestedAt  DateTime               @default(now())
+  approvedAt   DateTime?
+  approvedById String?
+  approvedBy   User?                  @relation("SubscriptionApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  startDate    DateTime?
+  endDate      DateTime?
+  cancelledAt  DateTime?
+  notes        String?
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  deletedAt    DateTime?
+
+  advisorAssignment AdvisorAssignment?
+  paymentRequests   PlanPaymentRequest[]
+
+  @@index([farmerId])
+  @@index([planId])
+  @@map("advisor_subscriptions")
+}
+
+/**
+ * A UPI payment claim for a plan — farmer initiates with a fixed QR/link, marks it paid, and an admin verifies + confirms before the plan is extended.
+ */
+model PlanPaymentRequest {
+  id              String              @id @default(uuid())
+  farmerId        String
+  farmer          User                @relation("PlanPaymentFarmer", fields: [farmerId], references: [id], onDelete: Cascade)
+  subscriptionId  String
+  subscription    AdvisorSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  amount          Decimal             @db.Decimal(12, 2)
+  daysGranted     Int
+  status          PlanPaymentStatus   @default(PENDING)
+  utr             String?
+  requestedAt     DateTime            @default(now())
+  submittedAt     DateTime?
+  confirmedAt     DateTime?
+  confirmedById   String?
+  confirmedBy     User?               @relation("PlanPaymentConfirmedBy", fields: [confirmedById], references: [id], onDelete: SetNull)
+  rejectedAt      DateTime?
+  rejectionReason String?
+
+  @@index([farmerId])
+  @@index([subscriptionId])
+  @@index([status])
+  @@map("plan_payment_requests")
+}
+
+/// A farmer paying via UPI to self-upgrade/renew their FarmerPlan tier (BASIC/STANDARD/PREMIUM) directly —
+/// separate from the AdvisorSubscription payment flow above and from coupon-code redemption.
+model FarmerPlanPaymentRequest {
+  id                String                 @id @default(uuid())
+  farmerId          String
+  farmer            User                   @relation("FarmerPlanPaymentFarmer", fields: [farmerId], references: [id], onDelete: Cascade)
+  targetPlan        FarmerSubscriptionPlan
+  amount            Decimal                @db.Decimal(12, 2)
+  daysGranted       Int
+  status            PlanPaymentStatus      @default(PENDING)
+  utr               String?
+  screenshotUrl     String?
+  requestedAt       DateTime               @default(now())
+  submittedAt       DateTime?
+  confirmedAt       DateTime?
+  confirmedById     String?
+  confirmedBy       User?                  @relation("FarmerPlanPaymentConfirmedBy", fields: [confirmedById], references: [id], onDelete: SetNull)
+  selectedDoctorId  String?
+  selectedAdvisorId String?
+  doctorKingId      String?
+  advisorKingId     String?
+  rejectedAt        DateTime?
+  rejectionReason   String?
+
+  @@index([farmerId])
+  @@index([status])
+  @@map("farmer_plan_payment_requests")
+}
+
+model CropActivitySchedule {
+  id                 String         @id @default(uuid())
+  cropCycleId        String
+  cropCycle          CropCycle      @relation(fields: [cropCycleId], references: [id], onDelete: Cascade)
+  activityType       ActivityType
+  title              String
+  description        String?
+  scheduledDate      DateTime
+  status             ActivityStatus @default(PENDING)
+  completedAt        DateTime?
+  completedById      String?
+  completedBy        User?          @relation("ActivityCompletedBy", fields: [completedById], references: [id], onDelete: SetNull)
+  createdByAdvisorId String
+  createdByAdvisor   User           @relation("ActivityCreatedByAdvisor", fields: [createdByAdvisorId], references: [id])
+  notes              String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  deletedAt          DateTime?
+
+  @@index([cropCycleId])
+  @@index([createdByAdvisorId])
+  @@index([scheduledDate])
+  @@map("crop_activity_schedules")
+}
+
+model Upload {
+  id           String   @id @default(uuid())
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  fileUrl      String
+  mimeType     String
+  originalName String
+  sizeBytes    Int
+  createdAt    DateTime @default(now())
+
+  @@index([uploadedById])
+  @@map("uploads")
+}

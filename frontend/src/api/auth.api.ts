@@ -66,10 +66,11 @@ export async function verifyAccountPassword(password: string, mobile?: string): 
 }
 
 export interface GoogleLoginPayload {
-  email: string;
+  email?: string;
   name?: string;
   photoUrl?: string;
   googleId?: string;
+  accessToken?: string;
 }
 
 export async function googleLoginApi(payload: GoogleLoginPayload): Promise<AuthResponse & { isProfileIncomplete?: boolean; missingFields?: string[] }> {
@@ -99,5 +100,10 @@ export async function sendLoginOtpApi(mobile: string): Promise<{ success: boolea
 
 export async function verifyLoginOtpApi(payload: { mobile: string; otp: string }): Promise<AuthResponse> {
   const { data } = await apiClient.post<AuthResponse>('/auth/verify-login-otp', payload);
+  return data;
+}
+
+export async function firebaseLoginApi(idToken: string): Promise<AuthResponse> {
+  const { data } = await apiClient.post<AuthResponse>('/auth/firebase-login', { idToken });
   return data;
 }

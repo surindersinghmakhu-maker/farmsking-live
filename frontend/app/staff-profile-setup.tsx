@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
 
   section: {
     backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.lg, gap: 12,
-    borderWidth: 1, borderColor: '#e2e8f0', ...premiumShadow('#0f172a', 'xs'),
+    borderWidth: 1, borderColor: '#e2e8f0', ...premiumShadow('#0f172a', 'sm'),
   },
   sectionTitle: { fontSize: 15, fontFamily: FONT.extraBold, color: '#0f172a', marginBottom: 4 },
 
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
   pendingText: { fontSize: 14, fontFamily: FONT.medium, color: '#475569', textAlign: 'center', lineHeight: 22 },
   backHomeBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    paddingVertical: 14, paddingHorizontal: 32, borderRadius: RADIUS.full, marginTop: 8,
+    paddingVertical: 14, paddingHorizontal: 32, borderRadius: RADIUS.pill, marginTop: 8,
   },
   backHomeBtnText: { fontSize: 15, fontFamily: FONT.bold, color: '#fff' },
 });

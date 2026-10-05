@@ -888,7 +888,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 3.5,
     borderRadius: RADIUS.pill,
-    ...premiumShadow('#000000', 'xs'),
+    ...premiumShadow('#000000', 'sm'),
   },
   highlightPlanBadgeText: {
     fontSize: 11,
@@ -974,7 +974,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     alignItems: 'flex-end',
     gap: 2,
-    ...premiumShadow('#000000', 'xs'),
+    ...premiumShadow('#000000', 'sm'),
   },
   combinedCardTopRow: {
     flexDirection: 'row',

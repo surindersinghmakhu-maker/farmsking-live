@@ -1,0 +1,62 @@
+// ─── Gardener 2-Tier Plan System ─────────────────────────────────────────
+
+/// Gardener ki current active plan record. Har gardener ka ek hi row hoga (unique on gardenerId).
+model GardenerPlan {
+  id              String                   @id @default(uuid())
+  gardenerId      String                   @unique
+  gardener        User                     @relation(fields: [gardenerId], references: [id], onDelete: Cascade)
+  plan            GardenerSubscriptionPlan @default(FREE)
+  startDate       DateTime                 @default(now())
+  endDate         DateTime? // null = FREE plan (no expiry)
+  expiredAt       DateTime? // when this plan actually lapsed
+  couponId        String?
+  coupon          GardenerPlanCoupon?      @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  hasUsedVipTrial Boolean                  @default(false) // 30-day free VIP demo
+  trialStartedAt  DateTime? // when demo was activated
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  @@map("gardener_plans")
+}
+
+/// Admin creates these coupons to give gardeners PREMIUM (paid-only, no BASIC tier for gardeners).
+model GardenerPlanCoupon {
+  id                 String                   @id @default(uuid())
+  code               String                   @unique
+  plan               GardenerSubscriptionPlan // always PREMIUM
+  daysGranted        Int
+  assignedGardenerId String?
+  assignedGardener   User?                    @relation("GardenerPlanCouponsAssignedGardener", fields: [assignedGardenerId], references: [id], onDelete: SetNull)
+  isUsed             Boolean                  @default(false)
+  usedAt             DateTime?
+  usedByGardenerId   String?
+  usedByGardener     User?                    @relation("GardenerPlanCouponsUsedBy", fields: [usedByGardenerId], references: [id], onDelete: SetNull)
+  expiresAt          DateTime?
+  createdById        String
+  createdBy          User                     @relation("GardenerPlanCouponsCreatedBy", fields: [createdById], references: [id])
+  createdAt          DateTime                 @default(now())
+
+  gardenerPlans GardenerPlan[]
+
+  @@index([assignedGardenerId])
+  @@index([createdById])
+  @@map("gardener_plan_coupons")
+}
+
+model AdminChatMessage {
+  id             String   @id @default(uuid())
+  farmerId       String
+  farmer         User     @relation("AdminChatFarmer", fields: [farmerId], references: [id], onDelete: Cascade)
+  adminId        String?
+  admin          User?    @relation("AdminChatAdmin", fields: [adminId], references: [id], onDelete: SetNull)
+  senderRole     Role     @default(FARMER)
+  message        String   @db.Text
+  imageUrl       String?
+  isReadByFarmer Boolean  @default(false)
+  isReadByAdmin  Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  @@index([farmerId])
+  @@index([adminId])
+  @@map("admin_chat_messages")
+}

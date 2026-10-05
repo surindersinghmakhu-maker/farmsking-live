@@ -113,7 +113,7 @@ export const PartnerDashboardView: React.FC = () => {
         <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm')]}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Earnings & Payout Breakdown</Text>
-            <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/(tabs)/wallet')}>
+            <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/(tabs)/wallet' as never)}>
               <Text style={[styles.viewAllText, { color: theme.primary }]}>View Wallet</Text>
             </TouchableOpacity>
           </View>
@@ -156,7 +156,7 @@ export const PartnerDashboardView: React.FC = () => {
         <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm')]}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent Referrals</Text>
-            <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/(tabs)/referrals')}>
+            <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/(tabs)/referrals' as never)}>
               <Text style={[styles.viewAllText, { color: theme.primary }]}>View All</Text>
             </TouchableOpacity>
           </View>

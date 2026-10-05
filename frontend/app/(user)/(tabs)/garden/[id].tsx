@@ -213,9 +213,9 @@ const styles = StyleSheet.create({
   headerTitle: { flex: 1, textAlign: 'center', fontSize: 18, fontFamily: FONT.extraBold, color: '#ffffff' },
   headerLocation: { textAlign: 'center', fontSize: 12, fontFamily: FONT.medium, color: '#cbd5e1', marginTop: 4 },
   
-  tabContainer: { backgroundColor: '#ffffff', marginTop: -15, marginHorizontal: SPACING.lg, borderRadius: RADIUS.full, ...premiumShadow('#0f172a', 'sm') },
+  tabContainer: { backgroundColor: '#ffffff', marginTop: -15, marginHorizontal: SPACING.lg, borderRadius: RADIUS.pill, ...premiumShadow('#0f172a', 'sm') },
   tabScroll: { paddingHorizontal: 4, paddingVertical: 4, gap: 4 },
-  tabBtn: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: RADIUS.full },
+  tabBtn: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: RADIUS.pill },
   tabBtnActive: { backgroundColor: theme.primary },
   tabText: { fontSize: 12, fontFamily: FONT.bold, color: '#64748b' },
   tabTextActive: { color: '#ffffff' },

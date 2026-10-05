@@ -259,7 +259,7 @@ export function PaymentVoucherModal({
       const yy = String(vDate.getFullYear()).slice(-2);
       const mm = String(vDate.getMonth() + 1).padStart(2, '0');
       const seq = Date.now().toString().slice(-4);
-      const isLabour = sourceParty && (sourceParty.__type === 'LABOUR' || sourceParty.isWorker || sourceParty.address?.includes('Labour Worker'));
+      const isLabour = sourceParty && ((sourceParty as any).__type === 'LABOUR' || (sourceParty as any).isWorker || sourceParty.address?.includes('Labour Worker'));
       const voucherPrefix = isLabour 
         ? 'L' 
         : voucherType === 'RECEIPT_IN' 

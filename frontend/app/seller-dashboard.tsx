@@ -1813,7 +1813,7 @@ export default function SellerDashboardScreen() {
             {productType && (
               <View style={styles.card}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <Text style={styles.cardTitle}>📦 FarmsKing Product Listing Form</Text>
+                  <Text style={{ color: '#F9FAFB', fontSize: 16, fontWeight: '800' }}>📦 FarmsKing Product Listing Form</Text>
                   <TouchableOpacity onPress={() => setProductType(null)}>
                     <Ionicons name="close-circle" size={24} color="#9CA3AF" />
                   </TouchableOpacity>
@@ -2948,7 +2948,7 @@ const styles = StyleSheet.create({
   resubmitBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    justify: 'center',
+    justifyContent: 'center',
     backgroundColor: '#DC2626',
     borderRadius: 8,
     paddingVertical: 10,

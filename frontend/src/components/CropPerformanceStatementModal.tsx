@@ -59,7 +59,7 @@ export function CropPerformanceStatementModal({ visible, data, onClose }: CropPe
 
   if (!visible || !data) return null;
 
-  const farmerRefCode = data.refNo || (user?.refCode || user?.referralCode ? `EXP-${user.refCode || user.referralCode}` : (user?.id ? `EXP-${String(user.id).padStart(6, '0')}` : 'EXP-100001'));
+  const farmerRefCode = data.refNo || ((user as any)?.refCode || (user as any)?.referralCode ? `EXP-${(user as any).refCode || (user as any).referralCode}` : (user?.id ? `EXP-${String(user.id).padStart(6, '0')}` : 'EXP-100001'));
   const refNumber = farmerRefCode;
   const appName = settings?.appName || 'FarmsKing';
   const farmerName = user?.farmName || user?.name || 'Farmer Ji';

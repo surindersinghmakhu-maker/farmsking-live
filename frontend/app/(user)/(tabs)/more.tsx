@@ -292,7 +292,7 @@ export default function MoreScreen() {
 
                   {/* 🏪 DYNAMIC SELLER STORE / REGISTER STORE ITEM */}
                   {(() => {
-                    const isSellerRole = role === 'SELLER' || user?.role === 'SELLER' || (Array.isArray(user?.roles) && user.roles.includes('SELLER' as any)) || Boolean((user as any)?.isSeller) || Boolean((user as any)?.sellerStore);
+                    const isSellerRole = role === ('SELLER' as any) || user?.role === ('SELLER' as any) || (Array.isArray(user?.roles) && user.roles.includes('SELLER' as any)) || Boolean((user as any)?.isSeller) || Boolean((user as any)?.sellerStore);
                     return (
                       <TouchableOpacity
                         style={styles.row}

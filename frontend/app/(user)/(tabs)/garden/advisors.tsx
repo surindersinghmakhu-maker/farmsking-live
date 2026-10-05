@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   filterBtn: {
     paddingVertical: SPACING.xs,
     paddingHorizontal: SPACING.md,
-    borderRadius: RADIUS.full,
+    borderRadius: RADIUS.pill,
     backgroundColor: '#ffffff',
     borderWidth: 1,
     borderColor: '#cbd5e1',
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: SPACING.sm,
     paddingHorizontal: SPACING.lg,
-    borderRadius: RADIUS.full,
+    borderRadius: RADIUS.pill,
   },
   hireBtnText: {
     fontFamily: FONT.bold,

@@ -575,7 +575,7 @@ const styles = StyleSheet.create({
   },
   fallbackText: {
     fontSize: 12,
-    fontFamily: FONT.semibold,
+    fontFamily: FONT.semiBold,
     color: '#94a3b8',
   },
   targetFrame: {

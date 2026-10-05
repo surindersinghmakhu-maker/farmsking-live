@@ -330,8 +330,8 @@ export default function SuperCouponsScreen({ initialTab }: { initialTab?: Coupon
                   <TouchableOpacity
                     key={cat.value}
                     style={[
-                      styles.subTabChip,
-                      isSelected && styles.subTabChipActive,
+                      styles.tabChip,
+                      isSelected && styles.tabChipActive,
                     ]}
                     activeOpacity={0.8}
                     onPress={() => {
@@ -340,7 +340,7 @@ export default function SuperCouponsScreen({ initialTab }: { initialTab?: Coupon
                     }}
                   >
                     <Ionicons name={cat.icon} size={14} color={isSelected ? '#ffffff' : '#64748b'} />
-                    <Text style={[styles.subTabChipText, isSelected && styles.subTabChipTextActive]}>
+                    <Text style={[styles.tabChipText, isSelected && styles.tabChipTextActive]}>
                       {cat.label}
                     </Text>
                   </TouchableOpacity>

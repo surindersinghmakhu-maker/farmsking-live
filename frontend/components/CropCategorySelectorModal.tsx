@@ -590,7 +590,7 @@ export const CropCategorySelectorModal: React.FC<CropCategorySelectorModalProps>
                       if (onOpenUpgradeModal) {
                         onOpenUpgradeModal();
                       } else {
-                        router.push('/(tabs)/wallet');
+                        router.push('/(tabs)/wallet' as never);
                       }
                     }}
                   >

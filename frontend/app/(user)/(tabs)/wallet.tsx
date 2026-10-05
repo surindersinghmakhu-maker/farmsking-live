@@ -290,7 +290,7 @@ export default function WalletScreen() {
       safeKingId: kingId || 'KING',
       welcomeRewardAmount,
       inviteLink,
-      logoUrl: appSettings?.logoUrl,
+      logoUrl: appSettings?.logoUrl || undefined,
     });
   };
 
@@ -615,7 +615,7 @@ function ReferralInviteCard({
       safeKingId,
       welcomeRewardAmount,
       inviteLink,
-      logoUrl: appSettings?.logoUrl,
+      logoUrl: appSettings?.logoUrl || undefined,
     });
   };
 
@@ -1139,7 +1139,7 @@ function WalletHistoryTable({
 
     // Processed successful transactions
     for (const tx of transactions) {
-      if (tx.status && tx.status !== 'SUCCESS') continue;
+      if ((tx as any).status && (tx as any).status !== 'SUCCESS') continue;
       const isCredit = tx.type === 'CREDIT';
       let displayType = isCredit ? 'Credit' : 'Debit';
       if (tx.reason.includes('Welcome')) displayType = 'Welcome Bonus';
@@ -1243,7 +1243,7 @@ function WalletHistoryTable({
 
                       {/* Credit Amount */}
                       <View style={{ flex: 1.1, justifyContent: 'center', alignItems: 'center' }}>
-                        <View style={item.status === 'SUCCESS' ? styles.bonusStatusPillSuccess : styles.bonusStatusTextWaiting}>
+                        <View style={item.status === 'SUCCESS' ? styles.bonusStatusPillSuccess : styles.bonusStatusPillWaiting}>
                           <Text style={item.status === 'SUCCESS' ? styles.bonusStatusTextSuccess : styles.bonusStatusTextWaiting}>
                             {item.status === 'PENDING' ? `₹${item.pendingAmount} ⏳` : `${item.isCredit ? '+' : '-'}₹${item.amount} ${item.isCredit ? '✅' : ''}`}
                           </Text>
@@ -1253,7 +1253,7 @@ function WalletHistoryTable({
 
                     {isExpanded ? (
                       <View style={styles.historyDetailBox}>
-                        <Text style={styles.historyDetailReason}>{item.rawReason}</Text>
+                        <Text style={styles.historyDetailSub}>{item.rawReason}</Text>
                         {item.relatedUserMobile ? (
                           <Text style={styles.historyDetailSub}>Contact: {item.relatedUserMobile}</Text>
                         ) : null}
@@ -2136,7 +2136,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.pill,
     flexShrink: 1,
     maxWidth: '74%',
-    ...premiumShadow('#f59e0b', 'xs'),
+    ...premiumShadow('#f59e0b', 'sm'),
   },
   royalTitleText: {
     fontSize: 11.5,
@@ -2151,7 +2151,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: RADIUS.pill,
     flexShrink: 0,
-    ...premiumShadow('#f59e0b', 'xs'),
+    ...premiumShadow('#f59e0b', 'sm'),
   },
   royalKingIdText: {
     fontSize: 9.5,
@@ -2226,7 +2226,7 @@ const styles = StyleSheet.create({
   royalWithdrawBtn: {
     borderRadius: RADIUS.pill,
     overflow: 'hidden',
-    ...premiumShadow('#eab308', 'xs'),
+    ...premiumShadow('#eab308', 'sm'),
   },
   royalWithdrawGradient: {
     flexDirection: 'row',
@@ -2277,24 +2277,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT.extraBold,
     color: '#b45309',
   },
-  claimBannerBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-    backgroundColor: '#16a34a',
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-    borderRadius: RADIUS.pill,
-    borderWidth: 1.5,
-    borderColor: '#15803d',
-  },
-  claimBannerBtnText: {
-    fontSize: 11.5,
-    fontFamily: FONT.extraBold,
-    color: '#ffffff',
-  },
+
   bonusStatusPillSuccess: {
     backgroundColor: '#dcfce7',
     paddingHorizontal: 8,
@@ -2495,5 +2478,54 @@ const styles = StyleSheet.create({
   },
   adminTabModeTextActive: {
     color: '#15803d',
+  },
+  refActionsCol: {
+    gap: 8,
+  },
+  refWaBtnStacked: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#15803d',
+    paddingVertical: 10,
+    borderRadius: 9999,
+  },
+  refWaBtnTextStacked: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontFamily: 'Inter-Bold',
+  },
+  refCopyLinkBtnStacked: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    paddingVertical: 10,
+    borderRadius: 9999,
+  },
+  refCopyLinkBtnTextStacked: {
+    color: '#0f172a',
+    fontSize: 13,
+    fontFamily: 'Inter-Bold',
+  },
+  refCouponBtnStacked: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#fef3c7',
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    paddingVertical: 10,
+    borderRadius: 9999,
+  },
+  refCouponBtnTextStacked: {
+    color: '#b45309',
+    fontSize: 13,
+    fontFamily: 'Inter-Bold',
   },
 });

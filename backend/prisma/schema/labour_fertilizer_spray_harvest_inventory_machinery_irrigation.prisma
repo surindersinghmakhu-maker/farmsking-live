@@ -1,0 +1,408 @@
+// ─── Phase 3: Labour, Fertilizer, Spray, Harvest, Inventory, Machinery, Irrigation ──
+
+model LabourWorker {
+  id               String    @id @default(uuid())
+  farmerId         String
+  farmer           User      @relation("FarmerLabourWorkers", fields: [farmerId], references: [id], onDelete: Cascade)
+  farmId           String?
+  farm             Farm?     @relation(fields: [farmId], references: [id], onDelete: SetNull)
+  userId           String?
+  user             User?     @relation("LabourWorkerUser", fields: [userId], references: [id], onDelete: SetNull)
+  name             String
+  mobile           String?
+  address          String?
+  photoUrl         String?
+  relation         String?
+  defaultDailyWage Decimal?  @db.Decimal(12, 2)
+  defaultRate      Decimal?  @db.Decimal(12, 2)
+  defaultUnit      String?   @default("DAILY")
+  notes            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  labourEntries   LabourEntry[]
+  workEntries     LabourWorkEntry[]
+  payments        LabourPayment[]
+  spraysPerformed Spray[]
+
+  @@index([farmerId])
+  @@index([farmId])
+  @@index([mobile])
+  @@map("labour_workers")
+}
+
+model LabourEntry {
+  id           String         @id @default(uuid())
+  farmId       String
+  farm         Farm           @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  plotId       String?
+  plot         Plot?          @relation(fields: [plotId], references: [id], onDelete: SetNull)
+  cropCycleId  String?
+  cropCycle    CropCycle?     @relation(fields: [cropCycleId], references: [id], onDelete: SetNull)
+  workerId     String?
+  worker       LabourWorker?  @relation(fields: [workerId], references: [id], onDelete: SetNull)
+  workerCount  Int            @default(1)
+  workType     String
+  workDate     DateTime
+  wageType     LabourWageType
+  wageAmount   Decimal        @db.Decimal(12, 2)
+  paid         Boolean        @default(false)
+  notes        String?
+  recordedById String
+  recordedBy   User           @relation(fields: [recordedById], references: [id])
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  deletedAt    DateTime?
+
+  @@index([farmId])
+  @@index([plotId])
+  @@index([cropCycleId])
+  @@index([workerId])
+  @@map("labour_entries")
+}
+
+model LabourWorkEntry {
+  id           String       @id @default(uuid())
+  farmerId     String
+  farmer       User         @relation("FarmerWorkEntries", fields: [farmerId], references: [id], onDelete: Cascade)
+  workerId     String
+  worker       LabourWorker @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  farmId       String?
+  farm         Farm?        @relation(fields: [farmId], references: [id], onDelete: SetNull)
+  plotId       String?
+  plot         Plot?        @relation(fields: [plotId], references: [id], onDelete: SetNull)
+  cropCycleId  String?
+  cropCycle    CropCycle?   @relation(fields: [cropCycleId], references: [id], onDelete: SetNull)
+  workDate     DateTime
+  workType     String
+  unit         String       @default("DAILY")
+  quantity     Float        @default(1)
+  rate         Decimal      @db.Decimal(12, 2)
+  totalAmount  Decimal      @db.Decimal(12, 2)
+  notes        String?
+  recordedById String
+  recordedBy   User         @relation("WorkEntriesRecordedBy", fields: [recordedById], references: [id])
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deletedAt    DateTime?
+
+  @@index([farmerId])
+  @@index([workerId])
+  @@index([workDate])
+  @@map("labour_work_entries")
+}
+
+model LabourPayment {
+  id           String       @id @default(uuid())
+  farmerId     String
+  farmer       User         @relation("FarmerLabourPayments", fields: [farmerId], references: [id], onDelete: Cascade)
+  workerId     String
+  worker       LabourWorker @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  paymentDate  DateTime
+  amount       Decimal      @db.Decimal(12, 2)
+  paymentMode  PaymentMode? @default(CASH)
+  notes        String?
+  recordedById String
+  recordedBy   User         @relation("LabourPaymentsRecordedBy", fields: [recordedById], references: [id])
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deletedAt    DateTime?
+
+  @@index([farmerId])
+  @@index([workerId])
+  @@index([paymentDate])
+  @@map("labour_payments")
+}
+
+model Fertilizer {
+  id          String          @id @default(uuid())
+  name        String
+  type        FertilizerType?
+  defaultUnit String
+  isSystem    Boolean         @default(true)
+  addedById   String?
+  addedBy     User?           @relation(fields: [addedById], references: [id], onDelete: SetNull)
+  notes       String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  deletedAt   DateTime?
+
+  usages FertilizerUsage[]
+
+  @@map("fertilizers")
+}
+
+model FertilizerUsage {
+  id                String     @id @default(uuid())
+  cropCycleId       String
+  cropCycle         CropCycle  @relation(fields: [cropCycleId], references: [id], onDelete: Cascade)
+  fertilizerId      String
+  fertilizer        Fertilizer @relation(fields: [fertilizerId], references: [id])
+  quantity          Float
+  unit              String
+  applicationDate   DateTime
+  applicationMethod String?
+  expenseId         String?
+  expense           Expense?   @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+  notes             String?
+  recordedById      String
+  recordedBy        User       @relation(fields: [recordedById], references: [id])
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  deletedAt         DateTime?
+
+  @@index([cropCycleId])
+  @@index([fertilizerId])
+  @@index([expenseId])
+  @@map("fertilizer_usage")
+}
+
+model Spray {
+  id           String        @id @default(uuid())
+  cropCycleId  String
+  cropCycle    CropCycle     @relation(fields: [cropCycleId], references: [id], onDelete: Cascade)
+  sprayType    SprayType
+  productName  String
+  quantity     Float?
+  unit         String?
+  sprayDate    DateTime
+  doneById     String?
+  doneBy       LabourWorker? @relation(fields: [doneById], references: [id], onDelete: SetNull)
+  expenseId    String?
+  expense      Expense?      @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+  result       String?
+  notes        String?
+  recordedById String
+  recordedBy   User          @relation(fields: [recordedById], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+
+  schedule SpraySchedule?
+
+  @@index([cropCycleId])
+  @@index([expenseId])
+  @@map("sprays")
+}
+
+model SpraySchedule {
+  id                 String              @id @default(uuid())
+  cropCycleId        String
+  cropCycle          CropCycle           @relation(fields: [cropCycleId], references: [id], onDelete: Cascade)
+  scheduledDate      DateTime
+  sprayType          SprayType?
+  recommendedProduct String?
+  dosageInstructions String?
+  alternativeOption  String?
+  alternativeOption2 String?
+  createdByAdvisorId String
+  createdByAdvisor   User                @relation(fields: [createdByAdvisorId], references: [id])
+  status             SprayScheduleStatus @default(PENDING)
+  completedSprayId   String?             @unique
+  completedSpray     Spray?              @relation(fields: [completedSprayId], references: [id], onDelete: SetNull)
+  notes              String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  deletedAt          DateTime?
+
+  @@index([cropCycleId])
+  @@index([createdByAdvisorId])
+  @@map("spray_schedules")
+}
+
+/**
+ * Searchable product name list for the spray-schedule item/alternative autocomplete — grows organically as advisors type new names.
+ */
+model SprayProductCatalog {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  sprayType SprayType?
+  createdAt DateTime   @default(now())
+  deletedAt DateTime?
+
+  @@map("spray_product_catalog")
+}
+
+/**
+ * An advisor's reusable item/dose/alternatives row, picked to quick-fill new spray schedule entries. Advisor-owned; Super Admin can view all.
+ */
+model SprayItemTemplate {
+  id           String     @id @default(uuid())
+  advisorId    String
+  advisor      User       @relation(fields: [advisorId], references: [id], onDelete: Cascade)
+  sprayType    SprayType?
+  item         String
+  dose         String?
+  alternative1 String?
+  alternative2 String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+
+  @@index([advisorId])
+  @@map("spray_item_templates")
+}
+
+model CropProblem {
+  id                    String               @id @default(uuid())
+  cropCycleId           String
+  cropCycle             CropCycle            @relation(fields: [cropCycleId], references: [id], onDelete: Cascade)
+  reportedById          String
+  reportedBy            User                 @relation("CropProblemReporter", fields: [reportedById], references: [id])
+  title                 String
+  description           String
+  severity              CropProblemSeverity?
+  status                CropProblemStatus    @default(REPORTED)
+  assignedAdvisorId     String?
+  assignedAdvisor       User?                @relation("CropProblemAdvisor", fields: [assignedAdvisorId], references: [id], onDelete: SetNull)
+  advisorResponse       String?
+  recommendedProduct    String?
+  farmerRating          Int?
+  farmerFeedback        String?
+  followUpDate          DateTime?
+  forwardedToSeniorAt   DateTime?
+  forwardedFromJuniorId String?
+  resolvedAt            DateTime?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  deletedAt             DateTime?
+
+  photos CropProblemPhoto[]
+
+  @@index([cropCycleId])
+  @@index([assignedAdvisorId])
+  @@map("crop_problems")
+}
+
+model CropProblemPhoto {
+  id            String      @id @default(uuid())
+  cropProblemId String
+  cropProblem   CropProblem @relation(fields: [cropProblemId], references: [id], onDelete: Cascade)
+  photoUrl      String
+  caption       String?
+  uploadedAt    DateTime    @default(now())
+
+  @@index([cropProblemId])
+  @@map("crop_problem_photos")
+}
+
+model Harvest {
+  id            String    @id @default(uuid())
+  cropCycleId   String
+  cropCycle     CropCycle @relation(fields: [cropCycleId], references: [id], onDelete: Cascade)
+  harvestDate   DateTime
+  totalQuantity Float     @default(0)
+  unit          String
+  wasteQuantity Float?
+  notes         String?
+  recordedById  String
+  recordedBy    User      @relation(fields: [recordedById], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  gradeBreakdowns HarvestGradeBreakdown[]
+
+  @@index([cropCycleId])
+  @@map("harvests")
+}
+
+model HarvestGradeBreakdown {
+  id           String   @id @default(uuid())
+  harvestId    String
+  harvest      Harvest  @relation(fields: [harvestId], references: [id], onDelete: Cascade)
+  grade        String
+  quantity     Float
+  unit         String
+  pricePerUnit Decimal? @db.Decimal(12, 2)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([harvestId])
+  @@map("harvest_grade_breakdowns")
+}
+
+model InventoryItem {
+  id                String            @id @default(uuid())
+  farmId            String
+  farm              Farm              @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  name              String
+  itemType          InventoryItemType
+  unit              String
+  currentQuantity   Float             @default(0)
+  lowStockThreshold Float?
+  notes             String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  deletedAt         DateTime?
+
+  transactions InventoryTransaction[]
+
+  @@index([farmId])
+  @@map("inventory_items")
+}
+
+model InventoryTransaction {
+  id                 String                   @id @default(uuid())
+  inventoryItemId    String
+  inventoryItem      InventoryItem            @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  transactionType    InventoryTransactionType
+  quantity           Float
+  transactionDate    DateTime
+  relatedCropCycleId String?
+  relatedCropCycle   CropCycle?               @relation(fields: [relatedCropCycleId], references: [id], onDelete: SetNull)
+  relatedExpenseId   String?
+  relatedExpense     Expense?                 @relation(fields: [relatedExpenseId], references: [id], onDelete: SetNull)
+  notes              String?
+  recordedById       String
+  recordedBy         User                     @relation(fields: [recordedById], references: [id])
+  createdAt          DateTime                 @default(now())
+
+  @@index([inventoryItemId])
+  @@index([relatedCropCycleId])
+  @@index([relatedExpenseId])
+  @@map("inventory_transactions")
+}
+
+model Machinery {
+  id        String             @id @default(uuid())
+  farmId    String
+  farm      Farm               @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  name      String
+  ownership MachineryOwnership
+  notes     String?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  deletedAt DateTime?
+
+  expenses Expense[]
+
+  @@index([farmId])
+  @@map("machinery")
+}
+
+model IrrigationRecord {
+  id              String     @id @default(uuid())
+  plotId          String
+  plot            Plot       @relation(fields: [plotId], references: [id], onDelete: Cascade)
+  cropCycleId     String?
+  cropCycle       CropCycle? @relation(fields: [cropCycleId], references: [id], onDelete: SetNull)
+  irrigationDate  DateTime
+  method          String?
+  durationMinutes Int?
+  waterSource     String?
+  expenseId       String?
+  expense         Expense?   @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+  notes           String?
+  recordedById    String
+  recordedBy      User       @relation(fields: [recordedById], references: [id])
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  deletedAt       DateTime?
+
+  @@index([plotId])
+  @@index([cropCycleId])
+  @@index([expenseId])
+  @@map("irrigation_records")
+}

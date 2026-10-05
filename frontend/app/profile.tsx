@@ -117,7 +117,7 @@ export default function ProfileScreen() {
 
   const redirectUri = AuthSession.makeRedirectUri(
     Platform.OS === 'web'
-      ? { useProxy: false }
+      ? {}
       : { scheme: 'farmsking', path: 'auth' }
   );
 
@@ -412,7 +412,7 @@ export default function ProfileScreen() {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace('/(tabs)');
+      router.replace('/(tabs)' as never);
     }
   };
 

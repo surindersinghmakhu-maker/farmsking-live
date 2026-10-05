@@ -83,7 +83,7 @@ export default function NotificationSettingsScreen() {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace('/(tabs)');
+      router.replace('/(tabs)' as never);
     }
   };
 

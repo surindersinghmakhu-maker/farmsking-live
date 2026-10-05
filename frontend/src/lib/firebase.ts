@@ -8,13 +8,13 @@ import { getStorage } from "firebase/storage";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyB6QN0ziIfdBr0_M2tRJAnPA-UR7tSbODE",
-  authDomain: "farmsking-f1d0d.firebaseapp.com",
-  projectId: "farmsking-f1d0d",
-  storageBucket: "farmsking-f1d0d.firebasestorage.app",
-  messagingSenderId: "557259263742",
-  appId: "1:557259263742:web:72855ee0ecafdabeb11faf",
-  measurementId: "G-CZV16L4TBG"
+  apiKey: "AIzaSyC4ZPSAJcbb7xHzPdWlmqNo0yX2rnLeIgo",
+  authDomain: "farmsking-510606.firebaseapp.com",
+  projectId: "farmsking-510606",
+  storageBucket: "farmsking-510606.firebasestorage.app",
+  messagingSenderId: "742233980320",
+  appId: "1:742233980320:web:baebebe2a59b7a4857b8c5",
+  measurementId: "G-42NJGE0F0D"
 };
 
 // Initialize Firebase

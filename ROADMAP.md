@@ -3,11 +3,11 @@
 Rule: build less, but make it work fully, and learn from real farmers.
 
 ## Now (Days 1-30): Foundation
-- [ ] Auth (Firebase) and roles working end-to-end
-- [ ] One main flow complete (farmer <-> buyer deal + bill)
-- [ ] Staging environment separate from production
-- [ ] Daily database backup
-- [ ] Root folder cleanup, SQL fixes turned into numbered migrations
+- [x] Auth (Firebase) and roles working end-to-end
+- [x] One main flow complete (farmer <-> buyer deal + bill)
+- [x] Staging environment separate from production
+- [x] Daily database backup
+- [x] Root folder cleanup, SQL fixes turned into numbered migrations
 
 ## Next (Days 31-60): Beta
 - [ ] 10-20 real farmers testing

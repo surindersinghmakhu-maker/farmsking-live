@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -35,7 +35,7 @@ export default function OnboardingScreen() {
   const [irrigationSource, setIrrigationSource] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const finish = () => router.replace('/(tabs)');
+  const finish = () => router.replace('/(tabs)' as any);
 
   useEffect(() => {
     if (user?.role === 'CUSTOMER' && (!user.roles || user.roles.length <= 1 || (user.roles.length === 1 && user.roles[0] === 'CUSTOMER'))) {

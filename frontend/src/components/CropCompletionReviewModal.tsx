@@ -56,8 +56,8 @@ export function CropCompletionReviewModal({
     (crop.advisorStatus && crop.advisorStatus !== 'NONE') ||
     Boolean(crop.assignedSchedule);
 
-  const doctorName = myAdvisor?.name
-    ? `Dr. ${myAdvisor.name}`
+  const doctorName = (myAdvisor as any)?.name || (myAdvisor as any)?.advisor?.name
+    ? `Dr. ${(myAdvisor as any)?.name || (myAdvisor as any)?.advisor?.name}`
     : 'Assigned Crop Doctor';
 
   const tap = () => {

@@ -449,6 +449,8 @@ export default function TabLayout() {
           <Tabs.Screen name="market" options={{ href: null }} />
           <Tabs.Screen name="garden/expenses" options={{ href: null }} />
           <Tabs.Screen name="garden/[id]" options={{ href: null }} />
+          <Tabs.Screen name="garden/advisors" options={{ href: null }} />
+          <Tabs.Screen name="garden/report-issue" options={{ href: null }} />
         </Tabs>
 
       </View>

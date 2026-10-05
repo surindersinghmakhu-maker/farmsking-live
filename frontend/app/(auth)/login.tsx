@@ -292,6 +292,13 @@ export default function LoginScreen() {
 
         {/* Hero Banner */}
         <LinearGradient colors={['#16a34a', '#15803d', '#0f766e']} style={styles.heroBanner}>
+          <TouchableOpacity 
+            style={{ position: 'absolute', top: 20, left: 20, flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 }}
+            onPress={() => router.push('/')}
+          >
+            <Ionicons name="home" size={14} color="#fff" />
+            <Text style={{ color: '#fff', fontSize: 12, fontFamily: FONT.bold, marginLeft: 6 }}>Home</Text>
+          </TouchableOpacity>
           <View style={styles.brandBox}>
             <BrandLogo size={48} useHdQuality style={{ marginBottom: 6 }} />
             <Text style={styles.brandName}>FarmsKing</Text>

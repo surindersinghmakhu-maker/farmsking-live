@@ -194,9 +194,6 @@ function GlassCard({ imgSrcs, title, desc }: { imgSrcs: any[], title: string, de
             />
           ))}
         </View>
-        <View style={styles.glassCardArrowBtn}>
-          <Ionicons name="chevron-forward" size={14} color="#fff" />
-        </View>
       </View>
       
       <Text style={styles.glassCardTitle}>{title}</Text>
@@ -204,7 +201,7 @@ function GlassCard({ imgSrcs, title, desc }: { imgSrcs: any[], title: string, de
       
       <TouchableOpacity 
         style={styles.learnMoreBtn}
-        onPress={() => router.push('/(auth)/login')}
+        onPress={() => router.push(`/topic/${encodeURIComponent(title)}`)}
       >
         <Text style={styles.learnMoreText}>Learn More</Text>
       </TouchableOpacity>
@@ -290,12 +287,12 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingTop: 120, // push down below header
+    paddingTop: 100, // pushed down just enough for header
     justifyContent: 'space-between',
-    zIndex: 10, // Ensure cards stay above background
+    zIndex: 10,
   },
   smartBadgeContainer: {
-    marginBottom: 20,
+    marginBottom: 12,
     borderRadius: 30,
     ...premiumShadow('rgba(16, 185, 129, 0.6)', 'md'),
   },
@@ -310,17 +307,17 @@ const styles = StyleSheet.create({
   },
   smartBadgeText: {
     color: '#ffffff',
-    fontSize: 14,
+    fontSize: 12,
     fontFamily: FONT.extraBold,
     letterSpacing: 1.5,
   },
   heroTextContainer: {
     alignItems: 'center',
     paddingHorizontal: 20,
-    marginTop: 40,
+    marginTop: 0,
   },
   heroTitle: {
-    fontSize: 36,
+    fontSize: 32,
     fontFamily: FONT.extraBold,
     color: '#ffffff',
     textAlign: 'center',
@@ -330,10 +327,10 @@ const styles = StyleSheet.create({
     textShadowRadius: 10,
   },
   heroTitleMobile: {
-    fontSize: 26,
+    fontSize: 24,
   },
   heroSubtitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: FONT.medium,
     color: '#e2e8f0',
     textAlign: 'center',
@@ -342,7 +339,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
   heroSubtitleMobile: {
-    fontSize: 15,
+    fontSize: 14,
   },
   cardsRow: {
     flexDirection: 'row',

@@ -7,6 +7,41 @@ import { FONT, premiumShadow } from '@/constants/theme';
 import PublicHeader from '@/components/PublicHeader';
 import { useAuth } from '@/src/store/auth-context';
 
+const getTopicDetails = (id: string) => {
+  switch(id) {
+    case 'Farming':
+      return {
+        subtitle: 'Empowering farmers with modern tools, high-yield seeds, and expert advisory.',
+        details: 'FarmsKing provides a complete end-to-end ecosystem for farmers. From advanced crop intelligence to the highest quality natural seeds and fertilizers, we aim to maximize your yield and profit. Join thousands of progressive farmers revolutionizing Indian agriculture.',
+        features: ['High-Yield Seeds', 'Modern Farm Machinery', 'Expert Crop Advisory']
+      };
+    case 'Gardening':
+      return {
+        subtitle: 'Everything you need to build and maintain a beautiful, blooming garden.',
+        details: 'Whether you are a hobbyist or a professional landscaper, our gardening section brings you the finest tools, organic composts, and exotic seeds. Grow your own organic vegetables or create stunning floral landscapes effortlessly with our premium supplies.',
+        features: ['Organic Composts', 'Premium Garden Tools', 'Exotic Plant Seeds']
+      };
+    case 'Crop Doctors':
+      return {
+        subtitle: 'Instant diagnosis and expert solutions for all your crop diseases.',
+        details: 'Our Kisan Crop Intelligence Engine and expert agronomists are available 24/7. Upload a picture of your infected crop, and get immediate recommendations on the exact crop protection chemicals and dosages required to save your harvest.',
+        features: ['AI Crop Disease Detection', 'Expert Agronomists', 'Precise Chemical Dosages']
+      };
+    case 'Agri Store':
+      return {
+        subtitle: 'Your one-stop destination for genuine, lab-tested agricultural products.',
+        details: 'Shop from a wide range of verified crop protection chemicals, fertilizers, and farm equipment. We guarantee 100% original products delivered directly to your farm, eliminating middlemen and ensuring the best market prices.',
+        features: ['100% Genuine Products', 'Direct Farm Delivery', 'Best Market Prices']
+      };
+    default:
+      return {
+        subtitle: `Discover everything you need about ${id ? id.replace('-', ' ') : 'Topic'} sourced directly from our platform.`,
+        details: 'Explore our vast catalogue of verified agricultural products and services tailored for your specific needs.',
+        features: []
+      };
+  }
+};
+
 export default function TopicPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -16,6 +51,9 @@ export default function TopicPage() {
 
   // Fetch data (super admin products)
   const { data: products, isLoading } = useProducts(true);
+
+  const title = id ? id.replace('-', ' ') : 'Topic';
+  const topicDetails = getTopicDetails(id || '');
 
   // Filter products based on topic (e.g. if id="Farming", show Natural Farmer Foods or Farming tools)
   const filteredProducts = React.useMemo(() => {
@@ -32,8 +70,6 @@ export default function TopicPage() {
     return products;
   }, [products, id]);
 
-  const title = id ? id.replace('-', ' ') : 'Topic';
-
   return (
     <View style={styles.container}>
       {/* 100% RESPONSIVE FULL SCREEN BACKGROUND */}
@@ -43,7 +79,7 @@ export default function TopicPage() {
         resizeMode="cover" 
       />
       {/* Dark overlay for readability */}
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0, 0, 0, 0.65)' }]} />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0, 0, 0, 0.75)' }]} />
 
       {/* PUBLIC FLOATING HEADER */}
       <PublicHeader />
@@ -51,45 +87,58 @@ export default function TopicPage() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.headerArea}>
           <Text style={styles.pageTitle}>{title}</Text>
-          <Text style={styles.pageSubtitle}>Discover everything you need about {title} sourced directly from our platform.</Text>
+          <Text style={styles.pageSubtitle}>{topicDetails.subtitle}</Text>
+          
+          <View style={styles.detailsCard}>
+            <Text style={styles.detailsText}>{topicDetails.details}</Text>
+            
+            {topicDetails.features.length > 0 && (
+              <View style={styles.featuresList}>
+                {topicDetails.features.map((feat, idx) => (
+                  <View key={idx} style={styles.featureItem}>
+                    <Ionicons name="checkmark-circle" size={20} color="#10b981" />
+                    <Text style={styles.featureText}>{feat}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+          
+          <TouchableOpacity 
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 24, paddingVertical: 10, paddingHorizontal: 20, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }}
+            onPress={() => router.push('/')}
+          >
+            <Ionicons name="home-outline" size={18} color="#fff" />
+            <Text style={{ color: '#fff', fontFamily: FONT.bold, fontSize: 14 }}>Go Home</Text>
+          </TouchableOpacity>
         </View>
 
         {isLoading ? (
           <ActivityIndicator size="large" color="#10b981" style={{ marginTop: 50 }} />
         ) : (
           <View style={styles.gridContainer}>
-            {filteredProducts.length === 0 ? (
-              <View style={styles.emptyState}>
-                <Ionicons name="leaf-outline" size={48} color="#10b981" />
-                <Text style={styles.emptyText}>No products found for {title}.</Text>
-                <TouchableOpacity style={styles.storeBtn} onPress={() => router.push('/shop')}>
-                  <Text style={styles.storeBtnText}>Go to Main Store</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              filteredProducts.map(product => (
-                <View key={product.id} style={styles.productCard}>
-                  {product.images && product.images[0] ? (
-                    <Image source={{ uri: product.images[0] }} style={styles.productImage} />
-                  ) : (
-                    <View style={[styles.productImage, { backgroundColor: '#334155', justifyContent: 'center', alignItems: 'center' }]}>
-                      <Ionicons name="image-outline" size={32} color="#94a3b8" />
-                    </View>
-                  )}
-                  <View style={styles.productInfo}>
-                    <Text style={styles.productName} numberOfLines={1}>{product.name}</Text>
-                    <Text style={styles.productCategory}>{product.category}</Text>
-                    <Text style={styles.productPrice}>₹{product.price}</Text>
-                    <TouchableOpacity 
-                      style={styles.buyBtn} 
-                      onPress={() => router.push('/shop')}
-                    >
-                      <Text style={styles.buyBtnText}>View in Store</Text>
-                    </TouchableOpacity>
+            {filteredProducts.map(product => (
+              <View key={product.id} style={styles.productCard}>
+                {product.images && product.images[0] ? (
+                  <Image source={{ uri: product.images[0] }} style={styles.productImage} />
+                ) : (
+                  <View style={[styles.productImage, { backgroundColor: '#334155', justifyContent: 'center', alignItems: 'center' }]}>
+                    <Ionicons name="image-outline" size={32} color="#94a3b8" />
                   </View>
+                )}
+                <View style={styles.productInfo}>
+                  <Text style={styles.productName} numberOfLines={1}>{product.name}</Text>
+                  <Text style={styles.productCategory}>{product.category}</Text>
+                  <Text style={styles.productPrice}>₹{product.price}</Text>
+                  <TouchableOpacity 
+                    style={styles.buyBtn} 
+                    onPress={() => router.push('/shop')}
+                  >
+                    <Text style={styles.buyBtnText}>View in Store</Text>
+                  </TouchableOpacity>
                 </View>
-              ))
-            )}
+              </View>
+            ))}
           </View>
         )}
       </ScrollView>
@@ -139,6 +188,46 @@ const styles = StyleSheet.create({
     fontFamily: FONT.medium,
     textAlign: 'center',
     maxWidth: 600,
+  },
+  detailsCard: {
+    marginTop: 24,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    padding: 24,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    maxWidth: 800,
+    width: '100%',
+  },
+  detailsText: {
+    fontSize: 15,
+    color: '#f8fafc',
+    fontFamily: FONT.regular,
+    lineHeight: 24,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  featuresList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 16,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  featureText: {
+    color: '#10b981',
+    fontFamily: FONT.bold,
+    fontSize: 13,
   },
   gridContainer: {
     flexDirection: 'row',

@@ -227,7 +227,7 @@ const ORDER_STATUS_META: Record<OrderStatus, { label: string; bg: string; color:
   PACKING: { label: 'Packing', bg: '#e0e7ff', color: '#4338ca' },
   PACKED: { label: 'Packed', bg: '#dbeafe', color: '#1d4ed8' },
   DISPATCHED: { label: 'Dispatched', bg: '#dbeafe', color: '#1d4ed8' },
-  DELIVERED: { label: 'Delivered', bg: '#f1f5f9', color: '#334155' },
+  DELIVERED: { label: 'Delivered', bg: '#f1f5f9', color: '#e2e8f0' },
   CANCELLED: { label: 'Cancelled', bg: '#fee2e2', color: '#dc2626' },
 };
 
@@ -310,7 +310,7 @@ function renderDeliveryAddressCard(order: any) {
   const pincode = pinMatch ? pinMatch[1].trim() : '';
 
   return (
-    <View style={{ backgroundColor: '#f8fafc', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#e2e8f0', gap: 6, marginVertical: 4 }}>
+    <View style={{ backgroundColor: '#0f172a', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#334155', gap: 6, marginVertical: 4 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#cbd5e1', paddingBottom: 4 }}>
         <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#15803d' }}>📍 Customer Delivery Address</Text>
         <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>Verified Dispatch Details</Text>
@@ -318,12 +318,12 @@ function renderDeliveryAddressCard(order: any) {
 
       <View style={{ gap: 4 }}>
         {/* 1. Name */}
-        <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>
+        <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>
           👤 Name: <Text style={{ fontFamily: FONT.extraBold, color: '#166534' }}>{name}</Text>
         </Text>
 
         {/* 2. Address Line */}
-        <Text style={{ fontSize: 11.5, fontFamily: FONT.semiBold, color: '#334155' }}>
+        <Text style={{ fontSize: 11.5, fontFamily: FONT.semiBold, color: '#e2e8f0' }}>
           🏠 <Text style={{ fontFamily: FONT.bold }}>Address:</Text> {line}
         </Text>
 
@@ -1730,7 +1730,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
 
                   if (listToRender.length === 0) {
                     return (
-                      <View style={[styles.emptyCenter, { paddingVertical: 36, backgroundColor: '#ffffff', borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0' }]}>
+                      <View style={[styles.emptyCenter, { paddingVertical: 36, backgroundColor: '#1e293b', borderRadius: 12, borderWidth: 1, borderColor: '#334155' }]}>
                         <Ionicons name={inventoryStatusTab === 'INACTIVE' ? "eye-off-outline" : "cube-outline"} size={40} color="#cbd5e1" />
                         <Text style={[styles.emptyText, { fontFamily: FONT.bold, color: '#64748b', marginTop: 4 }]}>
                           {inventoryStatusTab === 'INACTIVE'
@@ -1777,8 +1777,8 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
 
                           {/* In-Line Quick Stock Adjuster */}
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#334155' }}>Stock:</Text>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f1f5f9', borderRadius: RADIUS.pill, paddingHorizontal: 6, paddingVertical: 2 }}>
+                            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>Stock:</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#334155', borderRadius: RADIUS.pill, paddingHorizontal: 6, paddingVertical: 2 }}>
                               <TouchableOpacity
                                 style={styles.qtyBtn}
                                 onPress={() => {
@@ -1887,16 +1887,16 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   </View>
                 ) : (
                   allOrders.map((order) => {
-                    const statusMeta = ORDER_STATUS_META[order.status] || { label: order.status, bg: '#f1f5f9', color: '#334155' };
+                    const statusMeta = ORDER_STATUS_META[order.status] || { label: order.status, bg: '#f1f5f9', color: '#e2e8f0' };
                     return (
-                      <View key={order.id} style={[styles.cartItemRow, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 14, borderWidth: 1, borderColor: '#e2e8f0', flexDirection: 'column', gap: 10 }]}>
+                      <View key={order.id} style={[styles.cartItemRow, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#1e293b', borderRadius: RADIUS.lg, padding: 14, borderWidth: 1, borderColor: '#334155', flexDirection: 'column', gap: 10 }]}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 8 }}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                             <View style={{ width: 36, height: 36, borderRadius: RADIUS.md, backgroundColor: '#e0f2fe', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#bae6fd' }}>
                               <Ionicons name="receipt" size={18} color="#0284c7" />
                             </View>
                             <View>
-                              <Text style={{ fontSize: 14, fontFamily: FONT.bold, color: '#0f172a' }}>{order.orderNumber}</Text>
+                              <Text style={{ fontSize: 14, fontFamily: FONT.bold, color: '#ffffff' }}>{order.orderNumber}</Text>
                               <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
                                 {new Date((order as any).createdAt || (order as any).date || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                               </Text>
@@ -1909,14 +1909,14 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
 
                         {/* Customer Details & Structured Delivery Address Card */}
                         {renderDeliveryAddressCard(order)}
-                        <Text style={{ fontSize: 11.5, fontFamily: FONT.semiBold, color: '#334155', marginTop: 2 }}>
+                        <Text style={{ fontSize: 11.5, fontFamily: FONT.semiBold, color: '#e2e8f0', marginTop: 2 }}>
                           🛍️ Items: {order.items.map((i) => `${i.productName} (x${i.quantity})`).join(', ')}
                         </Text>
 
                         {/* Payment Info & Status Actions */}
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', borderTopWidth: 1, borderTopColor: '#f1f5f9', paddingTop: 8, flexWrap: 'wrap', gap: 6 }}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                            <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>₹{Number(order.totalAmount).toLocaleString('en-IN')}</Text>
+                            <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' }}>₹{Number(order.totalAmount).toLocaleString('en-IN')}</Text>
                             <View style={{ backgroundColor: order.paymentStatus === 'PAID' ? '#d1fae5' : '#fef3c7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
                               <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: order.paymentStatus === 'PAID' ? '#047857' : '#b45309' }}>
                                 {order.paymentStatus || 'PENDING'} · {order.paymentMode || 'COD'}
@@ -1927,11 +1927,11 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                           {/* Status Action Buttons */}
                           <View style={{ flexDirection: 'row', gap: 6 }}>
                             <TouchableOpacity
-                              style={{ backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#cbd5e1', paddingHorizontal: 8, paddingVertical: 6, borderRadius: RADIUS.md, flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                              style={{ backgroundColor: '#334155', borderWidth: 1, borderColor: '#cbd5e1', paddingHorizontal: 8, paddingVertical: 6, borderRadius: RADIUS.md, flexDirection: 'row', alignItems: 'center', gap: 4 }}
                               onPress={() => { tap(); setInvoiceOrder(order); }}
                             >
                               <Ionicons name="document-text-outline" size={13} color="#334155" />
-                              <Text style={{ color: '#334155', fontSize: 11, fontFamily: FONT.bold }}>Invoice</Text>
+                              <Text style={{ color: '#e2e8f0', fontSize: 11, fontFamily: FONT.bold }}>Invoice</Text>
                             </TouchableOpacity>
 
                             {order.status === 'PLACED' && (
@@ -2010,7 +2010,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   <View style={styles.qrBox}>
                     <QRCode value={`upi://pay?pa=${activeShopUpiId}&pn=FarmsKing%20Store&cu=INR`} size={140} />
                   </View>
-                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>{activeShopUpiId}</Text>
+                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>{activeShopUpiId}</Text>
                   <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center' }}>
                     Customers can scan this QR code or enter this UPI ID for instant direct payments.
                   </Text>
@@ -2034,9 +2034,9 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     { title: 'Pusa Bt Cotton Hybrid Seed Pack (500g)', discount: '15% OFF', price: '₹950', original: '₹1,120', timer: 'Ends in 08h 10m' },
                     { title: 'Battery Sprayer Pump 16L Heavy Duty', discount: '25% OFF', price: '₹2,450', original: '₹3,200', timer: 'Ends in 19h 45m' },
                   ].map((deal, idx) => (
-                    <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f8fafc', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                    <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#0f172a', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#334155' }}>
                       <View style={{ flex: 1, gap: 2 }}>
-                        <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>{deal.title}</Text>
+                        <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#ffffff' }}>{deal.title}</Text>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                           <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#16a34a' }}>{deal.price}</Text>
                           <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8', textDecorationLine: 'line-through' }}>{deal.original}</Text>
@@ -2174,7 +2174,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     <View style={{ gap: 4, marginTop: 4, borderTopWidth: 1, borderTopColor: '#fed7aa', paddingTop: 6 }}>
                       <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#9a3412' }}>Promotional Headline Banner Text</Text>
                       <TextInput
-                        style={[styles.modalInput, { backgroundColor: '#ffffff', height: 38 }]}
+                        style={[styles.modalInput, { backgroundColor: '#1e293b', height: 38 }]}
                         value={hotDealTitle}
                         onChangeText={setHotDealTitle}
                         placeholder="e.g. 🔥 MEGA FARMER FLASH SALE - 40% OFF!"
@@ -2194,7 +2194,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                 </View>
 
                 <View style={{ gap: 4, marginTop: 4 }}>
-                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#334155' }}>🚚 Free Shipping Minimum Order Amount (₹)</Text>
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>🚚 Free Shipping Minimum Order Amount (₹)</Text>
                   <TextInput
                     style={styles.modalInput}
                     keyboardType="numeric"
@@ -2205,7 +2205,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                 </View>
 
                 <View style={{ gap: 4 }}>
-                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#334155' }}>⚠️ Low Stock Warning Threshold (Qty)</Text>
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>⚠️ Low Stock Warning Threshold (Qty)</Text>
                   <TextInput
                     style={styles.modalInput}
                     keyboardType="numeric"
@@ -2362,7 +2362,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
           {activeSubTab === 'CATALOG' ? (
             <View style={{ flex: 1 }}>
               {/* Category Filter Chips Bar */}
-              <View style={{ backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}>
+              <View style={{ backgroundColor: '#1e293b', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
@@ -2439,8 +2439,8 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
               )}
 
               {/* Layout View Mode Bar (Grid vs List Toggle) */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.md, paddingVertical: 6, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', maxWidth: 1200, width: '100%', alignSelf: 'center' }}>
-                <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#475569' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.md, paddingVertical: 6, backgroundColor: '#1e293b', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', maxWidth: 1200, width: '100%', alignSelf: 'center' }}>
+                <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#cbd5e1' }}>
                   {activeCategory === '🔴 Hidden / Off Products' ? '🔴 Hidden / Off Products' : '📦 Available Products'} ({filteredProducts.length})
                 </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -2540,7 +2540,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
               {items.length === 0 ? (
                 <View style={styles.emptyCenter}>
                   <Ionicons name="cart-outline" size={48} color="#cbd5e1" />
-                  <Text style={[styles.emptyText, { fontSize: 14, fontFamily: FONT.bold, color: '#475569' }]}>Your shopping cart is empty</Text>
+                  <Text style={[styles.emptyText, { fontSize: 14, fontFamily: FONT.bold, color: '#cbd5e1' }]}>Your shopping cart is empty</Text>
                   <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8', textAlign: 'center', marginTop: 2 }}>
                     Browse our product catalog to add genuine seeds, fertilizers, and farm equipment.
                   </Text>
@@ -2553,12 +2553,12 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                 </View>
               ) : (
                 items.map((item) => (
-                  <View key={item.productId} style={[styles.cartItemRow, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 12, borderWidth: 1, borderColor: '#e2e8f0' }]}>
+                  <View key={item.productId} style={[styles.cartItemRow, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#1e293b', borderRadius: RADIUS.lg, padding: 12, borderWidth: 1, borderColor: '#334155' }]}>
                     <View style={{ width: 44, height: 44, borderRadius: RADIUS.md, backgroundColor: '#f0fdf4', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#bbf7d0' }}>
                       <Ionicons name="cube-outline" size={22} color="#15803d" />
                     </View>
                     <View style={{ flex: 1, paddingHorizontal: 6 }}>
-                      <Text style={[styles.mgmtProductName, { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' }]}>{item.name}</Text>
+                      <Text style={[styles.mgmtProductName, { fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' }]}>{item.name}</Text>
                       <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 }}>{item.unit}</Text>
                       <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#15803d', marginTop: 2 }}>₹{item.price.toLocaleString('en-IN')}</Text>
                     </View>
@@ -2566,11 +2566,11 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                       <TouchableOpacity onPress={() => removeItem(item.productId)} style={{ padding: 2 }}>
                         <Ionicons name="trash-outline" size={15} color="#dc2626" />
                       </TouchableOpacity>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#f1f5f9', borderRadius: RADIUS.pill, paddingHorizontal: 8, paddingVertical: 4 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#334155', borderRadius: RADIUS.pill, paddingHorizontal: 8, paddingVertical: 4 }}>
                         <TouchableOpacity onPress={() => updateQuantity(item.productId, item.quantity - 1)} style={{ width: 22, height: 22, alignItems: 'center', justifyContent: 'center' }}>
                           <Ionicons name="remove" size={14} color="#334155" />
                         </TouchableOpacity>
-                        <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a', minWidth: 16, textAlign: 'center' }}>{item.quantity}</Text>
+                        <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff', minWidth: 16, textAlign: 'center' }}>{item.quantity}</Text>
                         <TouchableOpacity onPress={() => updateQuantity(item.productId, item.quantity + 1)} style={{ width: 22, height: 22, alignItems: 'center', justifyContent: 'center' }}>
                           <Ionicons name="add" size={14} color="#334155" />
                         </TouchableOpacity>
@@ -2582,7 +2582,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
 
               {items.length > 0 && (
                 checkoutStep === 1 ? (
-                  <View style={[styles.checkoutBox, premiumShadow('#0f172a', 'md'), { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 16, borderWidth: 1.5, borderColor: '#cbd5e1', gap: 16 }]}>
+                  <View style={[styles.checkoutBox, premiumShadow('#0f172a', 'md'), { backgroundColor: '#1e293b', borderRadius: RADIUS.lg, padding: 16, borderWidth: 1.5, borderColor: '#cbd5e1', gap: 16 }]}>
                     {/* Checkout Header Banner */}
                     <View style={{ backgroundColor: '#0f172a', borderRadius: 10, padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -2598,12 +2598,12 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     </View>
 
                     {/* 🎟️ & 🧾 STEP 1: DISCOUNT COUPON & BILL SUMMARY */}
-                    <View style={{ backgroundColor: '#ffffff', borderRadius: 12, padding: 14, borderWidth: 1.5, borderColor: '#bbf7d0', borderLeftWidth: 5, borderLeftColor: '#15803d', gap: 12 }}>
+                    <View style={{ backgroundColor: '#1e293b', borderRadius: 12, padding: 14, borderWidth: 1.5, borderColor: '#bbf7d0', borderLeftWidth: 5, borderLeftColor: '#15803d', gap: 12 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 6 }}>
                         <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#b45309', alignItems: 'center', justifyContent: 'center' }}>
                           <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#ffffff' }}>1</Text>
                         </View>
-                        <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' }}>🎟️ Have a Discount Coupon?</Text>
+                        <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' }}>🎟️ Have a Discount Coupon?</Text>
                       </View>
 
                       {/* Coupon Section */}
@@ -2643,12 +2643,12 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                       {couponError ? <Text style={{ color: '#dc2626', fontSize: 11.5, fontFamily: FONT.medium }}>{couponError}</Text> : null}
 
                       {/* Live Bill Summary Breakdown */}
-                      <View style={{ gap: 6, marginTop: 4, backgroundColor: '#f8fafc', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                        <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a', marginBottom: 2 }}>🧾 Order Bill Summary:</Text>
+                      <View style={{ gap: 6, marginTop: 4, backgroundColor: '#0f172a', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#334155' }}>
+                        <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#ffffff', marginBottom: 2 }}>🧾 Order Bill Summary:</Text>
                         
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                           <Text style={{ fontSize: 12.5, fontFamily: FONT.medium, color: '#64748b' }}>Items Subtotal:</Text>
-                          <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#334155' }}>₹{(subtotal || 0).toLocaleString('en-IN')}</Text>
+                          <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#e2e8f0' }}>₹{(subtotal || 0).toLocaleString('en-IN')}</Text>
                         </View>
 
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -2668,7 +2668,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                         ) : null}
 
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#cbd5e1', paddingTop: 8, marginTop: 4 }}>
-                          <Text style={{ fontFamily: FONT.extraBold, fontSize: 15, color: '#0f172a' }}>Total Amount Payable:</Text>
+                          <Text style={{ fontFamily: FONT.extraBold, fontSize: 15, color: '#ffffff' }}>Total Amount Payable:</Text>
                           <Text style={{ fontFamily: FONT.extraBold, fontSize: 20, color: '#15803d' }}>
                             ₹{finalPayableAmount.toLocaleString('en-IN')}
                           </Text>
@@ -2692,7 +2692,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   </View>
                 ) : (
                   /* 📍 & 💳 STEP 2 PAGE: DELIVERY ADDRESS, PAYMENT & ORDER CONFIRMATION */
-                  <View style={[styles.checkoutBox, premiumShadow('#0f172a', 'md'), { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 16, borderWidth: 1.5, borderColor: '#cbd5e1', gap: 16 }]}>
+                  <View style={[styles.checkoutBox, premiumShadow('#0f172a', 'md'), { backgroundColor: '#1e293b', borderRadius: RADIUS.lg, padding: 16, borderWidth: 1.5, borderColor: '#cbd5e1', gap: 16 }]}>
                     {/* Checkout Header Banner */}
                     <View style={{ backgroundColor: '#15803d', borderRadius: 10, padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -2711,13 +2711,13 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     </View>
 
                     {/* 📍 STEP 1 IN PAGE 2: DELIVERY ADDRESS SELECTION */}
-                    <View style={{ backgroundColor: '#f8fafc', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#e2e8f0', gap: 8 }}>
+                    <View style={{ backgroundColor: '#0f172a', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#334155', gap: 8 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#cbd5e1', paddingBottom: 6 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                           <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#15803d', alignItems: 'center', justifyContent: 'center' }}>
                             <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#ffffff' }}>1</Text>
                           </View>
-                          <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>📍 Select Delivery Address</Text>
+                          <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>📍 Select Delivery Address</Text>
                         </View>
                         <TouchableOpacity onPress={() => handleOpenEditAddressModal(null)}>
                           <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#15803d' }}>+ Add New</Text>
@@ -2763,7 +2763,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                                       </View>
                                     )}
                                   </View>
-                                  <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#334155', marginTop: 2, lineHeight: 16 }}>
+                                  <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#e2e8f0', marginTop: 2, lineHeight: 16 }}>
                                     {composeAddress(addr)}
                                   </Text>
                                 </View>
@@ -2782,7 +2782,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                         </View>
                       ) : (
                         <TouchableOpacity
-                          style={{ flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, backgroundColor: '#ffffff', borderRadius: 8, borderWidth: 1, borderColor: '#15803d', borderStyle: 'dashed' }}
+                          style={{ flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, backgroundColor: '#1e293b', borderRadius: 8, borderWidth: 1, borderColor: '#15803d', borderStyle: 'dashed' }}
                           onPress={() => handleOpenEditAddressModal(null)}
                         >
                           <Ionicons name="location-sharp" size={20} color="#15803d" />
@@ -2792,12 +2792,12 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     </View>
 
                     {/* 💳 STEP 2 IN PAGE 2: SELECT PAYMENT MODE */}
-                    <View style={{ backgroundColor: '#f8fafc', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#e2e8f0', gap: 10 }}>
+                    <View style={{ backgroundColor: '#0f172a', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#334155', gap: 10 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                         <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#4338ca', alignItems: 'center', justifyContent: 'center' }}>
                           <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#ffffff' }}>2</Text>
                         </View>
-                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>💳 Select Payment Mode *</Text>
+                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>💳 Select Payment Mode *</Text>
                       </View>
 
                       <View style={{ flexDirection: 'column', gap: 8 }}>
@@ -2913,8 +2913,8 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     )}
 
                     {/* Total Amount Summary Bar */}
-                    <View style={{ backgroundColor: '#ffffff', borderRadius: 10, padding: 12, borderWidth: 1.5, borderColor: '#bbf7d0', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text style={{ fontFamily: FONT.extraBold, fontSize: 14, color: '#0f172a' }}>Total Amount Payable:</Text>
+                    <View style={{ backgroundColor: '#1e293b', borderRadius: 10, padding: 12, borderWidth: 1.5, borderColor: '#bbf7d0', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Text style={{ fontFamily: FONT.extraBold, fontSize: 14, color: '#ffffff' }}>Total Amount Payable:</Text>
                       <Text style={{ fontFamily: FONT.extraBold, fontSize: 20, color: '#15803d' }}>
                         ₹{finalPayableAmount.toLocaleString('en-IN')}
                       </Text>
@@ -2935,10 +2935,10 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     {/* Actions Row */}
                     <View style={{ flexDirection: 'row', gap: 10 }}>
                       <TouchableOpacity
-                        style={{ flex: 1, backgroundColor: '#f1f5f9', borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderWidth: 1, borderColor: '#cbd5e1' }}
+                        style={{ flex: 1, backgroundColor: '#334155', borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderWidth: 1, borderColor: '#cbd5e1' }}
                         onPress={() => { tap(); setCheckoutStep(1); }}
                       >
-                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#475569' }}>← Back</Text>
+                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#cbd5e1' }}>← Back</Text>
                       </TouchableOpacity>
 
                       <TouchableOpacity
@@ -2982,7 +2982,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
               ) : !myOrders || myOrders.length === 0 ? (
                 <View style={styles.emptyCenter}>
                   <Ionicons name="receipt-outline" size={48} color="#cbd5e1" />
-                  <Text style={[styles.emptyText, { fontSize: 14, fontFamily: FONT.bold, color: '#475569' }]}>No orders placed yet</Text>
+                  <Text style={[styles.emptyText, { fontSize: 14, fontFamily: FONT.bold, color: '#cbd5e1' }]}>No orders placed yet</Text>
                   <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8', textAlign: 'center', marginTop: 2 }}>
                     Your placed seed and fertilizer order history will appear here.
                   </Text>
@@ -2995,19 +2995,19 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                 </View>
               ) : (
                 myOrders.map((order) => {
-                  const statusMeta = ORDER_STATUS_META[order.status] || { label: order.status, bg: '#f1f5f9', color: '#334155' };
+                  const statusMeta = ORDER_STATUS_META[order.status] || { label: order.status, bg: '#f1f5f9', color: '#e2e8f0' };
                   const canCancel = order.status === 'PLACED';
                   const itemsSummary = order.items.map((i) => `${i.productName} x${i.quantity}`).join(', ');
 
                   return (
-                    <View key={order.id} style={[styles.cartItemRow, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 14, borderWidth: 1, borderColor: '#e2e8f0', flexDirection: 'column', gap: 10 }]}>
+                    <View key={order.id} style={[styles.cartItemRow, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#1e293b', borderRadius: RADIUS.lg, padding: 14, borderWidth: 1, borderColor: '#334155', flexDirection: 'column', gap: 10 }]}>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 8 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                           <View style={{ width: 34, height: 34, borderRadius: RADIUS.md, backgroundColor: '#f0fdf4', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#bbf7d0' }}>
                             <Ionicons name="receipt" size={17} color="#15803d" />
                           </View>
                           <View>
-                            <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' }}>{order.orderNumber}</Text>
+                            <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' }}>{order.orderNumber}</Text>
                             <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8' }}>
                               {new Date((order as any).createdAt || (order as any).date || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                             </Text>
@@ -3019,7 +3019,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                       </View>
 
                       <View style={{ width: '100%', gap: 4 }}>
-                        <Text style={{ fontSize: 12, fontFamily: FONT.semiBold, color: '#334155' }}>Items: {itemsSummary}</Text>
+                        <Text style={{ fontSize: 12, fontFamily: FONT.semiBold, color: '#e2e8f0' }}>Items: {itemsSummary}</Text>
                         {renderDeliveryAddressCard(order)}
                       </View>
 
@@ -3034,7 +3034,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', borderTopWidth: 1, borderTopColor: '#f1f5f9', paddingTop: 8 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                           <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b' }}>Payment Mode:</Text>
-                          <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>{order.paymentMode || 'COD'}</Text>
+                          <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' }}>{order.paymentMode || 'COD'}</Text>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                           <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: '#15803d' }}>₹{Number(order.totalAmount).toLocaleString('en-IN')}</Text>
@@ -3116,7 +3116,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
 
             {/* UPI ID Badge & Copy Button */}
             <View style={styles.upiCopyBadge}>
-              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#334155' }}>
+              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#e2e8f0' }}>
                 UPI ID: {activeShopUpiId}
               </Text>
               <TouchableOpacity onPress={handleCopyUpiId} style={styles.copyBtn}>
@@ -3210,7 +3210,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                               alignItems: 'center',
                               justifyContent: 'space-between',
                               paddingRight: 8,
-                              backgroundColor: '#ffffff',
+                              backgroundColor: '#1e293b',
                               borderColor: isPrimaryCategoryDropdownOpen ? '#166534' : '#cbd5e1',
                               borderWidth: 1.5,
                             },
@@ -3224,7 +3224,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                         >
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
                             <Text style={{ fontSize: 14 }}>{currentCatObj.icon}</Text>
-                            <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
+                            <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }} numberOfLines={1}>
                               {currentCatObj.label}
                             </Text>
                           </View>
@@ -3238,7 +3238,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                               top: 48,
                               left: 0,
                               right: 0,
-                              backgroundColor: '#ffffff',
+                              backgroundColor: '#1e293b',
                               borderRadius: RADIUS.md,
                               borderWidth: 1.5,
                               borderColor: '#166534',
@@ -3301,7 +3301,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         paddingRight: 8,
-                        backgroundColor: '#ffffff',
+                        backgroundColor: '#1e293b',
                         borderColor: isSubCategoryDropdownOpen ? '#4338ca' : '#cbd5e1',
                         borderWidth: 1.5,
                       },
@@ -3328,7 +3328,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                         top: 48,
                         left: 0,
                         right: 0,
-                        backgroundColor: '#ffffff',
+                        backgroundColor: '#1e293b',
                         borderRadius: RADIUS.md,
                         borderWidth: 1.5,
                         borderColor: '#4338ca',
@@ -3491,7 +3491,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         paddingRight: 8,
-                        backgroundColor: '#ffffff',
+                        backgroundColor: '#1e293b',
                         borderColor: isBrandDropdownOpen ? '#0284c7' : '#cbd5e1',
                         borderWidth: 1.5,
                       },
@@ -3518,7 +3518,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                         top: 60,
                         left: 0,
                         right: 0,
-                        backgroundColor: '#ffffff',
+                        backgroundColor: '#1e293b',
                         borderRadius: RADIUS.md,
                         borderWidth: 1.5,
                         borderColor: '#0284c7',
@@ -3623,7 +3623,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     <View style={{ gap: 4 }}>
                       <Text style={[styles.inputLabel, { color: '#166534' }]}>Farmer Producer / Creator Name *</Text>
                       <TextInput
-                        style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#86efac' }]}
+                        style={[styles.modalInput, { backgroundColor: '#1e293b', borderColor: '#86efac' }]}
                         placeholder="e.g. Sardar Gurdev Singh (Village Makhu)"
                         placeholderTextColor="#94a3b8"
                         value={farmerProducerName}
@@ -3635,7 +3635,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                       <View style={{ flex: 1, gap: 4 }}>
                         <Text style={[styles.inputLabel, { color: '#166534' }]}>Harvest / Batch Date</Text>
                         <TextInput
-                          style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#86efac' }]}
+                          style={[styles.modalInput, { backgroundColor: '#1e293b', borderColor: '#86efac' }]}
                           placeholder="e.g. August 2026 Batch"
                           placeholderTextColor="#94a3b8"
                           value={harvestBatchDate}
@@ -3646,7 +3646,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                       <View style={{ flex: 1, gap: 4 }}>
                         <Text style={[styles.inputLabel, { color: '#166534' }]}>Processing Method</Text>
                         <TextInput
-                          style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#86efac' }]}
+                          style={[styles.modalInput, { backgroundColor: '#1e293b', borderColor: '#86efac' }]}
                           placeholder="e.g. Cold-Pressed / Desi Kohlu"
                           placeholderTextColor="#94a3b8"
                           value={processingMethod}
@@ -3730,7 +3730,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   <View style={{ gap: 4 }}>
                     <Text style={[styles.inputLabel, { color: '#0369a1' }]}>Power Source / Fuel Type *</Text>
                     <TextInput
-                      style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#7dd3fc' }]}
+                      style={[styles.modalInput, { backgroundColor: '#1e293b', borderColor: '#7dd3fc' }]}
                       placeholder="e.g. 12V 12Ah Battery / Solar Powered / Manual Hand Operated"
                       placeholderTextColor="#94a3b8"
                       value={machineryPowerSource}
@@ -3742,7 +3742,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     <View style={{ flex: 1, gap: 4 }}>
                       <Text style={[styles.inputLabel, { color: '#0369a1' }]}>Warranty Period</Text>
                       <TextInput
-                        style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#7dd3fc' }]}
+                        style={[styles.modalInput, { backgroundColor: '#1e293b', borderColor: '#7dd3fc' }]}
                         placeholder="e.g. 1 Year Warranty"
                         placeholderTextColor="#94a3b8"
                         value={machineryWarranty}
@@ -3753,7 +3753,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     <View style={{ flex: 1, gap: 4 }}>
                       <Text style={[styles.inputLabel, { color: '#0369a1' }]}>Motor / Material Specs</Text>
                       <TextInput
-                        style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#7dd3fc' }]}
+                        style={[styles.modalInput, { backgroundColor: '#1e293b', borderColor: '#7dd3fc' }]}
                         placeholder="e.g. Brass Nozzle & Copper Motor"
                         placeholderTextColor="#94a3b8"
                         value={machineryMotorSpecs}
@@ -3782,7 +3782,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   <View style={{ gap: 4 }}>
                     <Text style={[styles.inputLabel, { color: '#c2410c' }]}>Active Technical Ingredient / NPK Ratio *</Text>
                     <TextInput
-                      style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#fdba74' }]}
+                      style={[styles.modalInput, { backgroundColor: '#1e293b', borderColor: '#fdba74' }]}
                       placeholder="e.g. NPK 19:19:19 / Chlorpyrifos 50% EC / Urea 46% N"
                       placeholderTextColor="#94a3b8"
                       value={chemicalActiveIngredient}
@@ -3795,7 +3795,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   <View style={{ gap: 4 }}>
                     <Text style={[styles.inputLabel, { color: '#c2410c' }]}>Technical Chemical Formula / Active Composition</Text>
                     <TextInput
-                      style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#fdba74' }]}
+                      style={[styles.modalInput, { backgroundColor: '#1e293b', borderColor: '#fdba74' }]}
                       placeholder="e.g. Chlorantraniliprole 18.5% SC"
                       placeholderTextColor="#94a3b8"
                       value={newTechnicalFormula}
@@ -3806,7 +3806,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   <View style={{ gap: 4 }}>
                     <Text style={[styles.inputLabel, { color: '#c2410c' }]}>Recommended Dosage & Application Instructions</Text>
                     <TextInput
-                      style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#fdba74' }]}
+                      style={[styles.modalInput, { backgroundColor: '#1e293b', borderColor: '#fdba74' }]}
                       placeholder="e.g. 60 ml per acre in 150-200 Litres water. Spray during pest emergence."
                       placeholderTextColor="#94a3b8"
                       value={newDosageInstructions}
@@ -3830,7 +3830,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   <View style={{ gap: 4 }}>
                     <Text style={[styles.inputLabel, { color: '#166534' }]}>Botanical Source / Bio-Organism *</Text>
                     <TextInput
-                      style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#86efac' }]}
+                      style={[styles.modalInput, { backgroundColor: '#1e293b', borderColor: '#86efac' }]}
                       placeholder="e.g. Neem Seed Kernel Extract (10000 PPM) / Trichoderma Viride"
                       placeholderTextColor="#94a3b8"
                       value={bioBotanicalSource}
@@ -3841,7 +3841,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   <View style={{ gap: 4 }}>
                     <Text style={[styles.inputLabel, { color: '#166534' }]}>Organic Standard</Text>
                     <TextInput
-                      style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#86efac' }]}
+                      style={[styles.modalInput, { backgroundColor: '#1e293b', borderColor: '#86efac' }]}
                       placeholder="e.g. NPOP Certified Organic Inputs / EcoCert Approved"
                       placeholderTextColor="#94a3b8"
                       value={bioCertificationStandard}
@@ -3852,7 +3852,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   <View style={{ gap: 4 }}>
                     <Text style={[styles.inputLabel, { color: '#166534' }]}>Recommended Dosage & Application Instructions</Text>
                     <TextInput
-                      style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#86efac' }]}
+                      style={[styles.modalInput, { backgroundColor: '#1e293b', borderColor: '#86efac' }]}
                       placeholder="e.g. 2-3 ml per Litre of water. Apply every 15 days."
                       placeholderTextColor="#94a3b8"
                       value={newDosageInstructions}
@@ -3906,7 +3906,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                       </TouchableOpacity>
                     </View>
                     <TextInput
-                      style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#fde047' }]}
+                      style={[styles.modalInput, { backgroundColor: '#1e293b', borderColor: '#fde047' }]}
                       placeholder="e.g. PB-1121 Basmati Paddy / HD-3086 Wheat"
                       placeholderTextColor="#94a3b8"
                       value={seedVarietyName}
@@ -3918,7 +3918,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     <View style={{ flex: 1, gap: 4 }}>
                       <Text style={[styles.inputLabel, { color: '#854d0e' }]}>Aprox. Germination Rate (%)</Text>
                       <TextInput
-                        style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#fde047' }]}
+                        style={[styles.modalInput, { backgroundColor: '#1e293b', borderColor: '#fde047' }]}
                         placeholder="e.g. 98% Aprox. Germination Rate"
                         placeholderTextColor="#94a3b8"
                         value={seedGerminationRate}
@@ -3929,7 +3929,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     <View style={{ flex: 1, gap: 4 }}>
                       <Text style={[styles.inputLabel, { color: '#854d0e' }]}>Aprox. Maturity Days</Text>
                       <TextInput
-                        style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#fde047' }]}
+                        style={[styles.modalInput, { backgroundColor: '#1e293b', borderColor: '#fde047' }]}
                         placeholder="e.g. 120 - 130 Days"
                         placeholderTextColor="#94a3b8"
                         value={seedMaturityDays}
@@ -3956,7 +3956,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   <View style={{ gap: 4 }}>
                     <Text style={[styles.inputLabel, { color: '#78350f' }]}>Coupon Benefit / Pass Value *</Text>
                     <TextInput
-                      style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#fcd34d' }]}
+                      style={[styles.modalInput, { backgroundColor: '#1e293b', borderColor: '#fcd34d' }]}
                       placeholder="e.g. Flat ₹500 Off / 10% Extra Cashback"
                       placeholderTextColor="#94a3b8"
                       value={couponPassValue}
@@ -3967,7 +3967,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   <View style={{ gap: 4 }}>
                     <Text style={[styles.inputLabel, { color: '#78350f' }]}>Validity Period</Text>
                     <TextInput
-                      style={[styles.modalInput, { backgroundColor: '#ffffff', borderColor: '#fcd34d' }]}
+                      style={[styles.modalInput, { backgroundColor: '#1e293b', borderColor: '#fcd34d' }]}
                       placeholder="e.g. Valid for 1 Year from Purchase Date"
                       placeholderTextColor="#94a3b8"
                       value={couponValidityPeriod}
@@ -4013,7 +4013,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   <View style={{ width: 68, gap: 2 }}>
                     <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#78350f' }} numberOfLines={1}>Value *</Text>
                     <TextInput
-                      style={[styles.modalInput, { height: 34, fontSize: 11, paddingHorizontal: 6, backgroundColor: '#ffffff', borderColor: '#fcd34d' }]}
+                      style={[styles.modalInput, { height: 34, fontSize: 11, paddingHorizontal: 6, backgroundColor: '#1e293b', borderColor: '#fcd34d' }]}
                       placeholder="e.g. 500"
                       value={builderVal}
                       onChangeText={(text) => {
@@ -4040,7 +4040,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                         {
                           height: 34,
                           paddingHorizontal: 6,
-                          backgroundColor: '#ffffff',
+                          backgroundColor: '#1e293b',
                           borderColor: isBuilderUnitDropdownOpen ? '#b45309' : '#fcd34d',
                           borderWidth: 1.5,
                           flexDirection: 'row',
@@ -4091,7 +4091,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                           style={{
                             width: '90%',
                             maxWidth: 340,
-                            backgroundColor: '#ffffff',
+                            backgroundColor: '#1e293b',
                             borderRadius: 16,
                             borderWidth: 1.5,
                             borderColor: '#b45309',
@@ -4122,11 +4122,11 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                               paddingHorizontal: 10,
                               fontSize: 12,
                               fontFamily: FONT.medium,
-                              backgroundColor: '#f8fafc',
+                              backgroundColor: '#0f172a',
                               borderRadius: 8,
                               borderWidth: 1,
                               borderColor: '#cbd5e1',
-                              color: '#0f172a',
+                              color: '#ffffff',
                             }}
                             placeholder="🔍 Search unit (e.g. Kg, Litre, Box, Acre)..."
                             placeholderTextColor="#94a3b8"
@@ -4190,9 +4190,9 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
 
                   {/* 3. MRP */}
                   <View style={{ width: 64, gap: 2 }}>
-                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#475569' }} numberOfLines={1}>MRP (₹)</Text>
+                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#cbd5e1' }} numberOfLines={1}>MRP (₹)</Text>
                     <TextInput
-                      style={[styles.modalInput, { height: 34, fontSize: 11, paddingHorizontal: 6, backgroundColor: '#ffffff' }]}
+                      style={[styles.modalInput, { height: 34, fontSize: 11, paddingHorizontal: 6, backgroundColor: '#1e293b' }]}
                       placeholder="600"
                       keyboardType="numeric"
                       value={builderMrp}
@@ -4204,7 +4204,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   <View style={{ width: 68, gap: 2 }}>
                     <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#dc2626' }} numberOfLines={1}>Offer (₹) *</Text>
                     <TextInput
-                      style={[styles.modalInput, { height: 34, fontSize: 11, paddingHorizontal: 6, backgroundColor: '#ffffff', borderColor: '#fca5a5' }]}
+                      style={[styles.modalInput, { height: 34, fontSize: 11, paddingHorizontal: 6, backgroundColor: '#1e293b', borderColor: '#fca5a5' }]}
                       placeholder="500"
                       keyboardType="numeric"
                       value={builderSelling}
@@ -4216,7 +4216,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   <View style={{ width: 58, gap: 2 }}>
                     <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#15803d' }} numberOfLines={1}>Stock *</Text>
                     <TextInput
-                      style={[styles.modalInput, { height: 34, fontSize: 11, paddingHorizontal: 6, backgroundColor: '#ffffff', borderColor: '#86efac' }]}
+                      style={[styles.modalInput, { height: 34, fontSize: 11, paddingHorizontal: 6, backgroundColor: '#1e293b', borderColor: '#86efac' }]}
                       placeholder="50"
                       keyboardType="numeric"
                       value={builderStock}
@@ -4246,7 +4246,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                       </TouchableOpacity>
                     </View>
                     <TextInput
-                      style={[styles.modalInput, { height: 34, fontSize: 10.5, paddingHorizontal: 5, backgroundColor: '#ffffff', borderColor: '#bae6fd' }]}
+                      style={[styles.modalInput, { height: 34, fontSize: 10.5, paddingHorizontal: 5, backgroundColor: '#1e293b', borderColor: '#bae6fd' }]}
                       placeholder="SKU"
                       value={builderSku}
                       onChangeText={setBuilderSku}
@@ -4343,7 +4343,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
               {newPackSizes.length > 0 && (
                 <View
                   style={{
-                    backgroundColor: '#ffffff',
+                    backgroundColor: '#1e293b',
                     borderRadius: RADIUS.md,
                     borderWidth: 1.5,
                     borderColor: '#fcd34d',
@@ -4365,13 +4365,13 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                   <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     <View style={{ minWidth: 480, width: '100%' }}>
                       {/* Table Header Row */}
-                  <View style={{ flexDirection: 'row', backgroundColor: '#f8fafc', paddingVertical: 7, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: '#e2e8f0', alignItems: 'center' }}>
-                    <Text style={{ flex: 1.2, fontSize: 9.5, fontFamily: FONT.extraBold, color: '#475569' }}>VARIANT</Text>
+                  <View style={{ flexDirection: 'row', backgroundColor: '#0f172a', paddingVertical: 7, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: '#e2e8f0', alignItems: 'center' }}>
+                    <Text style={{ flex: 1.2, fontSize: 9.5, fontFamily: FONT.extraBold, color: '#cbd5e1' }}>VARIANT</Text>
                     <Text style={{ flex: 0.9, fontSize: 9.5, fontFamily: FONT.extraBold, color: '#64748b', textAlign: 'center' }}>MRP</Text>
                     <Text style={{ flex: 1, fontSize: 9.5, fontFamily: FONT.extraBold, color: '#dc2626', textAlign: 'center' }}>OFFER</Text>
                     <Text style={{ flex: 0.9, fontSize: 9.5, fontFamily: FONT.extraBold, color: '#15803d', textAlign: 'center' }}>STOCK</Text>
                     <Text style={{ flex: 1.2, fontSize: 9.5, fontFamily: FONT.extraBold, color: '#0369a1', textAlign: 'center' }}>SKU</Text>
-                    <Text style={{ flex: 1.1, fontSize: 9.5, fontFamily: FONT.extraBold, color: '#475569', textAlign: 'right' }}>ACTION</Text>
+                    <Text style={{ flex: 1.1, fontSize: 9.5, fontFamily: FONT.extraBold, color: '#cbd5e1', textAlign: 'right' }}>ACTION</Text>
                   </View>
 
                   {/* Table Data Rows */}
@@ -4402,7 +4402,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                       >
                         {/* Variant Name & Main Badge */}
                         <View style={{ flex: 1.2, gap: 2 }}>
-                          <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>{sz}</Text>
+                          <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' }} numberOfLines={1}>{sz}</Text>
                           {isPrimary && (
                             <View style={{ backgroundColor: '#d97706', paddingHorizontal: 4, paddingVertical: 1, borderRadius: 3, alignSelf: 'flex-start' }}>
                               <Text style={{ fontSize: 7.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>⭐ MAIN</Text>
@@ -4705,10 +4705,10 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
 
               <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
                 {/* Printable Invoice Header Box */}
-                <View style={{ backgroundColor: '#f8fafc', padding: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#cbd5e1', gap: 6 }}>
+                <View style={{ backgroundColor: '#0f172a', padding: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#cbd5e1', gap: 6 }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: '#15803d' }}>FarmsKing Official Store</Text>
-                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569' }}>INVOICE: #{invoiceOrder.orderNumber}</Text>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#cbd5e1' }}>INVOICE: #{invoiceOrder.orderNumber}</Text>
                   </View>
 
                   <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' }}>
@@ -4718,26 +4718,26 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
 
                 {/* Shipping & Billing Address Box */}
                 <View style={{ flexDirection: 'row', gap: 10, marginVertical: 10 }}>
-                  <View style={{ flex: 1, backgroundColor: '#f1f5f9', padding: 10, borderRadius: RADIUS.md, gap: 2 }}>
-                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0f172a' }}>📍 SHIP TO (CUSTOMER):</Text>
-                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#1e293b' }}>{(invoiceOrder as any).user?.name || 'Customer'}</Text>
-                    <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#475569' }}>{(invoiceOrder as any).user?.phone || 'N/A'}</Text>
+                  <View style={{ flex: 1, backgroundColor: '#334155', padding: 10, borderRadius: RADIUS.md, gap: 2 }}>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>📍 SHIP TO (CUSTOMER):</Text>
+                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#f8fafc' }}>{(invoiceOrder as any).user?.name || 'Customer'}</Text>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#cbd5e1' }}>{(invoiceOrder as any).user?.phone || 'N/A'}</Text>
                     <Text style={{ fontSize: 10.5, fontFamily: FONT.regular, color: '#64748b' }}>{invoiceOrder.deliveryAddress || 'No address'}</Text>
                   </View>
                 </View>
 
                 {/* Items Table */}
-                <View style={{ borderWidth: 1, borderColor: '#e2e8f0', borderRadius: RADIUS.md, overflow: 'hidden' }}>
-                  <View style={{ flexDirection: 'row', backgroundColor: '#e2e8f0', paddingHorizontal: 10, paddingVertical: 6 }}>
-                    <Text style={{ flex: 2, fontSize: 11, fontFamily: FONT.bold, color: '#334155' }}>Item Description</Text>
-                    <Text style={{ flex: 1, fontSize: 11, fontFamily: FONT.bold, color: '#334155', textAlign: 'center' }}>Qty</Text>
-                    <Text style={{ flex: 1, fontSize: 11, fontFamily: FONT.bold, color: '#334155', textAlign: 'right' }}>Total</Text>
+                <View style={{ borderWidth: 1, borderColor: '#334155', borderRadius: RADIUS.md, overflow: 'hidden' }}>
+                  <View style={{ flexDirection: 'row', backgroundColor: '#475569', paddingHorizontal: 10, paddingVertical: 6 }}>
+                    <Text style={{ flex: 2, fontSize: 11, fontFamily: FONT.bold, color: '#e2e8f0' }}>Item Description</Text>
+                    <Text style={{ flex: 1, fontSize: 11, fontFamily: FONT.bold, color: '#e2e8f0', textAlign: 'center' }}>Qty</Text>
+                    <Text style={{ flex: 1, fontSize: 11, fontFamily: FONT.bold, color: '#e2e8f0', textAlign: 'right' }}>Total</Text>
                   </View>
 
                   {invoiceOrder.items.map((item, idx) => (
                     <View key={idx} style={{ flexDirection: 'row', paddingHorizontal: 10, paddingVertical: 8, borderTopWidth: idx > 0 ? 1 : 0, borderTopColor: '#f1f5f9' }}>
-                      <Text style={{ flex: 2, fontSize: 11.5, fontFamily: FONT.medium, color: '#0f172a' }}>{item.productName}</Text>
-                      <Text style={{ flex: 1, fontSize: 11.5, fontFamily: FONT.bold, color: '#334155', textAlign: 'center' }}>{item.quantity}</Text>
+                      <Text style={{ flex: 2, fontSize: 11.5, fontFamily: FONT.medium, color: '#ffffff' }}>{item.productName}</Text>
+                      <Text style={{ flex: 1, fontSize: 11.5, fontFamily: FONT.bold, color: '#e2e8f0', textAlign: 'center' }}>{item.quantity}</Text>
                       <Text style={{ flex: 1, fontSize: 11.5, fontFamily: FONT.extraBold, color: '#16a34a', textAlign: 'right' }}>
                         ₹{(Number(item.price) * item.quantity).toLocaleString('en-IN')}
                       </Text>
@@ -4749,10 +4749,10 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                 <View style={{ marginTop: 10, borderTopWidth: 1.5, borderTopColor: '#0f172a', paddingTop: 8, gap: 4 }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                     <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b' }}>Payment Mode:</Text>
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>{invoiceOrder.paymentMode || 'COD'}</Text>
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' }}>{invoiceOrder.paymentMode || 'COD'}</Text>
                   </View>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' }}>Grand Total (Inc. GST):</Text>
+                    <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' }}>Grand Total (Inc. GST):</Text>
                     <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: '#15803d' }}>₹{Number(invoiceOrder.totalAmount).toLocaleString('en-IN')}</Text>
                   </View>
                 </View>
@@ -5220,7 +5220,7 @@ function FarmsKingProductDetailModal({
 
   return (
     <Modal visible={Boolean(product)} animationType="slide" transparent={false} onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+      <View style={{ flex: 1, backgroundColor: '#0f172a' }}>
         {/* FarmsKing Header Bar */}
         <LinearGradient colors={['#0f172a', '#1e293b']} style={{ paddingTop: 44, paddingBottom: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -5246,7 +5246,7 @@ function FarmsKingProductDetailModal({
 
         <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
           {/* Main Hero Gallery */}
-          <View style={{ backgroundColor: '#ffffff', borderRadius: 16, padding: 14, borderWidth: 1, borderColor: '#e2e8f0', alignItems: 'center', gap: 12, ...premiumShadow('#0f172a', 'sm') }}>
+          <View style={{ backgroundColor: '#1e293b', borderRadius: 16, padding: 14, borderWidth: 1, borderColor: '#334155', alignItems: 'center', gap: 12, ...premiumShadow('#0f172a', 'sm') }}>
             {/* FarmsKing Bestseller Tag */}
             <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <View style={{ backgroundColor: '#fff7ed', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: '#ffedd5', flexDirection: 'row', alignItems: 'center', gap: 4 }}>
@@ -5335,11 +5335,11 @@ function FarmsKingProductDetailModal({
                       borderRadius: 8,
                       overflow: 'hidden',
                       padding: 2,
-                      backgroundColor: '#ffffff',
+                      backgroundColor: '#1e293b',
                     }}
                   >
                     {imgErrorMap[idx] ? (
-                      <View style={{ width: 50, height: 50, borderRadius: 6, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
+                      <View style={{ width: 50, height: 50, borderRadius: 6, backgroundColor: '#334155', alignItems: 'center', justifyContent: 'center' }}>
                         <Ionicons name="image-outline" size={20} color="#94a3b8" />
                       </View>
                     ) : (
@@ -5357,12 +5357,12 @@ function FarmsKingProductDetailModal({
           </View>
 
           {/* Product Title & Ratings Section */}
-          <View style={{ backgroundColor: '#ffffff', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#e2e8f0', gap: 8, ...premiumShadow('#0f172a', 'sm') }}>
+          <View style={{ backgroundColor: '#1e293b', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#334155', gap: 8, ...premiumShadow('#0f172a', 'sm') }}>
             <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0284c7', textTransform: 'uppercase', letterSpacing: 0.5 }}>
               Brand: {brandName}
             </Text>
 
-            <Text style={{ fontSize: 17, fontFamily: FONT.bold, color: '#0f172a', lineHeight: 23 }}>
+            <Text style={{ fontSize: 17, fontFamily: FONT.bold, color: '#ffffff', lineHeight: 23 }}>
               {product.name}
             </Text>
 
@@ -5381,7 +5381,7 @@ function FarmsKingProductDetailModal({
             <View style={{ borderTopWidth: 1, borderTopColor: '#f1f5f9', paddingTop: 10, marginTop: 4, gap: 4 }}>
               <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
                 <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#dc2626' }}>-{discountPercent}%</Text>
-                <Text style={{ fontSize: 26, fontFamily: FONT.extraBold, color: '#0f172a' }}>₹{sellingPrice.toLocaleString('en-IN')}</Text>
+                <Text style={{ fontSize: 26, fontFamily: FONT.extraBold, color: '#ffffff' }}>₹{sellingPrice.toLocaleString('en-IN')}</Text>
                 <Text style={{ fontSize: 13, fontFamily: FONT.medium, color: '#64748b', textDecorationLine: 'line-through' }}>
                   M.R.P.: ₹{mrpPrice.toLocaleString('en-IN')}
                 </Text>
@@ -5425,8 +5425,8 @@ function FarmsKingProductDetailModal({
           </View>
 
           {/* Pack Size Variant Selector */}
-          <View style={{ backgroundColor: '#ffffff', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#e2e8f0', gap: 10, ...premiumShadow('#0f172a', 'sm') }}>
-            <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>
+          <View style={{ backgroundColor: '#1e293b', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#334155', gap: 10, ...premiumShadow('#0f172a', 'sm') }}>
+            <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>
               📦 Select Pack Size Variant:
             </Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -5484,7 +5484,7 @@ function FarmsKingProductDetailModal({
                   { icon: '📦', label: 'Shelf Life', value: shelfLifeInfo || '6 Months' },
                 ].map((item) => (
                   <View key={item.label} style={{ width: '50%', paddingHorizontal: 3, paddingVertical: 3 }}>
-                    <View style={{ backgroundColor: '#ffffff', paddingHorizontal: 8, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#bbf7d0' }}>
+                    <View style={{ backgroundColor: '#1e293b', paddingHorizontal: 8, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#bbf7d0' }}>
                       <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#15803d' }}>{item.icon} {item.label}</Text>
                       <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#14532d', marginTop: 1 }} numberOfLines={1}>{item.value}</Text>
                     </View>
@@ -5493,7 +5493,7 @@ function FarmsKingProductDetailModal({
               </View>
 
               {purityGuarantee ? (
-                <View style={{ backgroundColor: '#ffffff', padding: 6, borderRadius: 6, borderWidth: 1, borderColor: '#bbf7d0' }}>
+                <View style={{ backgroundColor: '#1e293b', padding: 6, borderRadius: 6, borderWidth: 1, borderColor: '#bbf7d0' }}>
                   <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#15803d' }}>🌿 Purity Badges:</Text>
                   <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#14532d', marginTop: 1 }}>{purityGuarantee}</Text>
                 </View>
@@ -5502,13 +5502,13 @@ function FarmsKingProductDetailModal({
           )}
 
           {/* Technical Specifications & SKU Metadata Grid (Compact) */}
-          <View style={{ backgroundColor: '#ffffff', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#e2e8f0', gap: 8, ...premiumShadow('#0f172a', 'sm') }}>
+          <View style={{ backgroundColor: '#1e293b', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#334155', gap: 8, ...premiumShadow('#0f172a', 'sm') }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 6 }}>
-              <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>
+              <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>
                 📋 Product SKU & Specifications
               </Text>
-              <View style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 }}>
-                <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#475569' }}>SKU: {variantSku || mainSkuCode || 'FK-CERTIFIED'}</Text>
+              <View style={{ backgroundColor: '#334155', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 }}>
+                <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#cbd5e1' }}>SKU: {variantSku || mainSkuCode || 'FK-CERTIFIED'}</Text>
               </View>
             </View>
 
@@ -5528,9 +5528,9 @@ function FarmsKingProductDetailModal({
                 { label: 'Dosage / Acre', value: dosageInstructions },
               ].map((item, idx) => (
                 <View key={item.label} style={{ width: '50%', paddingHorizontal: 4, paddingVertical: 4 }}>
-                  <View style={{ backgroundColor: idx % 4 === 0 || idx % 4 === 3 ? '#f8fafc' : '#ffffff', padding: 8, borderRadius: 6, borderWidth: 1, borderColor: '#f1f5f9', height: '100%', justifyContent: 'center' }}>
+                  <View style={{ backgroundColor: idx % 4 === 0 || idx % 4 === 3 ? '#f8fafc' : '#ffffff', padding: 8, borderRadius: 6, borderWidth: 1, borderColor: '#1e293b', height: '100%', justifyContent: 'center' }}>
                     <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b', textTransform: 'uppercase' }}>{item.label}</Text>
-                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0f172a', marginTop: 1 }} numberOfLines={2}>{item.value}</Text>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff', marginTop: 1 }} numberOfLines={2}>{item.value}</Text>
                   </View>
                 </View>
               ))}
@@ -5539,11 +5539,11 @@ function FarmsKingProductDetailModal({
 
           {/* Description & Key Features */}
           {cleanProductDisplayDescription(product.description) ? (
-            <View style={{ backgroundColor: '#ffffff', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#e2e8f0', gap: 8, ...premiumShadow('#0f172a', 'sm') }}>
-              <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>
+            <View style={{ backgroundColor: '#1e293b', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#334155', gap: 8, ...premiumShadow('#0f172a', 'sm') }}>
+              <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>
                 💡 About This Item & Highlights:
               </Text>
-              <Text style={{ fontSize: 12.5, fontFamily: FONT.regular, color: '#334155', lineHeight: 19 }}>
+              <Text style={{ fontSize: 12.5, fontFamily: FONT.regular, color: '#e2e8f0', lineHeight: 19 }}>
                 {cleanProductDisplayDescription(product.description)}
               </Text>
             </View>
@@ -5553,7 +5553,7 @@ function FarmsKingProductDetailModal({
         </ScrollView>
 
         {/* Sticky FarmsKing Bottom Action Bar */}
-        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#ffffff', paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#e2e8f0', flexDirection: 'row', alignItems: 'center', gap: 10, ...premiumShadow('#0f172a', 'md') }}>
+        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#1e293b', paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#e2e8f0', flexDirection: 'row', alignItems: 'center', gap: 10, ...premiumShadow('#0f172a', 'md') }}>
           <TouchableOpacity
             style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#25d366', alignItems: 'center', justifyContent: 'center' }}
             onPress={handleShareWhatsApp}
@@ -5582,7 +5582,7 @@ function FarmsKingProductDetailModal({
               onBuyNow();
             }}
           >
-            <Text style={{ color: '#0f172a', fontSize: 13, fontFamily: FONT.extraBold }}>
+            <Text style={{ color: '#ffffff', fontSize: 13, fontFamily: FONT.extraBold }}>
               ⚡ Buy Now
             </Text>
           </TouchableOpacity>
@@ -5664,7 +5664,7 @@ function ProductCard({
             )}
           </View>
 
-          <Text style={[{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }, isHidden && { color: '#991b1b', textDecorationLine: 'line-through' }]} numberOfLines={1}>
+          <Text style={[{ fontSize: 12.5, fontFamily: FONT.bold, color: '#ffffff' }, isHidden && { color: '#991b1b', textDecorationLine: 'line-through' }]} numberOfLines={1}>
             {product.name}
           </Text>
 
@@ -5824,7 +5824,7 @@ function ProductCard({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: '#0f172a' },
   floatingHeader: {
     alignSelf: 'center',
     width: '100%', backgroundColor: '#0f172a',
@@ -5855,7 +5855,7 @@ const styles = StyleSheet.create({
   sellerAddBtn: { backgroundColor: '#0284c7', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, flexDirection: 'row', alignItems: 'center', gap: 4 },
   sellerAddBtnText: { color: '#ffffff', fontSize: 11, fontFamily: FONT.bold },
 
-  ecomNavBar: { flexDirection: 'row', backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
+  ecomNavBar: { flexDirection: 'row', backgroundColor: '#1e293b', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
   ecomNavItem: { flex: 1, alignItems: 'center', paddingVertical: 9, borderBottomWidth: 2, borderBottomColor: 'transparent' },
   ecomNavItemActive: { borderBottomColor: '#0284c7' },
   ecomNavText: { fontSize: 10, fontFamily: FONT.medium, color: '#64748b' },
@@ -5868,26 +5868,26 @@ const styles = StyleSheet.create({
   analyticsSub: { color: 'rgba(255,255,255,0.75)', fontSize: 9.5, fontFamily: FONT.medium },
 
   kpiRow: { flexDirection: 'row', gap: 10 },
-  kpiBox: { flex: 1, backgroundColor: '#ffffff', borderRadius: 12, padding: 10, alignItems: 'center', gap: 2 },
-  kpiVal: { fontSize: 17, fontFamily: FONT.extraBold, color: '#0f172a' },
+  kpiBox: { flex: 1, backgroundColor: '#1e293b', borderRadius: 12, padding: 10, alignItems: 'center', gap: 2 },
+  kpiVal: { fontSize: 17, fontFamily: FONT.extraBold, color: '#ffffff' },
   kpiLbl: { fontSize: 10, fontFamily: FONT.bold, color: '#64748b' },
 
   tableHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
-  tableHeaderTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
+  tableHeaderTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' },
   tableHeaderCount: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b' },
 
-  mgmtProductCard: { backgroundColor: '#ffffff', borderRadius: 12, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12, },
+  mgmtProductCard: { backgroundColor: '#1e293b', borderRadius: 12, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 12, },
   mgmtProductImg: { width: 44, height: 44, borderRadius: 8 },
   mgmtProductImgPlaceholder: { width: 44, height: 44, borderRadius: 8, backgroundColor: '#e0f2fe', alignItems: 'center', justifyContent: 'center' },
-  mgmtProductName: { fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' },
+  mgmtProductName: { fontSize: 12.5, fontFamily: FONT.bold, color: '#ffffff' },
   mgmtProductMeta: { fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' },
   updatePhotoBtn: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: '#e0f2fe' },
   updatePhotoBtnText: { fontSize: 10, fontFamily: FONT.bold, color: '#0284c7' },
 
-  settingsCard: { backgroundColor: '#ffffff', borderRadius: 12, padding: 14, gap: 12, },
-  settingsCardTitle: { fontSize: 14, fontFamily: FONT.bold, color: '#0f172a' },
+  settingsCard: { backgroundColor: '#1e293b', borderRadius: 12, padding: 14, gap: 12, },
+  settingsCardTitle: { fontSize: 14, fontFamily: FONT.bold, color: '#ffffff' },
   settingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  settingLabel: { fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' },
+  settingLabel: { fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' },
   saveSettingsBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#0284c7', borderRadius: RADIUS.md, paddingVertical: 10, marginTop: 6 },
   saveSettingsBtnText: { fontSize: 12.5, fontFamily: FONT.bold, color: '#ffffff' },
 
@@ -5900,7 +5900,7 @@ const styles = StyleSheet.create({
 
   hero: { paddingTop: 14, paddingBottom: 10, paddingHorizontal: SPACING.md, gap: 10 },
   headerTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  logoBadgeWrap: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#facc15' },
+  logoBadgeWrap: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#1e293b', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#facc15' },
   heroTitle: { color: '#ffffff', fontSize: 19, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
   verifiedTag: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(250, 204, 21, 0.2)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: 'rgba(250, 204, 21, 0.4)' },
   verifiedTagText: { fontSize: 9.5, fontFamily: FONT.bold, color: '#facc15' },
@@ -5909,26 +5909,26 @@ const styles = StyleSheet.create({
   cartIconBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
   cartBadge: { position: 'absolute', top: -3, right: -3, backgroundColor: '#ef4444', minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4, borderWidth: 1.5, borderColor: '#ffffff' },
   cartBadgeText: { color: '#ffffff', fontSize: 9.5, fontFamily: FONT.extraBold },
-  searchBarBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff', borderRadius: RADIUS.md, paddingHorizontal: 12, height: 44, gap: 8, },
-  searchInput: { flex: 1, fontFamily: FONT.regular, fontSize: 13, color: '#0f172a' },
+  searchBarBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1e293b', borderRadius: RADIUS.md, paddingHorizontal: 12, height: 44, gap: 8, },
+  searchInput: { flex: 1, fontFamily: FONT.regular, fontSize: 13, color: '#ffffff' },
   trustRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', backgroundColor: 'rgba(0,0,0,0.25)', paddingVertical: 6, paddingHorizontal: 10, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' },
   trustItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   trustItemText: { fontSize: 10, fontFamily: FONT.bold, color: '#ffffff' },
   trustDivider: { width: 1, height: 12, backgroundColor: 'rgba(255,255,255,0.3)' },
 
-  subTabBar: { backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
+  subTabBar: { backgroundColor: '#1e293b', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
   subTabItem: { flexGrow: 1, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 11, borderBottomWidth: 2, borderBottomColor: 'transparent' },
   subTabItemActive: { borderBottomColor: '#15803d' },
   subTabText: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
   subTabTextActive: { color: '#15803d', fontFamily: FONT.bold },
-  categoryFilterRow: { backgroundColor: '#ffffff', flexGrow: 0, height: 50, minHeight: 50 },
-  filterChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: '#cbd5e1', backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center', minHeight: 34 },
-  filterChipText: { fontSize: 12, fontFamily: FONT.bold, color: '#334155', textAlign: 'center', includeFontPadding: false, lineHeight: 16 },
+  categoryFilterRow: { backgroundColor: '#1e293b', flexGrow: 0, height: 50, minHeight: 50 },
+  filterChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: '#cbd5e1', backgroundColor: '#1e293b', alignItems: 'center', justifyContent: 'center', minHeight: 34 },
+  filterChipText: { fontSize: 12, fontFamily: FONT.bold, color: '#e2e8f0', textAlign: 'center', includeFontPadding: false, lineHeight: 16 },
   grid: { padding: SPACING.md, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10, columnGap: 10, paddingBottom: 170, maxWidth: 1200, width: '100%', alignSelf: 'center' },
   emptyCenter: { width: '100%', alignItems: 'center', justifyContent: 'center', padding: 50, gap: 8 },
   emptyText: { fontSize: 13, fontFamily: FONT.medium, color: '#94a3b8' },
 
-  card: { width: (Platform.OS === 'web' ? 'calc(50% - 6px)' : '48.5%') as any, maxWidth: 280, backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 8, gap: 4, overflow: 'hidden' },
+  card: { width: (Platform.OS === 'web' ? 'calc(50% - 6px)' : '48.5%') as any, maxWidth: 280, backgroundColor: '#1e293b', borderRadius: RADIUS.lg, padding: 8, gap: 4, overflow: 'hidden' },
   cardBadgeRow: { position: 'absolute', top: 6, left: 6, zIndex: 10 },
   certifiedTag: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#fef3c7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: '#fde68a' },
   certifiedTagText: { fontSize: 8.5, fontFamily: FONT.extraBold, color: '#92400e' },
@@ -5936,63 +5936,63 @@ const styles = StyleSheet.create({
   productImagePlaceholder: { backgroundColor: '#dcfce7', alignItems: 'center', justifyContent: 'center' },
   cardContent: { gap: 4, flex: 1, justifyContent: 'space-between' },
   productCategoryTag: { fontSize: 9.5, fontFamily: FONT.bold, color: '#0284c7', textTransform: 'uppercase' },
-  productName: { fontSize: 12, fontFamily: FONT.bold, color: '#0f172a', minHeight: 32, lineHeight: 15 },
+  productName: { fontSize: 12, fontFamily: FONT.bold, color: '#ffffff', minHeight: 32, lineHeight: 15 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 3 },
   productPrice: { fontSize: 14, fontFamily: FONT.extraBold, color: '#166534' },
   productUnit: { fontSize: 9.5, fontFamily: FONT.medium, color: '#64748b' },
 
-  listRowCard: { width: '100%', flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff', borderRadius: RADIUS.md, padding: 8, },
+  listRowCard: { width: '100%', flexDirection: 'row', alignItems: 'center', backgroundColor: '#1e293b', borderRadius: RADIUS.md, padding: 8, },
 
   addBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: '#15803d', paddingVertical: 8, borderRadius: RADIUS.md, marginTop: 4 },
   addBtnActive: { backgroundColor: '#166534' },
-  addBtnDisabled: { backgroundColor: '#e2e8f0' },
+  addBtnDisabled: { backgroundColor: '#475569' },
   addBtnText: { fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' },
 
   cartFooterBanner: { position: 'absolute', bottom: 14, left: 12, right: 12, backgroundColor: '#15803d', borderRadius: RADIUS.lg, paddingVertical: 11, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', ...premiumShadow('#0f172a', 'md') },
-  cartFooterBadge: { backgroundColor: '#ffffff', width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  cartFooterBadge: { backgroundColor: '#1e293b', width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   cartFooterBadgeText: { color: '#15803d', fontSize: 13, fontFamily: FONT.extraBold },
   cartFooterText: { color: '#ffffff', fontSize: 13, fontFamily: FONT.bold },
   cartFooterSub: { color: 'rgba(255,255,255,0.9)', fontSize: 11, fontFamily: FONT.medium },
   cartFooterAction: { color: '#ffffff', fontSize: 12.5, fontFamily: FONT.bold },
 
-  cartItemRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ffffff', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' },
-  qtyBtn: { width: 26, height: 26, borderRadius: 13, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
-  checkoutBox: { backgroundColor: '#ffffff', borderRadius: 12, padding: 14, gap: 10, marginTop: 10 },
+  cartItemRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#1e293b', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#334155' },
+  qtyBtn: { width: 26, height: 26, borderRadius: 13, backgroundColor: '#334155', alignItems: 'center', justifyContent: 'center' },
+  checkoutBox: { backgroundColor: '#1e293b', borderRadius: 12, padding: 14, gap: 10, marginTop: 10 },
   payMethodBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 9, borderRadius: 8, borderWidth: 1, borderColor: '#cbd5e1' },
   payMethodBtnActive: { backgroundColor: '#15803d', borderColor: '#166534' },
-  payMethodText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#334155' },
+  payMethodText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#e2e8f0' },
   placeOrderBtn: { backgroundColor: '#15803d', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 8 },
   placeOrderBtnText: { color: '#ffffff', fontSize: 14, fontFamily: FONT.bold },
 
-  qrBox: { padding: 14, backgroundColor: '#ffffff', borderRadius: RADIUS.lg, marginVertical: 6 },
+  qrBox: { padding: 14, backgroundColor: '#1e293b', borderRadius: RADIUS.lg, marginVertical: 6 },
   upiCopyBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#f0fdf4', paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#bbf7d0' },
   copyBtn: { backgroundColor: '#15803d', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, flexDirection: 'row', alignItems: 'center', gap: 4 },
 
   modalOverlay: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(15, 23, 42, 0.65)', justifyContent: 'center', alignItems: 'center', padding: 20, zIndex: 999 },
-  modalContent: { width: '100%', maxWidth: 460, backgroundColor: '#ffffff', borderRadius: RADIUS.xl, padding: SPACING.lg },
+  modalContent: { width: '100%', maxWidth: 460, backgroundColor: '#1e293b', borderRadius: RADIUS.xl, padding: SPACING.lg },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  modalTitle: { fontSize: 14.5, fontFamily: FONT.bold, color: '#0f172a' },
-  inputLabel: { fontSize: 11, fontFamily: FONT.bold, color: '#334155', marginTop: 8, marginBottom: 3 },
-  modalInput: { borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 7, fontSize: 12.5, color: '#0f172a', backgroundColor: '#f8fafc' },
+  modalTitle: { fontSize: 14.5, fontFamily: FONT.bold, color: '#ffffff' },
+  inputLabel: { fontSize: 11, fontFamily: FONT.bold, color: '#e2e8f0', marginTop: 8, marginBottom: 3 },
+  modalInput: { borderWidth: 1.5, borderColor: '#334155', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 7, fontSize: 12.5, color: '#ffffff', backgroundColor: '#0f172a' },
   errorText: { fontSize: 11, fontFamily: FONT.bold, color: '#dc2626', marginTop: 8 },
   modalSubmitBtn: { marginTop: 14, borderRadius: RADIUS.md, paddingVertical: 11, backgroundColor: '#15803d', alignItems: 'center' },
   modalSubmitText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill },
   badgeText: { fontSize: 9, fontFamily: FONT.extraBold },
 
-  maintenanceContainer: { flex: 1, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center' },
+  maintenanceContainer: { flex: 1, backgroundColor: '#0f172a', justifyContent: 'center', alignItems: 'center' },
   maintenanceContent: { paddingHorizontal: 20, paddingVertical: 32, alignItems: 'center', maxWidth: 520, width: '100%', gap: 14 },
   maintenanceHeaderBanner: { width: '100%', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f0fdf4', borderRadius: RADIUS.xl, padding: 16, borderWidth: 1.5, borderColor: '#bbf7d0' },
   maintenanceImg: { width: '100%', height: 210 },
   maintenanceBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#fef2f2', borderWidth: 1.5, borderColor: '#fca5a5', paddingHorizontal: 14, paddingVertical: 6, borderRadius: RADIUS.pill },
   maintenanceBadgeText: { fontSize: 11, fontFamily: FONT.extraBold, color: '#dc2626', letterSpacing: 0.6 },
-  maintenanceTitle: { fontSize: 22, fontFamily: FONT.extraBold, color: '#0f172a', textAlign: 'center', letterSpacing: -0.4 },
+  maintenanceTitle: { fontSize: 22, fontFamily: FONT.extraBold, color: '#ffffff', textAlign: 'center', letterSpacing: -0.4 },
   maintenanceSubPunjabi: { fontSize: 14, fontFamily: FONT.extraBold, color: '#15803d', textAlign: 'center', lineHeight: 21, backgroundColor: '#dcfce7', paddingHorizontal: 14, paddingVertical: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#86efac' },
   maintenanceSub: { fontSize: 12.5, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center', lineHeight: 19 },
   teaserStack: { width: '100%', gap: 10, marginVertical: 4 },
-  teaserItem: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#ffffff', padding: 12, borderRadius: RADIUS.lg, ...premiumShadow('#0f172a', 'sm') },
+  teaserItem: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#1e293b', padding: 12, borderRadius: RADIUS.lg, ...premiumShadow('#0f172a', 'sm') },
   teaserIconCircle: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  teaserTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
+  teaserTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' },
   teaserSub: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
   maintenanceBox: { width: '100%', flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#f0f9ff', borderRadius: RADIUS.lg, padding: 12, marginTop: 4 },
   pulseDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#0284c7' },
@@ -6027,7 +6027,7 @@ function HotDealPopupModal({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={{ flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.75)', justifyContent: 'center', alignItems: 'center', padding: 16 }}>
-        <View style={{ width: '100%', maxWidth: 440, backgroundColor: '#ffffff', borderRadius: 20, overflow: 'hidden', borderWidth: 2, borderColor: '#ea580c', ...premiumShadow('#0f172a', 'md') }}>
+        <View style={{ width: '100%', maxWidth: 440, backgroundColor: '#1e293b', borderRadius: 20, overflow: 'hidden', borderWidth: 2, borderColor: '#ea580c', ...premiumShadow('#0f172a', 'md') }}>
           
           {/* Fire Orange Gradient Header */}
           <LinearGradient colors={['#ea580c', '#c2410c']} style={{ paddingVertical: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -6083,13 +6083,13 @@ function HotDealPopupModal({
               <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#0284c7', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 {(featuredProduct as any).brand || 'FarmsKing Certified Hot Sale'}
               </Text>
-              <Text style={{ fontSize: 15.5, fontFamily: FONT.bold, color: '#0f172a', textAlign: 'center' }} numberOfLines={2}>
+              <Text style={{ fontSize: 15.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'center' }} numberOfLines={2}>
                 {featuredProduct.name}
               </Text>
             </View>
 
             {/* Pricing Section */}
-            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 10, backgroundColor: '#f8fafc', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 10, backgroundColor: '#0f172a', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: '#334155' }}>
               <Text style={{ fontSize: 24, fontFamily: FONT.extraBold, color: '#16a34a' }}>
                 ₹{sellingPrice.toLocaleString('en-IN')}
               </Text>
@@ -6125,7 +6125,7 @@ function HotDealPopupModal({
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={{ backgroundColor: '#f1f5f9', paddingVertical: 9, borderRadius: 10, alignItems: 'center', justifyContent: 'center' }}
+                style={{ backgroundColor: '#334155', paddingVertical: 9, borderRadius: 10, alignItems: 'center', justifyContent: 'center' }}
                 onPress={() => {
                   tap();
                   onClose();

@@ -27,11 +27,8 @@ export default function ContactUsPage() {
           <Text style={styles.title}>Get in Touch</Text>
           <Text style={styles.subtitle}>We would love to hear from you. Reach out to our agricultural experts!</Text>
 
-          {isLoading ? (
-            <ActivityIndicator size="large" color="#10b981" style={{ marginTop: 40 }} />
-          ) : (
-            <View style={styles.contactGrid}>
-              
+          <View style={styles.contactGrid}>
+            
               <View style={styles.contactCard}>
                 <View style={styles.iconCircle}>
                   <Ionicons name="call" size={24} color="#10b981" />
@@ -69,7 +66,6 @@ export default function ContactUsPage() {
               </View>
 
             </View>
-          )}
         </View>
       </ScrollView>
     </View>

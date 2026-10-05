@@ -76,20 +76,6 @@ function AnimatedCropAsset({ imgSrc, style, label, index = 0 }: { imgSrc: any, s
   );
 }
 
-const AnimatedSmartText = ({ inHeader = false }: { inHeader?: boolean }) => {
-  return (
-    <View style={[styles.smartBadgeContainer, inHeader && { marginBottom: 0, marginLeft: 16 }]}>
-      <LinearGradient
-        colors={['#10b981', '#059669', '#047857']}
-        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-        style={[styles.smartBadgeGradient, inHeader && { paddingVertical: 6, paddingHorizontal: 12 }]}
-      >
-        <Ionicons name="sparkles" size={14} color="#ecfdf5" style={{ marginRight: 6 }} />
-        <Text style={[styles.smartBadgeText, inHeader && { fontSize: 11 }]}>SMART FARMING PLATFORM</Text>
-      </LinearGradient>
-    </View>
-  );
-};
 
 export default function PublicLandingPage() {
   const router = useRouter();
@@ -120,7 +106,6 @@ export default function PublicLandingPage() {
         
         {/* TOP TEXT AREA */}
         <View style={styles.heroTextContainer}>
-          <AnimatedSmartText />
           <Text style={[styles.heroTitle, !isDesktop && styles.heroTitleMobile]}>
             Revolutionizing Indian Agriculture
           </Text>

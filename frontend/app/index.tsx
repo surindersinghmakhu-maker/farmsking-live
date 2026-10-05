@@ -179,9 +179,12 @@ export default function PublicLandingPage() {
 
 function GlassCard({ imgSrcs, title, desc }: { imgSrcs: any[], title: string, desc: string }) {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isMobile = width <= 768;
+  const cardWidth = isMobile ? (width / 2) - 24 : 175;
   
   return (
-    <View style={styles.glassCard}>
+    <View style={[styles.glassCard, { width: cardWidth }]}>
       <View style={styles.glassCardTopRow}>
         <View style={{ flexDirection: 'row', gap: 12 }}>
           {imgSrcs.map((src, idx) => (
@@ -351,9 +354,12 @@ const styles = StyleSheet.create({
     paddingTop: 40,
   },
   cardsRowMobile: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    paddingTop: 40,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'stretch',
+    justifyContent: 'center',
+    paddingTop: 30,
+    gap: 12,
   },
   glassCard: {
     backgroundColor: 'rgba(20, 30, 45, 0.65)',

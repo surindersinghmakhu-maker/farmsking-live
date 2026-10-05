@@ -58,7 +58,7 @@ async function bootstrap() {
   });
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   app.use(compression({ level: 6, threshold: 256 }));
-  const allowedOrigins = corsOrigins ? corsOrigins.split(',') : ['https://farmsking.in'];
+  const allowedOrigins = corsOrigins === '*' ? true : (corsOrigins ? corsOrigins.split(',') : ['https://farmsking.in']);
   app.enableCors({
     origin: allowedOrigins,
     credentials: true,

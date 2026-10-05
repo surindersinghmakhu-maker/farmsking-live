@@ -49,7 +49,8 @@ function RootNavigation() {
     if (isLoading) return;
     const currentGroup = segments[0] as string;
     const inAuthGroup = currentGroup === '(auth)';
-    const isPublicRoute = currentGroup === 'seo' || currentGroup === 'dose' || currentGroup === 'doses' || currentGroup === 'my' || currentGroup === 'you';
+    const isRootRoute = segments.length === 0 || (segments.length === 1 && segments[0] === 'index');
+    const isPublicRoute = isRootRoute || currentGroup === 'topic' || currentGroup === 'seo' || currentGroup === 'dose' || currentGroup === 'doses' || currentGroup === 'my' || currentGroup === 'you' || currentGroup === 'shop' || currentGroup === 'support' || currentGroup === 'contact-us';
     const isStaffSetupRoute = segments.join('/') === 'staff-profile-setup';
 
     const STAFF_ROLES = ['TECHNICAL_TRAINER', 'FARM_ADVISOR', 'DOCTOR'];
@@ -73,7 +74,7 @@ function RootNavigation() {
       } else if (currentGroup === '(partner)') {
         const hasPartnerAccess = userRoles.some(r => ['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(r));
         if (!hasPartnerAccess) router.replace('/(user)/(tabs)');
-      } else if (inAuthGroup) {
+      } else if (inAuthGroup || isRootRoute) {
         if (['SUPER_ADMIN', 'ADMIN', 'OPERATOR'].includes(user.role)) {
           router.replace('/(admin)/(tabs)');
         } else if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user.role)) {
@@ -91,11 +92,15 @@ function RootNavigation() {
 
   return (
     <Stack>
+      <Stack.Screen name="index" options={{ headerShown: false, title: 'FarmsKing - India\'s Agriculture Platform' }} />
       <Stack.Screen name="(admin)" options={{ headerShown: false, title: 'FarmsKing Admin' }} />
       <Stack.Screen name="(partner)" options={{ headerShown: false, title: 'FarmsKing Partner' }} />
       <Stack.Screen name="(user)" options={{ headerShown: false, title: 'FarmsKing' }} />
       <Stack.Screen name="(auth)" options={{ headerShown: false, title: 'FarmsKing Login' }} />
       <Stack.Screen name="seo" options={{ headerShown: false, title: 'FarmsKing' }} />
+      <Stack.Screen name="shop" options={{ headerShown: false, title: 'FarmsKing Store' }} />
+      <Stack.Screen name="support" options={{ headerShown: false, title: 'FarmsKing Support' }} />
+      <Stack.Screen name="contact-us" options={{ headerShown: false, title: 'Contact Us' }} />
       <Stack.Screen name="dose" options={{ headerShown: false, title: 'FarmsKing' }} />
       <Stack.Screen name="doses" options={{ headerShown: false, title: 'FarmsKing' }} />
       <Stack.Screen name="my" options={{ headerShown: false, title: 'FarmsKing' }} />
@@ -105,6 +110,7 @@ function RootNavigation() {
       <Stack.Screen name="staff-profile-setup" options={{ headerShown: false, title: 'Staff Profile Setup' }} />
       <Stack.Screen name="crop-intelligence" options={{ headerShown: false, title: 'FarmsKing AI' }} />
       <Stack.Screen name="admin-sellers" options={{ headerShown: false, title: 'FarmsKing' }} />
+      <Stack.Screen name="topic/[id]" options={{ headerShown: false, title: 'FarmsKing Topic' }} />
       <Stack.Screen name="+not-found" options={{ title: 'Not Found' }} />
     </Stack>
   );

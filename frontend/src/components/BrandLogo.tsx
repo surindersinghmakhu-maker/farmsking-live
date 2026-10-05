@@ -74,7 +74,16 @@ export function BrandLogo({
   return (
     <Image
       source={finalSource}
-      style={[{ width: size, height: size }, style as StyleProp<ImageStyle>]}
+      style={[
+        { 
+          width: size, 
+          height: size, 
+          backgroundColor: 'transparent',
+          borderRadius: size / 2,
+          overflow: 'hidden'
+        }, 
+        style as StyleProp<ImageStyle>
+      ]}
       resizeMode="contain"
       onError={() => {
         setImageError(true);

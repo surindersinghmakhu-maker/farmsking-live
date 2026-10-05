@@ -21,11 +21,10 @@ import { useAuth } from '@/src/store/auth-context';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { BrandLogo } from '@/src/components/BrandLogo';
-import { CaptchaChallenge, CaptchaRef } from '@/src/components/CaptchaChallenge';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const GOOGLE_CLIENT_ID = '526414717221-j7s76lkacilevmucm0npnehrnqtqu0f3.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '742233980320-ito7h8q3iq5vdon6b93qc08q5l8c3v9v.apps.googleusercontent.com';
 
 const discovery = {
   authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
@@ -36,10 +35,9 @@ const discovery = {
 type LoginTab = 'password' | 'otp';
 
 export default function LoginScreen() {
-  const { login, sendLoginOtp, otpLogin, googleLogin } = useAuth();
+  const { login, sendLoginOtp, otpLogin, firebaseLogin, googleLogin } = useAuth();
   const { data: appSettings } = useAppSettings();
   const router = useRouter();
-  const captchaRef = useRef<CaptchaRef>(null);
   const otpInputRef = useRef<TextInput>(null);
 
   const [activeTab, setActiveTab] = useState<LoginTab>('password');
@@ -65,6 +63,48 @@ export default function LoginScreen() {
     return () => clearTimeout(t);
   }, [resendTimer]);
 
+  // Robust ReCaptcha Initialization
+  // The verifier is created ONCE and only reset after a failed attempt.
+  // Destroying its DOM node while Google's script is still running causes
+  // "Cannot read properties of null (reading 'style')".
+  const initRecaptcha = () => {
+    if (Platform.OS !== 'web') return;
+    try {
+      const container = document.getElementById('recaptcha-container');
+      if (!container) return;
+      const existing = (window as any).recaptchaVerifier;
+      if (existing && (window as any).recaptchaContainer === container) return;
+      if (existing) {
+        try { existing.clear(); } catch (e) {}
+        (window as any).recaptchaVerifier = null;
+      }
+      container.innerHTML = ''; // leftovers from a hot reload
+      (window as any).recaptchaContainer = container;
+      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, container, {
+        size: 'invisible',
+        callback: () => {},
+      });
+    } catch (e) {
+      console.warn('ReCaptcha init error:', e);
+    }
+  };
+
+  const resetRecaptcha = async () => {
+    if (Platform.OS !== 'web') return;
+    try {
+      const verifier = (window as any).recaptchaVerifier;
+      if (!verifier) return;
+      const widgetId = await verifier.render();
+      (window as any).grecaptcha?.reset(widgetId);
+    } catch (e) {
+      console.warn('ReCaptcha reset error:', e);
+    }
+  };
+
+  useEffect(() => {
+    initRecaptcha();
+  }, []);
+
   useEffect(() => {
     setOtpSent(false);
     setOtpCode('');
@@ -76,7 +116,7 @@ export default function LoginScreen() {
 
   const redirectUri = AuthSession.makeRedirectUri(
     Platform.OS === 'web'
-      ? { useProxy: false }
+      ? ({ useProxy: false } as any)
       : { scheme: 'farmsking', path: 'auth' }
   );
 
@@ -115,12 +155,13 @@ export default function LoginScreen() {
             name: userInfo.name || userInfo.given_name || userInfo.email.split('@')[0],
             photoUrl: userInfo.picture,
             googleId: userInfo.sub,
+            accessToken: response.authentication!.accessToken,
           });
 
           if (res?.isProfileIncomplete) {
             router.replace('/farmer-profile-setup');
           } else {
-            router.replace('/(tabs)');
+            router.replace('/(tabs)' as any);
           }
         } catch (err: any) {
           setError(err?.response?.data?.message ?? err?.message ?? 'Google Sign-In failed.');
@@ -169,24 +210,22 @@ export default function LoginScreen() {
       if (Platform.OS === 'web') {
         const fullPhone = `+91${cleanNum}`;
         try {
-          if (!(window as any).recaptchaVerifier) {
-            (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-              size: 'invisible',
-              callback: () => {},
-            });
-          }
+          initRecaptcha();
           const verifier = (window as any).recaptchaVerifier;
+          
           const result = await signInWithPhoneNumber(auth, fullPhone, verifier);
           setConfirmationResult(result);
         } catch (firebaseErr: any) {
-          console.warn('[Firebase Auth Phone OTP]:', firebaseErr?.message);
+          console.warn('[Firebase Auth Phone OTP]:', firebaseErr?.code, firebaseErr?.message);
+          // Token was consumed - reset widget so the next attempt gets a fresh one
+          await resetRecaptcha();
+          
+          throw new Error(`Firebase Error: ${firebaseErr?.message || 'Failed to send SMS'}`);
         }
       }
 
-      const res = await sendLoginOtp(cleanNum);
       setOtpSent(true);
       setResendTimer(60);
-      setDevOtp(res.devOtp || null);
       setTimeout(() => otpInputRef.current?.focus(), 300);
     } catch (err: any) {
       const isNet = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
@@ -210,14 +249,13 @@ export default function LoginScreen() {
     setIsSubmitting(true);
     try {
       if (confirmationResult) {
-        try {
-          await confirmationResult.confirm(cleanCode);
-        } catch (confirmErr: any) {
-          console.warn('[Firebase Auth Confirm Warning]:', confirmErr?.message);
-        }
+        const credential = await confirmationResult.confirm(cleanCode);
+        const idToken = await credential.user.getIdToken();
+        await firebaseLogin(idToken);
+        router.replace('/(tabs)' as any);
+      } else {
+        throw new Error('Firebase Confirmation Result is missing. Please request a new OTP.');
       }
-      await otpLogin({ mobile: mobile.trim(), otp: cleanCode });
-      router.replace('/(tabs)');
     } catch (err: any) {
       const isNet = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
       setError(isNet
@@ -233,16 +271,11 @@ export default function LoginScreen() {
     setError(null);
     if (!mobile.trim()) { setError('Please enter your 10-digit mobile number.'); return; }
     if (!password.trim()) { setError('Please enter your password.'); return; }
-    if (captchaRef.current && !captchaRef.current.validate()) {
-      setError('Invalid Captcha! Please enter the correct code shown below.');
-      return;
-    }
     setIsSubmitting(true);
     try {
       await login({ mobile: mobile.trim(), password: password.trim() });
-      router.replace('/(tabs)');
+      router.replace('/(tabs)' as any);
     } catch (err: any) {
-      captchaRef.current?.refresh();
       const isNet = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
       setError(isNet
         ? 'Network error! Could not connect. Please check your internet.'
@@ -260,7 +293,7 @@ export default function LoginScreen() {
         {/* Hero Banner */}
         <LinearGradient colors={['#16a34a', '#15803d', '#0f766e']} style={styles.heroBanner}>
           <View style={styles.brandBox}>
-            <BrandLogo size={56} useHdQuality style={{ marginBottom: 8 }} />
+            <BrandLogo size={48} useHdQuality style={{ marginBottom: 6 }} />
             <Text style={styles.brandName}>FarmsKing</Text>
             <Text style={styles.brandTagline}>Smart Agriculture & Farm Management</Text>
           </View>
@@ -272,37 +305,7 @@ export default function LoginScreen() {
           <Text style={styles.subtitle}>Sign in to your FarmsKing account</Text>
 
           {/* Invisible Recaptcha container for Firebase Auth */}
-          <div id="recaptcha-container" />
-
-          {/* ─── Google Sign-In Button ─── */}
-          <TouchableOpacity
-            style={[styles.googleBtn, (!request || googleLoading) && styles.googleBtnDisabled]}
-            onPress={handleGoogleSignIn}
-            disabled={!request || googleLoading || isSubmitting}
-            activeOpacity={0.88}
-          >
-            {googleLoading ? (
-              <ActivityIndicator color="#4285F4" size="small" />
-            ) : (
-              <>
-                <View style={styles.googleIconBox}>
-                  <Text style={styles.googleG}>G</Text>
-                </View>
-                <Text style={styles.googleBtnText}>Continue with Google</Text>
-              </>
-            )}
-          </TouchableOpacity>
-
-          <Text style={styles.googleHint}>
-            🔐 Select your Google account to log in instantly without a password!
-          </Text>
-
-          {/* OR Divider */}
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR login with mobile</Text>
-            <View style={styles.dividerLine} />
-          </View>
+          <div id="recaptcha-container"></div>
 
           {/* ─── Login Method Tabs ─── */}
           <View style={styles.tabRow}>
@@ -320,7 +323,7 @@ export default function LoginScreen() {
               activeOpacity={0.8}
             >
               <Ionicons name="phone-portrait-outline" size={15} color={activeTab === 'otp' ? '#16a34a' : '#94a3b8'} />
-              <Text style={[styles.tabText, activeTab === 'otp' && styles.tabTextActive]}>Firebase SMS OTP</Text>
+              <Text style={[styles.tabText, activeTab === 'otp' && styles.tabTextActive]}>OTP</Text>
             </TouchableOpacity>
           </View>
 
@@ -371,9 +374,6 @@ export default function LoginScreen() {
                 </TouchableOpacity>
               </View>
 
-              {/* Captcha */}
-              <CaptchaChallenge ref={captchaRef} onValueChange={() => {}} onSubmitEditing={onSubmit} />
-
               {/* Forgot Password */}
               <TouchableOpacity style={styles.forgotLink} activeOpacity={0.7} onPress={() => router.push('/(auth)/forgot-password')}>
                 <Text style={styles.forgotText}>Forgot Password?</Text>
@@ -386,9 +386,6 @@ export default function LoginScreen() {
             <>
               {!otpSent ? (
                 <>
-                  <Text style={styles.otpHint}>
-                    📱 A 6-digit SMS OTP will be sent to your phone via Firebase Auth. Log in instantly without a password!
-                  </Text>
                   <TouchableOpacity
                     onPress={handleSendOtp}
                     disabled={otpSending || !mobile.trim()}
@@ -401,7 +398,7 @@ export default function LoginScreen() {
                       ) : (
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                           <Ionicons name="paper-plane" size={18} color="#ffffff" />
-                          <Text style={styles.buttonText}>Send Firebase SMS OTP</Text>
+                          <Text style={styles.buttonText}>Send OTP</Text>
                         </View>
                       )}
                     </LinearGradient>
@@ -410,7 +407,7 @@ export default function LoginScreen() {
               ) : (
                 <>
                   <Text style={styles.otpSentMsg}>
-                    ✅ 6-digit SMS OTP sent to +91 {mobile} via Firebase Auth
+                    ✅ OTP sent to +91 {mobile}
                   </Text>
 
                   {devOtp && (
@@ -491,7 +488,30 @@ export default function LoginScreen() {
             </TouchableOpacity>
           ) : null}
 
-          {/* Register Card */}
+          {/* OR Divider for Google */}
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* Small Google Icon Button */}
+          <View style={styles.socialRow}>
+            <TouchableOpacity
+              style={[styles.googleIconBtn, (!request || googleLoading) && styles.googleBtnDisabled]}
+              onPress={handleGoogleSignIn}
+              disabled={!request || googleLoading || isSubmitting}
+              activeOpacity={0.88}
+            >
+              {googleLoading ? (
+                <ActivityIndicator color="#4285F4" size="small" />
+              ) : (
+                <Text style={styles.googleG}>G</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Register Highlight Row */}
           <View style={styles.registerHighlightCard}>
             <Text style={styles.registerHighlightText}>New to FarmsKing?</Text>
             <TouchableOpacity
@@ -499,8 +519,8 @@ export default function LoginScreen() {
               onPress={() => router.push('/(auth)/register')}
               activeOpacity={0.85}
             >
-              <Ionicons name="person-add" size={18} color="#ffffff" />
-              <Text style={styles.registerHighlightBtnText}>Create New Account / Register Now ✨</Text>
+              <Text style={styles.registerHighlightBtnText}>Create Account</Text>
+              <Ionicons name="arrow-forward" size={14} color="#16a34a" />
             </TouchableOpacity>
           </View>
 
@@ -514,11 +534,11 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f1f5f9' },
   scroll: { flexGrow: 1, paddingBottom: 32 },
   heroBanner: {
-    paddingTop: Platform.OS === 'web' ? 18 : 44,
-    paddingBottom: 32,
+    paddingTop: Platform.OS === 'web' ? 12 : 36,
+    paddingBottom: 24,
     paddingHorizontal: SPACING.md,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
     alignItems: 'center',
   },
   brandBox: { alignItems: 'center', marginTop: 2 },
@@ -536,51 +556,33 @@ const styles = StyleSheet.create({
   title: { fontSize: 20, fontFamily: FONT.extraBold, color: '#0f172a', letterSpacing: -0.3, marginBottom: 2 },
   subtitle: { fontSize: 12, color: '#64748b', fontFamily: FONT.medium, marginBottom: 14 },
 
-  googleBtn: {
+  socialRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  googleIconBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: '#ffffff',
     borderWidth: 1.5,
     borderColor: '#dadce0',
-    borderRadius: RADIUS.md,
-    paddingVertical: 11,
-    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
-    marginBottom: 2,
   },
   googleBtnDisabled: { opacity: 0.7 },
-  googleIconBox: {
-    width: 26, height: 26,
-    borderRadius: 13,
-    backgroundColor: '#fff',
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: '#e2e8f0',
-  },
   googleG: {
-    fontSize: 15,
+    fontSize: 22,
     fontFamily: FONT.extraBold,
     color: '#4285F4',
-    lineHeight: 20,
-  },
-  googleBtnText: {
-    fontSize: 14,
-    fontFamily: FONT.bold,
-    color: '#3c4043',
-    letterSpacing: 0.1,
-  },
-  googleHint: {
-    fontSize: 11,
-    fontFamily: FONT.medium,
-    color: '#16a34a',
-    textAlign: 'center',
-    marginTop: 5,
-    marginBottom: 2,
+    lineHeight: 28,
   },
 
   dividerRow: { flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 14, gap: 8 },
@@ -632,19 +634,6 @@ const styles = StyleSheet.create({
   forgotLink: { alignSelf: 'flex-end', marginTop: 6 },
   forgotText: { color: '#16a34a', fontSize: 11.5, fontFamily: FONT.bold },
 
-  otpHint: {
-    fontSize: 12,
-    fontFamily: FONT.medium,
-    color: '#0369a1',
-    backgroundColor: '#f0f9ff',
-    borderWidth: 1,
-    borderColor: '#bae6fd',
-    borderRadius: RADIUS.md,
-    padding: 10,
-    marginTop: 8,
-    textAlign: 'center',
-    lineHeight: 18,
-  },
   sendOtpBtn: {
     width: '100%',
     marginTop: 12,
@@ -698,15 +687,33 @@ const styles = StyleSheet.create({
   buttonText: { color: '#ffffff', fontSize: 14, fontFamily: FONT.bold },
 
   registerHighlightCard: {
-    marginTop: 14,
-    backgroundColor: '#f0fdf4', borderWidth: 1.5, borderColor: '#86efac',
-    borderRadius: RADIUS.md, padding: 10, alignItems: 'center', gap: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 20,
+    backgroundColor: '#f0fdf4',
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+    borderRadius: RADIUS.md,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
   },
-  registerHighlightText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#166534' },
+  registerHighlightText: { fontSize: 12.5, fontFamily: FONT.medium, color: '#166534' },
   registerHighlightBtn: {
-    width: '100%', backgroundColor: '#16a34a',
-    paddingVertical: 9, borderRadius: RADIUS.md,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#ffffff',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    borderColor: '#86efac',
+    shadowColor: '#16a34a',
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
   },
-  registerHighlightBtnText: { color: '#ffffff', fontSize: 13, fontFamily: FONT.extraBold },
+  registerHighlightBtnText: { color: '#16a34a', fontSize: 12, fontFamily: FONT.bold },
 });

@@ -58,7 +58,7 @@ export default function StaffProfileSetupScreen() {
   const [saving, setSaving] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const isAlreadySubmitted = !!(user as any)?.staffProfileSubmitted;
+  const isAlreadySubmitted = !!(user as any)?.staffProfileSubmitted || user?.profileStatus === 'UNDER_REVIEW' || user?.profileStatus === 'APPROVED';
 
   const handleSubmit = async () => {
     if (!fullName.trim()) return alert('Please enter your full name.');

@@ -59,7 +59,7 @@ function RootNavigation() {
     } else if (user) {
       const userRoles = [user.role, ...(user.roles || [])];
       const isStaff = STAFF_ROLES.includes(user.role);
-      const profileSubmitted = !!(user as any).staffProfileSubmitted;
+      const profileSubmitted = !!(user as any).staffProfileSubmitted || user.profileStatus === 'UNDER_REVIEW' || user.profileStatus === 'APPROVED';
 
       // Redirect unsubmitted staff to profile setup
       if (isStaff && !profileSubmitted && !isStaffSetupRoute && !inAuthGroup) {

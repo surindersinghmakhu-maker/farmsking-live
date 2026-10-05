@@ -293,7 +293,7 @@ export default function LoginScreen() {
         {/* Hero Banner */}
         <LinearGradient colors={['#16a34a', '#15803d', '#0f766e']} style={styles.heroBanner}>
           <TouchableOpacity 
-            style={{ position: 'absolute', top: 20, left: 20, flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 }}
+            style={{ position: 'absolute', top: 20, left: 20, zIndex: 10, flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 }}
             onPress={() => router.push('/')}
           >
             <Ionicons name="home" size={14} color="#fff" />

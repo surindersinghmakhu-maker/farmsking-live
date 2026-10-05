@@ -113,34 +113,7 @@ export default function TopicPage() {
           </TouchableOpacity>
         </View>
 
-        {isLoading ? (
-          <ActivityIndicator size="large" color="#10b981" style={{ marginTop: 50 }} />
-        ) : (
-          <View style={styles.gridContainer}>
-            {filteredProducts.map(product => (
-              <View key={product.id} style={styles.productCard}>
-                {product.images && product.images[0] ? (
-                  <Image source={{ uri: product.images[0] }} style={styles.productImage} />
-                ) : (
-                  <View style={[styles.productImage, { backgroundColor: '#334155', justifyContent: 'center', alignItems: 'center' }]}>
-                    <Ionicons name="image-outline" size={32} color="#94a3b8" />
-                  </View>
-                )}
-                <View style={styles.productInfo}>
-                  <Text style={styles.productName} numberOfLines={1}>{product.name}</Text>
-                  <Text style={styles.productCategory}>{product.category}</Text>
-                  <Text style={styles.productPrice}>₹{product.price}</Text>
-                  <TouchableOpacity 
-                    style={styles.buyBtn} 
-                    onPress={() => router.push('/shop')}
-                  >
-                    <Text style={styles.buyBtnText}>View in Store</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
+
       </ScrollView>
     </View>
   );

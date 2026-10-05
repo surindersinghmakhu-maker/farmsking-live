@@ -49,7 +49,7 @@ function RootNavigation() {
     if (isLoading) return;
     const currentGroup = segments[0] as string;
     const inAuthGroup = currentGroup === '(auth)';
-    const isRootRoute = segments.length === 0 || (segments.length === 1 && segments[0] === 'index');
+    const isRootRoute = segments.length === 0 || (segments.length === 1 && (segments[0] === 'index' || segments[0] === ''));
     const isPublicRoute = isRootRoute || currentGroup === 'topic' || currentGroup === 'seo' || currentGroup === 'dose' || currentGroup === 'doses' || currentGroup === 'my' || currentGroup === 'you' || currentGroup === 'shop' || currentGroup === 'support' || currentGroup === 'contact-us';
     const isStaffSetupRoute = segments.join('/') === 'staff-profile-setup';
 

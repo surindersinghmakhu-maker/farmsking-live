@@ -558,7 +558,7 @@ const styles = StyleSheet.create({
   cardDesktop: {
     width: '100%',
     maxWidth: 480,
-    marginHorizontal: 'auto' as any,
+    alignSelf: 'center',
     marginTop: -28,
     borderRadius: 24,
     padding: 28,

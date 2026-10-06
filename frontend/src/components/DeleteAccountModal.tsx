@@ -16,6 +16,7 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
   const { user, logout } = useAuth();
   const [mobileInput, setMobileInput] = useState('');
   const [otpInput, setOtpInput] = useState('');
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState('');
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -28,6 +29,7 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
     if (visible) {
       setMobileInput('');
       setOtpInput('');
+      setDeleteConfirmInput('');
       setConfirmationResult(null);
       setOtpSent(false);
       setErrorMsg(null);
@@ -79,6 +81,11 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
   const handleVerifyAndDelete = async () => {
     if (!otpInput.trim() || otpInput.trim().length !== 6) {
       setErrorMsg('Please enter a valid 6-digit OTP.');
+      return;
+    }
+
+    if (deleteConfirmInput.trim().toLowerCase() !== 'delete') {
+      setErrorMsg('Please type "delete" to confirm.');
       return;
     }
 
@@ -194,6 +201,24 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
                   </View>
                 </View>
 
+                <View>
+                  <Text style={styles.label}>3. Type "delete" to confirm *</Text>
+                  <View style={styles.inputWrap}>
+                    <Ionicons name="text-outline" size={17} color="#94a3b8" style={{ marginRight: 6 }} />
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="Type delete"
+                      placeholderTextColor="#94a3b8"
+                      autoCapitalize="none"
+                      value={deleteConfirmInput}
+                      onChangeText={(t) => {
+                        setDeleteConfirmInput(t);
+                        setErrorMsg(null);
+                      }}
+                    />
+                  </View>
+                </View>
+
                 {errorMsg ? (
                   <View style={styles.errorBox}>
                     <Ionicons name="alert-circle" size={16} color="#dc2626" />
@@ -206,7 +231,7 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
                     <Text style={styles.cancelBtnText}>Cancel</Text>
                   </TouchableOpacity>
 
-                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#dc2626' }]} onPress={handleVerifyAndDelete} disabled={isVerifying || isDeletingAccount || otpInput.length !== 6}>
+                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#dc2626' }]} onPress={handleVerifyAndDelete} disabled={isVerifying || isDeletingAccount || otpInput.length !== 6 || deleteConfirmInput.trim().toLowerCase() !== 'delete'}>
                     {isVerifying || isDeletingAccount ? (
                       <ActivityIndicator color="#ffffff" size="small" />
                     ) : (

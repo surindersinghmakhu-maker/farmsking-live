@@ -392,16 +392,17 @@ export class UsersService implements OnModuleInit {
     //    Mobile & Email get a DEL_ prefix so they are unusable for login
     //    but still uniquely distinguishable in the DB for auditing.
     const ts = Date.now();
-    const delMobile = dbUser.mobile ? `DEL_${dbUser.mobile}_${ts}` : `DEL_UNKNOWN_${user.id}_${ts}`;
-    const delEmail  = dbUser.email  ? `DEL_${dbUser.email}_${ts}`  : null;
+    const delMobile = dbUser.mobile ? `${dbUser.mobile}_del_${ts}` : `UNKNOWN_${user.id}_del_${ts}`;
+    const delEmail  = dbUser.email  ? `${dbUser.email}_del_${ts}`  : null;
+    const delKingId = dbUser.kingId ? `${dbUser.kingId}_del_${ts}` : null;
 
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
         name: 'Deleted Account',
-        mobile: delMobile,       // DEL_ prefix — login blocked; number is identifiable for audit
-        email: delEmail,         // DEL_ prefix — login blocked; email identifiable for audit
-        // kingId → intentionally unchanged so all linked records remain traceable
+        mobile: delMobile,       // Appended _del so login is blocked but recovery/signup is possible
+        email: delEmail,         // Appended _del
+        kingId: delKingId,       // Appended _del to disable login via kingId and allow freeing up the ID if needed
         photoUrl: null,
         village: null,
         district: null,

@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
   useWindowDimensions,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,8 +21,9 @@ import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'fi
 import { auth } from '@/src/lib/firebase';
 import { useAuth } from '@/src/store/auth-context';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
-import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
+import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { BrandLogo } from '@/src/components/BrandLogo';
+import { BlurView } from 'expo-blur';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -36,7 +38,7 @@ const discovery = {
 type LoginTab = 'password' | 'otp';
 
 export default function LoginScreen() {
-  const { login, sendLoginOtp, otpLogin, firebaseLogin, googleLogin } = useAuth();
+  const { login, firebaseLogin, googleLogin } = useAuth();
   const { data: appSettings } = useAppSettings();
   const router = useRouter();
   const otpInputRef = useRef<TextInput>(null);
@@ -64,10 +66,6 @@ export default function LoginScreen() {
     return () => clearTimeout(t);
   }, [resendTimer]);
 
-  // Robust ReCaptcha Initialization
-  // The verifier is created ONCE and only reset after a failed attempt.
-  // Destroying its DOM node while Google's script is still running causes
-  // "Cannot read properties of null (reading 'style')".
   const initRecaptcha = () => {
     if (Platform.OS !== 'web') return;
     try {
@@ -79,7 +77,7 @@ export default function LoginScreen() {
         try { existing.clear(); } catch (e) {}
         (window as any).recaptchaVerifier = null;
       }
-      container.innerHTML = ''; // leftovers from a hot reload
+      container.innerHTML = '';
       (window as any).recaptchaContainer = container;
       (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, container, {
         size: 'invisible',
@@ -116,9 +114,7 @@ export default function LoginScreen() {
   }, [activeTab]);
 
   const redirectUri = AuthSession.makeRedirectUri(
-    Platform.OS === 'web'
-      ? ({ useProxy: false } as any)
-      : { scheme: 'farmsking', path: 'auth' }
+    Platform.OS === 'web' ? ({ useProxy: false } as any) : { scheme: 'farmsking', path: 'auth' }
   );
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
@@ -198,7 +194,6 @@ export default function LoginScreen() {
     }
   };
 
-  // ── Send Firebase SMS OTP ──────────────────────────────────────────────────
   const handleSendOtp = async () => {
     setError(null);
     const cleanNum = mobile.trim().replace(/\D/g, '').slice(-10);
@@ -213,33 +208,25 @@ export default function LoginScreen() {
         try {
           initRecaptcha();
           const verifier = (window as any).recaptchaVerifier;
-          
           const result = await signInWithPhoneNumber(auth, fullPhone, verifier);
           setConfirmationResult(result);
         } catch (firebaseErr: any) {
           console.warn('[Firebase Auth Phone OTP]:', firebaseErr?.code, firebaseErr?.message);
-          // Token was consumed - reset widget so the next attempt gets a fresh one
           await resetRecaptcha();
-          
           throw new Error(`Firebase Error: ${firebaseErr?.message || 'Failed to send SMS'}`);
         }
       }
-
       setOtpSent(true);
       setResendTimer(60);
       setTimeout(() => otpInputRef.current?.focus(), 300);
     } catch (err: any) {
       const isNet = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
-      setError(isNet
-        ? 'Network error! Please check your internet connection.'
-        : (err?.response?.data?.message ?? err?.message ?? 'Failed to send OTP. Please try again.')
-      );
+      setError(isNet ? 'Network error! Please check your internet connection.' : (err?.response?.data?.message ?? err?.message ?? 'Failed to send OTP. Please try again.'));
     } finally {
       setOtpSending(false);
     }
   };
 
-  // ── Verify Firebase / Server OTP ──────────────────────────────────────────
   const handleOtpLogin = async () => {
     setError(null);
     const cleanCode = otpCode.trim();
@@ -259,10 +246,7 @@ export default function LoginScreen() {
       }
     } catch (err: any) {
       const isNet = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
-      setError(isNet
-        ? 'Network error! Please check your internet connection.'
-        : (err?.response?.data?.message ?? err?.message ?? 'OTP verification failed.')
-      );
+      setError(isNet ? 'Network error! Please check your internet connection.' : (err?.response?.data?.message ?? err?.message ?? 'OTP verification failed.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -278,10 +262,7 @@ export default function LoginScreen() {
       router.replace('/(tabs)' as any);
     } catch (err: any) {
       const isNet = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
-      setError(isNet
-        ? 'Network error! Could not connect. Please check your internet.'
-        : (err?.response?.data?.message ?? err?.message ?? 'Login failed.')
-      );
+      setError(isNet ? 'Network error! Could not connect. Please check your internet.' : (err?.response?.data?.message ?? err?.message ?? 'Login failed.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -292,113 +273,118 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      {/* 5-Star Dark Premium Background */}
+      <Image
+        source={require('@/assets/images/farmsking_hero_bg_new.png')}
+        style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
+        resizeMode="cover"
+      />
+      <LinearGradient colors={['rgba(4,15,28,0.7)', 'rgba(4,15,28,0.92)']} style={StyleSheet.absoluteFill} />
 
-        {/* Hero Banner */}
-        <LinearGradient colors={['#16a34a', '#15803d', '#0f766e']} style={[styles.heroBanner, isDesktop && { paddingTop: 20, paddingBottom: 28 }]}>
-          <TouchableOpacity 
-            style={{ position: 'absolute', top: 20, left: 20, zIndex: 10, flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 }}
-            onPress={() => router.push('/')}
-          >
-            <Ionicons name="home" size={14} color="#fff" />
-            <Text style={{ color: '#fff', fontSize: 12, fontFamily: FONT.bold, marginLeft: 6 }}>Home</Text>
-          </TouchableOpacity>
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        
+        {/* Floating Back Button */}
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.push('/')}>
+          <Ionicons name="home" size={16} color="#fff" />
+          <Text style={styles.backBtnText}>Home</Text>
+        </TouchableOpacity>
+
+        <View style={isDesktop ? styles.cardWebWrapper : { paddingHorizontal: 16 }}>
+          
+          {/* Logo & Brand Header */}
           <View style={styles.brandBox}>
-            <BrandLogo size={48} useHdQuality style={{ marginBottom: 6 }} />
+            <BrandLogo size={60} useHdQuality style={{ marginBottom: 10 }} />
             <Text style={styles.brandName}>FarmsKing</Text>
             <Text style={styles.brandTagline}>Smart Agriculture & Farm Management</Text>
           </View>
-        </LinearGradient>
 
-        {/* Card — centered on desktop */}
-        <View style={isDesktop ? styles.cardWebWrapper : null}>
-        <View style={[styles.card, premiumShadow('#0f172a', 'md'), isDesktop && styles.cardDesktop]}>
-          <Text style={styles.title}>Welcome Back! 👋</Text>
-          <Text style={styles.subtitle}>Sign in to your FarmsKing account</Text>
+          {/* Glassmorphism Card */}
+          <View style={[styles.card, isDesktop && styles.cardDesktop, premiumShadow('rgba(0,0,0,0.6)', 'lg')]}>
+            <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
 
-          {/* Invisible Recaptcha container for Firebase Auth */}
-          <div id="recaptcha-container"></div>
+            <Text style={styles.title}>Welcome Back! 👋</Text>
+            <Text style={styles.subtitle}>Sign in to your premium account</Text>
 
-          {/* ─── Login Method Tabs ─── */}
-          <View style={styles.tabRow}>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === 'password' && styles.tabActive]}
-              onPress={() => setActiveTab('password')}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="lock-closed" size={15} color={activeTab === 'password' ? '#16a34a' : '#94a3b8'} />
-              <Text style={[styles.tabText, activeTab === 'password' && styles.tabTextActive]}>Password</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === 'otp' && styles.tabActive]}
-              onPress={() => setActiveTab('otp')}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="phone-portrait-outline" size={15} color={activeTab === 'otp' ? '#16a34a' : '#94a3b8'} />
-              <Text style={[styles.tabText, activeTab === 'otp' && styles.tabTextActive]}>OTP</Text>
-            </TouchableOpacity>
-          </View>
+            <div id="recaptcha-container"></div>
 
-          {/* Mobile/King ID Field (shared but adaptive) */}
-          <Text style={styles.label}>{activeTab === 'password' ? 'Mobile Number or King ID' : 'Mobile Number'}</Text>
-          <View style={[styles.inputWrap, focusedField === 'mobile' && styles.inputWrapFocused]}>
-            <Ionicons name={activeTab === 'password' ? 'person-outline' : 'call-outline'} size={18} color={focusedField === 'mobile' ? '#16a34a' : '#94a3b8'} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              keyboardType={activeTab === 'password' ? 'default' : 'phone-pad'}
-              maxLength={activeTab === 'otp' ? 10 : 30}
-              placeholder={activeTab === 'password' ? 'Enter Mobile Number or King ID' : '10-digit mobile number'}
-              placeholderTextColor="#94a3b8"
-              value={mobile}
-              onChangeText={(t) => { setMobile(t); if (otpSent) { setOtpSent(false); setOtpCode(''); setDevOtp(null); } }}
-              onFocus={() => setFocusedField('mobile')}
-              onBlur={() => setFocusedField(null)}
-              returnKeyType="next"
-              editable={!(activeTab === 'otp' && otpSent)}
-              autoCapitalize="none"
-            />
-            {activeTab === 'otp' && otpSent && (
-              <TouchableOpacity onPress={() => { setOtpSent(false); setOtpCode(''); setDevOtp(null); }} style={{ padding: 4 }}>
-                <Ionicons name="pencil" size={16} color="#16a34a" />
+            {/* Tabs */}
+            <View style={styles.tabRow}>
+              <TouchableOpacity
+                style={[styles.tab, activeTab === 'password' && styles.tabActive]}
+                onPress={() => setActiveTab('password')}
+                activeOpacity={0.8}
+              >
+                <LinearGradient colors={activeTab === 'password' ? ['rgba(16,185,129,0.2)', 'rgba(16,185,129,0.05)'] : ['transparent', 'transparent']} style={StyleSheet.absoluteFill} />
+                <Ionicons name="lock-closed" size={15} color={activeTab === 'password' ? '#10b981' : '#64748b'} />
+                <Text style={[styles.tabText, activeTab === 'password' && styles.tabTextActive]}>Password</Text>
               </TouchableOpacity>
-            )}
-          </View>
+              <TouchableOpacity
+                style={[styles.tab, activeTab === 'otp' && styles.tabActive]}
+                onPress={() => setActiveTab('otp')}
+                activeOpacity={0.8}
+              >
+                <LinearGradient colors={activeTab === 'otp' ? ['rgba(16,185,129,0.2)', 'rgba(16,185,129,0.05)'] : ['transparent', 'transparent']} style={StyleSheet.absoluteFill} />
+                <Ionicons name="phone-portrait-outline" size={15} color={activeTab === 'otp' ? '#10b981' : '#64748b'} />
+                <Text style={[styles.tabText, activeTab === 'otp' && styles.tabTextActive]}>OTP</Text>
+              </TouchableOpacity>
+            </View>
 
-          {/* ─── PASSWORD TAB ─── */}
-          {activeTab === 'password' && (
-            <>
-              <Text style={styles.label}>Password</Text>
-              <View style={[styles.inputWrap, focusedField === 'password' && styles.inputWrapFocused]}>
-                <Ionicons name="lock-closed-outline" size={18} color={focusedField === 'password' ? '#16a34a' : '#94a3b8'} style={styles.inputIcon} />
-                <TextInput
-                  style={styles.input}
-                  secureTextEntry={!showPassword}
-                  placeholder="Password"
-                  placeholderTextColor="#94a3b8"
-                  value={password}
-                  onChangeText={setPassword}
-                  onFocus={() => setFocusedField('password')}
-                  onBlur={() => setFocusedField(null)}
-                  returnKeyType="done"
-                  onSubmitEditing={onSubmit}
-                />
-                <TouchableOpacity onPress={() => setShowPassword(v => !v)} style={{ padding: 4 }}>
-                  <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#64748b" />
+            {/* Inputs */}
+            <Text style={styles.label}>{activeTab === 'password' ? 'Mobile Number or King ID' : 'Mobile Number'}</Text>
+            <View style={[styles.inputWrap, focusedField === 'mobile' && styles.inputWrapFocused]}>
+              <Ionicons name={activeTab === 'password' ? 'person-outline' : 'call-outline'} size={18} color={focusedField === 'mobile' ? '#10b981' : '#64748b'} style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                keyboardType={activeTab === 'password' ? 'default' : 'phone-pad'}
+                maxLength={activeTab === 'otp' ? 10 : 30}
+                placeholder={activeTab === 'password' ? 'Enter Mobile Number or King ID' : '10-digit mobile number'}
+                placeholderTextColor="#64748b"
+                value={mobile}
+                onChangeText={(t) => { setMobile(t); if (otpSent) { setOtpSent(false); setOtpCode(''); setDevOtp(null); } }}
+                onFocus={() => setFocusedField('mobile')}
+                onBlur={() => setFocusedField(null)}
+                returnKeyType="next"
+                editable={!(activeTab === 'otp' && otpSent)}
+                autoCapitalize="none"
+              />
+              {activeTab === 'otp' && otpSent && (
+                <TouchableOpacity onPress={() => { setOtpSent(false); setOtpCode(''); setDevOtp(null); }} style={{ padding: 4 }}>
+                  <Ionicons name="pencil" size={16} color="#10b981" />
                 </TouchableOpacity>
-              </View>
+              )}
+            </View>
 
-              {/* Forgot Password */}
-              <TouchableOpacity style={styles.forgotLink} activeOpacity={0.7} onPress={() => router.push('/(auth)/forgot-password')}>
-                <Text style={styles.forgotText}>Forgot Password?</Text>
-              </TouchableOpacity>
-            </>
-          )}
+            {activeTab === 'password' && (
+              <>
+                <Text style={styles.label}>Password</Text>
+                <View style={[styles.inputWrap, focusedField === 'password' && styles.inputWrapFocused]}>
+                  <Ionicons name="lock-closed-outline" size={18} color={focusedField === 'password' ? '#10b981' : '#64748b'} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    secureTextEntry={!showPassword}
+                    placeholder="Password"
+                    placeholderTextColor="#64748b"
+                    value={password}
+                    onChangeText={setPassword}
+                    onFocus={() => setFocusedField('password')}
+                    onBlur={() => setFocusedField(null)}
+                    returnKeyType="done"
+                    onSubmitEditing={onSubmit}
+                  />
+                  <TouchableOpacity onPress={() => setShowPassword(v => !v)} style={{ padding: 4 }}>
+                    <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#94a3b8" />
+                  </TouchableOpacity>
+                </View>
 
-          {/* ─── OTP TAB (Firebase SMS) ─── */}
-          {activeTab === 'otp' && (
-            <>
-              {!otpSent ? (
-                <>
+                <TouchableOpacity style={styles.forgotLink} onPress={() => router.push('/(auth)/forgot-password')}>
+                  <Text style={styles.forgotText}>Forgot Password?</Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {activeTab === 'otp' && (
+              <>
+                {!otpSent ? (
                   <TouchableOpacity
                     onPress={handleSendOtp}
                     disabled={otpSending || !mobile.trim()}
@@ -406,9 +392,7 @@ export default function LoginScreen() {
                     style={[styles.sendOtpBtn, (!mobile.trim() || otpSending) && { opacity: 0.6 }]}
                   >
                     <LinearGradient colors={['#0ea5e9', '#0284c7']} style={styles.gradientBtn}>
-                      {otpSending ? (
-                        <ActivityIndicator color="#ffffff" />
-                      ) : (
+                      {otpSending ? <ActivityIndicator color="#ffffff" /> : (
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                           <Ionicons name="paper-plane" size={18} color="#ffffff" />
                           <Text style={styles.buttonText}>Send OTP</Text>
@@ -416,131 +400,96 @@ export default function LoginScreen() {
                       )}
                     </LinearGradient>
                   </TouchableOpacity>
-                </>
-              ) : (
-                <>
-                  <Text style={styles.otpSentMsg}>
-                    ✅ OTP sent to +91 {mobile}
-                  </Text>
+                ) : (
+                  <>
+                    <Text style={styles.otpSentMsg}>✅ OTP sent to +91 {mobile}</Text>
+                    {devOtp && (
+                      <View style={styles.devOtpBox}>
+                        <Text style={styles.devOtpLabel}>🧪 Test OTP Code:</Text>
+                        <Text style={styles.devOtpCode}>{devOtp}</Text>
+                      </View>
+                    )}
+                    <Text style={styles.label}>Enter 6-Digit OTP</Text>
+                    <View style={[styles.inputWrap, focusedField === 'otp' && styles.inputWrapFocused]}>
+                      <Ionicons name="keypad-outline" size={18} color={focusedField === 'otp' ? '#10b981' : '#64748b'} style={styles.inputIcon} />
+                      <TextInput
+                        ref={otpInputRef}
+                        style={[styles.input, { letterSpacing: 6, fontSize: 18, fontFamily: FONT.extraBold, textAlign: 'center' }]}
+                        keyboardType="number-pad"
+                        maxLength={6}
+                        placeholder="● ● ● ● ● ●"
+                        placeholderTextColor="#475569"
+                        value={otpCode}
+                        onChangeText={setOtpCode}
+                        onFocus={() => setFocusedField('otp')}
+                        onBlur={() => setFocusedField(null)}
+                        returnKeyType="done"
+                        onSubmitEditing={handleOtpLogin}
+                      />
+                    </View>
+                    <View style={styles.resendRow}>
+                      {resendTimer > 0 ? (
+                        <Text style={styles.resendTimer}>Resend SMS in {resendTimer}s</Text>
+                      ) : (
+                        <TouchableOpacity onPress={handleSendOtp} disabled={otpSending}>
+                          <Text style={styles.resendLink}>🔄 Resend SMS OTP</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </>
+                )}
+              </>
+            )}
 
-                  {devOtp && (
-                    <View style={styles.devOtpBox}>
-                      <Text style={styles.devOtpLabel}>🧪 Test OTP Code:</Text>
-                      <Text style={styles.devOtpCode}>{devOtp}</Text>
+            {error ? (
+              <View style={styles.errorBox}>
+                <Ionicons name="alert-circle" size={20} color="#f87171" />
+                <Text style={styles.error}>{error}</Text>
+              </View>
+            ) : null}
+
+            {activeTab === 'password' || otpSent ? (
+              <TouchableOpacity onPress={activeTab === 'password' ? onSubmit : handleOtpLogin} disabled={isSubmitting} activeOpacity={0.85} style={styles.button}>
+                <LinearGradient colors={['#10b981', '#059669']} style={styles.gradientBtn}>
+                  {isSubmitting ? <ActivityIndicator color="#ffffff" /> : (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <Text style={styles.buttonText}>{activeTab === 'password' ? 'Secure Login' : 'Verify & Login'}</Text>
+                      <Ionicons name="arrow-forward" size={18} color="#ffffff" />
                     </View>
                   )}
+                </LinearGradient>
+              </TouchableOpacity>
+            ) : null}
 
-                  <Text style={styles.label}>Enter 6-Digit OTP</Text>
-                  <View style={[styles.inputWrap, focusedField === 'otp' && styles.inputWrapFocused]}>
-                    <Ionicons name="keypad-outline" size={18} color={focusedField === 'otp' ? '#16a34a' : '#94a3b8'} style={styles.inputIcon} />
-                    <TextInput
-                      ref={otpInputRef}
-                      style={[styles.input, { letterSpacing: 6, fontSize: 18, fontFamily: FONT.extraBold }]}
-                      keyboardType="number-pad"
-                      textContentType="oneTimeCode"
-                      autoComplete="one-time-code"
-                      maxLength={6}
-                      placeholder="● ● ● ● ● ●"
-                      placeholderTextColor="#cbd5e1"
-                      value={otpCode}
-                      onChangeText={setOtpCode}
-                      onFocus={() => setFocusedField('otp')}
-                      onBlur={() => setFocusedField(null)}
-                      returnKeyType="done"
-                      onSubmitEditing={handleOtpLogin}
-                    />
-                  </View>
-
-                  {/* Resend */}
-                  <View style={styles.resendRow}>
-                    {resendTimer > 0 ? (
-                      <Text style={styles.resendTimer}>Resend SMS in {resendTimer}s</Text>
-                    ) : (
-                      <TouchableOpacity onPress={handleSendOtp} disabled={otpSending}>
-                        <Text style={styles.resendLink}>🔄 Resend SMS OTP</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                </>
-              )}
-            </>
-          )}
-
-          {/* Error */}
-          {error ? (
-            <View style={styles.errorBox}>
-              <Ionicons name="alert-circle" size={20} color="#dc2626" />
-              <Text style={styles.error}>{error}</Text>
+            {/* Google Login */}
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>OR CONNECT WITH</Text>
+              <View style={styles.dividerLine} />
             </View>
-          ) : null}
 
-          {/* Login / Verify Button */}
-          {activeTab === 'password' ? (
-            <TouchableOpacity onPress={onSubmit} disabled={isSubmitting} activeOpacity={0.85} style={styles.button}>
-              <LinearGradient colors={['#16a34a', '#15803d']} style={styles.gradientBtn}>
-                {isSubmitting ? (
-                  <ActivityIndicator color="#ffffff" />
-                ) : (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Text style={styles.buttonText}>Login</Text>
-                    <Ionicons name="arrow-forward" size={18} color="#ffffff" />
-                  </View>
-                )}
-              </LinearGradient>
-            </TouchableOpacity>
-          ) : otpSent ? (
-            <TouchableOpacity onPress={handleOtpLogin} disabled={isSubmitting} activeOpacity={0.85} style={styles.button}>
-              <LinearGradient colors={['#16a34a', '#15803d']} style={styles.gradientBtn}>
-                {isSubmitting ? (
-                  <ActivityIndicator color="#ffffff" />
-                ) : (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Ionicons name="checkmark-circle" size={18} color="#ffffff" />
-                    <Text style={styles.buttonText}>Verify OTP & Login</Text>
-                  </View>
-                )}
-              </LinearGradient>
-            </TouchableOpacity>
-          ) : null}
-
-          {/* OR Divider for Google */}
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Small Google Icon Button */}
-          <View style={styles.socialRow}>
             <TouchableOpacity
               style={[styles.googleIconBtn, (!request || googleLoading) && styles.googleBtnDisabled]}
               onPress={handleGoogleSignIn}
               disabled={!request || googleLoading || isSubmitting}
               activeOpacity={0.88}
             >
-              {googleLoading ? (
-                <ActivityIndicator color="#4285F4" size="small" />
-              ) : (
-                <Text style={styles.googleG}>G</Text>
+              {googleLoading ? <ActivityIndicator color="#4285F4" /> : (
+                <>
+                  <Ionicons name="logo-google" size={20} color="#fff" />
+                  <Text style={styles.googleText}>Sign in with Google</Text>
+                </>
               )}
             </TouchableOpacity>
-          </View>
 
-          {/* Register Highlight Row */}
-          <View style={styles.registerHighlightCard}>
-            <Text style={styles.registerHighlightText}>New to FarmsKing?</Text>
-            <TouchableOpacity
-              style={styles.registerHighlightBtn}
-              onPress={() => router.push('/(auth)/register')}
-              activeOpacity={0.85}
-            >
+            {/* Register */}
+            <TouchableOpacity style={styles.registerHighlightBtn} onPress={() => router.push('/(auth)/register')} activeOpacity={0.85}>
+              <Text style={styles.registerHighlightText}>New to FarmsKing? </Text>
               <Text style={styles.registerHighlightBtnText}>Create Account</Text>
-              <Ionicons name="arrow-forward" size={14} color="#16a34a" />
+              <Ionicons name="arrow-forward" size={14} color="#10b981" />
             </TouchableOpacity>
-          </View>
 
-        </View>
-        {isDesktop && <View />}
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -548,202 +497,108 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f1f5f9' },
-  scroll: { flexGrow: 1, paddingBottom: 32 },
-  cardWebWrapper: {
-    width: '100%',
-    alignItems: 'center',
-    paddingHorizontal: 16,
+  container: { flex: 1, backgroundColor: '#040f1c' },
+  scroll: { flexGrow: 1, paddingBottom: 40, paddingTop: 40 },
+  backBtn: {
+    position: 'absolute', top: 20, left: 20, zIndex: 10,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 14, paddingVertical: 8,
+    borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)'
   },
-  cardDesktop: {
-    width: '100%',
-    maxWidth: 480,
-    alignSelf: 'center',
-    marginTop: -28,
-    borderRadius: 24,
-    padding: 28,
-  },
-  heroBanner: {
-    paddingTop: Platform.OS === 'web' ? 16 : 36,
-    paddingBottom: 24,
-    paddingHorizontal: SPACING.md,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    alignItems: 'center',
-  },
-  brandBox: { alignItems: 'center', marginTop: 2 },
-  brandName: { fontSize: 24, fontFamily: FONT.extraBold, color: '#ffffff', letterSpacing: 0.5 },
-  brandTagline: { fontSize: 12, fontFamily: FONT.medium, color: 'rgba(255,255,255,0.85)', marginTop: 2 },
+  backBtnText: { color: '#fff', fontSize: 13, fontFamily: FONT.bold },
+  
+  brandBox: { alignItems: 'center', marginBottom: 24, marginTop: 30 },
+  brandName: { fontSize: 32, fontFamily: FONT.extraBold, color: '#ffffff', letterSpacing: 0.5 },
+  brandTagline: { fontSize: 14, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 4 },
+  
+  cardWebWrapper: { width: '100%', alignItems: 'center', paddingHorizontal: 16 },
   card: {
-    backgroundColor: '#ffffff',
-    marginHorizontal: 12,
-    marginTop: -20,
-    borderRadius: RADIUS.lg,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  title: { fontSize: 20, fontFamily: FONT.extraBold, color: '#0f172a', letterSpacing: -0.3, marginBottom: 2 },
-  subtitle: { fontSize: 12, color: '#64748b', fontFamily: FONT.medium, marginBottom: 14 },
-
-  socialRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  googleIconBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#ffffff',
-    borderWidth: 1.5,
-    borderColor: '#dadce0',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  googleBtnDisabled: { opacity: 0.7 },
-  googleG: {
-    fontSize: 22,
-    fontFamily: FONT.extraBold,
-    color: '#4285F4',
-    lineHeight: 28,
-  },
-
-  dividerRow: { flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 14, gap: 8 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: '#e2e8f0' },
-  dividerText: { color: '#94a3b8', fontSize: 10.5, fontFamily: FONT.bold, letterSpacing: 0.3 },
-
-  tabRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 12,
-  },
-  tab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 9,
-    borderRadius: RADIUS.md,
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#f8fafc',
-  },
-  tabActive: {
-    borderColor: '#16a34a',
-    backgroundColor: '#f0fdf4',
-  },
-  tabText: {
-    fontSize: 12.5,
-    fontFamily: FONT.bold,
-    color: '#94a3b8',
-  },
-  tabTextActive: {
-    color: '#16a34a',
-  },
-
-  label: { fontSize: 11.5, color: '#334155', fontFamily: FONT.bold, marginBottom: 4, marginTop: 8 },
-  inputWrap: {
-    width: '100%', height: 42,
-    flexDirection: 'row', alignItems: 'center',
-    borderWidth: 1.5, borderColor: '#e2e8f0',
-    borderRadius: RADIUS.md, backgroundColor: '#f8fafc',
-    paddingHorizontal: 10,
-  },
-  inputWrapFocused: { borderColor: '#16a34a', backgroundColor: '#ffffff' },
-  inputIcon: { marginRight: 8 },
-  input: { flex: 1, paddingVertical: 6, fontSize: 13.5, fontFamily: FONT.medium, color: '#0f172a' },
-
-  forgotLink: { alignSelf: 'flex-end', marginTop: 6 },
-  forgotText: { color: '#16a34a', fontSize: 11.5, fontFamily: FONT.bold },
-
-  sendOtpBtn: {
     width: '100%',
-    marginTop: 12,
-    borderRadius: RADIUS.md,
+    backgroundColor: 'rgba(16, 25, 40, 0.45)',
+    borderRadius: 24,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
     overflow: 'hidden',
   },
+  cardDesktop: { maxWidth: 480, alignSelf: 'center', padding: 32 },
+  
+  title: { fontSize: 24, fontFamily: FONT.extraBold, color: '#ffffff', letterSpacing: -0.3, marginBottom: 4 },
+  subtitle: { fontSize: 13, color: '#94a3b8', fontFamily: FONT.medium, marginBottom: 24 },
+
+  tabRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+  tab: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.03)', overflow: 'hidden'
+  },
+  tabActive: { borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.05)' },
+  tabText: { fontSize: 13, fontFamily: FONT.bold, color: '#94a3b8' },
+  tabTextActive: { color: '#10b981' },
+
+  label: { fontSize: 12, color: '#cbd5e1', fontFamily: FONT.bold, marginBottom: 6, marginTop: 12 },
+  inputWrap: {
+    width: '100%', height: 48, flexDirection: 'row', alignItems: 'center',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 14, backgroundColor: 'rgba(0,0,0,0.3)',
+    paddingHorizontal: 14,
+  },
+  inputWrapFocused: { borderColor: '#10b981', backgroundColor: 'rgba(0,0,0,0.5)' },
+  inputIcon: { marginRight: 10 },
+  input: { flex: 1, paddingVertical: 8, fontSize: 14, fontFamily: FONT.medium, color: '#ffffff' },
+
+  forgotLink: { alignSelf: 'flex-end', marginTop: 10 },
+  forgotText: { color: '#10b981', fontSize: 12, fontFamily: FONT.bold },
+
+  sendOtpBtn: { width: '100%', marginTop: 16, borderRadius: 14, overflow: 'hidden' },
   otpSentMsg: {
-    fontSize: 12,
-    fontFamily: FONT.bold,
-    color: '#16a34a',
-    backgroundColor: '#f0fdf4',
-    borderWidth: 1,
-    borderColor: '#bbf7d0',
-    borderRadius: RADIUS.md,
-    padding: 10,
-    marginTop: 8,
-    textAlign: 'center',
+    fontSize: 13, fontFamily: FONT.bold, color: '#10b981',
+    backgroundColor: 'rgba(16,185,129,0.1)', borderWidth: 1, borderColor: 'rgba(16,185,129,0.2)',
+    borderRadius: 12, padding: 12, marginTop: 12, textAlign: 'center',
   },
   devOtpBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#fefce8',
-    borderWidth: 1,
-    borderColor: '#fde68a',
-    borderRadius: RADIUS.md,
-    padding: 8,
-    marginTop: 6,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: 'rgba(245,158,11,0.1)', borderWidth: 1, borderColor: 'rgba(245,158,11,0.3)',
+    borderRadius: 12, padding: 10, marginTop: 10,
   },
-  devOtpLabel: { fontSize: 11, fontFamily: FONT.bold, color: '#92400e' },
-  devOtpCode: { fontSize: 18, fontFamily: FONT.extraBold, color: '#b45309', letterSpacing: 4 },
-  resendRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 6,
-  },
-  resendTimer: { fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8' },
-  resendLink: { fontSize: 12, fontFamily: FONT.bold, color: '#0284c7' },
+  devOtpLabel: { fontSize: 12, fontFamily: FONT.bold, color: '#fcd34d' },
+  devOtpCode: { fontSize: 18, fontFamily: FONT.extraBold, color: '#fbbf24', letterSpacing: 4 },
+  resendRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 10 },
+  resendTimer: { fontSize: 12, fontFamily: FONT.medium, color: '#94a3b8' },
+  resendLink: { fontSize: 12, fontFamily: FONT.bold, color: '#38bdf8' },
 
   errorBox: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    marginTop: 10, width: '100%',
-    backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca',
-    padding: 10, borderRadius: RADIUS.md,
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    marginTop: 16, width: '100%',
+    backgroundColor: 'rgba(239,68,68,0.1)', borderWidth: 1, borderColor: 'rgba(239,68,68,0.3)',
+    padding: 12, borderRadius: 12,
   },
-  error: { color: '#dc2626', fontFamily: FONT.medium, fontSize: 11.5, lineHeight: 15, flex: 1 },
+  error: { color: '#fca5a5', fontFamily: FONT.medium, fontSize: 12, lineHeight: 16, flex: 1 },
 
-  button: { width: '100%', marginTop: 14, borderRadius: RADIUS.md, overflow: 'hidden' },
-  gradientBtn: { paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
-  buttonText: { color: '#ffffff', fontSize: 14, fontFamily: FONT.bold },
+  button: { width: '100%', marginTop: 20, borderRadius: 14, overflow: 'hidden', ...premiumShadow('#10b981', 'lg') },
+  gradientBtn: { paddingVertical: 14, alignItems: 'center', justifyContent: 'center' },
+  buttonText: { color: '#ffffff', fontSize: 15, fontFamily: FONT.bold },
 
-  registerHighlightCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 20,
-    backgroundColor: '#f0fdf4',
-    borderWidth: 1,
-    borderColor: '#bbf7d0',
-    borderRadius: RADIUS.md,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+  dividerRow: { flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 24, gap: 12 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: 'rgba(255,255,255,0.1)' },
+  dividerText: { color: '#64748b', fontSize: 11, fontFamily: FONT.bold, letterSpacing: 1 },
+
+  googleIconBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12,
+    width: '100%', paddingVertical: 12,
+    borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
   },
-  registerHighlightText: { fontSize: 12.5, fontFamily: FONT.medium, color: '#166534' },
+  googleBtnDisabled: { opacity: 0.7 },
+  googleText: { fontSize: 14, fontFamily: FONT.bold, color: '#ffffff' },
+
   registerHighlightBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#ffffff',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: RADIUS.sm,
-    borderWidth: 1,
-    borderColor: '#86efac',
-    shadowColor: '#16a34a',
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    shadowOffset: { width: 0, height: 1 },
-    elevation: 1,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4,
+    marginTop: 24, paddingVertical: 14,
+    backgroundColor: 'rgba(16,185,129,0.08)',
+    borderRadius: 14, borderWidth: 1, borderColor: 'rgba(16,185,129,0.2)',
   },
-  registerHighlightBtnText: { color: '#16a34a', fontSize: 12, fontFamily: FONT.bold },
+  registerHighlightText: { fontSize: 13, fontFamily: FONT.medium, color: '#94a3b8' },
+  registerHighlightBtnText: { color: '#10b981', fontSize: 13, fontFamily: FONT.bold },
 });

@@ -149,3 +149,8 @@ md_to_pdf(
     r"d:\FarmsKing\docs\trainers\trainer_job_role_handbook.md",
     r"d:\FarmsKing\docs\admin\trainer_job_role_handbook.pdf"
 )
+
+md_to_pdf(
+    r"d:\FarmsKing\docs\project_flowchart.md",
+    r"d:\FarmsKing\docs\project_flowchart.pdf"
+)

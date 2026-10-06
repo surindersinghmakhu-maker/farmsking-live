@@ -13,6 +13,7 @@ import { SprayTankSizeL } from '@/src/types/api';
 import { verifyAccountPassword } from '@/src/api/auth.api';
 
 import { UpiQrScannerModal } from '@/src/components/UpiQrScannerModal';
+import { lookupPincode } from '@/src/api/pincode.api';
 
 const theme = RoleThemes.FARMER;
 
@@ -44,6 +45,15 @@ export default function FarmerProfileSetupScreen() {
   const [whatsappGroupEnabled, setWhatsappGroupEnabled] = useState<boolean>(user?.whatsappGroupEnabled ?? true);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
 
+  const [pincode, setPincode] = useState<string>(user?.pincode || '');
+  const [postOffice, setPostOffice] = useState<string>(user?.postOffice || '');
+  const [district, setDistrict] = useState<string>(user?.district || '');
+  const [state, setState] = useState<string>(user?.state || '');
+  const [pincodeStatus, setPincodeStatus] = useState<string | null>(null);
+  const [isPincodeLoading, setIsPincodeLoading] = useState<boolean>(false);
+  const [officeOptions, setOfficeOptions] = useState<any[]>([]);
+  const [isPostOfficeExpanded, setIsPostOfficeExpanded] = useState<boolean>(false);
+
   // Password verification state for UPI ID save
   const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
   const [verifyPassword, setVerifyPassword] = useState<string>('');
@@ -69,6 +79,10 @@ export default function FarmerProfileSetupScreen() {
       setUpiId(user.upiId || '');
       if (user.whatsappGroupEnabled !== undefined) setWhatsappGroupEnabled(user.whatsappGroupEnabled);
       if (user.sprayTankSizeL) setSprayTankSizeL(user.sprayTankSizeL);
+      if (user.pincode) setPincode(user.pincode);
+      if (user.postOffice) setPostOffice(user.postOffice);
+      if (user.district) setDistrict(user.district);
+      if (user.state) setState(user.state);
     }
     if (status?.profile.sprayTankSizeL && !sprayTankSizeL) {
       setSprayTankSizeL(status.profile.sprayTankSizeL);
@@ -80,6 +94,29 @@ export default function FarmerProfileSetupScreen() {
       router.back();
     } else {
       router.replace('/(user)/(tabs)' as any);
+    }
+  };
+
+  const fetchLocationFromPincode = async (codeToFetch?: string) => {
+    const target = codeToFetch || pincode;
+    if (!target || target.length !== 6) {
+      setPincodeStatus('⚠️ Please enter a valid 6-digit PIN Code first');
+      return;
+    }
+    setIsPincodeLoading(true);
+    setPincodeStatus(null);
+    try {
+      const result = await lookupPincode(target);
+      setOfficeOptions(result.offices);
+      setPostOffice(result.postOffice);
+      setDistrict(result.district);
+      setState(result.state);
+      setIsPostOfficeExpanded(true);
+      setPincodeStatus(`✨ Address Fetched: ${result.postOffice}, ${result.district}, ${result.state}`);
+    } catch (err: any) {
+      setPincodeStatus(`❌ ${err?.message ?? 'Could not fetch PIN details'}`);
+    } finally {
+      setIsPincodeLoading(false);
     }
   };
 
@@ -101,6 +138,10 @@ export default function FarmerProfileSetupScreen() {
         farmMobile: finalFarmMobile,
         upiId: finalUpiId,
         whatsappGroupEnabled,
+        pincode,
+        postOffice,
+        district,
+        state,
       };
 
       const updatedUser = await updateProfile.mutateAsync(payload);
@@ -115,6 +156,10 @@ export default function FarmerProfileSetupScreen() {
         upiId: finalUpiId,
         sprayTankSizeL: selectedTankSize,
         whatsappGroupEnabled,
+        pincode,
+        postOffice,
+        district,
+        state,
       };
 
       await updateUser(mergedUser as any);
@@ -247,6 +292,92 @@ export default function FarmerProfileSetupScreen() {
                     </TouchableOpacity>
                   );
                 })}
+              </View>
+            </View>
+          </View>
+
+          {/* SECTION: LOCATION DETAILS */}
+          <View style={[styles.printingHeaderBox, { marginTop: 16 }]}>
+            <View style={styles.tableHeader}>
+              <Ionicons name="location" size={18} color="#15803d" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.printingTitle}>📍 Location Details</Text>
+                <Text style={styles.printingSub}>For accurate mandi rates and weather alerts.</Text>
+              </View>
+            </View>
+
+            <View style={styles.tableRowField}>
+              <Text style={styles.fieldLabel}>PIN Code (Auto-fills District & State)</Text>
+              <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                <View style={[styles.inputWrap, { flex: 1, backgroundColor: '#ffffff' }]}>
+                  <TextInput
+                    style={styles.textInput}
+                    value={pincode}
+                    onChangeText={(t) => {
+                      setPincode(t);
+                      if (t.length === 6) fetchLocationFromPincode(t);
+                    }}
+                    placeholder="6-digit PIN Code"
+                    placeholderTextColor="#94a3b8"
+                    keyboardType="numeric"
+                    maxLength={6}
+                  />
+                </View>
+                <TouchableOpacity
+                  style={{ backgroundColor: '#16a34a', paddingHorizontal: 16, height: 44, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center' }}
+                  onPress={() => fetchLocationFromPincode()}
+                  disabled={isPincodeLoading || pincode.length !== 6}
+                >
+                  {isPincodeLoading ? <ActivityIndicator size="small" color="#fff" /> : <Text style={{ color: '#fff', fontFamily: FONT.bold }}>Fetch</Text>}
+                </TouchableOpacity>
+              </View>
+              {pincodeStatus ? <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: pincodeStatus.startsWith('❌') ? '#dc2626' : '#15803d', marginTop: 4 }}>{pincodeStatus}</Text> : null}
+
+              {officeOptions.length > 0 && (
+                postOffice && !isPostOfficeExpanded ? (
+                  <TouchableOpacity
+                    style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#16a34a', borderRadius: RADIUS.md, padding: 10, marginTop: 8 }}
+                    onPress={() => { tap(); setIsPostOfficeExpanded(true); }}
+                  >
+                    <Ionicons name="checkmark-circle" size={16} color="#16a34a" />
+                    <Text style={{ flex: 1, fontSize: 13, color: '#16a34a', marginLeft: 6 }} numberOfLines={1}>{postOffice} ({district})</Text>
+                    <View style={{ backgroundColor: '#fff', borderWidth: 1, borderColor: '#16a34a', borderRadius: RADIUS.pill, paddingHorizontal: 8, paddingVertical: 2 }}>
+                      <Text style={{ fontSize: 10, color: '#16a34a', fontFamily: FONT.bold }}>Change</Text>
+                    </View>
+                  </TouchableOpacity>
+                ) : (
+                  <View style={{ borderWidth: 1, borderColor: '#e2e8f0', borderRadius: RADIUS.md, marginTop: 8, overflow: 'hidden' }}>
+                    {officeOptions.map((office) => {
+                      const isSel = postOffice === office.name;
+                      return (
+                        <TouchableOpacity
+                          key={office.name}
+                          style={[{ flexDirection: 'row', alignItems: 'center', padding: 10, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }, isSel && { backgroundColor: '#f0fdf4' }]}
+                          onPress={() => { tap(); setPostOffice(office.name); setDistrict(office.district); setState(office.state); setIsPostOfficeExpanded(false); }}
+                        >
+                          <Ionicons name={isSel ? 'radio-button-on' : 'radio-button-off'} size={15} color={isSel ? '#16a34a' : '#94a3b8'} />
+                          <Text style={[{ fontSize: 13, marginLeft: 6 }, isSel && { color: '#16a34a', fontFamily: FONT.bold }]}>{office.name} ({office.district})</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                )
+              )}
+
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.fieldLabel, { fontSize: 11.5, color: '#475569', marginBottom: 4 }]}>District</Text>
+                  <View style={[styles.inputWrap, { backgroundColor: '#f1f5f9', opacity: 0.8 }]}>
+                    <Ionicons name="location-outline" size={14} color="#64748b" style={{ marginRight: 6 }} />
+                    <Text style={[styles.textInput, { color: '#64748b' }]} numberOfLines={1}>{district || '—'}</Text>
+                  </View>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.fieldLabel, { fontSize: 11.5, color: '#475569', marginBottom: 4 }]}>State</Text>
+                  <View style={[styles.inputWrap, { backgroundColor: '#f1f5f9', opacity: 0.8 }]}>
+                    <Text style={[styles.textInput, { color: '#64748b' }]} numberOfLines={1}>{state || '—'}</Text>
+                  </View>
+                </View>
               </View>
             </View>
           </View>

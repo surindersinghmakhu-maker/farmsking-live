@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -14,59 +14,129 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING } from '@/constants/theme';
-import { forgotPasswordStart, forgotPasswordVerify, forgotPasswordReset } from '@/src/api/auth.api';
+import { firebaseForgotPasswordReset } from '@/src/api/auth.api';
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
+import { auth } from '@/src/lib/firebase';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const theme = RoleThemes.FARMER;
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
-  const [step, setStep] = useState<'lookup' | 'otp' | 'new-password' | 'done'>('lookup');
+  const [step, setStep] = useState<'phone' | 'otp' | 'new-password' | 'done'>('phone');
   const [mobile, setMobile] = useState('');
-  const [pincode, setPincode] = useState('');
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const otpInputRef = useRef<TextInput>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [resendTimer, setResendTimer] = useState(0);
 
-  // Step 1: Lookup Mobile + PIN & send WhatsApp OTP
-  const onLookup = async () => {
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  const [idToken, setIdToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const t = setTimeout(() => setResendTimer((v) => v - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendTimer]);
+
+  const initRecaptcha = () => {
+    if (Platform.OS !== 'web') return;
+    try {
+      const container = document.getElementById('recaptcha-container');
+      if (!container) return;
+      const existing = (window as any).recaptchaVerifier;
+      if (existing && (window as any).recaptchaContainer === container) return;
+      if (existing) {
+        try { existing.clear(); } catch (e) {}
+        (window as any).recaptchaVerifier = null;
+      }
+      container.innerHTML = '';
+      (window as any).recaptchaContainer = container;
+      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, container, {
+        size: 'invisible',
+        callback: () => {},
+      });
+    } catch (e) {
+      console.warn('ReCaptcha init error:', e);
+    }
+  };
+
+  const resetRecaptcha = async () => {
+    if (Platform.OS !== 'web') return;
+    try {
+      const verifier = (window as any).recaptchaVerifier;
+      if (!verifier) return;
+      const widgetId = await verifier.render();
+      (window as any).grecaptcha?.reset(widgetId);
+    } catch (e) {
+      console.warn('ReCaptcha reset error:', e);
+    }
+  };
+
+  useEffect(() => {
+    initRecaptcha();
+  }, []);
+
+  // Step 1: Send Firebase OTP
+  const onSendOtp = async () => {
     setError(null);
-    if (mobile.trim().length !== 10) {
+    const cleanNum = mobile.trim().replace(/\D/g, '').slice(-10);
+    if (!cleanNum || cleanNum.length < 10) {
       setError('Enter a valid 10-digit mobile number.');
       return;
     }
-    if (pincode.trim().length !== 6) {
-      setError('Enter your 6-digit PIN code.');
-      return;
-    }
+    
     setIsSubmitting(true);
     try {
-      await forgotPasswordStart({ mobile: mobile.trim(), pincode: pincode.trim() });
+      if (Platform.OS === 'web') {
+        const fullPhone = `+91${cleanNum}`;
+        try {
+          initRecaptcha();
+          const verifier = (window as any).recaptchaVerifier;
+          const result = await signInWithPhoneNumber(auth, fullPhone, verifier);
+          setConfirmationResult(result);
+        } catch (firebaseErr: any) {
+          console.warn('[Firebase Auth Phone OTP]:', firebaseErr?.code, firebaseErr?.message);
+          await resetRecaptcha();
+          throw new Error(`Firebase Error: ${firebaseErr?.message || 'Failed to send SMS'}`);
+        }
+      }
+      setResendTimer(60);
       setStep('otp');
+      setTimeout(() => otpInputRef.current?.focus(), 300);
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Could not find an account matching this mobile number and PIN code.');
+      setError(err?.message ?? 'Could not send OTP. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Step 2: Verify WhatsApp OTP
+  // Step 2: Verify Firebase OTP
   const onVerifyOtp = async () => {
     setError(null);
-    if (!otp.trim() || otp.trim().length < 4) {
-      setError('Enter the 4-digit OTP code received on WhatsApp.');
+    const cleanCode = otp.trim();
+    if (!cleanCode || cleanCode.length < 6) {
+      setError('Enter the 6-digit OTP code received via SMS.');
       return;
     }
     setIsSubmitting(true);
     try {
-      await forgotPasswordVerify({ mobile: mobile.trim(), otp: otp.trim() });
-      setStep('new-password');
+      if (confirmationResult) {
+        const credential = await confirmationResult.confirm(cleanCode);
+        const token = await credential.user.getIdToken();
+        setIdToken(token);
+        setStep('new-password');
+      } else {
+        throw new Error('Verification session missing. Please request a new OTP.');
+      }
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Invalid or expired OTP code.');
+      setError('Invalid or expired OTP code.');
     } finally {
       setIsSubmitting(false);
     }
@@ -83,11 +153,15 @@ export default function ForgotPasswordScreen() {
       setError('Passwords do not match. Please re-type your password.');
       return;
     }
+    if (!idToken) {
+      setError('Authentication session missing. Please restart the process.');
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
-      const result = await forgotPasswordReset({
-        mobile: mobile.trim(),
-        otp: otp.trim(),
+      const result = await firebaseForgotPasswordReset({
+        idToken,
         newPassword,
       });
       setSuccessMessage(result.message);
@@ -102,20 +176,22 @@ export default function ForgotPasswordScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <TouchableOpacity style={styles.backBtn} onPress={() => (step === 'lookup' ? router.back() : setStep('lookup'))}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => (step === 'phone' ? router.back() : setStep('phone'))}>
           <Ionicons name="arrow-back" size={20} color="#0f172a" />
         </TouchableOpacity>
 
-        <Text style={styles.title}>Forgot Password</Text>
+        <Text style={styles.title}>Reset Password</Text>
         <Text style={styles.subtitle}>
-          {step === 'lookup' && 'Enter your 10-digit mobile number and 6-digit PIN code to receive a WhatsApp OTP.'}
-          {step === 'otp' && `Enter the 4-digit OTP sent to your WhatsApp number (+91 ${mobile}).`}
+          {step === 'phone' && 'Enter your 10-digit mobile number to receive an SMS OTP.'}
+          {step === 'otp' && `Enter the 6-digit OTP sent to your number (+91 ${mobile}).`}
           {step === 'new-password' && 'Enter and confirm your new account password.'}
           {step === 'done' && 'Your password has been updated successfully!'}
         </Text>
 
-        {/* STEP 1: LOOKUP */}
-        {step === 'lookup' && (
+        <div id="recaptcha-container"></div>
+
+        {/* STEP 1: PHONE */}
+        {step === 'phone' && (
           <>
             <Text style={styles.label}>Mobile Number</Text>
             <View style={styles.inputWrap}>
@@ -128,27 +204,14 @@ export default function ForgotPasswordScreen() {
                 placeholderTextColor="#94a3b8"
                 value={mobile}
                 onChangeText={setMobile}
-              />
-            </View>
-
-            <Text style={styles.label}>PIN Code</Text>
-            <View style={styles.inputWrap}>
-              <Ionicons name="navigate-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                keyboardType="numeric"
-                maxLength={6}
-                placeholder="6-digit PIN Code"
-                placeholderTextColor="#94a3b8"
-                value={pincode}
-                onChangeText={setPincode}
+                onSubmitEditing={onSendOtp}
               />
             </View>
 
             {error ? <Text style={styles.error}>{error}</Text> : null}
 
-            <TouchableOpacity onPress={onLookup} disabled={isSubmitting} activeOpacity={0.85} style={styles.button}>
-              {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Send WhatsApp OTP</Text>}
+            <TouchableOpacity onPress={onSendOtp} disabled={isSubmitting} activeOpacity={0.85} style={styles.button}>
+              {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Send SMS OTP</Text>}
             </TouchableOpacity>
           </>
         )}
@@ -156,27 +219,19 @@ export default function ForgotPasswordScreen() {
         {/* STEP 2: OTP VERIFICATION */}
         {step === 'otp' && (
           <>
-            <View style={styles.otpBox}>
-              <Ionicons name="logo-whatsapp" size={24} color="#25D366" />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.otpBoxTitle}>WhatsApp OTP Sent!</Text>
-                <Text style={styles.otpBoxSubtitle}>
-                  Check your WhatsApp messages for the 4-digit code.
-                </Text>
-              </View>
-            </View>
-
-            <Text style={styles.label}>Enter 4-Digit OTP</Text>
+            <Text style={styles.label}>Enter 6-Digit OTP</Text>
             <View style={styles.inputWrap}>
               <Ionicons name="key-outline" size={18} color="#94a3b8" style={styles.inputIcon} />
               <TextInput
+                ref={otpInputRef}
                 style={[styles.input, { letterSpacing: 6, fontSize: 18, fontFamily: FONT.extraBold }]}
                 keyboardType="numeric"
                 maxLength={6}
-                placeholder="• • • •"
+                placeholder="• • • • • •"
                 placeholderTextColor="#94a3b8"
                 value={otp}
                 onChangeText={setOtp}
+                onSubmitEditing={onVerifyOtp}
               />
             </View>
 
@@ -186,9 +241,15 @@ export default function ForgotPasswordScreen() {
               {isSubmitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Verify OTP</Text>}
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={onLookup} style={{ marginTop: 16, alignItems: 'center' }}>
-              <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: theme.primary }}>Didn't receive OTP? Resend via WhatsApp</Text>
-            </TouchableOpacity>
+            <View style={styles.resendRow}>
+              {resendTimer > 0 ? (
+                <Text style={styles.resendTimer}>Resend SMS in {resendTimer}s</Text>
+              ) : (
+                <TouchableOpacity onPress={onSendOtp} disabled={isSubmitting}>
+                  <Text style={styles.resendLink}>🔄 Resend SMS OTP</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </>
         )}
 
@@ -221,6 +282,7 @@ export default function ForgotPasswordScreen() {
                 placeholderTextColor="#94a3b8"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
+                onSubmitEditing={onResetPassword}
               />
             </View>
 
@@ -275,19 +337,9 @@ const styles = StyleSheet.create({
     marginTop: 22,
   },
   buttonText: { color: '#fff', fontSize: 16, fontFamily: FONT.bold },
-  otpBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: '#f0fdf4',
-    borderWidth: 1,
-    borderColor: '#bbf7d0',
-    borderRadius: RADIUS.md,
-    padding: 14,
-    marginBottom: 6,
-  },
-  otpBoxTitle: { fontSize: 14, fontFamily: FONT.extraBold, color: '#166534' },
-  otpBoxSubtitle: { fontSize: 12.5, fontFamily: FONT.medium, color: '#15803d', marginTop: 1 },
+  resendRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 12 },
+  resendTimer: { fontSize: 13, fontFamily: FONT.medium, color: '#94a3b8' },
+  resendLink: { fontSize: 13, fontFamily: FONT.bold, color: '#0284c7' },
   successBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',

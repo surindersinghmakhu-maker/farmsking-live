@@ -24,6 +24,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useAuth } from '@/src/store/auth-context';
 import { useUpdateMyAddress } from '@/src/hooks/useAdvisorProfile';
 import { useMyAddresses, useCreateAddress, useUpdateAddress, useDeleteAddress } from '@/src/hooks/useAddresses';
+import { verifyAccountPassword } from '@/src/api/auth.api';
 import type { CustomerAddress } from '@/src/api/addresses.api';
 import { lookupPincode, PincodeOffice } from '@/src/api/pincode.api';
 import { uploadPhoto } from '@/src/api/uploads.api';
@@ -35,7 +36,7 @@ import { useLabourDashboard } from '@/src/hooks/useLabour';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const GOOGLE_CLIENT_ID = '526414717221-j7s76lkacilevmucm0npnehrnqtqu0f3.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '742233980320-ito7h8q3iq5vdon6b93qc08q5l8c3v9v.apps.googleusercontent.com';
 const discovery = {
   authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
   tokenEndpoint: 'https://oauth2.googleapis.com/token',
@@ -54,7 +55,7 @@ const getCleanMobile = (mobile?: string | null) => {
 export default function ProfileScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ tab?: string }>();
-  const { user, updateUser, refreshUser, linkGoogle, sendMobileLinkOtp, verifyMobileLinkOtp } = useAuth();
+  const { user, updateUser, refreshUser, linkGoogle, unlinkGoogle, sendMobileLinkOtp, verifyMobileLinkOtp } = useAuth();
   const updateAddress = useUpdateMyAddress();
   const theme = RoleThemes[user?.role === 'ADVISOR' ? 'FARM_ADVISOR' : 'FARMER'] ?? RoleThemes.FARMER;
 
@@ -65,6 +66,47 @@ export default function ProfileScreen() {
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [otpError, setOtpError] = useState<string | null>(null);
   const [devOtpMsg, setDevOtpMsg] = useState<string | null>(null);
+
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  const handleChangePassword = async () => {
+    if (!oldPassword.trim()) {
+      setPasswordError('Please enter your old password.');
+      return;
+    }
+    if (!newPassword.trim() || newPassword.trim().length < 4) {
+      setPasswordError('New password must be at least 4 characters.');
+      return;
+    }
+    if (newPassword.trim() !== confirmNewPassword.trim()) {
+      setPasswordError('New passwords do not match.');
+      return;
+    }
+    setIsChangingPassword(true);
+    setPasswordError(null);
+    try {
+      // 1. Verify old password
+      await verifyAccountPassword(oldPassword.trim(), userMobile);
+      
+      // 2. Update to new password
+      await updateAddress.mutateAsync({ password: newPassword.trim() });
+      
+      setIsPasswordModalOpen(false);
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+      Alert.alert('✅ Success', 'Password updated successfully!');
+    } catch (err: any) {
+      setPasswordError(err?.response?.data?.message || err?.message || 'Failed to update password.');
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
 
 
   const handleSendOtp = async () => {
@@ -117,7 +159,7 @@ export default function ProfileScreen() {
 
   const redirectUri = AuthSession.makeRedirectUri(
     Platform.OS === 'web'
-      ? {}
+      ? ({ useProxy: false } as any)
       : { scheme: 'farmsking', path: 'auth' }
   );
 
@@ -195,6 +237,33 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleUnlinkGoogle = async () => {
+    Alert.alert(
+      'Unlink Google Account',
+      'Are you sure you want to unlink your Google account?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Unlink',
+          style: 'destructive',
+          onPress: async () => {
+            setGoogleLoading(true);
+            try {
+              const res = await unlinkGoogle();
+              if (res.success) {
+                Alert.alert('✅ Success', res.message || 'Google account unlinked.');
+              }
+            } catch (err: any) {
+              Alert.alert('Error', err?.response?.data?.message || err?.message || 'Failed to unlink Google account.');
+            } finally {
+              setGoogleLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const [activeTab, setActiveTab] = useState<'PROFILE' | 'ADDRESSES'>(
     params.tab === 'ADDRESSES' ? 'ADDRESSES' : 'PROFILE'
   );
@@ -213,6 +282,8 @@ export default function ProfileScreen() {
   const [userMobile, setUserMobile] = useState(getCleanMobile(user?.mobile) || '');
   const [loginPassword, setLoginPassword] = useState('');
   const [email, setEmail] = useState(user?.email ?? '');
+  const [isEditingMobile, setIsEditingMobile] = useState(false);
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [farmName, setFarmName] = useState(user?.farmName || user?.name || '');
   const [farmAddress, setFarmAddress] = useState(
     user?.farmAddress || [user?.village, user?.district, user?.state].filter(Boolean).join(', ') || ''
@@ -669,51 +740,48 @@ export default function ProfileScreen() {
             /* ─── ROLE TYPE 3: REGULAR USER PROFILE (FARMER, ADVISOR, CUSTOMER, GARDENER) ─── */
             <View style={{ width: '100%', maxWidth: 460, gap: 12 }}>
 
-              {/* ── Section 1: Avatar / Photo ── */}
-              <View style={styles.avatarSection}>
+              {/* ── Section 1: Header / Avatar ── */}
+              <View style={[styles.avatarSection, { marginBottom: 16, alignItems: 'center' }]}>
                 <TouchableOpacity style={styles.avatarWrap} activeOpacity={0.85} onPress={() => setIsPhotoModalOpen(true)}>
-                  <Avatar key={photoUrl ?? 'avatar'} uri={photoUrl ?? undefined} size={88} />
+                  <Avatar key={photoUrl ?? 'avatar'} uri={photoUrl ?? undefined} size={96} />
                   <View style={styles.photoEditBadge}>
-                    <Ionicons name="camera" size={13} color="#ffffff" />
+                    <Ionicons name="camera" size={14} color="#ffffff" />
                   </View>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.changePhotoBtn} onPress={() => setIsPhotoModalOpen(true)}>
+                <TouchableOpacity onPress={() => setIsPhotoModalOpen(true)} style={{ marginTop: 8 }}>
                   <Text style={styles.changePhotoText}>Change Profile Photo</Text>
                 </TouchableOpacity>
+                
+                <Text style={{ fontSize: 20, fontFamily: FONT.extraBold, color: '#0f172a', marginTop: 12 }}>
+                  {user?.name || 'User'}
+                </Text>
+                
+                <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#eff6ff', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, borderWidth: 1, borderColor: '#bfdbfe' }}>
+                    <Ionicons name="key-outline" size={13} color="#2563eb" />
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#1d4ed8' }}>King ID: {user?.kingId || '—'}</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f0fdf4', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, borderWidth: 1, borderColor: '#bbf7d0' }}>
+                    <Ionicons name="ribbon-outline" size={13} color="#16a34a" />
+                    <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#15803d' }}>{user?.role?.replace('_', ' ') || 'FARMER'}</Text>
+                  </View>
+                </View>
               </View>
 
               {/* ── Section 2: Personal Details Card ── */}
-              <View style={[styles.card, { padding: 12, gap: 8 }]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+              <View style={[styles.card, { padding: 16, gap: 12 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 8 }}>
                   <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#eff6ff', alignItems: 'center', justifyContent: 'center' }}>
                     <Ionicons name="person" size={14} color="#2563eb" />
                   </View>
-                  <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' }}>👤 Personal Details</Text>
-                </View>
-
-                {/* King ID + Mobile badges */}
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 4 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f8fafc', paddingHorizontal: 8, paddingVertical: 3.5, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                    <Ionicons name="key-outline" size={12} color="#0284c7" />
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#475569' }}>King ID: {user?.kingId || '—'}</Text>
-                  </View>
-                  {getCleanMobile(user?.mobile) ? (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f8fafc', paddingHorizontal: 8, paddingVertical: 3.5, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
-                      <Ionicons name="call-outline" size={12} color="#16a34a" />
-                      <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#475569' }}>{getCleanMobile(user?.mobile)}</Text>
-                    </View>
-                  ) : null}
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f0fdf4', paddingHorizontal: 8, paddingVertical: 3.5, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#bbf7d0' }}>
-                    <Ionicons name="ribbon-outline" size={12} color="#16a34a" />
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#15803d' }}>{user?.role?.replace('_', ' ') || 'FARMER'}</Text>
-                  </View>
+                  <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' }}>Personal Details</Text>
                 </View>
 
                 {/* Full Name */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Text style={{ width: 80, fontSize: 11.5, fontFamily: FONT.bold, color: '#475569' }}>Full Name *</Text>
+                <View style={{ marginBottom: 6 }}>
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#475569', marginBottom: 4 }}>Full Name *</Text>
                   <TextInput
-                    style={[styles.input, { flex: 1, height: 36, fontSize: 13, paddingVertical: 0, backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }]}
+                    style={[styles.input, { height: 40, fontSize: 13, backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }]}
                     value={name}
                     onChangeText={(v) => { isUserInteractingRef.current = true; setName(v); }}
                     placeholder="Your full name"
@@ -721,210 +789,105 @@ export default function ProfileScreen() {
                   />
                 </View>
 
-                {/* Email */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Text style={{ width: 80, fontSize: 11.5, fontFamily: FONT.bold, color: '#475569' }}>Email</Text>
-                  <TextInput
-                    style={[styles.input, { flex: 1, height: 36, fontSize: 13, paddingVertical: 0, backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }]}
-                    value={email}
-                    onChangeText={setEmail}
-                    placeholder="yourname@domain.com"
-                    placeholderTextColor="#94a3b8"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
-                </View>
-
-                {/* Mobile Link / Add */}
-                {!getCleanMobile(user?.mobile) ? (
+                {/* Mobile Link / Add / Update */}
+                <View style={{ marginBottom: 6 }}>
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#475569', marginBottom: 4 }}>Mobile Number</Text>
                   <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-                    <TextInput
-                      style={[styles.input, { flex: 1, height: 36, fontSize: 13, paddingVertical: 0, backgroundColor: '#ffffff', borderColor: '#cbd5e1' }]}
-                      value={userMobile}
-                      onChangeText={setUserMobile}
-                      placeholder="Add 10-digit mobile"
-                      placeholderTextColor="#94a3b8"
-                      keyboardType="phone-pad"
-                      maxLength={10}
-                    />
-                    <TouchableOpacity
-                      style={{ backgroundColor: '#16a34a', paddingHorizontal: 10, height: 36, borderRadius: RADIUS.md, justifyContent: 'center', alignItems: 'center', flexDirection: 'row', gap: 4 }}
-                      onPress={handleSendOtp}
-                      disabled={isSendingOtp}
-                    >
-                      {isSendingOtp ? <ActivityIndicator size="small" color="#FFF" /> : <Text style={{ color: '#FFF', fontSize: 11, fontFamily: FONT.bold }}>Get OTP</Text>}
-                    </TouchableOpacity>
-                  </View>
-                ) : null}
-
-                {/* Link Google */}
-                <TouchableOpacity
-                  style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: user?.email ? '#f0fdf4' : '#eff6ff', borderColor: user?.email ? '#bbf7d0' : '#bfdbfe', borderWidth: 1, paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.md }}
-                  onPress={handleLinkGoogle}
-                  disabled={googleLoading}
-                >
-                  {googleLoading ? <ActivityIndicator size="small" color="#0284c7" /> : (
-                    <>
-                      <Ionicons name="logo-google" size={14} color={user?.email ? '#16a34a' : '#2563eb'} />
-                      <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: user?.email ? '#15803d' : '#1d4ed8' }}>
-                        {user?.email ? `Google: ${user.email}` : '🔗 Link Google Account'}
-                      </Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
-
-              {/* ── Section 3: Farm Details Card ── */}
-              <View style={[styles.card, { padding: 12, gap: 8 }]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                  <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#f0fdf4', alignItems: 'center', justifyContent: 'center' }}>
-                    <Ionicons name="leaf" size={14} color="#16a34a" />
-                  </View>
-                  <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' }}>🌾 Farm Details</Text>
-                </View>
-
-                <Text style={styles.inputLabel}>Farm / Business Name</Text>
-                <TextInput
-                  style={styles.input}
-                  value={farmName}
-                  onChangeText={(v) => { isUserInteractingRef.current = true; setFarmName(v); }}
-                  placeholder="e.g. Singh Farms / ABC Agri"
-                  placeholderTextColor="#94a3b8"
-                />
-
-                <Text style={styles.inputLabel}>Farm Address / Village</Text>
-                <TextInput
-                  style={styles.input}
-                  value={farmAddress}
-                  onChangeText={(v) => { isUserInteractingRef.current = true; setFarmAddress(v); }}
-                  placeholder="e.g. Village Khanna, Ludhiana"
-                  placeholderTextColor="#94a3b8"
-                />
-
-                <View style={{ flexDirection: 'row', gap: 10 }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.inputLabel}>Farm Mobile</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={farmMobile}
-                      onChangeText={(v) => { isUserInteractingRef.current = true; setFarmMobile(v); }}
-                      placeholder="Contact number"
-                      placeholderTextColor="#94a3b8"
-                      keyboardType="phone-pad"
-                      maxLength={10}
-                    />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.inputLabel}>UPI ID (Payments)</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={upiId}
-                      onChangeText={(v) => { isUserInteractingRef.current = true; setUpiId(v); }}
-                      placeholder="name@upi"
-                      placeholderTextColor="#94a3b8"
-                      autoCapitalize="none"
-                    />
+                    <View style={[styles.input, { flex: 1, height: 40, paddingVertical: 0, paddingHorizontal: 10, backgroundColor: isEditingMobile ? '#ffffff' : '#f8fafc', borderColor: '#e2e8f0', flexDirection: 'row', alignItems: 'center' }]}>
+                      <Ionicons name="call-outline" size={16} color="#94a3b8" style={{ marginRight: 6 }} />
+                      <TextInput
+                        style={{ flex: 1, fontSize: 13, color: '#0f172a' }}
+                        value={userMobile}
+                        onChangeText={setUserMobile}
+                        placeholder="10-digit mobile number"
+                        placeholderTextColor="#94a3b8"
+                        keyboardType="phone-pad"
+                        maxLength={10}
+                        editable={isEditingMobile}
+                      />
+                      {user?.mobile && getCleanMobile(user?.mobile) === userMobile ? <Ionicons name="checkmark-circle" size={16} color="#16a34a" style={{ marginLeft: 4 }} /> : null}
+                    </View>
+                    {!isEditingMobile ? (
+                      <TouchableOpacity
+                        style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 12, height: 40, borderRadius: RADIUS.md, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#cbd5e1' }}
+                        onPress={() => setIsEditingMobile(true)}
+                      >
+                        <Text style={{ color: '#475569', fontSize: 11.5, fontFamily: FONT.bold }}>Update</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity
+                        style={{ backgroundColor: '#16a34a', paddingHorizontal: 12, height: 40, borderRadius: RADIUS.md, justifyContent: 'center', alignItems: 'center', flexDirection: 'row', gap: 4 }}
+                        onPress={handleSendOtp}
+                        disabled={isSendingOtp || userMobile === getCleanMobile(user?.mobile)}
+                      >
+                        {isSendingOtp ? <ActivityIndicator size="small" color="#FFF" /> : <Text style={{ color: '#FFF', fontSize: 11.5, fontFamily: FONT.bold }}>OTP</Text>}
+                      </TouchableOpacity>
+                    )}
                   </View>
                 </View>
-              </View>
 
-              {/* ── Section 4: Location / Pincode Card ── */}
-              <View style={[styles.card, { padding: 12, gap: 8 }]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                  <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#fff7ed', alignItems: 'center', justifyContent: 'center' }}>
-                    <Ionicons name="location" size={14} color="#ea580c" />
+                {/* Email */}
+                <View style={{ marginBottom: 6 }}>
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#475569', marginBottom: 4 }}>Email Address</Text>
+                  <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                    <View style={[styles.input, { flex: 1, height: 40, paddingVertical: 0, paddingHorizontal: 10, backgroundColor: isEditingEmail ? '#ffffff' : '#f8fafc', borderColor: '#e2e8f0', flexDirection: 'row', alignItems: 'center' }]}>
+                      <Ionicons name="mail-outline" size={16} color="#94a3b8" style={{ marginRight: 6 }} />
+                      <TextInput
+                        style={{ flex: 1, fontSize: 13, color: '#0f172a' }}
+                        value={email}
+                        onChangeText={setEmail}
+                        placeholder="yourname@domain.com"
+                        placeholderTextColor="#94a3b8"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        editable={isEditingEmail}
+                      />
+                      {user?.googleId && email && email.toLowerCase() === user.email?.toLowerCase() ? <Ionicons name="checkmark-circle" size={16} color="#16a34a" style={{ marginLeft: 4 }} /> : null}
+                    </View>
+                    {!isEditingEmail && (
+                      <TouchableOpacity
+                        style={{ backgroundColor: '#f1f5f9', paddingHorizontal: 12, height: 40, borderRadius: RADIUS.md, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#cbd5e1' }}
+                        onPress={() => setIsEditingEmail(true)}
+                      >
+                        <Text style={{ color: '#475569', fontSize: 11.5, fontFamily: FONT.bold }}>Update</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
-                  <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' }}>📍 Location Details</Text>
                 </View>
 
-                <Text style={styles.inputLabel}>PIN Code (Auto-fills District & State)</Text>
-                <View style={styles.pincodeRow}>
-                  <TextInput
-                    style={[styles.input, { flex: 1, borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 10, backgroundColor: '#f8fafc' }]}
-                    value={pincode}
-                    onChangeText={(t) => {
-                      isUserInteractingRef.current = true;
-                      setPincode(t);
-                      if (t.length === 6) fetchLocationFromPincode(t);
-                    }}
-                    placeholder="6-digit PIN Code"
-                    placeholderTextColor="#94a3b8"
-                    keyboardType="numeric"
-                    maxLength={6}
-                  />
+                {/* Link/Unlink Google */}
+                <View style={{ marginTop: 8 }}>
                   <TouchableOpacity
-                    style={[styles.fetchBtn, { backgroundColor: theme.primary }]}
-                    onPress={() => fetchLocationFromPincode()}
-                    disabled={isPincodeLoading || pincode.length !== 6}
+                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: user?.googleId ? '#fef2f2' : '#eff6ff', borderColor: user?.googleId ? '#fecaca' : '#bfdbfe', borderWidth: 1, paddingVertical: 10, borderRadius: RADIUS.md }}
+                    onPress={user?.googleId ? handleUnlinkGoogle : handleLinkGoogle}
+                    disabled={googleLoading}
                   >
-                    {isPincodeLoading ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.fetchBtnText}>Fetch</Text>}
+                    {googleLoading ? <ActivityIndicator size="small" color={user?.googleId ? '#dc2626' : '#2563eb'} /> : (
+                      <>
+                        <Ionicons name="logo-google" size={16} color={user?.googleId ? '#dc2626' : '#2563eb'} />
+                        <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: user?.googleId ? '#b91c1c' : '#1d4ed8' }}>
+                          {user?.googleId ? `Unlink Google: ${user.email}` : 'Securely Link Google Account'}
+                        </Text>
+                      </>
+                    )}
                   </TouchableOpacity>
                 </View>
-                {pincodeStatus ? <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: pincodeStatus.startsWith('❌') ? '#dc2626' : '#15803d' }}>{pincodeStatus}</Text> : null}
-
-                {/* Post Office Selector */}
-                {officeOptions.length > 0 && (
-                  postOffice && !isPostOfficeExpanded ? (
-                    <TouchableOpacity
-                      style={[styles.selectedOfficeCard, { borderColor: theme.primary, backgroundColor: theme.primaryLight ?? '#f0fdf4' }]}
-                      onPress={() => { tap(); setIsPostOfficeExpanded(true); }}
-                    >
-                      <Ionicons name="checkmark-circle" size={16} color={theme.primary} />
-                      <Text style={[styles.selectedOfficeText, { color: theme.primary }]} numberOfLines={1}>{postOffice} ({district})</Text>
-                      <View style={[styles.changePill, { borderColor: theme.primary }]}>
-                        <Text style={[styles.changePillText, { color: theme.primary }]}>Change</Text>
-                        <Ionicons name="chevron-down" size={11} color={theme.primary} />
-                      </View>
-                    </TouchableOpacity>
-                  ) : (
-                    <View style={styles.expandedOfficeList}>
-                      {officeOptions.map((office) => {
-                        const isSel = postOffice === office.name;
-                        return (
-                          <TouchableOpacity
-                            key={office.name}
-                            style={[styles.expandedOfficeCard, isSel && { backgroundColor: theme.primaryLight ?? '#f0fdf4', borderColor: theme.primary }]}
-                            onPress={() => { tap(); setPostOffice(office.name); setDistrict(office.district); setState(office.state); setIsPostOfficeExpanded(false); }}
-                          >
-                            <Ionicons name={isSel ? 'radio-button-on' : 'radio-button-off'} size={15} color={isSel ? theme.primary : '#94a3b8'} />
-                            <Text style={[styles.expandedOfficeText, isSel && { color: theme.primary, fontFamily: FONT.bold }]}>{office.name} ({office.district})</Text>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
-                  )
-                )}
-
-                <View style={{ flexDirection: 'row', gap: 10 }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.inputLabel}>District</Text>
-                    <View style={styles.readOnlySelector}>
-                      <Ionicons name="location-outline" size={14} color="#64748b" />
-                      <Text style={styles.readOnlyText} numberOfLines={1}>{district || '—'}</Text>
-                      <Ionicons name="lock-closed-outline" size={12} color="#94a3b8" />
-                    </View>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.inputLabel}>State</Text>
-                    <View style={styles.readOnlySelector}>
-                      <Text style={styles.readOnlyText} numberOfLines={1}>{state || '—'}</Text>
-                      <Ionicons name="lock-closed-outline" size={12} color="#94a3b8" />
-                    </View>
-                  </View>
-                </View>
               </View>
 
-              {/* ── Section 5: Notifications & Preferences ── */}
-              <View style={[styles.card, { padding: 12 }]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-                  <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#f0fdf4', alignItems: 'center', justifyContent: 'center' }}>
-                    <Ionicons name="notifications" size={14} color="#16a34a" />
+
+
+              {/* ── Section: Notifications & Security ── */}
+              <View style={[styles.card, { padding: 16, gap: 12 }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 8 }}>
+                  <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#f3e8ff', alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="settings" size={14} color="#9333ea" />
                   </View>
-                  <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' }}>🔔 Notifications & Preferences</Text>
+                  <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' }}>Preferences & Security</Text>
                 </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 4 }}>
+
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }}>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>📱 WhatsApp Group Alerts</Text>
+                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>📱 WhatsApp Alerts</Text>
                     <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 }}>Receive mandi rates, weather & farm alerts</Text>
                   </View>
                   <Switch
@@ -934,6 +897,14 @@ export default function ProfileScreen() {
                     thumbColor={whatsappGroupEnabled ? '#16a34a' : '#94a3b8'}
                   />
                 </View>
+
+                <TouchableOpacity
+                  style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#f8fafc', borderColor: '#e2e8f0', borderWidth: 1, paddingHorizontal: 12, paddingVertical: 10, borderRadius: RADIUS.md, marginTop: 4 }}
+                  onPress={() => setIsPasswordModalOpen(true)}
+                >
+                  <Ionicons name="key" size={16} color="#475569" />
+                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#334155' }}>Change Account Password</Text>
+                </TouchableOpacity>
               </View>
 
               {isSaved && (
@@ -986,11 +957,7 @@ export default function ProfileScreen() {
                   We sent a 6-digit OTP to WhatsApp number <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>{userMobile}</Text>.
                 </Text>
 
-                {devOtpMsg ? (
-                  <View style={{ backgroundColor: '#fef3c7', padding: 8, borderRadius: RADIUS.md, marginBottom: 10 }}>
-                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#92400e' }}>{devOtpMsg}</Text>
-                  </View>
-                ) : null}
+                {/* Dev OTP message removed so users do not see it on screen */}
 
                 <Text style={[styles.inputLabel, { fontSize: 11.5, color: '#334155' }]}>6-Digit OTP Code *</Text>
                 <TextInput
@@ -1000,6 +967,8 @@ export default function ProfileScreen() {
                   placeholder="123456"
                   placeholderTextColor="#cbd5e1"
                   keyboardType="number-pad"
+                  textContentType="oneTimeCode"
+                  autoComplete="one-time-code"
                   maxLength={6}
                 />
 
@@ -1037,6 +1006,86 @@ export default function ProfileScreen() {
                   <Text style={{ color: '#0284c7', fontSize: 12, fontFamily: FONT.bold }}>
                     {isSendingOtp ? 'Resending...' : 'Didn\'t receive OTP? Resend via WhatsApp'}
                   </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+
+          {/* 🔒 Password Change Modal */}
+          <Modal
+            visible={isPasswordModalOpen}
+            animationType="fade"
+            transparent
+            onRequestClose={() => {
+              setIsPasswordModalOpen(false);
+              setOldPassword('');
+              setNewPassword('');
+              setConfirmNewPassword('');
+              setPasswordError(null);
+            }}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="key" size={20} color="#dc2626" />
+                    <Text style={styles.modalTitle}>Change Password</Text>
+                  </View>
+                  <TouchableOpacity onPress={() => {
+                    setIsPasswordModalOpen(false);
+                    setOldPassword('');
+                    setNewPassword('');
+                    setConfirmNewPassword('');
+                    setPasswordError(null);
+                  }}>
+                    <Ionicons name="close" size={20} color="#64748b" />
+                  </TouchableOpacity>
+                </View>
+
+                <Text style={[styles.inputLabel, { fontSize: 11.5, color: '#334155' }]}>Current Password *</Text>
+                <TextInput
+                  style={[styles.modalInput, { fontSize: 14, fontFamily: FONT.bold }]}
+                  value={oldPassword}
+                  onChangeText={setOldPassword}
+                  placeholder="Enter old password"
+                  placeholderTextColor="#cbd5e1"
+                  secureTextEntry
+                />
+
+                <Text style={[styles.inputLabel, { fontSize: 11.5, color: '#334155', marginTop: 10 }]}>New Password *</Text>
+                <TextInput
+                  style={[styles.modalInput, { fontSize: 14, fontFamily: FONT.bold }]}
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  placeholder="Enter new password"
+                  placeholderTextColor="#cbd5e1"
+                  secureTextEntry
+                />
+
+                <Text style={[styles.inputLabel, { fontSize: 11.5, color: '#334155', marginTop: 10 }]}>Confirm New Password *</Text>
+                <TextInput
+                  style={[styles.modalInput, { fontSize: 14, fontFamily: FONT.bold }]}
+                  value={confirmNewPassword}
+                  onChangeText={setConfirmNewPassword}
+                  placeholder="Re-enter new password"
+                  placeholderTextColor="#cbd5e1"
+                  secureTextEntry
+                />
+
+                {passwordError ? (
+                  <Text style={{ color: '#ef4444', fontSize: 12, fontFamily: FONT.bold, marginTop: 8 }}>{passwordError}</Text>
+                ) : null}
+
+                <TouchableOpacity
+                  style={[styles.modalSubmitBtn, { backgroundColor: '#dc2626', marginTop: 16 }]}
+                  onPress={handleChangePassword}
+                  disabled={isChangingPassword}
+                >
+                  {isChangingPassword ? (
+                    <ActivityIndicator color="#ffffff" />
+                  ) : (
+                    <Text style={styles.modalSubmitText}>Update Password</Text>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>

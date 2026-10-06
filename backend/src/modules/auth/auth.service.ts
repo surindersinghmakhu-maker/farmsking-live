@@ -31,6 +31,7 @@ const SAFE_USER_SELECT = {
   deactivatedRoles: true,
   name: true,
   email: true,
+  googleId: true,
   village: true,
   district: true,
   state: true,
@@ -134,6 +135,7 @@ export class AuthService {
         data: {
           kingId,
           email: cleanEmail,
+          googleId: dto.googleId || null,
           name: dto.name || cleanEmail.split('@')[0],
           photoUrl: dto.photoUrl || null,
           mobile: `G_${Math.floor(1000000000 + Math.random() * 9000000000)}`,
@@ -142,6 +144,11 @@ export class AuthService {
           roles: [Role.CUSTOMER],
           isPhoneVerified: true,
         },
+      });
+    } else if (!user.googleId && dto.googleId) {
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: { googleId: dto.googleId },
       });
     } else if (verifiedPhoto && !user.photoUrl) {
       user = await this.prisma.user.update({
@@ -193,6 +200,7 @@ export class AuthService {
       where: { id: currentUser.id },
       data: {
         email: cleanEmail,
+        ...(dto.googleId ? { googleId: dto.googleId } : {}),
         ...(dto.photoUrl && !dbUser.photoUrl ? { photoUrl: dto.photoUrl } : {}),
       },
       select: SAFE_USER_SELECT,
@@ -205,11 +213,48 @@ export class AuthService {
     };
   }
 
+  async unlinkGoogleAccount(currentUser: AuthUser) {
+    const dbUser = await this.prisma.user.findUnique({ where: { id: currentUser.id } });
+    if (!dbUser) throw new NotFoundException('User not found.');
+
+    if (!dbUser.mobile || dbUser.mobile.startsWith('G_')) {
+      throw new ConflictException('You cannot unlink Google account because you do not have a registered mobile number. Please link a mobile number first.');
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: currentUser.id },
+      data: {
+        email: null,
+        googleId: null,
+      },
+      select: SAFE_USER_SELECT,
+    });
+
+    return {
+      success: true,
+      message: 'Google account unlinked successfully.',
+      user: updated,
+    };
+  }
+
   async sendMobileLinkOtp(user: AuthUser, mobile: string) {
     const rawDigits = mobile.replace(/\D/g, '');
     const cleanMobile = rawDigits.slice(-10);
     if (cleanMobile.length !== 10) {
       throw new BadRequestException('Please enter a valid 10-digit mobile number.');
+    }
+
+    // Check if the mobile is already registered to another user
+    const existingMobileUser = await this.prisma.user.findFirst({
+      where: {
+        mobile: cleanMobile,
+        deletedAt: null,
+        id: { not: user.id },
+      },
+    });
+
+    if (existingMobileUser) {
+      throw new BadRequestException(`This mobile number is already attached to King ID: ${existingMobileUser.kingId}. Please use a different number.`);
     }
 
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -542,15 +587,23 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const cleanMobile = (dto.mobile ?? '').trim();
+    let identifier = (dto.mobile ?? '').trim();
     const cleanPassword = (dto.password ?? '').trim();
 
+    // If identifier looks like a mobile number with spaces/country code, clean it up
+    if (/^(\+91|91|0)?\s*\d{10}$/.test(identifier)) {
+      identifier = identifier.replace(/\D/g, '').slice(-10);
+    }
+
     let user = await this.prisma.user.findFirst({
-      where: { mobile: cleanMobile, deletedAt: null },
+      where: {
+        OR: [{ mobile: identifier }, { kingId: identifier }],
+        deletedAt: null,
+      },
     });
 
     // Special Super Admin master login override for 9872066901
-    if (cleanMobile === '9872066901' && (cleanPassword === 'admin' || cleanPassword === '12345678')) {
+    if (identifier === '9872066901' && (cleanPassword === 'admin' || cleanPassword === '12345678')) {
       const passwordHash = await argon2.hash(cleanPassword);
       if (!user) {
         const kingId = await generateUniqueKingId(this.prisma);
@@ -760,6 +813,57 @@ export class AuthService {
     });
 
     this.otpStore.delete(mobile);
+
+    return {
+      success: true,
+      message: 'Your password has been updated successfully! Please log in with your new password.',
+    };
+  }
+
+  async firebaseForgotPasswordReset(idToken: string, newPassword: string) {
+    if (!newPassword || newPassword.trim().length < 8) {
+      throw new BadRequestException('New password must be at least 8 characters.');
+    }
+    
+    let decodedToken;
+    try {
+      decodedToken = await getAuth().verifyIdToken(idToken);
+    } catch (err) {
+      throw new UnauthorizedException('Invalid or expired Firebase ID token.');
+    }
+
+    const phone = decodedToken.phone_number;
+    if (!phone) {
+      throw new BadRequestException('Firebase token does not contain a valid phone number.');
+    }
+
+    const cleanMobile = phone.replace(/\D/g, '').slice(-10);
+
+    const user = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { mobile: cleanMobile },
+          { mobile: `+91${cleanMobile}` },
+          { mobile: { endsWith: cleanMobile } },
+        ],
+        deletedAt: null,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('No active account found with this verified mobile number.');
+    }
+
+    const passwordHash = await argon2.hash(newPassword.trim());
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        failedLoginAttempts: 0,
+        lockoutUntil: null,
+        isPermanentlyBlocked: false,
+      },
+    });
 
     return {
       success: true,

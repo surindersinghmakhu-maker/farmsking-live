@@ -66,6 +66,13 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
+  @Post('unlink-google')
+  unlinkGoogleAccount(@CurrentUser() user: AuthUser) {
+    return this.authService.unlinkGoogleAccount(user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
   @Post('send-mobile-link-otp')
   sendMobileLinkOtp(@CurrentUser() user: AuthUser, @Body() body: { mobile: string }) {
     return this.authService.sendMobileLinkOtp(user, body.mobile);
@@ -79,6 +86,16 @@ export class AuthController {
     @Body() dto: { mobile: string; otp: string; password?: string },
   ) {
     return this.authService.verifyMobileLinkOtp(user, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Post('firebase-mobile-link')
+  firebaseMobileLink(
+    @CurrentUser() user: AuthUser,
+    @Body() body: { idToken: string; password?: string }
+  ) {
+    return this.authService.firebaseMobileLink(user, body);
   }
 
   @Throttle({ default: { limit: 1000, ttl: 60_000 } })
@@ -130,5 +147,12 @@ export class AuthController {
   @Post('forgot-password/reset')
   forgotPasswordReset(@Body() dto: ForgotPasswordResetDto) {
     return this.authService.forgotPasswordReset(dto);
+  }
+
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post('forgot-password/firebase-reset')
+  firebaseForgotPasswordReset(@Body() body: { idToken: string; newPassword: string }) {
+    return this.authService.firebaseForgotPasswordReset(body.idToken, body.newPassword);
   }
 }

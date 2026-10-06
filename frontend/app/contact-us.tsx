@@ -4,19 +4,19 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { FONT } from '@/constants/theme';
 import PublicHeader from '@/components/PublicHeader';
-import { useAppSettings } from '@/src/hooks/useAppSettings';
+import { useSupportContact } from '@/src/hooks/useAppSettings';
 import { ActivityIndicator } from 'react-native';
 
 export default function ContactUsPage() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isDesktop = width > 768;
-  const { data: settings, isLoading } = useAppSettings();
+  const { data: support, isLoading } = useSupportContact();
 
-  const phone = settings?.contactPhone || '+91-9876543210';
-  const whatsapp = settings?.whatsappNumber || phone;
-  const email = settings?.contactEmail || 'support@farmsking.in';
-  const address = settings?.contactAddress || 'FarmsKing AgriTech Pvt Ltd\nMakhu, Punjab, India - 142044';
+  const phone = support?.mobile || '+91-9876543210';
+  const whatsapp = phone;
+  const email = support?.email || 'support@farmsking.in';
+  const address = 'FarmsKing AgriTech Pvt Ltd\nMakhu, Punjab, India - 142044';
 
   return (
     <View style={styles.container}>

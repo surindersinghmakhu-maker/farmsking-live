@@ -56,6 +56,12 @@ async function bootstrap() {
     immutable: true,
     etag: true,
   });
+  
+  // Serve public HTML landing page at root route
+  app.useStaticAssets(join(process.cwd(), 'public'), {
+    prefix: '/',
+  });
+
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   app.use(compression({ level: 6, threshold: 256 }));
   const allowedOrigins = corsOrigins === '*' ? true : (corsOrigins ? corsOrigins.split(',') : ['https://farmsking.in']);

@@ -14,6 +14,7 @@ model User {
   deactivatedRoles        Role[]       @default([])
   name                    String
   email                   String?
+  googleId                String?      @unique
   village                 String?
   district                String?
   state                   String?

@@ -47,6 +47,7 @@ export interface User {
   deactivatedRoles?: Role[];
   name: string;
   email?: string | null;
+  googleId?: string | null;
   village?: string | null;
   district?: string | null;
   state?: string | null;

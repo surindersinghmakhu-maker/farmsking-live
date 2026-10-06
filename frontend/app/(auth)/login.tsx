@@ -269,7 +269,7 @@ export default function LoginScreen() {
 
   const onSubmit = async () => {
     setError(null);
-    if (!mobile.trim()) { setError('Please enter your 10-digit mobile number.'); return; }
+    if (!mobile.trim()) { setError('Please enter your Mobile Number or King ID.'); return; }
     if (!password.trim()) { setError('Please enter your password.'); return; }
     setIsSubmitting(true);
     try {
@@ -334,15 +334,15 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Mobile Field (shared) */}
-          <Text style={styles.label}>Mobile Number</Text>
+          {/* Mobile/King ID Field (shared but adaptive) */}
+          <Text style={styles.label}>{activeTab === 'password' ? 'Mobile Number or King ID' : 'Mobile Number'}</Text>
           <View style={[styles.inputWrap, focusedField === 'mobile' && styles.inputWrapFocused]}>
-            <Ionicons name="call-outline" size={18} color={focusedField === 'mobile' ? '#16a34a' : '#94a3b8'} style={styles.inputIcon} />
+            <Ionicons name={activeTab === 'password' ? 'person-outline' : 'call-outline'} size={18} color={focusedField === 'mobile' ? '#16a34a' : '#94a3b8'} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              keyboardType="phone-pad"
-              maxLength={10}
-              placeholder="10-digit mobile number"
+              keyboardType={activeTab === 'password' ? 'default' : 'phone-pad'}
+              maxLength={activeTab === 'otp' ? 10 : 30}
+              placeholder={activeTab === 'password' ? 'Enter Mobile Number or King ID' : '10-digit mobile number'}
               placeholderTextColor="#94a3b8"
               value={mobile}
               onChangeText={(t) => { setMobile(t); if (otpSent) { setOtpSent(false); setOtpCode(''); setDevOtp(null); } }}
@@ -350,6 +350,7 @@ export default function LoginScreen() {
               onBlur={() => setFocusedField(null)}
               returnKeyType="next"
               editable={!(activeTab === 'otp' && otpSent)}
+              autoCapitalize="none"
             />
             {activeTab === 'otp' && otpSent && (
               <TouchableOpacity onPress={() => { setOtpSent(false); setOtpCode(''); setDevOtp(null); }} style={{ padding: 4 }}>
@@ -431,6 +432,8 @@ export default function LoginScreen() {
                       ref={otpInputRef}
                       style={[styles.input, { letterSpacing: 6, fontSize: 18, fontFamily: FONT.extraBold }]}
                       keyboardType="number-pad"
+                      textContentType="oneTimeCode"
+                      autoComplete="one-time-code"
                       maxLength={6}
                       placeholder="● ● ● ● ● ●"
                       placeholderTextColor="#cbd5e1"

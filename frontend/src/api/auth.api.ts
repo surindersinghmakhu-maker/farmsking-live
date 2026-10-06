@@ -55,6 +55,11 @@ export async function forgotPasswordReset(payload: { mobile: string; otp: string
   return data;
 }
 
+export async function firebaseForgotPasswordReset(payload: { idToken: string; newPassword: string }): Promise<{ success: boolean; message: string }> {
+  const { data } = await apiClient.post('/auth/forgot-password/firebase-reset', payload);
+  return data;
+}
+
 export async function logoutOtherSessions(): Promise<{ success: boolean; message: string; loggedOutCount: number }> {
   const { data } = await apiClient.post('/auth/logout-other-sessions');
   return data;
@@ -80,6 +85,11 @@ export async function googleLoginApi(payload: GoogleLoginPayload): Promise<AuthR
 
 export async function linkGoogleApi(payload: GoogleLoginPayload): Promise<{ success: boolean; message: string; user: any }> {
   const { data } = await apiClient.post<{ success: boolean; message: string; user: any }>('/auth/link-google', payload);
+  return data;
+}
+
+export async function unlinkGoogleApi(): Promise<{ success: boolean; message: string; user: any }> {
+  const { data } = await apiClient.post<{ success: boolean; message: string; user: any }>('/auth/unlink-google');
   return data;
 }
 

@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { createContext, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import { AppState, Alert } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
-import { login as apiLogin, registerFarmer as apiRegister, logoutOtherSessions, googleLoginApi, linkGoogleApi, sendMobileLinkOtpApi, verifyMobileLinkOtpApi, sendLoginOtpApi, verifyLoginOtpApi, firebaseLoginApi, LoginPayload, RegisterPayload, GoogleLoginPayload } from '../api/auth.api';
+import { login as apiLogin, registerFarmer as apiRegister, logoutOtherSessions, googleLoginApi, linkGoogleApi, unlinkGoogleApi, sendMobileLinkOtpApi, verifyMobileLinkOtpApi, sendLoginOtpApi, verifyLoginOtpApi, firebaseLoginApi, LoginPayload, RegisterPayload, GoogleLoginPayload } from '../api/auth.api';
 import { getMe } from '../api/users.api';
 import { setUnauthorizedHandler, TOKEN_KEY } from '../api/client';
 import { disconnectChatSocket } from '../lib/socket';
@@ -18,6 +18,7 @@ interface AuthContextValue {
   firebaseLogin: (idToken: string) => Promise<void>;
   googleLogin: (payload: GoogleLoginPayload) => Promise<{ isProfileIncomplete?: boolean }>;
   linkGoogle: (payload: GoogleLoginPayload) => Promise<{ success: boolean; message: string }>;
+  unlinkGoogle: () => Promise<{ success: boolean; message: string }>;
   sendMobileLinkOtp: (mobile: string) => Promise<{ success: boolean; message: string; devOtp?: string }>;
   verifyMobileLinkOtp: (payload: { mobile: string; otp: string; password?: string }) => Promise<{ success: boolean; message: string; isMerged?: boolean }>;
   register: (payload: RegisterPayload) => Promise<void>;
@@ -172,6 +173,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       linkGoogle: async (payload) => {
         const response = await linkGoogleApi(payload);
+        if (response.user) {
+          if (!userRef.current) return { success: response.success, message: response.message };
+          const merged = { ...userRef.current, ...response.user };
+          await SecureStore.setItemAsync(USER_KEY, JSON.stringify(merged));
+          setUser(merged);
+        }
+        return { success: response.success, message: response.message };
+      },
+      unlinkGoogle: async () => {
+        const response = await unlinkGoogleApi();
         if (response.user) {
           if (!userRef.current) return { success: response.success, message: response.message };
           const merged = { ...userRef.current, ...response.user };

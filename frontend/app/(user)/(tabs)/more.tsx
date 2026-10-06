@@ -23,6 +23,7 @@ import { apiClient } from '@/src/api/client';
 import { deleteMyAccount } from '@/src/api/users.api';
 import { SuperAdminExpenseCategoriesModal } from '@/components/SuperAdminExpenseCategoriesModal';
 import { SupervisorManagementModal } from '@/src/components/SupervisorManagementModal';
+import { DeleteAccountModal } from '@/src/components/DeleteAccountModal';
 import { CaptchaChallenge, CaptchaRef } from '@/src/components/CaptchaChallenge';
 import { useExecutiveTheme, EXECUTIVE_THEME_CONFIG, ExecutiveTheme } from '@/src/store/theme-context';
 import * as Print from 'expo-print';
@@ -142,59 +143,7 @@ export default function MoreScreen() {
   };
 
   const handleOpenDeleteModal = () => {
-    setDeleteKingIdInput('');
-    setDeletePasswordInput('');
-    setDeleteConfirmText('');
-    setDeletePincodeInput('');
-    setDeleteOtpInput('');
-    setDeleteGeneratedOtp('');
-    setIsDeleteOtpSent(false);
-    setDeleteBotStatusText(null);
-    setDeleteCaptchaError(null);
-    setIsSecurityVerified(false);
     setShowDeleteConfirmModal(true);
-  };
-
-  const handleVerifyDeleteSecurity = () => {
-    setDeleteCaptchaError(null);
-
-    // Step 1: King ID must match
-    const inputKingId = deleteKingIdInput.trim().toUpperCase();
-    const cleanUserKingId = (user?.kingId || '').trim().toUpperCase();
-    if (!inputKingId) {
-      setDeleteCaptchaError('Please enter your King ID (e.g. FK100234).');
-      return;
-    }
-    if (inputKingId !== cleanUserKingId) {
-      setDeleteCaptchaError('King ID is incorrect. Please enter your exact King ID.');
-      return;
-    }
-
-    // Step 2: Password must be provided
-    if (!deletePasswordInput.trim()) {
-      setDeleteCaptchaError('Please enter your account password.');
-      return;
-    }
-
-    // Step 3: User must type DELETE exactly
-    if (deleteConfirmText.trim() !== 'DELETE') {
-      setDeleteCaptchaError('Please type DELETE (in uppercase) exactly to confirm.');
-      return;
-    }
-
-    setIsSecurityVerified(true);
-  };
-
-  const handleConfirmDeleteAccount = async () => {
-    setIsDeletingAccount(true);
-    try {
-      await deleteMyAccount();
-      await logout();
-    } catch (err: any) {
-      alert(err?.response?.data?.message ?? 'Could not delete account. Please try again.');
-    } finally {
-      setIsDeletingAccount(false);
-    }
   };
 
   const showAdvisorBusinessSection =
@@ -527,159 +476,7 @@ export default function MoreScreen() {
         </View>
       </Modal>
 
-      {/* ── Delete Account Security & Confirmation Modal ───────────────────────────────── */}
-      <Modal visible={showDeleteConfirmModal} transparent animationType="fade" onRequestClose={() => setShowDeleteConfirmModal(false)}>
-        <View style={pModalStyles.overlay}>
-          <View style={[pModalStyles.card, { borderColor: '#fecaca', borderWidth: 2, maxWidth: 440 }]}>
-            <View style={{ alignItems: 'center', marginBottom: 10 }}>
-              <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#fee2e2', justifyContent: 'center', alignItems: 'center', marginBottom: 6 }}>
-                <Ionicons name="shield-checkmark-outline" size={24} color="#dc2626" />
-              </View>
-              <Text style={{ fontSize: 17, fontFamily: FONT.extraBold, color: '#991b1b', textAlign: 'center' }}>
-                Delete Account
-              </Text>
-              <Text style={{ fontSize: 11.5, color: '#64748b', fontFamily: FONT.medium, textAlign: 'center', marginTop: 2 }}>
-                3-Step Verification: King ID, Password & Confirm DELETE
-              </Text>
-            </View>
-
-            {!isSecurityVerified ? (
-              <View style={{ gap: 9, width: '100%' }}>
-
-                {/* 1. Input King ID */}
-                <View>
-                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#334155', marginBottom: 3 }}>
-                    1. Enter King ID / Mobile Number *
-                  </Text>
-                  <View style={{ height: 38, flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, backgroundColor: '#ffffff', paddingHorizontal: 10 }}>
-                    <Ionicons name="card-outline" size={17} color="#94a3b8" style={{ marginRight: 6 }} />
-                    <TextInput
-                      style={{ flex: 1, fontSize: 13, fontFamily: FONT.medium, color: '#0f172a' }}
-                      placeholder="e.g. FK100234 or Mobile Number"
-                      placeholderTextColor="#94a3b8"
-                      value={deleteKingIdInput}
-                      onChangeText={setDeleteKingIdInput}
-                      autoCapitalize="characters"
-                    />
-                  </View>
-                </View>
-
-                {/* Step 2: Password */}
-                <View>
-                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#334155', marginBottom: 3 }}>
-                    2. Enter Your Account Password *
-                  </Text>
-                  <View style={{ height: 38, flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, backgroundColor: '#ffffff', paddingHorizontal: 10 }}>
-                    <Ionicons name="lock-closed-outline" size={17} color="#94a3b8" style={{ marginRight: 6 }} />
-                    <TextInput
-                      style={{ flex: 1, fontSize: 13, fontFamily: FONT.medium, color: '#0f172a' }}
-                      placeholder="Your account password"
-                      placeholderTextColor="#94a3b8"
-                      secureTextEntry
-                      value={deletePasswordInput}
-                      onChangeText={setDeletePasswordInput}
-                    />
-                  </View>
-                </View>
-
-                {/* Step 3: Type DELETE */}
-                <View style={{ backgroundColor: '#fef2f2', borderWidth: 1.5, borderColor: '#fecaca', borderRadius: RADIUS.md, padding: 9, gap: 6 }}>
-                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#991b1b' }}>
-                    3. Type DELETE to confirm *
-                  </Text>
-                  <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' }}>
-                    ⚠️ This action is irreversible. Your personal data will be permanently removed. Your King ID and historical records will be retained for audit.
-                  </Text>
-                  <View style={{ height: 38, flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#f87171', borderRadius: RADIUS.md, backgroundColor: '#ffffff', paddingHorizontal: 10 }}>
-                    <Ionicons name="warning-outline" size={17} color="#ef4444" style={{ marginRight: 6 }} />
-                    <TextInput
-                      style={{ flex: 1, fontSize: 14, fontFamily: FONT.extraBold, color: '#dc2626', letterSpacing: 2 }}
-                      placeholder="Type: DELETE"
-                      placeholderTextColor="#fca5a5"
-                      autoCapitalize="characters"
-                      value={deleteConfirmText}
-                      onChangeText={(t) => {
-                        setDeleteConfirmText(t.toUpperCase());
-                        setDeleteCaptchaError(null);
-                      }}
-                    />
-                    {deleteConfirmText === 'DELETE' ? (
-                      <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
-                    ) : null}
-                  </View>
-                </View>
-
-                {deleteCaptchaError ? (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca', padding: 7, borderRadius: RADIUS.md }}>
-                    <Ionicons name="alert-circle" size={16} color="#dc2626" />
-                    <Text style={{ color: '#dc2626', fontFamily: FONT.medium, fontSize: 11, flex: 1 }}>{deleteCaptchaError}</Text>
-                  </View>
-                ) : null}
-
-                <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
-                  <TouchableOpacity
-                    style={{ flex: 1, paddingVertical: 10, borderRadius: RADIUS.md, backgroundColor: '#f1f5f9', alignItems: 'center' }}
-                    onPress={() => setShowDeleteConfirmModal(false)}
-                  >
-                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#475569' }}>Cancel</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={{ flex: 1.3, paddingVertical: 10, borderRadius: RADIUS.md, backgroundColor: deleteConfirmText === 'DELETE' ? '#0284c7' : '#cbd5e1', alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 4 }}
-                    onPress={handleVerifyDeleteSecurity}
-                    disabled={deleteConfirmText !== 'DELETE'}
-                  >
-                    <Ionicons name="shield-checkmark" size={16} color="#ffffff" />
-                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>Verify & Continue</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ) : (
-              <View style={{ gap: 12, width: '100%' }}>
-                {/* Security Verified Success Badge */}
-                <View style={{ backgroundColor: '#f0fdf4', borderWidth: 1.5, borderColor: '#86efac', padding: 8, borderRadius: RADIUS.md, alignItems: 'center' }}>
-                  <Ionicons name="checkmark-circle" size={20} color="#16a34a" />
-                  <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: '#15803d', marginTop: 2 }}>
-                    ✨ Security Verified Successfully!
-                  </Text>
-                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>
-                    Verified King ID: {user?.kingId || user?.mobile}
-                  </Text>
-                </View>
-
-                <Text style={{ fontSize: 12, color: '#475569', lineHeight: 18, textAlign: 'center', fontFamily: FONT.medium }}>
-                  🛡️ Google Play Store Policy Compliant Account Deletion: Confirming will permanently delete & anonymize your profile info, photo avatar, village/address, zero out wallet balance, and unlink supervisor accounts. You will be logged out immediately.
-                </Text>
-
-                <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
-                  <TouchableOpacity
-                    style={{ flex: 1, paddingVertical: 11, borderRadius: RADIUS.md, backgroundColor: '#f1f5f9', alignItems: 'center' }}
-                    onPress={() => setShowDeleteConfirmModal(false)}
-                    disabled={isDeletingAccount}
-                  >
-                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#475569' }}>Cancel</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={{ flex: 1.4, paddingVertical: 11, borderRadius: RADIUS.md, backgroundColor: '#dc2626', alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 6 }}
-                    onPress={handleConfirmDeleteAccount}
-                    disabled={isDeletingAccount}
-                  >
-                    {isDeletingAccount ? (
-                      <ActivityIndicator color="#ffffff" size="small" />
-                    ) : (
-                      <>
-                        <Ionicons name="trash" size={16} color="#ffffff" />
-                        <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff' }}>Delete Account Now</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-          </View>
-        </View>
-      </Modal>
+      <DeleteAccountModal visible={showDeleteConfirmModal} onClose={() => setShowDeleteConfirmModal(false)} />
     </>
   );
 }

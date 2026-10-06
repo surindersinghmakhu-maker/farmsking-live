@@ -9,6 +9,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -286,12 +287,15 @@ export default function LoginScreen() {
     }
   };
 
+  const { width } = useWindowDimensions();
+  const isDesktop = width > 768;
+
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
         {/* Hero Banner */}
-        <LinearGradient colors={['#16a34a', '#15803d', '#0f766e']} style={styles.heroBanner}>
+        <LinearGradient colors={['#16a34a', '#15803d', '#0f766e']} style={[styles.heroBanner, isDesktop && { paddingTop: 20, paddingBottom: 28 }]}>
           <TouchableOpacity 
             style={{ position: 'absolute', top: 20, left: 20, zIndex: 10, flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 }}
             onPress={() => router.push('/')}
@@ -306,8 +310,9 @@ export default function LoginScreen() {
           </View>
         </LinearGradient>
 
-        {/* Card */}
-        <View style={[styles.card, premiumShadow('#0f172a', 'md')]}>
+        {/* Card — centered on desktop */}
+        <View style={isDesktop ? styles.cardWebWrapper : null}>
+        <View style={[styles.card, premiumShadow('#0f172a', 'md'), isDesktop && styles.cardDesktop]}>
           <Text style={styles.title}>Welcome Back! 👋</Text>
           <Text style={styles.subtitle}>Sign in to your FarmsKing account</Text>
 
@@ -535,6 +540,8 @@ export default function LoginScreen() {
           </View>
 
         </View>
+        {isDesktop && <View />}
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -543,8 +550,21 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f1f5f9' },
   scroll: { flexGrow: 1, paddingBottom: 32 },
+  cardWebWrapper: {
+    width: '100%',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  cardDesktop: {
+    width: '100%',
+    maxWidth: 480,
+    marginHorizontal: 'auto' as any,
+    marginTop: -28,
+    borderRadius: 24,
+    padding: 28,
+  },
   heroBanner: {
-    paddingTop: Platform.OS === 'web' ? 12 : 36,
+    paddingTop: Platform.OS === 'web' ? 16 : 36,
     paddingBottom: 24,
     paddingHorizontal: SPACING.md,
     borderBottomLeftRadius: 24,

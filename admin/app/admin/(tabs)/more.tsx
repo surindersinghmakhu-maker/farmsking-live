@@ -50,9 +50,9 @@ const ADVISOR_BUSINESS_ITEMS: { key: TranslationKey; label: string; icon: keyof 
 ];
 
 const SHOP_ITEMS: { key: TranslationKey; label: string; icon: keyof typeof Ionicons.glyphMap; href?: string }[] = [
-  { key: 'browseCategories', label: 'Browse Categories', icon: 'grid-outline', href: '/(user)/(tabs)/shop' },
-  { key: 'myCart', label: 'My Cart', icon: 'cart-outline', href: '/(user)/(tabs)/cart' },
-  { key: 'myOrders', label: 'My Orders', icon: 'receipt-outline', href: '/(user)/(tabs)/orders' },
+  { key: 'browseCategories', label: 'Browse Categories', icon: 'grid-outline', href: '/admin/(tabs)/admin_shop' },
+  { key: 'myCart', label: 'My Cart', icon: 'cart-outline', href: '/admin/(tabs)/cart' },
+  { key: 'myOrders', label: 'My Orders', icon: 'receipt-outline', href: '/admin/(tabs)/orders' },
 ];
 
 const SUPER_ADMIN_ITEMS: { key: TranslationKey | 'workspace' | 'agristoreHub'; label: string; icon: keyof typeof Ionicons.glyphMap; href?: string }[] = [

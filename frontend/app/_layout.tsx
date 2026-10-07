@@ -68,16 +68,11 @@ function RootNavigation() {
         return;
       }
 
-      if (currentGroup === 'admin') {
-        const hasAdminAccess = userRoles.some(r => ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'MANAGER', 'SUPERVISOR'].includes(r));
-        if (!hasAdminAccess) router.replace('/(user)/(tabs)');
-      } else if (currentGroup === '(partner)') {
+      if (currentGroup === '(partner)') {
         const hasPartnerAccess = userRoles.some(r => ['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(r));
         if (!hasPartnerAccess) router.replace('/(user)/(tabs)');
       } else if (inAuthGroup) {
-        if (['SUPER_ADMIN', 'ADMIN', 'OPERATOR'].includes(user.role)) {
-          router.replace('/admin/(tabs)');
-        } else if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user.role)) {
+        if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user.role)) {
           router.replace('/(partner)/(tabs)');
         } else {
           router.replace('/(user)/(tabs)');
@@ -93,7 +88,6 @@ function RootNavigation() {
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false, title: 'FarmsKing - India\'s Agriculture Platform' }} />
-      <Stack.Screen name="admin" options={{ headerShown: false, title: 'FarmsKing Admin' }} />
       <Stack.Screen name="(partner)" options={{ headerShown: false, title: 'FarmsKing Partner' }} />
       <Stack.Screen name="(user)" options={{ headerShown: false, title: 'FarmsKing' }} />
       <Stack.Screen name="(auth)" options={{ headerShown: false, title: 'FarmsKing Login' }} />
@@ -102,8 +96,6 @@ function RootNavigation() {
       <Stack.Screen name="support" options={{ headerShown: false, title: 'FarmsKing Support' }} />
       <Stack.Screen name="contact-us" options={{ headerShown: false, title: 'Contact Us' }} />
       <Stack.Screen name="dose" options={{ headerShown: false, title: 'FarmsKing' }} />
-      <Stack.Screen name="doses" options={{ headerShown: false, title: 'FarmsKing' }} />
-      <Stack.Screen name="my" options={{ headerShown: false, title: 'FarmsKing' }} />
       <Stack.Screen name="you" options={{ headerShown: false, title: 'FarmsKing' }} />
       <Stack.Screen name="seller-dashboard" options={{ headerShown: false, title: 'FarmsKing Seller' }} />
       <Stack.Screen name="farmer-profile-setup" options={{ headerShown: false, title: 'FarmsKing Setup' }} />

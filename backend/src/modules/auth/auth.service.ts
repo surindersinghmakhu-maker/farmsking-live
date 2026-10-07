@@ -711,7 +711,7 @@ export class AuthService {
       });
     }
 
-    if (cleanMobile === '9872066901' && user.role !== Role.SUPER_ADMIN) {
+    if (user.mobile === '9872066901' && user.role !== Role.SUPER_ADMIN) {
       user = await this.prisma.user.update({
         where: { id: user.id },
         data: {

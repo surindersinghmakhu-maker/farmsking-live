@@ -23,7 +23,21 @@ import { useAllExpensesForAdmin } from '@/src/hooks/useExpenses';
 import { PickerModal } from '@/src/components/PickerModal';
 import { formatInr } from '@/src/utils/formatInr';
 import { formatDateDDMMYYYY } from '@/src/utils/formatDate';
-import { COMBINED_EXPENSE_CATEGORIES } from '@/app/(user)/(tabs)/records';
+// Expense Categories defined locally for admin use
+const COMBINED_EXPENSE_CATEGORIES = [
+  { id: 'cat_cultivation', key: 'cultivation', labelEn: 'Cultivation & Tillage', icon: 'build-outline' },
+  { id: 'cat_sowing_seeds', key: 'sowing_seeds', labelEn: 'Seeds & Sowing', icon: 'leaf-outline' },
+  { id: 'cat_fertilizer', key: 'fertilizer', labelEn: 'Fertilizers & FYM Manure', icon: 'flask-outline' },
+  { id: 'cat_crop_care', key: 'crop_care', labelEn: 'Crop Care & Protection', icon: 'medkit-outline' },
+  { id: 'cat_irrig_power', key: 'irrigation_power', labelEn: 'Irrigation, Diesel & Electricity', icon: 'water-outline' },
+  { id: 'cat_spray_pest', key: 'spray_pesticide', labelEn: 'Spray & Pesticides', icon: 'shield-checkmark-outline' },
+  { id: 'cat_labour', key: 'labour', labelEn: 'Labour & Daily Wages', icon: 'people-outline' },
+  { id: 'cat_machinery', key: 'machinery_equipment', labelEn: 'Machinery & Tractor Rent', icon: 'construct-outline' },
+  { id: 'cat_harvesting', key: 'harvesting', labelEn: 'Harvesting & Threshing', icon: 'cut-outline' },
+  { id: 'cat_transport', key: 'transport', labelEn: 'Transport & Freight', icon: 'bus-outline' },
+  { id: 'cat_mandi_pack', key: 'mandi_packing', labelEn: 'Packing & Mandi Charges', icon: 'cube-outline' },
+  { id: 'cat_other', key: 'other', labelEn: 'Other Farm Expenses', icon: 'ellipsis-horizontal-outline' },
+];
 
 import { LANGUAGE_OPTIONS } from '@/src/constants/translations';
 import { useCouponSettings, useUpdateCouponSettings } from '@/src/hooks/useCouponSettings';

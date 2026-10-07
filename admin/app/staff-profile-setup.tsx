@@ -117,7 +117,7 @@ export default function StaffProfileSetupScreen() {
 
             <TouchableOpacity
               style={[styles.backHomeBtn, { backgroundColor: roleMeta.color }]}
-              onPress={() => router.replace('/(partner)/(tabs)' as any)}
+              onPress={() => router.replace('/admin/(tabs)' as any)}
             >
               <Ionicons name="home" size={18} color="#fff" />
               <Text style={styles.backHomeBtnText}>Go to Web Training Dashboard</Text>

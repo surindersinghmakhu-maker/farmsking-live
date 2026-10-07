@@ -122,6 +122,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading,
       login: async (payload) => {
         const response = await apiLogin(payload);
+        if (response.user.role !== 'ADMIN' && response.user.role !== 'SUPER_ADMIN') {
+          throw new Error('Only Admin and Super Admin accounts can access this panel.');
+        }
         await persistSession(response.accessToken, response.user);
 
         if (response.sessionMeta?.warningMessage || response.sessionMeta?.hasMultipleLogins) {
@@ -160,14 +163,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       otpLogin: async (payload) => {
         const response = await verifyLoginOtpApi(payload);
+        if (response.user.role !== 'ADMIN' && response.user.role !== 'SUPER_ADMIN') {
+          throw new Error('Only Admin and Super Admin accounts can access this panel.');
+        }
         await persistSession(response.accessToken, response.user);
       },
       firebaseLogin: async (idToken) => {
         const response = await firebaseLoginApi(idToken);
+        if (response.user.role !== 'ADMIN' && response.user.role !== 'SUPER_ADMIN') {
+          throw new Error('Only Admin and Super Admin accounts can access this panel.');
+        }
         await persistSession(response.accessToken, response.user);
       },
       googleLogin: async (payload) => {
         const response = await googleLoginApi(payload);
+        if (response.user.role !== 'ADMIN' && response.user.role !== 'SUPER_ADMIN') {
+          throw new Error('Only Admin and Super Admin accounts can access this panel.');
+        }
         await persistSession(response.accessToken, response.user);
         return { isProfileIncomplete: response.isProfileIncomplete };
       },

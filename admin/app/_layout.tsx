@@ -86,16 +86,12 @@ function RootNavigation() {
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false, title: 'FarmsKing - India\'s Agriculture Platform' }} />
       <Stack.Screen name="admin" options={{ headerShown: false, title: 'FarmsKing Admin' }} />
-      <Stack.Screen name="(partner)" options={{ headerShown: false, title: 'FarmsKing Partner' }} />
-      <Stack.Screen name="(user)" options={{ headerShown: false, title: 'FarmsKing' }} />
       <Stack.Screen name="(auth)" options={{ headerShown: false, title: 'FarmsKing Login' }} />
       <Stack.Screen name="seo" options={{ headerShown: false, title: 'FarmsKing' }} />
       <Stack.Screen name="shop" options={{ headerShown: false, title: 'FarmsKing Store' }} />
       <Stack.Screen name="support" options={{ headerShown: false, title: 'FarmsKing Support' }} />
       <Stack.Screen name="contact-us" options={{ headerShown: false, title: 'Contact Us' }} />
       <Stack.Screen name="dose" options={{ headerShown: false, title: 'FarmsKing' }} />
-      <Stack.Screen name="doses" options={{ headerShown: false, title: 'FarmsKing' }} />
-      <Stack.Screen name="my" options={{ headerShown: false, title: 'FarmsKing' }} />
       <Stack.Screen name="you" options={{ headerShown: false, title: 'FarmsKing' }} />
       <Stack.Screen name="seller-dashboard" options={{ headerShown: false, title: 'FarmsKing Seller' }} />
       <Stack.Screen name="farmer-profile-setup" options={{ headerShown: false, title: 'FarmsKing Setup' }} />

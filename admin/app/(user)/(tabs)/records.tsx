@@ -1,0 +1,4892 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+// Updated Records Screen with Sales tab label & syntax fix
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
+import ViewShot from 'react-native-view-shot';
+import { useLocalSearchParams } from 'expo-router';
+import { useAuth } from '@/src/store/auth-context';
+import { UniversalVoucherSlipModal, UniversalVoucherData } from '@/src/components/UniversalVoucherSlip';
+import { UniversalStatementModal, RawStatementEntry } from '@/src/components/UniversalStatementModal';
+import { useFarms } from '@/src/hooks/useFarms';
+import { usePlotsForFarm } from '@/src/hooks/usePlots';
+import { useCreateExpense, useUpdateExpense, useExpenseCategories, useExpensesForFarm } from '@/src/hooks/useExpenses';
+import { useCrops, CropSaleRecord } from '@/src/store/crops-context';
+import { useMyCrops } from '@/src/hooks/useCrops';
+import { useParties, useCreateParty, usePartyStatement, useRecordSaleLedger, useRecordPaymentReceived, useRecordPaymentMade } from '@/src/hooks/useParties';
+import { useCreateSaleBill, useDeleteSaleBill, useFetchSaleBill, useMySaleBillCount, useUpdateSaleBill, useSaleBills } from '@/src/hooks/useSaleBills';
+import * as saleBillsApi from '@/src/api/saleBills.api';
+import { useFetchPaymentReceipt, useMyPaymentReceiptCount } from '@/src/hooks/usePaymentReceipts';
+import { useFarmerPlan } from '@/src/hooks/useFarmerPlan';
+import { PartyPicker } from '@/src/components/PartyPicker';
+import { PaymentVoucherModal, type VoucherType } from '@/src/components/PaymentVoucherModal';
+import { LabourManagementSection } from '@/src/components/LabourManagementSection';
+import { AllPartiesSection } from '@/src/components/AllPartiesSection';
+import { buildPartyLedgerRows, PopulatedLedgerEntry } from '@/src/utils/partyLedger';
+import { ProfessionalOverviewView } from '@/src/components/ProfessionalOverviewView';
+import { PaymentMode } from '@/src/types/api';
+import { useLabourWorkers } from '@/src/hooks/useLabour';
+import {
+  BillPreview,
+  PaymentReceiptPreview,
+  useShareBillAsJpg,
+  type SaleCartItem,
+  type SavedSaleInvoice,
+  type PaymentReceiptData,
+} from '@/src/components/SaleBillPreview';
+import { Party } from '@/src/types/api';
+import { getExpenseCategoryIcon } from '@/src/constants/expenseCategoryIcons';
+import { formatInr } from '@/src/utils/formatInr';
+import { formatDateDDMMYYYY } from '@/src/utils/formatDate';
+import { RoleThemes } from '@/constants/Colors';
+import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
+import { useExecutiveTheme } from '@/src/store/theme-context';
+
+const theme = RoleThemes.FARMER;
+
+const tap = () => {
+  if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+};
+
+function todayIso() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getCleanIsoDate(dateStr?: string): string {
+  if (!dateStr) return todayIso();
+  const str = String(dateStr).trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) {
+    return str.slice(0, 10);
+  }
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}/.test(str)) {
+    const parts = str.split('/');
+    const day = parts[0].padStart(2, '0');
+    const month = parts[1].padStart(2, '0');
+    const year = parts[2];
+    return `${year}-${month}-${day}`;
+  }
+  const parsed = new Date(str);
+  if (!isNaN(parsed.getTime())) {
+    const year = parsed.getFullYear();
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  return str;
+}
+
+// Individual Agricultural Work & Farming Expense Categories
+export const COMBINED_EXPENSE_CATEGORIES = [
+  {
+    id: 'cat_cultivation',
+    key: 'cultivation',
+    labelEn: 'Cultivation & Tillage',
+    labelPa: 'Cultivation & Tillage',
+    labelHi: 'Cultivation & Tillage',
+    icon: 'build-outline',
+  },
+  {
+    id: 'cat_sowing_seeds',
+    key: 'sowing_seeds',
+    labelEn: 'Seeds & Sowing',
+    labelPa: 'Seeds & Sowing',
+    labelHi: 'Seeds & Sowing',
+    icon: 'leaf-outline',
+  },
+  {
+    id: 'cat_fertilizer',
+    key: 'fertilizer',
+    labelEn: 'Fertilizers & FYM Manure',
+    labelPa: 'Fertilizers & FYM Manure',
+    labelHi: 'Fertilizers & FYM Manure',
+    icon: 'flask-outline',
+  },
+  {
+    id: 'cat_crop_care',
+    key: 'crop_care',
+    labelEn: 'Crop Care & Protection',
+    labelPa: 'Crop Care & Protection',
+    labelHi: 'Crop Care & Protection',
+    icon: 'medkit-outline',
+  },
+  {
+    id: 'cat_irrig_power',
+    key: 'irrigation_power',
+    labelEn: 'Irrigation, Diesel & Electricity',
+    labelPa: 'Irrigation, Diesel & Electricity',
+    labelHi: 'Irrigation, Diesel & Electricity',
+    icon: 'water-outline',
+  },
+  {
+    id: 'cat_spray_pest',
+    key: 'spray_pesticide',
+    labelEn: 'Spray & Pesticides',
+    labelPa: 'Spray & Pesticides',
+    labelHi: 'Spray & Pesticides',
+    icon: 'shield-checkmark-outline',
+  },
+  {
+    id: 'cat_labour',
+    key: 'labour',
+    labelEn: 'Labour & Daily Wages',
+    labelPa: 'Labour & Daily Wages',
+    labelHi: 'Labour & Daily Wages',
+    icon: 'people-outline',
+  },
+  {
+    id: 'cat_machinery',
+    key: 'machinery_equipment',
+    labelEn: 'Machinery & Tractor Rent',
+    labelPa: 'Machinery & Tractor Rent',
+    labelHi: 'Machinery & Tractor Rent',
+    icon: 'construct-outline',
+  },
+  {
+    id: 'cat_harvesting',
+    key: 'harvesting',
+    labelEn: 'Harvesting & Threshing',
+    labelPa: 'Harvesting & Threshing',
+    labelHi: 'Harvesting & Threshing',
+    icon: 'cut-outline',
+  },
+  {
+    id: 'cat_transport',
+    key: 'transport',
+    labelEn: 'Transport & Freight',
+    labelPa: 'Transport & Freight',
+    labelHi: 'Transport & Freight',
+    icon: 'bus-outline',
+  },
+  {
+    id: 'cat_mandi_pack',
+    key: 'mandi_packing',
+    labelEn: 'Packing & Mandi Charges',
+    labelPa: 'Packing & Mandi Charges',
+    labelHi: 'Packing & Mandi Charges',
+    icon: 'cube-outline',
+  },
+  {
+    id: 'cat_other',
+    key: 'other',
+    labelEn: 'Other Farm Expenses',
+    labelPa: 'Other Farm Expenses',
+    labelHi: 'Other Farm Expenses',
+    icon: 'ellipsis-horizontal-outline',
+  },
+];
+
+const LABOUR_WORK_TYPES = [
+  { id: 'harvesting', label: '🌾 Harvesting' },
+  { id: 'sowing', label: '🌱 Sowing & Planting' },
+  { id: 'weeding', label: '🌿 Weeding' },
+  { id: 'spraying', label: '🧴 Spraying' },
+  { id: 'loading', label: '📦 Packing & Loading' },
+  { id: 'irrigation', label: '💧 Irrigation' },
+  { id: 'general', label: '🚜 General Labour' },
+];
+
+export default function RecordsScreen() {
+  const { width } = useWindowDimensions();
+  const isMobile = width < 600;
+  const { user } = useAuth();
+  const [recordType, setRecordType] = useState<'EXPENSES' | 'SALES' | 'OVERVIEW' | 'LABOUR' | 'ANALYSIS' | 'PARTIES'>('OVERVIEW');
+
+  const { data: farms, isLoading: farmsLoading } = useFarms();
+  const [selectedFarmId, setSelectedFarmId] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!selectedFarmId && farms && farms.length > 0) {
+      setSelectedFarmId(farms[0].id);
+    }
+  }, [farms, selectedFarmId]);
+
+  const { data: apiCategories } = useExpenseCategories();
+  const { data: plots } = usePlotsForFarm(selectedFarmId);
+  const { data: expenses, isLoading: expensesLoading, refetch, isRefetching } = useExpensesForFarm(selectedFarmId);
+  const createExpense = useCreateExpense();
+  const updateExpense = useUpdateExpense();
+  const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
+
+  // Combine categories: use api categories if available, else fall back to COMBINED_EXPENSE_CATEGORIES
+  const displayCategories = useMemo(() => {
+    const raw = (apiCategories && apiCategories.length > 0) ? apiCategories : COMBINED_EXPENSE_CATEGORIES;
+    return raw.map((c) => ({
+      ...c,
+      labelEn: (c.labelEn || '').replace(/\s*\([\u0A00-\u0A7F\s\/]+\)/g, '').replace(/[\u0A00-\u0A7F]+/g, '').trim(),
+    }));
+  }, [apiCategories]);
+
+  // Expense Form state
+  const [showExpenseForm, setShowExpenseForm] = useState(false);
+  const [categoryId, setCategoryId] = useState<string | undefined>(displayCategories[0].id);
+  const [expenseCropType, setExpenseCropType] = useState<'CROP' | 'OTHER'>('CROP');
+  const [expenseCropId, setExpenseCropId] = useState<string | undefined>(undefined);
+  const { data: myRealCrops } = useMyCrops();
+
+  const activeCrops = useMemo(() => {
+    return (myRealCrops ?? []).filter((c) => c.status === 'ACTIVE' || c.status === 'HARVESTING' || c.status === 'PLANNED');
+  }, [myRealCrops]);
+  const { data: expenseLabourWorkers = [], refetch: refetchLabourWorkers } = useLabourWorkers();
+  const [expenseRecipientType, setExpenseRecipientType] = useState<'SUPPLIER' | 'LABOUR' | 'CASH'>('CASH');
+  const [selectedLabourWorkerId, setSelectedLabourWorkerId] = useState<string | undefined>(undefined);
+  const [labourWorkType, setLabourWorkType] = useState<string>('general');
+  const [amount, setAmount] = useState('');
+  const [expenseDate, setExpenseDate] = useState(todayIso());
+  const [plotId, setPlotId] = useState<string | undefined>(undefined);
+  const [expensePaymentMode, setExpensePaymentMode] = useState<PaymentMode>('CASH');
+  const [expenseParty, setExpenseParty] = useState<Party | null>(null);
+  const [isExpenseCategoryDropdownOpen, setIsExpenseCategoryDropdownOpen] = useState(false);
+  const [vendorName, setVendorName] = useState('');
+  const [quantity, setQuantity] = useState('');
+  const [unit, setUnit] = useState('');
+  const [notes, setNotes] = useState('');
+  const [expenseError, setExpenseError] = useState<string | null>(null);
+
+  // Universal Voucher & Statement Slip Modal state
+  const [showVoucherSlipModal, setShowVoucherSlipModal] = useState(false);
+  const [activeVoucherData, setActiveVoucherData] = useState<UniversalVoucherData | null>(null);
+  const [showFullStatementModal, setShowFullStatementModal] = useState(false);
+
+  // Active crops & their sales — shared with the Crops tab. Once a crop reaches
+  // the Completed stage it drops out of cropFields, so it naturally stops
+  // contributing here too; its sale record only lives on in Crop History.
+  const { cropFields: farmerCrops, salesRecords: allSalesRecords, recordSale, updateSale, deleteSale } = useCrops();
+
+  const { data: rawSaleBillsList } = useSaleBills();
+  const saleBillsMap = useMemo(() => {
+    const map = new Map<string, any>();
+    (rawSaleBillsList || []).forEach((b) => {
+      if (b.id) map.set(b.id, b);
+      if (b.billNo) map.set(b.billNo, b);
+    });
+    return map;
+  }, [rawSaleBillsList]);
+
+  // Unified list of ALL sales — DB Sale Bills are the single source of truth.
+  // Local/session records are merged seamlessly to avoid flickering or separate un-grouped rows.
+  const unifiedSalesRecords = useMemo(() => {
+    const result: CropSaleRecord[] = [];
+    const dbBillIds = new Set<string>();
+    const dbBillNos = new Set<string>();
+
+    if (rawSaleBillsList && Array.isArray(rawSaleBillsList)) {
+      rawSaleBillsList.forEach((b) => {
+        if (b.id) dbBillIds.add(b.id);
+        if (b.billNo) dbBillNos.add(b.billNo);
+
+        const cropSummary = (b.items && b.items.length > 0)
+          ? b.items.map((i: any) => `${i.cropName} (${i.qty} ${i.unit || 'unit'})`).join(', ')
+          : 'Crop Sale';
+
+        result.push({
+          id: b.id,
+          cropId: b.items?.[0]?.cropId || '',
+          cropName: cropSummary,
+          fieldName: b.partyName || 'Sale',
+          quantity: String(b.items?.[0]?.qty || 1),
+          unit: b.items?.[0]?.unit || 'kg',
+          pricePerUnit: String(b.items?.[0]?.rate || b.totalAmount),
+          totalAmount: Number(b.totalAmount),
+          amountReceived: b.amountReceived !== undefined && b.amountReceived !== null ? Number(b.amountReceived) : undefined,
+          previousBalance: b.previousBalance !== undefined && b.previousBalance !== null ? Number(b.previousBalance) : undefined,
+          amountReceivedMode: (b as any).amountReceivedMode as 'CASH' | 'UPI' | undefined,
+          buyerName: b.partyName || (b.isCash ? 'Cash Sale' : 'Direct Cash'),
+          saleDate: b.createdAt ? getCleanIsoDate(String(b.createdAt)) : todayIso(),
+          createdAt: b.createdAt ? String(b.createdAt) : undefined,
+          billId: b.id,
+          billNo: b.billNo,
+          partyId: b.partyId,
+        });
+      });
+    }
+
+    // Merge unsynced local/session records that are not yet present in DB bills
+    if (allSalesRecords && allSalesRecords.length > 0) {
+      const unsyncedLocals = allSalesRecords.filter((s) => {
+        if (s.billId && dbBillIds.has(s.billId)) return false;
+        if (s.billNo && dbBillNos.has(s.billNo)) return false;
+        if (s.id && dbBillIds.has(s.id)) return false;
+        return true;
+      });
+
+      if (unsyncedLocals.length > 0) {
+        const groupedMap = new Map<string, CropSaleRecord[]>();
+        unsyncedLocals.forEach((s) => {
+          const key = s.billId || s.billNo || `${s.saleDate}_${s.buyerName}`;
+          const existing = groupedMap.get(key) || [];
+          groupedMap.set(key, [...existing, s]);
+        });
+
+        groupedMap.forEach((items) => {
+          if (items.length === 1) {
+            result.push(items[0]);
+          } else {
+            const first = items[0];
+            const combinedCropSummary = items
+              .map((i) => `${i.cropName} (${i.quantity} ${i.unit || 'unit'})`)
+              .join(', ');
+            const totalAmt = items.reduce((sum, i) => sum + i.totalAmount, 0);
+
+            result.push({
+              ...first,
+              id: first.billId || first.id,
+              cropName: combinedCropSummary,
+              totalAmount: totalAmt,
+            });
+          }
+        });
+      }
+    }
+
+    return result.sort((a, b) => {
+      const timeA = (a as any).createdAt ? new Date((a as any).createdAt).getTime() : (a.saleDate ? new Date(a.saleDate).getTime() : 0);
+      const timeB = (b as any).createdAt ? new Date((b as any).createdAt).getTime() : (b.saleDate ? new Date(b.saleDate).getTime() : 0);
+      return timeB - timeA;
+    });
+  }, [rawSaleBillsList, allSalesRecords]);
+
+
+  const renderSaleRowItem = (item: CropSaleRecord, idx: number) => {
+    const matchedBill = item.billId ? saleBillsMap.get(item.billId) : (item.billNo ? saleBillsMap.get(item.billNo) : null);
+    const formattedBillNo = matchedBill?.billNo || item.billNo || (item.billId ? `${item.billId.slice(-4).toUpperCase()}` : 'SALE-01');
+    
+    const billTotal = matchedBill ? Number(matchedBill.totalAmount) : item.totalAmount;
+    const isCashSale = !item.partyId || item.buyerName === 'Cash Sale' || item.buyerName === 'Direct / Cash';
+    const billRecd = matchedBill ? Number(matchedBill.amountReceived) : (isCashSale ? billTotal : 0);
+    const remainingBal = matchedBill && matchedBill.thisSaleBalance !== undefined
+      ? Number(matchedBill.thisSaleBalance)
+      : Math.max(0, billTotal - billRecd);
+
+    const buyerDisplayName = matchedBill?.partyName || (matchedBill?.isCash ? 'Cash Sale' : item.buyerName || 'Cash Sale');
+
+    let cropDetailText = '';
+    if (matchedBill && Array.isArray(matchedBill.items) && matchedBill.items.length > 0) {
+      cropDetailText = matchedBill.items
+        .map((i: any) => `${i.cropName} (${i.qty} ${i.unit || 'unit'})`)
+        .join(', ');
+    } else {
+      let str = item.cropName || 'Crop Sale';
+      str = str.replace(/^Sale[-:\s]*/i, '');
+      str = str.replace(/\(FK-[^)]+\).*/gi, '');
+      str = str.replace(/\((CASH|UPI)\)/gi, '');
+      str = str.replace(/\(\d+\s*items?\)/gi, '');
+      str = str.replace(/\s*@\s*₹?\d+(\.\d+)?/gi, '');
+      str = str.replace(/\s+/g, ' ').trim();
+
+      const qty = item.quantity ? Number(item.quantity) : 1;
+      const unit = item.unit || 'item';
+      
+      cropDetailText = `${str || 'Crop Sale'} (${qty} ${unit})`;
+    }
+
+    const rcvdMode = (matchedBill as any)?.amountReceivedMode || item.amountReceivedMode || 'CASH';
+    const rcvdAmtVal = matchedBill
+      ? Number(matchedBill.amountReceived || 0)
+      : (isCashSale ? billTotal : Number(item.amountReceived || 0));
+
+    const displayDateStr = matchedBill?.createdAt
+      ? formatDateDDMMYYYY(matchedBill.createdAt)
+      : (item.saleDate ? formatDateDDMMYYYY(item.saleDate) : 'Today');
+
+    return (
+      <View
+        key={item.id}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingHorizontal: 8,
+          paddingVertical: 8,
+          backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc',
+          borderBottomWidth: 1,
+          borderBottomColor: '#f1f5f9',
+          minWidth: 720,
+        }}
+      >
+        {/* 1. Bill No */}
+        <View style={{ width: 75 }}>
+          <View style={{ backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1, alignSelf: 'flex-start', maxWidth: 72 }}>
+            <Text style={{ fontSize: 9.5, fontFamily: FONT.extraBold, color: '#1d4ed8' }} numberOfLines={1}>
+              {formattedBillNo}
+            </Text>
+          </View>
+        </View>
+
+        {/* 2. Date */}
+        <Text style={{ width: 70, fontSize: 10, fontFamily: FONT.bold, color: '#475569' }}>
+          {displayDateStr}
+        </Text>
+
+        {/* 3. Party */}
+        <View style={{ width: 105, paddingRight: 4 }}>
+          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
+            🤝 {buyerDisplayName}
+          </Text>
+        </View>
+
+        {/* 4. Bill Items */}
+        <View style={{ flex: 1.5, minWidth: 140, paddingRight: 4 }}>
+          <Text style={{ fontSize: 10.5, fontFamily: FONT.semiBold, color: '#16a34a' }} numberOfLines={2}>
+            🌾 {cropDetailText}
+          </Text>
+        </View>
+
+        {/* 5. Net Sale Amount */}
+        <Text style={{ width: 100, fontSize: 11, fontFamily: FONT.bold, color: '#0f172a', textAlign: 'right', paddingRight: 6 }}>
+          ₹{billTotal.toLocaleString('en-IN')}
+        </Text>
+
+        {/* 6. Received Amount Column */}
+        <View style={{ width: 110, alignItems: 'flex-end', paddingRight: 6 }}>
+          {rcvdAmtVal > 0 ? (
+            <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#dc2626' }}>
+              {rcvdMode}: -₹{rcvdAmtVal.toLocaleString('en-IN')}
+            </Text>
+          ) : (
+            <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#94a3b8' }}>—</Text>
+          )}
+        </View>
+
+        {/* 7. Action Buttons (Edit & Download) */}
+        <View style={{ width: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingLeft: 2 }}>
+          <TouchableOpacity
+            style={{
+              width: 26,
+              height: 26,
+              borderRadius: 13,
+              backgroundColor: '#f0fdf4',
+              borderWidth: 1,
+              borderColor: '#bbf7d0',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            activeOpacity={0.7}
+            onPress={() => handleOpenEditSale(item)}
+            hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+          >
+            <Ionicons name="create-outline" size={13} color="#16a34a" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{
+              width: 26,
+              height: 26,
+              borderRadius: 13,
+              backgroundColor: '#eff6ff',
+              borderWidth: 1,
+              borderColor: '#bfdbfe',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            activeOpacity={0.7}
+            onPress={() => openBillPreviewForSale(item)}
+            hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+          >
+            <Ionicons name="download-outline" size={13} color="#2563eb" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
+  // Sales list view mode — Month / Today / Custom Period Range / Buyer-wise / All Time
+  const [salesViewMode, setSalesViewMode] = useState<'MONTH' | 'TODAY' | 'PERIOD' | 'BUYER' | 'ALL'>('ALL');
+  const [expandedSalesGroup, setExpandedSalesGroup] = useState<string | null>(null);
+
+  // Custom Period Date Range state (Default to start of current month till today)
+  const [salesFromDate, setSalesFromDate] = useState<string>(() => {
+    const d = new Date();
+    d.setDate(1);
+    return d.toISOString().slice(0, 10);
+  });
+  const [salesToDate, setSalesToDate] = useState<string>(todayIso());
+  const [showFromDatePicker, setShowFromDatePicker] = useState(false);
+  const [showToDatePicker, setShowToDatePicker] = useState(false);
+
+
+
+  // 1. Filter sales for Current Calendar Month
+  const currentMonthPrefix = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }, []);
+  const salesThisMonth = useMemo(() => {
+    return unifiedSalesRecords.filter((s) => {
+      if (!s.saleDate) return true;
+      const iso = getCleanIsoDate(s.saleDate);
+      return iso.slice(0, 7) === currentMonthPrefix;
+    });
+  }, [unifiedSalesRecords, currentMonthPrefix]);
+
+  // 2. Filter sales for Today
+  const todayDateStr = useMemo(() => todayIso(), []);
+  const salesToday = useMemo(() => {
+    return unifiedSalesRecords.filter((s) => {
+      if (!s.saleDate) return false;
+      const iso = getCleanIsoDate(s.saleDate);
+      return iso === todayDateStr;
+    });
+  }, [unifiedSalesRecords, todayDateStr]);
+
+  // 3. Filter sales for Custom Period Date Range (From Date -> To Date)
+  const salesInPeriod = useMemo(() => {
+    return unifiedSalesRecords.filter((s) => {
+      if (!s.saleDate) return true;
+      const iso = getCleanIsoDate(s.saleDate);
+      return iso >= salesFromDate && iso <= salesToDate;
+    });
+  }, [unifiedSalesRecords, salesFromDate, salesToDate]);
+
+  // Active filtered list depending on selected view mode
+  // 'ALL' always shows everything from DB — DB is single source of truth
+  const activeSalesList = useMemo(() => {
+    if (salesViewMode === 'ALL') return unifiedSalesRecords;
+    if (salesViewMode === 'MONTH') return salesThisMonth.length > 0 ? salesThisMonth : unifiedSalesRecords;
+    if (salesViewMode === 'TODAY') return salesToday.length > 0 ? salesToday : unifiedSalesRecords;
+    if (salesViewMode === 'PERIOD') return salesInPeriod.length > 0 ? salesInPeriod : unifiedSalesRecords;
+    return unifiedSalesRecords;
+  }, [salesViewMode, salesThisMonth, salesToday, salesInPeriod, unifiedSalesRecords]);
+
+  // Dynamic Total Sales Revenue for selected filter
+  const totalSalesRevenue = useMemo(() => {
+    return activeSalesList.reduce((acc, item) => {
+      const matchedBill = item.billId ? saleBillsMap.get(item.billId) : (item.billNo ? saleBillsMap.get(item.billNo) : null);
+      return acc + (matchedBill ? Number(matchedBill.totalAmount) : (Number(item.totalAmount) || 0));
+    }, 0);
+  }, [activeSalesList, saleBillsMap]);
+
+  // Automatically calculate next bill number adhering to standard YYMM-01 sequential rules
+  const nextSuggestedBillNo = useMemo(() => {
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const prefix = `${yy}${mm}-`;
+
+    let maxSeq = 0;
+    const checkBillNo = (bNo?: string | null) => {
+      if (!bNo) return;
+      const cleanStr = String(bNo).trim().toUpperCase();
+      const match = cleanStr.match(/\d+$/);
+      if (match) {
+        const num = parseInt(match[0], 10);
+        if (!isNaN(num) && num > maxSeq && num < 9999) {
+          maxSeq = num;
+        }
+      }
+    };
+
+    (rawSaleBillsList || []).forEach((b) => checkBillNo(b.billNo));
+    (allSalesRecords || []).forEach((s) => {
+      checkBillNo(s.billNo);
+      checkBillNo(s.billId);
+    });
+
+    const nextSeq = maxSeq + 1;
+    const padded = String(nextSeq).padStart(2, '0');
+    return `${prefix}${padded}`;
+  }, [rawSaleBillsList, allSalesRecords]);
+
+  // 3. Group sales Buyer-wise
+  const salesByBuyer = useMemo(() => {
+    const map = new Map<string, CropSaleRecord[]>();
+    unifiedSalesRecords.forEach((item) => {
+      const name = item.buyerName || 'Cash Sale';
+      const existing = map.get(name) || [];
+      map.set(name, [...existing, item]);
+    });
+    return Array.from(map.entries()).map(([buyer, entries]) => {
+      const total = entries.reduce((acc, e) => {
+        const matchedBill = e.billId ? saleBillsMap.get(e.billId) : (e.billNo ? saleBillsMap.get(e.billNo) : null);
+        return acc + (matchedBill ? Number(matchedBill.totalAmount) : e.totalAmount);
+      }, 0);
+      return {
+        name: buyer,
+        entries,
+        total,
+      };
+    });
+  }, [unifiedSalesRecords, saleBillsMap]);
+
+  const [expenseViewMode, setExpenseViewMode] = useState<'ALL' | 'CROP' | 'VENDOR'>('ALL');
+  const [expandedExpenseGroup, setExpandedExpenseGroup] = useState<string | null>(null);
+
+  // Voucher modal state
+  const [showPaymentVoucherModal, setShowPaymentVoucherModal] = useState(false);
+  const [voucherInitialType, setVoucherInitialType] = useState<VoucherType>('RECEIPT_IN');
+  const [voucherInitialParty, setVoucherInitialParty] = useState<Party | null>(null);
+  const [lockVoucherParty, setLockVoucherParty] = useState(false);
+  const [inlinePaymentMode, setInlinePaymentMode] = useState<'CASH' | 'UPI'>('CASH');
+
+  // Sales Form state
+  const [showSaleForm, setShowSaleForm] = useState(false);
+  const [saleStep, setSaleStep] = useState<'FORM' | 'SAVED'>('FORM');
+  const [paymentMode, setPaymentMode] = useState<'CASH' | 'PARTY'>('CASH');
+  const [selectedParty, setSelectedParty] = useState<Party | null>(null);
+  const [cashBuyerName, setCashBuyerName] = useState('');
+  const [cashBuyerMobile, setCashBuyerMobile] = useState('');
+  const [selectedCropId, setSelectedCropId] = useState<string>('');
+  const [saleQuantity, setSaleQuantity] = useState('');
+  const [saleRate, setSaleRate] = useState('');
+  const [saleDate, setSaleDate] = useState(todayIso());
+  const [saleItems, setSaleItems] = useState<SaleCartItem[]>([]);
+  const [amountReceived, setAmountReceived] = useState('');
+  const [amountReceivedMode, setAmountReceivedMode] = useState<'CASH' | 'UPI'>('CASH');
+  const [saleError, setSaleError] = useState<string | null>(null);
+  const [isSavingSale, setIsSavingSale] = useState(false);
+  const [savedInvoice, setSavedInvoice] = useState<SavedSaleInvoice | null>(null);
+  const [isCropDropdownOpen, setIsCropDropdownOpen] = useState(false);
+  const [showSaleDatePicker, setShowSaleDatePicker] = useState(false);
+  const [saleDiscount, setSaleDiscount] = useState('');
+  const [saleDelivery, setSaleDelivery] = useState('');
+  const [saleDescription, setSaleDescription] = useState('');
+
+  // Main Form Edit Bill State
+  const [editingBillId, setEditingBillId] = useState<string | null>(null);
+  const [editingBillNo, setEditingBillNo] = useState<string | null>(null);
+  const [editingPreviousBalance, setEditingPreviousBalance] = useState<number | null>(null);
+  // ✅ ਇਹ track ਕਰਦਾ ਹੈ ਕਿ save ਤੋਂ ਪਹਿਲਾਂ edit mode ਸੀ ਜਾਂ ਨਹੀਂ
+  const [wasEditingBill, setWasEditingBill] = useState(false);
+
+  // Handle incoming route params (e.g. action: 'NEW_SALE' or action: 'NEW_EXPENSE' from Quick Accounts Card)
+  const { action, t } = useLocalSearchParams<{ action?: string; t?: string }>();
+
+  useEffect(() => {
+    if (action === 'NEW_SALE') {
+      setRecordType('SALES');
+      setSaleStep('FORM');
+      setShowSaleForm(true);
+    } else if (action === 'SALES') {
+      setRecordType('SALES');
+    } else if (action === 'NEW_EXPENSE') {
+      setRecordType('EXPENSES');
+      resetExpenseForm();
+      setShowExpenseForm(true);
+    } else if (action === 'EXPENSES') {
+      setRecordType('EXPENSES');
+    }
+  }, [action, t]);
+
+  const handleOpenEditSale = async (item: CropSaleRecord) => {
+    tap();
+    const isParty = Boolean(item.partyId || (item.buyerName && item.buyerName !== 'Cash Sale' && item.buyerName !== 'Direct / Cash'));
+
+    const foundParty = parties.find(p => p.id === item.partyId || (p.name && p.name.trim().toLowerCase() === item.buyerName?.trim().toLowerCase()));
+    const partyObj = foundParty || (isParty ? ({ id: item.partyId || `party-${Date.now()}`, name: item.buyerName || 'Party', mobile: item.partyMobile || '' } as Party) : null);
+
+    let loadedItems: Array<{ id: string; cropId: string; cropName: string; unit: string; qty: number; rate: number; amount: number }> = [];
+    let billNoToUse = item.billNo || (item.billId ? `${item.billId.slice(-4).toUpperCase()}` : (item.id ? `${item.id.slice(-4).toUpperCase()}` : 'SALE-01'));
+    let realBillIdToUse = item.billId || item.id;
+    let loadedAmountReceived: string | null = null;
+    let loadedPreviousBalance: number | null = null;
+    let loadedReceivedMode: 'CASH' | 'UPI' = 'CASH';
+    // ✅ Track discount/delivery/notes/date from bill
+    let loadedDiscount: string = '';
+    let loadedDelivery: string = '';
+    let loadedNotes: string = '';
+    let loadedBillDate: string | null = null;
+
+    const matchedBill = item.billId ? saleBillsMap.get(item.billId) : (item.billNo ? saleBillsMap.get(item.billNo) : (item.id ? saleBillsMap.get(item.id) : null));
+
+    // Step 1: Load from cache first (fast path)
+    if (matchedBill) {
+      realBillIdToUse = matchedBill.id;
+      billNoToUse = matchedBill.billNo || billNoToUse;
+      if (matchedBill.amountReceived !== undefined && matchedBill.amountReceived !== null) {
+        loadedAmountReceived = String(matchedBill.amountReceived);
+      }
+      if (matchedBill.previousBalance !== undefined && matchedBill.previousBalance !== null) {
+        loadedPreviousBalance = Number(matchedBill.previousBalance);
+      }
+      if (matchedBill.amountReceivedMode) {
+        loadedReceivedMode = matchedBill.amountReceivedMode as 'CASH' | 'UPI';
+      }
+      if (matchedBill.discountAmount !== undefined && matchedBill.discountAmount !== null) {
+        loadedDiscount = Number(matchedBill.discountAmount) !== 0 ? String(Number(matchedBill.discountAmount)) : '';
+      }
+      if (matchedBill.deliveryCharge !== undefined && matchedBill.deliveryCharge !== null) {
+        loadedDelivery = Number(matchedBill.deliveryCharge) !== 0 ? String(Number(matchedBill.deliveryCharge)) : '';
+      }
+      if (matchedBill.notes) loadedNotes = matchedBill.notes;
+      if (matchedBill.createdAt) loadedBillDate = getCleanIsoDate(String(matchedBill.createdAt));
+      if (Array.isArray(matchedBill.items) && matchedBill.items.length > 0) {
+        loadedItems = (matchedBill.items as any[]).map((bi: any, idx: number) => ({
+          id: bi.id || `bill-item-${idx}-${Date.now()}`,
+          cropId: bi.cropId || item.cropId,
+          cropName: bi.cropName || item.cropName,
+          unit: bi.unit || item.unit || 'Quintal',
+          qty: Number(bi.qty) || 1,
+          rate: Number(bi.rate) || 0,
+          amount: Number(bi.amount) || ((Number(bi.qty) || 1) * (Number(bi.rate) || 0)),
+        }));
+      }
+    }
+
+    // Step 2: ALWAYS fetch from DB API for fresh/accurate data (discount, delivery, notes may be missing from cache)
+    const fetchBillId = (matchedBill?.id) || item.billId || item.billNo || item.id;
+    if (fetchBillId) {
+      try {
+        const bill = await saleBillsApi.getSaleBill(fetchBillId);
+        if (bill) {
+          // Override with fresh data from DB
+          realBillIdToUse = bill.id;
+          billNoToUse = bill.billNo || billNoToUse;
+          if (bill.amountReceived !== undefined && bill.amountReceived !== null) {
+            loadedAmountReceived = String(bill.amountReceived);
+          }
+          if (bill.previousBalance !== undefined && bill.previousBalance !== null) {
+            loadedPreviousBalance = Number(bill.previousBalance);
+          }
+          if ((bill as any).amountReceivedMode) {
+            loadedReceivedMode = (bill as any).amountReceivedMode as 'CASH' | 'UPI';
+          }
+          // ✅ Always override discount/delivery/notes from fresh API data
+          loadedDiscount = (bill.discountAmount !== undefined && bill.discountAmount !== null && Number(bill.discountAmount) !== 0)
+            ? String(Number(bill.discountAmount))
+            : '';
+          loadedDelivery = (bill.deliveryCharge !== undefined && bill.deliveryCharge !== null && Number(bill.deliveryCharge) !== 0)
+            ? String(Number(bill.deliveryCharge))
+            : '';
+          if (bill.notes !== undefined) loadedNotes = bill.notes || '';
+          if (bill.createdAt) loadedBillDate = getCleanIsoDate(String(bill.createdAt));
+          if (Array.isArray(bill.items) && bill.items.length > 0) {
+            loadedItems = (bill.items as any[]).map((bi: any, idx: number) => ({
+              id: bi.id || `bill-item-${idx}-${Date.now()}`,
+              cropId: bi.cropId || item.cropId,
+              cropName: bi.cropName || item.cropName,
+              unit: bi.unit || item.unit || 'Quintal',
+              qty: Number(bi.qty) || 1,
+              rate: Number(bi.rate) || 0,
+              amount: Number(bi.amount) || ((Number(bi.qty) || 1) * (Number(bi.rate) || 0)),
+            }));
+          }
+        }
+      } catch {
+        // API failed — keep using cache values loaded above
+      }
+    }
+
+    if (loadedAmountReceived === null && item.amountReceived !== undefined && item.amountReceived !== null) {
+      loadedAmountReceived = String(item.amountReceived);
+    }
+    if (loadedPreviousBalance === null && item.previousBalance !== undefined && item.previousBalance !== null) {
+      loadedPreviousBalance = Number(item.previousBalance);
+    }
+    if (item.amountReceivedMode) {
+      loadedReceivedMode = item.amountReceivedMode;
+    }
+
+    if (loadedItems.length === 0) {
+      loadedItems = [
+        {
+          id: item.id,
+          cropId: item.cropId,
+          cropName: item.cropName,
+          unit: item.unit || 'Quintal',
+          qty: Number(item.quantity) || 1,
+          rate: Number(item.pricePerUnit) || 0,
+          amount: Number(item.totalAmount) || (Number(item.quantity) * Number(item.pricePerUnit)) || 0,
+        }
+      ];
+    }
+
+    setPaymentMode(isParty ? 'PARTY' : 'CASH');
+    setSelectedParty(partyObj);
+    setCashBuyerName(item.buyerName || '');
+    setCashBuyerMobile(item.partyMobile || '');
+    setSaleItems(loadedItems);
+    // ✅ Use loaded values from bill (not just matchedBill)
+    setSaleDiscount(loadedDiscount);
+    setSaleDelivery(loadedDelivery);
+    setEditingPreviousBalance(loadedPreviousBalance);
+    const defaultRecd = !isParty ? String(item.totalAmount) : '';
+    setAmountReceived(loadedAmountReceived !== null ? loadedAmountReceived : defaultRecd);
+    setAmountReceivedMode(loadedReceivedMode);
+    setSaleDescription(loadedNotes || item.notes || '');
+    // ✅ FIX: sale date — use getCleanIsoDate so any format (ISO, DD/MM/YYYY, timestamp) is parsed cleanly to YYYY-MM-DD
+    const rawSaleDate = loadedBillDate || item.saleDate || item.createdAt;
+    setSaleDate(getCleanIsoDate(rawSaleDate));
+    setEditingBillId(realBillIdToUse);
+    setEditingBillNo(billNoToUse);
+    setSaleStep('FORM');
+    setShowSaleForm(true);
+    setRecordType('SALES');
+  };
+
+  const onDeleteEditingBill = () => {
+    if (!editingBillId) return;
+
+    const performDelete = async () => {
+      try {
+        tap();
+        await deleteSaleBill.mutateAsync(editingBillId);
+        await deleteSale(editingBillId);
+        setShowSaleForm(false);
+        resetSaleForm();
+        if (Platform.OS === 'web') {
+          alert('Bill and statement entry deleted successfully.');
+        } else {
+          Alert.alert('Deleted', 'Bill and statement entry deleted successfully.');
+        }
+      } catch (err) {
+        console.error('Failed to delete bill:', err);
+        await deleteSale(editingBillId);
+        setShowSaleForm(false);
+        resetSaleForm();
+      }
+    };
+
+    const confirmMsg = `Are you sure you want to delete Sale Bill #${editingBillNo || editingBillId}?\n\n(ਕੀ ਤੁਸੀਂ ਯਕੀਨਨ ਇਹ ਸੇਲ ਬਿਲ ਡਿਲੀਟ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?)`;
+
+    if (Platform.OS === 'web') {
+      if (window.confirm(confirmMsg)) {
+        performDelete();
+      }
+    } else {
+      Alert.alert(
+        'Delete Sale Bill?',
+        confirmMsg,
+        [
+          { text: 'ਕੈਂਸਲ (Cancel)', style: 'cancel' },
+          {
+            text: 'ਹਾਂ, ਡਿਲੀਟ ਕਰੋ (Delete)',
+            style: 'destructive',
+            onPress: performDelete,
+          },
+        ]
+      );
+    }
+  };
+
+  // Get calendar data for a given month
+  const getCalendarMonth = (isoDate: string) => {
+    const cleanStr = getCleanIsoDate(isoDate);
+    const d = new Date(cleanStr);
+    const validDate = isNaN(d.getTime()) ? new Date() : d;
+    const year = validDate.getFullYear();
+    const month = validDate.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    return { year, month, firstDay, daysInMonth };
+  };
+
+  const calData = getCalendarMonth(saleDate);
+  const calMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const calDayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+
+  const shiftCalMonth = (dir: -1 | 1) => {
+    const cleanStr = getCleanIsoDate(saleDate);
+    const d = new Date(cleanStr);
+    const validDate = isNaN(d.getTime()) ? new Date() : d;
+    validDate.setMonth(validDate.getMonth() + dir);
+    setSaleDate(validDate.toISOString().slice(0, 10));
+  };
+
+  const selectCalDay = (day: number) => {
+    const mm = String(calData.month + 1).padStart(2, '0');
+    const dd = String(day).padStart(2, '0');
+    setSaleDate(`${calData.year}-${mm}-${dd}`);
+    setShowSaleDatePicker(false);
+  };
+
+  // Render interactive grid calendar modal for Custom Period Date Range
+  const renderPeriodCalendarModal = (
+    title: string,
+    currentDateIso: string,
+    onSelectDate: (iso: string) => void,
+    visible: boolean,
+    onClose: () => void
+  ) => {
+    if (!visible) return null;
+    const d = new Date(currentDateIso || todayIso());
+    const validDate = isNaN(d.getTime()) ? new Date() : d;
+    const year = validDate.getFullYear();
+    const month = validDate.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const calMonthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const calDayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+
+    const shiftMonth = (dir: -1 | 1) => {
+      const next = new Date(validDate);
+      next.setMonth(next.getMonth() + dir);
+      onSelectDate(next.toISOString().slice(0, 10));
+    };
+
+    const pickDay = (dayNum: number) => {
+      const mm = String(month + 1).padStart(2, '0');
+      const dd = String(dayNum).padStart(2, '0');
+      onSelectDate(`${year}-${mm}-${dd}`);
+      onClose();
+    };
+
+    return (
+      <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+        <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.45)', justifyContent: 'center', alignItems: 'center' }} activeOpacity={1} onPress={onClose}>
+          <TouchableOpacity activeOpacity={1} style={{ backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 14, width: 290, borderWidth: 1, borderColor: '#cbd5e1', elevation: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 10 }}>
+            {/* Header */}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 6 }}>
+              <Text style={{ fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' }}>{title}</Text>
+              <TouchableOpacity onPress={onClose} style={{ padding: 2 }}>
+                <Ionicons name="close" size={18} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Month & Year Navigation */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <TouchableOpacity onPress={() => shiftMonth(-1)} style={{ padding: 5, borderRadius: RADIUS.sm, backgroundColor: '#f1f5f9' }}>
+                <Ionicons name="chevron-back" size={16} color="#334155" />
+              </TouchableOpacity>
+              <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>
+                {calMonthNames[month]} {year}
+              </Text>
+              <TouchableOpacity onPress={() => shiftMonth(1)} style={{ padding: 5, borderRadius: RADIUS.sm, backgroundColor: '#f1f5f9' }}>
+                <Ionicons name="chevron-forward" size={16} color="#334155" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Days of Week Header */}
+            <View style={{ flexDirection: 'row', marginBottom: 4 }}>
+              {calDayNames.map((dn) => (
+                <Text key={dn} style={{ flex: 1, textAlign: 'center', fontSize: 10, fontFamily: FONT.bold, color: '#94a3b8' }}>{dn}</Text>
+              ))}
+            </View>
+
+            {/* Day Grid */}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+              {Array.from({ length: firstDay }).map((_, i) => (
+                <View key={`empty-${i}`} style={{ width: '14.28%', height: 32 }} />
+              ))}
+              {Array.from({ length: daysInMonth }).map((_, i) => {
+                const day = i + 1;
+                const selDay = validDate.getDate();
+                const isSelected = day === selDay;
+                return (
+                  <TouchableOpacity
+                    key={day}
+                    onPress={() => pickDay(day)}
+                    style={{
+                      width: '14.28%',
+                      height: 32,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      borderRadius: 16,
+                      backgroundColor: isSelected ? '#16a34a' : 'transparent',
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, fontFamily: isSelected ? FONT.bold : FONT.medium, color: isSelected ? '#ffffff' : '#1e293b' }}>
+                      {day}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Footer Action Buttons */}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#f1f5f9' }}>
+              <TouchableOpacity
+                onPress={() => {
+                  onSelectDate(todayIso());
+                  onClose();
+                }}
+                style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill, backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0' }}
+              >
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#16a34a' }}>Today</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={onClose}
+                style={{ paddingHorizontal: 12, paddingVertical: 5, borderRadius: RADIUS.md, backgroundColor: '#16a34a' }}
+              >
+                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Done</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+    );
+  };
+
+  const queryClient = useQueryClient();
+  const { data: parties = [], refetch: refetchParties } = useParties();
+  const createParty = useCreateParty();
+  const recordSaleLedger = useRecordSaleLedger();
+  const createSaleBill = useCreateSaleBill();
+  const updateSaleBill = useUpdateSaleBill();
+  const deleteSaleBill = useDeleteSaleBill();
+  const fetchSaleBill = useFetchSaleBill();
+  const fetchPaymentReceipt = useFetchPaymentReceipt();
+
+  // Bill preview (re-share from Sales list) + JPG capture/share
+  const { billShotRef, isSharingBill, shareInvoiceAsJpg: shareInvoiceAsJpgRaw, shareInvoiceAsPdf: shareInvoiceAsPdfRaw } = useShareBillAsJpg();
+  const [billPreviewInvoice, setBillPreviewInvoice] = useState<SavedSaleInvoice | null>(null);
+  const [billPreviewVisible, setBillPreviewVisible] = useState(false);
+  const [isLoadingBillPreview, setIsLoadingBillPreview] = useState(false);
+
+  // FREE plan share limits — 30 bills + 30 receipts, then prompt to upgrade.
+  const FREE_SHARE_LIMIT = 30;
+  const { plan } = useFarmerPlan();
+  const isFreePlan = plan === 'FREE';
+  const { data: billCountData } = useMySaleBillCount();
+  const { data: receiptCountData } = useMyPaymentReceiptCount();
+
+  const showUpgradePrompt = (kind: 'bill' | 'receipt') => {
+    const message =
+      kind === 'bill'
+        ? `Free Pass ਵਿੱਚ ਤੁਸੀਂ max ${FREE_SHARE_LIMIT} ਸੇਲ ਬਿਲ ਹੀ ਡਾਊਨਲੋਡ/ਸ਼ੇਅਰ ਕਰ ਸਕਦੇ ਹੋ। ਅਨਲਿਮਟਿਡ ਬਿਲਾਂ ਲਈ Kisan Card ਅਨਲੌਕ ਕਰੋ!`
+        : `Free Pass ਵਿੱਚ ਤੁਸੀਂ max ${FREE_SHARE_LIMIT} ਪੇਮੈਂਟ ਰਸੀਦਾਂ ਹੀ ਡਾਊਨਲੋਡ/ਸ਼ੇਅਰ ਕਰ ਸਕਦੇ ਹੋ। ਅਨਲਿਮਟਿਡ ਰਸੀਦਾਂ ਲਈ Kisan Card ਅਨਲੌਕ ਕਰੋ!`;
+    if (Platform.OS === 'web') {
+      alert(`🔒 Upgrade Your Kisan Card\n\n${message}`);
+    } else {
+      Alert.alert('🔒 Upgrade Your Kisan Card', message);
+    }
+  };
+
+  const shareInvoiceAsJpg = async (fileName: string | undefined, kind: 'bill' | 'receipt') => {
+    if (isFreePlan) {
+      const count = kind === 'bill' ? billCountData?.count ?? 0 : receiptCountData?.count ?? 0;
+      if (count >= FREE_SHARE_LIMIT) {
+        showUpgradePrompt(kind);
+        return;
+      }
+    }
+    await shareInvoiceAsJpgRaw(fileName);
+  };
+
+  const shareInvoiceAsPdf = async (inv: SavedSaleInvoice | null | undefined, fileName?: string) => {
+    if (!inv) return;
+    if (isFreePlan) {
+      const count = billCountData?.count ?? 0;
+      if (count >= FREE_SHARE_LIMIT) {
+        showUpgradePrompt('bill');
+        return;
+      }
+    }
+    await shareInvoiceAsPdfRaw(inv, fileName);
+  };
+
+  const loadBillPreviewById = async (billId: string): Promise<boolean> => {
+    setIsLoadingBillPreview(true);
+    try {
+      const bill = await fetchSaleBill.mutateAsync(billId);
+      const rcvdAmt = bill.amountReceived !== undefined && bill.amountReceived !== null ? Number(bill.amountReceived) : 0;
+      const totalAmt = Number(bill.totalAmount || 0);
+      const prevBal = Number(bill.previousBalance || 0);
+      const thisBal = bill.thisSaleBalance !== undefined ? Number(bill.thisSaleBalance) : Math.max(0, totalAmt - rcvdAmt);
+      const netRecv = bill.netReceivable !== undefined ? Number(bill.netReceivable) : prevBal + thisBal;
+
+      setBillPreviewInvoice({
+        billNo: bill.billNo,
+        farmerName: bill.farmerName,
+        partyId: bill.partyId,
+        partyName: bill.partyName,
+        partyMobile: bill.partyMobile,
+        partyAddress: bill.partyAddress,
+        isCash: bill.isCash,
+        amountReceivedMode: (bill as any).amountReceivedMode || 'CASH',
+        items: (bill.items || []).map((i: any, idx: number) => ({ id: String(idx), ...i })),
+        totalItems: bill.totalItems,
+        totalAmount: totalAmt,
+        amountReceived: rcvdAmt,
+        thisSaleBalance: thisBal,
+        previousBalance: prevBal,
+        netReceivable: netRecv,
+        discountAmount: bill.discountAmount !== undefined ? Number(bill.discountAmount) : 0,
+        deliveryCharge: bill.deliveryCharge !== undefined ? Number(bill.deliveryCharge) : 0,
+        notes: bill.notes || undefined,
+        date: formatDateDDMMYYYY(bill.createdAt),
+        time: new Date(bill.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+      });
+      setBillPreviewVisible(true);
+      return true;
+    } catch {
+      // Return false silently — caller (openBillPreviewForSale) will use saleBillsMap fallback
+      return false;
+    } finally {
+      setIsLoadingBillPreview(false);
+    }
+  };
+
+  const openBillPreviewForSale = async (sale: { billId?: string; billNo?: string; id?: string; cropName: string; quantity: string; unit: string; pricePerUnit: string; totalAmount: number; buyerName: string; saleDate: string; amountReceived?: number | string; previousBalance?: number; amountReceivedMode?: 'CASH' | 'UPI' }) => {
+    tap();
+
+    const targetBillId = sale.billId || sale.id;
+
+    // ─── Helper: build invoice object from a SaleBill record ─────────────────────
+    const buildInvoiceFromBillRecord = (b: any): SavedSaleInvoice => {
+      const rcvdAmt = b.amountReceived !== undefined ? Number(b.amountReceived) : 0;
+      const totalAmt = Number(b.totalAmount || 0);
+      const prevBal = Number(b.previousBalance || 0);
+      const thisBal = b.thisSaleBalance !== undefined ? Number(b.thisSaleBalance) : Math.max(0, totalAmt - rcvdAmt);
+      const netRecv = b.netReceivable !== undefined ? Number(b.netReceivable) : prevBal + thisBal;
+      return {
+        billNo: b.billNo,
+        farmerName: b.farmerName || user?.name || 'Farmer',
+        partyId: b.partyId,
+        partyName: b.partyName,
+        partyMobile: b.partyMobile,
+        partyAddress: b.partyAddress,
+        isCash: b.isCash,
+        amountReceivedMode: (b as any).amountReceivedMode || 'CASH',
+        items: (b.items || []).map((i: any, idx: number) => ({ id: String(i.id || idx), ...i })),
+        totalItems: b.totalItems,
+        totalAmount: totalAmt,
+        amountReceived: rcvdAmt,
+        thisSaleBalance: thisBal,
+        previousBalance: prevBal,
+        netReceivable: netRecv,
+        discountAmount: b.discountAmount !== undefined ? Number(b.discountAmount) : 0,
+        deliveryCharge: b.deliveryCharge !== undefined ? Number(b.deliveryCharge) : 0,
+        notes: b.notes || undefined,
+        date: formatDateDDMMYYYY(b.createdAt || sale.saleDate),
+        time: b.createdAt ? new Date(b.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '',
+      };
+    };
+
+    if (targetBillId) {
+      // Step 1: Show cached data immediately for instant feedback
+      const cachedBill = saleBillsMap.get(targetBillId) || (sale.billNo ? saleBillsMap.get(sale.billNo) : null);
+      if (cachedBill) {
+        setBillPreviewInvoice(buildInvoiceFromBillRecord(cachedBill));
+        setBillPreviewVisible(true);
+      } else {
+        setIsLoadingBillPreview(true);
+      }
+
+      // Step 2: Fetch fresh data from DB (has all fields: discount, delivery, notes, previousBalance)
+      try {
+        const freshBill = await saleBillsApi.getSaleBill(targetBillId);
+        if (freshBill) {
+          setBillPreviewInvoice(buildInvoiceFromBillRecord(freshBill));
+          setBillPreviewVisible(true);
+        }
+      } catch {
+        // If fresh fetch failed but we already showed cached data, that's fine
+        if (!cachedBill) {
+          Alert.alert('Bill Not Found', 'Could not load the saved bill. Please check your connection.');
+        }
+      } finally {
+        setIsLoadingBillPreview(false);
+      }
+      return;
+    }
+
+    // ─── Legacy sale with no linked bill — reconstruct minimal preview ────────────
+    const isCash = sale.buyerName === 'Cash Sale' || !sale.buyerName;
+    const rcvdAmt = sale.amountReceived !== undefined && sale.amountReceived !== null ? Number(sale.amountReceived) : (isCash ? sale.totalAmount : 0);
+    const prevBal = sale.previousBalance !== undefined ? Number(sale.previousBalance) : 0;
+    const thisBal = Math.max(0, sale.totalAmount - rcvdAmt);
+
+    setBillPreviewInvoice({
+      billNo: sale.billNo || `FK-${sale.saleDate ? sale.saleDate.replace(/-/g, '') : '260901'}`,
+      farmerName: user?.name || 'Farmer',
+      partyName: isCash ? 'Cash' : sale.buyerName,
+      isCash,
+      amountReceivedMode: sale.amountReceivedMode || 'CASH',
+      items: [{ id: '0', cropId: '', cropName: sale.cropName, unit: sale.unit, qty: Number(sale.quantity), rate: Number(sale.pricePerUnit), amount: sale.totalAmount }],
+      totalItems: 1,
+      totalAmount: sale.totalAmount,
+      amountReceived: rcvdAmt,
+      thisSaleBalance: thisBal,
+      previousBalance: prevBal,
+      netReceivable: prevBal + thisBal,
+      date: formatDateDDMMYYYY(sale.saleDate),
+      time: '',
+    });
+    setBillPreviewVisible(true);
+  };
+
+  // Analysis tab — Receivable / Payable / All sub-tabs + party statement
+  const [analysisSubTab, setAnalysisSubTab] = useState<'RECEIVABLE' | 'PAYABLE' | 'ALL'>('RECEIVABLE');
+  const [accountSearchQuery, setAccountSearchQuery] = useState('');
+  const [statementPartyId, setStatementPartyId] = useState<string | null>(null);
+  const [statementSortAsc, setStatementSortAsc] = useState(false);
+  const { data: statement, isLoading: isLoadingStatement } = usePartyStatement(statementPartyId ?? undefined);
+  const statementLedgerRows = useMemo(() => {
+    const rows = buildPartyLedgerRows((statement?.entries as any as PopulatedLedgerEntry[]) || []);
+    if (statementSortAsc) {
+      return [...rows].sort((a, b) => a.srNo - b.srNo);
+    }
+    return rows;
+  }, [statement?.entries, statementSortAsc]);
+  const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentNote, setPaymentNote] = useState('');
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const recordPaymentReceived = useRecordPaymentReceived();
+  const recordPaymentMade = useRecordPaymentMade();
+  const [paymentReceiptData, setPaymentReceiptData] = useState<PaymentReceiptData | null>(null);
+  const [paymentReceiptVisible, setPaymentReceiptVisible] = useState(false);
+
+  const closeStatementModal = () => {
+    setStatementPartyId(null);
+    setIsPaymentFormOpen(false);
+    setPaymentAmount('');
+    setPaymentNote('');
+    setPaymentError(null);
+  };
+
+  const handleRecordPayment = async () => {
+    setPaymentError(null);
+    const value = Number(paymentAmount);
+    if (!value || value <= 0) {
+      setPaymentError('Enter a valid amount.');
+      return;
+    }
+    if (!statementPartyId || !statement) return;
+    try {
+      const isReceived = statement.balance >= 0;
+      const mutation = isReceived ? recordPaymentReceived : recordPaymentMade;
+      const result = await mutation.mutateAsync({ id: statementPartyId, payload: { amount: value, reason: paymentNote.trim() || undefined } });
+      const now = new Date();
+      setPaymentReceiptData({
+        receiptNo: result.receiptNo,
+        receiverName: user?.name || 'Farmer',
+        partyName: statement.party.name,
+        isReceived,
+        previousBalance: statement.balance,
+        paymentAmount: value,
+        netBalance: result.balance,
+        date: formatDateDDMMYYYY(now.toISOString().slice(0, 10)),
+        time: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+      });
+      setPaymentReceiptVisible(true);
+      setIsPaymentFormOpen(false);
+      setPaymentAmount('');
+      setPaymentNote('');
+    } catch (err: any) {
+      setPaymentError(err?.response?.data?.message ?? 'Could not record payment.');
+    }
+  };
+
+  const LEDGER_SIGN: Record<string, 1 | -1> = { SALE_CREDIT: 1, SALE_PAYMENT: -1, EXPENSE_CREDIT: -1, EXPENSE_PAYMENT: 1 };
+  const entryRunningBalance = useMemo(() => {
+    const map = new Map<string, { before: number; after: number }>();
+    if (!statement) return map;
+    const chronological = [...statement.entries].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    let running = 0;
+    chronological.forEach((e) => {
+      const before = running;
+      const after = before + LEDGER_SIGN[e.type] * Number(e.amount);
+      map.set(e.id, { before, after });
+      running = after;
+    });
+    return map;
+  }, [statement]);
+
+  const shareStatementSaleEntry = async (entry: { id: string; reason: string; amount: string; createdAt: string; saleBillId?: string | null }) => {
+    if (!statement) return;
+    tap();
+    const refMatch = entry.reason?.match(/FK-[A-Za-z0-9]+/i)?.[0];
+    const targetBillId = entry.saleBillId || refMatch;
+    if (targetBillId) {
+      const loaded = await loadBillPreviewById(targetBillId);
+      if (loaded) return;
+    }
+
+    // Older entry recorded before bill-linking was added — reconstruct a best-effort single-line preview.
+    const now = new Date(entry.createdAt);
+    setBillPreviewInvoice({
+      billNo: `FK-${entry.id.slice(0, 8).toUpperCase()}`,
+      farmerName: user?.name || 'Farmer',
+      partyId: statement.party.id,
+      partyName: statement.party.name,
+      isCash: false,
+      items: [{ id: entry.id, cropId: '', cropName: entry.reason || 'Sale', unit: '', qty: 1, rate: Number(entry.amount), amount: Number(entry.amount) }],
+      totalItems: 1,
+      totalAmount: Number(entry.amount),
+      amountReceived: 0,
+      thisSaleBalance: Number(entry.amount),
+      previousBalance: entryRunningBalance.get(entry.id)?.before ?? 0,
+      netReceivable: entryRunningBalance.get(entry.id)?.after ?? 0,
+      date: now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      time: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+    });
+    setBillPreviewVisible(true);
+  };
+
+  const shareStatementPaymentEntry = async (entry: { id: string; type: string; amount: string; createdAt: string; paymentReceiptId?: string | null }) => {
+    if (!statement) return;
+    tap();
+    if (entry.paymentReceiptId) {
+      setIsLoadingBillPreview(true);
+      try {
+        const receipt = await fetchPaymentReceipt.mutateAsync(entry.paymentReceiptId);
+        const created = new Date(receipt.createdAt);
+        setPaymentReceiptData({
+          receiptNo: receipt.receiptNo,
+          receiverName: user?.name || 'Farmer',
+          partyName: receipt.partyName,
+          isReceived: receipt.isReceived,
+          previousBalance: Number(receipt.previousBalance),
+          paymentAmount: Number(receipt.paymentAmount),
+          netBalance: Number(receipt.netBalance),
+          date: created.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+          time: created.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+        });
+        setPaymentReceiptVisible(true);
+      } catch {
+        Alert.alert('Receipt Not Found', 'Could not load the saved receipt for this payment.');
+      } finally {
+        setIsLoadingBillPreview(false);
+      }
+      return;
+    }
+
+    // Older entry recorded before receipt-linking was added — reconstruct from the running ledger balance.
+    const now = new Date(entry.createdAt);
+    const running = entryRunningBalance.get(entry.id);
+    setPaymentReceiptData({
+      receiptNo: `RCT-${entry.id.slice(0, 8).toUpperCase()}`,
+      receiverName: user?.name || 'Farmer',
+      partyName: statement.party.name,
+      isReceived: entry.type === 'SALE_PAYMENT',
+      previousBalance: running?.before ?? 0,
+      paymentAmount: Number(entry.amount),
+      netBalance: running?.after ?? 0,
+      date: now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      time: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+    });
+    setPaymentReceiptVisible(true);
+  };
+
+  const unifiedAccountParties = useMemo<Party[]>(() => {
+    const list: Party[] = [...parties];
+    (expenseLabourWorkers || []).forEach((w: any) => {
+      const pending = Number(w.pendingBalance || 0);
+      list.push({
+        id: w.id,
+        ownerId: w.farmerId || '',
+        name: w.name.startsWith('👷') ? w.name : `👷 ${w.name}`,
+        mobile: w.mobile ?? undefined,
+        address: w.address ?? 'Labour Worker',
+        balance: -pending, // pending > 0 is Payable (-balance in Party convention)
+        createdAt: w.createdAt || new Date().toISOString(),
+        __type: 'LABOUR',
+        isWorker: true,
+      } as any);
+    });
+    return list;
+  }, [parties, expenseLabourWorkers]);
+
+  const receivableParties = useMemo(
+    () => unifiedAccountParties.filter((p) => p.balance > 0).sort((a, b) => b.balance - a.balance),
+    [unifiedAccountParties],
+  );
+  const payableParties = useMemo(
+    () => unifiedAccountParties.filter((p) => p.balance < 0).sort((a, b) => a.balance - b.balance),
+    [unifiedAccountParties],
+  );
+  const totalReceivable = useMemo(() => receivableParties.reduce((sum, p) => sum + p.balance, 0), [receivableParties]);
+  const totalPayable = useMemo(() => payableParties.reduce((sum, p) => sum + Math.abs(p.balance), 0), [payableParties]);
+
+  const filteredAccountsList = useMemo(() => {
+    let baseList =
+      analysisSubTab === 'RECEIVABLE'
+        ? receivableParties
+        : analysisSubTab === 'PAYABLE'
+        ? payableParties
+        : unifiedAccountParties;
+
+    const q = accountSearchQuery.trim().toLowerCase();
+    if (!q) return baseList;
+    return baseList.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        (p.mobile && p.mobile.includes(q)) ||
+        (p.address && p.address.toLowerCase().includes(q))
+    );
+  }, [analysisSubTab, receivableParties, payableParties, unifiedAccountParties, accountSearchQuery]);
+  const { data: partyStatement } = usePartyStatement(paymentMode === 'PARTY' ? selectedParty?.id : undefined);
+  const livePartyBalance = partyStatement?.balance ?? selectedParty?.balance ?? 0;
+  const previousPartyBalance = editingBillId && editingPreviousBalance !== null
+    ? editingPreviousBalance
+    : livePartyBalance;
+
+  // ਸਿਰਫ਼ HARVESTING stage ਵਾਲੀਆਂ crops sale ਲਈ
+  const harvestingCrops = useMemo(() => {
+    const harvesting = farmerCrops.filter((c) => c.stage === 'HARVESTING');
+    // ਜੇ HARVESTING ਵਾਲੀ ਕੋਈ ਨਹੀਂ ਤਾਂ ਸਾਰੀਆਂ active ਦਿਖਾਓ (fallback)
+    return harvesting.length > 0 ? harvesting : farmerCrops;
+  }, [farmerCrops]);
+
+  // Keep the selected crop valid as the active crop list changes
+  useEffect(() => {
+    if (harvestingCrops.length === 0) return;
+    if (!harvestingCrops.some((c) => c.id === selectedCropId)) {
+      setSelectedCropId(harvestingCrops[0].id);
+      setSaleRate(harvestingCrops[0].pricePerUnit);
+    }
+  }, [harvestingCrops, selectedCropId]);
+
+  const totalCartItems = saleItems.length;
+  const totalCartAmount = useMemo(() => saleItems.reduce((sum, i) => sum + i.amount, 0), [saleItems]);
+  const totalCartQty = useMemo(() => saleItems.reduce((sum, i) => sum + Number(i.qty), 0), [saleItems]);
+  
+  const netCartAmount = useMemo(() => {
+    const discountVal = Number(saleDiscount) || 0;
+    const deliveryVal = Number(saleDelivery) || 0;
+    return Math.max(0, totalCartAmount - discountVal + deliveryVal);
+  }, [totalCartAmount, saleDiscount, saleDelivery]);
+
+  const effectiveAmountReceived = paymentMode === 'CASH' ? netCartAmount : Number(amountReceived) || 0;
+  const thisSaleBalance = netCartAmount - effectiveAmountReceived;
+  const netReceivable = previousPartyBalance + thisSaleBalance;
+
+  const totalSpent = useMemo(
+    () => (expenses ?? []).reduce((acc, curr) => acc + Number(curr.amount), 0),
+    [expenses]
+  );
+
+  /** Expenses grouped by crop or by vendor, each group sorted by highest total first. */
+  const groupExpenses = (key: 'crop' | 'vendor') => {
+    const expenseList = expenses ?? [];
+    const groups = new Map<string, typeof expenseList>();
+    expenseList.forEach((e) => {
+      const groupKey = key === 'crop' ? e.cropCycle?.cropName || 'No Crop' : e.vendorName?.trim() || 'Unknown Vendor';
+      if (!groups.has(groupKey)) groups.set(groupKey, []);
+      groups.get(groupKey)!.push(e);
+    });
+    return Array.from(groups.entries())
+      .map(([name, entries]) => ({ name, entries, total: entries.reduce((sum, e) => sum + Number(e.amount), 0) }))
+      .sort((a, b) => b.total - a.total);
+  };
+  const expensesByCrop = useMemo(() => groupExpenses('crop'), [expenses]);
+  const expensesByVendor = useMemo(() => groupExpenses('vendor'), [expenses]);
+
+  /** Sales grouped by crop or by buyer, each group sorted by most recent sale first. */
+  const groupSales = (key: 'cropName' | 'buyerName') => {
+    const groups = new Map<string, typeof unifiedSalesRecords>();
+    unifiedSalesRecords.forEach((s) => {
+      const groupKey = s[key] || 'Unknown';
+      if (!groups.has(groupKey)) groups.set(groupKey, []);
+      groups.get(groupKey)!.push(s);
+    });
+    return Array.from(groups.entries())
+      .map(([name, entries]) => ({ name, entries, total: entries.reduce((sum, e) => sum + e.totalAmount, 0) }))
+      .sort((a, b) => b.total - a.total);
+  };
+  const salesByCrop = useMemo(() => groupSales('cropName'), [unifiedSalesRecords]);
+
+  // Crop-wise breakdown for the Analysis tab.
+  // Proportional allocation:
+  // - Delivery charges added to Income based on item sale value ratio.
+  // - Discounts added to Expense based on item sale value ratio.
+  // - Expenses (tagged + general farm expenses) allocated per crop field.
+  const cropAnalysis = useMemo(() => {
+    const totalFields = farmerCrops.length;
+
+    const getCleanName = (name: string): string => {
+      if (!name) return '';
+      return name
+        .toLowerCase()
+        .replace(/\([^)]*\)/g, '')
+        .replace(/[^a-z0-9]/g, '')
+        .trim();
+    };
+
+    // Data structures for field-level income and expense tracking
+    const fieldIncomes: Record<string, number> = {};
+    const fieldExpenses: Record<string, number> = {};
+
+    farmerCrops.forEach((c) => {
+      fieldIncomes[c.id] = 0;
+      fieldExpenses[c.id] = 0;
+    });
+
+    // 1. Process Sale Bills (rawSaleBillsList) & Sale Records
+    // Flatten into itemized entries with proportional delivery charge (added to income)
+    // and proportional discount (added to expense)
+    const allFlatSaleItems: Array<{
+      cropId?: string;
+      cropName: string;
+      incomeAmount: number;
+      discountAmount: number;
+    }> = [];
+
+    (rawSaleBillsList || []).forEach((bill: any) => {
+      const deliveryVal = Number(bill.deliveryCharge) || 0;
+      const discountVal = Number(bill.discountAmount) || 0;
+
+      if (Array.isArray(bill.items) && bill.items.length > 0) {
+        const rawSubtotal = bill.items.reduce((sum: number, i: any) => {
+          return sum + (Number(i.amount) || ((Number(i.qty) || 1) * (Number(i.rate) || 0)));
+        }, 0);
+
+        bill.items.forEach((item: any) => {
+          const itemBaseAmt = Number(item.amount) || ((Number(item.qty) || 1) * (Number(item.rate) || 0));
+          const ratio = rawSubtotal > 0 ? itemBaseAmt / rawSubtotal : 1 / bill.items.length;
+
+          const propDelivery = deliveryVal * ratio;
+          const propDiscount = discountVal * ratio;
+          const finalItemIncome = itemBaseAmt + propDelivery;
+
+          allFlatSaleItems.push({
+            cropId: item.cropId || bill.cropId,
+            cropName: item.cropName || '',
+            incomeAmount: finalItemIncome,
+            discountAmount: propDiscount,
+          });
+        });
+      } else {
+        const billTotal = Number(bill.totalAmount) || 0;
+        allFlatSaleItems.push({
+          cropId: bill.cropId,
+          cropName: bill.cropName || 'Crop Sale',
+          incomeAmount: billTotal + deliveryVal,
+          discountAmount: discountVal,
+        });
+      }
+    });
+
+    // Also process local/unsynced sales records not in rawSaleBillsList
+    const dbBillIds = new Set<string>();
+    const dbBillNos = new Set<string>();
+    (rawSaleBillsList || []).forEach((b: any) => {
+      if (b.id) dbBillIds.add(b.id);
+      if (b.billNo) dbBillNos.add(b.billNo);
+    });
+
+    (allSalesRecords || []).forEach((s: any) => {
+      if (s.billId && dbBillIds.has(s.billId)) return;
+      if (s.billNo && dbBillNos.has(s.billNo)) return;
+      if (s.id && dbBillIds.has(s.id)) return;
+      allFlatSaleItems.push({
+        cropId: s.cropId,
+        cropName: s.cropName || '',
+        incomeAmount: Number(s.totalAmount) || 0,
+        discountAmount: 0,
+      });
+    });
+
+    // 2. Allocate Sale Income and Sale Discounts to crop fields
+    allFlatSaleItems.forEach((sItem) => {
+      if (sItem.incomeAmount <= 0 && sItem.discountAmount <= 0) return;
+      const sKey = getCleanName(sItem.cropName);
+
+      // Direct crop ID matches
+      const directMatches = farmerCrops.filter(
+        (c) => sItem.cropId && (sItem.cropId === c.id || (c.cropId && sItem.cropId === c.cropId))
+      );
+
+      if (directMatches.length > 0) {
+        const incShare = sItem.incomeAmount / directMatches.length;
+        const discShare = sItem.discountAmount / directMatches.length;
+        directMatches.forEach((c) => {
+          fieldIncomes[c.id] = (fieldIncomes[c.id] || 0) + incShare;
+          fieldExpenses[c.id] = (fieldExpenses[c.id] || 0) + discShare;
+        });
+        return;
+      }
+
+      // Name matches
+      const nameMatches = farmerCrops.filter((c) => {
+        const cKey = getCleanName(c.cropName);
+        if (!sKey || !cKey) return false;
+        return sKey.includes(cKey) || cKey.includes(sKey);
+      });
+
+      if (nameMatches.length > 0) {
+        const incShare = sItem.incomeAmount / nameMatches.length;
+        const discShare = sItem.discountAmount / nameMatches.length;
+        nameMatches.forEach((c) => {
+          fieldIncomes[c.id] = (fieldIncomes[c.id] || 0) + incShare;
+          fieldExpenses[c.id] = (fieldExpenses[c.id] || 0) + discShare;
+        });
+        return;
+      }
+
+      // Fallback: distribute evenly across active fields
+      if (totalFields > 0) {
+        const incShare = sItem.incomeAmount / totalFields;
+        const discShare = sItem.discountAmount / totalFields;
+        farmerCrops.forEach((c) => {
+          fieldIncomes[c.id] = (fieldIncomes[c.id] || 0) + incShare;
+          fieldExpenses[c.id] = (fieldExpenses[c.id] || 0) + discShare;
+        });
+      }
+    });
+
+    // 3. Process Farm Expenses (expenses array) & allocate per crop field
+    (expenses || []).forEach((exp: any) => {
+      const expAmt = Number(exp.amount) || 0;
+      if (expAmt <= 0) return;
+
+      const expCropId = exp.cropId || exp.cropCycleId || exp.cropCycle?.id;
+      const expCropName = exp.cropName || exp.cropCycle?.cropName;
+      const eKey = getCleanName(expCropName);
+
+      // Explicitly tagged crop ID match
+      const directMatches = farmerCrops.filter(
+        (c) => expCropId && (expCropId === c.id || (c.cropId && expCropId === c.cropId))
+      );
+
+      if (directMatches.length > 0) {
+        const share = expAmt / directMatches.length;
+        directMatches.forEach((c) => {
+          fieldExpenses[c.id] = (fieldExpenses[c.id] || 0) + share;
+        });
+        return;
+      }
+
+      // Explicitly tagged crop name match
+      const nameMatches = farmerCrops.filter((c) => {
+        const cKey = getCleanName(c.cropName);
+        if (!eKey || !cKey) return false;
+        return eKey.includes(cKey) || cKey.includes(eKey);
+      });
+
+      if (nameMatches.length > 0) {
+        const share = expAmt / nameMatches.length;
+        nameMatches.forEach((c) => {
+          fieldExpenses[c.id] = (fieldExpenses[c.id] || 0) + share;
+        });
+        return;
+      }
+
+      // General / untagged farm expenses: distribute across active crop fields
+      if (totalFields > 0) {
+        const share = expAmt / totalFields;
+        farmerCrops.forEach((c) => {
+          fieldExpenses[c.id] = (fieldExpenses[c.id] || 0) + share;
+        });
+      }
+    });
+
+    return farmerCrops.map((crop) => {
+      const cropIdStr = crop.id;
+      const cropName = crop.cropName || 'Crop';
+      const fieldName = crop.fieldName || 'Field 1';
+      const income = fieldIncomes[cropIdStr] || 0;
+      const expense = fieldExpenses[cropIdStr] || 0;
+      const net = income - expense;
+
+      return {
+        cropId: cropIdStr,
+        cropName,
+        fieldName,
+        income,
+        expense,
+        net,
+      };
+    });
+  }, [farmerCrops, rawSaleBillsList, allSalesRecords, expenses]);
+
+  const maxCropValue = Math.max(1, ...cropAnalysis.map((c) => Math.max(c.income, c.expense)));
+  const overallNet = totalSalesRevenue - totalSpent;
+  const maxOverallValue = Math.max(1, totalSalesRevenue, totalSpent);
+
+  const selectedFarmerCrop = harvestingCrops.find((c) => c.id === selectedCropId) ?? harvestingCrops[0];
+
+  const handleSelectFarmerCrop = (cropId: string) => {
+    tap();
+    setSelectedCropId(cropId);
+    const found = harvestingCrops.find((c) => c.id === cropId);
+    if (found) {
+      setSaleRate(found.pricePerUnit);
+    }
+  };
+
+  const resetSaleForm = () => {
+    setSaleStep('FORM');
+    setPaymentMode('CASH');
+    setSelectedParty(null);
+    setCashBuyerName('');
+    setCashBuyerMobile('');
+    setSaleQuantity('');
+    setAmountReceived('');
+    setAmountReceivedMode('CASH');
+    setSaleItems([]);
+    setSaleError(null);
+    setSavedInvoice(null);
+    setIsCropDropdownOpen(false);
+    setSaleDiscount('');
+    setSaleDelivery('');
+    setSaleDescription('');
+    setEditingBillId(null);
+    setEditingBillNo(null);
+    setWasEditingBill(false);
+    setEditingPreviousBalance(null);
+    setSaleDate(todayIso()); // ✅ Reset date to today for new sale
+  };
+
+  const getCropMaxRateDetails = (cropName: string, userSetPrice?: string | number) => {
+    const baseName = cropName.split('(')[0].trim().toLowerCase();
+
+    // 1. All prices from farmer crops across the system
+    const cropRates = (farmerCrops || [])
+      .filter((c) => c.cropName.split('(')[0].trim().toLowerCase() === baseName)
+      .map((c) => Number(c.maxPricePerUnit || c.pricePerUnit || 0))
+      .filter((r) => r > 0);
+
+    // 2. All sales rates from all sales records across the system
+    const salesRates = (allSalesRecords || [])
+      .filter((s) => s.cropName.split('(')[0].trim().toLowerCase() === baseName)
+      .map((s) => Number(s.pricePerUnit || 0))
+      .filter((r) => r > 0);
+
+    const ownRate = Number(userSetPrice || 0);
+    const validRates = [...cropRates, ...salesRates, ownRate].filter((r) => r > 0);
+
+    // Highest rate across all farmers
+    const highestFarmerRate = validRates.length > 0 ? Math.max(...validRates) : 0;
+
+    // Allow farmers to record any valid selling rate (up to 1,00,00,000)
+    const maxAllowedRate = 10000000;
+
+    return {
+      highestFarmerRate,
+      maxAllowedRate,
+    };
+  };
+
+  const getCropEstimatedMaxRate = (cropName: string, userSetPrice?: string | number): number => {
+    return getCropMaxRateDetails(cropName, userSetPrice).maxAllowedRate;
+  };
+
+  const onAddProductToCart = () => {
+    setSaleError(null);
+    const qty = Number(saleQuantity);
+    const rate = Number(saleRate);
+    if (!selectedFarmerCrop) {
+      setSaleError('⚠️ Please select a crop first!');
+      return;
+    }
+    if (!qty || qty <= 0 || !rate || rate <= 0) {
+      setSaleError('⚠️ Please enter a valid sale quantity and rate.');
+      return;
+    }
+
+    // Maximum rate rule: highest rate across all farmers + 10% max cap
+    const { highestFarmerRate, maxAllowedRate } = getCropMaxRateDetails(
+      selectedFarmerCrop.cropName,
+      selectedFarmerCrop.maxPricePerUnit || selectedFarmerCrop.pricePerUnit
+    );
+
+    if (rate > maxAllowedRate) {
+      setSaleError(
+        `⚠️ Rate ₹${rate}/${selectedFarmerCrop.unit || 'unit'} exceeds maximum allowed limit! (Max allowed: ₹${maxAllowedRate.toLocaleString('en-IN')}/${selectedFarmerCrop.unit || 'unit'} [10% cap above highest farmer rate ₹${highestFarmerRate.toLocaleString('en-IN')}]).`
+      );
+      return;
+    }
+
+    tap();
+    setSaleItems((prev) => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        cropId: selectedFarmerCrop.id,
+        cropName: selectedFarmerCrop.cropName,
+        unit: selectedFarmerCrop.unit,
+        qty,
+        rate,
+        amount: qty * rate,
+      },
+    ]);
+    setSaleQuantity('');
+  };
+
+  const onRemoveCartItem = (id: string) => {
+    tap();
+    setSaleItems((prev) => prev.filter((i) => i.id !== id));
+  };
+
+  const onSaveSale = async () => {
+    setSaleError(null);
+    let itemsToSave = [...saleItems];
+    if (itemsToSave.length === 0) {
+      const qty = Number(saleQuantity);
+      const rate = Number(saleRate);
+      if (selectedFarmerCrop && qty > 0 && rate > 0) {
+        itemsToSave = [
+          {
+            id: Date.now().toString(),
+            cropId: selectedFarmerCrop.id,
+            cropName: selectedFarmerCrop.cropName,
+            unit: selectedFarmerCrop.unit,
+            qty,
+            rate,
+            amount: qty * rate,
+          },
+        ];
+      } else {
+        setSaleError('⚠️ Please add at least one product to the sale list.');
+        return;
+      }
+    }
+    if (paymentMode === 'PARTY' && !selectedParty) {
+      setSaleError('⚠️ Please select a party or choose Cash.');
+      return;
+    }
+
+    // Validate estimated max rate (+10% cap over all farmers) for all items in the cart
+    for (const item of itemsToSave) {
+      const crop = harvestingCrops.find((c) => c.id === item.cropId) || farmerCrops.find((c) => c.id === item.cropId);
+      const { highestFarmerRate, maxAllowedRate } = getCropMaxRateDetails(
+        item.cropName,
+        crop?.maxPricePerUnit || crop?.pricePerUnit
+      );
+      if (item.rate > maxAllowedRate) {
+        setSaleError(
+          `⚠️ Rate for ${item.cropName} (₹${item.rate}/${item.unit || 'unit'}) exceeds maximum allowed limit! (Max allowed: ₹${maxAllowedRate.toLocaleString('en-IN')}/${item.unit || 'unit'} [10% cap above highest farmer rate ₹${highestFarmerRate.toLocaleString('en-IN')}]).`
+        );
+        return;
+      }
+    }
+
+    tap();
+    setIsSavingSale(true);
+    const cashName = cashBuyerName.trim();
+    const buyerName = paymentMode === 'PARTY' && selectedParty ? selectedParty.name : cashName || 'Cash Sale';
+
+    try {
+      const currentReceivedMode = paymentMode === 'PARTY' ? amountReceivedMode : 'CASH';
+      const targetBillNo = editingBillNo || nextSuggestedBillNo;
+      const calcTotalAmount = itemsToSave.reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+      const discountVal = Number(saleDiscount) || 0;
+      const deliveryVal = Number(saleDelivery) || 0;
+      const calcNetCartAmount = Math.max(0, calcTotalAmount - discountVal + deliveryVal);
+      const calcEffectiveAmountReceived = paymentMode === 'CASH' ? calcNetCartAmount : Number(amountReceived) || 0;
+      const calcThisSaleBalance = calcNetCartAmount - calcEffectiveAmountReceived;
+
+      const billPayload = {
+        billNo: targetBillNo,
+        farmerName: user?.name || 'Farmer',
+        farmerUpiId: user?.upiId || undefined,
+        partyId: paymentMode === 'PARTY' ? selectedParty?.id : undefined,
+        partyName: paymentMode === 'PARTY' && selectedParty ? selectedParty.name : cashName || 'Cash',
+        partyMobile: paymentMode === 'PARTY' ? selectedParty?.mobile ?? undefined : cashBuyerMobile.trim() || undefined,
+        isCash: paymentMode === 'CASH',
+        amountReceivedMode: currentReceivedMode,
+        items: itemsToSave.map((i) => ({ cropId: i.cropId || '', cropName: i.cropName, unit: i.unit || 'unit', qty: Number(i.qty) || 1, rate: Number(i.rate) || 0, amount: Number(i.amount) || 0 })),
+        totalItems: itemsToSave.length,
+        totalAmount: calcNetCartAmount,
+        amountReceived: calcEffectiveAmountReceived,
+        thisSaleBalance: calcThisSaleBalance,
+        previousBalance: previousPartyBalance,
+        netReceivable: paymentMode === 'PARTY' ? previousPartyBalance + calcThisSaleBalance : 0,
+        discountAmount: discountVal,
+        deliveryCharge: deliveryVal,
+        notes: saleDescription.trim() || undefined,
+        createdAt: saleDate ? new Date(`${saleDate}T12:00:00.000Z`).toISOString() : undefined,
+      };
+
+      // Save/update the bill snapshot FIRST so its real DB id can be linked onto the ledger entry.
+      let billNo = targetBillNo;
+      let realDbBillId: string | undefined = undefined;
+      
+      if (editingBillId) {
+        try {
+          const updatedBill = await updateSaleBill.mutateAsync({
+            id: editingBillId,
+            payload: billPayload,
+          });
+          billNo = updatedBill.billNo || editingBillNo || billNo;
+          realDbBillId = updatedBill.id;
+        } catch (err: any) {
+          console.warn('Update sale bill online sync warning:', err);
+          billNo = editingBillNo || billNo;
+        }
+      } else {
+        try {
+          const savedBill = await createSaleBill.mutateAsync(billPayload);
+          billNo = savedBill.billNo || targetBillNo;
+          realDbBillId = savedBill.id;
+        } catch (err: any) {
+          console.warn('Create sale bill online sync warning, saving locally:', err);
+          billNo = targetBillNo;
+        }
+      }
+
+      if (paymentMode === 'PARTY' && selectedParty) {
+        const itemSummaryWithQty = itemsToSave.map((i) => `${i.cropName} (${i.qty} ${i.unit || 'unit'})`).join(', ');
+        const reason = `Sale: ${itemSummaryWithQty}`;
+        try {
+          const validBillIdToPass = realDbBillId || editingBillId || undefined;
+          await recordSaleLedger.mutateAsync({
+            id: selectedParty.id,
+            payload: {
+              totalAmount: calcNetCartAmount,
+              amountReceived: calcEffectiveAmountReceived,
+              reason,
+              saleBillId: validBillIdToPass,
+            },
+          });
+        } catch (ledgerErr) {
+          console.warn('Could not record party ledger entry:', ledgerErr);
+        }
+      }
+
+      if (editingBillId) {
+        const targetBillId = realDbBillId || editingBillId;
+        const existingSales = allSalesRecords.filter(
+          (s) =>
+            (s.billId && (s.billId === editingBillId || s.billId === editingBillNo || (realDbBillId && s.billId === realDbBillId))) ||
+            (s.billNo && (s.billNo === editingBillNo || s.billNo === editingBillId)) ||
+            s.id === editingBillId
+        );
+
+        if (existingSales.length > 0) {
+          itemsToSave.forEach((item, index) => {
+            if (index < existingSales.length) {
+              const existing = existingSales[index];
+              updateSale(existing.id, {
+                cropName: item.cropName,
+                quantity: String(item.qty),
+                pricePerUnit: String(item.rate),
+                buyerName,
+                totalAmount: item.amount,
+                amountReceived: calcEffectiveAmountReceived,
+                previousBalance: previousPartyBalance,
+                amountReceivedMode: currentReceivedMode,
+                notes: saleDescription.trim(),
+                billId: targetBillId,
+                billNo,
+                partyId: paymentMode === 'PARTY' ? selectedParty?.id : undefined,
+              }).catch(() => {});
+            } else if (item.cropId) {
+              recordSale(item.cropId, {
+                quantity: String(item.qty),
+                rate: String(item.rate),
+                buyerName,
+                billId: targetBillId,
+                billNo,
+                amountReceived: calcEffectiveAmountReceived,
+                previousBalance: previousPartyBalance,
+                amountReceivedMode: currentReceivedMode,
+              }).catch(() => {});
+            }
+          });
+
+          if (existingSales.length > itemsToSave.length) {
+            for (let i = itemsToSave.length; i < existingSales.length; i++) {
+              deleteSale(existingSales[i].id).catch(() => {});
+            }
+          }
+        } else {
+          itemsToSave.forEach((item) => {
+            if (item.cropId) {
+              recordSale(item.cropId, {
+                quantity: String(item.qty),
+                rate: String(item.rate),
+                buyerName,
+                billId: targetBillId,
+                billNo,
+                amountReceived: calcEffectiveAmountReceived,
+                previousBalance: previousPartyBalance,
+                amountReceivedMode: currentReceivedMode,
+              }).catch(() => {});
+            }
+          });
+        }
+      } else {
+        itemsToSave.forEach((item) => {
+          if (item.cropId) {
+            recordSale(item.cropId, {
+              quantity: String(item.qty),
+              rate: String(item.rate),
+              buyerName,
+              billId: realDbBillId,
+              billNo,
+              amountReceived: calcEffectiveAmountReceived,
+              previousBalance: previousPartyBalance,
+              amountReceivedMode: currentReceivedMode,
+            }).catch(() => {});
+          }
+        });
+      }
+
+      await queryClient.refetchQueries({ queryKey: ['sale-bills', 'mine'] });
+      queryClient.invalidateQueries({ queryKey: ['sale-bills'] });
+      queryClient.invalidateQueries({ queryKey: ['market-rates'] });
+      queryClient.invalidateQueries({ queryKey: ['farmer-crops'] });
+      queryClient.invalidateQueries({ queryKey: ['parties'] });
+      queryClient.invalidateQueries({ queryKey: ['parties', 'statement'] });
+
+      const now = new Date();
+      const saleDateForBill = saleDate ? formatDateDDMMYYYY(saleDate) : now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+      // Fetch the freshly created/updated bill directly from the DB API to construct invoice preview
+      let invoice: SavedSaleInvoice | null = null;
+      if (realDbBillId) {
+        try {
+          const dbBill = await saleBillsApi.getSaleBill(realDbBillId);
+          if (dbBill) {
+            const created = new Date(dbBill.createdAt || now);
+            invoice = {
+              billNo: dbBill.billNo,
+              farmerName: dbBill.farmerName || billPayload.farmerName,
+              partyId: dbBill.partyId || billPayload.partyId,
+              partyName: dbBill.partyName || billPayload.partyName,
+              partyMobile: dbBill.partyMobile || billPayload.partyMobile,
+              isCash: dbBill.isCash,
+              amountReceivedMode: (dbBill as any).amountReceivedMode || currentReceivedMode,
+              items: (dbBill.items as any[] || []).map((bi: any, idx: number) => ({
+                id: bi.id || String(idx),
+                cropId: bi.cropId || '',
+                cropName: bi.cropName || '',
+                unit: bi.unit || 'unit',
+                qty: Number(bi.qty) || 1,
+                rate: Number(bi.rate) || 0,
+                amount: Number(bi.amount) || ((Number(bi.qty) || 1) * (Number(bi.rate) || 0)),
+              })),
+              totalItems: dbBill.totalItems || billPayload.totalItems,
+              totalAmount: Number(dbBill.totalAmount),
+              amountReceived: Number(dbBill.amountReceived),
+              thisSaleBalance: Number(dbBill.thisSaleBalance),
+              previousBalance: Number(dbBill.previousBalance),
+              netReceivable: Number(dbBill.netReceivable),
+              discountAmount: dbBill.discountAmount !== undefined ? Number(dbBill.discountAmount) : billPayload.discountAmount,
+              deliveryCharge: dbBill.deliveryCharge !== undefined ? Number(dbBill.deliveryCharge) : billPayload.deliveryCharge,
+              notes: dbBill.notes || billPayload.notes,
+              date: formatDateDDMMYYYY(created),
+              time: created.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+            };
+          }
+        } catch (fetchErr) {
+          console.warn('Could not fetch created bill from DB for preview:', fetchErr);
+        }
+      }
+
+      if (!invoice) {
+        invoice = {
+          billNo,
+          farmerName: billPayload.farmerName,
+          partyId: billPayload.partyId,
+          partyName: billPayload.partyName,
+          partyMobile: billPayload.partyMobile,
+          isCash: billPayload.isCash,
+          amountReceivedMode: currentReceivedMode,
+          items: saleItems,
+          totalItems: billPayload.totalItems,
+          totalAmount: billPayload.totalAmount,
+          amountReceived: billPayload.amountReceived,
+          thisSaleBalance: billPayload.thisSaleBalance,
+          previousBalance: billPayload.previousBalance,
+          netReceivable: billPayload.netReceivable,
+          discountAmount: billPayload.discountAmount,
+          deliveryCharge: billPayload.deliveryCharge,
+          notes: billPayload.notes,
+          date: saleDateForBill,
+          time: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+        };
+      }
+
+      setWasEditingBill(Boolean(editingBillId));
+      setEditingBillId(null);
+      setEditingBillNo(null);
+      setSavedInvoice(invoice);
+      setSaleStep('SAVED');
+    } catch (err: any) {
+      console.error('Save sale failed:', err);
+      const serverMsg = err?.response?.data?.message || err?.message;
+      const displayMsg = Array.isArray(serverMsg) ? serverMsg.join(', ') : serverMsg;
+      setSaleError(displayMsg ? `⚠️ ${displayMsg}` : 'Failed to save sale. Please try again.');
+    } finally {
+      setIsSavingSale(false);
+    }
+  };
+
+  const resetExpenseForm = () => {
+    setEditingExpenseId(null);
+    setAmount('');
+    setVendorName('');
+    setQuantity('');
+    setUnit('');
+    setNotes('');
+    setExpenseError(null);
+    setExpenseCropType('CROP');
+    setExpenseCropId(undefined);
+  };
+
+  const handleOpenEditExpense = (item: any) => {
+    tap();
+    setEditingExpenseId(item.id);
+    setAmount(String(item.amount));
+    setExpenseDate(item.expenseDate ? item.expenseDate.slice(0, 10) : todayIso());
+    if (item.categoryId) setCategoryId(item.categoryId);
+    setVendorName(item.vendorName || '');
+    setNotes(item.notes || '');
+    setQuantity(item.quantity ? String(item.quantity) : '');
+    setUnit(item.unit || '');
+    if (item.cropCycleId) {
+      setExpenseCropType('CROP');
+      setExpenseCropId(item.cropCycleId);
+    } else {
+      setExpenseCropType('OTHER');
+      setExpenseCropId(undefined);
+    }
+    setExpenseError(null);
+    setShowExpenseForm(true);
+  };
+
+  const onAddExpense = async () => {
+    setExpenseError(null);
+    const amountNum = Number(amount);
+    if (!selectedFarmId) {
+      setExpenseError('⚠️ Please select a farm first.');
+      return;
+    }
+    const activeCatId = categoryId || displayCategories[0]?.id;
+
+    if (!amountNum || amountNum <= 0) {
+      setExpenseError('⚠️ Enter a valid expense amount.');
+      return;
+    }
+    if ((expensePaymentMode === 'CREDIT' || expenseRecipientType === 'SUPPLIER' || expenseRecipientType === 'LABOUR') && !expenseParty) {
+      if (expenseRecipientType === 'SUPPLIER' || expenseRecipientType === 'LABOUR') {
+        setExpenseError('⚠️ Please select a party or worker.');
+        return;
+      }
+    }
+
+    // Determine target farmId and plotId from crop if tagged to a crop
+    let targetFarmId = selectedFarmId;
+    let targetPlotId = plotId;
+
+    if (expenseCropId) {
+      const targetCrop = (myRealCrops ?? []).find((c) => c.id === expenseCropId);
+      if (targetCrop && targetCrop.plot) {
+        if (targetCrop.plot.farmId) targetFarmId = targetCrop.plot.farmId;
+        if (targetCrop.plot.id) targetPlotId = targetCrop.plot.id;
+      }
+    }
+
+    // Compose notes with labour work type & quantity if applicable
+    const noteParts: string[] = [];
+    if (expenseRecipientType === 'LABOUR') {
+      const selectedWorkTypeObj = LABOUR_WORK_TYPES.find((w) => w.id === labourWorkType);
+      if (selectedWorkTypeObj) {
+        noteParts.push(`Work: ${selectedWorkTypeObj.label}`);
+      }
+    }
+    if (quantity) {
+      noteParts.push(`Qty: ${quantity} ${unit || ''}`.trim());
+    }
+    if (notes.trim()) {
+      noteParts.push(notes.trim());
+    }
+    const combinedNotes = noteParts.length > 0 ? noteParts.join(' | ') : undefined;
+
+    try {
+      if (editingExpenseId) {
+        await updateExpense.mutateAsync({
+          id: editingExpenseId,
+          payload: {
+            categoryId: activeCatId,
+            cropCycleId: expenseCropId,
+            amount: amountNum,
+            expenseDate: expenseDate || todayIso(),
+            plotId: targetPlotId,
+            paymentMode: expensePaymentMode,
+            partyId: expenseRecipientType !== 'CASH' ? expenseParty?.id : undefined,
+            vendorName: expenseRecipientType === 'CASH' ? vendorName.trim() || undefined : expenseParty?.name,
+            quantity: quantity ? Number(quantity) : undefined,
+            unit: unit.trim() || undefined,
+            notes: combinedNotes,
+          },
+        });
+      } else {
+        await createExpense.mutateAsync({
+          farmId: targetFarmId,
+          categoryId: activeCatId,
+          cropCycleId: expenseCropId,
+          amount: amountNum,
+          expenseDate: expenseDate || todayIso(),
+          plotId: targetPlotId,
+          paymentMode: expensePaymentMode,
+          partyId: expenseRecipientType !== 'CASH' ? expenseParty?.id : undefined,
+          vendorName: expenseRecipientType === 'CASH' ? vendorName.trim() || undefined : expenseParty?.name,
+          quantity: quantity ? Number(quantity) : undefined,
+          unit: unit.trim() || undefined,
+          notes: combinedNotes,
+        });
+      }
+
+      const createdVoucherData: UniversalVoucherData = {
+        voucherType: 'EXPENSE',
+        title: editingExpenseId ? '🔴 UPDATED FARM EXPENSE SLIP' : '🔴 FARM EXPENSE STATEMENT SLIP',
+        voucherNo: editingExpenseId ? `${editingExpenseId.replace(/^EXP-?/i, '').slice(0, 6).toUpperCase()}` : `${Date.now().toString().slice(-6)}`,
+        date: expenseDate || todayIso(),
+        farmerName: user?.name || 'Farmer',
+        farmerPhone: user?.mobile || '',
+        farmerVillage: user?.village || '',
+        partyName: expenseParty?.name || vendorName.trim() || (expenseRecipientType === 'LABOUR' ? 'Labour Worker' : 'Direct / Cash Vendor'),
+        partyPhone: expenseParty?.mobile || undefined,
+        partyRole: expenseRecipientType === 'LABOUR' ? 'Labour Worker' : expenseRecipientType === 'SUPPLIER' ? 'Supplier / Trader' : 'Cash Vendor',
+        amount: amountNum,
+        paymentMode: expensePaymentMode === 'CREDIT' ? 'CREDIT / Khata' : 'CASH / Direct',
+        categoryOrWorkType: displayCategories.find((c) => c.id === activeCatId)?.labelEn || (expenseRecipientType === 'LABOUR' ? labourWorkType : 'Farm Expense'),
+        description: combinedNotes,
+      };
+
+      resetExpenseForm();
+      setShowExpenseForm(false);
+      setActiveVoucherData(createdVoucherData);
+      setShowVoucherSlipModal(true);
+    } catch (err: any) {
+      console.error('Create expense error:', err);
+      const serverMsg = err?.response?.data?.message || err?.message;
+      const displayMsg = Array.isArray(serverMsg) ? serverMsg.join(', ') : serverMsg;
+      setExpenseError(displayMsg ? `⚠️ ${displayMsg}` : 'Failed to save expense. Please try again.');
+    }
+  };
+
+  const openExpenseSlipPreview = (item: any) => {
+    tap();
+    const cleanId = String(item.id || '').replace(/^EXP-?/i, '');
+    setActiveVoucherData({
+      voucherType: 'EXPENSE',
+      title: '🔴 FARM EXPENSE STATEMENT SLIP',
+      voucherNo: `${cleanId.slice(0, 6).toUpperCase()}`,
+      date: item.expenseDate ? item.expenseDate.slice(0, 10) : todayIso(),
+      farmerName: user?.name || 'Farmer',
+      farmerPhone: user?.mobile || '',
+      farmerVillage: user?.village || '',
+      partyName: item.vendorName || (item.party ? item.party.name : 'Direct Cash Vendor'),
+      partyPhone: item.party ? item.party.mobile : undefined,
+      partyRole: item.vendorName ? 'Vendor / Merchant' : 'Farm Expense',
+      amount: Number(item.amount),
+      paymentMode: item.paymentMode || 'CASH',
+      categoryOrWorkType: item.category ? item.category.labelEn : 'Farm Input Expense',
+      description: item.notes || undefined,
+    });
+    setShowVoucherSlipModal(true);
+  };
+
+  const { colors } = useExecutiveTheme();
+
+  return (
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      {/* Header */}
+      <LinearGradient colors={colors.headerGradient} style={styles.hero}>
+        <Text style={styles.heroTitle}>Accounts</Text>
+        <Text style={styles.heroSubtitle}>Track sales revenue & combined farm expenses</Text>
+
+        {/* Tab Switcher */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ marginTop: 16 }}>
+          <View style={styles.subTabBar}>
+            <TouchableOpacity
+              style={[styles.subTabItem, recordType === 'OVERVIEW' && styles.subTabItemActive]}
+              activeOpacity={0.8}
+              onPress={() => { tap(); setRecordType('OVERVIEW'); }}
+            >
+              <Ionicons name="bar-chart" size={14} color={recordType === 'OVERVIEW' ? theme.primary : '#ffffff'} />
+              <Text style={[styles.subTabText, recordType === 'OVERVIEW' && styles.subTabTextActive]}>Overview</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.subTabItem, recordType === 'SALES' && styles.subTabItemActive]}
+              activeOpacity={0.8}
+              onPress={() => { tap(); setRecordType('SALES'); }}
+            >
+              <Ionicons name="trending-up" size={14} color={recordType === 'SALES' ? theme.primary : '#ffffff'} />
+              <Text style={[styles.subTabText, recordType === 'SALES' && styles.subTabTextActive]}>Sales</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.subTabItem, recordType === 'EXPENSES' && styles.subTabItemActive]}
+              activeOpacity={0.8}
+              onPress={() => { tap(); setRecordType('EXPENSES'); }}
+            >
+              <Ionicons name="receipt" size={14} color={recordType === 'EXPENSES' ? theme.primary : '#ffffff'} />
+              <Text style={[styles.subTabText, recordType === 'EXPENSES' && styles.subTabTextActive]}>Expenses</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.subTabItem, recordType === 'ANALYSIS' && styles.subTabItemActive]}
+              activeOpacity={0.8}
+              onPress={() => { tap(); setRecordType('ANALYSIS'); }}
+            >
+              <Ionicons name="stats-chart" size={14} color={recordType === 'ANALYSIS' ? theme.primary : '#ffffff'} />
+              <Text style={[styles.subTabText, recordType === 'ANALYSIS' && styles.subTabTextActive]}>Payments</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.subTabItem, recordType === 'LABOUR' && styles.subTabItemActive]}
+              activeOpacity={0.8}
+              onPress={() => { tap(); setRecordType('LABOUR'); }}
+            >
+              <Ionicons name="people" size={14} color={recordType === 'LABOUR' ? theme.primary : '#ffffff'} />
+              <Text style={[styles.subTabText, recordType === 'LABOUR' && styles.subTabTextActive]}>Labour</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.subTabItem, recordType === 'PARTIES' && styles.subTabItemActive]}
+              activeOpacity={0.8}
+              onPress={() => { tap(); setRecordType('PARTIES'); }}
+            >
+              <Ionicons name="people-circle-outline" size={14} color={recordType === 'PARTIES' ? theme.primary : '#ffffff'} />
+              <Text style={[styles.subTabText, recordType === 'PARTIES' && styles.subTabTextActive]}>Parties</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </LinearGradient>
+
+      {/* Main Content */}
+      {farmsLoading ? (
+        <View style={styles.center}>
+          <ActivityIndicator color={theme.primary} size="large" />
+        </View>
+      ) : (
+        <>
+          {recordType === 'SALES' ? (
+            /* CROP SALES TAB */
+            <View style={{ flex: 1 }}>
+              {/* Sales Summary Bar */}
+              <View style={styles.summaryBar}>
+                <View>
+                  <Text style={styles.totalLabel}>Total Sales Revenue</Text>
+                  <Text style={styles.salesValue}>{formatInr(totalSalesRevenue)}</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.addSalesCTA}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    tap();
+                    resetSaleForm();
+                    setShowSaleForm(true);
+                  }}
+                >
+                  <Ionicons name="add" size={16} color="#ffffff" />
+                  <Text style={styles.addSalesCTAText}>Sale</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Sales List view mode */}
+              <View style={styles.salesViewModeRow}>
+                {(
+                  [
+                    { id: 'ALL', label: '🌐 All Time' },
+                    { id: 'MONTH', label: '📅 This Month' },
+                    { id: 'TODAY', label: '📆 Today' },
+                    { id: 'PERIOD', label: '🗓️ Custom Period' },
+                    { id: 'BUYER', label: '🤝 Buyer-wise' },
+                  ] as const
+                ).map((mode) => (
+                  <TouchableOpacity
+                    key={mode.id}
+                    style={[styles.salesViewModeChip, salesViewMode === mode.id && styles.salesViewModeChipActive]}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      tap();
+                      setSalesViewMode(mode.id);
+                      setExpandedSalesGroup(null);
+                    }}
+                  >
+                    <Text style={[styles.salesViewModeChipText, salesViewMode === mode.id && styles.salesViewModeChipTextActive]}>
+                      {mode.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Custom Period Date Range Bar */}
+              {salesViewMode === 'PERIOD' && (
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: '#f8fafc',
+                  borderWidth: 1,
+                  borderColor: '#cbd5e1',
+                  borderRadius: RADIUS.md,
+                  paddingHorizontal: 10,
+                  paddingVertical: 8,
+                  marginBottom: 8,
+                  gap: 8,
+                }}>
+                  {/* From Date */}
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>FROM DATE</Text>
+                    <TouchableOpacity
+                      style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.sm, paddingHorizontal: 8, paddingVertical: 5 }}
+                      onPress={() => { tap(); setShowFromDatePicker(true); }}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>{formatDateDDMMYYYY(salesFromDate)}</Text>
+                      <Ionicons name="calendar" size={14} color="#16a34a" />
+                    </TouchableOpacity>
+                  </View>
+
+                  <Ionicons name="arrow-forward" size={14} color="#64748b" style={{ marginTop: 12 }} />
+
+                  {/* To Date */}
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b', marginBottom: 2 }}>TO DATE</Text>
+                    <TouchableOpacity
+                      style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.sm, paddingHorizontal: 8, paddingVertical: 5 }}
+                      onPress={() => { tap(); setShowToDatePicker(true); }}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>{formatDateDDMMYYYY(salesToDate)}</Text>
+                      <Ionicons name="calendar" size={14} color="#16a34a" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
+              {/* Interactive Calendar Modals for Custom Period Selection */}
+              {renderPeriodCalendarModal(
+                '📅 Select From Date',
+                salesFromDate,
+                setSalesFromDate,
+                showFromDatePicker,
+                () => setShowFromDatePicker(false)
+              )}
+              {renderPeriodCalendarModal(
+                '📅 Select To Date',
+                salesToDate,
+                setSalesToDate,
+                showToDatePicker,
+                () => setShowToDatePicker(false)
+              )}
+
+              {activeSalesList.length === 0 ? (
+                <View style={styles.center}>
+                  <Ionicons name="cart-outline" size={36} color="#cbd5e1" />
+                  <Text style={styles.emptyText}>No sales recorded for this period.</Text>
+                  <Text style={styles.emptySub}>Tap "+ Sale" to log revenue from your harvested crops.</Text>
+                </View>
+              ) : (salesViewMode !== 'BUYER') ? (
+                <View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, overflow: 'hidden', backgroundColor: '#ffffff', marginBottom: 16 }}>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 720, flexGrow: 1 }}>
+                    <View style={{ flex: 1, minWidth: 720 }}>
+                      {/* Table Header Row */}
+                      <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 8, paddingHorizontal: 8, alignItems: 'center', minWidth: 720 }}>
+                        <Text style={{ width: 75, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>BILL NO.</Text>
+                        <Text style={{ width: 70, fontSize: 9.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>DATE</Text>
+                        <Text style={{ width: 105, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>PARTY</Text>
+                        <Text style={{ flex: 1.5, minWidth: 140, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>BILL ITEMS</Text>
+                        <Text style={{ width: 100, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right', paddingRight: 6 }}>NET SALE AMT</Text>
+                        <Text style={{ width: 110, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right', paddingRight: 6 }}>RECEIVED</Text>
+                        <Text style={{ width: 60, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'center' }}>ACTION</Text>
+                      </View>
+
+                      {/* Table Body Rows */}
+                      <ScrollView showsVerticalScrollIndicator={false} nestedScrollEnabled style={{ maxHeight: 600 }}>
+                        {activeSalesList.map((item, index) => renderSaleRowItem(item, index))}
+                      </ScrollView>
+                    </View>
+                  </ScrollView>
+                </View>
+              ) : (
+                <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+                  {salesByBuyer.map((group) => {
+                    const isExpanded = expandedSalesGroup === group.name;
+                    return (
+                      <View key={group.name} style={styles.salesGroupBlock}>
+                        <TouchableOpacity
+                          style={styles.salesGroupHeader}
+                          activeOpacity={0.7}
+                          onPress={() => {
+                            tap();
+                            setExpandedSalesGroup((cur) => (cur === group.name ? null : group.name));
+                          }}
+                        >
+                          <Ionicons name={isExpanded ? 'chevron-down' : 'chevron-forward'} size={14} color="#64748b" />
+                          <Text style={styles.salesGroupName} numberOfLines={1}>
+                            🤝 Buyer: {group.name} <Text style={styles.salesGroupCount}>({group.entries.length})</Text>
+                          </Text>
+                          <Text style={styles.salesGroupTotal}>{formatInr(group.total)}</Text>
+                        </TouchableOpacity>
+                        {isExpanded ? (
+                          <View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 8, overflow: 'hidden', backgroundColor: '#ffffff', marginTop: 6 }}>
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 720, flexGrow: 1 }}>
+                              <View style={{ flex: 1, minWidth: 720 }}>
+                                <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 7, paddingHorizontal: 8, alignItems: 'center', minWidth: 720 }}>
+                                  <Text style={{ width: 75, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>BILL NO.</Text>
+                                  <Text style={{ width: 70, fontSize: 9.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>DATE</Text>
+                                  <Text style={{ width: 105, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>PARTY</Text>
+                                  <Text style={{ flex: 1.5, minWidth: 140, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>BILL ITEMS</Text>
+                                  <Text style={{ width: 100, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right', paddingRight: 6 }}>NET SALE AMT</Text>
+                                  <Text style={{ width: 110, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right', paddingRight: 6 }}>RECEIVED</Text>
+                                  <Text style={{ width: 60, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'center' }}>ACTION</Text>
+                                </View>
+                                {group.entries.map((item, idx) => renderSaleRowItem(item, idx))}
+                              </View>
+                            </ScrollView>
+                          </View>
+                        ) : null}
+                      </View>
+                    );
+                  })}
+                </ScrollView>
+              )}
+
+              {/* Sale Form Modal */}
+              <Modal visible={showSaleForm} transparent animationType="slide" onRequestClose={() => setShowSaleForm(false)}>
+                <View style={styles.modalOverlay}>
+                  <View style={[styles.modalCard, { width: '96%', maxWidth: 600, maxHeight: '94%', padding: isMobile ? 10 : 16, paddingBottom: 20 }]}>
+                    {saleStep === 'FORM' ? (
+                      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                        {/* Header Bar with Date at Top */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }}>
+                          <View>
+                            <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: theme.text }}>
+                              {editingBillId ? `✏️ Edit Sale / Bill #${editingBillNo}` : `New Sale / Bill #${nextSuggestedBillNo}`}
+                            </Text>
+                            {!editingBillId && (
+                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
+                                Vyapar Billing POS — Auto Bill #{nextSuggestedBillNo}
+                              </Text>
+                            )}
+                          </View>
+
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                            {/* Date Field at Top — Calendar Picker */}
+                            <TouchableOpacity
+                              style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6 }}
+                              onPress={() => { tap(); setShowSaleDatePicker(true); }}
+                              activeOpacity={0.8}
+                            >
+                              <Ionicons name="calendar-outline" size={14} color="#16a34a" />
+                              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>{formatDateDDMMYYYY(saleDate)}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              onPress={() => setShowSaleForm(false)}
+                              style={{ padding: 4, borderRadius: RADIUS.pill, backgroundColor: '#f1f5f9' }}
+                            >
+                              <Ionicons name="close" size={18} color="#475569" />
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+
+                        {/* Mini Calendar Date Picker Overlay */}
+                        {showSaleDatePicker && (
+                          <View style={{ position: 'relative', zIndex: 999 }}>
+                            <TouchableOpacity style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'transparent' }} onPress={() => setShowSaleDatePicker(false)} activeOpacity={1} />
+                            <View style={{ position: 'absolute', top: 0, right: 0, zIndex: 1000, backgroundColor: '#ffffff', borderRadius: RADIUS.lg, borderWidth: 1, borderColor: '#e2e8f0', padding: 12, width: 260, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 8 }}>
+                              {/* Month/Year Navigation */}
+                              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                                <TouchableOpacity onPress={() => shiftCalMonth(-1)} style={{ padding: 4 }}>
+                                  <Ionicons name="chevron-back" size={18} color="#475569" />
+                                </TouchableOpacity>
+                                <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>{calMonthNames[calData.month]} {calData.year}</Text>
+                                <TouchableOpacity onPress={() => shiftCalMonth(1)} style={{ padding: 4 }}>
+                                  <Ionicons name="chevron-forward" size={18} color="#475569" />
+                                </TouchableOpacity>
+                              </View>
+                              {/* Day Names Header */}
+                              <View style={{ flexDirection: 'row', marginBottom: 4 }}>
+                                {calDayNames.map((dn) => (
+                                  <Text key={dn} style={{ flex: 1, textAlign: 'center', fontSize: 10, fontFamily: FONT.bold, color: '#94a3b8' }}>{dn}</Text>
+                                ))}
+                              </View>
+                              {/* Day Grid */}
+                              <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                                {Array.from({ length: calData.firstDay }).map((_, i) => (
+                                  <View key={`empty-${i}`} style={{ width: '14.28%', height: 32 }} />
+                                ))}
+                                {Array.from({ length: calData.daysInMonth }).map((_, i) => {
+                                  const day = i + 1;
+                                  const cleanDateStr = getCleanIsoDate(saleDate);
+                                  const selDay = parseInt(cleanDateStr.split('-')[2], 10);
+                                  const isSelected = day === selDay;
+                                  return (
+                                    <TouchableOpacity
+                                      key={day}
+                                      onPress={() => selectCalDay(day)}
+                                      style={{ width: '14.28%', height: 32, justifyContent: 'center', alignItems: 'center', borderRadius: 16, backgroundColor: isSelected ? '#16a34a' : 'transparent' }}
+                                    >
+                                      <Text style={{ fontSize: 12, fontFamily: isSelected ? FONT.bold : FONT.medium, color: isSelected ? '#ffffff' : '#334155' }}>{day}</Text>
+                                    </TouchableOpacity>
+                                  );
+                                })}
+                              </View>
+                              {/* Today Button */}
+                              <TouchableOpacity
+                                onPress={() => { setSaleDate(todayIso()); setShowSaleDatePicker(false); }}
+                                style={{ marginTop: 8, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 5, borderRadius: RADIUS.pill, backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0' }}
+                              >
+                                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#16a34a' }}>Today</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        )}
+
+                        {/* Payment Mode & Party Picker Bar (Responsive!) */}
+                        <View style={{ backgroundColor: '#f8fafc', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 10 }}>
+                          <View style={{ flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', gap: 8 }}>
+                            {/* Payment Mode Toggles */}
+                            <View style={{ flexDirection: 'row', gap: 4 }}>
+                              <TouchableOpacity
+                                style={[styles.paymentModeChip, { flex: isMobile ? 1 : 0, paddingVertical: 6, paddingHorizontal: 10 }, paymentMode === 'CASH' && styles.paymentModeChipActive]}
+                                onPress={() => {
+                                  tap();
+                                  setPaymentMode('CASH');
+                                  setSelectedParty(null);
+                                }}
+                              >
+                                <Ionicons name="cash-outline" size={13} color={paymentMode === 'CASH' ? '#fff' : '#475569'} />
+                                <Text style={[styles.paymentModeChipText, { fontSize: 11.5 }, paymentMode === 'CASH' && styles.paymentModeChipTextActive]}>Cash</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity
+                                style={[styles.paymentModeChip, { flex: isMobile ? 1 : 0, paddingVertical: 6, paddingHorizontal: 10 }, paymentMode === 'PARTY' && styles.paymentModeChipActive]}
+                                onPress={() => {
+                                  tap();
+                                  setPaymentMode('PARTY');
+                                }}
+                              >
+                                <Ionicons name="people-outline" size={13} color={paymentMode === 'PARTY' ? '#fff' : '#475569'} />
+                                <Text style={[styles.paymentModeChipText, { fontSize: 11.5 }, paymentMode === 'PARTY' && styles.paymentModeChipTextActive]}>Party</Text>
+                              </TouchableOpacity>
+                            </View>
+
+                            {/* Party Search + Add Party Button */}
+                            {paymentMode === 'PARTY' ? (
+                              <View style={{ flex: 1 }}>
+                                <PartyPicker
+                                  parties={parties}
+                                  labourWorkers={expenseLabourWorkers}
+                                  selectedParty={selectedParty}
+                                  onSelect={setSelectedParty}
+                                  onCreate={async (payload) => createParty.mutateAsync(payload)}
+                                  accentColor="#16a34a"
+                                  hideLabel
+                                  inlineAddButton
+                                  placeholder="Select or search party..."
+                                />
+                              </View>
+                            ) : (
+                              <View style={{ flex: 1, flexDirection: isMobile ? 'column' : 'row', gap: 6 }}>
+                                <TextInput
+                                  style={[styles.input, { flex: 1, paddingVertical: 5, fontSize: 12, height: 38 }]}
+                                  placeholder="Buyer Name (Optional)"
+                                  placeholderTextColor="#94a3b8"
+                                  value={cashBuyerName}
+                                  onChangeText={setCashBuyerName}
+                                />
+                                <TextInput
+                                  style={[styles.input, { flex: 1, paddingVertical: 5, fontSize: 12, height: 38 }]}
+                                  placeholder="Buyer Mobile (Optional)"
+                                  placeholderTextColor="#94a3b8"
+                                  keyboardType="phone-pad"
+                                  maxLength={10}
+                                  value={cashBuyerMobile}
+                                  onChangeText={setCashBuyerMobile}
+                                />
+                              </View>
+                            )}
+                          </View>
+                        </View>
+
+                        {/* Product Entry Box — Responsive Mobile & Desktop Layout */}
+                        <View style={{ backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#cbd5e1', marginBottom: 10, zIndex: 50 }}>
+                          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#334155', marginBottom: 6 }}>📦 Add Item</Text>
+
+                          {isMobile ? (
+                            <View style={{ gap: 8 }}>
+                              {/* 1. Product Dropdown (Full Width on Mobile - Inline Touch Responsive) */}
+                              <View style={{ width: '100%' }}>
+                                <TouchableOpacity
+                                  style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    borderWidth: 1.5,
+                                    borderColor: isCropDropdownOpen ? '#16a34a' : '#cbd5e1',
+                                    borderRadius: RADIUS.md,
+                                    paddingHorizontal: 10,
+                                    height: 40,
+                                    backgroundColor: '#f8fafc',
+                                  }}
+                                  onPress={() => { tap(); setIsCropDropdownOpen((prev) => !prev); }}
+                                  activeOpacity={0.8}
+                                >
+                                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                                    <Ionicons name="cube-outline" size={16} color="#16a34a" />
+                                    <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: selectedFarmerCrop ? '#0f172a' : '#94a3b8' }} numberOfLines={1}>
+                                      {selectedFarmerCrop ? `${selectedFarmerCrop.cropName} (${selectedFarmerCrop.unit})` : 'Select Product / Crop'}
+                                    </Text>
+                                  </View>
+                                  <Ionicons name={isCropDropdownOpen ? 'chevron-up' : 'chevron-down'} size={16} color="#64748b" />
+                                </TouchableOpacity>
+
+                                {isCropDropdownOpen && (
+                                  <View style={{
+                                    marginTop: 6,
+                                    backgroundColor: '#ffffff',
+                                    borderRadius: RADIUS.md,
+                                    borderWidth: 1.5,
+                                    borderColor: '#16a34a',
+                                    maxHeight: 200,
+                                    padding: 4,
+                                  }}>
+                                    <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
+                                      {harvestingCrops.map((crop) => (
+                                        <TouchableOpacity
+                                          key={crop.id}
+                                          style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            paddingHorizontal: 12,
+                                            paddingVertical: 9,
+                                            borderRadius: RADIUS.sm,
+                                            marginBottom: 3,
+                                            backgroundColor: crop.id === selectedCropId ? '#f0fdf4' : '#f8fafc',
+                                            borderWidth: 1,
+                                            borderColor: crop.id === selectedCropId ? '#bbf7d0' : '#e2e8f0',
+                                          }}
+                                          onPress={() => {
+                                            tap();
+                                            handleSelectFarmerCrop(crop.id);
+                                            setIsCropDropdownOpen(false);
+                                          }}
+                                        >
+                                          <View style={{ flex: 1 }}>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                              <Ionicons name="leaf-outline" size={15} color={crop.id === selectedCropId ? '#16a34a' : '#64748b'} />
+                                              <Text style={{ fontSize: 13, fontFamily: crop.id === selectedCropId ? FONT.bold : FONT.medium, color: crop.id === selectedCropId ? '#16a34a' : '#0f172a' }}>
+                                                {crop.cropName}
+                                              </Text>
+                                            </View>
+                                            <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b', marginLeft: 21 }}>
+                                              {crop.area} • {crop.unit}/unit
+                                            </Text>
+                                          </View>
+                                          <View style={{ backgroundColor: '#eff6ff', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, maxWidth: 100 }}>
+                                            <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#1d4ed8' }} numberOfLines={1}>🌱 {crop.fieldName}</Text>
+                                          </View>
+                                        </TouchableOpacity>
+                                      ))}
+                                    </ScrollView>
+                                  </View>
+                                )}
+                              </View>
+
+                              {/* 2. QTY, Rate, Amount Row */}
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                <View style={{ flex: 1 }}>
+                                  <TextInput
+                                    style={[styles.input, { height: 38, paddingVertical: 4, paddingHorizontal: 5, fontSize: 12 }]}
+                                    placeholder={`QTY (${selectedFarmerCrop?.unit || 'Kg'})`}
+                                    placeholderTextColor="#94a3b8"
+                                    keyboardType="numeric"
+                                    value={saleQuantity}
+                                    onChangeText={setSaleQuantity}
+                                  />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                  <TextInput
+                                    style={[styles.input, { height: 38, paddingVertical: 4, paddingHorizontal: 5, fontSize: 12 }]}
+                                    placeholder="RATE (₹)"
+                                    placeholderTextColor="#94a3b8"
+                                    keyboardType="numeric"
+                                    value={saleRate}
+                                    onChangeText={setSaleRate}
+                                  />
+                                </View>
+                                <View style={{
+                                  flex: 1.2,
+                                  height: 38,
+                                  backgroundColor: '#f0fdf4',
+                                  borderWidth: 1,
+                                  borderColor: '#bbf7d0',
+                                  borderRadius: RADIUS.md,
+                                  justifyContent: 'center',
+                                  alignItems: 'center',
+                                  paddingHorizontal: 2,
+                                }}>
+                                  <Text style={{ fontSize: 9, fontFamily: FONT.medium, color: '#15803d' }}>AMOUNT</Text>
+                                  <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: '#16a34a' }} numberOfLines={1}>
+                                    ₹{((Number(saleQuantity) || 0) * (Number(saleRate) || 0)).toLocaleString('en-IN')}
+                                  </Text>
+                                </View>
+                              </View>
+
+                              {/* 3. Full width Add button on mobile */}
+                              <TouchableOpacity
+                                style={{
+                                  height: 38,
+                                  backgroundColor: '#16a34a',
+                                  borderRadius: RADIUS.md,
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: 4,
+                                }}
+                                activeOpacity={0.85}
+                                onPress={onAddProductToCart}
+                              >
+                                <Ionicons name="add-circle" size={16} color="#ffffff" />
+                                <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 12.5 }}>Add Item to List</Text>
+                              </TouchableOpacity>
+                            </View>
+                          ) : (
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                              {/* 1. Product Dropdown */}
+                              <View style={{ flex: 2, position: 'relative' }}>
+                                <TouchableOpacity
+                                  style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    borderWidth: 1.5,
+                                    borderColor: isCropDropdownOpen ? '#16a34a' : '#cbd5e1',
+                                    borderRadius: RADIUS.md,
+                                    paddingHorizontal: 8,
+                                    height: 38,
+                                    backgroundColor: '#f8fafc',
+                                  }}
+                                  onPress={() => { tap(); setIsCropDropdownOpen((prev) => !prev); }}
+                                >
+                                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: selectedFarmerCrop ? '#0f172a' : '#94a3b8' }} numberOfLines={1}>
+                                    {selectedFarmerCrop ? selectedFarmerCrop.cropName : 'Select Product'}
+                                  </Text>
+                                  <Ionicons name={isCropDropdownOpen ? 'chevron-up' : 'chevron-down'} size={15} color="#64748b" />
+                                </TouchableOpacity>
+
+                                {isCropDropdownOpen && (
+                                  <View style={{
+                                    position: 'absolute',
+                                    top: 42,
+                                    left: 0,
+                                    right: 0,
+                                    zIndex: 100,
+                                    backgroundColor: '#ffffff',
+                                    borderRadius: RADIUS.md,
+                                    borderWidth: 1.5,
+                                    borderColor: '#16a34a',
+                                    maxHeight: 190,
+                                    elevation: 8,
+                                    shadowColor: '#000',
+                                    shadowOpacity: 0.15,
+                                    shadowRadius: 6,
+                                    shadowOffset: { width: 0, height: 3 },
+                                  }}>
+                                    <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
+                                      {harvestingCrops.map((crop) => (
+                                        <TouchableOpacity
+                                          key={crop.id}
+                                          style={{
+                                            paddingHorizontal: 10,
+                                            paddingVertical: 8,
+                                            borderBottomWidth: 1,
+                                            borderBottomColor: '#f1f5f9',
+                                            backgroundColor: crop.id === selectedCropId ? '#f0fdf4' : '#ffffff',
+                                          }}
+                                          onPress={() => {
+                                            tap();
+                                            handleSelectFarmerCrop(crop.id);
+                                            setIsCropDropdownOpen(false);
+                                          }}
+                                        >
+                                          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <Text style={{ fontSize: 12, fontFamily: crop.id === selectedCropId ? FONT.bold : FONT.medium, color: crop.id === selectedCropId ? '#16a34a' : '#0f172a', flex: 1 }}>
+                                              🌾 {crop.cropName}
+                                            </Text>
+                                            <View style={{ backgroundColor: '#eff6ff', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5, marginLeft: 6 }}>
+                                              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#1d4ed8' }} numberOfLines={1}>🌱 {crop.fieldName}</Text>
+                                            </View>
+                                          </View>
+                                          <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 2 }}>
+                                            {crop.area} • {crop.unit}/unit
+                                          </Text>
+                                        </TouchableOpacity>
+                                      ))}
+                                    </ScrollView>
+                                  </View>
+                                )}
+                              </View>
+
+                              {/* 2. Quantity Input */}
+                              <View style={{ flex: 1 }}>
+                                <TextInput
+                                  style={[styles.input, { height: 38, paddingVertical: 4, paddingHorizontal: 5, fontSize: 12 }]}
+                                  placeholder={`QTY (${selectedFarmerCrop?.unit || 'Kg'})`}
+                                  placeholderTextColor="#94a3b8"
+                                  keyboardType="numeric"
+                                  value={saleQuantity}
+                                  onChangeText={setSaleQuantity}
+                                />
+                              </View>
+
+                              {/* 3. Rate Input */}
+                              <View style={{ flex: 1 }}>
+                                <TextInput
+                                  style={[styles.input, { height: 38, paddingVertical: 4, paddingHorizontal: 5, fontSize: 12 }]}
+                                  placeholder="RATE (₹)"
+                                  placeholderTextColor="#94a3b8"
+                                  keyboardType="numeric"
+                                  value={saleRate}
+                                  onChangeText={setSaleRate}
+                                />
+                              </View>
+
+                              {/* 4. Amount Subtotal */}
+                              <View style={{
+                                flex: 1.2,
+                                height: 38,
+                                backgroundColor: '#f0fdf4',
+                                borderWidth: 1,
+                                borderColor: '#bbf7d0',
+                                borderRadius: RADIUS.md,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                paddingHorizontal: 2,
+                              }}>
+                                <Text style={{ fontSize: 9, fontFamily: FONT.medium, color: '#15803d' }}>AMOUNT</Text>
+                                <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: '#16a34a' }} numberOfLines={1}>
+                                  ₹{((Number(saleQuantity) || 0) * (Number(saleRate) || 0)).toLocaleString('en-IN')}
+                                </Text>
+                              </View>
+
+                              {/* 5. Add Item Button */}
+                              <TouchableOpacity
+                                style={{
+                                  flex: 1.1,
+                                  height: 38,
+                                  backgroundColor: '#16a34a',
+                                  borderRadius: RADIUS.md,
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: 2,
+                                  paddingHorizontal: 4,
+                                }}
+                                activeOpacity={0.85}
+                                onPress={onAddProductToCart}
+                              >
+                                <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 12 }}>Add</Text>
+                              </TouchableOpacity>
+                            </View>
+                          )}
+                        </View>
+
+                        {/* Cart Table with Column-aligned Totals! */}
+                        {saleItems.length > 0 && (
+                          <View style={[styles.cartTable, { marginTop: 4, marginBottom: 10 }]}>
+                            <View style={[styles.cartHeaderRow, { paddingVertical: 5 }]}>
+                              <Text style={[styles.cartHeaderCell, { flex: 1.8, fontSize: 10 }]}>PRODUCT</Text>
+                              <Text style={[styles.cartHeaderCell, { flex: 1, fontSize: 10, textAlign: 'right' }]}>QTY</Text>
+                              <Text style={[styles.cartHeaderCell, { flex: 1, fontSize: 10, textAlign: 'right' }]}>RATE</Text>
+                              <Text style={[styles.cartHeaderCell, { flex: 1.2, fontSize: 10, textAlign: 'right' }]}>AMOUNT</Text>
+                              <View style={{ width: 20 }} />
+                            </View>
+                            {saleItems.map((item) => (
+                              <View key={item.id} style={[styles.cartRow, { paddingVertical: 5 }]}>
+                                <Text style={[styles.cartCell, { flex: 1.8, fontFamily: FONT.bold, fontSize: 11.5 }]}>{item.cropName}</Text>
+                                <Text style={[styles.cartCell, { flex: 1, fontSize: 11.5, textAlign: 'right' }]}>{item.qty} {item.unit}</Text>
+                                <Text style={[styles.cartCell, { flex: 1, fontSize: 11.5, textAlign: 'right' }]}>₹{item.rate}</Text>
+                                <Text style={[styles.cartCell, { flex: 1.2, fontSize: 11.5, fontFamily: FONT.bold, color: '#16a34a', textAlign: 'right' }]}>₹{item.amount.toLocaleString('en-IN')}</Text>
+                                <TouchableOpacity onPress={() => onRemoveCartItem(item.id)} style={{ width: 20, alignItems: 'center' }}>
+                                  <Ionicons name="close-circle" size={15} color="#dc2626" />
+                                </TouchableOpacity>
+                              </View>
+                            ))}
+                            {/* Summary Footer Row - Totals strictly under their respective columns! */}
+                            <View style={[styles.cartTotalsRow, { paddingVertical: 6, flexDirection: 'row', alignItems: 'center' }]}>
+                              <Text style={[styles.cartTotalsLabel, { flex: 1.8, fontSize: 11 }]}>Items Total: {totalCartItems}</Text>
+                              <Text style={[styles.cartTotalsLabel, { flex: 1, fontSize: 11, color: '#0f172a', textAlign: 'right' }]}>Qty: {totalCartQty}</Text>
+                              <View style={{ flex: 1 }} />
+                              <Text style={[styles.cartTotalsValue, { flex: 1.2, fontSize: 12.5, textAlign: 'right' }]}>Total: {formatInr(totalCartAmount)}</Text>
+                              <View style={{ width: 20 }} />
+                            </View>
+                          </View>
+                        )}
+
+                        {/* Billing Calculation Section */}
+                        {saleItems.length > 0 && (
+                          <View style={{ backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: RADIUS.md, padding: 10, marginBottom: 10 }}>
+                            {/* Top Row: Sale Amount, Discount (-), Delivery (+) */}
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
+                              <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
+                                Sale Amount: <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>{formatInr(totalCartAmount)}</Text>
+                              </Text>
+
+                              {/* Discount & Delivery inline */}
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#fef2f2', borderRadius: RADIUS.sm, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 1, borderColor: '#fecaca' }}>
+                                  <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#dc2626' }}>Discount (-)</Text>
+                                  <TextInput
+                                    style={{ fontSize: 11, fontFamily: FONT.bold, color: '#dc2626', padding: 0, width: 42, textAlign: 'right' }}
+                                    placeholder="0"
+                                    placeholderTextColor="#fca5a5"
+                                    keyboardType="numeric"
+                                    value={saleDiscount}
+                                    onChangeText={setSaleDiscount}
+                                  />
+                                </View>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#eff6ff', borderRadius: RADIUS.sm, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 1, borderColor: '#bfdbfe' }}>
+                                  <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#2563eb' }}>Delivery (+)</Text>
+                                  <TextInput
+                                    style={{ fontSize: 11, fontFamily: FONT.bold, color: '#2563eb', padding: 0, width: 42, textAlign: 'right' }}
+                                    placeholder="0"
+                                    placeholderTextColor="#93c5fd"
+                                    keyboardType="numeric"
+                                    value={saleDelivery}
+                                    onChangeText={setSaleDelivery}
+                                  />
+                                </View>
+                              </View>
+                            </View>
+
+                            <View style={{ borderTopWidth: 1, borderTopColor: '#cbd5e1', borderStyle: 'dashed', marginBottom: 8 }} />
+
+                            {/* Net Sale Amount & Previous Balance Breakdown */}
+                            <View style={{ backgroundColor: '#fff', borderRadius: RADIUS.md, padding: 8, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 8 }}>
+                              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 }}>
+                                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#334155' }}>Net Sale Amount:</Text>
+                                <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' }}>
+                                  {formatInr(totalCartAmount - (Number(saleDiscount) || 0) + (Number(saleDelivery) || 0))}
+                                </Text>
+                              </View>
+
+                              {paymentMode === 'PARTY' && (
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 }}>
+                                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#d97706' }}>Previous Balance (+):</Text>
+                                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#d97706' }}>{formatInr(previousPartyBalance)}</Text>
+                                </View>
+                              )}
+
+                              <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#f1f5f9', paddingTop: 4, marginTop: 2 }}>
+                                <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: '#16a34a' }}>
+                                  {paymentMode === 'CASH' ? 'Cash Received:' : 'Net Receivable Amount:'}
+                                </Text>
+                                <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: '#16a34a' }}>
+                                  {formatInr(
+                                    (totalCartAmount - (Number(saleDiscount) || 0) + (Number(saleDelivery) || 0)) +
+                                    (paymentMode === 'PARTY' ? previousPartyBalance : 0)
+                                  )}
+                                </Text>
+                              </View>
+                            </View>
+
+                            {/* Received Amount Input: [Label Left] [Radio Cash/UPI Middle] [TextInput Right Aligned] */}
+                            {paymentMode === 'PARTY' ? (
+                              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 8 }}>
+                                {/* 1. Label on left */}
+                                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#334155' }}>
+                                  Amount Received Now (₹)
+                                </Text>
+
+                                {/* 2. Cash / UPI Radio Options in middle */}
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                  <TouchableOpacity
+                                    style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
+                                    activeOpacity={0.8}
+                                    onPress={() => {
+                                      tap();
+                                      setAmountReceivedMode('CASH');
+                                    }}
+                                  >
+                                    <Ionicons
+                                      name={amountReceivedMode === 'CASH' ? 'radio-button-on' : 'radio-button-off'}
+                                      size={14}
+                                      color={amountReceivedMode === 'CASH' ? '#16a34a' : '#94a3b8'}
+                                    />
+                                    <Text
+                                      style={{
+                                        fontSize: 11,
+                                        fontFamily: amountReceivedMode === 'CASH' ? FONT.bold : FONT.medium,
+                                        color: amountReceivedMode === 'CASH' ? '#16a34a' : '#64748b',
+                                      }}
+                                    >
+                                      Cash
+                                    </Text>
+                                  </TouchableOpacity>
+
+                                  <TouchableOpacity
+                                    style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}
+                                    activeOpacity={0.8}
+                                    onPress={() => {
+                                      tap();
+                                      setAmountReceivedMode('UPI');
+                                    }}
+                                  >
+                                    <Ionicons
+                                      name={amountReceivedMode === 'UPI' ? 'radio-button-on' : 'radio-button-off'}
+                                      size={14}
+                                      color={amountReceivedMode === 'UPI' ? '#0284c7' : '#94a3b8'}
+                                    />
+                                    <Text
+                                      style={{
+                                        fontSize: 11,
+                                        fontFamily: amountReceivedMode === 'UPI' ? FONT.bold : FONT.medium,
+                                        color: amountReceivedMode === 'UPI' ? '#0284c7' : '#64748b',
+                                      }}
+                                    >
+                                      UPI
+                                    </Text>
+                                  </TouchableOpacity>
+                                </View>
+
+                                {/* 3. Right-aligned TextInput on right */}
+                                <TextInput
+                                  style={{
+                                    flex: 1,
+                                    maxWidth: 110,
+                                    borderWidth: 1,
+                                    borderColor: '#cbd5e1',
+                                    borderRadius: RADIUS.md,
+                                    paddingHorizontal: 8,
+                                    paddingVertical: 4,
+                                    fontSize: 12.5,
+                                    fontFamily: FONT.bold,
+                                    color: '#0f172a',
+                                    backgroundColor: '#fff',
+                                    height: 34,
+                                    textAlign: 'right',
+                                  }}
+                                  placeholder="0"
+                                  placeholderTextColor="#94a3b8"
+                                  keyboardType="numeric"
+                                  value={amountReceived}
+                                  onChangeText={setAmountReceived}
+                                />
+                              </View>
+                            ) : null}
+
+                            {/* Remaining Balance Row */}
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 6, borderTopWidth: 1.5, borderTopColor: '#16a34a', marginBottom: 6 }}>
+                              <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#16a34a' }}>Remaining Balance</Text>
+                              <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: paymentMode === 'CASH' ? '#16a34a' : '#0f172a' }}>
+                                {paymentMode === 'CASH'
+                                  ? '₹0'
+                                  : formatInr(
+                                    ((totalCartAmount - (Number(saleDiscount) || 0) + (Number(saleDelivery) || 0)) +
+                                      previousPartyBalance) -
+                                    (Number(amountReceived) || 0)
+                                  )}
+                              </Text>
+                            </View>
+
+                            {/* Description Field */}
+                            <View style={{ marginTop: 2 }}>
+                              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b', marginBottom: 3 }}>Description</Text>
+                              <TextInput
+                                style={{ borderWidth: 1, borderColor: '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 8, paddingVertical: 5, fontSize: 12, fontFamily: FONT.medium, color: '#0f172a', backgroundColor: '#fff', minHeight: 34 }}
+                                placeholder="Add note / description..."
+                                placeholderTextColor="#94a3b8"
+                                value={saleDescription}
+                                onChangeText={setSaleDescription}
+                                multiline
+                              />
+                            </View>
+                          </View>
+                        )}
+
+
+
+                        {saleError ? <Text style={[styles.errorText, { marginBottom: 6, marginTop: 0 }]}>{saleError}</Text> : null}
+
+                        {/* Modal Action Buttons */}
+                        <View style={[styles.formActions, { marginTop: 8, marginBottom: 4, gap: 6 }]}>
+                          {editingBillId && (
+                            <TouchableOpacity
+                              style={{
+                                height: 38,
+                                paddingHorizontal: 10,
+                                backgroundColor: '#fef2f2',
+                                borderWidth: 1,
+                                borderColor: '#fecaca',
+                                borderRadius: RADIUS.md,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexDirection: 'row',
+                                gap: 4,
+                              }}
+                              onPress={onDeleteEditingBill}
+                              activeOpacity={0.8}
+                            >
+                              <Ionicons name="trash-outline" size={15} color="#dc2626" />
+                              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#dc2626' }}>Delete Bill</Text>
+                            </TouchableOpacity>
+                          )}
+
+                          <TouchableOpacity style={[styles.secondaryButton, { paddingVertical: 9, flex: editingBillId ? undefined : 1 }]} onPress={() => setShowSaleForm(false)}>
+                            <Text style={[styles.secondaryButtonText, { fontSize: 12.5 }]}>Cancel</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity style={[styles.primaryButtonWrap, { flex: editingBillId ? 1.5 : 1 }]} onPress={onSaveSale} disabled={isSavingSale} activeOpacity={0.85}>
+                            <LinearGradient colors={theme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.primaryButton, { paddingVertical: 9 }]}>
+                              {isSavingSale ? (
+                                <ActivityIndicator color="#fff" size="small" />
+                              ) : (
+                                <Text style={[styles.primaryButtonText, { fontSize: 12.5 }]}>
+                                  {editingBillId ? `Update Bill #${editingBillNo}` : 'Save Sale'}
+                                </Text>
+                              )}
+                            </LinearGradient>
+                          </TouchableOpacity>
+                        </View>
+                      </ScrollView>
+                    ) : (
+                      /* SAVED confirmation + bill preview */
+                      <ScrollView showsVerticalScrollIndicator={false}>
+                        <View style={{ alignItems: 'center', paddingVertical: 10 }}>
+                          <Ionicons name="checkmark-circle" size={40} color="#16a34a" />
+                          <Text style={styles.savedTitle}>{wasEditingBill ? 'Bill Updated ✅' : 'Sale Saved ✅'}</Text>
+                          <Text style={styles.savedSub}>{wasEditingBill ? 'Bill successfully updated. Same Bill # preserved.' : 'Preview the bill below, then share it as an image.'}</Text>
+
+                          {savedInvoice && (
+                            <View style={{ marginTop: 12 }}>
+                              <ViewShot ref={billShotRef} options={{ format: 'jpg', quality: 0.95 }}>
+                                <BillPreview inv={savedInvoice} />
+                              </ViewShot>
+                            </View>
+                          )}
+
+                          <View style={{ flexDirection: 'row', gap: 10, marginTop: 12, width: '100%' }}>
+                            <TouchableOpacity
+                              style={{ flex: 1 }}
+                              onPress={() => shareInvoiceAsJpg(`Bill-${savedInvoice?.billNo}`, 'bill')}
+                              disabled={isSharingBill}
+                              activeOpacity={0.8}
+                            >
+                              <LinearGradient colors={theme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.primaryButton, { paddingVertical: 11 }]}>
+                                {isSharingBill ? (
+                                  <ActivityIndicator color="#ffffff" size="small" />
+                                ) : (
+                                  <Text style={styles.primaryButtonText}>🖼️ Download JPG</Text>
+                                )}
+                              </LinearGradient>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                              style={{ flex: 1 }}
+                              onPress={() => shareInvoiceAsPdf(savedInvoice, `Bill-${savedInvoice?.billNo}`)}
+                              disabled={isSharingBill}
+                              activeOpacity={0.8}
+                            >
+                              <View style={[styles.primaryButton, { backgroundColor: '#0284c7', paddingVertical: 11 }]}>
+                                {isSharingBill ? (
+                                  <ActivityIndicator color="#ffffff" size="small" />
+                                ) : (
+                                  <Text style={styles.primaryButtonText}>📄 Download PDF</Text>
+                                )}
+                              </View>
+                            </TouchableOpacity>
+                          </View>
+
+                          {/* Action row: New Sale + Close */}
+                          <View style={{ flexDirection: 'row', gap: 10, marginTop: 10, width: '100%' }}>
+                            <TouchableOpacity
+                              style={{ flex: 1, paddingVertical: 9, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#16a34a', alignItems: 'center' }}
+                              onPress={() => {
+                                tap();
+                                resetSaleForm();
+                                setSaleStep('FORM');
+                              }}
+                              activeOpacity={0.8}
+                            >
+                              <Text style={{ color: '#16a34a', fontFamily: FONT.bold, fontSize: 13 }}>➕ New Sale</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={{ flex: 1, paddingVertical: 9, borderRadius: RADIUS.md, backgroundColor: '#f1f5f9', alignItems: 'center' }}
+                              onPress={() => {
+                                setShowSaleForm(false);
+                                resetSaleForm();
+                              }}
+                              activeOpacity={0.8}
+                            >
+                              <Text style={{ color: '#64748b', fontFamily: FONT.bold, fontSize: 13 }}>✕ Close</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      </ScrollView>
+                    )}
+                  </View>
+                </View>
+              </Modal>
+
+              {/* Bill Preview Modal — re-share a saved sale's bill from the list */}
+              <Modal
+                visible={billPreviewVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => {
+                  setBillPreviewVisible(false);
+                  setBillPreviewInvoice(null);
+                }}
+              >
+                <View style={styles.modalOverlay}>
+                  <View style={[styles.modalCard, { maxHeight: '92%' }]}>
+                    <View style={[styles.modalHeaderRow, { justifyContent: 'space-between' }]}>
+                      <Text style={styles.formTitle}>Bill Preview</Text>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setBillPreviewVisible(false);
+                          setBillPreviewInvoice(null);
+                        }}
+                      >
+                        <Ionicons name="close" size={20} color="#475569" />
+                      </TouchableOpacity>
+                    </View>
+                    <ScrollView showsVerticalScrollIndicator={false}>
+                      {billPreviewInvoice && (
+                        <View style={{ alignItems: 'center', paddingVertical: 6 }}>
+                          <ViewShot ref={billShotRef} options={{ format: 'jpg', quality: 0.95 }}>
+                            <BillPreview inv={billPreviewInvoice} />
+                          </ViewShot>
+                          <View style={{ flexDirection: 'row', gap: 10, marginTop: 12, width: '100%' }}>
+                            <TouchableOpacity
+                              style={{ flex: 1 }}
+                              onPress={() => shareInvoiceAsJpg(`Bill-${billPreviewInvoice?.billNo}`, 'bill')}
+                              disabled={isSharingBill}
+                              activeOpacity={0.8}
+                            >
+                              <LinearGradient colors={theme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.primaryButton, { paddingVertical: 11 }]}>
+                                {isSharingBill ? (
+                                  <ActivityIndicator color="#ffffff" size="small" />
+                                ) : (
+                                  <Text style={styles.primaryButtonText}>🖼️ Download JPG</Text>
+                                )}
+                              </LinearGradient>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                              style={{ flex: 1 }}
+                              onPress={() => shareInvoiceAsPdf(billPreviewInvoice, `Bill-${billPreviewInvoice?.billNo}`)}
+                              disabled={isSharingBill}
+                              activeOpacity={0.8}
+                            >
+                              <View style={[styles.primaryButton, { backgroundColor: '#0284c7', paddingVertical: 11 }]}>
+                                {isSharingBill ? (
+                                  <ActivityIndicator color="#ffffff" size="small" />
+                                ) : (
+                                  <Text style={styles.primaryButtonText}>📄 Download PDF</Text>
+                                )}
+                              </View>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      )}
+                    </ScrollView>
+                  </View>
+                </View>
+              </Modal>
+
+            </View>
+          ) : recordType === 'LABOUR' ? (
+            /* LABOUR MANAGEMENT TAB */
+            <ScrollView contentContainerStyle={{ padding: SPACING.md, paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
+              <LabourManagementSection />
+            </ScrollView>
+          ) : recordType === 'PARTIES' ? (
+            /* ALL PEOPLE ACCOUNTS LIST TAB */
+            <ScrollView contentContainerStyle={{ padding: SPACING.md, paddingBottom: 32 }} showsVerticalScrollIndicator={false}>
+              <AllPartiesSection />
+            </ScrollView>
+          ) : recordType === 'EXPENSES' ? (
+            /* FARM EXPENSES TAB */
+            <>
+              <View style={styles.summaryBar}>
+                <View>
+                  <Text style={styles.totalLabel}>Total Expenses</Text>
+                  <Text style={styles.totalValue}>{formatInr(totalSpent)}</Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.addSalesCTA, { backgroundColor: '#dc2626' }]}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    tap();
+                    setShowExpenseForm(true);
+                  }}
+                >
+                  <Ionicons name="add" size={16} color="#ffffff" />
+                  <Text style={styles.addSalesCTAText}>Expense</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Expense List view mode */}
+              <View style={styles.salesViewModeRow}>
+                {(['ALL', 'CROP', 'VENDOR'] as const).map((mode) => (
+                  <TouchableOpacity
+                    key={mode}
+                    style={[styles.salesViewModeChip, expenseViewMode === mode && { backgroundColor: '#dc2626', borderColor: '#dc2626' }]}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      tap();
+                      setExpenseViewMode(mode);
+                      setExpandedExpenseGroup(null);
+                    }}
+                  >
+                    <Text style={[styles.salesViewModeChipText, expenseViewMode === mode && styles.salesViewModeChipTextActive]}>
+                      {mode === 'ALL' ? 'All' : mode === 'CROP' ? 'Crop-wise' : 'Vendor-wise'}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {expensesLoading ? (
+                <View style={styles.center}>
+                  <ActivityIndicator color={theme.primary} size="large" />
+                </View>
+              ) : !expenses || expenses.length === 0 ? (
+                <View style={styles.center}>
+                  <Ionicons name="wallet-outline" size={36} color="#cbd5e1" />
+                  <Text style={styles.emptyText}>No expenses recorded yet.</Text>
+                </View>
+              ) : expenseViewMode === 'ALL' ? (
+                <FlatList
+                  data={expenses}
+                  keyExtractor={(item) => item.id}
+                  refreshing={isRefetching}
+                  onRefresh={refetch}
+                  contentContainerStyle={styles.list}
+                  renderItem={({ item }) => (
+                    <View style={styles.compactSaleRow}>
+                      <Ionicons name={item.cropCycle ? 'leaf-outline' : getExpenseCategoryIcon(item.category.key)} size={14} color="#dc2626" />
+                      <View style={styles.compactSaleBody}>
+                        <Text style={styles.compactSaleTitle} numberOfLines={1}>
+                          {item.cropCycle ? item.cropCycle.cropName : item.category.labelEn}
+                          {item.vendorName ? ` · ${item.vendorName}` : ''}
+                        </Text>
+                        <Text style={styles.compactSaleMeta} numberOfLines={1}>
+                          {new Date(item.expenseDate).toLocaleDateString('en-IN')}
+                          {item.notes ? ` · ${item.notes}` : ''}
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Text style={[styles.compactSaleAmount, { color: '#dc2626' }]}>-{formatInr(Number(item.amount))}</Text>
+                        <TouchableOpacity
+                          style={{
+                            width: 27,
+                            height: 27,
+                            borderRadius: 14,
+                            backgroundColor: '#f0fdf4',
+                            borderWidth: 1,
+                            borderColor: '#bbf7d0',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                          activeOpacity={0.7}
+                          onPress={() => handleOpenEditExpense(item)}
+                          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                        >
+                          <Ionicons name="create-outline" size={14} color="#16a34a" />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={{
+                            width: 27,
+                            height: 27,
+                            borderRadius: 14,
+                            backgroundColor: '#fff1f2',
+                            borderWidth: 1,
+                            borderColor: '#fecdd3',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                          activeOpacity={0.7}
+                          onPress={() => openExpenseSlipPreview(item)}
+                          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                        >
+                          <Ionicons name="download-outline" size={14} color="#e11d48" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
+                />
+              ) : (
+                <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+                  {(expenseViewMode === 'CROP' ? expensesByCrop : expensesByVendor).map((group) => {
+                    const isExpanded = expandedExpenseGroup === group.name;
+                    return (
+                      <View key={group.name} style={styles.salesGroupBlock}>
+                        <TouchableOpacity
+                          style={styles.salesGroupHeader}
+                          activeOpacity={0.7}
+                          onPress={() => {
+                            tap();
+                            setExpandedExpenseGroup((cur) => (cur === group.name ? null : group.name));
+                          }}
+                        >
+                          <Ionicons name={isExpanded ? 'chevron-down' : 'chevron-forward'} size={14} color="#64748b" />
+                          <Text style={styles.salesGroupName} numberOfLines={1}>
+                            {group.name} <Text style={styles.salesGroupCount}>({group.entries.length})</Text>
+                          </Text>
+                          <Text style={[styles.salesGroupTotal, { color: '#dc2626' }]}>{formatInr(group.total)}</Text>
+                        </TouchableOpacity>
+                        {isExpanded
+                          ? group.entries.map((item) => (
+                            <View key={item.id} style={styles.compactSaleRow}>
+                              <Ionicons name={item.cropCycle ? 'leaf-outline' : getExpenseCategoryIcon(item.category.key)} size={14} color="#dc2626" />
+                              <View style={styles.compactSaleBody}>
+                                <Text style={styles.compactSaleTitle} numberOfLines={1}>
+                                  {expenseViewMode === 'CROP'
+                                    ? item.vendorName || item.category.labelEn
+                                    : item.cropCycle
+                                      ? item.cropCycle.cropName
+                                      : item.category.labelEn}
+                                </Text>
+                                <Text style={styles.compactSaleMeta} numberOfLines={1}>
+                                  {new Date(item.expenseDate).toLocaleDateString('en-IN')}
+                                  {item.notes ? ` · ${item.notes}` : ''}
+                                </Text>
+                              </View>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                <Text style={[styles.compactSaleAmount, { color: '#dc2626' }]}>-{formatInr(Number(item.amount))}</Text>
+                                <TouchableOpacity
+                                  style={{
+                                    width: 27,
+                                    height: 27,
+                                    borderRadius: 14,
+                                    backgroundColor: '#f0fdf4',
+                                    borderWidth: 1,
+                                    borderColor: '#bbf7d0',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                  }}
+                                  activeOpacity={0.7}
+                                  onPress={() => handleOpenEditExpense(item)}
+                                  hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                                >
+                                  <Ionicons name="create-outline" size={14} color="#16a34a" />
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                  style={{
+                                    width: 27,
+                                    height: 27,
+                                    borderRadius: 14,
+                                    backgroundColor: '#fff1f2',
+                                    borderWidth: 1,
+                                    borderColor: '#fecdd3',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                  }}
+                                  activeOpacity={0.7}
+                                  onPress={() => openExpenseSlipPreview(item)}
+                                  hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                                >
+                                  <Ionicons name="download-outline" size={14} color="#e11d48" />
+                                </TouchableOpacity>
+                              </View>
+                            </View>
+                          ))
+                          : null}
+                      </View>
+                    );
+                  })}
+                </ScrollView>
+              )}
+
+              {/* Combined Expenses Modal Window Popup */}
+              <Modal
+                visible={showExpenseForm}
+                transparent
+                animationType="slide"
+                onRequestClose={() => {
+                  setShowExpenseForm(false);
+                  setExpenseError(null);
+                }}
+              >
+                <View style={styles.modalOverlay}>
+                  <View style={[styles.modalCard, { maxHeight: '90%', width: '100%', maxWidth: 480, padding: 16 }]}>
+                    {/* Header */}
+                    <View style={[styles.modalHeaderRow, { borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 10, marginBottom: 12 }]}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.formTitle, { fontSize: 16 }]}>🔴 Add Farm Expense</Text>
+                        <Text style={styles.formSubTitle}>Record crop-specific or general farm input expenses</Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setShowExpenseForm(false);
+                          setExpenseError(null);
+                        }}
+                        style={{ padding: 4 }}
+                      >
+                        <Ionicons name="close-circle" size={22} color="#64748b" />
+                      </TouchableOpacity>
+                    </View>
+
+                    <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 12 }}>
+                      {/* ROW 1: EXPENSE DATE & EXPENSE CATEGORY SIDE-BY-SIDE */}
+                      <View style={{ flexDirection: 'row', gap: 8, zIndex: 1000 }}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.label}>Expense Date *</Text>
+                          <TextInput
+                            style={[styles.input, { height: 40 }]}
+                            placeholder="YYYY-MM-DD"
+                            placeholderTextColor="#94a3b8"
+                            value={expenseDate}
+                            onChangeText={setExpenseDate}
+                          />
+                        </View>
+
+                        <View style={{ flex: 1.2, position: 'relative', zIndex: 1000 }}>
+                          <Text style={styles.label}>Expense Category *</Text>
+                          <TouchableOpacity
+                            style={{
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              borderWidth: 1,
+                              borderColor: isExpenseCategoryDropdownOpen ? '#dc2626' : '#cbd5e1',
+                              borderRadius: RADIUS.md,
+                              paddingHorizontal: 8,
+                              height: 40,
+                              backgroundColor: '#f8fafc',
+                            }}
+                            onPress={() => { tap(); setIsExpenseCategoryDropdownOpen((prev) => !prev); }}
+                            activeOpacity={0.8}
+                          >
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                              <Ionicons
+                                name={(displayCategories.find((c) => c.id === categoryId)?.icon as any) || 'pricetag-outline'}
+                                size={15}
+                                color="#dc2626"
+                              />
+                              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
+                                {(() => {
+                                  const selected = displayCategories.find((c) => c.id === categoryId);
+                                  return selected ? selected.labelEn : 'Select Category';
+                                })()}
+                              </Text>
+                            </View>
+                            <Ionicons name={isExpenseCategoryDropdownOpen ? 'chevron-up' : 'chevron-down'} size={15} color="#64748b" />
+                          </TouchableOpacity>
+
+                          {/* Floating Overlay Dropdown Menu List */}
+                          {isExpenseCategoryDropdownOpen && (
+                            <View
+                              style={{
+                                position: 'absolute',
+                                top: 62,
+                                left: 0,
+                                right: 0,
+                                zIndex: 9999,
+                                elevation: 12,
+                                backgroundColor: '#ffffff',
+                                borderRadius: RADIUS.md,
+                                borderWidth: 1.5,
+                                borderColor: '#dc2626',
+                                maxHeight: 220,
+                                padding: 4,
+                                ...premiumShadow('#000000', 'md'),
+                              }}
+                            >
+                              <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
+                                {displayCategories.map((cat) => {
+                                  const isSelected = categoryId === cat.id;
+                                  return (
+                                    <TouchableOpacity
+                                      key={cat.id}
+                                      style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        paddingHorizontal: 10,
+                                        paddingVertical: 8,
+                                        borderRadius: RADIUS.sm,
+                                        marginBottom: 2,
+                                        backgroundColor: isSelected ? '#fef2f2' : '#f8fafc',
+                                        borderWidth: 1,
+                                        borderColor: isSelected ? '#fecaca' : '#e2e8f0',
+                                      }}
+                                      onPress={() => {
+                                        tap();
+                                        setCategoryId(cat.id);
+                                        setIsExpenseCategoryDropdownOpen(false);
+                                      }}
+                                    >
+                                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                                        <Ionicons name={cat.icon as any} size={15} color={isSelected ? '#dc2626' : '#475569'} />
+                                        <Text style={{ fontSize: 12, fontFamily: isSelected ? FONT.bold : FONT.medium, color: isSelected ? '#dc2626' : '#0f172a' }}>
+                                          {cat.labelEn}
+                                        </Text>
+                                      </View>
+                                      {isSelected && <Ionicons name="checkmark" size={15} color="#dc2626" />}
+                                    </TouchableOpacity>
+                                  );
+                                })}
+                              </ScrollView>
+                            </View>
+                          )}
+                        </View>
+                      </View>
+
+                      {/* ROW 2: EXPENSE DETAILS */}
+                      <View>
+                        <Text style={styles.label}>Expense Details</Text>
+                        <TextInput
+                          style={[styles.input, { height: 38 }]}
+                          placeholder="e.g. 2 bags DAP fertilizer / diesel payment..."
+                          placeholderTextColor="#94a3b8"
+                          value={notes}
+                          onChangeText={setNotes}
+                        />
+                      </View>
+
+                      {/* ROW 3: EXPENSE AMOUNT WITH INLINE CASH / UPI RADIOS ON THE RIGHT SIDE OF TEXTBOX */}
+                      <View>
+                        <Text style={styles.label}>Expense Amount (₹) *</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          {/* Amount Input Box */}
+                          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#cbd5e1', borderRadius: RADIUS.md, backgroundColor: '#ffffff', paddingHorizontal: 10, height: 42 }}>
+                            <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: '#dc2626', marginRight: 6 }}>₹</Text>
+                            <TextInput
+                              style={{ flex: 1, fontSize: 15, fontFamily: FONT.bold, color: '#0f172a', padding: 0 }}
+                              placeholder="e.g. 2500"
+                              placeholderTextColor="#94a3b8"
+                              keyboardType="numeric"
+                              value={amount}
+                              onChangeText={setAmount}
+                            />
+                          </View>
+
+                          {/* Cash / UPI Radio Buttons directly on the right side of text box */}
+                          <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+                            <TouchableOpacity
+                              style={[
+                                styles.modePill,
+                                expensePaymentMode === 'CASH' && { backgroundColor: '#16a34a', borderColor: '#15803d' },
+                                { height: 42, paddingHorizontal: 10, justifyContent: 'center', alignItems: 'center' },
+                              ]}
+                              activeOpacity={0.8}
+                              onPress={() => {
+                                tap();
+                                setExpensePaymentMode('CASH');
+                              }}
+                            >
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                <Ionicons name="cash-outline" size={13} color={expensePaymentMode === 'CASH' ? '#fff' : '#16a34a'} />
+                                <Text style={[styles.modePillText, { fontSize: 11.5 }, expensePaymentMode === 'CASH' && { color: '#fff', fontFamily: FONT.bold }]}>
+                                  Cash
+                                </Text>
+                              </View>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                              style={[
+                                styles.modePill,
+                                expensePaymentMode === 'UPI' && { backgroundColor: '#0284c7', borderColor: '#0369a1' },
+                                { height: 42, paddingHorizontal: 10, justifyContent: 'center', alignItems: 'center' },
+                              ]}
+                              activeOpacity={0.8}
+                              onPress={() => {
+                                tap();
+                                setExpensePaymentMode('UPI');
+                              }}
+                            >
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                                <Ionicons name="qr-code-outline" size={13} color={expensePaymentMode === 'UPI' ? '#fff' : '#0284c7'} />
+                                <Text style={[styles.modePillText, { fontSize: 11.5 }, expensePaymentMode === 'UPI' && { color: '#fff', fontFamily: FONT.bold }]}>
+                                  UPI
+                                </Text>
+                              </View>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      </View>
+
+                      {/* ROW 3: RECIPIENT / PAID TO */}
+                      <View style={{ gap: 8 }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Text style={[styles.label, { marginBottom: 0 }]}>Paid To / Recipient *</Text>
+                          <View style={{ flexDirection: 'row', gap: 4, flexWrap: 'wrap' }}>
+                            <TouchableOpacity
+                              style={[
+                                styles.modePill,
+                                expenseRecipientType === 'CASH' && { backgroundColor: '#16a34a', borderColor: '#15803d' },
+                                { paddingVertical: 4, paddingHorizontal: 7 },
+                              ]}
+                              onPress={() => {
+                                tap();
+                                setExpenseRecipientType('CASH');
+                                setExpensePaymentMode('CASH');
+                                setExpenseParty(null);
+                              }}
+                            >
+                              <Ionicons name="cash" size={12} color={expenseRecipientType === 'CASH' ? '#fff' : '#16a34a'} />
+                              <Text style={[styles.modePillText, expenseRecipientType === 'CASH' && { color: '#fff' }]}>Direct / Cash</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                              style={[
+                                styles.modePill,
+                                expenseRecipientType === 'SUPPLIER' && { backgroundColor: '#dc2626', borderColor: '#b91c1c' },
+                                { paddingVertical: 4, paddingHorizontal: 7 },
+                              ]}
+                              onPress={() => {
+                                tap();
+                                setExpenseRecipientType('SUPPLIER');
+                                setExpensePaymentMode('CREDIT');
+                              }}
+                            >
+                              <Ionicons name="business" size={12} color={expenseRecipientType === 'SUPPLIER' ? '#fff' : '#dc2626'} />
+                              <Text style={[styles.modePillText, expenseRecipientType === 'SUPPLIER' && { color: '#fff' }]}>Supplier / Party</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+
+                        {/* Recipient Details based on Selection */}
+                        {expenseRecipientType === 'SUPPLIER' ? (
+                          <View style={{ marginTop: 2 }}>
+                            <PartyPicker
+                              parties={parties}
+                              labourWorkers={expenseLabourWorkers}
+                              selectedParty={expenseParty}
+                              onSelect={setExpenseParty}
+                              onCreate={async (name) => createParty.mutateAsync(name)}
+                              accentColor="#dc2626"
+                              label="Supplier / Trader Name *"
+                              inlineAddButton
+                            />
+                          </View>
+                        ) : (
+                          <View style={{ marginTop: 2 }}>
+                            <TextInput
+                              style={[styles.input, { height: 38 }]}
+                              placeholder="Vendor / Shop Name (Optional)"
+                              placeholderTextColor="#94a3b8"
+                              value={vendorName}
+                              onChangeText={setVendorName}
+                            />
+                          </View>
+                        )}
+                      </View>
+
+                      {/* ROW 4: PLOT / LAND SELECTOR */}
+                      <View style={{ backgroundColor: '#f8fafc', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                        <Text style={[styles.label, { marginBottom: 6 }]}>Expense Location / Plot Selection *</Text>
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                          {activeCrops.map((c, index) => {
+                            const isSelected = expenseCropType === 'CROP' && expenseCropId === c.id;
+                            const plotName = c.plot?.name || (c as any).fieldName || (plots && plots[index]?.name) || `Plot ${index + 1}`;
+                            const chipTitle = c.cropName ? `${plotName} (${c.cropName})` : plotName;
+                            return (
+                              <TouchableOpacity
+                                key={c.id}
+                                style={[
+                                  styles.categoryChip,
+                                  isSelected && { backgroundColor: '#16a34a', borderColor: '#15803d' },
+                                  { paddingVertical: 6, paddingHorizontal: 10 },
+                                ]}
+                                activeOpacity={0.8}
+                                onPress={() => {
+                                  tap();
+                                  setExpenseCropType('CROP');
+                                  setExpenseCropId(c.id);
+                                }}
+                              >
+                                <Ionicons name="location" size={13} color={isSelected ? '#fff' : '#16a34a'} />
+                                <Text style={[styles.categoryChipText, isSelected && { color: '#fff', fontFamily: FONT.bold }]}>
+                                  {chipTitle}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+
+                          <TouchableOpacity
+                            style={[
+                              styles.categoryChip,
+                              expenseCropType === 'OTHER' && { backgroundColor: '#475569', borderColor: '#334155' },
+                              { paddingVertical: 6, paddingHorizontal: 10 },
+                            ]}
+                            activeOpacity={0.8}
+                            onPress={() => {
+                              tap();
+                              setExpenseCropType('OTHER');
+                              setExpenseCropId(undefined);
+                            }}
+                          >
+                            <Ionicons name="grid-outline" size={13} color={expenseCropType === 'OTHER' ? '#fff' : '#475569'} />
+                            <Text style={[styles.categoryChipText, expenseCropType === 'OTHER' && { color: '#fff', fontFamily: FONT.bold }]}>
+                              General / Entire Farm
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+
+
+
+                      {expenseError ? <Text style={styles.errorText}>{expenseError}</Text> : null}
+
+                      {/* Action Buttons */}
+                      <View style={[styles.formActions, { marginTop: 6 }]}>
+                        <TouchableOpacity
+                          style={styles.secondaryButton}
+                          onPress={() => {
+                            setShowExpenseForm(false);
+                            setExpenseError(null);
+                          }}
+                        >
+                          <Text style={styles.secondaryButtonText}>Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.primaryButtonWrap}
+                          onPress={onAddExpense}
+                          disabled={createExpense.isPending}
+                          activeOpacity={0.85}
+                        >
+                          <LinearGradient colors={theme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.primaryButton}>
+                            {createExpense.isPending ? (
+                              <ActivityIndicator color="#fff" />
+                            ) : (
+                              <Text style={styles.primaryButtonText}>Save Expense</Text>
+                            )}
+                          </LinearGradient>
+                        </TouchableOpacity>
+                      </View>
+                    </ScrollView>
+                  </View>
+                </View>
+              </Modal>
+            </>
+          ) : recordType === 'OVERVIEW' ? (
+            /* OVERVIEW TAB */
+            <ProfessionalOverviewView
+              totalSalesRevenue={totalSalesRevenue}
+              totalSpent={totalSpent}
+              overallNet={overallNet}
+              totalReceivable={totalReceivable}
+              totalPayable={totalPayable}
+              salesCount={unifiedSalesRecords.length}
+              expenseCount={expenses?.length ?? 0}
+              cropAnalysis={cropAnalysis}
+              salesRecords={unifiedSalesRecords}
+              expenses={expenses}
+              onNavigateTab={(tab, subTab) => {
+                if (subTab) setAnalysisSubTab(subTab);
+                setRecordType(tab);
+              }}
+              onOpenSaleForm={() => {
+                resetSaleForm();
+                setShowSaleForm(true);
+              }}
+              onOpenExpenseForm={() => {
+                setShowExpenseForm(true);
+              }}
+            />
+          ) : (
+            /* ANALYSIS (PAYMENTS) TAB — Receivable/Payable party ledgers */
+            <View style={{ flex: 1 }}>
+              {/* Quick Action Buttons: Payment In & Payment Out (Pill layout from Home) */}
+              <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 12, paddingTop: 10, paddingBottom: 6 }}>
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    backgroundColor: '#0284c7',
+                    paddingVertical: 10,
+                    borderRadius: RADIUS.pill,
+                  }}
+                  activeOpacity={0.85}
+                  onPress={() => {
+                    tap();
+                    setVoucherInitialType('RECEIPT_IN');
+                    setVoucherInitialParty(null);
+                    setLockVoucherParty(false);
+                    setShowPaymentVoucherModal(true);
+                  }}
+                >
+                  <Ionicons name="arrow-down-circle" size={16} color="#ffffff" />
+                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>💰 Payment In</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    backgroundColor: '#ea580c',
+                    paddingVertical: 10,
+                    borderRadius: RADIUS.pill,
+                  }}
+                  activeOpacity={0.85}
+                  onPress={() => {
+                    tap();
+                    setVoucherInitialType('PAYMENT_OUT');
+                    setVoucherInitialParty(null);
+                    setLockVoucherParty(false);
+                    setShowPaymentVoucherModal(true);
+                  }}
+                >
+                  <Ionicons name="arrow-up-circle" size={16} color="#ffffff" />
+                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>💸 Payment Out</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Receivable/Payable/All subtabs */}
+
+              <View style={styles.analysisSubTabRow}>
+                {(['RECEIVABLE', 'PAYABLE', 'ALL'] as const).map((tab) => (
+                  <TouchableOpacity
+                    key={tab}
+                    style={[styles.analysisSubTabBtn, analysisSubTab === tab && styles.analysisSubTabBtnActive]}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      tap();
+                      setAnalysisSubTab(tab);
+                    }}
+                  >
+                    <Text style={[styles.analysisSubTabText, analysisSubTab === tab && styles.analysisSubTabTextActive]}>
+                      {tab === 'RECEIVABLE'
+                        ? `Receivable ${formatInr(totalReceivable)}`
+                        : tab === 'PAYABLE'
+                        ? `Payable ${formatInr(totalPayable)}`
+                        : `All (${unifiedAccountParties.length})`}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Search Bar for Accounts */}
+              <View style={{ paddingHorizontal: 12, paddingTop: 8, paddingBottom: 4, backgroundColor: '#ffffff' }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: '#f8fafc',
+                    borderWidth: 1,
+                    borderColor: '#cbd5e1',
+                    borderRadius: RADIUS.md,
+                    paddingHorizontal: 10,
+                    height: 38,
+                  }}
+                >
+                  <Ionicons name="search" size={16} color="#64748b" style={{ marginRight: 6 }} />
+                  <TextInput
+                    style={{ flex: 1, fontSize: 12.5, fontFamily: FONT.medium, color: '#0f172a' }}
+                    placeholder="Search worker, supplier, buyer or party..."
+                    placeholderTextColor="#94a3b8"
+                    value={accountSearchQuery}
+                    onChangeText={setAccountSearchQuery}
+                  />
+                  {accountSearchQuery.length > 0 && (
+                    <TouchableOpacity onPress={() => setAccountSearchQuery('')}>
+                      <Ionicons name="close-circle" size={16} color="#94a3b8" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+
+              <FlatList
+                data={filteredAccountsList}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.list}
+                ListEmptyComponent={
+                  <View style={styles.center}>
+                    <Ionicons name="people-outline" size={36} color="#cbd5e1" />
+                    <Text style={styles.emptyText}>
+                      {accountSearchQuery
+                        ? 'No matching party or worker found.'
+                        : analysisSubTab === 'RECEIVABLE'
+                        ? 'No party or worker has outstanding amount to pay you.'
+                        : analysisSubTab === 'PAYABLE'
+                        ? 'You do not owe any amount to parties or workers.'
+                        : 'No party or worker registered yet.'}
+                    </Text>
+                  </View>
+                }
+                renderItem={({ item }) => {
+                  // Determine per-party direction based on its own balance (works correctly for ALL tab too)
+                  const isItemReceivable = item.balance > 0;
+                  const itemColor = isItemReceivable ? '#16a34a' : '#dc2626';
+                  const itemBg = isItemReceivable ? '#dcfce7' : '#fee2e2';
+                  const itemVoucherType = isItemReceivable ? 'RECEIPT_IN' : 'PAYMENT_OUT';
+                  const itemBtnLabel = isItemReceivable ? 'Receive Amount' : 'Pay Amount';
+
+                  return (
+                  <TouchableOpacity
+                    style={[styles.card, premiumShadow('#000000', 'sm')]}
+                    activeOpacity={0.85}
+                    onPress={() => {
+                      tap();
+                      if ((item as any).isWorker || (item as any).__type === 'LABOUR') {
+                        setVoucherInitialType(itemVoucherType);
+                        setVoucherInitialParty(item);
+                        setLockVoucherParty(true);
+                        setShowPaymentVoucherModal(true);
+                      } else {
+                        setIsPaymentFormOpen(false);
+                        setPaymentAmount('');
+                        setPaymentNote('');
+                        setPaymentError(null);
+                        setStatementPartyId(item.id);
+                      }
+                    }}
+                  >
+                    <View style={[styles.cardIconWrap, { backgroundColor: itemBg }]}>
+                      <Ionicons name="person" size={18} color={itemColor} />
+                    </View>
+                    <View style={styles.cardBody}>
+                      <Text style={styles.cardTitle}>{item.name}</Text>
+                      <Text style={[styles.cardSubtitle, { color: itemColor, fontFamily: FONT.semiBold }]}>
+                        {isItemReceivable ? '↑ Receivable (CR)' : '↓ Payable (DR)'}
+                      </Text>
+                    </View>
+                    <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                      <Text style={{ color: itemColor, fontSize: 15, fontFamily: FONT.extraBold }}>
+                        {formatInr(Math.abs(item.balance))}
+                      </Text>
+                      <TouchableOpacity
+                        style={[styles.rowPaymentBtn, { backgroundColor: itemColor }]}
+                        activeOpacity={0.85}
+                        onPress={() => {
+                          tap();
+                          setVoucherInitialType(itemVoucherType);
+                          setVoucherInitialParty(item);
+                          setLockVoucherParty(true);
+                          setShowPaymentVoucherModal(true);
+                        }}
+                      >
+                        <Text style={styles.rowPaymentBtnText}>
+                          {itemBtnLabel}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </TouchableOpacity>
+                  );
+                }}
+              />
+
+              {/* Party Statement Modal */}
+              <Modal visible={!!statementPartyId} transparent animationType="slide" onRequestClose={closeStatementModal}>
+                <View style={styles.modalOverlay}>
+                  <View style={[styles.modalCard, { maxHeight: '85%' }]}>
+                    {isLoadingStatement || !statement ? (
+                      <View style={styles.center}>
+                        <ActivityIndicator color={theme.primary} size="large" />
+                      </View>
+                    ) : (
+                      <>
+                        <View style={styles.modalHeaderRow}>
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.formTitle}>{statement.party.name}</Text>
+                            <Text style={[styles.formSubTitle, { color: statement.balance >= 0 ? '#16a34a' : '#dc2626' }]}>
+                              {statement.balance >= 0 ? 'Receivable' : 'Payable'}: {formatInr(Math.abs(statement.balance))}
+                            </Text>
+                          </View>
+                          <TouchableOpacity onPress={closeStatementModal}>
+                            <Ionicons name="close-circle" size={24} color="#64748b" />
+                          </TouchableOpacity>
+                        </View>
+
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 6, marginVertical: 6 }}>
+                          <TouchableOpacity
+                            style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0', paddingHorizontal: 10, paddingVertical: 7, borderRadius: RADIUS.md }}
+                            onPress={() => {
+                              tap();
+                              setShowFullStatementModal(true);
+                            }}
+                          >
+                            <Ionicons name="document-text-outline" size={15} color="#16a34a" />
+                            <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: '#16a34a' }}>
+                              📜 View / PDF
+                            </Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#cbd5e1', paddingHorizontal: 10, paddingVertical: 7, borderRadius: RADIUS.md }}
+                            onPress={() => {
+                              tap();
+                              setStatementSortAsc(!statementSortAsc);
+                            }}
+                          >
+                            <Ionicons name="swap-vertical" size={14} color="#0284c7" />
+                            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0369a1' }}>
+                              {statementSortAsc ? '🔼 Seq (#1 -> #N)' : '🔽 Newest First'}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+
+                        {statement.balance !== 0 && isPaymentFormOpen ? (
+                          <View style={{ gap: 8, marginBottom: 8, backgroundColor: '#f8fafc', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#cbd5e1' }}>
+                            {/* Party / Account Name (Read Only) */}
+                            <View style={{ gap: 4 }}>
+                              <Text style={styles.label}>Party / Account Name *</Text>
+                              <View style={[styles.input, { backgroundColor: '#f1f5f9', height: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 10 }]}>
+                                <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>{statement.party.name}</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#e2e8f0', paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.sm }}>
+                                  <Ionicons name="lock-closed" size={11} color="#64748b" />
+                                  <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b' }}>Read Only</Text>
+                                </View>
+                              </View>
+                            </View>
+
+                            {/* Amount (₹) & Inline Cash/UPI Radio */}
+                            <View style={{ gap: 4 }}>
+                              <Text style={styles.label}>
+                                {statement.balance >= 0 ? 'Received Amount (₹) *' : 'Paid Amount (₹) *'}
+                              </Text>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                <TextInput
+                                  style={[styles.input, { flex: 1, height: 40 }]}
+                                  keyboardType="numeric"
+                                  value={paymentAmount}
+                                  onChangeText={setPaymentAmount}
+                                  placeholder="e.g. 5000"
+                                  placeholderTextColor="#94a3b8"
+                                />
+
+                                <View style={{ flexDirection: 'row', gap: 6 }}>
+                                  <TouchableOpacity
+                                    style={[
+                                      styles.modePill,
+                                      inlinePaymentMode === 'CASH' && styles.modePillCashActive,
+                                      { height: 40 }
+                                    ]}
+                                    activeOpacity={0.8}
+                                    onPress={() => {
+                                      tap();
+                                      setInlinePaymentMode('CASH');
+                                    }}
+                                  >
+                                    <Ionicons
+                                      name={inlinePaymentMode === 'CASH' ? 'radio-button-on' : 'radio-button-off'}
+                                      size={14}
+                                      color={inlinePaymentMode === 'CASH' ? '#ffffff' : '#16a34a'}
+                                    />
+                                    <Text style={[styles.modePillText, inlinePaymentMode === 'CASH' && styles.modePillTextActive]}>Cash</Text>
+                                  </TouchableOpacity>
+
+                                  <TouchableOpacity
+                                    style={[
+                                      styles.modePill,
+                                      inlinePaymentMode === 'UPI' && styles.modePillUpiActive,
+                                      { height: 40 }
+                                    ]}
+                                    activeOpacity={0.8}
+                                    onPress={() => {
+                                      tap();
+                                      setInlinePaymentMode('UPI');
+                                    }}
+                                  >
+                                    <Ionicons
+                                      name={inlinePaymentMode === 'UPI' ? 'radio-button-on' : 'radio-button-off'}
+                                      size={14}
+                                      color={inlinePaymentMode === 'UPI' ? '#ffffff' : '#2563eb'}
+                                    />
+                                    <Text style={[styles.modePillText, inlinePaymentMode === 'UPI' && styles.modePillTextActive]}>UPI/Online</Text>
+                                  </TouchableOpacity>
+                                </View>
+                              </View>
+                            </View>
+
+                            {/* Description / Note */}
+                            <View style={{ gap: 4 }}>
+                              <Text style={styles.label}>Description</Text>
+                              <TextInput
+                                style={[styles.input, { height: 40 }]}
+                                value={paymentNote}
+                                onChangeText={setPaymentNote}
+                                placeholder="e.g. Land Rent, Advance, Bill payment..."
+                                placeholderTextColor="#94a3b8"
+                              />
+                            </View>
+
+                            {paymentError ? <Text style={styles.errorText}>{paymentError}</Text> : null}
+
+                            <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+                              <TouchableOpacity style={styles.secondaryButton} onPress={() => setIsPaymentFormOpen(false)}>
+                                <Text style={styles.secondaryButtonText}>Cancel</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity
+                                style={[styles.primaryButtonWrap, { borderRadius: RADIUS.md }]}
+                                disabled={recordPaymentReceived.isPending || recordPaymentMade.isPending}
+                                onPress={handleRecordPayment}
+                              >
+                                <View
+                                  style={[
+                                    styles.primaryButton,
+                                    { backgroundColor: statement.balance >= 0 ? '#16a34a' : '#dc2626' },
+                                  ]}
+                                >
+                                  {recordPaymentReceived.isPending || recordPaymentMade.isPending ? (
+                                    <ActivityIndicator color="#fff" />
+                                  ) : (
+                                    <Text style={styles.primaryButtonText}>
+                                      {statement.balance >= 0 ? 'Save Payment Received' : 'Save Payment Made'}
+                                    </Text>
+                                  )}
+                                </View>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        ) : null}
+
+                        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 6 }}>
+                          <View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 6, overflow: 'hidden' }}>
+                            <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 7, paddingHorizontal: 6, alignItems: 'center' }}>
+                              <Text style={{ width: 32, fontSize: 9.5, fontFamily: FONT.bold, color: '#fbbf24' }}>Sr.</Text>
+                              <Text style={{ width: 52, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>Date</Text>
+                              <Text style={{ width: 62, fontSize: 9.5, fontFamily: FONT.bold, color: '#e2e8f0' }}>Bill No.</Text>
+                              <Text style={{ flex: 1, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>Particulars</Text>
+                              <Text style={{ width: 55, fontSize: 9.5, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right' }}>Dr. (₹)</Text>
+                              <Text style={{ width: 55, fontSize: 9.5, fontFamily: FONT.bold, color: '#86efac', textAlign: 'right' }}>Cr. (₹)</Text>
+                              <Text style={{ width: 70, fontSize: 9.5, fontFamily: FONT.bold, color: '#38bdf8', textAlign: 'right' }}>Balance</Text>
+                            </View>
+
+                            {statementLedgerRows.length === 0 ? (
+                              <View style={{ padding: 16, alignItems: 'center' }}>
+                                <Text style={styles.emptyText}>No ledger entries yet.</Text>
+                              </View>
+                            ) : (
+                              statementLedgerRows.map((row, idx) => (
+                                <View key={row.id || idx} style={{ flexDirection: 'row', paddingHorizontal: 6, paddingVertical: 7, backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', alignItems: 'center' }}>
+                                  <Text style={{ width: 32, fontSize: 9.5, fontFamily: FONT.bold, color: '#0369a1' }}>
+                                    {row.entryNo || `#${row.srNo}`}
+                                  </Text>
+
+                                  <Text style={{ width: 52, fontSize: 9.5, fontFamily: FONT.medium, color: '#475569' }}>
+                                    {new Date(row.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                  </Text>
+
+                                  <View style={{ width: 62 }}>
+                                    {row.billNo && row.billNo !== '—' ? (
+                                      <TouchableOpacity
+                                        activeOpacity={0.7}
+                                        onPress={() => {
+                                          const raw = row.rawEntries?.[0];
+                                          if (row.saleBillId || (raw as any)?.type === 'SALE_CREDIT' || (raw as any)?.type === 'CREDIT' || row.drAmount > 0) {
+                                            shareStatementSaleEntry({
+                                              id: raw?.id || row.id,
+                                              reason: raw?.reason || row.reason,
+                                              amount: String(raw?.amount || row.drAmount || row.crAmount),
+                                              createdAt: (raw?.createdAt as any) || row.date,
+                                              saleBillId: row.saleBillId || (raw as any)?.saleBillId,
+                                            });
+                                          } else {
+                                            shareStatementPaymentEntry({
+                                              id: raw?.id || row.id,
+                                              type: raw?.type || 'PAYMENT',
+                                              amount: String(raw?.amount || row.crAmount || row.drAmount),
+                                              createdAt: (raw?.createdAt as any) || row.date,
+                                              paymentReceiptId: row.paymentReceiptId || (raw as any)?.paymentReceiptId,
+                                            });
+                                          }
+                                        }}
+                                        style={{ backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#bfdbfe', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 2, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 2 }}
+                                      >
+                                        <Ionicons name="document-text-outline" size={10} color="#1d4ed8" />
+                                        <Text style={{ fontSize: 8.5, fontFamily: FONT.bold, color: '#1d4ed8' }}>{row.billNo}</Text>
+                                      </TouchableOpacity>
+                                    ) : (
+                                      <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8' }}>—</Text>
+                                    )}
+                                  </View>
+
+                                  <Text style={{ flex: 1, fontSize: 10, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={2}>
+                                    {row.reason}
+                                  </Text>
+
+                                  <Text style={{ width: 55, fontSize: 10, fontFamily: FONT.bold, color: row.drAmount > 0 ? '#b91c1c' : '#94a3b8', textAlign: 'right' }}>
+                                    {row.drAmount > 0 ? `₹${row.drAmount.toLocaleString('en-IN')}` : '—'}
+                                  </Text>
+
+                                  <Text style={{ width: 55, fontSize: 10, fontFamily: FONT.bold, color: row.crAmount > 0 ? '#15803d' : '#94a3b8', textAlign: 'right' }}>
+                                    {row.crAmount > 0 ? `₹${row.crAmount.toLocaleString('en-IN')}` : '—'}
+                                  </Text>
+
+                                  <Text style={{ width: 75, fontSize: 9.5, fontFamily: FONT.extraBold, color: row.runningBalance >= 0 ? '#16a34a' : '#dc2626', textAlign: 'right' }}>
+                                    ₹{Math.abs(row.runningBalance).toLocaleString('en-IN')} {row.runningBalance >= 0 ? 'Dr' : 'Cr'}
+                                  </Text>
+                                </View>
+                              ))
+                            )}
+                          </View>
+                        </ScrollView>
+                      </>
+                    )}
+                  </View>
+                </View>
+              </Modal>
+
+              {/* Payment Receipt Modal — shown right after recording a payment, with Share as JPG */}
+              <Modal
+                visible={paymentReceiptVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => {
+                  setPaymentReceiptVisible(false);
+                  setPaymentReceiptData(null);
+                }}
+              >
+                <View style={styles.modalOverlay}>
+                  <View style={[styles.modalCard, { maxHeight: '92%' }]}>
+                    <View style={[styles.modalHeaderRow, { justifyContent: 'space-between' }]}>
+                      <Text style={styles.formTitle}>Payment Receipt</Text>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setPaymentReceiptVisible(false);
+                          setPaymentReceiptData(null);
+                        }}
+                      >
+                        <Ionicons name="close" size={20} color="#475569" />
+                      </TouchableOpacity>
+                    </View>
+                    <ScrollView showsVerticalScrollIndicator={false}>
+                      {paymentReceiptData && (
+                        <View style={{ alignItems: 'center', paddingVertical: 6 }}>
+                          <ViewShot ref={billShotRef} options={{ format: 'jpg', quality: 0.95 }}>
+                            <PaymentReceiptPreview inv={paymentReceiptData} />
+                          </ViewShot>
+                          <View style={[styles.formActions, { width: '100%' }]}>
+                            <TouchableOpacity
+                              style={styles.primaryButtonWrap}
+                              onPress={() => shareInvoiceAsJpg(`Receipt-${paymentReceiptData.receiptNo}`, 'receipt')}
+                              disabled={isSharingBill}
+                            >
+                              <LinearGradient colors={theme.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.primaryButton}>
+                                {isSharingBill ? (
+                                  <ActivityIndicator color="#ffffff" />
+                                ) : (
+                                  <Text style={styles.primaryButtonText}>Share Receipt (JPG)</Text>
+                                )}
+                              </LinearGradient>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      )}
+                    </ScrollView>
+                  </View>
+                </View>
+              </Modal>
+
+            </View>
+          )}
+        </>
+      )}
+
+      {/* Universal Voucher Slip & Statement Modals (Accessible across ALL Tabs) */}
+      <PaymentVoucherModal
+        visible={showPaymentVoucherModal}
+        initialType={voucherInitialType}
+        initialParty={voucherInitialParty}
+        lockParty={lockVoucherParty}
+        parties={parties}
+        labourWorkers={expenseLabourWorkers}
+        onClose={() => setShowPaymentVoucherModal(false)}
+        onSuccess={() => {
+          refetch();
+          refetchParties();
+          refetchLabourWorkers();
+          queryClient.invalidateQueries({ queryKey: ['parties'] });
+          queryClient.invalidateQueries({ queryKey: ['labour-workers'] });
+          queryClient.invalidateQueries({ queryKey: ['unified-parties'] });
+        }}
+      />
+
+      <UniversalVoucherSlipModal
+        visible={showVoucherSlipModal}
+        data={activeVoucherData}
+        onClose={() => setShowVoucherSlipModal(false)}
+      />
+
+      <UniversalStatementModal
+        visible={showFullStatementModal && !!statement}
+        onClose={() => setShowFullStatementModal(false)}
+        partyName={statement?.party.name || 'Party Account'}
+        partyPhone={statement?.party.mobile || undefined}
+        entries={(statement?.entries || []).map((e: any) => ({
+          id: e.id,
+          date: e.createdAt || todayIso(),
+          type: e.type,
+          reason: e.reason || 'Ledger entry',
+          amount: Number(e.amount),
+          billNo: e.billNo || e.saleBill?.billNo || (e.paymentReceipt?.receiptNo ? e.paymentReceipt.receiptNo : undefined),
+          saleBillId: e.saleBillId || e.saleBill?.id,
+          paymentReceiptId: e.paymentReceiptId || e.paymentReceipt?.id,
+        }))}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.bg },
+  hero: { paddingTop: 18, paddingBottom: 14, paddingHorizontal: SPACING.lg },
+  heroTitle: { color: '#fff', fontSize: 20, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
+  heroSubtitle: { color: 'rgba(255,255,255,0.85)', fontSize: 12.5, fontFamily: FONT.medium, marginTop: 2 },
+  tabRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
+  subTabBar: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 8,
+    padding: 4,
+  },
+  subTabItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    gap: 6,
+  },
+  subTabItemActive: { backgroundColor: '#ffffff' },
+  subTabText: { fontSize: 12.5, fontFamily: FONT.semiBold, color: '#ffffff' },
+  subTabTextActive: { color: theme.primary },
+  summaryBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  totalLabel: { color: '#64748b', fontSize: 12, fontFamily: FONT.medium },
+  salesValue: { color: '#16a34a', fontSize: 22, fontFamily: FONT.extraBold, letterSpacing: -0.5 },
+  totalValue: { color: '#dc2626', fontSize: 22, fontFamily: FONT.extraBold, letterSpacing: -0.5 },
+  addSalesCTA: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#16a34a',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: RADIUS.md,
+  },
+  addSalesCTAText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 },
+  list: { padding: SPACING.lg, gap: SPACING.sm, paddingBottom: 140 },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    padding: SPACING.md,
+    gap: 12,
+  },
+  cardIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: RADIUS.md,
+    backgroundColor: theme.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardBody: { flex: 1 },
+  cardTitle: { color: theme.text, fontSize: 14, fontFamily: FONT.bold },
+  cardSubtitle: { color: theme.textMuted, fontSize: 12, fontFamily: FONT.medium, marginTop: 2 },
+  compactSaleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 4,
+  },
+  compactSaleBody: { flex: 1 },
+  compactSaleTitle: { fontSize: 12.5, fontFamily: FONT.semiBold, color: theme.text },
+  compactSaleMeta: { fontSize: 10.5, fontFamily: FONT.medium, color: theme.textMuted, marginTop: 1 },
+  compactSaleAmount: { fontSize: 12.5, fontFamily: FONT.extraBold, color: '#16a34a' },
+  shareBillIconBtn: {
+    marginLeft: 8,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f0fdf4',
+  },
+  salesViewModeRow: { flexDirection: 'row', gap: 8, paddingHorizontal: SPACING.lg, paddingTop: SPACING.sm },
+  salesViewModeChip: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 7,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    backgroundColor: '#ffffff',
+  },
+  salesViewModeChipActive: { backgroundColor: theme.primary, borderColor: theme.primary },
+  salesViewModeChipText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#475569' },
+  salesViewModeChipTextActive: { color: '#ffffff' },
+  salesGroupBlock: { marginBottom: 10 },
+  salesGroupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.sm,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 4,
+  },
+  salesGroupName: { flex: 1, fontSize: 12.5, fontFamily: FONT.extraBold, color: '#0f172a' },
+  salesGroupCount: { fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8' },
+  salesGroupTotal: { fontSize: 12, fontFamily: FONT.bold, color: '#16a34a' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 30, gap: 6 },
+  emptyText: { color: theme.text, fontSize: 15, fontFamily: FONT.bold },
+  emptySub: { color: theme.textMuted, fontSize: 12.5, fontFamily: FONT.medium, textAlign: 'center' },
+  analysisHint: { fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 4, marginBottom: 14 },
+  analysisCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    padding: SPACING.md,
+    marginBottom: 10,
+  },
+  analysisCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  analysisCropName: { fontSize: 14, fontFamily: FONT.bold, color: '#0f172a' },
+  analysisNet: { fontSize: 12.5, fontFamily: FONT.extraBold },
+  form: {
+    maxHeight: 460,
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: RADIUS.xl,
+    borderTopRightRadius: RADIUS.xl,
+    padding: SPACING.lg,
+    ...premiumShadow('#000000', 'lg'),
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 480,
+    maxHeight: '90%',
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: RADIUS.xl,
+    borderTopRightRadius: RADIUS.xl,
+    padding: SPACING.lg,
+    paddingBottom: 32,
+    ...premiumShadow('#000000', 'lg'),
+  },
+  formTitle: { fontSize: 17, fontFamily: FONT.extraBold, color: theme.text },
+  formSubTitle: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b', marginBottom: 10 },
+  label: { fontSize: 12, fontFamily: FONT.bold, color: theme.text, marginTop: 10, marginBottom: 4 },
+  rowPaymentBtn: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill },
+  rowPaymentBtnText: { color: '#ffffff', fontSize: 10.5, fontFamily: FONT.bold },
+  input: {
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    fontSize: 13.5,
+    color: theme.text,
+    backgroundColor: '#f8fafc',
+    fontFamily: FONT.medium,
+  },
+  cropSelectorRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 },
+  cropSelectorChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    backgroundColor: '#f8fafc',
+  },
+  cropSelectorChipActive: { backgroundColor: '#16a34a', borderColor: '#16a34a' },
+  cropSelectorChipText: { fontSize: 12, fontFamily: FONT.medium, color: '#475569' },
+  cropSelectorChipTextActive: { color: '#ffffff', fontFamily: FONT.bold },
+  revCalcBox: {
+    backgroundColor: '#fffbeb',
+    padding: 10,
+    borderRadius: RADIUS.md,
+    marginTop: 8,
+  },
+  revCalcTitle: { fontSize: 11.5, fontFamily: FONT.bold, color: '#b45309' },
+  revCalcValue: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#92400e', marginTop: 2 },
+  categoryRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 },
+  categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    backgroundColor: '#f8fafc',
+  },
+  categoryChipActive: { backgroundColor: theme.primary, borderColor: theme.primary },
+  categoryChipText: { fontSize: 11.5, fontFamily: FONT.medium, color: theme.text },
+  categoryChipTextActive: { color: '#fff', fontFamily: FONT.bold },
+  helperTextExpense: { fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 2 },
+  errorText: { color: '#dc2626', fontSize: 12, fontFamily: FONT.bold, marginTop: 8 },
+  formActions: { flexDirection: 'row', gap: 10, marginTop: 16, marginBottom: 20 },
+  secondaryButton: {
+    flex: 1,
+    backgroundColor: '#f1f5f9',
+    borderRadius: RADIUS.md,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  secondaryButtonText: { color: theme.text, fontFamily: FONT.semiBold, fontSize: 13.5 },
+  primaryButtonWrap: { flex: 1.5, borderRadius: RADIUS.md, ...premiumShadow(theme.primary, 'sm') },
+  primaryButton: { borderRadius: RADIUS.md, paddingVertical: 12, alignItems: 'center' },
+  primaryButtonText: { color: '#fff', fontFamily: FONT.bold, fontSize: 13.5 },
+  paymentModeRow: { flexDirection: 'row', gap: 8, marginTop: 4 },
+  paymentModeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    backgroundColor: '#f8fafc',
+  },
+  paymentModeChipActive: { backgroundColor: '#16a34a', borderColor: '#16a34a' },
+  paymentModeChipText: { fontSize: 12.5, fontFamily: FONT.bold, color: '#475569' },
+  paymentModeChipTextActive: { color: '#ffffff' },
+  addProductBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#16a34a',
+    borderRadius: RADIUS.md,
+    paddingVertical: 10,
+    marginTop: 10,
+  },
+  addProductBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 },
+  cartTable: {
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: RADIUS.md,
+    overflow: 'hidden',
+  },
+  cartHeaderRow: {
+    flexDirection: 'row',
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  cartHeaderCell: { flex: 1, fontSize: 10.5, fontFamily: FONT.bold, color: '#64748b', textTransform: 'uppercase' },
+  cartRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  cartCell: { flex: 1, fontSize: 12, fontFamily: FONT.medium, color: '#0f172a' },
+  cartTotalsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+  },
+  cartTotalsLabel: { fontSize: 12, fontFamily: FONT.bold, color: '#334155' },
+  cartTotalsValue: { fontSize: 13, fontFamily: FONT.extraBold, color: '#16a34a' },
+  ledgerSummaryBox: {
+    backgroundColor: '#fffbeb',
+    borderRadius: RADIUS.md,
+    padding: 12,
+    marginTop: 10,
+    gap: 4,
+  },
+  ledgerRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  ledgerLabel: { fontSize: 12, fontFamily: FONT.medium, color: '#92400e' },
+  ledgerValue: { fontSize: 12.5, fontFamily: FONT.bold, color: '#92400e' },
+  ledgerLabelBold: { fontSize: 13, fontFamily: FONT.extraBold, color: '#78350f' },
+  ledgerValueBold: { fontSize: 14.5, fontFamily: FONT.extraBold, color: '#78350f' },
+  savedTitle: { fontSize: 17, fontFamily: FONT.extraBold, color: '#0f172a', marginTop: 10 },
+  savedSub: { fontSize: 12.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 4, textAlign: 'center' },
+  modalHeaderRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 },
+  analysisSubTabRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  analysisSubTabBtn: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderRadius: RADIUS.md,
+    backgroundColor: '#f1f5f9',
+  },
+  analysisSubTabBtnActive: { backgroundColor: theme.primary },
+  analysisSubTabText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#475569' },
+  analysisSubTabTextActive: { color: '#ffffff' },
+  overallStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.md,
+    paddingVertical: 10,
+    marginBottom: 8,
+  },
+  overallStripItem: { flex: 1, alignItems: 'center' },
+  overallStripLabel: { fontSize: 10.5, fontFamily: FONT.medium, color: '#94a3b8' },
+  overallStripValue: { fontSize: 13, fontFamily: FONT.extraBold, marginTop: 1 },
+  overallStripDivider: { width: 1, height: 26, backgroundColor: '#f1f5f9' },
+  compactCropRow: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    marginBottom: 4,
+  },
+  compactCropTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  compactCropName: { flex: 1, fontSize: 12.5, fontFamily: FONT.semiBold, color: '#0f172a' },
+  compactCropNet: { fontSize: 12, fontFamily: FONT.extraBold },
+  compactCropSub: { fontSize: 10.5, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 1 },
+  statementRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: RADIUS.md,
+    padding: 10,
+    gap: 8,
+  },
+  statementLabel: { fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' },
+  statementReason: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 },
+  statementDate: { fontSize: 10.5, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 2 },
+  statementAmount: { fontSize: 13.5, fontFamily: FONT.extraBold },
+  modePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 7,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    backgroundColor: '#f8fafc',
+  },
+  modePillCashActive: {
+    backgroundColor: '#16a34a',
+    borderColor: '#15803d',
+  },
+  modePillUpiActive: {
+    backgroundColor: '#2563eb',
+    borderColor: '#1d4ed8',
+  },
+  modePillText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#475569',
+  },
+  modePillTextActive: {
+    color: '#ffffff',
+  },
+});

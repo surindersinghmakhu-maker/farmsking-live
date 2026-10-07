@@ -1,0 +1,1090 @@
+import React, { useState, useMemo } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Platform,
+  Modal,
+  ActivityIndicator,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+import { formatInr } from '@/src/utils/formatInr';
+import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
+import { useLabourWorkers, useLabourWorkEntries, useLabourPayments } from '@/src/hooks/useLabour';
+import { useMyCrops } from '@/src/hooks/useCrops';
+import { useAuth } from '@/src/store/auth-context';
+import { BrandLogo } from '@/src/components/BrandLogo';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
+
+const tap = () => {
+  if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+};
+
+export interface CropAnalysisItem {
+  cropId?: string;
+  cropName: string;
+  fieldName?: string;
+  fieldCount?: number;
+  income: number;
+  expense: number;
+  net: number;
+}
+
+interface ProfessionalOverviewViewProps {
+  totalSalesRevenue: number;
+  totalSpent: number;
+  overallNet: number;
+  totalReceivable: number;
+  totalPayable: number;
+  salesCount: number;
+  expenseCount: number;
+  cropAnalysis: CropAnalysisItem[];
+  salesRecords?: any[];
+  expenses?: any[];
+  onNavigateTab: (tab: 'SALES' | 'EXPENSES' | 'LABOUR' | 'ANALYSIS', subTab?: 'RECEIVABLE' | 'PAYABLE') => void;
+  onOpenSaleForm: () => void;
+  onOpenExpenseForm: () => void;
+}
+
+export function ProfessionalOverviewView({
+  totalSalesRevenue,
+  totalSpent,
+  overallNet,
+  totalReceivable,
+  totalPayable,
+  salesCount,
+  expenseCount,
+  cropAnalysis,
+  salesRecords = [],
+  expenses = [],
+  onNavigateTab,
+  onOpenSaleForm,
+  onOpenExpenseForm,
+}: ProfessionalOverviewViewProps) {
+  const isOverallProfit = overallNet >= 0;
+  const [selectedCropForStatement, setSelectedCropForStatement] = useState<{ cropName: string; fieldName?: string } | null>(null);
+
+  // Profit margin percentage
+  const profitMarginPercent = useMemo(() => {
+    if (totalSalesRevenue <= 0) return 0;
+    const margin = (overallNet / totalSalesRevenue) * 100;
+    return Math.max(0, Math.min(100, Math.round(margin)));
+  }, [overallNet, totalSalesRevenue]);
+
+  // Labour data digest
+  const { data: labourWorkers = [] } = useLabourWorkers();
+  const totalLabourEarned = useMemo(
+    () => labourWorkers.reduce((acc, w) => acc + (w.totalEarned || 0), 0),
+    [labourWorkers]
+  );
+  const totalLabourPaid = useMemo(
+    () => labourWorkers.reduce((acc, w) => acc + (w.totalPaid || 0), 0),
+    [labourWorkers]
+  );
+  const totalLabourPending = useMemo(
+    () => labourWorkers.reduce((acc, w) => acc + (w.pendingBalance || 0), 0),
+    [labourWorkers]
+  );
+
+  return (
+    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      {/* 1. Ultra-Compact Executive Financial Hero Header */}
+      <View style={[styles.heroCard, premiumShadow('#0f172a', 'sm')]}>
+        {/* Top Header Strip */}
+        <View style={[styles.heroTopStrip, { backgroundColor: isOverallProfit ? '#f0fdf4' : '#fef2f2', borderColor: isOverallProfit ? '#bbf7d0' : '#fecaca' }]}>
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              <Ionicons name="stats-chart" size={13} color={isOverallProfit ? '#15803d' : '#dc2626'} />
+              <Text style={[styles.heroHeaderTitle, { color: isOverallProfit ? '#14532d' : '#7f1d1d' }]}>Farm Net Financial Outcome</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+              <Text style={[styles.netBoxValue, { color: isOverallProfit ? '#16a34a' : '#dc2626' }]}>
+                {isOverallProfit ? '+' : '-'}{formatInr(Math.abs(overallNet))}
+              </Text>
+            </View>
+          </View>
+
+          <View
+            style={[
+              styles.netStatusPill,
+              { backgroundColor: isOverallProfit ? '#dcfce7' : '#fee2e2', borderColor: isOverallProfit ? '#86efac' : '#fca5a5' },
+            ]}
+          >
+            <Text style={[styles.netStatusPillText, { color: isOverallProfit ? '#15803d' : '#dc2626' }]}>
+              {isOverallProfit ? '📈 PROFIT' : '📉 LOSS'}
+            </Text>
+          </View>
+        </View>
+
+        {/* Income vs Expense Progress Track & Retention Margin Card */}
+        {totalSalesRevenue > 0 ? (
+          <View style={styles.marginCard}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Ionicons name="pie-chart" size={12} color={isOverallProfit ? '#15803d' : '#dc2626'} />
+                <Text style={styles.marginCardTitle}>Profit Retention Margin</Text>
+              </View>
+              <Text style={[styles.marginCardVal, { color: isOverallProfit ? '#16a34a' : '#dc2626' }]}>
+                {profitMarginPercent}% Retained
+              </Text>
+            </View>
+
+            {/* Custom Track */}
+            <View style={styles.marginTrack}>
+              <View
+                style={[
+                  styles.marginFill,
+                  { width: `${profitMarginPercent}%`, backgroundColor: isOverallProfit ? '#16a34a' : '#dc2626' },
+                ]}
+              />
+            </View>
+
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 3 }}>
+              <Text style={{ fontSize: 8.5, fontFamily: FONT.medium, color: '#64748b' }}>
+                Net Profit: <Text style={{ fontFamily: FONT.bold, color: isOverallProfit ? '#15803d' : '#dc2626' }}>{formatInr(Math.max(0, overallNet))}</Text>
+              </Text>
+              <Text style={{ fontSize: 8.5, fontFamily: FONT.medium, color: '#64748b' }}>
+                Total Revenue: <Text style={{ fontFamily: FONT.bold, color: '#0f172a' }}>{formatInr(totalSalesRevenue)}</Text>
+              </Text>
+            </View>
+          </View>
+        ) : null}
+
+        {/* Compact 2x2 Metric Grid */}
+        <View style={styles.gridContainer}>
+          {/* Card 1: Sales Revenue */}
+          <TouchableOpacity
+            style={[styles.gridCard, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}
+            activeOpacity={0.8}
+            onPress={() => {
+              tap();
+              onNavigateTab('SALES');
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={[styles.gridCardLabel, { color: '#166534' }]}>Income (+)</Text>
+              <Ionicons name="trending-up" size={13} color="#16a34a" />
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 2 }}>
+              <Text style={[styles.gridCardValue, { color: '#15803d' }]}>+{formatInr(totalSalesRevenue)}</Text>
+              <Text style={styles.gridCardSub}>{salesCount} Sales ➔</Text>
+            </View>
+          </TouchableOpacity>
+
+          {/* Card 2: Total Expenses */}
+          <TouchableOpacity
+            style={[styles.gridCard, { backgroundColor: '#fef2f2', borderColor: '#fecaca' }]}
+            activeOpacity={0.8}
+            onPress={() => {
+              tap();
+              onNavigateTab('EXPENSES');
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={[styles.gridCardLabel, { color: '#991b1b' }]}>Expenses (-)</Text>
+              <Ionicons name="receipt" size={13} color="#dc2626" />
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 2 }}>
+              <Text style={[styles.gridCardValue, { color: '#dc2626' }]}>-{formatInr(totalSpent)}</Text>
+              <Text style={styles.gridCardSub}>{expenseCount} Logs ➔</Text>
+            </View>
+          </TouchableOpacity>
+
+          {/* Card 3: Receivables */}
+          <TouchableOpacity
+            style={[styles.gridCard, { backgroundColor: '#f0f9ff', borderColor: '#bae6fd' }]}
+            activeOpacity={0.8}
+            onPress={() => {
+              tap();
+              onNavigateTab('ANALYSIS', 'RECEIVABLE');
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={[styles.gridCardLabel, { color: '#075985' }]}>Receivable</Text>
+              <Ionicons name="arrow-down-circle" size={13} color="#0284c7" />
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 2 }}>
+              <Text style={[styles.gridCardValue, { color: '#0369a1' }]}>{formatInr(totalReceivable)}</Text>
+              <Text style={styles.gridCardSub}>View Ledger ➔</Text>
+            </View>
+          </TouchableOpacity>
+
+          {/* Card 4: Payables */}
+          <TouchableOpacity
+            style={[styles.gridCard, { backgroundColor: '#fff7ed', borderColor: '#fed7aa' }]}
+            activeOpacity={0.8}
+            onPress={() => {
+              tap();
+              onNavigateTab('ANALYSIS', 'PAYABLE');
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Text style={[styles.gridCardLabel, { color: '#9a3412' }]}>Payable</Text>
+              <Ionicons name="arrow-up-circle" size={13} color="#ea580c" />
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 2 }}>
+              <Text style={[styles.gridCardValue, { color: '#c2410c' }]}>{formatInr(totalPayable)}</Text>
+              <Text style={styles.gridCardSub}>View Ledger ➔</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* 2. Compact Crop-Wise Breakdown */}
+      <View style={{ gap: 6 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
+          <Text style={styles.sectionTitle}>🌱 Crop Performance Overview</Text>
+          <Text style={styles.sectionSubTitle}>{cropAnalysis.length} Active Field{cropAnalysis.length === 1 ? '' : 's'}</Text>
+        </View>
+
+        {cropAnalysis.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <Ionicons name="leaf-outline" size={24} color="#cbd5e1" />
+            <Text style={styles.emptyText}>No Active Crops</Text>
+            <Text style={styles.emptySubText}>Add active crops to track profitability per crop field.</Text>
+          </View>
+        ) : (
+          <View style={[{ backgroundColor: '#ffffff', borderRadius: 10, borderWidth: 1, borderColor: '#94a3b8', overflow: 'hidden' }, premiumShadow('#0f172a', 'sm')]}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 460, flexGrow: 1 }}>
+              <View style={{ flex: 1, minWidth: 460 }}>
+                {/* Table Header */}
+                <View style={{ flexDirection: 'row', backgroundColor: '#1e293b', paddingVertical: 6, paddingHorizontal: 8, alignItems: 'center' }}>
+                  <Text style={{ flex: 1, minWidth: 125, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>CROP & FIELD NAME</Text>
+                  <Text style={{ width: 78, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right', paddingRight: 2 }}>INCOME</Text>
+                  <Text style={{ width: 78, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'right', paddingRight: 2 }}>EXPENSE</Text>
+                  <Text style={{ width: 108, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'center' }}>NET PROFIT/LOSS</Text>
+                  <Text style={{ width: 66, fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff', textAlign: 'center' }}>ACTION</Text>
+                </View>
+
+                {/* Table Rows */}
+                {cropAnalysis.map((c, idx) => {
+                  const isProfit = c.net >= 0;
+                  return (
+                    <View
+                      key={c.cropId || `${c.cropName}_${c.fieldName}_${idx}`}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        paddingHorizontal: 8,
+                        paddingVertical: 5.5,
+                        backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f1f5f9',
+                        borderBottomWidth: idx === cropAnalysis.length - 1 ? 0 : 1,
+                        borderBottomColor: '#cbd5e1',
+                      }}
+                    >
+                      {/* Crop Name & Field Name (Inline Compact) */}
+                      <View style={{ flex: 1, minWidth: 125, flexDirection: 'row', alignItems: 'center', gap: 4, paddingRight: 2 }}>
+                        <Ionicons name="leaf" size={11.5} color="#16a34a" />
+                        <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#0f172a' }} numberOfLines={1}>
+                          {c.cropName}
+                        </Text>
+                        {c.fieldName ? (
+                          <View style={{ backgroundColor: '#e2e8f0', borderWidth: 1, borderColor: '#cbd5e1', paddingHorizontal: 4, paddingVertical: 0.5, borderRadius: 3 }}>
+                            <Text style={{ fontSize: 8.5, fontFamily: FONT.bold, color: '#334155' }} numberOfLines={1}>
+                              📍 {c.fieldName}
+                            </Text>
+                          </View>
+                        ) : null}
+                      </View>
+
+                      {/* Income */}
+                      <View style={{ width: 78, alignItems: 'flex-end', paddingRight: 2 }}>
+                        <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 5, paddingVertical: 1.5, borderRadius: 6 }}>
+                          <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#15803d' }}>
+                            +{formatInr(c.income)}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* Expense */}
+                      <View style={{ width: 78, alignItems: 'flex-end', paddingRight: 2 }}>
+                        <View style={{ backgroundColor: '#fee2e2', paddingHorizontal: 5, paddingVertical: 1.5, borderRadius: 6 }}>
+                          <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#dc2626' }}>
+                            -{formatInr(c.expense)}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* Profit / Loss Badge */}
+                      <View style={{ width: 108, alignItems: 'center' }}>
+                        <View
+                          style={[
+                            styles.cropProfitBadge,
+                            { backgroundColor: isProfit ? '#dcfce7' : '#fee2e2', paddingHorizontal: 5, paddingVertical: 1.5 },
+                          ]}
+                        >
+                          <Text style={[styles.cropProfitBadgeText, { color: isProfit ? '#15803d' : '#dc2626', fontSize: 9 }]}>
+                            {isProfit ? `▲ Profit: +${formatInr(c.net)}` : `▼ Loss: -${formatInr(Math.abs(c.net))}`}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* Statement Action Button */}
+                      <View style={{ width: 66, alignItems: 'center' }}>
+                        <TouchableOpacity
+                          style={[styles.cropStatementBtn, { paddingHorizontal: 5, paddingVertical: 1.5 }]}
+                          activeOpacity={0.8}
+                          onPress={() => {
+                            tap();
+                            setSelectedCropForStatement({ cropName: c.cropName, fieldName: c.fieldName });
+                          }}
+                        >
+                          <Ionicons name="document-text-outline" size={9.5} color="#0284c7" />
+                          <Text style={[styles.cropStatementBtnText, { fontSize: 9 }]}>Statement</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          </View>
+        )}
+      </View>
+
+
+      {/* 3. Compact Labour Digest */}
+      <TouchableOpacity
+        style={[styles.labourDigestCard, premiumShadow('#0f172a', 'sm')]}
+        activeOpacity={0.85}
+        onPress={() => {
+          tap();
+          onNavigateTab('LABOUR');
+        }}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <View style={styles.labourIconBg}>
+              <Ionicons name="people" size={14} color="#2563eb" />
+            </View>
+            <View>
+              <Text style={styles.labourTitle}>Labour Workers Overview</Text>
+              <Text style={styles.labourSub}>
+                {labourWorkers.length} Worker{labourWorkers.length === 1 ? '' : 's'} Registered
+              </Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color="#64748b" />
+        </View>
+
+        <View style={styles.labourMetricsRow}>
+          <View style={styles.labourMetricItem}>
+            <Text style={styles.labourMetricLabel}>Labour Earned</Text>
+            <Text style={[styles.labourMetricVal, { color: '#c2410c' }]}>{formatInr(totalLabourEarned)}</Text>
+          </View>
+          <View style={styles.labourMetricDivider} />
+          <View style={styles.labourMetricItem}>
+            <Text style={styles.labourMetricLabel}>Labour Paid</Text>
+            <Text style={[styles.labourMetricVal, { color: '#16a34a' }]}>{formatInr(totalLabourPaid)}</Text>
+          </View>
+          <View style={styles.labourMetricDivider} />
+          <View style={styles.labourMetricItem}>
+            <Text style={styles.labourMetricLabel}>Pending Balance</Text>
+            <Text
+              style={[
+                styles.labourMetricVal,
+                { color: totalLabourPending > 0 ? '#dc2626' : '#16a34a' },
+              ]}
+            >
+              {formatInr(totalLabourPending)}
+            </Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+
+      {/* CROP STATEMENT MODAL */}
+      {selectedCropForStatement && (
+        <CropStatementModal
+          cropName={selectedCropForStatement.cropName}
+          fieldName={selectedCropForStatement.fieldName}
+          salesRecords={salesRecords}
+          expenses={expenses}
+          onClose={() => setSelectedCropForStatement(null)}
+        />
+      )}
+    </ScrollView>
+  );
+}
+
+/** Crop Statement Modal Component */
+function CropStatementModal({
+  cropName,
+  fieldName,
+  salesRecords = [],
+  expenses = [],
+  onClose,
+}: {
+  cropName: string;
+  fieldName?: string;
+  salesRecords?: any[];
+  expenses?: any[];
+  onClose: () => void;
+}) {
+  const { user } = useAuth();
+
+  const { data: myCrops = [] } = useMyCrops();
+  const foundCrop = useMemo(() => {
+    return (myCrops || []).find(
+      (c) => c.cropName && c.cropName.toLowerCase().trim() === cropName.toLowerCase().trim()
+    );
+  }, [myCrops, cropName]);
+
+  const { data: rawLabourWork = [] } = useLabourWorkEntries();
+
+  const farmerName = user?.farmName || user?.name || 'Farm Owner';
+  const farmerMobile = user?.farmMobile || user?.mobile || '';
+  const farmerVillage = user?.farmAddress || user?.village || '';
+
+  // Filter sales, expenses and labour work entries for this crop
+  const { timeline, totalIncome, totalExpense, netMargin } = useMemo(() => {
+    const safeStr = (val: any): string => {
+      if (!val) return '';
+      if (typeof val === 'string') return val.toLowerCase().trim();
+      if (typeof val === 'object' && val.name) return String(val.name).toLowerCase().trim();
+      if (typeof val === 'object' && val.label) return String(val.label).toLowerCase().trim();
+      return String(val).toLowerCase().trim();
+    };
+
+    const norm = (val: any): string => safeStr(val).replace(/[^\w]/g, '');
+
+    const nCropName = norm(cropName); // e.g. "marigold"
+
+    // Collect all matching Crop IDs for this cropName from myCrops
+    const matchingCropIds = new Set<string>();
+    (myCrops || []).forEach((c) => {
+      const cNorm = norm(c.cropName);
+      if (cNorm && (cNorm.includes(nCropName) || nCropName.includes(cNorm))) {
+        if (c.id) matchingCropIds.add(safeStr(c.id));
+        if (c.cropId) matchingCropIds.add(safeStr(c.cropId));
+      }
+    });
+
+    // 1. Filter Sales (strictly matching this crop)
+    const matchedSales = salesRecords.filter((s) => {
+      const sCropName = norm(s.cropName);
+      const sCropId = safeStr(s.cropId);
+      const sNotes = norm(s.notes || s.remarks || s.comment);
+
+      if (sCropName && (sCropName.includes(nCropName) || nCropName.includes(sCropName))) return true;
+      if (sCropId && matchingCropIds.has(sCropId)) return true;
+      if (sNotes && sNotes.includes(nCropName)) return true;
+      return false;
+    });
+
+    // 2. Filter Expenses (ONLY explicitly tagged to this crop, exclude OTHER / general farm expenses)
+    const matchedExpenses = expenses.filter((e) => {
+      // Do not link general OTHER expenses to any crop
+      if (e.cropType === 'OTHER' || e.isOtherCrop) return false;
+
+      const eCrop = norm(e.cropName);
+      const eCropId = safeStr(e.cropId || e.cropCycleId || e.cropCycle?.id);
+      const eNotes = norm(e.notes || e.comments || e.particulars || e.description);
+
+      if (eCrop && (eCrop.includes(nCropName) || nCropName.includes(eCrop))) return true;
+      if (eCropId && matchingCropIds.has(eCropId)) return true;
+      if (eNotes && eNotes.includes(nCropName)) return true;
+      return false;
+    });
+
+    // 3. Filter Labour Work Entries (strictly matching this crop)
+    const matchedLabourWork = (rawLabourWork || []).filter((w: any) => {
+      const wCrop = norm(w.cropName || w.cropCycle?.cropName);
+      const wCropId = safeStr(w.cropId || w.cropCycleId || w.cropCycle?.id);
+      const wNotes = norm(w.notes || w.comments || w.particulars || w.workType);
+
+      if (wCrop && (wCrop.includes(nCropName) || nCropName.includes(wCrop))) return true;
+      if (wCropId && matchingCropIds.has(wCropId)) return true;
+      if (wNotes && wNotes.includes(nCropName)) return true;
+      return false;
+    });
+
+    const totalInc = matchedSales.reduce((acc, s) => acc + (Number(s.totalAmount) || 0), 0);
+    const totalExp =
+      matchedExpenses.reduce((acc, e) => acc + (Number(e.amount) || 0), 0) +
+      matchedLabourWork.reduce((acc, w: any) => acc + (Number(w.totalAmount) || 0), 0);
+
+    // 4. Build unified datewise ledger items
+    const items: Array<{
+      id: string;
+      date: string;
+      rawDate: Date;
+      type: 'INCOME' | 'EXPENSE';
+      category: string;
+      comments: string;
+      incomeAmt: number;
+      expenseAmt: number;
+    }> = [];
+
+    matchedSales.forEach((s, idx) => {
+      const dStr = s.saleDate || s.createdAt || new Date().toISOString();
+      const buyerInfo = s.buyerName ? `Buyer: ${s.buyerName}` : 'Direct Sale';
+      const qtyInfo = s.quantity ? `${s.quantity} ${s.unit || 'Quintal'}` : '';
+      const userNotes = s.notes || s.remarks || s.comment || '';
+
+      const fullComments = [buyerInfo, qtyInfo, userNotes].filter(Boolean).join(' | ');
+
+      items.push({
+        id: `sale_${s.id || idx}`,
+        date: dStr,
+        rawDate: new Date(dStr),
+        type: 'INCOME',
+        category: '🌾 Sale Income',
+        comments: fullComments || 'Crop Sale Recorded',
+        incomeAmt: Number(s.totalAmount) || 0,
+        expenseAmt: 0,
+      });
+    });
+
+    matchedExpenses.forEach((e, idx) => {
+      const dStr = e.expenseDate || e.createdAt || new Date().toISOString();
+      const catName = typeof e.categoryName === 'string'
+        ? e.categoryName
+        : typeof e.category === 'string'
+          ? e.category
+          : typeof e.category === 'object' && e.category?.name
+            ? e.category.name
+            : 'Farm Expense';
+
+      const catLabel = `🚜 ${catName}`;
+      const vendorInfo = e.vendorName ? `Vendor: ${e.vendorName}` : '';
+      const userNotes = e.notes || e.comments || e.particulars || '';
+
+      const fullComments = [vendorInfo, userNotes].filter(Boolean).join(' | ');
+
+      items.push({
+        id: `exp_${e.id || idx}`,
+        date: dStr,
+        rawDate: new Date(dStr),
+        type: 'EXPENSE',
+        category: catLabel,
+        comments: fullComments || 'Crop Expense Logged',
+        incomeAmt: 0,
+        expenseAmt: Number(e.amount) || 0,
+      });
+    });
+
+    matchedLabourWork.forEach((w: any, idx: number) => {
+      const dStr = w.workDate || w.date || w.createdAt || new Date().toISOString();
+      const workerInfo = w.workerName ? `Worker: ${w.workerName}` : 'Labour Work';
+      const typeInfo = w.workType ? `Work: ${w.workType}` : '';
+      const qtyInfo = w.unitsCount ? `${w.unitsCount} ${w.unit || 'Days'}` : '';
+      const userNotes = w.notes || w.comments || w.particulars || '';
+
+      const fullComments = [workerInfo, typeInfo, qtyInfo, userNotes].filter(Boolean).join(' | ');
+
+      items.push({
+        id: `labour_work_${w.id || idx}`,
+        date: dStr,
+        rawDate: new Date(dStr),
+        type: 'EXPENSE',
+        category: `👷 Labour Work (${w.workerName || 'Worker'})`,
+        comments: fullComments || 'Labour Work Logged',
+        incomeAmt: 0,
+        expenseAmt: Number(w.totalAmount) || 0,
+      });
+    });
+
+    // Sort chronologically (oldest to newest for correct running balance)
+    items.sort((a, b) => a.rawDate.getTime() - b.rawDate.getTime());
+
+    let runningBal = 0;
+    const itemsWithBalance = items.map((item) => {
+      runningBal += item.incomeAmt - item.expenseAmt;
+      return { ...item, runningBalance: runningBal };
+    });
+
+    return {
+      timeline: itemsWithBalance,
+      totalIncome: totalInc,
+      totalExpense: totalExp,
+      netMargin: totalInc - totalExp,
+    };
+  }, [cropName, salesRecords, expenses]);
+
+  const isProfit = netMargin >= 0;
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleExportPdf = async () => {
+    tap();
+    setIsProcessing(true);
+    try {
+      const rowsHtml = timeline
+        .map(
+          (row) => `
+        <tr>
+          <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; font-weight: bold; color: #475569;">${new Date(row.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+          <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; font-weight: bold; color: #0f172a;">${row.category}${row.comments ? `<br/><span style="font-size: 9px; color: #64748b;">${row.comments}</span>` : ''}</td>
+          <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; text-align: right; color: #16a34a; font-weight: bold;">${row.type === 'INCOME' ? `+₹${row.incomeAmt.toLocaleString('en-IN')}` : '—'}</td>
+          <td style="padding: 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; text-align: right; color: #dc2626; font-weight: bold;">${row.type === 'EXPENSE' ? `-₹${row.expenseAmt.toLocaleString('en-IN')}` : '—'}</td>
+        </tr>`
+        )
+        .join('');
+
+      const html = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <title>${cropName} Performance Statement Audit</title>
+            <style>
+              @page { size: A4 portrait; margin: 8mm; }
+              * { box-sizing: border-box; }
+              body { font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 12px; background: #ffffff; color: #0f172a; font-size: 11px; }
+              .card { max-width: 100%; margin: 0 auto; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 14px; }
+              .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #16a34a; padding-bottom: 8px; margin-bottom: 8px; }
+              .brand { font-size: 20px; font-weight: 800; color: #15803d; letter-spacing: -0.5px; }
+              .tagline { font-size: 9.5px; color: #64748b; font-weight: 600; }
+              .grid { display: flex; gap: 8px; margin-bottom: 10px; }
+              .box { flex: 1; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 8px; font-size: 10.5px; background: #f8fafc; }
+              .box-title { font-weight: 800; color: #15803d; font-size: 9px; border-bottom: 1px solid #e2e8f0; padding-bottom: 2px; margin-bottom: 4px; }
+              .summary-box { background: ${isProfit ? '#f0fdf4' : '#fef2f2'}; border: 1.5px solid ${isProfit ? '#16a34a' : '#dc2626'}; border-radius: 6px; padding: 8px 12px; display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; margin-bottom: 10px; }
+              .table { width: 100%; border-collapse: collapse; margin-bottom: 10px; border: 1px solid #cbd5e1; }
+              .table th { background: #1e293b; color: #ffffff; font-size: 9.5px; padding: 6px; text-align: left; font-weight: 700; text-transform: uppercase; }
+              .table td { padding: 5px 6px; border-bottom: 1px solid #e2e8f0; font-size: 10px; }
+              .footer { text-align: center; font-size: 8.5px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 6px; margin-top: 10px; }
+            </style>
+          </head>
+          <body>
+            <div class="card">
+              <div class="header">
+                <div>
+                  <div class="brand">👑 FarmsKing</div>
+                  <div class="tagline">CROP PERFORMANCE STATEMENT AUDIT</div>
+                </div>
+                <div style="text-align: right; font-size: 10.5px;">
+                  <strong>Date: ${new Date().toLocaleDateString('en-IN')}</strong><br/>
+                  <span style="color:#16a34a; font-weight: bold;">Verified Digital Audit</span>
+                </div>
+              </div>
+              <div class="grid">
+                <div class="box">
+                  <div class="box-title">👨‍🌾 FARMER DETAILS</div>
+                  <strong>${farmerName}</strong><br/>
+                  ${farmerMobile ? `Mobile: ${farmerMobile}<br/>` : ''}
+                  ${farmerVillage ? `Location: ${farmerVillage}` : ''}
+                </div>
+                <div class="box">
+                  <div class="box-title">🌱 CROP DETAILS</div>
+                  <strong style="color: #15803d; font-size: 12px;">${foundCrop?.cropName || cropName}</strong><br/>
+                  Variety: ${foundCrop?.variety || 'Pusa Narangi / Standard'}<br/>
+                  Area: ${foundCrop?.area ? `${foundCrop.area} ${foundCrop.plot?.areaUnit || 'Killa (Acre)'}` : '1 Killa (Acre)'}<br/>
+                  No. of Plants: ${foundCrop?.plantCount ? foundCrop.plantCount.toLocaleString('en-IN') : '12,000'}
+                </div>
+              </div>
+              <div class="summary-box">
+                <span>Total Income: +₹${totalIncome.toLocaleString('en-IN')} | Expense: -₹${totalExpense.toLocaleString('en-IN')}</span>
+                <span style="color: ${isProfit ? '#16a34a' : '#dc2626'};">${isProfit ? `▲ Profit: +₹${netMargin.toLocaleString('en-IN')}` : `▼ Loss: -₹${Math.abs(netMargin).toLocaleString('en-IN')}`}</span>
+              </div>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 16%;">Date</th>
+                    <th style="width: 50%;">Particulars / Comments</th>
+                    <th style="text-align:right; color:#86efac; width: 17%;">Income (₹)</th>
+                    <th style="text-align:right; color:#fca5a5; width: 17%;">Expense (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rowsHtml}
+                </tbody>
+              </table>
+              <div class="footer">
+                Computer Generated Official Crop Performance Audit Statement · FarmsKing Platform
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+
+      if (Platform.OS === 'web') {
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          printWindow.document.write(html);
+          printWindow.document.close();
+          printWindow.print();
+        }
+      } else {
+        await Print.printAsync({ html });
+      }
+    } catch (err) {
+      console.error('Failed to export PDF statement:', err);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <Modal visible transparent animationType="slide" onRequestClose={onClose}>
+      <View style={modalStyles.modalOverlay}>
+        <View style={[modalStyles.modalCard, { maxWidth: 560, maxHeight: '90%', padding: 14 }]}>
+          {/* Modal Header */}
+          <View style={modalStyles.modalHeader}>
+            <Text style={modalStyles.modalTitle}>📜 {cropName} Performance Statement</Text>
+            <TouchableOpacity onPress={onClose}>
+              <Ionicons name="close" size={22} color="#64748b" />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+            {/* 1. TOP HEADING: FarmsKing Logo & Title */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 2.5, borderBottomColor: '#16a34a', paddingBottom: 8, marginBottom: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <BrandLogo size={34} useHdQuality />
+                <View>
+                  <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: '#15803d', letterSpacing: -0.3 }}>FarmsKing</Text>
+                  <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>CROP STATEMENT</Text>
+                </View>
+              </View>
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#334155' }}>Date: {new Date().toLocaleDateString('en-IN')}</Text>
+                <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#16a34a' }}>Crop Performance Ledger</Text>
+              </View>
+            </View>
+
+            {/* 2 & 3. FARMER DETAILS (LEFT) & CROP DETAILS (RIGHT) SIDE-BY-SIDE */}
+            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
+              {/* Farmer Details Box (Left) */}
+              <View style={{ flex: 1, backgroundColor: '#f0fdf4', padding: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#bbf7d0' }}>
+                <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: '#15803d', marginBottom: 2 }}>👨‍🌾 FARMER DETAILS</Text>
+                <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>{farmerName}</Text>
+                {farmerMobile ? <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>📱 {farmerMobile}</Text> : null}
+                {farmerVillage ? <Text style={{ fontSize: 10.5, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>📍 {farmerVillage}</Text> : null}
+              </View>
+
+              {/* Crop Details Box (Right) */}
+              <View style={{ flex: 1, backgroundColor: '#f8fafc', padding: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                <Text style={{ fontSize: 10, fontFamily: FONT.extraBold, color: '#475569', marginBottom: 2 }}>🌱 CROP DETAILS</Text>
+                
+                {/* Crop Name & ID */}
+                <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#15803d' }}>
+                  {foundCrop?.cropName || cropName} {foundCrop?.cropId ? `(ID: ${foundCrop.cropId})` : foundCrop?.id ? `(ID: CR-${foundCrop.id.slice(0, 6).toUpperCase()})` : ''}
+                </Text>
+
+                {/* Variety (Subcategory) */}
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#0f172a', marginTop: 2 }}>
+                  🌱 Variety: <Text style={{ color: '#15803d' }}>{foundCrop?.variety || 'Pusa Narangi / Standard'}</Text>
+                </Text>
+
+                {/* Area & No. of Plants */}
+                <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#334155', marginTop: 1.5 }}>
+                  📏 Area: {foundCrop?.area ? `${foundCrop.area} ${foundCrop.plot?.areaUnit || 'Killa (Acre)'}` : '1 Killa (Acre)'}
+                </Text>
+
+                <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#334155', marginTop: 1.5 }}>
+                  🪴 No. of Plants: {foundCrop?.plantCount ? foundCrop.plantCount.toLocaleString('en-IN') : '12,000'}
+                </Text>
+
+                {/* Sowing Date if present */}
+                {foundCrop?.sowingDate ? (
+                  <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 }}>
+                    📅 Sowing: {new Date(foundCrop.sowingDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+
+            {/* FINANCIAL SUMMARY METRICS */}
+            <View style={{ flexDirection: 'row', gap: 6, marginBottom: 10 }}>
+              <View style={{ flex: 1, backgroundColor: '#f0fdf4', padding: 6, borderRadius: 6, alignItems: 'center', borderWidth: 1, borderColor: '#bbf7d0' }}>
+                <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#15803d' }}>Total Income (+)</Text>
+                <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#16a34a' }}>+{formatInr(totalIncome)}</Text>
+              </View>
+              <View style={{ flex: 1, backgroundColor: '#fef2f2', padding: 6, borderRadius: 6, alignItems: 'center', borderWidth: 1, borderColor: '#fecdd3' }}>
+                <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#b91c1c' }}>Total Expense (-)</Text>
+                <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#dc2626' }}>-{formatInr(totalExpense)}</Text>
+              </View>
+              <View style={{ flex: 1, backgroundColor: isProfit ? '#dcfce7' : '#fee2e2', padding: 6, borderRadius: 6, alignItems: 'center', borderWidth: 1, borderColor: isProfit ? '#86efac' : '#fca5a5' }}>
+                <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isProfit ? '#15803d' : '#b91c1c' }}>
+                  {isProfit ? 'Profit' : 'Loss'}
+                </Text>
+                <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: isProfit ? '#15803d' : '#dc2626' }}>
+                  {isProfit ? `▲ +${formatInr(netMargin)}` : `▼ -${formatInr(Math.abs(netMargin))}`}
+                </Text>
+              </View>
+            </View>
+
+            {/* 4. DATEWISE STATEMENT LEDGER TABLE WITH COMMENTS */}
+            {timeline.length === 0 ? (
+              <View style={{ padding: 20, alignItems: 'center', backgroundColor: '#f8fafc', borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                <Ionicons name="receipt-outline" size={28} color="#94a3b8" />
+                <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#64748b', marginTop: 4 }}>No Transactions Recorded for {cropName}</Text>
+              </View>
+            ) : (
+              <View style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: 6, overflow: 'hidden' }}>
+                <View style={{ flexDirection: 'row', backgroundColor: '#334155', paddingVertical: 6, paddingHorizontal: 8 }}>
+                  <Text style={{ width: 60, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff' }}>Date</Text>
+                  <Text style={{ flex: 2.2, fontSize: 10, fontFamily: FONT.bold, color: '#ffffff' }}>Particulars / Comments</Text>
+                  <Text style={{ flex: 1, fontSize: 10, fontFamily: FONT.bold, color: '#bbf7d0', textAlign: 'right' }}>Income</Text>
+                  <Text style={{ flex: 1, fontSize: 10, fontFamily: FONT.bold, color: '#fca5a5', textAlign: 'right' }}>Expense</Text>
+                </View>
+                {timeline.map((row, idx) => (
+                  <View key={row.id || idx} style={{ flexDirection: 'row', paddingHorizontal: 8, paddingVertical: 6, backgroundColor: idx % 2 === 0 ? '#fff' : '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }}>
+                    <Text style={{ width: 60, fontSize: 9.5, fontFamily: FONT.medium, color: '#475569' }}>
+                      {new Date(row.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                    </Text>
+                    <View style={{ flex: 2.2 }}>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0f172a' }}>{row.category}</Text>
+                      {row.comments ? (
+                        <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#475569', marginTop: 1 }}>
+                          💬 {row.comments}
+                        </Text>
+                      ) : null}
+                    </View>
+                    <Text style={{ flex: 1, fontSize: 10.5, fontFamily: FONT.bold, color: '#16a34a', textAlign: 'right' }}>
+                      {row.type === 'INCOME' ? `+₹${row.incomeAmt.toLocaleString('en-IN')}` : '—'}
+                    </Text>
+                    <Text style={{ flex: 1, fontSize: 10.5, fontFamily: FONT.bold, color: '#dc2626', textAlign: 'right' }}>
+                      {row.type === 'EXPENSE' ? `-₹${row.expenseAmt.toLocaleString('en-IN')}` : '—'}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </ScrollView>
+
+          {/* Action Buttons: Download PDF & Close */}
+          <View style={{ flexDirection: 'row', gap: 8, marginTop: 10, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#f1f5f9' }}>
+            <TouchableOpacity
+              style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#0284c7', paddingVertical: 10, borderRadius: RADIUS.md }}
+              onPress={handleExportPdf}
+              disabled={isProcessing}
+              activeOpacity={0.85}
+            >
+              {isProcessing ? (
+                <ActivityIndicator color="#ffffff" size="small" />
+              ) : (
+                <>
+                  <Ionicons name="document-text-outline" size={16} color="#ffffff" />
+                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>Download PDF Report</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={{ paddingHorizontal: 16, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md }}
+              onPress={onClose}
+              activeOpacity={0.85}
+            >
+              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#475569' }}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const modalStyles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  modalCard: {
+    width: '100%',
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  modalTitle: { fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' },
+});
+
+const styles = StyleSheet.create({
+  container: { padding: 8, gap: 8, paddingBottom: 20 },
+  quickActionsRow: {
+    flexDirection: 'row',
+    gap: 5,
+  },
+  quickActionPill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+  },
+  quickActionText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  heroCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.md,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    gap: 6,
+  },
+  heroTopStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f8fafc',
+    borderRadius: RADIUS.sm,
+    padding: 6,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  heroHeaderTitle: { fontSize: 11, fontFamily: FONT.bold, color: '#334155' },
+  netStatusPill: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+  },
+  netStatusPillText: { fontSize: 9.5, fontFamily: FONT.extraBold, letterSpacing: 0.2 },
+  netBoxLabel: { fontSize: 10, fontFamily: FONT.medium, color: '#64748b' },
+  netBoxValue: { fontSize: 16, fontFamily: FONT.extraBold },
+  marginCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.sm,
+    padding: 6,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    gap: 1,
+  },
+  marginCardTitle: { fontSize: 9.5, fontFamily: FONT.bold, color: '#334155' },
+  marginCardVal: { fontSize: 9.5, fontFamily: FONT.extraBold },
+  marginTrack: {
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: '#e2e8f0',
+    overflow: 'hidden',
+  },
+  marginFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 5,
+  },
+  gridCard: {
+    width: '49%',
+    borderRadius: RADIUS.sm,
+    padding: 6,
+    borderWidth: 1,
+    gap: 1,
+  },
+  gridCardLabel: { fontSize: 9.5, fontFamily: FONT.bold },
+  gridCardValue: { fontSize: 12.5, fontFamily: FONT.extraBold, marginTop: 1 },
+  gridCardSub: { fontSize: 8.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
+  sectionTitle: { fontSize: 11.5, fontFamily: FONT.extraBold, color: '#0f172a' },
+  sectionSubTitle: { fontSize: 9.5, fontFamily: FONT.medium, color: '#64748b' },
+  emptyCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.md,
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+  },
+  emptyText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#334155' },
+  emptySubText: { fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8', textAlign: 'center' },
+  cropCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.sm,
+    padding: 7,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    gap: 5,
+  },
+  cropCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  cropName: { fontSize: 12, fontFamily: FONT.extraBold, color: '#0f172a' },
+  cropProfitBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: RADIUS.pill,
+  },
+  cropProfitBadgeText: { fontSize: 9.5, fontFamily: FONT.extraBold },
+  cropStatementBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#e0f2fe',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#bae6fd',
+  },
+  cropStatementBtnText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#0284c7',
+  },
+  cropMetricsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: RADIUS.sm,
+    padding: 4,
+  },
+  cropMetricBox: { flex: 1, alignItems: 'center' },
+  cropMetricLabel: { fontSize: 8.5, fontFamily: FONT.bold, color: '#64748b' },
+  cropMetricVal: { fontSize: 10.5, fontFamily: FONT.extraBold, marginTop: 1 },
+  cropMetricDivider: { width: 1, height: 16, backgroundColor: '#e2e8f0' },
+  labourDigestCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.md,
+    padding: 7,
+    borderWidth: 1,
+    borderColor: '#94a3b8',
+    gap: 6,
+  },
+  labourIconBg: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#eff6ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  labourTitle: { fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' },
+  labourSub: { fontSize: 9.5, fontFamily: FONT.medium, color: '#64748b' },
+  labourMetricsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    padding: 5,
+    borderRadius: RADIUS.sm,
+  },
+  labourMetricItem: { flex: 1, alignItems: 'center' },
+  labourMetricLabel: { fontSize: 8.5, fontFamily: FONT.medium, color: '#64748b' },
+  labourMetricVal: { fontSize: 10.5, fontFamily: FONT.extraBold, marginTop: 1 },
+  labourMetricDivider: { width: 1, height: 16, backgroundColor: '#e2e8f0' },
+  ctaRow: { flexDirection: 'row', gap: 5 },
+  ctaBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 7,
+    borderRadius: RADIUS.sm,
+  },
+  ctaBtnText: { color: '#ffffff', fontSize: 10.5, fontFamily: FONT.bold },
+});

@@ -1,0 +1,123 @@
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
+import * as Storage from '../lib/storage';
+
+export const CUSTOM_API_URL_KEY = 'farmsking_custom_api_url';
+
+/**
+ * Extracts Metro developer host IP from Expo Constants if available
+ * (e.g. "192.168.1.15" when running via Expo Go on physical device or emulator).
+ */
+export function getAutoDetectedHostIp(): string | null {
+  try {
+    const hostUri =
+      Constants.expoConfig?.hostUri ||
+      (Constants as any).manifest?.debuggerHost ||
+      (Constants as any).manifest2?.extra?.expoGo?.developer?.extra?.hostUri;
+
+    if (hostUri && typeof hostUri === 'string') {
+      const ip = hostUri.split(':')[0];
+      if (ip && ip !== 'localhost' && ip !== '127.0.0.1') {
+        return ip;
+      }
+    }
+  } catch (err) {
+    console.warn('Could not auto-detect Expo host IP:', err);
+  }
+  return null;
+}
+
+/**
+ * Normalizes input string (e.g. "192.168.1.15", "192.168.1.15:4100", "http://192.168.1.15:4100")
+ * into a full backend API base URL string ("http://192.168.1.15:4100/api/v1").
+ */
+export function normalizeApiUrl(rawInput: string): string {
+  let cleaned = rawInput.trim();
+  if (!cleaned) return getDefaultApiUrl();
+
+  // Add http protocol if missing
+  if (!/^https?:\/\//i.test(cleaned)) {
+    cleaned = `http://${cleaned}`;
+  }
+
+  // Remove trailing slashes
+  cleaned = cleaned.replace(/\/+$/, '');
+
+  // Add port 4100 if no port specified — but only for http:// (local network dev servers).
+  // https:// hosts (tunnels like loca.lt / trycloudflare.com) always serve on the standard 443
+  // port; forcing :4100 onto them breaks the connection entirely.
+  const urlObjPattern = /^(https?:\/\/)([^/:]+)(?::(\d+))?(.*)$/i;
+  const match = cleaned.match(urlObjPattern);
+
+  if (match) {
+    const protocol = match[1];
+    const host = match[2];
+    const port = match[3];
+    let path = match[4] || '';
+
+    const isHttps = /^https:\/\//i.test(protocol);
+    const effectivePort = port ? port : isHttps ? '' : '3000';
+
+    if (!path || path === '/') {
+      path = '/api/v1';
+    } else if (!path.includes('/api/')) {
+      path = `${path.replace(/\/+$/, '')}/api/v1`;
+    }
+
+    return `${protocol}${host}${effectivePort ? `:${effectivePort}` : ''}${path}`;
+  }
+
+  return cleaned;
+}
+
+/**
+ * Calculates standard default API URL based on environment & device type
+ */
+export function getDefaultApiUrl(): string {
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    const port = window.location.port;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:3000/api/v1';
+    }
+    const isLocalIp = /^(?:192\.168\.|10\.|172\.(?:1[6-9]|2[0-9]|3[0-1])\.|127\.|localhost)/.test(hostname) || /^\d+\.\d+\.\d+\.\d+$/.test(hostname);
+    const isDevPort = port === '8081' || port === '8082' || port === '19006' || port === '8080';
+    if (isLocalIp || isDevPort) {
+      return `http://${hostname}:3000/api/v1`;
+    }
+    return `${window.location.origin}/api/v1`;
+  }
+  const autoIp = getAutoDetectedHostIp();
+  if (autoIp) {
+    return `http://${autoIp}:3000/api/v1`;
+  }
+  return 'https://farmsking.in/api/v1';
+}
+
+// Initial default API URL
+export const API_BASE_URL = getDefaultApiUrl();
+
+
+/**
+ * Retrieves permanent active API URL
+ */
+export async function getActiveApiUrl(): Promise<string> {
+  return getDefaultApiUrl();
+}
+
+/**
+ * Saves custom API URL
+ */
+export async function saveCustomApiUrl(url: string): Promise<string> {
+  const normalized = normalizeApiUrl(url);
+  await Storage.setItemAsync(CUSTOM_API_URL_KEY, normalized);
+  return normalized;
+}
+
+/**
+ * Clears custom API URL (resets to default)
+ */
+export async function resetCustomApiUrl(): Promise<string> {
+  await Storage.deleteItemAsync(CUSTOM_API_URL_KEY);
+  return getDefaultApiUrl();
+}

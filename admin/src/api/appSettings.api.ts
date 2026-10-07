@@ -1,0 +1,124 @@
+import { apiClient } from './client';
+
+export interface AppSettings {
+  id: string;
+  appName: string;
+  logoUrl: string | null;
+  tagline: string | null;
+  upiId: string | null;
+  upiPayeeName: string | null;
+  groupVoiceCallEnabled?: boolean;
+  whatsappGroupSyncEnabled?: boolean;
+  whatsappAutoAddEnabled?: boolean;
+  whatsappAutoRemoveEnabled?: boolean;
+  whatsappGroupJid?: string | null;
+  referralSignupBonusAmount?: number;
+  newUserSignupBonusAmount?: number;
+  referralPaidPlanBonusAmount?: number;
+  partnerReferralCommissionAmount?: number;
+  partnerRefereeSignupBonusAmount?: number;
+  partnerReferralPaidPlanBonusAmount?: number;
+  referralOfferSchemeEnabled?: boolean;
+  referralOfferExpiryDate?: string | null;
+  referralOfferSchemeName?: string | null;
+  referralOfferReferrerBonus?: number;
+  referralOfferNewUserBonus?: number;
+  referralOfferPaidPlanBonus?: number;
+  partnerOfferSchemeEnabled?: boolean;
+  partnerOfferExpiryDate?: string | null;
+  partnerOfferSchemeName?: string | null;
+  partnerOfferReferrerBonus?: number;
+  partnerOfferNewUserBonus?: number;
+  partnerOfferPaidPlanBonus?: number;
+  appDownloadUrl?: string | null;
+  latestAppVersion?: string | null;
+  storefrontMaintenanceMode?: boolean;
+  agriMaintenanceMode?: boolean;
+  gardenMaintenanceMode?: boolean;
+  walletMaintenanceMode?: boolean;
+  doctorMaintenanceMode?: boolean;
+  gardenAdvisorMaintenanceMode?: boolean;
+  accountsMaintenanceMode?: boolean;
+  freeTrialEnabled?: boolean;
+  freeTrialDays?: number;
+  freeTrialPlan?: 'PRO' | 'SMART' | 'SUPER';
+  advisorCertificationFee?: number;
+  advisorCertificationDiscount?: number;
+  gardenExpertPlatformFeePercent?: number;
+  gardenerProCardPrice?: number;
+  gardenerVipCardPrice?: number;
+  updatedAt: string;
+  updatedById: string | null;
+}
+
+export interface UpdateAppSettingsPayload {
+  appName?: string;
+  logoUrl?: string;
+  tagline?: string;
+  upiId?: string;
+  upiPayeeName?: string;
+  adminName?: string;
+  adminMobile?: string;
+  adminEmail?: string;
+  groupVoiceCallEnabled?: boolean;
+  whatsappGroupSyncEnabled?: boolean;
+  whatsappAutoAddEnabled?: boolean;
+  whatsappAutoRemoveEnabled?: boolean;
+  whatsappGroupJid?: string;
+  referralSignupBonusAmount?: number;
+  newUserSignupBonusAmount?: number;
+  referralPaidPlanBonusAmount?: number;
+  partnerReferralCommissionAmount?: number;
+  partnerRefereeSignupBonusAmount?: number;
+  partnerReferralPaidPlanBonusAmount?: number;
+  referralOfferSchemeEnabled?: boolean;
+  referralOfferExpiryDate?: string;
+  referralOfferSchemeName?: string;
+  referralOfferReferrerBonus?: number;
+  referralOfferNewUserBonus?: number;
+  referralOfferPaidPlanBonus?: number;
+  partnerOfferSchemeEnabled?: boolean;
+  partnerOfferExpiryDate?: string;
+  partnerOfferSchemeName?: string;
+  partnerOfferReferrerBonus?: number;
+  partnerOfferNewUserBonus?: number;
+  partnerOfferPaidPlanBonus?: number;
+  appDownloadUrl?: string;
+  latestAppVersion?: string;
+  storefrontMaintenanceMode?: boolean;
+  agriMaintenanceMode?: boolean;
+  gardenMaintenanceMode?: boolean;
+  walletMaintenanceMode?: boolean;
+  doctorMaintenanceMode?: boolean;
+  gardenAdvisorMaintenanceMode?: boolean;
+  accountsMaintenanceMode?: boolean;
+  freeTrialEnabled?: boolean;
+  freeTrialDays?: number;
+  freeTrialPlan?: 'PRO' | 'SMART' | 'SUPER';
+  advisorCertificationFee?: number;
+  advisorCertificationDiscount?: number;
+  gardenExpertPlatformFeePercent?: number;
+  gardenerProCardPrice?: number;
+  gardenerVipCardPrice?: number;
+}
+
+export async function getAppSettings(): Promise<AppSettings> {
+  const { data } = await apiClient.get<AppSettings>('/app-settings');
+  return data;
+}
+
+export async function updateAppSettings(payload: UpdateAppSettingsPayload): Promise<AppSettings> {
+  const { data } = await apiClient.patch<AppSettings>('/app-settings', payload);
+  return data;
+}
+
+export interface SupportContact {
+  name: string;
+  mobile: string;
+  email: string | null;
+}
+
+export async function getSupportContact(): Promise<SupportContact> {
+  const { data } = await apiClient.get<SupportContact>('/app-settings/support-contact');
+  return data;
+}

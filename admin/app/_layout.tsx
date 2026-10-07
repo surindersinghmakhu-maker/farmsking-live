@@ -1,0 +1,169 @@
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  Manrope_400Regular,
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+  Manrope_800ExtraBold,
+} from '@expo-google-fonts/manrope';
+import { useFonts } from 'expo-font';
+import { Stack, useRouter, useSegments } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
+import { Platform } from 'react-native';
+import 'react-native-reanimated';
+
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { AuthProvider, useAuth } from '@/src/store/auth-context';
+import { RoleProvider } from '@/src/store/role-context';
+import { CropsProvider } from '@/src/store/crops-context';
+import { CartProvider } from '@/src/store/cart-context';
+import { LanguageProvider } from '@/src/store/language-context';
+import { ExecutiveThemeProvider } from '@/src/store/theme-context';
+import { SplashView } from '@/components/SplashView';
+
+// Prevent the splash screen from auto-hiding before asset loading is complete.
+SplashScreen.preventAutoHideAsync();
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      retry: 1,
+    },
+  },
+});
+
+function RootNavigation() {
+  const { user, isLoading } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+  const segmentsPath = segments.join('/');
+
+  useEffect(() => {
+    if (isLoading) return;
+    const currentGroup = segments[0] as string;
+    const inAuthGroup = currentGroup === '(auth)';
+    const isRootRoute = segments.length === 0 || (segments.length === 1 && (segments[0] === 'index' || segments[0] === ''));
+    const isPublicRoute = isRootRoute || currentGroup === 'topic' || currentGroup === 'seo' || currentGroup === 'dose' || currentGroup === 'doses' || currentGroup === 'my' || currentGroup === 'you' || currentGroup === 'shop' || currentGroup === 'support' || currentGroup === 'contact-us';
+    const isStaffSetupRoute = segments.join('/') === 'staff-profile-setup';
+
+    const STAFF_ROLES = ['TECHNICAL_TRAINER', 'FARM_ADVISOR', 'DOCTOR'];
+
+    if (!user && !inAuthGroup && !isPublicRoute) {
+      router.replace('/(auth)/login');
+    } else if (user) {
+      const userRoles = [user.role, ...(user.roles || [])];
+      const isStaff = STAFF_ROLES.includes(user.role);
+      const profileSubmitted = !!(user as any).staffProfileSubmitted || user.profileStatus === 'UNDER_REVIEW' || user.profileStatus === 'APPROVED';
+
+      // Redirect unsubmitted staff to profile setup
+      if (isStaff && !profileSubmitted && !isStaffSetupRoute && !inAuthGroup) {
+        router.replace('/staff-profile-setup' as any);
+        return;
+      }
+
+      const hasAdminAccess = userRoles.some(r => ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'MANAGER', 'SUPERVISOR'].includes(r));
+      if (!hasAdminAccess) {
+        alert('You are not authorized to access the Admin Panel.');
+        router.replace('/(auth)/login');
+      } else if (inAuthGroup || isRootRoute || currentGroup !== 'admin') {
+        router.replace('/admin/(tabs)' as any);
+      }
+    }
+  }, [user, isLoading, segmentsPath]);
+
+  if (isLoading) {
+    return <SplashView />;
+  }
+
+  return (
+    <Stack>
+      <Stack.Screen name="index" options={{ headerShown: false, title: 'FarmsKing - India\'s Agriculture Platform' }} />
+      <Stack.Screen name="admin" options={{ headerShown: false, title: 'FarmsKing Admin' }} />
+      <Stack.Screen name="(partner)" options={{ headerShown: false, title: 'FarmsKing Partner' }} />
+      <Stack.Screen name="(user)" options={{ headerShown: false, title: 'FarmsKing' }} />
+      <Stack.Screen name="(auth)" options={{ headerShown: false, title: 'FarmsKing Login' }} />
+      <Stack.Screen name="seo" options={{ headerShown: false, title: 'FarmsKing' }} />
+      <Stack.Screen name="shop" options={{ headerShown: false, title: 'FarmsKing Store' }} />
+      <Stack.Screen name="support" options={{ headerShown: false, title: 'FarmsKing Support' }} />
+      <Stack.Screen name="contact-us" options={{ headerShown: false, title: 'Contact Us' }} />
+      <Stack.Screen name="dose" options={{ headerShown: false, title: 'FarmsKing' }} />
+      <Stack.Screen name="doses" options={{ headerShown: false, title: 'FarmsKing' }} />
+      <Stack.Screen name="my" options={{ headerShown: false, title: 'FarmsKing' }} />
+      <Stack.Screen name="you" options={{ headerShown: false, title: 'FarmsKing' }} />
+      <Stack.Screen name="seller-dashboard" options={{ headerShown: false, title: 'FarmsKing Seller' }} />
+      <Stack.Screen name="farmer-profile-setup" options={{ headerShown: false, title: 'FarmsKing Setup' }} />
+      <Stack.Screen name="staff-profile-setup" options={{ headerShown: false, title: 'Staff Profile Setup' }} />
+      <Stack.Screen name="crop-intelligence" options={{ headerShown: false, title: 'FarmsKing AI' }} />
+      <Stack.Screen name="admin-sellers" options={{ headerShown: false, title: 'FarmsKing' }} />
+      <Stack.Screen name="topic/[id]" options={{ headerShown: false, title: 'FarmsKing Topic' }} />
+      <Stack.Screen name="+not-found" options={{ title: 'Not Found' }} />
+    </Stack>
+  );
+}
+
+import { MobileAppShell } from '@/components/MobileAppShell';
+import { LiveWebsiteWebView } from '@/components/LiveWebsiteWebView';
+
+export default function RootLayout() {
+  const colorScheme = useColorScheme();
+  const [loaded, fontError] = useFonts({
+    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    Manrope_400Regular,
+    Manrope_500Medium,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+    Manrope_800ExtraBold,
+  });
+
+  useEffect(() => {
+    if (loaded || fontError) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [loaded, fontError]);
+
+  if (!loaded && !fontError) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <SplashView />
+      </QueryClientProvider>
+    );
+  }
+
+  // If shortcut webview mode is enabled on native mobile build
+  if (process.env.EXPO_PUBLIC_WEBVIEW_MODE === 'true' && Platform.OS !== 'web') {
+    return <LiveWebsiteWebView uri="https://farmsking.in" />;
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <LanguageProvider>
+        <ExecutiveThemeProvider>
+          <AuthProvider>
+            <RoleProvider>
+              <CropsProvider>
+                <CartProvider>
+                  <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                    <MobileAppShell>
+                      <RootNavigation />
+                      <StatusBar style="auto" />
+                    </MobileAppShell>
+                  </ThemeProvider>
+                </CartProvider>
+              </CropsProvider>
+            </RoleProvider>
+          </AuthProvider>
+        </ExecutiveThemeProvider>
+      </LanguageProvider>
+    </QueryClientProvider>
+  );
+}
+
+import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary';
+export { GlobalErrorBoundary as ErrorBoundary };

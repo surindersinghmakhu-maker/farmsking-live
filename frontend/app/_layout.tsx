@@ -74,7 +74,7 @@ function RootNavigation() {
       } else if (currentGroup === '(partner)') {
         const hasPartnerAccess = userRoles.some(r => ['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(r));
         if (!hasPartnerAccess) router.replace('/(user)/(tabs)');
-      } else if (inAuthGroup || isRootRoute) {
+      } else if (inAuthGroup) {
         if (['SUPER_ADMIN', 'ADMIN', 'OPERATOR'].includes(user.role)) {
           router.replace('/(admin)/(tabs)');
         } else if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user.role)) {

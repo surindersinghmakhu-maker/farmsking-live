@@ -24,7 +24,7 @@ import { Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { SuperAdminExpenseCategoriesModal } from '@/components/SuperAdminExpenseCategoriesModal';
-import { AdminInfoModal, SuperAdminWorkspaceModal, UserGuidesModal } from '@/app/(admin)/(tabs)/more';
+import { AdminInfoModal, SuperAdminWorkspaceModal, UserGuidesModal } from '@/app/admin/(tabs)/more';
 import { APP_VERSION } from '@/src/constants/version';
 import { IsoControlCenterPanel } from '@/src/components/IsoControlCenterPanel';
 import { IsoStaffApprovalPanel } from '@/src/components/IsoStaffApprovalPanel';

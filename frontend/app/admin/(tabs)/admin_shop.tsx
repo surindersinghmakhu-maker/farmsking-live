@@ -145,7 +145,7 @@ export default function AdminShopScreen() {
             <View style={styles.card}>
               <Text style={styles.cardTitle}>⚡ Admin Quick Actions</Text>
               <View style={styles.actionGrid}>
-                <TouchableOpacity style={styles.actionPill} onPress={() => router.push('/(admin)/(tabs)/admin-products' as any)}>
+                <TouchableOpacity style={styles.actionPill} onPress={() => router.push('/admin/(tabs)/admin-products' as any)}>
                   <Ionicons name="cube-outline" size={18} color="#2563eb" />
                   <Text style={styles.actionPillText}>Product Inventory</Text>
                 </TouchableOpacity>
@@ -160,7 +160,7 @@ export default function AdminShopScreen() {
                   <Text style={styles.actionPillText}>Seller Payouts</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.actionPill} onPress={() => router.push('/(admin)/(tabs)/admin-orders' as any)}>
+                <TouchableOpacity style={styles.actionPill} onPress={() => router.push('/admin/(tabs)/admin-orders' as any)}>
                   <Ionicons name="receipt-outline" size={18} color="#7c3aed" />
                   <Text style={styles.actionPillText}>Order Processing</Text>
                 </TouchableOpacity>
@@ -260,7 +260,7 @@ export default function AdminShopScreen() {
             <View style={styles.card}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Text style={styles.cardTitle}>🔔 Pending Orders Action Required ({pendingOrders.length})</Text>
-                <TouchableOpacity onPress={() => router.push('/(admin)/(tabs)/admin-orders' as any)}>
+                <TouchableOpacity onPress={() => router.push('/admin/(tabs)/admin-orders' as any)}>
                   <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#2563eb' }}>View All →</Text>
                 </TouchableOpacity>
               </View>
@@ -296,7 +296,7 @@ export default function AdminShopScreen() {
               />
             </View>
 
-            <TouchableOpacity style={styles.addProductFullBtn} onPress={() => router.push('/(admin)/(tabs)/admin-products' as any)}>
+            <TouchableOpacity style={styles.addProductFullBtn} onPress={() => router.push('/admin/(tabs)/admin-products' as any)}>
               <Ionicons name="open-outline" size={20} color="#ffffff" />
               <Text style={styles.addProductFullBtnText}>Open Advanced Catalog Manager</Text>
             </TouchableOpacity>

@@ -74,12 +74,12 @@ export default function AdminMoreScreen() {
                 <View style={{ flex: 1 }}><Text style={styles.rowLabel}>👑 National E-Commerce Hub</Text><Text style={styles.rowSubLabel}>E-Commerce store overview & management dashboard</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/(admin)/(tabs)/admin-products' as any)}>
+              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/admin/(tabs)/admin-products' as any)}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#eff6ff' }]}><Ionicons name="cube-outline" size={18} color="#2563eb" /></View>
                 <View style={{ flex: 1 }}><Text style={styles.rowLabel}>📦 Product Inventory & Catalog</Text><Text style={styles.rowSubLabel}>Manage platform products, stock levels & pricing</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/(admin)/(tabs)/admin-orders' as any)}>
+              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/admin/(tabs)/admin-orders' as any)}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#f5f3ff' }]}><Ionicons name="receipt-outline" size={18} color="#7c3aed" /></View>
                 <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🧾 Order Processing & Fulfillment</Text><Text style={styles.rowSubLabel}>Process customer orders & update shipping status</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
@@ -94,7 +94,7 @@ export default function AdminMoreScreen() {
                 <View style={{ flex: 1 }}><Text style={styles.rowLabel}>💸 Seller Payouts & Commission</Text><Text style={styles.rowSubLabel}>Release seller balances & monitor payout transactions</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} activeOpacity={0.7} onPress={() => router.push('/(admin)/(tabs)/super-orders' as any)}>
+              <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} activeOpacity={0.7} onPress={() => router.push('/admin/(tabs)/super-orders' as any)}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#f0f9ff' }]}><Ionicons name="bar-chart-outline" size={18} color="#0284c7" /></View>
                 <View style={{ flex: 1 }}><Text style={styles.rowLabel}>📊 Sales Order Analytics</Text><Text style={styles.rowSubLabel}>View pan-India sales order logs & revenue history</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
@@ -106,17 +106,17 @@ export default function AdminMoreScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>👥 USERS & FARMER MANAGEMENT</Text>
             <View style={styles.sectionCard}>
-              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/(admin)/(tabs)/super-users' as any)}>
+              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/admin/(tabs)/super-users' as any)}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#eef2ff' }]}><Ionicons name="people-outline" size={18} color="#4f46e5" /></View>
                 <View style={{ flex: 1 }}><Text style={styles.rowLabel}>👥 User & Role Management</Text><Text style={styles.rowSubLabel}>Manage all users, farmers, advisors & role assignments</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/(admin)/(tabs)/super-crop-edit' as any)}>
+              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/admin/(tabs)/super-crop-edit' as any)}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#f0fdf4' }]}><Ionicons name="leaf-outline" size={18} color="#15803d" /></View>
                 <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🌾 Edit Farmer Crop Data</Text><Text style={styles.rowSubLabel}>Look up farmer's live crop by ID and override field data</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} activeOpacity={0.7} onPress={() => router.push('/(admin)/(tabs)/super-coupons' as any)}>
+              <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} activeOpacity={0.7} onPress={() => router.push('/admin/(tabs)/super-coupons' as any)}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#fdf4ff' }]}><Ionicons name="ticket-outline" size={18} color="#c026d3" /></View>
                 <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🎟️ VIP Pass & Coupon Manager</Text><Text style={styles.rowSubLabel}>Issue VIP passes, discount codes & farmer schemes</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
@@ -133,7 +133,7 @@ export default function AdminMoreScreen() {
                 <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🏷️ Expense Categories Manager</Text><Text style={styles.rowSubLabel}>Add, edit & deactivate farm expense categories</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} activeOpacity={0.7} onPress={() => router.push('/(admin)/(tabs)/super-audit-log' as any)}>
+              <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} activeOpacity={0.7} onPress={() => router.push('/admin/(tabs)/super-audit-log' as any)}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#f8fafc' }]}><Ionicons name="time-outline" size={18} color="#475569" /></View>
                 <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🕒 System Audit Log</Text><Text style={styles.rowSubLabel}>Track all administrative actions & security events</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
@@ -145,7 +145,7 @@ export default function AdminMoreScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>🛠️ C-PANEL & CONFIGURATION (5 OPTIONS)</Text>
             <View style={styles.sectionCard}>
-              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/(admin)/(tabs)/super-settings' as any as any)}>
+              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/admin/(tabs)/super-settings' as any as any)}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#f8fafc' }]}><Ionicons name="options-outline" size={18} color="#0d9488" /></View>
                 <View style={{ flex: 1 }}><Text style={styles.rowLabel}>⚙️ System Settings & Feature Flags</Text><Text style={styles.rowSubLabel}>Full system controls, feature toggles & API flags</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />

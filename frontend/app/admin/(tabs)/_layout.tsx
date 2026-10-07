@@ -191,9 +191,9 @@ export default function TabLayout() {
 
   const handleNavigate = (tabName: TabName) => {
     if (tabName === 'index') {
-      router.push('/(admin)/(tabs)' as any);
+      router.push('/admin/(tabs)' as any);
     } else {
-      router.push(`/(admin)/(tabs)/${tabName}` as any);
+      router.push(`/admin/(tabs)/${tabName}` as any);
     }
   };
 
@@ -203,7 +203,7 @@ export default function TabLayout() {
       {isDesktop && (
         <View style={[desktopStyles.headerBar, { backgroundColor: colors.headerBg, borderBottomColor: colors.cardBorder }]}>
           <View style={desktopStyles.headerLeft}>
-            <TouchableOpacity style={desktopStyles.brandLogoBox} activeOpacity={0.8} onPress={() => router.push('/(admin)/(tabs)' as any)}>
+            <TouchableOpacity style={desktopStyles.brandLogoBox} activeOpacity={0.8} onPress={() => router.push('/admin/(tabs)' as any)}>
               <BrandLogo size={36} useFastBundledOnly={true} />
               <Text style={desktopStyles.brandTitle}>FarmsKing</Text>
             </TouchableOpacity>

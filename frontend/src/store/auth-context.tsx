@@ -122,9 +122,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading,
       login: async (payload) => {
         const response = await apiLogin(payload);
-        if (response.user.role === 'ADMIN' || response.user.role === 'SUPER_ADMIN') {
-          throw new Error('Admin/Super Admin account cannot login from the customer app. Please use the Admin Panel.');
-        }
         await persistSession(response.accessToken, response.user);
 
         if (response.sessionMeta?.warningMessage || response.sessionMeta?.hasMultipleLogins) {

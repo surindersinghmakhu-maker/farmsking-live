@@ -95,42 +95,7 @@ export class UsersService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    try {
-      const usersToBackfill = await this.prisma.user.findMany({
-        where: {
-          OR: [{ farmName: null }, { farmAddress: null }, { farmMobile: null }],
-        },
-        select: {
-          id: true,
-          name: true,
-          mobile: true,
-          farmName: true,
-          farmAddress: true,
-          farmMobile: true,
-          billPrintingAddress: true,
-          village: true,
-          district: true,
-          state: true,
-        },
-      });
-
-      for (const u of usersToBackfill) {
-        const farmName = u.farmName || u.name;
-        const farmAddress =
-          u.farmAddress ||
-          u.billPrintingAddress ||
-          [u.village, u.district, u.state].filter((s) => s && s.trim().length > 0).join(', ') ||
-          '';
-        const farmMobile = u.farmMobile || u.mobile;
-
-        await this.prisma.user.update({
-          where: { id: u.id },
-          data: { farmName, farmAddress, farmMobile },
-        });
-      }
-    } catch (e) {
-      console.error('Failed to backfill user farmName / farmAddress / farmMobile:', e);
-    }
+    // Intentionally left blank to avoid blocking app boot.
   }
 
   async list(query: ListUsersQueryDto) {

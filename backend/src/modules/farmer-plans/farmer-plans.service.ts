@@ -79,7 +79,9 @@ export class FarmerPlansService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    await this.ensureDefaultPricing();
+    setTimeout(() => {
+      this.ensureDefaultPricing().catch(err => console.error('Boot seed failed', err));
+    }, 5000);
   }
 
   private async ensureDefaultPricing() {

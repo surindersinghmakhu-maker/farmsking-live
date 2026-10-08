@@ -62,7 +62,9 @@ export class IsoControlsService implements OnModuleInit {
   constructor(private readonly prisma: PrismaService) {}
 
   async onModuleInit() {
-    await this.seedDefaultModules();
+    setTimeout(() => {
+      this.seedDefaultModules().catch(err => this.logger.error('Boot seed failed', err));
+    }, 5000);
   }
 
   /** Seed initial ISO module control records if missing */

@@ -21,9 +21,6 @@ const getCleanMobile = (mobile?: string | null) => {
   return mobile;
 };
 
-// Reorganized categories rendered directly in the body
-
-
 const Hoverable4DCard = ({ children, style, onPress }: any) => {
   return (
     <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
@@ -85,15 +82,10 @@ export default function AdminMoreScreen() {
           {/* Switch Role / Dashboard */}
           <SwitchDashboardSection />
 
-          {/* 📦 E-COMMERCE & MARKETPLACE */}
+          {/* 📦 MULTI-VENDOR MARKETPLACE */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>📦 E-COMMERCE & MARKETPLACE</Text>
+            <Text style={styles.sectionTitle}>📦 MULTI-VENDOR MARKETPLACE</Text>
             <View style={styles.sectionCard}>
-              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/agristore')}>
-                <View style={[styles.rowIconBg, { backgroundColor: '#fef3c7' }]}><Ionicons name="storefront-outline" size={18} color="#d97706" /></View>
-                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>👑 National E-Commerce Hub</Text><Text style={styles.rowSubLabel}>E-Commerce store overview & management dashboard</Text></View>
-                <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
-              </TouchableOpacity>
               <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/admin/(tabs)/admin-products' as any)}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#eff6ff' }]}><Ionicons name="cube-outline" size={18} color="#2563eb" /></View>
                 <View style={{ flex: 1 }}><Text style={styles.rowLabel}>📦 Product Inventory & Catalog</Text><Text style={styles.rowSubLabel}>Manage platform products, stock levels & pricing</Text></View>

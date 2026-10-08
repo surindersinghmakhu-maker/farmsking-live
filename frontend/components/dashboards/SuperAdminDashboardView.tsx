@@ -190,12 +190,12 @@ export const SuperAdminDashboardView: React.FC = () => {
               <Text style={styles.ecoCardDesc}>Manage all 5 Admin Roles & Users</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.ecoCard} activeOpacity={0.8} onPress={() => router.push('/admin/(tabs)/admin_shop' as any)}>
+            <TouchableOpacity style={styles.ecoCard} activeOpacity={0.8} onPress={() => router.push('/admin/(tabs)/admin-products' as any)}>
               <View style={[styles.ecoIconBox, { backgroundColor: '#fef2f2' }]}>
                 <Ionicons name="storefront" size={24} color="#dc2626" />
               </View>
-              <Text style={styles.ecoCardTitle}>E-Commerce</Text>
-              <Text style={styles.ecoCardDesc}>Products, Stores, Inventory</Text>
+              <Text style={styles.ecoCardTitle}>Multi-Vendor Market</Text>
+              <Text style={styles.ecoCardDesc}>Products, Stores & Sellers</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.ecoCard} activeOpacity={0.8} onPress={() => router.push('/admin/(tabs)/super-accounts' as any)}>

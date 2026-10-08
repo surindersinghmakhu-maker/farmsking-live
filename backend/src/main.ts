@@ -33,7 +33,7 @@ async function bootstrap() {
 
   const apiPrefix = configService.get<string>('API_PREFIX', '/api/v1');
   const port = 3000; // Hardcode to 3000
-  const host = '127.0.0.1'; // Force bind to localhost to avoid NGINX 502
+  const host = '0.0.0.0'; // Revert back to 0.0.0.0 to fix NGINX connection refused
   const corsOrigins = configService.get<string>('CORS_ORIGINS', '');
 
   app.use(json({ limit: '50mb' }));

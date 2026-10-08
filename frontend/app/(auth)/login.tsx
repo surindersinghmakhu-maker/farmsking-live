@@ -505,7 +505,7 @@ export default function LoginScreen() {
                 <LinearGradient colors={['#10b981', '#059669']} style={styles.gradientBtn}>
                   {isSubmitting ? <ActivityIndicator color="#fff" /> : (
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Text style={styles.buttonText}>{activeTab === 'password' ? 'Sign In' : 'Verify & Login'}</Text>
+                      <Text style={styles.buttonText}>{activeTab === 'password' ? 'Secure Login' : 'Verify & Login'}</Text>
                       <Ionicons name="arrow-forward" size={16} color="#fff" />
                     </View>
                   )}

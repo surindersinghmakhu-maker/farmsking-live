@@ -447,7 +447,9 @@ export class OrdersService {
     await this.prisma.subOrder.updateMany({
       where: { orderId: id },
       data: { orderStatus: SubOrderStatus.ACCEPTED },
-      await this.notifyCustomer(
+    });
+    
+    await this.notifyCustomer(
       order.customerId,
       '✅ Order Confirmed',
       `Your FarmsKing Order #${order.orderNumber} has been confirmed by seller. Packing in progress.`,

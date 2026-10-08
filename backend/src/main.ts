@@ -97,10 +97,13 @@ async function bootstrap() {
   
   // Start the server
   try {
+    require('fs').writeFileSync('app-listen-before.txt', 'Before listen');
     await app.listen(port, host);
+    require('fs').writeFileSync('app-listen-after.txt', 'After listen');
     Logger.log(`==========================================================`, 'Bootstrap');
     Logger.log(`🚀 FarmsKing API Server is running on: http://${host}:${port}`, 'Bootstrap');
   } catch (error) {
+    require('fs').writeFileSync('app-listen-error.txt', error.toString());
     Logger.error(`Error starting server: ${error}`, 'Bootstrap');
   }
 }

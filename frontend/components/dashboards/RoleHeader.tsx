@@ -10,6 +10,7 @@ import { Avatar } from '@/src/components/Avatar';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { useAuth } from '@/src/store/auth-context';
 
 interface RoleHeaderProps {
   currentRole: UserRole;

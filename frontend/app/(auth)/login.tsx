@@ -102,6 +102,17 @@ export default function LoginScreen() {
 
   useEffect(() => {
     initRecaptcha();
+    if (Platform.OS === 'web') {
+      const siteKey = process.env.EXPO_PUBLIC_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
+      const scriptId = 'recaptcha-v3-script';
+      if (!document.getElementById(scriptId)) {
+        const script = document.createElement('script');
+        script.id = scriptId;
+        script.src = `https://www.google.com/recaptcha/api.js?render=${siteKey}`;
+        document.head.appendChild(script);
+      }
+      (window as any).recaptchaSiteKey = siteKey;
+    }
   }, []);
 
   useEffect(() => {
@@ -257,8 +268,24 @@ export default function LoginScreen() {
     if (!mobile.trim()) { setError('Please enter your Mobile Number or King ID.'); return; }
     if (!password.trim()) { setError('Please enter your password.'); return; }
     setIsSubmitting(true);
+
+    let captchaToken = undefined;
+    if (Platform.OS === 'web' && (window as any).grecaptcha) {
+      try {
+        captchaToken = await new Promise<string>((resolve) => {
+          (window as any).grecaptcha.ready(() => {
+            (window as any).grecaptcha.execute((window as any).recaptchaSiteKey, { action: 'login' }).then((token: string) => {
+              resolve(token);
+            });
+          });
+        });
+      } catch (e) {
+        console.warn('reCAPTCHA v3 failed:', e);
+      }
+    }
+
     try {
-      await login({ mobile: mobile.trim(), password: password.trim() });
+      await login({ mobile: mobile.trim(), password: password.trim(), captchaToken });
       router.replace('/(tabs)' as any);
     } catch (err: any) {
       const isNet = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';

@@ -590,6 +590,22 @@ export class AuthService {
     let identifier = (dto.mobile ?? '').trim();
     const cleanPassword = (dto.password ?? '').trim();
 
+    if (dto.captchaToken) {
+      try {
+        const secret = process.env.RECAPTCHA_SECRET_KEY || '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe';
+        const verifyRes = await fetch(`https://www.google.com/recaptcha/api/siteverify?secret=${secret}&response=${dto.captchaToken}`, {
+          method: 'POST',
+        });
+        const result = await verifyRes.json();
+        if (!result.success || result.score < 0.5) {
+          throw new UnauthorizedException('reCAPTCHA verification failed. Suspicious activity detected.');
+        }
+      } catch (err: any) {
+        if (err instanceof UnauthorizedException) throw err;
+        throw new UnauthorizedException('reCAPTCHA verification error. Please try again.');
+      }
+    }
+
     // If identifier looks like a mobile number with spaces/country code, clean it up
     if (/^(\+91|91|0)?\s*\d{10}$/.test(identifier)) {
       identifier = identifier.replace(/\D/g, '').slice(-10);

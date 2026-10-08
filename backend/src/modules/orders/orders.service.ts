@@ -590,9 +590,7 @@ export class OrdersService {
     );
 
     return updated;
-  }ed;
   }
-
   /** Update RTO status for sub-order & apply RTO Bearer Fee Policy */
   async processRtoSubOrder(subOrderId: string, rtoShippingFee: number) {
     const subOrder = await this.prisma.subOrder.findUnique({

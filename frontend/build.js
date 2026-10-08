@@ -170,14 +170,14 @@ try {
     if (!fs.existsSync(doseSubDir)) fs.mkdirSync(doseSubDir, { recursive: true });
     fs.writeFileSync(path.join(doseSubDir, 'index.html'), indexHtml, 'utf8');
 
-    // MY Route Static HTML & Directory
-    const myHtmlPath = path.join(distDir, 'my.html');
-    const mySubDir = path.join(distDir, 'my');
-    fs.writeFileSync(myHtmlPath, indexHtml, 'utf8');
-    if (!fs.existsSync(mySubDir)) fs.mkdirSync(mySubDir, { recursive: true });
-    fs.writeFileSync(path.join(mySubDir, 'index.html'), indexHtml, 'utf8');
+    // ADMIN Route Static HTML & Directory
+    const adminHtmlPath = path.join(distDir, 'admin.html');
+    const adminSubDir = path.join(distDir, 'admin');
+    fs.writeFileSync(adminHtmlPath, indexHtml, 'utf8');
+    if (!fs.existsSync(adminSubDir)) fs.mkdirSync(adminSubDir, { recursive: true });
+    fs.writeFileSync(path.join(adminSubDir, 'index.html'), indexHtml, 'utf8');
 
-    console.log('✅ Preserved and deployed static you.html, sk.html, dose.html, my.html and route subdirectories');
+    console.log('✅ Preserved and deployed static you.html, sk.html, dose.html, my.html, admin.html and route subdirectories');
   }
 
   console.log('✅ Expo Web build completed successfully!');

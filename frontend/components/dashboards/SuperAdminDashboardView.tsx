@@ -20,8 +20,10 @@ import {
   PlanPaymentReviewModal,
   FarmerPlanPaymentCard,
   FarmerPlanPaymentReviewModal,
-} from '@/app/admin/(tabs)/super-accounts';
-import { UserGuidesModal, SuperAdminWorkspaceModal, AdminInfoModal } from '@/app/admin/(tabs)/more';
+  UserGuidesModal,
+  SuperAdminWorkspaceModal,
+  AdminInfoModal,
+} from './SuperAdminStubs';
 import { SuperAdminExpenseCategoriesModal } from '../SuperAdminExpenseCategoriesModal';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';

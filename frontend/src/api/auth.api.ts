@@ -28,6 +28,7 @@ export interface RegisterPayload {
 export interface LoginPayload {
   mobile: string;
   password: string;
+  captchaToken?: string;
 }
 
 export async function registerFarmer(payload: RegisterPayload): Promise<AuthResponse> {

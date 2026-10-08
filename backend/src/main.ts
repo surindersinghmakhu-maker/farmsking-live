@@ -32,7 +32,8 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   const apiPrefix = configService.get<string>('API_PREFIX', '/api/v1');
-  const port = configService.get<number>('PORT', 3000);
+  const port = parseInt(configService.get<string>('PORT', '3000'), 10);
+  const host = '127.0.0.1'; // Force bind to localhost to avoid NGINX 502
   const corsOrigins = configService.get<string>('CORS_ORIGINS', '');
 
   app.use(json({ limit: '50mb' }));
@@ -80,7 +81,6 @@ async function bootstrap() {
     }),
   );
 
-  const host = configService.get<string>('HOST', '0.0.0.0');
 
   // Ensure Super Admin account 9872066901 is initialized on backend startup
   try {
@@ -132,6 +132,15 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, document);
 
-  await app.listen(port, host);
+  Logger.log(`Attempting to start server on ${host}:${port}`, 'Bootstrap');
+  
+  // Start the server
+  try {
+    await app.listen(port, host);
+    Logger.log(`==========================================================`, 'Bootstrap');
+    Logger.log(`🚀 FarmsKing API Server is running on: http://${host}:${port}`, 'Bootstrap');
+  } catch (error) {
+    Logger.error(`Error starting server: ${error}`, 'Bootstrap');
+  }
 }
 bootstrap();

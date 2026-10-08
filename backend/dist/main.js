@@ -60,7 +60,8 @@ async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     const configService = app.get(config_1.ConfigService);
     const apiPrefix = configService.get('API_PREFIX', '/api/v1');
-    const port = configService.get('PORT', 3000);
+    const port = parseInt(configService.get('PORT', '3000'), 10);
+    const host = '127.0.0.1';
     const corsOrigins = configService.get('CORS_ORIGINS', '');
     app.use((0, express_1.json)({ limit: '50mb' }));
     app.use((0, express_1.urlencoded)({ limit: '50mb', extended: true }));
@@ -101,7 +102,6 @@ async function bootstrap() {
         transform: true,
         transformOptions: { enableImplicitConversion: true },
     }));
-    const host = configService.get('HOST', '0.0.0.0');
     try {
         const prisma = app.get(prisma_service_1.PrismaService);
         const superAdminMobile = '9872066901';
@@ -150,7 +150,15 @@ async function bootstrap() {
         .build();
     const document = swagger_1.SwaggerModule.createDocument(app, swaggerConfig);
     swagger_1.SwaggerModule.setup('api/docs', app, document);
-    await app.listen(port, host);
+    common_1.Logger.log(`Attempting to start server on ${host}:${port}`, 'Bootstrap');
+    try {
+        await app.listen(port, host);
+        common_1.Logger.log(`==========================================================`, 'Bootstrap');
+        common_1.Logger.log(`🚀 FarmsKing API Server is running on: http://${host}:${port}`, 'Bootstrap');
+    }
+    catch (error) {
+        common_1.Logger.error(`Error starting server: ${error}`, 'Bootstrap');
+    }
 }
 bootstrap();
 //# sourceMappingURL=main.js.map

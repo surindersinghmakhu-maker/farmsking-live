@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, Alert, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView, TouchableOpacity, Image, TextInput, Modal, Alert, ActivityIndicator, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/src/store/auth-context';
@@ -10,6 +10,26 @@ import { useAllOrders } from '@/src/hooks/useOrders';
 import { resolveMediaUrl } from '@/src/api/client';
 import { Product, OrderStatus } from '@/src/types/api';
 import { apiClient } from '@/src/api/client';
+
+
+const Hoverable4DCard = ({ children, style, onPress }: any) => {
+  return (
+    <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
+      style,
+      hovered && {
+        borderColor: 'rgba(0,255,135,0.55)',
+        shadowColor: '#00ff87',
+        shadowOpacity: 0.3,
+        shadowRadius: 15,
+        elevation: 10,
+        transform: [{ scale: 1.02 }]
+      },
+      pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
+    ]}>
+      {children}
+    </Pressable>
+  );
+};
 
 export default function AdminShopScreen() {
   const router = useRouter();
@@ -94,7 +114,7 @@ export default function AdminShopScreen() {
           </View>
         </View>
         <TouchableOpacity style={styles.viewStoreBtn} onPress={() => router.push('/shop' as any)}>
-          <Ionicons name="eye-outline" size={16} color="#ffffff" />
+          <Ionicons name="eye-outline" size={16} color="#d97706" />
           <Text style={styles.viewStoreBtnText}>View Customer Store</Text>
         </TouchableOpacity>
       </View>
@@ -220,9 +240,9 @@ export default function AdminShopScreen() {
                     Pending Sellers Needing Approval:
                   </Text>
                   {pendingStores.slice(0, 5).map((store: any) => (
-                    <View key={store.id} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ffffff', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#fdba74' }}>
+                    <View key={store.id} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(0,255,135,0.03)', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#fdba74' }}>
                       <View style={{ flex: 1, marginRight: 8 }}>
-                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>{store.storeName || 'Unnamed Store'}</Text>
+                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>{store.storeName || 'Unnamed Store'}</Text>
                         <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>Owner: {store.seller?.name || store.seller?.mobile || 'Unknown'}</Text>
                       </View>
                       <TouchableOpacity
@@ -357,29 +377,34 @@ export default function AdminShopScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: '#020d06' },
   header: {
-    backgroundColor: '#1e293b',
-    paddingTop: 50,
+    backgroundColor: 'rgba(0,255,135,0.03)',
+    paddingTop: Platform.OS === 'ios' ? 50 : 20,
     paddingBottom: 16,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    ...premiumShadow('#cbd5e1', 'sm') as any,
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  headerTitle: { fontSize: 16, fontFamily: FONT.bold, color: '#ffffff' },
-  headerSub: { fontSize: 10.5, fontFamily: FONT.regular, color: '#cbd5e1' },
+  headerTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#ffffff' },
+  headerSub: { fontSize: 10.5, fontFamily: FONT.bold, color: '#d97706', marginTop: 2 },
   viewStoreBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: '#fffbeb',
+    borderWidth: 1,
+    borderColor: '#fde68a',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: RADIUS.pill,
   },
-  viewStoreBtnText: { fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' },
+  viewStoreBtnText: { fontSize: 11, fontFamily: FONT.bold, color: '#d97706' },
   kpiRow: { flexDirection: 'row', gap: 8, padding: 12 },
   kpiCard: {
     flex: 1,
@@ -390,57 +415,57 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 2,
   },
-  kpiVal: { fontSize: 17, fontFamily: FONT.extraBold, color: '#0f172a' },
+  kpiVal: { fontSize: 17, fontFamily: FONT.extraBold, color: '#ffffff' },
   kpiLabel: { fontSize: 10, fontFamily: FONT.bold, color: '#475569' },
   navTabs: { flexDirection: 'row', paddingHorizontal: 12, gap: 6, marginBottom: 10 },
   navTabBtn: {
     flex: 1,
     paddingVertical: 8,
     borderRadius: RADIUS.pill,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0,255,135,0.3)',
   },
   navTabBtnActive: { backgroundColor: '#d97706', borderColor: '#d97706' },
   navTabText: { fontSize: 11, fontFamily: FONT.bold, color: '#475569' },
   navTabTextActive: { color: '#ffffff' },
   content: { flex: 1, paddingHorizontal: 12 },
-  card: { backgroundColor: '#ffffff', borderRadius: 14, padding: 14, marginBottom: 12, ...premiumShadow('#0f172a', 'sm') as any },
-  cardTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a', marginBottom: 10 },
+  card: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: 14, padding: 14, marginBottom: 12, ...premiumShadow('#0f172a', 'sm') as any },
+  cardTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#ffffff', marginBottom: 10 },
   actionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   actionPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#020d06',
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0,255,135,0.3)',
     width: '48%',
   },
-  actionPillText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#334155' },
+  actionPillText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#e2e8f0' },
   emptyText: { fontSize: 12, fontFamily: FONT.regular, color: '#94a3b8', textAlign: 'center', marginVertical: 12 },
   orderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     padding: 12,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: 'rgba(0,255,135,0.2)',
     marginBottom: 6,
   },
-  orderIdText: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
+  orderIdText: { fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' },
   orderSubText: { fontSize: 11, fontFamily: FONT.regular, color: '#64748b', marginTop: 2 },
   statusBadge: { backgroundColor: '#fef3c7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   statusBadgeText: { fontSize: 10, fontFamily: FONT.bold, color: '#b45309' },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     paddingHorizontal: 12,
     height: 42,
     borderRadius: 10,
@@ -448,7 +473,7 @@ const styles = StyleSheet.create({
     borderColor: '#cbd5e1',
     gap: 8,
   },
-  searchInput: { flex: 1, fontSize: 13, fontFamily: FONT.regular, color: '#0f172a' },
+  searchInput: { flex: 1, fontSize: 13, fontFamily: FONT.regular, color: '#ffffff' },
   addProductFullBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -462,15 +487,15 @@ const styles = StyleSheet.create({
   productRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     padding: 10,
     borderRadius: 12,
     gap: 10,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: 'rgba(0,255,135,0.2)',
   },
-  prodImgBox: { width: 44, height: 44, borderRadius: 8, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
-  prodName: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
+  prodImgBox: { width: 44, height: 44, borderRadius: 8, backgroundColor: '#051b11', alignItems: 'center', justifyContent: 'center' },
+  prodName: { fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' },
   prodSub: { fontSize: 11, fontFamily: FONT.regular, color: '#64748b', marginTop: 2 },
   stockTag: { backgroundColor: '#f0fdf4', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   stockTagText: { fontSize: 10.5, fontFamily: FONT.bold, color: '#16a34a' },

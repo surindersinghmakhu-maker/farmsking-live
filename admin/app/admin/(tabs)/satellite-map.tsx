@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import {
-  View,
+import { View,
   Text,
   StyleSheet,
   TouchableOpacity,
@@ -8,8 +7,7 @@ import {
   SafeAreaView,
   Modal,
   Alert,
-  Image,
-} from 'react-native';
+  Image, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { FarmLocationPickerModal } from '@/components/FarmLocationPickerModal';
@@ -36,6 +34,26 @@ interface SatelliteZone {
   moisturePercent: number;
   color: string;
 }
+
+
+const Hoverable4DCard = ({ children, style, onPress }: any) => {
+  return (
+    <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
+      style,
+      hovered && {
+        borderColor: 'rgba(0,255,135,0.55)',
+        shadowColor: '#00ff87',
+        shadowOpacity: 0.3,
+        shadowRadius: 15,
+        elevation: 10,
+        transform: [{ scale: 1.02 }]
+      },
+      pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
+    ]}>
+      {children}
+    </Pressable>
+  );
+};
 
 export default function SatelliteMapScreen() {
   const router = useRouter();
@@ -301,18 +319,18 @@ export default function SatelliteMapScreen() {
                 </View>
 
                 {/* 1. Full Crop Profile Details in Easy English */}
-                <View style={{ backgroundColor: '#ffffff', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#bfdbfe', marginBottom: 8, gap: 4 }}>
+                <View style={{ backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#bfdbfe', marginBottom: 8, gap: 4 }}>
                   <Text style={{ fontSize: 12, fontWeight: '800', color: '#1e3a8a' }}>
                     📋 Field & Crop Profile Summary
                   </Text>
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 2 }}>
-                    <Text style={{ fontSize: 11, fontWeight: '600', color: '#334155' }}>
+                    <Text style={{ fontSize: 11, fontWeight: '600', color: '#e2e8f0' }}>
                       🌾 Crop: <Text style={{ fontWeight: '800', color: '#16a34a' }}>{selectedPlot.cropName}</Text>
                     </Text>
-                    <Text style={{ fontSize: 11, fontWeight: '600', color: '#334155' }}>
+                    <Text style={{ fontSize: 11, fontWeight: '600', color: '#e2e8f0' }}>
                       📏 Field Area: <Text style={{ fontWeight: '800' }}>{selectedPlot.areaAcres} Acres</Text>
                     </Text>
-                    <Text style={{ fontSize: 11, fontWeight: '600', color: '#334155' }}>
+                    <Text style={{ fontSize: 11, fontWeight: '600', color: '#e2e8f0' }}>
                       📍 GPS Stamp: <Text style={{ fontWeight: '800', color: '#0284c7' }}>{selectedPlot.coordsText}</Text>
                     </Text>
                   </View>
@@ -664,7 +682,7 @@ export default function SatelliteMapScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#020d06',
   },
   header: {
     flexDirection: 'row',
@@ -672,7 +690,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
   },
@@ -682,7 +700,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#ffffff',
   },
   roleTag: {
     paddingHorizontal: 8,
@@ -726,7 +744,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   emptyCropsCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',
@@ -746,7 +764,7 @@ const styles = StyleSheet.create({
   emptyCropsTitle: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#ffffff',
     marginBottom: 4,
   },
   emptyCropsSub: {
@@ -795,12 +813,12 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   selectorCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 14,
     padding: 14,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0,255,135,0.3)',
   },
   selectorLabel: {
     fontSize: 12,
@@ -812,7 +830,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#020d06',
     padding: 12,
     borderRadius: 10,
     borderWidth: 1,
@@ -821,7 +839,7 @@ const styles = StyleSheet.create({
   pickerText: {
     fontSize: 13.5,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#ffffff',
   },
   pickerSubText: {
     fontSize: 11,
@@ -829,7 +847,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   adminCommandCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1.5,
@@ -853,7 +871,7 @@ const styles = StyleSheet.create({
   adminCoordVal: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#ffffff',
     marginBottom: 4,
   },
   adminSyncStatus: {
@@ -875,7 +893,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   farmerActionCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1.5,
@@ -883,7 +901,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   advisorAnalysisCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1.5,
@@ -906,7 +924,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     marginBottom: 10,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#020d06',
     padding: 10,
     borderRadius: 10,
   },
@@ -937,7 +955,7 @@ const styles = StyleSheet.create({
   actionItemTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#0f172a',
+    color: '#ffffff',
   },
   actionItemSub: {
     fontSize: 11.5,
@@ -965,7 +983,7 @@ const styles = StyleSheet.create({
   matrixValue: {
     fontSize: 13.5,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#ffffff',
     marginTop: 2,
   },
   adminUnlockRowBtn: {
@@ -986,7 +1004,7 @@ const styles = StyleSheet.create({
     color: '#2563eb',
   },
   mapContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
@@ -1002,7 +1020,7 @@ const styles = StyleSheet.create({
   mapTitle: {
     fontSize: 13.5,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#ffffff',
   },
   mapDate: {
     fontSize: 11,
@@ -1110,11 +1128,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#020d06',
     borderRadius: 10,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0,255,135,0.3)',
     marginTop: 8,
   },
   execMetricItem: {
@@ -1187,16 +1205,16 @@ const styles = StyleSheet.create({
   sectionHeading: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#ffffff',
     marginBottom: 12,
   },
   zoneCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 14,
     padding: 14,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0,255,135,0.3)',
     borderLeftWidth: 5,
   },
   zoneHeader: {
@@ -1208,7 +1226,7 @@ const styles = StyleSheet.create({
   zoneName: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#ffffff',
   },
   zoneArea: {
     fontSize: 12,
@@ -1226,7 +1244,7 @@ const styles = StyleSheet.create({
   },
   statBox: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#020d06',
     padding: 8,
     borderRadius: 8,
   },
@@ -1237,7 +1255,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#ffffff',
     marginTop: 2,
   },
   modalOverlay: {
@@ -1249,7 +1267,7 @@ const styles = StyleSheet.create({
   },
   pickerModalCard: {
     width: '100%',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 20,
     padding: 18,
   },
@@ -1262,18 +1280,18 @@ const styles = StyleSheet.create({
   pickerModalTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#ffffff',
   },
   plotOptionCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#020d06',
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0,255,135,0.3)',
   },
   selectedPlotOptionCard: {
     backgroundColor: '#f0fdf4',
@@ -1282,7 +1300,7 @@ const styles = StyleSheet.create({
   plotOptionName: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#ffffff',
   },
   plotOptionSub: {
     fontSize: 11,

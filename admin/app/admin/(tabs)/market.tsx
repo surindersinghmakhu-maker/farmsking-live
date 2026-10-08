@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import { View, Pressable, StyleSheet, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, SPACING } from '@/constants/theme';
@@ -8,6 +8,26 @@ import { useFarmerPlan } from '@/src/hooks/useFarmerPlan';
 import { Ionicons } from '@expo/vector-icons';
 
 const theme = RoleThemes.FARMER;
+
+
+const Hoverable4DCard = ({ children, style, onPress }: any) => {
+  return (
+    <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
+      style,
+      hovered && {
+        borderColor: 'rgba(0,255,135,0.55)',
+        shadowColor: '#00ff87',
+        shadowOpacity: 0.3,
+        shadowRadius: 15,
+        elevation: 10,
+        transform: [{ scale: 1.02 }]
+      },
+      pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
+    ]}>
+      {children}
+    </Pressable>
+  );
+};
 
 export default function MarketScreen() {
   const { plan, meta, limits } = useFarmerPlan();

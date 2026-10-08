@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RoleThemes } from '@/constants/Colors';
@@ -10,6 +10,26 @@ import { AuditLogEntry } from '@/src/api/audit.api';
 const theme = RoleThemes.SUPER_ADMIN;
 
 const STATUS_COLOR = (statusCode: number) => (statusCode >= 200 && statusCode < 300 ? '#16a34a' : statusCode >= 400 ? '#dc2626' : '#d97706');
+
+
+const Hoverable4DCard = ({ children, style, onPress }: any) => {
+  return (
+    <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
+      style,
+      hovered && {
+        borderColor: 'rgba(0,255,135,0.55)',
+        shadowColor: '#00ff87',
+        shadowOpacity: 0.3,
+        shadowRadius: 15,
+        elevation: 10,
+        transform: [{ scale: 1.02 }]
+      },
+      pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
+    ]}>
+      {children}
+    </Pressable>
+  );
+};
 
 export default function SuperAuditLogScreen() {
   const [actionFilter, setActionFilter] = useState('');
@@ -100,7 +120,7 @@ function LogRow({ entry, isExpanded, onToggle }: { entry: AuditLogEntry; isExpan
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: '#020d06' },
   hero: { paddingTop: 20, paddingBottom: 18, paddingHorizontal: SPACING.xxl },
   heroTitle: { color: '#fff', fontSize: 20, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
   heroSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 12, fontFamily: FONT.medium, marginTop: 2 },
@@ -128,18 +148,18 @@ const styles = StyleSheet.create({
     marginTop: 4,
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#ffffff',
+    borderColor: 'rgba(0,255,135,0.3)',
+    backgroundColor: 'rgba(0,255,135,0.03)',
   },
   showMoreBtnText: { fontSize: 12.5, fontFamily: FONT.bold, color: theme.primary },
   emptyText: { color: '#64748b', fontSize: 13, fontFamily: FONT.medium },
-  logCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.md, gap: 4 },
+  logCard: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.md, gap: 4 },
   methodBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.xs },
   methodBadgeText: { fontSize: 10.5, fontFamily: FONT.extraBold },
-  actionText: { flex: 1, fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
+  actionText: { flex: 1, fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' },
   statusText: { fontSize: 12, fontFamily: FONT.extraBold },
   metaText: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b' },
-  expandedBox: { marginTop: 6, backgroundColor: '#f8fafc', borderRadius: RADIUS.sm, padding: 8, gap: 4 },
-  expandedPath: { fontSize: 11, fontFamily: FONT.bold, color: '#334155' },
+  expandedBox: { marginTop: 6, backgroundColor: '#020d06', borderRadius: RADIUS.sm, padding: 8, gap: 4 },
+  expandedPath: { fontSize: 11, fontFamily: FONT.bold, color: '#e2e8f0' },
   expandedBody: { fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' },
 });

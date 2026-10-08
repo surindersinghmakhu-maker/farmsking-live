@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Modal, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Modal, Platform, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, View, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -251,6 +251,26 @@ function couponPlanAmount(pricing: FarmerPlanPricing[], plan: FarmerPlanType, da
   return amount > 0 ? amount : null;
 }
 
+
+const Hoverable4DCard = ({ children, style, onPress }: any) => {
+  return (
+    <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
+      style,
+      hovered && {
+        borderColor: 'rgba(0,255,135,0.55)',
+        shadowColor: '#00ff87',
+        shadowOpacity: 0.3,
+        shadowRadius: 15,
+        elevation: 10,
+        transform: [{ scale: 1.02 }]
+      },
+      pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
+    ]}>
+      {children}
+    </Pressable>
+  );
+};
+
 export default function WalletScreen() {
   const { user } = useAuth();
   const { role: currentRole } = useRole();
@@ -458,7 +478,7 @@ export default function WalletScreen() {
                     size={14}
                     color={copiedLink ? '#15803d' : '#0f172a'}
                   />
-                  <Text style={[styles.claimBannerBtnSecondaryText, copiedLink ? { color: '#15803d' } : { color: '#0f172a' }]}>
+                  <Text style={[styles.claimBannerBtnSecondaryText, copiedLink ? { color: '#15803d' } : { color: '#ffffff' }]}>
                     {copiedLink ? 'Copied!' : 'Copy Link'}
                   </Text>
                 </TouchableOpacity>
@@ -794,8 +814,8 @@ function TablePaginationControls({
                 border: '1px solid #cbd5e1',
                 fontSize: '12px',
                 fontFamily: 'sans-serif',
-                backgroundColor: '#ffffff',
-                color: '#0f172a',
+                backgroundColor: 'rgba(0,255,135,0.03)',
+                color: '#ffffff',
                 fontWeight: '600',
                 cursor: 'pointer',
                 outline: 'none',
@@ -1213,7 +1233,7 @@ function WalletHistoryTable({
                 return (
                   <React.Fragment key={item.id}>
                     <TouchableOpacity
-                      style={[styles.historyTableRow, !isLast && styles.tableRowBorder, isExpanded && { backgroundColor: '#f8fafc' }]}
+                      style={[styles.historyTableRow, !isLast && styles.tableRowBorder, isExpanded && { backgroundColor: '#020d06' }]}
                       activeOpacity={0.7}
                       onPress={() => setExpandedId(isExpanded ? null : item.id)}
                     >
@@ -1645,7 +1665,7 @@ function MyUnifiedPlanCouponsSection({ theme }: { theme: RoleTheme }) {
                 </Text>
               </View>
 
-              <View style={[styles.statusBadge, c.isUsed ? { backgroundColor: '#f1f5f9' } : { backgroundColor: '#dcfce7' }]}>
+              <View style={[styles.statusBadge, c.isUsed ? { backgroundColor: '#051b11' } : { backgroundColor: '#dcfce7' }]}>
                 <Text style={[styles.statusBadgeText, c.isUsed ? { color: '#64748b' } : { color: '#16a34a' }]}>
                   {c.isUsed ? 'Used' : 'Unused'}
                 </Text>
@@ -1814,18 +1834,18 @@ function GenerateCouponModal({ visible, onClose }: { visible: boolean; onClose: 
                 ))}
               </View>
 
-              <View style={{ backgroundColor: '#f8fafc', padding: 10, borderRadius: RADIUS.md, marginTop: 4, borderWidth: 1, borderColor: '#e2e8f0' }}>
+              <View style={{ backgroundColor: '#020d06', padding: 10, borderRadius: RADIUS.md, marginTop: 4, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                   <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>MRP Base Price:</Text>
-                  <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0f172a' }}>₹{basePrice.toLocaleString('en-IN')}</Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>₹{basePrice.toLocaleString('en-IN')}</Text>
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                   <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#16a34a' }}>Your Commission Cut:</Text>
                   <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#16a34a' }}>-₹{commission.toLocaleString('en-IN')}</Text>
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#e2e8f0', paddingTop: 4, marginTop: 2 }}>
-                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' }}>Net Cost per Coupon:</Text>
-                  <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#0f172a' }}>₹{netPricePerCoupon.toLocaleString('en-IN')}</Text>
+                  <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>Net Cost per Coupon:</Text>
+                  <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#ffffff' }}>₹{netPricePerCoupon.toLocaleString('en-IN')}</Text>
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 }}>
                   <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: staticTheme.primary }}>Total Wallet Debit ({quantity}x):</Text>
@@ -2000,7 +2020,7 @@ function BasicPlanCouponMarketSection({ theme, balance }: { theme: RoleTheme; ba
                 <Text style={styles.txDate}>Paid ₹{c.purchasePrice} · Hand this code out to a farmer</Text>
               </View>
               <CopyButton value={c.code} color={theme.primary} />
-              <View style={[styles.statusBadge, c.isUsed ? { backgroundColor: '#f1f5f9' } : { backgroundColor: '#dcfce7' }]}>
+              <View style={[styles.statusBadge, c.isUsed ? { backgroundColor: '#051b11' } : { backgroundColor: '#dcfce7' }]}>
                 <Text style={[styles.statusBadgeText, c.isUsed ? { color: '#64748b' } : { color: '#16a34a' }]}>
                   {c.isUsed ? 'Used' : 'Unused'}
                 </Text>
@@ -2095,8 +2115,8 @@ function WithdrawModal({ visible, balance, onClose }: { visible: boolean; balanc
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: staticTheme.bg },
-  hero: { paddingTop: 10, paddingBottom: 8, paddingHorizontal: 16, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  heroTitle: { fontSize: 18, fontFamily: FONT.extraBold, color: '#0f172a' },
+  hero: { paddingTop: 10, paddingBottom: 8, paddingHorizontal: 16, backgroundColor: 'rgba(0,255,135,0.03)', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  heroTitle: { fontSize: 18, fontFamily: FONT.extraBold, color: '#ffffff' },
   kingIdBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6, flexWrap: 'wrap' },
   kingIdText: { fontSize: 11.5, fontFamily: FONT.bold, color: staticTheme.primary, letterSpacing: 0.3, flexShrink: 1 },
   body: { paddingHorizontal: 16, paddingVertical: 10, maxWidth: 1200, alignSelf: 'center', width: '100%' },
@@ -2104,44 +2124,44 @@ const styles = StyleSheet.create({
   balanceLabel: { color: 'rgba(255,255,255,0.75)', fontSize: 13, fontFamily: FONT.medium },
   balanceValue: { color: '#fff', fontSize: 32, fontFamily: FONT.extraBold, marginTop: 6, letterSpacing: -0.6, flexShrink: 1 },
   pendingNote: { color: 'rgba(255,255,255,0.85)', fontSize: 12, fontFamily: FONT.semiBold, marginTop: 8, flexShrink: 1 },
-  withdrawButton: { backgroundColor: '#ffffff', borderRadius: RADIUS.md, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center', marginTop: 16 },
+  withdrawButton: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.md, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center', marginTop: 16 },
   withdrawText: { color: staticTheme.primary, fontSize: 14, fontFamily: FONT.bold },
   sectionTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#64748b' },
-  txCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 14, width: '100%' },
+  txCard: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: 14, width: '100%' },
   applyCouponBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1.5, borderRadius: RADIUS.lg, paddingVertical: 12, marginTop: 12 },
   applyCouponBtnText: { fontSize: 13, fontFamily: FONT.bold },
   txRowWrap: { borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   txRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11, width: '100%' },
   txIconBg: { width: 34, height: 34, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   txInfo: { flex: 1, marginLeft: 10, flexShrink: 1 },
-  txLabel: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a', flexShrink: 1 },
+  txLabel: { fontSize: 13, fontFamily: FONT.bold, color: '#ffffff', flexShrink: 1 },
   txDate: { fontSize: 11, color: '#64748b', fontFamily: FONT.medium, marginTop: 2, flexShrink: 1 },
   txAmount: { fontSize: 13.5, fontFamily: FONT.extraBold, flexShrink: 0 },
-  txDetailBox: { backgroundColor: '#f8fafc', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', padding: 10, marginBottom: 10, gap: 6, width: '100%' },
+  txDetailBox: { backgroundColor: '#020d06', borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', padding: 10, marginBottom: 10, gap: 6, width: '100%' },
   txDetailRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, width: '100%' },
   txDetailLabel: { fontSize: 10.5, fontFamily: FONT.bold, color: '#94a3b8', flexShrink: 0 },
-  txDetailValue: { fontSize: 11.5, fontFamily: FONT.semiBold, color: '#0f172a', flex: 1, textAlign: 'right', flexWrap: 'wrap' },
+  txDetailValue: { fontSize: 11.5, fontFamily: FONT.semiBold, color: '#ffffff', flex: 1, textAlign: 'right', flexWrap: 'wrap' },
   emptyText: { fontSize: 12.5, fontFamily: FONT.medium, color: '#94a3b8', flexShrink: 1 },
-  couponCode: { fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a', letterSpacing: 0.4, flexShrink: 1 },
+  couponCode: { fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff', letterSpacing: 0.4, flexShrink: 1 },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill, flexShrink: 0 },
   statusBadgeText: { fontSize: 10, fontFamily: FONT.bold },
   viewUsageBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
   viewUsageBtnText: { fontSize: 12, fontFamily: FONT.bold, color: staticTheme.primary },
-  usageRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#f8fafc', borderRadius: RADIUS.sm, padding: 8, width: '100%' },
+  usageRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#020d06', borderRadius: RADIUS.sm, padding: 8, width: '100%' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'center', alignItems: 'center', padding: 16 },
-  modalCard: { width: '100%', maxWidth: 420, backgroundColor: '#ffffff', borderRadius: RADIUS.xl, padding: 16, gap: 8, ...premiumShadow('#000000', 'lg') },
+  modalCard: { width: '100%', maxWidth: 420, backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.xl, padding: 16, gap: 8, ...premiumShadow('#000000', 'lg') },
   modalHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  modalTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a', flexShrink: 1 },
+  modalTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#ffffff', flexShrink: 1 },
   label: { fontSize: 12, fontFamily: FONT.semiBold, color: '#64748b' },
-  input: { borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, fontFamily: FONT.medium, backgroundColor: '#f8fafc', color: '#0f172a' },
+  input: { borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, fontFamily: FONT.medium, backgroundColor: '#020d06', color: '#ffffff' },
   errorText: { color: '#dc2626', fontFamily: FONT.semiBold, fontSize: 12 },
   submitBtn: { backgroundColor: staticTheme.primary, borderRadius: RADIUS.md, paddingVertical: 13, alignItems: 'center', marginTop: 4 },
   submitBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 14 },
   successBox: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#f0fdf4', borderRadius: RADIUS.md, padding: 12, borderWidth: 1, borderColor: '#bbf7d0' },
   successText: { flex: 1, fontSize: 12.5, fontFamily: FONT.medium, color: '#15803d' },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  chip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: '#e2e8f0', backgroundColor: '#f8fafc' },
-  chipText: { fontSize: 12, fontFamily: FONT.semiBold, color: '#334155' },
+  chip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', backgroundColor: '#020d06' },
+  chipText: { fontSize: 12, fontFamily: FONT.semiBold, color: '#e2e8f0' },
   generateBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: staticTheme.primary, borderRadius: RADIUS.md, paddingVertical: 11, marginTop: 8 },
   generateBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 },
   costPreviewBox: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fffbeb', borderRadius: RADIUS.md, padding: 10, borderWidth: 1, borderColor: '#fde68a' },
@@ -2164,7 +2184,7 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderWidth: 1,
     borderColor: '#86efac',
     alignItems: 'center',
@@ -2235,7 +2255,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   claimBannerBtn: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: RADIUS.pill,
@@ -2245,7 +2265,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: RADIUS.md,
     paddingHorizontal: 10,
     paddingVertical: 8,
@@ -2265,63 +2285,63 @@ const styles = StyleSheet.create({
   referralCard: { borderRadius: RADIUS.xl, marginTop: 14, overflow: 'hidden' },
   referralGradient: { padding: 14, borderRadius: RADIUS.xl, borderWidth: 1.5, borderColor: '#bbf7d0', gap: 10 },
   refHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  refIconCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center' },
+  refIconCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,255,135,0.03)', alignItems: 'center', justifyContent: 'center' },
   refTitle: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#14532d' },
   refSub: { fontSize: 10.5, fontFamily: FONT.medium, color: '#166534', marginTop: 1 },
   rewardBadge: { backgroundColor: '#16a34a', paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.pill },
   rewardBadgeText: { fontSize: 10, fontFamily: FONT.extraBold, color: '#ffffff' },
-  refCodeBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ffffff', padding: 10, borderRadius: RADIUS.lg, borderWidth: 1, borderColor: '#86efac' },
+  refCodeBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(0,255,135,0.03)', padding: 10, borderRadius: RADIUS.lg, borderWidth: 1, borderColor: '#86efac' },
   refCodeLabel: { fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b', letterSpacing: 0.3 },
-  refCodeValue: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a', letterSpacing: 1, marginTop: 2 },
+  refCodeValue: { fontSize: 16, fontFamily: FONT.extraBold, color: '#ffffff', letterSpacing: 1, marginTop: 2 },
   refBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#16a34a', paddingHorizontal: 12, paddingVertical: 8, borderRadius: RADIUS.md },
   refBtnSuccess: { backgroundColor: '#dcfce7', borderWidth: 1, borderColor: '#86efac' },
   refBtnText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' },
-  refLinkBox: { backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', gap: 2 },
+  refLinkBox: { backgroundColor: 'rgba(0,255,135,0.03)', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', gap: 2 },
   refLinkLabel: { fontSize: 9, fontFamily: FONT.bold, color: '#94a3b8', letterSpacing: 0.3 },
-  refLinkText: { fontSize: 11, fontFamily: FONT.semiBold, color: '#0f172a' },
+  refLinkText: { fontSize: 11, fontFamily: FONT.semiBold, color: '#ffffff' },
   refActionsCol: { flexDirection: 'column', gap: 6, marginTop: 4 },
   refWaBtnStacked: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#25D366', paddingVertical: 10, borderRadius: RADIUS.md },
   refWaBtnTextStacked: { fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' },
-  refCopyLinkBtnStacked: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#f8fafc', paddingVertical: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#cbd5e1' },
-  refCopyLinkBtnTextStacked: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
+  refCopyLinkBtnStacked: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#020d06', paddingVertical: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#cbd5e1' },
+  refCopyLinkBtnTextStacked: { fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' },
   refCouponBtnStacked: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#fffbeb', paddingVertical: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#fde68a' },
   refCouponBtnTextStacked: { fontSize: 13.5, fontFamily: FONT.bold, color: '#b45309' },
   refActionsRow: { flexDirection: 'row', gap: 8, marginTop: 2 },
-  refShareLinkBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#ffffff', borderWidth: 1.5, borderColor: '#cbd5e1', paddingVertical: 10, borderRadius: RADIUS.md },
-  refShareLinkBtnText: { fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' },
+  refShareLinkBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: 'rgba(0,255,135,0.03)', borderWidth: 1.5, borderColor: '#cbd5e1', paddingVertical: 10, borderRadius: RADIUS.md },
+  refShareLinkBtnText: { fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' },
   refWaBtn: { flex: 1.2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#25d366', paddingVertical: 10, borderRadius: RADIUS.md },
   refWaBtnText: { fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' },
-  refSummaryCard: { flexDirection: 'row', backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 14, alignItems: 'center', justifyContent: 'space-around', borderWidth: 1, borderColor: '#e2e8f0', marginTop: 4 },
+  refSummaryCard: { flexDirection: 'row', backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: 14, alignItems: 'center', justifyContent: 'space-around', borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', marginTop: 4 },
   refSummaryCol: { flex: 1, alignItems: 'center' },
   refSummaryLabel: { fontSize: 10.5, fontFamily: FONT.bold, color: '#64748b' },
-  refSummaryVal: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a', marginTop: 2 },
+  refSummaryVal: { fontSize: 16, fontFamily: FONT.extraBold, color: '#ffffff', marginTop: 2 },
   refSummaryDivider: { width: 1, height: 24, backgroundColor: '#cbd5e1' },
   mySponsorCard: { backgroundColor: '#f0f9ff', borderRadius: RADIUS.lg, padding: 12, borderWidth: 1, borderColor: '#bae6fd', marginTop: 10 },
   mySponsorHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
   mySponsorTitle: { fontSize: 12.5, fontFamily: FONT.bold, color: '#0369a1', flex: 1 },
   mySponsorBody: { marginTop: 2 },
-  mySponsorName: { fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' },
+  mySponsorName: { fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff' },
   mySponsorSub: { fontSize: 11, fontFamily: FONT.medium, color: '#475569', marginTop: 1 },
-  mySponsorBonusText: { fontSize: 11, fontFamily: FONT.medium, color: '#334155' },
-  tableHeaderRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 12, backgroundColor: '#f8fafc', borderBottomWidth: 1.5, borderBottomColor: '#e2e8f0' },
+  mySponsorBonusText: { fontSize: 11, fontFamily: FONT.medium, color: '#e2e8f0' },
+  tableHeaderRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 12, backgroundColor: '#020d06', borderBottomWidth: 1.5, borderBottomColor: '#e2e8f0' },
   tableHeadCell: { fontSize: 10.5, fontFamily: FONT.bold, color: '#475569', textTransform: 'uppercase' },
   tableRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 12 },
   tableRowBorder: { borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  tableNameText: { fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' },
+  tableNameText: { fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' },
   tableSubText: { fontSize: 10, fontFamily: FONT.medium, color: '#64748b' },
   tableCodeText: { fontSize: 9.5, fontFamily: FONT.bold, color: staticTheme.primary },
   tableDateText: { fontSize: 10.5, fontFamily: FONT.medium, color: '#475569' },
   tableAmountText: { fontSize: 12, fontFamily: FONT.extraBold },
   tableControlRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 20, marginBottom: 8, flexWrap: 'wrap', gap: 8 },
   filterChipGroup: { flexDirection: 'row', gap: 6 },
-  filterChip: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff' },
+  filterChip: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', backgroundColor: 'rgba(0,255,135,0.03)' },
   filterChipText: { fontSize: 11, fontFamily: FONT.bold, color: '#64748b' },
-  historyTableHeader: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 12, backgroundColor: '#f8fafc', borderBottomWidth: 1.5, borderBottomColor: '#e2e8f0' },
+  historyTableHeader: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 12, backgroundColor: '#020d06', borderBottomWidth: 1.5, borderBottomColor: '#e2e8f0' },
   historyHeadCell: { fontSize: 10.5, fontFamily: FONT.bold, color: '#475569', textTransform: 'uppercase' },
   historyTableRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 12 },
   historyCellText: { fontSize: 11, fontFamily: FONT.medium, color: '#475569' },
-  historyDetailBox: { backgroundColor: '#f1f5f9', padding: 10, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: '#e2e8f0', gap: 4 },
-  historyDetailReason: { fontSize: 12, fontFamily: FONT.semiBold, color: '#0f172a', marginBottom: 6 },
+  historyDetailBox: { backgroundColor: '#051b11', padding: 10, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: '#e2e8f0', gap: 4 },
+  historyDetailReason: { fontSize: 12, fontFamily: FONT.semiBold, color: '#ffffff', marginBottom: 6 },
   historyDetailSub: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 },
   benefitsContainer: {
     flexDirection: 'row',
@@ -2520,7 +2540,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.pill,
   },
   royalWithdrawBtnText: {
-    color: '#0f172a',
+    color: '#ffffff',
     fontSize: 13,
     fontFamily: FONT.extraBold,
   },
@@ -2530,7 +2550,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 5,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderRadius: RADIUS.pill,
@@ -2540,7 +2560,7 @@ const styles = StyleSheet.create({
   claimBannerBtnSecondaryText: {
     fontSize: 11,
     fontFamily: FONT.bold,
-    color: '#0f172a',
+    color: '#ffffff',
   },
   claimBannerBtnJpg: {
     flex: 1,
@@ -2593,7 +2613,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#020d06',
     borderTopWidth: 1,
     borderTopColor: '#e2e8f0',
     flexWrap: 'wrap',
@@ -2624,7 +2644,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 6,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderWidth: 1,
     borderColor: '#cbd5e1',
   },
@@ -2651,19 +2671,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderWidth: 1,
     borderColor: '#cbd5e1',
     gap: 2,
   },
   pageNavBtnDisabled: {
-    backgroundColor: '#f1f5f9',
-    borderColor: '#e2e8f0',
+    backgroundColor: '#051b11',
+    borderColor: 'rgba(0,255,135,0.3)',
   },
   pageNavBtnText: {
     fontSize: 12,
     fontFamily: FONT.bold,
-    color: '#0f172a',
+    color: '#ffffff',
   },
   pageNavBtnTextDisabled: {
     color: '#cbd5e1',
@@ -2674,7 +2694,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 6,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderWidth: 1,
     borderColor: '#cbd5e1',
   },
@@ -2685,7 +2705,7 @@ const styles = StyleSheet.create({
   pageNumberText: {
     fontSize: 12,
     fontFamily: FONT.bold,
-    color: '#334155',
+    color: '#e2e8f0',
   },
   pageNumberTextActive: {
     color: '#ffffff',
@@ -2706,12 +2726,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
   },
   collapseBadge: {
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#051b11',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0,255,135,0.3)',
   },
   collapseBadgeText: {
     fontSize: 10.5,
@@ -2722,7 +2742,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: RADIUS.pill,
@@ -2732,7 +2752,7 @@ const styles = StyleSheet.create({
   collapseTogglePillText: {
     fontSize: 11.5,
     fontFamily: FONT.bold,
-    color: '#0f172a',
+    color: '#ffffff',
   },
   adminTabModeRow: {
     flexDirection: 'row',
@@ -2752,7 +2772,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.pill,
   },
   adminTabModeBtnActive: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
   },
   adminTabModeText: {
     fontSize: 12.5,

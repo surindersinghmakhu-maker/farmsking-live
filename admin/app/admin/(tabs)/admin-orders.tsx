@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { RoleThemes } from '@/constants/Colors';
@@ -19,7 +19,7 @@ const STATUS_META: Record<OrderStatus, { label: string; bg: string; color: strin
   PACKING: { label: 'Packing', bg: '#e0e7ff', color: '#4338ca' },
   PACKED: { label: 'Packed', bg: '#dbeafe', color: '#1d4ed8' },
   DISPATCHED: { label: 'Dispatched', bg: '#dbeafe', color: '#1d4ed8' },
-  DELIVERED: { label: 'Delivered', bg: '#f1f5f9', color: '#334155' },
+  DELIVERED: { label: 'Delivered', bg: '#f1f5f9', color: '#e2e8f0' },
   CANCELLED: { label: 'Cancelled', bg: '#fee2e2', color: '#dc2626' },
 };
 
@@ -45,6 +45,26 @@ const FILTERS: { value: OrderStatus | 'ALL'; label: string }[] = [
   { value: 'DELIVERED', label: 'Delivered' },
   { value: 'CANCELLED', label: 'Cancelled' },
 ];
+
+
+const Hoverable4DCard = ({ children, style, onPress }: any) => {
+  return (
+    <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
+      style,
+      hovered && {
+        borderColor: 'rgba(0,255,135,0.55)',
+        shadowColor: '#00ff87',
+        shadowOpacity: 0.3,
+        shadowRadius: 15,
+        elevation: 10,
+        transform: [{ scale: 1.02 }]
+      },
+      pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
+    ]}>
+      {children}
+    </Pressable>
+  );
+};
 
 export default function AdminOrdersScreen() {
   const [filter, setFilter] = useState<OrderStatus | 'ALL'>('ALL');
@@ -236,24 +256,24 @@ function OrderRow({ order, isExpanded, onToggle }: { order: CustomerOrder; isExp
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.bg },
-  hero: { paddingTop: 20, paddingBottom: 16, paddingHorizontal: SPACING.xxl, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  heroTitle: { fontSize: 19, fontFamily: FONT.extraBold, color: '#0f172a' },
+  hero: { paddingTop: 20, paddingBottom: 16, paddingHorizontal: SPACING.xxl, backgroundColor: 'rgba(0,255,135,0.03)', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  heroTitle: { fontSize: 19, fontFamily: FONT.extraBold, color: '#ffffff' },
   heroSubtitle: { fontSize: 12.5, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
   filterRow: { marginTop: 12, flexGrow: 0 },
-  filterChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: '#e2e8f0', backgroundColor: '#ffffff' },
-  filterChipText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#334155' },
+  filterChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', backgroundColor: 'rgba(0,255,135,0.03)' },
+  filterChipText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#e2e8f0' },
   list: { padding: SPACING.xxl, gap: 10 },
   emptyCenter: { alignItems: 'center', justifyContent: 'center', padding: 50, gap: 8 },
   emptyText: { fontSize: 13, fontFamily: FONT.medium, color: '#94a3b8' },
-  card: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.lg, gap: 10 },
+  card: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.lg, gap: 10 },
   cardTopRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   iconBg: { width: 40, height: 40, borderRadius: 14, backgroundColor: theme.primaryLight, alignItems: 'center', justifyContent: 'center' },
   info: { flex: 1 },
-  orderId: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
+  orderId: { fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' },
   orderName: { fontSize: 12, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
   orderSummary: { fontSize: 10.5, color: '#94a3b8', fontFamily: FONT.medium, marginTop: 2 },
   right: { alignItems: 'flex-end', gap: 6 },
-  amount: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#0f172a' },
+  amount: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#ffffff' },
   badge: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: RADIUS.pill },
   badgeText: { fontSize: 10.5, fontFamily: FONT.bold },
   paymentRow: {
@@ -268,17 +288,17 @@ const styles = StyleSheet.create({
   paymentRowLeft: { flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1 },
   paymentModeText: { fontSize: 11.5, fontFamily: FONT.semiBold, color: '#64748b' },
   detailBlock: { gap: 8 },
-  itemsBox: { backgroundColor: '#f8fafc', borderRadius: RADIUS.md, padding: 10, gap: 4 },
+  itemsBox: { backgroundColor: '#020d06', borderRadius: RADIUS.md, padding: 10, gap: 4 },
   itemRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  itemName: { flex: 1, fontSize: 12, fontFamily: FONT.medium, color: '#334155' },
+  itemName: { flex: 1, fontSize: 12, fontFamily: FONT.medium, color: '#e2e8f0' },
   itemQty: { color: '#94a3b8', fontFamily: FONT.medium },
-  itemAmount: { fontSize: 12, fontFamily: FONT.semiBold, color: '#0f172a' },
-  totalLabel: { fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' },
-  totalAmount: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#0f172a' },
-  paymentBox: { backgroundColor: '#f8fafc', borderRadius: RADIUS.md, padding: 10, gap: 6 },
+  itemAmount: { fontSize: 12, fontFamily: FONT.semiBold, color: '#ffffff' },
+  totalLabel: { fontSize: 12.5, fontFamily: FONT.bold, color: '#ffffff' },
+  totalAmount: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#ffffff' },
+  paymentBox: { backgroundColor: '#020d06', borderRadius: RADIUS.md, padding: 10, gap: 6 },
   paymentBoxTitle: { fontSize: 10.5, fontFamily: FONT.bold, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 2 },
   metaLabel: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
-  metaValue: { fontSize: 12, fontFamily: FONT.semiBold, color: '#0f172a', flexShrink: 1, textAlign: 'right' },
+  metaValue: { fontSize: 12, fontFamily: FONT.semiBold, color: '#ffffff', flexShrink: 1, textAlign: 'right' },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   metaText: { flex: 1, fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
   actionRow: { flexDirection: 'row', gap: 8 },

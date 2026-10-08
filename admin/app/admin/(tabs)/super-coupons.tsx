@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ActivityIndicator, Alert, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -292,6 +292,26 @@ const MAIN_SUB_TABS: {
     softBg: '#d1fae5',
   },
 ];
+
+
+const Hoverable4DCard = ({ children, style, onPress }: any) => {
+  return (
+    <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
+      style,
+      hovered && {
+        borderColor: 'rgba(0,255,135,0.55)',
+        shadowColor: '#00ff87',
+        shadowOpacity: 0.3,
+        shadowRadius: 15,
+        elevation: 10,
+        transform: [{ scale: 1.02 }]
+      },
+      pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
+    ]}>
+      {children}
+    </Pressable>
+  );
+};
 
 export default function SuperCouponsScreen({ initialTab }: { initialTab?: CouponsTab | null } = {}) {
   const { data: coupons, isLoading } = useAllCoupons();
@@ -1078,7 +1098,7 @@ function EditPlanMultiDurationPricingModal({
                 borderColor: theme.primary,
                 borderStyle: 'dashed',
                 borderRadius: RADIUS.md,
-                backgroundColor: '#f8fafc',
+                backgroundColor: '#020d06',
                 marginTop: 4,
               }}
               onPress={handleAddRate}
@@ -1799,7 +1819,7 @@ function GenerateCouponSection() {
               key={cat.key}
               style={[
                 styles.categoryCard,
-                isActive && { borderColor: theme.primary, borderWidth: 1.5, backgroundColor: '#f8fafc' },
+                isActive && { borderColor: theme.primary, borderWidth: 1.5, backgroundColor: '#020d06' },
                 premiumShadow('#0f172a', 'sm'),
               ]}
               activeOpacity={0.88}
@@ -2253,7 +2273,7 @@ function FarmerPlanCouponBrowseSection({
                             {c.generationCostAmount ? ` · ₹${c.generationCostAmount} debited` : ''}
                           </Text>
                         </View>
-                        <View style={[styles.statusBadge, c.isUsed ? { backgroundColor: '#f1f5f9' } : { backgroundColor: '#dcfce7' }]}>
+                        <View style={[styles.statusBadge, c.isUsed ? { backgroundColor: '#051b11' } : { backgroundColor: '#dcfce7' }]}>
                           <Text style={[styles.statusBadgeText, c.isUsed ? { color: '#64748b' } : { color: '#16a34a' }]}>
                             {c.isUsed ? 'Used' : 'Unused'}
                           </Text>
@@ -2484,7 +2504,7 @@ function FarmerBasicPremiumCouponSection({ initialCategory }: { initialCategory?
               <TouchableOpacity onPress={() => setShareCoupon({ code: c.code, plan: c.plan, daysGranted: c.daysGranted })} style={{ padding: 4 }}>
                 <Ionicons name="share-social-outline" size={16} color={theme.primary} />
               </TouchableOpacity>
-              <View style={[styles.statusBadge, c.isUsed ? { backgroundColor: '#f1f5f9' } : { backgroundColor: '#dcfce7' }]}>
+              <View style={[styles.statusBadge, c.isUsed ? { backgroundColor: '#051b11' } : { backgroundColor: '#dcfce7' }]}>
                 <Text style={[styles.statusBadgeText, c.isUsed ? { color: '#64748b' } : { color: '#16a34a' }]}>
                   {c.isUsed ? 'Used' : 'Unused'}
                 </Text>
@@ -2979,7 +2999,7 @@ function ToggleType({ value, onChange }: { value: DiscountValueType; onChange: (
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: '#020d06' },
   hero: { paddingTop: 20, paddingBottom: 16, paddingHorizontal: SPACING.xxl },
   heroTitle: { color: '#fff', fontSize: 20, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
   heroSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 12, fontFamily: FONT.medium, marginTop: 2 },
@@ -3022,26 +3042,26 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.pill,
     backgroundColor: 'rgba(255,255,255,0.14)',
   },
-  tabChipActive: { backgroundColor: '#ffffff' },
+  tabChipActive: { backgroundColor: 'rgba(0,255,135,0.03)' },
   tabChipText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' },
   tabChipTextActive: { color: theme.primary },
   list: { padding: SPACING.lg, gap: 12, paddingBottom: SPACING.xxl },
-  categoryCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.md, borderWidth: 1, borderColor: '#f1f5f9' },
+  categoryCard: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.2)' },
   categoryCardExpanded: { borderColor: theme.primaryLight },
   categoryHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   categoryIconBg: { width: 30, height: 30, borderRadius: 15, backgroundColor: theme.primaryLight, alignItems: 'center', justifyContent: 'center' },
   categoryChevronBg: { width: 24, height: 24, borderRadius: 12, backgroundColor: theme.primaryLight, alignItems: 'center', justifyContent: 'center' },
-  categoryTitle: { fontSize: 14.5, fontFamily: FONT.extraBold, color: '#0f172a' },
+  categoryTitle: { fontSize: 14.5, fontFamily: FONT.extraBold, color: '#ffffff' },
   createBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: theme.primary, paddingVertical: 12, borderRadius: RADIUS.md },
   createBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 13.5 },
   emptyCenter: { alignItems: 'center', justifyContent: 'center', padding: 50, gap: 6 },
   emptyText: { fontSize: 12.5, fontFamily: FONT.medium, color: '#94a3b8' },
-  sectionTitle: { fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' },
+  sectionTitle: { fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' },
   groupHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#020d06',
     borderWidth: 1,
     borderRadius: RADIUS.md,
     paddingHorizontal: 12,
@@ -3050,10 +3070,10 @@ const styles = StyleSheet.create({
   groupHeaderText: { fontSize: 12.5, fontFamily: FONT.extraBold },
   helperText: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', lineHeight: 15 },
   codeRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fbfcfd', borderRadius: RADIUS.md, padding: 11, borderWidth: 1, borderColor: '#eef1f5', gap: 6 },
-  couponCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.md, gap: 8 },
+  couponCard: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.md, gap: 8 },
   rateCard: { backgroundColor: '#fbfcfd', borderRadius: RADIUS.md, padding: SPACING.md, borderWidth: 1, borderColor: '#eef1f5', gap: 7 },
   rateCardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  rateCardTitle: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#0f172a' },
+  rateCardTitle: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#ffffff' },
   rateCardPrice: { fontSize: 13, fontFamily: FONT.extraBold, color: theme.primary },
   rateCardGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 2, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#eef1f5' },
   rateCardItem: { minWidth: '28%' },
@@ -3068,11 +3088,11 @@ const styles = StyleSheet.create({
     width: '48.5%',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: RADIUS.lg,
     padding: 10,
     borderWidth: 1.5,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0,255,135,0.3)',
     gap: 10,
   },
   winFolderTileActive: {
@@ -3082,7 +3102,7 @@ const styles = StyleSheet.create({
   winFolderTitle: {
     fontSize: 13,
     fontFamily: FONT.extraBold,
-    color: '#0f172a',
+    color: '#ffffff',
   },
   winFolderTitleActive: {
     color: '#0369a1',
@@ -3101,14 +3121,14 @@ const styles = StyleSheet.create({
   },
   iconTabCard: {
     width: '48.5%',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 20,
     paddingVertical: 18,
     paddingHorizontal: 8,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#f1f5f9',
+    borderColor: 'rgba(0,255,135,0.2)',
   },
   iconCircleBadge: {
     width: 48,
@@ -3121,7 +3141,7 @@ const styles = StyleSheet.create({
   iconTabTitle: {
     fontSize: 13,
     fontFamily: FONT.extraBold,
-    color: '#1e293b',
+    color: '#ffffff',
     textAlign: 'center',
   },
   iconTabSub: {
@@ -3135,7 +3155,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -3171,11 +3191,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: RADIUS.lg,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: 'rgba(0,255,135,0.2)',
     marginTop: 4,
   },
   selectPromptText: {
@@ -3184,40 +3204,40 @@ const styles = StyleSheet.create({
     color: '#64748b',
   },
   rateCardItemLabel: { fontSize: 9.5, fontFamily: FONT.bold, color: '#94a3b8', letterSpacing: 0.2, textTransform: 'uppercase' },
-  rateCardItemValue: { fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a', marginTop: 2 },
+  rateCardItemValue: { fontSize: 12.5, fontFamily: FONT.bold, color: '#ffffff', marginTop: 2 },
   couponHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  couponCode: { fontSize: 15, fontFamily: FONT.extraBold, color: '#0f172a', letterSpacing: 0.6 },
+  couponCode: { fontSize: 15, fontFamily: FONT.extraBold, color: '#ffffff', letterSpacing: 0.6 },
   couponPartner: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 },
   statusBadge: { paddingHorizontal: 9, paddingVertical: 3.5, borderRadius: RADIUS.pill },
   statusBadgeText: { fontSize: 10, fontFamily: FONT.extraBold, letterSpacing: 0.2 },
   couponMetaRow: { flexDirection: 'row', gap: 16 },
-  couponMetaText: { fontSize: 11.5, fontFamily: FONT.medium, color: '#334155' },
+  couponMetaText: { fontSize: 11.5, fontFamily: FONT.medium, color: '#e2e8f0' },
   couponActionRow: { flexDirection: 'row', gap: 8, marginTop: 2 },
   viewUsageBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: theme.primaryLight, paddingVertical: 9, borderRadius: RADIUS.md },
   viewUsageBtnText: { fontSize: 12, fontFamily: FONT.bold, color: theme.primary },
   removeBtn: { width: 38, height: 38, borderRadius: RADIUS.md, backgroundColor: '#fee2e2', alignItems: 'center', justifyContent: 'center' },
   usagePanel: { borderTopWidth: 1, borderTopColor: '#f1f5f9', paddingTop: 8, gap: 8 },
-  usageRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#f8fafc', borderRadius: RADIUS.sm, padding: 8 },
-  usageCustomer: { fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' },
+  usageRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#020d06', borderRadius: RADIUS.sm, padding: 8 },
+  usageCustomer: { fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' },
   usageDate: { fontSize: 10, fontFamily: FONT.medium, color: '#94a3b8' },
-  usageAmount: { fontSize: 11.5, fontFamily: FONT.semiBold, color: '#334155' },
+  usageAmount: { fontSize: 11.5, fontFamily: FONT.semiBold, color: '#e2e8f0' },
   usageCommission: { fontSize: 11.5, fontFamily: FONT.bold, color: '#16a34a' },
   usagePending: { fontSize: 11.5, fontFamily: FONT.bold, color: '#d97706' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'center', alignItems: 'center', padding: SPACING.lg },
-  modalCard: { width: '100%', maxWidth: 460, maxHeight: '88%', backgroundColor: '#ffffff', borderRadius: RADIUS.xl, padding: SPACING.lg, ...premiumShadow('#000000', 'lg') },
+  modalCard: { width: '100%', maxWidth: 460, maxHeight: '88%', backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.xl, padding: SPACING.lg, ...premiumShadow('#000000', 'lg') },
   modalHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  modalTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a' },
+  modalTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#ffffff' },
   label: { fontSize: 11.5, fontFamily: FONT.extraBold, color: '#475569', marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.2 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  dropdownPanel: { borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, backgroundColor: '#f8fafc', padding: 6 },
+  dropdownPanel: { borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', borderRadius: RADIUS.md, backgroundColor: '#020d06', padding: 6 },
   dropdownRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 6 },
-  dropdownRowText: { fontSize: 13, fontFamily: FONT.medium, color: '#0f172a', flex: 1 },
-  partnerChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: '#e2e8f0', backgroundColor: '#f8fafc' },
-  partnerChipText: { fontSize: 12, fontFamily: FONT.semiBold, color: '#334155' },
-  input: { borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13.5, fontFamily: FONT.medium, backgroundColor: '#f8fafc', color: '#0f172a' },
-  toggleWrap: { flexDirection: 'row', borderRadius: RADIUS.md, overflow: 'hidden', borderWidth: 1.5, borderColor: '#e2e8f0' },
-  toggleOption: { width: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc' },
-  toggleOptionText: { fontSize: 14, fontFamily: FONT.bold, color: '#334155' },
+  dropdownRowText: { fontSize: 13, fontFamily: FONT.medium, color: '#ffffff', flex: 1 },
+  partnerChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', backgroundColor: '#020d06' },
+  partnerChipText: { fontSize: 12, fontFamily: FONT.semiBold, color: '#e2e8f0' },
+  input: { borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13.5, fontFamily: FONT.medium, backgroundColor: '#020d06', color: '#ffffff' },
+  toggleWrap: { flexDirection: 'row', borderRadius: RADIUS.md, overflow: 'hidden', borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)' },
+  toggleOption: { width: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: '#020d06' },
+  toggleOptionText: { fontSize: 14, fontFamily: FONT.bold, color: '#e2e8f0' },
   errorText: { color: '#dc2626', fontFamily: FONT.semiBold, fontSize: 12 },
   submitBtn: { backgroundColor: theme.primary, borderRadius: RADIUS.md, paddingVertical: 13, alignItems: 'center', marginTop: 4 },
   submitBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 14 },
@@ -3227,7 +3247,7 @@ const styles = StyleSheet.create({
   debitPreviewText: { flex: 1, fontSize: 11.5, fontFamily: FONT.medium, color: '#92400e' },
   finSummaryCard: { backgroundColor: '#f0fdf4', borderRadius: RADIUS.md, padding: 12, borderWidth: 1, borderColor: '#bbf7d0', marginBottom: 8 },
   finSummaryTitle: { fontSize: 13, fontFamily: FONT.extraBold, color: '#166534' },
-  finSummaryItem: { minWidth: '45%', flex: 1, backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#dcfce7' },
+  finSummaryItem: { minWidth: '45%', flex: 1, backgroundColor: 'rgba(0,255,135,0.03)', padding: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#dcfce7' },
   mainFolderGrid: {
     flexDirection: 'row',
     gap: 8,
@@ -3235,12 +3255,12 @@ const styles = StyleSheet.create({
   },
   mainFolderCard: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: RADIUS.xl,
     paddingVertical: 12,
     paddingHorizontal: 6,
     borderWidth: 1.5,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0,255,135,0.3)',
     alignItems: 'center',
     gap: 3,
     position: 'relative',
@@ -3275,7 +3295,7 @@ const styles = StyleSheet.create({
   mainFolderTitle: {
     fontSize: 12,
     fontFamily: FONT.extraBold,
-    color: '#0f172a',
+    color: '#ffffff',
     textAlign: 'center',
   },
   mainFolderSub: {
@@ -3292,7 +3312,7 @@ const styles = StyleSheet.create({
   finSummaryValue: {
     fontSize: 13,
     fontFamily: FONT.extraBold,
-    color: '#0f172a',
+    color: '#ffffff',
     marginTop: 2,
   },
   resetFilterBtn: {
@@ -3314,17 +3334,17 @@ const styles = StyleSheet.create({
   searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#020d06',
     borderRadius: RADIUS.md,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0,255,135,0.3)',
     paddingVertical: Platform.OS === 'ios' ? 8 : 4,
   },
   searchInput: {
     flex: 1,
     fontSize: 13,
     fontFamily: FONT.medium,
-    color: '#0f172a',
+    color: '#ffffff',
     paddingHorizontal: 8,
   },
   dropdownGrid: {
@@ -3337,7 +3357,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#020d06',
     borderWidth: 1,
     borderColor: '#cbd5e1',
     borderRadius: RADIUS.md,
@@ -3357,7 +3377,7 @@ const styles = StyleSheet.create({
   dropdownPillValue: {
     fontSize: 12,
     fontFamily: FONT.bold,
-    color: '#0f172a',
+    color: '#ffffff',
     marginTop: 2,
   },
   kpiCard: {
@@ -3379,12 +3399,12 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   savedEntryCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: RADIUS.lg,
     padding: 14,
     gap: 8,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0,255,135,0.3)',
   },
   entryCategoryIconBg: {
     width: 30,
@@ -3397,7 +3417,7 @@ const styles = StyleSheet.create({
   entryCategoryTitle: {
     fontSize: 13.5,
     fontFamily: FONT.extraBold,
-    color: '#0f172a',
+    color: '#ffffff',
   },
   entryDateText: {
     fontSize: 11,
@@ -3411,7 +3431,7 @@ const styles = StyleSheet.create({
   },
   entryDivider: {
     height: 1,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#051b11',
     marginVertical: 2,
   },
   entryFarmerName: {
@@ -3438,17 +3458,17 @@ const styles = StyleSheet.create({
     color: '#0369a1',
   },
   entrySubDetailsBox: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#020d06',
     borderRadius: RADIUS.md,
     padding: 8,
     gap: 4,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: 'rgba(0,255,135,0.2)',
   },
   entrySubDetailText: {
     fontSize: 11.5,
     fontFamily: FONT.regular,
-    color: '#334155',
+    color: '#e2e8f0',
   },
   entryFooterRow: {
     flexDirection: 'row',
@@ -3764,7 +3784,7 @@ function SavedEntriesSection() {
         </View>
 
         {/* 5 Filter Dropdowns Grid */}
-        <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#334155', marginTop: 4 }}>
+        <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#e2e8f0', marginTop: 4 }}>
           ⚙️ Filter Dropdowns:
         </Text>
 
@@ -4054,7 +4074,7 @@ function AdminUserGuidesSection() {
   return (
     <View style={{ gap: 10, paddingVertical: 4 }}>
       {/* Multi-Language Selector Bar */}
-      <View style={{ backgroundColor: '#f8fafc', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0' }}>
+      <View style={{ backgroundColor: '#020d06', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}>
         <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569', marginBottom: 6 }}>
           🌐 Choose Guide Language for PDF Generation:
         </Text>
@@ -4082,7 +4102,7 @@ function AdminUserGuidesSection() {
       {docsList.map((doc: any) => (
         <View key={doc.key} style={[styles.couponCard, premiumShadow('#0f172a', 'sm'), { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12 }]}>
           <View style={{ flex: 1, paddingRight: 8 }}>
-            <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: '#0f172a' }}>{doc.title}</Text>
+            <Text style={{ fontSize: 13.5, fontFamily: FONT.extraBold, color: '#ffffff' }}>{doc.title}</Text>
             <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 }}>{doc.description}</Text>
             <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: theme.primary, marginTop: 4 }}>📄 {doc.fileName.replace('.md', `_${selectedLang.toUpperCase()}.pdf`)}</Text>
           </View>
@@ -4109,7 +4129,7 @@ function AdminUserGuidesSection() {
               </TouchableOpacity>
             </View>
             <ScrollView style={{ flex: 1 }}>
-              <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#334155', lineHeight: 18 }}>{selectedDoc?.content}</Text>
+              <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#e2e8f0', lineHeight: 18 }}>{selectedDoc?.content}</Text>
             </ScrollView>
           </View>
         </View>

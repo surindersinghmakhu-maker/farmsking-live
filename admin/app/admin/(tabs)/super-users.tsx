@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Alert, Image, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -71,9 +72,16 @@ function filterToBackendRole(filter: UserFilter): Role {
 
 export default function SuperUsersScreen() {
   const { user } = useAuth();
+  const { filter: initialFilter, group: initialGroup } = useLocalSearchParams<{ filter?: UserFilter, group?: UserGroup }>();
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
-  const [group, setGroup] = useState<UserGroup>('CLIENTS');
-  const [filter, setFilter] = useState<UserFilter>('FARMER');
+  const [group, setGroup] = useState<UserGroup>(initialGroup || 'CLIENTS');
+  const [filter, setFilter] = useState<UserFilter>(initialFilter || 'FARMER');
+
+  useEffect(() => {
+    if (initialGroup) setGroup(initialGroup);
+    if (initialFilter) setFilter(initialFilter);
+  }, [initialGroup, initialFilter]);
+
   const [search, setSearch] = useState('');
   const [isAddAdvisorOpen, setIsAddAdvisorOpen] = useState(false);
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
@@ -161,6 +169,9 @@ export default function SuperUsersScreen() {
     filter === 'FARM_ADVISOR' ? true : filter === 'GARDEN_ADVISOR' ? u.advisorType === 'GARDEN' : true,
   );
 
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
+
   useEffect(() => {
     setPage(1);
   }, [filter, search]);
@@ -168,66 +179,91 @@ export default function SuperUsersScreen() {
   const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
   const visibleItems = items.slice((page - 1) * pageSize, page * pageSize);
 
+  const currentFilterLabel = Object.values(FILTERS_BY_GROUP).flat().find(f => f.value === filter)?.label || 'Users';
+
   return (
-    <View style={styles.container}>
-      <LinearGradient colors={theme.gradient} style={styles.hero}>
-        <Text style={styles.heroTitle}>User Management</Text>
-        <Text style={styles.heroSubtitle}>Every role on the platform, in one place</Text>
+    <View style={[styles.container, { backgroundColor: '#f8fafc' }]}>
+      <View style={styles.premiumHero}>
+        <View style={styles.premiumHeroContent}>
+          <View style={styles.heroHeaderRow}>
+            <View>
+              <Text style={styles.premiumHeroTitle}>{isDesktop ? `${currentFilterLabel} Management` : 'Role Distribution'}</Text>
+              <Text style={styles.premiumHeroSubtitle}>{isDesktop ? `Managing ${currentFilterLabel.toLowerCase()} in FarmsKing` : '& User Management Ecosystem'}</Text>
+            </View>
+            <View style={styles.heroStatsPill}>
+              <Ionicons name="analytics" size={14} color="#10b981" />
+              <Text style={styles.heroStatsText}>Total Users: {allUsersList.length}</Text>
+            </View>
+          </View>
 
-        <View style={styles.searchWrap}>
-          <Ionicons name="search" size={16} color="rgba(255,255,255,0.8)" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search by name or mobile..."
-            placeholderTextColor="rgba(255,255,255,0.6)"
-            value={search}
-            onChangeText={setSearch}
-          />
+          <View style={styles.searchWrapPremium}>
+            <Ionicons name="search" size={18} color="#10b981" style={{ marginRight: 8 }} />
+            <TextInput
+              style={styles.searchInputPremium}
+              placeholder={`Search ${isDesktop ? currentFilterLabel.toLowerCase() : 'by name, mobile, or ID'}...`}
+              placeholderTextColor="rgba(148, 163, 184, 0.7)"
+              value={search}
+              onChangeText={setSearch}
+            />
+          </View>
+
+          {!isDesktop && (
+            <>
+              <View style={styles.groupRowPremium}>
+                {GROUPS.map((g) => {
+                  const groupCount = getGroupCount(g.value);
+                  const isActive = group === g.value;
+                  return (
+                    <TouchableOpacity
+                      key={g.value}
+                      style={[styles.groupChipPremium, isActive && styles.groupChipPremiumActive]}
+                      activeOpacity={0.8}
+                      onPress={() => selectGroup(g.value)}
+                    >
+                      {isActive && (
+                        <LinearGradient
+                          colors={['rgba(16,185,129,0.1)', 'transparent']}
+                          style={StyleSheet.absoluteFill}
+                          borderRadius={12}
+                        />
+                      )}
+                      <Ionicons name={g.icon} size={16} color={isActive ? '#10b981' : '#64748b'} />
+                      <Text style={[styles.groupChipTextPremium, isActive && { color: '#10b981' }]}>
+                        {g.label} ({groupCount})
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12, paddingBottom: 5 }} contentContainerStyle={{ gap: 10 }}>
+                {FILTERS_BY_GROUP[group].map((f) => {
+                  const subCount = getSubCategoryCount(f.value);
+                  const isActive = filter === f.value;
+                  return (
+                    <TouchableOpacity
+                      key={f.value}
+                      style={[styles.filterChipPremium, isActive && styles.filterChipPremiumActive]}
+                      activeOpacity={0.8}
+                      onPress={() => {
+                        tap();
+                        setFilter(f.value);
+                      }}
+                    >
+                      <Ionicons name={f.icon} size={14} color={isActive ? '#10b981' : '#94a3b8'} />
+                      <Text style={[styles.filterChipTextPremium, isActive && { color: '#10b981' }]}>
+                        {f.label} ({subCount})
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </>
+          )}
         </View>
+      </View>
 
-        <View style={styles.groupRow}>
-          {GROUPS.map((g) => {
-            const groupCount = getGroupCount(g.value);
-            return (
-              <TouchableOpacity
-                key={g.value}
-                style={[styles.groupChip, group === g.value && styles.groupChipActive]}
-                activeOpacity={0.8}
-                onPress={() => selectGroup(g.value)}
-              >
-                <Ionicons name={g.icon} size={14} color={group === g.value ? theme.primary : '#fff'} />
-                <Text style={[styles.groupChipText, group === g.value && { color: theme.primary }]}>
-                  {g.label} ({groupCount})
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 10 }} contentContainerStyle={{ gap: 8 }}>
-          {FILTERS_BY_GROUP[group].map((f) => {
-            const subCount = getSubCategoryCount(f.value);
-            return (
-              <TouchableOpacity
-                key={f.value}
-                style={[styles.filterChip, filter === f.value && styles.filterChipActive]}
-                activeOpacity={0.8}
-                onPress={() => {
-                  tap();
-                  setFilter(f.value);
-                }}
-              >
-                <Ionicons name={f.icon} size={13} color={filter === f.value ? theme.primary : '#fff'} />
-                <Text style={[styles.filterChipText, filter === f.value && { color: theme.primary }]}>
-                  {f.label} ({subCount})
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </LinearGradient>
-
-      <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.premiumList} showsVerticalScrollIndicator={false}>
         {(filter === 'FARM_ADVISOR' || filter === 'GARDEN_ADVISOR') && (
           <TouchableOpacity
             style={[styles.addAdvisorBtn, premiumShadow(theme.primary, 'sm')]}
@@ -1557,6 +1593,126 @@ function TrainerReportsModal({ visible, onClose }: { visible: boolean; onClose: 
 }
 
 const styles = StyleSheet.create({
+  premiumHero: {
+    paddingTop: Platform.OS === 'ios' ? 50 : 20,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    ...premiumShadow('#cbd5e1', 'sm'),
+  },
+  premiumHeroContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+  },
+  heroHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 20,
+  },
+  premiumHeroTitle: {
+    fontSize: 26,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+    letterSpacing: -0.5,
+  },
+  premiumHeroSubtitle: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#059669',
+    letterSpacing: 1,
+    marginTop: 2,
+    textTransform: 'uppercase',
+  },
+  heroStatsPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#ecfdf5',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+  },
+  heroStatsText: {
+    color: '#059669',
+    fontFamily: FONT.bold,
+    fontSize: 11,
+  },
+  searchWrapPremium: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 16,
+  },
+  searchInputPremium: {
+    flex: 1,
+    color: '#334155',
+    fontFamily: FONT.medium,
+    fontSize: 14,
+  },
+  groupRowPremium: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  groupChipPremium: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  groupChipPremiumActive: {
+    borderColor: '#10b981',
+    backgroundColor: '#f0fdf4',
+    ...premiumShadow('#10b981', 'sm'),
+  },
+  groupChipTextPremium: {
+    color: '#64748b',
+    fontFamily: FONT.bold,
+    fontSize: 12,
+  },
+  filterChipPremium: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  filterChipPremiumActive: {
+    backgroundColor: '#059669',
+    borderColor: '#047857',
+    ...premiumShadow('#059669', 'sm'),
+  },
+  filterChipTextPremium: {
+    color: '#64748b',
+    fontFamily: FONT.semiBold,
+    fontSize: 12,
+  },
+  premiumList: {
+    padding: 20,
+    paddingBottom: 100,
+    gap: 12,
+    backgroundColor: '#f8fafc',
+  },
   label: { fontSize: 11.5, fontFamily: FONT.bold, color: '#334155', marginTop: 4 },
   container: { flex: 1, backgroundColor: '#f8fafc' },
   hero: { paddingTop: 20, paddingBottom: 16, paddingHorizontal: SPACING.xxl },

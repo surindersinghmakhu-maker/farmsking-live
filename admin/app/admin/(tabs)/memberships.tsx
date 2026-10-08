@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import {
-  View,
+import { View,
   Text,
   StyleSheet,
   TouchableOpacity,
@@ -9,8 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
-  Modal,
-} from 'react-native';
+  Modal, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -32,6 +30,26 @@ const theme = RoleThemes.FARMER;
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+};
+
+
+const Hoverable4DCard = ({ children, style, onPress }: any) => {
+  return (
+    <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
+      style,
+      hovered && {
+        borderColor: 'rgba(0,255,135,0.55)',
+        shadowColor: '#00ff87',
+        shadowOpacity: 0.3,
+        shadowRadius: 15,
+        elevation: 10,
+        transform: [{ scale: 1.02 }]
+      },
+      pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
+    ]}>
+      {children}
+    </Pressable>
+  );
 };
 
 export default function MembershipsScreen() {
@@ -351,8 +369,8 @@ export default function MembershipsScreen() {
                     </View>
                   </View>
                   {user?.kingId ? (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, padding: 10, backgroundColor: '#ffffff', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#bae6fd' }}>
-                      <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' }}>King ID: {user.kingId}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, padding: 10, backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#bae6fd' }}>
+                      <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#ffffff' }}>King ID: {user.kingId}</Text>
                       <CopyButton value={user.kingId} />
                     </View>
                   ) : null}
@@ -549,7 +567,7 @@ export default function MembershipsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: '#020d06' },
   hero: { paddingTop: 40, paddingBottom: 16, paddingHorizontal: 16 },
   heroHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
   backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
@@ -561,55 +579,55 @@ const styles = StyleSheet.create({
   tabText: { fontSize: 12, fontFamily: FONT.bold, color: '#94a3b8' },
   tabTextActive: { color: '#ffffff' },
   scrollContent: { padding: 14, paddingBottom: 32 },
-  statusCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 14, borderWidth: 1, borderColor: '#e2e8f0' },
+  statusCard: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: 14, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' },
   statusBadgeIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#dcfce7', alignItems: 'center', justifyContent: 'center' },
   statusLabel: { fontSize: 10, fontFamily: FONT.bold, color: '#64748b', letterSpacing: 0.5 },
-  statusPlanName: { fontSize: 15, fontFamily: FONT.extraBold, color: '#0f172a' },
+  statusPlanName: { fontSize: 15, fontFamily: FONT.extraBold, color: '#ffffff' },
   activePill: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: RADIUS.pill, maxWidth: 95 },
   activePillText: { fontSize: 9, fontFamily: FONT.extraBold },
   statusMetricsRow: { flexDirection: 'row', alignItems: 'center', marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#f1f5f9' },
   metricItem: { flex: 1, alignItems: 'center' },
-  metricValue: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
+  metricValue: { fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' },
   metricLabel: { fontSize: 10, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 },
   metricDivider: { width: 1, height: 24, backgroundColor: '#e2e8f0' },
-  couponCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 14, borderWidth: 1, borderColor: '#e2e8f0' },
-  cardHeaderTitle: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
+  couponCard: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: 14, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' },
+  cardHeaderTitle: { fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' },
   cardHeaderSub: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
   couponInputRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  couponInput: { flex: 1, height: 42, backgroundColor: '#f1f5f9', borderRadius: RADIUS.md, paddingHorizontal: 12, fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
+  couponInput: { flex: 1, height: 42, backgroundColor: '#051b11', borderRadius: RADIUS.md, paddingHorizontal: 12, fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' },
   applyBtn: { backgroundColor: '#0f172a', paddingHorizontal: 16, height: 42, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center' },
   applyBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 },
   noticeText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#059669', marginTop: 8 },
   sectionHeaderTitle: { fontSize: 11.5, fontFamily: FONT.bold, color: '#64748b', letterSpacing: 0.5, marginTop: 6 },
-  planCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.xl, padding: 16, borderWidth: 1, borderColor: '#e2e8f0' },
+  planCard: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.xl, padding: 16, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' },
   vipTag: { position: 'absolute', top: -10, right: 16, backgroundColor: '#10b981', paddingHorizontal: 10, paddingVertical: 3, borderRadius: RADIUS.pill },
   vipTagText: { fontSize: 9.5, fontFamily: FONT.extraBold, color: '#ffffff', letterSpacing: 0.5 },
   planHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  planTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a' },
-  planPrice: { fontSize: 20, fontFamily: FONT.extraBold, color: '#0f172a', marginTop: 2 },
+  planTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#ffffff' },
+  planPrice: { fontSize: 20, fontFamily: FONT.extraBold, color: '#ffffff', marginTop: 2 },
   planPeriod: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
-  currentBadge: { backgroundColor: '#f1f5f9', paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.sm },
+  currentBadge: { backgroundColor: '#051b11', paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.sm },
   currentBadgeText: { fontSize: 11, fontFamily: FONT.bold, color: '#475569' },
   featureList: { gap: 6, marginBottom: 14 },
-  featureItem: { fontSize: 12.5, fontFamily: FONT.medium, color: '#334155' },
+  featureItem: { fontSize: 12.5, fontFamily: FONT.medium, color: '#e2e8f0' },
   upgradeBtn: { height: 44, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center' },
   upgradeBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 13.5 },
-  doctorCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 14, borderWidth: 1, borderColor: '#e2e8f0' },
+  doctorCard: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: 14, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' },
   doctorAvatarCircle: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#e0f2fe', alignItems: 'center', justifyContent: 'center' },
   doctorCardSub: { fontSize: 9.5, fontFamily: FONT.bold, color: '#0284c7', letterSpacing: 0.5 },
-  doctorCardName: { fontSize: 15, fontFamily: FONT.extraBold, color: '#0f172a' },
+  doctorCardName: { fontSize: 15, fontFamily: FONT.extraBold, color: '#ffffff' },
   doctorCardSpec: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b' },
   doctorActionsRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
   doctorActionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, borderRadius: RADIUS.md },
   doctorActionText: { fontSize: 12, fontFamily: FONT.bold },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.55)', justifyContent: 'center', alignItems: 'center', padding: 16 },
-  modalCard: { width: '100%', maxWidth: 440, backgroundColor: '#ffffff', borderRadius: RADIUS.xl, padding: 16, maxHeight: '80%' },
+  modalCard: { width: '100%', maxWidth: 440, backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.xl, padding: 16, maxHeight: '80%' },
   modalHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  modalTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a' },
+  modalTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#ffffff' },
   emptyText: { textAlign: 'center', color: '#94a3b8', fontSize: 12.5, fontFamily: FONT.medium, marginVertical: 20 },
   advisorItemRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   doctorAvatarCircleSmall: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#e0f2fe', alignItems: 'center', justifyContent: 'center' },
-  advisorName: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
+  advisorName: { fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' },
   advisorSub: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b' },
   chooseBtn: { backgroundColor: '#0284c7', paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.md },
   chooseBtnText: { color: '#ffffff', fontSize: 11.5, fontFamily: FONT.bold },

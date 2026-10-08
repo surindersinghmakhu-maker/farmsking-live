@@ -1,0 +1,31 @@
+graph TD
+    A[FarmsKing Master Database] --> B(Admin App Users)
+    A --> C(Frontend App Users)
+    
+    B --> B1[Super Admin]
+    B --> B2[Admin]
+    B --> B3[Operator]
+    B --> B4[Technical Trainer]
+    B --> B5[Market Manager]
+
+    C --> C1[Customer - All users can shop]
+    C --> C2[Seller - Add Products]
+    C --> C3[Farmer - Hero User]
+    C --> C4[Crop Doctor - Advises Farmer]
+    C --> C5[Gardener - Home Gardens]
+    C --> C6[Garden Advisor - Advises Gardener]
+
+    C4 -.->|Guides Only| C3
+    C6 -.->|Guides Only| C5
+
+    B1 -.-> W[(Global Wallet System)]
+    B2 -.-> W
+    B3 -.-> W
+    B4 -.-> W
+    B5 -.-> W
+    C1 -.-> W
+    C2 -.-> W
+    C3 -.-> W
+    C4 -.-> W
+    C5 -.-> W
+    C6 -.-> W

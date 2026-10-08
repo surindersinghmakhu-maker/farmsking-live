@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Platform } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Platform, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -24,6 +24,26 @@ const STAGES: { value: Stage; label: string; icon: string; color: string }[] = [
   { value: 'HARVESTING', label: '🌾 Harvesting', icon: 'basket', color: '#16a34a' },
   { value: 'COMPLETED', label: '✅ Completed', icon: 'checkmark-circle', color: '#475569' },
 ];
+
+
+const Hoverable4DCard = ({ children, style, onPress }: any) => {
+  return (
+    <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
+      style,
+      hovered && {
+        borderColor: 'rgba(0,255,135,0.55)',
+        shadowColor: '#00ff87',
+        shadowOpacity: 0.3,
+        shadowRadius: 15,
+        elevation: 10,
+        transform: [{ scale: 1.02 }]
+      },
+      pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
+    ]}>
+      {children}
+    </Pressable>
+  );
+};
 
 export default function SuperCropEditScreen() {
   const { colors } = useExecutiveTheme();
@@ -391,7 +411,7 @@ export default function SuperCropEditScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: '#020d06' },
   hero: { paddingTop: 20, paddingBottom: 18, paddingHorizontal: SPACING.lg },
   heroTitle: { color: '#fff', fontSize: 19, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
   heroSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 11.5, fontFamily: FONT.medium, marginTop: 2 },
@@ -411,14 +431,14 @@ const styles = StyleSheet.create({
   emptyText: { color: '#64748b', fontSize: 13, fontFamily: FONT.medium },
   errorText: { color: '#dc2626', fontSize: 12.5, fontFamily: FONT.bold, marginVertical: 4 },
   successText: { color: '#16a34a', fontSize: 12.5, fontFamily: FONT.bold, marginVertical: 4 },
-  readOnlyHeaderCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 12, borderWidth: 1.5, borderColor: '#ddd6fe' },
+  readOnlyHeaderCard: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: 12, borderWidth: 1.5, borderColor: '#ddd6fe' },
   cropIdBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f3e8ff', borderWidth: 1, borderColor: '#c084fc', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill },
   cropIdBadgeText: { fontSize: 13, fontFamily: FONT.extraBold, color: '#7c3aed' },
-  readOnlyTag: { backgroundColor: '#f1f5f9', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.sm },
+  readOnlyTag: { backgroundColor: '#051b11', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.sm },
   readOnlyTagText: { fontSize: 10.5, fontFamily: FONT.bold, color: '#64748b' },
-  contextLine: { fontSize: 12, fontFamily: FONT.medium, color: '#334155' },
-  formCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.md, gap: 8 },
-  formSectionHeader: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#0f172a', marginBottom: 4 },
+  contextLine: { fontSize: 12, fontFamily: FONT.medium, color: '#e2e8f0' },
+  formCard: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.md, gap: 8 },
+  formSectionHeader: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#ffffff', marginBottom: 4 },
   label: { fontSize: 11.5, fontFamily: FONT.bold, color: '#475569', marginTop: 4 },
   input: {
     borderWidth: 1,
@@ -428,8 +448,8 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     fontSize: 13,
     fontFamily: FONT.medium,
-    color: '#0f172a',
-    backgroundColor: '#f8fafc',
+    color: '#ffffff',
+    backgroundColor: '#020d06',
   },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: {
@@ -441,9 +461,9 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.sm,
     borderWidth: 1,
     borderColor: '#cbd5e1',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#020d06',
   },
-  chipText: { fontSize: 11.5, fontFamily: FONT.medium, color: '#334155' },
+  chipText: { fontSize: 11.5, fontFamily: FONT.medium, color: '#e2e8f0' },
   saveBtn: {
     marginTop: 14,
     borderRadius: RADIUS.md,

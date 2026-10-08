@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -20,7 +20,7 @@ const STATUS_META: Record<OrderStatus, { label: string; bg: string; color: strin
   PACKING: { label: 'Packing', bg: '#e0e7ff', color: '#4338ca' },
   PACKED: { label: 'Packed', bg: '#dbeafe', color: '#1d4ed8' },
   DISPATCHED: { label: 'Dispatched', bg: '#dbeafe', color: '#1d4ed8' },
-  DELIVERED: { label: 'Delivered', bg: '#f1f5f9', color: '#334155' },
+  DELIVERED: { label: 'Delivered', bg: '#f1f5f9', color: '#e2e8f0' },
   CANCELLED: { label: 'Cancelled', bg: '#fee2e2', color: '#dc2626' },
 };
 
@@ -36,6 +36,26 @@ const FILTERS: { value: OrderStatus | 'ALL'; label: string }[] = [
 ];
 
 /** Super Admin's dedicated Sale/Order oversight surface — same underlying orders data Admin/Operator already see. */
+
+const Hoverable4DCard = ({ children, style, onPress }: any) => {
+  return (
+    <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
+      style,
+      hovered && {
+        borderColor: 'rgba(0,255,135,0.55)',
+        shadowColor: '#00ff87',
+        shadowOpacity: 0.3,
+        shadowRadius: 15,
+        elevation: 10,
+        transform: [{ scale: 1.02 }]
+      },
+      pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
+    ]}>
+      {children}
+    </Pressable>
+  );
+};
+
 export default function SuperOrdersScreen() {
   const [filter, setFilter] = useState<OrderStatus | 'ALL'>('ALL');
   const { data: orders, isLoading } = useAllOrders(filter === 'ALL' ? undefined : filter);
@@ -130,24 +150,24 @@ function OrderRow({ order }: { order: CustomerOrder }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: '#020d06' },
   hero: { paddingTop: 20, paddingBottom: 18, paddingHorizontal: SPACING.xxl },
   heroTitle: { color: '#fff', fontSize: 20, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
   heroSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 12, fontFamily: FONT.medium, marginTop: 2 },
   filterRow: { marginTop: 12, flexGrow: 0 },
-  filterChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: '#e2e8f0', backgroundColor: '#ffffff' },
-  filterChipText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#334155' },
+  filterChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', backgroundColor: 'rgba(0,255,135,0.03)' },
+  filterChipText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#e2e8f0' },
   list: { padding: SPACING.xxl, gap: 10 },
   emptyCenter: { alignItems: 'center', justifyContent: 'center', padding: 50, gap: 8 },
   emptyText: { fontSize: 13, fontFamily: FONT.medium, color: '#94a3b8' },
-  card: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.lg, gap: 10 },
+  card: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.lg, gap: 10 },
   cardTopRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   iconBg: { width: 40, height: 40, borderRadius: 14, backgroundColor: theme.primaryLight, alignItems: 'center', justifyContent: 'center' },
   info: { flex: 1 },
-  orderId: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
+  orderId: { fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' },
   orderName: { fontSize: 12, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
   right: { alignItems: 'flex-end', gap: 6 },
-  amount: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#0f172a' },
+  amount: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#ffffff' },
   badge: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: RADIUS.pill },
   badgeText: { fontSize: 10.5, fontFamily: FONT.bold },
   actionRow: { flexDirection: 'row', gap: 8 },

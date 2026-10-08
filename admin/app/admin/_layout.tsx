@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import { useAuth } from '@/src/store/auth-context';
 
-const ADMIN_ROLES = ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'MANAGER', 'SUPERVISOR'];
+const ADMIN_ROLES = ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'TECHNICAL_TRAINER', 'MARKET_MANAGER'];
 
 export default function AdminLayout() {
   const { user, isLoading } = useAuth();

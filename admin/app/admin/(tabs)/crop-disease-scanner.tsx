@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import {
-  View,
+import { View,
   Text,
   StyleSheet,
   TouchableOpacity,
@@ -9,8 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   SafeAreaView,
-  Linking,
-} from 'react-native';
+  Linking, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -216,6 +214,26 @@ const DISEASE_KNOWLEDGE_BASE: Record<string, AiDiseaseDiagnostic> = {
     recommendedProductName: 'Blitox Copper Oxychloride 50% WP (500g)',
     recommendedPrice: 320,
   },
+};
+
+
+const Hoverable4DCard = ({ children, style, onPress }: any) => {
+  return (
+    <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
+      style,
+      hovered && {
+        borderColor: 'rgba(0,255,135,0.55)',
+        shadowColor: '#00ff87',
+        shadowOpacity: 0.3,
+        shadowRadius: 15,
+        elevation: 10,
+        transform: [{ scale: 1.02 }]
+      },
+      pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
+    ]}>
+      {children}
+    </Pressable>
+  );
 };
 
 export default function CropDiseaseScannerScreen() {
@@ -511,7 +529,7 @@ export default function CropDiseaseScannerScreen() {
                 <Text style={styles.prescTitle}>💊 Recommended Chemical First-Aid Spray</Text>
               </View>
               <Text style={styles.prescText}>{scanResult.firstAidSpray}</Text>
-              <View style={{ backgroundColor: '#ffffff', padding: 8, borderRadius: 8, marginTop: 6, borderWidth: 1, borderColor: '#bbf7d0' }}>
+              <View style={{ backgroundColor: 'rgba(0,255,135,0.03)', padding: 8, borderRadius: 8, marginTop: 6, borderWidth: 1, borderColor: '#bbf7d0' }}>
                 <Text style={{ fontSize: 11, fontWeight: '700', color: '#14532d' }}>⚙️ Exact Dosage & Spraying Method:</Text>
                 <Text style={{ fontSize: 11, color: '#166534', marginTop: 2 }}>{scanResult.dosageInstructions}</Text>
               </View>
@@ -561,7 +579,7 @@ export default function CropDiseaseScannerScreen() {
 
         {/* 🤖 FarmsKing Agri AI Doctor Chatbot (Strictly Agriculture Guardrail) */}
         <View style={{ marginTop: 10 }}>
-          <Text style={{ fontSize: 15, fontWeight: '800', color: '#0f172a', marginBottom: 4 }}>
+          <Text style={{ fontSize: 15, fontWeight: '800', color: '#ffffff', marginBottom: 4 }}>
             💬 Ask FarmsKing Kheti Mitra AI Doctor
           </Text>
           <Text style={{ fontSize: 11.5, color: '#64748b', marginBottom: 6 }}>
@@ -577,7 +595,7 @@ export default function CropDiseaseScannerScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#020d06',
   },
   header: {
     flexDirection: 'row',
@@ -585,7 +603,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
   },
@@ -595,7 +613,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#ffffff',
   },
   scrollContent: {
     padding: 14,
@@ -632,7 +650,7 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
   uploadBox: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 14,
     borderWidth: 2,
     borderColor: '#bbf7d0',
@@ -680,7 +698,7 @@ const styles = StyleSheet.create({
   placeholderTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#ffffff',
     marginBottom: 2,
   },
   placeholderSub: {
@@ -728,23 +746,23 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
   },
   sampleBarBox: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0,255,135,0.3)',
     gap: 6,
   },
   sampleTitle: {
     fontSize: 11.5,
     fontWeight: '800',
-    color: '#334155',
+    color: '#e2e8f0',
   },
   sampleChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#020d06',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -754,10 +772,10 @@ const styles = StyleSheet.create({
   sampleChipText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#0f172a',
+    color: '#ffffff',
   },
   loadingCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 14,
     padding: 20,
     alignItems: 'center',
@@ -767,7 +785,7 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#ffffff',
     marginTop: 10,
     textAlign: 'center',
   },
@@ -794,7 +812,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   resultCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 14,
     padding: 16,
     borderWidth: 1.5,
@@ -821,7 +839,7 @@ const styles = StyleSheet.create({
   diseaseName: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#ffffff',
     marginTop: 2,
   },
   punjabiDiseaseName: {
@@ -860,7 +878,7 @@ const styles = StyleSheet.create({
   severityLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#334155',
+    color: '#e2e8f0',
   },
   severityBadge: {
     paddingHorizontal: 8,
@@ -892,7 +910,7 @@ const styles = StyleSheet.create({
   prescText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#1e293b',
+    color: '#ffffff',
     lineHeight: 17,
   },
   precautionsBox: {
@@ -901,7 +919,7 @@ const styles = StyleSheet.create({
   precTitle: {
     fontSize: 12.5,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#ffffff',
   },
   precautionItem: {
     flexDirection: 'row',
@@ -910,7 +928,7 @@ const styles = StyleSheet.create({
   },
   precautionText: {
     fontSize: 11.5,
-    color: '#334155',
+    color: '#e2e8f0',
     flex: 1,
   },
   buyBtn: {

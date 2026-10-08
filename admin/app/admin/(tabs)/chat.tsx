@@ -1,4 +1,4 @@
-import { ActivityIndicator, View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, View, Text, StyleSheet, ScrollView, TouchableOpacity, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -18,6 +18,26 @@ function timeAgo(iso: string): string {
   if (hours < 24) return `${hours}h`;
   return `${Math.floor(hours / 24)}d`;
 }
+
+
+const Hoverable4DCard = ({ children, style, onPress }: any) => {
+  return (
+    <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
+      style,
+      hovered && {
+        borderColor: 'rgba(0,255,135,0.55)',
+        shadowColor: '#00ff87',
+        shadowOpacity: 0.3,
+        shadowRadius: 15,
+        elevation: 10,
+        transform: [{ scale: 1.02 }]
+      },
+      pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
+    ]}>
+      {children}
+    </Pressable>
+  );
+};
 
 export default function ChatScreen() {
   const router = useRouter();
@@ -89,7 +109,7 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#ffffff' },
+  container: { flex: 1, backgroundColor: 'rgba(0,255,135,0.03)' },
   hero: { paddingTop: 20, paddingBottom: 16, paddingHorizontal: SPACING.xxl },
   heroTitle: { fontSize: 19, fontFamily: FONT.extraBold, color: '#ffffff' },
   heroSubtitle: { fontSize: 12, fontFamily: FONT.medium, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
@@ -100,10 +120,10 @@ const styles = StyleSheet.create({
   presenceDot: { position: 'absolute', bottom: -1, right: -1, width: 12, height: 12, borderRadius: 6, borderWidth: 2, borderColor: '#ffffff' },
   rowUnread: { backgroundColor: '#f0fdf4' },
   info: { flex: 1 },
-  name: { fontSize: 14.5, fontFamily: FONT.bold, color: '#0f172a' },
+  name: { fontSize: 14.5, fontFamily: FONT.bold, color: '#ffffff' },
   subMeta: { fontSize: 10.5, fontFamily: FONT.medium, color: '#94a3b8' },
   message: { fontSize: 12.5, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
-  messageUnread: { color: '#0f172a', fontFamily: FONT.semiBold },
+  messageUnread: { color: '#ffffff', fontFamily: FONT.semiBold },
   right: { alignItems: 'flex-end', gap: 7, minWidth: 30 },
   time: { fontSize: 10.5, color: '#94a3b8', fontFamily: FONT.medium },
   unreadBadge: { minWidth: 19, height: 19, borderRadius: 9.5, backgroundColor: theme.primary, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 },

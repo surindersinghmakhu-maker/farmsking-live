@@ -68,11 +68,11 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
   const roleMeta = ROLE_DISPLAY[currentRole] || { label: currentRole, icon: '👤' };
 
   return (
-    <LinearGradient colors={colors.headerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.headerContainer}>
+    <View style={styles.headerContainer}>
       {/* Top Banner Row: Super Admin Logo + Action Icons */}
       <View style={styles.topRow}>
         <View style={styles.brandRow}>
-          <BrandLogo size={28} iconColor="#ffffff" />
+          <BrandLogo size={28} iconColor="#10b981" />
           <Text style={styles.brandNameText}>{settings?.appName || 'FarmsKing'}</Text>
         </View>
 
@@ -82,7 +82,7 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
             activeOpacity={0.75}
             onPress={() => router.push('/notifications' as never)}
           >
-            <Ionicons name="notifications-outline" size={19} color="#fff" />
+            <Ionicons name="notifications-outline" size={19} color="#475569" />
             {unreadCount > 0 ? (
               <View style={styles.notifDot}>
                 {unreadCount <= 9 ? <Text style={styles.notifDotText}>{unreadCount}</Text> : null}
@@ -156,19 +156,28 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
           ) : null}
         </View>
       </View>
-    </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   headerContainer: {
-    paddingTop: Platform.OS === 'web' ? 6 : 4,
+    paddingTop: Platform.OS === 'web' ? 12 : 8,
     paddingHorizontal: 16,
-    paddingBottom: 8,
+    paddingBottom: 12,
     borderBottomLeftRadius: RADIUS.lg,
     borderBottomRightRadius: RADIUS.lg,
-    overflow: 'hidden',
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    shadowColor: '#cbd5e1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 5,
+    overflow: 'visible',
     position: 'relative',
+    zIndex: 10,
   },
   topRow: {
     flexDirection: 'row',
@@ -185,7 +194,7 @@ const styles = StyleSheet.create({
   brandNameText: {
     fontSize: 16,
     fontFamily: FONT.extraBold,
-    color: '#ffffff',
+    color: '#0f172a',
     letterSpacing: -0.2,
   },
   actionsRight: {
@@ -197,9 +206,9 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: 'rgba(255,255,255,0.14)',
+    backgroundColor: '#f8fafc',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: '#e2e8f0',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -209,12 +218,12 @@ const styles = StyleSheet.create({
     height: 15,
     borderRadius: 8,
     paddingHorizontal: 2,
-    backgroundColor: '#fb7185',
+    backgroundColor: '#ef4444',
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.9)',
+    borderColor: '#ffffff',
     position: 'absolute',
-    top: 2,
-    right: 2,
+    top: -2,
+    right: -2,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -225,8 +234,8 @@ const styles = StyleSheet.create({
     lineHeight: 11,
   },
   userHeaderBlock: {
-    marginTop: 2,
-    marginBottom: 2,
+    marginTop: 8,
+    marginBottom: 4,
   },
   mainUserRow: {
     flexDirection: 'row',
@@ -239,39 +248,39 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   greetingText: {
-    color: 'rgba(255,255,255,0.8)',
+    color: '#64748b',
     fontSize: 11,
     fontFamily: FONT.medium,
   },
   nameText: {
-    color: '#ffffff',
-    fontSize: 16,
+    color: '#0f172a',
+    fontSize: 18,
     fontFamily: FONT.extraBold,
     letterSpacing: -0.3,
-    lineHeight: 21,
-    marginVertical: 0.5,
+    lineHeight: 22,
+    marginVertical: 2,
   },
   roleTagPill: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    backgroundColor: '#ecfdf5',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.35)',
+    borderColor: '#a7f3d0',
     borderRadius: RADIUS.pill,
     paddingHorizontal: 8,
     paddingVertical: 2,
     marginVertical: 2,
   },
   roleTagText: {
-    color: '#ffffff',
+    color: '#059669',
     fontSize: 10.5,
     fontFamily: FONT.extraBold,
     letterSpacing: 0.2,
   },
   subtitleText: {
-    color: 'rgba(255,255,255,0.95)',
-    fontSize: 11,
+    color: '#475569',
+    fontSize: 11.5,
     fontFamily: FONT.bold,
-    marginTop: 1,
+    marginTop: 2,
   },
   avatarContainer: {
     position: 'relative',

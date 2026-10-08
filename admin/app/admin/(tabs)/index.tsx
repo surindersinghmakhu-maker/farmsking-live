@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
+import { View, Pressable, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
 import { Redirect } from 'expo-router';
 import { RoleThemes } from '@/constants/Colors';
 import { useRole } from '@/src/store/role-context';
@@ -20,6 +20,26 @@ import { AdminChatModal } from '@/src/components/AdminChatModal';
 import { WelcomeBonusModal } from '@/src/components/WelcomeBonusModal';
 
 import { useExecutiveTheme } from '@/src/store/theme-context';
+
+
+const Hoverable4DCard = ({ children, style, onPress }: any) => {
+  return (
+    <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
+      style,
+      hovered && {
+        borderColor: 'rgba(0,255,135,0.55)',
+        shadowColor: '#00ff87',
+        shadowOpacity: 0.3,
+        shadowRadius: 15,
+        elevation: 10,
+        transform: [{ scale: 1.02 }]
+      },
+      pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
+    ]}>
+      {children}
+    </Pressable>
+  );
+};
 
 export default function HomeScreen() {
   const { role: currentRole } = useRole();

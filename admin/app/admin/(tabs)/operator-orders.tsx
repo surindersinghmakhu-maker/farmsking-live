@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as Sharing from 'expo-sharing';
@@ -29,8 +29,28 @@ const STATUS_META: Record<OrderStatus, { label: string; bg: string; color: strin
   PACKING: { label: 'Packing', bg: '#e0e7ff', color: '#4338ca' },
   PACKED: { label: 'Ready to Dispatch', bg: '#dbeafe', color: '#1d4ed8' },
   DISPATCHED: { label: 'Dispatched', bg: '#dbeafe', color: '#1d4ed8' },
-  DELIVERED: { label: 'Delivered', bg: '#f1f5f9', color: '#334155' },
+  DELIVERED: { label: 'Delivered', bg: '#f1f5f9', color: '#e2e8f0' },
   CANCELLED: { label: 'Cancelled', bg: '#fee2e2', color: '#dc2626' },
+};
+
+
+const Hoverable4DCard = ({ children, style, onPress }: any) => {
+  return (
+    <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
+      style,
+      hovered && {
+        borderColor: 'rgba(0,255,135,0.55)',
+        shadowColor: '#00ff87',
+        shadowOpacity: 0.3,
+        shadowRadius: 15,
+        elevation: 10,
+        transform: [{ scale: 1.02 }]
+      },
+      pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
+    ]}>
+      {children}
+    </Pressable>
+  );
 };
 
 export default function OperatorOrdersScreen() {
@@ -377,17 +397,17 @@ function PrintModal({ target, onClose }: { target: { order: CustomerOrder; mode:
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.bg },
-  hero: { paddingTop: 20, paddingBottom: 16, paddingHorizontal: SPACING.xxl, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  heroTitle: { fontSize: 19, fontFamily: FONT.extraBold, color: '#0f172a' },
+  hero: { paddingTop: 20, paddingBottom: 16, paddingHorizontal: SPACING.xxl, backgroundColor: 'rgba(0,255,135,0.03)', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  heroTitle: { fontSize: 19, fontFamily: FONT.extraBold, color: '#ffffff' },
   heroSubtitle: { fontSize: 12.5, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
   list: { padding: SPACING.xxl, gap: 12 },
   emptyCenter: { alignItems: 'center', justifyContent: 'center', padding: 50, gap: 8 },
   emptyText: { fontSize: 13, fontFamily: FONT.medium, color: '#94a3b8' },
-  card: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.lg, gap: 10 },
+  card: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.lg, gap: 10 },
   cardTopRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   iconBg: { width: 40, height: 40, borderRadius: 14, backgroundColor: theme.primaryLight, alignItems: 'center', justifyContent: 'center' },
   info: { flex: 1 },
-  orderId: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
+  orderId: { fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' },
   orderName: { fontSize: 12, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
   orderItems: { fontSize: 11, color: '#94a3b8', fontFamily: FONT.medium, marginTop: 2 },
   badge: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: RADIUS.pill },
@@ -400,25 +420,25 @@ const styles = StyleSheet.create({
   cancelLink: { alignItems: 'center', paddingVertical: 4 },
   cancelLinkText: { color: '#dc2626', fontSize: 12, fontFamily: FONT.bold },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'center', alignItems: 'center', padding: SPACING.lg },
-  modalCard: { width: '100%', maxWidth: 420, maxHeight: '88%', backgroundColor: '#ffffff', borderRadius: RADIUS.xl, padding: SPACING.lg, gap: 8, ...premiumShadow('#000000', 'lg') },
+  modalCard: { width: '100%', maxWidth: 420, maxHeight: '88%', backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.xl, padding: SPACING.lg, gap: 8, ...premiumShadow('#000000', 'lg') },
   modalHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  modalTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a' },
-  label: { fontSize: 11.5, fontFamily: FONT.bold, color: '#334155', marginTop: 4 },
-  input: { borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13.5, fontFamily: FONT.medium, backgroundColor: '#f8fafc', color: '#0f172a' },
+  modalTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#ffffff' },
+  label: { fontSize: 11.5, fontFamily: FONT.bold, color: '#e2e8f0', marginTop: 4 },
+  input: { borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13.5, fontFamily: FONT.medium, backgroundColor: '#020d06', color: '#ffffff' },
   errorText: { color: '#dc2626', fontFamily: FONT.semiBold, fontSize: 12 },
   submitBtn: { flexDirection: 'row', backgroundColor: theme.primary, borderRadius: RADIUS.md, paddingVertical: 13, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
   submitBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 14 },
-  printSheet: { maxHeight: 380, borderWidth: 1, borderColor: '#e2e8f0', borderRadius: RADIUS.md, padding: SPACING.md, backgroundColor: '#fafafa' },
+  printSheet: { maxHeight: 380, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', borderRadius: RADIUS.md, padding: SPACING.md, backgroundColor: '#fafafa' },
   printBrand: { fontSize: 15, fontFamily: FONT.extraBold, color: theme.primary },
-  printOrderNum: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a', marginTop: 4 },
+  printOrderNum: { fontSize: 13, fontFamily: FONT.bold, color: '#ffffff', marginTop: 4 },
   printDate: { fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 1 },
   printDivider: { height: 1, backgroundColor: '#e2e8f0', marginVertical: 10 },
   printSectionLabel: { fontSize: 10.5, fontFamily: FONT.bold, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 3 },
-  printCustomerName: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
+  printCustomerName: { fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' },
   printCustomerMeta: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
   printItemRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
-  printItemName: { fontSize: 12, fontFamily: FONT.medium, color: '#0f172a', flex: 1 },
-  printItemAmount: { fontSize: 12, fontFamily: FONT.bold, color: '#0f172a' },
-  printTotalLabel: { fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' },
+  printItemName: { fontSize: 12, fontFamily: FONT.medium, color: '#ffffff', flex: 1 },
+  printItemAmount: { fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' },
+  printTotalLabel: { fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff' },
   printTotalValue: { fontSize: 13, fontFamily: FONT.extraBold, color: theme.primary },
 });

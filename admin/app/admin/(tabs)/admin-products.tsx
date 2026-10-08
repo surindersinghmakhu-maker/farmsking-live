@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import {
-  View,
+import { View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
   TextInput,
   Platform,
-  ActivityIndicator,
-} from 'react-native';
+  ActivityIndicator, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { RoleThemes } from '@/constants/Colors';
@@ -20,6 +18,26 @@ const theme = RoleThemes.ADMIN;
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+};
+
+
+const Hoverable4DCard = ({ children, style, onPress }: any) => {
+  return (
+    <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
+      style,
+      hovered && {
+        borderColor: 'rgba(0,255,135,0.55)',
+        shadowColor: '#00ff87',
+        shadowOpacity: 0.3,
+        shadowRadius: 15,
+        elevation: 10,
+        transform: [{ scale: 1.02 }]
+      },
+      pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
+    ]}>
+      {children}
+    </Pressable>
+  );
 };
 
 export default function AdminProductsScreen() {
@@ -269,12 +287,12 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 14,
     paddingHorizontal: SPACING.lg,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9',
   },
   heroTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  heroTitle: { fontSize: 17, fontFamily: FONT.extraBold, color: '#0f172a' },
+  heroTitle: { fontSize: 17, fontFamily: FONT.extraBold, color: '#ffffff' },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -290,7 +308,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: RADIUS.lg,
     padding: SPACING.lg,
     gap: 12,
@@ -304,7 +322,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   info: { flex: 1 },
-  name: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
+  name: { fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' },
   price: { fontSize: 12, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
   badge: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: RADIUS.pill },
   badgeText: { fontSize: 10.5, fontFamily: FONT.bold },
@@ -323,22 +341,22 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '100%',
     maxWidth: 440,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: RADIUS.xl,
     padding: SPACING.xl,
   },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
-  modalTitle: { fontSize: 15, fontFamily: FONT.bold, color: '#0f172a' },
-  inputLabel: { fontSize: 12, fontFamily: FONT.bold, color: '#334155', marginTop: 10, marginBottom: 4 },
+  modalTitle: { fontSize: 15, fontFamily: FONT.bold, color: '#ffffff' },
+  inputLabel: { fontSize: 12, fontFamily: FONT.bold, color: '#e2e8f0', marginTop: 10, marginBottom: 4 },
   modalInput: {
     borderWidth: 1.5,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0,255,135,0.3)',
     borderRadius: RADIUS.md,
     paddingHorizontal: 10,
     paddingVertical: 8,
     fontSize: 13.5,
-    color: '#0f172a',
-    backgroundColor: '#f8fafc',
+    color: '#ffffff',
+    backgroundColor: '#020d06',
   },
   noticeText: { fontSize: 12, fontFamily: FONT.bold, color: '#16a34a', marginTop: 10 },
   modalSubmitBtn: { marginTop: 16, borderRadius: RADIUS.md, paddingVertical: 12, alignItems: 'center' },

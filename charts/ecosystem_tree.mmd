@@ -1,0 +1,39 @@
+graph TD
+    U_Cust(Customer)
+    U_Farm(Farmer / VIP Farmer)
+    U_Adv(Crop Doctor / Advisor)
+    U_Part(Business Partner)
+    U_Admin(Super Admin / Manager)
+
+    M_Store[Agri Store / E-Commerce]
+    M_Farm[Farming & Gardens]
+    M_AI[Agri-AI & Consultations]
+    M_Fin[Wallet & Payouts]
+    M_Admin[Admin Command Center]
+
+    U_Cust -->|Browses & Buys| M_Store
+    U_Cust -->|Recharges| M_Fin
+
+    U_Farm -->|Manages Crops| M_Farm
+    U_Farm -->|Asks Questions| M_AI
+    U_Farm -->|Buys Seeds/Tools| M_Store
+
+    U_Adv -->|Answers Farmers| M_AI
+    U_Adv -->|Earns Commission| M_Fin
+
+    U_Part -->|Refers Users| U_Farm
+    U_Part -->|Gets Referral Bonus| M_Fin
+
+    U_Admin -.->|Controls Inventory| M_Store
+    U_Admin -.->|Monitors Quality| M_AI
+    U_Admin -.->|Approves Payouts| M_Fin
+    U_Admin -.->|Manages Users| M_Admin
+
+    M_Store -->|Generates Orders| O_DB[(Orders DB)]
+    M_Farm -->|Logs Data| F_DB[(Farms DB)]
+    M_AI -->|Prescribes Medicine| M_Store
+    M_Fin -->|Transactions| W_DB[(Wallet DB)]
+    
+    O_DB -.->|Admin Tracks| M_Admin
+    F_DB -.->|Admin Tracks| M_Admin
+    W_DB -.->|Admin Tracks| M_Admin

@@ -1,6 +1,6 @@
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, Alert } from 'react-native';
+import { View, Text, Pressable, StyleSheet, TouchableOpacity, ScrollView, Modal, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -22,6 +22,26 @@ const getCleanMobile = (mobile?: string | null) => {
 };
 
 // Reorganized categories rendered directly in the body
+
+
+const Hoverable4DCard = ({ children, style, onPress }: any) => {
+  return (
+    <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
+      style,
+      hovered && {
+        borderColor: 'rgba(0,255,135,0.55)',
+        shadowColor: '#00ff87',
+        shadowOpacity: 0.3,
+        shadowRadius: 15,
+        elevation: 10,
+        transform: [{ scale: 1.02 }]
+      },
+      pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
+    ]}>
+      {children}
+    </Pressable>
+  );
+};
 
 export default function AdminMoreScreen() {
   const { user, logout } = useAuth();
@@ -134,7 +154,7 @@ export default function AdminMoreScreen() {
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
               <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} activeOpacity={0.7} onPress={() => router.push('/admin/(tabs)/super-audit-log' as any)}>
-                <View style={[styles.rowIconBg, { backgroundColor: '#f8fafc' }]}><Ionicons name="time-outline" size={18} color="#475569" /></View>
+                <View style={[styles.rowIconBg, { backgroundColor: '#020d06' }]}><Ionicons name="time-outline" size={18} color="#475569" /></View>
                 <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🕒 System Audit Log</Text><Text style={styles.rowSubLabel}>Track all administrative actions & security events</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
@@ -146,7 +166,7 @@ export default function AdminMoreScreen() {
             <Text style={styles.sectionTitle}>🛠️ C-PANEL & CONFIGURATION (5 OPTIONS)</Text>
             <View style={styles.sectionCard}>
               <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/admin/(tabs)/super-settings' as any as any)}>
-                <View style={[styles.rowIconBg, { backgroundColor: '#f8fafc' }]}><Ionicons name="options-outline" size={18} color="#0d9488" /></View>
+                <View style={[styles.rowIconBg, { backgroundColor: '#020d06' }]}><Ionicons name="options-outline" size={18} color="#0d9488" /></View>
                 <View style={{ flex: 1 }}><Text style={styles.rowLabel}>⚙️ System Settings & Feature Flags</Text><Text style={styles.rowSubLabel}>Full system controls, feature toggles & API flags</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
@@ -190,7 +210,7 @@ export default function AdminMoreScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: '#020d06' },
   hero: {
     paddingTop: 50,
     paddingBottom: 24,
@@ -218,10 +238,10 @@ const styles = StyleSheet.create({
   body: { padding: 16 },
   section: { marginBottom: 20 },
   sectionTitle: { fontSize: 12, fontFamily: FONT.bold, color: '#64748b', marginBottom: 8, letterSpacing: 0.5 },
-  sectionCard: { backgroundColor: '#ffffff', borderRadius: 16, overflow: 'hidden', ...premiumShadow('#0f172a', 'sm') as any },
+  sectionCard: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: 16, overflow: 'hidden', ...premiumShadow('#0f172a', 'sm') as any },
   row: { flexDirection: 'row', alignItems: 'center', padding: 14, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', gap: 12 },
   rowIconBg: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  rowLabel: { fontSize: 14, fontFamily: FONT.bold, color: '#0f172a' },
+  rowLabel: { fontSize: 14, fontFamily: FONT.bold, color: '#ffffff' },
   rowSubLabel: { fontSize: 11, fontFamily: FONT.regular, color: '#64748b', marginTop: 2 },
   logoutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#fef2f2', padding: 14, borderRadius: 16, marginTop: 10, marginBottom: 30 },
   logoutText: { fontSize: 15, fontFamily: FONT.bold, color: '#dc2626' },

@@ -93,20 +93,11 @@ type TabName =
   | 'operator-orders' | 'trainer-dashboard';
 
 const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
-  FARMER: { tabs: ['index', 'shop', 'farm', 'records', 'more'] },
-  GARDENER: { tabs: ['index', 'shop', 'garden', 'records', 'more'] },
-  CUSTOMER: { tabs: ['shop', 'wallet', 'more'] },
-  ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
-  FARM_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
-  GARDEN_ADVISOR: { tabs: ['index', 'shop', 'farmers', 'chat', 'wallet', 'more'] },
-  BUSINESS_PARTNER: { tabs: ['index', 'shop', 'referrals', 'wallet', 'more'] },
-  ADMIN: { tabs: ['index', 'admin_shop', 'super-users', 'super-accounts', 'admin_more'] },
   SUPER_ADMIN: { tabs: ['index', 'admin_shop', 'super-users', 'super-accounts', 'admin_more'] },
-  MANAGER: { tabs: ['index', 'admin_shop', 'super-users', 'super-accounts', 'admin_more'] },
-  SUPERVISOR: { tabs: ['index', 'shop', 'farm', 'records', 'wallet', 'more'] },
-  OPERATOR: { tabs: ['index', 'shop', 'operator-orders', 'wallet', 'more'] },
-  LABOUR: { tabs: ['index', 'shop', 'wallet', 'more'] },
-  TECHNICAL_TRAINER: { tabs: ['index', 'trainer-dashboard', 'shop', 'wallet', 'more'] },
+  ADMIN: { tabs: ['index', 'admin_shop', 'super-users', 'super-accounts', 'admin_more'] },
+  OPERATOR: { tabs: ['index', 'operator-orders', 'admin_more'] },
+  TECHNICAL_TRAINER: { tabs: ['index', 'trainer-dashboard', 'super-users', 'admin_more'] },
+  MARKET_MANAGER: { tabs: ['index', 'super-coupons', 'super-accounts', 'admin_more'] },
 };
 
 const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key: TranslationKey; title: string; icon: keyof typeof Ionicons.glyphMap; iconFilled: keyof typeof Ionicons.glyphMap }> = {
@@ -159,8 +150,8 @@ export default function TabLayout() {
   const { t, language, setLanguage } = useLanguage();
   const { user } = useAuth();
   const { colors } = useExecutiveTheme();
-  const config = ROLE_TABS[role] || ROLE_TABS.FARMER;
-  const visible = new Set(config ? config.tabs : ['index', 'shop', 'farm', 'records', 'wallet', 'more']);
+  const config = ROLE_TABS[role] || ROLE_TABS.OPERATOR;
+  const visible = new Set(config ? config.tabs : ['index', 'admin_more']);
 
   const isChatCapable = !!user && CHAT_CAPABLE_ROLES.has(user.role);
   useGlobalChatUnreadSync(isChatCapable);
@@ -198,60 +189,115 @@ export default function TabLayout() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      {/* 💻 DESKTOP TOP NAVIGATION HEADER MENU (Visible on screens >= 768px) */}
+    <View style={{ flex: 1, backgroundColor: '#f8fafc', flexDirection: isDesktop ? 'row' : 'column' }}>
+      {/* 💻 DESKTOP PREMIUM SIDEBAR (Visible on screens >= 768px) */}
       {isDesktop && (
-        <View style={[desktopStyles.headerBar, { backgroundColor: colors.headerBg, borderBottomColor: colors.cardBorder }]}>
-          <View style={desktopStyles.headerLeft}>
-            <TouchableOpacity style={desktopStyles.brandLogoBox} activeOpacity={0.8} onPress={() => router.push('/admin/(tabs)' as any)}>
-              <BrandLogo size={36} useFastBundledOnly={true} />
-              <Text style={desktopStyles.brandTitle}>FarmsKing</Text>
-            </TouchableOpacity>
+        <View style={desktopStyles.sidebar}>
+          <View style={desktopStyles.brandLogoBox}>
+            <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: '#00ff87', alignItems: 'center', justifyContent: 'center' }}>
+              <BrandLogo size={24} iconColor="#020d06" />
+            </View>
+            <Text style={desktopStyles.brandTitle}>FarmsKing <Text style={{ fontSize: 10, color: '#00ff87', backgroundColor: 'rgba(0,255,135,0.2)', paddingHorizontal: 4 }}>4D</Text></Text>
           </View>
 
-          {/* Desktop Links Menu */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={desktopStyles.menuNavRow}>
-            {config.tabs.map((tabName) => {
-              const isIndexActive = tabName === 'index' && (pathname === '/' || pathname === '/(tabs)' || pathname === '/(tabs)/index');
-              const isOtherActive = tabName !== 'index' && pathname.includes(tabName);
-              const isActive = isIndexActive || isOtherActive;
-              const title = getTabTitle(tabName);
-              const iconName = getTabIcon(tabName, isActive);
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={desktopStyles.menuNavCol}>
+            {(() => {
+              // Custom Flowchart structure for SUPER_ADMIN & ADMIN
+              if (role === 'SUPER_ADMIN' || role === 'ADMIN') {
+                const renderItem = (title: string, iconName: keyof typeof Ionicons.glyphMap, path: string, params?: any) => {
+                  // If it's a specific super-users route with a filter, check if active
+                  const isSuperUsersLink = path.includes('super-users');
+                  // We just highlight if we are broadly on super-users, or we could just skip perfect highlighting for deep links.
+                  // For simplicity, highlight if path matches exactly or loosely
+                  const isIndexActive = path === '/admin/(tabs)' && (pathname === '/' || pathname === '/(tabs)' || pathname === '/(tabs)/index');
+                  const isOtherActive = path !== '/admin/(tabs)' && pathname.includes(path.split('/').pop() || '');
+                  const isActive = isIndexActive || isOtherActive;
+                  
+                  return (
+                    <TouchableOpacity
+                      key={title}
+                      style={[desktopStyles.navMenuItem, isActive && !params && desktopStyles.navMenuItemActive]}
+                      onPress={() => router.push(params ? { pathname: path as any, params } : (path as any))}
+                    >
+                      <View style={[desktopStyles.navIconWrap, isActive && !params && desktopStyles.navIconWrapActive]}>
+                        <Ionicons name={iconName} size={16} color={isActive && !params ? '#020d06' : '#34d399'} />
+                      </View>
+                      <Text style={[desktopStyles.navMenuItemText, isActive && !params && desktopStyles.navMenuItemTextActive]}>
+                        {title}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                };
 
-              return (
-                <TouchableOpacity
-                  key={tabName}
-                  style={[desktopStyles.navMenuItem, isActive && desktopStyles.navMenuItemActive]}
-                  onPress={() => handleNavigate(tabName)}
-                >
-                  <Ionicons name={iconName} size={17} color={isActive ? colors.primary : colors.tabBarInactive} />
-                  <Text style={[desktopStyles.navMenuItemText, isActive && desktopStyles.navMenuItemTextActive]}>
-                    {title}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+                return (
+                  <View style={{ gap: 16 }}>
+                    <View>
+                      <Text style={desktopStyles.sectionLabel}>DASHBOARD</Text>
+                      {renderItem('Overview', 'home', '/admin/(tabs)')}
+                      {renderItem('E-Commerce Hub', 'storefront', '/admin/(tabs)/admin_shop')}
+                      {renderItem('Global Wallet', 'wallet', '/admin/(tabs)/super-accounts')}
+                    </View>
+                    
+                    <View>
+                      <Text style={desktopStyles.sectionLabel}>ADMIN APP USERS</Text>
+                      {renderItem('Super Admins', 'shield-half', '/admin/(tabs)/super-users', { group: 'ADMINS', filter: 'SUPER_ADMIN' })}
+                      {renderItem('Admins', 'shield-checkmark', '/admin/(tabs)/super-users', { group: 'ADMINS', filter: 'ADMIN' })}
+                      {renderItem('Operators', 'print', '/admin/(tabs)/super-users', { group: 'ADMINS', filter: 'OPERATOR' })}
+                      {renderItem('Technical Trainers', 'school', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'TECHNICAL_TRAINER' })}
+                      {renderItem('Market Managers', 'briefcase', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'MARKET_MANAGER' })}
+                    </View>
+
+                    <View>
+                      <Text style={desktopStyles.sectionLabel}>FRONTEND APP USERS</Text>
+                      {renderItem('Farmers (Hero)', 'leaf', '/admin/(tabs)/super-users', { group: 'CLIENTS', filter: 'FARMER' })}
+                      {renderItem('Crop Doctors', 'medical', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'FARM_ADVISOR' })}
+                      {renderItem('Customers', 'cart', '/admin/(tabs)/super-users', { group: 'CLIENTS', filter: 'CUSTOMER' })}
+                      {renderItem('Sellers', 'cube', '/admin/(tabs)/super-users', { group: 'CLIENTS', filter: 'SELLER' })}
+                      {renderItem('Gardeners', 'flower', '/admin/(tabs)/super-users', { group: 'CLIENTS', filter: 'GARDENER' })}
+                      {renderItem('Garden Advisors', 'sunny', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'GARDEN_ADVISOR' })}
+                    </View>
+                  </View>
+                );
+              }
+
+              // Default standard tabs mapping for other roles
+              return config.tabs.map((tabName) => {
+                const isIndexActive = tabName === 'index' && (pathname === '/' || pathname === '/(tabs)' || pathname === '/(tabs)/index');
+                const isOtherActive = tabName !== 'index' && pathname.includes(tabName);
+                const isActive = isIndexActive || isOtherActive;
+                const title = getTabTitle(tabName);
+                const iconName = getTabIcon(tabName, isActive);
+
+                return (
+                  <TouchableOpacity
+                    key={tabName}
+                    style={[desktopStyles.navMenuItem, isActive && desktopStyles.navMenuItemActive]}
+                    onPress={() => handleNavigate(tabName)}
+                  >
+                    <View style={[desktopStyles.navIconWrap, isActive && desktopStyles.navIconWrapActive]}>
+                      <Ionicons name={iconName} size={18} color={isActive ? '#059669' : '#64748b'} />
+                    </View>
+                    <Text style={[desktopStyles.navMenuItemText, isActive && desktopStyles.navMenuItemTextActive]}>
+                      {title}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              });
+            })()}
           </ScrollView>
 
-          {/* Right Header Actions */}
-          <View style={desktopStyles.headerRight}>
+          {/* Bottom Actions in Sidebar */}
+          <View style={desktopStyles.sidebarBottom}>
             {(() => {
               const isSellerRole = (role as string) === 'SELLER' || (user?.role as string) === 'SELLER' || Boolean((user as any)?.isSeller);
               if (!isSellerRole) return null;
               return (
                 <TouchableOpacity
-                  style={[
-                    desktopStyles.headerActionBtn,
-                    { backgroundColor: '#059669', borderStyle: 'solid' },
-                  ]}
+                  style={[desktopStyles.headerActionBtn, { marginBottom: 12 }]}
                   onPress={() => router.push('/seller-dashboard')}
                 >
-                  <Ionicons
-                    name="storefront-outline"
-                    size={16}
-                    color="#ffffff"
-                  />
-                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' }}>
+                  <Ionicons name="storefront-outline" size={16} color="#059669" />
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#059669' }}>
                     🏪 Seller Hub
                   </Text>
                 </TouchableOpacity>
@@ -265,14 +311,12 @@ export default function TabLayout() {
               >
                 <Text style={[desktopStyles.langBtnText, language === 'pa' && desktopStyles.langBtnTextActive]}>ਪੰਜਾਬੀ</Text>
               </TouchableOpacity>
-
               <TouchableOpacity
                 style={[desktopStyles.langBtn, language === 'hi' && desktopStyles.langBtnActive]}
                 onPress={() => setLanguage('hi')}
               >
                 <Text style={[desktopStyles.langBtnText, language === 'hi' && desktopStyles.langBtnTextActive]}>हिंदी</Text>
               </TouchableOpacity>
-
               <TouchableOpacity
                 style={[desktopStyles.langBtn, language === 'en' && desktopStyles.langBtnActive]}
                 onPress={() => setLanguage('en')}
@@ -450,102 +494,120 @@ export default function TabLayout() {
 }
 
 const desktopStyles = StyleSheet.create({
-  headerBar: {
-    height: 60,
-    backgroundColor: '#0f172a',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e293b',
+  sidebar: {
+    width: 250,
+    backgroundColor: '#04180d',
+    borderRightWidth: 1,
+    borderRightColor: 'rgba(0, 255, 135, 0.22)',
+    paddingVertical: 20,
+    ...premiumShadow('#000000', 'md') as any,
     zIndex: 99,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   brandLogoBox: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
+    marginBottom: 24,
+    paddingHorizontal: 20,
   },
   brandTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontFamily: FONT.extraBold,
     color: '#ffffff',
-    letterSpacing: 0.5,
+    letterSpacing: -0.5,
   },
-  menuNavRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+  menuNavCol: {
     paddingHorizontal: 12,
+    gap: 6,
+    paddingBottom: 24,
+  },
+  sectionLabel: {
+    fontSize: 10.5,
+    fontFamily: FONT.extraBold,
+    color: 'rgba(52, 211, 153, 0.8)',
+    letterSpacing: 0.5,
+    marginLeft: 12,
+    marginTop: 8,
+    marginBottom: 4,
   },
   navMenuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 12,
     paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: RADIUS.pill,
+    paddingVertical: 12,
+    borderRadius: RADIUS.lg,
     backgroundColor: 'transparent',
   },
   navMenuItemActive: {
-    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    backgroundColor: '#00ff87',
     borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.3)',
+    borderColor: 'rgba(0, 255, 135, 0.5)',
+    ...premiumShadow('#00ff87', 'md') as any,
+  },
+  navIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navIconWrapActive: {
+    backgroundColor: 'transparent',
   },
   navMenuItemText: {
-    fontSize: 12.5,
+    fontSize: 14,
     fontFamily: FONT.bold,
-    color: '#94a3b8',
+    color: '#cbd5e1',
   },
   navMenuItemTextActive: {
-    color: '#ffffff',
+    color: '#020d06',
+    fontFamily: FONT.extraBold,
   },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+  sidebarBottom: {
+    paddingHorizontal: 20,
+    marginTop: 'auto',
+    paddingTop: 20,
   },
   headerActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#1e293b',
+    backgroundColor: 'rgba(0,255,135,0.1)',
     paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: RADIUS.pill,
+    paddingVertical: 10,
+    borderRadius: RADIUS.lg,
     borderWidth: 1,
-    borderColor: '#334155',
-  },
-  headerActionBtnText: {
-    fontSize: 11.5,
-    fontFamily: FONT.bold,
-    color: '#38bdf8',
+    borderColor: 'rgba(0,255,135,0.3)',
   },
   langSwitcherBox: {
     flexDirection: 'row',
-    gap: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    padding: 2,
+    gap: 4,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    padding: 4,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderColor: 'rgba(0,255,135,0.2)',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   langBtn: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    flex: 1,
+    paddingVertical: 6,
     borderRadius: RADIUS.pill,
+    alignItems: 'center',
   },
   langBtnActive: {
     backgroundColor: '#ffffff',
+    ...premiumShadow('#cbd5e1', 'sm') as any,
   },
   langBtnText: {
-    fontSize: 9.5,
+    fontSize: 10,
     fontFamily: FONT.bold,
-    color: 'rgba(255, 255, 255, 0.75)',
+    color: '#94a3b8',
   },
   langBtnTextActive: {
     color: '#0f172a',

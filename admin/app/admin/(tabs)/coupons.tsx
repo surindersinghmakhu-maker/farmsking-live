@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import {
-  View,
+import { View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
   TextInput,
   Alert,
-  Platform,
-} from 'react-native';
+  Platform, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -76,6 +74,26 @@ const ACTIVE_OFFER_COUPONS: OfferCoupon[] = [
     bgColor: '#fffbe6',
   },
 ];
+
+
+const Hoverable4DCard = ({ children, style, onPress }: any) => {
+  return (
+    <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
+      style,
+      hovered && {
+        borderColor: 'rgba(0,255,135,0.55)',
+        shadowColor: '#00ff87',
+        shadowOpacity: 0.3,
+        shadowRadius: 15,
+        elevation: 10,
+        transform: [{ scale: 1.02 }]
+      },
+      pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
+    ]}>
+      {children}
+    </Pressable>
+  );
+};
 
 export default function CouponsScreen() {
   const router = useRouter();
@@ -188,7 +206,7 @@ export default function CouponsScreen() {
             key={coupon.id}
             style={[
               styles.offerCard,
-              { backgroundColor: coupon.bgColor, borderColor: '#e2e8f0' },
+              { backgroundColor: coupon.bgColor, borderColor: 'rgba(0,255,135,0.3)' },
               premiumShadow('#000000', 'sm'),
             ]}
           >
@@ -233,7 +251,7 @@ export default function CouponsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: '#020d06' },
   hero: { paddingTop: 40, paddingBottom: 16, paddingHorizontal: 16 },
   heroHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
   backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
@@ -245,11 +263,11 @@ const styles = StyleSheet.create({
   statLbl: { fontSize: 10, fontFamily: FONT.medium, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
   statDivider: { width: 1, height: 22, backgroundColor: 'rgba(255,255,255,0.2)' },
   scrollContent: { padding: 14, paddingBottom: 32, gap: 14 },
-  card: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 14, borderWidth: 1, borderColor: '#e2e8f0' },
-  cardTitle: { fontSize: 14, fontFamily: FONT.bold, color: '#0f172a' },
+  card: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: 14, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' },
+  cardTitle: { fontSize: 14, fontFamily: FONT.bold, color: '#ffffff' },
   cardSub: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 },
   inputRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
-  input: { flex: 1, height: 44, backgroundColor: '#f1f5f9', borderRadius: RADIUS.md, paddingHorizontal: 12, fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
+  input: { flex: 1, height: 44, backgroundColor: '#051b11', borderRadius: RADIUS.md, paddingHorizontal: 12, fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' },
   submitBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#10b981', paddingHorizontal: 16, height: 44, borderRadius: RADIUS.md },
   submitBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 },
   statusBox: { marginTop: 10, padding: 10, borderRadius: RADIUS.md },
@@ -257,11 +275,11 @@ const styles = StyleSheet.create({
   sectionHeaderTitle: { fontSize: 11.5, fontFamily: FONT.bold, color: '#64748b', letterSpacing: 0.5, marginTop: 4 },
   offerCard: { borderRadius: RADIUS.xl, padding: 14, borderWidth: 1 },
   offerCardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
-  codeBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#ffffff', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#cbd5e1' },
-  codeBadgeText: { fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' },
+  codeBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,255,135,0.03)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#cbd5e1' },
+  codeBadgeText: { fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff' },
   discountPill: { backgroundColor: '#0f172a', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill },
   discountPillText: { fontSize: 10.5, fontFamily: FONT.extraBold, color: '#ffffff' },
-  offerTitle: { fontSize: 15, fontFamily: FONT.extraBold, color: '#0f172a' },
+  offerTitle: { fontSize: 15, fontFamily: FONT.extraBold, color: '#ffffff' },
   offerDesc: { fontSize: 12, fontFamily: FONT.medium, color: '#475569', marginTop: 2 },
   offerFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.06)' },
   validText: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b' },

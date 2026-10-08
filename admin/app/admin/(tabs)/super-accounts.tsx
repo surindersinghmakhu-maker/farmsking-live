@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -70,6 +70,26 @@ function IdentityBadge({ name, sub, tint }: { name: string; sub?: string; tint?:
 
 // Using SECTIONS for top-level navigation
 
+
+const Hoverable4DCard = ({ children, style, onPress }: any) => {
+  return (
+    <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
+      style,
+      hovered && {
+        borderColor: 'rgba(0,255,135,0.55)',
+        shadowColor: '#00ff87',
+        shadowOpacity: 0.3,
+        shadowRadius: 15,
+        elevation: 10,
+        transform: [{ scale: 1.02 }]
+      },
+      pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
+    ]}>
+      {children}
+    </Pressable>
+  );
+};
+
 export default function SuperAccountsScreen() {
   const router = useRouter();
   const { data: withdrawals, isLoading } = useAllWithdrawals();
@@ -104,7 +124,7 @@ export default function SuperAccountsScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={theme.gradient} style={styles.hero}>
+      <View style={styles.hero}>
         <Text style={styles.heroTitle}>Finance Control Center</Text>
         <Text style={styles.heroSubtitle}>VIP Pass & Plans, Coupons & Vouchers, Finance & Wallet</Text>
 
@@ -139,13 +159,13 @@ export default function SuperAccountsScreen() {
                 activeOpacity={0.85}
                 onPress={() => { tap(); setSection(t.value); }}
               >
-                <Ionicons name={t.icon} size={15} color={active ? theme.primary : '#fff'} />
-                <Text style={[styles.sectionTabText, active && { color: theme.primary }, { fontSize: 11.5, fontFamily: FONT.bold }]}>{t.label}</Text>
+                <Ionicons name={t.icon} size={15} color={active ? '#ffffff' : '#64748b'} />
+                <Text style={[styles.sectionTabText, active && { color: '#ffffff' }, { fontSize: 11.5, fontFamily: FONT.bold }]}>{t.label}</Text>
               </TouchableOpacity>
             );
           })}
         </View>
-      </LinearGradient>
+      </View>
 
       <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
         {section === 'SEARCH' ? (
@@ -923,27 +943,35 @@ export function ReviewModal({ request, onClose }: { request: WithdrawalRequest |
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  hero: { paddingTop: 20, paddingBottom: 18, paddingHorizontal: SPACING.xxl },
-  heroTitle: { color: '#fff', fontSize: 20, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
-  heroSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 12, fontFamily: FONT.medium, marginTop: 2 },
+  container: { flex: 1, backgroundColor: '#020d06' },
+  hero: { 
+    paddingTop: Platform.OS === 'ios' ? 50 : 20, 
+    paddingBottom: 18, 
+    paddingHorizontal: SPACING.xxl,
+    backgroundColor: 'rgba(0,255,135,0.03)',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    ...premiumShadow('#cbd5e1', 'sm') as any,
+  },
+  heroTitle: { color: '#ffffff', fontSize: 20, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
+  heroSubtitle: { color: '#64748b', fontSize: 12, fontFamily: FONT.medium, marginTop: 2 },
 
   statRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: '#020d06',
     borderRadius: RADIUS.lg,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
+    borderColor: 'rgba(0,255,135,0.3)',
     paddingVertical: 12,
     marginTop: 16,
   },
   statCard: { flex: 1, alignItems: 'center', gap: 4 },
-  statDivider: { width: 1, height: 30, backgroundColor: 'rgba(255,255,255,0.2)' },
+  statDivider: { width: 1, height: 30, backgroundColor: '#e2e8f0' },
   statTopRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  statLabel: { color: 'rgba(255,255,255,0.75)', fontSize: 10.5, fontFamily: FONT.bold, textTransform: 'uppercase', letterSpacing: 0.3 },
-  statValue: { color: '#fff', fontSize: 18, fontFamily: FONT.extraBold, letterSpacing: -0.3 },
-  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#4ade80' },
+  statLabel: { color: '#64748b', fontSize: 10.5, fontFamily: FONT.bold, textTransform: 'uppercase', letterSpacing: 0.3 },
+  statValue: { color: '#ffffff', fontSize: 18, fontFamily: FONT.extraBold, letterSpacing: -0.3 },
+  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#d97706' },
 
   sectionTabRow: { flexDirection: 'row', gap: 8, marginTop: 14 },
   sectionTab: {
@@ -954,10 +982,12 @@ const styles = StyleSheet.create({
     gap: 5,
     paddingVertical: 9,
     borderRadius: RADIUS.pill,
-    backgroundColor: 'rgba(255,255,255,0.14)',
+    backgroundColor: '#051b11',
+    borderWidth: 1,
+    borderColor: 'rgba(0,255,135,0.3)',
   },
-  sectionTabActive: { backgroundColor: '#ffffff' },
-  sectionTabText: { color: '#fff', fontSize: 11.5, fontFamily: FONT.bold },
+  sectionTabActive: { backgroundColor: '#10b981', borderColor: '#059669' },
+  sectionTabText: { color: '#475569', fontSize: 11.5, fontFamily: FONT.bold },
   tabBadge: { minWidth: 16, height: 16, borderRadius: 8, paddingHorizontal: 4, backgroundColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center' },
   tabBadgeText: { color: '#fff', fontSize: 9.5, fontFamily: FONT.extraBold },
 
@@ -968,9 +998,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: RADIUS.pill,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderWidth: 1.5,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0,255,135,0.3)',
   },
   subTabChipActive: {
     backgroundColor: theme.primary,
@@ -989,22 +1019,22 @@ const styles = StyleSheet.create({
 
   sectionHeaderRow: { marginBottom: 10, marginTop: 2 },
   sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  sectionTitle: { fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' },
+  sectionTitle: { fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' },
   sectionSubtitle: { fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 1 },
   countPill: { backgroundColor: theme.primaryLight, borderRadius: RADIUS.pill, paddingHorizontal: 7, paddingVertical: 1.5 },
   countPillText: { fontSize: 10.5, fontFamily: FONT.extraBold, color: theme.primary },
 
-  emptyState: { alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 36, backgroundColor: '#ffffff', borderRadius: RADIUS.lg, borderWidth: 1, borderColor: '#f1f5f9', borderStyle: 'dashed' },
+  emptyState: { alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 36, backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, borderWidth: 1, borderColor: 'rgba(0,255,135,0.2)', borderStyle: 'dashed' },
   emptyText: { fontSize: 12.5, fontFamily: FONT.medium, color: '#94a3b8', textAlign: 'center' },
 
-  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.md, gap: 10 },
+  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.md, gap: 10 },
   identityRow: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
   avatarCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: theme.primaryLight, alignItems: 'center', justifyContent: 'center' },
   avatarInitials: { fontSize: 12.5, fontFamily: FONT.extraBold, color: theme.primary },
-  partnerName: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
+  partnerName: { fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' },
   requestDate: { fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 2 },
   approvedNote: { fontSize: 10.5, fontFamily: FONT.semiBold, color: '#15803d' },
-  amount: { fontSize: 15, fontFamily: FONT.extraBold, color: '#0f172a' },
+  amount: { fontSize: 15, fontFamily: FONT.extraBold, color: '#ffffff' },
   utrChip: { fontSize: 9.5, fontFamily: FONT.semiBold, color: '#64748b', maxWidth: 130 },
 
   statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill },
@@ -1017,19 +1047,19 @@ const styles = StyleSheet.create({
   ledgerBtnText: { color: theme.primary, fontSize: 11, fontFamily: FONT.bold },
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'center', alignItems: 'center', padding: SPACING.lg },
-  modalCard: { width: '100%', maxWidth: 440, backgroundColor: '#ffffff', borderRadius: RADIUS.xl, padding: SPACING.lg, gap: 4, ...premiumShadow('#000000', 'lg') },
+  modalCard: { width: '100%', maxWidth: 440, backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.xl, padding: SPACING.lg, gap: 4, ...premiumShadow('#000000', 'lg') },
   modalHeaderRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  modalTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a' },
+  modalTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#ffffff' },
   modalSub: { fontSize: 12, fontFamily: FONT.bold, color: theme.primary, marginTop: 2 },
 
-  summaryBox: { backgroundColor: '#f8fafc', borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', padding: 12, gap: 7, marginBottom: 8 },
+  summaryBox: { backgroundColor: '#020d06', borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', padding: 12, gap: 7, marginBottom: 8 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 },
   summaryLabel: { fontSize: 11, fontFamily: FONT.bold, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.2 },
-  summaryValue: { fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' },
+  summaryValue: { fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff' },
   hintText: { fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8', marginBottom: 6, lineHeight: 15 },
 
-  label: { fontSize: 11.5, fontFamily: FONT.bold, color: '#334155', marginTop: 6, marginBottom: 4 },
-  input: { borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13.5, fontFamily: FONT.medium, backgroundColor: '#f8fafc', color: '#0f172a' },
+  label: { fontSize: 11.5, fontFamily: FONT.bold, color: '#e2e8f0', marginTop: 6, marginBottom: 4 },
+  input: { borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13.5, fontFamily: FONT.medium, backgroundColor: '#020d06', color: '#ffffff' },
   errorText: { color: '#dc2626', fontFamily: FONT.semiBold, fontSize: 12, marginTop: 6 },
   rejectBtn: { flex: 1, backgroundColor: '#fee2e2', borderRadius: RADIUS.md, paddingVertical: 13, alignItems: 'center' },
   rejectBtnText: { color: '#dc2626', fontFamily: FONT.bold, fontSize: 13.5 },
@@ -1042,14 +1072,14 @@ const styles = StyleSheet.create({
   addBalanceBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1.5, borderColor: theme.primary, borderRadius: RADIUS.md, paddingVertical: 10, marginBottom: 8 },
   addBalanceBtnText: { fontSize: 13, fontFamily: FONT.bold },
 
-  ledgerHeading: { fontSize: 11.5, fontFamily: FONT.extraBold, color: '#334155', textTransform: 'uppercase', letterSpacing: 0.3, marginTop: 6, marginBottom: 4 },
+  ledgerHeading: { fontSize: 11.5, fontFamily: FONT.extraBold, color: '#e2e8f0', textTransform: 'uppercase', letterSpacing: 0.3, marginTop: 6, marginBottom: 4 },
 
-  searchWrap: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#ffffff', borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: '#e2e8f0', paddingHorizontal: 12, paddingVertical: 4, marginBottom: 12 },
-  searchInput: { flex: 1, paddingVertical: 10, fontSize: 13, fontFamily: FONT.medium, color: '#0f172a' },
+  searchWrap: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', paddingHorizontal: 12, paddingVertical: 4, marginBottom: 12 },
+  searchInput: { flex: 1, paddingVertical: 10, fontSize: 13, fontFamily: FONT.medium, color: '#ffffff' },
 
   txRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   txIconBg: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  txReason: { fontSize: 12.5, fontFamily: FONT.semiBold, color: '#0f172a' },
+  txReason: { fontSize: 12.5, fontFamily: FONT.semiBold, color: '#ffffff' },
   txDate: { fontSize: 10.5, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 2 },
   txAmount: { fontSize: 13.5, fontFamily: FONT.extraBold },
 });
@@ -1097,7 +1127,7 @@ function AdminBonusSectionComponent() {
     <View style={{ gap: 14 }}>
       {/* Overview Calculation Summary Cards */}
       <View style={{ gap: 8 }}>
-        <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' }}>
+        <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff' }}>
           📊 Bonus Financial Calculations & System Balance
         </Text>
 
@@ -1137,21 +1167,21 @@ function AdminBonusSectionComponent() {
 
         {/* 3-Way Detailed Breakdown Grid */}
         <View style={{ flexDirection: 'row', gap: 6 }}>
-          <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', gap: 2 }}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,255,135,0.03)', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', gap: 2 }}>
             <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>🎁 Welcome Signups</Text>
-            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' }}>₹{summary.totalWelcome.toLocaleString('en-IN')}</Text>
+            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' }}>₹{summary.totalWelcome.toLocaleString('en-IN')}</Text>
             <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8' }}>{summary.countWelcome} users</Text>
           </View>
 
-          <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', gap: 2 }}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,255,135,0.03)', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', gap: 2 }}>
             <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>🤝 Referral Signups</Text>
-            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' }}>₹{summary.totalReferralSignup.toLocaleString('en-IN')}</Text>
+            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' }}>₹{summary.totalReferralSignup.toLocaleString('en-IN')}</Text>
             <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8' }}>{summary.countReferralSignup} referrals</Text>
           </View>
 
-          <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', gap: 2 }}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,255,135,0.03)', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', gap: 2 }}>
             <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>👑 Plan Upgrades</Text>
-            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#0f172a' }}>₹{summary.totalReferralPlan.toLocaleString('en-IN')}</Text>
+            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' }}>₹{summary.totalReferralPlan.toLocaleString('en-IN')}</Text>
             <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8' }}>{summary.countReferralPlan} upgrades</Text>
           </View>
         </View>
@@ -1229,9 +1259,9 @@ function AdminBonusSectionComponent() {
                   </Text>
                 </View>
 
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f8fafc', padding: 8, borderRadius: RADIUS.sm }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#020d06', padding: 8, borderRadius: RADIUS.sm }}>
                   <View style={{ flex: 1, paddingRight: 6 }}>
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.semiBold, color: '#334155' }}>
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.semiBold, color: '#e2e8f0' }}>
                       {tx.reason}
                     </Text>
                     {tx.relatedUser ? (

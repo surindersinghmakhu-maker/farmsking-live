@@ -7,6 +7,10 @@ export interface CartItem {
   unit: string;
   imageUrl?: string | null;
   quantity: number;
+  bulkDiscountMinQty?: number | null;
+  bulkDiscountPercentage?: number | null;
+  weightKg?: number | null;
+  isCodAllowed?: boolean;
 }
 
 interface CartContextValue {
@@ -15,9 +19,11 @@ interface CartContextValue {
   updateQuantity: (productId: string, quantity: number) => void;
   removeItem: (productId: string) => void;
   clearCart: () => void;
-  totalAmount: number;
   subtotal: number;
+  totalAmount: number;
+  wholesaleSavings: number;
   itemCount: number;
+  totalWeightKg: number;
 }
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
@@ -45,9 +51,40 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = () => setItems([]);
 
   const value = useMemo<CartContextValue>(() => {
-    const totalAmount = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-    const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
-    return { items, addItem, updateQuantity, removeItem, clearCart, totalAmount, subtotal: totalAmount, itemCount };
+    let rawTotal = 0;
+    let effectiveTotal = 0;
+    let itemCount = 0;
+    let totalWeightKg = 0;
+
+    items.forEach((i) => {
+      itemCount += i.quantity;
+      totalWeightKg += (i.weightKg || 0.5) * i.quantity;
+      const baseSub = i.price * i.quantity;
+      rawTotal += baseSub;
+
+      // Calculate wholesale tier discount if applicable
+      const hasBulkDiscount = i.bulkDiscountMinQty && i.bulkDiscountPercentage && i.quantity >= i.bulkDiscountMinQty;
+      const effectivePrice = hasBulkDiscount
+        ? i.price * (1 - Number(i.bulkDiscountPercentage) / 100)
+        : i.price;
+
+      effectiveTotal += effectivePrice * i.quantity;
+    });
+
+    const wholesaleSavings = Math.max(0, rawTotal - effectiveTotal);
+
+    return {
+      items,
+      addItem,
+      updateQuantity,
+      removeItem,
+      clearCart,
+      subtotal: rawTotal,
+      totalAmount: effectiveTotal,
+      wholesaleSavings,
+      itemCount,
+      totalWeightKg,
+    };
   }, [items]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

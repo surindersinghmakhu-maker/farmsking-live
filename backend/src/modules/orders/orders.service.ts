@@ -85,7 +85,15 @@ export class OrdersService {
       );
     }
 
-    const subtotal = dto.items.reduce((sum, item) => sum + Number(productMap.get(item.productId)!.price) * item.quantity, 0);
+    const subtotal = dto.items.reduce((sum, item) => {
+      const p = productMap.get(item.productId)!;
+      const unitPrice = Number(p.price);
+      const isWholesale = p.bulkDiscountMinQty && p.bulkDiscountPercentage && item.quantity >= p.bulkDiscountMinQty;
+      const effectivePrice = isWholesale
+        ? unitPrice * (1 - Number(p.bulkDiscountPercentage) / 100)
+        : unitPrice;
+      return sum + effectivePrice * item.quantity;
+    }, 0);
 
     const couponResult = dto.couponCode ? await this.couponsService.getActiveForOrder(dto.couponCode, subtotal) : null;
     const discountAmount = couponResult?.discountAmount ?? 0;

@@ -54,6 +54,7 @@ import { Product, CustomerOrder, OrderStatus } from '@/src/types/api';
 import { SuperAdminExpenseCategoriesModal } from '@/components/SuperAdminExpenseCategoriesModal';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { UnderMaintenanceView } from '@/src/components/UnderMaintenanceView';
+import { UltraPremiumEcomHub } from '@/src/components/UltraPremiumEcomHub';
 
 const theme = RoleThemes.CUSTOMER;
 

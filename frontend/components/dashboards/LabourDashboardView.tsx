@@ -21,6 +21,7 @@ import { useLabourDashboard } from '@/src/hooks/useLabour';
 import { formatInr } from '@/src/utils/formatInr';
 import { LabourFamilySwitcher } from '@/src/components/LabourFamilySwitcher';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { SwitchDashboardSection } from '@/src/components/SwitchDashboardSection';
 
 export const LabourDashboardView: React.FC = () => {
   const theme = RoleThemes.LABOUR;
@@ -126,6 +127,8 @@ export const LabourDashboardView: React.FC = () => {
       />
 
       <View style={styles.content}>
+        <SwitchDashboardSection />
+
         {/* Farmer & Family Member Profile Switchers Bar */}
         {workersList.length > 0 && (
           <LabourFamilySwitcher

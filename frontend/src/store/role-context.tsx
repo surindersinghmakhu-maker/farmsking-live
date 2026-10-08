@@ -50,6 +50,22 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       finalRoles = ['CUSTOMER'];
     }
 
+    const isSuperOrAdmin = user.role === 'SUPER_ADMIN' || user.role === 'ADMIN';
+
+    if (isSuperOrAdmin) {
+      return [
+        user.role as UserRole,
+        'FARMER',
+        'FARM_ADVISOR',
+        'GARDENER',
+        'GARDEN_ADVISOR',
+        'BUSINESS_PARTNER',
+        'OPERATOR',
+        'LABOUR',
+        'CUSTOMER',
+      ];
+    }
+
     if (isStaffUser) {
       finalRoles = finalRoles.filter((r) => r !== 'FARMER' && r !== 'GARDENER');
       if (!finalRoles.includes('CUSTOMER')) {

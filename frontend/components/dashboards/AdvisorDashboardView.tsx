@@ -26,6 +26,7 @@ import { CropActivitySchedule, AdvisorReviewCropCycle, CropProblem } from '@/src
 import { useGroupVoiceCall } from '@/src/hooks/useGroupVoiceCall';
 import { GroupVoiceCallModal } from '@/src/components/chat/GroupVoiceCallModal';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { SwitchDashboardSection } from '@/src/components/SwitchDashboardSection';
 
 type TabKey = 'SUBMISSIONS' | 'DELAYED' | 'TODAY' | 'WEATHER' | 'NO_SCHEDULE' | 'PROBLEMS' | 'FEES';
 
@@ -214,6 +215,8 @@ export const AdvisorDashboardView: React.FC = () => {
         />
 
         <View style={styles.content}>
+          <SwitchDashboardSection />
+
           {/* My Farmer Roster — Ultra-Compact Professional Strip */}
           <LinearGradient colors={['#1e3a8a', '#2563eb']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.ultraRosterStrip}>
             <View style={styles.rosterLeftGroup}>

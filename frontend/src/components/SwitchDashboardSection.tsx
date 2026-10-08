@@ -38,7 +38,9 @@ export function SwitchDashboardSection({ extraRows }: { extraRows?: ExtraRow[] }
   const { role, setRole, assignedRoles } = useRole();
   const { user, updateUser } = useAuth();
 
-  if (role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR' || role === 'FARMER') {
+  const isSuperOrAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
+
+  if (!isSuperOrAdmin && assignedRoles.length <= 1 && (role === 'FARM_ADVISOR' || role === 'GARDEN_ADVISOR' || role === 'FARMER')) {
     return null;
   }
   const becomeFarmer = useBecomeFarmer();

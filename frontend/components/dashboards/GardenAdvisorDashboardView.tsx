@@ -17,6 +17,7 @@ import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { apiClient } from '@/src/api/client';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { SwitchDashboardSection } from '@/src/components/SwitchDashboardSection';
 
 interface AdvisorTask {
   id: string;
@@ -118,6 +119,8 @@ export const GardenAdvisorDashboardView: React.FC = () => {
       />
 
       <View style={styles.content}>
+        <SwitchDashboardSection />
+
         {/* Assigned Gardeners Card */}
         <LinearGradient colors={theme.heroGradient} style={[styles.assignedCard, premiumShadow(theme.primary, 'md')]}>
           <Ionicons name="flower" size={104} color={theme.primary} style={styles.watermark} />

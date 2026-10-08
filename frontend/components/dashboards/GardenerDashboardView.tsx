@@ -18,6 +18,7 @@ import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { apiClient } from '@/src/api/client';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { SwitchDashboardSection } from '@/src/components/SwitchDashboardSection';
 
 interface ScheduleItem {
   id: string;
@@ -123,6 +124,8 @@ export const GardenerDashboardView: React.FC = () => {
       />
 
       <View style={styles.content}>
+        <SwitchDashboardSection />
+
         {/* Today's Garden Visits Hero Banner */}
         <LinearGradient colors={theme.heroGradient} style={[styles.bannerCard, premiumShadow(theme.primary, 'md')]}>
           <View style={styles.bannerTextCol}>

@@ -239,6 +239,15 @@ export default function TabLayout() {
                     </View>
                     
                     <View>
+                      <Text style={desktopStyles.sectionLabel}>E-COMMERCE & ORDERS</Text>
+                      {renderItem('Products Catalog', 'cube', '/admin/(tabs)/admin-products')}
+                      {renderItem('Store Orders', 'receipt', '/admin/(tabs)/admin-orders')}
+                      {renderItem('Seller KYC', 'shield-checkmark', '/admin-sellers')}
+                      {renderItem('Seller Payouts', 'wallet', '/seller-payouts')}
+                      {renderItem('Sales Analytics', 'bar-chart', '/admin/(tabs)/super-orders')}
+                    </View>
+
+                    <View>
                       <Text style={desktopStyles.sectionLabel}>ADMIN APP USERS</Text>
                       {renderItem('Super Admins', 'shield-half', '/admin/(tabs)/super-users', { group: 'ADMINS', filter: 'SUPER_ADMIN' })}
                       {renderItem('Admins', 'shield-checkmark', '/admin/(tabs)/super-users', { group: 'ADMINS', filter: 'ADMIN' })}
@@ -255,6 +264,14 @@ export default function TabLayout() {
                       {renderItem('Sellers', 'cube', '/admin/(tabs)/super-users', { group: 'CLIENTS', filter: 'SELLER' })}
                       {renderItem('Gardeners', 'flower', '/admin/(tabs)/super-users', { group: 'CLIENTS', filter: 'GARDENER' })}
                       {renderItem('Garden Advisors', 'sunny', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'GARDEN_ADVISOR' })}
+                    </View>
+
+                    <View>
+                      <Text style={desktopStyles.sectionLabel}>SYSTEM & CONFIG</Text>
+                      {renderItem('VIP Passes', 'ticket', '/admin/(tabs)/super-coupons')}
+                      {renderItem('Edit Crop Data', 'leaf', '/admin/(tabs)/super-crop-edit')}
+                      {renderItem('Audit Log', 'time', '/admin/(tabs)/super-audit-log')}
+                      {renderItem('C-Panel Settings', 'options', '/admin/(tabs)/super-settings')}
                     </View>
                   </View>
                 );

@@ -568,7 +568,7 @@ export const SuperAdminDashboardView: React.FC = () => {
         </View>
 
         <View style={[styles.quickActionsCard, premiumShadow('#0f172a', 'sm')]}>
-          <Text style={styles.quickActionsTitle}>Super Admin Shortcuts</Text>
+          <Text style={styles.quickActionsTitle}>Super Admin Shortcuts & Tools</Text>
           <View style={styles.quickActionsGrid}>
             <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => router.push('/crop-intelligence' as any as never)}>
               <View style={[styles.pillIconBg, { backgroundColor: '#f0fdf4' }]}>
@@ -584,6 +584,62 @@ export const SuperAdminDashboardView: React.FC = () => {
               <Text style={styles.pillText}>Sales Orders</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => router.push('/(tabs)/admin-products' as never)}>
+              <View style={[styles.pillIconBg, { backgroundColor: '#eff6ff' }]}>
+                <Ionicons name="cube" size={16} color="#2563eb" />
+              </View>
+              <Text style={styles.pillText}>Products</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => router.push('/(tabs)/admin-orders' as never)}>
+              <View style={[styles.pillIconBg, { backgroundColor: '#f5f3ff' }]}>
+                <Ionicons name="storefront" size={16} color="#7c3aed" />
+              </View>
+              <Text style={styles.pillText}>Store Orders</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => router.push('/admin-sellers' as never)}>
+              <View style={[styles.pillIconBg, { backgroundColor: '#fff7ed' }]}>
+                <Ionicons name="shield-checkmark" size={16} color="#ea580c" />
+              </View>
+              <Text style={styles.pillText}>Seller KYC</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => router.push('/seller-payouts' as never)}>
+              <View style={[styles.pillIconBg, { backgroundColor: '#ecfdf5' }]}>
+                <Ionicons name="wallet" size={16} color="#059669" />
+              </View>
+              <Text style={styles.pillText}>Seller Payouts</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => router.push('/(tabs)/super-coupons' as never)}>
+              <View style={[styles.pillIconBg, { backgroundColor: '#fdf4ff' }]}>
+                <Ionicons name="ticket" size={16} color="#c026d3" />
+              </View>
+              <Text style={styles.pillText}>VIP Passes</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => router.push('/(tabs)/super-crop-edit' as never)}>
+              <View style={[styles.pillIconBg, { backgroundColor: '#f0fdf4' }]}>
+                <Ionicons name="leaf" size={16} color="#16a34a" />
+              </View>
+              <Text style={styles.pillText}>Edit Crops</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => router.push('/(tabs)/super-audit-log' as never)}>
+              <View style={[styles.pillIconBg, { backgroundColor: '#f8fafc' }]}>
+                <Ionicons name="time" size={16} color="#475569" />
+              </View>
+              <Text style={styles.pillText}>Audit Log</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => router.push('/(tabs)/super-settings' as never)}>
+              <View style={[styles.pillIconBg, { backgroundColor: '#ccfbf1' }]}>
+                <Ionicons name="options" size={16} color="#0d9488" />
+              </View>
+              <Text style={styles.pillText}>C-Panel</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => setShowCategoriesModal(true)}>
               <View style={[styles.pillIconBg, { backgroundColor: '#fef2f2' }]}>
                 <Ionicons name="pricetags" size={16} color="#dc2626" />
@@ -592,8 +648,8 @@ export const SuperAdminDashboardView: React.FC = () => {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => setShowWorkspaceModal(true)}>
-              <View style={[styles.pillIconBg, { backgroundColor: '#ccfbf1' }]}>
-                <Ionicons name="briefcase" size={16} color="#0d9488" />
+              <View style={[styles.pillIconBg, { backgroundColor: '#e0f2fe' }]}>
+                <Ionicons name="briefcase" size={16} color="#0284c7" />
               </View>
               <Text style={styles.pillText}>Workspace</Text>
             </TouchableOpacity>

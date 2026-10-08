@@ -238,7 +238,7 @@ export default function TabLayout() {
                     </View>
                     
                     <View>
-                      <Text style={desktopStyles.sectionLabel}>E-COMMERCE & ORDERS</Text>
+                      <Text style={desktopStyles.sectionLabel}>MULTI-VENDOR MARKETPLACE</Text>
                       {renderItem('Products Catalog', 'cube', '/admin/(tabs)/admin-products')}
                       {renderItem('Store Orders', 'receipt', '/admin/(tabs)/admin-orders')}
                       {renderItem('Seller KYC', 'shield-checkmark', '/admin-sellers')}

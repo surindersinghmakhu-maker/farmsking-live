@@ -32,8 +32,8 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   const apiPrefix = configService.get<string>('API_PREFIX', '/api/v1');
-  const port = 3000; // Hardcode to 3000
-  const host = '0.0.0.0'; // Revert back to 0.0.0.0 to fix NGINX connection refused
+  const port = parseInt(configService.get<string>('PORT', '3000'), 10);
+  const host = configService.get<string>('HOST', '0.0.0.0');
   const corsOrigins = configService.get<string>('CORS_ORIGINS', '');
 
   app.use(json({ limit: '50mb' }));
@@ -97,13 +97,10 @@ async function bootstrap() {
   
   // Start the server
   try {
-    require('fs').writeFileSync('app-listen-before.txt', 'Before listen');
     await app.listen(port, host);
-    require('fs').writeFileSync('app-listen-after.txt', 'After listen');
     Logger.log(`==========================================================`, 'Bootstrap');
     Logger.log(`🚀 FarmsKing API Server is running on: http://${host}:${port}`, 'Bootstrap');
   } catch (error) {
-    require('fs').writeFileSync('app-listen-error.txt', error.toString());
     Logger.error(`Error starting server: ${error}`, 'Bootstrap');
   }
 }

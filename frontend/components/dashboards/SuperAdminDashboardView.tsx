@@ -588,14 +588,14 @@ export const SuperAdminDashboardView: React.FC = () => {
               <View style={[styles.pillIconBg, { backgroundColor: '#eff6ff' }]}>
                 <Ionicons name="cube" size={16} color="#2563eb" />
               </View>
-              <Text style={styles.pillText}>Products</Text>
+              <Text style={styles.pillText}>Seller Products</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => router.push('/(tabs)/admin-orders' as never)}>
               <View style={[styles.pillIconBg, { backgroundColor: '#f5f3ff' }]}>
                 <Ionicons name="storefront" size={16} color="#7c3aed" />
               </View>
-              <Text style={styles.pillText}>Store Orders</Text>
+              <Text style={styles.pillText}>Marketplace Orders</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => router.push('/admin-sellers' as never)}>

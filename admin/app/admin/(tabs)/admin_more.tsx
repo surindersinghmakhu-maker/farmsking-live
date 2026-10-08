@@ -88,27 +88,27 @@ export default function AdminMoreScreen() {
             <View style={styles.sectionCard}>
               <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/admin/(tabs)/admin-products' as any)}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#eff6ff' }]}><Ionicons name="cube-outline" size={18} color="#2563eb" /></View>
-                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>📦 Product Inventory & Catalog</Text><Text style={styles.rowSubLabel}>Manage platform products, stock levels & pricing</Text></View>
+                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🛒 Seller Product Moderation</Text><Text style={styles.rowSubLabel}>Review, approve & moderate seller product listings</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
               <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/admin/(tabs)/admin-orders' as any)}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#f5f3ff' }]}><Ionicons name="receipt-outline" size={18} color="#7c3aed" /></View>
-                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🧾 Order Processing & Fulfillment</Text><Text style={styles.rowSubLabel}>Process customer orders & update shipping status</Text></View>
+                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🧾 Marketplace Orders</Text><Text style={styles.rowSubLabel}>Process multi-seller orders & shipping fulfillment</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
               <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/admin-sellers')}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#fff7ed' }]}><Ionicons name="shield-checkmark-outline" size={18} color="#ea580c" /></View>
-                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🏪 Seller KYC & Approvals</Text><Text style={styles.rowSubLabel}>Approve new seller store registrations & verify KYC</Text></View>
+                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>🏪 Seller KYC & Approvals</Text><Text style={styles.rowSubLabel}>Approve seller store registrations & verify identity</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
               <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => router.push('/seller-payouts')}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#ecfdf5' }]}><Ionicons name="wallet-outline" size={18} color="#059669" /></View>
-                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>💸 Seller Payouts & Commission</Text><Text style={styles.rowSubLabel}>Release seller balances & monitor payout transactions</Text></View>
+                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>💸 Seller Payouts (Hisab-Kitab)</Text><Text style={styles.rowSubLabel}>Release seller balances & monitor platform commission</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
               <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} activeOpacity={0.7} onPress={() => router.push('/admin/(tabs)/super-orders' as any)}>
                 <View style={[styles.rowIconBg, { backgroundColor: '#f0f9ff' }]}><Ionicons name="bar-chart-outline" size={18} color="#0284c7" /></View>
-                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>📊 Sales Order Analytics</Text><Text style={styles.rowSubLabel}>View pan-India sales order logs & revenue history</Text></View>
+                <View style={{ flex: 1 }}><Text style={styles.rowLabel}>📊 Revenue & Sales Analytics</Text><Text style={styles.rowSubLabel}>View marketplace sales analytics & revenue history</Text></View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
             </View>

@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Image, Platform, useWindowDimensions, Pressable, Animated as RNAnimated,
+  Image, Platform, useWindowDimensions, Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,586 +10,511 @@ import Animated, {
   useSharedValue, useAnimatedStyle, withSpring,
   withSequence, withRepeat, withTiming, withDelay,
 } from 'react-native-reanimated';
-import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
+import { FONT, premiumShadow } from '@/constants/theme';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 
-// ─── Floating animated crop image ────────────────────────────────────────────
-function AnimatedCropAsset({
-  imgSrc, style, index = 0,
-}: { imgSrc: any; style?: any; index?: number }) {
-  const translateY = useSharedValue(0);
-  const rotation  = useSharedValue(0);
-  const scale     = useSharedValue(1);
-
-  useEffect(() => {
-    const dur = 2800;
-    const offset = index % 2 === 0 ? -5 : 5;
-    const delay  = index * 350;
-    translateY.value = withDelay(delay, withRepeat(withSequence(withTiming(offset, { duration: dur }), withTiming(-offset, { duration: dur })), -1, true));
-    rotation.value   = withDelay(delay, withRepeat(withSequence(withTiming(4,  { duration: dur }), withTiming(-4, { duration: dur })), -1, true));
-  }, []);
-
-  const anim = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }, { rotate: `${rotation.value}deg` }, { scale: scale.value }],
-  }));
-
-  return (
-    <Animated.View style={[style, anim]}>
-      <Pressable
-        onPressIn={() => { scale.value = withSpring(1.18, { damping: 10 }); }}
-        onPressOut={() => { scale.value = withSpring(1, { damping: 10 }); }}
-        onHoverIn={() => { scale.value = withSpring(1.18, { damping: 10 }); }}
-        onHoverOut={() => { scale.value = withSpring(1, { damping: 10 }); }}
-        style={{ alignItems: 'center' }}
-      >
-        <Image source={imgSrc} style={styles.cropAsset} resizeMode="cover" />
-      </Pressable>
-    </Animated.View>
-  );
-}
-
-// ─── Glass service card ───────────────────────────────────────────────────────
-function GlassCard({
-  imgSrcs, title, desc, accentColor, onPress,
-}: { imgSrcs: any[]; title: string; desc: string; accentColor: string; onPress: () => void }) {
-  const { width } = useWindowDimensions();
-  const isMobile  = width <= 768;
-  const cardWidth = isMobile ? (width / 2) - 24 : 200;
-  const scale     = useSharedValue(1);
-
-  const cardAnim = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
-
+// ─── Tilt Card (4D Hover Effect) ─────────────────────────────────────────────
+function TiltCard({ children, style, onPress, intensity = 1.04 }: any) {
+  const scale = useSharedValue(1);
+  const anim = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   return (
     <Pressable
-      onHoverIn={() => { scale.value = withSpring(1.04, { damping: 12 }); }}
-      onHoverOut={() => { scale.value = withSpring(1, { damping: 12 }); }}
-      onPressIn={() => { scale.value = withSpring(0.97, { damping: 12 }); }}
-      onPressOut={() => { scale.value = withSpring(1, { damping: 12 }); }}
+      onHoverIn={() => { scale.value = withSpring(intensity, { damping: 14 }); }}
+      onHoverOut={() => { scale.value = withSpring(1, { damping: 14 }); }}
+      onPressIn={() => { scale.value = withSpring(0.97); }}
+      onPressOut={() => { scale.value = withSpring(1); }}
       onPress={onPress}
     >
-      <Animated.View style={[styles.glassCard, cardAnim, { width: cardWidth }]}>
-        <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
-        {/* Accent glow bar at top */}
-        <View style={[styles.glassAccentBar, { backgroundColor: accentColor }]} />
-
-        <View style={styles.glassImgRow}>
-          {imgSrcs.map((src, i) => (
-            <AnimatedCropAsset key={i} index={i} imgSrc={src} />
-          ))}
-        </View>
-
-        <Text style={[styles.glassTitle, { color: accentColor }]}>{title}</Text>
-        <Text style={styles.glassDesc}>{desc}</Text>
-
-        <TouchableOpacity
-          style={[styles.glassBtn, { borderColor: accentColor }]}
-          onPress={onPress}
-        >
-          <Text style={[styles.glassBtnText, { color: accentColor }]}>Explore →</Text>
-        </TouchableOpacity>
-      </Animated.View>
+      <Animated.View style={[style, anim]}>{children}</Animated.View>
     </Pressable>
   );
 }
 
-// ─── Feature pill (Why FarmsKing) ────────────────────────────────────────────
-function FeaturePill({ icon, label, desc }: { icon: string; label: string; desc: string }) {
+// ─── Float Widget ─────────────────────────────────────────────────────────────
+function Float({ children, style, delay = 0, dist = 8, dur = 3500 }: any) {
+  const ty = useSharedValue(0);
+  useEffect(() => {
+    ty.value = withDelay(delay,
+      withRepeat(withSequence(withTiming(-dist, { duration: dur }), withTiming(dist, { duration: dur })), -1, true)
+    );
+  }, []);
+  const anim = useAnimatedStyle(() => ({ transform: [{ translateY: ty.value }] }));
+  return <Animated.View style={[style, anim]}>{children}</Animated.View>;
+}
+
+// ─── Live Pulse Dot ───────────────────────────────────────────────────────────
+function LiveDot() {
+  const sc = useSharedValue(1);
+  useEffect(() => {
+    sc.value = withRepeat(withSequence(withTiming(1.6, { duration: 900 }), withTiming(1, { duration: 900 })), -1, true);
+  }, []);
+  const anim = useAnimatedStyle(() => ({ transform: [{ scale: sc.value }] }));
   return (
-    <View style={styles.featurePill}>
-      <View style={styles.featurePillIcon}>
-        <Ionicons name={icon as any} size={20} color="#10b981" />
-      </View>
-      <View style={{ flex: 1 }}>
-        <Text style={styles.featurePillLabel}>{label}</Text>
-        <Text style={styles.featurePillDesc}>{desc}</Text>
-      </View>
+    <View style={{ width: 10, height: 10, alignItems: 'center', justifyContent: 'center' }}>
+      <Animated.View style={[{ width: 10, height: 10, borderRadius: 5, backgroundColor: 'rgba(16,185,129,0.35)' }, anim]} />
+      <View style={{ position: 'absolute', width: 6, height: 6, borderRadius: 3, backgroundColor: '#10b981' }} />
     </View>
   );
 }
 
-// ─── Role card ───────────────────────────────────────────────────────────────
-function RoleCard({ emoji, title, desc, color }: { emoji: string; title: string; desc: string; color: string }) {
-  const scale = useSharedValue(1);
-  const anim  = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+// ─── Stat Counter Card ───────────────────────────────────────────────────────
+function StatCard({ val, label, color = '#00ff87', icon }: any) {
   return (
-    <Pressable
-      onHoverIn={() => { scale.value = withSpring(1.06); }}
-      onHoverOut={() => { scale.value = withSpring(1); }}
-      onPressIn={() => { scale.value = withSpring(0.95); }}
-      onPressOut={() => { scale.value = withSpring(1); }}
-    >
-      <Animated.View style={[styles.roleCard, anim, { borderColor: color }]}>
-        <LinearGradient colors={[`${color}22`, 'transparent']} style={StyleSheet.absoluteFill} />
-        <Text style={{ fontSize: 28, marginBottom: 6 }}>{emoji}</Text>
-        <Text style={[styles.roleTitle, { color }]}>{title}</Text>
-        <Text style={styles.roleDesc}>{desc}</Text>
-      </Animated.View>
-    </Pressable>
-  );
-}
-
-// ─── Step card ───────────────────────────────────────────────────────────────
-function StepCard({ num, title, desc }: { num: string; title: string; desc: string }) {
-  return (
-    <View style={styles.stepCard}>
-      <LinearGradient colors={['#10b981', '#059669']} style={styles.stepNum}>
-        <Text style={styles.stepNumText}>{num}</Text>
-      </LinearGradient>
-      <Text style={styles.stepTitle}>{title}</Text>
-      <Text style={styles.stepDesc}>{desc}</Text>
+    <View style={S.statCard}>
+      <Text style={[S.statVal, { color }]}>{val}</Text>
+      <Text style={S.statLabel}>{label}</Text>
     </View>
   );
 }
 
-// ─── Main landing page ────────────────────────────────────────────────────────
-export default function PublicLandingPage() {
-  const router    = useRouter();
+// ─── Service Card ─────────────────────────────────────────────────────────────
+function ServiceCard({ img, title, subtitle, color, onPress }: any) {
   const { width } = useWindowDimensions();
-  const isDesktop = width > 768;
-  const isMobile  = width <= 480;
+  const isMobile = width <= 768;
+  const cardW = isMobile ? (width - 60) / 2 : 220;
+  return (
+    <TiltCard onPress={onPress} style={[S.serviceCard, { width: cardW, borderColor: `${color}30` }]}>
+      <BlurView intensity={25} tint="light" style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={[`${color}18`, 'transparent']} style={[StyleSheet.absoluteFill, { borderRadius: 20 }]} />
+      <View style={[S.serviceIconBg, { backgroundColor: `${color}20`, borderColor: `${color}40` }]}>
+        <Image source={img} style={S.serviceImg} resizeMode="contain" />
+      </View>
+      <Text style={[S.serviceTitle, { color }]}>{title}</Text>
+      <Text style={S.serviceSubtitle}>{subtitle}</Text>
+      <View style={[S.serviceArrow, { borderColor: `${color}50` }]}>
+        <Ionicons name="arrow-forward" size={14} color={color} />
+      </View>
+    </TiltCard>
+  );
+}
+
+// ─── Feature Pill ────────────────────────────────────────────────────────────
+function FeaturePill({ icon, label }: { icon: any; label: string }) {
+  return (
+    <View style={S.featurePill}>
+      <Ionicons name={icon} size={16} color="#10b981" />
+      <Text style={S.featurePillText}>{label}</Text>
+    </View>
+  );
+}
+
+// ─── Role Badge ──────────────────────────────────────────────────────────────
+function RoleBadge({ emoji, title, color }: any) {
+  return (
+    <TiltCard style={[S.roleBadge, { borderColor: `${color}40`, backgroundColor: `${color}12` }]}>
+      <Text style={{ fontSize: 22, marginBottom: 6 }}>{emoji}</Text>
+      <Text style={[S.roleTitle, { color }]}>{title}</Text>
+    </TiltCard>
+  );
+}
+
+// ─── Trust Badge Card (ISO) ───────────────────────────────────────────────────
+function TrustBadgeCard({ icon, title, desc, color }: any) {
+  return (
+    <TiltCard style={[S.trustCard, { borderColor: `${color}25`, backgroundColor: `${color}05` }]}>
+      <View style={[S.trustIconBox, { backgroundColor: `${color}15`, borderColor: `${color}30` }]}>
+        <Ionicons name={icon} size={22} color={color} />
+      </View>
+      <Text style={[S.trustTitle, { color }]}>{title}</Text>
+      <Text style={S.trustDesc}>{desc}</Text>
+    </TiltCard>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+export default function PublicLandingPage() {
+  const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isDesktop = width > 1024;
+  const isMobile = width <= 768;
 
   return (
-    <View style={styles.container}>
-      {/* Full-screen hero background */}
-      <Image
-        source={require('@/assets/images/farmsking_hero_bg_new.png')}
-        style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]}
-        resizeMode="cover"
-      />
-      {/* Deep gradient overlay */}
-      <LinearGradient
-        colors={['rgba(4,15,28,0.72)', 'rgba(4,15,28,0.88)', '#040f1c']}
-        style={StyleSheet.absoluteFill}
-      />
+    <View style={S.root}>
 
-      {/* Floating glowing orbs — web only */}
-      {Platform.OS === 'web' && (
-        <>
-          <View style={[styles.orb, { top: 60,  left: '8%',  width: 320, height: 320, backgroundColor: 'rgba(16,185,129,0.14)' }]} />
-          <View style={[styles.orb, { top: 200, right: '6%', width: 260, height: 260, backgroundColor: 'rgba(14,165,233,0.12)' }]} />
-          <View style={[styles.orb, { top: 500, left: '35%', width: 180, height: 180, backgroundColor: 'rgba(245,158,11,0.08)'  }]} />
-        </>
-      )}
-
-      {/* Floating pill header */}
       <PublicHeader />
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[S.scroll, { paddingBottom: isMobile ? 100 : 80 }]}
         showsVerticalScrollIndicator={false}
-        bounces={false}
-        overScrollMode="never"
       >
-        {/* ── HERO ── */}
-        <View style={styles.heroSection}>
-          {/* Premium badge */}
-          <View style={styles.heroBadge}>
-            <Ionicons name="star" size={13} color="#f59e0b" />
-            <Text style={styles.heroBadgeText}>  India's #1 Digital Agriculture Platform</Text>
-            <Ionicons name="star" size={13} color="#f59e0b" />
-          </View>
 
-          <Text style={[styles.heroTitle, !isDesktop && styles.heroTitleMobile]}>
-            <Text style={{ color: '#fef08a' }}>Revolutionizing</Text>{'\n'}Indian Agriculture
-          </Text>
-          <Text style={[styles.heroSubtitle, !isDesktop && styles.heroSubtitleMobile]}>
-            Complete Agri-Platform · From Seeds to Harvest · Pure Farmer-Made Foods
-          </Text>
+        {/* ══ HERO ══ */}
+        <View style={[S.hero, isDesktop ? S.heroDesktop : S.heroMobile]}>
 
-          {/* Feature pills */}
-          <View style={styles.heroPills}>
-            {['🌱 Farm', '🌿 Garden', '📚 Learn', '⚙️ Manage', '🛒 Buy', '🚀 Grow'].map((p, i) => (
-              <View key={i} style={styles.heroPill}>
-                <Text style={styles.heroPillText}>{p}</Text>
+          {/* Left / Center Content */}
+          <View style={[S.heroContent, isDesktop ? { flex: 6, alignItems: 'flex-start' } : { alignItems: 'center' }]}>
+            {/* Live badge */}
+            <View style={S.liveBadge}>
+              <LiveDot />
+              <Text style={S.liveBadgeText}>LIVE · India's Smart Agri Platform</Text>
+            </View>
+
+            <Text style={[S.heroTitle, isMobile && { textAlign: 'center', fontSize: 26, lineHeight: 34 }]}>
+              Grow Smarter.{'\n'}
+              <Text style={S.heroGreen}>Earn More.</Text>
+            </Text>
+            <Text style={[S.heroSub, isMobile && { textAlign: 'center', fontSize: 13, lineHeight: 20, marginBottom: 20, paddingHorizontal: 8 }]}>
+              FarmsKing is India's complete digital farming ecosystem — real-time mandi prices, AI crop diagnostics, expert consultations, farm bookkeeping, and an agri-store. All in one platform.
+            </Text>
+
+            {/* CTA Buttons */}
+            <View style={[S.ctaRow, isMobile && { justifyContent: 'center' }]}>
+              <TiltCard intensity={1.06}>
+                <TouchableOpacity onPress={() => router.push('/(auth)/login')} activeOpacity={0.9}>
+                  <LinearGradient colors={['#00ff87', '#059669']} style={S.btnPrimary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                    <Ionicons name="leaf" size={18} color="#02120a" />
+                    <Text style={S.btnPrimaryText}>Start for Free</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </TiltCard>
+              <TouchableOpacity style={S.btnSecondary} onPress={() => router.push('/shop')}>
+                <Ionicons name="storefront-outline" size={16} color="#10b981" />
+                <Text style={S.btnSecondaryText}>Browse Store</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* ISO Enterprise Badges */}
+            <View style={[S.isoBadgeRow, isMobile && { justifyContent: 'center' }]}>
+              <View style={S.isoBadgeItem}>
+                <Ionicons name="shield-checkmark" size={14} color="#10b981" />
+                <Text style={S.isoBadgeText}>ISO 27001 Certified</Text>
               </View>
-            ))}
+              <View style={S.isoDot} />
+              <View style={S.isoBadgeItem}>
+                <Ionicons name="lock-closed" size={14} color="#10b981" />
+                <Text style={S.isoBadgeText}>256-Bit SSL</Text>
+              </View>
+              <View style={S.isoDot} />
+              <View style={S.isoBadgeItem}>
+                <Ionicons name="ribbon" size={14} color="#10b981" />
+                <Text style={S.isoBadgeText}>ISO 9001 Quality</Text>
+              </View>
+            </View>
+
+            {/* Stats */}
+            <View style={[S.statsRow, isMobile && { justifyContent: 'center' }]}>
+              <StatCard val="50,000+" label="Active Farmers" color="#10b981" />
+              <View style={S.statDivider} />
+              <StatCard val="1,200+" label="Agri Experts" color="#0ea5e9" />
+              <View style={S.statDivider} />
+              <StatCard val="28 States" label="India-wide" color="#f59e0b" />
+            </View>
           </View>
 
-          {/* CTA buttons */}
-          <View style={styles.heroActions}>
-            <TouchableOpacity
-              style={styles.ctaPrimary}
-              onPress={() => router.push('/shop')}
-              activeOpacity={0.85}
-            >
-              <LinearGradient colors={['#10b981', '#059669']} style={styles.ctaGradient}>
-                <Ionicons name="storefront-outline" size={18} color="#fff" />
-                <Text style={styles.ctaPrimaryText}>Shop Now</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+          {/* Right Side: Floating Crop Asset + Widgets */}
+          {isDesktop && (
+            <View style={[S.heroRight]}>
+              <Float delay={0} dist={14} dur={4000} style={{ alignItems: 'center' }}>
+                <Image source={require('@/assets/images/farmsking_allcrops_mockup.png')} style={S.heroImage} resizeMode="contain" />
+              </Float>
 
-            <TouchableOpacity
-              style={styles.ctaSecondary}
-              onPress={() => router.push('/topic/Crop-Doctors')}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="leaf-outline" size={18} color="#10b981" />
-              <Text style={styles.ctaSecondaryText}>Ask Agri-AI</Text>
-            </TouchableOpacity>
-          </View>
+              {/* Floating live mandi price widget */}
+              <Float delay={800} dist={8} dur={3500} style={S.floatWidget1}>
+                <BlurView intensity={35} tint="light" style={StyleSheet.absoluteFill} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <Ionicons name="trending-up" size={16} color="#10b981" />
+                  <Text style={S.widgetTitle}>Mandi Price Live</Text>
+                </View>
+                <Text style={S.widgetBig}>₹2,140</Text>
+                <Text style={S.widgetSub}>Wheat / Quintal · ↑ 8.4% today</Text>
+              </Float>
+
+              {/* Floating AI diagnosis widget */}
+              <Float delay={1500} dist={10} dur={4200} style={S.floatWidget2}>
+                <BlurView intensity={35} tint="light" style={StyleSheet.absoluteFill} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <Ionicons name="scan" size={16} color="#0ea5e9" />
+                  <Text style={S.widgetTitle}>AI Crop Scan</Text>
+                </View>
+                <Text style={[S.widgetSub, { color: '#0ea5e9' }]}>Disease: Late Blight</Text>
+                <Text style={[S.widgetSub, { color: '#64748b', marginTop: 2 }]}>Treatment found in 3s ✓</Text>
+              </Float>
+            </View>
+          )}
         </View>
 
-        {/* ── SERVICE CARDS ── */}
-        <View style={[styles.cardsRow, !isDesktop && styles.cardsRowMobile]}>
-          <GlassCard
-            imgSrcs={[require('@/assets/images/icon_farming_new.png')]}
-            title="Farming"
-            desc="Precision Agriculture, Yield Max & Resource Efficiency."
-            accentColor="#10b981"
-            onPress={() => router.push('/topic/Farming')}
-          />
-          <GlassCard
-            imgSrcs={[require('@/assets/images/icon_gardening_new.png')]}
-            title="Gardening"
-            desc="Home Kits, Urban Farming & Expert Plant Care."
-            accentColor="#ec4899"
-            onPress={() => router.push('/topic/Gardening')}
-          />
-          <GlassCard
-            imgSrcs={[require('@/assets/images/icon_cropdoctors_new.png')]}
-            title="Crop Doctors"
-            desc="AI Diagnosis, Expert Consults & Soil Analysis."
-            accentColor="#3b82f6"
-            onPress={() => router.push('/topic/Crop-Doctors')}
-          />
-          <GlassCard
-            imgSrcs={[require('@/assets/images/icon_agristore_new.png')]}
-            title="Agri Store"
-            desc="Certified Seeds, Fertilizers, Equipment & More."
-            accentColor="#f59e0b"
-            onPress={() => router.push('/shop')}
-          />
-        </View>
+        {/* Mobile crop image */}
+        {!isDesktop && (
+          <Float dist={10} dur={3800} style={{ alignItems: 'center', marginTop: 16, marginBottom: 8 }}>
+            <Image source={require('@/assets/images/farmsking_allcrops_mockup.png')} style={[S.heroImage, { width: width * 0.75, height: 160 }]} resizeMode="contain" />
+          </Float>
+        )}
 
-        {/* ── WHY FARMSKING ── */}
-        <View style={styles.section}>
-          <Text style={styles.sectionEyebrow}>WHY FARMSKING?</Text>
-          <Text style={styles.sectionTitle}>Everything in One Ecosystem</Text>
-          <View style={[styles.featuresGrid, isMobile && { flexDirection: 'column' }]}>
-            <FeaturePill icon="stats-chart-outline"   label="Real-Time Market Rates"  desc="Latest mandi rates & price trends" />
-            <FeaturePill icon="people-outline"        label="Expert Advisors"         desc="Practical agriculture guidance" />
-            <FeaturePill icon="book-outline"          label="Smart Bookkeeping"       desc="Income, expenses & profit/loss" />
-            <FeaturePill icon="bulb-outline"          label="AI-Powered Solutions"    desc="Instant answers & suggestions" />
-            <FeaturePill icon="cart-outline"          label="E-commerce Delivery"     desc="Quality products, fast delivery" />
-            <FeaturePill icon="shield-checkmark-outline" label="Trusted Community"   desc="Learn, share & grow together" />
-          </View>
-        </View>
-
-        {/* ── USER ROLES ── */}
-        <View style={styles.section}>
-          <Text style={styles.sectionEyebrow}>PERSONALIZED EXPERIENCE</Text>
-          <Text style={styles.sectionTitle}>Choose Your FarmsKing Role</Text>
-          <View style={styles.rolesGrid}>
-            <RoleCard emoji="🛒" title="Customer"         desc="Buy Products"       color="#3b82f6" />
-            <RoleCard emoji="🌾" title="Farmer"           desc="Manage Farm"        color="#10b981" />
-            <RoleCard emoji="👑" title="Paid Farmer"      desc="Advanced Tools"     color="#f59e0b" />
-            <RoleCard emoji="🧑‍⚕️" title="Advisor"        desc="Help Farmers"       color="#8b5cf6" />
-            <RoleCard emoji="🌺" title="Gardener"         desc="Manage Gardens"     color="#ec4899" />
-            <RoleCard emoji="🌸" title="Garden Advisor"   desc="Garden Expertise"   color="#d946ef" />
-            <RoleCard emoji="🤝" title="Business Partner" desc="Earn & Grow"        color="#f97316" />
-            <RoleCard emoji="⚙️" title="Admin"            desc="Manage Platform"    color="#64748b" />
-          </View>
-        </View>
-
-        {/* ── HOW IT WORKS ── */}
-        <View style={styles.section}>
-          <Text style={styles.sectionEyebrow}>GET STARTED IN 4 STEPS</Text>
-          <Text style={styles.sectionTitle}>How FarmsKing Works</Text>
-          <View style={[styles.stepsRow, isMobile && { flexDirection: 'column', alignItems: 'center' }]}>
-            <StepCard num="1" title="Register"        desc="Create your account in minutes." />
-            {!isMobile && <Ionicons name="arrow-forward" size={24} color="#10b981" style={{ marginTop: 24 }} />}
-            <StepCard num="2" title="Select Role"     desc="Choose your role & set up profile." />
-            {!isMobile && <Ionicons name="arrow-forward" size={24} color="#10b981" style={{ marginTop: 24 }} />}
-            <StepCard num="3" title="Explore Services" desc="Use farming, gardening, store & AI." />
-            {!isMobile && <Ionicons name="arrow-forward" size={24} color="#10b981" style={{ marginTop: 24 }} />}
-            <StepCard num="4" title="Grow Together"   desc="Better results, higher income." />
+        {/* ══ SERVICES ══ */}
+        <View style={S.section}>
+          <Text style={S.eyebrow}>WHAT WE OFFER</Text>
+          <Text style={S.sectionTitle}>Four Pillars of FarmsKing</Text>
+          <View style={[S.serviceRow, isMobile && { flexWrap: 'wrap', justifyContent: 'center' }]}>
+            <ServiceCard
+              img={require('@/assets/images/icon_farming_new.png')}
+              title="Farming" subtitle="Crop planning, yield tracking & expert advice"
+              color="#10b981" onPress={() => router.push('/topic/Farming')}
+            />
+            <ServiceCard
+              img={require('@/assets/images/icon_gardening_new.png')}
+              title="Gardening" subtitle="Home gardens, nurseries & urban growing"
+              color="#ec4899" onPress={() => router.push('/topic/Gardening')}
+            />
+            <ServiceCard
+              img={require('@/assets/images/icon_cropdoctors_new.png')}
+              title="Crop Doctors" subtitle="AI diagnosis + 1-on-1 expert consultations"
+              color="#3b82f6" onPress={() => router.push('/topic/Crop-Doctors')}
+            />
+            <ServiceCard
+              img={require('@/assets/images/icon_agristore_new.png')}
+              title="Agri Store" subtitle="Seeds, fertilizers & farming equipment"
+              color="#f59e0b" onPress={() => router.push('/shop')}
+            />
           </View>
         </View>
 
-        {/* ── TRUST BADGES ── */}
-        <View style={[styles.section, { paddingBottom: 0 }]}>
-          <View style={[styles.trustGrid, isMobile && { flexDirection: 'column' }]}>
+        {/* ══ FEATURES GRID ══ */}
+        <View style={S.section}>
+          <Text style={S.eyebrow}>WHY FARMSKING</Text>
+          <Text style={S.sectionTitle}>Everything in One Ecosystem</Text>
+          <View style={[S.featuresGrid, isMobile && { flexDirection: 'column', alignItems: 'center' }]}>
+            <FeaturePill icon="stats-chart" label="Real-Time Mandi Rates" />
+            <FeaturePill icon="scan" label="AI Disease Scanner" />
+            <FeaturePill icon="book" label="Farm Bookkeeping & Records" />
+            <FeaturePill icon="people" label="1200+ Verified Agri Experts" />
+            <FeaturePill icon="satellite" label="Satellite Crop Monitoring" />
+            <FeaturePill icon="cart" label="Certified Seeds & Inputs Store" />
+            <FeaturePill icon="school" label="AgriLearn — Training Courses" />
+            <FeaturePill icon="wallet" label="Business Partner Earnings" />
+          </View>
+        </View>
+
+        {/* ══ WHO IS IT FOR ══ */}
+        <View style={S.section}>
+          <Text style={S.eyebrow}>FOR EVERYONE</Text>
+          <Text style={S.sectionTitle}>Your FarmsKing Role</Text>
+          <View style={S.rolesGrid}>
+            <RoleBadge emoji="🌾" title="Farmer" color="#10b981" />
+            <RoleBadge emoji="🌺" title="Gardener" color="#ec4899" />
+            <RoleBadge emoji="🧑‍⚕️" title="Crop Doctor" color="#3b82f6" />
+            <RoleBadge emoji="🏪" title="Seller" color="#f59e0b" />
+            <RoleBadge emoji="🤝" title="Biz Partner" color="#f97316" />
+            <RoleBadge emoji="🛒" title="Customer" color="#8b5cf6" />
+          </View>
+        </View>
+
+        {/* ══ HOW IT WORKS ══ */}
+        <View style={[S.section, { paddingBottom: 20 }]}>
+          <Text style={S.eyebrow}>GET STARTED</Text>
+          <Text style={S.sectionTitle}>Up & Running in 3 Steps</Text>
+          <View style={[S.stepsRow, isMobile && { flexDirection: 'column', alignItems: 'center' }]}>
             {[
-              { icon: 'shield-checkmark', label: 'Secure & Safe',        desc: 'Privacy-focused platform' },
-              { icon: 'checkmark-circle', label: 'Verified Products',    desc: 'Quality from trusted sellers' },
-              { icon: 'people',           label: 'Expert Verification',  desc: 'Professional advisory network' },
-              { icon: 'lock-closed',      label: 'Privacy First',        desc: 'Your data always protected' },
-            ].map((b, i) => (
-              <View key={i} style={styles.trustBadge}>
-                <Ionicons name={b.icon as any} size={26} color="#10b981" />
-                <Text style={styles.trustLabel}>{b.label}</Text>
-                <Text style={styles.trustDesc}>{b.desc}</Text>
-              </View>
+              { n: '01', icon: 'person-add', title: 'Register Free', desc: 'Sign up in under a minute — no credit card needed.' },
+              { n: '02', icon: 'options', title: 'Pick Your Role', desc: 'Choose Farmer, Advisor, Gardener, Seller & more.' },
+              { n: '03', icon: 'trending-up', title: 'Start Growing', desc: 'Access live prices, AI tools, experts & the store.' },
+            ].map((s, i) => (
+              <TiltCard key={i} style={S.stepCard}>
+                <LinearGradient colors={['rgba(16,185,129,0.05)', 'transparent']} style={StyleSheet.absoluteFill} />
+                <Text style={S.stepNum}>{s.n}</Text>
+                <View style={S.stepIconBox}>
+                  <Ionicons name={s.icon as any} size={24} color="#10b981" />
+                </View>
+                <Text style={S.stepTitle}>{s.title}</Text>
+                <Text style={S.stepDesc}>{s.desc}</Text>
+              </TiltCard>
             ))}
           </View>
         </View>
 
-        {/* ── CTA STRIP ── */}
-        <LinearGradient
-          colors={['#064e3b', '#065f46', '#047857']}
-          style={styles.ctaStrip}
-        >
-          <Text style={styles.ctaStripTitle}>Start Your Smart Farming Journey Today</Text>
-          <Text style={styles.ctaStripSub}>Join FarmsKing — India's growing agri-revolution.</Text>
-          <TouchableOpacity
-            style={styles.ctaStripBtn}
-            onPress={() => router.push('/(auth)/login')}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.ctaStripBtnText}>Get Started →</Text>
-          </TouchableOpacity>
-        </LinearGradient>
-
-        {/* ── FOOTER ── */}
-        <View style={styles.footer}>
-          <View style={styles.footerTop}>
-            <View style={{ maxWidth: 260 }}>
-              <Text style={styles.footerBrand}>♕ FarmsKing</Text>
-              <Text style={styles.footerBrandSub}>Farm · Garden · Learn · Manage · Buy · Grow</Text>
-            </View>
-            {isDesktop && (
-              <>
-                <View>
-                  <Text style={styles.footerColHead}>Platform</Text>
-                  {['Farming', 'Gardening', 'Advisors', 'Market Rates'].map((l, i) => (
-                    <Text key={i} style={styles.footerLink}>{l}</Text>
-                  ))}
-                </View>
-                <View>
-                  <Text style={styles.footerColHead}>Store</Text>
-                  {['Seeds & Plants', 'Farm Inputs', 'Tools', 'Farmer Foods'].map((l, i) => (
-                    <Text key={i} style={styles.footerLink}>{l}</Text>
-                  ))}
-                </View>
-                <View>
-                  <Text style={styles.footerColHead}>Company</Text>
-                  {['About', 'Contact', 'Privacy', 'Terms'].map((l, i) => (
-                    <Text key={i} style={styles.footerLink}>{l}</Text>
-                  ))}
-                </View>
-              </>
-            )}
-          </View>
-          <View style={styles.footerDivider} />
-          <View style={styles.footerBottom}>
-            <Text style={styles.footerCopy}>© 2026 FarmsKing. All rights reserved.</Text>
-            <View style={{ flexDirection: 'row', gap: 16 }}>
-              {(['logo-facebook', 'logo-youtube', 'logo-instagram', 'logo-whatsapp'] as const).map((ic, i) => (
-                <Ionicons key={i} name={ic} size={20} color="#64748b" />
-              ))}
-            </View>
+        {/* ══ ENTERPRISE TRUST & ISO COMPLIANCE ══ */}
+        <View style={[S.section, { backgroundColor: 'rgba(0,255,135,0.02)', marginVertical: 40, borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'rgba(0,255,135,0.1)' }]}>
+          <Text style={S.eyebrow}>ENTERPRISE GRADE</Text>
+          <Text style={S.sectionTitle}>ISO Standards & Security</Text>
+          <View style={[S.trustRow, isMobile && { flexDirection: 'column', alignItems: 'center' }]}>
+            <TrustBadgeCard
+              icon="shield-checkmark-outline"
+              title="ISO 27001 Compliant"
+              desc="Bank-level data encryption ensuring 100% privacy and security for all farm data, bookkeeping, and personal records."
+              color="#00ff87"
+            />
+            <TrustBadgeCard
+              icon="leaf-outline"
+              title="ISO 9001 Quality"
+              desc="Rigorous quality management systems in place for our certified Agri Store products and verified crop consultations."
+              color="#2dd4bf"
+            />
+            <TrustBadgeCard
+              icon="server-outline"
+              title="99.99% Uptime SLA"
+              desc="Cloud-native infrastructure guaranteeing uninterrupted real-time mandi prices and AI crop diagnosis 24/7."
+              color="#f59e0b"
+            />
           </View>
         </View>
+
+        {/* ══ CTA STRIP ══ */}
+        <View style={S.ctaStrip}>
+          <LinearGradient colors={['#e2e8f0', '#f1f5f9', '#e2e8f0']} style={StyleSheet.absoluteFill} />
+          <View style={S.ctaStripDeco1} />
+          <View style={S.ctaStripDeco2} />
+          <Text style={S.ctaStripTitle}>Join 50,000+ Smart Farmers</Text>
+          <Text style={S.ctaStripSub}>India's agri-revolution starts at FarmsKing.in</Text>
+          <TouchableOpacity style={S.ctaStripBtn} onPress={() => router.push('/(auth)/login')}>
+            <LinearGradient colors={['#00ff87', '#059669']} style={S.ctaStripBtnInner} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+              <Text style={S.ctaStripBtnText}>Create Free Account →</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+
+        {/* ══ FOOTER ══ */}
+        <View style={S.footer}>
+          <Image source={require('@/assets/images/farmsking_logo_transparent_bg.png')} style={S.footerLogo} resizeMode="contain" />
+          <Text style={S.footerTagline}>Farm · Garden · Learn · Manage · Buy · Grow</Text>
+          <View style={S.footerDivider} />
+          <View style={[S.footerLinks, isMobile && { gap: 12 }]}>
+            {['About', 'Privacy', 'Terms', 'Contact', 'Careers'].map((l, i) => (
+              <Text key={i} style={S.footerLink}>{l}</Text>
+            ))}
+          </View>
+          <Text style={S.footerCopy}>© 2026 FarmsKing. All rights reserved. Made with ♥ for Indian Farmers.</Text>
+        </View>
+
       </ScrollView>
+
+      {/* ══ MOBILE BOTTOM NAV DOCK ══ */}
+      {isMobile && (
+        <View style={S.dock}>
+          <BlurView intensity={50} tint="light" style={StyleSheet.absoluteFill} />
+          <TouchableOpacity style={S.dockBtn} onPress={() => router.push('/market')}>
+            <Ionicons name="bar-chart-outline" size={22} color="#64748b" />
+            <Text style={S.dockLabel}>Market</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={S.dockBtn} onPress={() => router.push('/shop')}>
+            <Ionicons name="cart-outline" size={22} color="#64748b" />
+            <Text style={S.dockLabel}>Store</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={S.dockCenterWrap} onPress={() => router.push('/crop-disease-scanner')}>
+            <LinearGradient colors={['#00ff87', '#059669']} style={S.dockCenter}>
+              <Ionicons name="scan" size={28} color="#02120a" />
+            </LinearGradient>
+          </TouchableOpacity>
+          <TouchableOpacity style={S.dockBtn} onPress={() => router.push('/topic/Crop-Doctors')}>
+            <Ionicons name="medkit-outline" size={22} color="#64748b" />
+            <Text style={S.dockLabel}>Experts</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={S.dockBtn} onPress={() => router.push('/(auth)/login')}>
+            <Ionicons name="person-outline" size={22} color="#64748b" />
+            <Text style={S.dockLabel}>Login</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#040f1c' },
+const S = StyleSheet.create({
+  root: { flex: 1, backgroundColor: '#f8fafc' },
+  scroll: { paddingTop: 72, zIndex: 10 },
 
-  // Glowing background orbs
-  orb: {
-    position: 'absolute',
-    borderRadius: 999,
-    ...(Platform.OS === 'web' ? ({ filter: 'blur(80px)' } as any) : {}),
-    zIndex: 0,
-  },
+  // Hero
+  hero: { alignItems: 'center', paddingHorizontal: 16, paddingBottom: 10, zIndex: 10 },
+  heroDesktop: { flexDirection: 'row', alignItems: 'center', minHeight: 580, maxWidth: 1300, alignSelf: 'center', paddingTop: 40, gap: 40, paddingHorizontal: '5%' },
+  heroMobile: { flexDirection: 'column', paddingTop: 16, paddingHorizontal: 16 },
+  heroContent: { justifyContent: 'center' },
+  heroRight: { flex: 5, alignItems: 'center', position: 'relative', minHeight: 400 },
+  heroImage: { width: 400, height: 300 },
 
-  scrollContent: { flexGrow: 1, zIndex: 10 },
+  liveBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(16,185,129,0.1)', borderWidth: 1, borderColor: 'rgba(16,185,129,0.25)', paddingHorizontal: 14, paddingVertical: 7, borderRadius: 99, marginBottom: 22 },
+  liveBadgeText: { color: '#059669', fontSize: 11, fontFamily: FONT.bold, letterSpacing: 0.8 },
 
-  // ── Hero ──
-  heroSection: {
-    alignItems: 'center',
-    paddingTop: 130,
-    paddingBottom: 60,
-    paddingHorizontal: 20,
-  },
-  heroBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(245,158,11,0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(245,158,11,0.3)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 99,
-    marginBottom: 20,
-  },
-  heroBadgeText: {
-    color: '#fbbf24',
-    fontFamily: FONT.bold,
-    fontSize: 12,
-    letterSpacing: 0.5,
-  },
-  heroTitle: {
-    fontSize: 44,
-    fontFamily: FONT.extraBold,
-    color: '#ffffff',
-    textAlign: 'center',
-    lineHeight: 52,
-    marginBottom: 16,
-    textShadowColor: 'rgba(0,0,0,0.6)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 12,
-  },
-  heroTitleMobile: { fontSize: 28, lineHeight: 36 },
-  heroSubtitle: {
-    fontSize: 16,
-    fontFamily: FONT.medium,
-    color: '#94a3b8',
-    textAlign: 'center',
-    marginBottom: 28,
-    maxWidth: 560,
-  },
-  heroSubtitleMobile: { fontSize: 14 },
-  heroPills: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10, marginBottom: 32 },
-  heroPill: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 99,
-  },
-  heroPillText: { color: '#e2e8f0', fontFamily: FONT.semiBold, fontSize: 13 },
-  heroActions: { flexDirection: 'row', gap: 14, flexWrap: 'wrap', justifyContent: 'center' },
-  ctaPrimary: { borderRadius: 32, overflow: 'hidden', ...premiumShadow('#10b981', 'lg') },
-  ctaGradient: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    paddingHorizontal: 26, paddingVertical: 14, borderRadius: 32,
-  },
-  ctaPrimaryText: { color: '#fff', fontFamily: FONT.bold, fontSize: 15 },
-  ctaSecondary: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: 'rgba(16,185,129,0.1)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(16,185,129,0.4)',
-    paddingHorizontal: 26, paddingVertical: 13, borderRadius: 32,
-  },
-  ctaSecondaryText: { color: '#10b981', fontFamily: FONT.bold, fontSize: 15 },
+  heroTitle: { fontSize: 44, fontFamily: FONT.extraBold, color: '#0f172a', lineHeight: 54, marginBottom: 12 },
+  heroGreen: { color: '#10b981' },
+  heroSub: { fontSize: 15, fontFamily: FONT.medium, color: '#475569', lineHeight: 24, marginBottom: 24, maxWidth: 520 },
 
-  // ── Glass cards ──
-  cardsRow: {
-    flexDirection: 'row', justifyContent: 'center',
-    gap: 16, paddingHorizontal: 16, paddingBottom: 60,
-  },
-  cardsRowMobile: { flexWrap: 'wrap', gap: 12 },
-  glassCard: {
-    backgroundColor: 'rgba(16,25,40,0.35)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 20,
-    padding: 14,
-    overflow: 'hidden',
-    ...premiumShadow('rgba(0,0,0,0.5)', 'lg'),
-  },
-  glassAccentBar: { height: 3, borderRadius: 99, marginBottom: 12 },
-  glassImgRow: { flexDirection: 'row', gap: 10, justifyContent: 'center', marginBottom: 10 },
-  cropAsset: {
-    width: 52, height: 52, borderRadius: 26,
-    borderWidth: 2, borderColor: 'rgba(255,255,255,0.18)',
-    ...premiumShadow('#000', 'lg'),
-  },
-  glassTitle: { fontSize: 17, fontFamily: FONT.bold, marginBottom: 6 },
-  glassDesc:  { fontSize: 12, fontFamily: FONT.medium, color: '#94a3b8', lineHeight: 18, marginBottom: 14, flex: 1 },
-  glassBtn: {
-    borderWidth: 1, borderRadius: 20,
-    paddingVertical: 9, alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-  },
-  glassBtnText: { fontSize: 13, fontFamily: FONT.bold },
+  ctaRow: { flexDirection: 'row', gap: 14, marginBottom: 20, flexWrap: 'wrap' },
+  btnPrimary: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 30, paddingVertical: 15, borderRadius: 99, ...premiumShadow('rgba(16,185,129,0.3)', 'lg') },
+  btnPrimaryText: { color: '#ffffff', fontFamily: FONT.extraBold, fontSize: 16 },
+  btnSecondary: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1.5, borderColor: '#cbd5e1', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 99, backgroundColor: '#ffffff', ...premiumShadow('rgba(0,0,0,0.05)', 'sm') },
+  btnSecondaryText: { color: '#0f172a', fontFamily: FONT.bold, fontSize: 15 },
 
-  // ── Shared section ──
-  section: { paddingHorizontal: 20, paddingVertical: 60, alignItems: 'center' },
-  sectionEyebrow: {
-    color: '#10b981', fontSize: 11, fontFamily: FONT.bold,
-    letterSpacing: 2.5, marginBottom: 8,
-  },
-  sectionTitle: {
-    fontSize: 28, fontFamily: FONT.extraBold, color: '#f8fafc',
-    textAlign: 'center', marginBottom: 36,
-  },
+  // ISO Enterprise Badges
+  isoBadgeRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 40, flexWrap: 'wrap' },
+  isoBadgeItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  isoBadgeText: { fontSize: 11, fontFamily: FONT.bold, color: '#64748b' },
+  isoDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#cbd5e1' },
 
-  // ── Feature pills ──
-  featuresGrid: {
-    flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 16, maxWidth: 900,
-  },
-  featurePill: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 12,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 14, padding: 16, width: 260,
-  },
-  featurePillIcon: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: 'rgba(16,185,129,0.15)',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  featurePillLabel: { fontSize: 14, fontFamily: FONT.bold, color: '#f1f5f9', marginBottom: 2 },
-  featurePillDesc:  { fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
+  statsRow: { flexDirection: 'row', alignItems: 'center', gap: 24, flexWrap: 'wrap' },
+  statCard: { alignItems: 'flex-start' },
+  statVal: { fontSize: 22, fontFamily: FONT.extraBold },
+  statLabel: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 },
+  statDivider: { width: 1, height: 32, backgroundColor: '#e2e8f0' },
 
-  // ── Roles ──
-  rolesGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 14, maxWidth: 900 },
-  roleCard: {
-    width: 130, padding: 18, borderRadius: 18, borderWidth: 1.5,
-    alignItems: 'center', backgroundColor: 'rgba(16,25,40,0.5)',
-    overflow: 'hidden',
-    ...premiumShadow('rgba(0,0,0,0.4)', 'md'),
-  },
-  roleTitle: { fontSize: 13, fontFamily: FONT.bold, textAlign: 'center', marginBottom: 2 },
-  roleDesc:  { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center' },
+  // Float widgets on desktop hero
+  floatWidget1: { position: 'absolute', right: -20, top: 30, width: 220, backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 18, padding: 16, borderWidth: 1, borderColor: '#e2e8f0', overflow: 'hidden', ...premiumShadow('rgba(0,0,0,0.1)', 'lg') },
+  floatWidget2: { position: 'absolute', left: 0, bottom: 20, width: 210, backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 18, padding: 16, borderWidth: 1, borderColor: '#e2e8f0', overflow: 'hidden', ...premiumShadow('rgba(0,0,0,0.1)', 'lg') },
+  widgetTitle: { color: '#334155', fontSize: 12, fontFamily: FONT.bold },
+  widgetBig: { color: '#10b981', fontSize: 26, fontFamily: FONT.extraBold, marginVertical: 4 },
+  widgetSub: { color: '#64748b', fontSize: 11, fontFamily: FONT.medium },
 
-  // ── Steps ──
-  stepsRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap', justifyContent: 'center' },
-  stepCard: {
-    width: 170, backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 16, padding: 20, alignItems: 'center',
-  },
-  stepNum: {
-    width: 40, height: 40, borderRadius: 20,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 12,
-  },
-  stepNumText: { color: '#fff', fontFamily: FONT.extraBold, fontSize: 16 },
-  stepTitle:   { fontSize: 14, fontFamily: FONT.bold, color: '#f1f5f9', textAlign: 'center', marginBottom: 6 },
-  stepDesc:    { fontSize: 12, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center' },
+  // Section commons
+  section: { alignItems: 'center', paddingVertical: 60, paddingHorizontal: '5%', zIndex: 10 },
+  eyebrow: { color: '#10b981', fontSize: 11, fontFamily: FONT.bold, letterSpacing: 2.5, marginBottom: 10 },
+  sectionTitle: { fontSize: 32, fontFamily: FONT.extraBold, color: '#0f172a', textAlign: 'center', marginBottom: 36 },
 
-  // ── Trust ──
-  trustGrid: {
-    flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 16,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
-    borderRadius: 24, padding: 32, maxWidth: 900,
-  },
-  trustBadge: { alignItems: 'center', width: 170, gap: 6 },
-  trustLabel: { fontSize: 13, fontFamily: FONT.bold, color: '#f1f5f9', textAlign: 'center' },
-  trustDesc:  { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center' },
+  // Services
+  serviceRow: { flexDirection: 'row', gap: 16, flexWrap: 'wrap', justifyContent: 'center' },
+  serviceCard: { borderRadius: 20, padding: 20, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', overflow: 'hidden', ...premiumShadow('rgba(0,0,0,0.05)', 'lg') },
+  serviceIconBg: { width: 64, height: 64, borderRadius: 18, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginBottom: 14, overflow: 'hidden' },
+  serviceImg: { width: 50, height: 50 },
+  serviceTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a', marginBottom: 6 },
+  serviceSubtitle: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b', lineHeight: 18, marginBottom: 16 },
+  serviceArrow: { width: 30, height: 30, borderRadius: 15, borderWidth: 1, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-start' },
 
-  // ── CTA strip ──
-  ctaStrip: {
-    marginHorizontal: 20, marginVertical: 40,
-    borderRadius: 24, padding: 40, alignItems: 'center',
-    ...premiumShadow('#10b981', 'lg'),
-  },
-  ctaStripTitle: { fontSize: 26, fontFamily: FONT.extraBold, color: '#fff', textAlign: 'center', marginBottom: 8 },
-  ctaStripSub:   { fontSize: 15, fontFamily: FONT.medium, color: 'rgba(255,255,255,0.75)', textAlign: 'center', marginBottom: 24 },
-  ctaStripBtn: {
-    backgroundColor: '#fff', paddingHorizontal: 36, paddingVertical: 14, borderRadius: 32,
-    ...premiumShadow('#fff', 'md'),
-  },
-  ctaStripBtnText: { color: '#065f46', fontSize: 16, fontFamily: FONT.extraBold },
+  // Features
+  featuresGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center', maxWidth: 1000 },
+  featurePill: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e2e8f0', paddingHorizontal: 18, paddingVertical: 12, borderRadius: 99, ...premiumShadow('rgba(0,0,0,0.03)', 'sm') },
+  featurePillText: { color: '#334155', fontFamily: FONT.semiBold, fontSize: 13 },
 
-  // ── Footer ──
-  footer: { backgroundColor: '#020c18', paddingHorizontal: 24, paddingVertical: 40 },
-  footerTop: { flexDirection: 'row', flexWrap: 'wrap', gap: 40, justifyContent: 'space-between', marginBottom: 32 },
-  footerBrand: { fontSize: 20, fontFamily: FONT.extraBold, color: '#f8fafc', marginBottom: 4 },
-  footerBrandSub: { fontSize: 11, fontFamily: FONT.medium, color: '#475569' },
-  footerColHead: { fontSize: 13, fontFamily: FONT.bold, color: '#94a3b8', marginBottom: 12 },
-  footerLink:    { fontSize: 13, fontFamily: FONT.medium, color: '#475569', marginBottom: 8 },
-  footerDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.06)', marginBottom: 20 },
-  footerBottom:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 },
-  footerCopy:    { fontSize: 12, fontFamily: FONT.medium, color: '#475569' },
+  // Roles
+  rolesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, justifyContent: 'center', maxWidth: 800 },
+  roleBadge: { width: 110, paddingVertical: 20, borderRadius: 16, borderWidth: 1.5, backgroundColor: '#ffffff', alignItems: 'center', overflow: 'hidden', ...premiumShadow('rgba(0,0,0,0.03)', 'sm') },
+  roleTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
+
+  // Steps
+  stepsRow: { flexDirection: 'row', gap: 20, flexWrap: 'wrap', justifyContent: 'center' },
+  stepCard: { width: 280, backgroundColor: '#ffffff', borderRadius: 24, padding: 28, borderWidth: 1, borderColor: '#e2e8f0', overflow: 'hidden', ...premiumShadow('rgba(0,0,0,0.05)', 'lg') },
+  stepNum: { fontSize: 11, fontFamily: FONT.extraBold, color: '#10b981', letterSpacing: 2, marginBottom: 14 },
+  stepIconBox: { width: 48, height: 48, borderRadius: 14, backgroundColor: 'rgba(16,185,129,0.1)', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  stepTitle: { fontSize: 18, fontFamily: FONT.extraBold, color: '#0f172a', marginBottom: 8 },
+  stepDesc: { fontSize: 13, fontFamily: FONT.medium, color: '#64748b', lineHeight: 20 },
+
+  // Trust Badges
+  trustRow: { flexDirection: 'row', gap: 16, flexWrap: 'wrap', justifyContent: 'center' },
+  trustCard: { width: 300, backgroundColor: '#ffffff', borderRadius: 20, padding: 24, borderWidth: 1, overflow: 'hidden', ...premiumShadow('rgba(0,0,0,0.04)', 'md') },
+  trustIconBox: { width: 48, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, marginBottom: 16 },
+  trustTitle: { fontSize: 16, fontFamily: FONT.extraBold, marginBottom: 8 },
+  trustDesc: { fontSize: 13, fontFamily: FONT.medium, color: '#64748b', lineHeight: 20 },
+
+  // CTA strip
+  ctaStrip: { margin: 24, borderRadius: 28, padding: 48, alignItems: 'center', overflow: 'hidden', borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff', ...premiumShadow('rgba(0,0,0,0.08)', 'lg') },
+  ctaStripDeco1: { position: 'absolute', width: 300, height: 300, borderRadius: 150, backgroundColor: 'rgba(16,185,129,0.08)', top: -80, right: -80, ...(Platform.OS === 'web' ? { filter: 'blur(60px)' } as any : {}) },
+  ctaStripDeco2: { position: 'absolute', width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(59,130,246,0.05)', bottom: -60, left: -60, ...(Platform.OS === 'web' ? { filter: 'blur(60px)' } as any : {}) },
+  ctaStripTitle: { fontSize: 28, fontFamily: FONT.extraBold, color: '#0f172a', textAlign: 'center', marginBottom: 10 },
+  ctaStripSub: { fontSize: 14, fontFamily: FONT.medium, color: '#475569', textAlign: 'center', marginBottom: 28 },
+  ctaStripBtn: { borderRadius: 99, overflow: 'hidden', ...premiumShadow('rgba(16,185,129,0.4)', 'lg') },
+  ctaStripBtnInner: { paddingHorizontal: 36, paddingVertical: 15 },
+  ctaStripBtnText: { color: '#ffffff', fontFamily: FONT.extraBold, fontSize: 16 },
+
+  // Footer
+  footer: { alignItems: 'center', paddingVertical: 48, paddingHorizontal: 24, borderTopWidth: 1, borderTopColor: '#e2e8f0', marginTop: 20, backgroundColor: '#ffffff' },
+  footerLogo: { width: 80, height: 80, marginBottom: 8 },
+  footerTagline: { color: '#64748b', fontSize: 12, fontFamily: FONT.medium, letterSpacing: 0.5, marginBottom: 20 },
+  footerDivider: { width: '80%', height: 1, backgroundColor: '#e2e8f0', marginBottom: 20 },
+  footerLinks: { flexDirection: 'row', gap: 24, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 20 },
+  footerLink: { color: '#475569', fontSize: 13, fontFamily: FONT.medium },
+  footerCopy: { color: '#94a3b8', fontSize: 11, fontFamily: FONT.medium, textAlign: 'center' },
+
+  // Mobile dock
+  dock: { position: 'absolute', bottom: 16, left: 16, right: 16, height: 68, backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 34, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingHorizontal: 8, borderWidth: 1, borderColor: '#e2e8f0', overflow: 'hidden', ...premiumShadow('rgba(0,0,0,0.1)', 'lg') },
+  dockBtn: { alignItems: 'center', justifyContent: 'center', padding: 8 },
+  dockLabel: { color: '#64748b', fontSize: 10, fontFamily: FONT.bold, marginTop: 2 },
+  dockCenterWrap: { marginTop: -30 },
+  dockCenter: { width: 58, height: 58, borderRadius: 29, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#ffffff', ...premiumShadow('rgba(16,185,129,0.4)', 'lg') },
 });

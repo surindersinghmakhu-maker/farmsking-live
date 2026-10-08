@@ -172,6 +172,51 @@ export const SuperAdminDashboardView: React.FC = () => {
       />
 
       <View style={styles.content}>
+        
+        {/* ⭐ PREMIUM ECOSYSTEM COMMAND CENTER ⭐ */}
+        <View style={styles.ecoHubContainer}>
+          <View style={styles.ecoHubHeader}>
+            <Ionicons name="git-network-outline" size={20} color="#059669" />
+            <Text style={styles.ecoHubTitle}>Ecosystem Command Center</Text>
+          </View>
+          <Text style={styles.ecoHubSubtitle}>Manage platform systems per flowchart hierarchy</Text>
+
+          <View style={styles.ecoGrid}>
+            <TouchableOpacity style={styles.ecoCard} activeOpacity={0.8} onPress={() => router.push('/admin/(tabs)/super-users' as any)}>
+              <View style={[styles.ecoIconBox, { backgroundColor: '#eff6ff' }]}>
+                <Ionicons name="people" size={24} color="#2563eb" />
+              </View>
+              <Text style={styles.ecoCardTitle}>Admin & Users</Text>
+              <Text style={styles.ecoCardDesc}>Manage all 5 Admin Roles & Users</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.ecoCard} activeOpacity={0.8} onPress={() => router.push('/admin/(tabs)/admin_shop' as any)}>
+              <View style={[styles.ecoIconBox, { backgroundColor: '#fef2f2' }]}>
+                <Ionicons name="storefront" size={24} color="#dc2626" />
+              </View>
+              <Text style={styles.ecoCardTitle}>E-Commerce</Text>
+              <Text style={styles.ecoCardDesc}>Products, Stores, Inventory</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.ecoCard} activeOpacity={0.8} onPress={() => router.push('/admin/(tabs)/super-accounts' as any)}>
+              <View style={[styles.ecoIconBox, { backgroundColor: '#f0fdf4' }]}>
+                <Ionicons name="wallet" size={24} color="#16a34a" />
+              </View>
+              <Text style={styles.ecoCardTitle}>Wallet & Finance</Text>
+              <Text style={styles.ecoCardDesc}>Commissions, Payouts & Transactions</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.ecoCard} activeOpacity={0.8} onPress={() => { setActiveActionTab('SUBMISSIONS'); setIsRequestsCollapsed(false); }}>
+              <View style={[styles.ecoIconBox, { backgroundColor: '#fffbeb' }]}>
+                <Ionicons name="leaf" size={24} color="#d97706" />
+              </View>
+              <Text style={styles.ecoCardTitle}>Advisory & AI</Text>
+              <Text style={styles.ecoCardDesc}>Crop Doctors, Gardeners, AI Consults</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        {/* ⭐ END PREMIUM ECOSYSTEM COMMAND CENTER ⭐ */}
+
         <SwitchDashboardSection />
 
         {/* 🤖 Admin System Tool Widget: Google AI Telemetry & Quota Button */}
@@ -1404,5 +1449,65 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: '#3b82f6',
     borderRadius: 2,
+  },
+  ecoHubContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    ...premiumShadow('#cbd5e1', 'md'),
+  },
+  ecoHubHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  ecoHubTitle: {
+    fontSize: 18,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+  },
+  ecoHubSubtitle: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    marginBottom: 16,
+  },
+  ecoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  ecoCard: {
+    width: '48%',
+    backgroundColor: '#f8fafc',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    alignItems: 'flex-start',
+  },
+  ecoIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  ecoCardTitle: {
+    fontSize: 14,
+    fontFamily: FONT.bold,
+    color: '#1e293b',
+    marginBottom: 4,
+  },
+  ecoCardDesc: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    lineHeight: 16,
   },
 });

@@ -1,152 +1,200 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, useWindowDimensions, Platform } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/src/store/auth-context';
-import { FONT } from '@/constants/theme';
-import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
+import { FONT, premiumShadow } from '@/constants/theme';
+import Animated, {
+  useSharedValue, useAnimatedStyle, withRepeat,
+  withSequence, withTiming, withSpring,
+} from 'react-native-reanimated';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 
-export default function PublicHeader({ 
-  onCartPress, 
-  cartItemCount 
-}: { 
+const NAV_LINKS = [
+  { label: 'Home',         path: '/',                  icon: 'home-outline',        color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
+  { label: 'Agri Store',   path: '/shop',              icon: 'storefront-outline',  color: '#f97316', bg: 'rgba(249,115,22,0.1)' },
+  { label: 'Farming',      path: '/topic/Farming',     icon: 'leaf-outline',        color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
+  { label: 'Gardening',    path: '/topic/Gardening',   icon: 'flower-outline',      color: '#e11d48', bg: 'rgba(225,29,72,0.1)' },
+  { label: 'Crop Doctors', path: '/topic/Crop-Doctors',icon: 'medkit-outline',      color: '#06b6d4', bg: 'rgba(6,182,212,0.1)' },
+];
+
+export default function PublicHeader({
+  onCartPress,
+  cartItemCount,
+}: {
   onCartPress?: () => void;
   cartItemCount?: number;
 } = {}) {
-  const router = useRouter();
+  const router   = useRouter();
   const pathname = usePathname();
   const { width } = useWindowDimensions();
-  const isDesktop = width > 768;
+  const isDesktop = width > 1024;
+  const isTablet  = width > 768 && width <= 1024;
+  const isMobile  = width <= 768;
   const { user } = useAuth();
-  
+
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Pulse animation on Login CTA when no user
   const pulseScale = useSharedValue(1);
-
   useEffect(() => {
     if (!user) {
       pulseScale.value = withRepeat(
-        withSequence(
-          withTiming(1.05, { duration: 1500 }),
-          withTiming(1, { duration: 1500 })
-        ),
-        -1, // infinite loop
-        true // reverse
+        withSequence(withTiming(1.06, { duration: 1400 }), withTiming(1, { duration: 1400 })),
+        -1, true
       );
     }
   }, [user]);
+  const pulseStyle = useAnimatedStyle(() => ({ transform: [{ scale: pulseScale.value }] }));
 
-  const pulseStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: pulseScale.value }]
-    };
-  });
+  const isActive = (path: string) =>
+    pathname === path || (path === '/' && (pathname === '/index' || pathname === ''));
 
-  const getLinkStyle = (path: string) => {
-    const isActive = pathname === path || (path === '/' && pathname === '/index');
-    return [
-      styles.navLink, 
-      isActive && { color: '#f59e0b', borderBottomWidth: 2, borderBottomColor: '#f59e0b', paddingBottom: 2 }
-    ];
-  };
-
-  const handleMobileNav = (path: string) => {
+  const goTo = (path: string) => {
     setMenuOpen(false);
     router.push(path as any);
   };
 
   return (
     <>
-      <View style={[styles.floatingHeader, !isDesktop && styles.floatingHeaderMobile, menuOpen && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0 }]}>
-        <TouchableOpacity style={styles.logoContainer} onPress={() => router.push('/')}>
-          <Image source={require('@/assets/images/farmsking_logo_transparent_bg.png')} style={{ width: 36, height: 36, marginRight: 8 }} resizeMode="contain" />
+      {/* ── Main Header ── */}
+      <View style={[
+        styles.header,
+        isMobile  && styles.headerMobile,
+        menuOpen  && { borderBottomLeftRadius: 0, borderBottomRightRadius: 0 },
+      ]}>
+        {Platform.OS === 'web' && <BlurView intensity={40} tint="light" style={StyleSheet.absoluteFill} />}
+
+        {/* Logo */}
+        <TouchableOpacity style={styles.logo} onPress={() => goTo('/')} activeOpacity={0.8}>
+          <Image
+            source={require('@/assets/images/farmsking_logo_transparent_bg.png')}
+            style={styles.logoImg}
+            resizeMode="contain"
+          />
           <View>
-            <Text style={styles.logoText}>FarmsKing</Text>
-            <Text style={{ color: '#10b981', fontSize: 9, fontFamily: FONT.bold, letterSpacing: 0.5, marginTop: -2 }}>SMART FARMING PLATFORM</Text>
+            <Text style={styles.logoName}>FarmsKing</Text>
+            <Text style={styles.logoTag}>SMART FARMING PLATFORM</Text>
           </View>
         </TouchableOpacity>
 
+        {/* Desktop Nav Links */}
         {isDesktop && (
           <View style={styles.navLinks}>
-            <TouchableOpacity onPress={() => router.push('/')}>
-              <Text style={getLinkStyle('/')}>Home</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push('/shop')}>
-              <Text style={getLinkStyle('/shop')}>Store</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push('/support')}>
-              <Text style={getLinkStyle('/support')}>Support</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push('/contact-us')}>
-              <Text style={getLinkStyle('/contact-us')}>Contact Us</Text>
-            </TouchableOpacity>
+            {NAV_LINKS.map((link) => {
+              const active = isActive(link.path);
+              return (
+                <TouchableOpacity key={link.path} onPress={() => goTo(link.path)} activeOpacity={0.7}>
+                  <Text style={[styles.navLink, active && { color: link.color, backgroundColor: link.bg, fontFamily: FONT.extraBold }]}>
+                    {link.label}
+                  </Text>
+                  {active && <View style={[styles.navLinkBar, { backgroundColor: link.color }]} />}
+                </TouchableOpacity>
+              );
+            })}
           </View>
         )}
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: isDesktop ? 12 : 8 }}>
+        {/* Right Actions */}
+        <View style={styles.rightActions}>
+          {/* Cart */}
           {onCartPress && (
-            <TouchableOpacity
-              style={{ backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 12, paddingVertical: 10, borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 6 }}
-              activeOpacity={0.85}
-              onPress={onCartPress}
-            >
-              <Ionicons name="cart" size={18} color="#fff" />
+            <TouchableOpacity style={styles.iconBtn} onPress={onCartPress} activeOpacity={0.8}>
+              <Ionicons name="cart-outline" size={20} color="#334155" />
               {cartItemCount && cartItemCount > 0 ? (
-                <View style={{ backgroundColor: '#ef4444', borderRadius: 10, paddingHorizontal: 6, paddingVertical: 2 }}>
-                  <Text style={{ color: '#fff', fontSize: 10, fontFamily: FONT.bold }}>{cartItemCount}</Text>
+                <View style={styles.cartBadge}>
+                  <Text style={styles.cartBadgeText}>{cartItemCount}</Text>
                 </View>
               ) : null}
             </TouchableOpacity>
           )}
 
+          {/* Login / Go to App */}
           {user ? (
-            <TouchableOpacity 
-              style={[styles.loginBtn, { backgroundColor: '#10b981', borderColor: '#059669' }, !isDesktop && { paddingHorizontal: 12, paddingVertical: 6 }]}
-              onPress={() => router.push('/(tabs)')}
-              activeOpacity={0.8}
+            <TouchableOpacity
+              style={styles.userBtn}
+              onPress={() => goTo('/(tabs)')}
+              activeOpacity={0.85}
             >
-              <Text style={[styles.loginBtnText, { color: '#ffffff' }, !isDesktop && { fontSize: 12 }]}>
-                {user.name ? user.name.split(' ')[0] : 'App'}
-              </Text>
+              <LinearGradient colors={['#10b981', '#059669']} style={styles.userBtnInner} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                <Ionicons name="person" size={14} color="#fff" />
+                <Text style={styles.userBtnText} numberOfLines={1}>
+                  {user.name ? user.name.split(' ')[0] : 'Dashboard'}
+                </Text>
+              </LinearGradient>
             </TouchableOpacity>
           ) : (
-            <Animated.View style={pulseStyle}>
-              <TouchableOpacity 
-                style={[styles.loginBtn, !isDesktop && { paddingHorizontal: 12, paddingVertical: 6 }]}
-                onPress={() => router.push('/(auth)/login')}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.loginBtnText, !isDesktop && { fontSize: 12 }]}>Login / App</Text>
-              </TouchableOpacity>
-            </Animated.View>
-          )}
+              <Animated.View style={pulseStyle}>
+                <TouchableOpacity
+                  style={styles.loginBtn}
+                  onPress={() => goTo('/(auth)/login')}
+                  activeOpacity={0.85}
+                >
+                  <LinearGradient colors={['rgba(16,185,129,0.1)', 'rgba(16,185,129,0.05)']} style={styles.loginBtnInner} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                    <Ionicons name="log-in-outline" size={16} color="#059669" />
+                    <Text style={styles.loginBtnText}>Get Started</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </Animated.View>
+            )}
 
+          {/* Mobile Hamburger */}
           {!isDesktop && (
-            <TouchableOpacity onPress={() => setMenuOpen(!menuOpen)} style={{ padding: 4, marginLeft: 4 }}>
-              <Ionicons name={menuOpen ? "close" : "menu"} size={28} color="#fff" />
+            <TouchableOpacity
+              style={styles.iconBtn}
+              onPress={() => setMenuOpen(!menuOpen)}
+              activeOpacity={0.8}
+            >
+              <Ionicons name={menuOpen ? 'close' : 'menu'} size={24} color="#334155" />
             </TouchableOpacity>
           )}
         </View>
       </View>
 
+      {/* ── Mobile Dropdown Menu ── */}
       {!isDesktop && menuOpen && (
-        <View style={styles.mobileMenuDropdown}>
-          <TouchableOpacity style={styles.mobileMenuItem} onPress={() => handleMobileNav('/')}>
-            <Ionicons name="home-outline" size={20} color="#fff" />
-            <Text style={styles.mobileMenuText}>Home</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.mobileMenuItem} onPress={() => handleMobileNav('/shop')}>
-            <Ionicons name="storefront-outline" size={20} color="#fff" />
-            <Text style={styles.mobileMenuText}>Agri Store</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.mobileMenuItem} onPress={() => handleMobileNav('/support')}>
-            <Ionicons name="help-buoy-outline" size={20} color="#fff" />
-            <Text style={styles.mobileMenuText}>Support & Help</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.mobileMenuItem} onPress={() => handleMobileNav('/contact-us')}>
-            <Ionicons name="call-outline" size={20} color="#fff" />
-            <Text style={styles.mobileMenuText}>Contact Us</Text>
-          </TouchableOpacity>
+        <View style={styles.mobileMenu}>
+          {Platform.OS === 'web' && <BlurView intensity={40} tint="light" style={StyleSheet.absoluteFill} />}
+          <LinearGradient colors={['rgba(255,255,255,0.98)', 'rgba(248,250,252,0.99)']} style={StyleSheet.absoluteFill} />
+
+          {NAV_LINKS.map((link, i) => {
+            const active = isActive(link.path);
+            return (
+              <TouchableOpacity
+                key={link.path}
+                style={[
+                  styles.mobileItem,
+                  i < NAV_LINKS.length - 1 && styles.mobileItemBorder,
+                  active && styles.mobileItemActive,
+                ]}
+                onPress={() => goTo(link.path)}
+                activeOpacity={0.75}
+              >
+                <View style={[styles.mobileItemIcon, active && { backgroundColor: link.bg }]}>
+                  <Ionicons name={link.icon as any} size={18} color={active ? link.color : '#64748b'} />
+                </View>
+                <Text style={[styles.mobileItemText, active && { color: link.color, fontFamily: FONT.extraBold }]}>
+                  {link.label}
+                </Text>
+                {active && <Ionicons name="chevron-forward" size={16} color={link.color} style={{ marginLeft: 'auto' }} />}
+              </TouchableOpacity>
+            );
+          })}
+
+          {/* Login row inside menu */}
+          {!user && (
+            <TouchableOpacity
+              style={styles.mobileLoginBtn}
+              onPress={() => goTo('/(auth)/login')}
+              activeOpacity={0.85}
+            >
+              <LinearGradient colors={['#00ff87', '#059669']} style={styles.mobileLoginBtnInner} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+                <Ionicons name="rocket" size={16} color="#02120a" />
+                <Text style={styles.mobileLoginBtnText}>Start for Free — No Credit Card</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
         </View>
       )}
     </>
@@ -154,87 +202,95 @@ export default function PublicHeader({
 }
 
 const styles = StyleSheet.create({
-  mobileMenuDropdown: {
-    position: 'absolute',
-    top: 60,
-    width: '95%',
-    alignSelf: 'center',
-    backgroundColor: 'rgba(20, 30, 45, 0.95)',
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    borderTopWidth: 0,
-    padding: 16,
-    zIndex: 99,
-  },
-  mobileMenuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
-    gap: 12,
-  },
-  mobileMenuText: {
-    color: '#fff',
-    fontSize: 16,
-    fontFamily: FONT.bold,
-  },
-  floatingHeader: {
-    alignSelf: 'center',
+  // Header
+  header: {
     position: 'absolute',
     top: 20,
+    alignSelf: 'center',
     width: '90%',
-    maxWidth: 1200,
-    backgroundColor: 'rgba(20, 30, 45, 0.85)',
-    borderRadius: 40,
+    maxWidth: 1280,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 24,
     paddingVertical: 12,
-    zIndex: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255,255,255,0.9)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: 'rgba(0,0,0,0.05)',
+    zIndex: 200,
+    overflow: 'hidden',
+    ...premiumShadow('rgba(0,0,0,0.1)', 'lg'),
   },
-  floatingHeaderMobile: {
-    width: '95%',
+  headerMobile: {
     top: 10,
-    paddingHorizontal: 16,
+    width: '95%',
+    paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  logoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+
+  // Logo
+  logo: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  logoImg: { width: 38, height: 38 },
+  logoName: { fontSize: 18, fontFamily: FONT.extraBold, color: '#0f172a', letterSpacing: 0.3 },
+  logoTag: { fontSize: 8, fontFamily: FONT.bold, color: '#10b981', letterSpacing: 1, marginTop: -2 },
+
+  // Desktop nav
+  navLinks: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  navLink: { color: '#64748b', fontSize: 14, fontFamily: FONT.semiBold, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  navLinkActive: { color: '#10b981', backgroundColor: 'rgba(16,185,129,0.08)' },
+  navLinkBar: { height: 2, backgroundColor: '#10b981', borderRadius: 1, marginTop: 2, marginHorizontal: 12 },
+
+  // Right side
+  rightActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  iconBtn: {
+    width: 38, height: 38, borderRadius: 19,
+    backgroundColor: 'rgba(0,0,0,0.03)',
+    borderWidth: 1, borderColor: 'rgba(0,0,0,0.05)',
+    alignItems: 'center', justifyContent: 'center',
   },
-  logoText: {
-    fontSize: 20,
-    fontFamily: FONT.extraBold,
-    color: '#fff',
-    letterSpacing: 0.5,
-  },
-  navLinks: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  navLink: {
-    color: '#e2e8f0',
-    fontSize: 15,
-    fontFamily: FONT.bold,
-  },
-  loginBtn: {
-    backgroundColor: 'transparent',
+
+  // Cart badge
+  cartBadge: { position: 'absolute', top: -4, right: -4, width: 18, height: 18, borderRadius: 9, backgroundColor: '#ef4444', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: '#ffffff' },
+  cartBadgeText: { color: '#fff', fontSize: 9, fontFamily: FONT.extraBold },
+
+  // Login CTA
+  loginBtn: { borderRadius: 99, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(16,185,129,0.2)' },
+  loginBtnInner: { flexDirection: 'row', alignItems: 'center', gap: 7, paddingHorizontal: 18, paddingVertical: 9 },
+  loginBtnText: { color: '#059669', fontSize: 13, fontFamily: FONT.bold },
+
+  // User button (logged in)
+  userBtn: { borderRadius: 99, overflow: 'hidden' },
+  userBtnInner: { flexDirection: 'row', alignItems: 'center', gap: 7, paddingHorizontal: 16, paddingVertical: 9, maxWidth: 140 },
+  userBtnText: { color: '#fff', fontSize: 13, fontFamily: FONT.bold },
+
+  // Mobile dropdown
+  mobileMenu: {
+    position: 'absolute',
+    top: 68,
+    alignSelf: 'center',
+    width: '95%',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
+    borderColor: 'rgba(0,0,0,0.05)',
+    borderTopWidth: 0,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    overflow: 'hidden',
+    zIndex: 199,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 20,
+    backgroundColor: 'rgba(255,255,255,0.98)',
   },
-  loginBtnText: {
-    color: '#fff',
-    fontSize: 14,
-    fontFamily: FONT.bold,
-  },
+  mobileItem: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14 },
+  mobileItemBorder: { borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.05)' },
+  mobileItemActive: { backgroundColor: 'rgba(16,185,129,0.06)', marginHorizontal: -16, paddingHorizontal: 16, borderRadius: 12 },
+  mobileItemIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.03)', alignItems: 'center', justifyContent: 'center' },
+  mobileItemIconActive: { backgroundColor: 'rgba(16,185,129,0.12)' },
+  mobileItemText: { color: '#334155', fontSize: 15, fontFamily: FONT.bold, flex: 1 },
+
+  // Login inside mobile menu
+  mobileLoginBtn: { marginTop: 16, borderRadius: 99, overflow: 'hidden', ...premiumShadow('#00ff87', 'md') },
+  mobileLoginBtnInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 14 },
+  mobileLoginBtnText: { color: '#02120a', fontFamily: FONT.extraBold, fontSize: 15 },
 });

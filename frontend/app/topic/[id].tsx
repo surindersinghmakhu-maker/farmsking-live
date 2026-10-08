@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, useWindowDimensions, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useProducts } from '@/src/hooks/useProducts';
@@ -7,112 +7,170 @@ import { FONT, premiumShadow } from '@/constants/theme';
 import PublicHeader from '@/components/PublicHeader';
 import { useAuth } from '@/src/store/auth-context';
 
-const getTopicDetails = (id: string) => {
-  switch(id) {
-    case 'Farming':
-      return {
-        subtitle: 'Empowering farmers with modern tools, high-yield seeds, and expert advisory.',
-        details: 'FarmsKing provides a complete end-to-end ecosystem for farmers. From advanced crop intelligence to the highest quality natural seeds and fertilizers, we aim to maximize your yield and profit. Join thousands of progressive farmers revolutionizing Indian agriculture.',
-        features: ['High-Yield Seeds', 'Modern Farm Machinery', 'Expert Crop Advisory']
-      };
-    case 'Gardening':
-      return {
-        subtitle: 'Everything you need to build and maintain a beautiful, blooming garden.',
-        details: 'Whether you are a hobbyist or a professional landscaper, our gardening section brings you the finest tools, organic composts, and exotic seeds. Grow your own organic vegetables or create stunning floral landscapes effortlessly with our premium supplies.',
-        features: ['Organic Composts', 'Premium Garden Tools', 'Exotic Plant Seeds']
-      };
-    case 'Crop Doctors':
-      return {
-        subtitle: 'Instant diagnosis and expert solutions for all your crop diseases.',
-        details: 'Our Kisan Crop Intelligence Engine and expert agronomists are available 24/7. Upload a picture of your infected crop, and get immediate recommendations on the exact crop protection chemicals and dosages required to save your harvest.',
-        features: ['AI Crop Disease Detection', 'Expert Agronomists', 'Precise Chemical Dosages']
-      };
-    case 'Agri Store':
-      return {
-        subtitle: 'Your one-stop destination for genuine, lab-tested agricultural products.',
-        details: 'Shop from a wide range of verified crop protection chemicals, fertilizers, and farm equipment. We guarantee 100% original products delivered directly to your farm, eliminating middlemen and ensuring the best market prices.',
-        features: ['100% Genuine Products', 'Direct Farm Delivery', 'Best Market Prices']
-      };
-    default:
-      return {
-        subtitle: `Discover everything you need about ${id ? id.replace('-', ' ') : 'Topic'} sourced directly from our platform.`,
-        details: 'Explore our vast catalogue of verified agricultural products and services tailored for your specific needs.',
-        features: []
-      };
-  }
+// ── Per-topic brand color config ─────────────────────────────────────────────
+const TOPIC_CONFIG: Record<string, {
+  color: string; bg: string; lightBg: string; tint: string;
+  icon: any; emoji: string;
+  subtitle: string; details: string; features: string[];
+}> = {
+  Farming: {
+    color: '#10b981', bg: '#ecfdf5', lightBg: '#f0fdf4', tint: 'rgba(16,185,129,0.08)',
+    icon: 'leaf', emoji: '🌾',
+    subtitle: 'Empowering farmers with modern tools, high-yield seeds, and expert advisory.',
+    details: 'FarmsKing provides a complete end-to-end ecosystem for farmers. From advanced crop intelligence to the highest quality natural seeds and fertilizers, we aim to maximize your yield and profit. Join thousands of progressive farmers revolutionizing Indian agriculture.',
+    features: ['High-Yield Seeds', 'Modern Farm Machinery', 'Expert Crop Advisory'],
+  },
+  Gardening: {
+    color: '#e11d48', bg: '#fff1f2', lightBg: '#fdf2f8', tint: 'rgba(225,29,72,0.08)',
+    icon: 'flower', emoji: '🌸',
+    subtitle: 'Everything you need to build and maintain a beautiful, blooming garden.',
+    details: 'Whether you are a hobbyist or a professional landscaper, our gardening section brings you the finest tools, organic composts, and exotic seeds. Grow your own organic vegetables or create stunning floral landscapes effortlessly with our premium supplies.',
+    features: ['Organic Composts', 'Premium Garden Tools', 'Exotic Plant Seeds'],
+  },
+  'Crop-Doctors': {
+    color: '#06b6d4', bg: '#ecfeff', lightBg: '#f0f9ff', tint: 'rgba(6,182,212,0.08)',
+    icon: 'medkit', emoji: '🩺',
+    subtitle: 'Instant diagnosis and expert solutions for all your crop diseases.',
+    details: 'Our Kisan Crop Intelligence Engine and expert agronomists are available 24/7. Upload a picture of your infected crop, and get immediate recommendations on the exact crop protection chemicals and dosages required to save your harvest.',
+    features: ['AI Crop Disease Detection', 'Expert Agronomists', 'Precise Chemical Dosages'],
+  },
+  'Crop Doctors': {
+    color: '#06b6d4', bg: '#ecfeff', lightBg: '#f0f9ff', tint: 'rgba(6,182,212,0.08)',
+    icon: 'medkit', emoji: '🩺',
+    subtitle: 'Instant diagnosis and expert solutions for all your crop diseases.',
+    details: 'Our Kisan Crop Intelligence Engine and expert agronomists are available 24/7. Upload a picture of your infected crop, and get immediate recommendations on the exact crop protection chemicals and dosages required to save your harvest.',
+    features: ['AI Crop Disease Detection', 'Expert Agronomists', 'Precise Chemical Dosages'],
+  },
+  'Agri Store': {
+    color: '#f97316', bg: '#fff7ed', lightBg: '#fffbeb', tint: 'rgba(249,115,22,0.08)',
+    icon: 'storefront', emoji: '🏪',
+    subtitle: 'Your one-stop destination for genuine, lab-tested agricultural products.',
+    details: 'Shop from a wide range of verified crop protection chemicals, fertilizers, and farm equipment. We guarantee 100% original products delivered directly to your farm, eliminating middlemen and ensuring the best market prices.',
+    features: ['100% Genuine Products', 'Direct Farm Delivery', 'Best Market Prices'],
+  },
+};
+
+const DEFAULT_CONFIG = {
+  color: '#10b981', bg: '#ecfdf5', lightBg: '#f0fdf4', tint: 'rgba(16,185,129,0.08)',
+  icon: 'apps' as any, emoji: '🌿',
+  subtitle: 'Explore our agricultural platform.',
+  details: 'Explore our vast catalogue of verified agricultural products and services tailored for your specific needs.',
+  features: [],
 };
 
 export default function TopicPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const isDesktop = width > 768;
+  const isMobile = width <= 768;
   const { user } = useAuth();
 
-  // Fetch data (super admin products)
-  const { data: products, isLoading } = useProducts(true);
-
   const title = id ? id.replace('-', ' ') : 'Topic';
-  const topicDetails = getTopicDetails(id || '');
+  const cfg = TOPIC_CONFIG[id || ''] || DEFAULT_CONFIG;
 
-  // Filter products based on topic (e.g. if id="Farming", show Natural Farmer Foods or Farming tools)
-  const filteredProducts = React.useMemo(() => {
-    if (!products) return [];
-    if (id === 'Farming') {
-      return products.filter(p => p.category === 'Natural Farmer Foods' || p.category?.includes('Farm'));
-    }
-    if (id === 'Market' || id === 'Gardening') {
-      return products.filter(p => p.category?.includes('Garden') || p.category?.includes('Tool'));
-    }
-    if (id === 'Farmer Stores') {
-      return products;
-    }
-    return products;
-  }, [products, id]);
+  const QUICK_LINKS = [
+    { label: 'Agri Store', path: '/shop', icon: 'storefront-outline', color: '#f97316' },
+    { label: 'Farming', path: '/topic/Farming', icon: 'leaf-outline', color: '#10b981' },
+    { label: 'Gardening', path: '/topic/Gardening', icon: 'flower-outline', color: '#e11d48' },
+    { label: 'Crop Doctors', path: '/topic/Crop-Doctors', icon: 'medkit-outline', color: '#06b6d4' },
+  ];
 
   return (
-    <View style={styles.container}>
-      {/* 100% RESPONSIVE FULL SCREEN BACKGROUND */}
-      <Image 
-        source={require('@/assets/images/farmsking_clean_bg.png')} 
-        style={[StyleSheet.absoluteFill, { width: '100%', height: '100%' }]} 
-        resizeMode="cover" 
-      />
-      {/* Dark overlay for readability */}
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0, 0, 0, 0.75)' }]} />
-
-      {/* PUBLIC FLOATING HEADER */}
+    <View style={[styles.container, { backgroundColor: cfg.bg }]}>
       <PublicHeader />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.headerArea}>
-          <Text style={styles.pageTitle}>{title}</Text>
-          <Text style={styles.pageSubtitle}>{topicDetails.subtitle}</Text>
-          
-          <View style={styles.detailsCard}>
-            <Text style={styles.detailsText}>{topicDetails.details}</Text>
-            
-            {topicDetails.features.length > 0 && (
+      <ScrollView
+        contentContainerStyle={[styles.scroll, { paddingBottom: isMobile ? 80 : 60 }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── HERO SECTION ── */}
+        <View style={[styles.hero, { backgroundColor: cfg.lightBg, borderBottomWidth: 1, borderBottomColor: `${cfg.color}20` }]}>
+          {/* Icon circle */}
+          <View style={[styles.iconCircle, { backgroundColor: `${cfg.color}15`, borderColor: `${cfg.color}30` }]}>
+            <Ionicons name={cfg.icon} size={isMobile ? 36 : 48} color={cfg.color} />
+          </View>
+
+          <Text style={[styles.emoji]}>{cfg.emoji}</Text>
+
+          <Text style={[styles.pageTitle, { color: cfg.color, fontSize: isMobile ? 28 : 40 }]}>
+            {title}
+          </Text>
+          <Text style={[styles.pageSubtitle, { fontSize: isMobile ? 14 : 16 }]}>
+            {cfg.subtitle}
+          </Text>
+
+          {/* CTA */}
+          <View style={styles.ctaRow}>
+            <TouchableOpacity
+              style={[styles.ctaPrimary, { backgroundColor: cfg.color }]}
+              onPress={() => router.push('/shop')}
+            >
+              <Ionicons name="storefront-outline" size={16} color="#fff" />
+              <Text style={styles.ctaPrimaryText}>Browse Store</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.ctaSecondary, { borderColor: cfg.color }]}
+              onPress={() => router.push('/(auth)/login')}
+            >
+              <Ionicons name="person-outline" size={16} color={cfg.color} />
+              <Text style={[styles.ctaSecondaryText, { color: cfg.color }]}>Get Started</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* ── DETAILS CARD ── */}
+        <View style={styles.section}>
+          <View style={[styles.detailsCard, { borderColor: `${cfg.color}20`, backgroundColor: '#ffffff' }]}>
+            <View style={styles.cardHeader}>
+              <Ionicons name="information-circle" size={20} color={cfg.color} />
+              <Text style={[styles.cardHeaderText, { color: cfg.color }]}>About {title}</Text>
+            </View>
+            <Text style={styles.detailsText}>{cfg.details}</Text>
+
+            {/* Feature Pills */}
+            {cfg.features.length > 0 && (
               <View style={styles.featuresList}>
-                {topicDetails.features.map((feat, idx) => (
-                  <View key={idx} style={styles.featureItem}>
-                    <Ionicons name="checkmark-circle" size={20} color="#10b981" />
-                    <Text style={styles.featureText}>{feat}</Text>
+                {cfg.features.map((feat, idx) => (
+                  <View key={idx} style={[styles.featureItem, { backgroundColor: `${cfg.color}10`, borderColor: `${cfg.color}25` }]}>
+                    <Ionicons name="checkmark-circle" size={16} color={cfg.color} />
+                    <Text style={[styles.featureText, { color: cfg.color }]}>{feat}</Text>
                   </View>
                 ))}
               </View>
             )}
           </View>
-          
-          <TouchableOpacity 
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 24, paddingVertical: 10, paddingHorizontal: 20, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }}
-            onPress={() => router.push('/')}
-          >
-            <Ionicons name="home-outline" size={18} color="#fff" />
-            <Text style={{ color: '#fff', fontFamily: FONT.bold, fontSize: 14 }}>Go Home</Text>
-          </TouchableOpacity>
         </View>
 
+        {/* ── QUICK LINKS ── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Explore More</Text>
+          <View style={styles.quickLinks}>
+            {QUICK_LINKS.filter(l => !l.path.includes(String(id))).map(link => (
+              <TouchableOpacity
+                key={link.path}
+                style={[styles.quickLink, { borderColor: `${link.color}25`, backgroundColor: `${link.color}08` }]}
+                onPress={() => router.push(link.path as any)}
+              >
+                <View style={[styles.quickLinkIcon, { backgroundColor: `${link.color}15` }]}>
+                  <Ionicons name={link.icon as any} size={20} color={link.color} />
+                </View>
+                <Text style={[styles.quickLinkText, { color: link.color }]}>{link.label}</Text>
+                <Ionicons name="chevron-forward" size={14} color={link.color} style={{ marginLeft: 'auto' }} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* ── BACK HOME ── */}
+        <View style={{ alignItems: 'center', marginTop: 8, marginBottom: 20 }}>
+          <TouchableOpacity
+            style={[styles.backHome, { borderColor: `${cfg.color}30` }]}
+            onPress={() => router.push('/')}
+          >
+            <Ionicons name="home-outline" size={16} color={cfg.color} />
+            <Text style={[styles.backHomeText, { color: cfg.color }]}>Go to Home</Text>
+          </TouchableOpacity>
+        </View>
 
       </ScrollView>
     </View>
@@ -120,150 +178,41 @@ export default function TopicPage() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a1912' },
-  floatingHeader: {
-    alignSelf: 'center',
-    position: 'absolute',
-    top: 20,
-    width: '90%', maxWidth: 1200, height: 70, backgroundColor: 'rgba(20, 30, 45, 0.75)',
-    borderRadius: 35, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.1)',
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, zIndex: 100,
-    ...premiumShadow('rgba(0,0,0,0.5)', 'lg'),
-  },
-  floatingHeaderMobile: { width: '95%', height: 60, top: 10, borderRadius: 30, paddingHorizontal: 15 },
-  logoContainer: { flexDirection: 'row', alignItems: 'center' },
-  logoText: { fontSize: 24, fontFamily: FONT.extraBold, color: '#fff', letterSpacing: 0.5 },
-  navLinks: { flexDirection: 'row', gap: 16, alignItems: 'center' },
-  navLink: { fontSize: 16, fontFamily: FONT.bold, color: '#e2e8f0' },
-  loginBtn: { backgroundColor: '#10b981', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 24 },
-  loginBtnText: { color: '#fff', fontSize: 15, fontFamily: FONT.bold },
-  
-  scrollContent: {
-    paddingTop: 120,
-    paddingHorizontal: 20,
-    paddingBottom: 50,
-  },
-  headerArea: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  pageTitle: {
-    fontSize: 40,
-    fontFamily: FONT.extraBold,
-    color: '#10b981',
-    marginBottom: 10,
-    textTransform: 'capitalize',
-  },
-  pageSubtitle: {
-    fontSize: 16,
-    color: '#cbd5e1',
-    fontFamily: FONT.medium,
-    textAlign: 'center',
-    maxWidth: 600,
-  },
-  detailsCard: {
-    marginTop: 24,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    padding: 24,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    maxWidth: 800,
-    width: '100%',
-  },
-  detailsText: {
-    fontSize: 15,
-    color: '#f8fafc',
-    fontFamily: FONT.regular,
-    lineHeight: 24,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  featuresList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 16,
-  },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.3)',
-  },
-  featureText: {
-    color: '#10b981',
-    fontFamily: FONT.bold,
-    fontSize: 13,
-  },
-  gridContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 24,
-    justifyContent: 'center',
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 40,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  emptyText: { color: '#fff', fontSize: 18, marginTop: 16, fontFamily: FONT.medium, marginBottom: 20 },
-  storeBtn: { backgroundColor: '#10b981', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 24 },
-  storeBtnText: { color: '#fff', fontSize: 15, fontFamily: FONT.bold },
-  productCard: {
-    width: 280,
-    backgroundColor: 'rgba(20, 30, 45, 0.7)',
-    borderRadius: 20,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    ...premiumShadow('rgba(0,0,0,0.5)', 'md'),
-  },
-  productImage: {
-    width: '100%',
-    height: 200,
-    resizeMode: 'cover',
-  },
-  productInfo: {
-    padding: 16,
-  },
-  productName: {
-    fontSize: 18,
-    fontFamily: FONT.bold,
-    color: '#fff',
-    marginBottom: 4,
-  },
-  productCategory: {
-    fontSize: 12,
-    color: '#94a3b8',
-    fontFamily: FONT.medium,
-    marginBottom: 12,
-  },
-  productPrice: {
-    fontSize: 20,
-    color: '#f59e0b',
-    fontFamily: FONT.extraBold,
-    marginBottom: 16,
-  },
-  buyBtn: {
-    backgroundColor: '#10b981',
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buyBtnText: {
-    color: '#fff',
-    fontFamily: FONT.bold,
-    fontSize: 14,
-  }
+  container: { flex: 1 },
+  scroll: { paddingTop: 80, zIndex: 10 },
+
+  // Hero
+  hero: { alignItems: 'center', paddingHorizontal: 20, paddingTop: 32, paddingBottom: 36, gap: 10 },
+  iconCircle: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, marginBottom: 4 },
+  emoji: { fontSize: 32, marginBottom: 0 },
+  pageTitle: { fontFamily: FONT.extraBold, textAlign: 'center', textTransform: 'capitalize', marginBottom: 4 },
+  pageSubtitle: { fontFamily: FONT.medium, color: '#475569', textAlign: 'center', maxWidth: 560, lineHeight: 24 },
+  ctaRow: { flexDirection: 'row', gap: 12, marginTop: 12, flexWrap: 'wrap', justifyContent: 'center' },
+  ctaPrimary: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 22, paddingVertical: 12, borderRadius: 99, ...premiumShadow('rgba(0,0,0,0.1)', 'sm') },
+  ctaPrimaryText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 14 },
+  ctaSecondary: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 22, paddingVertical: 11, borderRadius: 99, borderWidth: 1.5, backgroundColor: '#ffffff' },
+  ctaSecondaryText: { fontFamily: FONT.bold, fontSize: 14 },
+
+  // Section
+  section: { paddingHorizontal: 16, paddingTop: 24, maxWidth: 860, width: '100%', alignSelf: 'center' },
+  sectionLabel: { fontSize: 11, fontFamily: FONT.bold, color: '#94a3b8', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 },
+
+  // Details card
+  detailsCard: { borderRadius: 20, padding: 22, borderWidth: 1, ...premiumShadow('rgba(0,0,0,0.05)', 'sm') },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  cardHeaderText: { fontSize: 15, fontFamily: FONT.bold },
+  detailsText: { fontSize: 14, color: '#475569', fontFamily: FONT.medium, lineHeight: 23, marginBottom: 18 },
+  featuresList: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  featureItem: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 99, borderWidth: 1 },
+  featureText: { fontFamily: FONT.bold, fontSize: 13 },
+
+  // Quick links
+  quickLinks: { gap: 10 },
+  quickLink: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, borderWidth: 1 },
+  quickLinkIcon: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  quickLinkText: { fontSize: 14, fontFamily: FONT.bold },
+
+  // Back
+  backHome: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 99, borderWidth: 1, backgroundColor: '#ffffff' },
+  backHomeText: { fontFamily: FONT.bold, fontSize: 13 },
 });

@@ -1,37 +1,4 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -44,9 +11,6 @@ const swagger_1 = require("@nestjs/swagger");
 const helmet_1 = __importDefault(require("helmet"));
 const compression_1 = __importDefault(require("compression"));
 const app_module_1 = require("./app.module");
-const prisma_service_1 = require("./modules/prisma/prisma.service");
-const client_1 = require("@prisma/client");
-const argon2 = __importStar(require("argon2"));
 process.on('uncaughtException', (err) => {
     if (err.code === 'ECONNRESET' || err.code === 'EPIPE') {
         console.warn(`[uncaughtException] Ignored transient connection error: ${err.code}`);
@@ -60,7 +24,7 @@ async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     const configService = app.get(config_1.ConfigService);
     const apiPrefix = configService.get('API_PREFIX', '/api/v1');
-    const port = parseInt(configService.get('PORT', '3000'), 10);
+    const port = 3000;
     const host = '127.0.0.1';
     const corsOrigins = configService.get('CORS_ORIGINS', '');
     app.use((0, express_1.json)({ limit: '50mb' }));
@@ -102,46 +66,6 @@ async function bootstrap() {
         transform: true,
         transformOptions: { enableImplicitConversion: true },
     }));
-    try {
-        const prisma = app.get(prisma_service_1.PrismaService);
-        const superAdminMobile = '9872066901';
-        const superAdminPassword = configService.get('SUPER_ADMIN_PASSWORD');
-        if (!superAdminPassword) {
-            common_1.Logger.warn('WARNING: SUPER_ADMIN_PASSWORD is not set in .env! Using insecure fallback.', 'Bootstrap');
-        }
-        const passwordHash = await argon2.hash(superAdminPassword || '12345678');
-        const existing = await prisma.user.findUnique({ where: { mobile: superAdminMobile } });
-        if (existing) {
-            const currentRoles = existing.roles ?? [];
-            const hasSuper = currentRoles.includes(client_1.Role.SUPER_ADMIN);
-            await prisma.user.update({
-                where: { id: existing.id },
-                data: {
-                    passwordHash,
-                    role: client_1.Role.SUPER_ADMIN,
-                    roles: hasSuper ? currentRoles : [...currentRoles, client_1.Role.SUPER_ADMIN],
-                    deletedAt: null,
-                },
-            });
-            common_1.Logger.log('Super Admin 9872066901 initialized/updated.', 'Bootstrap');
-        }
-        else {
-            await prisma.user.create({
-                data: {
-                    kingId: '02101982',
-                    mobile: superAdminMobile,
-                    passwordHash,
-                    role: client_1.Role.SUPER_ADMIN,
-                    roles: [client_1.Role.SUPER_ADMIN, client_1.Role.CUSTOMER],
-                    name: 'FarmsKing Super Admin',
-                },
-            });
-            common_1.Logger.log('Super Admin 9872066901 created.', 'Bootstrap');
-        }
-    }
-    catch (err) {
-        common_1.Logger.warn(`Super Admin check warning: ${err}`, 'Bootstrap');
-    }
     const swaggerConfig = new swagger_1.DocumentBuilder()
         .setTitle('FarmsKing API')
         .setDescription('FarmsKing Backend API Documentation')

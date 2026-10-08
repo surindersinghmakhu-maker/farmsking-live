@@ -109,8 +109,13 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
     };
   }
 
-  /** Farmer list for one of the dashboard links — ACTIVE (assigned), INACTIVE (revoked), PENDING (awaiting accept/reject), or ALL. */
+  /** Farmer/Gardener list for one of the dashboard links — ACTIVE (assigned), INACTIVE (revoked), PENDING (awaiting accept/reject), or ALL. */
   findFarmersByStatus(user: AuthUser, status: 'ACTIVE' | 'INACTIVE' | 'PENDING' | 'ALL') {
+    const requiredType = this.roleToAdvisorType(user);
+    const clientRoleClause = requiredType === AdvisorType.GARDEN
+      ? { OR: [{ role: Role.GARDENER }, { roles: { has: Role.GARDENER } }] }
+      : { OR: [{ role: Role.FARMER }, { roles: { has: Role.FARMER } }] };
+
     const statusFilter =
       status === 'ACTIVE'
         ? AdvisorAssignmentStatus.ACTIVE
@@ -136,7 +141,7 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
         advisorId: user.id,
         status: statusFilter,
         deletedAt: null,
-        farmer: { deletedAt: null },
+        farmer: { deletedAt: null, ...clientRoleClause },
         ...activeClause,
       },
       include: {
@@ -259,9 +264,18 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
 
   /** Farmer/Gardener: every advisor of the matching type they could choose (STANDARD/PREMIUM only — enforced in FarmerPlansService.chooseAdvisor). */
   async listAvailableAdvisors(user: AuthUser) {
+    const requiredType = this.roleToAdvisorType(user);
     const advisors = await this.prisma.user.findMany({
       where: {
-        OR: [{ role: Role.ADVISOR }, { roles: { has: Role.ADVISOR } }],
+        AND: [
+          { OR: [{ role: Role.ADVISOR }, { roles: { has: Role.ADVISOR } }] },
+          {
+            OR: [
+              { advisorType: requiredType },
+              ...(requiredType === AdvisorType.FARM ? [{ advisorType: null }] : []),
+            ],
+          },
+        ],
         deletedAt: null,
       },
       select: {
@@ -321,19 +335,35 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
     const sudhirAdvisor = await this.prisma.user.findFirst({
       where: {
         name: { contains: 'Sudhir', mode: 'insensitive' },
-        OR: [{ role: Role.ADVISOR }, { roles: { has: Role.ADVISOR } }],
+        AND: [
+          { OR: [{ role: Role.ADVISOR }, { roles: { has: Role.ADVISOR } }] },
+          {
+            OR: [
+              { advisorType },
+              ...(advisorType === AdvisorType.FARM ? [{ advisorType: null }] : []),
+            ],
+          },
+        ],
         deletedAt: null,
       },
       select: { id: true },
     });
 
-    if (sudhirAdvisor) {
+    if (sudhirAdvisor && advisorType === AdvisorType.FARM) {
       return sudhirAdvisor.id;
     }
 
     const advisors = await this.prisma.user.findMany({
       where: {
-        OR: [{ role: Role.ADVISOR }, { roles: { has: Role.ADVISOR } }],
+        AND: [
+          { OR: [{ role: Role.ADVISOR }, { roles: { has: Role.ADVISOR } }] },
+          {
+            OR: [
+              { advisorType },
+              ...(advisorType === AdvisorType.FARM ? [{ advisorType: null }] : []),
+            ],
+          },
+        ],
         deletedAt: null,
       },
       select: {
@@ -343,7 +373,7 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
     });
 
     if (advisors.length === 0) {
-      throw new NotFoundException('No advisor is available to assign right now. Please try again later.');
+      throw new NotFoundException(`No ${advisorType === AdvisorType.FARM ? 'Crop Doctor / Farm Advisor' : 'Garden Advisor'} is available right now.`);
     }
 
     advisors.sort((a, b) => a._count.advisorAssignmentsAsAdvisor - b._count.advisorAssignmentsAsAdvisor);

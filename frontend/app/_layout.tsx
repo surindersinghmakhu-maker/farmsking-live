@@ -48,14 +48,14 @@ function RootNavigation() {
   useEffect(() => {
     if (isLoading) return;
     const currentGroup = segments[0] as string;
-    const inAuthGroup = currentGroup === '(auth)';
-    const isRootRoute = segments.length === 0 || (segments.length === 1 && (segments[0] === 'index' || segments[0] === ''));
-    const isPublicRoute = isRootRoute || currentGroup === 'topic' || currentGroup === 'seo' || currentGroup === 'dose' || currentGroup === 'doses' || currentGroup === 'my' || currentGroup === 'you' || currentGroup === 'shop' || currentGroup === 'support' || currentGroup === 'contact-us';
-    const isStaffSetupRoute = segments.join('/') === 'staff-profile-setup';
+    const isSubdomainAdmin = Platform.OS === 'web' && typeof window !== 'undefined' && (window.location.hostname === 'admin.farmsking.in' || window.location.hostname.startsWith('admin.'));
 
-    const STAFF_ROLES = ['TECHNICAL_TRAINER', 'FARM_ADVISOR', 'DOCTOR'];
+    if (isSubdomainAdmin && currentGroup !== 'admin' && !inAuthGroup) {
+      router.replace('/admin');
+      return;
+    }
 
-    if (!user && !inAuthGroup && !isPublicRoute) {
+    if (!user && !inAuthGroup && !isPublicRoute && !isSubdomainAdmin) {
       router.replace('/(auth)/login');
     } else if (user) {
       const userRoles = [user.role, ...(user.roles || [])];

@@ -122,12 +122,18 @@ function TrustBadgeCard({ icon, title, desc, color }: any) {
   );
 }
 
+import AdminWebPortalScreen from './admin';
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function PublicLandingPage() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isDesktop = width > 1024;
   const isMobile = width <= 768;
+
+  if (Platform.OS === 'web' && typeof window !== 'undefined' && (window.location.hostname === 'admin.farmsking.in' || window.location.hostname.startsWith('admin.'))) {
+    return <AdminWebPortalScreen />;
+  }
 
   return (
     <View style={S.root}>

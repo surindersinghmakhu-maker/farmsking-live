@@ -101,6 +101,10 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
         };
     }
     findFarmersByStatus(user, status) {
+        const requiredType = this.roleToAdvisorType(user);
+        const clientRoleClause = requiredType === client_1.AdvisorType.GARDEN
+            ? { OR: [{ role: client_1.Role.GARDENER }, { roles: { has: client_1.Role.GARDENER } }] }
+            : { OR: [{ role: client_1.Role.FARMER }, { roles: { has: client_1.Role.FARMER } }] };
         const statusFilter = status === 'ACTIVE'
             ? client_1.AdvisorAssignmentStatus.ACTIVE
             : status === 'INACTIVE'
@@ -122,7 +126,7 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
                 advisorId: user.id,
                 status: statusFilter,
                 deletedAt: null,
-                farmer: { deletedAt: null },
+                farmer: { deletedAt: null, ...clientRoleClause },
                 ...activeClause,
             },
             include: {
@@ -230,9 +234,18 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
         };
     }
     async listAvailableAdvisors(user) {
+        const requiredType = this.roleToAdvisorType(user);
         const advisors = await this.prisma.user.findMany({
             where: {
-                OR: [{ role: client_1.Role.ADVISOR }, { roles: { has: client_1.Role.ADVISOR } }],
+                AND: [
+                    { OR: [{ role: client_1.Role.ADVISOR }, { roles: { has: client_1.Role.ADVISOR } }] },
+                    {
+                        OR: [
+                            { advisorType: requiredType },
+                            ...(requiredType === client_1.AdvisorType.FARM ? [{ advisorType: null }] : []),
+                        ],
+                    },
+                ],
                 deletedAt: null,
             },
             select: {
@@ -284,17 +297,33 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
         const sudhirAdvisor = await this.prisma.user.findFirst({
             where: {
                 name: { contains: 'Sudhir', mode: 'insensitive' },
-                OR: [{ role: client_1.Role.ADVISOR }, { roles: { has: client_1.Role.ADVISOR } }],
+                AND: [
+                    { OR: [{ role: client_1.Role.ADVISOR }, { roles: { has: client_1.Role.ADVISOR } }] },
+                    {
+                        OR: [
+                            { advisorType },
+                            ...(advisorType === client_1.AdvisorType.FARM ? [{ advisorType: null }] : []),
+                        ],
+                    },
+                ],
                 deletedAt: null,
             },
             select: { id: true },
         });
-        if (sudhirAdvisor) {
+        if (sudhirAdvisor && advisorType === client_1.AdvisorType.FARM) {
             return sudhirAdvisor.id;
         }
         const advisors = await this.prisma.user.findMany({
             where: {
-                OR: [{ role: client_1.Role.ADVISOR }, { roles: { has: client_1.Role.ADVISOR } }],
+                AND: [
+                    { OR: [{ role: client_1.Role.ADVISOR }, { roles: { has: client_1.Role.ADVISOR } }] },
+                    {
+                        OR: [
+                            { advisorType },
+                            ...(advisorType === client_1.AdvisorType.FARM ? [{ advisorType: null }] : []),
+                        ],
+                    },
+                ],
                 deletedAt: null,
             },
             select: {
@@ -303,7 +332,7 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
             },
         });
         if (advisors.length === 0) {
-            throw new common_1.NotFoundException('No advisor is available to assign right now. Please try again later.');
+            throw new common_1.NotFoundException(`No ${advisorType === client_1.AdvisorType.FARM ? 'Crop Doctor / Farm Advisor' : 'Garden Advisor'} is available right now.`);
         }
         advisors.sort((a, b) => a._count.advisorAssignmentsAsAdvisor - b._count.advisorAssignmentsAsAdvisor);
         return advisors[0].id;

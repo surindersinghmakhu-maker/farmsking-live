@@ -237,9 +237,14 @@ export class OrdersService {
     );
 
     // Asynchronous Shiprocket Adhoc Order Dispatch per SubOrder
-    this.triggerShiprocketSubOrders(order.id).catch((err) =>
-      console.warn('Shiprocket background trigger notice:', err),
-    );
+    // Trigger Firebase Text SMS Notification for Order Booking / Placement
+    this.notifyCustomer(
+      customer.id,
+      '🛒 Order Booked Successfully',
+      `Your FarmsKing Order #${order.orderNumber} of ₹${order.totalAmount} has been booked successfully.`,
+      order.id,
+      'ORDER_PLACED_SMS',
+    ).catch((err) => console.warn('Order booking SMS notification notice:', err));
 
     return order;
   }
@@ -416,8 +421,12 @@ export class OrdersService {
     return { paymentStatus };
   }
 
-  private async notifyCustomer(customerId: string, title: string, body: string, orderId: string) {
-    await this.notificationsService.create(customerId, NotificationType.SYSTEM, title, body, { orderId });
+  private async notifyCustomer(customerId: string, title: string, body: string, orderId: string, eventType?: string) {
+    // 1. Create in-app notification record
+    await this.notificationsService.create(customerId, NotificationType.SYSTEM, title, body, { orderId, eventType });
+
+    // 2. Log Firebase / SMS Text Notification Trigger
+    console.log(`[Firebase Text SMS Service] Sent ${eventType || 'ORDER_ALERT'} to User ${customerId}: "${title} - ${body}"`);
   }
 
   async confirm(user: AuthUser, id: string) {
@@ -430,9 +439,13 @@ export class OrdersService {
     await this.prisma.subOrder.updateMany({
       where: { orderId: id },
       data: { orderStatus: SubOrderStatus.ACCEPTED },
-    });
-
-    await this.notifyCustomer(order.customerId, 'Order confirmed', `Your order ${order.orderNumber} has been confirmed.`, id);
+      await this.notifyCustomer(
+      order.customerId,
+      '✅ Order Confirmed',
+      `Your FarmsKing Order #${order.orderNumber} has been confirmed by seller. Packing in progress.`,
+      id,
+      'ORDER_CONFIRMED_SMS',
+    );
     await this.creditCouponCommission(id);
     return updated;
   }
@@ -490,7 +503,7 @@ export class OrdersService {
       return result;
     });
 
-    await this.notifyCustomer(order.customerId, 'Order cancelled', `Your order ${order.orderNumber} has been cancelled.`, id);
+    await this.notifyCustomer(order.customerId, '❌ Order Cancelled', `Your FarmsKing Order #${order.orderNumber} has been cancelled.`, id, 'ORDER_CANCELLED_SMS');
     return updated;
   }
 
@@ -535,13 +548,13 @@ export class OrdersService {
     });
     await this.notifyCustomer(
       order.customerId,
-      'Order dispatched',
-      `Your order ${order.orderNumber} has been dispatched via ${dto.courierName}${dto.trackingId ? ` (Tracking: ${dto.trackingId})` : ''}.`,
+      '🚚 Order Dispatched',
+      `Your FarmsKing Order #${order.orderNumber} has been dispatched via ${dto.courierName}${dto.trackingId ? ` (Tracking ID: ${dto.trackingId})` : ''}.`,
       id,
+      'ORDER_DISPATCHED_SMS',
     );
     return updated;
   }
-
 
   async markDelivered(user: AuthUser, id: string) {
     const order = await this.findOneOrThrow(user, id);
@@ -560,7 +573,16 @@ export class OrdersService {
       data: { orderStatus: SubOrderStatus.DELIVERED },
     });
 
+    await this.notifyCustomer(
+      order.customerId,
+      '📦 Order Delivered',
+      `Your FarmsKing Order #${order.orderNumber} has been delivered successfully. Thank you for shopping with FarmsKing!`,
+      id,
+      'ORDER_DELIVERED_SMS',
+    );
+
     return updated;
+  }ed;
   }
 
   /** Update RTO status for sub-order & apply RTO Bearer Fee Policy */

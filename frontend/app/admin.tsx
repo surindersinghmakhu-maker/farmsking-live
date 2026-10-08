@@ -33,7 +33,7 @@ export default function AdminWebPortalScreen() {
     try {
       setIsSubmitting(true);
       setError(null);
-      await login(loginMobile, loginPassword);
+      await login({ mobile: loginMobile, password: loginPassword });
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Invalid admin credentials. Please try again.');
     } finally {

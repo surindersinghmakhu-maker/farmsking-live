@@ -1,0 +1,55 @@
+import { PrismaService } from '../prisma/prisma.service';
+import { AuthUser } from '../../common/types/auth-user.type';
+import { UpdateCouponSettingsDto } from './dto/update-coupon-settings.dto';
+export declare class CouponSettingsService {
+    private readonly prisma;
+    constructor(prisma: PrismaService);
+    get(): Promise<{
+        id: string;
+        updatedAt: Date;
+        partnerCouponDiscountPercent: import("@prisma/client/runtime/library").Decimal;
+        partnerCouponCommissionPercent: import("@prisma/client/runtime/library").Decimal;
+        partnerCouponMinOrderAmount: import("@prisma/client/runtime/library").Decimal;
+        partnerCouponMaxDiscountCap: import("@prisma/client/runtime/library").Decimal;
+        partnerCouponValidityDays: number;
+        referralCommissionPercent: import("@prisma/client/runtime/library").Decimal;
+        referralDiscountPercent: import("@prisma/client/runtime/library").Decimal;
+        referralMaxDiscountCap: import("@prisma/client/runtime/library").Decimal;
+        referralOrderLimit: number;
+        referralCouponValidityDays: number;
+        commissionCouponDiscountPercent: import("@prisma/client/runtime/library").Decimal;
+        commissionCouponCommissionPercent: import("@prisma/client/runtime/library").Decimal;
+        commissionCouponMinOrderAmount: import("@prisma/client/runtime/library").Decimal;
+        commissionCouponMaxDiscountCap: import("@prisma/client/runtime/library").Decimal;
+        commissionCouponValidityDays: number;
+        inviteCouponDiscountPercent: import("@prisma/client/runtime/library").Decimal;
+        inviteCouponCommissionPercent: import("@prisma/client/runtime/library").Decimal;
+        inviteCouponValidityDays: number;
+        inviteCouponUsageLimit: number;
+        updatedById: string | null;
+    }>;
+    update(admin: AuthUser, dto: UpdateCouponSettingsDto): Promise<{
+        id: string;
+        updatedAt: Date;
+        partnerCouponDiscountPercent: import("@prisma/client/runtime/library").Decimal;
+        partnerCouponCommissionPercent: import("@prisma/client/runtime/library").Decimal;
+        partnerCouponMinOrderAmount: import("@prisma/client/runtime/library").Decimal;
+        partnerCouponMaxDiscountCap: import("@prisma/client/runtime/library").Decimal;
+        partnerCouponValidityDays: number;
+        referralCommissionPercent: import("@prisma/client/runtime/library").Decimal;
+        referralDiscountPercent: import("@prisma/client/runtime/library").Decimal;
+        referralMaxDiscountCap: import("@prisma/client/runtime/library").Decimal;
+        referralOrderLimit: number;
+        referralCouponValidityDays: number;
+        commissionCouponDiscountPercent: import("@prisma/client/runtime/library").Decimal;
+        commissionCouponCommissionPercent: import("@prisma/client/runtime/library").Decimal;
+        commissionCouponMinOrderAmount: import("@prisma/client/runtime/library").Decimal;
+        commissionCouponMaxDiscountCap: import("@prisma/client/runtime/library").Decimal;
+        commissionCouponValidityDays: number;
+        inviteCouponDiscountPercent: import("@prisma/client/runtime/library").Decimal;
+        inviteCouponCommissionPercent: import("@prisma/client/runtime/library").Decimal;
+        inviteCouponValidityDays: number;
+        inviteCouponUsageLimit: number;
+        updatedById: string | null;
+    }>;
+}

@@ -25,6 +25,7 @@ import {
   AdminInfoModal,
 } from './SuperAdminStubs';
 import { SuperAdminExpenseCategoriesModal } from '../SuperAdminExpenseCategoriesModal';
+import { EcommerceFeaturesModal } from '@/src/components/EcommerceFeaturesModal';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAdminConversations } from '@/src/hooks/useAdminChat';
@@ -76,6 +77,7 @@ export const SuperAdminDashboardView: React.FC = () => {
   const [showWorkspaceModal, setShowWorkspaceModal] = useState(false);
   const [showGuidesModal, setShowGuidesModal] = useState(false);
   const [showCategoriesModal, setShowCategoriesModal] = useState(false);
+  const [showEcomFeaturesModal, setShowEcomFeaturesModal] = useState(false);
   const [showAdminInfoModal, setShowAdminInfoModal] = useState(false);
   const [showAiUpgradeModal, setShowAiUpgradeModal] = useState(false);
   const [showAiTelemetryModal, setShowAiTelemetryModal] = useState(false);
@@ -635,6 +637,13 @@ export const SuperAdminDashboardView: React.FC = () => {
               <Text style={styles.pillText}>Audit Log</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => setShowEcomFeaturesModal(true)}>
+              <View style={[styles.pillIconBg, { backgroundColor: '#f0fdfa' }]}>
+                <Ionicons name="cart" size={16} color="#0d9488" />
+              </View>
+              <Text style={styles.pillText}>Ecom Features</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.quickPill} activeOpacity={0.8} onPress={() => router.push('/(tabs)/super-settings' as never)}>
               <View style={[styles.pillIconBg, { backgroundColor: '#ccfbf1' }]}>
                 <Ionicons name="options" size={16} color="#0d9488" />
@@ -666,6 +675,12 @@ export const SuperAdminDashboardView: React.FC = () => {
         </View>
       </View>
 
+      <EcommerceFeaturesModal
+        visible={showEcomFeaturesModal}
+        onClose={() => setShowEcomFeaturesModal(false)}
+        appSettings={appSettings}
+        refetchAppSettings={refetchAppSettings}
+      />
       <ReviewModal request={activeWithdrawal} onClose={() => setActiveWithdrawal(null)} />
       <PlanPaymentReviewModal request={activePlanPayment} onClose={() => setActivePlanPayment(null)} />
       <FarmerPlanPaymentReviewModal request={activeFarmerPlanPayment} onClose={() => setActiveFarmerPlanPayment(null)} />

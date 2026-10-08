@@ -19,7 +19,9 @@ export class AdvisorAssignmentService implements OnApplicationBootstrap {
 
 
   async onApplicationBootstrap() {
-    await this.reassignAllToSudhir();
+    setTimeout(() => {
+      this.reassignAllToSudhir().catch(err => console.error('Boot seed failed', err));
+    }, 5000);
   }
 
   /** Reassigns all existing assignments, crop problem reports, and call requests to Sudhir Kumar if available in DB. */

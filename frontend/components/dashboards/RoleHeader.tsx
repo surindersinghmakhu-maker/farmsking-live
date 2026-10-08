@@ -64,6 +64,7 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
   const { data: unreadData } = useUnreadNotificationCount();
   const unreadCount = unreadData?.count ?? 0;
   const { data: settings } = useAppSettings();
+  const { logout } = useAuth();
 
   const roleMeta = ROLE_DISPLAY[currentRole] || { label: currentRole, icon: '👤' };
 
@@ -77,6 +78,27 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
         </View>
 
         <View style={styles.actionsRight}>
+          <TouchableOpacity
+            style={styles.logoutButton}
+            activeOpacity={0.8}
+            onPress={() => {
+              // @ts-ignore
+              if (Platform.OS === 'web') {
+                if (window.confirm('Are you sure you want to log out?')) logout();
+              } else {
+                import('react-native').then(({ Alert }) => {
+                  Alert.alert('Log Out', 'Are you sure you want to log out from your account?', [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Log Out', style: 'destructive', onPress: () => logout() }
+                  ]);
+                });
+              }
+            }}
+          >
+            <Ionicons name="power" size={14} color="#ef4444" />
+            <Text style={styles.logoutText}>Log Out</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.iconButton}
             activeOpacity={0.75}
@@ -192,6 +214,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  logoutText: {
+    color: '#fca5a5',
+    fontSize: 11,
+    fontFamily: FONT.bold,
   },
   iconButton: {
     width: 34,

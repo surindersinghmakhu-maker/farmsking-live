@@ -66,7 +66,9 @@ let IsoControlsService = IsoControlsService_1 = class IsoControlsService {
         this.logger = new common_1.Logger(IsoControlsService_1.name);
     }
     async onModuleInit() {
-        await this.seedDefaultModules();
+        setTimeout(() => {
+            this.seedDefaultModules().catch(err => this.logger.error('Boot seed failed', err));
+        }, 5000);
     }
     async seedDefaultModules() {
         try {

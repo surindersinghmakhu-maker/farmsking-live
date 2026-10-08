@@ -63,7 +63,9 @@ let FarmerPlansService = class FarmerPlansService {
         this.notificationsService = notificationsService;
     }
     async onModuleInit() {
-        await this.ensureDefaultPricing();
+        setTimeout(() => {
+            this.ensureDefaultPricing().catch(err => console.error('Boot seed failed', err));
+        }, 5000);
     }
     async ensureDefaultPricing() {
         const defaults = [

@@ -42,7 +42,9 @@ let AdvisorAssignmentService = class AdvisorAssignmentService {
         };
     }
     async onApplicationBootstrap() {
-        await this.reassignAllToSudhir();
+        setTimeout(() => {
+            this.reassignAllToSudhir().catch(err => console.error('Boot seed failed', err));
+        }, 5000);
     }
     async reassignAllToSudhir() {
         const sudhirAdvisor = await this.prisma.user.findFirst({

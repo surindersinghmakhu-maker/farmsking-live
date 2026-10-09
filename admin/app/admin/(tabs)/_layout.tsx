@@ -149,6 +149,18 @@ export default function TabLayout() {
   const isDesktop = width >= 768; // Desktop breakpoint
 
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
+  const [openGroups, setOpenGroups] = React.useState<Record<string, boolean>>({
+    EXECUTIVE: true,
+    ECOMMERCE: true,
+    FARMER_HUB: true,
+    GARDENER_HUB: true,
+    STAFF_HUB: true,
+    SYSTEM: true,
+  });
+
+  const toggleGroup = (key: string) => {
+    setOpenGroups(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   React.useEffect(() => {
     const handleOpenSearch = () => setIsSearchOpen(true);
@@ -221,10 +233,6 @@ export default function TabLayout() {
               // Custom Flowchart structure for SUPER_ADMIN & ADMIN
               if (role === 'SUPER_ADMIN' || role === 'ADMIN') {
                 const renderItem = (title: string, iconName: keyof typeof Ionicons.glyphMap, path: string, params?: any) => {
-                  // If it's a specific super-users route with a filter, check if active
-                  const isSuperUsersLink = path.includes('super-users');
-                  // We just highlight if we are broadly on super-users, or we could just skip perfect highlighting for deep links.
-                  // For simplicity, highlight if path matches exactly or loosely
                   const isIndexActive = path === '/admin/(tabs)' && (pathname === '/' || pathname === '/(tabs)' || pathname === '/(tabs)/index');
                   const isOtherActive = path !== '/admin/(tabs)' && pathname.includes(path.split('/').pop() || '');
                   const isActive = isIndexActive || isOtherActive;
@@ -245,52 +253,123 @@ export default function TabLayout() {
                   );
                 };
 
+                const renderAccordionGroup = (
+                  groupKey: string,
+                  groupTitle: string,
+                  groupIcon: keyof typeof Ionicons.glyphMap,
+                  countBadge: string,
+                  childrenItems: React.ReactNode
+                ) => {
+                  const isOpen = openGroups[groupKey] ?? true;
+                  return (
+                    <View key={groupKey} style={desktopStyles.accordionGroupContainer}>
+                      <TouchableOpacity
+                        style={desktopStyles.accordionGroupHeader}
+                        activeOpacity={0.8}
+                        onPress={() => toggleGroup(groupKey)}
+                      >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                          <Ionicons name={groupIcon} size={15} color="#00ff87" />
+                          <Text style={desktopStyles.accordionGroupTitle}>{groupTitle}</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          {countBadge ? (
+                            <View style={desktopStyles.accordionBadge}>
+                              <Text style={desktopStyles.accordionBadgeText}>{countBadge}</Text>
+                            </View>
+                          ) : null}
+                          <Ionicons
+                            name={isOpen ? 'chevron-down' : 'chevron-forward'}
+                            size={14}
+                            color="#94a3b8"
+                          />
+                        </View>
+                      </TouchableOpacity>
+                      {isOpen ? (
+                        <View style={desktopStyles.accordionSubMenuWrapper}>
+                          {childrenItems}
+                        </View>
+                      ) : null}
+                    </View>
+                  );
+                };
+
                 return (
-                  <View style={{ gap: 16 }}>
-                    <View>
-                      <Text style={desktopStyles.sectionLabel}>EXECUTIVE DASHBOARD</Text>
-                      {renderItem('Overview', 'home', '/admin/(tabs)')}
-                      {renderItem('Global Wallet & Ledger', 'wallet', '/admin/(tabs)/super-accounts')}
-                    </View>
-                    
-                    <View>
-                      <Text style={desktopStyles.sectionLabel}>E-COMMERCE & MARKETPLACE</Text>
-                      {renderItem('Products Catalog', 'cube', '/admin/(tabs)/admin-products')}
-                      {renderItem('Store Orders', 'receipt', '/admin/(tabs)/admin-orders')}
-                      {renderItem('Seller KYC Approvals', 'shield-checkmark', '/admin-sellers')}
-                      {renderItem('Seller Payouts', 'cash', '/seller-payouts')}
-                      {renderItem('Coupons & VIP Passes', 'ticket', '/admin/(tabs)/super-coupons')}
-                      {renderItem('Sales Analytics', 'bar-chart', '/admin/(tabs)/super-orders')}
-                    </View>
+                  <View style={{ gap: 12 }}>
+                    {renderAccordionGroup(
+                      'EXECUTIVE',
+                      'EXECUTIVE DASHBOARD',
+                      'pulse',
+                      '2 Apps',
+                      <>
+                        {renderItem('Overview', 'home', '/admin/(tabs)')}
+                        {renderItem('Global Wallet & Ledger', 'wallet', '/admin/(tabs)/super-accounts')}
+                      </>
+                    )}
 
-                    <View>
-                      <Text style={desktopStyles.sectionLabel}>FARMER & CROP DOCTOR HUB</Text>
-                      {renderItem('Farmers Directory', 'leaf', '/admin/(tabs)/super-users', { group: 'CLIENTS', filter: 'FARMER' })}
-                      {renderItem('Crop Doctors (Farmers Only)', 'medical', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'FARM_ADVISOR' })}
-                      {renderItem('AI Disease Scanner', 'scan', '/admin/(tabs)/crop-disease-scanner')}
-                      {renderItem('Crop Master Data', 'create', '/admin/(tabs)/super-crop-edit')}
-                    </View>
+                    {renderAccordionGroup(
+                      'ECOMMERCE',
+                      'E-COMMERCE & MARKETPLACE',
+                      'bag-handle',
+                      '6 Tools',
+                      <>
+                        {renderItem('Products Catalog', 'cube', '/admin/(tabs)/admin-products')}
+                        {renderItem('Store Orders', 'receipt', '/admin/(tabs)/admin-orders')}
+                        {renderItem('Seller KYC Approvals', 'shield-checkmark', '/admin-sellers')}
+                        {renderItem('Seller Payouts', 'cash', '/seller-payouts')}
+                        {renderItem('Coupons & VIP Passes', 'ticket', '/admin/(tabs)/super-coupons')}
+                        {renderItem('Sales Analytics', 'bar-chart', '/admin/(tabs)/super-orders')}
+                      </>
+                    )}
 
-                    <View>
-                      <Text style={desktopStyles.sectionLabel}>GARDENER & ADVISOR HUB</Text>
-                      {renderItem('Gardeners Directory', 'flower', '/admin/(tabs)/super-users', { group: 'CLIENTS', filter: 'GARDENER' })}
-                      {renderItem('Garden Advisors (Gardeners Only)', 'sunny', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'GARDEN_ADVISOR' })}
-                      {renderItem('Plant Care Doses', 'nutrition', '/dose')}
-                    </View>
+                    {renderAccordionGroup(
+                      'FARMER_HUB',
+                      'FARMER & CROP DOCTOR HUB',
+                      'leaf',
+                      '4 Hubs',
+                      <>
+                        {renderItem('Farmers Directory', 'leaf', '/admin/(tabs)/super-users', { group: 'CLIENTS', filter: 'FARMER' })}
+                        {renderItem('Crop Doctors (Farmers Only)', 'medical', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'FARM_ADVISOR' })}
+                        {renderItem('AI Disease Scanner', 'scan', '/admin/(tabs)/crop-disease-scanner')}
+                        {renderItem('Crop Master Data', 'create', '/admin/(tabs)/super-crop-edit')}
+                      </>
+                    )}
 
-                    <View>
-                      <Text style={desktopStyles.sectionLabel}>STAFF & USER MANAGEMENT</Text>
-                      {renderItem('Technical Trainers', 'school', '/admin/(tabs)/trainer-dashboard')}
-                      {renderItem('Operators & Fulfillment', 'print', '/admin/(tabs)/operator-orders')}
-                      {renderItem('Market Managers', 'briefcase', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'MARKET_MANAGER' })}
-                      {renderItem('All Users & Roles', 'people', '/admin/(tabs)/super-users')}
-                    </View>
+                    {renderAccordionGroup(
+                      'GARDENER_HUB',
+                      'GARDENER & ADVISOR HUB',
+                      'flower',
+                      '3 Hubs',
+                      <>
+                        {renderItem('Gardeners Directory', 'flower', '/admin/(tabs)/super-users', { group: 'CLIENTS', filter: 'GARDENER' })}
+                        {renderItem('Garden Advisors (Gardeners Only)', 'sunny', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'GARDEN_ADVISOR' })}
+                        {renderItem('Plant Care Doses', 'nutrition', '/dose')}
+                      </>
+                    )}
 
-                    <View>
-                      <Text style={desktopStyles.sectionLabel}>SYSTEM & C-PANEL</Text>
-                      {renderItem('C-Panel Settings', 'options', '/admin/(tabs)/super-settings')}
-                      {renderItem('System Audit Log', 'time', '/admin/(tabs)/super-audit-log')}
-                    </View>
+                    {renderAccordionGroup(
+                      'STAFF_HUB',
+                      'STAFF & USER MANAGEMENT',
+                      'people',
+                      '4 Roles',
+                      <>
+                        {renderItem('Technical Trainers', 'school', '/admin/(tabs)/trainer-dashboard')}
+                        {renderItem('Operators & Fulfillment', 'print', '/admin/(tabs)/operator-orders')}
+                        {renderItem('Market Managers', 'briefcase', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'MARKET_MANAGER' })}
+                        {renderItem('All Users & Roles', 'people', '/admin/(tabs)/super-users')}
+                      </>
+                    )}
+
+                    {renderAccordionGroup(
+                      'SYSTEM',
+                      'SYSTEM & C-PANEL',
+                      'options',
+                      '2 Logs',
+                      <>
+                        {renderItem('C-Panel Settings', 'options', '/admin/(tabs)/super-settings')}
+                        {renderItem('System Audit Log', 'time', '/admin/(tabs)/super-audit-log')}
+                      </>
+                    )}
                   </View>
                 );
               }
@@ -668,6 +747,47 @@ const desktopStyles = StyleSheet.create({
     marginLeft: 12,
     marginTop: 8,
     marginBottom: 4,
+  },
+  accordionGroupContainer: {
+    marginBottom: 4,
+  },
+  accordionGroupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: RADIUS.lg,
+  },
+  accordionGroupTitle: {
+    fontSize: 10.5,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    letterSpacing: 0.4,
+  },
+  accordionBadge: {
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.3)',
+  },
+  accordionBadgeText: {
+    fontSize: 9,
+    fontFamily: FONT.extraBold,
+    color: '#00ff87',
+  },
+  accordionSubMenuWrapper: {
+    marginTop: 6,
+    paddingLeft: 8,
+    borderLeftWidth: 2,
+    borderLeftColor: 'rgba(0, 255, 135, 0.25)',
+    marginLeft: 10,
+    gap: 2,
   },
   navMenuItem: {
     flexDirection: 'row',

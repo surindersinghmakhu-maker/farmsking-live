@@ -33,6 +33,8 @@ import { useGroupVoiceCall } from '@/src/hooks/useGroupVoiceCall';
 import { GroupVoiceCallModal } from '@/src/components/chat/GroupVoiceCallModal';
 import { SwitchDashboardSection } from '@/src/components/SwitchDashboardSection';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { AdminKpiMetricCards } from '../AdminKpiMetricCards';
+import { AdminQuickViewDrawer, QuickViewData } from '../AdminQuickViewDrawer';
 
 const theme = RoleThemes.SUPER_ADMIN;
 const LIVE_REQUESTS_POLL_MS = 20000;
@@ -193,6 +195,7 @@ export const SuperAdminDashboardView: React.FC = () => {
 
       <View style={styles.content}>
         <SwitchDashboardSection />
+        <AdminKpiMetricCards onOpenQuickView={handleOpenQuickView} />
 
         {/* 🤖 Admin System Tool Widget: Google AI Telemetry & Quota Button */}
         <TouchableOpacity
@@ -605,6 +608,7 @@ export const SuperAdminDashboardView: React.FC = () => {
       <ReviewModal request={activeWithdrawal} onClose={() => setActiveWithdrawal(null)} />
       <PlanPaymentReviewModal request={activePlanPayment} onClose={() => setActivePlanPayment(null)} />
       <FarmerPlanPaymentReviewModal request={activeFarmerPlanPayment} onClose={() => setActiveFarmerPlanPayment(null)} />
+      <AdminQuickViewDrawer data={quickViewData} onClose={() => setQuickViewData(null)} />
 
       <SuperAdminExpenseCategoriesModal visible={showCategoriesModal} onClose={() => setShowCategoriesModal(false)} />
       <SuperAdminWorkspaceModal visible={showWorkspaceModal} onClose={() => setShowWorkspaceModal(false)} />

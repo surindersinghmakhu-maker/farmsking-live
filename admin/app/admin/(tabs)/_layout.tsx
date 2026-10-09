@@ -17,6 +17,8 @@ import { useCart } from '@/src/store/cart-context';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 import { FloatingAgriAiChatbot } from '@/src/components/FloatingAgriAiChatbot';
+import { GlobalCommandSearchModal } from '@/components/GlobalCommandSearchModal';
+import { AdminLiveToastNotification } from '@/components/AdminLiveToastNotification';
 
 import { Ionicons } from '@expo/vector-icons';
 
@@ -145,6 +147,20 @@ export default function TabLayout() {
   const pathname = usePathname();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768; // Desktop breakpoint
+
+  const [isSearchOpen, setIsSearchOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleOpenSearch = () => setIsSearchOpen(true);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('open-command-search', handleOpenSearch);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('open-command-search', handleOpenSearch);
+      }
+    };
+  }, []);
 
   const { role } = useRole();
   const { t, language, setLanguage } = useLanguage();
@@ -349,6 +365,105 @@ export default function TabLayout() {
 
       {/* 📱 TABS VIEW CONTAINER (Bottom tabs hide on Desktop, show on Mobile) */}
       <View style={{ flex: 1 }}>
+        {/* 💻 TOP WORKSPACE SUB-TABS HEADER BAR (Visible on Desktop for Admins) */}
+        {isDesktop && (role === 'SUPER_ADMIN' || role === 'ADMIN') && (
+          <View style={desktopStyles.topTabsHeaderBar}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={desktopStyles.topTabsScrollContent}>
+              {(() => {
+                // Determine ecosystem context & sub-tabs based on current route
+                let subTabs: { title: string; icon: keyof typeof Ionicons.glyphMap; path: string; params?: any }[] = [];
+                let ecosystemTitle = 'EXECUTIVE WORKSPACE';
+
+                if (pathname.includes('admin-products') || pathname.includes('admin-orders') || pathname.includes('admin-sellers') || pathname.includes('seller-payouts') || pathname.includes('super-coupons') || pathname.includes('super-orders')) {
+                  ecosystemTitle = '🛒 E-COMMERCE SUITE';
+                  subTabs = [
+                    { title: 'Products Catalog', icon: 'cube', path: '/admin/(tabs)/admin-products' },
+                    { title: 'Store Orders', icon: 'receipt', path: '/admin/(tabs)/admin-orders' },
+                    { title: 'Seller KYC Approvals', icon: 'shield-checkmark', path: '/admin-sellers' },
+                    { title: 'Seller Payouts', icon: 'cash', path: '/seller-payouts' },
+                    { title: 'Coupons & VIP Passes', icon: 'ticket', path: '/admin/(tabs)/super-coupons' },
+                    { title: 'Sales Analytics', icon: 'bar-chart', path: '/admin/(tabs)/super-orders' },
+                  ];
+                } else if (pathname.includes('crop-disease-scanner') || pathname.includes('super-crop-edit') || (pathname.includes('super-users') && (pathname.includes('FARMER') || pathname.includes('FARM_ADVISOR')))) {
+                  ecosystemTitle = '🌾 FARMER & CROP DOCTOR SUITE';
+                  subTabs = [
+                    { title: 'Farmers Directory', icon: 'leaf', path: '/admin/(tabs)/super-users', params: { group: 'CLIENTS', filter: 'FARMER' } },
+                    { title: 'Crop Doctors (Farmer Only)', icon: 'medical', path: '/admin/(tabs)/super-users', params: { group: 'PARTNERS', filter: 'FARM_ADVISOR' } },
+                    { title: 'AI Disease Diagnostic Scanner', icon: 'scan', path: '/admin/(tabs)/crop-disease-scanner' },
+                    { title: 'Crop Master Data', icon: 'create', path: '/admin/(tabs)/super-crop-edit' },
+                  ];
+                } else if (pathname.includes('dose') || (pathname.includes('super-users') && (pathname.includes('GARDENER') || pathname.includes('GARDEN_ADVISOR')))) {
+                  ecosystemTitle = '🪴 GARDENER & ADVISOR SUITE';
+                  subTabs = [
+                    { title: 'Gardeners Directory', icon: 'flower', path: '/admin/(tabs)/super-users', params: { group: 'CLIENTS', filter: 'GARDENER' } },
+                    { title: 'Garden Advisors (Gardener Only)', icon: 'sunny', path: '/admin/(tabs)/super-users', params: { group: 'PARTNERS', filter: 'GARDEN_ADVISOR' } },
+                    { title: 'Plant Care Doses & Protocols', icon: 'nutrition', path: '/dose' },
+                  ];
+                } else if (pathname.includes('trainer-dashboard') || pathname.includes('operator-orders') || (pathname.includes('super-users') && pathname.includes('MARKET_MANAGER'))) {
+                  ecosystemTitle = '👥 STAFF & FIELD OPERATIONS';
+                  subTabs = [
+                    { title: 'Technical Trainers', icon: 'school', path: '/admin/(tabs)/trainer-dashboard' },
+                    { title: 'Operators & Fulfillment', icon: 'print', path: '/admin/(tabs)/operator-orders' },
+                    { title: 'Market Managers', icon: 'briefcase', path: '/admin/(tabs)/super-users', params: { group: 'PARTNERS', filter: 'MARKET_MANAGER' } },
+                    { title: 'All System Users', icon: 'people', path: '/admin/(tabs)/super-users' },
+                  ];
+                } else if (pathname.includes('super-settings') || pathname.includes('super-audit-log')) {
+                  ecosystemTitle = '⚙️ SYSTEM SECURITY & C-PANEL';
+                  subTabs = [
+                    { title: 'C-Panel Settings', icon: 'options', path: '/admin/(tabs)/super-settings' },
+                    { title: 'System Audit Log', icon: 'time', path: '/admin/(tabs)/super-audit-log' },
+                  ];
+                } else {
+                  ecosystemTitle = '📊 EXECUTIVE COMMAND CENTER';
+                  subTabs = [
+                    { title: 'Platform Overview', icon: 'home', path: '/admin/(tabs)' },
+                    { title: 'Global Wallet & Ledger', icon: 'wallet', path: '/admin/(tabs)/super-accounts' },
+                  ];
+                }
+
+                return (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, justifyContent: 'space-between' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                      <Text style={desktopStyles.topEcosystemLabel}>{ecosystemTitle}</Text>
+                      <View style={{ width: 1, height: 20, backgroundColor: 'rgba(0,255,135,0.2)' }} />
+                      {subTabs.map((tab) => {
+                        const isIndexActive = tab.path === '/admin/(tabs)' && (pathname === '/' || pathname === '/(tabs)' || pathname === '/(tabs)/index');
+                        const isOtherActive = tab.path !== '/admin/(tabs)' && pathname.includes(tab.path.split('/').pop() || '');
+                        const isActive = isIndexActive || isOtherActive;
+
+                        return (
+                          <TouchableOpacity
+                            key={tab.title}
+                            style={[desktopStyles.topSubTabPill, isActive && !tab.params && desktopStyles.topSubTabPillActive]}
+                            onPress={() => router.push(tab.params ? { pathname: tab.path as any, params: tab.params } : (tab.path as any))}
+                          >
+                            <Ionicons name={tab.icon} size={15} color={isActive && !tab.params ? '#020d06' : '#00ff87'} />
+                            <Text style={[desktopStyles.topSubTabPillText, isActive && !tab.params && desktopStyles.topSubTabPillTextActive]}>
+                              {tab.title}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+
+                    {/* Spotlight Command Search Trigger Button */}
+                    <TouchableOpacity
+                      style={desktopStyles.spotlightTriggerBtn}
+                      onPress={() => setIsSearchOpen(true)}
+                    >
+                      <Ionicons name="search" size={14} color="#00ff87" />
+                      <Text style={desktopStyles.spotlightTriggerText}>Quick Search...</Text>
+                      <View style={desktopStyles.kbdBadge}>
+                        <Text style={desktopStyles.kbdText}>Ctrl K</Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
+            </ScrollView>
+          </View>
+        )}
+
         <Tabs
           screenOptions={{
             tabBarActiveTintColor: colors.tabBarActive,
@@ -507,6 +622,10 @@ export default function TabLayout() {
           />
         </Tabs>
 
+        {/* 🌟 SUPER PREMIUM MODALS & TOAST NOTIFICATIONS */}
+        <GlobalCommandSearchModal visible={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+        <AdminLiveToastNotification />
+
       </View>
     </View>
   );
@@ -630,5 +749,79 @@ const desktopStyles = StyleSheet.create({
   },
   langBtnTextActive: {
     color: '#0f172a',
+  },
+  topTabsHeaderBar: {
+    backgroundColor: '#03140a',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 255, 135, 0.2)',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    zIndex: 90,
+    ...premiumShadow('#000000', 'sm') as any,
+  },
+  topTabsScrollContent: {
+    alignItems: 'center',
+    paddingRight: 24,
+  },
+  topEcosystemLabel: {
+    fontSize: 12,
+    fontFamily: FONT.extraBold,
+    color: '#00ff87',
+    letterSpacing: 0.8,
+  },
+  topSubTabPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(0, 255, 135, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: RADIUS.pill,
+  },
+  topSubTabPillActive: {
+    backgroundColor: '#00ff87',
+    borderColor: '#00ff87',
+    ...premiumShadow('#00ff87', 'md') as any,
+  },
+  topSubTabPillText: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#34d399',
+  },
+  topSubTabPillTextActive: {
+    color: '#020d06',
+    fontFamily: FONT.extraBold,
+  },
+  spotlightTriggerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(0, 255, 135, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.3)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+    marginLeft: 16,
+  },
+  spotlightTriggerText: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+  },
+  kbdBadge: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: RADIUS.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  kbdText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
   },
 });

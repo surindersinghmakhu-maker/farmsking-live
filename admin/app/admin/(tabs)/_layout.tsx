@@ -264,15 +264,20 @@ export default function TabLayout() {
                   return (
                     <View key={groupKey} style={desktopStyles.accordionGroupContainer}>
                       <TouchableOpacity
-                        style={desktopStyles.accordionGroupHeader}
+                        style={[
+                          desktopStyles.accordionGroupHeader,
+                          isOpen && desktopStyles.accordionGroupHeaderOpen
+                        ]}
                         activeOpacity={0.8}
                         onPress={() => toggleGroup(groupKey)}
                       >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                          <Ionicons name={groupIcon} size={15} color="#00ff87" />
-                          <Text style={desktopStyles.accordionGroupTitle}>{groupTitle}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+                          <Ionicons name={groupIcon} size={16} color="#00ff87" />
+                          <Text style={[desktopStyles.accordionGroupTitle, isOpen && { color: '#00ff87' }]} numberOfLines={1}>
+                            {groupTitle}
+                          </Text>
                         </View>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                           {countBadge ? (
                             <View style={desktopStyles.accordionBadge}>
                               <Text style={desktopStyles.accordionBadgeText}>{countBadge}</Text>
@@ -281,7 +286,7 @@ export default function TabLayout() {
                           <Ionicons
                             name={isOpen ? 'chevron-down' : 'chevron-forward'}
                             size={14}
-                            color="#94a3b8"
+                            color={isOpen ? '#00ff87' : '#94a3b8'}
                           />
                         </View>
                       </TouchableOpacity>
@@ -749,35 +754,44 @@ const desktopStyles = StyleSheet.create({
     marginBottom: 4,
   },
   accordionGroupContainer: {
-    marginBottom: 4,
+    marginBottom: 6,
   },
   accordionGroupHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.15)',
+    borderColor: 'rgba(0, 255, 135, 0.2)',
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: RADIUS.lg,
   },
+  accordionGroupHeaderOpen: {
+    backgroundColor: 'rgba(6, 36, 19, 0.95)',
+    borderColor: 'rgba(0, 255, 135, 0.45)',
+    shadowColor: '#00ff87',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+  },
   accordionGroupTitle: {
-    fontSize: 10.5,
+    fontSize: 11,
     fontFamily: FONT.extraBold,
     color: '#ffffff',
     letterSpacing: 0.4,
+    flex: 1,
   },
   accordionBadge: {
-    backgroundColor: 'rgba(0, 255, 135, 0.15)',
-    paddingHorizontal: 6,
+    backgroundColor: 'rgba(0, 255, 135, 0.18)',
+    paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.3)',
+    borderColor: 'rgba(0, 255, 135, 0.4)',
   },
   accordionBadgeText: {
-    fontSize: 9,
+    fontSize: 9.5,
     fontFamily: FONT.extraBold,
     color: '#00ff87',
   },

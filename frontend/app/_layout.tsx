@@ -39,6 +39,19 @@ const queryClient = new QueryClient({
   },
 });
 
+const STAFF_ROLES = [
+  'ADMIN',
+  'SUPERADMIN',
+  'ADVISOR',
+  'FARM_ADVISOR',
+  'GARDEN_ADVISOR',
+  'TECHNICAL_TRAINER',
+  'DISTRICT_MANAGER',
+  'STATE_MANAGER',
+  'ACCOUNTS_MANAGER',
+  'OPERATIONS_MANAGER',
+];
+
 function RootNavigation() {
   const { user, isLoading } = useAuth();
   const segments = useSegments();
@@ -48,6 +61,9 @@ function RootNavigation() {
   useEffect(() => {
     if (isLoading) return;
     const currentGroup = segments[0] as string;
+    const inAuthGroup = currentGroup === '(auth)';
+    const isPublicRoute = ['seo', 'support', 'contact-us', 'shop', 'dose', 'you', 'seller-dashboard', 'topic', 'privacy-policy', 'terms', 'refund-policy', 'account-deletion'].includes(currentGroup);
+    const isStaffSetupRoute = segmentsPath === 'staff-profile-setup';
     const isSubdomainAdmin = Platform.OS === 'web' && typeof window !== 'undefined' && (window.location.hostname === 'admin.farmsking.in' || window.location.hostname.startsWith('admin.'));
 
     if (isSubdomainAdmin && currentGroup !== 'admin' && !inAuthGroup) {

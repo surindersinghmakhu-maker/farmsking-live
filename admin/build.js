@@ -2,21 +2,8 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-// Walk up parent directories to locate frontend package.json
-let currentDir = __dirname;
-let targetDir = currentDir;
-
-while (currentDir !== path.parse(currentDir).root) {
-  if (fs.existsSync(path.join(currentDir, 'frontend', 'package.json'))) {
-    targetDir = path.join(currentDir, 'frontend');
-    break;
-  }
-  if (fs.existsSync(path.join(currentDir, 'package.json')) && (fs.existsSync(path.join(currentDir, 'app')) || fs.existsSync(path.join(currentDir, 'src')))) {
-    targetDir = currentDir;
-    break;
-  }
-  currentDir = path.dirname(currentDir);
-}
+// Set targetDir to admin project directory
+const targetDir = __dirname;
 
 // Trigger automatic version bump
 try {

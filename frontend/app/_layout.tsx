@@ -66,8 +66,11 @@ function RootNavigation() {
     const isStaffSetupRoute = segmentsPath === 'staff-profile-setup';
     const isSubdomainAdmin = Platform.OS === 'web' && typeof window !== 'undefined' && (window.location.hostname === 'admin.farmsking.in' || window.location.hostname.startsWith('admin.'));
 
-    if (isSubdomainAdmin && currentGroup !== 'admin' && !inAuthGroup) {
-      router.replace('/admin');
+    if (isSubdomainAdmin) {
+      // Admin subdomain renders AdminWebPortalScreen directly at root / (https://admin.farmsking.in/)
+      if (!user && currentGroup !== 'index' && currentGroup !== '' && currentGroup !== 'admin' && !inAuthGroup) {
+        // If navigating away on admin subdomain while logged out, keep at root /
+      }
       return;
     }
 

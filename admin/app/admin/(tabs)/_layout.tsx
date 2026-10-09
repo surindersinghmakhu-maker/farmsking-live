@@ -232,45 +232,48 @@ export default function TabLayout() {
                 return (
                   <View style={{ gap: 16 }}>
                     <View>
-                      <Text style={desktopStyles.sectionLabel}>DASHBOARD</Text>
+                      <Text style={desktopStyles.sectionLabel}>EXECUTIVE DASHBOARD</Text>
                       {renderItem('Overview', 'home', '/admin/(tabs)')}
-                      {renderItem('Global Wallet', 'wallet', '/admin/(tabs)/super-accounts')}
+                      {renderItem('Global Wallet & Ledger', 'wallet', '/admin/(tabs)/super-accounts')}
                     </View>
                     
                     <View>
-                      <Text style={desktopStyles.sectionLabel}>MULTI-VENDOR MARKETPLACE</Text>
+                      <Text style={desktopStyles.sectionLabel}>E-COMMERCE & MARKETPLACE</Text>
                       {renderItem('Products Catalog', 'cube', '/admin/(tabs)/admin-products')}
                       {renderItem('Store Orders', 'receipt', '/admin/(tabs)/admin-orders')}
-                      {renderItem('Seller KYC', 'shield-checkmark', '/admin-sellers')}
-                      {renderItem('Seller Payouts', 'wallet', '/seller-payouts')}
+                      {renderItem('Seller KYC Approvals', 'shield-checkmark', '/admin-sellers')}
+                      {renderItem('Seller Payouts', 'cash', '/seller-payouts')}
+                      {renderItem('Coupons & VIP Passes', 'ticket', '/admin/(tabs)/super-coupons')}
                       {renderItem('Sales Analytics', 'bar-chart', '/admin/(tabs)/super-orders')}
                     </View>
 
                     <View>
-                      <Text style={desktopStyles.sectionLabel}>ADMIN APP USERS</Text>
-                      {renderItem('Super Admins', 'shield-half', '/admin/(tabs)/super-users', { group: 'ADMINS', filter: 'SUPER_ADMIN' })}
-                      {renderItem('Admins', 'shield-checkmark', '/admin/(tabs)/super-users', { group: 'ADMINS', filter: 'ADMIN' })}
-                      {renderItem('Operators', 'print', '/admin/(tabs)/super-users', { group: 'ADMINS', filter: 'OPERATOR' })}
-                      {renderItem('Technical Trainers', 'school', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'TECHNICAL_TRAINER' })}
-                      {renderItem('Market Managers', 'briefcase', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'MARKET_MANAGER' })}
+                      <Text style={desktopStyles.sectionLabel}>FARMER & CROP DOCTOR HUB</Text>
+                      {renderItem('Farmers Directory', 'leaf', '/admin/(tabs)/super-users', { group: 'CLIENTS', filter: 'FARMER' })}
+                      {renderItem('Crop Doctors & Experts', 'medical', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'FARM_ADVISOR' })}
+                      {renderItem('AI Disease Scanner', 'scan', '/admin/(tabs)/crop-disease-scanner')}
+                      {renderItem('Crop Master Data', 'create', '/admin/(tabs)/super-crop-edit')}
                     </View>
 
                     <View>
-                      <Text style={desktopStyles.sectionLabel}>FRONTEND APP USERS</Text>
-                      {renderItem('Farmers (Hero)', 'leaf', '/admin/(tabs)/super-users', { group: 'CLIENTS', filter: 'FARMER' })}
-                      {renderItem('Crop Doctors', 'medical', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'FARM_ADVISOR' })}
-                      {renderItem('Customers', 'cart', '/admin/(tabs)/super-users', { group: 'CLIENTS', filter: 'CUSTOMER' })}
-                      {renderItem('Sellers', 'cube', '/admin/(tabs)/super-users', { group: 'CLIENTS', filter: 'SELLER' })}
+                      <Text style={desktopStyles.sectionLabel}>GARDENER & ADVISOR HUB</Text>
                       {renderItem('Gardeners', 'flower', '/admin/(tabs)/super-users', { group: 'CLIENTS', filter: 'GARDENER' })}
                       {renderItem('Garden Advisors', 'sunny', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'GARDEN_ADVISOR' })}
+                      {renderItem('Plant Care Doses', 'nutrition', '/dose')}
                     </View>
 
                     <View>
-                      <Text style={desktopStyles.sectionLabel}>SYSTEM & CONFIG</Text>
-                      {renderItem('VIP Passes', 'ticket', '/admin/(tabs)/super-coupons')}
-                      {renderItem('Edit Crop Data', 'leaf', '/admin/(tabs)/super-crop-edit')}
-                      {renderItem('Audit Log', 'time', '/admin/(tabs)/super-audit-log')}
+                      <Text style={desktopStyles.sectionLabel}>STAFF & USER MANAGEMENT</Text>
+                      {renderItem('Technical Trainers', 'school', '/admin/(tabs)/trainer-dashboard')}
+                      {renderItem('Operators & Fulfillment', 'print', '/admin/(tabs)/operator-orders')}
+                      {renderItem('Market Managers', 'briefcase', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'MARKET_MANAGER' })}
+                      {renderItem('All Users & Roles', 'people', '/admin/(tabs)/super-users')}
+                    </View>
+
+                    <View>
+                      <Text style={desktopStyles.sectionLabel}>SYSTEM & C-PANEL</Text>
                       {renderItem('C-Panel Settings', 'options', '/admin/(tabs)/super-settings')}
+                      {renderItem('System Audit Log', 'time', '/admin/(tabs)/super-audit-log')}
                     </View>
                   </View>
                 );

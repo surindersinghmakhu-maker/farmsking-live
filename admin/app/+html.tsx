@@ -212,6 +212,50 @@ export default function Root({ children }: PropsWithChildren) {
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="icon" sizes="192x192" href="/icon.png" />
 
+        {/* 🌟 100% Reliable Production Web Fonts & Vector Icons CDN Fallbacks */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Space+Mono&display=swap" rel="stylesheet" />
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            @font-face {
+              font-family: 'Ionicons';
+              src: url('https://cdnjs.cloudflare.com/ajax/libs/ionicons/5.5.2/fonts/ionicons.ttf') format('truetype');
+            }
+            @font-face {
+              font-family: 'MaterialIcons';
+              src: url('https://cdnjs.cloudflare.com/ajax/libs/material-design-icons/3.0.1/iconfont/MaterialIcons-Regular.ttf') format('truetype');
+            }
+            @font-face {
+              font-family: 'MaterialCommunityIcons';
+              src: url('https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/7.2.96/fonts/materialdesignicons-webfont.ttf') format('truetype');
+            }
+            @font-face {
+              font-family: 'FontAwesome';
+              src: url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/fonts/fontawesome-webfont.ttf') format('truetype');
+            }
+            @font-face {
+              font-family: 'Feather';
+              src: url('https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.ttf') format('truetype');
+            }
+            @font-face {
+              font-family: 'AntDesign';
+              src: url('https://cdn.jsdelivr.net/npm/react-native-vector-icons@10.0.0/Fonts/AntDesign.ttf') format('truetype');
+            }
+            @font-face {
+              font-family: 'Entypo';
+              src: url('https://cdn.jsdelivr.net/npm/react-native-vector-icons@10.0.0/Fonts/Entypo.ttf') format('truetype');
+            }
+
+            * {
+              box-sizing: border-box;
+            }
+            body, div, span, p, h1, h2, h3, h4, h5, h6, input, button, textarea {
+              font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+            }
+          `
+        }} />
+
         <ScrollViewStyleReset />
       </head>
       <body>

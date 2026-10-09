@@ -87,6 +87,44 @@ export const SuperAdminDashboardView: React.FC = () => {
   const [activeWithdrawal, setActiveWithdrawal] = useState<WithdrawalRequest | null>(null);
   const [activePlanPayment, setActivePlanPayment] = useState<PlanPaymentRequest | null>(null);
   const [activeFarmerPlanPayment, setActiveFarmerPlanPayment] = useState<FarmerPlanPaymentRequest | null>(null);
+  const [quickViewData, setQuickViewData] = useState<QuickViewData | null>(null);
+
+  const handleOpenQuickView = (type: 'SELLER_KYC' | 'PAYOUT_REQUEST') => {
+    if (type === 'SELLER_KYC') {
+      setQuickViewData({
+        id: 'kyc-1',
+        type: 'SELLER_KYC',
+        title: 'Surinder Agro Farm Store',
+        subtitle: 'Makhu, Ferozepur, Punjab · GSTIN Verified',
+        status: 'PENDING',
+        details: [
+          { label: 'Business Owner', value: 'Surinder Singh' },
+          { label: 'Mobile Contact', value: '+91 98765-43210' },
+          { label: 'Store Location', value: 'GT Road, Makhu, Punjab (142044)' },
+          { label: 'Agri License Category', value: 'Certified Seeds & Bio-Pesticides' },
+        ],
+        documents: [
+          { title: 'GST Registration Certificate', verified: true },
+          { title: 'FSSAI Fertilizer License', verified: true },
+          { title: 'Bank Account Cancelled Cheque', verified: true },
+        ],
+        onApprove: () => {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('admin-live-toast', {
+              detail: { type: 'SUCCESS', title: 'Seller KYC Approved', message: 'Surinder Agro Farm Store is now verified & active.' }
+            }));
+          }
+        },
+        onReject: () => {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('admin-live-toast', {
+              detail: { type: 'ALERT', title: 'KYC Verification Rejected', message: 'Seller notified to re-upload documents.' }
+            }));
+          }
+        },
+      });
+    }
+  };
 
   const [activeActionTab, setActiveActionTab] = useState<ActionRequiredTabKey>('SUBMISSIONS');
   const [cpanelSubTab, setCpanelSubTab] = useState<'SWITCHES' | 'MODIFICATIONS' | 'OTHERS'>('SWITCHES');

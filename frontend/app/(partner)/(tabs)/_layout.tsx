@@ -192,9 +192,9 @@ export default function TabLayout() {
 
   const handleNavigate = (tabName: TabName) => {
     if (tabName === 'index') {
-      router.push('/(tabs)' as any);
+      router.push('/' as any);
     } else {
-      router.push(`/(tabs)/${tabName}` as any);
+      router.push(`/${tabName}` as any);
     }
   };
 

@@ -250,15 +250,15 @@ export default function TabLayout() {
                     <View>
                       <Text style={desktopStyles.sectionLabel}>FARMER & CROP DOCTOR HUB</Text>
                       {renderItem('Farmers Directory', 'leaf', '/admin/(tabs)/super-users', { group: 'CLIENTS', filter: 'FARMER' })}
-                      {renderItem('Crop Doctors & Experts', 'medical', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'FARM_ADVISOR' })}
+                      {renderItem('Crop Doctors (Farmers Only)', 'medical', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'FARM_ADVISOR' })}
                       {renderItem('AI Disease Scanner', 'scan', '/admin/(tabs)/crop-disease-scanner')}
                       {renderItem('Crop Master Data', 'create', '/admin/(tabs)/super-crop-edit')}
                     </View>
 
                     <View>
                       <Text style={desktopStyles.sectionLabel}>GARDENER & ADVISOR HUB</Text>
-                      {renderItem('Gardeners', 'flower', '/admin/(tabs)/super-users', { group: 'CLIENTS', filter: 'GARDENER' })}
-                      {renderItem('Garden Advisors', 'sunny', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'GARDEN_ADVISOR' })}
+                      {renderItem('Gardeners Directory', 'flower', '/admin/(tabs)/super-users', { group: 'CLIENTS', filter: 'GARDENER' })}
+                      {renderItem('Garden Advisors (Gardeners Only)', 'sunny', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'GARDEN_ADVISOR' })}
                       {renderItem('Plant Care Doses', 'nutrition', '/dose')}
                     </View>
 

@@ -22,6 +22,8 @@ const IGNORED = new Set([
   '.next',
 ]);
 
+const SENSITIVE_REGEX = /^(?!\.env\.example$)(?:\.env(?:\..*)?|.*\.jks|.*\.p8|.*\.p12|.*\.key|.*\.mobileprovision|.*\.pem)$/i;
+
 function getTimestamp() {
   const now = new Date();
   const year = now.getFullYear();
@@ -45,6 +47,10 @@ function copyFolderRecursive(src, dest) {
 
   for (const entry of entries) {
     if (IGNORED.has(entry.name)) continue;
+    if (entry.isFile() && SENSITIVE_REGEX.test(entry.name)) {
+      console.log(`Skipping sensitive file: ${entry.name}`);
+      continue;
+    }
 
     const srcPath = path.join(src, entry.name);
     const destPath = path.join(dest, entry.name);

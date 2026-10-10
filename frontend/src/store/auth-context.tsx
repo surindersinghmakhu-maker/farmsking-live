@@ -97,8 +97,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (msg && (msg.includes('Session Terminated') || msg.includes('logged in on another device'))) {
         Alert.alert(
-          '⚠️ Active Session Terminated (ਸੈਸ਼ਨ ਸਮਾਪਤ)',
-          'Your account was logged in on another device. As per maximum 2 device policy, the oldest session was automatically logged out.\n\n(ਤੁਹਾਡਾ ਖਾਤਾ ਕਿਸੇ ਹੋਰ ਡਿਵਾਈਸ ਤੇ ਲੌਗਇਨ ਹੋਇਆ ਹੈ। 2 ਡਿਵਾਈਸ ਨਿਯਮ ਅਨੁਸਾਰ ਪੁਰਾਣਾ ਲੌਗਇਨ ਆਪਣੇ ਆਪ ਸਮਾਪਤ ਹੋ ਗਿਆ ਹੈ।)',
+          '⚠️ Active Session Terminated',
+          'Your account was logged in on another device. As per maximum 2 device policy, the oldest session was automatically logged out.',
           [{ text: 'OK' }]
         );
       }
@@ -128,18 +128,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const meta = response.sessionMeta;
           if (meta?.evictedOldest) {
             Alert.alert(
-              '⚠️ Notice: Old Session Auto Logged Out (ਪੁਰਾਣਾ ਲੌਗਇਨ ਬੰਦ)',
-              'You logged in on a 3rd device. Limit is 2 devices. The oldest active session was automatically logged out.\n\n(2 ਤੋਂ ਵੱਧ ਲੌਗਇਨ ਹੋਣ ਕਰਕੇ ਸਭ ਤੋਂ ਪਹਿਲਾਂ ਵਾਲਾ ਡਿਵਾਈਸ ਆਟੋਮੈਟਿਕ ਲੌਗ ਆਉਟ ਕਰ ਦਿੱਤਾ ਗਿਆ ਹੈ।)',
-              [{ text: 'OK (ਠੀਕ ਹੈ)' }]
+              '⚠️ Notice: Old Session Auto Logged Out',
+              'You logged in on a 3rd device. Limit is 2 devices. The oldest active session was automatically logged out.',
+              [{ text: 'OK' }]
             );
           } else if (meta?.hasMultipleLogins) {
             Alert.alert(
-              '⚠️ Multiple Devices Logged In (ਬਹੁ-ਡਿਵਾਈਸ ਲੌਗਇਨ alert)',
-              `Your account is currently logged in on ${meta.totalActiveSessions} devices.\n\nWould you like to auto log out all other devices right now?\n(ਤੁਹਾਡੀ ID 1 ਤੋਂ ਵੱਧ ਡਿਵਾਈਸ ਤੇ ਲੌਗਇਨ ਹੈ। ਕੀ ਤੁਸੀਂ ਬਾਕੀ ਸਾਰੇ ਪੁਰਾਣੇ ਲੌਗਇਨ ਲੌਗ ਆਉਟ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?)`,
+              '⚠️ Multiple Devices Logged In',
+              `Your account is currently logged in on ${meta.totalActiveSessions} devices.\n\nWould you like to auto log out all other devices right now?`,
               [
-                { text: 'Keep Both (ਰਹਿਣ ਦਿਓ)', style: 'cancel' },
+                { text: 'Keep Both', style: 'cancel' },
                 {
-                  text: 'Logout Other Devices (ਬਾਕੀ ਲੌਗਆਉਟ ਕਰੋ)',
+                  text: 'Logout Other Devices',
                   style: 'destructive',
                   onPress: async () => {
                     try {

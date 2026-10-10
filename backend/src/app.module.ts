@@ -66,11 +66,13 @@ import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter'
 
 
 import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor';
+import { RedisModule } from './modules/redis/redis.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 60 }]),
+    RedisModule,
     PrismaModule,
     IsoControlsModule,
     AuthModule,

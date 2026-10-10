@@ -124,6 +124,7 @@ export class ProductsService {
 
     return this.prisma.product.findMany({
       where,
+      take: 150, // Defensive bound to prevent massive catalog crash
       include: {
         sellerStore: {
           select: {
@@ -229,6 +230,7 @@ export class ProductsService {
   async getReviews(productId: string) {
     const reviews = await this.prisma.productReview.findMany({
       where: { productId },
+      take: 200,
       include: {
         user: { select: { id: true, name: true, mobile: true } },
       },
@@ -254,6 +256,7 @@ export class ProductsService {
           { moderationStatus: ProductModerationStatus.REJECTED },
         ],
       },
+      take: 100,
       include: {
         sellerStore: {
           select: { id: true, storeName: true, sellerType: true, rating: true, kycStatus: true },

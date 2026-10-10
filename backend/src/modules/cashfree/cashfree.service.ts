@@ -330,23 +330,40 @@ export class CashfreeService {
     this.logger.log(`Cashfree Webhook received: ${JSON.stringify(body)}`);
 
     const orderId = body?.data?.order?.order_id;
-    const orderStatus = body?.data?.order?.order_status;
+    if (!orderId) return { status: 'IGNORED' };
 
-    if (orderId && orderStatus === 'PAID') {
+    try {
+      // ALWAYS verify the order status with Cashfree directly to prevent spoofing
+      const endpoint = `${this.baseUrl}/orders/${orderId}`;
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+      const resData = await response.json();
+      
+      if (!response.ok || resData.order_status !== 'PAID') {
+        this.logger.warn(`Cashfree Webhook Spoof Attempt or Not Paid: ${orderId}`);
+        return { status: 'VERIFICATION_FAILED_OR_NOT_PAID' };
+      }
+
+      // It is securely verified as PAID by Cashfree API
       if (orderId.startsWith('PLAN-')) {
         await this.handlePlanPaymentSuccess(orderId);
       } else if (orderId.startsWith('GCARD-')) {
         await this.handleGardenerPlanPaymentSuccess(orderId);
       } else if (orderId.startsWith('WALLET-')) {
-        await this.handleWalletTopupSuccess(orderId, body.data?.order);
+        await this.handleWalletTopupSuccess(orderId, resData);
       } else if (orderId.startsWith('DOC-')) {
         await this.handleDoctorConsultationSuccess(orderId);
       } else {
-        await this.handlePaymentSuccess(orderId, body.data?.order);
+        await this.handlePaymentSuccess(orderId, resData);
       }
-    }
 
-    return { status: 'SUCCESS' };
+      return { status: 'SUCCESS' };
+    } catch (e) {
+      this.logger.error(`Cashfree Webhook verification failed for ${orderId}: ${e.message}`);
+      return { status: 'ERROR' };
+    }
   }
 
   /** Handle Wallet Top-up via Cashfree */

@@ -1,7 +1,7 @@
 {
   "name": "frontend",
   "main": "expo-router/entry",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "scripts": {
     "start": "expo start",
     "dev": "expo start",
@@ -65,9 +65,10 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@react-native/jest-preset": "^0.87.1",
     "@testing-library/jest-native": "^5.4.3",
     "@testing-library/react-native": "^14.0.1",
-    "@types/jest": "^29.5.12",
+    "@types/jest": "^29.5.14",
     "@types/react": "~19.2.4",
     "@types/react-test-renderer": "^18.3.0",
     "eslint": "^8.57.0",

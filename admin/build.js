@@ -4,6 +4,7 @@ const path = require('path');
 
 // Set targetDir to admin project directory
 const targetDir = __dirname;
+const currentDir = path.resolve(__dirname, '..');
 
 // Trigger automatic version bump
 try {

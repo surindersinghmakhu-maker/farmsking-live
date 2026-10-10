@@ -132,6 +132,8 @@ export class WalletService {
       const referredUsers = await this.prisma.user.findMany({
         where: { referredById: { not: null }, deletedAt: null },
         select: { id: true },
+        orderBy: { createdAt: 'desc' },
+        take: 500, // Process only the 500 most recent referrals to avoid OOM
       });
 
       for (const u of referredUsers) {

@@ -1,4 +1,6 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { auth } from '@/src/lib/firebase';
+import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 
 import {
   View,
@@ -65,7 +67,7 @@ export default function ProfileScreen() {
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [otpError, setOtpError] = useState<string | null>(null);
-  const [devOtpMsg, setDevOtpMsg] = useState<string | null>(null);
+  const [confirmationResult, setConfirmationResult] = useState<any>(null);
 
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [oldPassword, setOldPassword] = useState('');
@@ -94,7 +96,7 @@ export default function ProfileScreen() {
       await verifyAccountPassword(oldPassword.trim(), userMobile);
       
       // 2. Update to new password
-      await updateAddress.mutateAsync({ password: newPassword.trim() });
+      await updateAddress.mutateAsync({ password: newPassword.trim() } as any);
       
       setIsPasswordModalOpen(false);
       setOldPassword('');
@@ -118,12 +120,23 @@ export default function ProfileScreen() {
     setIsSendingOtp(true);
     setOtpError(null);
     try {
-      const res = await sendMobileLinkOtp(num);
-      if (res.devOtp) setDevOtpMsg(`Dev OTP: ${res.devOtp}`);
+      if (typeof window !== 'undefined' && !(window as any).recaptchaVerifierProfile) {
+        (window as any).recaptchaVerifierProfile = new RecaptchaVerifier(
+          auth,
+          'recaptcha-container-profile',
+          { size: 'invisible' }
+        );
+      }
+      const confirmation = await signInWithPhoneNumber(
+        auth,
+        `+91${num}`,
+        (window as any).recaptchaVerifierProfile
+      );
+      setConfirmationResult(confirmation);
       setIsOtpModalOpen(true);
-      Alert.alert('📲 OTP Sent', res.message || 'OTP sent via WhatsApp!');
+      Alert.alert('📲 OTP Sent', 'OTP sent via Firebase SMS!');
     } catch (err: any) {
-      Alert.alert('Error', err?.response?.data?.message || err?.message || 'Could not send OTP.');
+      Alert.alert('Error', err?.message || 'Could not send OTP.');
     } finally {
       setIsSendingOtp(false);
     }
@@ -137,9 +150,13 @@ export default function ProfileScreen() {
     setIsVerifyingOtp(true);
     setOtpError(null);
     try {
+      if (!confirmationResult) throw new Error('OTP session expired. Request a new OTP.');
+      const resFirebase = await confirmationResult.confirm(otpCode.trim());
+      const idToken = await resFirebase.user.getIdToken();
+
       const res = await verifyMobileLinkOtp({
         mobile: userMobile,
-        otp: otpCode.trim(),
+        otp: idToken,
         password: loginPassword.trim() || undefined,
       });
       setIsOtpModalOpen(false);
@@ -934,7 +951,7 @@ export default function ProfileScreen() {
 
 
           {/* 📲 Mobile Number OTP Verification Modal */}
-
+          <View id="recaptcha-container-profile" style={{ display: 'none' }} />
           <Modal
             visible={isOtpModalOpen}
             animationType="fade"
@@ -1004,7 +1021,7 @@ export default function ProfileScreen() {
                   disabled={isSendingOtp}
                 >
                   <Text style={{ color: '#0284c7', fontSize: 12, fontFamily: FONT.bold }}>
-                    {isSendingOtp ? 'Resending...' : 'Didn\'t receive OTP? Resend via WhatsApp'}
+                    {isSendingOtp ? 'Resending...' : 'Didn\'t receive OTP? Resend via SMS'}
                   </Text>
                 </TouchableOpacity>
               </View>

@@ -1,12 +1,12 @@
 {
   "name": "farmsking-monorepo",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "private": true,
   "scripts": {
-    "build": "cd backend && npm install --legacy-peer-deps && npm run build:local",
-    "start": "cd backend && node dist/main.js",
+    "build": "node scripts/build.js",
+    "start": "node scripts/start.js",
     "build:web": "node frontend/build.js",
-    "deploy": "npm --prefix backend run build:local && node frontend/build.js && git add . && git commit -m \"deploy: live update\" && git push origin main && git push hostinger main"
+    "deploy": "node scripts/deploy.js"
   },
   "dependencies": {
     "@google/genai": "^2.25.0",

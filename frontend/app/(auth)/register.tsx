@@ -160,11 +160,12 @@ export default function RegisterScreen() {
     setShowOtpModal(true);
   };
 
-  const handleCompleteRegistration = async () => {
+  const handleCompleteRegistration = async (firebaseIdToken: string) => {
     setShowOtpModal(false);
     setIsSubmitting(true);
     try {
       await register({
+        firebaseIdToken,
         name: values.name,
         mobile: values.mobile,
         password: values.password,
@@ -527,7 +528,6 @@ export default function RegisterScreen() {
       <OtpVerificationModal
         visible={showOtpModal}
         mobileNumber={values.mobile}
-        generatedOtp={generatedOtp}
         onVerifySuccess={handleCompleteRegistration}
         onClose={() => setShowOtpModal(false)}
       />

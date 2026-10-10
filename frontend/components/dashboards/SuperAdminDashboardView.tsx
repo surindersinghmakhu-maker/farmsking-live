@@ -83,6 +83,28 @@ export const SuperAdminDashboardView: React.FC = () => {
   const [showAiTelemetryModal, setShowAiTelemetryModal] = useState(false);
   const [isRequestsCollapsed, setIsRequestsCollapsed] = useState(true);
   const [activeChatTarget, setActiveChatTarget] = useState<{ farmerId: string; farmerName: string } | null>(null);
+  // 4D Command Center Engine States
+  const [diurnalCycle, setDiurnalCycle] = useState<'noon' | 'dawn' | 'dusk' | 'aurora'>('noon');
+  const [temporalDays, setTemporalDays] = useState<number>(0);
+  const [activeNavSection, setActiveNavSection] = useState<string>('overview');
+
+  const getDiurnalBg = () => {
+    switch (diurnalCycle) {
+      case 'dawn': return '#03130c';
+      case 'dusk': return '#06120b';
+      case 'aurora': return '#010804';
+      default: return '#020f07';
+    }
+  };
+
+  const getStageLabel = () => {
+    if (temporalDays < -5) return 'Seed Bed Preparation';
+    if (temporalDays <= 5) return 'Germination & Early Emergence';
+    if (temporalDays <= 20) return 'Vegetative Tillering & Canopy';
+    if (temporalDays <= 35) return 'Flowering & Grain Filling';
+    return 'Harvest Peak & APMC Mandi Procurement';
+  };
+
 
   // Faked AI Quota States
   const [aiTier, setAiTier] = useState<'PRO' | 'ULTRA'>('PRO');
@@ -167,7 +189,7 @@ export const SuperAdminDashboardView: React.FC = () => {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: tConfig.bg }]} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { backgroundColor: getDiurnalBg() }]} showsVerticalScrollIndicator={false}>
       <RoleHeader
         currentRole="SUPER_ADMIN"
         profileName={user?.name || 'Super Admin'}
@@ -177,7 +199,92 @@ export const SuperAdminDashboardView: React.FC = () => {
 
       <View style={styles.content}>
 
+        {/* 🌌 4D DIURNAL ATMOSPHERE & TIME WARP CONTROLLER 🌌 */}
+        <View style={styles.fourDHeaderContainer}>
+          <View style={styles.fourDTopRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+              <View style={styles.fourDBadgeIcon}>
+                <Ionicons name="sparkles" size={16} color="#00ff87" />
+              </View>
+              <View>
+                <Text style={styles.fourDTitle}>4D Super Admin Command Center</Text>
+                <Text style={styles.fourDSub}>Real-time predictive telemetry, diurnal lighting & ecosystem control</Text>
+              </View>
+            </View>
+
+            {/* Atmosphere Diurnal Selector */}
+            <View style={styles.diurnalPillRow}>
+              {(['noon', 'dawn', 'dusk', 'aurora'] as const).map((cycle) => (
+                <TouchableOpacity
+                  key={cycle}
+                  style={[styles.diurnalBtn, diurnalCycle === cycle && styles.diurnalBtnActive]}
+                  onPress={() => {
+                    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setDiurnalCycle(cycle);
+                  }}
+                >
+                  <Text style={[styles.diurnalBtnText, diurnalCycle === cycle && styles.diurnalBtnTextActive]}>
+                    {cycle === 'noon' ? '☀️ Noon' : cycle === 'dawn' ? '🌅 Dawn' : cycle === 'dusk' ? '🌆 Dusk' : '🌌 Aurora'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Temporal Timeline Scrubber Bar */}
+          <View style={styles.temporalScrubberCard}>
+            <View style={styles.temporalHeader}>
+              <View style={styles.chronoPulseDot} />
+              <Ionicons name="time" size={15} color="#00ff87" />
+              <Text style={styles.temporalLabel}>4D Temporal Engine Horizon:</Text>
+              <View style={styles.horizonBadge}>
+                <Text style={styles.horizonBadgeText}>
+                  {temporalDays === 0 ? 'Present Moment (T-0 Days)' : temporalDays > 0 ? `+${temporalDays} Days Harvest Forecast` : `${temporalDays} Days Past Log`}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.temporalScrubberTrack}>
+              <TouchableOpacity
+                style={[styles.scrubberQuickBtn, temporalDays === -15 && styles.scrubberQuickBtnActive]}
+                onPress={() => setTemporalDays(-15)}
+              >
+                <Text style={styles.scrubberQuickText}>-15d Past</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.scrubberQuickBtn, temporalDays === 0 && styles.scrubberQuickBtnActive]}
+                onPress={() => setTemporalDays(0)}
+              >
+                <Text style={styles.scrubberQuickText}>T-0 Present</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.scrubberQuickBtn, temporalDays === 15 && styles.scrubberQuickBtnActive]}
+                onPress={() => setTemporalDays(15)}
+              >
+                <Text style={styles.scrubberQuickText}>+15d Growth</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.scrubberQuickBtn, temporalDays === 45 && styles.scrubberQuickBtnActive]}
+                onPress={() => setTemporalDays(45)}
+              >
+                <Text style={styles.scrubberQuickText}>+45d Harvest</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.cropStageBar}>
+              <Ionicons name="leaf" size={14} color="#00ff87" />
+              <Text style={styles.cropStageText}>
+                Projected Sowing Stage: <Text style={{ color: '#00ff87', fontFamily: FONT.extraBold }}>{getStageLabel()}</Text>
+              </Text>
+            </View>
+          </View>
+        </View>
+
         {/* ⭐ PREMIUM ECOSYSTEM COMMAND CENTER ⭐ */}
+
         <View style={styles.ecoHubContainer}>
           <View style={styles.ecoHubHeader}>
             <Ionicons name="git-network-outline" size={20} color="#059669" />
@@ -1583,4 +1690,154 @@ const styles = StyleSheet.create({
     color: '#64748b',
     lineHeight: 16,
   },
+
+  // 🌌 4D COMMAND CENTER ATMOSPHERIC STYLES 🌌
+  fourDHeaderContainer: {
+    backgroundColor: '#04180d',
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+    shadowColor: '#00ff87',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 4,
+    gap: 12,
+  },
+  fourDTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  fourDBadgeIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.3)',
+  },
+  fourDTitle: {
+    fontSize: 16,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+  },
+  fourDSub: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+    marginTop: 1,
+  },
+  diurnalPillRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    padding: 3,
+    borderRadius: 99,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  diurnalBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 99,
+  },
+  diurnalBtnActive: {
+    backgroundColor: '#00ff87',
+  },
+  diurnalBtnText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#94a3b8',
+  },
+  diurnalBtnTextActive: {
+    color: '#020d06',
+    fontFamily: FONT.extraBold,
+  },
+  temporalScrubberCard: {
+    backgroundColor: 'rgba(2, 13, 6, 0.8)',
+    borderRadius: 14,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.2)',
+    gap: 8,
+  },
+  temporalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexWrap: 'wrap',
+  },
+  chronoPulseDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#00ff87',
+  },
+  temporalLabel: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  horizonBadge: {
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.3)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  horizonBadgeText: {
+    fontSize: 10.5,
+    fontFamily: FONT.extraBold,
+    color: '#00ff87',
+  },
+  temporalScrubberTrack: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  scrubberQuickBtn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 6,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  scrubberQuickBtnActive: {
+    backgroundColor: 'rgba(0, 255, 135, 0.2)',
+    borderColor: '#00ff87',
+  },
+  scrubberQuickText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#e2e8f0',
+  },
+  cropStageBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 2,
+    backgroundColor: 'rgba(0, 255, 135, 0.08)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  cropStageText: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#cbd5e1',
+  },
 });
+

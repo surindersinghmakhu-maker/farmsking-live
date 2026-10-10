@@ -324,6 +324,7 @@ export class OrdersService {
   findMine(user: AuthUser) {
     return this.prisma.customerOrder.findMany({
       where: { customerId: user.id },
+      take: 150,
       include: DETAIL_INCLUDE,
       orderBy: { orderDate: 'desc' },
     });
@@ -332,6 +333,7 @@ export class OrdersService {
   findAll(status?: OrderStatus) {
     return this.prisma.customerOrder.findMany({
       where: status ? { status } : {},
+      take: 200,
       include: DETAIL_INCLUDE,
       orderBy: { orderDate: 'desc' },
     });
@@ -343,6 +345,7 @@ export class OrdersService {
       where: {
         status: { in: [OrderStatus.PLACED, OrderStatus.CONFIRMED, OrderStatus.PACKING, OrderStatus.PACKED, OrderStatus.DISPATCHED] },
       },
+      take: 300,
       include: DETAIL_INCLUDE,
       orderBy: { orderDate: 'asc' },
     });

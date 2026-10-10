@@ -1,4 +1,4 @@
-import { loginWithMobile, verifyLoginOtp } from '../auth.api';
+import { sendLoginOtpApi, verifyLoginOtpApi } from '../auth.api';
 import { apiClient } from '../client';
 
 describe('Auth API', () => {
@@ -6,23 +6,22 @@ describe('Auth API', () => {
     jest.clearAllMocks();
   });
 
-  it('loginWithMobile should send mobile number to backend', async () => {
+  it('sendLoginOtpApi should send mobile number to backend', async () => {
     (apiClient.post as jest.Mock).mockResolvedValueOnce({
       data: { success: true, message: 'OTP sent' },
     });
 
-    const response = await loginWithMobile('9876543210', 'FARMER');
+    const response = await sendLoginOtpApi('9876543210');
 
-    expect(apiClient.post).toHaveBeenCalledWith('/auth/login', {
+    expect(apiClient.post).toHaveBeenCalledWith('/auth/send-login-otp', {
       mobile: '9876543210',
-      role: 'FARMER',
     });
     expect(response.success).toBe(true);
   });
 
-  it('verifyLoginOtp should send OTP to backend and return token and user', async () => {
+  it('verifyLoginOtpApi should send OTP to backend and return token and user', async () => {
     const mockData = {
-      token: 'fake-jwt-token',
+      accessToken: 'fake-jwt-token',
       user: {
         id: '1',
         mobile: '9876543210',
@@ -34,14 +33,13 @@ describe('Auth API', () => {
       data: mockData,
     });
 
-    const response = await verifyLoginOtp('9876543210', '123456', 'FARMER');
+    const response = await verifyLoginOtpApi({ mobile: '9876543210', otp: '123456' });
 
-    expect(apiClient.post).toHaveBeenCalledWith('/auth/verify-login', {
+    expect(apiClient.post).toHaveBeenCalledWith('/auth/verify-login-otp', {
       mobile: '9876543210',
       otp: '123456',
-      role: 'FARMER',
     });
-    expect(response.token).toBe('fake-jwt-token');
+    expect(response.accessToken).toBe('fake-jwt-token');
     expect(response.user.id).toBe('1');
   });
 });

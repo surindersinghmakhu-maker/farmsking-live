@@ -10,62 +10,69 @@ import {
   TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 
 export const IsoStaffApprovalPanel: React.FC = () => {
-  const [loading, setLoading] = useState(true);
-  const [pendingUsers, setPendingUsers] = useState<any[]>([]);
+  const queryClient = useQueryClient();
+  const { data: pendingUsers = [], isLoading: loading, refetch: fetchPending } = useQuery({
+    queryKey: ['pending-approvals'],
+    queryFn: async () => {
+      const res = await apiClient.get<any[]>('/users/pending-approvals');
+      return res.data;
+    }
+  });
+
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState<string>('');
 
-  const fetchPending = async () => {
-    try {
-      setLoading(true);
-      const res = await apiClient.get<any[]>('/users/pending-approvals');
-      setPendingUsers(res.data);
-    } catch (e) {
-      console.warn('Failed to fetch pending profile approvals:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPending();
-  }, []);
-
-  const handleApprove = async (userId: string) => {
-    try {
-      setProcessingId(userId);
-      await apiClient.post(`/users/${userId}/approve-profile`);
+  const approveMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return apiClient.post(`/users/${userId}/approve-profile`);
+    },
+    onSuccess: () => {
       Alert.alert('Approved', 'Staff/Expert profile approved successfully.');
-      await fetchPending();
-    } catch (e: any) {
+      queryClient.invalidateQueries({ queryKey: ['pending-approvals'] });
+    },
+    onError: (e: any) => {
       Alert.alert('Error', e?.response?.data?.message || 'Failed to approve profile.');
-    } finally {
+    },
+    onSettled: () => {
       setProcessingId(null);
     }
+  });
+
+  const handleApprove = async (userId: string) => {
+    setProcessingId(userId);
+    approveMutation.mutate(userId);
   };
+
+  const rejectMutation = useMutation({
+    mutationFn: async ({ userId, reason }: { userId: string; reason: string }) => {
+      return apiClient.post(`/users/${userId}/reject-profile`, { reason });
+    },
+    onSuccess: () => {
+      Alert.alert('Rejected', 'Profile submission rejected.');
+      setRejectingId(null);
+      setRejectionReason('');
+      queryClient.invalidateQueries({ queryKey: ['pending-approvals'] });
+    },
+    onError: (e: any) => {
+      Alert.alert('Error', e?.response?.data?.message || 'Failed to reject profile.');
+    },
+    onSettled: () => {
+      setProcessingId(null);
+    }
+  });
 
   const handleReject = async (userId: string) => {
     if (!rejectionReason.trim()) {
       Alert.alert('Reason Required', 'Please provide a reason for rejecting the profile.');
       return;
     }
-
-    try {
-      setProcessingId(userId);
-      await apiClient.post(`/users/${userId}/reject-profile`, { reason: rejectionReason });
-      Alert.alert('Rejected', 'Profile submission rejected.');
-      setRejectingId(null);
-      setRejectionReason('');
-      await fetchPending();
-    } catch (e: any) {
-      Alert.alert('Error', e?.response?.data?.message || 'Failed to reject profile.');
-    } finally {
-      setProcessingId(null);
-    }
+    setProcessingId(userId);
+    rejectMutation.mutate({ userId, reason: rejectionReason });
   };
 
   if (loading) {

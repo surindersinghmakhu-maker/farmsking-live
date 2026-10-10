@@ -102,6 +102,12 @@ export const API_BASE_URL = getDefaultApiUrl();
  * Retrieves permanent active API URL
  */
 export async function getActiveApiUrl(): Promise<string> {
+  try {
+    const custom = await Storage.getItemAsync(CUSTOM_API_URL_KEY);
+    if (custom) return custom;
+  } catch (err) {
+    // Fallback if storage fails
+  }
   return getDefaultApiUrl();
 }
 

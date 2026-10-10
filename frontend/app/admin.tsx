@@ -21,6 +21,7 @@ export default function AdminWebPortalScreen() {
     return <SuperAdminDashboardView />;
   }
 
+
   const handleAdminLogin = async (demoMobile?: string, demoPass?: string) => {
     const loginMobile = demoMobile || mobile;
     const loginPassword = demoPass || password;

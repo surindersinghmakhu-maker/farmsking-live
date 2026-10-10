@@ -14,31 +14,28 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
-import { apiClient } from '../api/client';
+import { auth } from '@/src/lib/firebase';
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
 
 interface OtpVerificationModalProps {
   visible: boolean;
   mobileNumber: string;
-  generatedOtp: string;
-  adminWhatsAppNumber?: string;
-  onVerifySuccess: () => void;
+  onVerifySuccess: (firebaseIdToken: string) => void;
   onClose: () => void;
 }
 
 export function OtpVerificationModal({
   visible,
   mobileNumber,
-  generatedOtp,
-  adminWhatsAppNumber = '919577622000',
   onVerifySuccess,
   onClose,
 }: OtpVerificationModalProps) {
   const [enteredOtp, setEnteredOtp] = useState('');
   const [timer, setTimer] = useState(30);
   const [errorText, setErrorText] = useState<string | null>(null);
-  const [isBotSending, setIsBotSending] = useState(false);
-  const [botStatusText, setBotStatusText] = useState<string | null>(null);
-  const [isBotConnected, setIsBotConnected] = useState<boolean | null>(null);
+  const [isSending, setIsSending] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
   useEffect(() => {
     let interval: any = null;
@@ -49,53 +46,63 @@ export function OtpVerificationModal({
   }, [visible, timer]);
 
   useEffect(() => {
-    if (visible && mobileNumber && generatedOtp) {
-      triggerAutomatedBotOtp();
+    if (visible && mobileNumber) {
+      triggerFirebaseOtp();
+    } else {
+      setConfirmationResult(null);
+      setEnteredOtp('');
+      setErrorText(null);
     }
-  }, [visible, mobileNumber, generatedOtp]);
+  }, [visible, mobileNumber]);
 
-  const triggerAutomatedBotOtp = async () => {
-    setIsBotSending(true);
-    setBotStatusText(null);
-    setIsBotConnected(null);
+  const triggerFirebaseOtp = async () => {
+    setIsSending(true);
+    setErrorText(null);
     try {
-      const res = await apiClient.post('/auth/send-otp', {
-        mobile: mobileNumber,
-        otp: generatedOtp,
-      });
-      if (res.data?.success) {
-        setIsBotConnected(true);
-        setBotStatusText(`🟢 4-digit OTP sent to your WhatsApp (+91 ${mobileNumber})!`);
-      } else {
-        setIsBotConnected(false);
-        setBotStatusText("⚠️ Automated WhatsApp Bot is currently offline.");
+      if (typeof window !== 'undefined' && !(window as any).recaptchaVerifier) {
+        (window as any).recaptchaVerifier = new RecaptchaVerifier(
+          auth,
+          'recaptcha-container-otp',
+          { size: 'invisible' }
+        );
       }
-    } catch {
-      setIsBotConnected(false);
-      setBotStatusText("⚠️ Automated WhatsApp Bot is currently offline.");
+      const confirmation = await signInWithPhoneNumber(
+        auth,
+        `+91${mobileNumber}`,
+        (window as any).recaptchaVerifier
+      );
+      setConfirmationResult(confirmation);
+      setTimer(30);
+    } catch (err: any) {
+      setErrorText(err.message || 'Failed to send OTP via Firebase.');
     } finally {
-      setIsBotSending(false);
+      setIsSending(false);
     }
   };
 
-  const handleOpenWhatsAppDeepLink = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    const msg = `🌾 FarmsKing Verification Code: ${generatedOtp}\nMobile Number: ${mobileNumber}`;
-    const cleanAdminNum = adminWhatsAppNumber.replace(/\D/g, '');
-    const url = `https://wa.me/${cleanAdminNum}?text=${encodeURIComponent(msg)}`;
-    Linking.openURL(url).catch(() => {
-      Alert.alert('WhatsApp Not Available', 'WhatsApp app is not installed on this device.');
-    });
-  };
-
-  const handleVerify = () => {
+  const handleVerify = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     setErrorText(null);
     const clean = enteredOtp.trim();
-    if (clean === generatedOtp) {
-      onVerifySuccess();
-    } else {
-      setErrorText('Invalid OTP! Please enter the correct code.');
+    if (clean.length < 4) {
+      setErrorText('Please enter a valid OTP.');
+      return;
+    }
+    
+    if (!confirmationResult) {
+      setErrorText('OTP session expired. Please request a new OTP.');
+      return;
+    }
+    
+    setIsVerifying(true);
+    try {
+      const res = await confirmationResult.confirm(clean);
+      const idToken = await res.user.getIdToken();
+      onVerifySuccess(idToken);
+    } catch (err: any) {
+      setErrorText(err.message || 'Invalid OTP! Please try again.');
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -117,43 +124,19 @@ export function OtpVerificationModal({
             </TouchableOpacity>
           </View>
 
-          {isBotSending ? (
-            <View style={styles.botStatusWrap}>
-              <ActivityIndicator size="small" color="#16a34a" />
-              <Text style={styles.botStatusText}>Sending 4-digit OTP to WhatsApp...</Text>
-            </View>
-          ) : botStatusText ? (
-            <Text style={[styles.botStatusText, isBotConnected === false && { color: '#b45309' }]}>
-              {botStatusText}
-            </Text>
-          ) : (
-            <Text style={styles.instruction}>
-              A 4-digit OTP code has been sent to your WhatsApp number (+91 {mobileNumber}). Enter the code below:
-            </Text>
-          )}
+          <View id="recaptcha-container-otp" style={{ display: 'none' }} />
 
-          {/* If Bot is Offline, show Fallback Quick-Fill Card */}
-          {isBotConnected === false && (
-            <View style={styles.fallbackBox}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                <Ionicons name="alert-circle" size={16} color="#d97706" />
-                <Text style={styles.fallbackTitle}>Bot Service Offline Notice</Text>
-              </View>
-              <Text style={styles.fallbackSub}>
-                Your verification OTP is <Text style={{ fontFamily: FONT.extraBold, color: '#16a34a', fontSize: 14 }}>{generatedOtp}</Text>. Tap Quick-Fill to auto-enter the code:
-              </Text>
-              <TouchableOpacity
-                style={styles.quickFillBtn}
-                onPress={() => {
-                  setEnteredOtp(generatedOtp);
-                  setErrorText(null);
-                }}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="flash" size={15} color="#ffffff" />
-                <Text style={styles.quickFillText}>⚡ Quick-Fill Code ({generatedOtp})</Text>
-              </TouchableOpacity>
+          {isSending ? (
+            <View style={{ alignItems: 'center', marginVertical: 20 }}>
+              <ActivityIndicator size="small" color="#16a34a" />
+              <Text style={{ marginTop: 10, color: '#475569', fontFamily: FONT.medium }}>Sending OTP via Firebase...</Text>
             </View>
+          ) : (
+            <>
+              <Text style={styles.instruction}>
+                A 6-digit OTP code has been sent via SMS to (+91 {mobileNumber}). Enter the code below:
+              </Text>
+            </>
           )}
 
           {/* OTP Input */}
@@ -161,8 +144,8 @@ export function OtpVerificationModal({
             <TextInput
               style={styles.otpInput}
               keyboardType="number-pad"
-              maxLength={4}
-              placeholder="••••"
+              maxLength={6}
+              placeholder="••••••"
               placeholderTextColor="#cbd5e1"
               value={enteredOtp}
               onChangeText={(text) => {
@@ -174,11 +157,6 @@ export function OtpVerificationModal({
 
           {errorText ? <Text style={styles.errorText}>{errorText}</Text> : null}
 
-          {/* Deep Link WhatsApp Support Option */}
-          <TouchableOpacity style={styles.freeWaLinkBtn} onPress={handleOpenWhatsAppDeepLink}>
-            <Ionicons name="logo-whatsapp" size={16} color="#25d366" />
-            <Text style={styles.freeWaLinkText}>💬 Open WhatsApp Support</Text>
-          </TouchableOpacity>
 
           {/* Verify Action Button */}
           <TouchableOpacity
@@ -187,7 +165,11 @@ export function OtpVerificationModal({
             onPress={handleVerify}
           >
             <LinearGradient colors={['#16a34a', '#15803d']} style={styles.verifyBtn}>
-              <Text style={styles.verifyBtnText}>Verify OTP & Complete Registration</Text>
+              {isVerifying ? (
+                <ActivityIndicator color="#ffffff" size="small" />
+              ) : (
+                <Text style={styles.verifyBtnText}>Verify OTP</Text>
+              )}
             </LinearGradient>
           </TouchableOpacity>
 
@@ -196,7 +178,7 @@ export function OtpVerificationModal({
             {timer > 0 ? (
               <Text style={styles.timerText}>Resend in {timer}s</Text>
             ) : (
-              <TouchableOpacity onPress={() => { setTimer(30); triggerAutomatedBotOtp(); }}>
+              <TouchableOpacity onPress={() => { setTimer(30); triggerFirebaseOtp(); }}>
                 <Text style={styles.resendBtnText}>🔄 Resend OTP</Text>
               </TouchableOpacity>
             )}

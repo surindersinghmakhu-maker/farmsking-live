@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FarmsKing.in | 4D Super Admin Command Center Live Preview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            display: ['"Space Grotesk"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              950: '#020d06',
+              900: '#04180d',
+              850: '#062413',
+              neon: '#00ff87',
+              emerald: '#10b981',
+              gold: '#fbbf24',
+              surface: 'rgba(6, 36, 19, 0.72)',
+              border: 'rgba(0, 255, 135, 0.22)'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    .perspective-1200 { perspective: 1200px; }
+    .transform-style-3d { transform-style: preserve-3d; }
+    
+    body.time-dawn {
+      --ambient-primary: rgba(251, 146, 60, 0.2);
+      --ambient-secondary: rgba(0, 255, 135, 0.12);
+      --body-bg: #03130c;
+    }
+    body.time-noon {
+      --ambient-primary: rgba(0, 255, 135, 0.25);
+      --ambient-secondary: rgba(56, 189, 248, 0.15);
+      --body-bg: #020f07;
+    }
+    body.time-dusk {
+      --ambient-primary: rgba(217, 119, 6, 0.22);
+      --ambient-secondary: rgba(168, 85, 247, 0.18);
+      --body-bg: #06120b;
+    }
+    body.time-aurora {
+      --ambient-primary: rgba(0, 255, 135, 0.3);
+      --ambient-secondary: rgba(139, 92, 246, 0.25);
+      --body-bg: #010804;
+    }
+
+    body {
+      background-color: var(--body-bg, #020d06);
+      transition: background-color 0.8s ease;
+    }
+
+    .four-d-atmosphere {
+      background: 
+        radial-gradient(circle at 18% 12%, var(--ambient-primary, rgba(0, 255, 135, 0.2)) 0%, transparent 48%),
+        radial-gradient(circle at 82% 28%, var(--ambient-secondary, rgba(251, 191, 36, 0.12)) 0%, transparent 45%),
+        radial-gradient(circle at 50% 88%, rgba(16, 185, 129, 0.14) 0%, transparent 58%);
+      transition: background 0.8s ease;
+    }
+
+    .card-4d {
+      position: relative;
+      background: linear-gradient(145deg, rgba(16, 185, 129, 0.08) 0%, rgba(4, 24, 13, 0.82) 100%);
+      border: 1px solid rgba(0, 255, 135, 0.18);
+      backdrop-filter: blur(24px);
+      box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.7);
+      transition: all 0.25s ease;
+    }
+    .card-4d:hover {
+      border-color: rgba(0, 255, 135, 0.55);
+      box-shadow: 0 28px 65px -15px rgba(0, 255, 135, 0.3);
+      transform: translateY(-3px);
+    }
+  </style>
+</head>
+<body class="time-noon text-slate-100 font-sans antialiased overflow-x-hidden selection:bg-brand-neon selection:text-brand-950">
+
+  <div class="fixed inset-0 four-d-atmosphere pointer-events-none z-0" id="atmosphereLayer"></div>
+
+  <div class="relative z-10 flex h-screen overflow-hidden">
+
+    <!-- SIDEBAR NAV -->
+    <aside id="sidebarDrawer" class="w-72 bg-brand-950/90 backdrop-blur-2xl border-r border-brand-border flex flex-col">
+      <div class="h-20 px-6 flex items-center justify-between border-b border-emerald-950/80">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-neon to-brand-emerald p-[2px]">
+            <div class="w-full h-full bg-brand-950 rounded-[10px] flex items-center justify-center">
+              <i data-lucide="sprout" class="w-5 h-5 text-brand-neon"></i>
+            </div>
+          </div>
+          <div>
+            <div class="font-display text-lg font-black text-white">FARMS<span class="text-brand-neon">KING</span> <span class="text-[9px] bg-brand-neon/20 text-brand-neon px-1.5 py-0.5 rounded border border-brand-neon/30">4D</span></div>
+            <span class="text-[9px] font-bold text-emerald-400 block tracking-widest uppercase">Admin Command Portal</span>
+          </div>
+        </div>
+      </div>
+
+      <nav class="flex-1 overflow-y-auto px-4 py-4 space-y-6 text-xs font-semibold">
+        <!-- GROUP 1: MAIN DASHBOARD -->
+        <div>
+          <div class="px-3 pb-2 text-[10px] font-black uppercase text-emerald-400">📊 MAIN DASHBOARD</div>
+          <div class="space-y-1">
+            <button class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-brand-neon text-brand-950 font-bold shadow-lg shadow-brand-neon/20">
+              <span class="flex items-center gap-2"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Overview (Dashboard)</span>
+              <span class="w-2 h-2 rounded-full bg-brand-950"></span>
+            </button>
+            <button class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5">
+              <span class="flex items-center gap-2"><i data-lucide="shopping-bag" class="w-4 h-4 text-emerald-400"></i> E-Commerce Hub</span>
+              <span class="text-[10px] bg-brand-gold/20 text-brand-gold px-1.5 py-0.5 rounded">1,248 Orders</span>
+            </button>
+            <button class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5">
+              <span class="flex items-center gap-2"><i data-lucide="wallet" class="w-4 h-4 text-brand-gold"></i> Global Wallet</span>
+              <span class="text-[10px] font-mono text-brand-neon">₹4.82 Cr</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- GROUP 2: ADMIN APP USERS -->
+        <div>
+          <div class="px-3 pb-2 text-[10px] font-black uppercase text-emerald-400">🛡️ ADMIN APP USERS</div>
+          <div class="space-y-1">
+            <button class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5">
+              <span class="flex items-center gap-2"><i data-lucide="shield-alert" class="w-4 h-4 text-rose-400"></i> Super Admins</span>
+              <span class="text-[10px] bg-rose-500/20 text-rose-300 px-1.5 py-0.5 rounded">4 Root</span>
+            </button>
+            <button class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5">
+              <span class="flex items-center gap-2"><i data-lucide="shield-check" class="w-4 h-4 text-teal-400"></i> Admins</span>
+              <span class="text-[10px] text-slate-400">18 Active</span>
+            </button>
+            <button class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5">
+              <span class="flex items-center gap-2"><i data-lucide="cpu" class="w-4 h-4 text-amber-400"></i> Operators</span>
+              <span class="text-[10px] text-slate-400">42 Live</span>
+            </button>
+            <button class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5">
+              <span class="flex items-center gap-2"><i data-lucide="graduation-cap" class="w-4 h-4 text-cyan-400"></i> Technical Trainers</span>
+              <span class="text-[10px] text-slate-400">26 PAU</span>
+            </button>
+            <button class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5">
+              <span class="flex items-center gap-2"><i data-lucide="landmark" class="w-4 h-4 text-brand-gold"></i> Market Managers</span>
+              <span class="text-[10px] text-slate-400">34 APMC</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- GROUP 3: FRONTEND APP USERS -->
+        <div>
+          <div class="px-3 pb-2 text-[10px] font-black uppercase text-emerald-400">👥 FRONTEND APP USERS</div>
+          <div class="space-y-1">
+            <button class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5">
+              <span class="flex items-center gap-2"><span>🌾</span> Farmers (Hero User)</span>
+              <span class="text-[10px] bg-emerald-500/20 text-brand-neon px-1.5 py-0.5 rounded">54.2K</span>
+            </button>
+            <button class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5">
+              <span class="flex items-center gap-2"><span>🩺</span> Crop Doctors</span>
+              <span class="text-[10px] text-teal-300">184 Verified</span>
+            </button>
+            <button class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5">
+              <span class="flex items-center gap-2"><span>🛒</span> Customers</span>
+              <span class="text-[10px] text-slate-400">112K</span>
+            </button>
+            <button class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5">
+              <span class="flex items-center gap-2"><span>🏪</span> Sellers</span>
+              <span class="text-[10px] text-brand-gold">1,480 Outlets</span>
+            </button>
+            <button class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5">
+              <span class="flex items-center gap-2"><span>🌻</span> Gardeners</span>
+              <span class="text-[10px] text-slate-400">12.8K</span>
+            </button>
+            <button class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-300 hover:bg-white/5">
+              <span class="flex items-center gap-2"><span>🌱</span> Garden Advisors</span>
+              <span class="text-[10px] text-emerald-300">62 Experts</span>
+            </button>
+          </div>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- MAIN BODY -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+      <!-- TOP HEADER -->
+      <header class="h-20 bg-brand-950/85 backdrop-blur-2xl border-b border-brand-border px-6 flex items-center justify-between">
+        <div>
+          <h1 class="text-xl font-black text-white font-display flex items-center gap-2">
+            Overview (Dashboard) <span class="text-[10px] bg-brand-neon/20 text-brand-neon px-2 py-0.5 rounded border border-brand-neon/30">Live 4D</span>
+          </h1>
+          <p class="text-xs text-slate-400">Real-time predictive telemetry, harvest forecasting, and ecosystem control</p>
+        </div>
+
+        <div class="flex items-center gap-2 bg-brand-surface p-1 rounded-xl border border-white/10">
+          <button onclick="document.body.className='time-dawn text-slate-100 font-sans'" class="px-2.5 py-1 rounded-lg text-xs font-bold text-slate-300 hover:text-white">🌅 Dawn</button>
+          <button onclick="document.body.className='time-noon text-slate-100 font-sans'" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-brand-neon text-brand-950">☀️ High Noon</button>
+          <button onclick="document.body.className='time-dusk text-slate-100 font-sans'" class="px-2.5 py-1 rounded-lg text-xs font-bold text-slate-300 hover:text-white">🌆 Dusk</button>
+          <button onclick="document.body.className='time-aurora text-slate-100 font-sans'" class="px-2.5 py-1 rounded-lg text-xs font-bold text-slate-300 hover:text-white">🌌 Aurora</button>
+        </div>
+      </header>
+
+      <!-- 4D TEMPORAL SCRUBBER BAR -->
+      <section class="bg-black/40 border-b border-emerald-950 px-6 py-2.5 backdrop-blur-md flex items-center justify-between gap-4 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-brand-neon animate-pulse"></span>
+          <span class="font-extrabold text-white">4D Temporal Scrubber:</span>
+          <span id="timeHorizonLabel" class="font-mono text-brand-neon font-bold bg-emerald-950 px-2 py-0.5 rounded border border-brand-neon/30">Present Moment (T-0 Days)</span>
+        </div>
+        <div class="flex-1 max-w-xl flex items-center gap-3">
+          <span class="text-[10px] text-slate-400 font-mono">-15d</span>
+          <input type="range" min="-15" max="45" value="0" id="timeSlider" oninput="document.getElementById('timeHorizonLabel').innerText = this.value == 0 ? 'Present Moment (T-0 Days)' : (this.value > 0 ? '+' + this.value + ' Days Harvest Forecast' : this.value + ' Days Historical Log')" class="w-full accent-brand-neon cursor-pointer" />
+          <span class="text-[10px] text-brand-gold font-mono">+45d</span>
+        </div>
+        <span class="text-slate-300 text-[11px] bg-white/5 px-2 py-1 rounded">🌤️ 26°C Sunny • 42% Moisture</span>
+      </section>
+
+      <!-- CONTENT AREA -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-6">
+        <!-- 4D CARDS GRID -->
+        <div class="grid grid-cols-4 gap-6">
+          <div class="card-4d p-5 rounded-2xl">
+            <span class="text-xs font-bold text-slate-400 uppercase">Active Hero Farmers 🌾</span>
+            <div class="text-3xl font-black text-white font-display mt-2">54,290</div>
+            <div class="text-xs text-brand-neon font-bold mt-2">↗ +14.2% MoM (4.8L Acres)</div>
+          </div>
+          <div class="card-4d p-5 rounded-2xl">
+            <span class="text-xs font-bold text-slate-400 uppercase">Mandi Volume Cleared</span>
+            <div class="text-3xl font-black text-brand-gold font-display mt-2">₹48.6 Cr</div>
+            <div class="text-xs text-brand-neon font-bold mt-2">↗ +8.6% (1.94L MT Grain)</div>
+          </div>
+          <div class="card-4d p-5 rounded-2xl">
+            <span class="text-xs font-bold text-slate-400 uppercase">Crop Doctor Consults 🩺</span>
+            <div class="text-3xl font-black text-white font-display mt-2">1,842</div>
+            <div class="text-xs text-teal-300 font-bold mt-2">✓ 99.1% Resolution Rate</div>
+          </div>
+          <div class="card-4d p-5 rounded-2xl">
+            <span class="text-xs font-bold text-slate-400 uppercase">Treasury Vault (Escrow)</span>
+            <div class="text-3xl font-black text-brand-neon font-display mt-2">₹4,82,40,190</div>
+            <div class="text-xs text-emerald-400 font-bold mt-2">⚡ T+0 Instant Payout Engine</div>
+          </div>
+        </div>
+
+        <!-- 4D CROP & MANDI GRID -->
+        <div class="grid grid-cols-12 gap-6">
+          <div class="col-span-7 card-4d p-6 rounded-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+              <h3 class="text-base font-black text-white font-display">4D Predictive Crop Sowing State</h3>
+              <span class="text-xs bg-brand-neon/20 text-brand-neon font-bold px-2.5 py-0.5 rounded-full border border-brand-neon/40">Stage: Vegetative Tillering</span>
+            </div>
+            <div class="w-full bg-slate-900 rounded-full h-3 p-0.5 border border-emerald-950">
+              <div class="h-full bg-gradient-to-r from-emerald-500 via-brand-neon to-brand-gold rounded-full w-[45%]"></div>
+            </div>
+            <div class="grid grid-cols-3 gap-3 text-xs pt-2">
+              <div class="p-3 bg-white/5 rounded-xl"><span class="text-slate-400 text-[10px] block">Fertilizer:</span><strong class="text-white">Urea Top Dress + Zinc 21%</strong></div>
+              <div class="p-3 bg-white/5 rounded-xl"><span class="text-slate-400 text-[10px] block">Irrigation:</span><strong class="text-emerald-300">2nd Water in 4 Days</strong></div>
+              <div class="p-3 bg-white/5 rounded-xl"><span class="text-slate-400 text-[10px] block">Pest Threat:</span><strong class="text-brand-gold">Low (Rust Monitoring)</strong></div>
+            </div>
+          </div>
+
+          <div class="col-span-5 card-4d p-6 rounded-2xl space-y-3">
+            <div class="flex items-center justify-between border-b border-white/10 pb-2">
+              <h3 class="text-base font-black text-white font-display">Live APMC Mandi Bids</h3>
+              <span class="text-[10px] font-mono text-brand-neon bg-emerald-950 px-2 py-0.5 rounded border border-brand-neon/30">Streaming</span>
+            </div>
+            <div class="space-y-2 text-xs">
+              <div class="p-2.5 bg-white/5 rounded-xl flex items-center justify-between">
+                <div><strong class="text-white block">Khanna Grain Yard</strong><span class="text-slate-400 text-[10px]">Sharbati Wheat • 18,200 Bags</span></div>
+                <div class="text-right"><div class="font-extrabold text-brand-neon font-display text-sm">₹2,465 / Qtl</div><span class="text-[9px] text-brand-neon">+4.2% Peak</span></div>
+              </div>
+              <div class="p-2.5 bg-white/5 rounded-xl flex items-center justify-between">
+                <div><strong class="text-white block">Moga Main APMC</strong><span class="text-slate-400 text-[10px]">Basmati 1121 • 7,900 Bags</span></div>
+                <div class="text-right"><div class="font-extrabold text-white font-display text-sm">₹3,940 / Qtl</div><span class="text-[9px] text-emerald-400">+2.8% Steady</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script>lucide.createIcons();</script>
+</body>
+</html>

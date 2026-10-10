@@ -10,6 +10,10 @@ import { AppModule } from './app.module';
 import { PrismaService } from './modules/prisma/prisma.service';
 import { Role } from '@prisma/client';
 import * as argon2 from 'argon2';
+import * as Sentry from '@sentry/node';
+import { nodeProfilingIntegration } from '@sentry/profiling-node';
+import { SentryFilter } from './common/filters/sentry.filter';
+import { HttpAdapterHost } from '@nestjs/core';
 
 // A client disconnecting mid-request (common behind tunnels/proxies, or a mobile device losing
 // signal) fires a raw socket 'error' event with no listener attached, which Node treats as an
@@ -30,6 +34,18 @@ import { json, urlencoded } from 'express';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
+
+  const sentryDsn = configService.get<string>('SENTRY_DSN');
+  if (sentryDsn) {
+    Sentry.init({
+      dsn: sentryDsn,
+      integrations: [nodeProfilingIntegration()],
+      tracesSampleRate: 1.0,
+    });
+    Logger.log('Sentry initialized for error tracking', 'Bootstrap');
+  } else {
+    Logger.warn('SENTRY_DSN not provided, Sentry error tracking is disabled.', 'Bootstrap');
+  }
 
   const apiPrefix = configService.get<string>('API_PREFIX', '/api/v1');
   const port = parseInt(configService.get<string>('PORT', '3000'), 10);
@@ -81,6 +97,9 @@ async function bootstrap() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
+
+  const { httpAdapter } = app.get(HttpAdapterHost);
+  app.useGlobalFilters(new SentryFilter(httpAdapter));
 
 
 

@@ -3,6 +3,10 @@ import { SupervisorPermission } from '@prisma/client';
 import { IsIndianMobile } from '../../../common/validators/is-indian-mobile.validator';
 
 export class CreateSupervisorDto {
+  @IsOptional()
+  @IsString()
+  firebaseIdToken?: string;
+
   @IsIndianMobile()
   mobile: string;
 

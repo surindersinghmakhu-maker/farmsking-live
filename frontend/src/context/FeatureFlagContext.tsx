@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FeatureFlagsMap } from '../types/feature-flags';
 import { apiClient } from '../api/client';
 
@@ -13,24 +14,15 @@ interface FeatureFlagContextType {
 const FeatureFlagContext = createContext<FeatureFlagContextType | undefined>(undefined);
 
 export const FeatureFlagProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [flags, setFlags] = useState<FeatureFlagsMap | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const queryClient = useQueryClient();
 
-  const fetchFlags = useCallback(async () => {
-    try {
-      setLoading(true);
+  const { data: flags = null, isLoading: loading, refetch: fetchFlags } = useQuery({
+    queryKey: ['feature-flags'],
+    queryFn: async () => {
       const res = await apiClient.get('/app-settings/feature-flags');
-      setFlags(res.data);
-    } catch (err) {
-      console.warn('Could not fetch feature flags:', err);
-    } finally {
-      setLoading(false);
+      return res.data;
     }
-  }, []);
-
-  useEffect(() => {
-    fetchFlags();
-  }, [fetchFlags]);
+  });
 
   const isFeatureEnabled = useCallback(
     (category: string, subCategory?: string): boolean => {
@@ -48,22 +40,22 @@ export const FeatureFlagProvider: React.FC<{ children: React.ReactNode }> = ({ c
     [flags]
   );
 
-  const updateFlags = useCallback(async (newFlags: FeatureFlagsMap) => {
-    try {
-      setLoading(true);
+  const updateFlagsMutation = useMutation({
+    mutationFn: async (newFlags: FeatureFlagsMap) => {
       const res = await apiClient.patch('/app-settings/feature-flags', newFlags);
-      if (res.data?.featureFlags) {
-        setFlags(res.data.featureFlags);
-      } else {
-        setFlags(newFlags);
-      }
-    } catch (err) {
+      return res.data?.featureFlags || newFlags;
+    },
+    onSuccess: (updatedFlags) => {
+      queryClient.setQueryData(['feature-flags'], updatedFlags);
+    },
+    onError: (err) => {
       console.error('Failed to update feature flags:', err);
-      throw err;
-    } finally {
-      setLoading(false);
     }
-  }, []);
+  });
+
+  const updateFlags = useCallback(async (newFlags: FeatureFlagsMap) => {
+    await updateFlagsMutation.mutateAsync(newFlags);
+  }, [updateFlagsMutation]);
 
   return (
     <FeatureFlagContext.Provider
@@ -71,7 +63,7 @@ export const FeatureFlagProvider: React.FC<{ children: React.ReactNode }> = ({ c
         flags,
         loading,
         isFeatureEnabled,
-        refreshFlags: fetchFlags,
+        refreshFlags: async () => { await fetchFlags(); },
         updateFlags,
       }}
     >

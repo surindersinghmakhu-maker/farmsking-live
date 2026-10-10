@@ -12,9 +12,12 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FONT, RADIUS, premiumShadow } from '../../constants/theme';
 import { apiClient } from '../api/client';
+import { auth } from '@/src/lib/firebase';
+import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 
 export type SupervisorPermission =
   | 'ASSIGNED_FARMS_ONLY'
@@ -49,8 +52,16 @@ export function SupervisorManagementModal({
   visible: boolean;
   onClose: () => void;
 }) {
-  const [supervisors, setSupervisors] = useState<SupervisorUser[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
+  const { data: supervisors = [], isLoading, refetch: fetchSupervisors } = useQuery({
+    queryKey: ['my-supervisors'],
+    queryFn: async () => {
+      const res = await apiClient.get<SupervisorUser[]>('/users/my-supervisors');
+      return res.data;
+    },
+    enabled: visible,
+  });
+
   const [showAddForm, setShowAddForm] = useState(false);
 
   // Form & OTP State
@@ -64,6 +75,7 @@ export function SupervisorManagementModal({
     'MANAGE_HARVEST_SALES',
   ]);
   const [otpStep, setOtpStep] = useState<'FORM' | 'VERIFY_OTP'>('FORM');
+  const [confirmationResult, setConfirmationResult] = useState<any>(null);
   const [generatedOtp, setGeneratedOtp] = useState('');
   const [otpInput, setOtpInput] = useState('');
   const [otpError, setOtpError] = useState<string | null>(null);
@@ -71,21 +83,26 @@ export function SupervisorManagementModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdInfo, setCreatedInfo] = useState<{ supervisor: SupervisorUser; tempPassword: string } | null>(null);
 
-  const fetchSupervisors = async () => {
-    setIsLoading(true);
-    try {
-      const res = await apiClient.get<SupervisorUser[]>('/users/my-supervisors');
-      setSupervisors(res.data);
-    } catch (err: any) {
-      console.error('Failed to fetch supervisors:', err);
-    } finally {
-      setIsLoading(false);
+  const addSupervisorMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return apiClient.post<{ supervisor: SupervisorUser; tempPassword: string }>('/users/my-supervisors', data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-supervisors'] });
     }
-  };
+  });
+
+  const deleteSupervisorMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiClient.delete(`/users/my-supervisors/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-supervisors'] });
+    }
+  });
 
   useEffect(() => {
     if (visible) {
-      fetchSupervisors();
       setCreatedInfo(null);
       setShowAddForm(false);
       setOtpStep('FORM');
@@ -120,38 +137,56 @@ export function SupervisorManagementModal({
     setIsSendingOtp(true);
     setOtpError(null);
     try {
-      const code = Math.floor(1000 + Math.random() * 9000).toString();
-      setGeneratedOtp(code);
-      await apiClient.post('/auth/send-otp', { mobile: cleanMobile, otp: code });
+      if (typeof window !== 'undefined' && !(window as any).recaptchaVerifierSupervisor) {
+        (window as any).recaptchaVerifierSupervisor = new RecaptchaVerifier(
+          auth,
+          'recaptcha-container-supervisor',
+          { size: 'invisible' }
+        );
+      }
+      const confirmation = await signInWithPhoneNumber(
+        auth,
+        `+91${cleanMobile}`,
+        (window as any).recaptchaVerifierSupervisor
+      );
+      setConfirmationResult(confirmation);
       setOtpStep('VERIFY_OTP');
       setOtpInput('');
     } catch (err: any) {
-      const code = Math.floor(1000 + Math.random() * 9000).toString();
-      setGeneratedOtp(code);
-      setOtpStep('VERIFY_OTP');
+      const msg = err?.message ?? 'Failed to send OTP via Firebase.';
+      if (Platform.OS === 'web') alert(msg);
+      else Alert.alert('Error', msg);
     } finally {
       setIsSendingOtp(false);
     }
   };
 
   const handleVerifyOtpAndCreate = async () => {
-    if (!otpInput.trim()) {
+    if (!otpInput.trim() || otpInput.trim().length < 4) {
       setOtpError('Please enter the 4-digit OTP received on Supervisor mobile.');
-      return;
-    }
-    if (otpInput.trim() !== generatedOtp) {
-      setOtpError('Incorrect OTP! Please enter the 4-digit code sent to supervisor mobile.');
       return;
     }
 
     setIsSubmitting(true);
     setOtpError(null);
+    
+    let idToken = '';
     try {
-      const res = await apiClient.post<{ supervisor: SupervisorUser; tempPassword: string }>('/users/my-supervisors', {
+      if (!confirmationResult) throw new Error('OTP Session Expired. Request a new OTP.');
+      const resFirebase = await confirmationResult.confirm(otpInput.trim());
+      idToken = await resFirebase.user.getIdToken();
+    } catch (err: any) {
+      setOtpError(err?.message ?? 'Invalid OTP code.');
+      setIsSubmitting(false);
+      return;
+    }
+    try {
+      const res = await addSupervisorMutation.mutateAsync({
         name: name.trim(),
         mobile: mobile.trim(),
         password: pin.trim() || undefined,
         permissions: selectedPerms,
+        firebaseIdToken: idToken,
       });
 
       setCreatedInfo(res.data);
@@ -172,8 +207,7 @@ export function SupervisorManagementModal({
   const handleDeleteSupervisor = async (id: string, supName: string) => {
     const doDelete = async () => {
       try {
-        await apiClient.delete(`/users/my-supervisors/${id}`);
-        fetchSupervisors();
+        await deleteSupervisorMutation.mutateAsync(id);
       } catch (err: any) {
         alert('Failed to remove supervisor.');
       }

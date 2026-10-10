@@ -2,6 +2,7 @@ import { apiClient } from './client';
 import { AuthResponse, SoilType, SprayTankSizeL, WaterType } from '../types/api';
 
 export interface RegisterPayload {
+  firebaseIdToken?: string;
   mobile: string;
   password: string;
   name: string;

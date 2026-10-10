@@ -18,6 +18,8 @@ import { WhatsAppGroupSyncService } from '../whatsapp/whatsapp-group-sync.servic
 import { AuthUser } from '../../common/types/auth-user.type';
 import { generateUniqueKingId } from '../../common/utils/king-id.util';
 import { provisionInviteCoupon } from '../../common/utils/invite-coupon.util';
+import { UnauthorizedException } from '@nestjs/common';
+import { getAuth } from 'firebase-admin/auth';
 import { provisionPartnerReferralCoupon } from '../../common/utils/partner-coupon.util';
 import { provisionReferralWelcomeCoupon } from '../../common/utils/referral-coupon.util';
 import {
@@ -588,6 +590,25 @@ export class UsersService implements OnModuleInit {
     const existing = await this.prisma.user.findUnique({ where: { mobile: dto.mobile } });
     if (existing) {
       throw new ConflictException('An account with this mobile number already exists.');
+    }
+
+    if (process.env.NODE_ENV === 'production' && !dto.firebaseIdToken) {
+      throw new BadRequestException('Firebase ID Token is required.');
+    }
+
+    if (dto.firebaseIdToken) {
+      try {
+        const decoded = await getAuth().verifyIdToken(dto.firebaseIdToken);
+        const fbPhone = decoded.phone_number;
+        if (!fbPhone) throw new UnauthorizedException('No phone attached to Firebase credential.');
+        const cleanFbMobile = fbPhone.replace(/\D/g, '').slice(-10);
+        const cleanDtoMobile = dto.mobile.replace(/\D/g, '').slice(-10);
+        if (cleanFbMobile !== cleanDtoMobile) {
+          throw new UnauthorizedException('Verified phone number does not match requested mobile.');
+        }
+      } catch (err: any) {
+        throw new UnauthorizedException('Invalid Firebase ID Token: ' + err.message);
+      }
     }
 
     const initialPassword = dto.password?.trim() || generateTempPassword();

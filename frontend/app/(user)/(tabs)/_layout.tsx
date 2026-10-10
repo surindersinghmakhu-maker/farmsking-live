@@ -12,6 +12,7 @@ import { useLanguage } from '@/src/store/language-context';
 import { useMyAdvisor } from '@/src/hooks/useAdvisorAssignments';
 import { useFarmerProfileStatus } from '@/src/hooks/useFarmerProfile';
 import { useChatUnreadCount, useGlobalChatUnreadSync } from '@/src/hooks/useChat';
+import { useUnreadNotificationCount } from '@/src/hooks/useNotifications';
 import { TranslationKey } from '@/src/constants/translations';
 import { useCart } from '@/src/store/cart-context';
 import { BrandLogo } from '@/src/components/BrandLogo';
@@ -158,7 +159,9 @@ export default function TabLayout() {
 
   const { role } = useRole();
   const { t, language, setLanguage } = useLanguage();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const { data: unreadNotifData } = useUnreadNotificationCount();
+  const unreadNotifCount = unreadNotifData?.count ?? 0;
   const { colors } = useExecutiveTheme();
   const config = ROLE_TABS[role] || ROLE_TABS.FARMER;
   const visible = new Set(config ? config.tabs : ['index', 'shop', 'farm', 'records', 'wallet', 'more']);
@@ -259,6 +262,20 @@ export default function TabLayout() {
               );
             })()}
 
+            {/* Notification Bell */}
+            <TouchableOpacity
+              style={desktopStyles.headerIconBtn}
+              activeOpacity={0.75}
+              onPress={() => router.push('/notifications' as never)}
+            >
+              <Ionicons name="notifications-outline" size={18} color="#ffffff" />
+              {unreadNotifCount > 0 ? (
+                <View style={desktopStyles.notifDot}>
+                  {unreadNotifCount <= 9 ? <Text style={desktopStyles.notifDotText}>{unreadNotifCount}</Text> : null}
+                </View>
+              ) : null}
+            </TouchableOpacity>
+
             <View style={desktopStyles.langSwitcherBox}>
               <TouchableOpacity
                 style={[desktopStyles.langBtn, language === 'pa' && desktopStyles.langBtnActive]}
@@ -281,6 +298,27 @@ export default function TabLayout() {
                 <Text style={[desktopStyles.langBtnText, language === 'en' && desktopStyles.langBtnTextActive]}>ENG</Text>
               </TouchableOpacity>
             </View>
+
+            {/* Logout Button */}
+            <TouchableOpacity
+              style={desktopStyles.logoutBtn}
+              activeOpacity={0.8}
+              onPress={() => {
+                if (Platform.OS === 'web') {
+                  if (window.confirm('Are you sure you want to log out?')) logout();
+                } else {
+                  import('react-native').then(({ Alert }) => {
+                    Alert.alert('Log Out', 'Are you sure you want to log out from your account?', [
+                      { text: 'Cancel', style: 'cancel' },
+                      { text: 'Log Out', style: 'destructive', onPress: () => logout() }
+                    ]);
+                  });
+                }
+              }}
+            >
+              <Ionicons name="power" size={13} color="#ef4444" />
+              <Text style={desktopStyles.logoutBtnText}>Log Out</Text>
+            </TouchableOpacity>
           </View>
         </View>
       )}
@@ -556,5 +594,52 @@ const desktopStyles = StyleSheet.create({
   },
   langBtnTextActive: {
     color: '#0f172a',
+  },
+  headerIconBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.22)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  notifDot: {
+    minWidth: 15,
+    height: 15,
+    borderRadius: 8,
+    paddingHorizontal: 2,
+    backgroundColor: '#ef4444',
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notifDotText: {
+    color: '#ffffff',
+    fontSize: 9,
+    fontFamily: FONT.bold,
+    lineHeight: 11,
+  },
+  logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.35)',
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: RADIUS.pill,
+  },
+  logoutBtnText: {
+    color: '#fca5a5',
+    fontSize: 11,
+    fontFamily: FONT.bold,
   },
 });

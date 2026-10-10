@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -60,6 +60,8 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
 }) => {
   const theme = RoleThemes[currentRole] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER;
   const { colors } = useExecutiveTheme();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
   const router = useRouter();
   const greeting = getTimeBasedGreeting();
   const { data: unreadData } = useUnreadNotificationCount();
@@ -69,54 +71,61 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
 
   const roleMeta = ROLE_DISPLAY[currentRole] || { label: currentRole, icon: '👤' };
 
+  const isRedundantSubtitle =
+    !subtitle ||
+    subtitle.trim().toLowerCase() === `${roleMeta.label.toLowerCase()} profile` ||
+    subtitle.trim().toLowerCase() === roleMeta.label.toLowerCase();
+
   return (
-    <LinearGradient colors={colors.headerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.headerContainer}>
-      {/* Top Banner Row: Super Admin Logo + Action Icons */}
-      <View style={styles.topRow}>
-        <View style={styles.brandRow}>
-          <BrandLogo size={28} iconColor="#ffffff" />
-          <Text style={styles.brandNameText}>{settings?.appName || 'FarmsKing'}</Text>
-        </View>
+    <LinearGradient colors={colors.headerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.headerContainer, isDesktop && styles.headerContainerDesktop]}>
+      {/* Top Banner Row: ONLY show on Mobile (<768px) where desktop top navbar is absent */}
+      {!isDesktop && (
+        <View style={styles.topRow}>
+          <View style={styles.brandRow}>
+            <BrandLogo size={28} iconColor="#ffffff" />
+            <Text style={styles.brandNameText}>{settings?.appName || 'FarmsKing'}</Text>
+          </View>
 
-        <View style={styles.actionsRight}>
-          <TouchableOpacity
-            style={styles.logoutButton}
-            activeOpacity={0.8}
-            onPress={() => {
-              // @ts-ignore
-              if (Platform.OS === 'web') {
-                if (window.confirm('Are you sure you want to log out?')) logout();
-              } else {
-                import('react-native').then(({ Alert }) => {
-                  Alert.alert('Log Out', 'Are you sure you want to log out from your account?', [
-                    { text: 'Cancel', style: 'cancel' },
-                    { text: 'Log Out', style: 'destructive', onPress: () => logout() }
-                  ]);
-                });
-              }
-            }}
-          >
-            <Ionicons name="power" size={14} color="#ef4444" />
-            <Text style={styles.logoutText}>Log Out</Text>
-          </TouchableOpacity>
+          <View style={styles.actionsRight}>
+            <TouchableOpacity
+              style={styles.logoutButton}
+              activeOpacity={0.8}
+              onPress={() => {
+                // @ts-ignore
+                if (Platform.OS === 'web') {
+                  if (window.confirm('Are you sure you want to log out?')) logout();
+                } else {
+                  import('react-native').then(({ Alert }) => {
+                    Alert.alert('Log Out', 'Are you sure you want to log out from your account?', [
+                      { text: 'Cancel', style: 'cancel' },
+                      { text: 'Log Out', style: 'destructive', onPress: () => logout() }
+                    ]);
+                  });
+                }
+              }}
+            >
+              <Ionicons name="power" size={14} color="#ef4444" />
+              <Text style={styles.logoutText}>Log Out</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.iconButton}
-            activeOpacity={0.75}
-            onPress={() => router.push('/notifications' as never)}
-          >
-            <Ionicons name="notifications-outline" size={19} color="#fff" />
-            {unreadCount > 0 ? (
-              <View style={styles.notifDot}>
-                {unreadCount <= 9 ? <Text style={styles.notifDotText}>{unreadCount}</Text> : null}
-              </View>
-            ) : null}
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.iconButton}
+              activeOpacity={0.75}
+              onPress={() => router.push('/notifications' as never)}
+            >
+              <Ionicons name="notifications-outline" size={19} color="#fff" />
+              {unreadCount > 0 ? (
+                <View style={styles.notifDot}>
+                  {unreadCount <= 9 ? <Text style={styles.notifDotText}>{unreadCount}</Text> : null}
+                </View>
+              ) : null}
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      )}
 
       {/* User Header Block */}
-      <View style={styles.userHeaderBlock}>
+      <View style={[styles.userHeaderBlock, isDesktop && styles.userHeaderBlockDesktop]}>
         <View style={styles.mainUserRow}>
           {/* Left Block: Greeting + Name + Assigned Role Tag + Subtitle */}
           <View style={styles.userInfoLeftBlock}>
@@ -128,7 +137,7 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
               <Text style={styles.roleTagText}>{roleMeta.icon} {roleMeta.label}</Text>
             </View>
 
-            {subtitle ? <Text style={styles.subtitleText}>{subtitle}</Text> : null}
+            {!isRedundantSubtitle ? <Text style={styles.subtitleText}>{subtitle}</Text> : null}
           </View>
 
           {/* Center Block: Profile Photo Avatar */}
@@ -192,6 +201,14 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: RADIUS.lg,
     overflow: 'hidden',
     position: 'relative',
+  },
+  headerContainerDesktop: {
+    paddingTop: 14,
+    paddingBottom: 14,
+    paddingHorizontal: 20,
+    borderRadius: RADIUS.lg,
+    marginHorizontal: 16,
+    marginTop: 12,
   },
   topRow: {
     flexDirection: 'row',
@@ -266,6 +283,10 @@ const styles = StyleSheet.create({
   userHeaderBlock: {
     marginTop: 2,
     marginBottom: 2,
+  },
+  userHeaderBlockDesktop: {
+    marginTop: 0,
+    marginBottom: 0,
   },
   mainUserRow: {
     flexDirection: 'row',

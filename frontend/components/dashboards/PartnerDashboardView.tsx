@@ -11,7 +11,6 @@ import { useMyWallet } from '@/src/hooks/useWallet';
 import { useMyWithdrawals } from '@/src/hooks/useWithdrawals';
 import { useMyReferrals } from '@/src/hooks/useReferrals';
 import { useExecutiveTheme } from '@/src/store/theme-context';
-import { SwitchDashboardSection } from '@/src/components/SwitchDashboardSection';
 
 function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -72,8 +71,6 @@ export const PartnerDashboardView: React.FC = () => {
       />
 
       <View style={styles.content}>
-        <SwitchDashboardSection />
-
         {/* Earnings Card */}
         <LinearGradient colors={theme.heroGradient} style={[styles.earningsCard, premiumShadow(theme.primary, 'md')]}>
           <Ionicons name="wallet" size={104} color={theme.primary} style={styles.watermark} />

@@ -23,6 +23,7 @@ import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useMyAdvisor, useAvailableAdvisors, useChooseAdvisor, useMyPendingRequest } from '@/src/hooks/useAdvisorAssignments';
 import { useCrops } from '@/src/store/crops-context';
 import { useAuth } from '@/src/store/auth-context';
+import { useRole } from '@/src/store/role-context';
 import { CopyButton } from '@/src/components/CopyButton';
 import { DoctorChangeDisclaimerModal } from '@/src/components/DoctorChangeDisclaimerModal';
 import { CropCarePlanModal } from '@/src/components/CropCarePlanModal';
@@ -37,7 +38,21 @@ const tap = () => {
 export default function MembershipsScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { role } = useRole();
   const { colors } = useExecutiveTheme();
+
+  const isAdminRole = role === 'ADMIN' || role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+  const hasFarmerRole =
+    role === 'FARMER' ||
+    user?.role === 'FARMER' ||
+    (Array.isArray(user?.roles) && user.roles.includes('FARMER')) ||
+    isAdminRole;
+
+  const isGardener =
+    role === 'GARDENER' ||
+    user?.role === 'GARDENER' ||
+    (Array.isArray(user?.roles) && user.roles.includes('GARDENER'));
+
   const { plan, limits, endDate, isExpired, hasUsedTrial } = useFarmerPlan();
   const { data: settings } = useAppSettings();
   const activateTrialMutation = useActivateTrial();
@@ -148,6 +163,66 @@ export default function MembershipsScreen() {
       else Alert.alert('Error', msg);
     }
   };
+
+  if (!hasFarmerRole) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.bg }]}>
+        <LinearGradient colors={['#0f172a', '#1e293b']} style={styles.hero}>
+          <View style={styles.heroHeaderRow}>
+            <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={20} color="#ffffff" />
+            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.heroTitle}>{isGardener ? '🌿 Garden Advisor Support' : '👑 Farmer Plans'}</Text>
+              <Text style={styles.heroSubtitle}>
+                {isGardener ? 'Personalized Plant & Lawn Care Advisory' : 'FarmsKing Platform Membership'}
+              </Text>
+            </View>
+          </View>
+        </LinearGradient>
+
+        <View style={{ padding: 20, alignItems: 'center', justifyContent: 'center', flex: 1, gap: 16 }}>
+          {isGardener ? (
+            <View style={[styles.planCard, { width: '100%', maxWidth: 440, alignItems: 'center', padding: 24, gap: 12 }, premiumShadow('#15803d', 'sm')]}>
+              <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#dcfce7', alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="school" size={32} color="#16a34a" />
+              </View>
+              <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: '#0f172a', textAlign: 'center' }}>
+                🌿 Dedicated Garden Advisor Support
+              </Text>
+              <Text style={{ fontSize: 13, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center', lineHeight: 20 }}>
+                FarmsKing VIP software plans are designed for farm crop management. For your garden and plants, certified Garden Advisors are available to assist you with customized care schedules, plant health, and pest management.
+              </Text>
+              <TouchableOpacity
+                style={[styles.upgradeBtn, { backgroundColor: '#16a34a', width: '100%', marginTop: 8 }]}
+                onPress={() => router.push('/garden/advisors')}
+              >
+                <Text style={styles.upgradeBtnText}>Connect with Garden Advisor 🌿</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={[styles.planCard, { width: '100%', maxWidth: 440, alignItems: 'center', padding: 24, gap: 12 }, premiumShadow('#0f172a', 'sm')]}>
+              <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="information-circle" size={32} color="#64748b" />
+              </View>
+              <Text style={{ fontSize: 18, fontFamily: FONT.extraBold, color: '#0f172a', textAlign: 'center' }}>
+                👑 Farmer Exclusive Plans
+              </Text>
+              <Text style={{ fontSize: 13, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center', lineHeight: 20 }}>
+                VIP pass plans and crop doctor advisory packages are currently exclusive to Farmers. Member offers for the store and other services will be introduced in future platform releases.
+              </Text>
+              <TouchableOpacity
+                style={[styles.upgradeBtn, { backgroundColor: '#0f172a', width: '100%', marginTop: 8 }]}
+                onPress={() => router.back()}
+              >
+                <Text style={styles.upgradeBtnText}>Go Back</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>

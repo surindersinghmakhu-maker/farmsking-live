@@ -27,7 +27,6 @@ import { FarmerPortalUpgradeSection, FarmerPortalUpgradeSectionRef } from '@/src
 import { SupervisorManagementModal } from '@/src/components/SupervisorManagementModal';
 import { WelcomeBonusModal } from '@/src/components/WelcomeBonusModal';
 import { FarmerTrainingRatingBanner } from '@/src/components/FarmerTrainingRatingBanner';
-import { SwitchDashboardSection } from '@/src/components/SwitchDashboardSection';
 import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const tap = () => {
@@ -243,8 +242,6 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
             <AgriAiChatbot isModal={true} />
           </SafeAreaView>
         </Modal>
-
-        <SwitchDashboardSection />
 
         {/* Live Open-Meteo Weather Card */}
         <OpenMeteoWeatherCard />

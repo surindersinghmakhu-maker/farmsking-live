@@ -13,12 +13,12 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
 import { RoleHeader } from './RoleHeader';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { apiClient } from '@/src/api/client';
 import { useExecutiveTheme } from '@/src/store/theme-context';
-import { SwitchDashboardSection } from '@/src/components/SwitchDashboardSection';
 
 interface ScheduleItem {
   id: string;
@@ -34,6 +34,7 @@ const tap = () => {
 };
 
 export const GardenerDashboardView: React.FC = () => {
+  const router = useRouter();
   const theme = RoleThemes.GARDENER;
   const { colors: tConfig } = useExecutiveTheme();
 
@@ -124,7 +125,26 @@ export const GardenerDashboardView: React.FC = () => {
       />
 
       <View style={styles.content}>
-        <SwitchDashboardSection />
+        {/* Garden Advisor Banner */}
+        <TouchableOpacity
+          style={[styles.advisorBanner, premiumShadow(theme.primary, 'sm')]}
+          activeOpacity={0.88}
+          onPress={() => router.push('/garden/advisors')}
+        >
+          <View style={styles.advisorIconBg}>
+            <Ionicons name="school" size={22} color={theme.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={styles.advisorBannerTitle}>🌿 Garden Advisor Support</Text>
+              <View style={styles.advisorActiveBadge}>
+                <Text style={styles.advisorActiveBadgeText}>AVAILABLE</Text>
+              </View>
+            </View>
+            <Text style={styles.advisorBannerSub}>Connect with certified garden experts for lawn & plant care</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
+        </TouchableOpacity>
 
         {/* Today's Garden Visits Hero Banner */}
         <LinearGradient colors={theme.heroGradient} style={[styles.bannerCard, premiumShadow(theme.primary, 'md')]}>
@@ -417,5 +437,46 @@ const styles = StyleSheet.create({
   modalSubmitBtn: { marginTop: 20, borderRadius: RADIUS.md, paddingVertical: 14, alignItems: 'center' },
   modalSubmitText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 15 },
   infoRowText: { fontSize: 13.5, fontFamily: FONT.medium, color: '#334155', paddingVertical: 4 },
+  advisorBanner: {
+    backgroundColor: '#ffffff',
+    borderRadius: RADIUS.lg,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1.5,
+    borderColor: '#bbf7d0',
+  },
+  advisorIconBg: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#dcfce7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  advisorBannerTitle: {
+    fontSize: 13.5,
+    fontFamily: FONT.extraBold,
+    color: '#0f172a',
+  },
+  advisorBannerSub: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  advisorActiveBadge: {
+    backgroundColor: '#dcfce7',
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: RADIUS.pill,
+  },
+  advisorActiveBadgeText: {
+    fontSize: 8.5,
+    fontFamily: FONT.extraBold,
+    color: '#15803d',
+    letterSpacing: 0.5,
+  },
 });
 

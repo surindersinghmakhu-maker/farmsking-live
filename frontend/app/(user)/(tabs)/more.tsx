@@ -73,6 +73,15 @@ export default function MoreScreen() {
   const { data: appSettings } = useAppSettings();
   const updateAppSettings = useUpdateAppSettings();
   const isAdminRole = role === 'ADMIN' || role === 'SUPER_ADMIN';
+  const hasFarmerRole =
+    role === 'FARMER' ||
+    user?.role === 'FARMER' ||
+    (Array.isArray(user?.roles) && user.roles.includes('FARMER')) ||
+    isAdminRole;
+  const isGardener =
+    role === 'GARDENER' ||
+    user?.role === 'GARDENER' ||
+    (Array.isArray(user?.roles) && user.roles.includes('GARDENER'));
   const brandLogoUri = appSettings?.logoUrl ?? null;
   const { language, t } = useLanguage();
   const router = useRouter();
@@ -299,8 +308,8 @@ export default function MoreScreen() {
                 </View>
               </View>
 
-              {/* Dedicated App Parts: VIP Pass Scheme & Crops Care */}
-              {role !== 'FARM_ADVISOR' && role !== 'GARDEN_ADVISOR' ? (
+              {/* Dedicated App Parts: VIP Pass Scheme for Farmers, Garden Advisor for Gardeners */}
+              {hasFarmerRole ? (
                 <View style={styles.section}>
                   <Text style={styles.sectionTitle}>👑 VIP PASS SCHEME & CROPS CARE</Text>
                   <View style={styles.sectionCard}>
@@ -330,6 +339,26 @@ export default function MoreScreen() {
                       <View style={{ flex: 1 }}>
                         <Text style={styles.rowLabel}>🩺 Crops Care Plan</Text>
                         <Text style={styles.rowSubLabel}>Specialist Doctor Advisory & Coupon Offers</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : isGardener ? (
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>🌿 GARDEN EXPERT & ADVISORY</Text>
+                  <View style={styles.sectionCard}>
+                    <TouchableOpacity
+                      style={[styles.row, { borderBottomWidth: 0 }]}
+                      activeOpacity={0.7}
+                      onPress={() => router.push('/garden/advisors')}
+                    >
+                      <View style={[styles.rowIconBg, { backgroundColor: '#dcfce7' }]}>
+                        <Ionicons name="school-outline" size={18} color="#16a34a" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.rowLabel}>🌿 Hire a Garden Expert</Text>
+                        <Text style={styles.rowSubLabel}>Connect with certified garden advisors for plant care</Text>
                       </View>
                       <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
                     </TouchableOpacity>

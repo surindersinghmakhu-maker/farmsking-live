@@ -411,7 +411,7 @@ export default function SuperCropEditScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020d06' },
+  container: { flex: 1, backgroundColor: '#f8fafc' },
   hero: { paddingTop: 20, paddingBottom: 18, paddingHorizontal: SPACING.lg },
   heroTitle: { color: '#fff', fontSize: 19, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
   heroSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 11.5, fontFamily: FONT.medium, marginTop: 2 },
@@ -431,13 +431,13 @@ const styles = StyleSheet.create({
   emptyText: { color: '#64748b', fontSize: 13, fontFamily: FONT.medium },
   errorText: { color: '#dc2626', fontSize: 12.5, fontFamily: FONT.bold, marginVertical: 4 },
   successText: { color: '#16a34a', fontSize: 12.5, fontFamily: FONT.bold, marginVertical: 4 },
-  readOnlyHeaderCard: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: 12, borderWidth: 1.5, borderColor: '#ddd6fe' },
+  readOnlyHeaderCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 12, borderWidth: 1.5, borderColor: '#ddd6fe' },
   cropIdBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f3e8ff', borderWidth: 1, borderColor: '#c084fc', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill },
   cropIdBadgeText: { fontSize: 13, fontFamily: FONT.extraBold, color: '#7c3aed' },
   readOnlyTag: { backgroundColor: '#051b11', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.sm },
   readOnlyTagText: { fontSize: 10.5, fontFamily: FONT.bold, color: '#64748b' },
   contextLine: { fontSize: 12, fontFamily: FONT.medium, color: '#e2e8f0' },
-  formCard: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.md, gap: 8 },
+  formCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.md, gap: 8 },
   formSectionHeader: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#ffffff', marginBottom: 4 },
   label: { fontSize: 11.5, fontFamily: FONT.bold, color: '#475569', marginTop: 4 },
   input: {
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: FONT.medium,
     color: '#ffffff',
-    backgroundColor: '#020d06',
+    backgroundColor: '#ffffff',
   },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: {
@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.sm,
     borderWidth: 1,
     borderColor: '#cbd5e1',
-    backgroundColor: '#020d06',
+    backgroundColor: '#ffffff',
   },
   chipText: { fontSize: 11.5, fontFamily: FONT.medium, color: '#e2e8f0' },
   saveBtn: {

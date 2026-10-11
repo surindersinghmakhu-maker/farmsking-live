@@ -1,11 +1,12 @@
-import { Tabs, useRouter, usePathname } from 'expo-router';
-import React, { useEffect, useRef } from 'react';
-import { Platform, View, StyleSheet, Text, TouchableOpacity, useWindowDimensions, ScrollView } from 'react-native';
+import { Tabs, useRouter, usePathname, useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
+import { Platform, View, StyleSheet, Text, TouchableOpacity, useWindowDimensions, ScrollView, Animated, Pressable } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { HapticTab } from '@/components/HapticTab';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { RoleThemes, UserRole } from '@/constants/Colors';
-import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
+import { FONT, RADIUS, THEME_4D, neonGlow, premiumShadow } from '@/constants/theme';
 import { useRole } from '@/src/store/role-context';
 import { useAuth } from '@/src/store/auth-context';
 import { useLanguage } from '@/src/store/language-context';
@@ -19,6 +20,9 @@ import { useExecutiveTheme } from '@/src/store/theme-context';
 import { FloatingAgriAiChatbot } from '@/src/components/FloatingAgriAiChatbot';
 import { GlobalCommandSearchModal } from '@/components/GlobalCommandSearchModal';
 import { AdminLiveToastNotification } from '@/components/AdminLiveToastNotification';
+import { AdminHealthRadarModal } from '@/components/AdminHealthRadarModal';
+import { AdminImpersonationBanner, ImpersonationTarget } from '@/components/AdminImpersonationBanner';
+import { ADMIN_PILLARS, detectPillarFromRoute, NavigationPillar, SubTabItem } from '@/constants/navigationPillars';
 
 import { Ionicons } from '@expo/vector-icons';
 
@@ -145,31 +149,61 @@ const ALL_TABS: TabName[] = [
 export default function TabLayout() {
   const router = useRouter();
   const pathname = usePathname();
+  const localParams = useLocalSearchParams();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768; // Desktop breakpoint
 
-  const [isSearchOpen, setIsSearchOpen] = React.useState(false);
-  const [openGroups, setOpenGroups] = React.useState<Record<string, boolean>>({
-    EXECUTIVE: true,
-    ECOMMERCE: true,
-    FARMER_HUB: true,
-    GARDENER_HUB: true,
-    STAFF_HUB: true,
-    SYSTEM: true,
-  });
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isHealthRadarOpen, setIsHealthRadarOpen] = useState(false);
+  const [impersonationTarget, setImpersonationTarget] = useState<ImpersonationTarget | null>(null);
+  const [selectedPillarId, setSelectedPillarId] = useState<string>(() =>
+    detectPillarFromRoute(pathname, localParams)
+  );
 
-  const toggleGroup = (key: string) => {
-    setOpenGroups(prev => ({ ...prev, [key]: !prev[key] }));
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const tabLayouts = useRef<{ [key: string]: { x: number; width: number } }>({});
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const widthAnim = useRef(new Animated.Value(0)).current;
+  const trailAnim = useRef(new Animated.Value(0)).current;
+
+  const triggerTabsAnimation = () => {
+    fadeAnim.setValue(0.35);
+    Animated.spring(fadeAnim, {
+      toValue: 1,
+      friction: 6,
+      tension: 70,
+      useNativeDriver: true,
+    }).start();
   };
 
-  React.useEffect(() => {
+  // Keep active pillar synchronized with URL changes (Deep-linking & Back/Forward browser navigation)
+  useEffect(() => {
+    const matchingPillar = detectPillarFromRoute(pathname, localParams);
+    if (matchingPillar && matchingPillar !== selectedPillarId) {
+      setSelectedPillarId(matchingPillar);
+      triggerTabsAnimation();
+    }
+  }, [pathname, localParams]);
+
+  useEffect(() => {
     const handleOpenSearch = () => setIsSearchOpen(true);
+    const handleOpenHealthRadar = () => setIsHealthRadarOpen(true);
+    const handleStartImpersonation = (e: any) => {
+      if (e.detail) {
+        setImpersonationTarget(e.detail);
+      }
+    };
+
     if (typeof window !== 'undefined') {
       window.addEventListener('open-command-search', handleOpenSearch);
+      window.addEventListener('admin-open-health-radar', handleOpenHealthRadar);
+      window.addEventListener('admin-start-impersonation', handleStartImpersonation);
     }
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('open-command-search', handleOpenSearch);
+        window.removeEventListener('admin-open-health-radar', handleOpenHealthRadar);
+        window.removeEventListener('admin-start-impersonation', handleStartImpersonation);
       }
     };
   }, []);
@@ -216,170 +250,174 @@ export default function TabLayout() {
     }
   };
 
+  const activePillar = ADMIN_PILLARS.find((p) => p.id === selectedPillarId) || ADMIN_PILLARS[0];
+
+  const activeSubTab = activePillar.subTabs.find((tab) => {
+    const isIndexActive = tab.path === '/admin/(tabs)' && (pathname === '/' || pathname === '/(tabs)' || pathname === '/(tabs)/index');
+    const isOtherActive = tab.path !== '/admin/(tabs)' && pathname.includes(tab.path.split('/').pop() || '');
+    const isFilterMatch = !tab.params?.filter || (localParams?.filter === tab.params.filter);
+    return (isIndexActive || isOtherActive) && isFilterMatch;
+  }) || activePillar.subTabs[0];
+
+  useEffect(() => {
+    if (activeSubTab && tabLayouts.current[activeSubTab.id]) {
+      const { x, width: w } = tabLayouts.current[activeSubTab.id];
+      Animated.parallel([
+        Animated.spring(slideAnim, {
+          toValue: x,
+          tension: 75,
+          friction: 9,
+          useNativeDriver: false,
+        }),
+        Animated.spring(widthAnim, {
+          toValue: w,
+          tension: 75,
+          friction: 9,
+          useNativeDriver: false,
+        }),
+        Animated.sequence([
+          Animated.timing(trailAnim, {
+            toValue: 1,
+            duration: 100,
+            useNativeDriver: false,
+          }),
+          Animated.timing(trailAnim, {
+            toValue: 0,
+            duration: 450,
+            useNativeDriver: false,
+          }),
+        ]),
+      ]).start();
+    }
+  }, [activeSubTab?.id, selectedPillarId, pathname, localParams]);
+
+  const handleTabLayout = (tabId: string, layout: { x: number; width: number }) => {
+    tabLayouts.current[tabId] = layout;
+    if (activeSubTab?.id === tabId) {
+      slideAnim.setValue(layout.x);
+      widthAnim.setValue(layout.width);
+    }
+  };
+
+  const handleSelectPillar = (pillar: NavigationPillar) => {
+    setSelectedPillarId(pillar.id);
+    triggerTabsAnimation();
+
+    if (pillar.subTabs && pillar.subTabs.length > 0) {
+      const firstTab = pillar.subTabs[0];
+      const isAlreadyOnFirstTab =
+        (firstTab.path === pathname || (firstTab.path === '/admin/(tabs)' && (pathname === '/' || pathname === '/(tabs)' || pathname === '/(tabs)/index'))) &&
+        (!firstTab.params?.filter || localParams?.filter === firstTab.params.filter);
+
+      if (!isAlreadyOnFirstTab) {
+        if (firstTab.params) {
+          router.setParams(firstTab.params);
+          router.push({ pathname: firstTab.path as any, params: firstTab.params });
+        } else {
+          router.push(firstTab.path as any);
+        }
+      }
+    }
+  };
+
+  const handleSelectSubTab = (tab: SubTabItem) => {
+    if (tab.params) {
+      router.setParams(tab.params);
+      router.push({ pathname: tab.path as any, params: tab.params });
+    } else {
+      router.push(tab.path as any);
+    }
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: '#f8fafc', flexDirection: isDesktop ? 'row' : 'column' }}>
-      {/* 💻 DESKTOP PREMIUM SIDEBAR (Visible on screens >= 768px) */}
+      {/* 💻 DESKTOP 2-TIER EXECUTIVE SIDEBAR (Visible on screens >= 768px) */}
       {isDesktop && (
         <View style={desktopStyles.sidebar}>
+          {/* Brand Logo & Platform Title */}
           <View style={desktopStyles.brandLogoBox}>
-            <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: '#00ff87', alignItems: 'center', justifyContent: 'center' }}>
-              <BrandLogo size={24} iconColor="#020d06" />
+            <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: '#10b981', alignItems: 'center', justifyContent: 'center' }}>
+              <BrandLogo size={22} iconColor="#ffffff" />
             </View>
-            <Text style={desktopStyles.brandTitle}>FarmsKing <Text style={{ fontSize: 10, color: '#00ff87', backgroundColor: 'rgba(0,255,135,0.2)', paddingHorizontal: 4 }}>4D</Text></Text>
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={desktopStyles.brandTitle}>
+                FarmsKing <Text style={desktopStyles.brandBadgeText}>4D</Text>
+              </Text>
+              <Text style={desktopStyles.brandSubtitle}>Executive Hub</Text>
+            </View>
           </View>
 
+          {/* Section Heading */}
+          <Text style={desktopStyles.sidebarSectionTitle}>DOMAIN PILLARS</Text>
+
+          {/* Navigation Pillars List (Effective Prominent Buttons) */}
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={desktopStyles.menuNavCol}>
             {(() => {
-              // Custom Flowchart structure for SUPER_ADMIN & ADMIN
               if (role === 'SUPER_ADMIN' || role === 'ADMIN') {
-                const renderItem = (title: string, iconName: keyof typeof Ionicons.glyphMap, path: string, params?: any) => {
-                  const isIndexActive = path === '/admin/(tabs)' && (pathname === '/' || pathname === '/(tabs)' || pathname === '/(tabs)/index');
-                  const isOtherActive = path !== '/admin/(tabs)' && pathname.includes(path.split('/').pop() || '');
-                  const isActive = isIndexActive || isOtherActive;
-                  
+                return ADMIN_PILLARS.map((pillar) => {
+                  const isActive = selectedPillarId === pillar.id;
                   return (
-                    <TouchableOpacity
-                      key={title}
-                      style={[desktopStyles.navMenuItem, isActive && !params && desktopStyles.navMenuItemActive]}
-                      onPress={() => router.push(params ? { pathname: path as any, params } : (path as any))}
+                    <Pressable
+                      key={pillar.id}
+                      onPress={() => handleSelectPillar(pillar)}
+                      style={({ hovered, pressed }: any) => [
+                        desktopStyles.pillarCard,
+                        isActive && desktopStyles.pillarCardActive,
+                        hovered && !isActive && desktopStyles.pillarCardHover,
+                        pressed && { transform: [{ scale: 0.98 }] },
+                      ]}
                     >
-                      <View style={[desktopStyles.navIconWrap, isActive && !params && desktopStyles.navIconWrapActive]}>
-                        <Ionicons name={iconName} size={16} color={isActive && !params ? '#020d06' : '#34d399'} />
-                      </View>
-                      <Text style={[desktopStyles.navMenuItemText, isActive && !params && desktopStyles.navMenuItemTextActive]}>
-                        {title}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                };
+                      {/* Active Left Indicator Bar */}
+                      {isActive && <View style={desktopStyles.pillarActiveBar} />}
 
-                const renderAccordionGroup = (
-                  groupKey: string,
-                  groupTitle: string,
-                  groupIcon: keyof typeof Ionicons.glyphMap,
-                  countBadge: string,
-                  childrenItems: React.ReactNode
-                ) => {
-                  const isOpen = openGroups[groupKey] ?? true;
-                  return (
-                    <View key={groupKey} style={desktopStyles.accordionGroupContainer}>
-                      <TouchableOpacity
+                      <View
                         style={[
-                          desktopStyles.accordionGroupHeader,
-                          isOpen && desktopStyles.accordionGroupHeaderOpen
+                          desktopStyles.pillarIconWrap,
+                          isActive && desktopStyles.pillarIconWrapActive,
                         ]}
-                        activeOpacity={0.8}
-                        onPress={() => toggleGroup(groupKey)}
                       >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
-                          <Ionicons name={groupIcon} size={16} color="#00ff87" />
-                          <Text style={[desktopStyles.accordionGroupTitle, isOpen && { color: '#00ff87' }]} numberOfLines={1}>
-                            {groupTitle}
-                          </Text>
+                        <Ionicons
+                          name={isActive ? pillar.iconFilled : pillar.icon}
+                          size={18}
+                          color={isActive ? '#ffffff' : (pillar.color || '#059669')}
+                        />
+                      </View>
+
+                      <View style={desktopStyles.pillarContentCol}>
+                        <Text
+                          style={[
+                            desktopStyles.pillarTitle,
+                            isActive && desktopStyles.pillarTitleActive,
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {pillar.title}
+                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                          <View style={[desktopStyles.pillarBadge, isActive && desktopStyles.pillarBadgeActive]}>
+                            <Text
+                              style={[
+                                desktopStyles.pillarBadgeText,
+                                isActive && desktopStyles.pillarBadgeTextActive,
+                              ]}
+                            >
+                              {pillar.badge}
+                            </Text>
+                          </View>
                         </View>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                          {countBadge ? (
-                            <View style={desktopStyles.accordionBadge}>
-                              <Text style={desktopStyles.accordionBadgeText}>{countBadge}</Text>
-                            </View>
-                          ) : null}
-                          <Ionicons
-                            name={isOpen ? 'chevron-down' : 'chevron-forward'}
-                            size={14}
-                            color={isOpen ? '#00ff87' : '#94a3b8'}
-                          />
-                        </View>
-                      </TouchableOpacity>
-                      {isOpen ? (
-                        <View style={desktopStyles.accordionSubMenuWrapper}>
-                          {childrenItems}
-                        </View>
-                      ) : null}
-                    </View>
+                      </View>
+
+                      <Ionicons
+                        name={isActive ? 'chevron-forward' : 'chevron-forward-outline'}
+                        size={15}
+                        color={isActive ? '#10b981' : '#94a3b8'}
+                      />
+                    </Pressable>
                   );
-                };
-
-                return (
-                  <View style={{ gap: 12 }}>
-                    {renderAccordionGroup(
-                      'EXECUTIVE',
-                      'EXECUTIVE DASHBOARD',
-                      'pulse',
-                      '2 Apps',
-                      <>
-                        {renderItem('Overview', 'home', '/admin/(tabs)')}
-                        {renderItem('Global Wallet & Ledger', 'wallet', '/admin/(tabs)/super-accounts')}
-                      </>
-                    )}
-
-                    {renderAccordionGroup(
-                      'ECOMMERCE',
-                      'E-COMMERCE & MARKETPLACE',
-                      'bag-handle',
-                      '6 Tools',
-                      <>
-                        {renderItem('Products Catalog', 'cube', '/admin/(tabs)/admin-products')}
-                        {renderItem('Store Orders', 'receipt', '/admin/(tabs)/admin-orders')}
-                        {renderItem('Seller KYC Approvals', 'shield-checkmark', '/admin-sellers')}
-                        {renderItem('Seller Payouts', 'cash', '/seller-payouts')}
-                        {renderItem('Coupons & VIP Passes', 'ticket', '/admin/(tabs)/super-coupons')}
-                        {renderItem('Sales Analytics', 'bar-chart', '/admin/(tabs)/super-orders')}
-                      </>
-                    )}
-
-                    {renderAccordionGroup(
-                      'FARMER_HUB',
-                      'FARMER & CROP DOCTOR HUB',
-                      'leaf',
-                      '4 Hubs',
-                      <>
-                        {renderItem('Farmers Directory', 'leaf', '/admin/(tabs)/super-users', { group: 'CLIENTS', filter: 'FARMER' })}
-                        {renderItem('Crop Doctors (Farmers Only)', 'medical', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'FARM_ADVISOR' })}
-                        {renderItem('AI Disease Scanner', 'scan', '/admin/(tabs)/crop-disease-scanner')}
-                        {renderItem('Crop Master Data', 'create', '/admin/(tabs)/super-crop-edit')}
-                      </>
-                    )}
-
-                    {renderAccordionGroup(
-                      'GARDENER_HUB',
-                      'GARDENER & ADVISOR HUB',
-                      'flower',
-                      '3 Hubs',
-                      <>
-                        {renderItem('Gardeners Directory', 'flower', '/admin/(tabs)/super-users', { group: 'CLIENTS', filter: 'GARDENER' })}
-                        {renderItem('Garden Advisors (Gardeners Only)', 'sunny', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'GARDEN_ADVISOR' })}
-                        {renderItem('Plant Care Doses', 'nutrition', '/dose')}
-                      </>
-                    )}
-
-                    {renderAccordionGroup(
-                      'STAFF_HUB',
-                      'STAFF & USER MANAGEMENT',
-                      'people',
-                      '4 Roles',
-                      <>
-                        {renderItem('Technical Trainers', 'school', '/admin/(tabs)/trainer-dashboard')}
-                        {renderItem('Operators & Fulfillment', 'print', '/admin/(tabs)/operator-orders')}
-                        {renderItem('Market Managers', 'briefcase', '/admin/(tabs)/super-users', { group: 'PARTNERS', filter: 'MARKET_MANAGER' })}
-                        {renderItem('All Users & Roles', 'people', '/admin/(tabs)/super-users')}
-                      </>
-                    )}
-
-                    {renderAccordionGroup(
-                      'SYSTEM',
-                      'SYSTEM & C-PANEL',
-                      'options',
-                      '2 Logs',
-                      <>
-                        {renderItem('C-Panel Settings', 'options', '/admin/(tabs)/super-settings')}
-                        {renderItem('System Audit Log', 'time', '/admin/(tabs)/super-audit-log')}
-                      </>
-                    )}
-                  </View>
-                );
+                });
               }
 
-              // Default standard tabs mapping for other roles
+              // Default standard tabs mapping for non-admin roles
               return config.tabs.map((tabName) => {
                 const isIndexActive = tabName === 'index' && (pathname === '/' || pathname === '/(tabs)' || pathname === '/(tabs)/index');
                 const isOtherActive = tabName !== 'index' && pathname.includes(tabName);
@@ -394,7 +432,7 @@ export default function TabLayout() {
                     onPress={() => handleNavigate(tabName)}
                   >
                     <View style={[desktopStyles.navIconWrap, isActive && desktopStyles.navIconWrapActive]}>
-                      <Ionicons name={iconName} size={18} color={isActive ? '#059669' : '#64748b'} />
+                      <Ionicons name={iconName} size={18} color={isActive ? '#ffffff' : '#64748b'} />
                     </View>
                     <Text style={[desktopStyles.navMenuItemText, isActive && desktopStyles.navMenuItemTextActive]}>
                       {title}
@@ -447,106 +485,87 @@ export default function TabLayout() {
         </View>
       )}
 
-      {/* 📱 TABS VIEW CONTAINER (Bottom tabs hide on Desktop, show on Mobile) */}
+      {/* 📱 MAIN CONTENT CANVAS CONTAINER */}
       <View style={{ flex: 1 }}>
         {/* 💻 TOP WORKSPACE SUB-TABS HEADER BAR (Visible on Desktop for Admins) */}
         {isDesktop && (role === 'SUPER_ADMIN' || role === 'ADMIN') && (
           <View style={desktopStyles.topTabsHeaderBar}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={desktopStyles.topTabsScrollContent}>
-              {(() => {
-                // Determine ecosystem context & sub-tabs based on current route
-                let subTabs: { title: string; icon: keyof typeof Ionicons.glyphMap; path: string; params?: any }[] = [];
-                let ecosystemTitle = 'EXECUTIVE WORKSPACE';
+            <View style={desktopStyles.topTabsHeaderInner}>
+              {/* Clean Segmented Sub-Tabs Navigation */}
+              <View style={desktopStyles.topTabsAnimatedContainer}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={desktopStyles.topTabsScrollContent}
+                >
+                  <View style={desktopStyles.segmentedTabContainer}>
+                    {activePillar.subTabs.map((tab) => {
+                      const isActive = activeSubTab?.id === tab.id;
 
-                if (pathname.includes('admin-products') || pathname.includes('admin-orders') || pathname.includes('admin-sellers') || pathname.includes('seller-payouts') || pathname.includes('super-coupons') || pathname.includes('super-orders')) {
-                  ecosystemTitle = '🛒 E-COMMERCE SUITE';
-                  subTabs = [
-                    { title: 'Products Catalog', icon: 'cube', path: '/admin/(tabs)/admin-products' },
-                    { title: 'Store Orders', icon: 'receipt', path: '/admin/(tabs)/admin-orders' },
-                    { title: 'Seller KYC Approvals', icon: 'shield-checkmark', path: '/admin-sellers' },
-                    { title: 'Seller Payouts', icon: 'cash', path: '/seller-payouts' },
-                    { title: 'Coupons & VIP Passes', icon: 'ticket', path: '/admin/(tabs)/super-coupons' },
-                    { title: 'Sales Analytics', icon: 'bar-chart', path: '/admin/(tabs)/super-orders' },
-                  ];
-                } else if (pathname.includes('crop-disease-scanner') || pathname.includes('super-crop-edit') || (pathname.includes('super-users') && (pathname.includes('FARMER') || pathname.includes('FARM_ADVISOR')))) {
-                  ecosystemTitle = '🌾 FARMER & CROP DOCTOR SUITE';
-                  subTabs = [
-                    { title: 'Farmers Directory', icon: 'leaf', path: '/admin/(tabs)/super-users', params: { group: 'CLIENTS', filter: 'FARMER' } },
-                    { title: 'Crop Doctors (Farmer Only)', icon: 'medical', path: '/admin/(tabs)/super-users', params: { group: 'PARTNERS', filter: 'FARM_ADVISOR' } },
-                    { title: 'AI Disease Diagnostic Scanner', icon: 'scan', path: '/admin/(tabs)/crop-disease-scanner' },
-                    { title: 'Crop Master Data', icon: 'create', path: '/admin/(tabs)/super-crop-edit' },
-                  ];
-                } else if (pathname.includes('dose') || (pathname.includes('super-users') && (pathname.includes('GARDENER') || pathname.includes('GARDEN_ADVISOR')))) {
-                  ecosystemTitle = '🪴 GARDENER & ADVISOR SUITE';
-                  subTabs = [
-                    { title: 'Gardeners Directory', icon: 'flower', path: '/admin/(tabs)/super-users', params: { group: 'CLIENTS', filter: 'GARDENER' } },
-                    { title: 'Garden Advisors (Gardener Only)', icon: 'sunny', path: '/admin/(tabs)/super-users', params: { group: 'PARTNERS', filter: 'GARDEN_ADVISOR' } },
-                    { title: 'Plant Care Doses & Protocols', icon: 'nutrition', path: '/dose' },
-                  ];
-                } else if (pathname.includes('trainer-dashboard') || pathname.includes('operator-orders') || (pathname.includes('super-users') && pathname.includes('MARKET_MANAGER'))) {
-                  ecosystemTitle = '👥 STAFF & FIELD OPERATIONS';
-                  subTabs = [
-                    { title: 'Technical Trainers', icon: 'school', path: '/admin/(tabs)/trainer-dashboard' },
-                    { title: 'Operators & Fulfillment', icon: 'print', path: '/admin/(tabs)/operator-orders' },
-                    { title: 'Market Managers', icon: 'briefcase', path: '/admin/(tabs)/super-users', params: { group: 'PARTNERS', filter: 'MARKET_MANAGER' } },
-                    { title: 'All System Users', icon: 'people', path: '/admin/(tabs)/super-users' },
-                  ];
-                } else if (pathname.includes('super-settings') || pathname.includes('super-audit-log')) {
-                  ecosystemTitle = '⚙️ SYSTEM SECURITY & C-PANEL';
-                  subTabs = [
-                    { title: 'C-Panel Settings', icon: 'options', path: '/admin/(tabs)/super-settings' },
-                    { title: 'System Audit Log', icon: 'time', path: '/admin/(tabs)/super-audit-log' },
-                  ];
-                } else {
-                  ecosystemTitle = '📊 EXECUTIVE COMMAND CENTER';
-                  subTabs = [
-                    { title: 'Platform Overview', icon: 'home', path: '/admin/(tabs)' },
-                    { title: 'Global Wallet & Ledger', icon: 'wallet', path: '/admin/(tabs)/super-accounts' },
-                  ];
-                }
-
-                return (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, justifyContent: 'space-between' }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                      <Text style={desktopStyles.topEcosystemLabel}>{ecosystemTitle}</Text>
-                      <View style={{ width: 1, height: 20, backgroundColor: 'rgba(0,255,135,0.2)' }} />
-                      {subTabs.map((tab) => {
-                        const isIndexActive = tab.path === '/admin/(tabs)' && (pathname === '/' || pathname === '/(tabs)' || pathname === '/(tabs)/index');
-                        const isOtherActive = tab.path !== '/admin/(tabs)' && pathname.includes(tab.path.split('/').pop() || '');
-                        const isActive = isIndexActive || isOtherActive;
-
-                        return (
-                          <TouchableOpacity
-                            key={tab.title}
-                            style={[desktopStyles.topSubTabPill, isActive && !tab.params && desktopStyles.topSubTabPillActive]}
-                            onPress={() => router.push(tab.params ? { pathname: tab.path as any, params: tab.params } : (tab.path as any))}
+                      return (
+                        <Pressable
+                          key={tab.id}
+                          onPress={() => handleSelectSubTab(tab)}
+                          style={({ hovered, pressed }: any) => [
+                            desktopStyles.segmentedTabItem,
+                            isActive && desktopStyles.segmentedTabItemActive,
+                            hovered && !isActive && desktopStyles.segmentedTabItemHover,
+                            pressed && { transform: [{ scale: 0.98 }] },
+                          ]}
+                        >
+                          <Ionicons
+                            name={tab.icon}
+                            size={14.5}
+                            color={isActive ? '#059669' : '#64748b'}
+                          />
+                          <Text
+                            style={[
+                              desktopStyles.segmentedTabText,
+                              isActive ? desktopStyles.segmentedTabTextActive : desktopStyles.segmentedTabTextInactive,
+                            ]}
+                            numberOfLines={1}
                           >
-                            <Ionicons name={tab.icon} size={15} color={isActive && !tab.params ? '#020d06' : '#00ff87'} />
-                            <Text style={[desktopStyles.topSubTabPillText, isActive && !tab.params && desktopStyles.topSubTabPillTextActive]}>
-                              {tab.title}
-                            </Text>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
-
-                    {/* Spotlight Command Search Trigger Button */}
-                    <TouchableOpacity
-                      style={desktopStyles.spotlightTriggerBtn}
-                      onPress={() => setIsSearchOpen(true)}
-                    >
-                      <Ionicons name="search" size={14} color="#00ff87" />
-                      <Text style={desktopStyles.spotlightTriggerText}>Quick Search...</Text>
-                      <View style={desktopStyles.kbdBadge}>
-                        <Text style={desktopStyles.kbdText}>Ctrl K</Text>
-                      </View>
-                    </TouchableOpacity>
+                            {tab.title}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
                   </View>
-                );
-              })()}
-            </ScrollView>
+                </ScrollView>
+              </View>
+
+              {/* 🟢 Live Infrastructure Health Pulse (AWS/Stripe Standard) */}
+              <TouchableOpacity
+                style={desktopStyles.healthRadarTriggerBtn}
+                onPress={() => setIsHealthRadarOpen(true)}
+                activeOpacity={0.8}
+              >
+                <View style={desktopStyles.healthRadarDot} />
+                <Text style={desktopStyles.healthRadarText}>99.9% Uptime</Text>
+              </TouchableOpacity>
+
+              {/* Spotlight Command Search Trigger Button */}
+              <TouchableOpacity
+                style={desktopStyles.spotlightTriggerBtn}
+                onPress={() => setIsSearchOpen(true)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="search" size={13} color="#059669" />
+                <Text style={desktopStyles.spotlightTriggerText}>Quick Search</Text>
+                <View style={desktopStyles.kbdBadge}>
+                  <Text style={desktopStyles.kbdText}>Ctrl K</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
+
+        {/* 👁️ Shopify-Style Safe Executive Impersonation Banner */}
+        <AdminImpersonationBanner
+          target={impersonationTarget}
+          onExit={() => setImpersonationTarget(null)}
+        />
+
 
         <Tabs
           screenOptions={{
@@ -704,12 +723,56 @@ export default function TabLayout() {
               href: null,
             }}
           />
+          <Tabs.Screen
+            name="crop-intelligence"
+            options={{
+              href: null,
+            }}
+          />
+          <Tabs.Screen
+            name="dose"
+            options={{
+              href: null,
+            }}
+          />
+          <Tabs.Screen
+            name="advisor-profile"
+            options={{
+              href: null,
+            }}
+          />
+          <Tabs.Screen
+            name="farmer-profile-setup"
+            options={{
+              href: null,
+            }}
+          />
+          <Tabs.Screen
+            name="admin-sellers"
+            options={{
+              href: null,
+            }}
+          />
+          <Tabs.Screen
+            name="seller-payouts"
+            options={{
+              href: null,
+            }}
+          />
         </Tabs>
 
         {/* 🌟 SUPER PREMIUM MODALS & TOAST NOTIFICATIONS */}
-        <GlobalCommandSearchModal visible={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+        <GlobalCommandSearchModal
+          visible={isSearchOpen}
+          onClose={() => setIsSearchOpen(false)}
+          onOpenHealthRadar={() => setIsHealthRadarOpen(true)}
+          onStartImpersonation={(target) => setImpersonationTarget(target)}
+        />
+        <AdminHealthRadarModal
+          visible={isHealthRadarOpen}
+          onClose={() => setIsHealthRadarOpen(false)}
+        />
         <AdminLiveToastNotification />
-
       </View>
     </View>
   );
@@ -717,245 +780,359 @@ export default function TabLayout() {
 
 const desktopStyles = StyleSheet.create({
   sidebar: {
-    width: 250,
-    backgroundColor: '#04180d',
+    width: 260,
+    backgroundColor: '#020b06',
     borderRightWidth: 1,
-    borderRightColor: 'rgba(0, 255, 135, 0.22)',
-    paddingVertical: 20,
-    ...premiumShadow('#000000', 'md') as any,
+    borderRightColor: 'rgba(0, 255, 135, 0.18)',
+    paddingVertical: 18,
+    shadowColor: '#00ff87',
+    shadowOffset: { width: 3, height: 0 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 6,
     zIndex: 99,
+    ...(Platform.OS === 'web' ? ({ backdropFilter: 'blur(20px)' } as any) : {}),
   },
   brandLogoBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginBottom: 24,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
+    marginBottom: 20,
+    gap: 10,
   },
   brandTitle: {
-    fontSize: 22,
+    fontSize: 16,
     fontFamily: FONT.extraBold,
     color: '#ffffff',
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
   },
-  menuNavCol: {
-    paddingHorizontal: 12,
-    gap: 6,
-    paddingBottom: 24,
+  brandSubtitle: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#6ee7b7',
+    marginTop: 1,
   },
-  sectionLabel: {
-    fontSize: 10.5,
-    fontFamily: FONT.extraBold,
-    color: 'rgba(52, 211, 153, 0.8)',
-    letterSpacing: 0.5,
-    marginLeft: 12,
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  accordionGroupContainer: {
-    marginBottom: 6,
-  },
-  accordionGroupHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: RADIUS.lg,
-  },
-  accordionGroupHeaderOpen: {
-    backgroundColor: 'rgba(6, 36, 19, 0.95)',
-    borderColor: 'rgba(0, 255, 135, 0.45)',
-    shadowColor: '#00ff87',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-  },
-  accordionGroupTitle: {
-    fontSize: 11,
-    fontFamily: FONT.extraBold,
-    color: '#ffffff',
-    letterSpacing: 0.4,
-    flex: 1,
-  },
-  accordionBadge: {
-    backgroundColor: 'rgba(0, 255, 135, 0.18)',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: RADIUS.pill,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.4)',
-  },
-  accordionBadgeText: {
+  brandBadgeText: {
     fontSize: 9.5,
     fontFamily: FONT.extraBold,
     color: '#00ff87',
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.4)',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
   },
-  accordionSubMenuWrapper: {
-    marginTop: 6,
-    paddingLeft: 8,
-    borderLeftWidth: 2,
-    borderLeftColor: 'rgba(0, 255, 135, 0.25)',
+  sidebarSectionTitle: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    color: '#00ff87',
+    letterSpacing: 1.2,
+    marginLeft: 16,
+    marginBottom: 8,
+  },
+  menuNavCol: {
+    paddingHorizontal: 10,
+    gap: 6,
+    paddingBottom: 20,
+  },
+  pillarCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: RADIUS.lg,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginBottom: 4,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  pillarCardActive: {
+    backgroundColor: '#ecfdf5',
+    borderColor: '#059669',
+    shadowColor: '#059669',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  pillarCardHover: {
+    backgroundColor: '#f8fafc',
+    borderColor: '#cbd5e1',
+  },
+  pillarActiveBar: {
+    position: 'absolute',
+    left: 0,
+    top: 6,
+    bottom: 6,
+    width: 3.5,
+    backgroundColor: '#059669',
+    borderTopRightRadius: 3,
+    borderBottomRightRadius: 3,
+  },
+  pillarIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pillarIconWrapActive: {
+    backgroundColor: '#059669',
+    borderColor: '#059669',
+  },
+  pillarContentCol: {
+    flex: 1,
     marginLeft: 10,
-    gap: 2,
+  },
+  pillarTitle: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#334155',
+    letterSpacing: 0.1,
+  },
+  pillarTitleActive: {
+    color: '#0f172a',
+    fontFamily: FONT.extraBold,
+  },
+  pillarBadge: {
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  pillarBadgeActive: {
+    backgroundColor: '#d1fae5',
+    borderColor: '#a7f3d0',
+  },
+  pillarBadgeText: {
+    fontSize: 9,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+  },
+  pillarBadgeTextActive: {
+    color: '#059669',
+    fontFamily: FONT.extraBold,
   },
   navMenuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderRadius: RADIUS.lg,
-    backgroundColor: 'transparent',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   navMenuItemActive: {
-    backgroundColor: '#00ff87',
+    backgroundColor: '#ecfdf5',
     borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.5)',
-    ...premiumShadow('#00ff87', 'md') as any,
+    borderColor: '#059669',
+    shadowColor: '#059669',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2,
   },
   navIconWrap: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
     alignItems: 'center',
     justifyContent: 'center',
   },
   navIconWrapActive: {
-    backgroundColor: 'transparent',
+    backgroundColor: '#059669',
+    borderColor: '#059669',
   },
   navMenuItemText: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: FONT.bold,
-    color: '#cbd5e1',
+    color: '#334155',
   },
   navMenuItemTextActive: {
-    color: '#020d06',
+    color: '#059669',
     fontFamily: FONT.extraBold,
   },
   sidebarBottom: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 14,
     marginTop: 'auto',
-    paddingTop: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
   },
   headerActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: 'rgba(0,255,135,0.1)',
+    backgroundColor: '#ecfdf5',
     paddingHorizontal: 10,
-    paddingVertical: 10,
+    paddingVertical: 8,
     borderRadius: RADIUS.lg,
     borderWidth: 1,
-    borderColor: 'rgba(0,255,135,0.3)',
+    borderColor: '#a7f3d0',
   },
   langSwitcherBox: {
     flexDirection: 'row',
-    gap: 4,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    padding: 4,
+    gap: 3,
+    backgroundColor: '#f1f5f9',
+    padding: 3,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
-    borderColor: 'rgba(0,255,135,0.2)',
+    borderColor: '#e2e8f0',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   langBtn: {
     flex: 1,
-    paddingVertical: 6,
+    paddingVertical: 5,
     borderRadius: RADIUS.pill,
     alignItems: 'center',
   },
   langBtnActive: {
     backgroundColor: '#ffffff',
-    ...premiumShadow('#cbd5e1', 'sm') as any,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
   },
   langBtnText: {
     fontSize: 10,
     fontFamily: FONT.bold,
-    color: '#94a3b8',
+    color: '#64748b',
   },
   langBtnTextActive: {
     color: '#0f172a',
+    fontFamily: FONT.extraBold,
   },
   topTabsHeaderBar: {
-    backgroundColor: '#03140a',
+    backgroundColor: '#ffffff',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 255, 135, 0.2)',
-    paddingVertical: 10,
+    borderBottomColor: '#e2e8f0',
+    paddingVertical: 8,
     paddingHorizontal: 16,
     zIndex: 90,
-    ...premiumShadow('#000000', 'sm') as any,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
+    ...(Platform.OS === 'web' ? ({ backdropFilter: 'blur(20px)' } as any) : {}),
+  },
+  topTabsHeaderInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    width: '100%',
+  },
+  topTabsAnimatedContainer: {
+    flex: 1,
+    minWidth: 0,
   },
   topTabsScrollContent: {
     alignItems: 'center',
-    paddingRight: 24,
+    paddingRight: 16,
   },
-  topEcosystemLabel: {
-    fontSize: 12,
-    fontFamily: FONT.extraBold,
-    color: '#00ff87',
-    letterSpacing: 0.8,
-  },
-  topSubTabPill: {
+  segmentedTabContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(0, 255, 135, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.25)',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: RADIUS.pill,
+    backgroundColor: '#f1f5f9',
+    borderRadius: RADIUS.md,
+    padding: 3,
+    gap: 3,
   },
-  topSubTabPillActive: {
-    backgroundColor: '#00ff87',
-    borderColor: '#00ff87',
-    ...premiumShadow('#00ff87', 'md') as any,
+  segmentedTabItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: RADIUS.sm,
+    backgroundColor: 'transparent',
   },
-  topSubTabPillText: {
-    fontSize: 12.5,
+  segmentedTabItemActive: {
+    backgroundColor: '#ffffff',
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  segmentedTabItemHover: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  segmentedTabText: {
+    fontSize: 12,
+    letterSpacing: 0.1,
+  },
+  segmentedTabTextInactive: {
+    color: '#64748b',
+    fontFamily: FONT.medium,
+  },
+  segmentedTabTextActive: {
+    color: '#0f172a',
     fontFamily: FONT.bold,
-    color: '#34d399',
-  },
-  topSubTabPillTextActive: {
-    color: '#020d06',
-    fontFamily: FONT.extraBold,
   },
   spotlightTriggerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(0, 255, 135, 0.08)',
+    gap: 6,
+    backgroundColor: '#f8fafc',
     borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.3)',
-    paddingHorizontal: 12,
+    borderColor: '#e2e8f0',
+    paddingHorizontal: 11,
     paddingVertical: 6,
     borderRadius: RADIUS.pill,
-    marginLeft: 16,
+    flexShrink: 0,
   },
   spotlightTriggerText: {
-    fontSize: 11.5,
+    fontSize: 11,
     fontFamily: FONT.medium,
-    color: '#94a3b8',
+    color: '#64748b',
   },
   kbdBadge: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
     borderRadius: RADIUS.sm,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: '#cbd5e1',
   },
   kbdText: {
-    fontSize: 9.5,
+    fontSize: 9,
     fontFamily: FONT.bold,
-    color: '#00ff87',
+    color: '#059669',
+  },
+  healthRadarTriggerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#ecfdf5',
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+    paddingHorizontal: 10,
+    paddingVertical: 5.5,
+    borderRadius: RADIUS.pill,
+    flexShrink: 0,
+  },
+  healthRadarDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#059669',
+  },
+  healthRadarText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#059669',
   },
 });

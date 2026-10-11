@@ -200,7 +200,7 @@ export default function CropIntelligenceScreen() {
           activeOpacity={0.8}
           onPress={handleGoBack}
         >
-          <Ionicons name="arrow-back" size={18} color="#ffffff" />
+          <Ionicons name="arrow-back" size={18} color="#0f172a" />
           <Text style={styles.backBtnText}>ਪਿੱਛੇ (Back)</Text>
         </TouchableOpacity>
 
@@ -626,7 +626,7 @@ export default function CropIntelligenceScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#f8fafc',
   },
   topNavHeader: {
     flexDirection: 'row',
@@ -634,26 +634,26 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#ffffff',
     borderBottomWidth: 1,
-    borderBottomColor: '#1e293b',
+    borderBottomColor: '#e2e8f0',
     gap: 10,
   },
   backBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#1e293b',
+    backgroundColor: '#f1f5f9',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: '#cbd5e1',
   },
   backBtnText: {
     fontSize: 11,
     fontFamily: FONT.bold,
-    color: '#ffffff',
+    color: '#0f172a',
   },
   headerTitleContainer: {
     flex: 1,
@@ -661,20 +661,22 @@ const styles = StyleSheet.create({
   headerTitleMain: {
     fontSize: 13.5,
     fontFamily: FONT.extraBold,
-    color: '#38bdf8',
+    color: '#0f172a',
   },
   headerSubtitle: {
     fontSize: 10,
     fontFamily: FONT.medium,
-    color: '#94a3b8',
+    color: '#64748b',
     marginTop: 1,
   },
   topLangPillBox: {
     flexDirection: 'row',
     gap: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#f1f5f9',
     padding: 2,
     borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   topLangBtn: {
     paddingHorizontal: 7,
@@ -682,15 +684,15 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.pill,
   },
   topLangBtnActive: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#10b981',
   },
   topLangBtnText: {
     fontSize: 9.5,
     fontFamily: FONT.bold,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: '#64748b',
   },
   topLangBtnTextActive: {
-    color: '#0f172a',
+    color: '#ffffff',
   },
   scrollContainer: {
     flex: 1,

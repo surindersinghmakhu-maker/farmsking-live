@@ -24,7 +24,7 @@ run('node admin/build.js');
 // 3. Git Operations
 run('git add .');
 run('git commit -m "deploy: automatic live update release"');
-run('git push origin main');
-run('git push hostinger main');
+run('git push origin HEAD:main');
+run('git push hostinger HEAD:main');
 
 console.log('✅ All done! Deployed to Hostinger live server safely.');

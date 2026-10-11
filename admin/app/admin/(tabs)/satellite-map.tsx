@@ -319,7 +319,7 @@ export default function SatelliteMapScreen() {
                 </View>
 
                 {/* 1. Full Crop Profile Details in Easy English */}
-                <View style={{ backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#bfdbfe', marginBottom: 8, gap: 4 }}>
+                <View style={{ backgroundColor: '#ffffff', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#bfdbfe', marginBottom: 8, gap: 4 }}>
                   <Text style={{ fontSize: 12, fontWeight: '800', color: '#1e3a8a' }}>
                     📋 Field & Crop Profile Summary
                   </Text>
@@ -682,7 +682,7 @@ export default function SatelliteMapScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#020d06',
+    backgroundColor: '#f8fafc',
   },
   header: {
     flexDirection: 'row',
@@ -690,7 +690,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
   },
@@ -700,7 +700,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#0f172a',
   },
   roleTag: {
     paddingHorizontal: 8,
@@ -744,7 +744,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   emptyCropsCard: {
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',
@@ -764,7 +764,7 @@ const styles = StyleSheet.create({
   emptyCropsTitle: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#0f172a',
     marginBottom: 4,
   },
   emptyCropsSub: {
@@ -813,7 +813,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   selectorCard: {
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     borderRadius: 14,
     padding: 14,
     marginBottom: 14,
@@ -830,7 +830,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#020d06',
+    backgroundColor: '#ffffff',
     padding: 12,
     borderRadius: 10,
     borderWidth: 1,
@@ -839,7 +839,7 @@ const styles = StyleSheet.create({
   pickerText: {
     fontSize: 13.5,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#0f172a',
   },
   pickerSubText: {
     fontSize: 11,
@@ -847,7 +847,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   adminCommandCard: {
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1.5,
@@ -871,7 +871,7 @@ const styles = StyleSheet.create({
   adminCoordVal: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#0f172a',
     marginBottom: 4,
   },
   adminSyncStatus: {
@@ -893,7 +893,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   farmerActionCard: {
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1.5,
@@ -901,7 +901,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   advisorAnalysisCard: {
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1.5,
@@ -924,7 +924,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     marginBottom: 10,
-    backgroundColor: '#020d06',
+    backgroundColor: '#ffffff',
     padding: 10,
     borderRadius: 10,
   },
@@ -955,7 +955,7 @@ const styles = StyleSheet.create({
   actionItemTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#ffffff',
+    color: '#0f172a',
   },
   actionItemSub: {
     fontSize: 11.5,
@@ -983,7 +983,7 @@ const styles = StyleSheet.create({
   matrixValue: {
     fontSize: 13.5,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#0f172a',
     marginTop: 2,
   },
   adminUnlockRowBtn: {
@@ -1004,7 +1004,7 @@ const styles = StyleSheet.create({
     color: '#2563eb',
   },
   mapContainer: {
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
@@ -1020,7 +1020,7 @@ const styles = StyleSheet.create({
   mapTitle: {
     fontSize: 13.5,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#0f172a',
   },
   mapDate: {
     fontSize: 11,
@@ -1128,7 +1128,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#020d06',
+    backgroundColor: '#ffffff',
     borderRadius: 10,
     padding: 10,
     borderWidth: 1,
@@ -1205,11 +1205,11 @@ const styles = StyleSheet.create({
   sectionHeading: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#0f172a',
     marginBottom: 12,
   },
   zoneCard: {
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     borderRadius: 14,
     padding: 14,
     marginBottom: 12,
@@ -1226,7 +1226,7 @@ const styles = StyleSheet.create({
   zoneName: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#0f172a',
   },
   zoneArea: {
     fontSize: 12,
@@ -1244,7 +1244,7 @@ const styles = StyleSheet.create({
   },
   statBox: {
     flex: 1,
-    backgroundColor: '#020d06',
+    backgroundColor: '#ffffff',
     padding: 8,
     borderRadius: 8,
   },
@@ -1267,7 +1267,7 @@ const styles = StyleSheet.create({
   },
   pickerModalCard: {
     width: '100%',
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     borderRadius: 20,
     padding: 18,
   },
@@ -1286,7 +1286,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#020d06',
+    backgroundColor: '#ffffff',
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,

@@ -94,7 +94,7 @@ export default function ProfileScreen() {
       await verifyAccountPassword(oldPassword.trim(), userMobile);
       
       // 2. Update to new password
-      await updateAddress.mutateAsync({ password: newPassword.trim() });
+      await updateAddress.mutateAsync({ password: newPassword.trim() } as any);
       
       setIsPasswordModalOpen(false);
       setOldPassword('');

@@ -529,7 +529,7 @@ export default function CropDiseaseScannerScreen() {
                 <Text style={styles.prescTitle}>💊 Recommended Chemical First-Aid Spray</Text>
               </View>
               <Text style={styles.prescText}>{scanResult.firstAidSpray}</Text>
-              <View style={{ backgroundColor: 'rgba(0,255,135,0.03)', padding: 8, borderRadius: 8, marginTop: 6, borderWidth: 1, borderColor: '#bbf7d0' }}>
+              <View style={{ backgroundColor: '#ffffff', padding: 8, borderRadius: 8, marginTop: 6, borderWidth: 1, borderColor: '#bbf7d0' }}>
                 <Text style={{ fontSize: 11, fontWeight: '700', color: '#14532d' }}>⚙️ Exact Dosage & Spraying Method:</Text>
                 <Text style={{ fontSize: 11, color: '#166534', marginTop: 2 }}>{scanResult.dosageInstructions}</Text>
               </View>
@@ -579,7 +579,7 @@ export default function CropDiseaseScannerScreen() {
 
         {/* 🤖 FarmsKing Agri AI Doctor Chatbot (Strictly Agriculture Guardrail) */}
         <View style={{ marginTop: 10 }}>
-          <Text style={{ fontSize: 15, fontWeight: '800', color: '#ffffff', marginBottom: 4 }}>
+          <Text style={{ fontSize: 15, fontWeight: '800', color: '#0f172a', marginBottom: 4 }}>
             💬 Ask FarmsKing Kheti Mitra AI Doctor
           </Text>
           <Text style={{ fontSize: 11.5, color: '#64748b', marginBottom: 6 }}>
@@ -595,7 +595,7 @@ export default function CropDiseaseScannerScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#020d06',
+    backgroundColor: '#f8fafc',
   },
   header: {
     flexDirection: 'row',
@@ -603,7 +603,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
   },
@@ -613,7 +613,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#0f172a',
   },
   scrollContent: {
     padding: 14,
@@ -650,7 +650,7 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
   uploadBox: {
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     borderRadius: 14,
     borderWidth: 2,
     borderColor: '#bbf7d0',
@@ -698,7 +698,7 @@ const styles = StyleSheet.create({
   placeholderTitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#0f172a',
     marginBottom: 2,
   },
   placeholderSub: {
@@ -746,7 +746,7 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
   },
   sampleBarBox: {
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
@@ -756,13 +756,13 @@ const styles = StyleSheet.create({
   sampleTitle: {
     fontSize: 11.5,
     fontWeight: '800',
-    color: '#e2e8f0',
+    color: '#0f172a',
   },
   sampleChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#020d06',
+    backgroundColor: '#ffffff',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -772,10 +772,10 @@ const styles = StyleSheet.create({
   sampleChipText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#ffffff',
+    color: '#0f172a',
   },
   loadingCard: {
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     borderRadius: 14,
     padding: 20,
     alignItems: 'center',
@@ -785,7 +785,7 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#0f172a',
     marginTop: 10,
     textAlign: 'center',
   },
@@ -812,7 +812,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   resultCard: {
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     borderRadius: 14,
     padding: 16,
     borderWidth: 1.5,

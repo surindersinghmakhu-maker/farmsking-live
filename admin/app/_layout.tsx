@@ -49,7 +49,7 @@ function RootNavigation() {
     if (isLoading) return;
     const currentGroup = segments[0] as string;
     const inAuthGroup = currentGroup === '(auth)';
-    const isRootRoute = segments.length === 0 || (segments.length === 1 && (segments[0] === 'index' || segments[0] === ''));
+    const isRootRoute = (segments as string[]).length === 0 || ((segments as string[]).length === 1 && ((segments[0] as any) === 'index' || (segments[0] as any) === ''));
     const isPublicRoute = isRootRoute || currentGroup === 'topic' || currentGroup === 'seo' || currentGroup === 'dose' || currentGroup === 'doses' || currentGroup === 'my' || currentGroup === 'you' || currentGroup === 'shop' || currentGroup === 'support' || currentGroup === 'contact-us';
     const isStaffSetupRoute = segments.join('/') === 'staff-profile-setup';
 
@@ -60,7 +60,7 @@ function RootNavigation() {
     } else if (user) {
       const userRoles = [user.role, ...(user.roles || [])];
       const isStaff = STAFF_ROLES.includes(user.role);
-      const profileSubmitted = !!(user as any).staffProfileSubmitted || user.profileStatus === 'UNDER_REVIEW' || user.profileStatus === 'APPROVED';
+      const profileSubmitted = !!(user as any).staffProfileSubmitted || (user as any).profileStatus === 'UNDER_REVIEW' || (user as any).profileStatus === 'APPROVED';
 
       // Redirect unsubmitted staff to profile setup
       if (isStaff && !profileSubmitted && !isStaffSetupRoute && !inAuthGroup) {

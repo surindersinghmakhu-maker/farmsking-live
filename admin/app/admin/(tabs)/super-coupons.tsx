@@ -1098,7 +1098,7 @@ function EditPlanMultiDurationPricingModal({
                 borderColor: theme.primary,
                 borderStyle: 'dashed',
                 borderRadius: RADIUS.md,
-                backgroundColor: '#020d06',
+                backgroundColor: '#ffffff',
                 marginTop: 4,
               }}
               onPress={handleAddRate}
@@ -1819,7 +1819,7 @@ function GenerateCouponSection() {
               key={cat.key}
               style={[
                 styles.categoryCard,
-                isActive && { borderColor: theme.primary, borderWidth: 1.5, backgroundColor: '#020d06' },
+                isActive && { borderColor: theme.primary, borderWidth: 1.5, backgroundColor: '#ffffff' },
                 premiumShadow('#0f172a', 'sm'),
               ]}
               activeOpacity={0.88}
@@ -2999,7 +2999,7 @@ function ToggleType({ value, onChange }: { value: DiscountValueType; onChange: (
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020d06' },
+  container: { flex: 1, backgroundColor: '#f8fafc' },
   hero: { paddingTop: 20, paddingBottom: 16, paddingHorizontal: SPACING.xxl },
   heroTitle: { color: '#fff', fontSize: 20, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
   heroSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 12, fontFamily: FONT.medium, marginTop: 2 },
@@ -3042,11 +3042,11 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.pill,
     backgroundColor: 'rgba(255,255,255,0.14)',
   },
-  tabChipActive: { backgroundColor: 'rgba(0,255,135,0.03)' },
+  tabChipActive: { backgroundColor: '#ffffff' },
   tabChipText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' },
   tabChipTextActive: { color: theme.primary },
   list: { padding: SPACING.lg, gap: 12, paddingBottom: SPACING.xxl },
-  categoryCard: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.2)' },
+  categoryCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.2)' },
   categoryCardExpanded: { borderColor: theme.primaryLight },
   categoryHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   categoryIconBg: { width: 30, height: 30, borderRadius: 15, backgroundColor: theme.primaryLight, alignItems: 'center', justifyContent: 'center' },
@@ -3061,7 +3061,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#020d06',
+    backgroundColor: '#ffffff',
     borderWidth: 1,
     borderRadius: RADIUS.md,
     paddingHorizontal: 12,
@@ -3070,7 +3070,7 @@ const styles = StyleSheet.create({
   groupHeaderText: { fontSize: 12.5, fontFamily: FONT.extraBold },
   helperText: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', lineHeight: 15 },
   codeRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fbfcfd', borderRadius: RADIUS.md, padding: 11, borderWidth: 1, borderColor: '#eef1f5', gap: 6 },
-  couponCard: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.md, gap: 8 },
+  couponCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.md, gap: 8 },
   rateCard: { backgroundColor: '#fbfcfd', borderRadius: RADIUS.md, padding: SPACING.md, borderWidth: 1, borderColor: '#eef1f5', gap: 7 },
   rateCardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   rateCardTitle: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#ffffff' },
@@ -3088,7 +3088,7 @@ const styles = StyleSheet.create({
     width: '48.5%',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     borderRadius: RADIUS.lg,
     padding: 10,
     borderWidth: 1.5,
@@ -3121,7 +3121,7 @@ const styles = StyleSheet.create({
   },
   iconTabCard: {
     width: '48.5%',
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     borderRadius: 20,
     paddingVertical: 18,
     paddingHorizontal: 8,
@@ -3155,7 +3155,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -3191,7 +3191,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     borderRadius: RADIUS.lg,
     padding: 16,
     borderWidth: 1,
@@ -3217,26 +3217,26 @@ const styles = StyleSheet.create({
   viewUsageBtnText: { fontSize: 12, fontFamily: FONT.bold, color: theme.primary },
   removeBtn: { width: 38, height: 38, borderRadius: RADIUS.md, backgroundColor: '#fee2e2', alignItems: 'center', justifyContent: 'center' },
   usagePanel: { borderTopWidth: 1, borderTopColor: '#f1f5f9', paddingTop: 8, gap: 8 },
-  usageRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#020d06', borderRadius: RADIUS.sm, padding: 8 },
+  usageRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#ffffff', borderRadius: RADIUS.sm, padding: 8 },
   usageCustomer: { fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' },
   usageDate: { fontSize: 10, fontFamily: FONT.medium, color: '#94a3b8' },
   usageAmount: { fontSize: 11.5, fontFamily: FONT.semiBold, color: '#e2e8f0' },
   usageCommission: { fontSize: 11.5, fontFamily: FONT.bold, color: '#16a34a' },
   usagePending: { fontSize: 11.5, fontFamily: FONT.bold, color: '#d97706' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'center', alignItems: 'center', padding: SPACING.lg },
-  modalCard: { width: '100%', maxWidth: 460, maxHeight: '88%', backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.xl, padding: SPACING.lg, ...premiumShadow('#000000', 'lg') },
+  modalCard: { width: '100%', maxWidth: 460, maxHeight: '88%', backgroundColor: '#ffffff', borderRadius: RADIUS.xl, padding: SPACING.lg, ...premiumShadow('#000000', 'lg') },
   modalHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   modalTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#ffffff' },
   label: { fontSize: 11.5, fontFamily: FONT.extraBold, color: '#475569', marginTop: 4, textTransform: 'uppercase', letterSpacing: 0.2 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  dropdownPanel: { borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', borderRadius: RADIUS.md, backgroundColor: '#020d06', padding: 6 },
+  dropdownPanel: { borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', borderRadius: RADIUS.md, backgroundColor: '#ffffff', padding: 6 },
   dropdownRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 6 },
   dropdownRowText: { fontSize: 13, fontFamily: FONT.medium, color: '#ffffff', flex: 1 },
-  partnerChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', backgroundColor: '#020d06' },
+  partnerChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', backgroundColor: '#ffffff' },
   partnerChipText: { fontSize: 12, fontFamily: FONT.semiBold, color: '#e2e8f0' },
-  input: { borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13.5, fontFamily: FONT.medium, backgroundColor: '#020d06', color: '#ffffff' },
+  input: { borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13.5, fontFamily: FONT.medium, backgroundColor: '#ffffff', color: '#0f172a' },
   toggleWrap: { flexDirection: 'row', borderRadius: RADIUS.md, overflow: 'hidden', borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)' },
-  toggleOption: { width: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: '#020d06' },
+  toggleOption: { width: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff' },
   toggleOptionText: { fontSize: 14, fontFamily: FONT.bold, color: '#e2e8f0' },
   errorText: { color: '#dc2626', fontFamily: FONT.semiBold, fontSize: 12 },
   submitBtn: { backgroundColor: theme.primary, borderRadius: RADIUS.md, paddingVertical: 13, alignItems: 'center', marginTop: 4 },
@@ -3247,7 +3247,7 @@ const styles = StyleSheet.create({
   debitPreviewText: { flex: 1, fontSize: 11.5, fontFamily: FONT.medium, color: '#92400e' },
   finSummaryCard: { backgroundColor: '#f0fdf4', borderRadius: RADIUS.md, padding: 12, borderWidth: 1, borderColor: '#bbf7d0', marginBottom: 8 },
   finSummaryTitle: { fontSize: 13, fontFamily: FONT.extraBold, color: '#166534' },
-  finSummaryItem: { minWidth: '45%', flex: 1, backgroundColor: 'rgba(0,255,135,0.03)', padding: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#dcfce7' },
+  finSummaryItem: { minWidth: '45%', flex: 1, backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#dcfce7' },
   mainFolderGrid: {
     flexDirection: 'row',
     gap: 8,
@@ -3255,7 +3255,7 @@ const styles = StyleSheet.create({
   },
   mainFolderCard: {
     flex: 1,
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     borderRadius: RADIUS.xl,
     paddingVertical: 12,
     paddingHorizontal: 6,
@@ -3334,7 +3334,7 @@ const styles = StyleSheet.create({
   searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#020d06',
+    backgroundColor: '#ffffff',
     borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: 'rgba(0,255,135,0.3)',
@@ -3357,7 +3357,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#020d06',
+    backgroundColor: '#ffffff',
     borderWidth: 1,
     borderColor: '#cbd5e1',
     borderRadius: RADIUS.md,
@@ -3399,7 +3399,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   savedEntryCard: {
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     borderRadius: RADIUS.lg,
     padding: 14,
     gap: 8,
@@ -3458,7 +3458,7 @@ const styles = StyleSheet.create({
     color: '#0369a1',
   },
   entrySubDetailsBox: {
-    backgroundColor: '#020d06',
+    backgroundColor: '#ffffff',
     borderRadius: RADIUS.md,
     padding: 8,
     gap: 4,
@@ -4074,7 +4074,7 @@ function AdminUserGuidesSection() {
   return (
     <View style={{ gap: 10, paddingVertical: 4 }}>
       {/* Multi-Language Selector Bar */}
-      <View style={{ backgroundColor: '#020d06', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}>
+      <View style={{ backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}>
         <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569', marginBottom: 6 }}>
           🌐 Choose Guide Language for PDF Generation:
         </Text>

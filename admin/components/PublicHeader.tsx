@@ -102,7 +102,7 @@ export default function PublicHeader({
           {user ? (
             <TouchableOpacity 
               style={[styles.loginBtn, { backgroundColor: '#10b981', borderColor: '#059669' }, !isDesktop && { paddingHorizontal: 12, paddingVertical: 6 }]}
-              onPress={() => router.push('/(tabs)')}
+              onPress={() => router.push('/admin/(tabs)' as any)}
               activeOpacity={0.8}
             >
               <Text style={[styles.loginBtnText, { color: '#ffffff' }, !isDesktop && { fontSize: 12 }]}>

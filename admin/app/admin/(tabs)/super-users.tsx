@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, Alert, Image, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -166,7 +166,7 @@ export default function SuperUsersScreen() {
   };
 
   const items = (data?.items ?? []).filter((u) =>
-    filter === 'FARM_ADVISOR' ? true : filter === 'GARDEN_ADVISOR' ? u.advisorType === 'GARDEN' : true,
+    filter === 'FARM_ADVISOR' ? u.advisorType !== 'GARDEN' : filter === 'GARDEN_ADVISOR' ? u.advisorType === 'GARDEN' : true,
   );
 
   const { width } = useWindowDimensions();
@@ -223,8 +223,7 @@ export default function SuperUsersScreen() {
                       {isActive && (
                         <LinearGradient
                           colors={['rgba(16,185,129,0.1)', 'transparent']}
-                          style={StyleSheet.absoluteFill}
-                          borderRadius={12}
+                          style={[StyleSheet.absoluteFill, { borderRadius: 12 }]}
                         />
                       )}
                       <Ionicons name={g.icon} size={16} color={isActive ? '#10b981' : '#64748b'} />

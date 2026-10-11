@@ -240,7 +240,7 @@ export default function AdminShopScreen() {
                     Pending Sellers Needing Approval:
                   </Text>
                   {pendingStores.slice(0, 5).map((store: any) => (
-                    <View key={store.id} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(0,255,135,0.03)', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#fdba74' }}>
+                    <View key={store.id} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ffffff', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#fdba74' }}>
                       <View style={{ flex: 1, marginRight: 8 }}>
                         <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' }}>{store.storeName || 'Unnamed Store'}</Text>
                         <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>Owner: {store.seller?.name || store.seller?.mobile || 'Unknown'}</Text>
@@ -377,9 +377,9 @@ export default function AdminShopScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020d06' },
+  container: { flex: 1, backgroundColor: '#f8fafc' },
   header: {
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     paddingTop: Platform.OS === 'ios' ? 50 : 20,
     paddingBottom: 16,
     paddingHorizontal: 16,
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 8,
     borderRadius: RADIUS.pill,
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: 'rgba(0,255,135,0.3)',
@@ -431,14 +431,14 @@ const styles = StyleSheet.create({
   navTabText: { fontSize: 11, fontFamily: FONT.bold, color: '#475569' },
   navTabTextActive: { color: '#ffffff' },
   content: { flex: 1, paddingHorizontal: 12 },
-  card: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: 14, padding: 14, marginBottom: 12, ...premiumShadow('#0f172a', 'sm') as any },
+  card: { backgroundColor: '#ffffff', borderRadius: 14, padding: 14, marginBottom: 12, ...premiumShadow('#0f172a', 'sm') as any },
   cardTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#ffffff', marginBottom: 10 },
   actionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   actionPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#020d06',
+    backgroundColor: '#ffffff',
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 10,
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
   orderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     padding: 12,
     borderRadius: 10,
     borderWidth: 1,
@@ -465,7 +465,7 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     paddingHorizontal: 12,
     height: 42,
     borderRadius: 10,
@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
   productRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#ffffff',
     padding: 10,
     borderRadius: 12,
     gap: 10,

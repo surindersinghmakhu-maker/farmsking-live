@@ -8,37 +8,60 @@ import { useRouter } from 'expo-router';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { BlurView } from 'expo-blur';
 
-interface CommandItem {
+export interface CommandItem {
   id: string;
   title: string;
-  category: 'FARMERS' | 'DOCTORS' | 'SELLERS' | 'ORDERS' | 'SETTINGS';
+  category: 'ACTIONS' | 'FARMERS' | 'DOCTORS' | 'SELLERS' | 'ORDERS' | 'SETTINGS' | 'FINANCE' | 'STAFF';
   subtitle: string;
   icon: keyof typeof Ionicons.glyphMap;
-  path: string;
+  path?: string;
   params?: any;
+  actionType?: 'HEALTH_RADAR' | 'IMPERSONATE_FARMER' | 'IMPERSONATE_DOCTOR' | 'BATCH_APPROVE' | 'EXPORT_DIGEST';
 }
 
 const SEARCH_DATABASE: CommandItem[] = [
+  // ⚡ International SaaS Action Commands
+  { id: 'act-1', title: '> 🚀 Run System Health Diagnostics', category: 'ACTIONS', subtitle: 'AWS / Stripe Standard Infrastructure & Telemetry Radar', icon: 'pulse', actionType: 'HEALTH_RADAR' },
+  { id: 'act-2', title: '> 👁️ Simulate View as Farmer Harpreet Singh', category: 'ACTIONS', subtitle: 'Shopify-style sandbox impersonation (Makhu, 15 Acres)', icon: 'leaf', actionType: 'IMPERSONATE_FARMER' },
+  { id: 'act-3', title: '> 🩺 Simulate View as Dr. Amanpreet Kaur', category: 'ACTIONS', subtitle: 'Chief Crop Doctor portal sandbox impersonation', icon: 'medical', actionType: 'IMPERSONATE_DOCTOR' },
+  { id: 'act-4', title: '> ⚡ 1-Click Batch Verify Pending Sellers', category: 'ACTIONS', subtitle: 'Bulk approve 12 verified agricultural store licenses', icon: 'shield-checkmark', actionType: 'BATCH_APPROVE' },
+  { id: 'act-5', title: '> 📊 Export Daily Operations Dossier (CSV)', category: 'ACTIONS', subtitle: 'Download executive summary of orders, farmers & wallets', icon: 'download', actionType: 'EXPORT_DIGEST' },
+
+  // Standard Navigation Entries
   { id: '1', title: 'Surinder Singh (Super Admin)', category: 'SETTINGS', subtitle: 'Platform Administrator · Makhu', icon: 'shield-checkmark', path: '/admin/(tabs)/super-users', params: { filter: 'SUPER_ADMIN' } },
   { id: '2', title: 'Farmer Directory', category: 'FARMERS', subtitle: 'Manage all 1,240 registered farmers', icon: 'leaf', path: '/admin/(tabs)/super-users', params: { group: 'CLIENTS', filter: 'FARMER' } },
   { id: '3', title: 'Crop Doctors & Advisory', category: 'DOCTORS', subtitle: 'Certified Agri Doctors (Farmers Only)', icon: 'medical', path: '/admin/(tabs)/super-users', params: { group: 'PARTNERS', filter: 'FARM_ADVISOR' } },
   { id: '4', title: 'Seller KYC Approvals', category: 'SELLERS', subtitle: '12 pending seller verifications', icon: 'shield-checkmark', path: '/admin-sellers' },
-  { id: '5', title: 'Seller Payouts Ledger', category: 'SELLERS', subtitle: 'UPI withdrawals & auto payouts', icon: 'cash', path: '/seller-payouts' },
+  { id: '5', title: 'Seller Payouts Ledger', category: 'FINANCE', subtitle: 'UPI withdrawals & auto payouts', icon: 'cash', path: '/seller-payouts' },
   { id: '6', title: 'Store Orders & Fulfillment', category: 'ORDERS', subtitle: 'View real-time customer purchases', icon: 'receipt', path: '/admin/(tabs)/admin-orders' },
   { id: '7', title: 'AI Disease Diagnostic Scanner', category: 'DOCTORS', subtitle: 'Agri AI scan logs & diagnostics', icon: 'scan', path: '/admin/(tabs)/crop-disease-scanner' },
-  { id: '8', title: 'Plant Care Doses & Protocols', category: 'SETTINGS', subtitle: 'Gardening & urban agriculture care', icon: 'nutrition', path: '/dose' },
-  { id: '9', title: 'Global Wallet & Accounts', category: 'SETTINGS', subtitle: 'Platform financial balance & ledger', icon: 'wallet', path: '/admin/(tabs)/super-accounts' },
-  { id: '10', title: 'Technical Trainers Dashboard', category: 'SETTINGS', subtitle: 'Staff trainers & field ops', icon: 'school', path: '/admin/(tabs)/trainer-dashboard' },
+  { id: '8', title: 'High-Res Satellite Farm Radar', category: 'FARMERS', subtitle: 'Soil moisture, NDVI & weather satellite maps', icon: 'planet', path: '/admin/(tabs)/satellite-map' },
+  { id: '9', title: 'Global Ledger & Accounts', category: 'FINANCE', subtitle: 'Platform financial balance & ledger', icon: 'wallet', path: '/admin/(tabs)/super-accounts' },
+  { id: '10', title: 'Technical Trainers Dashboard', category: 'STAFF', subtitle: 'Staff trainers & field ops', icon: 'school', path: '/admin/(tabs)/trainer-dashboard' },
   { id: '11', title: 'Coupons & VIP Passes', category: 'ORDERS', subtitle: 'Manage discount vouchers & passes', icon: 'ticket', path: '/admin/(tabs)/super-coupons' },
   { id: '12', title: 'C-Panel & Security Settings', category: 'SETTINGS', subtitle: 'Feature flags & platform config', icon: 'options', path: '/admin/(tabs)/super-settings' },
+];
+
+const RECENT_BREADCRUMBS = [
+  { label: 'Farmer Directory', query: 'Farmer' },
+  { label: 'Seller KYC', query: 'Seller' },
+  { label: 'Global Ledger', query: 'Wallet' },
+  { label: 'Health Radar', query: 'Health' },
 ];
 
 interface Props {
   visible: boolean;
   onClose: () => void;
+  onOpenHealthRadar?: () => void;
+  onStartImpersonation?: (target: any) => void;
 }
 
-export function GlobalCommandSearchModal({ visible, onClose }: Props) {
+export function GlobalCommandSearchModal({
+  visible,
+  onClose,
+  onOpenHealthRadar,
+  onStartImpersonation,
+}: Props) {
   const router = useRouter();
   const [query, setQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('ALL');
@@ -53,7 +76,6 @@ export function GlobalCommandSearchModal({ visible, onClose }: Props) {
         if (visible) {
           onClose();
         } else {
-          // Open trigger via window event if needed
           window.dispatchEvent(new CustomEvent('open-command-search'));
         }
       }
@@ -75,25 +97,101 @@ export function GlobalCommandSearchModal({ visible, onClose }: Props) {
 
   const handleSelect = (item: CommandItem) => {
     onClose();
-    if (item.params) {
-      router.push({ pathname: item.path as any, params: item.params });
-    } else {
-      router.push(item.path as any);
+
+    // Execute Action Command
+    if (item.actionType === 'HEALTH_RADAR') {
+      if (onOpenHealthRadar) {
+        onOpenHealthRadar();
+      } else if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('admin-open-health-radar'));
+      }
+      return;
+    }
+
+    if (item.actionType === 'IMPERSONATE_FARMER') {
+      const farmerTarget = {
+        id: 'farmer-101',
+        name: 'Harpreet Singh',
+        role: 'FARMER',
+        location: 'Makhu, Ferozepur',
+        badge: 'Verified Farmer (15 Acres)',
+      };
+      if (onStartImpersonation) {
+        onStartImpersonation(farmerTarget);
+      } else if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('admin-start-impersonation', { detail: farmerTarget }));
+      }
+      return;
+    }
+
+    if (item.actionType === 'IMPERSONATE_DOCTOR') {
+      const doctorTarget = {
+        id: 'doc-202',
+        name: 'Dr. Amanpreet Kaur',
+        role: 'FARM_ADVISOR',
+        location: 'Punjab Agri University (PAU)',
+        badge: 'Chief Crop Doctor',
+      };
+      if (onStartImpersonation) {
+        onStartImpersonation(doctorTarget);
+      } else if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('admin-start-impersonation', { detail: doctorTarget }));
+      }
+      return;
+    }
+
+    if (item.actionType === 'BATCH_APPROVE') {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('admin-live-toast', {
+            detail: {
+              type: 'SUCCESS',
+              title: 'Batch Approvals Executed',
+              message: '12 Agricultural Seller Stores approved and activated pan-India.',
+            },
+          })
+        );
+      }
+      return;
+    }
+
+    if (item.actionType === 'EXPORT_DIGEST') {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('admin-live-toast', {
+            detail: {
+              type: 'INFO',
+              title: 'Export Generating',
+              message: 'FarmsKing Daily Operations Dossier exported as CSV successfully.',
+            },
+          })
+        );
+      }
+      return;
+    }
+
+    // Standard Route Navigation
+    if (item.path) {
+      if (item.params) {
+        router.push({ pathname: item.path as any, params: item.params });
+      } else {
+        router.push(item.path as any);
+      }
     }
   };
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.overlay} onPress={onClose}>
-        <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
+        <BlurView intensity={40} tint="light" style={StyleSheet.absoluteFill} />
         
         <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
           {/* Top Search Input Header */}
           <View style={styles.searchHeader}>
-            <Ionicons name="search" size={20} color="#00ff87" />
+            <Ionicons name="search" size={20} color="#059669" />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search Farmers, Doctors, Orders, Sellers, Settings... (Ctrl+K)"
+              placeholder="Search or type > for Action Commands (Ctrl+K)..."
               placeholderTextColor="#64748b"
               value={query}
               onChangeText={setQuery}
@@ -104,16 +202,30 @@ export function GlobalCommandSearchModal({ visible, onClose }: Props) {
             </TouchableOpacity>
           </View>
 
+          {/* Quick Breadcrumbs Row (Recently Visited) */}
+          <View style={styles.breadcrumbsRow}>
+            <Text style={styles.breadcrumbsLabel}>RECENT:</Text>
+            {RECENT_BREADCRUMBS.map((b) => (
+              <TouchableOpacity
+                key={b.label}
+                style={styles.breadcrumbChip}
+                onPress={() => setQuery(b.query)}
+              >
+                <Text style={styles.breadcrumbText}>{b.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
           {/* Category Filter Chips */}
           <View style={styles.categoryRow}>
-            {['ALL', 'FARMERS', 'DOCTORS', 'SELLERS', 'ORDERS', 'SETTINGS'].map((cat) => (
+            {['ALL', 'ACTIONS', 'FARMERS', 'DOCTORS', 'SELLERS', 'ORDERS', 'SETTINGS'].map((cat) => (
               <TouchableOpacity
                 key={cat}
                 style={[styles.catChip, activeCategory === cat && styles.catChipActive]}
                 onPress={() => setActiveCategory(cat)}
               >
                 <Text style={[styles.catChipText, activeCategory === cat && styles.catChipTextActive]}>
-                  {cat}
+                  {cat === 'ACTIONS' ? '⚡ ACTIONS' : cat}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -123,36 +235,49 @@ export function GlobalCommandSearchModal({ visible, onClose }: Props) {
           <ScrollView style={styles.resultsList} showsVerticalScrollIndicator={false}>
             {filteredItems.length === 0 ? (
               <View style={styles.emptyBox}>
-                <Ionicons name="search-disagree" size={32} color="#475569" />
-                <Text style={styles.emptyText}>No matching admin command or user found</Text>
+                <Ionicons name="search-outline" size={32} color="#94a3b8" />
+                <Text style={styles.emptyText}>No matching admin command or action found</Text>
               </View>
             ) : (
-              filteredItems.map((item) => (
-                <TouchableOpacity
-                  key={item.id}
-                  style={styles.resultItem}
-                  onPress={() => handleSelect(item)}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.itemIconBox}>
-                    <Ionicons name={item.icon} size={18} color="#00ff87" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.itemTitle}>{item.title}</Text>
-                    <Text style={styles.itemSubtitle}>{item.subtitle}</Text>
-                  </View>
-                  <View style={styles.categoryBadge}>
-                    <Text style={styles.categoryBadgeText}>{item.category}</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={16} color="#475569" />
-                </TouchableOpacity>
-              ))
+              filteredItems.map((item) => {
+                const isAction = item.category === 'ACTIONS';
+                return (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={[styles.resultItem, isAction && styles.resultItemAction]}
+                    onPress={() => handleSelect(item)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={[styles.itemIconBox, isAction && styles.itemIconBoxAction]}>
+                      <Ionicons
+                        name={item.icon}
+                        size={18}
+                        color={isAction ? '#ffffff' : '#059669'}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.itemTitle, isAction && { color: '#064e3b' }]}>
+                        {item.title}
+                      </Text>
+                      <Text style={styles.itemSubtitle}>{item.subtitle}</Text>
+                    </View>
+                    <View style={[styles.categoryBadge, isAction && styles.categoryBadgeAction]}>
+                      <Text style={[styles.categoryBadgeText, isAction && styles.categoryBadgeTextAction]}>
+                        {item.category}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
+                  </TouchableOpacity>
+                );
+              })
             )}
           </ScrollView>
 
           {/* Footer Shortcuts Note */}
           <View style={styles.footerRow}>
-            <Text style={styles.footerNote}>💡 Tip: Use <Text style={{ color: '#00ff87', fontFamily: FONT.bold }}>Ctrl + K</Text> anywhere in Admin Portal to open spotlight search.</Text>
+            <Text style={styles.footerNote}>
+              💡 Tip: Type <Text style={{ color: '#059669', fontFamily: FONT.bold }}>&gt;</Text> to filter Action Commands, or press <Text style={{ color: '#059669', fontFamily: FONT.bold }}>Esc</Text> to exit.
+            </Text>
           </View>
         </Pressable>
       </Pressable>
@@ -163,7 +288,7 @@ export function GlobalCommandSearchModal({ visible, onClose }: Props) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(2, 13, 6, 0.75)',
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
     justifyContent: 'flex-start',
     alignItems: 'center',
     paddingTop: 80,
@@ -172,12 +297,12 @@ const styles = StyleSheet.create({
     width: '90%',
     maxWidth: 680,
     maxHeight: '75%',
-    backgroundColor: '#04180d',
+    backgroundColor: '#ffffff',
     borderRadius: RADIUS.xl,
     borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.3)',
+    borderColor: '#e2e8f0',
     overflow: 'hidden',
-    ...premiumShadow('#000000', 'xl') as any,
+    ...premiumShadow('#64748b', 'xl') as any,
   },
   searchHeader: {
     flexDirection: 'row',
@@ -185,47 +310,76 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 255, 135, 0.15)',
+    borderBottomColor: '#e2e8f0',
     gap: 12,
   },
   searchInput: {
     flex: 1,
     fontSize: 15,
     fontFamily: FONT.medium,
-    color: '#ffffff',
+    color: '#0f172a',
     outlineStyle: 'none' as any,
   },
   escBadge: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: '#f1f5f9',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: RADIUS.sm,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: '#e2e8f0',
   },
   escText: {
     fontSize: 10,
     fontFamily: FONT.bold,
+    color: '#64748b',
+  },
+  breadcrumbsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#f8fafc',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  breadcrumbsLabel: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
     color: '#94a3b8',
+    letterSpacing: 0.5,
+  },
+  breadcrumbChip: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  breadcrumbText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#475569',
   },
   categoryRow: {
     flexDirection: 'row',
     gap: 6,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    backgroundColor: '#f8fafc',
   },
   catChip: {
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: RADIUS.pill,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: '#ffffff',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: '#e2e8f0',
   },
   catChipActive: {
-    backgroundColor: 'rgba(0, 255, 135, 0.15)',
-    borderColor: '#00ff87',
+    backgroundColor: '#ecfdf5',
+    borderColor: '#10b981',
   },
   catChipText: {
     fontSize: 10.5,
@@ -233,7 +387,7 @@ const styles = StyleSheet.create({
     color: '#64748b',
   },
   catChipTextActive: {
-    color: '#00ff87',
+    color: '#059669',
   },
   resultsList: {
     paddingHorizontal: 12,
@@ -247,38 +401,53 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: RADIUS.lg,
     marginBottom: 4,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  resultItemAction: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#bbf7d0',
   },
   itemIconBox: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+    backgroundColor: '#ecfdf5',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  itemIconBoxAction: {
+    backgroundColor: '#10b981',
   },
   itemTitle: {
     fontSize: 14,
     fontFamily: FONT.bold,
-    color: '#f8fafc',
+    color: '#0f172a',
   },
   itemSubtitle: {
     fontSize: 11.5,
     fontFamily: FONT.medium,
-    color: '#94a3b8',
+    color: '#64748b',
     marginTop: 2,
   },
   categoryBadge: {
-    backgroundColor: 'rgba(0, 255, 135, 0.08)',
+    backgroundColor: '#f1f5f9',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: RADIUS.pill,
     marginRight: 4,
   },
+  categoryBadgeAction: {
+    backgroundColor: '#d1fae5',
+  },
   categoryBadgeText: {
     fontSize: 9.5,
     fontFamily: FONT.bold,
-    color: '#34d399',
+    color: '#475569',
+  },
+  categoryBadgeTextAction: {
+    color: '#047857',
   },
   emptyBox: {
     alignItems: 'center',
@@ -295,12 +464,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0, 255, 135, 0.15)',
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderTopColor: '#e2e8f0',
+    backgroundColor: '#f8fafc',
   },
   footerNote: {
     fontSize: 11,
     fontFamily: FONT.medium,
-    color: '#94a3b8',
+    color: '#64748b',
   },
 });

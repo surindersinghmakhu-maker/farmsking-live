@@ -109,7 +109,7 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'rgba(0,255,135,0.03)' },
+  container: { flex: 1, backgroundColor: '#f8fafc' },
   hero: { paddingTop: 20, paddingBottom: 16, paddingHorizontal: SPACING.xxl },
   heroTitle: { fontSize: 19, fontFamily: FONT.extraBold, color: '#ffffff' },
   heroSubtitle: { fontSize: 12, fontFamily: FONT.medium, color: 'rgba(255,255,255,0.8)', marginTop: 2 },

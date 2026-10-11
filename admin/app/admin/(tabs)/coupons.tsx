@@ -251,7 +251,7 @@ export default function CouponsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020d06' },
+  container: { flex: 1, backgroundColor: '#f8fafc' },
   hero: { paddingTop: 40, paddingBottom: 16, paddingHorizontal: 16 },
   heroHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
   backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   statLbl: { fontSize: 10, fontFamily: FONT.medium, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
   statDivider: { width: 1, height: 22, backgroundColor: 'rgba(255,255,255,0.2)' },
   scrollContent: { padding: 14, paddingBottom: 32, gap: 14 },
-  card: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: 14, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' },
+  card: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 14, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' },
   cardTitle: { fontSize: 14, fontFamily: FONT.bold, color: '#ffffff' },
   cardSub: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 },
   inputRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
   sectionHeaderTitle: { fontSize: 11.5, fontFamily: FONT.bold, color: '#64748b', letterSpacing: 0.5, marginTop: 4 },
   offerCard: { borderRadius: RADIUS.xl, padding: 14, borderWidth: 1 },
   offerCardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
-  codeBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,255,135,0.03)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#cbd5e1' },
+  codeBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#ffffff', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#cbd5e1' },
   codeBadgeText: { fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff' },
   discountPill: { backgroundColor: '#0f172a', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill },
   discountPillText: { fontSize: 10.5, fontFamily: FONT.extraBold, color: '#ffffff' },

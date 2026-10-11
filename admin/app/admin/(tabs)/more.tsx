@@ -533,7 +533,7 @@ function ContactModal({ mode, onClose }: { mode: 'SUPPORT' | 'CONTACT' | null; o
                   ? 'Need help? Reach out to our Super Admin support directly.'
                   : 'Official Contact Details'}
               </Text>
-              <View style={{ backgroundColor: '#020d06', borderRadius: RADIUS.md, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}>
+              <View style={{ backgroundColor: '#ffffff', borderRadius: RADIUS.md, padding: 10, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}>
                 <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                   Super Admin Profile
                 </Text>
@@ -579,7 +579,7 @@ function ContactModal({ mode, onClose }: { mode: 'SUPPORT' | 'CONTACT' | null; o
 
 const contactStyles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.55)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  card: { width: '100%', maxWidth: 400, backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.xl, padding: SPACING.lg },
+  card: { width: '100%', maxWidth: 400, backgroundColor: '#ffffff', borderRadius: RADIUS.xl, padding: SPACING.lg },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   title: { fontSize: 16, fontFamily: FONT.extraBold, color: '#ffffff' },
   subText: { fontSize: 12.5, fontFamily: FONT.medium, color: '#64748b', marginBottom: 10 },
@@ -610,7 +610,7 @@ const styles = StyleSheet.create({
   section: { marginBottom: 12 },
   sectionTitle: { fontSize: 11, fontFamily: FONT.bold, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 5 },
   sectionCard: {
-    backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, ...premiumShadow('#0f172a', 'sm'),
+    backgroundColor: '#ffffff', borderRadius: RADIUS.lg, ...premiumShadow('#0f172a', 'sm'),
   },
   row: {
     flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12,
@@ -714,7 +714,7 @@ export function UserGuidesModal({ visible, onClose }: { visible: boolean; onClos
           </View>
 
           {/* Multi-Language Selector Bar */}
-          <View style={{ backgroundColor: '#020d06', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', marginBottom: 12 }}>
+          <View style={{ backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', marginBottom: 12 }}>
             <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#475569', marginBottom: 6 }}>
               🌐 Select Guide Language for PDF Generation:
             </Text>
@@ -744,7 +744,7 @@ export function UserGuidesModal({ visible, onClose }: { visible: boolean; onClos
             <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
               <View style={{ gap: 10 }}>
                 {docsList.map((doc: any) => (
-                  <View key={doc.key} style={{ backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.md, padding: 12, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View key={doc.key} style={{ backgroundColor: '#ffffff', borderRadius: RADIUS.md, padding: 12, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <View style={{ flex: 1, paddingRight: 8 }}>
                       <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff' }}>{doc.title}</Text>
                       <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 }}>{doc.description}</Text>
@@ -866,7 +866,7 @@ export function SuperAdminWorkspaceModal({ visible, onClose }: { visible: boolea
               </Text>
 
               {lastBackupInfo?.fileName ? (
-                <View style={{ backgroundColor: 'rgba(0,255,135,0.03)', padding: 10, borderRadius: RADIUS.sm, marginBottom: 10, borderWidth: 1, borderColor: '#cbd5e1' }}>
+                <View style={{ backgroundColor: '#ffffff', padding: 10, borderRadius: RADIUS.sm, marginBottom: 10, borderWidth: 1, borderColor: '#cbd5e1' }}>
                   <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>LAST BACKUP FILE:</Text>
                   <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#15803d', marginTop: 2 }}>{lastBackupInfo.fileName}</Text>
                   <Text style={{ fontSize: 9, color: '#94a3b8', marginTop: 2 }}>☁️ {lastBackupInfo.cloudFolder || 'GoogleDrive/FarmsKing_Backups'}</Text>
@@ -892,7 +892,7 @@ export function SuperAdminWorkspaceModal({ visible, onClose }: { visible: boolea
 
                 {/* Download Backup Button */}
                 <TouchableOpacity
-                  style={{ backgroundColor: 'rgba(0,255,135,0.03)', paddingVertical: 9, borderRadius: RADIUS.sm, alignItems: 'center', borderWidth: 1, borderColor: '#15803d', flexDirection: 'row', justifyContent: 'center', gap: 6 }}
+                  style={{ backgroundColor: '#ffffff', paddingVertical: 9, borderRadius: RADIUS.sm, alignItems: 'center', borderWidth: 1, borderColor: '#15803d', flexDirection: 'row', justifyContent: 'center', gap: 6 }}
                   onPress={handleDownloadBackup}
                 >
                   <Ionicons name="download-outline" size={16} color="#15803d" />
@@ -903,20 +903,20 @@ export function SuperAdminWorkspaceModal({ visible, onClose }: { visible: boolea
 
 
             {/* Section 2: System Health Monitor */}
-            <View style={{ backgroundColor: '#020d06', padding: 14, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}>
+            <View style={{ backgroundColor: '#ffffff', padding: 14, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}>
               <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#475569', marginBottom: 10 }}>
                 📊 Workspace Health & Server Status
               </Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                <View style={{ flex: 1, minWidth: 100, backgroundColor: 'rgba(0,255,135,0.03)', padding: 10, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#cbd5e1' }}>
+                <View style={{ flex: 1, minWidth: 100, backgroundColor: '#ffffff', padding: 10, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#cbd5e1' }}>
                   <Text style={{ fontSize: 10, color: '#64748b', fontFamily: FONT.bold }}>RAM USAGE</Text>
                   <Text style={{ fontSize: 14, color: '#15803d', fontFamily: FONT.bold, marginTop: 2 }}>142 MB</Text>
                 </View>
-                <View style={{ flex: 1, minWidth: 100, backgroundColor: 'rgba(0,255,135,0.03)', padding: 10, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#cbd5e1' }}>
+                <View style={{ flex: 1, minWidth: 100, backgroundColor: '#ffffff', padding: 10, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#cbd5e1' }}>
                   <Text style={{ fontSize: 10, color: '#64748b', fontFamily: FONT.bold }}>API LATENCY</Text>
                   <Text style={{ fontSize: 14, color: '#0284c7', fontFamily: FONT.bold, marginTop: 2 }}>36 ms</Text>
                 </View>
-                <View style={{ flex: 1, minWidth: 100, backgroundColor: 'rgba(0,255,135,0.03)', padding: 10, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#cbd5e1' }}>
+                <View style={{ flex: 1, minWidth: 100, backgroundColor: '#ffffff', padding: 10, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#cbd5e1' }}>
                   <Text style={{ fontSize: 10, color: '#64748b', fontFamily: FONT.bold }}>DB ROWS</Text>
                   <Text style={{ fontSize: 14, color: '#c026d3', fontFamily: FONT.bold, marginTop: 2 }}>14,890</Text>
                 </View>
@@ -924,7 +924,7 @@ export function SuperAdminWorkspaceModal({ visible, onClose }: { visible: boolea
             </View>
 
             {/* Section 3: Dev Tools */}
-            <View style={{ backgroundColor: 'rgba(0,255,135,0.03)', padding: 14, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#cbd5e1', gap: 8 }}>
+            <View style={{ backgroundColor: '#ffffff', padding: 14, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#cbd5e1', gap: 8 }}>
               <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#e2e8f0' }}>
                 🛠️ Workspace Developer & System Tools
               </Text>
@@ -1120,7 +1120,7 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
                   <View>
                     <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0369a1', marginBottom: 4 }}>App Name</Text>
                     <TextInput
-                      style={{ borderWidth: 1, borderColor: '#bae6fd', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#ffffff', backgroundColor: 'rgba(0,255,135,0.03)' }}
+                      style={{ borderWidth: 1, borderColor: '#bae6fd', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#ffffff', backgroundColor: '#ffffff' }}
                       value={formAppName}
                       onChangeText={setFormAppName}
                       placeholder="e.g. FarmsKing"
@@ -1129,7 +1129,7 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
                   <View>
                     <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0369a1', marginBottom: 4 }}>Tagline</Text>
                     <TextInput
-                      style={{ borderWidth: 1, borderColor: '#bae6fd', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 12.5, fontFamily: FONT.medium, color: '#ffffff', backgroundColor: 'rgba(0,255,135,0.03)' }}
+                      style={{ borderWidth: 1, borderColor: '#bae6fd', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 12.5, fontFamily: FONT.medium, color: '#ffffff', backgroundColor: '#ffffff' }}
                       value={formTagline}
                       onChangeText={setFormTagline}
                       placeholder="e.g. Smart Farming, Better Future"
@@ -1139,7 +1139,7 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
                     <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0369a1', marginBottom: 4 }}>Brand Logo Image URL</Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                       <TextInput
-                        style={{ flex: 1, borderWidth: 1, borderColor: '#bae6fd', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 12, fontFamily: FONT.regular, color: '#ffffff', backgroundColor: 'rgba(0,255,135,0.03)' }}
+                        style={{ flex: 1, borderWidth: 1, borderColor: '#bae6fd', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 12, fontFamily: FONT.regular, color: '#ffffff', backgroundColor: '#ffffff' }}
                         value={formLogoUrl}
                         onChangeText={setFormLogoUrl}
                         placeholder="https://... or click Browse to upload"
@@ -1162,7 +1162,7 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
                     </View>
 
                     {formLogoUrl ? (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, backgroundColor: 'rgba(0,255,135,0.03)', padding: 6, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#cbd5e1' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, backgroundColor: '#ffffff', padding: 6, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#cbd5e1' }}>
                         <Avatar uri={formLogoUrl} size={36} />
                         <Text style={{ fontSize: 11, fontFamily: FONT.semiBold, color: '#16a34a', flex: 1 }} numberOfLines={1}>
                           ✓ Brand Logo Uploaded
@@ -1184,7 +1184,7 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
             </View>
 
             {/* Section 2: UPI Receiver Settings */}
-            <View style={{ backgroundColor: 'rgba(0,255,135,0.03)', padding: 14, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', gap: 8 }}>
+            <View style={{ backgroundColor: '#ffffff', padding: 14, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', gap: 8 }}>
               <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 💳 Official UPI Receiver (Database Registered)
               </Text>
@@ -1194,7 +1194,7 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
                   <View>
                     <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#64748b', marginBottom: 4 }}>UPI ID (VPA)</Text>
                     <TextInput
-                      style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#ffffff', backgroundColor: 'rgba(0,255,135,0.03)' }}
+                      style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#ffffff', backgroundColor: '#ffffff' }}
                       value={formUpiId}
                       onChangeText={setFormUpiId}
                       placeholder="e.g. surindersinghmakhu-5@oksbi"
@@ -1203,7 +1203,7 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
                   <View>
                     <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#64748b', marginBottom: 4 }}>UPI Payee Name</Text>
                     <TextInput
-                      style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#ffffff', backgroundColor: 'rgba(0,255,135,0.03)' }}
+                      style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#ffffff', backgroundColor: '#ffffff' }}
                       value={formUpiPayeeName}
                       onChangeText={setFormUpiPayeeName}
                       placeholder="e.g. Surinder Singh"
@@ -1211,7 +1211,7 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
                   </View>
                 </View>
               ) : (
-                <View style={{ backgroundColor: '#020d06', padding: 10, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#cbd5e1' }}>
+                <View style={{ backgroundColor: '#ffffff', padding: 10, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#cbd5e1' }}>
                   <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>UPI ID (VPA):</Text>
                   <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff', marginTop: 1 }}>{formUpiId}</Text>
                   <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b', marginTop: 6 }}>PAYEE NAME:</Text>
@@ -1221,7 +1221,7 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
             </View>
 
             {/* Section 3: Super Admin Profile Details */}
-            <View style={{ backgroundColor: 'rgba(0,255,135,0.03)', padding: 14, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', gap: 8 }}>
+            <View style={{ backgroundColor: '#ffffff', padding: 14, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', gap: 8 }}>
               <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 👑 Super Admin Contact Profile
               </Text>
@@ -1231,7 +1231,7 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
                   <View>
                     <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#64748b', marginBottom: 4 }}>Admin Name</Text>
                     <TextInput
-                      style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#ffffff', backgroundColor: 'rgba(0,255,135,0.03)' }}
+                      style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#ffffff', backgroundColor: '#ffffff' }}
                       value={formAdminName}
                       onChangeText={setFormAdminName}
                       placeholder="e.g. Surinder Singh"
@@ -1240,7 +1240,7 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
                   <View>
                     <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#64748b', marginBottom: 4 }}>Mobile Number</Text>
                     <TextInput
-                      style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#ffffff', backgroundColor: 'rgba(0,255,135,0.03)' }}
+                      style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#ffffff', backgroundColor: '#ffffff' }}
                       value={formAdminMobile}
                       onChangeText={setFormAdminMobile}
                       placeholder="e.g. 9577622000"
@@ -1250,7 +1250,7 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
                   <View>
                     <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#64748b', marginBottom: 4 }}>Email Address</Text>
                     <TextInput
-                      style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#ffffff', backgroundColor: 'rgba(0,255,135,0.03)' }}
+                      style={{ borderWidth: 1, borderColor: '#cbd5e1', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 6, fontSize: 13, fontFamily: FONT.bold, color: '#ffffff', backgroundColor: '#ffffff' }}
                       value={formAdminEmail}
                       onChangeText={setFormAdminEmail}
                       placeholder="e.g. support@farmsking.com"
@@ -1294,11 +1294,11 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
             </View>
 
             {/* Section 4: Corporate Registration & Trademarks */}
-            <View style={{ backgroundColor: 'rgba(0,255,135,0.03)', padding: 14, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', gap: 8 }}>
+            <View style={{ backgroundColor: '#ffffff', padding: 14, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', gap: 8 }}>
               <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 🏛️ Corporate Registration & Trademarks
               </Text>
-              <View style={{ backgroundColor: '#020d06', padding: 10, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#cbd5e1' }}>
+              <View style={{ backgroundColor: '#ffffff', padding: 10, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: '#cbd5e1' }}>
                 <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>PARENT COMPANY:</Text>
                 <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#ffffff', marginTop: 1 }}>CoreKing Technologies Private Limited</Text>
                 
@@ -1361,7 +1361,7 @@ export function AdminInfoModal({ visible, onClose }: { visible: boolean; onClose
 
 const pModalStyles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.65)', justifyContent: 'center', alignItems: 'center', padding: SPACING.md },
-  card: { width: '100%', maxWidth: 440, backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: 18, elevation: 8 },
+  card: { width: '100%', maxWidth: 440, backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 18, elevation: 8 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   title: { fontSize: 16, fontFamily: FONT.bold, color: '#ffffff' },
   pHead: { fontSize: 13, fontFamily: FONT.bold, color: '#166534', marginTop: 10, marginBottom: 4 },

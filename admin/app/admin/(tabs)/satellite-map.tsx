@@ -319,7 +319,7 @@ export default function SatelliteMapScreen() {
                 </View>
 
                 {/* 1. Full Crop Profile Details in Easy English */}
-                <View style={{ backgroundColor: '#ffffff', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#bfdbfe', marginBottom: 8, gap: 4 }}>
+                <View style={{ backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: 10, padding: 10, borderWidth: 1, borderColor: '#bfdbfe', marginBottom: 8, gap: 4 }}>
                   <Text style={{ fontSize: 12, fontWeight: '800', color: '#1e3a8a' }}>
                     📋 Field & Crop Profile Summary
                   </Text>
@@ -682,7 +682,7 @@ export default function SatelliteMapScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#020d06',
   },
   header: {
     flexDirection: 'row',
@@ -690,7 +690,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
   },
@@ -744,7 +744,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   emptyCropsCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',
@@ -813,7 +813,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   selectorCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 14,
     padding: 14,
     marginBottom: 14,
@@ -830,7 +830,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     padding: 12,
     borderRadius: 10,
     borderWidth: 1,
@@ -847,7 +847,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   adminCommandCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1.5,
@@ -893,7 +893,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   farmerActionCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1.5,
@@ -901,7 +901,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   advisorAnalysisCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1.5,
@@ -924,7 +924,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     marginBottom: 10,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     padding: 10,
     borderRadius: 10,
   },
@@ -1004,7 +1004,7 @@ const styles = StyleSheet.create({
     color: '#2563eb',
   },
   mapContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
@@ -1128,7 +1128,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 10,
     padding: 10,
     borderWidth: 1,
@@ -1209,7 +1209,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   zoneCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 14,
     padding: 14,
     marginBottom: 12,
@@ -1244,7 +1244,7 @@ const styles = StyleSheet.create({
   },
   statBox: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     padding: 8,
     borderRadius: 8,
   },
@@ -1267,7 +1267,7 @@ const styles = StyleSheet.create({
   },
   pickerModalCard: {
     width: '100%',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 20,
     padding: 18,
   },
@@ -1286,7 +1286,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,

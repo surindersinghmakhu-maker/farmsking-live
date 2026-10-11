@@ -22,6 +22,7 @@ import { GlobalCommandSearchModal } from '@/components/GlobalCommandSearchModal'
 import { AdminLiveToastNotification } from '@/components/AdminLiveToastNotification';
 import { AdminHealthRadarModal } from '@/components/AdminHealthRadarModal';
 import { AdminImpersonationBanner, ImpersonationTarget } from '@/components/AdminImpersonationBanner';
+import { MobilePillarsMenuModal } from '@/components/MobilePillarsMenuModal';
 import { ADMIN_PILLARS, detectPillarFromRoute, NavigationPillar, SubTabItem } from '@/constants/navigationPillars';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -155,6 +156,7 @@ export default function TabLayout() {
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isHealthRadarOpen, setIsHealthRadarOpen] = useState(false);
+  const [isPillarsMenuOpen, setIsPillarsMenuOpen] = useState(false);
   const [impersonationTarget, setImpersonationTarget] = useState<ImpersonationTarget | null>(null);
   const [selectedPillarId, setSelectedPillarId] = useState<string>(() =>
     detectPillarFromRoute(pathname, localParams)
@@ -188,6 +190,7 @@ export default function TabLayout() {
   useEffect(() => {
     const handleOpenSearch = () => setIsSearchOpen(true);
     const handleOpenHealthRadar = () => setIsHealthRadarOpen(true);
+    const handleOpenPillarsMenu = () => setIsPillarsMenuOpen(true);
     const handleStartImpersonation = (e: any) => {
       if (e.detail) {
         setImpersonationTarget(e.detail);
@@ -197,12 +200,14 @@ export default function TabLayout() {
     if (typeof window !== 'undefined') {
       window.addEventListener('open-command-search', handleOpenSearch);
       window.addEventListener('admin-open-health-radar', handleOpenHealthRadar);
+      window.addEventListener('admin-open-pillars-menu', handleOpenPillarsMenu);
       window.addEventListener('admin-start-impersonation', handleStartImpersonation);
     }
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('open-command-search', handleOpenSearch);
         window.removeEventListener('admin-open-health-radar', handleOpenHealthRadar);
+        window.removeEventListener('admin-open-pillars-menu', handleOpenPillarsMenu);
         window.removeEventListener('admin-start-impersonation', handleStartImpersonation);
       }
     };
@@ -330,14 +335,14 @@ export default function TabLayout() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#f8fafc', flexDirection: isDesktop ? 'row' : 'column' }}>
+    <View style={{ flex: 1, backgroundColor: '#020d06', flexDirection: isDesktop ? 'row' : 'column' }}>
       {/* 💻 DESKTOP 2-TIER EXECUTIVE SIDEBAR (Visible on screens >= 768px) */}
       {isDesktop && (
         <View style={desktopStyles.sidebar}>
           {/* Brand Logo & Platform Title */}
           <View style={desktopStyles.brandLogoBox}>
-            <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: '#10b981', alignItems: 'center', justifyContent: 'center' }}>
-              <BrandLogo size={22} iconColor="#ffffff" />
+            <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: '#00ff87', alignItems: 'center', justifyContent: 'center' }}>
+              <BrandLogo size={22} iconColor="#020d06" />
             </View>
             <View style={{ flex: 1, marginLeft: 10 }}>
               <Text style={desktopStyles.brandTitle}>
@@ -772,6 +777,11 @@ export default function TabLayout() {
           visible={isHealthRadarOpen}
           onClose={() => setIsHealthRadarOpen(false)}
         />
+        <MobilePillarsMenuModal
+          visible={isPillarsMenuOpen}
+          onClose={() => setIsPillarsMenuOpen(false)}
+          activePillarId={selectedPillarId}
+        />
         <AdminLiveToastNotification />
       </View>
     </View>
@@ -842,25 +852,25 @@ const desktopStyles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: RADIUS.lg,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0, 255, 135, 0.16)',
     marginBottom: 4,
     position: 'relative',
     overflow: 'hidden',
   },
   pillarCardActive: {
-    backgroundColor: '#ecfdf5',
-    borderColor: '#059669',
-    shadowColor: '#059669',
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+    borderColor: '#00ff87',
+    shadowColor: '#00ff87',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 3,
   },
   pillarCardHover: {
-    backgroundColor: '#f8fafc',
-    borderColor: '#cbd5e1',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: 'rgba(0, 255, 135, 0.35)',
   },
   pillarActiveBar: {
     position: 'absolute',
@@ -868,7 +878,7 @@ const desktopStyles = StyleSheet.create({
     top: 6,
     bottom: 6,
     width: 3.5,
-    backgroundColor: '#059669',
+    backgroundColor: '#00ff87',
     borderTopRightRadius: 3,
     borderBottomRightRadius: 3,
   },
@@ -876,15 +886,15 @@ const desktopStyles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: 'rgba(0, 255, 135, 0.08)',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0, 255, 135, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   pillarIconWrapActive: {
-    backgroundColor: '#059669',
-    borderColor: '#059669',
+    backgroundColor: '#00ff87',
+    borderColor: '#00ff87',
   },
   pillarContentCol: {
     flex: 1,
@@ -893,32 +903,32 @@ const desktopStyles = StyleSheet.create({
   pillarTitle: {
     fontSize: 12,
     fontFamily: FONT.bold,
-    color: '#334155',
+    color: '#cbd5e1',
     letterSpacing: 0.1,
   },
   pillarTitleActive: {
-    color: '#0f172a',
+    color: '#00ff87',
     fontFamily: FONT.extraBold,
   },
   pillarBadge: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: 'rgba(0, 255, 135, 0.12)',
     paddingHorizontal: 6,
     paddingVertical: 1.5,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0, 255, 135, 0.25)',
   },
   pillarBadgeActive: {
-    backgroundColor: '#d1fae5',
-    borderColor: '#a7f3d0',
+    backgroundColor: 'rgba(0, 255, 135, 0.25)',
+    borderColor: '#00ff87',
   },
   pillarBadgeText: {
     fontSize: 9,
     fontFamily: FONT.bold,
-    color: '#64748b',
+    color: '#94a3b8',
   },
   pillarBadgeTextActive: {
-    color: '#059669',
+    color: '#00ff87',
     fontFamily: FONT.extraBold,
   },
   navMenuItem: {
@@ -928,40 +938,40 @@ const desktopStyles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: RADIUS.lg,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0, 255, 135, 0.16)',
   },
   navMenuItemActive: {
-    backgroundColor: '#ecfdf5',
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
     borderWidth: 1,
-    borderColor: '#059669',
-    shadowColor: '#059669',
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 2,
+    borderColor: '#00ff87',
+    shadowColor: '#00ff87',
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 3,
   },
   navIconWrap: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: 'rgba(0, 255, 135, 0.08)',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0, 255, 135, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   navIconWrapActive: {
-    backgroundColor: '#059669',
-    borderColor: '#059669',
+    backgroundColor: '#00ff87',
+    borderColor: '#00ff87',
   },
   navMenuItemText: {
     fontSize: 13,
     fontFamily: FONT.bold,
-    color: '#334155',
+    color: '#cbd5e1',
   },
   navMenuItemTextActive: {
-    color: '#059669',
+    color: '#00ff87',
     fontFamily: FONT.extraBold,
   },
   sidebarBottom: {
@@ -969,28 +979,28 @@ const desktopStyles = StyleSheet.create({
     marginTop: 'auto',
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
+    borderTopColor: 'rgba(0, 255, 135, 0.15)',
   },
   headerActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#ecfdf5',
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: RADIUS.lg,
     borderWidth: 1,
-    borderColor: '#a7f3d0',
+    borderColor: 'rgba(0, 255, 135, 0.3)',
   },
   langSwitcherBox: {
     flexDirection: 'row',
     gap: 3,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     padding: 3,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0, 255, 135, 0.2)',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
@@ -1001,31 +1011,31 @@ const desktopStyles = StyleSheet.create({
     alignItems: 'center',
   },
   langBtnActive: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0, 255, 135, 0.2)',
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: 'rgba(0, 255, 135, 0.4)',
   },
   langBtnText: {
     fontSize: 10,
     fontFamily: FONT.bold,
-    color: '#64748b',
+    color: '#94a3b8',
   },
   langBtnTextActive: {
-    color: '#0f172a',
+    color: '#00ff87',
     fontFamily: FONT.extraBold,
   },
   topTabsHeaderBar: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#03140a',
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    borderBottomColor: 'rgba(0, 255, 135, 0.2)',
     paddingVertical: 8,
     paddingHorizontal: 16,
     zIndex: 90,
-    shadowColor: '#0f172a',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.3,
     shadowRadius: 10,
-    elevation: 2,
+    elevation: 3,
     ...(Platform.OS === 'web' ? ({ backdropFilter: 'blur(20px)' } as any) : {}),
   },
   topTabsHeaderInner: {
@@ -1045,8 +1055,10 @@ const desktopStyles = StyleSheet.create({
   segmentedTabContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f1f5f9',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.2)',
     padding: 3,
     gap: 3,
   },
@@ -1060,35 +1072,35 @@ const desktopStyles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   segmentedTabItemActive: {
-    backgroundColor: '#ffffff',
-    shadowColor: '#0f172a',
+    backgroundColor: '#00ff87',
+    shadowColor: '#00ff87',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 3,
   },
   segmentedTabItemHover: {
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   segmentedTabText: {
     fontSize: 12,
     letterSpacing: 0.1,
   },
   segmentedTabTextInactive: {
-    color: '#64748b',
+    color: '#94a3b8',
     fontFamily: FONT.medium,
   },
   segmentedTabTextActive: {
-    color: '#0f172a',
+    color: '#020d06',
     fontFamily: FONT.bold,
   },
   spotlightTriggerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#f8fafc',
+    backgroundColor: 'rgba(0, 255, 135, 0.08)',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0, 255, 135, 0.3)',
     paddingHorizontal: 11,
     paddingVertical: 6,
     borderRadius: RADIUS.pill,
@@ -1097,28 +1109,28 @@ const desktopStyles = StyleSheet.create({
   spotlightTriggerText: {
     fontSize: 11,
     fontFamily: FONT.medium,
-    color: '#64748b',
+    color: '#94a3b8',
   },
   kbdBadge: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     paddingHorizontal: 5,
     paddingVertical: 1.5,
     borderRadius: RADIUS.sm,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   kbdText: {
     fontSize: 9,
     fontFamily: FONT.bold,
-    color: '#059669',
+    color: '#00ff87',
   },
   healthRadarTriggerBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#ecfdf5',
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
     borderWidth: 1,
-    borderColor: '#a7f3d0',
+    borderColor: 'rgba(0, 255, 135, 0.3)',
     paddingHorizontal: 10,
     paddingVertical: 5.5,
     borderRadius: RADIUS.pill,
@@ -1128,11 +1140,11 @@ const desktopStyles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#059669',
+    backgroundColor: '#00ff87',
   },
   healthRadarText: {
     fontSize: 11,
     fontFamily: FONT.bold,
-    color: '#059669',
+    color: '#00ff87',
   },
 });

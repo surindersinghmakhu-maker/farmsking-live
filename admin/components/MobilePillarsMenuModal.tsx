@@ -1,0 +1,480 @@
+import React, { useState, useMemo } from 'react';
+import {
+  Modal,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  Platform,
+  Pressable,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { FONT, RADIUS, THEME_4D, premiumShadow } from '@/constants/theme';
+import { ADMIN_PILLARS, NavigationPillar, SubTabItem } from '@/constants/navigationPillars';
+
+interface Props {
+  visible: boolean;
+  onClose: () => void;
+  activePillarId?: string;
+}
+
+export const MobilePillarsMenuModal: React.FC<Props> = ({
+  visible,
+  onClose,
+  activePillarId,
+}) => {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedPillars, setExpandedPillars] = useState<Record<string, boolean>>(() => {
+    // Expand active pillar or first two by default
+    const initial: Record<string, boolean> = {};
+    ADMIN_PILLARS.forEach((p, idx) => {
+      initial[p.id] = p.id === activePillarId || idx < 2;
+    });
+    return initial;
+  });
+
+  const toggleExpand = (pillarId: string) => {
+    setExpandedPillars((prev) => ({
+      ...prev,
+      [pillarId]: !prev[pillarId],
+    }));
+  };
+
+  const handleSelectSubTab = (subTab: SubTabItem) => {
+    onClose();
+    if (subTab.params) {
+      router.push({ pathname: subTab.path as any, params: subTab.params });
+    } else {
+      router.push(subTab.path as any);
+    }
+  };
+
+  const filteredPillars = useMemo(() => {
+    if (!searchQuery.trim()) return ADMIN_PILLARS;
+    const q = searchQuery.toLowerCase();
+    return ADMIN_PILLARS.map((pillar) => {
+      const matchPillar = pillar.title.toLowerCase().includes(q) || pillar.shortTitle.toLowerCase().includes(q);
+      const matchTabs = pillar.subTabs.filter(
+        (t) =>
+          t.title.toLowerCase().includes(q) ||
+          (t.shortTitle && t.shortTitle.toLowerCase().includes(q))
+      );
+      if (matchPillar || matchTabs.length > 0) {
+        return {
+          ...pillar,
+          subTabs: matchTabs.length > 0 ? matchTabs : pillar.subTabs,
+        };
+      }
+      return null;
+    }).filter(Boolean) as NavigationPillar[];
+  }, [searchQuery]);
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View style={styles.overlay}>
+        <Pressable style={styles.backdropPressable} onPress={onClose} />
+
+        <View style={styles.sheetContainer}>
+          {/* Header Indicator Pull Bar */}
+          <View style={styles.pullIndicatorBox}>
+            <View style={styles.pullIndicator} />
+          </View>
+
+          {/* Modal Header Row */}
+          <View style={styles.headerRow}>
+            <View style={styles.headerTitleBlock}>
+              <View style={styles.headerBadge}>
+                <View style={styles.badgePulseDot} />
+                <Text style={styles.headerBadgeText}>7 DOMAIN PILLARS</Text>
+              </View>
+              <Text style={styles.sheetTitle}>Command Navigation</Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.closeBtn}
+              onPress={onClose}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="close" size={20} color="#94a3b8" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Quick Search Bar */}
+          <View style={styles.searchBarWrap}>
+            <Ionicons name="search" size={16} color="#00ff87" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search 25+ tools (e.g. Products, Ledger, Doctors)..."
+              placeholderTextColor="#64748b"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoCapitalize="none"
+              clearButtonMode="while-editing"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')} activeOpacity={0.7}>
+                <Ionicons name="close-circle" size={16} color="#94a3b8" />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Pillars List */}
+          <ScrollView
+            style={styles.scrollContent}
+            contentContainerStyle={styles.scrollInner}
+            showsVerticalScrollIndicator={false}
+          >
+            {filteredPillars.map((pillar) => {
+              const isExpanded = searchQuery.trim().length > 0 ? true : !!expandedPillars[pillar.id];
+              const isActive = pillar.id === activePillarId;
+
+              return (
+                <View key={pillar.id} style={styles.pillarCard}>
+                  {/* Pillar Header (Accordion Toggle) */}
+                  <TouchableOpacity
+                    style={[
+                      styles.pillarCardHeader,
+                      isActive && styles.pillarCardHeaderActive,
+                    ]}
+                    activeOpacity={0.8}
+                    onPress={() => toggleExpand(pillar.id)}
+                  >
+                    <View
+                      style={[
+                        styles.pillarIconWrap,
+                        { borderColor: `${pillar.color}50` },
+                        isActive && { backgroundColor: `${pillar.color}25` },
+                      ]}
+                    >
+                      <Ionicons
+                        name={isExpanded ? pillar.iconFilled : pillar.icon}
+                        size={17}
+                        color={pillar.color}
+                      />
+                    </View>
+
+                    <View style={styles.pillarMetaCol}>
+                      <Text
+                        style={[
+                          styles.pillarTitleText,
+                          isActive && { color: '#00ff87' },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {pillar.title}
+                      </Text>
+                      <Text style={styles.pillarSubtitleText}>
+                        {pillar.subTabs.length} Administrative Tools
+                      </Text>
+                    </View>
+
+                    <View style={styles.pillarHeaderRight}>
+                      <View
+                        style={[
+                          styles.pillarBadgePill,
+                          { borderColor: `${pillar.color}40`, backgroundColor: `${pillar.color}15` },
+                        ]}
+                      >
+                        <Text style={[styles.pillarBadgeText, { color: pillar.color }]}>
+                          {pillar.badge}
+                        </Text>
+                      </View>
+                      <Ionicons
+                        name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                        size={16}
+                        color="#64748b"
+                      />
+                    </View>
+                  </TouchableOpacity>
+
+                  {/* Sub-Tabs Grid / Pills */}
+                  {isExpanded && (
+                    <View style={styles.subTabsContainer}>
+                      {pillar.subTabs.map((subTab) => (
+                        <TouchableOpacity
+                          key={subTab.id}
+                          style={styles.subTabPill}
+                          activeOpacity={0.75}
+                          onPress={() => handleSelectSubTab(subTab)}
+                        >
+                          <Ionicons
+                            name={subTab.icon}
+                            size={14}
+                            color="#00ff87"
+                          />
+                          <Text style={styles.subTabTitleText} numberOfLines={1}>
+                            {subTab.title}
+                          </Text>
+                          <Ionicons
+                            name="arrow-forward"
+                            size={12}
+                            color="#64748b"
+                            style={{ marginLeft: 'auto' }}
+                          />
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+          </ScrollView>
+
+          {/* Bottom Fast Action Footer */}
+          <View style={styles.footerRow}>
+            <TouchableOpacity
+              style={styles.footerLinkBtn}
+              activeOpacity={0.8}
+              onPress={() => {
+                onClose();
+                router.push('/admin/(tabs)/admin_more');
+              }}
+            >
+              <Ionicons name="grid-outline" size={14} color="#00ff87" />
+              <Text style={styles.footerLinkText}>Open Full More Hub</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.footerLinkBtn}
+              activeOpacity={0.8}
+              onPress={() => {
+                onClose();
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('admin-open-health-radar'));
+                }
+              }}
+            >
+              <Ionicons name="pulse-outline" size={14} color="#10b981" />
+              <Text style={styles.footerLinkText}>99.9% Health Radar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    justifyContent: 'flex-end',
+  },
+  backdropPressable: {
+    flex: 1,
+  },
+  sheetContainer: {
+    width: '100%',
+    maxHeight: '88%',
+    backgroundColor: '#020905',
+    borderTopLeftRadius: RADIUS.xl,
+    borderTopRightRadius: RADIUS.xl,
+    borderTopWidth: 1.5,
+    borderTopColor: 'rgba(0, 255, 135, 0.35)',
+    paddingBottom: Platform.OS === 'ios' ? 28 : 16,
+    ...premiumShadow('#00ff87', 'lg'),
+    ...(Platform.OS === 'web'
+      ? ({
+        backdropFilter: 'blur(24px)',
+      } as any)
+      : {}),
+  },
+  pullIndicatorBox: {
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  pullIndicator: {
+    width: 44,
+    height: 4.5,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 18,
+    marginBottom: 12,
+  },
+  headerTitleBlock: {
+    gap: 3,
+  },
+  headerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.3)',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+  },
+  badgePulseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#00ff87',
+  },
+  headerBadgeText: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    color: '#00ff87',
+    letterSpacing: 0.8,
+  },
+  sheetTitle: {
+    fontSize: 18,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    letterSpacing: -0.2,
+  },
+  closeBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  searchBarWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+    borderRadius: RADIUS.lg,
+    paddingHorizontal: 12,
+    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: FONT.medium,
+    color: '#ffffff',
+    paddingVertical: 4,
+  },
+  scrollContent: {
+    maxHeight: 460,
+  },
+  scrollInner: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    gap: 10,
+  },
+  pillarCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.15)',
+    overflow: 'hidden',
+  },
+  pillarCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 10,
+  },
+  pillarCardHeaderActive: {
+    backgroundColor: 'rgba(0, 255, 135, 0.06)',
+  },
+  pillarIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pillarMetaCol: {
+    flex: 1,
+  },
+  pillarTitleText: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  pillarSubtitleText: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+    marginTop: 1,
+  },
+  pillarHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  pillarBadgePill: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+  },
+  pillarBadgeText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+  },
+  subTabsContainer: {
+    paddingHorizontal: 12,
+    paddingBottom: 12,
+    paddingTop: 4,
+    gap: 6,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  subTabPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.12)',
+  },
+  subTabTitleText: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#e2e8f0',
+    flex: 1,
+  },
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  footerLinkBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+  },
+  footerLinkText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
+  },
+});

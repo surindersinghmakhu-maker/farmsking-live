@@ -294,7 +294,7 @@ export default function AdminProductsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: '#020d06' },
   hero: {
     paddingTop: 18,
     paddingBottom: 16,

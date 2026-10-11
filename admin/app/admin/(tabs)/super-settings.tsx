@@ -439,7 +439,7 @@ const wStyles = StyleSheet.create({
   groupInput: {
     flex: 1, borderWidth: 1.5, borderColor: '#c4b5fd',
     borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 9,
-    fontSize: 12, fontFamily: FONT.medium, backgroundColor: '#ffffff', color: '#ffffff',
+    fontSize: 12, fontFamily: FONT.medium, backgroundColor: 'rgba(0,255,135,0.03)', color: '#ffffff',
   },
   groupSaveBtn: {
     borderRadius: RADIUS.md, paddingHorizontal: 16, paddingVertical: 10,
@@ -496,7 +496,7 @@ const wStyles = StyleSheet.create({
   qrInstructTitle: { fontSize: 12, fontFamily: FONT.extraBold, color: '#0369a1', marginBottom: 2 },
   qrStep: { fontSize: 11.5, fontFamily: FONT.medium, color: '#1e40af' },
   qrImageBox: {
-    backgroundColor: '#ffffff', padding: 10,
+    backgroundColor: 'rgba(0,255,135,0.03)', padding: 10,
     borderRadius: RADIUS.lg, borderWidth: 2.5, borderColor: '#25d366',
   },
   qrImage: { width: 220, height: 220 },
@@ -504,12 +504,12 @@ const wStyles = StyleSheet.create({
 
   // Group picker modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.65)', justifyContent: 'center', alignItems: 'center', padding: 16 },
-  modalCard: { width: '100%', maxWidth: 440, backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 16, gap: 10, ...premiumShadow('#000000', 'lg') },
+  modalCard: { width: '100%', maxWidth: 440, backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: 16, gap: 10, ...premiumShadow('#000000', 'lg') },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   modalTitle: { fontSize: 15, fontFamily: FONT.extraBold, color: '#ffffff' },
   modalSub: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
   emptyText: { fontSize: 12, fontFamily: FONT.medium, color: '#b45309', textAlign: 'center', paddingVertical: 16 },
-  groupRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', marginBottom: 8, backgroundColor: '#ffffff' },
+  groupRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', marginBottom: 8, backgroundColor: 'rgba(0,255,135,0.03)' },
   groupRowSelected: { backgroundColor: '#f0fdf4', borderColor: '#86efac' },
   groupIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#f3e8ff', alignItems: 'center', justifyContent: 'center' },
   groupName: { fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' },
@@ -1090,7 +1090,7 @@ function ECommerceSettingsPanel() {
                 fontSize: 13,
                 fontFamily: FONT.bold,
                 color: '#ffffff',
-                backgroundColor: '#ffffff',
+                backgroundColor: 'rgba(0,255,135,0.03)',
               }}
               keyboardType="numeric"
               value={freeShippingThreshold}
@@ -1414,7 +1414,7 @@ function CombinedReferralBonusSettingsPanel() {
 
         {/* 3 Full Bonus Inputs in Single Grid Row */}
         <View style={{ flexDirection: 'row', gap: 4 }}>
-          <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 5, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: '#86efac' }}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,255,135,0.03)', padding: 5, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: '#86efac' }}>
             <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#166534', marginBottom: 2 }} numberOfLines={1}>
               Referrer (₹)
             </Text>
@@ -1428,7 +1428,7 @@ function CombinedReferralBonusSettingsPanel() {
                 fontSize: 12,
                 fontFamily: FONT.extraBold,
                 color: '#ffffff',
-                backgroundColor: '#ffffff',
+                backgroundColor: 'rgba(0,255,135,0.03)',
                 textAlign: 'center',
               }}
               keyboardType="numeric"
@@ -1438,7 +1438,7 @@ function CombinedReferralBonusSettingsPanel() {
             />
           </View>
 
-          <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 5, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: '#86efac' }}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,255,135,0.03)', padding: 5, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: '#86efac' }}>
             <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#166534', marginBottom: 2 }} numberOfLines={1}>
               New User (₹)
             </Text>
@@ -1452,7 +1452,7 @@ function CombinedReferralBonusSettingsPanel() {
                 fontSize: 12,
                 fontFamily: FONT.extraBold,
                 color: '#ffffff',
-                backgroundColor: '#ffffff',
+                backgroundColor: 'rgba(0,255,135,0.03)',
                 textAlign: 'center',
               }}
               keyboardType="numeric"
@@ -1462,7 +1462,7 @@ function CombinedReferralBonusSettingsPanel() {
             />
           </View>
 
-          <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 5, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: '#86efac' }}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,255,135,0.03)', padding: 5, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: '#86efac' }}>
             <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#15803d', marginBottom: 2 }} numberOfLines={1}>
               VIP Pass (₹)
             </Text>
@@ -1476,7 +1476,7 @@ function CombinedReferralBonusSettingsPanel() {
                 fontSize: 12,
                 fontFamily: FONT.extraBold,
                 color: '#ffffff',
-                backgroundColor: '#ffffff',
+                backgroundColor: 'rgba(0,255,135,0.03)',
                 textAlign: 'center',
               }}
               keyboardType="numeric"
@@ -1561,7 +1561,7 @@ function AppDownloadSettingsPanel() {
 
       {/* 2 Input Fields in Single Compact Row Grid */}
       <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
-        <View style={{ flex: 2.2, backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#7dd3fc', gap: 4 }}>
+        <View style={{ flex: 2.2, backgroundColor: 'rgba(0,255,135,0.03)', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#7dd3fc', gap: 4 }}>
           <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#0369a1' }} numberOfLines={1}>
             APK / Play Store Link
           </Text>
@@ -1575,7 +1575,7 @@ function AppDownloadSettingsPanel() {
               fontSize: 12,
               fontFamily: FONT.medium,
               color: '#ffffff',
-              backgroundColor: '#ffffff',
+              backgroundColor: 'rgba(0,255,135,0.03)',
             }}
             value={downloadUrl}
             onChangeText={setDownloadUrl}
@@ -1584,7 +1584,7 @@ function AppDownloadSettingsPanel() {
           />
         </View>
 
-        <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#7dd3fc', gap: 4 }}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,255,135,0.03)', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#7dd3fc', gap: 4 }}>
           <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#0369a1' }} numberOfLines={1}>
             App Version
           </Text>
@@ -1598,7 +1598,7 @@ function AppDownloadSettingsPanel() {
               fontSize: 13,
               fontFamily: FONT.extraBold,
               color: '#ffffff',
-              backgroundColor: '#ffffff',
+              backgroundColor: 'rgba(0,255,135,0.03)',
               textAlign: 'center',
             }}
             value={version}
@@ -1690,7 +1690,7 @@ function FreeTrialSettingsPanel() {
       {/* 3 Controls in Single Compact Row Grid */}
       <View style={{ flexDirection: 'row', gap: 8, marginTop: 10, alignItems: 'center' }}>
         {/* Col 1: Switch */}
-        <View style={{ backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#f5d0fe', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <View style={{ backgroundColor: 'rgba(0,255,135,0.03)', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#f5d0fe', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#86198f' }}>
             Enable Trial
           </Text>
@@ -1704,7 +1704,7 @@ function FreeTrialSettingsPanel() {
         </View>
 
         {/* Col 2: Days */}
-        <View style={{ width: 80, backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#f5d0fe', gap: 4 }}>
+        <View style={{ width: 80, backgroundColor: 'rgba(0,255,135,0.03)', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#f5d0fe', gap: 4 }}>
           <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#86198f' }} numberOfLines={1}>
             Days
           </Text>
@@ -1718,7 +1718,7 @@ function FreeTrialSettingsPanel() {
               fontSize: 13,
               fontFamily: FONT.extraBold,
               color: '#ffffff',
-              backgroundColor: '#ffffff',
+              backgroundColor: 'rgba(0,255,135,0.03)',
               textAlign: 'center',
             }}
             keyboardType="numeric"
@@ -1729,7 +1729,7 @@ function FreeTrialSettingsPanel() {
         </View>
 
         {/* Col 3: Plan Tier */}
-        <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#f5d0fe', gap: 4 }}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,255,135,0.03)', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#f5d0fe', gap: 4 }}>
           <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#86198f' }} numberOfLines={1}>
             Target Plan Tier
           </Text>
@@ -2274,7 +2274,7 @@ export default function SuperSettingsScreen() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={{ flex: 1, minWidth: 140, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: RADIUS.md, backgroundColor: '#ffffff', borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}
+                  style={{ flex: 1, minWidth: 140, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: RADIUS.md, backgroundColor: 'rgba(0,255,135,0.03)', borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}
                   onPress={() => router.push('/(tabs)/super-orders' as any)}
                 >
                   <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#eef2ff', alignItems: 'center', justifyContent: 'center' }}>
@@ -2284,7 +2284,7 @@ export default function SuperSettingsScreen() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={{ flex: 1, minWidth: 140, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: RADIUS.md, backgroundColor: '#ffffff', borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}
+                  style={{ flex: 1, minWidth: 140, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: RADIUS.md, backgroundColor: 'rgba(0,255,135,0.03)', borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}
                   onPress={() => setShowCategoriesModal(true)}
                 >
                   <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#fef2f2', alignItems: 'center', justifyContent: 'center' }}>
@@ -2294,7 +2294,7 @@ export default function SuperSettingsScreen() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={{ flex: 1, minWidth: 140, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: RADIUS.md, backgroundColor: '#ffffff', borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}
+                  style={{ flex: 1, minWidth: 140, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: RADIUS.md, backgroundColor: 'rgba(0,255,135,0.03)', borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}
                   onPress={() => setShowWorkspaceModal(true)}
                 >
                   <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#ccfbf1', alignItems: 'center', justifyContent: 'center' }}>
@@ -2304,7 +2304,7 @@ export default function SuperSettingsScreen() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={{ flex: 1, minWidth: 140, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: RADIUS.md, backgroundColor: '#ffffff', borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}
+                  style={{ flex: 1, minWidth: 140, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: RADIUS.md, backgroundColor: 'rgba(0,255,135,0.03)', borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}
                   onPress={() => setShowGuidesModal(true)}
                 >
                   <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#f0fdf4', alignItems: 'center', justifyContent: 'center' }}>
@@ -2314,7 +2314,7 @@ export default function SuperSettingsScreen() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={{ flex: 1, minWidth: 140, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: RADIUS.md, backgroundColor: '#ffffff', borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}
+                  style={{ flex: 1, minWidth: 140, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: RADIUS.md, backgroundColor: 'rgba(0,255,135,0.03)', borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}
                   onPress={() => router.push('/(tabs)/super-audit-log' as any)}
                 >
                   <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#fef3c7', alignItems: 'center', justifyContent: 'center' }}>
@@ -2324,7 +2324,7 @@ export default function SuperSettingsScreen() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={{ flex: 1, minWidth: 140, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: RADIUS.md, backgroundColor: '#ffffff', borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}
+                  style={{ flex: 1, minWidth: 140, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: RADIUS.md, backgroundColor: 'rgba(0,255,135,0.03)', borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}
                   onPress={() => router.push('/(tabs)/super-crop-edit' as any)}
                 >
                   <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#dcfce7', alignItems: 'center', justifyContent: 'center' }}>
@@ -2363,13 +2363,13 @@ export default function SuperSettingsScreen() {
 
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: '#020d06' },
   hero: { paddingTop: 24, paddingBottom: 18, paddingHorizontal: SPACING.xxl },
   heroHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   heroTitle: { color: '#fff', fontSize: 20, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
   heroSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 12, fontFamily: FONT.medium, marginTop: 4 },
   list: { padding: SPACING.lg, gap: 14, paddingBottom: SPACING.xxl },
-  card: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 16, gap: 14 },
+  card: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: 16, gap: 14 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   iconCircle: {
     width: 40,
@@ -2398,19 +2398,19 @@ const styles = StyleSheet.create({
   subToggleTitle: { fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff' },
   subToggleDesc: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
   subControlsCard: {
-    backgroundColor: '#ffffff', borderRadius: RADIUS.md,
+    backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.md,
     padding: 12, gap: 10, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)',
   },
   subControlsHeader: { fontSize: 12, fontFamily: FONT.extraBold, color: '#e2e8f0', marginBottom: 2 },
   switchItemRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   switchItemTitle: { fontSize: 12.5, fontFamily: FONT.bold, color: '#ffffff' },
   switchItemSub: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1, lineHeight: 15 },
-  rulesBox: { backgroundColor: '#ffffff', borderRadius: RADIUS.md, padding: 12, gap: 6, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' },
+  rulesBox: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.md, padding: 12, gap: 6, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' },
   rulesTitle: { fontSize: 12, fontFamily: FONT.extraBold, color: '#e2e8f0', marginBottom: 2 },
   ruleItem: { fontSize: 11.5, fontFamily: FONT.medium, color: '#475569', lineHeight: 17 },
   errorText: { color: '#dc2626', fontFamily: FONT.semiBold, fontSize: 12, marginTop: 4 },
   placeholderCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: RADIUS.lg,
     padding: 16,
     alignItems: 'center',
@@ -2422,7 +2422,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   placeholderText: { fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8', textAlign: 'center' },
-  planCardContainer: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', padding: SPACING.md, gap: 8 },
+  planCardContainer: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', padding: SPACING.md, gap: 8 },
   planCardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   planCardTitle: { fontSize: 15, fontFamily: FONT.extraBold },
   planCardBadge: { fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b', backgroundColor: '#051b11', paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.pill, overflow: 'hidden' },
@@ -2430,7 +2430,7 @@ const styles = StyleSheet.create({
   cardDivider: { height: 1, backgroundColor: '#051b11' },
   cardSection: { gap: 6 },
   cardSectionTitle: { fontSize: 12, fontFamily: FONT.extraBold, color: '#e2e8f0' },
-  variantRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' },
+  variantRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(0,255,135,0.03)', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' },
   variantTitle: { fontSize: 12.5, fontFamily: FONT.bold, color: '#ffffff' },
   variantMeta: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
   variantEditBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.md },
@@ -2443,18 +2443,18 @@ const styles = StyleSheet.create({
   chipTextOn: { color: '#15803d' },
   chipTextOff: { color: '#dc2626' },
   limitMetaText: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b' },
-  sectionCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.lg, gap: 10 },
+  sectionCard: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.lg, gap: 10 },
   sectionTitle: { fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' },
   helperText: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b' },
   emptyText: { fontSize: 12.5, fontFamily: FONT.medium, color: '#94a3b8' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'center', alignItems: 'center', padding: SPACING.lg },
-  modalCard: { width: '100%', maxWidth: 440, maxHeight: '88%', backgroundColor: '#ffffff', borderRadius: RADIUS.xl, padding: SPACING.lg, ...premiumShadow('#000000', 'lg') },
+  modalCard: { width: '100%', maxWidth: 440, maxHeight: '88%', backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.xl, padding: SPACING.lg, ...premiumShadow('#000000', 'lg') },
   modalHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   modalTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#ffffff' },
   label: { fontSize: 11.5, fontFamily: FONT.bold, color: '#e2e8f0', marginTop: 4 },
-  input: { borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13.5, fontFamily: FONT.medium, backgroundColor: '#ffffff', color: '#0f172a' },
+  input: { borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13.5, fontFamily: FONT.medium, backgroundColor: '#020d06', color: '#ffffff' },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  farmerChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', backgroundColor: '#ffffff' },
+  farmerChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', backgroundColor: 'rgba(0,255,135,0.03)' },
   farmerChipText: { fontSize: 12, fontFamily: FONT.semiBold, color: '#e2e8f0' },
   submitBtn: { backgroundColor: theme.primary, borderRadius: RADIUS.md, paddingVertical: 13, alignItems: 'center', marginTop: 4 },
   submitBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 14 },
@@ -2485,7 +2485,7 @@ export function PendingDoctorChangeApprovalsSection() {
 
       <View style={{ gap: 10, marginTop: 6 }}>
         {pendingRequests.map((req: any) => (
-          <View key={req.id} style={{ backgroundColor: '#ffffff', padding: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#fde68a' }}>
+          <View key={req.id} style={{ backgroundColor: 'rgba(0,255,135,0.03)', padding: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#fde68a' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <View>
                 <Text style={{ fontSize: 14, fontFamily: FONT.bold, color: '#ffffff' }}>🧑‍🌾 {req.farmer?.name} ({req.farmer?.kingId || req.farmer?.mobile})</Text>
@@ -2496,7 +2496,7 @@ export function PendingDoctorChangeApprovalsSection() {
               </View>
             </View>
 
-            <View style={{ marginTop: 8, padding: 8, backgroundColor: '#ffffff', borderRadius: RADIUS.sm, gap: 2 }}>
+            <View style={{ marginTop: 8, padding: 8, backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.sm, gap: 2 }}>
               <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>🩺 Requested Doctor: Dr. {req.advisor?.name}</Text>
               {req.notes ? <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#dc2626' }}>{req.notes}</Text> : null}
             </View>
@@ -2551,7 +2551,7 @@ export function PlanPricingSection() {
   return (
     <View style={{ gap: 16 }}>
       {/* Category 1: Farmer Software Membership Plans */}
-      <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#ffffff', borderColor: 'rgba(0,255,135,0.3)', borderWidth: 1 }]}>
+      <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm'), { backgroundColor: 'rgba(0,255,135,0.03)', borderColor: 'rgba(0,255,135,0.3)', borderWidth: 1 }]}>
         <TouchableOpacity
           style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 }}
           onPress={() => setIsSoftwareCollapsed((prev) => !prev)}
@@ -2670,7 +2670,7 @@ function PlanCardGroup({
   onDeleteItem: (id: string) => void;
 }) {
   return (
-    <View style={[styles.planCardContainer, { borderColor: meta.color + '40', backgroundColor: '#ffffff' }, premiumShadow('#0f172a', 'sm')]}>
+    <View style={[styles.planCardContainer, { borderColor: meta.color + '40', backgroundColor: 'rgba(0,255,135,0.03)' }, premiumShadow('#0f172a', 'sm')]}>
       <View style={styles.planCardHeader}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
           <Text style={{ fontSize: 24 }}>{meta.emoji}</Text>
@@ -3050,7 +3050,7 @@ function UnifiedPlanManagerModal({
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingVertical: 2 }}>
             {/* Feature ON/OFF Toggles for Active Plan */}
-            <View style={{ backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 10, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', gap: 6 }}>
+            <View style={{ backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: 10, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', gap: 6 }}>
               <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: '#e2e8f0' }}>
                 ⚙️ {planMeta?.label} Features (ON / OFF)
               </Text>
@@ -3093,7 +3093,7 @@ function UnifiedPlanManagerModal({
               <View
                 key={item.id || idx}
                 style={{
-                  backgroundColor: '#ffffff',
+                  backgroundColor: 'rgba(0,255,135,0.03)',
                   borderRadius: RADIUS.lg,
                   padding: 10,
                   borderWidth: 1.5,
@@ -3119,7 +3119,7 @@ function UnifiedPlanManagerModal({
                         fontSize: 11,
                         fontFamily: FONT.bold,
                         color: '#ffffff',
-                        backgroundColor: '#ffffff',
+                        backgroundColor: 'rgba(0,255,135,0.03)',
                         textAlign: 'center',
                       }}
                       keyboardType="numeric"
@@ -3144,7 +3144,7 @@ function UnifiedPlanManagerModal({
                         fontSize: 11,
                         fontFamily: FONT.bold,
                         color: '#ffffff',
-                        backgroundColor: '#ffffff',
+                        backgroundColor: 'rgba(0,255,135,0.03)',
                       }}
                       keyboardType="numeric"
                       placeholder="1999"
@@ -3168,7 +3168,7 @@ function UnifiedPlanManagerModal({
                         fontSize: 11,
                         fontFamily: FONT.bold,
                         color: '#ffffff',
-                        backgroundColor: '#ffffff',
+                        backgroundColor: 'rgba(0,255,135,0.03)',
                       }}
                       keyboardType="numeric"
                       placeholder="10%"
@@ -3193,7 +3193,7 @@ function UnifiedPlanManagerModal({
                           fontSize: 11,
                           fontFamily: FONT.bold,
                           color: '#ffffff',
-                          backgroundColor: '#ffffff',
+                          backgroundColor: 'rgba(0,255,135,0.03)',
                         }}
                         keyboardType="numeric"
                         placeholder="Manual"
@@ -3219,7 +3219,7 @@ function UnifiedPlanManagerModal({
                           fontSize: 11,
                           fontFamily: FONT.bold,
                           color: '#ffffff',
-                          backgroundColor: '#ffffff',
+                          backgroundColor: 'rgba(0,255,135,0.03)',
                         }}
                         keyboardType="numeric"
                         placeholder="%"
@@ -3244,7 +3244,7 @@ function UnifiedPlanManagerModal({
                         fontSize: 11,
                         fontFamily: FONT.bold,
                         color: '#ffffff',
-                        backgroundColor: '#ffffff',
+                        backgroundColor: 'rgba(0,255,135,0.03)',
                       }}
                       keyboardType="numeric"
                       placeholder="Auto"
@@ -3286,7 +3286,7 @@ function UnifiedPlanManagerModal({
                         <TextInput
                           style={{
                             height: 30, borderWidth: 1, borderColor: '#fde68a', borderRadius: RADIUS.sm,
-                            paddingHorizontal: 6, fontSize: 11, fontFamily: FONT.bold, color: '#ffffff', backgroundColor: '#ffffff',
+                            paddingHorizontal: 6, fontSize: 11, fontFamily: FONT.bold, color: '#ffffff', backgroundColor: 'rgba(0,255,135,0.03)',
                           }}
                           placeholder="e.g. Festival Offer"
                           value={item.offerName}
@@ -3299,7 +3299,7 @@ function UnifiedPlanManagerModal({
                         <TextInput
                           style={{
                             height: 30, borderWidth: 1, borderColor: '#fde68a', borderRadius: RADIUS.sm,
-                            paddingHorizontal: 6, fontSize: 11, fontFamily: FONT.bold, color: '#16a34a', backgroundColor: '#ffffff',
+                            paddingHorizontal: 6, fontSize: 11, fontFamily: FONT.bold, color: '#16a34a', backgroundColor: 'rgba(0,255,135,0.03)',
                           }}
                           keyboardType="numeric"
                           placeholder="e.g. 499"
@@ -3313,7 +3313,7 @@ function UnifiedPlanManagerModal({
                         <TextInput
                           style={{
                             height: 30, borderWidth: 1, borderColor: '#fde68a', borderRadius: RADIUS.sm,
-                            paddingHorizontal: 6, fontSize: 11, fontFamily: FONT.bold, color: '#ffffff', backgroundColor: '#ffffff',
+                            paddingHorizontal: 6, fontSize: 11, fontFamily: FONT.bold, color: '#ffffff', backgroundColor: 'rgba(0,255,135,0.03)',
                           }}
                           placeholder="DD/MM/YY"
                           value={item.offerValidTill}

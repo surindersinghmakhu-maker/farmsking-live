@@ -75,13 +75,9 @@ export default function AdminMoreScreen() {
     <>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {/* Hero Profile Banner */}
-        <LinearGradient colors={['#0f172a', '#1e293b']} style={styles.hero}>
+        <LinearGradient colors={['#04140a', '#020d06']} style={styles.hero}>
           <View style={styles.avatarCircle}>
-            {brandLogoUri ? (
-              <Avatar uri={brandLogoUri} size={56} />
-            ) : (
-              <Ionicons name="shield-checkmark" size={28} color="#10b981" />
-            )}
+            <Ionicons name="shield-checkmark" size={32} color="#00ff87" />
           </View>
           <Text style={styles.name}>{user?.name ?? 'Admin User'}</Text>
           <View style={styles.roleTag}>
@@ -314,7 +310,7 @@ export default function AdminMoreScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: '#020d06' },
   hero: {
     paddingTop: Platform.OS === 'web' ? 36 : 50,
     paddingBottom: 22,
@@ -357,21 +353,21 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0, 255, 135, 0.25)',
     paddingHorizontal: 12,
     paddingVertical: 9,
     gap: 8,
     marginBottom: 16,
-    ...premiumShadow('#0f172a', 'sm') as any,
+    ...premiumShadow('#000000', 'sm') as any,
   },
   searchInput: {
     flex: 1,
     fontSize: 13,
     fontFamily: FONT.medium,
-    color: '#0f172a',
+    color: '#ffffff',
     padding: 0,
   },
   section: { marginBottom: 16 },
@@ -391,11 +387,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 12,
     fontFamily: FONT.extraBold,
-    color: '#334155',
+    color: '#e2e8f0',
     letterSpacing: 0.3,
   },
   pillarBadge: {
-    backgroundColor: '#f1f5f9',
+    backgroundColor: 'rgba(0, 255, 135, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: RADIUS.pill,
@@ -406,19 +404,19 @@ const styles = StyleSheet.create({
     fontFamily: FONT.extraBold,
   },
   sectionCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(0, 255, 135, 0.15)',
     overflow: 'hidden',
-    ...premiumShadow('#0f172a', 'sm') as any,
+    ...premiumShadow('#000000', 'sm') as any,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 13,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: 'rgba(255, 255, 255, 0.06)',
     gap: 12,
   },
   rowIconBg: {
@@ -431,12 +429,12 @@ const styles = StyleSheet.create({
   rowLabel: {
     fontSize: 13.5,
     fontFamily: FONT.bold,
-    color: '#0f172a',
+    color: '#ffffff',
   },
   rowSubLabel: {
     fontSize: 11,
     fontFamily: FONT.regular,
-    color: '#64748b',
+    color: '#94a3b8',
     marginTop: 2,
   },
   logoutButton: {

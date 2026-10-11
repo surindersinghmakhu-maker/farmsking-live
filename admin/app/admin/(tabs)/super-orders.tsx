@@ -150,17 +150,17 @@ function OrderRow({ order }: { order: CustomerOrder }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: '#020d06' },
   hero: { paddingTop: 20, paddingBottom: 18, paddingHorizontal: SPACING.xxl },
   heroTitle: { color: '#fff', fontSize: 20, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
   heroSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 12, fontFamily: FONT.medium, marginTop: 2 },
   filterRow: { marginTop: 12, flexGrow: 0 },
-  filterChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', backgroundColor: '#ffffff' },
+  filterChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', backgroundColor: 'rgba(0,255,135,0.03)' },
   filterChipText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#e2e8f0' },
   list: { padding: SPACING.xxl, gap: 10 },
   emptyCenter: { alignItems: 'center', justifyContent: 'center', padding: 50, gap: 8 },
   emptyText: { fontSize: 13, fontFamily: FONT.medium, color: '#94a3b8' },
-  card: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.lg, gap: 10 },
+  card: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.lg, gap: 10 },
   cardTopRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   iconBg: { width: 40, height: 40, borderRadius: 14, backgroundColor: theme.primaryLight, alignItems: 'center', justifyContent: 'center' },
   info: { flex: 1 },

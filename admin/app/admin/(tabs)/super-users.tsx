@@ -182,7 +182,7 @@ export default function SuperUsersScreen() {
   const currentFilterLabel = Object.values(FILTERS_BY_GROUP).flat().find(f => f.value === filter)?.label || 'Users';
 
   return (
-    <View style={[styles.container, { backgroundColor: '#f8fafc' }]}>
+    <View style={[styles.container, { backgroundColor: '#020d06' }]}>
       <View style={styles.premiumHero}>
         <View style={styles.premiumHeroContent}>
           <View style={styles.heroHeaderRow}>
@@ -1564,7 +1564,7 @@ function TrainerReportsModal({ visible, onClose }: { visible: boolean; onClose: 
                 logs.map((log: any) => {
                   const isVerified = log.status === 'VERIFIED_AND_PAID';
                   return (
-                    <View key={log.id} style={{ backgroundColor: '#f8fafc', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', gap: 4 }}>
+                    <View key={log.id} style={{ backgroundColor: '#020d06', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', gap: 4 }}>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>
                           🌾 {log.farmer?.name || 'Farmer'} ({log.farmer?.mobile})
@@ -1594,7 +1594,7 @@ function TrainerReportsModal({ visible, onClose }: { visible: boolean; onClose: 
 const styles = StyleSheet.create({
   premiumHero: {
     paddingTop: Platform.OS === 'ios' ? 50 : 20,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9',
     ...premiumShadow('#cbd5e1', 'sm'),
@@ -1642,7 +1642,7 @@ const styles = StyleSheet.create({
   searchWrapPremium: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#020d06',
     borderWidth: 1,
     borderColor: '#e2e8f0',
     borderRadius: 16,
@@ -1669,7 +1669,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderWidth: 1,
     borderColor: '#e2e8f0',
     position: 'relative',
@@ -1692,7 +1692,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
@@ -1710,10 +1710,10 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 100,
     gap: 12,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#020d06',
   },
   label: { fontSize: 11.5, fontFamily: FONT.bold, color: '#334155', marginTop: 4 },
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: '#020d06' },
   hero: { paddingTop: 20, paddingBottom: 16, paddingHorizontal: SPACING.xxl },
   heroTitle: { color: '#fff', fontSize: 20, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
   heroSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 12, fontFamily: FONT.medium, marginTop: 2 },
@@ -1745,7 +1745,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: RADIUS.pill,
   },
-  groupChipActive: { backgroundColor: '#ffffff' },
+  groupChipActive: { backgroundColor: 'rgba(0,255,135,0.03)' },
   groupChipText: { fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' },
   filterChip: {
     flexDirection: 'row',
@@ -1756,7 +1756,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.pill,
     backgroundColor: 'rgba(255,255,255,0.18)',
   },
-  filterChipActive: { backgroundColor: '#ffffff' },
+  filterChipActive: { backgroundColor: 'rgba(0,255,135,0.03)' },
   filterChipText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' },
   list: { padding: SPACING.lg, gap: 10, paddingBottom: SPACING.xxl },
   addAdvisorBtn: {
@@ -1811,7 +1811,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#e2e8f0',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#020d06',
   },
   pagerBtnDisabled: { opacity: 0.5 },
   pagerText: { fontSize: 12.5, fontFamily: FONT.bold, color: '#334155' },
@@ -1820,7 +1820,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: RADIUS.lg,
     paddingVertical: SPACING.sm,
     paddingHorizontal: SPACING.md,
@@ -1856,10 +1856,10 @@ const styles = StyleSheet.create({
   },
   actionBtnLabel: { fontSize: 10.5, fontFamily: FONT.bold },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'center', alignItems: 'center', padding: SPACING.lg },
-  modalCard: { width: '100%', maxWidth: 440, maxHeight: '85%', backgroundColor: '#ffffff', borderRadius: RADIUS.xl, padding: SPACING.lg, ...premiumShadow('#000000', 'lg') },
+  modalCard: { width: '100%', maxWidth: 440, maxHeight: '85%', backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.xl, padding: SPACING.lg, ...premiumShadow('#000000', 'lg') },
   modalHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   modalTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a' },
-  input: { borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13.5, fontFamily: FONT.medium, backgroundColor: '#f8fafc', color: '#0f172a' },
+  input: { borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13.5, fontFamily: FONT.medium, backgroundColor: '#020d06', color: '#0f172a' },
   errorText: { color: '#dc2626', fontFamily: FONT.semiBold, fontSize: 12 },
   submitBtn: { backgroundColor: theme.primary, borderRadius: RADIUS.md, paddingVertical: 13, alignItems: 'center', marginTop: 4 },
   submitBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 14 },
@@ -1872,7 +1872,7 @@ const styles = StyleSheet.create({
   detailName: { fontSize: 17, fontFamily: FONT.extraBold, color: '#0f172a' },
   detailMeta: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
   detailStatsRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  detailStatBox: { flex: 1, backgroundColor: '#f8fafc', borderRadius: RADIUS.md, paddingVertical: 10, alignItems: 'center' },
+  detailStatBox: { flex: 1, backgroundColor: '#020d06', borderRadius: RADIUS.md, paddingVertical: 10, alignItems: 'center' },
   detailStatValue: { fontSize: 15, fontFamily: FONT.extraBold, color: '#0f172a' },
   detailStatLabel: { fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 },
   successBox: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#f0fdf4', borderRadius: RADIUS.md, padding: 12, borderWidth: 1, borderColor: '#bbf7d0' },

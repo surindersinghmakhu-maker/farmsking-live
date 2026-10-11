@@ -943,12 +943,12 @@ export function ReviewModal({ request, onClose }: { request: WithdrawalRequest |
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: '#020d06' },
   hero: { 
     paddingTop: Platform.OS === 'ios' ? 50 : 20, 
     paddingBottom: 18, 
     paddingHorizontal: SPACING.xxl,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9',
     ...premiumShadow('#cbd5e1', 'sm') as any,
@@ -959,7 +959,7 @@ const styles = StyleSheet.create({
   statRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: RADIUS.lg,
     borderWidth: 1,
     borderColor: 'rgba(0,255,135,0.3)',
@@ -998,7 +998,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: RADIUS.pill,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderWidth: 1.5,
     borderColor: 'rgba(0,255,135,0.3)',
   },
@@ -1024,10 +1024,10 @@ const styles = StyleSheet.create({
   countPill: { backgroundColor: theme.primaryLight, borderRadius: RADIUS.pill, paddingHorizontal: 7, paddingVertical: 1.5 },
   countPillText: { fontSize: 10.5, fontFamily: FONT.extraBold, color: theme.primary },
 
-  emptyState: { alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 36, backgroundColor: '#ffffff', borderRadius: RADIUS.lg, borderWidth: 1, borderColor: 'rgba(0,255,135,0.2)', borderStyle: 'dashed' },
+  emptyState: { alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 36, backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, borderWidth: 1, borderColor: 'rgba(0,255,135,0.2)', borderStyle: 'dashed' },
   emptyText: { fontSize: 12.5, fontFamily: FONT.medium, color: '#94a3b8', textAlign: 'center' },
 
-  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.md, gap: 10 },
+  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.md, gap: 10 },
   identityRow: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
   avatarCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: theme.primaryLight, alignItems: 'center', justifyContent: 'center' },
   avatarInitials: { fontSize: 12.5, fontFamily: FONT.extraBold, color: theme.primary },
@@ -1047,19 +1047,19 @@ const styles = StyleSheet.create({
   ledgerBtnText: { color: theme.primary, fontSize: 11, fontFamily: FONT.bold },
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'center', alignItems: 'center', padding: SPACING.lg },
-  modalCard: { width: '100%', maxWidth: 440, backgroundColor: '#ffffff', borderRadius: RADIUS.xl, padding: SPACING.lg, gap: 4, ...premiumShadow('#000000', 'lg') },
+  modalCard: { width: '100%', maxWidth: 440, backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.xl, padding: SPACING.lg, gap: 4, ...premiumShadow('#000000', 'lg') },
   modalHeaderRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
   modalTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#ffffff' },
   modalSub: { fontSize: 12, fontFamily: FONT.bold, color: theme.primary, marginTop: 2 },
 
-  summaryBox: { backgroundColor: '#ffffff', borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', padding: 12, gap: 7, marginBottom: 8 },
+  summaryBox: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', padding: 12, gap: 7, marginBottom: 8 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 },
   summaryLabel: { fontSize: 11, fontFamily: FONT.bold, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.2 },
   summaryValue: { fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff' },
   hintText: { fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8', marginBottom: 6, lineHeight: 15 },
 
   label: { fontSize: 11.5, fontFamily: FONT.bold, color: '#e2e8f0', marginTop: 6, marginBottom: 4 },
-  input: { borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13.5, fontFamily: FONT.medium, backgroundColor: '#ffffff', color: '#0f172a' },
+  input: { borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13.5, fontFamily: FONT.medium, backgroundColor: '#020d06', color: '#ffffff' },
   errorText: { color: '#dc2626', fontFamily: FONT.semiBold, fontSize: 12, marginTop: 6 },
   rejectBtn: { flex: 1, backgroundColor: '#fee2e2', borderRadius: RADIUS.md, paddingVertical: 13, alignItems: 'center' },
   rejectBtnText: { color: '#dc2626', fontFamily: FONT.bold, fontSize: 13.5 },
@@ -1074,7 +1074,7 @@ const styles = StyleSheet.create({
 
   ledgerHeading: { fontSize: 11.5, fontFamily: FONT.extraBold, color: '#e2e8f0', textTransform: 'uppercase', letterSpacing: 0.3, marginTop: 6, marginBottom: 4 },
 
-  searchWrap: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#ffffff', borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', paddingHorizontal: 12, paddingVertical: 4, marginBottom: 12 },
+  searchWrap: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', paddingHorizontal: 12, paddingVertical: 4, marginBottom: 12 },
   searchInput: { flex: 1, paddingVertical: 10, fontSize: 13, fontFamily: FONT.medium, color: '#ffffff' },
 
   txRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
@@ -1167,19 +1167,19 @@ function AdminBonusSectionComponent() {
 
         {/* 3-Way Detailed Breakdown Grid */}
         <View style={{ flexDirection: 'row', gap: 6 }}>
-          <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', gap: 2 }}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,255,135,0.03)', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', gap: 2 }}>
             <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>🎁 Welcome Signups</Text>
             <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' }}>₹{summary.totalWelcome.toLocaleString('en-IN')}</Text>
             <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8' }}>{summary.countWelcome} users</Text>
           </View>
 
-          <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', gap: 2 }}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,255,135,0.03)', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', gap: 2 }}>
             <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>🤝 Referral Signups</Text>
             <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' }}>₹{summary.totalReferralSignup.toLocaleString('en-IN')}</Text>
             <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8' }}>{summary.countReferralSignup} referrals</Text>
           </View>
 
-          <View style={{ flex: 1, backgroundColor: '#ffffff', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', gap: 2 }}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,255,135,0.03)', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', gap: 2 }}>
             <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>👑 Plan Upgrades</Text>
             <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' }}>₹{summary.totalReferralPlan.toLocaleString('en-IN')}</Text>
             <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8' }}>{summary.countReferralPlan} upgrades</Text>
@@ -1259,7 +1259,7 @@ function AdminBonusSectionComponent() {
                   </Text>
                 </View>
 
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ffffff', padding: 8, borderRadius: RADIUS.sm }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(0,255,135,0.03)', padding: 8, borderRadius: RADIUS.sm }}>
                   <View style={{ flex: 1, paddingRight: 6 }}>
                     <Text style={{ fontSize: 11.5, fontFamily: FONT.semiBold, color: '#e2e8f0' }}>
                       {tx.reason}

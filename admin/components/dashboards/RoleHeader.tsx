@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -9,6 +9,7 @@ import { Avatar } from '@/src/components/Avatar';
 import { BrandLogo } from '@/src/components/BrandLogo';
 import { useAppSettings } from '@/src/hooks/useAppSettings';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { MobilePillarsMenuModal } from '@/components/MobilePillarsMenuModal';
 
 interface RoleHeaderProps {
   currentRole: UserRole;
@@ -66,6 +67,7 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
   const { data: settings } = useAppSettings();
 
   const roleMeta = ROLE_DISPLAY[currentRole] || { label: currentRole, icon: '👤' };
+  const [showPillarsModal, setShowPillarsModal] = useState(false);
 
   return (
     <View style={styles.headerContainer}>
@@ -78,6 +80,18 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
           </View>
 
           <View style={styles.actionsRight}>
+            {(currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN') && (
+              <TouchableOpacity
+                style={styles.pillarsMenuTrigger}
+                activeOpacity={0.8}
+                onPress={() => setShowPillarsModal(true)}
+              >
+                <Ionicons name="grid" size={13} color="#00ff87" />
+                <Text style={styles.pillarsMenuTriggerText}>Pillars</Text>
+                <Ionicons name="chevron-down" size={11} color="#00ff87" />
+              </TouchableOpacity>
+            )}
+
             <TouchableOpacity
               style={styles.iconButton}
               activeOpacity={0.75}
@@ -159,11 +173,34 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
           ) : null}
         </View>
       </View>
+
+      {/* 📱 4D Mobile Domain Pillars Command Sheet */}
+      <MobilePillarsMenuModal
+        visible={showPillarsModal}
+        onClose={() => setShowPillarsModal(false)}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  pillarsMenuTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(0, 255, 135, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.35)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: RADIUS.pill,
+  },
+  pillarsMenuTriggerText: {
+    fontSize: 11,
+    fontFamily: FONT.extraBold,
+    color: '#00ff87',
+    letterSpacing: 0.3,
+  },
   headerContainer: {
     paddingTop: Platform.OS === 'web' ? 14 : 10,
     paddingHorizontal: 16,

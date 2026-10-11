@@ -529,7 +529,7 @@ export default function CropDiseaseScannerScreen() {
                 <Text style={styles.prescTitle}>💊 Recommended Chemical First-Aid Spray</Text>
               </View>
               <Text style={styles.prescText}>{scanResult.firstAidSpray}</Text>
-              <View style={{ backgroundColor: '#ffffff', padding: 8, borderRadius: 8, marginTop: 6, borderWidth: 1, borderColor: '#bbf7d0' }}>
+              <View style={{ backgroundColor: 'rgba(0,255,135,0.03)', padding: 8, borderRadius: 8, marginTop: 6, borderWidth: 1, borderColor: '#bbf7d0' }}>
                 <Text style={{ fontSize: 11, fontWeight: '700', color: '#14532d' }}>⚙️ Exact Dosage & Spraying Method:</Text>
                 <Text style={{ fontSize: 11, color: '#166534', marginTop: 2 }}>{scanResult.dosageInstructions}</Text>
               </View>
@@ -595,7 +595,7 @@ export default function CropDiseaseScannerScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#020d06',
   },
   header: {
     flexDirection: 'row',
@@ -603,7 +603,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
   },
@@ -650,7 +650,7 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
   uploadBox: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 14,
     borderWidth: 2,
     borderColor: '#bbf7d0',
@@ -746,7 +746,7 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
   },
   sampleBarBox: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
@@ -762,7 +762,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -775,7 +775,7 @@ const styles = StyleSheet.create({
     color: '#0f172a',
   },
   loadingCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 14,
     padding: 20,
     alignItems: 'center',
@@ -812,7 +812,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   resultCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(0,255,135,0.03)',
     borderRadius: 14,
     padding: 16,
     borderWidth: 1.5,

@@ -6,6 +6,7 @@ import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAllOrders, useCancelOrder, useConfirmOrder } from '@/src/hooks/useOrders';
 import { CustomerOrder, OrderPaymentMode, OrderPaymentStatus, OrderStatus } from '@/src/types/api';
+import { exportOrdersToExcel } from '@/src/utils/excelExport';
 
 const theme = RoleThemes.ADMIN;
 
@@ -74,8 +75,22 @@ export default function AdminOrdersScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.hero}>
-        <Text style={styles.heroTitle}>Orders</Text>
-        <Text style={styles.heroSubtitle}>{orders?.length ?? 0} order(s)</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View>
+            <Text style={styles.heroTitle}>Orders</Text>
+            <Text style={styles.heroSubtitle}>{orders?.length ?? 0} order(s)</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.exportBtn}
+            onPress={() => {
+              tap();
+              exportOrdersToExcel(orders || []);
+            }}
+          >
+            <Ionicons name="download-outline" size={14} color="#00ff87" />
+            <Text style={styles.exportBtnText}>Excel Export</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={{ gap: 8, paddingHorizontal: SPACING.xxl }}>
@@ -306,4 +321,20 @@ const styles = StyleSheet.create({
   confirmBtnText: { color: '#ffffff', fontSize: 12.5, fontFamily: FONT.bold },
   cancelBtn: { flex: 1, backgroundColor: '#fee2e2', borderRadius: RADIUS.md, paddingVertical: 10, alignItems: 'center' },
   cancelBtnText: { color: '#dc2626', fontSize: 12.5, fontFamily: FONT.bold },
+  exportBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(0,255,135,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0,255,135,0.3)',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+  },
+  exportBtnText: {
+    color: '#00ff87',
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+  },
 });

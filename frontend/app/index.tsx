@@ -123,13 +123,25 @@ function TrustBadgeCard({ icon, title, desc, color }: any) {
 }
 
 import AdminWebPortalScreen from './admin';
+import { useAuth } from '@/src/store/auth-context';
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function PublicLandingPage() {
   const router = useRouter();
+  const { user, isLoading } = useAuth();
   const { width } = useWindowDimensions();
   const isDesktop = width > 1024;
   const isMobile = width <= 768;
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user.role)) {
+        router.replace('/(partner)/(tabs)');
+      } else {
+        router.replace('/(user)/(tabs)');
+      }
+    }
+  }, [user, isLoading]);
 
   if (Platform.OS === 'web' && typeof window !== 'undefined' && (window.location.hostname === 'admin.farmsking.in' || window.location.hostname.startsWith('admin.'))) {
     return <AdminWebPortalScreen />;

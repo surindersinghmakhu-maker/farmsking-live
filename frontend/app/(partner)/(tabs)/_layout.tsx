@@ -4,6 +4,7 @@ import { Platform, View, StyleSheet, Text, TouchableOpacity, useWindowDimensions
 
 import { HapticTab } from '@/components/HapticTab';
 import TabBarBackground from '@/components/ui/TabBarBackground';
+import { AnimatedPurpleBottomBar } from '@/components/ui/AnimatedPurpleBottomBar';
 import { RoleThemes, UserRole } from '@/constants/Colors';
 import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { useRole } from '@/src/store/role-context';
@@ -288,34 +289,10 @@ export default function TabLayout() {
       {/* 📱 TABS VIEW CONTAINER (Bottom tabs hide on Desktop, show on Mobile) */}
       <View style={{ flex: 1 }}>
         <Tabs
+          tabBar={(props: any) => <AnimatedPurpleBottomBar {...props} />}
           screenOptions={{
-            tabBarActiveTintColor: colors.tabBarActive,
-            tabBarInactiveTintColor: colors.tabBarInactive,
-            tabBarLabelStyle: { fontFamily: FONT.bold, fontSize: 10.5 },
             headerShown: false,
-            tabBarButton: (props: any) => <HapticTab {...props} />,
-            tabBarBackground: TabBarBackground,
-            tabBarStyle: Platform.select({
-              ios: {
-                position: 'absolute',
-                display: isDesktop ? 'none' : 'flex',
-                backgroundColor: colors.tabBarBg,
-                borderTopColor: colors.tabBarBorder,
-              },
-              default: {
-                display: isDesktop ? 'none' : 'flex',
-                height: 62,
-                paddingBottom: 8,
-                paddingTop: 6,
-                maxWidth: 520,
-                width: '100%',
-                alignSelf: 'center',
-                backgroundColor: colors.tabBarBg,
-                borderTopWidth: 1,
-                borderTopColor: colors.tabBarBorder,
-                ...premiumShadow('#0f172a', 'sm'),
-              },
-            }),
+            animation: 'fade',
           }}>
           {ALL_TABS.map((name) => {
             const isShown = visible.has(name);

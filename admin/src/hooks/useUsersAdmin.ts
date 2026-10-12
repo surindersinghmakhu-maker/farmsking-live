@@ -142,10 +142,32 @@ export function useCreateAssistantDoctor() {
   });
 }
 
-export function useMyAssistantDoctors() {
-  return useQuery({
-    queryKey: ['my-assistant-doctors'],
-    queryFn: api.getMyAssistantDoctors,
+export function useCreateManager() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: api.createManager,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users', 'admin-list'] }),
+  });
+}
+
+export function useResignSupervisor() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.resignSupervisor(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users', 'admin-list'] });
+    },
+  });
+}
+
+export function useAssignSupervisorEmployer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, employerFarmerId }: { id: string; employerFarmerId: string | null }) =>
+      api.assignSupervisorEmployer(id, employerFarmerId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users', 'admin-list'] });
+    },
   });
 }
 

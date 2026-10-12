@@ -14,6 +14,7 @@ enum Role {
   LABOUR
   TECHNICAL_TRAINER
   SELLER
+  TRADER
 }
 
 /// Fixed, read-only capabilities an Admin/Super Admin can grant to a specific Operator account.

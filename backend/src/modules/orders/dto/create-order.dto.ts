@@ -32,4 +32,8 @@ export class CreateOrderDto {
 
   @IsOptional()
   useWalletBalance?: boolean;
+
+  @IsOptional()
+  @IsUUID()
+  customerId?: string;
 }

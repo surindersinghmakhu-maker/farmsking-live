@@ -7,6 +7,7 @@ import { generateUniqueKingId } from '../../common/utils/king-id.util';
 import { CreateLabourWorkerDto, UpdateLabourWorkerDto } from './dto/create-labour-worker.dto';
 import { CreateWorkEntryDto } from './dto/create-work-entry.dto';
 import { CreateLabourPaymentDto } from './dto/create-labour-payment.dto';
+import { getEffectiveFarmerId } from '../../common/utils/effective-farmer.util';
 
 @Injectable()
 export class LabourService {
@@ -124,7 +125,7 @@ export class LabourService {
    * Enforces duplicate name prevention under the same mobile number.
    */
   async createWorker(user: AuthUser, dto: CreateLabourWorkerDto) {
-    let farmerId = user.id;
+    let farmerId = getEffectiveFarmerId(user);
     if (user.role === Role.LABOUR) {
       const myWorkerRecord = await this.prisma.labourWorker.findFirst({
         where: {
@@ -173,14 +174,15 @@ export class LabourService {
             passwordHash,
             name: dto.name,
             role: Role.LABOUR,
-            roles: [Role.LABOUR],
+            roles: [Role.LABOUR, Role.CUSTOMER],
           },
         });
       } else {
-        if (!linkedUser.roles.includes(Role.LABOUR)) {
+        const updatedRoles = Array.from(new Set([...linkedUser.roles, Role.LABOUR, Role.CUSTOMER]));
+        if (updatedRoles.length !== linkedUser.roles.length) {
           await this.prisma.user.update({
             where: { id: linkedUser.id },
-            data: { roles: { push: Role.LABOUR } },
+            data: { roles: updatedRoles },
           });
         }
       }
@@ -223,7 +225,7 @@ export class LabourService {
 
   /** Get list of workers created by the farmer with calculated financial balances. */
   async getWorkersForFarmer(user: AuthUser) {
-    let farmerId = user.id;
+    let farmerId = getEffectiveFarmerId(user);
     if (user.role === Role.LABOUR) {
       const myWorkerRecord = await this.prisma.labourWorker.findFirst({
         where: {
@@ -287,13 +289,15 @@ export class LabourService {
             passwordHash,
             name: dto.name || existing.name,
             role: Role.LABOUR,
-            roles: [Role.LABOUR],
+            roles: [Role.LABOUR, Role.CUSTOMER],
           },
         });
       } else {
+        const updatedRoles = Array.from(new Set([...linkedUser.roles, Role.LABOUR, Role.CUSTOMER]));
         await this.prisma.user.update({
           where: { id: linkedUser.id },
           data: {
+            roles: updatedRoles,
             ...(dto.name && { name: dto.name.trim() }),
             ...(dto.photoUrl !== undefined && { photoUrl: dto.photoUrl?.trim() || null }),
           },

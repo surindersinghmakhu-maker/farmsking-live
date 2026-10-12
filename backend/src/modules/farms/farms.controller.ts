@@ -19,6 +19,7 @@ import { UpdateFarmDto } from './dto/update-farm.dto';
   Role.ADMIN,
   Role.SUPER_ADMIN,
   Role.OPERATOR,
+  Role.SUPERVISOR,
 )
 @Controller('farms')
 export class FarmsController {

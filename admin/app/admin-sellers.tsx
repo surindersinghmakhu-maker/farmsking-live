@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -17,6 +17,8 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { apiClient } from '@/src/api/client';
+import { exportSellersToExcel } from '@/src/utils/excelExport';
+import { playKycAlertChime } from '@/src/utils/audioAlert';
 
 export default function AdminSellersScreen() {
   const router = useRouter();
@@ -27,6 +29,23 @@ export default function AdminSellersScreen() {
   const [customCommission, setCustomCommission] = useState('5.0');
   const [rejectionReasonInput, setRejectionReasonInput] = useState('');
   const [expandedStoreIds, setExpandedStoreIds] = useState<Record<string, boolean>>({});
+
+  // Category-wise commission modal state
+  const [categoryModalVisible, setCategoryModalVisible] = useState(false);
+  const [categoryStore, setCategoryStore] = useState<any>(null);
+  const [categoryCommissions, setCategoryCommissions] = useState({
+    fertilizer: '2.0',
+    seeds: '5.0',
+    spray: '4.0',
+    machinery: '3.0',
+    feed: '2.0',
+    general: '5.0',
+  });
+  const [savingCategoryCommission, setSavingCategoryCommission] = useState(false);
+
+  // Live Bell notification & Audio chime state
+  const [pendingKycCount, setPendingKycCount] = useState<number>(0);
+  const prevPendingCountRef = useRef<number>(0);
 
   // Document photo preview modal state
   const [previewDocUrl, setPreviewDocUrl] = useState<string | null>(null);
@@ -52,6 +71,21 @@ export default function AdminSellersScreen() {
     fetchStores();
   }, [selectedFilter]);
 
+  useEffect(() => {
+    // 25-second live background check for new seller KYC submissions
+    const timer = setInterval(() => {
+      apiClient.get('/seller/admin/stores?kycStatus=PENDING').then((res) => {
+        const count = Array.isArray(res.data) ? res.data.length : 0;
+        if (count > prevPendingCountRef.current && prevPendingCountRef.current !== 0) {
+          playKycAlertChime();
+        }
+        prevPendingCountRef.current = count;
+        setPendingKycCount(count);
+      }).catch(() => {});
+    }, 25000);
+    return () => clearInterval(timer);
+  }, []);
+
   const showAlert = (title: string, message: string) => {
     if (Platform.OS === 'web') {
       window.alert(`${title}\n\n${message}`);
@@ -65,8 +99,17 @@ export default function AdminSellersScreen() {
       setLoading(true);
       setFetchError(null);
       const kycParam = selectedFilter !== 'ALL' ? `?kycStatus=${selectedFilter}` : '';
-      const res = await apiClient.get(`/seller/admin/stores${kycParam}`);
+      const [res, pendingRes] = await Promise.all([
+        apiClient.get(`/seller/admin/stores${kycParam}`),
+        apiClient.get('/seller/admin/stores?kycStatus=PENDING').catch(() => ({ data: [] })),
+      ]);
       setStores(res.data);
+      const currentPending = Array.isArray(pendingRes.data) ? pendingRes.data.length : 0;
+      if (currentPending > prevPendingCountRef.current && prevPendingCountRef.current !== 0) {
+        playKycAlertChime();
+      }
+      prevPendingCountRef.current = currentPending;
+      setPendingKycCount(currentPending);
     } catch (err: any) {
       console.log('Error fetching seller stores for admin:', err?.response?.data || err.message);
       const status = err?.response?.status;
@@ -77,6 +120,47 @@ export default function AdminSellersScreen() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openCategoryModal = (store: any) => {
+    setCategoryStore(store);
+    const existing = store.categoryCommissions || {};
+    setCategoryCommissions({
+      fertilizer: existing.fertilizer !== undefined ? String(existing.fertilizer) : '2.0',
+      seeds: existing.seeds !== undefined ? String(existing.seeds) : '5.0',
+      spray: existing.spray !== undefined ? String(existing.spray) : '4.0',
+      machinery: existing.machinery !== undefined ? String(existing.machinery) : '3.0',
+      feed: existing.feed !== undefined ? String(existing.feed) : '2.0',
+      general: store.commissionRate !== undefined ? String(store.commissionRate) : '5.0',
+    });
+    setCategoryModalVisible(true);
+  };
+
+  const handleSaveCategoryCommissions = async () => {
+    if (!categoryStore) return;
+    try {
+      setSavingCategoryCommission(true);
+      const catPayload = {
+        fertilizer: parseFloat(categoryCommissions.fertilizer || '2.0'),
+        seeds: parseFloat(categoryCommissions.seeds || '5.0'),
+        spray: parseFloat(categoryCommissions.spray || '4.0'),
+        machinery: parseFloat(categoryCommissions.machinery || '3.0'),
+        feed: parseFloat(categoryCommissions.feed || '2.0'),
+      };
+      const generalRate = parseFloat(categoryCommissions.general || '5.0');
+      await apiClient.patch(`/seller/admin/stores/${categoryStore.id}/settings`, {
+        categoryCommissions: catPayload,
+        commissionRate: generalRate,
+      });
+      showAlert('ਕਮਿਸ਼ਨ ਸੈੱਟ ਹੋ ਗਿਆ ✅', `ਸੈਲਰ "${categoryStore.storeName}" ਲਈ ਕੈਟੇਗਰੀ ਕਮਿਸ਼ਨ (ਖਾਦ ${catPayload.fertilizer}%, ਬੀਜ ${catPayload.seeds}%) ਸਫਲਤਾਪੂਰਵਕ ਸੇਵ ਹੋ ਗਿਆ।`);
+      setCategoryModalVisible(false);
+      fetchStores();
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Could not save category commissions.';
+      showAlert('Error ⚠️', Array.isArray(msg) ? msg.join(', ') : msg);
+    } finally {
+      setSavingCategoryCommission(false);
     }
   };
 
@@ -157,6 +241,38 @@ export default function AdminSellersScreen() {
         </View>
 
         <View style={styles.headerRight}>
+          {/* Live Sound Alert & Bell Notification */}
+          <TouchableOpacity
+            style={[
+              styles.headerActionBtn,
+              pendingKycCount > 0 && { backgroundColor: '#78350F', borderColor: '#F59E0B', borderWidth: 1 },
+            ]}
+            onPress={() => {
+              playKycAlertChime();
+              setSelectedFilter('PENDING');
+            }}
+          >
+            <Ionicons
+              name={pendingKycCount > 0 ? 'notifications' : 'notifications-outline'}
+              size={16}
+              color={pendingKycCount > 0 ? '#FBBF24' : '#10B981'}
+            />
+            {pendingKycCount > 0 && (
+              <View style={styles.liveBellBadge}>
+                <Text style={styles.liveBellBadgeText}>{pendingKycCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* 1-Click Excel Export for All Sellers */}
+          <TouchableOpacity
+            style={[styles.headerActionBtn, { backgroundColor: '#064E3B', borderColor: '#10B981', borderWidth: 1 }]}
+            onPress={() => exportSellersToExcel(stores)}
+          >
+            <Ionicons name="download-outline" size={16} color="#34D399" />
+            <Text style={[styles.headerActionText, { color: '#34D399', fontWeight: '800' }]}>Excel Export</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.headerActionBtn} onPress={() => router.push('/shop')}>
             <Ionicons name="storefront" size={16} color="#10B981" />
             <Text style={styles.headerActionText}>Shop</Text>
@@ -369,6 +485,39 @@ export default function AdminSellersScreen() {
                         <Text style={styles.detailLabel}>Platform Commission:</Text>
                         <Text style={styles.commissionVal}>{store.commissionRate}%</Text>
                       </View>
+
+                      {store.categoryCommissions && Object.keys(store.categoryCommissions).length > 0 && (
+                        <View style={styles.categoryRatesBox}>
+                          <Text style={styles.categoryRatesTitle}>ਕੈਟੇਗਰੀ-ਵਾਈਜ਼ ਕਮਿਸ਼ਨ (Category Commissions):</Text>
+                          <View style={styles.categoryRatesRow}>
+                            {store.categoryCommissions.fertilizer !== undefined && (
+                              <View style={styles.catRatePill}>
+                                <Text style={styles.catRatePillText}>🌱 ਖਾਦ: {store.categoryCommissions.fertilizer}%</Text>
+                              </View>
+                            )}
+                            {store.categoryCommissions.seeds !== undefined && (
+                              <View style={styles.catRatePill}>
+                                <Text style={styles.catRatePillText}>🌾 ਬੀਜ: {store.categoryCommissions.seeds}%</Text>
+                              </View>
+                            )}
+                            {store.categoryCommissions.spray !== undefined && (
+                              <View style={styles.catRatePill}>
+                                <Text style={styles.catRatePillText}>🧪 ਦਵਾਈ/ਸਪਰੇਅ: {store.categoryCommissions.spray}%</Text>
+                              </View>
+                            )}
+                            {store.categoryCommissions.machinery !== undefined && (
+                              <View style={styles.catRatePill}>
+                                <Text style={styles.catRatePillText}>🚜 ਮਸ਼ੀਨਰੀ: {store.categoryCommissions.machinery}%</Text>
+                              </View>
+                            )}
+                            {store.categoryCommissions.feed !== undefined && (
+                              <View style={styles.catRatePill}>
+                                <Text style={styles.catRatePillText}>🐄 ਪਸ਼ੂ ਆਹਾਰ: {store.categoryCommissions.feed}%</Text>
+                              </View>
+                            )}
+                          </View>
+                        </View>
+                      )}
                     </View>
 
                     {/* Uploaded Documents Panel */}
@@ -546,6 +695,16 @@ export default function AdminSellersScreen() {
 
                             {!isBlocked && (
                               <TouchableOpacity
+                                style={[styles.btn, { backgroundColor: '#1E3A8A', borderWidth: 1, borderColor: '#3B82F6' }]}
+                                onPress={() => openCategoryModal(store)}
+                              >
+                                <Ionicons name="options-outline" size={15} color="#93C5FD" />
+                                <Text style={[styles.btnText, { color: '#93C5FD' }]}> % ਕੈਟੇਗਰੀ ਕਮਿਸ਼ਨ</Text>
+                              </TouchableOpacity>
+                            )}
+
+                            {!isBlocked && (
+                              <TouchableOpacity
                                 style={[styles.btn, styles.btnGstr8]}
                                 onPress={() => handleDownloadGstr8(store.id)}
                               >
@@ -644,6 +803,169 @@ export default function AdminSellersScreen() {
                   )}
                 </ScrollView>
               ) : null}
+            </View>
+          </View>
+        </Modal>
+      ) : null}
+
+      {/* Simplified Category-Wise Commission Setting Modal */}
+      {categoryModalVisible && categoryStore ? (
+        <Modal visible={true} transparent={true} animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.categoryModalBox}>
+              <View style={styles.imageModalHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons name="options" size={20} color="#34D399" />
+                  <Text style={styles.imageModalTitle}>
+                    ਸੈਲਰ ਕਮਿਸ਼ਨ ਸੈਟਿੰਗ ({categoryStore.storeName})
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={() => setCategoryModalVisible(false)} style={styles.closeBtn}>
+                  <Ionicons name="close" size={22} color="#FFF" />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.modalHelperText}>
+                ਵੱਖ-ਵੱਖ ਕੈਟੇਗਰੀਆਂ (ਜਿਵੇਂ ਖਾਦ 'ਤੇ 2%, ਬੀਜ 'ਤੇ 5%) ਲਈ ਅਲੱਗ-ਅਲੱਗ ਕਮਿਸ਼ਨ ਦਰਾਂ ਸੈੱਟ ਕਰੋ:
+              </Text>
+
+              {/* Preset quick buttons */}
+              <View style={styles.presetRow}>
+                <TouchableOpacity
+                  style={styles.presetBtn}
+                  onPress={() =>
+                    setCategoryCommissions((prev) => ({
+                      ...prev,
+                      fertilizer: '2.0',
+                      seeds: '5.0',
+                      spray: '4.0',
+                      machinery: '3.0',
+                    }))
+                  }
+                >
+                  <Text style={styles.presetBtnText}>⚡ ਖਾਦ 2% / ਬੀਜ 5% / ਸਪਰੇਅ 4%</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.presetBtn}
+                  onPress={() =>
+                    setCategoryCommissions((prev) => ({
+                      ...prev,
+                      fertilizer: '1.5',
+                      seeds: '4.0',
+                      spray: '3.0',
+                      machinery: '2.5',
+                    }))
+                  }
+                >
+                  <Text style={styles.presetBtnText}>🏷️ ਲੋ-ਮਾਰਜਿਨ (ਖਾਦ 1.5% / ਬੀਜ 4%)</Text>
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView style={{ maxHeight: 380, marginVertical: 8 }}>
+                <View style={styles.categoryInputGrid}>
+                  {/* Fertilizer */}
+                  <View style={styles.catInputItem}>
+                    <Text style={styles.catInputLabel}>🌱 ਖਾਦ (Fertilizer) %</Text>
+                    <TextInput
+                      style={styles.catInputField}
+                      keyboardType="numeric"
+                      value={categoryCommissions.fertilizer}
+                      onChangeText={(val) => setCategoryCommissions((c) => ({ ...c, fertilizer: val }))}
+                      placeholder="2.0"
+                      placeholderTextColor="#64748B"
+                    />
+                  </View>
+
+                  {/* Seeds */}
+                  <View style={styles.catInputItem}>
+                    <Text style={styles.catInputLabel}>🌾 ਬੀਜ (Seeds) %</Text>
+                    <TextInput
+                      style={styles.catInputField}
+                      keyboardType="numeric"
+                      value={categoryCommissions.seeds}
+                      onChangeText={(val) => setCategoryCommissions((c) => ({ ...c, seeds: val }))}
+                      placeholder="5.0"
+                      placeholderTextColor="#64748B"
+                    />
+                  </View>
+
+                  {/* Pesticides / Spray */}
+                  <View style={styles.catInputItem}>
+                    <Text style={styles.catInputLabel}>🧪 ਕੀਟਨਾਸ਼ਕ / ਸਪਰੇਅ (Pesticides) %</Text>
+                    <TextInput
+                      style={styles.catInputField}
+                      keyboardType="numeric"
+                      value={categoryCommissions.spray}
+                      onChangeText={(val) => setCategoryCommissions((c) => ({ ...c, spray: val }))}
+                      placeholder="4.0"
+                      placeholderTextColor="#64748B"
+                    />
+                  </View>
+
+                  {/* Machinery */}
+                  <View style={styles.catInputItem}>
+                    <Text style={styles.catInputLabel}>🚜 ਸੰਦ / ਮਸ਼ੀਨਰੀ (Machinery) %</Text>
+                    <TextInput
+                      style={styles.catInputField}
+                      keyboardType="numeric"
+                      value={categoryCommissions.machinery}
+                      onChangeText={(val) => setCategoryCommissions((c) => ({ ...c, machinery: val }))}
+                      placeholder="3.0"
+                      placeholderTextColor="#64748B"
+                    />
+                  </View>
+
+                  {/* Feed */}
+                  <View style={styles.catInputItem}>
+                    <Text style={styles.catInputLabel}>🐄 ਪਸ਼ੂ ਆਹਾਰ (Cattle Feed) %</Text>
+                    <TextInput
+                      style={styles.catInputField}
+                      keyboardType="numeric"
+                      value={categoryCommissions.feed}
+                      onChangeText={(val) => setCategoryCommissions((c) => ({ ...c, feed: val }))}
+                      placeholder="2.0"
+                      placeholderTextColor="#64748B"
+                    />
+                  </View>
+
+                  {/* Default / General Store Rate */}
+                  <View style={styles.catInputItem}>
+                    <Text style={styles.catInputLabel}>📦 ਬਾਕੀ ਸਾਰੇ ਉਤਪਾਦ (General Rate) %</Text>
+                    <TextInput
+                      style={styles.catInputField}
+                      keyboardType="numeric"
+                      value={categoryCommissions.general}
+                      onChangeText={(val) => setCategoryCommissions((c) => ({ ...c, general: val }))}
+                      placeholder="5.0"
+                      placeholderTextColor="#64748B"
+                    />
+                  </View>
+                </View>
+              </ScrollView>
+
+              <View style={styles.catModalFooter}>
+                <TouchableOpacity
+                  style={[styles.btn, styles.btnCancel, { flex: 1 }]}
+                  onPress={() => setCategoryModalVisible(false)}
+                >
+                  <Text style={[styles.btnText, { color: '#9CA3AF' }]}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.btn, styles.btnApprove, { flex: 2 }]}
+                  disabled={savingCategoryCommission}
+                  onPress={handleSaveCategoryCommissions}
+                >
+                  {savingCategoryCommission ? (
+                    <ActivityIndicator size="small" color="#FFF" />
+                  ) : (
+                    <>
+                      <Ionicons name="checkmark-done" size={16} color="#FFF" />
+                      <Text style={styles.btnText}> ਕਮਿਸ਼ਨ ਸੇਵ ਕਰੋ (Save)</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
@@ -1209,5 +1531,138 @@ const styles = StyleSheet.create({
     marginVertical: 3,
     borderWidth: 1,
     borderColor: '#334155',
+  },
+
+  // Live Bell notification badge
+  liveBellBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#EF4444',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 1.5,
+    borderColor: '#022C22',
+  },
+  liveBellBadgeText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '900',
+  },
+
+  // Category Rates display in store card
+  categoryRatesBox: {
+    backgroundColor: '#0F172A',
+    borderRadius: 8,
+    padding: 8,
+    marginTop: 6,
+    borderWidth: 1,
+    borderColor: '#1E293B',
+  },
+  categoryRatesTitle: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '700',
+    marginBottom: 5,
+  },
+  categoryRatesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  catRatePill: {
+    backgroundColor: '#1E293B',
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  catRatePillText: {
+    color: '#34D399',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+
+  // Category Commission Modal styles
+  categoryModalBox: {
+    width: '100%',
+    maxWidth: 520,
+    backgroundColor: '#0F172A',
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#1E293B',
+  },
+  modalHelperText: {
+    color: '#94A3B8',
+    fontSize: 12,
+    marginBottom: 10,
+    lineHeight: 16,
+  },
+  presetRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 8,
+  },
+  presetBtn: {
+    flex: 1,
+    backgroundColor: '#1E293B',
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  presetBtnText: {
+    color: '#6EE7B7',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  categoryInputGrid: {
+    gap: 8,
+  },
+  catInputItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#1E293B',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  catInputLabel: {
+    color: '#F8FAFC',
+    fontSize: 13,
+    fontWeight: '600',
+    flex: 1,
+  },
+  catInputField: {
+    backgroundColor: '#0F172A',
+    color: '#34D399',
+    fontWeight: '800',
+    fontSize: 14,
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    width: 80,
+    textAlign: 'center',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  catModalFooter: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#1E293B',
   },
 });

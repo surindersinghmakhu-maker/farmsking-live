@@ -11,5 +11,7 @@ export interface AuthUser {
   name: string;
   kingId?: string | null;
   isSeniorDoctor?: boolean;
+  employerFarmerId?: string | null;
+  supervisorFeaturesConfig?: any;
 }
 

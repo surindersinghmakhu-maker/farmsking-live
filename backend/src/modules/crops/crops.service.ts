@@ -13,6 +13,7 @@ import { AdvisorAssignmentService } from '../advisor-assignment/advisor-assignme
 import { NotificationsService } from '../notifications/notifications.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { generateUniqueCropId } from '../../common/utils/crop-id.util';
+import { getEffectiveFarmerId } from '../../common/utils/effective-farmer.util';
 import { CreateCropDto } from './dto/create-crop.dto';
 import { UpdateCropDto } from './dto/update-crop.dto';
 
@@ -146,9 +147,10 @@ export class CropsService {
         user.role === Role.SUPER_ADMIN ||
         (Array.isArray(user.roles) && (user.roles.includes(Role.ADMIN) || user.roles.includes(Role.SUPER_ADMIN)));
 
+      const ownerFarmerId = getEffectiveFarmerId(user);
       // 1. Fetch all plot IDs for farms owned by this user (or all plots if global admin)
       const userFarms = await this.prisma.farm.findMany({
-        where: isGlobalAdmin ? { deletedAt: null } : { ownerId: user.id, deletedAt: null },
+        where: isGlobalAdmin ? { deletedAt: null } : { ownerId: ownerFarmerId, deletedAt: null },
         select: { id: true, plots: { where: { deletedAt: null }, select: { id: true } } },
       });
 
@@ -238,7 +240,8 @@ export class CropsService {
       include: { plot: { include: { farm: true } } },
     });
 
-    if (!cropCycle || (user.role !== Role.ADMIN && user.role !== Role.SUPER_ADMIN && cropCycle.plot.farm.ownerId !== user.id)) {
+    const ownerFarmerId = getEffectiveFarmerId(user);
+    if (!cropCycle || (user.role !== Role.ADMIN && user.role !== Role.SUPER_ADMIN && cropCycle.plot.farm.ownerId !== ownerFarmerId)) {
       throw new NotFoundException('Crop cycle not found.');
     }
 

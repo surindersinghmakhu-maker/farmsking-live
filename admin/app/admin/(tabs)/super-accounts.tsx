@@ -17,6 +17,7 @@ import { useAdminBonusReport, useCreditWallet, useDebitWallet, useWalletForUser 
 import { AdminUser } from '@/src/types/api';
 
 import { AdminWalletManagementView } from '@/src/components/AdminWalletManagementView';
+import { exportAccountsToExcel } from '@/src/utils/excelExport';
 
 const theme = RoleThemes.SUPER_ADMIN;
 
@@ -125,8 +126,22 @@ export default function SuperAccountsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.hero}>
-        <Text style={styles.heroTitle}>Finance Control Center</Text>
-        <Text style={styles.heroSubtitle}>VIP Pass & Plans, Coupons & Vouchers, Finance & Wallet</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.heroTitle}>Finance Control Center</Text>
+            <Text style={styles.heroSubtitle}>VIP Pass & Plans, Coupons & Vouchers, Finance & Wallet</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.exportBtn}
+            onPress={() => {
+              tap();
+              exportAccountsToExcel(withdrawals || []);
+            }}
+          >
+            <Ionicons name="download-outline" size={14} color="#00ff87" />
+            <Text style={styles.exportBtnText}>Excel Export</Text>
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.statRow}>
           <View style={styles.statCard}>
@@ -955,6 +970,22 @@ const styles = StyleSheet.create({
   },
   heroTitle: { color: '#ffffff', fontSize: 20, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
   heroSubtitle: { color: '#64748b', fontSize: 12, fontFamily: FONT.medium, marginTop: 2 },
+  exportBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(0, 255, 135, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.35)',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+  },
+  exportBtnText: {
+    color: '#00ff87',
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+  },
 
   statRow: {
     flexDirection: 'row',

@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { CreateSaleBillDto } from './dto/create-sale-bill.dto';
 import { ChatGateway } from '../chat/chat.gateway';
+import { getEffectiveFarmerId } from '../../common/utils/effective-farmer.util';
 
 @Injectable()
 export class SaleBillsService {
@@ -12,6 +13,7 @@ export class SaleBillsService {
   ) {}
 
   private async nextBillNo(user: AuthUser): Promise<string> {
+    const farmerId = getEffectiveFarmerId(user);
     const now = new Date();
     const fullYear = now.getFullYear();
     const yy = String(fullYear).slice(-2); // e.g. "26" for 2026
@@ -24,7 +26,7 @@ export class SaleBillsService {
     // Count sale bills created by THIS FARMER in current calendar month
     const countThisMonth = await this.prisma.saleBill.count({
       where: {
-        farmerId: user.id,
+        farmerId,
         createdAt: {
           gte: startOfMonth,
           lte: endOfMonth,
@@ -38,14 +40,14 @@ export class SaleBillsService {
 
     // Guarantee 100% Unique Bill Number per farmer across concurrent requests
     let exists = await this.prisma.saleBill.findFirst({
-      where: { farmerId: user.id, billNo: candidate },
+      where: { farmerId, billNo: candidate },
     });
     while (exists) {
       nextSeq++;
       paddedSeq = String(nextSeq).padStart(2, '0');
       candidate = `${prefix}-${paddedSeq}`;
       exists = await this.prisma.saleBill.findFirst({
-        where: { farmerId: user.id, billNo: candidate },
+        where: { farmerId, billNo: candidate },
       });
     }
 
@@ -53,9 +55,10 @@ export class SaleBillsService {
   }
 
   async create(user: AuthUser, dto: CreateSaleBillDto) {
+    const farmerId = getEffectiveFarmerId(user);
     if (dto.billNo) {
       const existing = await this.prisma.saleBill.findFirst({
-        where: { farmerId: user.id, billNo: dto.billNo },
+        where: { farmerId, billNo: dto.billNo },
       });
       if (existing) {
         return this.update(user, existing.id, dto);
@@ -76,7 +79,7 @@ export class SaleBillsService {
 
     const bill = await this.prisma.saleBill.create({
       data: {
-        farmerId: user.id,
+        farmerId,
         billNo,
         farmerName: dto.farmerName,
         partyId: dto.partyId,
@@ -100,7 +103,6 @@ export class SaleBillsService {
     });
 
     // Broadcast real-time market rate update via WebSocket.
-    // market-rates.service.ts reads directly from SaleBill.items — no separate MarketRate record needed.
     this.chatGateway.broadcastMarketRateUpdate({ source: 'farmer_sale_bill', billId: bill.id });
 
     return bill;
@@ -144,13 +146,13 @@ export class SaleBillsService {
     });
 
     // Broadcast real-time market rate update via WebSocket.
-    // market-rates.service.ts reads directly from SaleBill.items — no separate MarketRate record needed.
     this.chatGateway.broadcastMarketRateUpdate({ source: 'farmer_sale_bill_update', billId: updated.id });
 
     return updated;
   }
 
   async findOneOrThrow(user: AuthUser, id: string) {
+    const farmerId = getEffectiveFarmerId(user);
     let bill: any = null;
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
     if (isUuid) {
@@ -158,13 +160,13 @@ export class SaleBillsService {
     }
     if (!bill) {
       bill = await this.prisma.saleBill.findFirst({
-        where: { farmerId: user.id, billNo: id },
+        where: { farmerId, billNo: id },
       });
     }
     if (!bill) {
       bill = await this.prisma.saleBill.findFirst({
         where: {
-          farmerId: user.id,
+          farmerId,
           billNo: { equals: id, mode: 'insensitive' },
         },
       });
@@ -172,21 +174,23 @@ export class SaleBillsService {
     if (!bill) {
       throw new NotFoundException('Bill not found.');
     }
-    if (bill.farmerId !== user.id) {
+    if (bill.farmerId !== farmerId) {
       throw new ForbiddenException('This bill does not belong to you.');
     }
     return bill;
   }
 
   async listMine(user: AuthUser) {
+    const farmerId = getEffectiveFarmerId(user);
     return this.prisma.saleBill.findMany({
-      where: { farmerId: user.id },
+      where: { farmerId },
       orderBy: { createdAt: 'desc' },
     });
   }
 
   async countMine(user: AuthUser) {
-    const count = await this.prisma.saleBill.count({ where: { farmerId: user.id } });
+    const farmerId = getEffectiveFarmerId(user);
+    const count = await this.prisma.saleBill.count({ where: { farmerId } });
     return { count };
   }
 

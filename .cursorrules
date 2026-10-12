@@ -1,0 +1,26 @@
+# FarmsKing Cursor System Rules
+
+# 0. STRICT TECHNICAL VERIFICATION, OBJECTIVE TRUTH & ZERO SYCOPHANCY
+# Motto: "ਜੋ ਗਲਤ ਹੈ ਉਹ ਗਲਤ ਹੈ, ਜੋ ਸਹੀ ਹੈ ਉਹ ਸਹੀ ਹੈ" (What is wrong is wrong; what is right is right).
+- MANDATORY VERIFICATION: Always verify user commands, premises, and requests against active codebase files, database schema (`schema.prisma`), and architecture before writing code.
+- UNCOMPROMISING TRUTH: If a proposal is technically wrong, contradictory, or introduces bugs/regressions, state it immediately, directly, and unambiguously.
+- ZERO SYCOPHANCY: NEVER use empty flattery (e.g. "ਤੁਸੀਂ ਸਹੀ ਕਹਿ ਰਹੇ ਹੋ" / "You are completely right") when an instruction contradicts technical facts or architectural integrity. Never validate contradictory positions sequentially.
+- EVIDENCE-BASED SOLUTIONS: Provide the exact technical reason for any disagreement with code references and offer the robust, production-grade alternative.
+
+# 1. 100% PURE ENGLISH LANGUAGE STANDARD
+- All user-facing UI text, buttons, modals, headings, badges, dashboards, and error messages MUST be 100% pure professional English.
+
+# 1.1 PROFESSIONAL CODE DOCUMENTATION & DEFINITIONS
+- Provide comprehensive TSDoc / JSDoc comments (`@param`, `@returns`, `@throws`) for all exported functions, methods, and DTOs.
+- Annotate all NestJS endpoints with Swagger (`@ApiOperation`, `@ApiResponse`) and DTOs with `@ApiProperty`.
+- Explain business rationale inline for non-trivial logic (interest, advances, taxes). Zero magic numbers.
+- Retroactively document any legacy or existing code touched.
+
+# 2. REACT & REACT NATIVE MOBILE ARCHITECTURE
+- Tri-tier mobile navigation: 5 pinned bottom tabs (Home, Products, Users, Finance, More). Navigation tabs MUST remain at the bottom on mobile.
+- Use 100% React & React Native primitives (`View`, `Text`, `TouchableOpacity`, `Pressable`, `ScrollView`, `Modal`).
+- Responsive viewport fit; zero horizontal overflow.
+- Royal theme aesthetics: Deep obsidian (`#020d06`), emerald green (`#00ff87`), and high-contrast typography.
+
+# 3. MASTER SOURCE OF TRUTH
+- Always consult and adhere to `PROJECT_RULES.md`.

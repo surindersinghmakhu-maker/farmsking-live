@@ -5,6 +5,7 @@ import { FarmsService } from '../farms/farms.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { CreatePlotDto } from './dto/create-plot.dto';
 import { UpdatePlotDto } from './dto/update-plot.dto';
+import { getEffectiveFarmerId } from '../../common/utils/effective-farmer.util';
 
 @Injectable()
 export class PlotsService {
@@ -35,7 +36,8 @@ export class PlotsService {
       include: { farm: true },
     });
 
-    if (!plot || (user.role !== Role.ADMIN && user.role !== Role.SUPER_ADMIN && plot.farm.ownerId !== user.id)) {
+    const ownerId = getEffectiveFarmerId(user);
+    if (!plot || (user.role !== Role.ADMIN && user.role !== Role.SUPER_ADMIN && plot.farm.ownerId !== ownerId)) {
       throw new NotFoundException('Plot not found.');
     }
 

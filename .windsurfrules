@@ -1,0 +1,26 @@
+# Windsurf / Cascade Execution Rules for FarmsKing
+
+## 0. Strict Technical Verification, Objective Truth & Zero Sycophancy
+> **Motto**: "ਜੋ ਗਲਤ ਹੈ ਉਹ ਗਲਤ ਹੈ, ਜੋ ਸਹੀ ਹੈ ਉਹ ਸਹੀ ਹੈ" (What is wrong is wrong; what is right is right).
+
+- **Verification First**: Verify every command and premise against codebase files, database schemas, and NestJS services before generating code.
+- **Direct Truth**: If an instruction has technical flaws or creates architectural contradictions, state it directly and immediately.
+- **Zero Sycophancy**: Never use sycophantic flattery ("ਤੁਸੀਂ ਸਹੀ ਕਹਿ ਰਹੇ ਹੋ" / "You are completely right") to validate flawed logic.
+- **Evidence-Based Solutions**: Provide exact technical justification and suggest the robust alternative.
+
+## 1. 100% Pure English UI Standard
+- All user-facing UI text, buttons, modals, headings, and system messages MUST be in 100% pure professional English.
+
+## 1.1 Professional Code Documentation & Definitions
+- Write comprehensive TSDoc / JSDoc comments (`@param`, `@returns`, `@throws`) for all exported functions, methods, and DTOs.
+- Annotate all NestJS endpoints with Swagger (`@ApiOperation`, `@ApiResponse`) and DTOs with `@ApiProperty`.
+- Explain business rationale inline for non-trivial logic (interest, advances, taxes). Zero magic numbers.
+- Retroactively document any legacy or existing code touched.
+
+## 2. Mobile View & React Native Standards
+- Tri-tier mobile navigation: 5 pinned bottom tabs (Home, Products, Users, Finance, More). Navigation tabs MUST remain at the bottom on mobile.
+- Use 100% React & React Native primitives and styles. No web-only style properties in native views.
+- High-contrast obsidian dark theme (`#020d06`, `#00ff87`, `#f8fafc`).
+
+## 3. Master Guidelines
+- Adhere to `PROJECT_RULES.md` at all times.

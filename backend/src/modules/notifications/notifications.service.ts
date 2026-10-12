@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { NotificationType, Prisma } from '@prisma/client';
+import { NotificationType, Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 
@@ -46,5 +46,71 @@ export class NotificationsService {
       data: { isRead: true, readAt: new Date() },
     });
     return { success: true };
+  }
+
+  /** Admin: Broadcast notification to All Farmers, All Sellers, or All Users */
+  async broadcastNotification(
+    user: AuthUser,
+    dto: {
+      targetGroup: 'ALL_FARMERS' | 'ALL_SELLERS' | 'ALL_USERS';
+      title: string;
+      body: string;
+      category?: string;
+      schemeUrl?: string;
+    },
+  ) {
+    let whereClause: Prisma.UserWhereInput = { deletedAt: null };
+
+    if (dto.targetGroup === 'ALL_FARMERS') {
+      whereClause = {
+        deletedAt: null,
+        OR: [
+          { role: Role.FARMER },
+          { roles: { has: Role.FARMER } },
+        ],
+      };
+    } else if (dto.targetGroup === 'ALL_SELLERS') {
+      whereClause = {
+        deletedAt: null,
+        OR: [
+          { role: Role.TRADER },
+          { roles: { has: Role.TRADER } },
+          { sellerStore: { isNot: null } },
+        ],
+      };
+    }
+
+    const recipients = await this.prisma.user.findMany({
+      where: whereClause,
+      select: { id: true, mobile: true, name: true },
+    });
+
+    if (recipients.length === 0) {
+      return { success: true, count: 0, message: 'No recipients matched the target group.' };
+    }
+
+    const data = recipients.map((r) => ({
+      userId: r.id,
+      type: NotificationType.SYSTEM,
+      title: dto.title,
+      body: dto.body,
+      data: {
+        category: dto.category || 'BROADCAST',
+        schemeUrl: dto.schemeUrl || null,
+        targetGroup: dto.targetGroup,
+        sentByAdminId: user.id,
+      },
+    }));
+
+    await this.prisma.notification.createMany({
+      data,
+    });
+
+    return {
+      success: true,
+      count: recipients.length,
+      targetGroup: dto.targetGroup,
+      message: `Successfully broadcast message to ${recipients.length} recipients!`,
+    };
   }
 }

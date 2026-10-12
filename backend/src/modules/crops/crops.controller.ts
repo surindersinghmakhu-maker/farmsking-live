@@ -21,6 +21,7 @@ import { UpdateCropScheduleDto } from './dto/update-crop-schedule.dto';
   Role.ADMIN,
   Role.SUPER_ADMIN,
   Role.OPERATOR,
+  Role.SUPERVISOR,
 )
 @Controller('crops')
 export class CropsController {
@@ -35,6 +36,7 @@ export class CropsController {
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
+    Role.SUPERVISOR,
   )
   @Post()
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateCropDto) {
@@ -92,6 +94,7 @@ export class CropsController {
     Role.ADMIN,
     Role.SUPER_ADMIN,
     Role.OPERATOR,
+    Role.SUPERVISOR,
   )
   @Get('mine')
   listMineForFarmer(@CurrentUser() user: AuthUser) {

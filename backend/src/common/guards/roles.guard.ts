@@ -22,11 +22,38 @@ export class RolesGuard implements CanActivate {
     const user: AuthUser | undefined = request.user;
     if (!user) return false;
 
-    // Primary role covers the common case; `roles` lets an account with more than one granted role
-    // (e.g. a Farmer who was also made a Business Partner) reach every dashboard it holds — minus
-    // whatever an Admin has deactivated (still kept in `roles` for history, just not usable).
+    // Collect all usable active roles
     const isPrimaryUsable = !user.deactivatedRoles?.includes(user.role);
     const activeRoles = (user.roles ?? []).filter((r) => !user.deactivatedRoles?.includes(r));
-    return (requiredRoles.includes(user.role) && isPrimaryUsable) || requiredRoles.some((r) => activeRoles.includes(r));
+    const allUserRoles = new Set<Role>();
+    if (isPrimaryUsable) allUserRoles.add(user.role);
+    activeRoles.forEach((r) => allUserRoles.add(r));
+
+    // Role Hierarchy rules:
+    // 1. SUPER_ADMIN has platform-wide authority over all admin-tier and staff operations
+    if (allUserRoles.has(Role.SUPER_ADMIN)) {
+      return true;
+    }
+
+    // 2. ADMIN has access to ADMIN, MANAGER, and OPERATOR endpoints
+    if (allUserRoles.has(Role.ADMIN)) {
+      if (
+        requiredRoles.includes(Role.ADMIN) ||
+        requiredRoles.includes(Role.MANAGER) ||
+        requiredRoles.includes(Role.OPERATOR)
+      ) {
+        return true;
+      }
+    }
+
+    // 3. MANAGER has access to MANAGER and OPERATOR endpoints
+    if (allUserRoles.has(Role.MANAGER)) {
+      if (requiredRoles.includes(Role.MANAGER) || requiredRoles.includes(Role.OPERATOR)) {
+        return true;
+      }
+    }
+
+    // Standard match for user's assigned active roles
+    return requiredRoles.some((r) => allUserRoles.has(r));
   }
 }

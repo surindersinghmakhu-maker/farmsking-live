@@ -47,7 +47,8 @@ export const MobilePillarsMenuModal: React.FC<Props> = ({
   const handleSelectSubTab = (subTab: SubTabItem) => {
     onClose();
     if (subTab.params) {
-      router.push({ pathname: subTab.path as any, params: subTab.params });
+      const queryString = new URLSearchParams(subTab.params as Record<string, string>).toString();
+      router.push(`${subTab.path}?${queryString}` as any);
     } else {
       router.push(subTab.path as any);
     }

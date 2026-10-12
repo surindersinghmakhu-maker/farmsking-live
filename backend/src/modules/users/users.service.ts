@@ -1,13 +1,15 @@
 import { randomBytes } from 'crypto';
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
-import { AdminStaffPermission, FarmerSubscriptionPlan, OperatorPermission, Prisma, Role, SupervisorPermission } from '@prisma/client';
+import { AdminStaffPermission, FarmerSubscriptionPlan, NotificationType, OperatorPermission, Prisma, Role, SupervisorPermission } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
 import { WalletService } from '../wallet/wallet.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateAdvisorDto } from './dto/create-advisor.dto';
 import { CreateAssistantDoctorDto } from './dto/create-assistant-doctor.dto';
 import { CreateStaffDto } from './dto/create-staff.dto';
 import { CreateSupervisorDto } from './dto/create-supervisor.dto';
+import { AppointSupervisorRequestDto, RespondSupervisorRequestDto } from './dto/appoint-supervisor-request.dto';
 import { ListUsersQueryDto } from './dto/list-users-query.dto';
 import { UpdateFarmerProfileDto } from './dto/update-farmer-profile.dto';
 import { UpdateAdvisorProfileDto } from './dto/update-advisor-profile.dto';
@@ -81,6 +83,32 @@ const SAFE_USER_SELECT = {
       kycStatus: true,
     },
   },
+  employerFarmer: {
+    select: {
+      id: true,
+      name: true,
+      kingId: true,
+      mobile: true,
+      farmName: true,
+    },
+  },
+  labourWorkerUser: {
+    where: { deletedAt: null },
+    select: {
+      id: true,
+      name: true,
+      farmerId: true,
+      farmer: {
+        select: {
+          id: true,
+          name: true,
+          kingId: true,
+          mobile: true,
+          farmName: true,
+        },
+      },
+    },
+  },
 } as const;
 
 function generateTempPassword(): string {
@@ -94,6 +122,7 @@ export class UsersService implements OnModuleInit {
     private readonly prisma: PrismaService,
     private readonly walletService: WalletService,
     private readonly whatsappGroupSyncService: WhatsAppGroupSyncService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async onModuleInit() {
@@ -290,7 +319,7 @@ export class UsersService implements OnModuleInit {
         state: dto.state,
         preferredLanguage: dto.preferredLanguage ?? 'en',
         role,
-        roles: [role],
+        roles: (role === Role.ADMIN || role === Role.SUPER_ADMIN) ? [role] : [role, Role.CUSTOMER],
       },
       select: SAFE_USER_SELECT,
     });
@@ -587,9 +616,66 @@ export class UsersService implements OnModuleInit {
       throw new ForbiddenException('Only farmers with VIP Membership (or Super Admin) can add Supervisors.');
     }
 
-    const existing = await this.prisma.user.findUnique({ where: { mobile: dto.mobile } });
+    const cleanMobile = dto.mobile.replace(/\D/g, '').slice(-10);
+    const existing = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { mobile: dto.mobile.trim() },
+          { mobile: cleanMobile },
+          { mobile: `+91${cleanMobile}` },
+        ],
+      },
+    });
+
     if (existing) {
-      throw new ConflictException('An account with this mobile number already exists.');
+      // Domain Rule: A supervisor can work for only 1 farmer at a time!
+      if (existing.employerFarmerId && existing.employerFarmerId !== farmer.id) {
+        const currentEmployer = await this.prisma.user.findUnique({
+          where: { id: existing.employerFarmerId },
+          select: { name: true, kingId: true, mobile: true },
+        });
+        throw new ConflictException(
+          `This supervisor is currently actively working under farmer "${currentEmployer?.name || 'Another Farmer'}" (${currentEmployer?.kingId || ''}). A supervisor cannot work for 2 farmers at the same time. They must resign from their current employer before joining a new farmer.`,
+        );
+      }
+
+      if (existing.employerFarmerId === farmer.id) {
+        const updated = await this.prisma.user.update({
+          where: { id: existing.id },
+          data: {
+            supervisorPermissions: dto.permissions ?? [
+              SupervisorPermission.MANAGE_SPRAY_SCHEDULE,
+              SupervisorPermission.MANAGE_LABOUR_EXPENSES,
+              SupervisorPermission.CROP_DOCTOR_CHAT,
+              SupervisorPermission.MANAGE_HARVEST_SALES,
+            ],
+            deletedAt: null,
+          },
+          select: SAFE_USER_SELECT,
+        });
+        return { supervisor: updated, tempPassword: '(Already Assigned)' };
+      }
+
+      // Existing user has resigned or was unassigned: link them as supervisor for this farmer!
+      const updatedRoles = Array.from(new Set([...(existing.roles ?? []), Role.SUPERVISOR]));
+      const updated = await this.prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          employerFarmerId: farmer.id,
+          role: Role.SUPERVISOR,
+          roles: updatedRoles,
+          supervisorPermissions: dto.permissions ?? [
+            SupervisorPermission.MANAGE_SPRAY_SCHEDULE,
+            SupervisorPermission.MANAGE_LABOUR_EXPENSES,
+            SupervisorPermission.CROP_DOCTOR_CHAT,
+            SupervisorPermission.MANAGE_HARVEST_SALES,
+          ],
+          deletedAt: null,
+        },
+        select: SAFE_USER_SELECT,
+      });
+
+      return { supervisor: updated, tempPassword: '(Existing Account Linked)' };
     }
 
     if (process.env.NODE_ENV === 'production' && !dto.firebaseIdToken) {
@@ -622,7 +708,7 @@ export class UsersService implements OnModuleInit {
         passwordHash,
         name: dto.name,
         role: Role.SUPERVISOR,
-        roles: [Role.SUPERVISOR],
+        roles: [Role.SUPERVISOR, Role.CUSTOMER],
         employerFarmerId: farmer.id,
         supervisorPermissions: dto.permissions ?? [
           SupervisorPermission.MANAGE_SPRAY_SCHEDULE,
@@ -637,12 +723,356 @@ export class UsersService implements OnModuleInit {
     return { supervisor, tempPassword: initialPassword };
   }
 
+  /** Farmer appoints a supervisor by King ID with specific features & permissions (View & Entry) */
+  async appointSupervisorRequest(farmer: AuthUser, dto: AppointSupervisorRequestDto) {
+    const cleanKing = dto.supervisorKingId.trim();
+    const cleanDigits = cleanKing.replace(/\D/g, '');
+    const cleanMobile = cleanDigits.length >= 10 ? cleanDigits.slice(-10) : '';
+
+    const target = await this.prisma.user.findFirst({
+      where: {
+        deletedAt: null,
+        OR: [
+          { kingId: cleanKing.toUpperCase() },
+          { mobile: cleanKing },
+          ...(cleanMobile ? [{ mobile: { endsWith: cleanMobile } }] : []),
+        ],
+      },
+      select: { id: true, name: true, kingId: true, mobile: true, employerFarmerId: true, role: true, roles: true },
+    });
+
+    if (!target) {
+      throw new NotFoundException('Candidate not found matching King ID / Mobile number.');
+    }
+
+    if (target.id === farmer.id) {
+      throw new BadRequestException('You cannot appoint yourself as your own supervisor.');
+    }
+
+    // Domain Rule: 1 supervisor can only work for 1 farmer at a time
+    if (target.employerFarmerId && target.employerFarmerId !== farmer.id) {
+      const currentEmployer = await this.prisma.user.findUnique({
+        where: { id: target.employerFarmerId },
+        select: { name: true, kingId: true },
+      });
+      throw new ConflictException(
+        `This supervisor is currently actively working under farmer "${currentEmployer?.name || 'Another Farmer'}" (${currentEmployer?.kingId || ''}). A supervisor cannot work for 2 farmers at the same time. They must resign from their current employer first.`,
+      );
+    }
+
+    const cfgJson = JSON.stringify(dto.featuresConfig || {});
+
+    // Check if an existing pending request exists
+    const existingRows: any[] = await this.prisma.$queryRawUnsafe(
+      `SELECT id FROM "supervisor_requests" WHERE "farmerId" = $1 AND "supervisorId" = $2 AND "status" = 'PENDING' LIMIT 1`,
+      farmer.id,
+      target.id,
+    );
+
+    let requestId: string;
+    if (existingRows && existingRows.length > 0) {
+      requestId = existingRows[0].id;
+      await this.prisma.$executeRawUnsafe(
+        `UPDATE "supervisor_requests" SET "featuresConfig" = $1::jsonb, "note" = $2, "updatedAt" = NOW() WHERE "id" = $3`,
+        cfgJson,
+        dto.note || null,
+        requestId,
+      );
+    } else {
+      requestId = `sr_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      await this.prisma.$executeRawUnsafe(
+        `INSERT INTO "supervisor_requests" ("id", "farmerId", "supervisorId", "status", "featuresConfig", "note", "createdAt", "updatedAt")
+         VALUES ($1, $2, $3, 'PENDING', $4::jsonb, $5, NOW(), NOW())`,
+        requestId,
+        farmer.id,
+        target.id,
+        cfgJson,
+        dto.note || null,
+      );
+    }
+
+    // In-app notification to the supervisor candidate
+    try {
+      await this.notificationsService.create(
+        target.id,
+        NotificationType.SYSTEM,
+        '🚜 Farm Supervisor Appointment Request',
+        `Farmer ${farmer.name} (${farmer.kingId || ''}) has sent you an appointment request to manage their farm operations. Tap to view allowed features and accept or reject.`,
+        { requestId, farmerId: farmer.id },
+      );
+    } catch (err: any) {
+      // Non-blocking notification
+    }
+
+    return {
+      success: true,
+      message: `Appointment request sent to ${target.name} (${target.kingId || ''}). They can accept it directly in their dashboard.`,
+      requestId,
+      supervisor: {
+        id: target.id,
+        name: target.name,
+        kingId: target.kingId,
+        mobile: target.mobile,
+      },
+    };
+  }
+
+  /** Gets incoming requests for candidate/supervisor, or outgoing requests for farmer */
+  async getSupervisorRequests(user: AuthUser) {
+    try {
+      const incoming: any[] = await this.prisma.$queryRawUnsafe(
+        `SELECT sr.id, sr."farmerId", sr."supervisorId", sr.status, sr."featuresConfig", sr.note, sr."createdAt",
+                f.name as "farmerName", f."kingId" as "farmerKingId", f.mobile as "farmerMobile", f.village as "farmerVillage", f."farmName"
+         FROM "supervisor_requests" sr
+         JOIN "users" f ON f.id = sr."farmerId"
+         WHERE sr."supervisorId" = $1 AND sr.status = 'PENDING'
+         ORDER BY sr."createdAt" DESC`,
+        user.id,
+      );
+
+      const outgoing: any[] = await this.prisma.$queryRawUnsafe(
+        `SELECT sr.id, sr."farmerId", sr."supervisorId", sr.status, sr."featuresConfig", sr.note, sr."createdAt", sr."respondedAt",
+                s.name as "supervisorName", s."kingId" as "supervisorKingId", s.mobile as "supervisorMobile"
+         FROM "supervisor_requests" sr
+         JOIN "users" s ON s.id = sr."supervisorId"
+         WHERE sr."farmerId" = $1
+         ORDER BY sr."createdAt" DESC`,
+        user.id,
+      );
+
+      const parseRows = (rows: any[]) =>
+        rows.map((r) => ({
+          ...r,
+          featuresConfig: typeof r.featuresConfig === 'string' ? JSON.parse(r.featuresConfig) : (r.featuresConfig || {}),
+        }));
+
+      return {
+        incoming: parseRows(incoming),
+        outgoing: parseRows(outgoing),
+      };
+    } catch {
+      return { incoming: [], outgoing: [] };
+    }
+  }
+
+  /** Candidate supervisor accepts or rejects appointment request — zero Admin intervention */
+  async respondToSupervisorRequest(user: AuthUser, requestId: string, dto: RespondSupervisorRequestDto) {
+    const rows: any[] = await this.prisma.$queryRawUnsafe(
+      `SELECT * FROM "supervisor_requests" WHERE "id" = $1 AND "supervisorId" = $2 LIMIT 1`,
+      requestId,
+      user.id,
+    );
+
+    if (!rows || rows.length === 0) {
+      throw new NotFoundException('Appointment request not found.');
+    }
+
+    const request = rows[0];
+    if (request.status !== 'PENDING') {
+      throw new BadRequestException(`This request has already been ${request.status.toLowerCase()}.`);
+    }
+
+    if (dto.action === 'REJECT') {
+      await this.prisma.$executeRawUnsafe(
+        `UPDATE "supervisor_requests" SET "status" = 'REJECTED', "respondedAt" = NOW(), "updatedAt" = NOW() WHERE "id" = $1`,
+        requestId,
+      );
+
+      try {
+        await this.notificationsService.create(
+          request.farmerId,
+          NotificationType.SYSTEM,
+          'Supervisor Request Declined',
+          `${user.name} declined your farm supervisor appointment request.`,
+        );
+      } catch {}
+
+      return { success: true, status: 'REJECTED', message: 'You have declined this supervisor request.' };
+    }
+
+    // Action: ACCEPT
+    const currentUser = await this.prisma.user.findUnique({ where: { id: user.id } });
+    if (currentUser?.employerFarmerId && currentUser.employerFarmerId !== request.farmerId) {
+      const employer = await this.prisma.user.findUnique({ where: { id: currentUser.employerFarmerId }, select: { name: true, kingId: true } });
+      throw new ConflictException(
+        `You are currently actively assigned to farmer "${employer?.name || 'Another Farmer'}" (${employer?.kingId || ''}). Please resign from that farmer before accepting a new appointment.`,
+      );
+    }
+
+    const cfg = typeof request.featuresConfig === 'string' ? JSON.parse(request.featuresConfig) : (request.featuresConfig || {});
+    const permissions: SupervisorPermission[] = [];
+    if (cfg.spray?.view || cfg.spray?.entry) permissions.push(SupervisorPermission.MANAGE_SPRAY_SCHEDULE);
+    if (cfg.labour?.view || cfg.labour?.entry) permissions.push(SupervisorPermission.MANAGE_LABOUR_EXPENSES);
+    if (cfg.advisory?.view || cfg.advisory?.entry) permissions.push(SupervisorPermission.CROP_DOCTOR_CHAT);
+    if (cfg.sales?.view || cfg.sales?.entry) permissions.push(SupervisorPermission.MANAGE_HARVEST_SALES);
+
+    await this.prisma.$executeRawUnsafe(
+      `UPDATE "supervisor_requests" SET "status" = 'ACCEPTED', "respondedAt" = NOW(), "updatedAt" = NOW() WHERE "id" = $1`,
+      requestId,
+    );
+
+    // Cancel or decline any other pending requests for this supervisor since they can only work for 1 farmer
+    await this.prisma.$executeRawUnsafe(
+      `UPDATE "supervisor_requests" SET "status" = 'CANCELLED', "updatedAt" = NOW() WHERE "supervisorId" = $1 AND "status" = 'PENDING'`,
+      user.id,
+    );
+
+    const updatedRoles = Array.from(new Set([...(currentUser?.roles ?? []), Role.SUPERVISOR]));
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        employerFarmerId: request.farmerId,
+        role: Role.SUPERVISOR,
+        roles: updatedRoles,
+        supervisorPermissions: permissions,
+        deletedAt: null,
+      },
+    });
+
+    await this.prisma.$executeRawUnsafe(
+      `UPDATE "users" SET "supervisorFeaturesConfig" = $1::jsonb WHERE "id" = $2`,
+      JSON.stringify(cfg),
+      user.id,
+    );
+
+    const farmer = await this.prisma.user.findUnique({
+      where: { id: request.farmerId },
+      select: { id: true, name: true, kingId: true, mobile: true, farmName: true, village: true },
+    });
+
+    try {
+      await this.notificationsService.create(
+        request.farmerId,
+        NotificationType.SYSTEM,
+        '🎉 Supervisor Appointed!',
+        `${user.name} accepted your request and is now your active Farm Supervisor.`,
+        { supervisorId: user.id },
+      );
+    } catch {}
+
+    return {
+      success: true,
+      status: 'ACCEPTED',
+      message: `You are now the Farm Supervisor for ${farmer?.name || 'the farmer'}!`,
+      employerFarmer: farmer,
+      featuresConfig: cfg,
+    };
+  }
+
+  /** Supervisor gets their active employer farmer and allowed features */
+  async getActiveSupervisorAssignment(user: AuthUser) {
+    const dbUser = await this.prisma.user.findUnique({
+      where: { id: user.id },
+      select: {
+        id: true,
+        name: true,
+        role: true,
+        roles: true,
+        employerFarmerId: true,
+        supervisorPermissions: true,
+        employerFarmer: {
+          select: {
+            id: true,
+            name: true,
+            kingId: true,
+            mobile: true,
+            village: true,
+            district: true,
+            state: true,
+            farmName: true,
+          },
+        },
+      },
+    });
+
+    if (!dbUser || !dbUser.employerFarmerId) {
+      return { isAssigned: false, employerFarmer: null, featuresConfig: null };
+    }
+
+    let cfg = {};
+    try {
+      const rows: any[] = await this.prisma.$queryRawUnsafe(
+        `SELECT "supervisorFeaturesConfig" FROM "users" WHERE "id" = $1 LIMIT 1`,
+        user.id,
+      );
+      if (rows && rows.length > 0 && rows[0].supervisorFeaturesConfig) {
+        cfg = typeof rows[0].supervisorFeaturesConfig === 'string'
+          ? JSON.parse(rows[0].supervisorFeaturesConfig)
+          : rows[0].supervisorFeaturesConfig;
+      }
+    } catch {}
+
+    return {
+      isAssigned: true,
+      employerFarmer: dbUser.employerFarmer,
+      supervisorPermissions: dbUser.supervisorPermissions,
+      featuresConfig: cfg,
+    };
+  }
+
+  /** Farmer updates features (View & Entry) for an active supervisor */
+  async updateSupervisorFeaturesConfig(farmer: AuthUser, supervisorId: string, featuresConfig: any) {
+    const supervisor = await this.prisma.user.findUnique({ where: { id: supervisorId } });
+    if (!supervisor || supervisor.employerFarmerId !== farmer.id) {
+      throw new NotFoundException('Supervisor not found under your account.');
+    }
+
+    const cfg = featuresConfig || {};
+    const permissions: SupervisorPermission[] = [];
+    if (cfg.spray?.view || cfg.spray?.entry) permissions.push(SupervisorPermission.MANAGE_SPRAY_SCHEDULE);
+    if (cfg.labour?.view || cfg.labour?.entry) permissions.push(SupervisorPermission.MANAGE_LABOUR_EXPENSES);
+    if (cfg.advisory?.view || cfg.advisory?.entry) permissions.push(SupervisorPermission.CROP_DOCTOR_CHAT);
+    if (cfg.sales?.view || cfg.sales?.entry) permissions.push(SupervisorPermission.MANAGE_HARVEST_SALES);
+
+    await this.prisma.user.update({
+      where: { id: supervisorId },
+      data: { supervisorPermissions: permissions },
+    });
+
+    await this.prisma.$executeRawUnsafe(
+      `UPDATE "users" SET "supervisorFeaturesConfig" = $1::jsonb WHERE "id" = $2`,
+      JSON.stringify(cfg),
+      supervisorId,
+    );
+
+    return {
+      success: true,
+      message: 'Supervisor permissions and features updated successfully.',
+      supervisorId,
+      featuresConfig: cfg,
+    };
+  }
+
   async getMySupervisors(farmer: AuthUser) {
-    return this.prisma.user.findMany({
+    const list = await this.prisma.user.findMany({
       where: { employerFarmerId: farmer.id, deletedAt: null },
       select: SAFE_USER_SELECT,
       orderBy: { createdAt: 'desc' },
     });
+
+    if (list.length === 0) return [];
+
+    try {
+      const ids = list.map((u) => u.id);
+      const configs: any[] = await this.prisma.$queryRawUnsafe(
+        `SELECT id, "supervisorFeaturesConfig" FROM "users" WHERE id = ANY($1::text[])`,
+        ids,
+      );
+      const configMap = new Map<string, any>();
+      configs.forEach((c) => {
+        const val = typeof c.supervisorFeaturesConfig === 'string'
+          ? JSON.parse(c.supervisorFeaturesConfig)
+          : (c.supervisorFeaturesConfig || {});
+        configMap.set(c.id, val);
+      });
+      return list.map((u) => ({
+        ...u,
+        supervisorFeaturesConfig: configMap.get(u.id) || {},
+      }));
+    } catch {
+      return list;
+    }
   }
 
   async updateSupervisorPermissions(farmer: AuthUser, supervisorId: string, permissions: SupervisorPermission[]) {
@@ -658,18 +1088,94 @@ export class UsersService implements OnModuleInit {
     });
   }
 
+  /**
+   * Resigns/releases a supervisor from their current employer farmer so they can join another farmer.
+   * Account and King ID are preserved.
+   */
+  async resignSupervisor(actor: AuthUser, supervisorId: string) {
+    const supervisor = await this.prisma.user.findUnique({ where: { id: supervisorId } });
+    if (!supervisor) {
+      throw new NotFoundException('Supervisor not found.');
+    }
+    const isOwnerFarmer = supervisor.employerFarmerId === actor.id;
+    const isSelf = supervisor.id === actor.id;
+    const isAdmin = actor.role === Role.SUPER_ADMIN || actor.role === Role.ADMIN;
+
+    if (!isOwnerFarmer && !isSelf && !isAdmin) {
+      throw new ForbiddenException('Only the employer farmer, the supervisor themselves, or Admin can resign this supervisor.');
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: supervisorId },
+      data: {
+        employerFarmerId: null,
+      },
+      select: SAFE_USER_SELECT,
+    });
+
+    try {
+      await this.prisma.$executeRawUnsafe(
+        `UPDATE "users" SET "supervisorFeaturesConfig" = '{}'::jsonb WHERE "id" = $1`,
+        supervisorId,
+      );
+      await this.prisma.$executeRawUnsafe(
+        `UPDATE "supervisor_requests" SET "status" = 'RESIGNED', "updatedAt" = NOW() WHERE "supervisorId" = $1 AND "status" = 'ACCEPTED'`,
+        supervisorId,
+      );
+    } catch {}
+
+    return {
+      success: true,
+      message: `Supervisor ${supervisor.name} has resigned / been released. They can now join another farmer if appointed.`,
+      supervisor: updated,
+    };
+  }
+
+  /** Admin/Super Admin: Assigns or unassigns a supervisor to an employer farmer */
+  async assignSupervisorEmployer(caller: AuthUser, supervisorId: string, employerFarmerId: string | null) {
+    const supervisor = await this.prisma.user.findUnique({ where: { id: supervisorId } });
+    if (!supervisor) {
+      throw new NotFoundException('Supervisor not found.');
+    }
+    if (caller.role !== Role.SUPER_ADMIN && caller.role !== Role.ADMIN) {
+      throw new ForbiddenException('Only an Admin or Super Admin can assign a supervisor to an employer.');
+    }
+
+    if (employerFarmerId) {
+      const employerFarmer = await this.prisma.user.findUnique({ where: { id: employerFarmerId } });
+      if (!employerFarmer) {
+        throw new NotFoundException('Target employer farmer not found.');
+      }
+    }
+
+    const updatedRoles = Array.from(new Set([...(supervisor.roles ?? []), Role.SUPERVISOR]));
+
+    const updated = await this.prisma.user.update({
+      where: { id: supervisorId },
+      data: {
+        employerFarmerId,
+        role: Role.SUPERVISOR,
+        roles: updatedRoles,
+      },
+      select: SAFE_USER_SELECT,
+    });
+
+    return updated;
+  }
+
   async deleteSupervisor(farmer: AuthUser, supervisorId: string) {
     const supervisor = await this.prisma.user.findUnique({ where: { id: supervisorId } });
     if (!supervisor || supervisor.employerFarmerId !== farmer.id) {
       throw new NotFoundException('Supervisor not found under your account.');
     }
 
+    // Unlink employer so they are free, and soft delete only if farmer specifically removes
     await this.prisma.user.update({
       where: { id: supervisorId },
-      data: { deletedAt: new Date() },
+      data: { employerFarmerId: null },
     });
 
-    return { success: true, message: 'Supervisor removed successfully.' };
+    return { success: true, message: 'Supervisor resigned / unlinked successfully.' };
   }
 
   private async findActiveOrThrow(id: string) {
@@ -695,12 +1201,38 @@ export class UsersService implements OnModuleInit {
           ...(cleanMobile ? [{ mobile: { endsWith: cleanMobile } }] : []),
         ],
       },
-      select: { id: true, name: true, kingId: true, mobile: true, role: true, roles: true },
+      select: {
+        id: true,
+        name: true,
+        kingId: true,
+        mobile: true,
+        role: true,
+        roles: true,
+        employerFarmerId: true,
+        village: true,
+        district: true,
+        state: true,
+      },
     });
     if (!user) {
       throw new NotFoundException('No user found matching that King ID or Mobile number.');
     }
-    return user;
+
+    let currentEmployerName: string | null = null;
+    if (user.employerFarmerId) {
+      const employer = await this.prisma.user.findUnique({
+        where: { id: user.employerFarmerId },
+        select: { name: true, kingId: true },
+      });
+      if (employer) {
+        currentEmployerName = `${employer.name} (${employer.kingId || ''})`;
+      }
+    }
+
+    return {
+      ...user,
+      currentEmployerName,
+    };
   }
 
   /**
@@ -726,11 +1258,12 @@ export class UsersService implements OnModuleInit {
 
     const isNewAdvisor = role === Role.ADVISOR && !user.roles.includes(Role.ADVISOR);
     const newDeactivatedRoles = (user.deactivatedRoles ?? []).filter((r) => r !== role);
+    const targetRoles = Array.from(new Set([...user.roles, role, Role.CUSTOMER]));
     const updated = await this.prisma.user.update({
       where: { id },
       data: {
         role,
-        roles: user.roles.includes(role) ? undefined : { push: role },
+        roles: targetRoles,
         deactivatedRoles: newDeactivatedRoles,
         ...(isNewAdvisor ? { specialization: null, bio: null, yearsExperience: null, advisorType: null } : {}),
       },
@@ -943,6 +1476,7 @@ export class UsersService implements OnModuleInit {
         ...(dto.isSeniorDoctor !== undefined ? { isSeniorDoctor: dto.isSeniorDoctor } : {}),
         ...(dto.seniorDoctorId !== undefined ? { seniorDoctorId: dto.seniorDoctorId } : {}),
         ...(dto.doctorConsultationFee !== undefined ? { doctorConsultationFee: dto.doctorConsultationFee } : {}),
+        ...(dto.employerFarmerId !== undefined ? { employerFarmerId: dto.employerFarmerId } : {}),
       },
       select: {
         ...SAFE_USER_SELECT,

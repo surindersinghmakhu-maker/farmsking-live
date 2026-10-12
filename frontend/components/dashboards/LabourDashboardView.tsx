@@ -177,6 +177,31 @@ export const LabourDashboardView: React.FC = () => {
                 Total Balance Summary
               </Text>
             </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f1f5f9', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#e2e8f0' }}>
+              <Ionicons name="eye-outline" size={12} color="#64748b" />
+              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#475569' }}>View Only (ਵੇਖਣ ਲਈ)</Text>
+            </View>
+          </View>
+
+          {/* Multi-Farmer Labour King ID Card */}
+          <View style={{ backgroundColor: '#f8fafc', borderRadius: RADIUS.md, padding: 8, marginBottom: 8, borderWidth: 1, borderColor: '#e2e8f0' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="git-network-outline" size={14} color="#ea580c" />
+                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0f172a' }}>
+                  Multi-Farmer Labour ID:
+                </Text>
+                <View style={{ backgroundColor: '#ffedd5', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#fed7aa' }}>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#c2410c' }}>
+                    {user?.kingId || 'FK-LABOUR'}
+                  </Text>
+                </View>
+              </View>
+              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#16a34a' }}>● Active</Text>
+            </View>
+            <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b', marginTop: 3 }}>
+              ਜੇਕਰ ਕੋਈ ਹੋਰ ਕਿਸਾਨ ਵੀ ਤੁਹਾਨੂੰ ਕੰਮ 'ਤੇ ਰੱਖਦਾ ਹੈ, ਤਾਂ ਉਹ ਇਸ King ID ਜਾਂ ਤੁਹਾਡੇ ਮੋਬਾਈਲ ਰਾਹੀਂ ਐਂਟਰੀਆਂ ਪਾ ਸਕਦਾ ਹੈ।
+            </Text>
           </View>
 
           {/* 3-Column Vivid Metrics Row: Total Earned, Received Payment, Pending Balance */}

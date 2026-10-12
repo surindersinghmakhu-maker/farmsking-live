@@ -21,5 +21,5 @@ const Hoverable4DCard = ({ children, style, onPress }: any) => {
 };
 
 export default function Dummy() {
-  return <Redirect href="/admin/(tabs)" />;
+  return <Redirect href="/admin/(tabs)/super-users?group=PARTNERS&filter=TECHNICAL_TRAINER" />;
 }

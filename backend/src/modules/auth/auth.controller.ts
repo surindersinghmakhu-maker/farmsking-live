@@ -1,7 +1,9 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
+import { RegisterTraderDto } from './dto/register-trader.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordStartDto } from './dto/forgot-password-start.dto';
 import { ForgotPasswordVerifyDto } from './dto/forgot-password-verify.dto';
@@ -10,6 +12,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthUser } from '../../common/types/auth-user.type';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
@@ -102,6 +105,34 @@ export class AuthController {
   @Post('register')
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
+  }
+
+  /**
+   * Stage 2: Trader / Shopkeeper Self-Registration & Upgrade.
+   * Enables a guest statement viewer to convert into an authenticated TRADER + CUSTOMER account,
+   * receiving an 8-digit King ID and aggregating all farmer billings.
+   *
+   * @param dto - Registration payload with mobile, password, name, and shop details
+   * @returns Complete auth token and user profile
+   */
+  @ApiOperation({
+    summary: 'Register or upgrade as Trader / Shopkeeper',
+    description:
+      'Creates a new trader account or upgrades an existing guest account with TRADER and CUSTOMER roles, generating a King ID and auto-linking all farmer ledger records matching the mobile number.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Trader account successfully registered or upgraded with JWT token and King ID.',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Validation failed on mobile number or password length.',
+  })
+  @Throttle({ default: { limit: 1000, ttl: 60_000 } })
+  @HttpCode(HttpStatus.OK)
+  @Post('register-trader')
+  registerTrader(@Body() dto: RegisterTraderDto) {
+    return this.authService.registerTrader(dto);
   }
 
   @Throttle({ default: { limit: 1000, ttl: 60_000 } })

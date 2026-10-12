@@ -46,7 +46,8 @@ export default function AdminMoreScreen() {
 
   const handleNavigateSubTab = (tab: SubTabItem) => {
     if (tab.params) {
-      router.push({ pathname: tab.path as any, params: tab.params });
+      const queryString = new URLSearchParams(tab.params as Record<string, string>).toString();
+      router.push(`${tab.path}?${queryString}` as any);
     } else {
       router.push(tab.path as any);
     }

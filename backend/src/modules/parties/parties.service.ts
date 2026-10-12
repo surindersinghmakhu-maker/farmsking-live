@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { ArhtiyaTransactionType, MandiUnit, PartyLedgerEntryType, PartyRole, PartyType } from '@prisma/client';
+import { ArhtiyaTransactionType, MandiUnit, PartyLedgerEntryType, PartyRole, PartyType, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { RecordSaleLedgerDto } from './dto/record-sale-ledger.dto';
@@ -8,6 +8,7 @@ import { CreateUnifiedPartyDto } from './dto/create-unified-party.dto';
 import { RecordArhtiyaAdvanceDto } from './dto/record-arhtiya-advance.dto';
 import { RecordArhtiyaCropSaleDto } from './dto/record-arhtiya-crop-sale.dto';
 import { ChatGateway } from '../chat/chat.gateway';
+import { getEffectiveFarmerId } from '../../common/utils/effective-farmer.util';
 
 
 /** Sign each ledger entry type contributes to a party's balance: + = party owes the farmer, - = farmer owes the party. */
@@ -25,9 +26,13 @@ export class PartiesService {
     private readonly chatGateway: ChatGateway,
   ) {}
 
+  private getFarmerId(user: AuthUser): string {
+    return getEffectiveFarmerId(user);
+  }
+
   create(user: AuthUser, name: string, address: string, mobile?: string) {
     return this.prisma.party.create({
-      data: { ownerId: user.id, name: name.trim(), address: address.trim(), mobile: mobile?.trim() || null },
+      data: { ownerId: this.getFarmerId(user), name: name.trim(), address: address.trim(), mobile: mobile?.trim() || null },
     });
   }
 
@@ -59,7 +64,7 @@ export class PartiesService {
 
   async listMine(user: AuthUser) {
     const parties = await this.prisma.party.findMany({
-      where: { ownerId: user.id, deletedAt: null },
+      where: { ownerId: this.getFarmerId(user), deletedAt: null },
       include: { ledgerEntries: { select: { id: true, type: true, amount: true, saleBillId: true, reason: true } } },
       orderBy: { name: 'asc' },
     });
@@ -73,9 +78,10 @@ export class PartiesService {
   }
 
   private async findOwnedOrThrow(user: AuthUser, partyId: string) {
+    const ownerId = this.getFarmerId(user);
     const party = await this.prisma.party.findFirst({ where: { id: partyId, deletedAt: null } });
     if (party) {
-      if (party.ownerId !== user.id) {
+      if (party.ownerId !== ownerId) {
         throw new ForbiddenException('This party does not belong to you.');
       }
       return { ...party, isUnified: false };
@@ -84,7 +90,7 @@ export class PartiesService {
     const unified = await this.prisma.unifiedParty.findFirst({
       where: {
         OR: [{ id: partyId }, { kingId: partyId }],
-        ownerFarmerId: user.id,
+        ownerFarmerId: ownerId,
         deletedAt: null,
       },
     });
@@ -115,13 +121,13 @@ export class PartiesService {
 
     if (party.mobile) {
       const matchParties = await this.prisma.party.findMany({
-        where: { ownerId: user.id, mobile: party.mobile, deletedAt: null },
+        where: { ownerId: this.getFarmerId(user), mobile: party.mobile, deletedAt: null },
         select: { id: true },
       });
       matchParties.forEach((p) => partyIds.add(p.id));
 
       const matchUnified = await this.prisma.unifiedParty.findMany({
-        where: { ownerFarmerId: user.id, mobile: party.mobile, deletedAt: null },
+        where: { ownerFarmerId: this.getFarmerId(user), mobile: party.mobile, deletedAt: null },
         select: { id: true, kingId: true },
       });
       matchUnified.forEach((u) => {
@@ -153,7 +159,7 @@ export class PartiesService {
 
     const saleBills = await this.prisma.saleBill.findMany({
       where: {
-        farmerId: user.id,
+        farmerId: this.getFarmerId(user),
         OR: [
           { partyId: { in: Array.from(partyIds) } },
           { partyName: { equals: party.name, mode: 'insensitive' } },
@@ -241,16 +247,17 @@ export class PartiesService {
 
   async recordSaleLedger(user: AuthUser, partyId: string, dto: RecordSaleLedgerDto) {
     const partyObj = await this.findOwnedOrThrow(user, partyId);
+    const farmerId = this.getFarmerId(user);
 
     let targetPartyId = partyObj.id;
-    const dbParty = await this.prisma.party.findFirst({ where: { id: partyObj.id, ownerId: user.id, deletedAt: null } });
+    const dbParty = await this.prisma.party.findFirst({ where: { id: partyObj.id, ownerId: farmerId, deletedAt: null } });
     if (!dbParty) {
       let existingParty = await this.prisma.party.findFirst({
-        where: { ownerId: user.id, name: partyObj.name, deletedAt: null },
+        where: { ownerId: farmerId, name: partyObj.name, deletedAt: null },
       });
       if (!existingParty) {
         existingParty = await this.prisma.party.create({
-          data: { ownerId: user.id, name: partyObj.name, mobile: partyObj.mobile, address: partyObj.address },
+          data: { ownerId: farmerId, name: partyObj.name, mobile: partyObj.mobile, address: partyObj.address },
         });
       }
       targetPartyId = existingParty.id;
@@ -264,7 +271,7 @@ export class PartiesService {
         bill = await this.prisma.saleBill.findUnique({ where: { id: dto.saleBillId } }).catch(() => null);
       }
       if (!bill) {
-        bill = await this.prisma.saleBill.findFirst({ where: { farmerId: user.id, billNo: dto.saleBillId } }).catch(() => null);
+        bill = await this.prisma.saleBill.findFirst({ where: { farmerId, billNo: dto.saleBillId } }).catch(() => null);
       }
       if (bill) {
         validSaleBillId = bill.id;
@@ -324,11 +331,11 @@ export class PartiesService {
     // Auto-create SaleBill if validSaleBillId was not provided so every sale has a DB SaleBill record
     if (!validSaleBillId) {
       try {
-        const farmerObj = await this.prisma.user.findUnique({ where: { id: user.id }, select: { name: true } });
+        const farmerObj = await this.prisma.user.findUnique({ where: { id: farmerId }, select: { name: true } });
         const billNo = `FK-${Date.now().toString().slice(-6)}`;
         const createdBill = await this.prisma.saleBill.create({
           data: {
-            farmerId: user.id,
+            farmerId,
             billNo,
             farmerName: farmerObj?.name || 'Farmer',
             partyId: targetPartyId,
@@ -434,10 +441,11 @@ export class PartiesService {
       },
     });
     const afterBeforeLink = await this.getStatement(user, partyId);
+    const farmerId = this.getFarmerId(user);
     const receipt = await this.prisma.paymentReceipt.create({
       data: {
-        farmerId: user.id,
-        receiptNo: await this.nextReceiptNo(user.id),
+        farmerId,
+        receiptNo: await this.nextReceiptNo(farmerId),
         partyId,
         partyName: before.party.name,
         isReceived: true,
@@ -463,10 +471,11 @@ export class PartiesService {
       },
     });
     const afterBeforeLink = await this.getStatement(user, partyId);
+    const farmerId = this.getFarmerId(user);
     const receipt = await this.prisma.paymentReceipt.create({
       data: {
-        farmerId: user.id,
-        receiptNo: await this.nextReceiptNo(user.id),
+        farmerId,
+        receiptNo: await this.nextReceiptNo(farmerId),
         partyId,
         partyName: before.party.name,
         isReceived: false,
@@ -502,7 +511,7 @@ export class PartiesService {
     return this.prisma.unifiedParty.create({
       data: {
         kingId,
-        ownerFarmerId: user.id,
+        ownerFarmerId: this.getFarmerId(user),
         name: dto.name.trim(),
         type: dto.type ?? PartyType.INDIVIDUAL,
         roles: dto.roles && dto.roles.length > 0 ? dto.roles : [PartyRole.CUSTOMER],
@@ -518,7 +527,7 @@ export class PartiesService {
   }
 
   async listUnifiedParties(user: AuthUser, role?: PartyRole) {
-    const where: any = { ownerFarmerId: user.id, deletedAt: null };
+    const where: any = { ownerFarmerId: this.getFarmerId(user), deletedAt: null };
     if (role) {
       where.roles = { has: role };
     }
@@ -531,14 +540,15 @@ export class PartiesService {
   // ─── Arhtiya Management Module ───────────────────────────────────────────
 
   async recordArhtiyaAdvance(user: AuthUser, dto: RecordArhtiyaAdvanceDto) {
+    const farmerId = this.getFarmerId(user);
     const party = await this.prisma.unifiedParty.findFirst({
-      where: { id: dto.partyId, ownerFarmerId: user.id, deletedAt: null },
+      where: { id: dto.partyId, ownerFarmerId: farmerId, deletedAt: null },
     });
     if (!party) throw new NotFoundException('Arhtiya / Party not found.');
 
     return this.prisma.arhtiyaTransaction.create({
       data: {
-        farmerId: user.id,
+        farmerId,
         partyId: dto.partyId,
         type: ArhtiyaTransactionType.ADVANCE_TAKEN,
         amount: dto.amount,
@@ -567,8 +577,9 @@ export class PartiesService {
   }
 
   async recordArhtiyaCropSale(user: AuthUser, dto: RecordArhtiyaCropSaleDto) {
+    const farmerId = this.getFarmerId(user);
     const party = await this.prisma.unifiedParty.findFirst({
-      where: { id: dto.partyId, ownerFarmerId: user.id, deletedAt: null },
+      where: { id: dto.partyId, ownerFarmerId: farmerId, deletedAt: null },
     });
     if (!party) throw new NotFoundException('Arhtiya / Party not found.');
 
@@ -583,7 +594,7 @@ export class PartiesService {
 
     const tx = await this.prisma.arhtiyaTransaction.create({
       data: {
-        farmerId: user.id,
+        farmerId,
         partyId: dto.partyId,
         type: ArhtiyaTransactionType.CROP_SALE_CREDIT,
         amount: netAmount,
@@ -615,13 +626,14 @@ export class PartiesService {
 
   /** Calculate net settlement, auto interest, and transaction ledger for an Arhtiya */
   async getArhtiyaLedgerHisab(user: AuthUser, partyId: string) {
+    const farmerId = this.getFarmerId(user);
     const party = await this.prisma.unifiedParty.findFirst({
-      where: { id: partyId, ownerFarmerId: user.id, deletedAt: null },
+      where: { id: partyId, ownerFarmerId: farmerId, deletedAt: null },
     });
     if (!party) throw new NotFoundException('Arhtiya / Party not found.');
 
     const transactions = await this.prisma.arhtiyaTransaction.findMany({
-      where: { partyId, farmerId: user.id },
+      where: { partyId, farmerId },
       orderBy: { transactionDate: 'asc' },
     });
 
@@ -679,6 +691,306 @@ export class PartiesService {
 
   async clearPartyEntries(user: AuthUser, partyId: string) {
     throw new ForbiddenException('Clearing transaction entries has been permanently disabled to protect your financial records.');
+  }
+
+  // ─── Guest Buyer Statement Lookup (No Login Required) ───────────────────
+  /**
+   * Stage 1: Public Guest Statement Lookup.
+   * Allows crop purchasers, shopkeepers, and grain buyers to view their bills, payments,
+   * and balances with a specific farmer without prior app registration.
+   *
+   * Cross-checks both legacy Party records and UnifiedParty records, providing a single
+   * consolidated accounting view of crop sales, credit balances, and interest calculations.
+   *
+   * @param buyerMobile - 10-digit mobile number of the purchaser (used as username)
+   * @param farmerMobileOrKingId - 10-digit mobile number or 8-digit King ID of the farmer (used as verification token)
+   * @returns Detailed statement containing farmer profile, purchaser details, ledger entries, and net balance
+   * @throws NotFoundException if the buyer mobile format is invalid or farmer cannot be found
+   */
+  async lookupBuyerStatement(buyerMobile: string, farmerMobileOrKingId: string) {
+    const rawFarmerDigits = farmerMobileOrKingId.replace(/\D/g, '');
+    const cleanFarmerMobile = rawFarmerDigits.slice(-10);
+    const cleanFarmerInput = farmerMobileOrKingId.trim();
+
+    const rawBuyerDigits = buyerMobile.replace(/\D/g, '');
+    const cleanBuyerMobile = rawBuyerDigits.slice(-10);
+
+    if (cleanBuyerMobile.length !== 10) {
+      throw new NotFoundException('Please provide a valid 10-digit buyer mobile number.');
+    }
+
+    const farmer = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          ...(cleanFarmerMobile.length === 10
+            ? [
+                { mobile: cleanFarmerMobile },
+                { mobile: `+91${cleanFarmerMobile}` },
+                { mobile: { endsWith: cleanFarmerMobile } },
+              ]
+            : []),
+          { kingId: { equals: cleanFarmerInput, mode: 'insensitive' } },
+        ],
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        name: true,
+        mobile: true,
+        kingId: true,
+        village: true,
+        district: true,
+        state: true,
+        farmName: true,
+      },
+    });
+
+    if (!farmer) {
+      throw new NotFoundException('Farmer account not found with this mobile or King ID.');
+    }
+
+    // Find party matching buyer mobile under this farmer
+    const party = await this.prisma.party.findFirst({
+      where: {
+        ownerId: farmer.id,
+        OR: [
+          { mobile: cleanBuyerMobile },
+          { mobile: `+91${cleanBuyerMobile}` },
+          { mobile: { endsWith: cleanBuyerMobile } },
+        ],
+        deletedAt: null,
+      },
+    });
+
+    const unifiedParty = await this.prisma.unifiedParty.findFirst({
+      where: {
+        ownerFarmerId: farmer.id,
+        OR: [
+          { mobile: cleanBuyerMobile },
+          { mobile: `+91${cleanBuyerMobile}` },
+          { mobile: { endsWith: cleanBuyerMobile } },
+        ],
+        deletedAt: null,
+      },
+    });
+
+    if (!party && !unifiedParty) {
+      return {
+        found: false,
+        farmer: {
+          name: farmer.name,
+          farmName: farmer.farmName || farmer.name,
+          mobile: farmer.mobile,
+          kingId: farmer.kingId,
+          village: farmer.village,
+          district: farmer.district,
+        },
+        buyerMobile: cleanBuyerMobile,
+        message: 'No bills or ledger found between this buyer mobile and farmer.',
+      };
+    }
+
+    const partyTargetId = party ? party.id : unifiedParty!.id;
+    const fakeAuthUser: AuthUser = {
+      id: farmer.id,
+      mobile: farmer.mobile,
+      name: farmer.name,
+      role: Role.FARMER,
+      roles: [Role.FARMER],
+      deactivatedRoles: [],
+      kingId: farmer.kingId,
+    };
+    const statement = await this.getStatement(fakeAuthUser, partyTargetId);
+
+    let arhtiyaHisab: any = null;
+    if (unifiedParty) {
+      try {
+        arhtiyaHisab = await this.getArhtiyaLedgerHisab(fakeAuthUser, unifiedParty.id);
+      } catch (_) {}
+    }
+
+    return {
+      found: true,
+      farmer: {
+        id: farmer.id,
+        name: farmer.name,
+        farmName: farmer.farmName || farmer.name,
+        mobile: farmer.mobile,
+        kingId: farmer.kingId,
+        village: farmer.village,
+        district: farmer.district,
+        state: farmer.state,
+      },
+      buyerParty: {
+        name: party?.name || unifiedParty?.name,
+        mobile: cleanBuyerMobile,
+        address: party?.address || unifiedParty?.address,
+        kingId: unifiedParty?.kingId || null,
+        shopNumber: unifiedParty?.shopNumber || null,
+        mandiName: unifiedParty?.mandiName || null,
+      },
+      statement,
+      arhtiyaHisab,
+    };
+  }
+
+  // ─── Trader Multi-Farmer Master Dashboard ──────────────────────────────
+  /**
+   * Stage 2: Trader Multi-Farmer Master Aggregator.
+   * Aggregates all crop purchases, udhari (credit) balances, payouts, and bills across
+   * all registered farmers who have billed the authenticated trader's mobile number.
+   *
+   * @param user - Current authenticated user with TRADER role
+   * @returns Multi-farmer portfolio summary with procurement totals, paid amounts, outstanding balances, and farmer-wise breakdown
+   */
+  async getTraderMasterLedger(user: AuthUser) {
+    const rawDigits = user.mobile.replace(/\D/g, '');
+    const cleanMobile = rawDigits.slice(-10);
+
+    const [matchingParties, matchingUnified] = await Promise.all([
+      this.prisma.party.findMany({
+        where: {
+          OR: [
+            { mobile: cleanMobile },
+            { mobile: user.mobile },
+            { mobile: `+91${cleanMobile}` },
+          ],
+          deletedAt: null,
+        },
+        include: {
+          owner: {
+            select: { id: true, name: true, mobile: true, kingId: true, village: true, district: true, state: true, farmName: true },
+          },
+          ledgerEntries: {
+            select: { id: true, type: true, amount: true, createdAt: true, reason: true },
+          },
+        },
+      }),
+      this.prisma.unifiedParty.findMany({
+        where: {
+          OR: [
+            { mobile: cleanMobile },
+            { mobile: user.mobile },
+            { mobile: `+91${cleanMobile}` },
+            { userId: user.id },
+          ],
+          deletedAt: null,
+        },
+        include: {
+          ownerFarmer: {
+            select: { id: true, name: true, mobile: true, kingId: true, village: true, district: true, state: true, farmName: true },
+          },
+          arhtiyaTransactions: {
+            select: { id: true, type: true, amount: true, transactionDate: true, cropName: true, netAmount: true },
+          },
+        },
+      }),
+    ]);
+
+    const farmerMap = new Map<string, any>();
+
+    for (const p of matchingParties) {
+      if (!p.owner) continue;
+      const farmerId = p.owner.id;
+      if (!farmerMap.has(farmerId)) {
+        farmerMap.set(farmerId, {
+          farmerId,
+          farmerName: p.owner.name,
+          farmName: p.owner.farmName || p.owner.name,
+          farmerMobile: p.owner.mobile,
+          kingId: p.owner.kingId,
+          location: [p.owner.village, p.owner.district, p.owner.state].filter(Boolean).join(', '),
+          totalPurchases: 0,
+          totalPaid: 0,
+          balanceDue: 0,
+          billCount: 0,
+          lastTransactionDate: null as Date | null,
+        });
+      }
+      const record = farmerMap.get(farmerId);
+      for (const entry of p.ledgerEntries) {
+        const amt = Number(entry.amount);
+        if (entry.type === PartyLedgerEntryType.SALE_CREDIT) {
+          record.totalPurchases += amt;
+          record.balanceDue += amt;
+          record.billCount += 1;
+        } else if (entry.type === PartyLedgerEntryType.SALE_PAYMENT) {
+          record.totalPaid += amt;
+          record.balanceDue -= amt;
+        }
+        if (!record.lastTransactionDate || new Date(entry.createdAt) > new Date(record.lastTransactionDate)) {
+          record.lastTransactionDate = entry.createdAt;
+        }
+      }
+    }
+
+    for (const u of matchingUnified) {
+      if (!u.ownerFarmer) continue;
+      const farmerId = u.ownerFarmer.id;
+      if (!farmerMap.has(farmerId)) {
+        farmerMap.set(farmerId, {
+          farmerId,
+          farmerName: u.ownerFarmer.name,
+          farmName: u.ownerFarmer.farmName || u.ownerFarmer.name,
+          farmerMobile: u.ownerFarmer.mobile,
+          kingId: u.ownerFarmer.kingId,
+          location: [u.ownerFarmer.village, u.ownerFarmer.district, u.ownerFarmer.state].filter(Boolean).join(', '),
+          totalPurchases: 0,
+          totalPaid: 0,
+          balanceDue: 0,
+          billCount: 0,
+          lastTransactionDate: null as Date | null,
+        });
+      }
+      const record = farmerMap.get(farmerId);
+      for (const tx of u.arhtiyaTransactions) {
+        const amt = Number(tx.netAmount || tx.amount);
+        if (tx.type === ArhtiyaTransactionType.CROP_SALE_CREDIT) {
+          record.totalPurchases += amt;
+          record.balanceDue += amt;
+          record.billCount += 1;
+        } else if (tx.type === ArhtiyaTransactionType.SETTLEMENT_PAYOUT) {
+          record.totalPaid += amt;
+          record.balanceDue -= amt;
+        }
+        if (!record.lastTransactionDate || new Date(tx.transactionDate) > new Date(record.lastTransactionDate)) {
+          record.lastTransactionDate = tx.transactionDate;
+        }
+      }
+    }
+
+    const farmersList = Array.from(farmerMap.values()).map((f) => ({
+      ...f,
+      totalPurchases: Math.round(f.totalPurchases * 100) / 100,
+      totalPaid: Math.round(f.totalPaid * 100) / 100,
+      balanceDue: Math.round(f.balanceDue * 100) / 100,
+    }));
+
+    const totalProcurement = farmersList.reduce((sum, f) => sum + f.totalPurchases, 0);
+    const totalPaid = farmersList.reduce((sum, f) => sum + f.totalPaid, 0);
+    const totalBalance = farmersList.reduce((sum, f) => sum + f.balanceDue, 0);
+
+    const traderUser = await this.prisma.user.findUnique({
+      where: { id: user.id },
+      select: { id: true, name: true, mobile: true, kingId: true, farmName: true, district: true, state: true },
+    });
+
+    return {
+      trader: {
+        id: user.id,
+        name: traderUser?.name || 'Trader',
+        shopName: traderUser?.farmName || null,
+        mobile: traderUser?.mobile || user.mobile,
+        kingId: traderUser?.kingId || null,
+      },
+      summary: {
+        totalFarmersCount: farmersList.length,
+        totalProcurementAmount: Math.round(totalProcurement * 100) / 100,
+        totalPaidAmount: Math.round(totalPaid * 100) / 100,
+        totalBalanceDue: Math.round(totalBalance * 100) / 100,
+      },
+      farmers: farmersList.sort((a, b) => b.totalPurchases - a.totalPurchases),
+    };
   }
 }
 

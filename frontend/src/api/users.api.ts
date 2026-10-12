@@ -331,3 +331,51 @@ export async function getMyAssistantDoctors(): Promise<AdminUser[]> {
   return data;
 }
 
+export async function appointSupervisorRequest(payload: {
+  supervisorKingId: string;
+  featuresConfig: import('../types/api').SupervisorFeaturesConfig;
+  note?: string;
+}): Promise<{ success: boolean; message: string; requestId: string; supervisor: any }> {
+  const { data } = await apiClient.post('/users/my-supervisors/appoint-request', payload);
+  return data;
+}
+
+export async function getSupervisorRequests(): Promise<{
+  incoming: import('../types/api').SupervisorRequest[];
+  outgoing: import('../types/api').SupervisorRequest[];
+}> {
+  const { data } = await apiClient.get('/users/my-supervisors/requests');
+  return data;
+}
+
+export async function respondToSupervisorRequest(
+  requestId: string,
+  action: 'ACCEPT' | 'REJECT',
+): Promise<{ success: boolean; status: string; message: string; employerFarmer?: any; featuresConfig?: any }> {
+  const { data } = await apiClient.post(`/users/my-supervisors/requests/${requestId}/respond`, { action });
+  return data;
+}
+
+export async function getActiveSupervisorAssignment(): Promise<{
+  isAssigned: boolean;
+  employerFarmer: any;
+  supervisorPermissions?: string[];
+  featuresConfig: import('../types/api').SupervisorFeaturesConfig | null;
+}> {
+  const { data } = await apiClient.get('/users/my-supervisors/active-assignment');
+  return data;
+}
+
+export async function updateSupervisorFeatures(
+  supervisorId: string,
+  featuresConfig: import('../types/api').SupervisorFeaturesConfig,
+): Promise<{ success: boolean; message: string }> {
+  const { data } = await apiClient.patch(`/users/my-supervisors/${supervisorId}/features`, { featuresConfig });
+  return data;
+}
+
+export async function resignSupervisor(supervisorId: string): Promise<{ success: boolean; message: string }> {
+  const { data } = await apiClient.post(`/users/my-supervisors/${supervisorId}/resign`);
+  return data;
+}
+

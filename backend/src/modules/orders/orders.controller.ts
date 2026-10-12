@@ -16,13 +16,13 @@ const STAFF_ROLES = [Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR];
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
-  @Roles(Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.ADVISOR)
+  @Roles(Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.ADVISOR, ...STAFF_ROLES)
   @Post()
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateOrderDto) {
     return this.ordersService.create(user, dto);
   }
 
-  @Roles(Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.ADVISOR)
+  @Roles(Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.ADVISOR, ...STAFF_ROLES)
   @Get('mine')
   findMine(@CurrentUser() user: AuthUser) {
     return this.ordersService.findMine(user);
@@ -70,7 +70,7 @@ export class OrdersController {
     return this.ordersService.getInvoiceHtml(invoiceId);
   }
 
-  @Roles(Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.ADVISOR)
+  @Roles(Role.CUSTOMER, Role.FARMER, Role.GARDENER, Role.ADVISOR, ...STAFF_ROLES)
   @Post(':id/cashfree/initiate')
   initiateCashfreePayment(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.ordersService.initiateCashfreePayment(user, id);

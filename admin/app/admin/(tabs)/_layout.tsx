@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { HapticTab } from '@/components/HapticTab';
 import TabBarBackground from '@/components/ui/TabBarBackground';
+import { AnimatedPurpleBottomBar } from '@/components/ui/AnimatedPurpleBottomBar';
 import { RoleThemes, UserRole } from '@/constants/Colors';
 import { FONT, RADIUS, THEME_4D, neonGlow, premiumShadow } from '@/constants/theme';
 import { useRole } from '@/src/store/role-context';
@@ -180,7 +181,7 @@ export default function TabLayout() {
 
   // Keep active pillar synchronized with URL changes (Deep-linking & Back/Forward browser navigation)
   useEffect(() => {
-    const matchingPillar = detectPillarFromRoute(pathname, localParams);
+    const matchingPillar = detectPillarFromRoute(pathname, localParams, selectedPillarId);
     if (matchingPillar && matchingPillar !== selectedPillarId) {
       setSelectedPillarId(matchingPillar);
       triggerTabsAnimation();
@@ -260,7 +261,8 @@ export default function TabLayout() {
   const activeSubTab = activePillar.subTabs.find((tab) => {
     const isIndexActive = tab.path === '/admin/(tabs)' && (pathname === '/' || pathname === '/(tabs)' || pathname === '/(tabs)/index');
     const isOtherActive = tab.path !== '/admin/(tabs)' && pathname.includes(tab.path.split('/').pop() || '');
-    const isFilterMatch = !tab.params?.filter || (localParams?.filter === tab.params.filter);
+    const currentFilter = localParams?.filter || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('filter') : undefined);
+    const isFilterMatch = !tab.params?.filter || (currentFilter === tab.params.filter);
     return (isIndexActive || isOtherActive) && isFilterMatch;
   }) || activePillar.subTabs[0];
 
@@ -317,7 +319,8 @@ export default function TabLayout() {
       if (!isAlreadyOnFirstTab) {
         if (firstTab.params) {
           router.setParams(firstTab.params);
-          router.push({ pathname: firstTab.path as any, params: firstTab.params });
+          const queryString = new URLSearchParams(firstTab.params as Record<string, string>).toString();
+          router.push(`${firstTab.path}?${queryString}` as any);
         } else {
           router.push(firstTab.path as any);
         }
@@ -328,7 +331,8 @@ export default function TabLayout() {
   const handleSelectSubTab = (tab: SubTabItem) => {
     if (tab.params) {
       router.setParams(tab.params);
-      router.push({ pathname: tab.path as any, params: tab.params });
+      const queryString = new URLSearchParams(tab.params as Record<string, string>).toString();
+      router.push(`${tab.path}?${queryString}` as any);
     } else {
       router.push(tab.path as any);
     }
@@ -492,18 +496,18 @@ export default function TabLayout() {
 
       {/* 📱 MAIN CONTENT CANVAS CONTAINER */}
       <View style={{ flex: 1 }}>
-        {/* 💻 TOP WORKSPACE SUB-TABS HEADER BAR (Visible on Desktop for Admins) */}
-        {isDesktop && (role === 'SUPER_ADMIN' || role === 'ADMIN') && (
-          <View style={desktopStyles.topTabsHeaderBar}>
+        {/* 💻 TOP WORKSPACE SUB-TABS HEADER BAR (Visible on Desktop & Mobile for Admins) */}
+        {(role === 'SUPER_ADMIN' || role === 'ADMIN') && (
+          <View style={[desktopStyles.topTabsHeaderBar, !isDesktop && { height: 46, paddingVertical: 4, paddingHorizontal: 8 }]}>
             <View style={desktopStyles.topTabsHeaderInner}>
               {/* Clean Segmented Sub-Tabs Navigation */}
               <View style={desktopStyles.topTabsAnimatedContainer}>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={desktopStyles.topTabsScrollContent}
+                  contentContainerStyle={[desktopStyles.topTabsScrollContent, !isDesktop && { paddingHorizontal: 4, gap: 4 }]}
                 >
-                  <View style={desktopStyles.segmentedTabContainer}>
+                  <View style={[desktopStyles.segmentedTabContainer, !isDesktop && { padding: 2 }]}>
                     {activePillar.subTabs.map((tab) => {
                       const isActive = activeSubTab?.id === tab.id;
 
@@ -513,6 +517,7 @@ export default function TabLayout() {
                           onPress={() => handleSelectSubTab(tab)}
                           style={({ hovered, pressed }: any) => [
                             desktopStyles.segmentedTabItem,
+                            !isDesktop && { paddingHorizontal: 10, paddingVertical: 5 },
                             isActive && desktopStyles.segmentedTabItemActive,
                             hovered && !isActive && desktopStyles.segmentedTabItemHover,
                             pressed && { transform: [{ scale: 0.98 }] },
@@ -520,17 +525,18 @@ export default function TabLayout() {
                         >
                           <Ionicons
                             name={tab.icon}
-                            size={14.5}
+                            size={isDesktop ? 14.5 : 13}
                             color={isActive ? '#059669' : '#64748b'}
                           />
                           <Text
                             style={[
                               desktopStyles.segmentedTabText,
+                              !isDesktop && { fontSize: 11 },
                               isActive ? desktopStyles.segmentedTabTextActive : desktopStyles.segmentedTabTextInactive,
                             ]}
                             numberOfLines={1}
                           >
-                            {tab.title}
+                            {isDesktop ? tab.title : (tab.shortTitle || tab.title)}
                           </Text>
                         </Pressable>
                       );
@@ -539,28 +545,32 @@ export default function TabLayout() {
                 </ScrollView>
               </View>
 
-              {/* 🟢 Live Infrastructure Health Pulse (AWS/Stripe Standard) */}
-              <TouchableOpacity
-                style={desktopStyles.healthRadarTriggerBtn}
-                onPress={() => setIsHealthRadarOpen(true)}
-                activeOpacity={0.8}
-              >
-                <View style={desktopStyles.healthRadarDot} />
-                <Text style={desktopStyles.healthRadarText}>99.9% Uptime</Text>
-              </TouchableOpacity>
+              {/* 🟢 Live Infrastructure Health Pulse (Visible on Desktop) */}
+              {isDesktop && (
+                <TouchableOpacity
+                  style={desktopStyles.healthRadarTriggerBtn}
+                  onPress={() => setIsHealthRadarOpen(true)}
+                  activeOpacity={0.8}
+                >
+                  <View style={desktopStyles.healthRadarDot} />
+                  <Text style={desktopStyles.healthRadarText}>99.9% Uptime</Text>
+                </TouchableOpacity>
+              )}
 
-              {/* Spotlight Command Search Trigger Button */}
-              <TouchableOpacity
-                style={desktopStyles.spotlightTriggerBtn}
-                onPress={() => setIsSearchOpen(true)}
-                activeOpacity={0.8}
-              >
-                <Ionicons name="search" size={13} color="#059669" />
-                <Text style={desktopStyles.spotlightTriggerText}>Quick Search</Text>
-                <View style={desktopStyles.kbdBadge}>
-                  <Text style={desktopStyles.kbdText}>Ctrl K</Text>
-                </View>
-              </TouchableOpacity>
+              {/* Spotlight Command Search Trigger Button (Visible on Desktop) */}
+              {isDesktop && (
+                <TouchableOpacity
+                  style={desktopStyles.spotlightTriggerBtn}
+                  onPress={() => setIsSearchOpen(true)}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="search" size={13} color="#059669" />
+                  <Text style={desktopStyles.spotlightTriggerText}>Quick Search</Text>
+                  <View style={desktopStyles.kbdBadge}>
+                    <Text style={desktopStyles.kbdText}>Ctrl K</Text>
+                  </View>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         )}
@@ -573,34 +583,10 @@ export default function TabLayout() {
 
 
         <Tabs
+          tabBar={(props: any) => <AnimatedPurpleBottomBar {...props} />}
           screenOptions={{
-            tabBarActiveTintColor: colors.tabBarActive,
-            tabBarInactiveTintColor: colors.tabBarInactive,
-            tabBarLabelStyle: { fontFamily: FONT.bold, fontSize: 10.5 },
             headerShown: false,
-            tabBarButton: (props: any) => <HapticTab {...props} />,
-            tabBarBackground: TabBarBackground,
-            tabBarStyle: Platform.select({
-              ios: {
-                position: 'absolute',
-                display: isDesktop ? 'none' : 'flex',
-                backgroundColor: colors.tabBarBg,
-                borderTopColor: colors.tabBarBorder,
-              },
-              default: {
-                display: isDesktop ? 'none' : 'flex',
-                height: 62,
-                paddingBottom: 8,
-                paddingTop: 6,
-                maxWidth: 520,
-                width: '100%',
-                alignSelf: 'center',
-                backgroundColor: colors.tabBarBg,
-                borderTopWidth: 1,
-                borderTopColor: colors.tabBarBorder,
-                ...premiumShadow('#0f172a', 'sm'),
-              },
-            }),
+            animation: 'fade',
           }}>
           {ALL_TABS.map((name) => {
             const isShown = visible.has(name);

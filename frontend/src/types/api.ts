@@ -79,7 +79,51 @@ export interface User {
   bio?: string | null;
   yearsExperience?: number | null;
   advisorType?: AdvisorType | null;
+  employerFarmerId?: string | null;
+  employerFarmer?: {
+    id: string;
+    name: string;
+    kingId?: string | null;
+    mobile: string;
+    village?: string | null;
+    farmName?: string | null;
+  } | null;
+  supervisorPermissions?: string[];
+  supervisorFeaturesConfig?: SupervisorFeaturesConfig | null;
   createdAt: string;
+}
+
+export interface FeaturePermission {
+  view: boolean;
+  entry: boolean;
+}
+
+export interface SupervisorFeaturesConfig {
+  sales?: FeaturePermission;
+  labour?: FeaturePermission;
+  spray?: FeaturePermission;
+  purchases?: FeaturePermission;
+  crops?: FeaturePermission;
+  advisory?: FeaturePermission;
+}
+
+export interface SupervisorRequest {
+  id: string;
+  farmerId: string;
+  supervisorId: string;
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED' | 'RESIGNED';
+  featuresConfig: SupervisorFeaturesConfig;
+  note?: string | null;
+  farmerName?: string;
+  farmerKingId?: string;
+  farmerMobile?: string;
+  farmerVillage?: string;
+  farmerFarmName?: string;
+  supervisorName?: string;
+  supervisorKingId?: string;
+  supervisorMobile?: string;
+  createdAt: string;
+  respondedAt?: string | null;
 }
 
 export interface FarmerProfileStatus {

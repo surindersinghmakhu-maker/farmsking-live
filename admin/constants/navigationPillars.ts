@@ -53,7 +53,7 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
     shortTitle: 'E-Commerce',
     icon: 'bag-handle-outline',
     iconFilled: 'bag-handle',
-    badge: '5 Tools',
+    badge: '7 Tools',
     color: '#0284c7',
     subTabs: [
       {
@@ -69,6 +69,22 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
         shortTitle: 'Orders',
         icon: 'receipt',
         path: '/admin/(tabs)/admin-orders',
+      },
+      {
+        id: 'seller-directory',
+        title: 'Store Sellers',
+        shortTitle: 'Sellers',
+        icon: 'storefront',
+        path: '/admin/(tabs)/super-users',
+        params: { group: 'ECOMMERCE', filter: 'SELLER' },
+      },
+      {
+        id: 'trader-directory',
+        title: 'Mandi Traders & Buyers',
+        shortTitle: 'Traders',
+        icon: 'swap-horizontal',
+        path: '/admin/(tabs)/super-users',
+        params: { group: 'ECOMMERCE', filter: 'TRADER' },
       },
       {
         id: 'seller-kyc',
@@ -138,7 +154,7 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
     shortTitle: 'Farmer Hub',
     icon: 'leaf-outline',
     iconFilled: 'leaf',
-    badge: '7 Tools',
+    badge: '9 Tools',
     color: '#16a34a',
     subTabs: [
       {
@@ -148,6 +164,22 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
         icon: 'leaf',
         path: '/admin/(tabs)/super-users',
         params: { group: 'CLIENTS', filter: 'FARMER' },
+      },
+      {
+        id: 'supervisors',
+        title: 'Supervisors (Single Farmer)',
+        shortTitle: 'Supervisors',
+        icon: 'key',
+        path: '/admin/(tabs)/super-users',
+        params: { group: 'CLIENTS', filter: 'SUPERVISOR' },
+      },
+      {
+        id: 'labours',
+        title: 'Labour Workers (Multi-Farmer)',
+        shortTitle: 'Labourers',
+        icon: 'hammer',
+        path: '/admin/(tabs)/super-users',
+        params: { group: 'CLIENTS', filter: 'LABOUR' },
       },
       {
         id: 'crop-doctors',
@@ -249,15 +281,24 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
     shortTitle: 'Staff Hub',
     icon: 'people-outline',
     iconFilled: 'people',
-    badge: '4 Roles',
+    badge: '5 Roles',
     color: '#6366f1',
     subTabs: [
+      {
+        id: 'managers',
+        title: 'System Managers',
+        shortTitle: 'Managers',
+        icon: 'person-circle',
+        path: '/admin/(tabs)/super-users',
+        params: { group: 'ADMINS', filter: 'MANAGER' },
+      },
       {
         id: 'trainers',
         title: 'Technical Trainers',
         shortTitle: 'Trainers',
         icon: 'school',
-        path: '/admin/(tabs)/trainer-dashboard',
+        path: '/admin/(tabs)/super-users',
+        params: { group: 'ADMINS', filter: 'TECHNICAL_TRAINER' },
       },
       {
         id: 'operators',
@@ -276,8 +317,8 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
       },
       {
         id: 'all-users',
-        title: 'All System Users & Roles',
-        shortTitle: 'All Users',
+        title: 'All Admins & Super Admins',
+        shortTitle: 'Admins',
         icon: 'people',
         path: '/admin/(tabs)/super-users',
         params: { group: 'ADMINS', filter: 'SUPER_ADMIN' },
@@ -321,8 +362,26 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
 /**
  * Automatically detects the active pillar ID given the current URL pathname and query params
  */
-export function detectPillarFromRoute(pathname: string, searchParams?: Record<string, any>): string {
-  if (!pathname) return 'EXECUTIVE';
+export function detectPillarFromRoute(
+  pathname: string,
+  searchParams?: Record<string, any>,
+  currentPillarId?: string
+): string {
+  if (!pathname) return currentPillarId || 'EXECUTIVE';
+
+  // Extract filter & group with web browser query string fallback
+  let activeFilter = searchParams?.filter;
+  let activeGroup = searchParams?.group;
+
+  if (typeof window !== 'undefined' && (!activeFilter || !activeGroup)) {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (!activeFilter) activeFilter = urlParams.get('filter') || undefined;
+      if (!activeGroup) activeGroup = urlParams.get('group') || undefined;
+    } catch {
+      // safe fallback
+    }
+  }
 
   // 1. Finance & Wallet routes
   if (
@@ -341,7 +400,8 @@ export function detectPillarFromRoute(pathname: string, searchParams?: Record<st
     pathname.includes('admin-sellers') ||
     pathname.includes('super-coupons') ||
     pathname.includes('super-orders') ||
-    pathname.includes('shop')
+    pathname.includes('shop') ||
+    (pathname.includes('super-users') && (activeGroup === 'ECOMMERCE' || activeFilter === 'SELLER' || activeFilter === 'TRADER'))
   ) {
     return 'ECOMMERCE';
   }
@@ -353,7 +413,7 @@ export function detectPillarFromRoute(pathname: string, searchParams?: Record<st
     pathname.includes('super-crop-edit') ||
     pathname.includes('crop-intelligence') ||
     pathname.includes('farmer-profile') ||
-    (pathname.includes('super-users') && (searchParams?.filter === 'FARMER' || searchParams?.filter === 'FARM_ADVISOR'))
+    (pathname.includes('super-users') && (activeFilter === 'FARMER' || activeFilter === 'SUPERVISOR' || activeFilter === 'LABOUR' || activeFilter === 'FARM_ADVISOR' || activeGroup === 'CLIENTS'))
   ) {
     return 'FARMER_HUB';
   }
@@ -362,7 +422,7 @@ export function detectPillarFromRoute(pathname: string, searchParams?: Record<st
   if (
     pathname.includes('dose') ||
     pathname.includes('advisor-profile') ||
-    (pathname.includes('super-users') && (searchParams?.filter === 'GARDENER' || searchParams?.filter === 'GARDEN_ADVISOR'))
+    (pathname.includes('super-users') && (activeFilter === 'GARDENER' || activeFilter === 'GARDEN_ADVISOR'))
   ) {
     return 'GARDENER_HUB';
   }
@@ -371,7 +431,7 @@ export function detectPillarFromRoute(pathname: string, searchParams?: Record<st
   if (
     pathname.includes('trainer-dashboard') ||
     pathname.includes('operator-orders') ||
-    (pathname.includes('super-users') && (searchParams?.filter === 'BUSINESS_PARTNER' || searchParams?.filter === 'SUPER_ADMIN' || searchParams?.filter === 'OPERATOR'))
+    (pathname.includes('super-users') && (activeFilter === 'MANAGER' || activeFilter === 'TECHNICAL_TRAINER' || activeFilter === 'BUSINESS_PARTNER' || activeFilter === 'SUPER_ADMIN' || activeFilter === 'ADMIN' || activeFilter === 'OPERATOR' || activeGroup === 'ADMINS'))
   ) {
     return 'STAFF_HUB';
   }
@@ -385,9 +445,14 @@ export function detectPillarFromRoute(pathname: string, searchParams?: Record<st
     return 'SETTINGS';
   }
 
-  // 7. Generic Users route defaults to Staff Hub if no filter specified
+  // 7. For shared routes like super-users with no explicit filter:
+  // If user is currently on E-Commerce, Farmer Hub, Garden Hub, or Staff Hub, preserve their active pillar!
   if (pathname.includes('super-users')) {
-    return 'STAFF_HUB';
+    if (currentPillarId && ['ECOMMERCE', 'FARMER_HUB', 'GARDENER_HUB', 'STAFF_HUB'].includes(currentPillarId)) {
+      return currentPillarId;
+    }
+    // FarmsKing is farmer-first by default
+    return 'FARMER_HUB';
   }
 
   // 8. Overview & Chat defaults to EXECUTIVE

@@ -50,9 +50,9 @@ const swagger_1 = __webpack_require__(5);
 const helmet_1 = __importDefault(__webpack_require__(6));
 const compression_1 = __importDefault(__webpack_require__(7));
 const app_module_1 = __webpack_require__(8);
-const Sentry = __importStar(__webpack_require__(337));
-const profiling_node_1 = __webpack_require__(338);
-const sentry_filter_1 = __webpack_require__(339);
+const Sentry = __importStar(__webpack_require__(342));
+const profiling_node_1 = __webpack_require__(343);
+const sentry_filter_1 = __webpack_require__(344);
 const core_2 = __webpack_require__(3);
 process.on('uncaughtException', (err) => {
     if (err.code === 'ECONNRESET' || err.code === 'EPIPE') {
@@ -62,7 +62,7 @@ process.on('uncaughtException', (err) => {
     console.error('[uncaughtException] Unexpected error:', err);
     process.exit(1);
 });
-const express_1 = __webpack_require__(340);
+const express_1 = __webpack_require__(345);
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     const configService = app.get(config_1.ConfigService);
@@ -208,64 +208,64 @@ const app_controller_1 = __webpack_require__(10);
 const app_service_1 = __webpack_require__(11);
 const prisma_module_1 = __webpack_require__(16);
 const auth_module_1 = __webpack_require__(17);
-const farms_module_1 = __webpack_require__(59);
-const plots_module_1 = __webpack_require__(65);
-const crops_module_1 = __webpack_require__(70);
-const dashboard_module_1 = __webpack_require__(99);
-const market_rates_module_1 = __webpack_require__(102);
-const expenses_module_1 = __webpack_require__(106);
-const uploads_module_1 = __webpack_require__(127);
-const advisor_assignment_module_1 = __webpack_require__(72);
-const subscriptions_module_1 = __webpack_require__(132);
-const crop_activity_schedules_module_1 = __webpack_require__(136);
-const spray_schedules_module_1 = __webpack_require__(144);
-const spray_item_templates_module_1 = __webpack_require__(149);
-const crop_problems_module_1 = __webpack_require__(154);
-const users_module_1 = __webpack_require__(160);
-const weather_module_1 = __webpack_require__(182);
-const notifications_module_1 = __webpack_require__(73);
-const wallet_module_1 = __webpack_require__(54);
-const coupons_module_1 = __webpack_require__(185);
-const withdrawals_module_1 = __webpack_require__(192);
-const plan_renewal_module_1 = __webpack_require__(197);
-const chat_module_1 = __webpack_require__(120);
-const products_module_1 = __webpack_require__(204);
-const orders_module_1 = __webpack_require__(209);
-const phonepe_module_1 = __webpack_require__(210);
-const farmer_plans_module_1 = __webpack_require__(71);
-const plan_payments_module_1 = __webpack_require__(226);
-const farmer_plan_payments_module_1 = __webpack_require__(231);
-const partner_assignment_module_1 = __webpack_require__(237);
-const gardener_plans_module_1 = __webpack_require__(240);
-const gardens_module_1 = __webpack_require__(245);
-const parties_module_1 = __webpack_require__(107);
-const sale_bills_module_1 = __webpack_require__(251);
-const payment_receipts_module_1 = __webpack_require__(255);
-const basic_plan_coupons_module_1 = __webpack_require__(258);
-const app_settings_module_1 = __webpack_require__(49);
-const coupon_settings_module_1 = __webpack_require__(262);
-const call_requests_module_1 = __webpack_require__(266);
-const addresses_module_1 = __webpack_require__(270);
-const audit_module_1 = __webpack_require__(274);
-const labour_module_1 = __webpack_require__(278);
-const admin_chat_module_1 = __webpack_require__(284);
-const whatsapp_module_1 = __webpack_require__(47);
-const referrals_module_1 = __webpack_require__(288);
-const voice_ai_module_1 = __webpack_require__(291);
-const satellite_module_1 = __webpack_require__(294);
-const mandi_ai_module_1 = __webpack_require__(297);
-const king_connect_module_1 = __webpack_require__(300);
-const voice_call_module_1 = __webpack_require__(311);
-const trainers_module_1 = __webpack_require__(317);
-const seller_module_1 = __webpack_require__(320);
-const cashfree_module_1 = __webpack_require__(217);
-const shiprocket_module_1 = __webpack_require__(213);
-const email_module_1 = __webpack_require__(324);
-const ai_chat_module_1 = __webpack_require__(325);
-const iso_controls_module_1 = __webpack_require__(328);
-const prisma_exception_filter_1 = __webpack_require__(331);
-const audit_log_interceptor_1 = __webpack_require__(332);
-const redis_module_1 = __webpack_require__(334);
+const farms_module_1 = __webpack_require__(60);
+const plots_module_1 = __webpack_require__(67);
+const crops_module_1 = __webpack_require__(72);
+const dashboard_module_1 = __webpack_require__(101);
+const market_rates_module_1 = __webpack_require__(104);
+const expenses_module_1 = __webpack_require__(108);
+const uploads_module_1 = __webpack_require__(131);
+const advisor_assignment_module_1 = __webpack_require__(74);
+const subscriptions_module_1 = __webpack_require__(136);
+const crop_activity_schedules_module_1 = __webpack_require__(140);
+const spray_schedules_module_1 = __webpack_require__(148);
+const spray_item_templates_module_1 = __webpack_require__(153);
+const crop_problems_module_1 = __webpack_require__(158);
+const users_module_1 = __webpack_require__(164);
+const weather_module_1 = __webpack_require__(187);
+const notifications_module_1 = __webpack_require__(75);
+const wallet_module_1 = __webpack_require__(55);
+const coupons_module_1 = __webpack_require__(190);
+const withdrawals_module_1 = __webpack_require__(197);
+const plan_renewal_module_1 = __webpack_require__(202);
+const chat_module_1 = __webpack_require__(124);
+const products_module_1 = __webpack_require__(209);
+const orders_module_1 = __webpack_require__(214);
+const phonepe_module_1 = __webpack_require__(215);
+const farmer_plans_module_1 = __webpack_require__(73);
+const plan_payments_module_1 = __webpack_require__(231);
+const farmer_plan_payments_module_1 = __webpack_require__(236);
+const partner_assignment_module_1 = __webpack_require__(242);
+const gardener_plans_module_1 = __webpack_require__(245);
+const gardens_module_1 = __webpack_require__(250);
+const parties_module_1 = __webpack_require__(109);
+const sale_bills_module_1 = __webpack_require__(256);
+const payment_receipts_module_1 = __webpack_require__(260);
+const basic_plan_coupons_module_1 = __webpack_require__(263);
+const app_settings_module_1 = __webpack_require__(50);
+const coupon_settings_module_1 = __webpack_require__(267);
+const call_requests_module_1 = __webpack_require__(271);
+const addresses_module_1 = __webpack_require__(275);
+const audit_module_1 = __webpack_require__(279);
+const labour_module_1 = __webpack_require__(283);
+const admin_chat_module_1 = __webpack_require__(289);
+const whatsapp_module_1 = __webpack_require__(48);
+const referrals_module_1 = __webpack_require__(293);
+const voice_ai_module_1 = __webpack_require__(296);
+const satellite_module_1 = __webpack_require__(299);
+const mandi_ai_module_1 = __webpack_require__(302);
+const king_connect_module_1 = __webpack_require__(305);
+const voice_call_module_1 = __webpack_require__(316);
+const trainers_module_1 = __webpack_require__(322);
+const seller_module_1 = __webpack_require__(325);
+const cashfree_module_1 = __webpack_require__(222);
+const shiprocket_module_1 = __webpack_require__(218);
+const email_module_1 = __webpack_require__(329);
+const ai_chat_module_1 = __webpack_require__(330);
+const iso_controls_module_1 = __webpack_require__(333);
+const prisma_exception_filter_1 = __webpack_require__(336);
+const audit_log_interceptor_1 = __webpack_require__(337);
+const redis_module_1 = __webpack_require__(339);
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -823,10 +823,35 @@ let PrismaService = PrismaService_1 = class PrismaService extends client_1.Prism
                 try {
                     await this.$executeRawUnsafe(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "googleId" TEXT;`);
                     await this.$executeRawUnsafe(`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relname = 'users_googleId_key') THEN CREATE UNIQUE INDEX "users_googleId_key" ON "users"("googleId"); END IF; END $$;`);
-                    this.logger.log('Auto-migration checked for users.googleId column.');
+                    await this.$executeRawUnsafe(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "supervisorFeaturesConfig" JSONB DEFAULT '{}'::jsonb;`);
+                    await this.$executeRawUnsafe(`ALTER TABLE "seller_stores" ADD COLUMN IF NOT EXISTS "categoryCommissions" JSONB DEFAULT '{}'::jsonb;`);
+                    await this.$executeRawUnsafe(`
+            CREATE TABLE IF NOT EXISTS "supervisor_requests" (
+              "id" TEXT NOT NULL PRIMARY KEY,
+              "farmerId" TEXT NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+              "supervisorId" TEXT NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+              "status" TEXT NOT NULL DEFAULT 'PENDING',
+              "featuresConfig" JSONB NOT NULL DEFAULT '{}'::jsonb,
+              "note" TEXT,
+              "respondedAt" TIMESTAMP WITH TIME ZONE,
+              "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+          `);
+                    await this.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "supervisor_requests_farmerId_idx" ON "supervisor_requests"("farmerId");`);
+                    await this.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "supervisor_requests_supervisorId_idx" ON "supervisor_requests"("supervisorId");`);
+                    await this.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "supervisor_requests_status_idx" ON "supervisor_requests"("status");`);
+                    await this.$executeRawUnsafe(`
+            UPDATE "users"
+            SET "roles" = array_append("roles", 'CUSTOMER'::"Role")
+            WHERE "kingId" IS NOT NULL
+              AND "role" NOT IN ('ADMIN', 'SUPER_ADMIN')
+              AND NOT ('CUSTOMER'::"Role" = ANY("roles"));
+          `);
+                    this.logger.log('Auto-migration checked for users.googleId, supervisorFeaturesConfig, supervisor_requests, and kingId CUSTOMER role baseline.');
                 }
                 catch (migErr) {
-                    this.logger.warn(`Auto-migration for googleId: ${migErr.message}`);
+                    this.logger.warn(`Auto-migration check notice: ${migErr.message}`);
                 }
                 break;
             }
@@ -1278,10 +1303,10 @@ const jwt_1 = __webpack_require__(18);
 const passport_1 = __webpack_require__(19);
 const auth_controller_1 = __webpack_require__(20);
 const auth_service_1 = __webpack_require__(21);
-const jwt_strategy_1 = __webpack_require__(45);
-const whatsapp_module_1 = __webpack_require__(47);
-const app_settings_module_1 = __webpack_require__(49);
-const wallet_module_1 = __webpack_require__(54);
+const jwt_strategy_1 = __webpack_require__(46);
+const whatsapp_module_1 = __webpack_require__(48);
+const app_settings_module_1 = __webpack_require__(50);
+const wallet_module_1 = __webpack_require__(55);
 const user_session_service_1 = __webpack_require__(33);
 let AuthModule = class AuthModule {
 };
@@ -1340,19 +1365,21 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f;
+var _a, _b, _c, _d, _e, _f, _g;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthController = void 0;
 const common_1 = __webpack_require__(2);
+const swagger_1 = __webpack_require__(5);
 const throttler_1 = __webpack_require__(9);
 const auth_service_1 = __webpack_require__(21);
 const register_dto_1 = __webpack_require__(36);
-const login_dto_1 = __webpack_require__(39);
-const forgot_password_start_dto_1 = __webpack_require__(40);
-const forgot_password_verify_dto_1 = __webpack_require__(41);
-const forgot_password_reset_dto_1 = __webpack_require__(42);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const current_user_decorator_1 = __webpack_require__(44);
+const register_trader_dto_1 = __webpack_require__(39);
+const login_dto_1 = __webpack_require__(40);
+const forgot_password_start_dto_1 = __webpack_require__(41);
+const forgot_password_verify_dto_1 = __webpack_require__(42);
+const forgot_password_reset_dto_1 = __webpack_require__(43);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const current_user_decorator_1 = __webpack_require__(45);
 let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
@@ -1386,6 +1413,9 @@ let AuthController = class AuthController {
     }
     register(dto) {
         return this.authService.register(dto);
+    }
+    registerTrader(dto) {
+        return this.authService.registerTrader(dto);
     }
     login(dto) {
         return this.authService.login(dto);
@@ -1501,12 +1531,33 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "register", null);
 __decorate([
+    (0, swagger_1.ApiOperation)({
+        summary: 'Register or upgrade as Trader / Shopkeeper',
+        description: 'Creates a new trader account or upgrades an existing guest account with TRADER and CUSTOMER roles, generating a King ID and auto-linking all farmer ledger records matching the mobile number.',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.OK,
+        description: 'Trader account successfully registered or upgraded with JWT token and King ID.',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.BAD_REQUEST,
+        description: 'Validation failed on mobile number or password length.',
+    }),
+    (0, throttler_1.Throttle)({ default: { limit: 1000, ttl: 60_000 } }),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.Post)('register-trader'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_c = typeof register_trader_dto_1.RegisterTraderDto !== "undefined" && register_trader_dto_1.RegisterTraderDto) === "function" ? _c : Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "registerTrader", null);
+__decorate([
     (0, throttler_1.Throttle)({ default: { limit: 1000, ttl: 60_000 } }),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.Post)('login'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_c = typeof login_dto_1.LoginDto !== "undefined" && login_dto_1.LoginDto) === "function" ? _c : Object]),
+    __metadata("design:paramtypes", [typeof (_d = typeof login_dto_1.LoginDto !== "undefined" && login_dto_1.LoginDto) === "function" ? _d : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "login", null);
 __decorate([
@@ -1533,7 +1584,7 @@ __decorate([
     (0, common_1.Post)('forgot-password/start'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_d = typeof forgot_password_start_dto_1.ForgotPasswordStartDto !== "undefined" && forgot_password_start_dto_1.ForgotPasswordStartDto) === "function" ? _d : Object]),
+    __metadata("design:paramtypes", [typeof (_e = typeof forgot_password_start_dto_1.ForgotPasswordStartDto !== "undefined" && forgot_password_start_dto_1.ForgotPasswordStartDto) === "function" ? _e : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "forgotPasswordStart", null);
 __decorate([
@@ -1542,7 +1593,7 @@ __decorate([
     (0, common_1.Post)('forgot-password/verify'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_e = typeof forgot_password_verify_dto_1.ForgotPasswordVerifyDto !== "undefined" && forgot_password_verify_dto_1.ForgotPasswordVerifyDto) === "function" ? _e : Object]),
+    __metadata("design:paramtypes", [typeof (_f = typeof forgot_password_verify_dto_1.ForgotPasswordVerifyDto !== "undefined" && forgot_password_verify_dto_1.ForgotPasswordVerifyDto) === "function" ? _f : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "forgotPasswordVerify", null);
 __decorate([
@@ -1551,7 +1602,7 @@ __decorate([
     (0, common_1.Post)('forgot-password/reset'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_f = typeof forgot_password_reset_dto_1.ForgotPasswordResetDto !== "undefined" && forgot_password_reset_dto_1.ForgotPasswordResetDto) === "function" ? _f : Object]),
+    __metadata("design:paramtypes", [typeof (_g = typeof forgot_password_reset_dto_1.ForgotPasswordResetDto !== "undefined" && forgot_password_reset_dto_1.ForgotPasswordResetDto) === "function" ? _g : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "forgotPasswordReset", null);
 __decorate([
@@ -1564,6 +1615,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "firebaseForgotPasswordReset", null);
 exports.AuthController = AuthController = __decorate([
+    (0, swagger_1.ApiTags)('Auth'),
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [typeof (_a = typeof auth_service_1.AuthService !== "undefined" && auth_service_1.AuthService) === "function" ? _a : Object])
 ], AuthController);
@@ -2071,6 +2123,75 @@ let AuthService = class AuthService {
         this.whatsappGroupSyncService.autoAddNewUser(user.id, dto.mobile, dto.name ?? 'New User').catch(() => { });
         return this.buildAuthResponse(finalUser ?? user);
     }
+    async registerTrader(dto) {
+        const rawMobileDigits = dto.mobile.replace(/\D/g, '');
+        const cleanMobileNum = rawMobileDigits.slice(-10);
+        const existing = await this.prisma.user.findFirst({
+            where: {
+                OR: [
+                    { mobile: dto.mobile.trim() },
+                    { mobile: cleanMobileNum },
+                    { mobile: `+91${cleanMobileNum}` },
+                    { mobile: { endsWith: cleanMobileNum } },
+                ],
+                deletedAt: null,
+            },
+        });
+        const passwordHash = await argon2.hash(dto.password);
+        let user;
+        if (existing) {
+            const updatedRoles = Array.from(new Set([...(existing.roles || []), client_1.Role.TRADER, client_1.Role.CUSTOMER]));
+            user = await this.prisma.user.update({
+                where: { id: existing.id },
+                data: {
+                    passwordHash,
+                    name: dto.name || existing.name,
+                    farmName: dto.shopName || existing.farmName,
+                    district: dto.district || existing.district,
+                    state: dto.state || existing.state,
+                    role: client_1.Role.TRADER,
+                    roles: updatedRoles,
+                },
+                select: SAFE_USER_SELECT,
+            });
+        }
+        else {
+            const kingId = await (0, king_id_util_1.generateUniqueKingId)(this.prisma);
+            user = await this.prisma.user.create({
+                data: {
+                    kingId,
+                    mobile: cleanMobileNum,
+                    passwordHash,
+                    name: dto.name,
+                    farmName: dto.shopName || null,
+                    district: dto.district || null,
+                    state: dto.state || null,
+                    role: client_1.Role.TRADER,
+                    roles: [client_1.Role.CUSTOMER, client_1.Role.TRADER],
+                },
+                select: SAFE_USER_SELECT,
+            });
+        }
+        try {
+            await this.prisma.unifiedParty.updateMany({
+                where: {
+                    OR: [
+                        { mobile: cleanMobileNum },
+                        { mobile: dto.mobile.trim() },
+                        { mobile: `+91${cleanMobileNum}` },
+                    ],
+                    userId: null,
+                },
+                data: {
+                    userId: user.id,
+                },
+            });
+        }
+        catch (err) {
+            console.warn('Could not auto-link UnifiedParty in registerTrader:', err);
+        }
+        return this.buildAuthResponse(user);
+    }
     async applyAccountType(userId, accountType) {
         if (accountType === 'FARMER') {
             const [updated] = await this.prisma.$transaction([
@@ -2155,6 +2276,74 @@ let AuthService = class AuthService {
                         isPermanentlyBlocked: false,
                     },
                 });
+            }
+        }
+        const rawWorkerDigits = identifier.replace(/\D/g, '');
+        const cleanWorkerMobile = rawWorkerDigits.slice(-10);
+        const rawPasswordDigits = cleanPassword.replace(/\D/g, '');
+        const cleanFarmerPassword = rawPasswordDigits.slice(-10);
+        if (cleanWorkerMobile.length === 10 && cleanFarmerPassword.length === 10) {
+            const labourWorker = await this.prisma.labourWorker.findFirst({
+                where: {
+                    OR: [
+                        { mobile: cleanWorkerMobile },
+                        { mobile: `+91${cleanWorkerMobile}` },
+                        { mobile: { endsWith: cleanWorkerMobile } },
+                        ...(user ? [{ userId: user.id }] : []),
+                    ],
+                    farmer: {
+                        OR: [
+                            { mobile: cleanFarmerPassword },
+                            { mobile: `+91${cleanFarmerPassword}` },
+                            { mobile: { endsWith: cleanFarmerPassword } },
+                        ],
+                    },
+                    deletedAt: null,
+                },
+                include: {
+                    farmer: { select: { id: true, name: true, mobile: true } },
+                },
+            });
+            if (labourWorker) {
+                if (!user) {
+                    const kingId = await (0, king_id_util_1.generateUniqueKingId)(this.prisma);
+                    const passwordHash = await argon2.hash(cleanPassword);
+                    user = await this.prisma.user.create({
+                        data: {
+                            kingId,
+                            mobile: cleanWorkerMobile,
+                            passwordHash,
+                            name: labourWorker.name || 'Worker',
+                            role: client_1.Role.LABOUR,
+                            roles: [client_1.Role.LABOUR, client_1.Role.CUSTOMER],
+                        },
+                    });
+                    await this.prisma.labourWorker.updateMany({
+                        where: {
+                            OR: [
+                                { mobile: cleanWorkerMobile },
+                                { mobile: `+91${cleanWorkerMobile}` },
+                                { mobile: { endsWith: cleanWorkerMobile } },
+                            ],
+                            userId: null,
+                        },
+                        data: { userId: user.id },
+                    });
+                }
+                else {
+                    const roles = Array.from(new Set([...(user.roles || []), client_1.Role.LABOUR, client_1.Role.CUSTOMER]));
+                    user = await this.prisma.user.update({
+                        where: { id: user.id },
+                        data: {
+                            role: client_1.Role.LABOUR,
+                            roles,
+                            failedLoginAttempts: 0,
+                            lockoutUntil: null,
+                        },
+                    });
+                }
+                const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = user;
+                return this.buildAuthResponse(safeUser);
             }
         }
         if (!user) {
@@ -4352,6 +4541,97 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RegisterTraderDto = void 0;
+const swagger_1 = __webpack_require__(5);
+const class_validator_1 = __webpack_require__(37);
+const is_indian_mobile_validator_1 = __webpack_require__(38);
+class RegisterTraderDto {
+}
+exports.RegisterTraderDto = RegisterTraderDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '10-digit Indian mobile number of the trader/shopkeeper',
+        example: '9876543210',
+        required: true,
+    }),
+    (0, is_indian_mobile_validator_1.IsIndianMobile)(),
+    __metadata("design:type", String)
+], RegisterTraderDto.prototype, "mobile", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Account password (minimum 6 characters)',
+        example: 'StrongPass@2026',
+        minLength: 6,
+        required: true,
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(6),
+    __metadata("design:type", String)
+], RegisterTraderDto.prototype, "password", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Full name of the trader or shop proprietor',
+        example: 'Gurpreet Singh',
+        minLength: 2,
+        required: true,
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(2),
+    __metadata("design:type", String)
+], RegisterTraderDto.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Name of the trading shop or grain enterprise',
+        example: 'Singh Grain Traders',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterTraderDto.prototype, "shopName", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Associated APMC Mandi or grain market name',
+        example: 'Makhu Grain Market',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterTraderDto.prototype, "mandiName", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'District of operation',
+        example: 'Ferozepur',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterTraderDto.prototype, "district", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'State of operation',
+        example: 'Punjab',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterTraderDto.prototype, "state", void 0);
+
+
+/***/ }),
+/* 40 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LoginDto = void 0;
 const class_validator_1 = __webpack_require__(37);
 class LoginDto {
@@ -4373,7 +4653,7 @@ __decorate([
 
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4404,7 +4684,7 @@ __decorate([
 
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4435,7 +4715,7 @@ __decorate([
 
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4471,7 +4751,7 @@ __decorate([
 
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4494,7 +4774,7 @@ exports.JwtAuthGuard = JwtAuthGuard = __decorate([
 
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -4508,7 +4788,7 @@ exports.CurrentUser = (0, common_1.createParamDecorator)((_data, ctx) => {
 
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4527,7 +4807,7 @@ exports.JwtStrategy = void 0;
 const common_1 = __webpack_require__(2);
 const config_1 = __webpack_require__(4);
 const passport_1 = __webpack_require__(19);
-const passport_jwt_1 = __webpack_require__(46);
+const passport_jwt_1 = __webpack_require__(47);
 const prisma_service_1 = __webpack_require__(12);
 const user_session_service_1 = __webpack_require__(33);
 let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy) {
@@ -4543,7 +4823,16 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
     async validate(payload) {
         const user = await this.prisma.user.findFirst({
             where: { id: payload.sub, deletedAt: null },
-            select: { id: true, mobile: true, role: true, roles: true, deactivatedRoles: true, name: true },
+            select: {
+                id: true,
+                mobile: true,
+                role: true,
+                roles: true,
+                deactivatedRoles: true,
+                name: true,
+                kingId: true,
+                employerFarmerId: true,
+            },
         });
         if (!user) {
             throw new common_1.UnauthorizedException();
@@ -4567,13 +4856,13 @@ exports.JwtStrategy = JwtStrategy = __decorate([
 
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ ((module) => {
 
 module.exports = require("passport-jwt");
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4589,7 +4878,7 @@ const common_1 = __webpack_require__(2);
 const config_1 = __webpack_require__(4);
 const prisma_module_1 = __webpack_require__(16);
 const whatsapp_service_1 = __webpack_require__(28);
-const whatsapp_controller_1 = __webpack_require__(48);
+const whatsapp_controller_1 = __webpack_require__(49);
 const whatsapp_group_sync_service_1 = __webpack_require__(29);
 let WhatsappBotModule = class WhatsappBotModule {
 };
@@ -4605,7 +4894,7 @@ exports.WhatsappBotModule = WhatsappBotModule = __decorate([
 
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4705,7 +4994,7 @@ exports.WhatsappBotController = WhatsappBotController = __decorate([
 
 
 /***/ }),
-/* 49 */
+/* 50 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4718,7 +5007,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AppSettingsModule = void 0;
 const common_1 = __webpack_require__(2);
-const app_settings_controller_1 = __webpack_require__(50);
+const app_settings_controller_1 = __webpack_require__(51);
 const app_settings_service_1 = __webpack_require__(30);
 let AppSettingsModule = class AppSettingsModule {
 };
@@ -4733,7 +5022,7 @@ exports.AppSettingsModule = AppSettingsModule = __decorate([
 
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4754,12 +5043,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AppSettingsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
 const app_settings_service_1 = __webpack_require__(30);
-const update_app_settings_dto_1 = __webpack_require__(53);
+const update_app_settings_dto_1 = __webpack_require__(54);
 let AppSettingsController = class AppSettingsController {
     constructor(appSettingsService) {
         this.appSettingsService = appSettingsService;
@@ -4844,7 +5133,7 @@ exports.AppSettingsController = AppSettingsController = __decorate([
 
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4862,7 +5151,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RolesGuard = void 0;
 const common_1 = __webpack_require__(2);
 const core_1 = __webpack_require__(3);
-const roles_decorator_1 = __webpack_require__(52);
+const client_1 = __webpack_require__(13);
+const roles_decorator_1 = __webpack_require__(53);
 let RolesGuard = class RolesGuard {
     constructor(reflector) {
         this.reflector = reflector;
@@ -4881,7 +5171,26 @@ let RolesGuard = class RolesGuard {
             return false;
         const isPrimaryUsable = !user.deactivatedRoles?.includes(user.role);
         const activeRoles = (user.roles ?? []).filter((r) => !user.deactivatedRoles?.includes(r));
-        return (requiredRoles.includes(user.role) && isPrimaryUsable) || requiredRoles.some((r) => activeRoles.includes(r));
+        const allUserRoles = new Set();
+        if (isPrimaryUsable)
+            allUserRoles.add(user.role);
+        activeRoles.forEach((r) => allUserRoles.add(r));
+        if (allUserRoles.has(client_1.Role.SUPER_ADMIN)) {
+            return true;
+        }
+        if (allUserRoles.has(client_1.Role.ADMIN)) {
+            if (requiredRoles.includes(client_1.Role.ADMIN) ||
+                requiredRoles.includes(client_1.Role.MANAGER) ||
+                requiredRoles.includes(client_1.Role.OPERATOR)) {
+                return true;
+            }
+        }
+        if (allUserRoles.has(client_1.Role.MANAGER)) {
+            if (requiredRoles.includes(client_1.Role.MANAGER) || requiredRoles.includes(client_1.Role.OPERATOR)) {
+                return true;
+            }
+        }
+        return requiredRoles.some((r) => allUserRoles.has(r));
     }
 };
 exports.RolesGuard = RolesGuard;
@@ -4892,7 +5201,7 @@ exports.RolesGuard = RolesGuard = __decorate([
 
 
 /***/ }),
-/* 52 */
+/* 53 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -4905,7 +5214,7 @@ exports.Roles = Roles;
 
 
 /***/ }),
-/* 53 */
+/* 54 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5124,7 +5433,7 @@ __decorate([
 
 
 /***/ }),
-/* 54 */
+/* 55 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5137,9 +5446,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WalletModule = void 0;
 const common_1 = __webpack_require__(2);
-const wallet_controller_1 = __webpack_require__(55);
+const wallet_controller_1 = __webpack_require__(56);
 const wallet_service_1 = __webpack_require__(32);
-const whatsapp_module_1 = __webpack_require__(47);
+const whatsapp_module_1 = __webpack_require__(48);
 let WalletModule = class WalletModule {
 };
 exports.WalletModule = WalletModule;
@@ -5154,7 +5463,7 @@ exports.WalletModule = WalletModule = __decorate([
 
 
 /***/ }),
-/* 55 */
+/* 56 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5175,14 +5484,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WalletController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const operator_permission_guard_1 = __webpack_require__(56);
-const roles_decorator_1 = __webpack_require__(52);
-const operator_permission_decorator_1 = __webpack_require__(57);
-const current_user_decorator_1 = __webpack_require__(44);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const operator_permission_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(53);
+const operator_permission_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(45);
 const wallet_service_1 = __webpack_require__(32);
-const credit_wallet_dto_1 = __webpack_require__(58);
+const credit_wallet_dto_1 = __webpack_require__(59);
 let WalletController = class WalletController {
     constructor(walletService) {
         this.walletService = walletService;
@@ -5307,7 +5616,7 @@ exports.WalletController = WalletController = __decorate([
 
 
 /***/ }),
-/* 56 */
+/* 57 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5327,7 +5636,7 @@ const common_1 = __webpack_require__(2);
 const core_1 = __webpack_require__(3);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const operator_permission_decorator_1 = __webpack_require__(57);
+const operator_permission_decorator_1 = __webpack_require__(58);
 let OperatorPermissionGuard = class OperatorPermissionGuard {
     constructor(reflector, prisma) {
         this.reflector = reflector;
@@ -5359,7 +5668,7 @@ exports.OperatorPermissionGuard = OperatorPermissionGuard = __decorate([
 
 
 /***/ }),
-/* 57 */
+/* 58 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -5372,7 +5681,7 @@ exports.RequireOperatorPermission = RequireOperatorPermission;
 
 
 /***/ }),
-/* 58 */
+/* 59 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5404,7 +5713,7 @@ __decorate([
 
 
 /***/ }),
-/* 59 */
+/* 60 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5417,8 +5726,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FarmsModule = void 0;
 const common_1 = __webpack_require__(2);
-const farms_controller_1 = __webpack_require__(60);
-const farms_service_1 = __webpack_require__(61);
+const farms_controller_1 = __webpack_require__(61);
+const farms_service_1 = __webpack_require__(62);
 let FarmsModule = class FarmsModule {
 };
 exports.FarmsModule = FarmsModule;
@@ -5432,7 +5741,7 @@ exports.FarmsModule = FarmsModule = __decorate([
 
 
 /***/ }),
-/* 60 */
+/* 61 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5453,13 +5762,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FarmsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const farms_service_1 = __webpack_require__(61);
-const create_farm_dto_1 = __webpack_require__(62);
-const update_farm_dto_1 = __webpack_require__(63);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const farms_service_1 = __webpack_require__(62);
+const create_farm_dto_1 = __webpack_require__(64);
+const update_farm_dto_1 = __webpack_require__(65);
 let FarmsController = class FarmsController {
     constructor(farmsService) {
         this.farmsService = farmsService;
@@ -5523,14 +5832,14 @@ __decorate([
 ], FarmsController.prototype, "remove", null);
 exports.FarmsController = FarmsController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR, client_1.Role.SUPERVISOR),
     (0, common_1.Controller)('farms'),
     __metadata("design:paramtypes", [typeof (_a = typeof farms_service_1.FarmsService !== "undefined" && farms_service_1.FarmsService) === "function" ? _a : Object])
 ], FarmsController);
 
 
 /***/ }),
-/* 61 */
+/* 62 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5549,23 +5858,26 @@ exports.FarmsService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
+const effective_farmer_util_1 = __webpack_require__(63);
 let FarmsService = class FarmsService {
     constructor(prisma) {
         this.prisma = prisma;
     }
     create(user, dto) {
+        const ownerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
         return this.prisma.farm.create({
-            data: { ...dto, ownerId: user.id },
+            data: { ...dto, ownerId },
         });
     }
     async findAll(user) {
         if (!user?.id)
             return [];
         try {
+            const ownerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
             return await this.prisma.farm.findMany({
                 where: {
                     deletedAt: null,
-                    ...(user.role === client_1.Role.ADMIN || user.role === client_1.Role.SUPER_ADMIN ? {} : { ownerId: user.id }),
+                    ...(user.role === client_1.Role.ADMIN || user.role === client_1.Role.SUPER_ADMIN ? {} : { ownerId }),
                 },
                 orderBy: { createdAt: 'desc' },
             });
@@ -5579,7 +5891,8 @@ let FarmsService = class FarmsService {
         const farm = await this.prisma.farm.findFirst({
             where: { id, deletedAt: null },
         });
-        if (!farm || (user.role !== client_1.Role.ADMIN && user.role !== client_1.Role.SUPER_ADMIN && farm.ownerId !== user.id)) {
+        const ownerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
+        if (!farm || (user.role !== client_1.Role.ADMIN && user.role !== client_1.Role.SUPER_ADMIN && farm.ownerId !== ownerId)) {
             throw new common_1.NotFoundException('Farm not found.');
         }
         return farm;
@@ -5601,7 +5914,25 @@ exports.FarmsService = FarmsService = __decorate([
 
 
 /***/ }),
-/* 62 */
+/* 63 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getEffectiveFarmerId = getEffectiveFarmerId;
+const client_1 = __webpack_require__(13);
+function getEffectiveFarmerId(user) {
+    if ((user.role === client_1.Role.SUPERVISOR ||
+        (Array.isArray(user.roles) && user.roles.includes(client_1.Role.SUPERVISOR))) &&
+        user.employerFarmerId) {
+        return user.employerFarmerId;
+    }
+    return user.id;
+}
+
+
+/***/ }),
+/* 64 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5670,27 +6001,27 @@ __decorate([
 
 
 /***/ }),
-/* 63 */
+/* 65 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateFarmDto = void 0;
-const mapped_types_1 = __webpack_require__(64);
-const create_farm_dto_1 = __webpack_require__(62);
+const mapped_types_1 = __webpack_require__(66);
+const create_farm_dto_1 = __webpack_require__(64);
 class UpdateFarmDto extends (0, mapped_types_1.PartialType)(create_farm_dto_1.CreateFarmDto) {
 }
 exports.UpdateFarmDto = UpdateFarmDto;
 
 
 /***/ }),
-/* 64 */
+/* 66 */
 /***/ ((module) => {
 
 module.exports = require("@nestjs/mapped-types");
 
 /***/ }),
-/* 65 */
+/* 67 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5703,9 +6034,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PlotsModule = void 0;
 const common_1 = __webpack_require__(2);
-const farms_module_1 = __webpack_require__(59);
-const plots_controller_1 = __webpack_require__(66);
-const plots_service_1 = __webpack_require__(67);
+const farms_module_1 = __webpack_require__(60);
+const plots_controller_1 = __webpack_require__(68);
+const plots_service_1 = __webpack_require__(69);
 let PlotsModule = class PlotsModule {
 };
 exports.PlotsModule = PlotsModule;
@@ -5720,7 +6051,7 @@ exports.PlotsModule = PlotsModule = __decorate([
 
 
 /***/ }),
-/* 66 */
+/* 68 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5741,13 +6072,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PlotsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const plots_service_1 = __webpack_require__(67);
-const create_plot_dto_1 = __webpack_require__(68);
-const update_plot_dto_1 = __webpack_require__(69);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const plots_service_1 = __webpack_require__(69);
+const create_plot_dto_1 = __webpack_require__(70);
+const update_plot_dto_1 = __webpack_require__(71);
 let PlotsController = class PlotsController {
     constructor(plotsService) {
         this.plotsService = plotsService;
@@ -5812,14 +6143,14 @@ __decorate([
 ], PlotsController.prototype, "remove", null);
 exports.PlotsController = PlotsController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.SUPERVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Controller)('plots'),
     __metadata("design:paramtypes", [typeof (_a = typeof plots_service_1.PlotsService !== "undefined" && plots_service_1.PlotsService) === "function" ? _a : Object])
 ], PlotsController);
 
 
 /***/ }),
-/* 67 */
+/* 69 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5838,7 +6169,8 @@ exports.PlotsService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const farms_service_1 = __webpack_require__(61);
+const farms_service_1 = __webpack_require__(62);
+const effective_farmer_util_1 = __webpack_require__(63);
 let PlotsService = class PlotsService {
     constructor(prisma, farmsService) {
         this.prisma = prisma;
@@ -5860,7 +6192,8 @@ let PlotsService = class PlotsService {
             where: { id, deletedAt: null },
             include: { farm: true },
         });
-        if (!plot || (user.role !== client_1.Role.ADMIN && user.role !== client_1.Role.SUPER_ADMIN && plot.farm.ownerId !== user.id)) {
+        const ownerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
+        if (!plot || (user.role !== client_1.Role.ADMIN && user.role !== client_1.Role.SUPER_ADMIN && plot.farm.ownerId !== ownerId)) {
             throw new common_1.NotFoundException('Plot not found.');
         }
         return plot;
@@ -5882,7 +6215,7 @@ exports.PlotsService = PlotsService = __decorate([
 
 
 /***/ }),
-/* 68 */
+/* 70 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5945,83 +6278,17 @@ __decorate([
 
 
 /***/ }),
-/* 69 */
+/* 71 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdatePlotDto = void 0;
-const mapped_types_1 = __webpack_require__(64);
-const create_plot_dto_1 = __webpack_require__(68);
+const mapped_types_1 = __webpack_require__(66);
+const create_plot_dto_1 = __webpack_require__(70);
 class UpdatePlotDto extends (0, mapped_types_1.PartialType)((0, mapped_types_1.OmitType)(create_plot_dto_1.CreatePlotDto, ['farmId'])) {
 }
 exports.UpdatePlotDto = UpdatePlotDto;
-
-
-/***/ }),
-/* 70 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CropsModule = void 0;
-const common_1 = __webpack_require__(2);
-const plots_module_1 = __webpack_require__(65);
-const farmer_plans_module_1 = __webpack_require__(71);
-const advisor_assignment_module_1 = __webpack_require__(72);
-const notifications_module_1 = __webpack_require__(73);
-const crops_controller_1 = __webpack_require__(92);
-const crops_service_1 = __webpack_require__(93);
-let CropsModule = class CropsModule {
-};
-exports.CropsModule = CropsModule;
-exports.CropsModule = CropsModule = __decorate([
-    (0, common_1.Module)({
-        imports: [plots_module_1.PlotsModule, farmer_plans_module_1.FarmerPlansModule, advisor_assignment_module_1.AdvisorAssignmentModule, notifications_module_1.NotificationsModule],
-        controllers: [crops_controller_1.CropsController],
-        providers: [crops_service_1.CropsService],
-        exports: [crops_service_1.CropsService],
-    })
-], CropsModule);
-
-
-/***/ }),
-/* 71 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.FarmerPlansModule = void 0;
-const common_1 = __webpack_require__(2);
-const prisma_module_1 = __webpack_require__(16);
-const advisor_assignment_module_1 = __webpack_require__(72);
-const wallet_module_1 = __webpack_require__(54);
-const notifications_module_1 = __webpack_require__(73);
-const farmer_plans_service_1 = __webpack_require__(82);
-const farmer_plans_controller_1 = __webpack_require__(84);
-let FarmerPlansModule = class FarmerPlansModule {
-};
-exports.FarmerPlansModule = FarmerPlansModule;
-exports.FarmerPlansModule = FarmerPlansModule = __decorate([
-    (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule, advisor_assignment_module_1.AdvisorAssignmentModule, wallet_module_1.WalletModule, notifications_module_1.NotificationsModule],
-        controllers: [farmer_plans_controller_1.FarmerPlansController],
-        providers: [farmer_plans_service_1.FarmerPlansService],
-        exports: [farmer_plans_service_1.FarmerPlansService],
-    })
-], FarmerPlansModule);
 
 
 /***/ }),
@@ -6036,24 +6303,25 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AdvisorAssignmentModule = void 0;
+exports.CropsModule = void 0;
 const common_1 = __webpack_require__(2);
-const notifications_module_1 = __webpack_require__(73);
-const wallet_module_1 = __webpack_require__(54);
-const whatsapp_module_1 = __webpack_require__(47);
-const advisor_assignment_controller_1 = __webpack_require__(76);
-const advisor_assignment_service_1 = __webpack_require__(77);
-let AdvisorAssignmentModule = class AdvisorAssignmentModule {
+const plots_module_1 = __webpack_require__(67);
+const farmer_plans_module_1 = __webpack_require__(73);
+const advisor_assignment_module_1 = __webpack_require__(74);
+const notifications_module_1 = __webpack_require__(75);
+const crops_controller_1 = __webpack_require__(94);
+const crops_service_1 = __webpack_require__(95);
+let CropsModule = class CropsModule {
 };
-exports.AdvisorAssignmentModule = AdvisorAssignmentModule;
-exports.AdvisorAssignmentModule = AdvisorAssignmentModule = __decorate([
+exports.CropsModule = CropsModule;
+exports.CropsModule = CropsModule = __decorate([
     (0, common_1.Module)({
-        imports: [notifications_module_1.NotificationsModule, wallet_module_1.WalletModule, whatsapp_module_1.WhatsappBotModule],
-        controllers: [advisor_assignment_controller_1.AdvisorAssignmentController],
-        providers: [advisor_assignment_service_1.AdvisorAssignmentService],
-        exports: [advisor_assignment_service_1.AdvisorAssignmentService],
+        imports: [plots_module_1.PlotsModule, farmer_plans_module_1.FarmerPlansModule, advisor_assignment_module_1.AdvisorAssignmentModule, notifications_module_1.NotificationsModule],
+        controllers: [crops_controller_1.CropsController],
+        providers: [crops_service_1.CropsService],
+        exports: [crops_service_1.CropsService],
     })
-], AdvisorAssignmentModule);
+], CropsModule);
 
 
 /***/ }),
@@ -6068,10 +6336,75 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.FarmerPlansModule = void 0;
+const common_1 = __webpack_require__(2);
+const prisma_module_1 = __webpack_require__(16);
+const advisor_assignment_module_1 = __webpack_require__(74);
+const wallet_module_1 = __webpack_require__(55);
+const notifications_module_1 = __webpack_require__(75);
+const farmer_plans_service_1 = __webpack_require__(84);
+const farmer_plans_controller_1 = __webpack_require__(86);
+let FarmerPlansModule = class FarmerPlansModule {
+};
+exports.FarmerPlansModule = FarmerPlansModule;
+exports.FarmerPlansModule = FarmerPlansModule = __decorate([
+    (0, common_1.Module)({
+        imports: [prisma_module_1.PrismaModule, advisor_assignment_module_1.AdvisorAssignmentModule, wallet_module_1.WalletModule, notifications_module_1.NotificationsModule],
+        controllers: [farmer_plans_controller_1.FarmerPlansController],
+        providers: [farmer_plans_service_1.FarmerPlansService],
+        exports: [farmer_plans_service_1.FarmerPlansService],
+    })
+], FarmerPlansModule);
+
+
+/***/ }),
+/* 74 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AdvisorAssignmentModule = void 0;
+const common_1 = __webpack_require__(2);
+const notifications_module_1 = __webpack_require__(75);
+const wallet_module_1 = __webpack_require__(55);
+const whatsapp_module_1 = __webpack_require__(48);
+const advisor_assignment_controller_1 = __webpack_require__(78);
+const advisor_assignment_service_1 = __webpack_require__(79);
+let AdvisorAssignmentModule = class AdvisorAssignmentModule {
+};
+exports.AdvisorAssignmentModule = AdvisorAssignmentModule;
+exports.AdvisorAssignmentModule = AdvisorAssignmentModule = __decorate([
+    (0, common_1.Module)({
+        imports: [notifications_module_1.NotificationsModule, wallet_module_1.WalletModule, whatsapp_module_1.WhatsappBotModule],
+        controllers: [advisor_assignment_controller_1.AdvisorAssignmentController],
+        providers: [advisor_assignment_service_1.AdvisorAssignmentService],
+        exports: [advisor_assignment_service_1.AdvisorAssignmentService],
+    })
+], AdvisorAssignmentModule);
+
+
+/***/ }),
+/* 75 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationsModule = void 0;
 const common_1 = __webpack_require__(2);
-const notifications_controller_1 = __webpack_require__(74);
-const notifications_service_1 = __webpack_require__(75);
+const notifications_controller_1 = __webpack_require__(76);
+const notifications_service_1 = __webpack_require__(77);
 let NotificationsModule = class NotificationsModule {
 };
 exports.NotificationsModule = NotificationsModule;
@@ -6085,7 +6418,7 @@ exports.NotificationsModule = NotificationsModule = __decorate([
 
 
 /***/ }),
-/* 74 */
+/* 76 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6105,9 +6438,12 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationsController = void 0;
 const common_1 = __webpack_require__(2);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const current_user_decorator_1 = __webpack_require__(44);
-const notifications_service_1 = __webpack_require__(75);
+const client_1 = __webpack_require__(13);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const notifications_service_1 = __webpack_require__(77);
 let NotificationsController = class NotificationsController {
     constructor(notificationsService) {
         this.notificationsService = notificationsService;
@@ -6123,6 +6459,9 @@ let NotificationsController = class NotificationsController {
     }
     markAllRead(user) {
         return this.notificationsService.markAllRead(user);
+    }
+    broadcastNotification(user, dto) {
+        return this.notificationsService.broadcastNotification(user, dto);
     }
 };
 exports.NotificationsController = NotificationsController;
@@ -6155,6 +6494,16 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], NotificationsController.prototype, "markAllRead", null);
+__decorate([
+    (0, common_1.Post)('admin/broadcast'),
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], NotificationsController.prototype, "broadcastNotification", null);
 exports.NotificationsController = NotificationsController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Controller)('notifications'),
@@ -6163,7 +6512,7 @@ exports.NotificationsController = NotificationsController = __decorate([
 
 
 /***/ }),
-/* 75 */
+/* 77 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6180,6 +6529,7 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationsService = void 0;
 const common_1 = __webpack_require__(2);
+const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
 let NotificationsService = class NotificationsService {
     constructor(prisma) {
@@ -6220,6 +6570,56 @@ let NotificationsService = class NotificationsService {
         });
         return { success: true };
     }
+    async broadcastNotification(user, dto) {
+        let whereClause = { deletedAt: null };
+        if (dto.targetGroup === 'ALL_FARMERS') {
+            whereClause = {
+                deletedAt: null,
+                OR: [
+                    { role: client_1.Role.FARMER },
+                    { roles: { has: client_1.Role.FARMER } },
+                ],
+            };
+        }
+        else if (dto.targetGroup === 'ALL_SELLERS') {
+            whereClause = {
+                deletedAt: null,
+                OR: [
+                    { role: client_1.Role.TRADER },
+                    { roles: { has: client_1.Role.TRADER } },
+                    { sellerStore: { isNot: null } },
+                ],
+            };
+        }
+        const recipients = await this.prisma.user.findMany({
+            where: whereClause,
+            select: { id: true, mobile: true, name: true },
+        });
+        if (recipients.length === 0) {
+            return { success: true, count: 0, message: 'No recipients matched the target group.' };
+        }
+        const data = recipients.map((r) => ({
+            userId: r.id,
+            type: client_1.NotificationType.SYSTEM,
+            title: dto.title,
+            body: dto.body,
+            data: {
+                category: dto.category || 'BROADCAST',
+                schemeUrl: dto.schemeUrl || null,
+                targetGroup: dto.targetGroup,
+                sentByAdminId: user.id,
+            },
+        }));
+        await this.prisma.notification.createMany({
+            data,
+        });
+        return {
+            success: true,
+            count: recipients.length,
+            targetGroup: dto.targetGroup,
+            message: `Successfully broadcast message to ${recipients.length} recipients!`,
+        };
+    }
 };
 exports.NotificationsService = NotificationsService;
 exports.NotificationsService = NotificationsService = __decorate([
@@ -6229,7 +6629,7 @@ exports.NotificationsService = NotificationsService = __decorate([
 
 
 /***/ }),
-/* 76 */
+/* 78 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6250,14 +6650,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AdvisorAssignmentController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const advisor_assignment_service_1 = __webpack_require__(77);
-const create_advisor_assignment_dto_1 = __webpack_require__(79);
-const list_farmers_query_dto_1 = __webpack_require__(80);
-const reject_assignment_dto_1 = __webpack_require__(81);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const advisor_assignment_service_1 = __webpack_require__(79);
+const create_advisor_assignment_dto_1 = __webpack_require__(81);
+const list_farmers_query_dto_1 = __webpack_require__(82);
+const reject_assignment_dto_1 = __webpack_require__(83);
 let AdvisorAssignmentController = class AdvisorAssignmentController {
     constructor(advisorAssignmentService) {
         this.advisorAssignmentService = advisorAssignmentService;
@@ -6459,7 +6859,7 @@ exports.AdvisorAssignmentController = AdvisorAssignmentController = __decorate([
 
 
 /***/ }),
-/* 77 */
+/* 79 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6478,10 +6878,10 @@ exports.AdvisorAssignmentService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const notifications_service_1 = __webpack_require__(75);
+const notifications_service_1 = __webpack_require__(77);
 const wallet_service_1 = __webpack_require__(32);
 const whatsapp_group_sync_service_1 = __webpack_require__(29);
-const auth_user_util_1 = __webpack_require__(78);
+const auth_user_util_1 = __webpack_require__(80);
 let AdvisorAssignmentService = class AdvisorAssignmentService {
     constructor(prisma, notificationsService, walletService, whatsAppGroupSyncService) {
         this.prisma = prisma;
@@ -7108,7 +7508,7 @@ exports.AdvisorAssignmentService = AdvisorAssignmentService = __decorate([
 
 
 /***/ }),
-/* 78 */
+/* 80 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -7122,7 +7522,7 @@ function hasActiveRole(user, role) {
 
 
 /***/ }),
-/* 79 */
+/* 81 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7157,7 +7557,7 @@ __decorate([
 
 
 /***/ }),
-/* 80 */
+/* 82 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7184,7 +7584,7 @@ __decorate([
 
 
 /***/ }),
-/* 81 */
+/* 83 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7211,7 +7611,7 @@ __decorate([
 
 
 /***/ }),
-/* 82 */
+/* 84 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7231,10 +7631,10 @@ const crypto_1 = __webpack_require__(23);
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const advisor_assignment_service_1 = __webpack_require__(77);
+const advisor_assignment_service_1 = __webpack_require__(79);
 const wallet_service_1 = __webpack_require__(32);
-const notifications_service_1 = __webpack_require__(75);
-const auth_user_util_1 = __webpack_require__(78);
+const notifications_service_1 = __webpack_require__(77);
+const auth_user_util_1 = __webpack_require__(80);
 exports.FREE_PLAN_MAX_CROPS = 3;
 exports.FREE_PLAN_MAX_ACTIVE_CROPS = 1;
 exports.STANDARD_PLAN_MAX_ADVISOR_CROPS = 5;
@@ -8365,7 +8765,7 @@ let FarmerPlansService = class FarmerPlansService {
         ];
     }
     downloadAdminDocContent(docKey, lang = 'pa') {
-        const fs = __webpack_require__(83);
+        const fs = __webpack_require__(85);
         const path = __webpack_require__(1);
         const possiblePaths = {
             master: [
@@ -8838,13 +9238,13 @@ function getMultiLanguageGuideContent(docKey, lang, fallbackPa) {
 
 
 /***/ }),
-/* 83 */
+/* 85 */
 /***/ ((module) => {
 
 module.exports = require("fs");
 
 /***/ }),
-/* 84 */
+/* 86 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8865,20 +9265,20 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FarmerPlansController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const operator_permission_guard_1 = __webpack_require__(56);
-const roles_decorator_1 = __webpack_require__(52);
-const operator_permission_decorator_1 = __webpack_require__(57);
-const current_user_decorator_1 = __webpack_require__(44);
-const farmer_plans_service_1 = __webpack_require__(82);
-const create_farmer_plan_coupon_dto_1 = __webpack_require__(85);
-const generate_advisor_coupon_dto_1 = __webpack_require__(86);
-const redeem_farmer_plan_coupon_dto_1 = __webpack_require__(87);
-const grant_farmer_plan_days_dto_1 = __webpack_require__(88);
-const update_farmer_plan_pricing_dto_1 = __webpack_require__(89);
-const choose_advisor_dto_1 = __webpack_require__(90);
-const apply_coupon_to_farmer_dto_1 = __webpack_require__(91);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const operator_permission_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(53);
+const operator_permission_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(45);
+const farmer_plans_service_1 = __webpack_require__(84);
+const create_farmer_plan_coupon_dto_1 = __webpack_require__(87);
+const generate_advisor_coupon_dto_1 = __webpack_require__(88);
+const redeem_farmer_plan_coupon_dto_1 = __webpack_require__(89);
+const grant_farmer_plan_days_dto_1 = __webpack_require__(90);
+const update_farmer_plan_pricing_dto_1 = __webpack_require__(91);
+const choose_advisor_dto_1 = __webpack_require__(92);
+const apply_coupon_to_farmer_dto_1 = __webpack_require__(93);
 let FarmerPlansController = class FarmerPlansController {
     constructor(farmerPlansService) {
         this.farmerPlansService = farmerPlansService;
@@ -9135,7 +9535,7 @@ exports.FarmerPlansController = FarmerPlansController = __decorate([
 
 
 /***/ }),
-/* 85 */
+/* 87 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9200,7 +9600,7 @@ __decorate([
 
 
 /***/ }),
-/* 86 */
+/* 88 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9284,7 +9684,7 @@ __decorate([
 
 
 /***/ }),
-/* 87 */
+/* 89 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9321,7 +9721,7 @@ __decorate([
 
 
 /***/ }),
-/* 88 */
+/* 90 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9364,7 +9764,7 @@ __decorate([
 
 
 /***/ }),
-/* 89 */
+/* 91 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9497,7 +9897,7 @@ __decorate([
 
 
 /***/ }),
-/* 90 */
+/* 92 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9523,7 +9923,7 @@ __decorate([
 
 
 /***/ }),
-/* 91 */
+/* 93 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9553,7 +9953,7 @@ __decorate([
 
 
 /***/ }),
-/* 92 */
+/* 94 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9574,15 +9974,15 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CropsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const crops_service_1 = __webpack_require__(93);
-const create_crop_dto_1 = __webpack_require__(95);
-const update_crop_dto_1 = __webpack_require__(96);
-const reject_crop_dto_1 = __webpack_require__(97);
-const update_crop_schedule_dto_1 = __webpack_require__(98);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const crops_service_1 = __webpack_require__(95);
+const create_crop_dto_1 = __webpack_require__(97);
+const update_crop_dto_1 = __webpack_require__(98);
+const reject_crop_dto_1 = __webpack_require__(99);
+const update_crop_schedule_dto_1 = __webpack_require__(100);
 let CropsController = class CropsController {
     constructor(cropsService) {
         this.cropsService = cropsService;
@@ -9632,7 +10032,7 @@ let CropsController = class CropsController {
 };
 exports.CropsController = CropsController;
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR, client_1.Role.SUPERVISOR),
     (0, common_1.Post)(),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
@@ -9704,7 +10104,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], CropsController.prototype, "updateAssignedSchedule", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR, client_1.Role.SUPERVISOR),
     (0, common_1.Get)('mine'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -9754,14 +10154,14 @@ __decorate([
 ], CropsController.prototype, "remove", null);
 exports.CropsController = CropsController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR, client_1.Role.SUPERVISOR),
     (0, common_1.Controller)('crops'),
     __metadata("design:paramtypes", [typeof (_a = typeof crops_service_1.CropsService !== "undefined" && crops_service_1.CropsService) === "function" ? _a : Object])
 ], CropsController);
 
 
 /***/ }),
-/* 93 */
+/* 95 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9780,11 +10180,12 @@ exports.CropsService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const plots_service_1 = __webpack_require__(67);
-const farmer_plans_service_1 = __webpack_require__(82);
-const advisor_assignment_service_1 = __webpack_require__(77);
-const notifications_service_1 = __webpack_require__(75);
-const crop_id_util_1 = __webpack_require__(94);
+const plots_service_1 = __webpack_require__(69);
+const farmer_plans_service_1 = __webpack_require__(84);
+const advisor_assignment_service_1 = __webpack_require__(79);
+const notifications_service_1 = __webpack_require__(77);
+const crop_id_util_1 = __webpack_require__(96);
+const effective_farmer_util_1 = __webpack_require__(63);
 const DATE_FIELDS = ['sowingDate', 'transplantDate', 'expectedHarvestDate', 'actualHarvestDate'];
 const ACTIVE_STATUSES = [
     client_1.CropStatus.PLANNED,
@@ -9889,8 +10290,9 @@ let CropsService = class CropsService {
             const isGlobalAdmin = user.role === client_1.Role.ADMIN ||
                 user.role === client_1.Role.SUPER_ADMIN ||
                 (Array.isArray(user.roles) && (user.roles.includes(client_1.Role.ADMIN) || user.roles.includes(client_1.Role.SUPER_ADMIN)));
+            const ownerFarmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
             const userFarms = await this.prisma.farm.findMany({
-                where: isGlobalAdmin ? { deletedAt: null } : { ownerId: user.id, deletedAt: null },
+                where: isGlobalAdmin ? { deletedAt: null } : { ownerId: ownerFarmerId, deletedAt: null },
                 select: { id: true, plots: { where: { deletedAt: null }, select: { id: true } } },
             });
             const plotIds = userFarms.flatMap((f) => f.plots.map((p) => p.id));
@@ -9969,7 +10371,8 @@ let CropsService = class CropsService {
             where: { id, deletedAt: null },
             include: { plot: { include: { farm: true } } },
         });
-        if (!cropCycle || (user.role !== client_1.Role.ADMIN && user.role !== client_1.Role.SUPER_ADMIN && cropCycle.plot.farm.ownerId !== user.id)) {
+        const ownerFarmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
+        if (!cropCycle || (user.role !== client_1.Role.ADMIN && user.role !== client_1.Role.SUPER_ADMIN && cropCycle.plot.farm.ownerId !== ownerFarmerId)) {
             throw new common_1.NotFoundException('Crop cycle not found.');
         }
         if (user.role === client_1.Role.FARMER &&
@@ -10261,7 +10664,7 @@ exports.CropsService = CropsService = __decorate([
 
 
 /***/ }),
-/* 94 */
+/* 96 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -10282,7 +10685,7 @@ async function generateUniqueCropId(prisma) {
 
 
 /***/ }),
-/* 95 */
+/* 97 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10380,21 +10783,21 @@ __decorate([
 
 
 /***/ }),
-/* 96 */
+/* 98 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateCropDto = void 0;
-const mapped_types_1 = __webpack_require__(64);
-const create_crop_dto_1 = __webpack_require__(95);
+const mapped_types_1 = __webpack_require__(66);
+const create_crop_dto_1 = __webpack_require__(97);
 class UpdateCropDto extends (0, mapped_types_1.PartialType)((0, mapped_types_1.OmitType)(create_crop_dto_1.CreateCropDto, ['plotId'])) {
 }
 exports.UpdateCropDto = UpdateCropDto;
 
 
 /***/ }),
-/* 97 */
+/* 99 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10421,7 +10824,7 @@ __decorate([
 
 
 /***/ }),
-/* 98 */
+/* 100 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10448,7 +10851,7 @@ __decorate([
 
 
 /***/ }),
-/* 99 */
+/* 101 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10461,8 +10864,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DashboardModule = void 0;
 const common_1 = __webpack_require__(2);
-const dashboard_controller_1 = __webpack_require__(100);
-const dashboard_service_1 = __webpack_require__(101);
+const dashboard_controller_1 = __webpack_require__(102);
+const dashboard_service_1 = __webpack_require__(103);
 const prisma_module_1 = __webpack_require__(16);
 let DashboardModule = class DashboardModule {
 };
@@ -10478,7 +10881,7 @@ exports.DashboardModule = DashboardModule = __decorate([
 
 
 /***/ }),
-/* 100 */
+/* 102 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10495,7 +10898,7 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DashboardController = void 0;
 const common_1 = __webpack_require__(2);
-const dashboard_service_1 = __webpack_require__(101);
+const dashboard_service_1 = __webpack_require__(103);
 let DashboardController = class DashboardController {
     constructor(dashboardService) {
         this.dashboardService = dashboardService;
@@ -10563,7 +10966,7 @@ exports.DashboardController = DashboardController = __decorate([
 
 
 /***/ }),
-/* 101 */
+/* 103 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10812,7 +11215,7 @@ exports.DashboardService = DashboardService = __decorate([
 
 
 /***/ }),
-/* 102 */
+/* 104 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10825,8 +11228,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MarketRatesModule = void 0;
 const common_1 = __webpack_require__(2);
-const market_rates_controller_1 = __webpack_require__(103);
-const market_rates_service_1 = __webpack_require__(105);
+const market_rates_controller_1 = __webpack_require__(105);
+const market_rates_service_1 = __webpack_require__(107);
 let MarketRatesModule = class MarketRatesModule {
 };
 exports.MarketRatesModule = MarketRatesModule;
@@ -10839,7 +11242,7 @@ exports.MarketRatesModule = MarketRatesModule = __decorate([
 
 
 /***/ }),
-/* 103 */
+/* 105 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10859,9 +11262,9 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MarketRatesController = void 0;
 const common_1 = __webpack_require__(2);
-const optional_jwt_auth_guard_1 = __webpack_require__(104);
-const current_user_decorator_1 = __webpack_require__(44);
-const market_rates_service_1 = __webpack_require__(105);
+const optional_jwt_auth_guard_1 = __webpack_require__(106);
+const current_user_decorator_1 = __webpack_require__(45);
+const market_rates_service_1 = __webpack_require__(107);
 let MarketRatesController = class MarketRatesController {
     constructor(marketRatesService) {
         this.marketRatesService = marketRatesService;
@@ -10886,7 +11289,7 @@ exports.MarketRatesController = MarketRatesController = __decorate([
 
 
 /***/ }),
-/* 104 */
+/* 106 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10915,7 +11318,7 @@ exports.OptionalJwtAuthGuard = OptionalJwtAuthGuard = __decorate([
 
 
 /***/ }),
-/* 105 */
+/* 107 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11331,7 +11734,7 @@ const CROP_SYNONYMS = {
 
 
 /***/ }),
-/* 106 */
+/* 108 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11344,12 +11747,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ExpensesModule = void 0;
 const common_1 = __webpack_require__(2);
-const farms_module_1 = __webpack_require__(59);
-const plots_module_1 = __webpack_require__(65);
-const crops_module_1 = __webpack_require__(70);
-const parties_module_1 = __webpack_require__(107);
-const expenses_controller_1 = __webpack_require__(123);
-const expenses_service_1 = __webpack_require__(124);
+const farms_module_1 = __webpack_require__(60);
+const plots_module_1 = __webpack_require__(67);
+const crops_module_1 = __webpack_require__(72);
+const parties_module_1 = __webpack_require__(109);
+const expenses_controller_1 = __webpack_require__(127);
+const expenses_service_1 = __webpack_require__(128);
 let ExpensesModule = class ExpensesModule {
 };
 exports.ExpensesModule = ExpensesModule;
@@ -11364,7 +11767,7 @@ exports.ExpensesModule = ExpensesModule = __decorate([
 
 
 /***/ }),
-/* 107 */
+/* 109 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11377,16 +11780,17 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PartiesModule = void 0;
 const common_1 = __webpack_require__(2);
-const parties_controller_1 = __webpack_require__(108);
-const parties_service_1 = __webpack_require__(109);
-const chat_module_1 = __webpack_require__(120);
+const parties_controller_1 = __webpack_require__(110);
+const public_parties_controller_1 = __webpack_require__(122);
+const parties_service_1 = __webpack_require__(111);
+const chat_module_1 = __webpack_require__(124);
 let PartiesModule = class PartiesModule {
 };
 exports.PartiesModule = PartiesModule;
 exports.PartiesModule = PartiesModule = __decorate([
     (0, common_1.Module)({
         imports: [chat_module_1.ChatModule],
-        controllers: [parties_controller_1.PartiesController],
+        controllers: [parties_controller_1.PartiesController, public_parties_controller_1.PublicPartiesController],
         providers: [parties_service_1.PartiesService],
         exports: [parties_service_1.PartiesService],
     })
@@ -11394,7 +11798,7 @@ exports.PartiesModule = PartiesModule = __decorate([
 
 
 /***/ }),
-/* 108 */
+/* 110 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11414,18 +11818,19 @@ var _a, _b, _c, _d, _e, _f, _g, _h, _j;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PartiesController = void 0;
 const common_1 = __webpack_require__(2);
+const swagger_1 = __webpack_require__(5);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const parties_service_1 = __webpack_require__(109);
-const create_party_dto_1 = __webpack_require__(114);
-const record_sale_ledger_dto_1 = __webpack_require__(115);
-const record_payment_dto_1 = __webpack_require__(116);
-const create_unified_party_dto_1 = __webpack_require__(117);
-const record_arhtiya_advance_dto_1 = __webpack_require__(118);
-const record_arhtiya_crop_sale_dto_1 = __webpack_require__(119);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const parties_service_1 = __webpack_require__(111);
+const create_party_dto_1 = __webpack_require__(116);
+const record_sale_ledger_dto_1 = __webpack_require__(117);
+const record_payment_dto_1 = __webpack_require__(118);
+const create_unified_party_dto_1 = __webpack_require__(119);
+const record_arhtiya_advance_dto_1 = __webpack_require__(120);
+const record_arhtiya_crop_sale_dto_1 = __webpack_require__(121);
 let PartiesController = class PartiesController {
     constructor(partiesService) {
         this.partiesService = partiesService;
@@ -11471,6 +11876,9 @@ let PartiesController = class PartiesController {
     }
     getArhtiyaLedgerHisab(user, id) {
         return this.partiesService.getArhtiyaLedgerHisab(user, id);
+    }
+    getTraderMasterLedger(user) {
+        return this.partiesService.getTraderMasterLedger(user);
     }
 };
 exports.PartiesController = PartiesController;
@@ -11588,16 +11996,34 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], PartiesController.prototype, "getArhtiyaLedgerHisab", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({
+        summary: 'Get multi-farmer master ledger for authenticated trader',
+        description: 'Aggregates crop purchases, payments, and credit balances across all farmers where this trader mobile number has transactions.',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Multi-farmer procurement portfolio retrieved successfully.',
+    }),
+    (0, common_1.Get)('trader/master-ledger'),
+    (0, roles_decorator_1.Roles)(client_1.Role.TRADER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], PartiesController.prototype, "getTraderMasterLedger", null);
 exports.PartiesController = PartiesController = __decorate([
+    (0, swagger_1.ApiTags)('Parties & Khata'),
+    (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.LABOUR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.LABOUR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.TRADER, client_1.Role.SUPERVISOR),
     (0, common_1.Controller)('parties'),
     __metadata("design:paramtypes", [typeof (_a = typeof parties_service_1.PartiesService !== "undefined" && parties_service_1.PartiesService) === "function" ? _a : Object])
 ], PartiesController);
 
 
 /***/ }),
-/* 109 */
+/* 111 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11616,7 +12042,8 @@ exports.PartiesService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const chat_gateway_1 = __webpack_require__(110);
+const chat_gateway_1 = __webpack_require__(112);
+const effective_farmer_util_1 = __webpack_require__(63);
 const SIGN = {
     SALE_CREDIT: 1,
     SALE_PAYMENT: -1,
@@ -11628,9 +12055,12 @@ let PartiesService = class PartiesService {
         this.prisma = prisma;
         this.chatGateway = chatGateway;
     }
+    getFarmerId(user) {
+        return (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
+    }
     create(user, name, address, mobile) {
         return this.prisma.party.create({
-            data: { ownerId: user.id, name: name.trim(), address: address.trim(), mobile: mobile?.trim() || null },
+            data: { ownerId: this.getFarmerId(user), name: name.trim(), address: address.trim(), mobile: mobile?.trim() || null },
         });
     }
     async update(user, partyId, dto) {
@@ -11659,7 +12089,7 @@ let PartiesService = class PartiesService {
     }
     async listMine(user) {
         const parties = await this.prisma.party.findMany({
-            where: { ownerId: user.id, deletedAt: null },
+            where: { ownerId: this.getFarmerId(user), deletedAt: null },
             include: { ledgerEntries: { select: { id: true, type: true, amount: true, saleBillId: true, reason: true } } },
             orderBy: { name: 'asc' },
         });
@@ -11671,9 +12101,10 @@ let PartiesService = class PartiesService {
         });
     }
     async findOwnedOrThrow(user, partyId) {
+        const ownerId = this.getFarmerId(user);
         const party = await this.prisma.party.findFirst({ where: { id: partyId, deletedAt: null } });
         if (party) {
-            if (party.ownerId !== user.id) {
+            if (party.ownerId !== ownerId) {
                 throw new common_1.ForbiddenException('This party does not belong to you.');
             }
             return { ...party, isUnified: false };
@@ -11681,7 +12112,7 @@ let PartiesService = class PartiesService {
         const unified = await this.prisma.unifiedParty.findFirst({
             where: {
                 OR: [{ id: partyId }, { kingId: partyId }],
-                ownerFarmerId: user.id,
+                ownerFarmerId: ownerId,
                 deletedAt: null,
             },
         });
@@ -11707,12 +12138,12 @@ let PartiesService = class PartiesService {
         }
         if (party.mobile) {
             const matchParties = await this.prisma.party.findMany({
-                where: { ownerId: user.id, mobile: party.mobile, deletedAt: null },
+                where: { ownerId: this.getFarmerId(user), mobile: party.mobile, deletedAt: null },
                 select: { id: true },
             });
             matchParties.forEach((p) => partyIds.add(p.id));
             const matchUnified = await this.prisma.unifiedParty.findMany({
-                where: { ownerFarmerId: user.id, mobile: party.mobile, deletedAt: null },
+                where: { ownerFarmerId: this.getFarmerId(user), mobile: party.mobile, deletedAt: null },
                 select: { id: true, kingId: true },
             });
             matchUnified.forEach((u) => {
@@ -11743,7 +12174,7 @@ let PartiesService = class PartiesService {
         });
         const saleBills = await this.prisma.saleBill.findMany({
             where: {
-                farmerId: user.id,
+                farmerId: this.getFarmerId(user),
                 OR: [
                     { partyId: { in: Array.from(partyIds) } },
                     { partyName: { equals: party.name, mode: 'insensitive' } },
@@ -11819,15 +12250,16 @@ let PartiesService = class PartiesService {
     }
     async recordSaleLedger(user, partyId, dto) {
         const partyObj = await this.findOwnedOrThrow(user, partyId);
+        const farmerId = this.getFarmerId(user);
         let targetPartyId = partyObj.id;
-        const dbParty = await this.prisma.party.findFirst({ where: { id: partyObj.id, ownerId: user.id, deletedAt: null } });
+        const dbParty = await this.prisma.party.findFirst({ where: { id: partyObj.id, ownerId: farmerId, deletedAt: null } });
         if (!dbParty) {
             let existingParty = await this.prisma.party.findFirst({
-                where: { ownerId: user.id, name: partyObj.name, deletedAt: null },
+                where: { ownerId: farmerId, name: partyObj.name, deletedAt: null },
             });
             if (!existingParty) {
                 existingParty = await this.prisma.party.create({
-                    data: { ownerId: user.id, name: partyObj.name, mobile: partyObj.mobile, address: partyObj.address },
+                    data: { ownerId: farmerId, name: partyObj.name, mobile: partyObj.mobile, address: partyObj.address },
                 });
             }
             targetPartyId = existingParty.id;
@@ -11840,7 +12272,7 @@ let PartiesService = class PartiesService {
                 bill = await this.prisma.saleBill.findUnique({ where: { id: dto.saleBillId } }).catch(() => null);
             }
             if (!bill) {
-                bill = await this.prisma.saleBill.findFirst({ where: { farmerId: user.id, billNo: dto.saleBillId } }).catch(() => null);
+                bill = await this.prisma.saleBill.findFirst({ where: { farmerId, billNo: dto.saleBillId } }).catch(() => null);
             }
             if (bill) {
                 validSaleBillId = bill.id;
@@ -11895,11 +12327,11 @@ let PartiesService = class PartiesService {
         }
         if (!validSaleBillId) {
             try {
-                const farmerObj = await this.prisma.user.findUnique({ where: { id: user.id }, select: { name: true } });
+                const farmerObj = await this.prisma.user.findUnique({ where: { id: farmerId }, select: { name: true } });
                 const billNo = `FK-${Date.now().toString().slice(-6)}`;
                 const createdBill = await this.prisma.saleBill.create({
                     data: {
-                        farmerId: user.id,
+                        farmerId,
                         billNo,
                         farmerName: farmerObj?.name || 'Farmer',
                         partyId: targetPartyId,
@@ -11994,10 +12426,11 @@ let PartiesService = class PartiesService {
             },
         });
         const afterBeforeLink = await this.getStatement(user, partyId);
+        const farmerId = this.getFarmerId(user);
         const receipt = await this.prisma.paymentReceipt.create({
             data: {
-                farmerId: user.id,
-                receiptNo: await this.nextReceiptNo(user.id),
+                farmerId,
+                receiptNo: await this.nextReceiptNo(farmerId),
                 partyId,
                 partyName: before.party.name,
                 isReceived: true,
@@ -12021,10 +12454,11 @@ let PartiesService = class PartiesService {
             },
         });
         const afterBeforeLink = await this.getStatement(user, partyId);
+        const farmerId = this.getFarmerId(user);
         const receipt = await this.prisma.paymentReceipt.create({
             data: {
-                farmerId: user.id,
-                receiptNo: await this.nextReceiptNo(user.id),
+                farmerId,
+                receiptNo: await this.nextReceiptNo(farmerId),
                 partyId,
                 partyName: before.party.name,
                 isReceived: false,
@@ -12054,7 +12488,7 @@ let PartiesService = class PartiesService {
         return this.prisma.unifiedParty.create({
             data: {
                 kingId,
-                ownerFarmerId: user.id,
+                ownerFarmerId: this.getFarmerId(user),
                 name: dto.name.trim(),
                 type: dto.type ?? client_1.PartyType.INDIVIDUAL,
                 roles: dto.roles && dto.roles.length > 0 ? dto.roles : [client_1.PartyRole.CUSTOMER],
@@ -12069,7 +12503,7 @@ let PartiesService = class PartiesService {
         });
     }
     async listUnifiedParties(user, role) {
-        const where = { ownerFarmerId: user.id, deletedAt: null };
+        const where = { ownerFarmerId: this.getFarmerId(user), deletedAt: null };
         if (role) {
             where.roles = { has: role };
         }
@@ -12079,14 +12513,15 @@ let PartiesService = class PartiesService {
         });
     }
     async recordArhtiyaAdvance(user, dto) {
+        const farmerId = this.getFarmerId(user);
         const party = await this.prisma.unifiedParty.findFirst({
-            where: { id: dto.partyId, ownerFarmerId: user.id, deletedAt: null },
+            where: { id: dto.partyId, ownerFarmerId: farmerId, deletedAt: null },
         });
         if (!party)
             throw new common_1.NotFoundException('Arhtiya / Party not found.');
         return this.prisma.arhtiyaTransaction.create({
             data: {
-                farmerId: user.id,
+                farmerId,
                 partyId: dto.partyId,
                 type: client_1.ArhtiyaTransactionType.ADVANCE_TAKEN,
                 amount: dto.amount,
@@ -12112,8 +12547,9 @@ let PartiesService = class PartiesService {
         }
     }
     async recordArhtiyaCropSale(user, dto) {
+        const farmerId = this.getFarmerId(user);
         const party = await this.prisma.unifiedParty.findFirst({
-            where: { id: dto.partyId, ownerFarmerId: user.id, deletedAt: null },
+            where: { id: dto.partyId, ownerFarmerId: farmerId, deletedAt: null },
         });
         if (!party)
             throw new common_1.NotFoundException('Arhtiya / Party not found.');
@@ -12126,7 +12562,7 @@ let PartiesService = class PartiesService {
         const netAmount = Math.max(0, Math.round((grossAmount - commissionAmount - otherCharges) * 100) / 100);
         const tx = await this.prisma.arhtiyaTransaction.create({
             data: {
-                farmerId: user.id,
+                farmerId,
                 partyId: dto.partyId,
                 type: client_1.ArhtiyaTransactionType.CROP_SALE_CREDIT,
                 amount: netAmount,
@@ -12152,13 +12588,14 @@ let PartiesService = class PartiesService {
         return tx;
     }
     async getArhtiyaLedgerHisab(user, partyId) {
+        const farmerId = this.getFarmerId(user);
         const party = await this.prisma.unifiedParty.findFirst({
-            where: { id: partyId, ownerFarmerId: user.id, deletedAt: null },
+            where: { id: partyId, ownerFarmerId: farmerId, deletedAt: null },
         });
         if (!party)
             throw new common_1.NotFoundException('Arhtiya / Party not found.');
         const transactions = await this.prisma.arhtiyaTransaction.findMany({
-            where: { partyId, farmerId: user.id },
+            where: { partyId, farmerId },
             orderBy: { transactionDate: 'asc' },
         });
         const now = new Date();
@@ -12209,6 +12646,267 @@ let PartiesService = class PartiesService {
     async clearPartyEntries(user, partyId) {
         throw new common_1.ForbiddenException('Clearing transaction entries has been permanently disabled to protect your financial records.');
     }
+    async lookupBuyerStatement(buyerMobile, farmerMobileOrKingId) {
+        const rawFarmerDigits = farmerMobileOrKingId.replace(/\D/g, '');
+        const cleanFarmerMobile = rawFarmerDigits.slice(-10);
+        const cleanFarmerInput = farmerMobileOrKingId.trim();
+        const rawBuyerDigits = buyerMobile.replace(/\D/g, '');
+        const cleanBuyerMobile = rawBuyerDigits.slice(-10);
+        if (cleanBuyerMobile.length !== 10) {
+            throw new common_1.NotFoundException('Please provide a valid 10-digit buyer mobile number.');
+        }
+        const farmer = await this.prisma.user.findFirst({
+            where: {
+                OR: [
+                    ...(cleanFarmerMobile.length === 10
+                        ? [
+                            { mobile: cleanFarmerMobile },
+                            { mobile: `+91${cleanFarmerMobile}` },
+                            { mobile: { endsWith: cleanFarmerMobile } },
+                        ]
+                        : []),
+                    { kingId: { equals: cleanFarmerInput, mode: 'insensitive' } },
+                ],
+                deletedAt: null,
+            },
+            select: {
+                id: true,
+                name: true,
+                mobile: true,
+                kingId: true,
+                village: true,
+                district: true,
+                state: true,
+                farmName: true,
+            },
+        });
+        if (!farmer) {
+            throw new common_1.NotFoundException('Farmer account not found with this mobile or King ID.');
+        }
+        const party = await this.prisma.party.findFirst({
+            where: {
+                ownerId: farmer.id,
+                OR: [
+                    { mobile: cleanBuyerMobile },
+                    { mobile: `+91${cleanBuyerMobile}` },
+                    { mobile: { endsWith: cleanBuyerMobile } },
+                ],
+                deletedAt: null,
+            },
+        });
+        const unifiedParty = await this.prisma.unifiedParty.findFirst({
+            where: {
+                ownerFarmerId: farmer.id,
+                OR: [
+                    { mobile: cleanBuyerMobile },
+                    { mobile: `+91${cleanBuyerMobile}` },
+                    { mobile: { endsWith: cleanBuyerMobile } },
+                ],
+                deletedAt: null,
+            },
+        });
+        if (!party && !unifiedParty) {
+            return {
+                found: false,
+                farmer: {
+                    name: farmer.name,
+                    farmName: farmer.farmName || farmer.name,
+                    mobile: farmer.mobile,
+                    kingId: farmer.kingId,
+                    village: farmer.village,
+                    district: farmer.district,
+                },
+                buyerMobile: cleanBuyerMobile,
+                message: 'No bills or ledger found between this buyer mobile and farmer.',
+            };
+        }
+        const partyTargetId = party ? party.id : unifiedParty.id;
+        const fakeAuthUser = {
+            id: farmer.id,
+            mobile: farmer.mobile,
+            name: farmer.name,
+            role: client_1.Role.FARMER,
+            roles: [client_1.Role.FARMER],
+            deactivatedRoles: [],
+            kingId: farmer.kingId,
+        };
+        const statement = await this.getStatement(fakeAuthUser, partyTargetId);
+        let arhtiyaHisab = null;
+        if (unifiedParty) {
+            try {
+                arhtiyaHisab = await this.getArhtiyaLedgerHisab(fakeAuthUser, unifiedParty.id);
+            }
+            catch (_) { }
+        }
+        return {
+            found: true,
+            farmer: {
+                id: farmer.id,
+                name: farmer.name,
+                farmName: farmer.farmName || farmer.name,
+                mobile: farmer.mobile,
+                kingId: farmer.kingId,
+                village: farmer.village,
+                district: farmer.district,
+                state: farmer.state,
+            },
+            buyerParty: {
+                name: party?.name || unifiedParty?.name,
+                mobile: cleanBuyerMobile,
+                address: party?.address || unifiedParty?.address,
+                kingId: unifiedParty?.kingId || null,
+                shopNumber: unifiedParty?.shopNumber || null,
+                mandiName: unifiedParty?.mandiName || null,
+            },
+            statement,
+            arhtiyaHisab,
+        };
+    }
+    async getTraderMasterLedger(user) {
+        const rawDigits = user.mobile.replace(/\D/g, '');
+        const cleanMobile = rawDigits.slice(-10);
+        const [matchingParties, matchingUnified] = await Promise.all([
+            this.prisma.party.findMany({
+                where: {
+                    OR: [
+                        { mobile: cleanMobile },
+                        { mobile: user.mobile },
+                        { mobile: `+91${cleanMobile}` },
+                    ],
+                    deletedAt: null,
+                },
+                include: {
+                    owner: {
+                        select: { id: true, name: true, mobile: true, kingId: true, village: true, district: true, state: true, farmName: true },
+                    },
+                    ledgerEntries: {
+                        select: { id: true, type: true, amount: true, createdAt: true, reason: true },
+                    },
+                },
+            }),
+            this.prisma.unifiedParty.findMany({
+                where: {
+                    OR: [
+                        { mobile: cleanMobile },
+                        { mobile: user.mobile },
+                        { mobile: `+91${cleanMobile}` },
+                        { userId: user.id },
+                    ],
+                    deletedAt: null,
+                },
+                include: {
+                    ownerFarmer: {
+                        select: { id: true, name: true, mobile: true, kingId: true, village: true, district: true, state: true, farmName: true },
+                    },
+                    arhtiyaTransactions: {
+                        select: { id: true, type: true, amount: true, transactionDate: true, cropName: true, netAmount: true },
+                    },
+                },
+            }),
+        ]);
+        const farmerMap = new Map();
+        for (const p of matchingParties) {
+            if (!p.owner)
+                continue;
+            const farmerId = p.owner.id;
+            if (!farmerMap.has(farmerId)) {
+                farmerMap.set(farmerId, {
+                    farmerId,
+                    farmerName: p.owner.name,
+                    farmName: p.owner.farmName || p.owner.name,
+                    farmerMobile: p.owner.mobile,
+                    kingId: p.owner.kingId,
+                    location: [p.owner.village, p.owner.district, p.owner.state].filter(Boolean).join(', '),
+                    totalPurchases: 0,
+                    totalPaid: 0,
+                    balanceDue: 0,
+                    billCount: 0,
+                    lastTransactionDate: null,
+                });
+            }
+            const record = farmerMap.get(farmerId);
+            for (const entry of p.ledgerEntries) {
+                const amt = Number(entry.amount);
+                if (entry.type === client_1.PartyLedgerEntryType.SALE_CREDIT) {
+                    record.totalPurchases += amt;
+                    record.balanceDue += amt;
+                    record.billCount += 1;
+                }
+                else if (entry.type === client_1.PartyLedgerEntryType.SALE_PAYMENT) {
+                    record.totalPaid += amt;
+                    record.balanceDue -= amt;
+                }
+                if (!record.lastTransactionDate || new Date(entry.createdAt) > new Date(record.lastTransactionDate)) {
+                    record.lastTransactionDate = entry.createdAt;
+                }
+            }
+        }
+        for (const u of matchingUnified) {
+            if (!u.ownerFarmer)
+                continue;
+            const farmerId = u.ownerFarmer.id;
+            if (!farmerMap.has(farmerId)) {
+                farmerMap.set(farmerId, {
+                    farmerId,
+                    farmerName: u.ownerFarmer.name,
+                    farmName: u.ownerFarmer.farmName || u.ownerFarmer.name,
+                    farmerMobile: u.ownerFarmer.mobile,
+                    kingId: u.ownerFarmer.kingId,
+                    location: [u.ownerFarmer.village, u.ownerFarmer.district, u.ownerFarmer.state].filter(Boolean).join(', '),
+                    totalPurchases: 0,
+                    totalPaid: 0,
+                    balanceDue: 0,
+                    billCount: 0,
+                    lastTransactionDate: null,
+                });
+            }
+            const record = farmerMap.get(farmerId);
+            for (const tx of u.arhtiyaTransactions) {
+                const amt = Number(tx.netAmount || tx.amount);
+                if (tx.type === client_1.ArhtiyaTransactionType.CROP_SALE_CREDIT) {
+                    record.totalPurchases += amt;
+                    record.balanceDue += amt;
+                    record.billCount += 1;
+                }
+                else if (tx.type === client_1.ArhtiyaTransactionType.SETTLEMENT_PAYOUT) {
+                    record.totalPaid += amt;
+                    record.balanceDue -= amt;
+                }
+                if (!record.lastTransactionDate || new Date(tx.transactionDate) > new Date(record.lastTransactionDate)) {
+                    record.lastTransactionDate = tx.transactionDate;
+                }
+            }
+        }
+        const farmersList = Array.from(farmerMap.values()).map((f) => ({
+            ...f,
+            totalPurchases: Math.round(f.totalPurchases * 100) / 100,
+            totalPaid: Math.round(f.totalPaid * 100) / 100,
+            balanceDue: Math.round(f.balanceDue * 100) / 100,
+        }));
+        const totalProcurement = farmersList.reduce((sum, f) => sum + f.totalPurchases, 0);
+        const totalPaid = farmersList.reduce((sum, f) => sum + f.totalPaid, 0);
+        const totalBalance = farmersList.reduce((sum, f) => sum + f.balanceDue, 0);
+        const traderUser = await this.prisma.user.findUnique({
+            where: { id: user.id },
+            select: { id: true, name: true, mobile: true, kingId: true, farmName: true, district: true, state: true },
+        });
+        return {
+            trader: {
+                id: user.id,
+                name: traderUser?.name || 'Trader',
+                shopName: traderUser?.farmName || null,
+                mobile: traderUser?.mobile || user.mobile,
+                kingId: traderUser?.kingId || null,
+            },
+            summary: {
+                totalFarmersCount: farmersList.length,
+                totalProcurementAmount: Math.round(totalProcurement * 100) / 100,
+                totalPaidAmount: Math.round(totalPaid * 100) / 100,
+                totalBalanceDue: Math.round(totalBalance * 100) / 100,
+            },
+            farmers: farmersList.sort((a, b) => b.totalPurchases - a.totalPurchases),
+        };
+    }
 };
 exports.PartiesService = PartiesService;
 exports.PartiesService = PartiesService = __decorate([
@@ -12218,7 +12916,7 @@ exports.PartiesService = PartiesService = __decorate([
 
 
 /***/ }),
-/* 110 */
+/* 112 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12240,10 +12938,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ChatGateway = exports.userRoom = void 0;
 const common_1 = __webpack_require__(2);
 const jwt_1 = __webpack_require__(18);
-const websockets_1 = __webpack_require__(111);
-const socket_io_1 = __webpack_require__(112);
+const websockets_1 = __webpack_require__(113);
+const socket_io_1 = __webpack_require__(114);
 const prisma_service_1 = __webpack_require__(12);
-const chat_service_1 = __webpack_require__(113);
+const chat_service_1 = __webpack_require__(115);
 const userRoom = (userId) => `user:${userId}`;
 exports.userRoom = userRoom;
 let ChatGateway = ChatGateway_1 = class ChatGateway {
@@ -12345,19 +13043,19 @@ exports.ChatGateway = ChatGateway = ChatGateway_1 = __decorate([
 
 
 /***/ }),
-/* 111 */
+/* 113 */
 /***/ ((module) => {
 
 module.exports = require("@nestjs/websockets");
 
 /***/ }),
-/* 112 */
+/* 114 */
 /***/ ((module) => {
 
 module.exports = require("socket.io");
 
 /***/ }),
-/* 113 */
+/* 115 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12379,8 +13077,8 @@ exports.ChatService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const notifications_service_1 = __webpack_require__(75);
-const chat_gateway_1 = __webpack_require__(110);
+const notifications_service_1 = __webpack_require__(77);
+const chat_gateway_1 = __webpack_require__(112);
 let ChatService = class ChatService {
     constructor(prisma, notificationsService, chatGateway) {
         this.prisma = prisma;
@@ -12513,7 +13211,7 @@ exports.ChatService = ChatService = __decorate([
 
 
 /***/ }),
-/* 114 */
+/* 116 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12565,7 +13263,7 @@ __decorate([
 
 
 /***/ }),
-/* 115 */
+/* 117 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12607,7 +13305,7 @@ __decorate([
 
 
 /***/ }),
-/* 116 */
+/* 118 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12639,7 +13337,7 @@ __decorate([
 
 
 /***/ }),
-/* 117 */
+/* 119 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12713,7 +13411,7 @@ __decorate([
 
 
 /***/ }),
-/* 118 */
+/* 120 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12759,7 +13457,7 @@ __decorate([
 
 
 /***/ }),
-/* 119 */
+/* 121 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12847,7 +13545,116 @@ __decorate([
 
 
 /***/ }),
-/* 120 */
+/* 122 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PublicPartiesController = void 0;
+const common_1 = __webpack_require__(2);
+const swagger_1 = __webpack_require__(5);
+const throttler_1 = __webpack_require__(9);
+const parties_service_1 = __webpack_require__(111);
+const lookup_buyer_statement_dto_1 = __webpack_require__(123);
+let PublicPartiesController = class PublicPartiesController {
+    constructor(partiesService) {
+        this.partiesService = partiesService;
+    }
+    lookupStatement(dto) {
+        return this.partiesService.lookupBuyerStatement(dto.buyerMobile, dto.farmerMobileOrKingId);
+    }
+};
+exports.PublicPartiesController = PublicPartiesController;
+__decorate([
+    (0, swagger_1.ApiOperation)({
+        summary: 'Lookup buyer statement with a specific farmer',
+        description: 'Allows a crop buyer or shopkeeper to view their khata ledger and bills recorded by a farmer by providing their own mobile number and the farmer mobile/King ID.',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.OK,
+        description: 'Statement successfully retrieved or clean empty report returned.',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.BAD_REQUEST,
+        description: 'Invalid input parameters or malformed mobile number.',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_FOUND,
+        description: 'Farmer account not found with the provided mobile number or King ID.',
+    }),
+    (0, throttler_1.Throttle)({ default: { limit: 60, ttl: 60_000 } }),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, common_1.Post)('lookup-statement'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof lookup_buyer_statement_dto_1.LookupBuyerStatementDto !== "undefined" && lookup_buyer_statement_dto_1.LookupBuyerStatementDto) === "function" ? _b : Object]),
+    __metadata("design:returntype", void 0)
+], PublicPartiesController.prototype, "lookupStatement", null);
+exports.PublicPartiesController = PublicPartiesController = __decorate([
+    (0, swagger_1.ApiTags)('Public - Parties & Khata'),
+    (0, common_1.Controller)('parties/public'),
+    __metadata("design:paramtypes", [typeof (_a = typeof parties_service_1.PartiesService !== "undefined" && parties_service_1.PartiesService) === "function" ? _a : Object])
+], PublicPartiesController);
+
+
+/***/ }),
+/* 123 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LookupBuyerStatementDto = void 0;
+const swagger_1 = __webpack_require__(5);
+const class_validator_1 = __webpack_require__(37);
+class LookupBuyerStatementDto {
+}
+exports.LookupBuyerStatementDto = LookupBuyerStatementDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '10-digit mobile number of the crop buyer/shopkeeper',
+        example: '9876543210',
+        required: true,
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], LookupBuyerStatementDto.prototype, "buyerMobile", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Farmer mobile number or 8-digit King ID used for verification',
+        example: '9872066901',
+        required: true,
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], LookupBuyerStatementDto.prototype, "farmerMobileOrKingId", void 0);
+
+
+/***/ }),
+/* 124 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12861,10 +13668,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ChatModule = void 0;
 const common_1 = __webpack_require__(2);
 const auth_module_1 = __webpack_require__(17);
-const notifications_module_1 = __webpack_require__(73);
-const chat_controller_1 = __webpack_require__(121);
-const chat_service_1 = __webpack_require__(113);
-const chat_gateway_1 = __webpack_require__(110);
+const notifications_module_1 = __webpack_require__(75);
+const chat_controller_1 = __webpack_require__(125);
+const chat_service_1 = __webpack_require__(115);
+const chat_gateway_1 = __webpack_require__(112);
 let ChatModule = class ChatModule {
 };
 exports.ChatModule = ChatModule;
@@ -12879,7 +13686,7 @@ exports.ChatModule = ChatModule = __decorate([
 
 
 /***/ }),
-/* 121 */
+/* 125 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12900,12 +13707,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ChatController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const chat_service_1 = __webpack_require__(113);
-const send_message_dto_1 = __webpack_require__(122);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const chat_service_1 = __webpack_require__(115);
+const send_message_dto_1 = __webpack_require__(126);
 let ChatController = class ChatController {
     constructor(chatService) {
         this.chatService = chatService;
@@ -12985,7 +13792,7 @@ exports.ChatController = ChatController = __decorate([
 
 
 /***/ }),
-/* 122 */
+/* 126 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13016,7 +13823,7 @@ __decorate([
 
 
 /***/ }),
-/* 123 */
+/* 127 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13037,13 +13844,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ExpensesController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const expenses_service_1 = __webpack_require__(124);
-const create_expense_dto_1 = __webpack_require__(125);
-const update_expense_dto_1 = __webpack_require__(126);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const expenses_service_1 = __webpack_require__(128);
+const create_expense_dto_1 = __webpack_require__(129);
+const update_expense_dto_1 = __webpack_require__(130);
 let ExpensesController = class ExpensesController {
     constructor(expensesService) {
         this.expensesService = expensesService;
@@ -13171,14 +13978,14 @@ __decorate([
 ], ExpensesController.prototype, "remove", null);
 exports.ExpensesController = ExpensesController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.SUPERVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Controller)('expenses'),
     __metadata("design:paramtypes", [typeof (_a = typeof expenses_service_1.ExpensesService !== "undefined" && expenses_service_1.ExpensesService) === "function" ? _a : Object])
 ], ExpensesController);
 
 
 /***/ }),
-/* 124 */
+/* 128 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13197,10 +14004,11 @@ exports.ExpensesService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const farms_service_1 = __webpack_require__(61);
-const plots_service_1 = __webpack_require__(67);
-const crops_service_1 = __webpack_require__(93);
-const parties_service_1 = __webpack_require__(109);
+const farms_service_1 = __webpack_require__(62);
+const plots_service_1 = __webpack_require__(69);
+const crops_service_1 = __webpack_require__(95);
+const parties_service_1 = __webpack_require__(111);
+const effective_farmer_util_1 = __webpack_require__(63);
 let ExpensesService = class ExpensesService {
     constructor(prisma, farmsService, plotsService, cropsService, partiesService) {
         this.prisma = prisma;
@@ -13380,7 +14188,8 @@ let ExpensesService = class ExpensesService {
             where: { id, deletedAt: null },
             include: { category: true, farm: true, cropCycle: { select: { id: true, cropName: true } } },
         });
-        if (!expense || (user.role !== client_1.Role.ADMIN && user.role !== client_1.Role.SUPER_ADMIN && expense.farm.ownerId !== user.id)) {
+        const ownerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
+        if (!expense || (user.role !== client_1.Role.ADMIN && user.role !== client_1.Role.SUPER_ADMIN && expense.farm.ownerId !== ownerId)) {
             throw new common_1.NotFoundException('Expense not found.');
         }
         return expense;
@@ -13442,7 +14251,7 @@ exports.ExpensesService = ExpensesService = __decorate([
 
 
 /***/ }),
-/* 125 */
+/* 129 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13534,21 +14343,21 @@ __decorate([
 
 
 /***/ }),
-/* 126 */
+/* 130 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateExpenseDto = void 0;
-const mapped_types_1 = __webpack_require__(64);
-const create_expense_dto_1 = __webpack_require__(125);
+const mapped_types_1 = __webpack_require__(66);
+const create_expense_dto_1 = __webpack_require__(129);
 class UpdateExpenseDto extends (0, mapped_types_1.PartialType)((0, mapped_types_1.OmitType)(create_expense_dto_1.CreateExpenseDto, ['farmId'])) {
 }
 exports.UpdateExpenseDto = UpdateExpenseDto;
 
 
 /***/ }),
-/* 127 */
+/* 131 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13561,8 +14370,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UploadsModule = void 0;
 const common_1 = __webpack_require__(2);
-const uploads_controller_1 = __webpack_require__(128);
-const uploads_service_1 = __webpack_require__(131);
+const uploads_controller_1 = __webpack_require__(132);
+const uploads_service_1 = __webpack_require__(135);
 let UploadsModule = class UploadsModule {
 };
 exports.UploadsModule = UploadsModule;
@@ -13575,7 +14384,7 @@ exports.UploadsModule = UploadsModule = __decorate([
 
 
 /***/ }),
-/* 128 */
+/* 132 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13597,11 +14406,11 @@ exports.UploadsController = void 0;
 const crypto_1 = __webpack_require__(23);
 const path_1 = __webpack_require__(1);
 const common_1 = __webpack_require__(2);
-const platform_express_1 = __webpack_require__(129);
-const multer_1 = __webpack_require__(130);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const current_user_decorator_1 = __webpack_require__(44);
-const uploads_service_1 = __webpack_require__(131);
+const platform_express_1 = __webpack_require__(133);
+const multer_1 = __webpack_require__(134);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const current_user_decorator_1 = __webpack_require__(45);
+const uploads_service_1 = __webpack_require__(135);
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'application/octet-stream'];
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 const VALID_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif'];
@@ -13661,19 +14470,19 @@ exports.UploadsController = UploadsController = __decorate([
 
 
 /***/ }),
-/* 129 */
+/* 133 */
 /***/ ((module) => {
 
 module.exports = require("@nestjs/platform-express");
 
 /***/ }),
-/* 130 */
+/* 134 */
 /***/ ((module) => {
 
 module.exports = require("multer");
 
 /***/ }),
-/* 131 */
+/* 135 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13715,7 +14524,7 @@ exports.UploadsService = UploadsService = __decorate([
 
 
 /***/ }),
-/* 132 */
+/* 136 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13728,10 +14537,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SubscriptionsModule = void 0;
 const common_1 = __webpack_require__(2);
-const advisor_assignment_module_1 = __webpack_require__(72);
-const whatsapp_module_1 = __webpack_require__(47);
-const subscriptions_controller_1 = __webpack_require__(133);
-const subscriptions_service_1 = __webpack_require__(134);
+const advisor_assignment_module_1 = __webpack_require__(74);
+const whatsapp_module_1 = __webpack_require__(48);
+const subscriptions_controller_1 = __webpack_require__(137);
+const subscriptions_service_1 = __webpack_require__(138);
 let SubscriptionsModule = class SubscriptionsModule {
 };
 exports.SubscriptionsModule = SubscriptionsModule;
@@ -13746,7 +14555,7 @@ exports.SubscriptionsModule = SubscriptionsModule = __decorate([
 
 
 /***/ }),
-/* 133 */
+/* 137 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13767,12 +14576,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SubscriptionsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const subscriptions_service_1 = __webpack_require__(134);
-const create_subscription_dto_1 = __webpack_require__(135);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const subscriptions_service_1 = __webpack_require__(138);
+const create_subscription_dto_1 = __webpack_require__(139);
 let SubscriptionsController = class SubscriptionsController {
     constructor(subscriptionsService) {
         this.subscriptionsService = subscriptionsService;
@@ -13855,7 +14664,7 @@ exports.SubscriptionsController = SubscriptionsController = __decorate([
 
 
 /***/ }),
-/* 134 */
+/* 138 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13874,7 +14683,7 @@ exports.SubscriptionsService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const advisor_assignment_service_1 = __webpack_require__(77);
+const advisor_assignment_service_1 = __webpack_require__(79);
 const whatsapp_group_sync_service_1 = __webpack_require__(29);
 const DAY_MS = 24 * 60 * 60 * 1000;
 let SubscriptionsService = class SubscriptionsService {
@@ -14022,7 +14831,7 @@ exports.SubscriptionsService = SubscriptionsService = __decorate([
 
 
 /***/ }),
-/* 135 */
+/* 139 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14048,7 +14857,7 @@ __decorate([
 
 
 /***/ }),
-/* 136 */
+/* 140 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14061,12 +14870,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CropActivitySchedulesModule = void 0;
 const common_1 = __webpack_require__(2);
-const crops_module_1 = __webpack_require__(70);
-const advisor_assignment_module_1 = __webpack_require__(72);
-const notifications_module_1 = __webpack_require__(73);
-const chat_module_1 = __webpack_require__(120);
-const crop_activity_schedules_controller_1 = __webpack_require__(137);
-const crop_activity_schedules_service_1 = __webpack_require__(138);
+const crops_module_1 = __webpack_require__(72);
+const advisor_assignment_module_1 = __webpack_require__(74);
+const notifications_module_1 = __webpack_require__(75);
+const chat_module_1 = __webpack_require__(124);
+const crop_activity_schedules_controller_1 = __webpack_require__(141);
+const crop_activity_schedules_service_1 = __webpack_require__(142);
 let CropActivitySchedulesModule = class CropActivitySchedulesModule {
 };
 exports.CropActivitySchedulesModule = CropActivitySchedulesModule;
@@ -14081,7 +14890,7 @@ exports.CropActivitySchedulesModule = CropActivitySchedulesModule = __decorate([
 
 
 /***/ }),
-/* 137 */
+/* 141 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14102,15 +14911,15 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CropActivitySchedulesController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const crop_activity_schedules_service_1 = __webpack_require__(138);
-const create_activity_schedule_dto_1 = __webpack_require__(139);
-const update_activity_schedule_dto_1 = __webpack_require__(140);
-const bulk_create_activity_schedule_dto_1 = __webpack_require__(141);
-const complete_activity_dto_1 = __webpack_require__(143);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const crop_activity_schedules_service_1 = __webpack_require__(142);
+const create_activity_schedule_dto_1 = __webpack_require__(143);
+const update_activity_schedule_dto_1 = __webpack_require__(144);
+const bulk_create_activity_schedule_dto_1 = __webpack_require__(145);
+const complete_activity_dto_1 = __webpack_require__(147);
 let CropActivitySchedulesController = class CropActivitySchedulesController {
     constructor(cropActivitySchedulesService) {
         this.cropActivitySchedulesService = cropActivitySchedulesService;
@@ -14255,7 +15064,7 @@ exports.CropActivitySchedulesController = CropActivitySchedulesController = __de
 
 
 /***/ }),
-/* 138 */
+/* 142 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14274,11 +15083,11 @@ exports.CropActivitySchedulesService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const crops_service_1 = __webpack_require__(93);
-const advisor_assignment_service_1 = __webpack_require__(77);
-const notifications_service_1 = __webpack_require__(75);
-const chat_service_1 = __webpack_require__(113);
-const chat_gateway_1 = __webpack_require__(110);
+const crops_service_1 = __webpack_require__(95);
+const advisor_assignment_service_1 = __webpack_require__(79);
+const notifications_service_1 = __webpack_require__(77);
+const chat_service_1 = __webpack_require__(115);
+const chat_gateway_1 = __webpack_require__(112);
 let CropActivitySchedulesService = class CropActivitySchedulesService {
     constructor(prisma, cropsService, advisorAssignmentService, notificationsService, chatService, chatGateway) {
         this.prisma = prisma;
@@ -14494,7 +15303,7 @@ exports.CropActivitySchedulesService = CropActivitySchedulesService = __decorate
 
 
 /***/ }),
-/* 139 */
+/* 143 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14545,21 +15354,21 @@ __decorate([
 
 
 /***/ }),
-/* 140 */
+/* 144 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateActivityScheduleDto = void 0;
-const mapped_types_1 = __webpack_require__(64);
-const create_activity_schedule_dto_1 = __webpack_require__(139);
+const mapped_types_1 = __webpack_require__(66);
+const create_activity_schedule_dto_1 = __webpack_require__(143);
 class UpdateActivityScheduleDto extends (0, mapped_types_1.PartialType)((0, mapped_types_1.OmitType)(create_activity_schedule_dto_1.CreateActivityScheduleDto, ['cropCycleId'])) {
 }
 exports.UpdateActivityScheduleDto = UpdateActivityScheduleDto;
 
 
 /***/ }),
-/* 141 */
+/* 145 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14575,7 +15384,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BulkCreateActivityScheduleDto = void 0;
-const class_transformer_1 = __webpack_require__(142);
+const class_transformer_1 = __webpack_require__(146);
 const client_1 = __webpack_require__(13);
 const class_validator_1 = __webpack_require__(37);
 class ActivityScheduleItemDto {
@@ -14620,13 +15429,13 @@ __decorate([
 
 
 /***/ }),
-/* 142 */
+/* 146 */
 /***/ ((module) => {
 
 module.exports = require("class-transformer");
 
 /***/ }),
-/* 143 */
+/* 147 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14653,7 +15462,7 @@ __decorate([
 
 
 /***/ }),
-/* 144 */
+/* 148 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14666,10 +15475,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SprayScheduleModule = void 0;
 const common_1 = __webpack_require__(2);
-const advisor_assignment_module_1 = __webpack_require__(72);
-const notifications_module_1 = __webpack_require__(73);
-const spray_schedules_controller_1 = __webpack_require__(145);
-const spray_schedules_service_1 = __webpack_require__(146);
+const advisor_assignment_module_1 = __webpack_require__(74);
+const notifications_module_1 = __webpack_require__(75);
+const spray_schedules_controller_1 = __webpack_require__(149);
+const spray_schedules_service_1 = __webpack_require__(150);
 let SprayScheduleModule = class SprayScheduleModule {
 };
 exports.SprayScheduleModule = SprayScheduleModule;
@@ -14684,7 +15493,7 @@ exports.SprayScheduleModule = SprayScheduleModule = __decorate([
 
 
 /***/ }),
-/* 145 */
+/* 149 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14705,13 +15514,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SprayScheduleController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const spray_schedules_service_1 = __webpack_require__(146);
-const create_spray_schedule_dto_1 = __webpack_require__(147);
-const update_spray_schedule_dto_1 = __webpack_require__(148);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const spray_schedules_service_1 = __webpack_require__(150);
+const create_spray_schedule_dto_1 = __webpack_require__(151);
+const update_spray_schedule_dto_1 = __webpack_require__(152);
 let SprayScheduleController = class SprayScheduleController {
     constructor(sprayScheduleService) {
         this.sprayScheduleService = sprayScheduleService;
@@ -14785,7 +15594,7 @@ exports.SprayScheduleController = SprayScheduleController = __decorate([
 
 
 /***/ }),
-/* 146 */
+/* 150 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14804,8 +15613,8 @@ exports.SprayScheduleService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const advisor_assignment_service_1 = __webpack_require__(77);
-const notifications_service_1 = __webpack_require__(75);
+const advisor_assignment_service_1 = __webpack_require__(79);
+const notifications_service_1 = __webpack_require__(77);
 let SprayScheduleService = class SprayScheduleService {
     constructor(prisma, advisorAssignmentService, notificationsService) {
         this.prisma = prisma;
@@ -14902,7 +15711,7 @@ exports.SprayScheduleService = SprayScheduleService = __decorate([
 
 
 /***/ }),
-/* 147 */
+/* 151 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14964,7 +15773,7 @@ __decorate([
 
 
 /***/ }),
-/* 148 */
+/* 152 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14980,10 +15789,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateSprayScheduleDto = void 0;
-const mapped_types_1 = __webpack_require__(64);
+const mapped_types_1 = __webpack_require__(66);
 const class_validator_1 = __webpack_require__(37);
 const client_1 = __webpack_require__(13);
-const create_spray_schedule_dto_1 = __webpack_require__(147);
+const create_spray_schedule_dto_1 = __webpack_require__(151);
 class UpdateSprayScheduleDto extends (0, mapped_types_1.PartialType)((0, mapped_types_1.OmitType)(create_spray_schedule_dto_1.CreateSprayScheduleDto, ['cropCycleId'])) {
 }
 exports.UpdateSprayScheduleDto = UpdateSprayScheduleDto;
@@ -14995,7 +15804,7 @@ __decorate([
 
 
 /***/ }),
-/* 149 */
+/* 153 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15008,8 +15817,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SprayItemTemplatesModule = void 0;
 const common_1 = __webpack_require__(2);
-const spray_item_templates_controller_1 = __webpack_require__(150);
-const spray_item_templates_service_1 = __webpack_require__(151);
+const spray_item_templates_controller_1 = __webpack_require__(154);
+const spray_item_templates_service_1 = __webpack_require__(155);
 let SprayItemTemplatesModule = class SprayItemTemplatesModule {
 };
 exports.SprayItemTemplatesModule = SprayItemTemplatesModule;
@@ -15022,7 +15831,7 @@ exports.SprayItemTemplatesModule = SprayItemTemplatesModule = __decorate([
 
 
 /***/ }),
-/* 150 */
+/* 154 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15043,13 +15852,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SprayItemTemplatesController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const spray_item_templates_service_1 = __webpack_require__(151);
-const create_spray_item_template_dto_1 = __webpack_require__(152);
-const update_spray_item_template_dto_1 = __webpack_require__(153);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const spray_item_templates_service_1 = __webpack_require__(155);
+const create_spray_item_template_dto_1 = __webpack_require__(156);
+const update_spray_item_template_dto_1 = __webpack_require__(157);
 let SprayItemTemplatesController = class SprayItemTemplatesController {
     constructor(service) {
         this.service = service;
@@ -15133,7 +15942,7 @@ exports.SprayItemTemplatesController = SprayItemTemplatesController = __decorate
 
 
 /***/ }),
-/* 151 */
+/* 155 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15207,7 +16016,7 @@ exports.SprayItemTemplatesService = SprayItemTemplatesService = __decorate([
 
 
 /***/ }),
-/* 152 */
+/* 156 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15256,21 +16065,21 @@ __decorate([
 
 
 /***/ }),
-/* 153 */
+/* 157 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateSprayItemTemplateDto = void 0;
-const mapped_types_1 = __webpack_require__(64);
-const create_spray_item_template_dto_1 = __webpack_require__(152);
+const mapped_types_1 = __webpack_require__(66);
+const create_spray_item_template_dto_1 = __webpack_require__(156);
 class UpdateSprayItemTemplateDto extends (0, mapped_types_1.PartialType)(create_spray_item_template_dto_1.CreateSprayItemTemplateDto) {
 }
 exports.UpdateSprayItemTemplateDto = UpdateSprayItemTemplateDto;
 
 
 /***/ }),
-/* 154 */
+/* 158 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15283,12 +16092,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CropProblemsModule = void 0;
 const common_1 = __webpack_require__(2);
-const crops_module_1 = __webpack_require__(70);
-const notifications_module_1 = __webpack_require__(73);
-const spray_schedules_module_1 = __webpack_require__(144);
-const chat_module_1 = __webpack_require__(120);
-const crop_problems_controller_1 = __webpack_require__(155);
-const crop_problems_service_1 = __webpack_require__(156);
+const crops_module_1 = __webpack_require__(72);
+const notifications_module_1 = __webpack_require__(75);
+const spray_schedules_module_1 = __webpack_require__(148);
+const chat_module_1 = __webpack_require__(124);
+const crop_problems_controller_1 = __webpack_require__(159);
+const crop_problems_service_1 = __webpack_require__(160);
 let CropProblemsModule = class CropProblemsModule {
 };
 exports.CropProblemsModule = CropProblemsModule;
@@ -15303,7 +16112,7 @@ exports.CropProblemsModule = CropProblemsModule = __decorate([
 
 
 /***/ }),
-/* 155 */
+/* 159 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15324,14 +16133,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CropProblemsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const crop_problems_service_1 = __webpack_require__(156);
-const create_crop_problem_dto_1 = __webpack_require__(157);
-const respond_crop_problem_dto_1 = __webpack_require__(158);
-const update_crop_problem_status_dto_1 = __webpack_require__(159);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const crop_problems_service_1 = __webpack_require__(160);
+const create_crop_problem_dto_1 = __webpack_require__(161);
+const respond_crop_problem_dto_1 = __webpack_require__(162);
+const update_crop_problem_status_dto_1 = __webpack_require__(163);
 let CropProblemsController = class CropProblemsController {
     constructor(cropProblemsService) {
         this.cropProblemsService = cropProblemsService;
@@ -15443,7 +16252,7 @@ exports.CropProblemsController = CropProblemsController = __decorate([
 
 
 /***/ }),
-/* 156 */
+/* 160 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15462,10 +16271,10 @@ exports.CropProblemsService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const crops_service_1 = __webpack_require__(93);
-const notifications_service_1 = __webpack_require__(75);
-const chat_service_1 = __webpack_require__(113);
-const chat_gateway_1 = __webpack_require__(110);
+const crops_service_1 = __webpack_require__(95);
+const notifications_service_1 = __webpack_require__(77);
+const chat_service_1 = __webpack_require__(115);
+const chat_gateway_1 = __webpack_require__(112);
 const DETAIL_INCLUDE = {
     photos: true,
     reportedBy: { select: { id: true, name: true, mobile: true, sprayTankSizeL: true } },
@@ -15696,7 +16505,7 @@ exports.CropProblemsService = CropProblemsService = __decorate([
 
 
 /***/ }),
-/* 157 */
+/* 161 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15746,7 +16555,7 @@ __decorate([
 
 
 /***/ }),
-/* 158 */
+/* 162 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15790,7 +16599,7 @@ __decorate([
 
 
 /***/ }),
-/* 159 */
+/* 163 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15818,7 +16627,7 @@ __decorate([
 
 
 /***/ }),
-/* 160 */
+/* 164 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15831,16 +16640,17 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UsersModule = void 0;
 const common_1 = __webpack_require__(2);
-const wallet_module_1 = __webpack_require__(54);
-const whatsapp_module_1 = __webpack_require__(47);
-const users_controller_1 = __webpack_require__(161);
-const users_service_1 = __webpack_require__(162);
+const wallet_module_1 = __webpack_require__(55);
+const whatsapp_module_1 = __webpack_require__(48);
+const notifications_module_1 = __webpack_require__(75);
+const users_controller_1 = __webpack_require__(165);
+const users_service_1 = __webpack_require__(166);
 let UsersModule = class UsersModule {
 };
 exports.UsersModule = UsersModule;
 exports.UsersModule = UsersModule = __decorate([
     (0, common_1.Module)({
-        imports: [wallet_module_1.WalletModule, whatsapp_module_1.WhatsappBotModule],
+        imports: [wallet_module_1.WalletModule, whatsapp_module_1.WhatsappBotModule, notifications_module_1.NotificationsModule],
         controllers: [users_controller_1.UsersController],
         providers: [users_service_1.UsersService],
     })
@@ -15848,7 +16658,7 @@ exports.UsersModule = UsersModule = __decorate([
 
 
 /***/ }),
-/* 161 */
+/* 165 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15864,35 +16674,36 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UsersController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const operator_permission_guard_1 = __webpack_require__(56);
-const roles_decorator_1 = __webpack_require__(52);
-const operator_permission_decorator_1 = __webpack_require__(57);
-const current_user_decorator_1 = __webpack_require__(44);
-const users_service_1 = __webpack_require__(162);
-const create_advisor_dto_1 = __webpack_require__(165);
-const create_assistant_doctor_dto_1 = __webpack_require__(166);
-const create_staff_dto_1 = __webpack_require__(167);
-const list_users_query_dto_1 = __webpack_require__(168);
-const update_role_dto_1 = __webpack_require__(169);
-const update_active_roles_dto_1 = __webpack_require__(170);
-const update_farmer_profile_dto_1 = __webpack_require__(171);
-const update_advisor_profile_dto_1 = __webpack_require__(172);
-const update_partner_profile_dto_1 = __webpack_require__(173);
-const update_my_address_dto_1 = __webpack_require__(174);
-const update_operator_permissions_dto_1 = __webpack_require__(175);
-const create_supervisor_dto_1 = __webpack_require__(176);
-const update_supervisor_permissions_dto_1 = __webpack_require__(177);
-const update_admin_staff_permissions_dto_1 = __webpack_require__(178);
-const set_referrer_dto_1 = __webpack_require__(179);
-const admin_update_user_dto_1 = __webpack_require__(180);
-const reset_user_password_dto_1 = __webpack_require__(181);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const operator_permission_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(53);
+const operator_permission_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(45);
+const users_service_1 = __webpack_require__(166);
+const create_advisor_dto_1 = __webpack_require__(169);
+const create_assistant_doctor_dto_1 = __webpack_require__(170);
+const create_staff_dto_1 = __webpack_require__(171);
+const list_users_query_dto_1 = __webpack_require__(172);
+const update_role_dto_1 = __webpack_require__(173);
+const update_active_roles_dto_1 = __webpack_require__(174);
+const update_farmer_profile_dto_1 = __webpack_require__(175);
+const update_advisor_profile_dto_1 = __webpack_require__(176);
+const update_partner_profile_dto_1 = __webpack_require__(177);
+const update_my_address_dto_1 = __webpack_require__(178);
+const update_operator_permissions_dto_1 = __webpack_require__(179);
+const create_supervisor_dto_1 = __webpack_require__(180);
+const appoint_supervisor_request_dto_1 = __webpack_require__(181);
+const update_supervisor_permissions_dto_1 = __webpack_require__(182);
+const update_admin_staff_permissions_dto_1 = __webpack_require__(183);
+const set_referrer_dto_1 = __webpack_require__(184);
+const admin_update_user_dto_1 = __webpack_require__(185);
+const reset_user_password_dto_1 = __webpack_require__(186);
 let UsersController = class UsersController {
     constructor(usersService) {
         this.usersService = usersService;
@@ -15987,11 +16798,32 @@ let UsersController = class UsersController {
     createSupervisor(user, dto) {
         return this.usersService.createSupervisorByFarmer(user, dto);
     }
+    appointSupervisorRequest(user, dto) {
+        return this.usersService.appointSupervisorRequest(user, dto);
+    }
+    getSupervisorRequests(user) {
+        return this.usersService.getSupervisorRequests(user);
+    }
+    respondToSupervisorRequest(user, requestId, dto) {
+        return this.usersService.respondToSupervisorRequest(user, requestId, dto);
+    }
+    getActiveSupervisorAssignment(user) {
+        return this.usersService.getActiveSupervisorAssignment(user);
+    }
     getMySupervisors(user) {
         return this.usersService.getMySupervisors(user);
     }
+    updateSupervisorFeatures(user, id, featuresConfig) {
+        return this.usersService.updateSupervisorFeaturesConfig(user, id, featuresConfig);
+    }
     updateSupervisorPermissions(user, id, dto) {
         return this.usersService.updateSupervisorPermissions(user, id, dto.permissions);
+    }
+    resignSupervisor(user, id) {
+        return this.usersService.resignSupervisor(user, id);
+    }
+    assignSupervisorEmployer(user, id, employerFarmerId) {
+        return this.usersService.assignSupervisorEmployer(user, id, employerFarmerId);
     }
     deleteSupervisor(user, id) {
         return this.usersService.deleteSupervisor(user, id);
@@ -16159,7 +16991,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "list", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.BUSINESS_PARTNER),
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.ADVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.BUSINESS_PARTNER),
     (0, common_1.Get)('lookup/:kingId'),
     __param(0, (0, common_1.Param)('kingId')),
     __metadata("design:type", Function),
@@ -16288,6 +17120,41 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "createSupervisor", null);
 __decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Post)('my-supervisors/appoint-request'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, typeof (_v = typeof appoint_supervisor_request_dto_1.AppointSupervisorRequestDto !== "undefined" && appoint_supervisor_request_dto_1.AppointSupervisorRequestDto) === "function" ? _v : Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "appointSupervisorRequest", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.SUPERVISOR, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.LABOUR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Get)('my-supervisors/requests'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "getSupervisorRequests", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.SUPERVISOR, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.LABOUR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Post)('my-supervisors/requests/:requestId/respond'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('requestId')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, typeof (_w = typeof appoint_supervisor_request_dto_1.RespondSupervisorRequestDto !== "undefined" && appoint_supervisor_request_dto_1.RespondSupervisorRequestDto) === "function" ? _w : Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "respondToSupervisorRequest", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.SUPERVISOR, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.LABOUR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Get)('my-supervisors/active-assignment'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "getActiveSupervisorAssignment", null);
+__decorate([
     (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.SUPERVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     (0, common_1.Get)('my-supervisors'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
@@ -16297,14 +17164,43 @@ __decorate([
 ], UsersController.prototype, "getMySupervisors", null);
 __decorate([
     (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Patch)('my-supervisors/:id/features'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)('featuresConfig')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "updateSupervisorFeatures", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.SUPER_ADMIN),
     (0, common_1.Patch)('my-supervisors/:id/permissions'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, typeof (_v = typeof update_supervisor_permissions_dto_1.UpdateSupervisorPermissionsDto !== "undefined" && update_supervisor_permissions_dto_1.UpdateSupervisorPermissionsDto) === "function" ? _v : Object]),
+    __metadata("design:paramtypes", [Object, String, typeof (_x = typeof update_supervisor_permissions_dto_1.UpdateSupervisorPermissionsDto !== "undefined" && update_supervisor_permissions_dto_1.UpdateSupervisorPermissionsDto) === "function" ? _x : Object]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "updateSupervisorPermissions", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.SUPERVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Post)('my-supervisors/:id/resign'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "resignSupervisor", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, common_1.Patch)('supervisors/:id/assign-employer'),
+    __param(0, (0, current_user_decorator_1.CurrentUser)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)('employerFarmerId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "assignSupervisorEmployer", null);
 __decorate([
     (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.SUPER_ADMIN),
     (0, common_1.Delete)('my-supervisors/:id'),
@@ -16330,7 +17226,7 @@ __decorate([
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, typeof (_w = typeof update_role_dto_1.UpdateRoleDto !== "undefined" && update_role_dto_1.UpdateRoleDto) === "function" ? _w : Object]),
+    __metadata("design:paramtypes", [Object, String, typeof (_y = typeof update_role_dto_1.UpdateRoleDto !== "undefined" && update_role_dto_1.UpdateRoleDto) === "function" ? _y : Object]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "updateRole", null);
 __decorate([
@@ -16340,7 +17236,7 @@ __decorate([
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, typeof (_x = typeof update_active_roles_dto_1.UpdateActiveRolesDto !== "undefined" && update_active_roles_dto_1.UpdateActiveRolesDto) === "function" ? _x : Object]),
+    __metadata("design:paramtypes", [Object, String, typeof (_z = typeof update_active_roles_dto_1.UpdateActiveRolesDto !== "undefined" && update_active_roles_dto_1.UpdateActiveRolesDto) === "function" ? _z : Object]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "updateActiveRoles", null);
 __decorate([
@@ -16421,7 +17317,7 @@ exports.UsersController = UsersController = __decorate([
 
 
 /***/ }),
-/* 162 */
+/* 166 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -16467,7 +17363,7 @@ var __importStar = (this && this.__importStar) || (function () {
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c;
+var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UsersService = void 0;
 const crypto_1 = __webpack_require__(23);
@@ -16476,14 +17372,15 @@ const client_1 = __webpack_require__(13);
 const argon2 = __importStar(__webpack_require__(14));
 const prisma_service_1 = __webpack_require__(12);
 const wallet_service_1 = __webpack_require__(32);
+const notifications_service_1 = __webpack_require__(77);
 const whatsapp_group_sync_service_1 = __webpack_require__(29);
 const king_id_util_1 = __webpack_require__(22);
 const invite_coupon_util_1 = __webpack_require__(24);
 const common_2 = __webpack_require__(2);
 const auth_1 = __webpack_require__(27);
-const partner_coupon_util_1 = __webpack_require__(163);
+const partner_coupon_util_1 = __webpack_require__(167);
 const referral_coupon_util_1 = __webpack_require__(25);
-const partner_profile_util_1 = __webpack_require__(164);
+const partner_profile_util_1 = __webpack_require__(168);
 const SAFE_USER_SELECT = {
     id: true,
     kingId: true,
@@ -16536,15 +17433,42 @@ const SAFE_USER_SELECT = {
             kycStatus: true,
         },
     },
+    employerFarmer: {
+        select: {
+            id: true,
+            name: true,
+            kingId: true,
+            mobile: true,
+            farmName: true,
+        },
+    },
+    labourWorkerUser: {
+        where: { deletedAt: null },
+        select: {
+            id: true,
+            name: true,
+            farmerId: true,
+            farmer: {
+                select: {
+                    id: true,
+                    name: true,
+                    kingId: true,
+                    mobile: true,
+                    farmName: true,
+                },
+            },
+        },
+    },
 };
 function generateTempPassword() {
     return (0, crypto_1.randomBytes)(8).toString('hex').slice(0, 10);
 }
 let UsersService = class UsersService {
-    constructor(prisma, walletService, whatsappGroupSyncService) {
+    constructor(prisma, walletService, whatsappGroupSyncService, notificationsService) {
         this.prisma = prisma;
         this.walletService = walletService;
         this.whatsappGroupSyncService = whatsappGroupSyncService;
+        this.notificationsService = notificationsService;
     }
     async onModuleInit() {
     }
@@ -16713,7 +17637,7 @@ let UsersService = class UsersService {
                 state: dto.state,
                 preferredLanguage: dto.preferredLanguage ?? 'en',
                 role,
-                roles: [role],
+                roles: (role === client_1.Role.ADMIN || role === client_1.Role.SUPER_ADMIN) ? [role] : [role, client_1.Role.CUSTOMER],
             },
             select: SAFE_USER_SELECT,
         });
@@ -16973,9 +17897,58 @@ let UsersService = class UsersService {
         if (!isVipOrSuper && farmer.role !== client_1.Role.SUPER_ADMIN && farmer.role !== client_1.Role.ADMIN) {
             throw new common_1.ForbiddenException('Only farmers with VIP Membership (or Super Admin) can add Supervisors.');
         }
-        const existing = await this.prisma.user.findUnique({ where: { mobile: dto.mobile } });
+        const cleanMobile = dto.mobile.replace(/\D/g, '').slice(-10);
+        const existing = await this.prisma.user.findFirst({
+            where: {
+                OR: [
+                    { mobile: dto.mobile.trim() },
+                    { mobile: cleanMobile },
+                    { mobile: `+91${cleanMobile}` },
+                ],
+            },
+        });
         if (existing) {
-            throw new common_1.ConflictException('An account with this mobile number already exists.');
+            if (existing.employerFarmerId && existing.employerFarmerId !== farmer.id) {
+                const currentEmployer = await this.prisma.user.findUnique({
+                    where: { id: existing.employerFarmerId },
+                    select: { name: true, kingId: true, mobile: true },
+                });
+                throw new common_1.ConflictException(`This supervisor is currently actively working under farmer "${currentEmployer?.name || 'Another Farmer'}" (${currentEmployer?.kingId || ''}). A supervisor cannot work for 2 farmers at the same time. They must resign from their current employer before joining a new farmer.`);
+            }
+            if (existing.employerFarmerId === farmer.id) {
+                const updated = await this.prisma.user.update({
+                    where: { id: existing.id },
+                    data: {
+                        supervisorPermissions: dto.permissions ?? [
+                            client_1.SupervisorPermission.MANAGE_SPRAY_SCHEDULE,
+                            client_1.SupervisorPermission.MANAGE_LABOUR_EXPENSES,
+                            client_1.SupervisorPermission.CROP_DOCTOR_CHAT,
+                            client_1.SupervisorPermission.MANAGE_HARVEST_SALES,
+                        ],
+                        deletedAt: null,
+                    },
+                    select: SAFE_USER_SELECT,
+                });
+                return { supervisor: updated, tempPassword: '(Already Assigned)' };
+            }
+            const updatedRoles = Array.from(new Set([...(existing.roles ?? []), client_1.Role.SUPERVISOR]));
+            const updated = await this.prisma.user.update({
+                where: { id: existing.id },
+                data: {
+                    employerFarmerId: farmer.id,
+                    role: client_1.Role.SUPERVISOR,
+                    roles: updatedRoles,
+                    supervisorPermissions: dto.permissions ?? [
+                        client_1.SupervisorPermission.MANAGE_SPRAY_SCHEDULE,
+                        client_1.SupervisorPermission.MANAGE_LABOUR_EXPENSES,
+                        client_1.SupervisorPermission.CROP_DOCTOR_CHAT,
+                        client_1.SupervisorPermission.MANAGE_HARVEST_SALES,
+                    ],
+                    deletedAt: null,
+                },
+                select: SAFE_USER_SELECT,
+            });
+            return { supervisor: updated, tempPassword: '(Existing Account Linked)' };
         }
         if (process.env.NODE_ENV === 'production' && !dto.firebaseIdToken) {
             throw new common_1.BadRequestException('Firebase ID Token is required.');
@@ -17006,7 +17979,7 @@ let UsersService = class UsersService {
                 passwordHash,
                 name: dto.name,
                 role: client_1.Role.SUPERVISOR,
-                roles: [client_1.Role.SUPERVISOR],
+                roles: [client_1.Role.SUPERVISOR, client_1.Role.CUSTOMER],
                 employerFarmerId: farmer.id,
                 supervisorPermissions: dto.permissions ?? [
                     client_1.SupervisorPermission.MANAGE_SPRAY_SCHEDULE,
@@ -17019,12 +17992,249 @@ let UsersService = class UsersService {
         });
         return { supervisor, tempPassword: initialPassword };
     }
+    async appointSupervisorRequest(farmer, dto) {
+        const cleanKing = dto.supervisorKingId.trim();
+        const cleanDigits = cleanKing.replace(/\D/g, '');
+        const cleanMobile = cleanDigits.length >= 10 ? cleanDigits.slice(-10) : '';
+        const target = await this.prisma.user.findFirst({
+            where: {
+                deletedAt: null,
+                OR: [
+                    { kingId: cleanKing.toUpperCase() },
+                    { mobile: cleanKing },
+                    ...(cleanMobile ? [{ mobile: { endsWith: cleanMobile } }] : []),
+                ],
+            },
+            select: { id: true, name: true, kingId: true, mobile: true, employerFarmerId: true, role: true, roles: true },
+        });
+        if (!target) {
+            throw new common_1.NotFoundException('Candidate not found matching King ID / Mobile number.');
+        }
+        if (target.id === farmer.id) {
+            throw new common_1.BadRequestException('You cannot appoint yourself as your own supervisor.');
+        }
+        if (target.employerFarmerId && target.employerFarmerId !== farmer.id) {
+            const currentEmployer = await this.prisma.user.findUnique({
+                where: { id: target.employerFarmerId },
+                select: { name: true, kingId: true },
+            });
+            throw new common_1.ConflictException(`This supervisor is currently actively working under farmer "${currentEmployer?.name || 'Another Farmer'}" (${currentEmployer?.kingId || ''}). A supervisor cannot work for 2 farmers at the same time. They must resign from their current employer first.`);
+        }
+        const cfgJson = JSON.stringify(dto.featuresConfig || {});
+        const existingRows = await this.prisma.$queryRawUnsafe(`SELECT id FROM "supervisor_requests" WHERE "farmerId" = $1 AND "supervisorId" = $2 AND "status" = 'PENDING' LIMIT 1`, farmer.id, target.id);
+        let requestId;
+        if (existingRows && existingRows.length > 0) {
+            requestId = existingRows[0].id;
+            await this.prisma.$executeRawUnsafe(`UPDATE "supervisor_requests" SET "featuresConfig" = $1::jsonb, "note" = $2, "updatedAt" = NOW() WHERE "id" = $3`, cfgJson, dto.note || null, requestId);
+        }
+        else {
+            requestId = `sr_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+            await this.prisma.$executeRawUnsafe(`INSERT INTO "supervisor_requests" ("id", "farmerId", "supervisorId", "status", "featuresConfig", "note", "createdAt", "updatedAt")
+         VALUES ($1, $2, $3, 'PENDING', $4::jsonb, $5, NOW(), NOW())`, requestId, farmer.id, target.id, cfgJson, dto.note || null);
+        }
+        try {
+            await this.notificationsService.create(target.id, client_1.NotificationType.SYSTEM, '🚜 Farm Supervisor Appointment Request', `Farmer ${farmer.name} (${farmer.kingId || ''}) has sent you an appointment request to manage their farm operations. Tap to view allowed features and accept or reject.`, { requestId, farmerId: farmer.id });
+        }
+        catch (err) {
+        }
+        return {
+            success: true,
+            message: `Appointment request sent to ${target.name} (${target.kingId || ''}). They can accept it directly in their dashboard.`,
+            requestId,
+            supervisor: {
+                id: target.id,
+                name: target.name,
+                kingId: target.kingId,
+                mobile: target.mobile,
+            },
+        };
+    }
+    async getSupervisorRequests(user) {
+        try {
+            const incoming = await this.prisma.$queryRawUnsafe(`SELECT sr.id, sr."farmerId", sr."supervisorId", sr.status, sr."featuresConfig", sr.note, sr."createdAt",
+                f.name as "farmerName", f."kingId" as "farmerKingId", f.mobile as "farmerMobile", f.village as "farmerVillage", f."farmName"
+         FROM "supervisor_requests" sr
+         JOIN "users" f ON f.id = sr."farmerId"
+         WHERE sr."supervisorId" = $1 AND sr.status = 'PENDING'
+         ORDER BY sr."createdAt" DESC`, user.id);
+            const outgoing = await this.prisma.$queryRawUnsafe(`SELECT sr.id, sr."farmerId", sr."supervisorId", sr.status, sr."featuresConfig", sr.note, sr."createdAt", sr."respondedAt",
+                s.name as "supervisorName", s."kingId" as "supervisorKingId", s.mobile as "supervisorMobile"
+         FROM "supervisor_requests" sr
+         JOIN "users" s ON s.id = sr."supervisorId"
+         WHERE sr."farmerId" = $1
+         ORDER BY sr."createdAt" DESC`, user.id);
+            const parseRows = (rows) => rows.map((r) => ({
+                ...r,
+                featuresConfig: typeof r.featuresConfig === 'string' ? JSON.parse(r.featuresConfig) : (r.featuresConfig || {}),
+            }));
+            return {
+                incoming: parseRows(incoming),
+                outgoing: parseRows(outgoing),
+            };
+        }
+        catch {
+            return { incoming: [], outgoing: [] };
+        }
+    }
+    async respondToSupervisorRequest(user, requestId, dto) {
+        const rows = await this.prisma.$queryRawUnsafe(`SELECT * FROM "supervisor_requests" WHERE "id" = $1 AND "supervisorId" = $2 LIMIT 1`, requestId, user.id);
+        if (!rows || rows.length === 0) {
+            throw new common_1.NotFoundException('Appointment request not found.');
+        }
+        const request = rows[0];
+        if (request.status !== 'PENDING') {
+            throw new common_1.BadRequestException(`This request has already been ${request.status.toLowerCase()}.`);
+        }
+        if (dto.action === 'REJECT') {
+            await this.prisma.$executeRawUnsafe(`UPDATE "supervisor_requests" SET "status" = 'REJECTED', "respondedAt" = NOW(), "updatedAt" = NOW() WHERE "id" = $1`, requestId);
+            try {
+                await this.notificationsService.create(request.farmerId, client_1.NotificationType.SYSTEM, 'Supervisor Request Declined', `${user.name} declined your farm supervisor appointment request.`);
+            }
+            catch { }
+            return { success: true, status: 'REJECTED', message: 'You have declined this supervisor request.' };
+        }
+        const currentUser = await this.prisma.user.findUnique({ where: { id: user.id } });
+        if (currentUser?.employerFarmerId && currentUser.employerFarmerId !== request.farmerId) {
+            const employer = await this.prisma.user.findUnique({ where: { id: currentUser.employerFarmerId }, select: { name: true, kingId: true } });
+            throw new common_1.ConflictException(`You are currently actively assigned to farmer "${employer?.name || 'Another Farmer'}" (${employer?.kingId || ''}). Please resign from that farmer before accepting a new appointment.`);
+        }
+        const cfg = typeof request.featuresConfig === 'string' ? JSON.parse(request.featuresConfig) : (request.featuresConfig || {});
+        const permissions = [];
+        if (cfg.spray?.view || cfg.spray?.entry)
+            permissions.push(client_1.SupervisorPermission.MANAGE_SPRAY_SCHEDULE);
+        if (cfg.labour?.view || cfg.labour?.entry)
+            permissions.push(client_1.SupervisorPermission.MANAGE_LABOUR_EXPENSES);
+        if (cfg.advisory?.view || cfg.advisory?.entry)
+            permissions.push(client_1.SupervisorPermission.CROP_DOCTOR_CHAT);
+        if (cfg.sales?.view || cfg.sales?.entry)
+            permissions.push(client_1.SupervisorPermission.MANAGE_HARVEST_SALES);
+        await this.prisma.$executeRawUnsafe(`UPDATE "supervisor_requests" SET "status" = 'ACCEPTED', "respondedAt" = NOW(), "updatedAt" = NOW() WHERE "id" = $1`, requestId);
+        await this.prisma.$executeRawUnsafe(`UPDATE "supervisor_requests" SET "status" = 'CANCELLED', "updatedAt" = NOW() WHERE "supervisorId" = $1 AND "status" = 'PENDING'`, user.id);
+        const updatedRoles = Array.from(new Set([...(currentUser?.roles ?? []), client_1.Role.SUPERVISOR]));
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+                employerFarmerId: request.farmerId,
+                role: client_1.Role.SUPERVISOR,
+                roles: updatedRoles,
+                supervisorPermissions: permissions,
+                deletedAt: null,
+            },
+        });
+        await this.prisma.$executeRawUnsafe(`UPDATE "users" SET "supervisorFeaturesConfig" = $1::jsonb WHERE "id" = $2`, JSON.stringify(cfg), user.id);
+        const farmer = await this.prisma.user.findUnique({
+            where: { id: request.farmerId },
+            select: { id: true, name: true, kingId: true, mobile: true, farmName: true, village: true },
+        });
+        try {
+            await this.notificationsService.create(request.farmerId, client_1.NotificationType.SYSTEM, '🎉 Supervisor Appointed!', `${user.name} accepted your request and is now your active Farm Supervisor.`, { supervisorId: user.id });
+        }
+        catch { }
+        return {
+            success: true,
+            status: 'ACCEPTED',
+            message: `You are now the Farm Supervisor for ${farmer?.name || 'the farmer'}!`,
+            employerFarmer: farmer,
+            featuresConfig: cfg,
+        };
+    }
+    async getActiveSupervisorAssignment(user) {
+        const dbUser = await this.prisma.user.findUnique({
+            where: { id: user.id },
+            select: {
+                id: true,
+                name: true,
+                role: true,
+                roles: true,
+                employerFarmerId: true,
+                supervisorPermissions: true,
+                employerFarmer: {
+                    select: {
+                        id: true,
+                        name: true,
+                        kingId: true,
+                        mobile: true,
+                        village: true,
+                        district: true,
+                        state: true,
+                        farmName: true,
+                    },
+                },
+            },
+        });
+        if (!dbUser || !dbUser.employerFarmerId) {
+            return { isAssigned: false, employerFarmer: null, featuresConfig: null };
+        }
+        let cfg = {};
+        try {
+            const rows = await this.prisma.$queryRawUnsafe(`SELECT "supervisorFeaturesConfig" FROM "users" WHERE "id" = $1 LIMIT 1`, user.id);
+            if (rows && rows.length > 0 && rows[0].supervisorFeaturesConfig) {
+                cfg = typeof rows[0].supervisorFeaturesConfig === 'string'
+                    ? JSON.parse(rows[0].supervisorFeaturesConfig)
+                    : rows[0].supervisorFeaturesConfig;
+            }
+        }
+        catch { }
+        return {
+            isAssigned: true,
+            employerFarmer: dbUser.employerFarmer,
+            supervisorPermissions: dbUser.supervisorPermissions,
+            featuresConfig: cfg,
+        };
+    }
+    async updateSupervisorFeaturesConfig(farmer, supervisorId, featuresConfig) {
+        const supervisor = await this.prisma.user.findUnique({ where: { id: supervisorId } });
+        if (!supervisor || supervisor.employerFarmerId !== farmer.id) {
+            throw new common_1.NotFoundException('Supervisor not found under your account.');
+        }
+        const cfg = featuresConfig || {};
+        const permissions = [];
+        if (cfg.spray?.view || cfg.spray?.entry)
+            permissions.push(client_1.SupervisorPermission.MANAGE_SPRAY_SCHEDULE);
+        if (cfg.labour?.view || cfg.labour?.entry)
+            permissions.push(client_1.SupervisorPermission.MANAGE_LABOUR_EXPENSES);
+        if (cfg.advisory?.view || cfg.advisory?.entry)
+            permissions.push(client_1.SupervisorPermission.CROP_DOCTOR_CHAT);
+        if (cfg.sales?.view || cfg.sales?.entry)
+            permissions.push(client_1.SupervisorPermission.MANAGE_HARVEST_SALES);
+        await this.prisma.user.update({
+            where: { id: supervisorId },
+            data: { supervisorPermissions: permissions },
+        });
+        await this.prisma.$executeRawUnsafe(`UPDATE "users" SET "supervisorFeaturesConfig" = $1::jsonb WHERE "id" = $2`, JSON.stringify(cfg), supervisorId);
+        return {
+            success: true,
+            message: 'Supervisor permissions and features updated successfully.',
+            supervisorId,
+            featuresConfig: cfg,
+        };
+    }
     async getMySupervisors(farmer) {
-        return this.prisma.user.findMany({
+        const list = await this.prisma.user.findMany({
             where: { employerFarmerId: farmer.id, deletedAt: null },
             select: SAFE_USER_SELECT,
             orderBy: { createdAt: 'desc' },
         });
+        if (list.length === 0)
+            return [];
+        try {
+            const ids = list.map((u) => u.id);
+            const configs = await this.prisma.$queryRawUnsafe(`SELECT id, "supervisorFeaturesConfig" FROM "users" WHERE id = ANY($1::text[])`, ids);
+            const configMap = new Map();
+            configs.forEach((c) => {
+                const val = typeof c.supervisorFeaturesConfig === 'string'
+                    ? JSON.parse(c.supervisorFeaturesConfig)
+                    : (c.supervisorFeaturesConfig || {});
+                configMap.set(c.id, val);
+            });
+            return list.map((u) => ({
+                ...u,
+                supervisorFeaturesConfig: configMap.get(u.id) || {},
+            }));
+        }
+        catch {
+            return list;
+        }
     }
     async updateSupervisorPermissions(farmer, supervisorId, permissions) {
         const supervisor = await this.prisma.user.findUnique({ where: { id: supervisorId } });
@@ -17037,6 +18247,61 @@ let UsersService = class UsersService {
             select: SAFE_USER_SELECT,
         });
     }
+    async resignSupervisor(actor, supervisorId) {
+        const supervisor = await this.prisma.user.findUnique({ where: { id: supervisorId } });
+        if (!supervisor) {
+            throw new common_1.NotFoundException('Supervisor not found.');
+        }
+        const isOwnerFarmer = supervisor.employerFarmerId === actor.id;
+        const isSelf = supervisor.id === actor.id;
+        const isAdmin = actor.role === client_1.Role.SUPER_ADMIN || actor.role === client_1.Role.ADMIN;
+        if (!isOwnerFarmer && !isSelf && !isAdmin) {
+            throw new common_1.ForbiddenException('Only the employer farmer, the supervisor themselves, or Admin can resign this supervisor.');
+        }
+        const updated = await this.prisma.user.update({
+            where: { id: supervisorId },
+            data: {
+                employerFarmerId: null,
+            },
+            select: SAFE_USER_SELECT,
+        });
+        try {
+            await this.prisma.$executeRawUnsafe(`UPDATE "users" SET "supervisorFeaturesConfig" = '{}'::jsonb WHERE "id" = $1`, supervisorId);
+            await this.prisma.$executeRawUnsafe(`UPDATE "supervisor_requests" SET "status" = 'RESIGNED', "updatedAt" = NOW() WHERE "supervisorId" = $1 AND "status" = 'ACCEPTED'`, supervisorId);
+        }
+        catch { }
+        return {
+            success: true,
+            message: `Supervisor ${supervisor.name} has resigned / been released. They can now join another farmer if appointed.`,
+            supervisor: updated,
+        };
+    }
+    async assignSupervisorEmployer(caller, supervisorId, employerFarmerId) {
+        const supervisor = await this.prisma.user.findUnique({ where: { id: supervisorId } });
+        if (!supervisor) {
+            throw new common_1.NotFoundException('Supervisor not found.');
+        }
+        if (caller.role !== client_1.Role.SUPER_ADMIN && caller.role !== client_1.Role.ADMIN) {
+            throw new common_1.ForbiddenException('Only an Admin or Super Admin can assign a supervisor to an employer.');
+        }
+        if (employerFarmerId) {
+            const employerFarmer = await this.prisma.user.findUnique({ where: { id: employerFarmerId } });
+            if (!employerFarmer) {
+                throw new common_1.NotFoundException('Target employer farmer not found.');
+            }
+        }
+        const updatedRoles = Array.from(new Set([...(supervisor.roles ?? []), client_1.Role.SUPERVISOR]));
+        const updated = await this.prisma.user.update({
+            where: { id: supervisorId },
+            data: {
+                employerFarmerId,
+                role: client_1.Role.SUPERVISOR,
+                roles: updatedRoles,
+            },
+            select: SAFE_USER_SELECT,
+        });
+        return updated;
+    }
     async deleteSupervisor(farmer, supervisorId) {
         const supervisor = await this.prisma.user.findUnique({ where: { id: supervisorId } });
         if (!supervisor || supervisor.employerFarmerId !== farmer.id) {
@@ -17044,9 +18309,9 @@ let UsersService = class UsersService {
         }
         await this.prisma.user.update({
             where: { id: supervisorId },
-            data: { deletedAt: new Date() },
+            data: { employerFarmerId: null },
         });
-        return { success: true, message: 'Supervisor removed successfully.' };
+        return { success: true, message: 'Supervisor resigned / unlinked successfully.' };
     }
     async findActiveOrThrow(id) {
         const user = await this.prisma.user.findUnique({ where: { id } });
@@ -17068,12 +18333,36 @@ let UsersService = class UsersService {
                     ...(cleanMobile ? [{ mobile: { endsWith: cleanMobile } }] : []),
                 ],
             },
-            select: { id: true, name: true, kingId: true, mobile: true, role: true, roles: true },
+            select: {
+                id: true,
+                name: true,
+                kingId: true,
+                mobile: true,
+                role: true,
+                roles: true,
+                employerFarmerId: true,
+                village: true,
+                district: true,
+                state: true,
+            },
         });
         if (!user) {
             throw new common_1.NotFoundException('No user found matching that King ID or Mobile number.');
         }
-        return user;
+        let currentEmployerName = null;
+        if (user.employerFarmerId) {
+            const employer = await this.prisma.user.findUnique({
+                where: { id: user.employerFarmerId },
+                select: { name: true, kingId: true },
+            });
+            if (employer) {
+                currentEmployerName = `${employer.name} (${employer.kingId || ''})`;
+            }
+        }
+        return {
+            ...user,
+            currentEmployerName,
+        };
     }
     assertCanManageTarget(caller, target) {
         const targetIsTierRestricted = target.role === client_1.Role.ADMIN || target.role === client_1.Role.SUPER_ADMIN;
@@ -17092,11 +18381,12 @@ let UsersService = class UsersService {
         }
         const isNewAdvisor = role === client_1.Role.ADVISOR && !user.roles.includes(client_1.Role.ADVISOR);
         const newDeactivatedRoles = (user.deactivatedRoles ?? []).filter((r) => r !== role);
+        const targetRoles = Array.from(new Set([...user.roles, role, client_1.Role.CUSTOMER]));
         const updated = await this.prisma.user.update({
             where: { id },
             data: {
                 role,
-                roles: user.roles.includes(role) ? undefined : { push: role },
+                roles: targetRoles,
                 deactivatedRoles: newDeactivatedRoles,
                 ...(isNewAdvisor ? { specialization: null, bio: null, yearsExperience: null, advisorType: null } : {}),
             },
@@ -17260,6 +18550,7 @@ let UsersService = class UsersService {
                 ...(dto.isSeniorDoctor !== undefined ? { isSeniorDoctor: dto.isSeniorDoctor } : {}),
                 ...(dto.seniorDoctorId !== undefined ? { seniorDoctorId: dto.seniorDoctorId } : {}),
                 ...(dto.doctorConsultationFee !== undefined ? { doctorConsultationFee: dto.doctorConsultationFee } : {}),
+                ...(dto.employerFarmerId !== undefined ? { employerFarmerId: dto.employerFarmerId } : {}),
             },
             select: {
                 ...SAFE_USER_SELECT,
@@ -17750,12 +19041,12 @@ let UsersService = class UsersService {
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof prisma_service_1.PrismaService !== "undefined" && prisma_service_1.PrismaService) === "function" ? _a : Object, typeof (_b = typeof wallet_service_1.WalletService !== "undefined" && wallet_service_1.WalletService) === "function" ? _b : Object, typeof (_c = typeof whatsapp_group_sync_service_1.WhatsAppGroupSyncService !== "undefined" && whatsapp_group_sync_service_1.WhatsAppGroupSyncService) === "function" ? _c : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof prisma_service_1.PrismaService !== "undefined" && prisma_service_1.PrismaService) === "function" ? _a : Object, typeof (_b = typeof wallet_service_1.WalletService !== "undefined" && wallet_service_1.WalletService) === "function" ? _b : Object, typeof (_c = typeof whatsapp_group_sync_service_1.WhatsAppGroupSyncService !== "undefined" && whatsapp_group_sync_service_1.WhatsAppGroupSyncService) === "function" ? _c : Object, typeof (_d = typeof notifications_service_1.NotificationsService !== "undefined" && notifications_service_1.NotificationsService) === "function" ? _d : Object])
 ], UsersService);
 
 
 /***/ }),
-/* 163 */
+/* 167 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -17809,7 +19100,7 @@ async function provisionPartnerReferralCoupon(prisma, businessPartnerId, created
 
 
 /***/ }),
-/* 164 */
+/* 168 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -17842,7 +19133,7 @@ function getAdvisorPayoutProfileStatus(user) {
 
 
 /***/ }),
-/* 165 */
+/* 169 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -17905,7 +19196,7 @@ __decorate([
 
 
 /***/ }),
-/* 166 */
+/* 170 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -17969,7 +19260,7 @@ __decorate([
 
 
 /***/ }),
-/* 167 */
+/* 171 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18026,7 +19317,7 @@ __decorate([
 
 
 /***/ }),
-/* 168 */
+/* 172 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18042,7 +19333,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ListUsersQueryDto = void 0;
-const class_transformer_1 = __webpack_require__(142);
+const class_transformer_1 = __webpack_require__(146);
 const class_validator_1 = __webpack_require__(37);
 const client_1 = __webpack_require__(13);
 class ListUsersQueryDto {
@@ -18080,7 +19371,7 @@ __decorate([
 
 
 /***/ }),
-/* 169 */
+/* 173 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18108,7 +19399,7 @@ __decorate([
 
 
 /***/ }),
-/* 170 */
+/* 174 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18125,7 +19416,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UpdateActiveRolesDto = exports.ASSIGNABLE_CHECKBOX_ROLES = void 0;
 const class_validator_1 = __webpack_require__(37);
 const client_1 = __webpack_require__(13);
-exports.ASSIGNABLE_CHECKBOX_ROLES = [client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.TECHNICAL_TRAINER];
+exports.ASSIGNABLE_CHECKBOX_ROLES = [client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.TECHNICAL_TRAINER, client_1.Role.TRADER];
 class UpdateActiveRolesDto {
 }
 exports.UpdateActiveRolesDto = UpdateActiveRolesDto;
@@ -18137,7 +19428,7 @@ __decorate([
 
 
 /***/ }),
-/* 171 */
+/* 175 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18242,7 +19533,7 @@ __decorate([
 
 
 /***/ }),
-/* 172 */
+/* 176 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18368,7 +19659,7 @@ __decorate([
 
 
 /***/ }),
-/* 173 */
+/* 177 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18426,7 +19717,7 @@ __decorate([
 
 
 /***/ }),
-/* 174 */
+/* 178 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18568,7 +19859,7 @@ __decorate([
 
 
 /***/ }),
-/* 175 */
+/* 179 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18596,7 +19887,7 @@ __decorate([
 
 
 /***/ }),
-/* 176 */
+/* 180 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18645,7 +19936,57 @@ __decorate([
 
 
 /***/ }),
-/* 177 */
+/* 181 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RespondSupervisorRequestDto = exports.AppointSupervisorRequestDto = exports.SupervisorFeaturesConfigDto = exports.FeaturePermissionDto = void 0;
+const class_validator_1 = __webpack_require__(37);
+class FeaturePermissionDto {
+}
+exports.FeaturePermissionDto = FeaturePermissionDto;
+class SupervisorFeaturesConfigDto {
+}
+exports.SupervisorFeaturesConfigDto = SupervisorFeaturesConfigDto;
+class AppointSupervisorRequestDto {
+}
+exports.AppointSupervisorRequestDto = AppointSupervisorRequestDto;
+__decorate([
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AppointSupervisorRequestDto.prototype, "supervisorKingId", void 0);
+__decorate([
+    (0, class_validator_1.IsObject)(),
+    __metadata("design:type", SupervisorFeaturesConfigDto)
+], AppointSupervisorRequestDto.prototype, "featuresConfig", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AppointSupervisorRequestDto.prototype, "note", void 0);
+class RespondSupervisorRequestDto {
+}
+exports.RespondSupervisorRequestDto = RespondSupervisorRequestDto;
+__decorate([
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RespondSupervisorRequestDto.prototype, "action", void 0);
+
+
+/***/ }),
+/* 182 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18673,7 +20014,7 @@ __decorate([
 
 
 /***/ }),
-/* 178 */
+/* 183 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18701,7 +20042,7 @@ __decorate([
 
 
 /***/ }),
-/* 179 */
+/* 184 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18728,7 +20069,7 @@ __decorate([
 
 
 /***/ }),
-/* 180 */
+/* 185 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18921,10 +20262,15 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Object)
 ], AdminUpdateUserDto.prototype, "doctorConsultationFee", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", Object)
+], AdminUpdateUserDto.prototype, "employerFarmerId", void 0);
 
 
 /***/ }),
-/* 181 */
+/* 186 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18952,7 +20298,7 @@ __decorate([
 
 
 /***/ }),
-/* 182 */
+/* 187 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18965,9 +20311,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WeatherModule = void 0;
 const common_1 = __webpack_require__(2);
-const weather_controller_1 = __webpack_require__(183);
-const weather_service_1 = __webpack_require__(184);
-const advisor_assignment_module_1 = __webpack_require__(72);
+const weather_controller_1 = __webpack_require__(188);
+const weather_service_1 = __webpack_require__(189);
+const advisor_assignment_module_1 = __webpack_require__(74);
 let WeatherModule = class WeatherModule {
 };
 exports.WeatherModule = WeatherModule;
@@ -18981,7 +20327,7 @@ exports.WeatherModule = WeatherModule = __decorate([
 
 
 /***/ }),
-/* 183 */
+/* 188 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19002,11 +20348,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WeatherController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const weather_service_1 = __webpack_require__(184);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const weather_service_1 = __webpack_require__(189);
 let WeatherController = class WeatherController {
     constructor(weatherService) {
         this.weatherService = weatherService;
@@ -19044,7 +20390,7 @@ exports.WeatherController = WeatherController = __decorate([
 
 
 /***/ }),
-/* 184 */
+/* 189 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19063,7 +20409,7 @@ exports.WeatherService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const advisor_assignment_service_1 = __webpack_require__(77);
+const advisor_assignment_service_1 = __webpack_require__(79);
 const CACHE_TTL_MS = 15 * 60 * 1000;
 const RAIN_CODES = new Set([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99]);
 function conditionFromWeatherCode(code) {
@@ -19318,7 +20664,7 @@ exports.WeatherService = WeatherService = __decorate([
 
 
 /***/ }),
-/* 185 */
+/* 190 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19331,9 +20677,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CouponsModule = void 0;
 const common_1 = __webpack_require__(2);
-const wallet_module_1 = __webpack_require__(54);
-const coupons_controller_1 = __webpack_require__(186);
-const coupons_service_1 = __webpack_require__(187);
+const wallet_module_1 = __webpack_require__(55);
+const coupons_controller_1 = __webpack_require__(191);
+const coupons_service_1 = __webpack_require__(192);
 let CouponsModule = class CouponsModule {
 };
 exports.CouponsModule = CouponsModule;
@@ -19348,7 +20694,7 @@ exports.CouponsModule = CouponsModule = __decorate([
 
 
 /***/ }),
-/* 186 */
+/* 191 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19369,17 +20715,17 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CouponsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const operator_permission_guard_1 = __webpack_require__(56);
-const roles_decorator_1 = __webpack_require__(52);
-const operator_permission_decorator_1 = __webpack_require__(57);
-const current_user_decorator_1 = __webpack_require__(44);
-const coupons_service_1 = __webpack_require__(187);
-const create_coupon_dto_1 = __webpack_require__(188);
-const update_coupon_dto_1 = __webpack_require__(189);
-const redeem_coupon_dto_1 = __webpack_require__(190);
-const issue_partner_coupon_dto_1 = __webpack_require__(191);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const operator_permission_guard_1 = __webpack_require__(57);
+const roles_decorator_1 = __webpack_require__(53);
+const operator_permission_decorator_1 = __webpack_require__(58);
+const current_user_decorator_1 = __webpack_require__(45);
+const coupons_service_1 = __webpack_require__(192);
+const create_coupon_dto_1 = __webpack_require__(193);
+const update_coupon_dto_1 = __webpack_require__(194);
+const redeem_coupon_dto_1 = __webpack_require__(195);
+const issue_partner_coupon_dto_1 = __webpack_require__(196);
 let CouponsController = class CouponsController {
     constructor(couponsService) {
         this.couponsService = couponsService;
@@ -19505,7 +20851,7 @@ exports.CouponsController = CouponsController = __decorate([
 
 
 /***/ }),
-/* 187 */
+/* 192 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19526,7 +20872,7 @@ const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
 const wallet_service_1 = __webpack_require__(32);
-const partner_coupon_util_1 = __webpack_require__(163);
+const partner_coupon_util_1 = __webpack_require__(167);
 const ALPHANUMERIC = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function generateCouponCode() {
     const bytes = (0, crypto_1.randomBytes)(5);
@@ -19737,7 +21083,7 @@ exports.CouponsService = CouponsService = __decorate([
 
 
 /***/ }),
-/* 188 */
+/* 193 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19821,7 +21167,7 @@ __decorate([
 
 
 /***/ }),
-/* 189 */
+/* 194 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19889,7 +21235,7 @@ __decorate([
 
 
 /***/ }),
-/* 190 */
+/* 195 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19916,7 +21262,7 @@ __decorate([
 
 
 /***/ }),
-/* 191 */
+/* 196 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19943,7 +21289,7 @@ __decorate([
 
 
 /***/ }),
-/* 192 */
+/* 197 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19956,10 +21302,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WithdrawalsModule = void 0;
 const common_1 = __webpack_require__(2);
-const wallet_module_1 = __webpack_require__(54);
-const app_settings_module_1 = __webpack_require__(49);
-const withdrawals_controller_1 = __webpack_require__(193);
-const withdrawals_service_1 = __webpack_require__(194);
+const wallet_module_1 = __webpack_require__(55);
+const app_settings_module_1 = __webpack_require__(50);
+const withdrawals_controller_1 = __webpack_require__(198);
+const withdrawals_service_1 = __webpack_require__(199);
 let WithdrawalsModule = class WithdrawalsModule {
 };
 exports.WithdrawalsModule = WithdrawalsModule;
@@ -19973,7 +21319,7 @@ exports.WithdrawalsModule = WithdrawalsModule = __decorate([
 
 
 /***/ }),
-/* 193 */
+/* 198 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19994,13 +21340,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WithdrawalsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const withdrawals_service_1 = __webpack_require__(194);
-const create_withdrawal_dto_1 = __webpack_require__(195);
-const approve_withdrawal_dto_1 = __webpack_require__(196);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const withdrawals_service_1 = __webpack_require__(199);
+const create_withdrawal_dto_1 = __webpack_require__(200);
+const approve_withdrawal_dto_1 = __webpack_require__(201);
 let WithdrawalsController = class WithdrawalsController {
     constructor(withdrawalsService) {
         this.withdrawalsService = withdrawalsService;
@@ -20074,7 +21420,7 @@ exports.WithdrawalsController = WithdrawalsController = __decorate([
 
 
 /***/ }),
-/* 194 */
+/* 199 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20095,7 +21441,7 @@ const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
 const wallet_service_1 = __webpack_require__(32);
 const app_settings_service_1 = __webpack_require__(30);
-const partner_profile_util_1 = __webpack_require__(164);
+const partner_profile_util_1 = __webpack_require__(168);
 let WithdrawalsService = class WithdrawalsService {
     constructor(prisma, walletService, appSettingsService) {
         this.prisma = prisma;
@@ -20282,7 +21628,7 @@ exports.WithdrawalsService = WithdrawalsService = __decorate([
 
 
 /***/ }),
-/* 195 */
+/* 200 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20309,7 +21655,7 @@ __decorate([
 
 
 /***/ }),
-/* 196 */
+/* 201 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20342,7 +21688,7 @@ __decorate([
 
 
 /***/ }),
-/* 197 */
+/* 202 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20355,10 +21701,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PlanRenewalModule = void 0;
 const common_1 = __webpack_require__(2);
-const advisor_assignment_module_1 = __webpack_require__(72);
-const app_settings_module_1 = __webpack_require__(49);
-const plan_renewal_controller_1 = __webpack_require__(198);
-const plan_renewal_service_1 = __webpack_require__(199);
+const advisor_assignment_module_1 = __webpack_require__(74);
+const app_settings_module_1 = __webpack_require__(50);
+const plan_renewal_controller_1 = __webpack_require__(203);
+const plan_renewal_service_1 = __webpack_require__(204);
 let PlanRenewalModule = class PlanRenewalModule {
 };
 exports.PlanRenewalModule = PlanRenewalModule;
@@ -20373,7 +21719,7 @@ exports.PlanRenewalModule = PlanRenewalModule = __decorate([
 
 
 /***/ }),
-/* 198 */
+/* 203 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20394,14 +21740,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PlanRenewalController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const plan_renewal_service_1 = __webpack_require__(199);
-const create_plan_renewal_coupon_dto_1 = __webpack_require__(201);
-const redeem_plan_renewal_coupon_dto_1 = __webpack_require__(202);
-const grant_plan_days_dto_1 = __webpack_require__(203);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const plan_renewal_service_1 = __webpack_require__(204);
+const create_plan_renewal_coupon_dto_1 = __webpack_require__(206);
+const redeem_plan_renewal_coupon_dto_1 = __webpack_require__(207);
+const grant_plan_days_dto_1 = __webpack_require__(208);
 let PlanRenewalController = class PlanRenewalController {
     constructor(planRenewalService) {
         this.planRenewalService = planRenewalService;
@@ -20498,7 +21844,7 @@ exports.PlanRenewalController = PlanRenewalController = __decorate([
 
 
 /***/ }),
-/* 199 */
+/* 204 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20518,9 +21864,9 @@ const crypto_1 = __webpack_require__(23);
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const advisor_assignment_service_1 = __webpack_require__(77);
-const auth_user_util_1 = __webpack_require__(78);
-const upi_util_1 = __webpack_require__(200);
+const advisor_assignment_service_1 = __webpack_require__(79);
+const auth_user_util_1 = __webpack_require__(80);
+const upi_util_1 = __webpack_require__(205);
 const app_settings_service_1 = __webpack_require__(30);
 const DAY_MS = 24 * 60 * 60 * 1000;
 function generateCode() {
@@ -20730,7 +22076,7 @@ exports.PlanRenewalService = PlanRenewalService = __decorate([
 
 
 /***/ }),
-/* 200 */
+/* 205 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -20752,7 +22098,7 @@ function buildUpiPaymentLink(params) {
 
 
 /***/ }),
-/* 201 */
+/* 206 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20789,7 +22135,7 @@ __decorate([
 
 
 /***/ }),
-/* 202 */
+/* 207 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20816,7 +22162,7 @@ __decorate([
 
 
 /***/ }),
-/* 203 */
+/* 208 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20847,7 +22193,7 @@ __decorate([
 
 
 /***/ }),
-/* 204 */
+/* 209 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20860,8 +22206,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProductsModule = void 0;
 const common_1 = __webpack_require__(2);
-const products_controller_1 = __webpack_require__(205);
-const products_service_1 = __webpack_require__(206);
+const products_controller_1 = __webpack_require__(210);
+const products_service_1 = __webpack_require__(211);
 let ProductsModule = class ProductsModule {
 };
 exports.ProductsModule = ProductsModule;
@@ -20874,7 +22220,7 @@ exports.ProductsModule = ProductsModule = __decorate([
 
 
 /***/ }),
-/* 205 */
+/* 210 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20895,13 +22241,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProductsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const products_service_1 = __webpack_require__(206);
-const create_product_dto_1 = __webpack_require__(207);
-const update_product_dto_1 = __webpack_require__(208);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const products_service_1 = __webpack_require__(211);
+const create_product_dto_1 = __webpack_require__(212);
+const update_product_dto_1 = __webpack_require__(213);
 let ProductsController = class ProductsController {
     constructor(productsService) {
         this.productsService = productsService;
@@ -21030,7 +22376,7 @@ exports.ProductsController = ProductsController = __decorate([
 
 
 /***/ }),
-/* 206 */
+/* 211 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21301,7 +22647,7 @@ exports.ProductsService = ProductsService = __decorate([
 
 
 /***/ }),
-/* 207 */
+/* 212 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21517,7 +22863,7 @@ __decorate([
 
 
 /***/ }),
-/* 208 */
+/* 213 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21582,7 +22928,7 @@ __decorate([
 
 
 /***/ }),
-/* 209 */
+/* 214 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21595,16 +22941,16 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.OrdersModule = void 0;
 const common_1 = __webpack_require__(2);
-const notifications_module_1 = __webpack_require__(73);
-const coupons_module_1 = __webpack_require__(185);
-const wallet_module_1 = __webpack_require__(54);
-const app_settings_module_1 = __webpack_require__(49);
-const phonepe_module_1 = __webpack_require__(210);
-const shiprocket_module_1 = __webpack_require__(213);
-const cashfree_module_1 = __webpack_require__(217);
-const orders_controller_1 = __webpack_require__(221);
-const orders_service_1 = __webpack_require__(222);
-const billing_service_1 = __webpack_require__(223);
+const notifications_module_1 = __webpack_require__(75);
+const coupons_module_1 = __webpack_require__(190);
+const wallet_module_1 = __webpack_require__(55);
+const app_settings_module_1 = __webpack_require__(50);
+const phonepe_module_1 = __webpack_require__(215);
+const shiprocket_module_1 = __webpack_require__(218);
+const cashfree_module_1 = __webpack_require__(222);
+const orders_controller_1 = __webpack_require__(226);
+const orders_service_1 = __webpack_require__(227);
+const billing_service_1 = __webpack_require__(228);
 let OrdersModule = class OrdersModule {
 };
 exports.OrdersModule = OrdersModule;
@@ -21627,7 +22973,7 @@ exports.OrdersModule = OrdersModule = __decorate([
 
 
 /***/ }),
-/* 210 */
+/* 215 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21640,9 +22986,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PhonePeModule = void 0;
 const common_1 = __webpack_require__(2);
-const notifications_module_1 = __webpack_require__(73);
-const phonepe_service_1 = __webpack_require__(211);
-const phonepe_webhook_controller_1 = __webpack_require__(212);
+const notifications_module_1 = __webpack_require__(75);
+const phonepe_service_1 = __webpack_require__(216);
+const phonepe_webhook_controller_1 = __webpack_require__(217);
 let PhonePeModule = class PhonePeModule {
 };
 exports.PhonePeModule = PhonePeModule;
@@ -21657,7 +23003,7 @@ exports.PhonePeModule = PhonePeModule = __decorate([
 
 
 /***/ }),
-/* 211 */
+/* 216 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21786,7 +23132,7 @@ exports.PhonePeService = PhonePeService = PhonePeService_1 = __decorate([
 
 
 /***/ }),
-/* 212 */
+/* 217 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21809,8 +23155,8 @@ exports.PhonePeWebhookController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const notifications_service_1 = __webpack_require__(75);
-const phonepe_service_1 = __webpack_require__(211);
+const notifications_service_1 = __webpack_require__(77);
+const phonepe_service_1 = __webpack_require__(216);
 let PhonePeWebhookController = PhonePeWebhookController_1 = class PhonePeWebhookController {
     constructor(prisma, phonePeService, notificationsService) {
         this.prisma = prisma;
@@ -21865,7 +23211,7 @@ exports.PhonePeWebhookController = PhonePeWebhookController = PhonePeWebhookCont
 
 
 /***/ }),
-/* 213 */
+/* 218 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21880,8 +23226,8 @@ exports.ShiprocketModule = void 0;
 const common_1 = __webpack_require__(2);
 const config_1 = __webpack_require__(4);
 const prisma_module_1 = __webpack_require__(16);
-const shiprocket_service_1 = __webpack_require__(214);
-const shiprocket_controller_1 = __webpack_require__(215);
+const shiprocket_service_1 = __webpack_require__(219);
+const shiprocket_controller_1 = __webpack_require__(220);
 let ShiprocketModule = class ShiprocketModule {
 };
 exports.ShiprocketModule = ShiprocketModule;
@@ -21896,7 +23242,7 @@ exports.ShiprocketModule = ShiprocketModule = __decorate([
 
 
 /***/ }),
-/* 214 */
+/* 219 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22139,7 +23485,7 @@ exports.ShiprocketService = ShiprocketService = ShiprocketService_1 = __decorate
 
 
 /***/ }),
-/* 215 */
+/* 220 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22159,9 +23505,9 @@ var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ShiprocketController = void 0;
 const common_1 = __webpack_require__(2);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const shiprocket_service_1 = __webpack_require__(214);
-const shiprocket_dto_1 = __webpack_require__(216);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const shiprocket_service_1 = __webpack_require__(219);
+const shiprocket_dto_1 = __webpack_require__(221);
 let ShiprocketController = class ShiprocketController {
     constructor(shiprocketService) {
         this.shiprocketService = shiprocketService;
@@ -22218,7 +23564,7 @@ exports.ShiprocketController = ShiprocketController = __decorate([
 
 
 /***/ }),
-/* 216 */
+/* 221 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22328,7 +23674,7 @@ __decorate([
 
 
 /***/ }),
-/* 217 */
+/* 222 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22343,8 +23689,8 @@ exports.CashfreeModule = void 0;
 const common_1 = __webpack_require__(2);
 const config_1 = __webpack_require__(4);
 const prisma_module_1 = __webpack_require__(16);
-const cashfree_service_1 = __webpack_require__(218);
-const cashfree_controller_1 = __webpack_require__(219);
+const cashfree_service_1 = __webpack_require__(223);
+const cashfree_controller_1 = __webpack_require__(224);
 let CashfreeModule = class CashfreeModule {
 };
 exports.CashfreeModule = CashfreeModule;
@@ -22359,7 +23705,7 @@ exports.CashfreeModule = CashfreeModule = __decorate([
 
 
 /***/ }),
-/* 218 */
+/* 223 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22768,7 +24114,7 @@ exports.CashfreeService = CashfreeService = CashfreeService_1 = __decorate([
 
 
 /***/ }),
-/* 219 */
+/* 224 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22788,10 +24134,10 @@ var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CashfreeController = void 0;
 const common_1 = __webpack_require__(2);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const current_user_decorator_1 = __webpack_require__(44);
-const cashfree_service_1 = __webpack_require__(218);
-const cashfree_dto_1 = __webpack_require__(220);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const current_user_decorator_1 = __webpack_require__(45);
+const cashfree_service_1 = __webpack_require__(223);
+const cashfree_dto_1 = __webpack_require__(225);
 let CashfreeController = class CashfreeController {
     constructor(cashfreeService) {
         this.cashfreeService = cashfreeService;
@@ -22865,7 +24211,7 @@ exports.CashfreeController = CashfreeController = __decorate([
 
 
 /***/ }),
-/* 220 */
+/* 225 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22963,7 +24309,7 @@ __decorate([
 
 
 /***/ }),
-/* 221 */
+/* 226 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22984,13 +24330,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.OrdersController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const orders_service_1 = __webpack_require__(222);
-const create_order_dto_1 = __webpack_require__(224);
-const dispatch_order_dto_1 = __webpack_require__(225);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const orders_service_1 = __webpack_require__(227);
+const create_order_dto_1 = __webpack_require__(229);
+const dispatch_order_dto_1 = __webpack_require__(230);
 const STAFF_ROLES = [client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR];
 let OrdersController = class OrdersController {
     constructor(ordersService) {
@@ -23050,7 +24396,7 @@ let OrdersController = class OrdersController {
 };
 exports.OrdersController = OrdersController;
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, ...STAFF_ROLES),
     (0, common_1.Post)(),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
@@ -23059,7 +24405,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "create", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, ...STAFF_ROLES),
     (0, common_1.Get)('mine'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
@@ -23126,7 +24472,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], OrdersController.prototype, "getInvoiceHtml", null);
 __decorate([
-    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.CUSTOMER, client_1.Role.FARMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, ...STAFF_ROLES),
     (0, common_1.Post)(':id/cashfree/initiate'),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
@@ -23206,7 +24552,7 @@ exports.OrdersController = OrdersController = __decorate([
 
 
 /***/ }),
-/* 222 */
+/* 227 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23226,15 +24572,15 @@ const crypto_1 = __webpack_require__(23);
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const notifications_service_1 = __webpack_require__(75);
-const coupons_service_1 = __webpack_require__(187);
+const notifications_service_1 = __webpack_require__(77);
+const coupons_service_1 = __webpack_require__(192);
 const wallet_service_1 = __webpack_require__(32);
 const app_settings_service_1 = __webpack_require__(30);
-const phonepe_service_1 = __webpack_require__(211);
-const shiprocket_service_1 = __webpack_require__(214);
-const cashfree_service_1 = __webpack_require__(218);
-const upi_util_1 = __webpack_require__(200);
-const billing_service_1 = __webpack_require__(223);
+const phonepe_service_1 = __webpack_require__(216);
+const shiprocket_service_1 = __webpack_require__(219);
+const cashfree_service_1 = __webpack_require__(223);
+const upi_util_1 = __webpack_require__(205);
+const billing_service_1 = __webpack_require__(228);
 const DETAIL_INCLUDE = {
     items: { include: { product: { select: { id: true, name: true, imageUrl: true, categorySlug: true, weightKg: true, isCodAllowed: true, gstPercentage: true } }, sellerStore: true } },
     subOrders: { include: { sellerStore: { select: { id: true, storeName: true, slug: true, sellerType: true, rtoBearer: true, rtoSharedVendorRatio: true, gstin: true, commissionRate: true } } } },
@@ -23258,6 +24604,9 @@ let OrdersService = class OrdersService {
         this.billingService = billingService;
     }
     async create(customer, dto) {
+        const staffRoles = [client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR];
+        const isStaff = staffRoles.includes(customer.role);
+        const targetCustomerId = (isStaff && dto.customerId) ? dto.customerId : customer.id;
         const productIds = dto.items.map((i) => i.productId);
         const products = await this.prisma.product.findMany({
             where: { id: { in: productIds }, isActive: true },
@@ -23267,7 +24616,10 @@ let OrdersService = class OrdersService {
         let totalWeightKg = 0;
         let anyCodDisabled = false;
         const deliveryAddressStr = dto.deliveryAddress || '';
-        const customerUser = await this.prisma.user.findUnique({ where: { id: customer.id } });
+        const customerUser = await this.prisma.user.findUnique({ where: { id: targetCustomerId } });
+        if (!customerUser) {
+            throw new common_1.NotFoundException(`Customer account not found.`);
+        }
         const customerState = customerUser?.state?.trim().toLowerCase() || '';
         for (const item of dto.items) {
             const product = productMap.get(item.productId);
@@ -23305,7 +24657,7 @@ let OrdersService = class OrdersService {
         let platformExpense = false;
         let totalWalletDeduction = 0;
         if (dto.useWalletBalance) {
-            const walletBalance = await this.walletService.getBalance(customer.id);
+            const walletBalance = await this.walletService.getBalance(targetCustomerId);
             if (walletBalance > 0) {
                 const settings = await this.appSettingsService.get();
                 const taxEnabled = settings.walletTaxEnabled ?? true;
@@ -23328,7 +24680,7 @@ let OrdersService = class OrdersService {
         const order = await this.prisma.$transaction(async (tx) => {
             const created = await tx.customerOrder.create({
                 data: {
-                    customerId: customer.id,
+                    customerId: targetCustomerId,
                     orderNumber: generateOrderNumber(),
                     totalAmount,
                     deliveryAddress: dto.deliveryAddress,
@@ -23364,7 +24716,7 @@ let OrdersService = class OrdersService {
                 await tx.couponRedemption.create({
                     data: {
                         couponId: couponResult.coupon.id,
-                        customerId: customer.id,
+                        customerId: targetCustomerId,
                         orderId: created.id,
                         orderAmount: subtotal,
                         discountAmount,
@@ -23373,7 +24725,7 @@ let OrdersService = class OrdersService {
                 });
             }
             if (walletDeduction > 0) {
-                await this.walletService.debit(customer.id, walletDeduction, `Paid for Order #${created.orderNumber}`);
+                await this.walletService.debit(targetCustomerId, walletDeduction, `Paid for Order #${created.orderNumber}`);
             }
             const vendorGroupMap = new Map();
             for (const item of dto.items) {
@@ -23414,7 +24766,7 @@ let OrdersService = class OrdersService {
             return created;
         });
         this.billingService.createInvoicesForOrder(order.id).catch((err) => console.warn('Billing & GST Invoice auto-generation notice:', err));
-        this.notifyCustomer(customer.id, '🛒 Order Booked Successfully', `Your FarmsKing Order #${order.orderNumber} of ₹${order.totalAmount} has been booked successfully.`, order.id, 'ORDER_PLACED_SMS').catch((err) => console.warn('Order booking SMS notification notice:', err));
+        this.notifyCustomer(targetCustomerId, '🛒 Order Booked Successfully', `Your FarmsKing Order #${order.orderNumber} of ₹${order.totalAmount} has been booked successfully.`, order.id, 'ORDER_PLACED_SMS').catch((err) => console.warn('Order booking SMS notification notice:', err));
         return order;
     }
     async triggerShiprocketSubOrders(orderId) {
@@ -23526,7 +24878,8 @@ let OrdersService = class OrdersService {
     }
     async initiateCashfreePayment(user, id) {
         const order = await this.findOneOrThrow(user, id);
-        if (order.customerId !== user.id) {
+        const staffRoles = [client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR];
+        if (order.customerId !== user.id && !staffRoles.includes(user.role)) {
             throw new common_1.ForbiddenException('You cannot pay for this order.');
         }
         if (order.paymentStatus === client_1.OrderPaymentStatus.PAID) {
@@ -23780,7 +25133,7 @@ exports.OrdersService = OrdersService = __decorate([
 
 
 /***/ }),
-/* 223 */
+/* 228 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24157,7 +25510,7 @@ exports.BillingService = BillingService = __decorate([
 
 
 /***/ }),
-/* 224 */
+/* 229 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24173,7 +25526,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CreateOrderDto = exports.OrderItemInputDto = void 0;
-const class_transformer_1 = __webpack_require__(142);
+const class_transformer_1 = __webpack_require__(146);
 const class_validator_1 = __webpack_require__(37);
 const client_1 = __webpack_require__(13);
 class OrderItemInputDto {
@@ -24217,10 +25570,15 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Boolean)
 ], CreateOrderDto.prototype, "useWalletBalance", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], CreateOrderDto.prototype, "customerId", void 0);
 
 
 /***/ }),
-/* 225 */
+/* 230 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24252,7 +25610,7 @@ __decorate([
 
 
 /***/ }),
-/* 226 */
+/* 231 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24265,12 +25623,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PlanPaymentsModule = void 0;
 const common_1 = __webpack_require__(2);
-const advisor_assignment_module_1 = __webpack_require__(72);
-const plan_renewal_module_1 = __webpack_require__(197);
-const notifications_module_1 = __webpack_require__(73);
-const app_settings_module_1 = __webpack_require__(49);
-const plan_payments_controller_1 = __webpack_require__(227);
-const plan_payments_service_1 = __webpack_require__(228);
+const advisor_assignment_module_1 = __webpack_require__(74);
+const plan_renewal_module_1 = __webpack_require__(202);
+const notifications_module_1 = __webpack_require__(75);
+const app_settings_module_1 = __webpack_require__(50);
+const plan_payments_controller_1 = __webpack_require__(232);
+const plan_payments_service_1 = __webpack_require__(233);
 let PlanPaymentsModule = class PlanPaymentsModule {
 };
 exports.PlanPaymentsModule = PlanPaymentsModule;
@@ -24284,7 +25642,7 @@ exports.PlanPaymentsModule = PlanPaymentsModule = __decorate([
 
 
 /***/ }),
-/* 227 */
+/* 232 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24305,13 +25663,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PlanPaymentsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const plan_payments_service_1 = __webpack_require__(228);
-const submit_plan_payment_dto_1 = __webpack_require__(229);
-const reject_plan_payment_dto_1 = __webpack_require__(230);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const plan_payments_service_1 = __webpack_require__(233);
+const submit_plan_payment_dto_1 = __webpack_require__(234);
+const reject_plan_payment_dto_1 = __webpack_require__(235);
 let PlanPaymentsController = class PlanPaymentsController {
     constructor(planPaymentsService) {
         this.planPaymentsService = planPaymentsService;
@@ -24397,7 +25755,7 @@ exports.PlanPaymentsController = PlanPaymentsController = __decorate([
 
 
 /***/ }),
-/* 228 */
+/* 233 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24416,11 +25774,11 @@ exports.PlanPaymentsService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const advisor_assignment_service_1 = __webpack_require__(77);
-const plan_renewal_service_1 = __webpack_require__(199);
-const notifications_service_1 = __webpack_require__(75);
-const auth_user_util_1 = __webpack_require__(78);
-const upi_util_1 = __webpack_require__(200);
+const advisor_assignment_service_1 = __webpack_require__(79);
+const plan_renewal_service_1 = __webpack_require__(204);
+const notifications_service_1 = __webpack_require__(77);
+const auth_user_util_1 = __webpack_require__(80);
+const upi_util_1 = __webpack_require__(205);
 const app_settings_service_1 = __webpack_require__(30);
 const DETAIL_INCLUDE = {
     farmer: { select: { id: true, name: true, mobile: true, kingId: true } },
@@ -24564,7 +25922,7 @@ exports.PlanPaymentsService = PlanPaymentsService = __decorate([
 
 
 /***/ }),
-/* 229 */
+/* 234 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24592,7 +25950,7 @@ __decorate([
 
 
 /***/ }),
-/* 230 */
+/* 235 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24620,7 +25978,7 @@ __decorate([
 
 
 /***/ }),
-/* 231 */
+/* 236 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24633,14 +25991,14 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FarmerPlanPaymentsModule = void 0;
 const common_1 = __webpack_require__(2);
-const advisor_assignment_module_1 = __webpack_require__(72);
-const notifications_module_1 = __webpack_require__(73);
-const app_settings_module_1 = __webpack_require__(49);
-const farmer_plans_module_1 = __webpack_require__(71);
-const wallet_module_1 = __webpack_require__(54);
-const cashfree_module_1 = __webpack_require__(217);
-const farmer_plan_payments_controller_1 = __webpack_require__(232);
-const farmer_plan_payments_service_1 = __webpack_require__(233);
+const advisor_assignment_module_1 = __webpack_require__(74);
+const notifications_module_1 = __webpack_require__(75);
+const app_settings_module_1 = __webpack_require__(50);
+const farmer_plans_module_1 = __webpack_require__(73);
+const wallet_module_1 = __webpack_require__(55);
+const cashfree_module_1 = __webpack_require__(222);
+const farmer_plan_payments_controller_1 = __webpack_require__(237);
+const farmer_plan_payments_service_1 = __webpack_require__(238);
 let FarmerPlanPaymentsModule = class FarmerPlanPaymentsModule {
 };
 exports.FarmerPlanPaymentsModule = FarmerPlanPaymentsModule;
@@ -24654,7 +26012,7 @@ exports.FarmerPlanPaymentsModule = FarmerPlanPaymentsModule = __decorate([
 
 
 /***/ }),
-/* 232 */
+/* 237 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24675,14 +26033,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FarmerPlanPaymentsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const farmer_plan_payments_service_1 = __webpack_require__(233);
-const initiate_farmer_plan_payment_dto_1 = __webpack_require__(234);
-const submit_farmer_plan_payment_dto_1 = __webpack_require__(235);
-const reject_farmer_plan_payment_dto_1 = __webpack_require__(236);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const farmer_plan_payments_service_1 = __webpack_require__(238);
+const initiate_farmer_plan_payment_dto_1 = __webpack_require__(239);
+const submit_farmer_plan_payment_dto_1 = __webpack_require__(240);
+const reject_farmer_plan_payment_dto_1 = __webpack_require__(241);
 let FarmerPlanPaymentsController = class FarmerPlanPaymentsController {
     constructor(farmerPlanPaymentsService) {
         this.farmerPlanPaymentsService = farmerPlanPaymentsService;
@@ -24769,7 +26127,7 @@ exports.FarmerPlanPaymentsController = FarmerPlanPaymentsController = __decorate
 
 
 /***/ }),
-/* 233 */
+/* 238 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24788,13 +26146,13 @@ exports.FarmerPlanPaymentsService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const advisor_assignment_service_1 = __webpack_require__(77);
-const notifications_service_1 = __webpack_require__(75);
+const advisor_assignment_service_1 = __webpack_require__(79);
+const notifications_service_1 = __webpack_require__(77);
 const app_settings_service_1 = __webpack_require__(30);
-const farmer_plans_service_1 = __webpack_require__(82);
-const auth_user_util_1 = __webpack_require__(78);
+const farmer_plans_service_1 = __webpack_require__(84);
+const auth_user_util_1 = __webpack_require__(80);
 const wallet_service_1 = __webpack_require__(32);
-const cashfree_service_1 = __webpack_require__(218);
+const cashfree_service_1 = __webpack_require__(223);
 const DETAIL_INCLUDE = {
     farmer: { select: { id: true, name: true, mobile: true, kingId: true } },
 };
@@ -24985,7 +26343,7 @@ exports.FarmerPlanPaymentsService = FarmerPlanPaymentsService = __decorate([
 
 
 /***/ }),
-/* 234 */
+/* 239 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -25035,7 +26393,7 @@ __decorate([
 
 
 /***/ }),
-/* 235 */
+/* 240 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -25068,7 +26426,7 @@ __decorate([
 
 
 /***/ }),
-/* 236 */
+/* 241 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -25096,7 +26454,7 @@ __decorate([
 
 
 /***/ }),
-/* 237 */
+/* 242 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -25109,8 +26467,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PartnerAssignmentModule = void 0;
 const common_1 = __webpack_require__(2);
-const partner_assignment_controller_1 = __webpack_require__(238);
-const partner_assignment_service_1 = __webpack_require__(239);
+const partner_assignment_controller_1 = __webpack_require__(243);
+const partner_assignment_service_1 = __webpack_require__(244);
 let PartnerAssignmentModule = class PartnerAssignmentModule {
 };
 exports.PartnerAssignmentModule = PartnerAssignmentModule;
@@ -25123,7 +26481,7 @@ exports.PartnerAssignmentModule = PartnerAssignmentModule = __decorate([
 
 
 /***/ }),
-/* 238 */
+/* 243 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -25144,11 +26502,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PartnerAssignmentController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const partner_assignment_service_1 = __webpack_require__(239);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const partner_assignment_service_1 = __webpack_require__(244);
 let PartnerAssignmentController = class PartnerAssignmentController {
     constructor(partnerAssignmentService) {
         this.partnerAssignmentService = partnerAssignmentService;
@@ -25185,7 +26543,7 @@ exports.PartnerAssignmentController = PartnerAssignmentController = __decorate([
 
 
 /***/ }),
-/* 239 */
+/* 244 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -25234,7 +26592,7 @@ exports.PartnerAssignmentService = PartnerAssignmentService = __decorate([
 
 
 /***/ }),
-/* 240 */
+/* 245 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -25248,10 +26606,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GardenerPlansModule = void 0;
 const common_1 = __webpack_require__(2);
 const prisma_module_1 = __webpack_require__(16);
-const app_settings_module_1 = __webpack_require__(49);
-const cashfree_module_1 = __webpack_require__(217);
-const gardener_plans_service_1 = __webpack_require__(241);
-const gardener_plans_controller_1 = __webpack_require__(242);
+const app_settings_module_1 = __webpack_require__(50);
+const cashfree_module_1 = __webpack_require__(222);
+const gardener_plans_service_1 = __webpack_require__(246);
+const gardener_plans_controller_1 = __webpack_require__(247);
 let GardenerPlansModule = class GardenerPlansModule {
 };
 exports.GardenerPlansModule = GardenerPlansModule;
@@ -25266,7 +26624,7 @@ exports.GardenerPlansModule = GardenerPlansModule = __decorate([
 
 
 /***/ }),
-/* 241 */
+/* 246 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -25287,7 +26645,7 @@ const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
 const app_settings_service_1 = __webpack_require__(30);
-const cashfree_service_1 = __webpack_require__(218);
+const cashfree_service_1 = __webpack_require__(223);
 exports.FREE_PLAN_MAX_PLANTS = 5;
 exports.EXPIRY_WARNING_DAYS = 5;
 exports.GRACE_PERIOD_DAYS = 2;
@@ -25540,7 +26898,7 @@ exports.GardenerPlansService = GardenerPlansService = __decorate([
 
 
 /***/ }),
-/* 242 */
+/* 247 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -25561,14 +26919,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GardenerPlansController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const gardener_plans_service_1 = __webpack_require__(241);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const gardener_plans_service_1 = __webpack_require__(246);
 const client_2 = __webpack_require__(13);
-const create_gardener_plan_coupon_dto_1 = __webpack_require__(243);
-const redeem_gardener_plan_coupon_dto_1 = __webpack_require__(244);
+const create_gardener_plan_coupon_dto_1 = __webpack_require__(248);
+const redeem_gardener_plan_coupon_dto_1 = __webpack_require__(249);
 let GardenerPlansController = class GardenerPlansController {
     constructor(gardenerPlansService) {
         this.gardenerPlansService = gardenerPlansService;
@@ -25673,7 +27031,7 @@ exports.GardenerPlansController = GardenerPlansController = __decorate([
 
 
 /***/ }),
-/* 243 */
+/* 248 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -25716,7 +27074,7 @@ __decorate([
 
 
 /***/ }),
-/* 244 */
+/* 249 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -25743,7 +27101,7 @@ __decorate([
 
 
 /***/ }),
-/* 245 */
+/* 250 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -25757,9 +27115,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GardensModule = void 0;
 const common_1 = __webpack_require__(2);
 const prisma_module_1 = __webpack_require__(16);
-const gardener_plans_module_1 = __webpack_require__(240);
-const gardens_service_1 = __webpack_require__(246);
-const gardens_controller_1 = __webpack_require__(247);
+const gardener_plans_module_1 = __webpack_require__(245);
+const gardens_service_1 = __webpack_require__(251);
+const gardens_controller_1 = __webpack_require__(252);
 let GardensModule = class GardensModule {
 };
 exports.GardensModule = GardensModule;
@@ -25773,7 +27131,7 @@ exports.GardensModule = GardensModule = __decorate([
 
 
 /***/ }),
-/* 246 */
+/* 251 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -25792,7 +27150,7 @@ exports.GardensService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const gardener_plans_service_1 = __webpack_require__(241);
+const gardener_plans_service_1 = __webpack_require__(246);
 let GardensService = class GardensService {
     constructor(prisma, gardenerPlansService) {
         this.prisma = prisma;
@@ -25879,7 +27237,7 @@ exports.GardensService = GardensService = __decorate([
 
 
 /***/ }),
-/* 247 */
+/* 252 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -25900,14 +27258,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GardensController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const gardens_service_1 = __webpack_require__(246);
-const create_garden_dto_1 = __webpack_require__(248);
-const create_plant_dto_1 = __webpack_require__(249);
-const create_garden_expense_dto_1 = __webpack_require__(250);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const gardens_service_1 = __webpack_require__(251);
+const create_garden_dto_1 = __webpack_require__(253);
+const create_plant_dto_1 = __webpack_require__(254);
+const create_garden_expense_dto_1 = __webpack_require__(255);
 let GardensController = class GardensController {
     constructor(gardensService) {
         this.gardensService = gardensService;
@@ -26010,7 +27368,7 @@ exports.GardensController = GardensController = __decorate([
 
 
 /***/ }),
-/* 248 */
+/* 253 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -26047,7 +27405,7 @@ __decorate([
 
 
 /***/ }),
-/* 249 */
+/* 254 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -26089,7 +27447,7 @@ __decorate([
 
 
 /***/ }),
-/* 250 */
+/* 255 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -26150,7 +27508,7 @@ __decorate([
 
 
 /***/ }),
-/* 251 */
+/* 256 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -26163,9 +27521,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SaleBillsModule = void 0;
 const common_1 = __webpack_require__(2);
-const sale_bills_controller_1 = __webpack_require__(252);
-const sale_bills_service_1 = __webpack_require__(253);
-const chat_module_1 = __webpack_require__(120);
+const sale_bills_controller_1 = __webpack_require__(257);
+const sale_bills_service_1 = __webpack_require__(258);
+const chat_module_1 = __webpack_require__(124);
 let SaleBillsModule = class SaleBillsModule {
 };
 exports.SaleBillsModule = SaleBillsModule;
@@ -26180,7 +27538,7 @@ exports.SaleBillsModule = SaleBillsModule = __decorate([
 
 
 /***/ }),
-/* 252 */
+/* 257 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -26201,12 +27559,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SaleBillsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const sale_bills_service_1 = __webpack_require__(253);
-const create_sale_bill_dto_1 = __webpack_require__(254);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const sale_bills_service_1 = __webpack_require__(258);
+const create_sale_bill_dto_1 = __webpack_require__(259);
 let SaleBillsController = class SaleBillsController {
     constructor(saleBillsService) {
         this.saleBillsService = saleBillsService;
@@ -26281,14 +27639,14 @@ __decorate([
 exports.SaleBillsController = SaleBillsController = __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     (0, common_1.UsePipes)(new common_1.ValidationPipe({ whitelist: false, forbidNonWhitelisted: false, transform: true })),
-    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.OPERATOR, client_1.Role.SUPERVISOR),
     (0, common_1.Controller)('sale-bills'),
     __metadata("design:paramtypes", [typeof (_a = typeof sale_bills_service_1.SaleBillsService !== "undefined" && sale_bills_service_1.SaleBillsService) === "function" ? _a : Object])
 ], SaleBillsController);
 
 
 /***/ }),
-/* 253 */
+/* 258 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -26306,13 +27664,15 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SaleBillsService = void 0;
 const common_1 = __webpack_require__(2);
 const prisma_service_1 = __webpack_require__(12);
-const chat_gateway_1 = __webpack_require__(110);
+const chat_gateway_1 = __webpack_require__(112);
+const effective_farmer_util_1 = __webpack_require__(63);
 let SaleBillsService = class SaleBillsService {
     constructor(prisma, chatGateway) {
         this.prisma = prisma;
         this.chatGateway = chatGateway;
     }
     async nextBillNo(user) {
+        const farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
         const now = new Date();
         const fullYear = now.getFullYear();
         const yy = String(fullYear).slice(-2);
@@ -26322,7 +27682,7 @@ let SaleBillsService = class SaleBillsService {
         const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
         const countThisMonth = await this.prisma.saleBill.count({
             where: {
-                farmerId: user.id,
+                farmerId,
                 createdAt: {
                     gte: startOfMonth,
                     lte: endOfMonth,
@@ -26333,22 +27693,23 @@ let SaleBillsService = class SaleBillsService {
         let paddedSeq = String(nextSeq).padStart(2, '0');
         let candidate = `${prefix}-${paddedSeq}`;
         let exists = await this.prisma.saleBill.findFirst({
-            where: { farmerId: user.id, billNo: candidate },
+            where: { farmerId, billNo: candidate },
         });
         while (exists) {
             nextSeq++;
             paddedSeq = String(nextSeq).padStart(2, '0');
             candidate = `${prefix}-${paddedSeq}`;
             exists = await this.prisma.saleBill.findFirst({
-                where: { farmerId: user.id, billNo: candidate },
+                where: { farmerId, billNo: candidate },
             });
         }
         return candidate;
     }
     async create(user, dto) {
+        const farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
         if (dto.billNo) {
             const existing = await this.prisma.saleBill.findFirst({
-                where: { farmerId: user.id, billNo: dto.billNo },
+                where: { farmerId, billNo: dto.billNo },
             });
             if (existing) {
                 return this.update(user, existing.id, dto);
@@ -26365,7 +27726,7 @@ let SaleBillsService = class SaleBillsService {
             : dto.items;
         const bill = await this.prisma.saleBill.create({
             data: {
-                farmerId: user.id,
+                farmerId,
                 billNo,
                 farmerName: dto.farmerName,
                 partyId: dto.partyId,
@@ -26428,6 +27789,7 @@ let SaleBillsService = class SaleBillsService {
         return updated;
     }
     async findOneOrThrow(user, id) {
+        const farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
         let bill = null;
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
         if (isUuid) {
@@ -26435,13 +27797,13 @@ let SaleBillsService = class SaleBillsService {
         }
         if (!bill) {
             bill = await this.prisma.saleBill.findFirst({
-                where: { farmerId: user.id, billNo: id },
+                where: { farmerId, billNo: id },
             });
         }
         if (!bill) {
             bill = await this.prisma.saleBill.findFirst({
                 where: {
-                    farmerId: user.id,
+                    farmerId,
                     billNo: { equals: id, mode: 'insensitive' },
                 },
             });
@@ -26449,19 +27811,21 @@ let SaleBillsService = class SaleBillsService {
         if (!bill) {
             throw new common_1.NotFoundException('Bill not found.');
         }
-        if (bill.farmerId !== user.id) {
+        if (bill.farmerId !== farmerId) {
             throw new common_1.ForbiddenException('This bill does not belong to you.');
         }
         return bill;
     }
     async listMine(user) {
+        const farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
         return this.prisma.saleBill.findMany({
-            where: { farmerId: user.id },
+            where: { farmerId },
             orderBy: { createdAt: 'desc' },
         });
     }
     async countMine(user) {
-        const count = await this.prisma.saleBill.count({ where: { farmerId: user.id } });
+        const farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
+        const count = await this.prisma.saleBill.count({ where: { farmerId } });
         return { count };
     }
     async remove(user, id) {
@@ -26482,7 +27846,7 @@ exports.SaleBillsService = SaleBillsService = __decorate([
 
 
 /***/ }),
-/* 254 */
+/* 259 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -26497,7 +27861,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CreateSaleBillDto = void 0;
-const class_transformer_1 = __webpack_require__(142);
+const class_transformer_1 = __webpack_require__(146);
 const class_validator_1 = __webpack_require__(37);
 class SaleBillItemDto {
     constructor() {
@@ -26671,7 +28035,7 @@ __decorate([
 
 
 /***/ }),
-/* 255 */
+/* 260 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -26684,8 +28048,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PaymentReceiptsModule = void 0;
 const common_1 = __webpack_require__(2);
-const payment_receipts_controller_1 = __webpack_require__(256);
-const payment_receipts_service_1 = __webpack_require__(257);
+const payment_receipts_controller_1 = __webpack_require__(261);
+const payment_receipts_service_1 = __webpack_require__(262);
 let PaymentReceiptsModule = class PaymentReceiptsModule {
 };
 exports.PaymentReceiptsModule = PaymentReceiptsModule;
@@ -26698,7 +28062,7 @@ exports.PaymentReceiptsModule = PaymentReceiptsModule = __decorate([
 
 
 /***/ }),
-/* 256 */
+/* 261 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -26719,11 +28083,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PaymentReceiptsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const payment_receipts_service_1 = __webpack_require__(257);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const payment_receipts_service_1 = __webpack_require__(262);
 let PaymentReceiptsController = class PaymentReceiptsController {
     constructor(paymentReceiptsService) {
         this.paymentReceiptsService = paymentReceiptsService;
@@ -26760,7 +28124,7 @@ exports.PaymentReceiptsController = PaymentReceiptsController = __decorate([
 
 
 /***/ }),
-/* 257 */
+/* 262 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -26805,7 +28169,7 @@ exports.PaymentReceiptsService = PaymentReceiptsService = __decorate([
 
 
 /***/ }),
-/* 258 */
+/* 263 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -26818,9 +28182,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BasicPlanCouponsModule = void 0;
 const common_1 = __webpack_require__(2);
-const basic_plan_coupons_controller_1 = __webpack_require__(259);
-const basic_plan_coupons_service_1 = __webpack_require__(260);
-const wallet_module_1 = __webpack_require__(54);
+const basic_plan_coupons_controller_1 = __webpack_require__(264);
+const basic_plan_coupons_service_1 = __webpack_require__(265);
+const wallet_module_1 = __webpack_require__(55);
 let BasicPlanCouponsModule = class BasicPlanCouponsModule {
 };
 exports.BasicPlanCouponsModule = BasicPlanCouponsModule;
@@ -26834,7 +28198,7 @@ exports.BasicPlanCouponsModule = BasicPlanCouponsModule = __decorate([
 
 
 /***/ }),
-/* 259 */
+/* 264 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -26855,12 +28219,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BasicPlanCouponsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const basic_plan_coupons_service_1 = __webpack_require__(260);
-const create_basic_plan_coupon_dto_1 = __webpack_require__(261);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const basic_plan_coupons_service_1 = __webpack_require__(265);
+const create_basic_plan_coupon_dto_1 = __webpack_require__(266);
 let BasicPlanCouponsController = class BasicPlanCouponsController {
     constructor(basicPlanCouponsService) {
         this.basicPlanCouponsService = basicPlanCouponsService;
@@ -26942,7 +28306,7 @@ exports.BasicPlanCouponsController = BasicPlanCouponsController = __decorate([
 
 
 /***/ }),
-/* 260 */
+/* 265 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27072,7 +28436,7 @@ exports.BasicPlanCouponsService = BasicPlanCouponsService = __decorate([
 
 
 /***/ }),
-/* 261 */
+/* 266 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27099,7 +28463,7 @@ __decorate([
 
 
 /***/ }),
-/* 262 */
+/* 267 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27112,8 +28476,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CouponSettingsModule = void 0;
 const common_1 = __webpack_require__(2);
-const coupon_settings_controller_1 = __webpack_require__(263);
-const coupon_settings_service_1 = __webpack_require__(264);
+const coupon_settings_controller_1 = __webpack_require__(268);
+const coupon_settings_service_1 = __webpack_require__(269);
 let CouponSettingsModule = class CouponSettingsModule {
 };
 exports.CouponSettingsModule = CouponSettingsModule;
@@ -27127,7 +28491,7 @@ exports.CouponSettingsModule = CouponSettingsModule = __decorate([
 
 
 /***/ }),
-/* 263 */
+/* 268 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27148,12 +28512,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CouponSettingsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const coupon_settings_service_1 = __webpack_require__(264);
-const update_coupon_settings_dto_1 = __webpack_require__(265);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const coupon_settings_service_1 = __webpack_require__(269);
+const update_coupon_settings_dto_1 = __webpack_require__(270);
 let CouponSettingsController = class CouponSettingsController {
     constructor(couponSettingsService) {
         this.couponSettingsService = couponSettingsService;
@@ -27189,7 +28553,7 @@ exports.CouponSettingsController = CouponSettingsController = __decorate([
 
 
 /***/ }),
-/* 264 */
+/* 269 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27261,7 +28625,7 @@ exports.CouponSettingsService = CouponSettingsService = __decorate([
 
 
 /***/ }),
-/* 265 */
+/* 270 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27397,7 +28761,7 @@ __decorate([
 
 
 /***/ }),
-/* 266 */
+/* 271 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27410,10 +28774,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CallRequestsModule = void 0;
 const common_1 = __webpack_require__(2);
-const notifications_module_1 = __webpack_require__(73);
-const call_requests_controller_1 = __webpack_require__(267);
-const call_requests_service_1 = __webpack_require__(268);
-const chat_module_1 = __webpack_require__(120);
+const notifications_module_1 = __webpack_require__(75);
+const call_requests_controller_1 = __webpack_require__(272);
+const call_requests_service_1 = __webpack_require__(273);
+const chat_module_1 = __webpack_require__(124);
 let CallRequestsModule = class CallRequestsModule {
 };
 exports.CallRequestsModule = CallRequestsModule;
@@ -27428,7 +28792,7 @@ exports.CallRequestsModule = CallRequestsModule = __decorate([
 
 
 /***/ }),
-/* 267 */
+/* 272 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27449,12 +28813,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CallRequestsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const call_requests_service_1 = __webpack_require__(268);
-const resolve_call_request_dto_1 = __webpack_require__(269);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const call_requests_service_1 = __webpack_require__(273);
+const resolve_call_request_dto_1 = __webpack_require__(274);
 let CallRequestsController = class CallRequestsController {
     constructor(callRequestsService) {
         this.callRequestsService = callRequestsService;
@@ -27515,7 +28879,7 @@ exports.CallRequestsController = CallRequestsController = __decorate([
 
 
 /***/ }),
-/* 268 */
+/* 273 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27537,8 +28901,8 @@ exports.CallRequestsService = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const prisma_service_1 = __webpack_require__(12);
-const notifications_service_1 = __webpack_require__(75);
-const chat_gateway_1 = __webpack_require__(110);
+const notifications_service_1 = __webpack_require__(77);
+const chat_gateway_1 = __webpack_require__(112);
 const SELECT = {
     farmer: { select: { id: true, name: true, mobile: true, kingId: true, photoUrl: true } },
     advisor: { select: { id: true, name: true, mobile: true } },
@@ -27641,7 +29005,7 @@ exports.CallRequestsService = CallRequestsService = __decorate([
 
 
 /***/ }),
-/* 269 */
+/* 274 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27668,7 +29032,7 @@ __decorate([
 
 
 /***/ }),
-/* 270 */
+/* 275 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27681,8 +29045,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AddressesModule = void 0;
 const common_1 = __webpack_require__(2);
-const addresses_controller_1 = __webpack_require__(271);
-const addresses_service_1 = __webpack_require__(272);
+const addresses_controller_1 = __webpack_require__(276);
+const addresses_service_1 = __webpack_require__(277);
 let AddressesModule = class AddressesModule {
 };
 exports.AddressesModule = AddressesModule;
@@ -27695,7 +29059,7 @@ exports.AddressesModule = AddressesModule = __decorate([
 
 
 /***/ }),
-/* 271 */
+/* 276 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27715,11 +29079,11 @@ var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AddressesController = void 0;
 const common_1 = __webpack_require__(2);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const current_user_decorator_1 = __webpack_require__(44);
-const addresses_service_1 = __webpack_require__(272);
-const create_address_dto_1 = __webpack_require__(273);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const current_user_decorator_1 = __webpack_require__(45);
+const addresses_service_1 = __webpack_require__(277);
+const create_address_dto_1 = __webpack_require__(278);
 let AddressesController = class AddressesController {
     constructor(addressesService) {
         this.addressesService = addressesService;
@@ -27778,7 +29142,7 @@ exports.AddressesController = AddressesController = __decorate([
 
 
 /***/ }),
-/* 272 */
+/* 277 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27844,7 +29208,7 @@ exports.AddressesService = AddressesService = __decorate([
 
 
 /***/ }),
-/* 273 */
+/* 278 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27899,7 +29263,7 @@ __decorate([
 
 
 /***/ }),
-/* 274 */
+/* 279 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27912,8 +29276,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuditModule = void 0;
 const common_1 = __webpack_require__(2);
-const audit_controller_1 = __webpack_require__(275);
-const audit_service_1 = __webpack_require__(276);
+const audit_controller_1 = __webpack_require__(280);
+const audit_service_1 = __webpack_require__(281);
 let AuditModule = class AuditModule {
 };
 exports.AuditModule = AuditModule;
@@ -27926,7 +29290,7 @@ exports.AuditModule = AuditModule = __decorate([
 
 
 /***/ }),
-/* 275 */
+/* 280 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -27947,11 +29311,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuditController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const audit_service_1 = __webpack_require__(276);
-const list_audit_log_query_dto_1 = __webpack_require__(277);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const audit_service_1 = __webpack_require__(281);
+const list_audit_log_query_dto_1 = __webpack_require__(282);
 let AuditController = class AuditController {
     constructor(auditService) {
         this.auditService = auditService;
@@ -27977,7 +29341,7 @@ exports.AuditController = AuditController = __decorate([
 
 
 /***/ }),
-/* 276 */
+/* 281 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -28036,7 +29400,7 @@ exports.AuditService = AuditService = __decorate([
 
 
 /***/ }),
-/* 277 */
+/* 282 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -28051,7 +29415,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ListAuditLogQueryDto = void 0;
-const class_transformer_1 = __webpack_require__(142);
+const class_transformer_1 = __webpack_require__(146);
 const class_validator_1 = __webpack_require__(37);
 class ListAuditLogQueryDto {
 }
@@ -28093,7 +29457,7 @@ __decorate([
 
 
 /***/ }),
-/* 278 */
+/* 283 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -28106,8 +29470,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LabourModule = void 0;
 const common_1 = __webpack_require__(2);
-const labour_controller_1 = __webpack_require__(279);
-const labour_service_1 = __webpack_require__(280);
+const labour_controller_1 = __webpack_require__(284);
+const labour_service_1 = __webpack_require__(285);
 let LabourModule = class LabourModule {
 };
 exports.LabourModule = LabourModule;
@@ -28121,7 +29485,7 @@ exports.LabourModule = LabourModule = __decorate([
 
 
 /***/ }),
-/* 279 */
+/* 284 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -28142,15 +29506,16 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LabourController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const optional_jwt_auth_guard_1 = __webpack_require__(104);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const labour_service_1 = __webpack_require__(280);
-const create_labour_worker_dto_1 = __webpack_require__(281);
-const create_work_entry_dto_1 = __webpack_require__(282);
-const create_labour_payment_dto_1 = __webpack_require__(283);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const optional_jwt_auth_guard_1 = __webpack_require__(106);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const labour_service_1 = __webpack_require__(285);
+const create_labour_worker_dto_1 = __webpack_require__(286);
+const create_work_entry_dto_1 = __webpack_require__(287);
+const create_labour_payment_dto_1 = __webpack_require__(288);
+const effective_farmer_util_1 = __webpack_require__(63);
 let LabourController = class LabourController {
     constructor(labourService) {
         this.labourService = labourService;
@@ -28174,19 +29539,24 @@ let LabourController = class LabourController {
         return this.labourService.deleteWorker(user, id);
     }
     createWorkEntry(user, dto) {
-        return this.labourService.createWorkEntry(user.id, user.id, dto);
+        const farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
+        return this.labourService.createWorkEntry(farmerId, user.id, dto);
     }
     getWorkEntries(user, workerId) {
-        return this.labourService.getWorkEntries(user.id, workerId);
+        const farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
+        return this.labourService.getWorkEntries(farmerId, workerId);
     }
     createPayment(user, dto) {
-        return this.labourService.createPayment(user.id, user.id, dto);
+        const farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
+        return this.labourService.createPayment(farmerId, user.id, dto);
     }
     getPayments(user, workerId) {
-        return this.labourService.getPayments(user.id, workerId);
+        const farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
+        return this.labourService.getPayments(farmerId, workerId);
     }
     getWorkerStatement(user, workerId) {
-        return this.labourService.getWorkerStatement(user.id, workerId);
+        const farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
+        return this.labourService.getWorkerStatement(farmerId, workerId);
     }
 };
 exports.LabourController = LabourController;
@@ -28210,7 +29580,7 @@ __decorate([
 __decorate([
     (0, common_1.Post)('workers'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.LABOUR, client_1.Role.FARMER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.OPERATOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.LABOUR, client_1.Role.FARMER, client_1.Role.SUPERVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.OPERATOR),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -28220,7 +29590,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)('workers'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.LABOUR, client_1.Role.FARMER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.OPERATOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.LABOUR, client_1.Role.FARMER, client_1.Role.SUPERVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.OPERATOR),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -28229,7 +29599,7 @@ __decorate([
 __decorate([
     (0, common_1.Put)('workers/:id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.LABOUR, client_1.Role.FARMER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.OPERATOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.LABOUR, client_1.Role.FARMER, client_1.Role.SUPERVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.OPERATOR),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)()),
@@ -28240,7 +29610,7 @@ __decorate([
 __decorate([
     (0, common_1.Delete)('workers/:id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.LABOUR, client_1.Role.FARMER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.OPERATOR),
+    (0, roles_decorator_1.Roles)(client_1.Role.LABOUR, client_1.Role.FARMER, client_1.Role.SUPERVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN, client_1.Role.CUSTOMER, client_1.Role.GARDENER, client_1.Role.ADVISOR, client_1.Role.BUSINESS_PARTNER, client_1.Role.OPERATOR),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -28250,7 +29620,7 @@ __decorate([
 __decorate([
     (0, common_1.Post)('work-entries'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.SUPERVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -28260,7 +29630,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)('work-entries'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.SUPERVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Query)('workerId')),
     __metadata("design:type", Function),
@@ -28270,7 +29640,7 @@ __decorate([
 __decorate([
     (0, common_1.Post)('payments'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.SUPERVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -28280,7 +29650,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)('payments'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.SUPERVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Query)('workerId')),
     __metadata("design:type", Function),
@@ -28290,7 +29660,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)('statement/:workerId'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.Role.FARMER, client_1.Role.SUPERVISOR, client_1.Role.ADMIN, client_1.Role.SUPER_ADMIN),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __param(1, (0, common_1.Param)('workerId')),
     __metadata("design:type", Function),
@@ -28304,7 +29674,7 @@ exports.LabourController = LabourController = __decorate([
 
 
 /***/ }),
-/* 280 */
+/* 285 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -28358,6 +29728,7 @@ const prisma_service_1 = __webpack_require__(12);
 const client_1 = __webpack_require__(13);
 const argon2 = __importStar(__webpack_require__(14));
 const king_id_util_1 = __webpack_require__(22);
+const effective_farmer_util_1 = __webpack_require__(63);
 let LabourService = class LabourService {
     constructor(prisma) {
         this.prisma = prisma;
@@ -28448,7 +29819,7 @@ let LabourService = class LabourService {
         };
     }
     async createWorker(user, dto) {
-        let farmerId = user.id;
+        let farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
         if (user.role === client_1.Role.LABOUR) {
             const myWorkerRecord = await this.prisma.labourWorker.findFirst({
                 where: {
@@ -28489,15 +29860,16 @@ let LabourService = class LabourService {
                         passwordHash,
                         name: dto.name,
                         role: client_1.Role.LABOUR,
-                        roles: [client_1.Role.LABOUR],
+                        roles: [client_1.Role.LABOUR, client_1.Role.CUSTOMER],
                     },
                 });
             }
             else {
-                if (!linkedUser.roles.includes(client_1.Role.LABOUR)) {
+                const updatedRoles = Array.from(new Set([...linkedUser.roles, client_1.Role.LABOUR, client_1.Role.CUSTOMER]));
+                if (updatedRoles.length !== linkedUser.roles.length) {
                     await this.prisma.user.update({
                         where: { id: linkedUser.id },
-                        data: { roles: { push: client_1.Role.LABOUR } },
+                        data: { roles: updatedRoles },
                     });
                 }
             }
@@ -28533,7 +29905,7 @@ let LabourService = class LabourService {
         return worker;
     }
     async getWorkersForFarmer(user) {
-        let farmerId = user.id;
+        let farmerId = (0, effective_farmer_util_1.getEffectiveFarmerId)(user);
         if (user.role === client_1.Role.LABOUR) {
             const myWorkerRecord = await this.prisma.labourWorker.findFirst({
                 where: {
@@ -28591,14 +29963,16 @@ let LabourService = class LabourService {
                         passwordHash,
                         name: dto.name || existing.name,
                         role: client_1.Role.LABOUR,
-                        roles: [client_1.Role.LABOUR],
+                        roles: [client_1.Role.LABOUR, client_1.Role.CUSTOMER],
                     },
                 });
             }
             else {
+                const updatedRoles = Array.from(new Set([...linkedUser.roles, client_1.Role.LABOUR, client_1.Role.CUSTOMER]));
                 await this.prisma.user.update({
                     where: { id: linkedUser.id },
                     data: {
+                        roles: updatedRoles,
                         ...(dto.name && { name: dto.name.trim() }),
                         ...(dto.photoUrl !== undefined && { photoUrl: dto.photoUrl?.trim() || null }),
                     },
@@ -28917,7 +30291,7 @@ exports.LabourService = LabourService = __decorate([
 
 
 /***/ }),
-/* 281 */
+/* 286 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29029,7 +30403,7 @@ __decorate([
 
 
 /***/ }),
-/* 282 */
+/* 287 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29101,7 +30475,7 @@ __decorate([
 
 
 /***/ }),
-/* 283 */
+/* 288 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29150,7 +30524,7 @@ __decorate([
 
 
 /***/ }),
-/* 284 */
+/* 289 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29163,11 +30537,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AdminChatModule = void 0;
 const common_1 = __webpack_require__(2);
-const admin_chat_controller_1 = __webpack_require__(285);
-const admin_chat_service_1 = __webpack_require__(286);
+const admin_chat_controller_1 = __webpack_require__(290);
+const admin_chat_service_1 = __webpack_require__(291);
 const prisma_module_1 = __webpack_require__(16);
-const chat_module_1 = __webpack_require__(120);
-const notifications_module_1 = __webpack_require__(73);
+const chat_module_1 = __webpack_require__(124);
+const notifications_module_1 = __webpack_require__(75);
 let AdminChatModule = class AdminChatModule {
 };
 exports.AdminChatModule = AdminChatModule;
@@ -29182,7 +30556,7 @@ exports.AdminChatModule = AdminChatModule = __decorate([
 
 
 /***/ }),
-/* 285 */
+/* 290 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29202,11 +30576,11 @@ var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AdminChatController = void 0;
 const common_1 = __webpack_require__(2);
-const admin_chat_service_1 = __webpack_require__(286);
-const send_chat_message_dto_1 = __webpack_require__(287);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
+const admin_chat_service_1 = __webpack_require__(291);
+const send_chat_message_dto_1 = __webpack_require__(292);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
 const client_1 = __webpack_require__(13);
 let AdminChatController = class AdminChatController {
     constructor(adminChatService) {
@@ -29277,7 +30651,7 @@ exports.AdminChatController = AdminChatController = __decorate([
 
 
 /***/ }),
-/* 286 */
+/* 291 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29299,8 +30673,8 @@ exports.AdminChatService = void 0;
 const common_1 = __webpack_require__(2);
 const prisma_service_1 = __webpack_require__(12);
 const client_1 = __webpack_require__(13);
-const chat_gateway_1 = __webpack_require__(110);
-const notifications_service_1 = __webpack_require__(75);
+const chat_gateway_1 = __webpack_require__(112);
+const notifications_service_1 = __webpack_require__(77);
 let AdminChatService = class AdminChatService {
     constructor(prisma, chatGateway, notificationsService) {
         this.prisma = prisma;
@@ -29498,7 +30872,7 @@ exports.AdminChatService = AdminChatService = __decorate([
 
 
 /***/ }),
-/* 287 */
+/* 292 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29535,7 +30909,7 @@ __decorate([
 
 
 /***/ }),
-/* 288 */
+/* 293 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29548,9 +30922,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ReferralsModule = void 0;
 const common_1 = __webpack_require__(2);
-const referrals_service_1 = __webpack_require__(289);
-const referrals_controller_1 = __webpack_require__(290);
-const wallet_module_1 = __webpack_require__(54);
+const referrals_service_1 = __webpack_require__(294);
+const referrals_controller_1 = __webpack_require__(295);
+const wallet_module_1 = __webpack_require__(55);
 let ReferralsModule = class ReferralsModule {
 };
 exports.ReferralsModule = ReferralsModule;
@@ -29565,7 +30939,7 @@ exports.ReferralsModule = ReferralsModule = __decorate([
 
 
 /***/ }),
-/* 289 */
+/* 294 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29750,7 +31124,7 @@ exports.ReferralsService = ReferralsService = __decorate([
 
 
 /***/ }),
-/* 290 */
+/* 295 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29770,9 +31144,9 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ReferralsController = exports.LinkReferralDto = void 0;
 const common_1 = __webpack_require__(2);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const current_user_decorator_1 = __webpack_require__(44);
-const referrals_service_1 = __webpack_require__(289);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const current_user_decorator_1 = __webpack_require__(45);
+const referrals_service_1 = __webpack_require__(294);
 class LinkReferralDto {
 }
 exports.LinkReferralDto = LinkReferralDto;
@@ -29811,7 +31185,7 @@ exports.ReferralsController = ReferralsController = __decorate([
 
 
 /***/ }),
-/* 291 */
+/* 296 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29824,8 +31198,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.VoiceAIModule = void 0;
 const common_1 = __webpack_require__(2);
-const voice_ai_service_1 = __webpack_require__(292);
-const voice_ai_controller_1 = __webpack_require__(293);
+const voice_ai_service_1 = __webpack_require__(297);
+const voice_ai_controller_1 = __webpack_require__(298);
 let VoiceAIModule = class VoiceAIModule {
 };
 exports.VoiceAIModule = VoiceAIModule;
@@ -29839,7 +31213,7 @@ exports.VoiceAIModule = VoiceAIModule = __decorate([
 
 
 /***/ }),
-/* 292 */
+/* 297 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29909,7 +31283,7 @@ exports.VoiceAIService = VoiceAIService = __decorate([
 
 
 /***/ }),
-/* 293 */
+/* 298 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29929,9 +31303,9 @@ var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.VoiceAIController = void 0;
 const common_1 = __webpack_require__(2);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const current_user_decorator_1 = __webpack_require__(44);
-const voice_ai_service_1 = __webpack_require__(292);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const current_user_decorator_1 = __webpack_require__(45);
+const voice_ai_service_1 = __webpack_require__(297);
 let VoiceAIController = class VoiceAIController {
     constructor(voiceAIService) {
         this.voiceAIService = voiceAIService;
@@ -29967,7 +31341,7 @@ exports.VoiceAIController = VoiceAIController = __decorate([
 
 
 /***/ }),
-/* 294 */
+/* 299 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -29980,8 +31354,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SatelliteModule = void 0;
 const common_1 = __webpack_require__(2);
-const satellite_service_1 = __webpack_require__(295);
-const satellite_controller_1 = __webpack_require__(296);
+const satellite_service_1 = __webpack_require__(300);
+const satellite_controller_1 = __webpack_require__(301);
 let SatelliteModule = class SatelliteModule {
 };
 exports.SatelliteModule = SatelliteModule;
@@ -29995,7 +31369,7 @@ exports.SatelliteModule = SatelliteModule = __decorate([
 
 
 /***/ }),
-/* 295 */
+/* 300 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30054,7 +31428,7 @@ exports.SatelliteService = SatelliteService = __decorate([
 
 
 /***/ }),
-/* 296 */
+/* 301 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30074,8 +31448,8 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SatelliteController = void 0;
 const common_1 = __webpack_require__(2);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const satellite_service_1 = __webpack_require__(295);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const satellite_service_1 = __webpack_require__(300);
 let SatelliteController = class SatelliteController {
     constructor(satelliteService) {
         this.satelliteService = satelliteService;
@@ -30100,7 +31474,7 @@ exports.SatelliteController = SatelliteController = __decorate([
 
 
 /***/ }),
-/* 297 */
+/* 302 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30113,8 +31487,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MandiAIModule = void 0;
 const common_1 = __webpack_require__(2);
-const mandi_ai_service_1 = __webpack_require__(298);
-const mandi_ai_controller_1 = __webpack_require__(299);
+const mandi_ai_service_1 = __webpack_require__(303);
+const mandi_ai_controller_1 = __webpack_require__(304);
 let MandiAIModule = class MandiAIModule {
 };
 exports.MandiAIModule = MandiAIModule;
@@ -30128,7 +31502,7 @@ exports.MandiAIModule = MandiAIModule = __decorate([
 
 
 /***/ }),
-/* 298 */
+/* 303 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30220,7 +31594,7 @@ exports.MandiAIService = MandiAIService = __decorate([
 
 
 /***/ }),
-/* 299 */
+/* 304 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30240,9 +31614,9 @@ var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MandiAIController = void 0;
 const common_1 = __webpack_require__(2);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const current_user_decorator_1 = __webpack_require__(44);
-const mandi_ai_service_1 = __webpack_require__(298);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const current_user_decorator_1 = __webpack_require__(45);
+const mandi_ai_service_1 = __webpack_require__(303);
 let MandiAIController = class MandiAIController {
     constructor(mandiAIService) {
         this.mandiAIService = mandiAIService;
@@ -30289,7 +31663,7 @@ exports.MandiAIController = MandiAIController = __decorate([
 
 
 /***/ }),
-/* 300 */
+/* 305 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30302,8 +31676,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.KingConnectModule = void 0;
 const common_1 = __webpack_require__(2);
-const king_connect_controller_1 = __webpack_require__(301);
-const king_connect_service_1 = __webpack_require__(302);
+const king_connect_controller_1 = __webpack_require__(306);
+const king_connect_service_1 = __webpack_require__(307);
 const prisma_module_1 = __webpack_require__(16);
 let KingConnectModule = class KingConnectModule {
 };
@@ -30319,7 +31693,7 @@ exports.KingConnectModule = KingConnectModule = __decorate([
 
 
 /***/ }),
-/* 301 */
+/* 306 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -30339,17 +31713,17 @@ var _a, _b, _c, _d, _e, _f, _g, _h, _j;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.KingConnectController = void 0;
 const common_1 = __webpack_require__(2);
-const king_connect_service_1 = __webpack_require__(302);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const current_user_decorator_1 = __webpack_require__(44);
-const send_connect_request_dto_1 = __webpack_require__(303);
-const respond_connect_dto_1 = __webpack_require__(304);
-const create_sync_request_dto_1 = __webpack_require__(305);
-const respond_sync_request_dto_1 = __webpack_require__(306);
-const create_demand_request_dto_1 = __webpack_require__(307);
-const respond_demand_request_dto_1 = __webpack_require__(308);
-const create_payment_request_dto_1 = __webpack_require__(309);
-const respond_payment_request_dto_1 = __webpack_require__(310);
+const king_connect_service_1 = __webpack_require__(307);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const current_user_decorator_1 = __webpack_require__(45);
+const send_connect_request_dto_1 = __webpack_require__(308);
+const respond_connect_dto_1 = __webpack_require__(309);
+const create_sync_request_dto_1 = __webpack_require__(310);
+const respond_sync_request_dto_1 = __webpack_require__(311);
+const create_demand_request_dto_1 = __webpack_require__(312);
+const respond_demand_request_dto_1 = __webpack_require__(313);
+const create_payment_request_dto_1 = __webpack_require__(314);
+const respond_payment_request_dto_1 = __webpack_require__(315);
 let KingConnectController = class KingConnectController {
     constructor(service) {
         this.service = service;
@@ -30559,7 +31933,7 @@ exports.KingConnectController = KingConnectController = __decorate([
 
 
 /***/ }),
-/* 302 */
+/* 307 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -31123,7 +32497,7 @@ exports.KingConnectService = KingConnectService = __decorate([
 
 
 /***/ }),
-/* 303 */
+/* 308 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -31155,7 +32529,7 @@ __decorate([
 
 
 /***/ }),
-/* 304 */
+/* 309 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -31181,7 +32555,7 @@ __decorate([
 
 
 /***/ }),
-/* 305 */
+/* 310 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -31233,7 +32607,7 @@ __decorate([
 
 
 /***/ }),
-/* 306 */
+/* 311 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -31274,7 +32648,7 @@ __decorate([
 
 
 /***/ }),
-/* 307 */
+/* 312 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -31330,7 +32704,7 @@ __decorate([
 
 
 /***/ }),
-/* 308 */
+/* 313 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -31371,7 +32745,7 @@ __decorate([
 
 
 /***/ }),
-/* 309 */
+/* 314 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -31422,7 +32796,7 @@ __decorate([
 
 
 /***/ }),
-/* 310 */
+/* 315 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -31468,7 +32842,7 @@ __decorate([
 
 
 /***/ }),
-/* 311 */
+/* 316 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -31482,9 +32856,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.VoiceCallModule = void 0;
 const common_1 = __webpack_require__(2);
 const auth_module_1 = __webpack_require__(17);
-const voice_call_controller_1 = __webpack_require__(312);
-const voice_call_service_1 = __webpack_require__(313);
-const voice_call_gateway_1 = __webpack_require__(316);
+const voice_call_controller_1 = __webpack_require__(317);
+const voice_call_service_1 = __webpack_require__(318);
+const voice_call_gateway_1 = __webpack_require__(321);
 let VoiceCallModule = class VoiceCallModule {
 };
 exports.VoiceCallModule = VoiceCallModule;
@@ -31499,7 +32873,7 @@ exports.VoiceCallModule = VoiceCallModule = __decorate([
 
 
 /***/ }),
-/* 312 */
+/* 317 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -31520,12 +32894,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.VoiceCallController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const voice_call_service_1 = __webpack_require__(313);
-const start_group_call_dto_1 = __webpack_require__(315);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const voice_call_service_1 = __webpack_require__(318);
+const start_group_call_dto_1 = __webpack_require__(320);
 let VoiceCallController = class VoiceCallController {
     constructor(voiceCallService) {
         this.voiceCallService = voiceCallService;
@@ -31586,7 +32960,7 @@ exports.VoiceCallController = VoiceCallController = __decorate([
 
 
 /***/ }),
-/* 313 */
+/* 318 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -31621,7 +32995,7 @@ let VoiceCallService = class VoiceCallService {
             };
         }
         try {
-            const { RtcTokenBuilder, RtcRole } = __webpack_require__(314);
+            const { RtcTokenBuilder, RtcRole } = __webpack_require__(319);
             const agoraRole = role === 'publisher' ? RtcRole.PUBLISHER : RtcRole.SUBSCRIBER;
             const expirationTimeInSeconds = 3600 * 2;
             const currentTimestamp = Math.floor(Date.now() / 1000);
@@ -31824,13 +33198,13 @@ exports.VoiceCallService = VoiceCallService = __decorate([
 
 
 /***/ }),
-/* 314 */
+/* 319 */
 /***/ ((module) => {
 
 module.exports = require("agora-token");
 
 /***/ }),
-/* 315 */
+/* 320 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -31862,7 +33236,7 @@ __decorate([
 
 
 /***/ }),
-/* 316 */
+/* 321 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -31884,10 +33258,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.VoiceCallGateway = exports.callRoom = void 0;
 const common_1 = __webpack_require__(2);
 const jwt_1 = __webpack_require__(18);
-const websockets_1 = __webpack_require__(111);
-const socket_io_1 = __webpack_require__(112);
+const websockets_1 = __webpack_require__(113);
+const socket_io_1 = __webpack_require__(114);
 const prisma_service_1 = __webpack_require__(12);
-const chat_gateway_1 = __webpack_require__(110);
+const chat_gateway_1 = __webpack_require__(112);
 const callRoom = (callId) => `call:${callId}`;
 exports.callRoom = callRoom;
 let VoiceCallGateway = VoiceCallGateway_1 = class VoiceCallGateway {
@@ -32097,7 +33471,7 @@ exports.VoiceCallGateway = VoiceCallGateway = VoiceCallGateway_1 = __decorate([
 
 
 /***/ }),
-/* 317 */
+/* 322 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -32110,11 +33484,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TrainersModule = void 0;
 const common_1 = __webpack_require__(2);
-const trainers_service_1 = __webpack_require__(318);
-const trainers_controller_1 = __webpack_require__(319);
+const trainers_service_1 = __webpack_require__(323);
+const trainers_controller_1 = __webpack_require__(324);
 const prisma_module_1 = __webpack_require__(16);
-const wallet_module_1 = __webpack_require__(54);
-const whatsapp_module_1 = __webpack_require__(47);
+const wallet_module_1 = __webpack_require__(55);
+const whatsapp_module_1 = __webpack_require__(48);
 let TrainersModule = class TrainersModule {
 };
 exports.TrainersModule = TrainersModule;
@@ -32129,7 +33503,7 @@ exports.TrainersModule = TrainersModule = __decorate([
 
 
 /***/ }),
-/* 318 */
+/* 323 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -32506,7 +33880,7 @@ exports.TrainersService = TrainersService = __decorate([
 
 
 /***/ }),
-/* 319 */
+/* 324 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -32526,12 +33900,12 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TrainersController = void 0;
 const common_1 = __webpack_require__(2);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
 const client_1 = __webpack_require__(13);
-const trainers_service_1 = __webpack_require__(318);
+const trainers_service_1 = __webpack_require__(323);
 let TrainersController = class TrainersController {
     constructor(trainersService) {
         this.trainersService = trainersService;
@@ -32678,7 +34052,7 @@ exports.TrainersController = TrainersController = __decorate([
 
 
 /***/ }),
-/* 320 */
+/* 325 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -32692,10 +34066,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SellerModule = void 0;
 const common_1 = __webpack_require__(2);
 const prisma_module_1 = __webpack_require__(16);
-const shiprocket_module_1 = __webpack_require__(213);
-const notifications_module_1 = __webpack_require__(73);
-const seller_service_1 = __webpack_require__(321);
-const seller_controller_1 = __webpack_require__(322);
+const shiprocket_module_1 = __webpack_require__(218);
+const notifications_module_1 = __webpack_require__(75);
+const seller_service_1 = __webpack_require__(326);
+const seller_controller_1 = __webpack_require__(327);
 let SellerModule = class SellerModule {
 };
 exports.SellerModule = SellerModule;
@@ -32710,7 +34084,7 @@ exports.SellerModule = SellerModule = __decorate([
 
 
 /***/ }),
-/* 321 */
+/* 326 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -32728,8 +34102,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SellerService = void 0;
 const common_1 = __webpack_require__(2);
 const prisma_service_1 = __webpack_require__(12);
-const shiprocket_service_1 = __webpack_require__(214);
-const notifications_service_1 = __webpack_require__(75);
+const shiprocket_service_1 = __webpack_require__(219);
+const notifications_service_1 = __webpack_require__(77);
 const client_1 = __webpack_require__(13);
 let SellerService = class SellerService {
     constructor(prisma, shiprocketService, notificationsService) {
@@ -32879,7 +34253,7 @@ let SellerService = class SellerService {
                 whereClause = { kycStatus: kycStatus };
             }
         }
-        return this.prisma.sellerStore.findMany({
+        const stores = await this.prisma.sellerStore.findMany({
             where: whereClause,
             include: {
                 seller: {
@@ -32888,6 +34262,20 @@ let SellerService = class SellerService {
             },
             orderBy: { createdAt: 'desc' },
         });
+        if (stores.length === 0)
+            return [];
+        try {
+            const ids = stores.map((s) => `'${s.id}'`).join(',');
+            const rawCommissions = await this.prisma.$queryRawUnsafe(`SELECT "id", "categoryCommissions" FROM "seller_stores" WHERE "id" IN (${ids})`);
+            const commMap = new Map(rawCommissions.map((r) => [r.id, r.categoryCommissions || {}]));
+            return stores.map((s) => ({
+                ...s,
+                categoryCommissions: commMap.get(s.id) || {},
+            }));
+        }
+        catch {
+            return stores;
+        }
     }
     async verifyKycByAdmin(storeId, status, commissionRate, rejectionReason) {
         const store = await this.prisma.sellerStore.findUnique({ where: { id: storeId } });
@@ -32926,6 +34314,14 @@ let SellerService = class SellerService {
         const store = await this.prisma.sellerStore.findUnique({ where: { id: storeId } });
         if (!store) {
             throw new common_1.NotFoundException('Seller store not found.');
+        }
+        if (dto.categoryCommissions) {
+            try {
+                await this.prisma.$executeRawUnsafe(`UPDATE "seller_stores" SET "categoryCommissions" = $1::jsonb WHERE "id" = $2`, JSON.stringify(dto.categoryCommissions), storeId);
+            }
+            catch (err) {
+                console.warn('Could not update categoryCommissions:', err);
+            }
         }
         return this.prisma.sellerStore.update({
             where: { id: storeId },
@@ -33032,7 +34428,7 @@ exports.SellerService = SellerService = __decorate([
 
 
 /***/ }),
-/* 322 */
+/* 327 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -33053,12 +34449,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SellerController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
-const current_user_decorator_1 = __webpack_require__(44);
-const seller_service_1 = __webpack_require__(321);
-const seller_store_dto_1 = __webpack_require__(323);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
+const current_user_decorator_1 = __webpack_require__(45);
+const seller_service_1 = __webpack_require__(326);
+const seller_store_dto_1 = __webpack_require__(328);
 let SellerController = class SellerController {
     constructor(sellerService) {
         this.sellerService = sellerService;
@@ -33172,7 +34568,7 @@ exports.SellerController = SellerController = __decorate([
 
 
 /***/ }),
-/* 323 */
+/* 328 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -33535,7 +34931,7 @@ __decorate([
 
 
 /***/ }),
-/* 324 */
+/* 329 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -33562,7 +34958,7 @@ exports.EmailModule = EmailModule = __decorate([
 
 
 /***/ }),
-/* 325 */
+/* 330 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -33575,8 +34971,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AiChatModule = void 0;
 const common_1 = __webpack_require__(2);
-const ai_chat_controller_1 = __webpack_require__(326);
-const ai_chat_service_1 = __webpack_require__(327);
+const ai_chat_controller_1 = __webpack_require__(331);
+const ai_chat_service_1 = __webpack_require__(332);
 let AiChatModule = class AiChatModule {
 };
 exports.AiChatModule = AiChatModule;
@@ -33590,7 +34986,7 @@ exports.AiChatModule = AiChatModule = __decorate([
 
 
 /***/ }),
-/* 326 */
+/* 331 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -33611,7 +35007,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AiChatController = void 0;
 const common_1 = __webpack_require__(2);
 const throttler_1 = __webpack_require__(9);
-const ai_chat_service_1 = __webpack_require__(327);
+const ai_chat_service_1 = __webpack_require__(332);
 let AiChatController = class AiChatController {
     constructor(aiChatService) {
         this.aiChatService = aiChatService;
@@ -33637,7 +35033,7 @@ exports.AiChatController = AiChatController = __decorate([
 
 
 /***/ }),
-/* 327 */
+/* 332 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -33905,7 +35301,7 @@ exports.AiChatService = AiChatService = AiChatService_1 = __decorate([
 
 
 /***/ }),
-/* 328 */
+/* 333 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -33918,8 +35314,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.IsoControlsModule = void 0;
 const common_1 = __webpack_require__(2);
-const iso_controls_service_1 = __webpack_require__(329);
-const iso_controls_controller_1 = __webpack_require__(330);
+const iso_controls_service_1 = __webpack_require__(334);
+const iso_controls_controller_1 = __webpack_require__(335);
 const prisma_module_1 = __webpack_require__(16);
 let IsoControlsModule = class IsoControlsModule {
 };
@@ -33935,7 +35331,7 @@ exports.IsoControlsModule = IsoControlsModule = __decorate([
 
 
 /***/ }),
-/* 329 */
+/* 334 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -34095,7 +35491,7 @@ exports.IsoControlsService = IsoControlsService = IsoControlsService_1 = __decor
 
 
 /***/ }),
-/* 330 */
+/* 335 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -34115,12 +35511,12 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.IsoControlsController = void 0;
 const common_1 = __webpack_require__(2);
-const iso_controls_service_1 = __webpack_require__(329);
-const jwt_auth_guard_1 = __webpack_require__(43);
-const roles_guard_1 = __webpack_require__(51);
-const roles_decorator_1 = __webpack_require__(52);
+const iso_controls_service_1 = __webpack_require__(334);
+const jwt_auth_guard_1 = __webpack_require__(44);
+const roles_guard_1 = __webpack_require__(52);
+const roles_decorator_1 = __webpack_require__(53);
 const client_1 = __webpack_require__(13);
-const current_user_decorator_1 = __webpack_require__(44);
+const current_user_decorator_1 = __webpack_require__(45);
 let IsoControlsController = class IsoControlsController {
     constructor(isoControlsService) {
         this.isoControlsService = isoControlsService;
@@ -34178,7 +35574,7 @@ exports.IsoControlsController = IsoControlsController = __decorate([
 
 
 /***/ }),
-/* 331 */
+/* 336 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -34232,7 +35628,7 @@ exports.PrismaExceptionFilter = PrismaExceptionFilter = PrismaExceptionFilter_1 
 
 
 /***/ }),
-/* 332 */
+/* 337 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -34249,7 +35645,7 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuditLogInterceptor = void 0;
 const common_1 = __webpack_require__(2);
-const rxjs_1 = __webpack_require__(333);
+const rxjs_1 = __webpack_require__(338);
 const prisma_service_1 = __webpack_require__(12);
 const MUTATING_METHODS = new Set(['POST', 'PATCH', 'PUT', 'DELETE']);
 const REDACT_KEYS = new Set(['password', 'passwordHash', 'securityAnswer', 'securityAnswerHash', 'newPassword']);
@@ -34317,13 +35713,13 @@ exports.AuditLogInterceptor = AuditLogInterceptor = __decorate([
 
 
 /***/ }),
-/* 333 */
+/* 338 */
 /***/ ((module) => {
 
 module.exports = require("rxjs");
 
 /***/ }),
-/* 334 */
+/* 339 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -34336,7 +35732,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RedisModule = void 0;
 const common_1 = __webpack_require__(2);
-const redis_service_1 = __webpack_require__(335);
+const redis_service_1 = __webpack_require__(340);
 let RedisModule = class RedisModule {
 };
 exports.RedisModule = RedisModule;
@@ -34350,7 +35746,7 @@ exports.RedisModule = RedisModule = __decorate([
 
 
 /***/ }),
-/* 335 */
+/* 340 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -34372,7 +35768,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RedisService = void 0;
 const common_1 = __webpack_require__(2);
 const config_1 = __webpack_require__(4);
-const ioredis_1 = __importDefault(__webpack_require__(336));
+const ioredis_1 = __importDefault(__webpack_require__(341));
 let RedisService = RedisService_1 = class RedisService {
     constructor(configService) {
         this.configService = configService;
@@ -34471,25 +35867,25 @@ exports.RedisService = RedisService = RedisService_1 = __decorate([
 
 
 /***/ }),
-/* 336 */
+/* 341 */
 /***/ ((module) => {
 
 module.exports = require("ioredis");
 
 /***/ }),
-/* 337 */
+/* 342 */
 /***/ ((module) => {
 
 module.exports = require("@sentry/node");
 
 /***/ }),
-/* 338 */
+/* 343 */
 /***/ ((module) => {
 
 module.exports = require("@sentry/profiling-node");
 
 /***/ }),
-/* 339 */
+/* 344 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -34537,7 +35933,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SentryFilter = void 0;
 const common_1 = __webpack_require__(2);
 const core_1 = __webpack_require__(3);
-const Sentry = __importStar(__webpack_require__(337));
+const Sentry = __importStar(__webpack_require__(342));
 let SentryFilter = SentryFilter_1 = class SentryFilter extends core_1.BaseExceptionFilter {
     constructor() {
         super(...arguments);
@@ -34563,7 +35959,7 @@ exports.SentryFilter = SentryFilter = SentryFilter_1 = __decorate([
 
 
 /***/ }),
-/* 340 */
+/* 345 */
 /***/ ((module) => {
 
 module.exports = require("express");

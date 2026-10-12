@@ -1,4 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PartyRole, Role } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -13,9 +14,10 @@ import { CreateUnifiedPartyDto } from './dto/create-unified-party.dto';
 import { RecordArhtiyaAdvanceDto } from './dto/record-arhtiya-advance.dto';
 import { RecordArhtiyaCropSaleDto } from './dto/record-arhtiya-crop-sale.dto';
 
-
+@ApiTags('Parties & Khata')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(Role.FARMER, Role.LABOUR, Role.ADMIN, Role.SUPER_ADMIN)
+@Roles(Role.FARMER, Role.LABOUR, Role.ADMIN, Role.SUPER_ADMIN, Role.TRADER, Role.SUPERVISOR)
 @Controller('parties')
 export class PartiesController {
   constructor(private readonly partiesService: PartiesService) {}
@@ -92,6 +94,31 @@ export class PartiesController {
   @Get('arhtiya/:id/hisab')
   getArhtiyaLedgerHisab(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.partiesService.getArhtiyaLedgerHisab(user, id);
+  }
+
+  // ─── Trader Multi-Farmer Master Dashboard Endpoint ───────────────────────
+
+  /**
+   * Multi-Farmer Master Ledger for Authenticated Traders & Shopkeepers.
+   * Aggregates billing records, purchases, and outstanding credit balances across
+   * all farmers who have billed this trader's mobile number.
+   *
+   * @param user - Current authenticated user (must possess TRADER, ADMIN, or SUPER_ADMIN role)
+   * @returns Portfolio breakdown of all linked farmers, procurement volumes, payments, and balances
+   */
+  @ApiOperation({
+    summary: 'Get multi-farmer master ledger for authenticated trader',
+    description:
+      'Aggregates crop purchases, payments, and credit balances across all farmers where this trader mobile number has transactions.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Multi-farmer procurement portfolio retrieved successfully.',
+  })
+  @Get('trader/master-ledger')
+  @Roles(Role.TRADER, Role.ADMIN, Role.SUPER_ADMIN)
+  getTraderMasterLedger(@CurrentUser() user: AuthUser) {
+    return this.partiesService.getTraderMasterLedger(user);
   }
 }
 

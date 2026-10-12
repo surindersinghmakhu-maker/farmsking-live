@@ -6,6 +6,7 @@ import { PlotsService } from '../plots/plots.service';
 import { CropsService } from '../crops/crops.service';
 import { PartiesService } from '../parties/parties.service';
 import { AuthUser } from '../../common/types/auth-user.type';
+import { getEffectiveFarmerId } from '../../common/utils/effective-farmer.util';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 
@@ -213,7 +214,8 @@ export class ExpensesService {
       include: { category: true, farm: true, cropCycle: { select: { id: true, cropName: true } } },
     });
 
-    if (!expense || (user.role !== Role.ADMIN && user.role !== Role.SUPER_ADMIN && expense.farm.ownerId !== user.id)) {
+    const ownerId = getEffectiveFarmerId(user);
+    if (!expense || (user.role !== Role.ADMIN && user.role !== Role.SUPER_ADMIN && expense.farm.ownerId !== ownerId)) {
       throw new NotFoundException('Expense not found.');
     }
 

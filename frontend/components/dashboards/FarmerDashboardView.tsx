@@ -323,8 +323,39 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
         {/* Your Crop Prices LIVE */}
         <MarketRatesCard />
 
+        {/* 🚜 Farm Supervisor Delegation Banner */}
+        <TouchableOpacity
+          style={[styles.supervisorBannerCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}
+          activeOpacity={0.85}
+          onPress={() => {
+            tap();
+            setShowSupervisorModal(true);
+          }}
+        >
+          <View style={styles.supervisorBannerLeft}>
+            <View style={styles.supervisorBannerIconWrap}>
+              <Ionicons name="shield-checkmark" size={22} color="#15803d" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={[styles.supervisorBannerTitle, { color: colors.text }]}>Appoint Farm Supervisor</Text>
+                <View style={styles.zeroAdminPill}>
+                  <Text style={styles.zeroAdminPillText}>0% ADMIN DELAY</Text>
+                </View>
+              </View>
+              <Text style={[styles.supervisorBannerSub, { color: colors.textMuted }]}>
+                Delegate crop sales, labour, sprays & expenses by King ID. Checked features are active immediately.
+              </Text>
+            </View>
+          </View>
+          <View style={styles.supervisorBannerArrow}>
+            <Ionicons name="chevron-forward" size={18} color="#15803d" />
+          </View>
+        </TouchableOpacity>
+
         {/* Farm Action Grid — All buttons in ONE unified card */}
-        <View style={[styles.toolsContainerCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}>
+        <View style={[styles.toolsContainerCard, { backgroundColor: colors.cardBg, borderColor: colors.cardBorder }, premiumShadow(colors.shadowColor, 'sm')]}
+        >
           <View style={styles.actionGridInner}>
             <TouchableOpacity
               style={[styles.actionCardUnified, { backgroundColor: 'rgba(148, 163, 184, 0.08)' }]}
@@ -365,6 +396,23 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
               activeOpacity={0.8}
               onPress={() => {
                 tap();
+                setShowSupervisorModal(true);
+              }}
+            >
+              <View style={[styles.actionIconBgUnified, { backgroundColor: '#dcfce7' }]}>
+                <Ionicons name="shield-checkmark" size={16} color="#15803d" />
+              </View>
+              <View style={styles.actionCardTextGroup}>
+                <Text style={[styles.actionCardTitle, { color: colors.text }]} numberOfLines={1}>Supervisor</Text>
+                <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>Appoint King ID</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.actionCardUnified, { backgroundColor: 'rgba(148, 163, 184, 0.08)' }]}
+              activeOpacity={0.8}
+              onPress={() => {
+                tap();
                 onOpenAdminChat?.();
               }}
             >
@@ -376,8 +424,6 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
                 <Text style={[styles.actionCardSub, { color: colors.textMuted }]} numberOfLines={1}>Chat Live</Text>
               </View>
             </TouchableOpacity>
-
-
 
             <TouchableOpacity
               style={[styles.actionCardUnified, { backgroundColor: 'rgba(148, 163, 184, 0.08)', opacity: 0.7 }]}
@@ -432,6 +478,12 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
       <WelcomeBonusModal
         visible={showWelcomeModal}
         onClose={() => setShowWelcomeModal(false)}
+      />
+
+      {/* 🚜 Supervisor Management & King ID Appointment Modal */}
+      <SupervisorManagementModal
+        visible={showSupervisorModal}
+        onClose={() => setShowSupervisorModal(false)}
       />
     </ScrollView>
   );
@@ -1174,6 +1226,54 @@ const styles = StyleSheet.create({
     padding: 6,
     backgroundColor: '#f1f5f9',
     borderRadius: 18,
+  },
+  supervisorBannerCard: {
+    borderRadius: RADIUS.lg,
+    padding: 12,
+    borderWidth: 1.5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginVertical: 2,
+  },
+  supervisorBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  supervisorBannerIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#dcfce7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  supervisorBannerTitle: {
+    fontSize: 13,
+    fontFamily: FONT.extraBold,
+  },
+  zeroAdminPill: {
+    backgroundColor: '#dcfce7',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: RADIUS.pill,
+  },
+  zeroAdminPillText: {
+    color: '#15803d',
+    fontSize: 9,
+    fontFamily: FONT.extraBold,
+  },
+  supervisorBannerSub: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    lineHeight: 15,
+    marginTop: 1,
+  },
+  supervisorBannerArrow: {
+    padding: 4,
   },
 });
 

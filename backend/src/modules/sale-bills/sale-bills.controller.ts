@@ -19,6 +19,7 @@ import { CreateSaleBillDto } from './dto/create-sale-bill.dto';
   Role.ADMIN,
   Role.SUPER_ADMIN,
   Role.OPERATOR,
+  Role.SUPERVISOR,
 )
 @Controller('sale-bills')
 export class SaleBillsController {

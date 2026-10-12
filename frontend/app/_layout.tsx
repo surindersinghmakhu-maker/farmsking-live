@@ -62,13 +62,14 @@ function RootNavigation() {
     if (isLoading) return;
     const currentGroup = segments[0] as string;
     const inAuthGroup = currentGroup === '(auth)';
-    const isPublicRoute = ['seo', 'support', 'contact-us', 'shop', 'dose', 'you', 'seller-dashboard', 'topic', 'privacy-policy', 'terms', 'refund-policy', 'account-deletion'].includes(currentGroup);
+    const isAtRootOrIndex = !currentGroup || currentGroup === '' || currentGroup === 'index';
+    const isPublicRoute = isAtRootOrIndex || ['seo', 'support', 'contact-us', 'shop', 'dose', 'you', 'seller-dashboard', 'topic', 'privacy-policy', 'terms', 'refund-policy', 'account-deletion'].includes(currentGroup);
     const isStaffSetupRoute = segmentsPath === 'staff-profile-setup';
     const isSubdomainAdmin = Platform.OS === 'web' && typeof window !== 'undefined' && (window.location.hostname === 'admin.farmsking.in' || window.location.hostname.startsWith('admin.'));
 
     if (isSubdomainAdmin) {
       // Admin subdomain renders AdminWebPortalScreen directly at root / (https://admin.farmsking.in/)
-      if (!user && currentGroup !== 'index' && currentGroup !== '' && currentGroup !== 'admin' && !inAuthGroup) {
+      if (!user && !isAtRootOrIndex && currentGroup !== 'admin' && !inAuthGroup) {
         // If navigating away on admin subdomain while logged out, keep at root /
       }
       return;
@@ -90,7 +91,7 @@ function RootNavigation() {
       if (currentGroup === '(partner)') {
         const hasPartnerAccess = userRoles.some(r => ['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(r));
         if (!hasPartnerAccess) router.replace('/(user)/(tabs)');
-      } else if (inAuthGroup) {
+      } else if (isAtRootOrIndex || inAuthGroup) {
         if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user.role)) {
           router.replace('/(partner)/(tabs)');
         } else {

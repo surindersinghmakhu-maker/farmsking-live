@@ -89,6 +89,11 @@ export async function createAdmin(payload: CreateStaffPayload): Promise<CreateAd
   return data;
 }
 
+export async function createManager(payload: CreateStaffPayload): Promise<CreateAdvisorResponse> {
+  const { data } = await apiClient.post<CreateAdvisorResponse>('/users/managers', payload);
+  return data;
+}
+
 export async function promoteToBusinessPartner(id: string): Promise<AdminUser> {
   const { data } = await apiClient.patch<AdminUser>(`/users/${id}/role`, { role: 'BUSINESS_PARTNER' });
   return data;
@@ -151,6 +156,7 @@ export interface AdminUpdateUserPayload {
   isSeniorDoctor?: boolean;
   seniorDoctorId?: string;
   doctorConsultationFee?: number;
+  employerFarmerId?: string | null;
 }
 
 export async function adminUpdateUser(id: string, payload: AdminUpdateUserPayload): Promise<AdminUser> {
@@ -165,10 +171,31 @@ export async function resetUserPassword(id: string, newPassword?: string): Promi
 }
 
 /** The checkbox-toggleable roles — staff roles (Admin/Super Admin/Operator) have their own dedicated flows. */
-export const ASSIGNABLE_CHECKBOX_ROLES: Role[] = ['CUSTOMER', 'FARMER', 'GARDENER', 'ADVISOR', 'BUSINESS_PARTNER', 'TECHNICAL_TRAINER' as Role];
+export const ASSIGNABLE_CHECKBOX_ROLES: Role[] = [
+  'CUSTOMER',
+  'FARMER',
+  'GARDENER',
+  'ADVISOR',
+  'BUSINESS_PARTNER',
+  'TECHNICAL_TRAINER' as Role,
+  'TRADER' as Role,
+  'SELLER' as Role,
+  'SUPERVISOR' as Role,
+  'LABOUR' as Role,
+];
 
 export async function updateActiveRoles(id: string, activeRoles: Role[]): Promise<AdminUser> {
   const { data } = await apiClient.patch<AdminUser>(`/users/${id}/active-roles`, { activeRoles });
+  return data;
+}
+
+export async function resignSupervisor(id: string): Promise<{ success: boolean; message: string; supervisor: AdminUser }> {
+  const { data } = await apiClient.post<{ success: boolean; message: string; supervisor: AdminUser }>(`/users/my-supervisors/${id}/resign`);
+  return data;
+}
+
+export async function assignSupervisorEmployer(id: string, employerFarmerId: string | null): Promise<AdminUser> {
+  const { data } = await apiClient.patch<AdminUser>(`/users/supervisors/${id}/assign-employer`, { employerFarmerId });
   return data;
 }
 

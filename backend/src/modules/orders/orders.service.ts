@@ -43,6 +43,10 @@ export class OrdersService {
   ) {}
 
   async create(customer: AuthUser, dto: CreateOrderDto) {
+    const staffRoles: Role[] = [Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR];
+    const isStaff = staffRoles.includes(customer.role);
+    const targetCustomerId = (isStaff && dto.customerId) ? dto.customerId : customer.id;
+
     const productIds = dto.items.map((i) => i.productId);
     const products = await this.prisma.product.findMany({
       where: { id: { in: productIds }, isActive: true },
@@ -55,7 +59,10 @@ export class OrdersService {
 
     // Detect delivery state from address string or customer user record
     const deliveryAddressStr = dto.deliveryAddress || '';
-    const customerUser = await this.prisma.user.findUnique({ where: { id: customer.id } });
+    const customerUser = await this.prisma.user.findUnique({ where: { id: targetCustomerId } });
+    if (!customerUser) {
+      throw new NotFoundException(`Customer account not found.`);
+    }
     const customerState = customerUser?.state?.trim().toLowerCase() || '';
 
     for (const item of dto.items) {
@@ -105,7 +112,7 @@ export class OrdersService {
     let totalWalletDeduction = 0;
 
     if (dto.useWalletBalance) {
-      const walletBalance = await this.walletService.getBalance(customer.id);
+      const walletBalance = await this.walletService.getBalance(targetCustomerId);
       if (walletBalance > 0) {
         const settings = await this.appSettingsService.get() as any;
         const taxEnabled = settings.walletTaxEnabled ?? true;
@@ -135,7 +142,7 @@ export class OrdersService {
     const order = await this.prisma.$transaction(async (tx) => {
       const created = await tx.customerOrder.create({
         data: {
-          customerId: customer.id,
+          customerId: targetCustomerId,
           orderNumber: generateOrderNumber(),
           totalAmount,
           deliveryAddress: dto.deliveryAddress,
@@ -179,7 +186,7 @@ export class OrdersService {
         await tx.couponRedemption.create({
           data: {
             couponId: couponResult.coupon.id,
-            customerId: customer.id,
+            customerId: targetCustomerId,
             orderId: created.id,
             orderAmount: subtotal,
             discountAmount,
@@ -190,7 +197,7 @@ export class OrdersService {
 
       // Wallet deduction
       if (walletDeduction > 0) {
-        await this.walletService.debit(customer.id, walletDeduction, `Paid for Order #${created.orderNumber}`);
+        await this.walletService.debit(targetCustomerId, walletDeduction, `Paid for Order #${created.orderNumber}`);
       }
 
       // Split order into Vendor SubOrders
@@ -247,7 +254,7 @@ export class OrdersService {
     // Asynchronous Shiprocket Adhoc Order Dispatch per SubOrder
     // Trigger Firebase Text SMS Notification for Order Booking / Placement
     this.notifyCustomer(
-      customer.id,
+      targetCustomerId,
       '🛒 Order Booked Successfully',
       `Your FarmsKing Order #${order.orderNumber} of ₹${order.totalAmount} has been booked successfully.`,
       order.id,
@@ -380,10 +387,10 @@ export class OrdersService {
     return { upiLink, amount: Number(order.totalAmount), orderNumber: order.orderNumber };
   }
 
-  /** Starts a Cashfree Checkout session for this order with Split Payments */
   async initiateCashfreePayment(user: AuthUser, id: string) {
     const order = await this.findOneOrThrow(user, id);
-    if (order.customerId !== user.id) {
+    const staffRoles: Role[] = [Role.ADMIN, Role.SUPER_ADMIN, Role.OPERATOR];
+    if (order.customerId !== user.id && !staffRoles.includes(user.role)) {
       throw new ForbiddenException('You cannot pay for this order.');
     }
     if (order.paymentStatus === OrderPaymentStatus.PAID) {

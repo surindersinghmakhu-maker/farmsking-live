@@ -27,6 +27,7 @@ import { assignTrainerState, getAdminTrainerReports } from '@/src/api/trainers.a
 import { Role, AdminUser, OperatorPermission, AdvisorType } from '@/src/types/api';
 import { useAuth } from '@/src/store/auth-context';
 import { PickerModal } from '@/src/components/PickerModal';
+import { exportUsersToExcel } from '@/src/utils/excelExport';
 
 const theme = RoleThemes.SUPER_ADMIN;
 
@@ -43,30 +44,32 @@ const GROUPS: { value: UserGroup; label: string; icon: keyof typeof Ionicons.gly
 ];
 
 type UserFilter =
-  | 'SUPER_ADMIN' | 'ADMIN' | 'OPERATOR'
-  | 'BUSINESS_PARTNER' | 'FARM_ADVISOR' | 'GARDEN_ADVISOR' | 'TECHNICAL_TRAINER'
+  | 'SUPER_ADMIN' | 'ADMIN' | 'OPERATOR' | 'TECHNICAL_TRAINER'
+  | 'BUSINESS_PARTNER' | 'TRADER' | 'FARM_ADVISOR' | 'GARDEN_ADVISOR'
   | 'CUSTOMER' | 'FARMER' | 'GARDENER';
 
 const FILTERS_BY_GROUP: Record<UserGroup, { value: UserFilter; label: string; icon: keyof typeof Ionicons.glyphMap }[]> = {
   ADMINS: [
     { value: 'SUPER_ADMIN', label: 'Super Admin', icon: 'shield-half-outline' },
     { value: 'OPERATOR', label: 'Operator', icon: 'print-outline' },
+    { value: 'TECHNICAL_TRAINER', label: 'Technical Staff', icon: 'school-outline' },
   ],
   PARTNERS: [
     { value: 'BUSINESS_PARTNER', label: 'Business Partners', icon: 'briefcase-outline' },
     { value: 'FARM_ADVISOR', label: 'Crop Doctors', icon: 'medical-outline' },
     { value: 'GARDEN_ADVISOR', label: 'Garden Advisors', icon: 'sunny-outline' },
-    { value: 'TECHNICAL_TRAINER', label: 'Technical Staff', icon: 'school-outline' },
   ],
   CLIENTS: [
     { value: 'CUSTOMER', label: 'Customers', icon: 'cart-outline' },
     { value: 'FARMER', label: 'Farmers', icon: 'leaf-outline' },
+    { value: 'TRADER', label: 'Traders & Buyers', icon: 'storefront-outline' },
     { value: 'GARDENER', label: 'Gardeners', icon: 'flower-outline' },
   ],
 };
 
 function filterToBackendRole(filter: UserFilter): Role {
   if (filter === 'TECHNICAL_TRAINER') return 'TECHNICAL_TRAINER' as Role;
+  if (filter === 'TRADER') return 'TRADER' as Role;
   return filter === 'FARM_ADVISOR' || filter === 'GARDEN_ADVISOR' ? 'ADVISOR' : (filter as Role);
 }
 
@@ -100,6 +103,9 @@ export default function SuperUsersScreen() {
     setFilter(FILTERS_BY_GROUP[g][0].value);
   };
 
+  const [statusTab, setStatusTab] = useState<'ACTIVE' | 'DELETED'>('ACTIVE');
+  const [deletedFilterMode, setDeletedFilterMode] = useState<'ALL_ROLES' | 'CURRENT_ROLE'>('ALL_ROLES');
+
   const { data: allUsersData } = useUsersList({ limit: 1000 });
   const { data, isLoading } = useUsersList({ role: filterToBackendRole(filter), search: search.trim() || undefined, limit: 1000 });
   const deactivate = useDeactivateUser();
@@ -107,17 +113,21 @@ export default function SuperUsersScreen() {
   const deleteUser = useDeleteUser();
 
   const allUsersList = allUsersData?.items ?? [];
+  const totalActiveUsersCount = allUsersList.filter((u) => !u.deletedAt).length;
+  const totalDeletedUsersCount = allUsersList.filter((u) => !!u.deletedAt).length;
 
   const getSubCategoryCount = (subFilter: UserFilter): number => {
     return allUsersList.filter((u) => {
+      if (statusTab === 'ACTIVE' ? !!u.deletedAt : !u.deletedAt) return false;
       const roles: string[] = Array.isArray(u.roles) && u.roles.length > 0 ? u.roles : [u.role];
       const activeRoles = roles.filter((r) => !(u.deactivatedRoles ?? []).includes(r as any));
       if (subFilter === 'SUPER_ADMIN') return activeRoles.includes('SUPER_ADMIN') || u.role === 'SUPER_ADMIN';
       if (subFilter === 'OPERATOR') return activeRoles.includes('OPERATOR') || u.role === 'OPERATOR';
+      if (subFilter === 'TECHNICAL_TRAINER') return activeRoles.includes('TECHNICAL_TRAINER') || u.role === 'TECHNICAL_TRAINER';
       if (subFilter === 'BUSINESS_PARTNER') return activeRoles.includes('BUSINESS_PARTNER') || u.role === 'BUSINESS_PARTNER';
+      if (subFilter === 'TRADER') return activeRoles.includes('TRADER') || u.role === 'TRADER';
       if (subFilter === 'FARM_ADVISOR') return (activeRoles.includes('ADVISOR') || u.role === 'ADVISOR') && u.advisorType !== 'GARDEN';
       if (subFilter === 'GARDEN_ADVISOR') return (activeRoles.includes('ADVISOR') || u.role === 'ADVISOR') && u.advisorType === 'GARDEN';
-      if (subFilter === 'TECHNICAL_TRAINER') return activeRoles.includes('TECHNICAL_TRAINER') || u.role === 'TECHNICAL_TRAINER';
       if (subFilter === 'CUSTOMER') return activeRoles.includes('CUSTOMER') || u.role === 'CUSTOMER';
       if (subFilter === 'FARMER') return activeRoles.includes('FARMER') || u.role === 'FARMER';
       if (subFilter === 'GARDENER') return activeRoles.includes('GARDENER') || u.role === 'GARDENER';
@@ -130,12 +140,15 @@ export default function SuperUsersScreen() {
     const uniqueUserIds = new Set<string>();
     filters.forEach((f) => {
       allUsersList.forEach((u) => {
+        if (statusTab === 'ACTIVE' ? !!u.deletedAt : !u.deletedAt) return;
         const roles: string[] = Array.isArray(u.roles) && u.roles.length > 0 ? u.roles : [u.role];
         const activeRoles = roles.filter((r) => !(u.deactivatedRoles ?? []).includes(r as any));
         let matches = false;
         if (f.value === 'SUPER_ADMIN' && (activeRoles.includes('SUPER_ADMIN') || u.role === 'SUPER_ADMIN')) matches = true;
         if (f.value === 'OPERATOR' && (activeRoles.includes('OPERATOR') || u.role === 'OPERATOR')) matches = true;
+        if (f.value === 'TECHNICAL_TRAINER' && (activeRoles.includes('TECHNICAL_TRAINER') || u.role === 'TECHNICAL_TRAINER')) matches = true;
         if (f.value === 'BUSINESS_PARTNER' && (activeRoles.includes('BUSINESS_PARTNER') || u.role === 'BUSINESS_PARTNER')) matches = true;
+        if (f.value === 'TRADER' && (activeRoles.includes('TRADER') || u.role === 'TRADER')) matches = true;
         if (f.value === 'FARM_ADVISOR' && (activeRoles.includes('ADVISOR') || u.role === 'ADVISOR') && u.advisorType !== 'GARDEN') matches = true;
         if (f.value === 'GARDEN_ADVISOR' && (activeRoles.includes('ADVISOR') || u.role === 'ADVISOR') && u.advisorType === 'GARDEN') matches = true;
         if (f.value === 'CUSTOMER' && (activeRoles.includes('CUSTOMER') || u.role === 'CUSTOMER')) matches = true;
@@ -165,16 +178,35 @@ export default function SuperUsersScreen() {
     setDeleteVerificationTarget(targetUser);
   };
 
-  const items = (data?.items ?? []).filter((u) =>
+  const currentRoleRawUsers = (data?.items ?? []).filter((u) =>
     filter === 'FARM_ADVISOR' ? u.advisorType !== 'GARDEN' : filter === 'GARDEN_ADVISOR' ? u.advisorType === 'GARDEN' : true,
   );
+  const currentRoleActiveUsers = currentRoleRawUsers.filter((u) => !u.deletedAt);
+  const currentRoleDeletedUsers = currentRoleRawUsers.filter((u) => !!u.deletedAt);
+
+  const allDeletedUsers = allUsersList.filter((u) => {
+    if (!u.deletedAt) return false;
+    if (!search.trim()) return true;
+    const q = search.trim().toLowerCase();
+    const cleanMob = u.mobile.replace(/DEL_/gi, '').replace(/_del_\d+/gi, '');
+    return (
+      (u.name && u.name.toLowerCase().includes(q)) ||
+      u.mobile.toLowerCase().includes(q) ||
+      cleanMob.includes(q) ||
+      (u.kingId && u.kingId.toLowerCase().includes(q))
+    );
+  });
+
+  const items = statusTab === 'ACTIVE'
+    ? currentRoleActiveUsers
+    : (deletedFilterMode === 'ALL_ROLES' ? allDeletedUsers : currentRoleDeletedUsers);
 
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
 
   useEffect(() => {
     setPage(1);
-  }, [filter, search]);
+  }, [filter, search, statusTab, deletedFilterMode]);
 
   const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
   const visibleItems = items.slice((page - 1) * pageSize, page * pageSize);
@@ -184,86 +216,219 @@ export default function SuperUsersScreen() {
   return (
     <View style={[styles.container, { backgroundColor: '#020d06' }]}>
       <View style={styles.premiumHero}>
-        <View style={styles.premiumHeroContent}>
+        <View style={[styles.premiumHeroContent, isDesktop && { maxWidth: 1240, width: '100%', alignSelf: 'center' }]}>
           <View style={styles.heroHeaderRow}>
-            <View>
-              <Text style={styles.premiumHeroTitle}>{isDesktop ? `${currentFilterLabel} Management` : 'Role Distribution'}</Text>
-              <Text style={styles.premiumHeroSubtitle}>{isDesktop ? `Managing ${currentFilterLabel.toLowerCase()} in FarmsKing` : '& User Management Ecosystem'}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap', flex: 1 }}>
+              <Text style={styles.compactHeroTitle} numberOfLines={1}>
+                {statusTab === 'DELETED'
+                  ? 'Deleted Users Archive'
+                  : `${currentFilterLabel} Directory`}
+              </Text>
+              <View style={styles.compactCountBadge}>
+                <Text style={styles.compactCountBadgeText}>{items.length}</Text>
+              </View>
             </View>
-            <View style={styles.heroStatsPill}>
-              <Ionicons name="analytics" size={14} color="#10b981" />
-              <Text style={styles.heroStatsText}>Total Users: {allUsersList.length}</Text>
-            </View>
-          </View>
 
-          <View style={styles.searchWrapPremium}>
-            <Ionicons name="search" size={18} color="#10b981" style={{ marginRight: 8 }} />
-            <TextInput
-              style={styles.searchInputPremium}
-              placeholder={`Search ${isDesktop ? currentFilterLabel.toLowerCase() : 'by name, mobile, or ID'}...`}
-              placeholderTextColor="rgba(148, 163, 184, 0.7)"
-              value={search}
-              onChangeText={setSearch}
-            />
-          </View>
-
-          {!isDesktop && (
-            <>
-              <View style={styles.groupRowPremium}>
-                {GROUPS.map((g) => {
-                  const groupCount = getGroupCount(g.value);
-                  const isActive = group === g.value;
-                  return (
-                    <TouchableOpacity
-                      key={g.value}
-                      style={[styles.groupChipPremium, isActive && styles.groupChipPremiumActive]}
-                      activeOpacity={0.8}
-                      onPress={() => selectGroup(g.value)}
-                    >
-                      {isActive && (
-                        <LinearGradient
-                          colors={['rgba(16,185,129,0.1)', 'transparent']}
-                          style={[StyleSheet.absoluteFill, { borderRadius: 12 }]}
-                        />
-                      )}
-                      <Ionicons name={g.icon} size={16} color={isActive ? '#10b981' : '#64748b'} />
-                      <Text style={[styles.groupChipTextPremium, isActive && { color: '#10b981' }]}>
-                        {g.label} ({groupCount})
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
+            {/* Quick Stats Pill Strip & 1-Click Exports */}
+            <View style={styles.heroStatsContainer}>
+              <View style={styles.heroStatsPill}>
+                <Ionicons name="people" size={11} color="#00ff87" />
+                <Text style={styles.heroStatsText}>Total {allUsersList.length}</Text>
+              </View>
+              <View style={[styles.heroStatsPill, { borderColor: 'rgba(16, 185, 129, 0.4)' }]}>
+                <Ionicons name="checkmark-circle" size={11} color="#10b981" />
+                <Text style={[styles.heroStatsText, { color: '#10b981' }]}>Active {totalActiveUsersCount}</Text>
+              </View>
+              <View style={[styles.heroStatsPill, { borderColor: 'rgba(239, 68, 68, 0.4)' }]}>
+                <Ionicons name="trash" size={11} color="#ef4444" />
+                <Text style={[styles.heroStatsText, { color: '#f87171' }]}>Del {totalDeletedUsersCount}</Text>
               </View>
 
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 12, paddingBottom: 5 }} contentContainerStyle={{ gap: 10 }}>
-                {FILTERS_BY_GROUP[group].map((f) => {
-                  const subCount = getSubCategoryCount(f.value);
-                  const isActive = filter === f.value;
-                  return (
-                    <TouchableOpacity
-                      key={f.value}
-                      style={[styles.filterChipPremium, isActive && styles.filterChipPremiumActive]}
-                      activeOpacity={0.8}
-                      onPress={() => {
-                        tap();
-                        setFilter(f.value);
-                      }}
-                    >
-                      <Ionicons name={f.icon} size={14} color={isActive ? '#10b981' : '#94a3b8'} />
-                      <Text style={[styles.filterChipTextPremium, isActive && { color: '#10b981' }]}>
-                        {f.label} ({subCount})
-                      </Text>
-                    </TouchableOpacity>
+              {/* Inline Compact Export Buttons */}
+              <TouchableOpacity
+                style={styles.compactExportBtn}
+                activeOpacity={0.8}
+                onPress={() => {
+                  tap();
+                  exportUsersToExcel(items, `${currentFilterLabel}_Users`);
+                }}
+              >
+                <Ionicons name="download-outline" size={12} color="#00ff87" />
+                <Text style={styles.compactExportBtnText}>Export ({items.length})</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.compactExportBtn, { borderColor: 'rgba(16, 185, 129, 0.4)', backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}
+                activeOpacity={0.8}
+                onPress={() => {
+                  tap();
+                  const farmers = allUsersList.filter(
+                    (u) => u.role === 'FARMER' || (Array.isArray(u.roles) && u.roles.includes('FARMER'))
                   );
-                })}
-              </ScrollView>
-            </>
+                  exportUsersToExcel(farmers, 'All_Farmers');
+                }}
+              >
+                <Ionicons name="leaf" size={11} color="#10b981" />
+                <Text style={[styles.compactExportBtnText, { color: '#10b981' }]}>
+                  Farmers ({allUsersList.filter((u) => u.role === 'FARMER' || (Array.isArray(u.roles) && u.roles.includes('FARMER'))).length})
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.compactExportBtn, { borderColor: 'rgba(245, 158, 11, 0.4)', backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}
+                activeOpacity={0.8}
+                onPress={() => {
+                  tap();
+                  const sellers = allUsersList.filter(
+                    (u) => u.role === 'TRADER' || (Array.isArray(u.roles) && u.roles.includes('TRADER'))
+                  );
+                  exportUsersToExcel(sellers, 'All_Sellers');
+                }}
+              >
+                <Ionicons name="storefront" size={11} color="#f59e0b" />
+                <Text style={[styles.compactExportBtnText, { color: '#f59e0b' }]}>
+                  Sellers ({allUsersList.filter((u) => u.role === 'TRADER' || (Array.isArray(u.roles) && u.roles.includes('TRADER'))).length})
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Unified Compact Control Bar: Status Switch + Search + Group Chips */}
+          <View style={[styles.compactControlBar, isDesktop && styles.compactControlBarDesktop]}>
+            {/* Status Switch (Active vs Deleted) */}
+            <View style={styles.compactStatusSwitch}>
+              <TouchableOpacity
+                style={[styles.compactStatusTab, statusTab === 'ACTIVE' && styles.compactStatusTabActive]}
+                activeOpacity={0.8}
+                onPress={() => {
+                  tap();
+                  setStatusTab('ACTIVE');
+                }}
+              >
+                <Ionicons name="checkmark-circle" size={12} color={statusTab === 'ACTIVE' ? '#00ff87' : '#64748b'} />
+                <Text style={[styles.compactStatusText, statusTab === 'ACTIVE' && styles.compactStatusTextActive]}>
+                  Active ({totalActiveUsersCount})
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.compactStatusTab, statusTab === 'DELETED' && styles.compactStatusTabDeletedActive]}
+                activeOpacity={0.8}
+                onPress={() => {
+                  tap();
+                  setStatusTab('DELETED');
+                }}
+              >
+                <Ionicons name="trash-bin" size={12} color={statusTab === 'DELETED' ? '#ef4444' : '#64748b'} />
+                <Text style={[styles.compactStatusText, statusTab === 'DELETED' && styles.compactStatusTextDeletedActive]}>
+                  Deleted ({totalDeletedUsersCount})
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Search Box */}
+            <View style={styles.compactSearchBox}>
+              <Ionicons name="search" size={13} color="#00ff87" style={{ marginRight: 6 }} />
+              <TextInput
+                style={styles.compactSearchInput}
+                placeholder={`Search ${statusTab === 'DELETED' ? 'deleted accounts' : currentFilterLabel.toLowerCase()}...`}
+                placeholderTextColor="rgba(148, 163, 184, 0.6)"
+                value={search}
+                onChangeText={setSearch}
+              />
+              {search.length > 0 && (
+                <TouchableOpacity
+                  onPress={() => {
+                    tap();
+                    setSearch('');
+                  }}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons name="close-circle" size={14} color="#94a3b8" />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* Group Tabs (Clients, Partners, Admins) */}
+            <View style={styles.compactGroupRow}>
+              {GROUPS.map((g) => {
+                const groupCount = getGroupCount(g.value);
+                const isActive = group === g.value;
+                return (
+                  <TouchableOpacity
+                    key={g.value}
+                    style={[styles.compactGroupChip, isActive && styles.compactGroupChipActive]}
+                    activeOpacity={0.8}
+                    onPress={() => selectGroup(g.value)}
+                  >
+                    <Ionicons name={g.icon} size={12} color={isActive ? '#00ff87' : '#64748b'} />
+                    <Text style={[styles.compactGroupChipText, isActive && { color: '#00ff87' }]} numberOfLines={1}>
+                      {g.label} ({groupCount})
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          {statusTab === 'DELETED' && (
+            <View style={styles.compactDeletedBannerBox}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                <Ionicons name="archive" size={13} color="#f87171" />
+                <Text style={styles.deletedBannerTitle}>Deleted Accounts Archive</Text>
+              </View>
+              <View style={styles.deletedScopePills}>
+                <TouchableOpacity
+                  style={[styles.deletedScopePill, deletedFilterMode === 'ALL_ROLES' && styles.deletedScopePillActive]}
+                  onPress={() => { tap(); setDeletedFilterMode('ALL_ROLES'); }}
+                >
+                  <Text style={[styles.deletedScopePillText, deletedFilterMode === 'ALL_ROLES' && styles.deletedScopePillTextActive]}>
+                    All Roles ({totalDeletedUsersCount})
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.deletedScopePill, deletedFilterMode === 'CURRENT_ROLE' && styles.deletedScopePillActive]}
+                  onPress={() => { tap(); setDeletedFilterMode('CURRENT_ROLE'); }}
+                >
+                  <Text style={[styles.deletedScopePillText, deletedFilterMode === 'CURRENT_ROLE' && styles.deletedScopePillTextActive]}>
+                    {currentFilterLabel} ({currentRoleDeletedUsers.length})
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           )}
+
+          {/* Role Sub-Filter Chips — Single Sleek Horizontal Scroll */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginTop: 6 }}
+            contentContainerStyle={{ gap: 6, alignItems: 'center' }}
+          >
+            {FILTERS_BY_GROUP[group].map((f) => {
+              const subCount = getSubCategoryCount(f.value);
+              const isActive = filter === f.value;
+              return (
+                <TouchableOpacity
+                  key={f.value}
+                  style={[styles.compactFilterChip, isActive && styles.compactFilterChipActive]}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    tap();
+                    setFilter(f.value);
+                  }}
+                >
+                  <Ionicons name={f.icon} size={12} color={isActive ? '#00ff87' : '#94a3b8'} />
+                  <Text style={[styles.compactFilterChipText, isActive && { color: '#00ff87' }]}>
+                    {f.label} ({subCount})
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
         </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.premiumList} showsVerticalScrollIndicator={false}>
-        {(filter === 'FARM_ADVISOR' || filter === 'GARDEN_ADVISOR') && (
+        {statusTab === 'ACTIVE' && (filter === 'FARM_ADVISOR' || filter === 'GARDEN_ADVISOR') && (
           <TouchableOpacity
             style={[styles.addAdvisorBtn, premiumShadow(theme.primary, 'sm')]}
             activeOpacity={0.85}
@@ -274,7 +439,7 @@ export default function SuperUsersScreen() {
           </TouchableOpacity>
         )}
 
-        {(filter === 'OPERATOR' || (filter === 'ADMIN' && isSuperAdmin)) && (
+        {statusTab === 'ACTIVE' && (filter === 'OPERATOR' || (filter === 'ADMIN' && isSuperAdmin)) && (
           <TouchableOpacity
             style={[styles.addAdvisorBtn, premiumShadow(theme.primary, 'sm')]}
             activeOpacity={0.85}
@@ -285,7 +450,7 @@ export default function SuperUsersScreen() {
           </TouchableOpacity>
         )}
 
-        {filter === 'TECHNICAL_TRAINER' && (
+        {statusTab === 'ACTIVE' && filter === 'TECHNICAL_TRAINER' && (
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <TouchableOpacity
               style={[styles.addAdvisorBtn, { flex: 1 }, premiumShadow(theme.primary, 'sm')]}
@@ -306,32 +471,51 @@ export default function SuperUsersScreen() {
             </TouchableOpacity>
           </View>
         )}
-        {filter === 'ADMIN' && !isSuperAdmin ? (
+        {statusTab === 'ACTIVE' && filter === 'ADMIN' && !isSuperAdmin ? (
           <Text style={styles.emptyText}>Only the Super Admin can add new Admin accounts.</Text>
         ) : null}
 
         {isLoading ? (
           <ActivityIndicator color={theme.primary} style={{ marginTop: 30 }} />
         ) : items.length === 0 ? (
-          <View style={{ alignItems: 'center', marginVertical: 30 }}>
-            <Ionicons name="people-outline" size={40} color="#cbd5e1" />
-            <Text style={styles.emptyText}>No users found.</Text>
+          <View style={{ alignItems: 'center', marginVertical: 40, paddingHorizontal: 20 }}>
+            <Ionicons
+              name={statusTab === 'DELETED' ? 'shield-checkmark-outline' : 'people-outline'}
+              size={48}
+              color={statusTab === 'DELETED' ? '#10b981' : '#64748b'}
+            />
+            <Text style={{ fontSize: 15, fontFamily: FONT.bold, color: statusTab === 'DELETED' ? '#00ff87' : '#94a3b8', marginTop: 12 }}>
+              {statusTab === 'DELETED' ? 'No Deleted Accounts Found' : 'No Users Found'}
+            </Text>
+            <Text style={[styles.emptyText, { marginTop: 4, textAlign: 'center' }]}>
+              {statusTab === 'DELETED'
+                ? deletedFilterMode === 'ALL_ROLES'
+                  ? 'There are no deleted or soft-deleted user accounts in the system.'
+                  : `There are no deleted accounts in ${currentFilterLabel}.`
+                : search.trim()
+                  ? `No active accounts matching "${search}".`
+                  : `No active ${currentFilterLabel.toLowerCase()} registered.`}
+            </Text>
           </View>
         ) : (
           <>
-            {visibleItems.map((u) => (
-              <UserRow
-                key={u.id}
-                user={u}
-                isOperator={filter === 'OPERATOR'}
-                onDeactivate={() => deactivate.mutate(u.id)}
-                onReactivate={() => reactivate.mutate(u.id)}
-                onDelete={isSuperAdmin ? () => handleDeleteUser(u) : undefined}
-                onEditPermissions={filter === 'OPERATOR' ? () => setPermissionsTarget(u) : undefined}
-                onEditRoles={filter !== 'OPERATOR' && filter !== 'ADMIN' && filter !== 'SUPER_ADMIN' ? () => setRolesTarget(u) : undefined}
-                onOpenDetail={() => setDetailTargetId(u.id)}
-              />
-            ))}
+            <View style={[styles.usersGridContainer, isDesktop && styles.usersGridContainerDesktop]}>
+              {visibleItems.map((u) => (
+                <View key={u.id} style={[styles.userGridItem, isDesktop && styles.userGridItemDesktop]}>
+                  <UserRow
+                    user={u}
+                    isDesktop={isDesktop}
+                    isOperator={filter === 'OPERATOR'}
+                    onDeactivate={() => deactivate.mutate(u.id)}
+                    onReactivate={() => reactivate.mutate(u.id)}
+                    onDelete={isSuperAdmin ? () => handleDeleteUser(u) : undefined}
+                    onEditPermissions={filter === 'OPERATOR' ? () => setPermissionsTarget(u) : undefined}
+                    onEditRoles={filter !== 'OPERATOR' && filter !== 'ADMIN' && filter !== 'SUPER_ADMIN' ? () => setRolesTarget(u) : undefined}
+                    onOpenDetail={() => setDetailTargetId(u.id)}
+                  />
+                </View>
+              ))}
+            </View>
 
             {/* Pagination Controls Row with Page Size Selector Dropdown */}
             <View style={styles.paginationContainer}>
@@ -796,8 +980,8 @@ function EditUserForm({ user, onDone }: { user: AdminUser; onDone: () => void })
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
       <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
-        <TouchableOpacity style={[styles.submitBtn, { flex: 1, backgroundColor: '#e2e8f0' }]} onPress={onDone}>
-          <Text style={[styles.submitBtnText, { color: '#475569' }]}>Cancel</Text>
+        <TouchableOpacity style={[styles.submitBtn, { flex: 1, backgroundColor: '#071f12', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.12)' }]} onPress={onDone}>
+          <Text style={[styles.submitBtnText, { color: '#cbd5e1' }]}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.submitBtn, { flex: 1 }]} disabled={update.isPending} onPress={handleSave}>
           {update.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Save</Text>}
@@ -860,8 +1044,8 @@ function ResetPasswordForm({ userId, onDone }: { userId: string; onDone: () => v
       />
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
       <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
-        <TouchableOpacity style={[styles.submitBtn, { flex: 1, backgroundColor: '#e2e8f0' }]} onPress={onDone}>
-          <Text style={[styles.submitBtnText, { color: '#475569' }]}>Cancel</Text>
+        <TouchableOpacity style={[styles.submitBtn, { flex: 1, backgroundColor: '#071f12', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.12)' }]} onPress={onDone}>
+          <Text style={[styles.submitBtnText, { color: '#cbd5e1' }]}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.submitBtn, { flex: 1, backgroundColor: '#dc2626' }]} disabled={resetPassword.isPending} onPress={handleReset}>
           {resetPassword.isPending ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.submitBtnText}>Reset Password</Text>}
@@ -943,6 +1127,7 @@ const ROLE_LABELS: Record<Role, string> = {
   OPERATOR: 'Operator',
   LABOUR: 'Labour Worker',
   TECHNICAL_TRAINER: 'Technical Trainer',
+  TRADER: 'Trader & Buyer',
   MANAGER: 'Manager',
   SUPERVISOR: 'Supervisor',
   SELLER: 'Seller',
@@ -1069,6 +1254,7 @@ function EditRolesModal({ target, onClose }: { target: AdminUser | null; onClose
 
 function UserRow({
   user,
+  isDesktop,
   isOperator,
   onDeactivate,
   onReactivate,
@@ -1078,6 +1264,7 @@ function UserRow({
   onOpenDetail,
 }: {
   user: AdminUser;
+  isDesktop?: boolean;
   isOperator?: boolean;
   onDeactivate: () => void;
   onReactivate: () => void;
@@ -1097,94 +1284,198 @@ function UserRow({
 
   const locationStr = [user.village, user.district, user.state].filter(Boolean).join(', ');
   const joinedDateStr = user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+  const deletedDateStr = user.deletedAt ? new Date(user.deletedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+  const cleanMobile = user.mobile.replace(/^DEL_/i, '').replace(/_del_\d+$/i, '').replace(/_\d+$/i, '');
+
+  const copyToClipboard = (text: string, label: string) => {
+    tap();
+    if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      alert(`Copied ${label}: ${text}`);
+    } else {
+      Alert.alert('Copied', `${label} ${text} copied to clipboard.`);
+    }
+  };
 
   return (
     <View style={[styles.userCard, premiumShadow('#0f172a', 'sm'), isDeactivated && styles.userCardDeactivated]}>
-      {/* Profile & Info Section */}
-      <TouchableOpacity
-        style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}
-        activeOpacity={0.7}
-        onPress={onOpenDetail}
-        disabled={!onOpenDetail}
-      >
-        {/* Profile Circle Photo */}
-        <View style={[styles.userAvatar, isDeactivated && { backgroundColor: '#f1f5f9' }]}>
-          {user.photoUrl ? (
-            <Image source={{ uri: user.photoUrl }} style={styles.userAvatarImage} resizeMode="cover" />
-          ) : (
-            <Text style={[styles.userAvatarText, isDeactivated && { color: '#94a3b8' }]}>{initials}</Text>
-          )}
-        </View>
+      {/* 1. Header: Avatar + Identity + Status Pill */}
+      <View style={styles.cardHeaderRow}>
+        {/* Avatar with Status Dot */}
+        <TouchableOpacity
+          style={styles.avatarWrap}
+          activeOpacity={0.8}
+          onPress={onOpenDetail}
+          disabled={!onOpenDetail}
+        >
+          <View style={[styles.userAvatar, isDeactivated && styles.userAvatarDeactivated]}>
+            {user.photoUrl ? (
+              <Image source={{ uri: user.photoUrl }} style={styles.userAvatarImage} resizeMode="cover" />
+            ) : (
+              <Text style={[styles.userAvatarText, isDeactivated && { color: '#ef4444' }]}>{initials}</Text>
+            )}
+          </View>
+          <View style={[styles.statusDot, isDeactivated ? styles.statusDotOffline : styles.statusDotOnline]} />
+        </TouchableOpacity>
 
-        {/* User Details */}
-        <View style={{ flex: 1, gap: 2 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-            <Text style={styles.userName}>{user.name}</Text>
+        {/* Name + King ID */}
+        <TouchableOpacity
+          style={{ flex: 1, gap: 2 }}
+          activeOpacity={0.8}
+          onPress={onOpenDetail}
+          disabled={!onOpenDetail}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+            <Text style={[styles.userName, isDeactivated && styles.userNameDeactivated]} numberOfLines={1}>
+              {user.name === 'Deleted Account' ? `Deleted (${user.kingId || cleanMobile})` : user.name}
+            </Text>
             {isDeactivated ? (
               <View style={styles.deactivatedBadge}>
-                <View style={styles.deactivatedDot} />
-                <Text style={styles.deactivatedBadgeText}>Disabled</Text>
-              </View>
-            ) : null}
-          </View>
-
-          <Text style={styles.userMeta}>
-            📱 {user.mobile} {user.kingId ? `· 🔑 ${user.kingId}` : ''}
-          </Text>
-
-          {user.email ? (
-            <Text style={styles.userSubMeta}>✉️ {user.email}</Text>
-          ) : null}
-
-          {locationStr ? (
-            <Text style={styles.userSubMeta}>📍 {locationStr}</Text>
-          ) : null}
-
-          {joinedDateStr ? (
-            <Text style={styles.userSubMeta}>📅 Joined: {joinedDateStr}</Text>
-          ) : null}
-
-          {/* Role Badges */}
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-            {activeAssignedRoles.map((r) => (
-              <View key={r} style={{ backgroundColor: r === user.role ? '#e0f2fe' : '#f1f5f9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: r === user.role ? '#0369a1' : '#475569' }}>
-                  {r.replace('_', ' ')}
+                <Ionicons name="trash" size={10} color="#ef4444" />
+                <Text style={styles.deactivatedBadgeText}>
+                  {deletedDateStr ? `Deleted ${deletedDateStr}` : 'Deleted'}
                 </Text>
               </View>
-            ))}
+            ) : (
+              <View style={styles.activePillBadge}>
+                <View style={styles.activePillDot} />
+                <Text style={styles.activePillText}>Active</Text>
+              </View>
+            )}
           </View>
-        </View>
-        {onOpenDetail ? <Ionicons name="chevron-forward" size={16} color="#cbd5e1" style={{ marginTop: 4 }} /> : null}
-      </TouchableOpacity>
 
-      {/* Top & Bottom Column for Deactivate, Delete & Action Buttons */}
-      <View style={styles.userActionColumn}>
-        {isOperator && onEditPermissions ? (
-          <TouchableOpacity style={[styles.actionBtnText, { backgroundColor: '#eff6ff' }]} activeOpacity={0.8} onPress={onEditPermissions}>
-            <Text style={[styles.actionBtnLabel, { color: '#1d4ed8' }]}>Permissions</Text>
+          {/* King ID with Copy Button */}
+          {user.kingId ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+              <TouchableOpacity
+                style={styles.kingIdChip}
+                onPress={() => copyToClipboard(user.kingId!, 'King ID')}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="key" size={10} color="#00ff87" />
+                <Text style={styles.kingIdChipText}>{user.kingId}</Text>
+                <Ionicons name="copy-outline" size={10} color="#00ff87" />
+              </TouchableOpacity>
+            </View>
+          ) : null}
+        </TouchableOpacity>
+      </View>
+
+      {/* 2. Body Info: Contact + Location + Joined + Roles */}
+      <View style={styles.cardBody}>
+        {/* Mobile Number Row */}
+        <View style={styles.infoRow}>
+          <TouchableOpacity
+            style={styles.mobileChip}
+            onPress={() => copyToClipboard(cleanMobile, 'Mobile Number')}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="call" size={12} color="#10b981" />
+            <Text style={styles.mobileChipText}>{cleanMobile}</Text>
+            <Ionicons name="copy-outline" size={10} color="#64748b" />
+          </TouchableOpacity>
+
+          {joinedDateStr ? (
+            <View style={styles.joinedBadge}>
+              <Ionicons name="calendar-outline" size={11} color="#64748b" />
+              <Text style={styles.joinedBadgeText}>{joinedDateStr}</Text>
+            </View>
+          ) : null}
+        </View>
+
+        {/* Email Row (if any) */}
+        {user.email ? (
+          <View style={styles.infoItemRow}>
+            <Ionicons name="mail-outline" size={12} color="#64748b" />
+            <Text style={styles.infoItemText} numberOfLines={1}>
+              {user.email.replace(/^DEL_/i, '').replace(/_del_\d+$/i, '')}
+            </Text>
+          </View>
+        ) : null}
+
+        {/* Location Row (if any) */}
+        {locationStr ? (
+          <View style={styles.infoItemRow}>
+            <Ionicons name="location-outline" size={12} color="#64748b" />
+            <Text style={styles.infoItemText} numberOfLines={1}>{locationStr}</Text>
+          </View>
+        ) : null}
+
+        {/* Role Tags */}
+        <View style={styles.rolesRow}>
+          {activeAssignedRoles.map((r) => (
+            <View key={r} style={[styles.roleBadge, isDeactivated && styles.roleBadgeDeactivated]}>
+              <Text style={[styles.roleBadgeText, isDeactivated && styles.roleBadgeTextDeactivated]}>
+                {r.replace('_', ' ')}
+              </Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* 3. Ergonomic Bottom Action Bar */}
+      <View style={styles.cardActionBar}>
+        {onOpenDetail ? (
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.actionBtnSecondary]}
+            activeOpacity={0.8}
+            onPress={onOpenDetail}
+          >
+            <Ionicons name="eye-outline" size={13} color="#94a3b8" />
+            <Text style={[styles.actionBtnText, { color: '#cbd5e1' }]}>Details</Text>
           </TouchableOpacity>
         ) : null}
 
-        {onEditRoles ? (
-          <TouchableOpacity style={[styles.actionBtnText, { backgroundColor: '#eef2ff' }]} activeOpacity={0.8} onPress={onEditRoles}>
-            <Text style={[styles.actionBtnLabel, { color: '#4338ca' }]}>Role</Text>
+        {!isDeactivated && isOperator && onEditPermissions ? (
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.actionBtnBlue]}
+            activeOpacity={0.8}
+            onPress={onEditPermissions}
+          >
+            <Ionicons name="options-outline" size={13} color="#60a5fa" />
+            <Text style={[styles.actionBtnText, { color: '#60a5fa' }]}>Perms</Text>
+          </TouchableOpacity>
+        ) : null}
+
+        {!isDeactivated && onEditRoles ? (
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.actionBtnIndigo]}
+            activeOpacity={0.8}
+            onPress={onEditRoles}
+          >
+            <Ionicons name="shield-outline" size={13} color="#a5b4fc" />
+            <Text style={[styles.actionBtnText, { color: '#a5b4fc' }]}>Role</Text>
           </TouchableOpacity>
         ) : null}
 
         {isDeactivated ? (
-          <TouchableOpacity style={[styles.actionBtnText, { backgroundColor: '#dcfce7' }]} activeOpacity={0.8} onPress={onReactivate}>
-            <Text style={[styles.actionBtnLabel, { color: '#16a34a' }]}>Reactivate</Text>
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.actionBtnRestore]}
+            activeOpacity={0.8}
+            onPress={onReactivate}
+          >
+            <Ionicons name="refresh" size={13} color="#00ff87" />
+            <Text style={[styles.actionBtnText, { color: '#00ff87' }]}>Restore</Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={[styles.actionBtnText, { backgroundColor: '#fee2e2' }]} activeOpacity={0.8} onPress={onDeactivate}>
-            <Text style={[styles.actionBtnLabel, { color: '#dc2626' }]}>Deactivate</Text>
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.actionBtnDeactivate]}
+            activeOpacity={0.8}
+            onPress={onDeactivate}
+          >
+            <Ionicons name="pause-circle-outline" size={13} color="#f87171" />
+            <Text style={[styles.actionBtnText, { color: '#f87171' }]}>Deactivate</Text>
           </TouchableOpacity>
         )}
 
         {onDelete ? (
-          <TouchableOpacity style={[styles.actionBtnText, { backgroundColor: '#991b1b' }]} activeOpacity={0.8} onPress={onDelete}>
-            <Text style={[styles.actionBtnLabel, { color: '#ffffff' }]}>🗑️ Delete</Text>
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.actionBtnDelete]}
+            activeOpacity={0.8}
+            onPress={onDelete}
+          >
+            <Ionicons name="trash-outline" size={13} color="#ffffff" />
+            <Text style={[styles.actionBtnText, { color: '#ffffff' }]}>Delete</Text>
           </TouchableOpacity>
         ) : null}
       </View>
@@ -1538,20 +1829,20 @@ function TrainerReportsModal({ visible, onClose }: { visible: boolean; onClose: 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
               {/* Summary Stats Grid */}
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                <View style={[styles.detailStatBox, { flex: 1, minWidth: 100, backgroundColor: '#f0fdf4' }]}>
-                  <Text style={[styles.detailStatValue, { color: '#16a34a' }]}>{summary.totalTrainers || 0}</Text>
+                <View style={[styles.detailStatBox, { flex: 1, minWidth: 100, backgroundColor: '#071f12', borderColor: 'rgba(0, 255, 135, 0.2)' }]}>
+                  <Text style={[styles.detailStatValue, { color: '#00ff87' }]}>{summary.totalTrainers || 0}</Text>
                   <Text style={styles.detailStatLabel}>Trainers</Text>
                 </View>
-                <View style={[styles.detailStatBox, { flex: 1, minWidth: 100, backgroundColor: '#eff6ff' }]}>
-                  <Text style={[styles.detailStatValue, { color: '#2563eb' }]}>{summary.totalLogs || 0}</Text>
+                <View style={[styles.detailStatBox, { flex: 1, minWidth: 100, backgroundColor: '#071f12', borderColor: 'rgba(59, 130, 246, 0.2)' }]}>
+                  <Text style={[styles.detailStatValue, { color: '#60a5fa' }]}>{summary.totalLogs || 0}</Text>
                   <Text style={styles.detailStatLabel}>Total Calls</Text>
                 </View>
-                <View style={[styles.detailStatBox, { flex: 1, minWidth: 100, backgroundColor: '#fef3c7' }]}>
-                  <Text style={[styles.detailStatValue, { color: '#d97706' }]}>{summary.pendingCalls || 0}</Text>
+                <View style={[styles.detailStatBox, { flex: 1, minWidth: 100, backgroundColor: '#071f12', borderColor: 'rgba(245, 158, 11, 0.2)' }]}>
+                  <Text style={[styles.detailStatValue, { color: '#fbbf24' }]}>{summary.pendingCalls || 0}</Text>
                   <Text style={styles.detailStatLabel}>Pending Calls</Text>
                 </View>
-                <View style={[styles.detailStatBox, { flex: 1, minWidth: 100, backgroundColor: '#dcfce7' }]}>
-                  <Text style={[styles.detailStatValue, { color: '#15803d' }]}>₹{summary.totalPayoutDisbursed || 0}</Text>
+                <View style={[styles.detailStatBox, { flex: 1, minWidth: 100, backgroundColor: '#071f12', borderColor: 'rgba(0, 255, 135, 0.2)' }]}>
+                  <Text style={[styles.detailStatValue, { color: '#00ff87' }]}>₹{summary.totalPayoutDisbursed || 0}</Text>
                   <Text style={styles.detailStatLabel}>Wallet Paid</Text>
                 </View>
               </View>
@@ -1564,19 +1855,19 @@ function TrainerReportsModal({ visible, onClose }: { visible: boolean; onClose: 
                 logs.map((log: any) => {
                   const isVerified = log.status === 'VERIFIED_AND_PAID';
                   return (
-                    <View key={log.id} style={{ backgroundColor: '#020d06', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#e2e8f0', gap: 4 }}>
+                    <View key={log.id} style={{ backgroundColor: '#020d06', padding: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.08)', gap: 5 }}>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' }}>
+                        <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#f8fafc' }}>
                           🌾 {log.farmer?.name || 'Farmer'} ({log.farmer?.mobile})
                         </Text>
-                        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isVerified ? '#15803d' : '#d97706' }}>
+                        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isVerified ? '#00ff87' : '#fbbf24' }}>
                           {isVerified ? `Verified (₹${log.payoutAmount})` : 'Pending'}
                         </Text>
                       </View>
-                      <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#475569' }}>
-                        Trainer: <Text style={{ fontFamily: FONT.bold }}>{log.trainer?.name || 'Assigned Trainer'}</Text> ({log.trainer?.mobile})
+                      <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#cbd5e1' }}>
+                        Trainer: <Text style={{ fontFamily: FONT.bold, color: '#00ff87' }}>{log.trainer?.name || 'Assigned Trainer'}</Text> ({log.trainer?.mobile})
                       </Text>
-                      <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
+                      <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8' }}>
                         Location: {log.farmer?.district || log.state || 'Punjab'} • Time Slot: {log.preferredCallSlot || 'ANYTIME'}
                       </Text>
                     </View>
@@ -1592,96 +1883,275 @@ function TrainerReportsModal({ visible, onClose }: { visible: boolean; onClose: 
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#020d06',
+  },
   premiumHero: {
-    paddingTop: Platform.OS === 'ios' ? 50 : 20,
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    paddingTop: Platform.OS === 'ios' ? 44 : 10,
+    backgroundColor: '#04140a',
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-    ...premiumShadow('#cbd5e1', 'sm'),
+    borderBottomColor: 'rgba(0, 255, 135, 0.12)',
+    ...premiumShadow('#000000', 'sm'),
   },
   premiumHeroContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 24,
+    paddingHorizontal: 14,
+    paddingBottom: 8,
   },
   heroHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 20,
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 8,
   },
-  premiumHeroTitle: {
-    fontSize: 26,
+  compactHeroTitle: {
+    fontSize: 18,
     fontFamily: FONT.extraBold,
-    color: '#0f172a',
-    letterSpacing: -0.5,
+    color: '#f8fafc',
+    letterSpacing: -0.4,
   },
-  premiumHeroSubtitle: {
-    fontSize: 12,
+  compactCountBadge: {
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.35)',
+    paddingHorizontal: 7,
+    paddingVertical: 1.5,
+    borderRadius: RADIUS.pill,
+  },
+  compactCountBadgeText: {
+    color: '#00ff87',
+    fontSize: 11,
     fontFamily: FONT.bold,
-    color: '#059669',
-    letterSpacing: 1,
-    marginTop: 2,
-    textTransform: 'uppercase',
+  },
+  heroStatsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexWrap: 'wrap',
   },
   heroStatsPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#ecfdf5',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
+    gap: 4,
+    backgroundColor: '#071f12',
+    paddingHorizontal: 8,
+    paddingVertical: 3.5,
+    borderRadius: RADIUS.pill,
     borderWidth: 1,
-    borderColor: '#a7f3d0',
+    borderColor: 'rgba(0, 255, 135, 0.2)',
   },
   heroStatsText: {
-    color: '#059669',
+    color: '#00ff87',
     fontFamily: FONT.bold,
-    fontSize: 11,
+    fontSize: 10.5,
   },
-  searchWrapPremium: {
+  compactExportBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.35)',
+    paddingHorizontal: 8,
+    paddingVertical: 3.5,
+    borderRadius: RADIUS.pill,
+  },
+  compactExportBtnText: {
+    color: '#00ff87',
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+  },
+  compactControlBar: {
+    flexDirection: 'column',
+    gap: 6,
+  },
+  compactControlBarDesktop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  compactStatusSwitch: {
+    flexDirection: 'row',
+    backgroundColor: '#071f12',
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    padding: 2,
+    alignSelf: 'flex-start',
+  },
+  compactStatusTab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIUS.pill,
+  },
+  compactStatusTabActive: {
+    backgroundColor: 'rgba(0, 255, 135, 0.18)',
+  },
+  compactStatusTabDeletedActive: {
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+  },
+  compactStatusText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#64748b',
+  },
+  compactStatusTextActive: {
+    color: '#00ff87',
+  },
+  compactStatusTextDeletedActive: {
+    color: '#f87171',
+  },
+  compactSearchBox: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#020d06',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 16,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+    borderRadius: RADIUS.pill,
+    paddingHorizontal: 10,
+    height: 32,
+    minWidth: 180,
   },
-  searchInputPremium: {
+  compactSearchInput: {
     flex: 1,
-    color: '#334155',
+    color: '#f8fafc',
     fontFamily: FONT.medium,
-    fontSize: 14,
+    fontSize: 12,
+  },
+  compactGroupRow: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  compactGroupChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: RADIUS.pill,
+    backgroundColor: '#071f12',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  compactGroupChipActive: {
+    borderColor: '#00ff87',
+    backgroundColor: 'rgba(0, 255, 135, 0.14)',
+  },
+  compactGroupChipText: {
+    color: '#94a3b8',
+    fontFamily: FONT.bold,
+    fontSize: 11,
+  },
+  compactFilterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4.5,
+    borderRadius: RADIUS.pill,
+    backgroundColor: '#071f12',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  compactFilterChipActive: {
+    backgroundColor: 'rgba(0, 255, 135, 0.18)',
+    borderColor: '#00ff87',
+  },
+  compactFilterChipText: {
+    color: '#94a3b8',
+    fontFamily: FONT.bold,
+    fontSize: 11,
+  },
+  compactDeletedBannerBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.25)',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginTop: 4,
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  deletedBannerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  deletedBannerTitle: {
+    fontSize: 13,
+    fontFamily: FONT.bold,
+    color: '#f87171',
+  },
+  deletedScopePills: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  deletedScopePill: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  deletedScopePillActive: {
+    backgroundColor: 'rgba(239, 68, 68, 0.25)',
+    borderColor: '#ef4444',
+  },
+  deletedScopePillText: {
+    fontSize: 11,
+    fontFamily: FONT.semiBold,
+    color: '#94a3b8',
+  },
+  deletedScopePillTextActive: {
+    color: '#fca5a5',
+    fontFamily: FONT.bold,
+  },
+  deletedBannerDesc: {
+    fontSize: 11,
+    fontFamily: FONT.regular,
+    color: '#cbd5e1',
+    lineHeight: 16,
+    marginTop: 6,
   },
   groupRowPremium: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 12,
+    gap: 8,
+    marginBottom: 8,
   },
   groupChipPremium: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
+    gap: 6,
+    paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    backgroundColor: '#071f12',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     position: 'relative',
     overflow: 'hidden',
   },
   groupChipPremiumActive: {
-    borderColor: '#10b981',
-    backgroundColor: '#f0fdf4',
-    ...premiumShadow('#10b981', 'sm'),
+    borderColor: '#00ff87',
+    backgroundColor: 'rgba(0, 255, 135, 0.12)',
+    ...premiumShadow('#00ff87', 'sm'),
   },
   groupChipTextPremium: {
-    color: '#64748b',
+    color: '#94a3b8',
     fontFamily: FONT.bold,
     fontSize: 12,
   },
@@ -1689,112 +2159,489 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,255,135,0.03)',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  filterChipPremiumActive: {
-    backgroundColor: '#059669',
-    borderColor: '#047857',
-    ...premiumShadow('#059669', 'sm'),
-  },
-  filterChipTextPremium: {
-    color: '#64748b',
-    fontFamily: FONT.semiBold,
-    fontSize: 12,
-  },
-  premiumList: {
-    padding: 20,
-    paddingBottom: 100,
-    gap: 12,
-    backgroundColor: '#020d06',
-  },
-  label: { fontSize: 11.5, fontFamily: FONT.bold, color: '#334155', marginTop: 4 },
-  container: { flex: 1, backgroundColor: '#020d06' },
-  hero: { paddingTop: 20, paddingBottom: 16, paddingHorizontal: SPACING.xxl },
-  heroTitle: { color: '#fff', fontSize: 20, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
-  heroSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 12, fontFamily: FONT.medium, marginTop: 2 },
-  searchWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(255,255,255,0.16)',
-    borderRadius: RADIUS.md,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    marginTop: 14,
-  },
-  searchInput: { flex: 1, color: '#fff', fontSize: 13, fontFamily: FONT.medium },
-  groupRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 14,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: RADIUS.pill,
-    padding: 4,
-  },
-  groupChip: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-    paddingVertical: 8,
-    borderRadius: RADIUS.pill,
-  },
-  groupChipActive: { backgroundColor: 'rgba(0,255,135,0.03)' },
-  groupChipText: { fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' },
-  filterChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: RADIUS.pill,
-    backgroundColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: '#071f12',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
-  filterChipActive: { backgroundColor: 'rgba(0,255,135,0.03)' },
-  filterChipText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#ffffff' },
-  list: { padding: SPACING.lg, gap: 10, paddingBottom: SPACING.xxl },
-  addAdvisorBtn: {
+  filterChipPremiumActive: {
+    backgroundColor: 'rgba(0, 255, 135, 0.16)',
+    borderColor: '#00ff87',
+    ...premiumShadow('#00ff87', 'sm'),
+  },
+  filterChipTextPremium: {
+    color: '#94a3b8',
+    fontFamily: FONT.semiBold,
+    fontSize: 11.5,
+  },
+  premiumList: {
+    padding: 16,
+    paddingBottom: 110,
+    gap: 12,
+    backgroundColor: '#020d06',
+  },
+  usersGridContainer: {
+    flexDirection: 'column',
+    gap: 12,
+    width: '100%',
+  },
+  usersGridContainerDesktop: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 14,
+    justifyContent: 'space-between',
+  },
+  userGridItem: {
+    width: '100%',
+  },
+  userGridItemDesktop: {
+    width: '49%',
+    minWidth: 320,
+  },
+  userCard: {
+    backgroundColor: '#04180d',
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.14)',
+    gap: 10,
+    width: '100%',
+  },
+  userCardDeactivated: {
+    backgroundColor: 'rgba(239, 68, 68, 0.04)',
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    opacity: 0.95,
+  },
+  cardHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  avatarWrap: {
+    position: 'relative',
+  },
+  userAvatar: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: 'rgba(0, 255, 135, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 255, 135, 0.3)',
+  },
+  userAvatarDeactivated: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderColor: 'rgba(239, 68, 68, 0.4)',
+  },
+  userAvatarImage: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+  },
+  userAvatarText: {
+    fontSize: 16,
+    fontFamily: FONT.extraBold,
+    color: '#00ff87',
+  },
+  statusDot: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#04180d',
+  },
+  statusDotOnline: {
+    backgroundColor: '#00ff87',
+  },
+  statusDotOffline: {
+    backgroundColor: '#ef4444',
+  },
+  userName: {
+    fontSize: 15,
+    fontFamily: FONT.bold,
+    color: '#f8fafc',
+    flexShrink: 1,
+    letterSpacing: -0.2,
+  },
+  userNameDeactivated: {
+    color: '#fca5a5',
+  },
+  activePillBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.3)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+  },
+  activePillDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#00ff87',
+  },
+  activePillText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
+  },
+  deactivatedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.4)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+  },
+  deactivatedBadgeText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#f87171',
+  },
+  kingIdChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#020d06',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: RADIUS.pill,
+    alignSelf: 'flex-start',
+  },
+  kingIdChipText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
+    letterSpacing: 0.4,
+  },
+  cardBody: {
+    gap: 8,
+    paddingVertical: 4,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  mobileChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#020d06',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  mobileChipText: {
+    fontSize: 12,
+    fontFamily: FONT.semiBold,
+    color: '#cbd5e1',
+  },
+  joinedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  joinedBadgeText: {
+    fontSize: 11,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
+  infoItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  infoItemText: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+    flex: 1,
+  },
+  rolesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 2,
+  },
+  roleBadge: {
+    backgroundColor: 'rgba(0, 255, 135, 0.08)',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+  },
+  roleBadgeText: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
+    letterSpacing: 0.3,
+  },
+  roleBadgeDeactivated: {
+    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+    borderColor: 'rgba(239, 68, 68, 0.25)',
+  },
+  roleBadgeTextDeactivated: {
+    color: '#fca5a5',
+  },
+  cardActionBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.05)',
+    flexWrap: 'wrap',
+  },
+  actionBtn: {
+    flex: 1,
+    minWidth: 70,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    backgroundColor: theme.primary,
-    paddingVertical: 12,
-    borderRadius: RADIUS.md,
+    gap: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    borderWidth: 1,
   },
-  addAdvisorBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 13.5 },
+  actionBtnSecondary: {
+    backgroundColor: '#071f12',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  actionBtnBlue: {
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    borderColor: 'rgba(59, 130, 246, 0.3)',
+  },
+  actionBtnIndigo: {
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+    borderColor: 'rgba(99, 102, 241, 0.3)',
+  },
+  actionBtnRestore: {
+    backgroundColor: 'rgba(0, 255, 135, 0.12)',
+    borderColor: '#00ff87',
+  },
+  actionBtnDeactivate: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+  },
+  actionBtnDelete: {
+    backgroundColor: '#dc2626',
+    borderColor: '#b91c1c',
+  },
+  actionBtnText: {
+    fontSize: 11,
+    fontFamily: FONT.bold,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(2, 13, 6, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: SPACING.lg,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 460,
+    maxHeight: '88%',
+    backgroundColor: '#04180d',
+    borderRadius: RADIUS.xl,
+    padding: SPACING.lg,
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+    ...premiumShadow('#000000', 'lg'),
+  },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontFamily: FONT.extraBold,
+    color: '#f8fafc',
+    letterSpacing: -0.3,
+  },
+  label: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#cbd5e1',
+    marginTop: 6,
+  },
+  input: {
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 255, 135, 0.2)',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 13.5,
+    fontFamily: FONT.medium,
+    backgroundColor: '#020d06',
+    color: '#f8fafc',
+  },
+  errorText: {
+    color: '#f87171',
+    fontFamily: FONT.semiBold,
+    fontSize: 12,
+  },
+  submitBtn: {
+    backgroundColor: theme.primary,
+    borderRadius: RADIUS.md,
+    paddingVertical: 13,
+    alignItems: 'center',
+    marginTop: 6,
+    ...premiumShadow(theme.primary, 'sm'),
+  },
+  submitBtnText: {
+    color: '#ffffff',
+    fontFamily: FONT.bold,
+    fontSize: 14,
+  },
+  helperText: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+  },
+  permissionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.04)',
+  },
+  permissionRowText: {
+    fontSize: 13.5,
+    fontFamily: FONT.semiBold,
+    color: '#f8fafc',
+    flex: 1,
+  },
+  deactivatedHint: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#fca5a5',
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  lockedHint: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontFamily: FONT.bold,
+    color: '#f8fafc',
+  },
+  detailName: {
+    fontSize: 18,
+    fontFamily: FONT.extraBold,
+    color: '#f8fafc',
+  },
+  detailMeta: {
+    fontSize: 12,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+  },
+  detailStatsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 10,
+  },
+  detailStatBox: {
+    flex: 1,
+    backgroundColor: '#020d06',
+    borderRadius: RADIUS.md,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  detailStatValue: {
+    fontSize: 16,
+    fontFamily: FONT.extraBold,
+    color: '#00ff87',
+  },
+  detailStatLabel: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+    marginTop: 2,
+  },
+  successBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(0, 255, 135, 0.08)',
+    borderRadius: RADIUS.md,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+  },
+  successText: {
+    flex: 1,
+    fontSize: 12.5,
+    fontFamily: FONT.medium,
+    color: '#00ff87',
+  },
   paginationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     flexWrap: 'wrap',
     gap: 10,
-    marginTop: 10,
-    paddingTop: 10,
+    marginTop: 14,
+    paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
+    borderTopColor: 'rgba(255, 255, 255, 0.08)',
   },
   pageSizeDropdownBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#f1f5f9',
+    gap: 6,
+    backgroundColor: '#071f12',
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
-    borderColor: '#cbd5e1',
+    borderColor: 'rgba(0, 255, 135, 0.2)',
   },
   pageSizeDropdownText: {
     fontSize: 12,
     fontFamily: FONT.bold,
-    color: '#0f172a',
+    color: '#f8fafc',
   },
   pagerRow: {
     flexDirection: 'row',
@@ -1810,71 +2657,99 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#020d06',
+    borderColor: 'rgba(0, 255, 135, 0.2)',
+    backgroundColor: '#071f12',
   },
-  pagerBtnDisabled: { opacity: 0.5 },
-  pagerText: { fontSize: 12.5, fontFamily: FONT.bold, color: '#334155' },
-  emptyText: { fontSize: 13, fontFamily: FONT.medium, color: '#94a3b8' },
-  userCard: {
+  pagerBtnDisabled: {
+    opacity: 0.4,
+  },
+  pagerText: {
+    fontSize: 12.5,
+    fontFamily: FONT.bold,
+    color: '#cbd5e1',
+  },
+  emptyText: {
+    fontSize: 13,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+  },
+  addAdvisorBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    backgroundColor: 'rgba(0,255,135,0.03)',
-    borderRadius: RADIUS.lg,
-    paddingVertical: SPACING.sm,
-    paddingHorizontal: SPACING.md,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
-  },
-  userCardDeactivated: { backgroundColor: '#fafbfc', opacity: 0.85 },
-  userAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.primaryLight, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  userAvatarImage: { width: 44, height: 44, borderRadius: 22 },
-  userAvatarText: { fontSize: 14, fontFamily: FONT.extraBold, color: theme.primary },
-  userActionColumn: { flexDirection: 'column', gap: 5, justifyContent: 'center', minWidth: 85, marginLeft: 4 },
-  userName: { fontSize: 14, fontFamily: FONT.bold, color: '#0f172a', flexShrink: 1 },
-  userMeta: { fontSize: 12, fontFamily: FONT.medium, color: '#475569', marginTop: 1 },
-  userSubMeta: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
-  userKingId: { fontSize: 10.5, fontFamily: FONT.bold, color: theme.primary, marginTop: 2, letterSpacing: 0.3 },
-  deactivatedBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#fee2e2', paddingHorizontal: 7, paddingVertical: 2.5, borderRadius: RADIUS.pill },
-  deactivatedDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#dc2626' },
-  deactivatedBadgeText: { fontSize: 9, fontFamily: FONT.extraBold, color: '#dc2626' },
-  actionBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: '#f1f5f9',
-    alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
+    backgroundColor: theme.primary,
+    paddingVertical: 12,
+    borderRadius: RADIUS.md,
   },
-  actionBtnText: {
+  addAdvisorBtnText: {
+    color: '#ffffff',
+    fontFamily: FONT.bold,
+    fontSize: 13.5,
+  },
+  relationBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+    borderRadius: RADIUS.md,
     paddingHorizontal: 10,
     paddingVertical: 7,
-    borderRadius: RADIUS.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
+    marginTop: 4,
   },
-  actionBtnLabel: { fontSize: 10.5, fontFamily: FONT.bold },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'center', alignItems: 'center', padding: SPACING.lg },
-  modalCard: { width: '100%', maxWidth: 440, maxHeight: '85%', backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.xl, padding: SPACING.lg, ...premiumShadow('#000000', 'lg') },
-  modalHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  modalTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#0f172a' },
-  input: { borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13.5, fontFamily: FONT.medium, backgroundColor: '#020d06', color: '#0f172a' },
-  errorText: { color: '#dc2626', fontFamily: FONT.semiBold, fontSize: 12 },
-  submitBtn: { backgroundColor: theme.primary, borderRadius: RADIUS.md, paddingVertical: 13, alignItems: 'center', marginTop: 4 },
-  submitBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 14 },
-  helperText: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b' },
-  permissionRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 },
-  permissionRowText: { fontSize: 13.5, fontFamily: FONT.semiBold, color: '#0f172a', flex: 1 },
-  deactivatedHint: { fontSize: 10.5, fontFamily: FONT.bold, color: '#dc2626', backgroundColor: '#fee2e2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  lockedHint: { fontSize: 10.5, fontFamily: FONT.bold, color: '#16a34a', backgroundColor: '#dcfce7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  sectionTitle: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
-  detailName: { fontSize: 17, fontFamily: FONT.extraBold, color: '#0f172a' },
-  detailMeta: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
-  detailStatsRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  detailStatBox: { flex: 1, backgroundColor: '#020d06', borderRadius: RADIUS.md, paddingVertical: 10, alignItems: 'center' },
-  detailStatValue: { fontSize: 15, fontFamily: FONT.extraBold, color: '#0f172a' },
-  detailStatLabel: { fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 2 },
-  successBox: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#f0fdf4', borderRadius: RADIUS.md, padding: 12, borderWidth: 1, borderColor: '#bbf7d0' },
-  successText: { flex: 1, fontSize: 12.5, fontFamily: FONT.medium, color: '#15803d' },
+  relationLabel: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#34d399',
+    letterSpacing: 0.2,
+  },
+  relationValue: {
+    fontSize: 12,
+    fontFamily: FONT.semiBold,
+    color: '#f8fafc',
+    marginTop: 1,
+  },
+  detailSectionHighlight: {
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+    borderRadius: RADIUS.md,
+    padding: 10,
+    marginVertical: 4,
+    gap: 3,
+  },
+  detailHighlightTitle: {
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#10b981',
+  },
+  detailHighlightText: {
+    fontSize: 11.5,
+    fontFamily: FONT.medium,
+    color: '#cbd5e1',
+  },
+  excelExportBar: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  excelBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(0, 255, 135, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.35)',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  excelBtnText: {
+    fontSize: 11.5,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
+  },
 });

@@ -209,7 +209,25 @@ export default function RecordsScreen() {
   const { width } = useWindowDimensions();
   const isMobile = width < 600;
   const { user } = useAuth();
-  const [recordType, setRecordType] = useState<'EXPENSES' | 'SALES' | 'OVERVIEW' | 'LABOUR' | 'ANALYSIS' | 'PARTIES'>('OVERVIEW');
+  const isSupervisor = user?.role === 'SUPERVISOR' || (Array.isArray(user?.roles) && user.roles.includes('SUPERVISOR' as any));
+  const supervisorConfig = (user?.supervisorFeaturesConfig as any) || {};
+
+  const canViewSales = !isSupervisor || !user?.employerFarmerId || Boolean(supervisorConfig.sales?.view || supervisorConfig.sales?.entry);
+  const canAddSales = !isSupervisor || !user?.employerFarmerId || Boolean(supervisorConfig.sales?.entry);
+
+  const canViewExpenses = !isSupervisor || !user?.employerFarmerId || Boolean(supervisorConfig.purchases?.view || supervisorConfig.purchases?.entry);
+  const canAddExpenses = !isSupervisor || !user?.employerFarmerId || Boolean(supervisorConfig.purchases?.entry);
+
+  const canViewLabour = !isSupervisor || !user?.employerFarmerId || Boolean(supervisorConfig.labour?.view || supervisorConfig.labour?.entry);
+  const canAddLabour = !isSupervisor || !user?.employerFarmerId || Boolean(supervisorConfig.labour?.entry);
+
+  const canViewParties = !isSupervisor || !user?.employerFarmerId || Boolean(supervisorConfig.sales?.view || supervisorConfig.purchases?.view);
+
+  const initialRecordType = isSupervisor && user?.employerFarmerId
+    ? canViewSales ? 'SALES' : canViewExpenses ? 'EXPENSES' : canViewLabour ? 'LABOUR' : 'OVERVIEW'
+    : 'OVERVIEW';
+
+  const [recordType, setRecordType] = useState<'EXPENSES' | 'SALES' | 'OVERVIEW' | 'LABOUR' | 'ANALYSIS' | 'PARTIES'>(initialRecordType);
 
   const { data: farms, isLoading: farmsLoading } = useFarms();
   const [selectedFarmId, setSelectedFarmId] = useState<string | undefined>(undefined);
@@ -671,19 +689,27 @@ export default function RecordsScreen() {
 
   useEffect(() => {
     if (action === 'NEW_SALE') {
-      setRecordType('SALES');
-      setSaleStep('FORM');
-      setShowSaleForm(true);
+      if (canViewSales) setRecordType('SALES');
+      if (canAddSales) {
+        setSaleStep('FORM');
+        setShowSaleForm(true);
+      }
     } else if (action === 'SALES') {
-      setRecordType('SALES');
+      if (canViewSales) setRecordType('SALES');
     } else if (action === 'NEW_EXPENSE') {
-      setRecordType('EXPENSES');
-      resetExpenseForm();
-      setShowExpenseForm(true);
+      if (canViewExpenses) setRecordType('EXPENSES');
+      if (canAddExpenses) {
+        resetExpenseForm();
+        setShowExpenseForm(true);
+      }
     } else if (action === 'EXPENSES') {
-      setRecordType('EXPENSES');
+      if (canViewExpenses) setRecordType('EXPENSES');
+    } else if (action === 'LABOUR') {
+      if (canViewLabour) setRecordType('LABOUR');
+    } else if (action === 'PARTIES') {
+      if (canViewParties) setRecordType('PARTIES');
     }
-  }, [action, t]);
+  }, [action, t, canViewSales, canAddSales, canViewExpenses, canAddExpenses, canViewLabour, canViewParties]);
 
   const handleOpenEditSale = async (item: CropSaleRecord) => {
     tap();
@@ -2283,59 +2309,71 @@ export default function RecordsScreen() {
         {/* Tab Switcher */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ marginTop: 16 }}>
           <View style={styles.subTabBar}>
-            <TouchableOpacity
-              style={[styles.subTabItem, recordType === 'OVERVIEW' && styles.subTabItemActive]}
-              activeOpacity={0.8}
-              onPress={() => { tap(); setRecordType('OVERVIEW'); }}
-            >
-              <Ionicons name="bar-chart" size={14} color={recordType === 'OVERVIEW' ? theme.primary : '#ffffff'} />
-              <Text style={[styles.subTabText, recordType === 'OVERVIEW' && styles.subTabTextActive]}>Overview</Text>
-            </TouchableOpacity>
+            {(!isSupervisor || !user?.employerFarmerId) && (
+              <TouchableOpacity
+                style={[styles.subTabItem, recordType === 'OVERVIEW' && styles.subTabItemActive]}
+                activeOpacity={0.8}
+                onPress={() => { tap(); setRecordType('OVERVIEW'); }}
+              >
+                <Ionicons name="bar-chart" size={14} color={recordType === 'OVERVIEW' ? theme.primary : '#ffffff'} />
+                <Text style={[styles.subTabText, recordType === 'OVERVIEW' && styles.subTabTextActive]}>Overview</Text>
+              </TouchableOpacity>
+            )}
 
-            <TouchableOpacity
-              style={[styles.subTabItem, recordType === 'SALES' && styles.subTabItemActive]}
-              activeOpacity={0.8}
-              onPress={() => { tap(); setRecordType('SALES'); }}
-            >
-              <Ionicons name="trending-up" size={14} color={recordType === 'SALES' ? theme.primary : '#ffffff'} />
-              <Text style={[styles.subTabText, recordType === 'SALES' && styles.subTabTextActive]}>Sales</Text>
-            </TouchableOpacity>
+            {canViewSales && (
+              <TouchableOpacity
+                style={[styles.subTabItem, recordType === 'SALES' && styles.subTabItemActive]}
+                activeOpacity={0.8}
+                onPress={() => { tap(); setRecordType('SALES'); }}
+              >
+                <Ionicons name="trending-up" size={14} color={recordType === 'SALES' ? theme.primary : '#ffffff'} />
+                <Text style={[styles.subTabText, recordType === 'SALES' && styles.subTabTextActive]}>Sales</Text>
+              </TouchableOpacity>
+            )}
 
-            <TouchableOpacity
-              style={[styles.subTabItem, recordType === 'EXPENSES' && styles.subTabItemActive]}
-              activeOpacity={0.8}
-              onPress={() => { tap(); setRecordType('EXPENSES'); }}
-            >
-              <Ionicons name="receipt" size={14} color={recordType === 'EXPENSES' ? theme.primary : '#ffffff'} />
-              <Text style={[styles.subTabText, recordType === 'EXPENSES' && styles.subTabTextActive]}>Expenses</Text>
-            </TouchableOpacity>
+            {canViewExpenses && (
+              <TouchableOpacity
+                style={[styles.subTabItem, recordType === 'EXPENSES' && styles.subTabItemActive]}
+                activeOpacity={0.8}
+                onPress={() => { tap(); setRecordType('EXPENSES'); }}
+              >
+                <Ionicons name="receipt" size={14} color={recordType === 'EXPENSES' ? theme.primary : '#ffffff'} />
+                <Text style={[styles.subTabText, recordType === 'EXPENSES' && styles.subTabTextActive]}>Expenses</Text>
+              </TouchableOpacity>
+            )}
 
-            <TouchableOpacity
-              style={[styles.subTabItem, recordType === 'ANALYSIS' && styles.subTabItemActive]}
-              activeOpacity={0.8}
-              onPress={() => { tap(); setRecordType('ANALYSIS'); }}
-            >
-              <Ionicons name="stats-chart" size={14} color={recordType === 'ANALYSIS' ? theme.primary : '#ffffff'} />
-              <Text style={[styles.subTabText, recordType === 'ANALYSIS' && styles.subTabTextActive]}>Payments</Text>
-            </TouchableOpacity>
+            {(canViewSales || canViewExpenses) && (
+              <TouchableOpacity
+                style={[styles.subTabItem, recordType === 'ANALYSIS' && styles.subTabItemActive]}
+                activeOpacity={0.8}
+                onPress={() => { tap(); setRecordType('ANALYSIS'); }}
+              >
+                <Ionicons name="stats-chart" size={14} color={recordType === 'ANALYSIS' ? theme.primary : '#ffffff'} />
+                <Text style={[styles.subTabText, recordType === 'ANALYSIS' && styles.subTabTextActive]}>Payments</Text>
+              </TouchableOpacity>
+            )}
 
-            <TouchableOpacity
-              style={[styles.subTabItem, recordType === 'LABOUR' && styles.subTabItemActive]}
-              activeOpacity={0.8}
-              onPress={() => { tap(); setRecordType('LABOUR'); }}
-            >
-              <Ionicons name="people" size={14} color={recordType === 'LABOUR' ? theme.primary : '#ffffff'} />
-              <Text style={[styles.subTabText, recordType === 'LABOUR' && styles.subTabTextActive]}>Labour</Text>
-            </TouchableOpacity>
+            {canViewLabour && (
+              <TouchableOpacity
+                style={[styles.subTabItem, recordType === 'LABOUR' && styles.subTabItemActive]}
+                activeOpacity={0.8}
+                onPress={() => { tap(); setRecordType('LABOUR'); }}
+              >
+                <Ionicons name="people" size={14} color={recordType === 'LABOUR' ? theme.primary : '#ffffff'} />
+                <Text style={[styles.subTabText, recordType === 'LABOUR' && styles.subTabTextActive]}>Labour</Text>
+              </TouchableOpacity>
+            )}
 
-            <TouchableOpacity
-              style={[styles.subTabItem, recordType === 'PARTIES' && styles.subTabItemActive]}
-              activeOpacity={0.8}
-              onPress={() => { tap(); setRecordType('PARTIES'); }}
-            >
-              <Ionicons name="people-circle-outline" size={14} color={recordType === 'PARTIES' ? theme.primary : '#ffffff'} />
-              <Text style={[styles.subTabText, recordType === 'PARTIES' && styles.subTabTextActive]}>Parties</Text>
-            </TouchableOpacity>
+            {canViewParties && (
+              <TouchableOpacity
+                style={[styles.subTabItem, recordType === 'PARTIES' && styles.subTabItemActive]}
+                activeOpacity={0.8}
+                onPress={() => { tap(); setRecordType('PARTIES'); }}
+              >
+                <Ionicons name="people-circle-outline" size={14} color={recordType === 'PARTIES' ? theme.primary : '#ffffff'} />
+                <Text style={[styles.subTabText, recordType === 'PARTIES' && styles.subTabTextActive]}>Parties</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </ScrollView>
       </LinearGradient>
@@ -2356,18 +2394,20 @@ export default function RecordsScreen() {
                   <Text style={styles.totalLabel}>Total Sales Revenue</Text>
                   <Text style={styles.salesValue}>{formatInr(totalSalesRevenue)}</Text>
                 </View>
-                <TouchableOpacity
-                  style={styles.addSalesCTA}
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    tap();
-                    resetSaleForm();
-                    setShowSaleForm(true);
-                  }}
-                >
-                  <Ionicons name="add" size={16} color="#ffffff" />
-                  <Text style={styles.addSalesCTAText}>Sale</Text>
-                </TouchableOpacity>
+                {canAddSales && (
+                  <TouchableOpacity
+                    style={styles.addSalesCTA}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      tap();
+                      resetSaleForm();
+                      setShowSaleForm(true);
+                    }}
+                  >
+                    <Ionicons name="add" size={16} color="#ffffff" />
+                    <Text style={styles.addSalesCTAText}>Sale</Text>
+                  </TouchableOpacity>
+                )}
               </View>
 
               {/* Sales List view mode */}
@@ -3394,17 +3434,19 @@ export default function RecordsScreen() {
                   <Text style={styles.totalLabel}>Total Expenses</Text>
                   <Text style={styles.totalValue}>{formatInr(totalSpent)}</Text>
                 </View>
-                <TouchableOpacity
-                  style={[styles.addSalesCTA, { backgroundColor: '#dc2626' }]}
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    tap();
-                    setShowExpenseForm(true);
-                  }}
-                >
-                  <Ionicons name="add" size={16} color="#ffffff" />
-                  <Text style={styles.addSalesCTAText}>Expense</Text>
-                </TouchableOpacity>
+                {canAddExpenses && (
+                  <TouchableOpacity
+                    style={[styles.addSalesCTA, { backgroundColor: '#dc2626' }]}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      tap();
+                      setShowExpenseForm(true);
+                    }}
+                  >
+                    <Ionicons name="add" size={16} color="#ffffff" />
+                    <Text style={styles.addSalesCTAText}>Expense</Text>
+                  </TouchableOpacity>
+                )}
               </View>
 
               {/* Expense List view mode */}

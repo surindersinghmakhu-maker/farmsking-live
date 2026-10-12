@@ -18,6 +18,7 @@ import { LabourDashboardView } from '@/components/dashboards/LabourDashboardView
 import { AdminChatModal } from '@/src/components/AdminChatModal';
 import { WelcomeBonusModal } from '@/src/components/WelcomeBonusModal';
 import { TechnicalTrainerDashboardView } from '@/components/dashboards/TechnicalTrainerDashboardView';
+import { SupervisorDashboardView } from '@/components/dashboards/SupervisorDashboardView';
 import { PendingApprovalView } from '@/src/components/PendingApprovalView';
 
 import { useExecutiveTheme } from '@/src/store/theme-context';
@@ -97,6 +98,8 @@ export default function HomeScreen() {
         return <OperatorDashboardView />;
       case 'LABOUR':
         return <LabourDashboardView />;
+      case 'SUPERVISOR':
+        return <SupervisorDashboardView />;
       case 'TECHNICAL_TRAINER':
         return <TechnicalTrainerDashboardView />;
       default:

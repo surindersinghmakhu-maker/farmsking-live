@@ -49,6 +49,10 @@ function todayIso() {
 
 export function LabourManagementSection() {
   const [subTab, setSubTab] = useState<'WORKERS' | 'WORK_ENTRIES' | 'PAYMENTS'>('WORKERS');
+  const { user } = useAuth();
+  const isSupervisor = user?.role === 'SUPERVISOR' || (Array.isArray(user?.roles) && user.roles.includes('SUPERVISOR' as any));
+  const supervisorConfig = (user?.supervisorFeaturesConfig as any) || {};
+  const canAddLabour = !isSupervisor || !user?.employerFarmerId || Boolean(supervisorConfig.labour?.entry);
 
   // Queries
   const { data: workers = [], isLoading: isLoadingWorkers } = useLabourWorkers();
@@ -334,37 +338,41 @@ export function LabourManagementSection() {
               </Text>
             </View>
           </View>
-          <TouchableOpacity
-            style={styles.addWorkerTopBtn}
-            activeOpacity={0.8}
-            onPress={handleOpenAddWorker}
-          >
-            <Ionicons name="person-add" size={14} color="#ffffff" />
-            <Text style={styles.addWorkerTopBtnText}>+ Add Worker</Text>
-          </TouchableOpacity>
+          {canAddLabour && (
+            <TouchableOpacity
+              style={styles.addWorkerTopBtn}
+              activeOpacity={0.8}
+              onPress={handleOpenAddWorker}
+            >
+              <Ionicons name="person-add" size={14} color="#ffffff" />
+              <Text style={styles.addWorkerTopBtnText}>+ Add Worker</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
       {/* 2. Quick Action Bar */}
-      <View style={styles.quickActionRow}>
-        <TouchableOpacity
-          style={[styles.quickActionBtn, { backgroundColor: '#fff7ed', borderColor: '#ffedd5' }]}
-          activeOpacity={0.8}
-          onPress={() => handleOpenAddWork()}
-        >
-          <Ionicons name="hammer-outline" size={16} color="#ea580c" />
-          <Text style={[styles.quickActionBtnText, { color: '#c2410c' }]}>+ Log Work</Text>
-        </TouchableOpacity>
+      {canAddLabour && (
+        <View style={styles.quickActionRow}>
+          <TouchableOpacity
+            style={[styles.quickActionBtn, { backgroundColor: '#fff7ed', borderColor: '#ffedd5' }]}
+            activeOpacity={0.8}
+            onPress={() => handleOpenAddWork()}
+          >
+            <Ionicons name="hammer-outline" size={16} color="#ea580c" />
+            <Text style={[styles.quickActionBtnText, { color: '#c2410c' }]}>+ Log Work</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.quickActionBtn, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}
-          activeOpacity={0.8}
-          onPress={() => handleOpenAddPayment()}
-        >
-          <Ionicons name="cash-outline" size={16} color="#16a34a" />
-          <Text style={[styles.quickActionBtnText, { color: '#166534' }]}>+ Give Payment</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={[styles.quickActionBtn, { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' }]}
+            activeOpacity={0.8}
+            onPress={() => handleOpenAddPayment()}
+          >
+            <Ionicons name="cash-outline" size={16} color="#16a34a" />
+            <Text style={[styles.quickActionBtnText, { color: '#166534' }]}>+ Give Payment</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* 3. Sub Tabs Bar */}
       <View style={styles.subTabRow}>
@@ -500,26 +508,30 @@ export function LabourManagementSection() {
 
                   {/* Card Actions: + Work | + Pay | Statement */}
                   <View style={styles.workerActionRow}>
-                    <TouchableOpacity
-                      style={styles.workerActionBtn}
-                      activeOpacity={0.8}
-                      onPress={() => handleOpenAddWork(w)}
-                    >
-                      <Ionicons name="hammer-outline" size={14} color="#ea580c" />
-                      <Text style={[styles.workerActionText, { color: '#ea580c' }]}>+ Work</Text>
-                    </TouchableOpacity>
+                    {canAddLabour && (
+                      <TouchableOpacity
+                        style={styles.workerActionBtn}
+                        activeOpacity={0.8}
+                        onPress={() => handleOpenAddWork(w)}
+                      >
+                        <Ionicons name="hammer-outline" size={14} color="#ea580c" />
+                        <Text style={[styles.workerActionText, { color: '#ea580c' }]}>+ Work</Text>
+                      </TouchableOpacity>
+                    )}
+
+                    {canAddLabour && (
+                      <TouchableOpacity
+                        style={styles.workerActionBtn}
+                        activeOpacity={0.8}
+                        onPress={() => handleOpenAddPayment(w)}
+                      >
+                        <Ionicons name="cash-outline" size={14} color="#16a34a" />
+                        <Text style={[styles.workerActionText, { color: '#16a34a' }]}>+ Pay</Text>
+                      </TouchableOpacity>
+                    )}
 
                     <TouchableOpacity
-                      style={styles.workerActionBtn}
-                      activeOpacity={0.8}
-                      onPress={() => handleOpenAddPayment(w)}
-                    >
-                      <Ionicons name="cash-outline" size={14} color="#16a34a" />
-                      <Text style={[styles.workerActionText, { color: '#16a34a' }]}>+ Pay</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[styles.workerActionBtn, { borderRightWidth: 0 }]}
+                      style={[styles.workerActionBtn, { borderRightWidth: 0, flex: canAddLabour ? 1 : 2 }]}
                       activeOpacity={0.8}
                       onPress={() => setSelectedStatementWorkerId(w.id)}
                     >

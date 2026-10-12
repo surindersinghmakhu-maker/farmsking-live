@@ -16,9 +16,37 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         try {
           await this.$executeRawUnsafe(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "googleId" TEXT;`);
           await this.$executeRawUnsafe(`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relname = 'users_googleId_key') THEN CREATE UNIQUE INDEX "users_googleId_key" ON "users"("googleId"); END IF; END $$;`);
-          this.logger.log('Auto-migration checked for users.googleId column.');
+          await this.$executeRawUnsafe(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "supervisorFeaturesConfig" JSONB DEFAULT '{}'::jsonb;`);
+          await this.$executeRawUnsafe(`ALTER TABLE "seller_stores" ADD COLUMN IF NOT EXISTS "categoryCommissions" JSONB DEFAULT '{}'::jsonb;`);
+          await this.$executeRawUnsafe(`
+            CREATE TABLE IF NOT EXISTS "supervisor_requests" (
+              "id" TEXT NOT NULL PRIMARY KEY,
+              "farmerId" TEXT NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+              "supervisorId" TEXT NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+              "status" TEXT NOT NULL DEFAULT 'PENDING',
+              "featuresConfig" JSONB NOT NULL DEFAULT '{}'::jsonb,
+              "note" TEXT,
+              "respondedAt" TIMESTAMP WITH TIME ZONE,
+              "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+          `);
+          await this.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "supervisor_requests_farmerId_idx" ON "supervisor_requests"("farmerId");`);
+          await this.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "supervisor_requests_supervisorId_idx" ON "supervisor_requests"("supervisorId");`);
+          await this.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "supervisor_requests_status_idx" ON "supervisor_requests"("status");`);
+
+          // Auto-migration: Ensure all non-admin users who possess a King ID have the 'CUSTOMER' role in their roles array
+          await this.$executeRawUnsafe(`
+            UPDATE "users"
+            SET "roles" = array_append("roles", 'CUSTOMER'::"Role")
+            WHERE "kingId" IS NOT NULL
+              AND "role" NOT IN ('ADMIN', 'SUPER_ADMIN')
+              AND NOT ('CUSTOMER'::"Role" = ANY("roles"));
+          `);
+
+          this.logger.log('Auto-migration checked for users.googleId, supervisorFeaturesConfig, supervisor_requests, and kingId CUSTOMER role baseline.');
         } catch (migErr) {
-          this.logger.warn(`Auto-migration for googleId: ${migErr.message}`);
+          this.logger.warn(`Auto-migration check notice: ${migErr.message}`);
         }
 
         break;

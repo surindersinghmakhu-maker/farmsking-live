@@ -11,7 +11,8 @@ export type Role =
   | 'SELLER'
   | 'OPERATOR'
   | 'LABOUR'
-  | 'TECHNICAL_TRAINER';
+  | 'TECHNICAL_TRAINER'
+  | 'TRADER';
 export type AdvisorType = 'FARM' | 'GARDEN';
 export type AreaUnit = 'ACRE' | 'HECTARE' | 'BIGHA' | 'GUNTA';
 export type SoilType =
@@ -150,6 +151,11 @@ export interface AdminUser {
   bankAccountNumber?: string | null;
   bankIfsc?: string | null;
   bankAccountHolderName?: string | null;
+  // Employer / Labour / Seller relations
+  employerFarmerId?: string | null;
+  employerFarmer?: { id: string; name: string; kingId: string | null; mobile: string; farmName?: string | null } | null;
+  labourWorkerUser?: { id: string; name: string; farmerId: string; farmer: { id: string; name: string; kingId: string | null; mobile: string; farmName?: string | null } }[];
+  sellerStore?: { id: string; storeName: string; kycStatus: string } | null;
 }
 
 export interface ListUsersResponse {

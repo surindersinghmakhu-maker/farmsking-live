@@ -175,7 +175,7 @@ export class SellerService {
         whereClause = { kycStatus: kycStatus as SellerKycStatus };
       }
     }
-    return this.prisma.sellerStore.findMany({
+    const stores = await this.prisma.sellerStore.findMany({
       where: whereClause,
       include: {
         seller: {
@@ -184,6 +184,22 @@ export class SellerService {
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    if (stores.length === 0) return [];
+
+    try {
+      const ids = stores.map((s) => `'${s.id}'`).join(',');
+      const rawCommissions: Array<{ id: string; categoryCommissions: any }> = await this.prisma.$queryRawUnsafe(
+        `SELECT "id", "categoryCommissions" FROM "seller_stores" WHERE "id" IN (${ids})`,
+      );
+      const commMap = new Map(rawCommissions.map((r) => [r.id, r.categoryCommissions || {}]));
+      return stores.map((s) => ({
+        ...s,
+        categoryCommissions: commMap.get(s.id) || {},
+      }));
+    } catch {
+      return stores;
+    }
   }
 
   /** Admin: Verify or Reject Seller KYC with mandatory reason & Punjabi welcome trigger */
@@ -232,11 +248,23 @@ export class SellerService {
     return updatedStore;
   }
 
-  /** Admin: Update Vendor Settings (Commission, RTO Policy, Catalog Mode, FSSAI Approval) */
+  /** Admin: Update Vendor Settings (Commission, RTO Policy, Catalog Mode, FSSAI Approval, Category Commissions) */
   async updateSellerSettings(storeId: string, dto: UpdateSellerSettingsDto) {
     const store = await this.prisma.sellerStore.findUnique({ where: { id: storeId } });
     if (!store) {
       throw new NotFoundException('Seller store not found.');
+    }
+
+    if ((dto as any).categoryCommissions) {
+      try {
+        await this.prisma.$executeRawUnsafe(
+          `UPDATE "seller_stores" SET "categoryCommissions" = $1::jsonb WHERE "id" = $2`,
+          JSON.stringify((dto as any).categoryCommissions),
+          storeId,
+        );
+      } catch (err) {
+        console.warn('Could not update categoryCommissions:', err);
+      }
     }
 
     return this.prisma.sellerStore.update({

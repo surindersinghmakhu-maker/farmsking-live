@@ -8,6 +8,7 @@ import { provisionInviteCoupon } from '../../common/utils/invite-coupon.util';
 import { provisionPartnerReferralCoupon } from '../../common/utils/partner-coupon.util';
 import { provisionReferralWelcomeCoupon } from '../../common/utils/referral-coupon.util';
 import { RegisterDto } from './dto/register.dto';
+import { RegisterTraderDto } from './dto/register-trader.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordStartDto } from './dto/forgot-password-start.dto';
 import { ForgotPasswordVerifyDto } from './dto/forgot-password-verify.dto';
@@ -557,6 +558,91 @@ export class AuthService {
   }
 
   /**
+   * Stage 2: Self-Upgrade & Trader/Shopkeeper Registration.
+   *
+   * Registers a new trader account or upgrades an existing customer/guest account
+   * with the `TRADER` and `CUSTOMER` roles, assigns an 8-digit King ID if not present,
+   * hashes the chosen password with argon2, and automatically links all existing
+   * `UnifiedParty` ledger records across different farmers matching this mobile number.
+   *
+   * @param dto - Object containing mobile, password, name, shopName, mandiName, location
+   * @returns Complete authentication response with JWT access token and sanitized user profile
+   */
+  async registerTrader(dto: RegisterTraderDto) {
+    const rawMobileDigits = dto.mobile.replace(/\D/g, '');
+    const cleanMobileNum = rawMobileDigits.slice(-10);
+
+    const existing = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { mobile: dto.mobile.trim() },
+          { mobile: cleanMobileNum },
+          { mobile: `+91${cleanMobileNum}` },
+          { mobile: { endsWith: cleanMobileNum } },
+        ],
+        deletedAt: null,
+      },
+    });
+
+    const passwordHash = await argon2.hash(dto.password);
+    let user: any;
+
+    if (existing) {
+      const updatedRoles = Array.from(new Set([...(existing.roles || []), Role.TRADER, Role.CUSTOMER]));
+      user = await this.prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          passwordHash,
+          name: dto.name || existing.name,
+          farmName: dto.shopName || existing.farmName,
+          district: dto.district || existing.district,
+          state: dto.state || existing.state,
+          role: Role.TRADER,
+          roles: updatedRoles,
+        },
+        select: SAFE_USER_SELECT,
+      });
+    } else {
+      const kingId = await generateUniqueKingId(this.prisma);
+      user = await this.prisma.user.create({
+        data: {
+          kingId,
+          mobile: cleanMobileNum,
+          passwordHash,
+          name: dto.name,
+          farmName: dto.shopName || null,
+          district: dto.district || null,
+          state: dto.state || null,
+          role: Role.TRADER,
+          roles: [Role.CUSTOMER, Role.TRADER],
+        },
+        select: SAFE_USER_SELECT,
+      });
+    }
+
+    // Auto-link any existing UnifiedParty records that match this mobile number
+    try {
+      await this.prisma.unifiedParty.updateMany({
+        where: {
+          OR: [
+            { mobile: cleanMobileNum },
+            { mobile: dto.mobile.trim() },
+            { mobile: `+91${cleanMobileNum}` },
+          ],
+          userId: null,
+        },
+        data: {
+          userId: user.id,
+        },
+      });
+    } catch (err) {
+      console.warn('Could not auto-link UnifiedParty in registerTrader:', err);
+    }
+
+    return this.buildAuthResponse(user);
+  }
+
+  /**
    * Farmer/Gardener signup grants FARMER or GARDENER role plus FREE plan record.
    * NOTE: Role.BUSINESS_PARTNER is NOT automatically assigned. Only Super Admin/Admin can assign BUSINESS_PARTNER.
    */
@@ -648,6 +734,79 @@ export class AuthService {
             isPermanentlyBlocked: false,
           },
         });
+      }
+    }
+
+    // Clean 10-digit mobile numbers for Worker & Farmer lookup
+    const rawWorkerDigits = identifier.replace(/\D/g, '');
+    const cleanWorkerMobile = rawWorkerDigits.slice(-10);
+    const rawPasswordDigits = cleanPassword.replace(/\D/g, '');
+    const cleanFarmerPassword = rawPasswordDigits.slice(-10);
+
+    // Labour Worker Login Support: Worker mobile + Farmer mobile as password
+    if (cleanWorkerMobile.length === 10 && cleanFarmerPassword.length === 10) {
+      const labourWorker = await this.prisma.labourWorker.findFirst({
+        where: {
+          OR: [
+            { mobile: cleanWorkerMobile },
+            { mobile: `+91${cleanWorkerMobile}` },
+            { mobile: { endsWith: cleanWorkerMobile } },
+            ...(user ? [{ userId: user.id }] : []),
+          ],
+          farmer: {
+            OR: [
+              { mobile: cleanFarmerPassword },
+              { mobile: `+91${cleanFarmerPassword}` },
+              { mobile: { endsWith: cleanFarmerPassword } },
+            ],
+          },
+          deletedAt: null,
+        },
+        include: {
+          farmer: { select: { id: true, name: true, mobile: true } },
+        },
+      });
+
+      if (labourWorker) {
+        if (!user) {
+          const kingId = await generateUniqueKingId(this.prisma);
+          const passwordHash = await argon2.hash(cleanPassword);
+          user = await this.prisma.user.create({
+            data: {
+              kingId,
+              mobile: cleanWorkerMobile,
+              passwordHash,
+              name: labourWorker.name || 'Worker',
+              role: Role.LABOUR,
+              roles: [Role.LABOUR, Role.CUSTOMER],
+            },
+          });
+          await this.prisma.labourWorker.updateMany({
+            where: {
+              OR: [
+                { mobile: cleanWorkerMobile },
+                { mobile: `+91${cleanWorkerMobile}` },
+                { mobile: { endsWith: cleanWorkerMobile } },
+              ],
+              userId: null,
+            },
+            data: { userId: user.id },
+          });
+        } else {
+          const roles = Array.from(new Set([...(user.roles || []), Role.LABOUR, Role.CUSTOMER]));
+          user = await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+              role: Role.LABOUR,
+              roles,
+              failedLoginAttempts: 0,
+              lockoutUntil: null,
+            },
+          });
+        }
+
+        const { passwordHash: _ph, securityAnswerHash: _sah, ...safeUser } = user;
+        return this.buildAuthResponse(safeUser as any);
       }
     }
 

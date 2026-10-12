@@ -20,6 +20,7 @@ import { UpdatePartnerProfileDto } from './dto/update-partner-profile.dto';
 import { UpdateMyAddressDto } from './dto/update-my-address.dto';
 import { UpdateOperatorPermissionsDto } from './dto/update-operator-permissions.dto';
 import { CreateSupervisorDto } from './dto/create-supervisor.dto';
+import { AppointSupervisorRequestDto, RespondSupervisorRequestDto } from './dto/appoint-supervisor-request.dto';
 import { UpdateSupervisorPermissionsDto } from './dto/update-supervisor-permissions.dto';
 import { UpdateAdminStaffPermissionsDto } from './dto/update-admin-staff-permissions.dto';
 import { SetReferrerDto } from './dto/set-referrer.dto';
@@ -204,8 +205,8 @@ export class UsersController {
     return this.usersService.list(query);
   }
 
-  /** Advisor/Admin/Business Partner: resolve a farmer's FarmsKing ID to their account, e.g. to apply a coupon on their behalf. */
-  @Roles(Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.BUSINESS_PARTNER)
+  /** Farmer/Advisor/Admin/Business Partner: resolve a user's FarmsKing ID to their account. */
+  @Roles(Role.FARMER, Role.ADVISOR, Role.ADMIN, Role.SUPER_ADMIN, Role.BUSINESS_PARTNER)
   @Get('lookup/:kingId')
   lookupByKingId(@Param('kingId') kingId: string) {
     return this.usersService.lookupByKingId(kingId);
@@ -300,10 +301,53 @@ export class UsersController {
     return this.usersService.createSupervisorByFarmer(user, dto);
   }
 
+  /** Farmer appoints a supervisor candidate by King ID with granular feature permissions (View & Entry) */
+  @Roles(Role.FARMER, Role.SUPER_ADMIN)
+  @Post('my-supervisors/appoint-request')
+  appointSupervisorRequest(@CurrentUser() user: AuthUser, @Body() dto: AppointSupervisorRequestDto) {
+    return this.usersService.appointSupervisorRequest(user, dto);
+  }
+
+  /** Fetches incoming requests for candidate, or outgoing requests sent by farmer */
+  @Roles(Role.FARMER, Role.SUPERVISOR, Role.CUSTOMER, Role.GARDENER, Role.LABOUR, Role.ADMIN, Role.SUPER_ADMIN)
+  @Get('my-supervisors/requests')
+  getSupervisorRequests(@CurrentUser() user: AuthUser) {
+    return this.usersService.getSupervisorRequests(user);
+  }
+
+  /** Supervisor candidate accepts or rejects appointment request — zero Admin intervention */
+  @Roles(Role.FARMER, Role.SUPERVISOR, Role.CUSTOMER, Role.GARDENER, Role.LABOUR, Role.ADMIN, Role.SUPER_ADMIN)
+  @Post('my-supervisors/requests/:requestId/respond')
+  respondToSupervisorRequest(
+    @CurrentUser() user: AuthUser,
+    @Param('requestId') requestId: string,
+    @Body() dto: RespondSupervisorRequestDto,
+  ) {
+    return this.usersService.respondToSupervisorRequest(user, requestId, dto);
+  }
+
+  /** Supervisor fetches their active employer farmer and allowed features */
+  @Roles(Role.FARMER, Role.SUPERVISOR, Role.CUSTOMER, Role.GARDENER, Role.LABOUR, Role.ADMIN, Role.SUPER_ADMIN)
+  @Get('my-supervisors/active-assignment')
+  getActiveSupervisorAssignment(@CurrentUser() user: AuthUser) {
+    return this.usersService.getActiveSupervisorAssignment(user);
+  }
+
   @Roles(Role.FARMER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN)
   @Get('my-supervisors')
   getMySupervisors(@CurrentUser() user: AuthUser) {
     return this.usersService.getMySupervisors(user);
+  }
+
+  /** Farmer updates allowed features (View & Entry) for an active supervisor */
+  @Roles(Role.FARMER, Role.SUPER_ADMIN)
+  @Patch('my-supervisors/:id/features')
+  updateSupervisorFeatures(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body('featuresConfig') featuresConfig: any,
+  ) {
+    return this.usersService.updateSupervisorFeaturesConfig(user, id, featuresConfig);
   }
 
   @Roles(Role.FARMER, Role.SUPER_ADMIN)
@@ -314,6 +358,22 @@ export class UsersController {
     @Body() dto: UpdateSupervisorPermissionsDto,
   ) {
     return this.usersService.updateSupervisorPermissions(user, id, dto.permissions);
+  }
+
+  @Roles(Role.FARMER, Role.SUPERVISOR, Role.ADMIN, Role.SUPER_ADMIN)
+  @Post('my-supervisors/:id/resign')
+  resignSupervisor(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.usersService.resignSupervisor(user, id);
+  }
+
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Patch('supervisors/:id/assign-employer')
+  assignSupervisorEmployer(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Body('employerFarmerId') employerFarmerId: string | null,
+  ) {
+    return this.usersService.assignSupervisorEmployer(user, id, employerFarmerId);
   }
 
   @Roles(Role.FARMER, Role.SUPER_ADMIN)

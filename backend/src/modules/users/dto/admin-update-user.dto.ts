@@ -144,4 +144,8 @@ export class AdminUpdateUserDto {
 
   @IsOptional()
   doctorConsultationFee?: number | null;
+
+  @IsOptional()
+  @IsString()
+  employerFarmerId?: string | null;
 }

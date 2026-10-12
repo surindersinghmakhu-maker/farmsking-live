@@ -15,8 +15,10 @@ import {
 } from '@/src/api/wallet.api';
 import { approveWithdrawal, listAllWithdrawals, rejectWithdrawal } from '@/src/api/withdrawals.api';
 import { MyWallet, WalletTransaction, WithdrawalRequest } from '@/src/types/api';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 export function AdminWalletManagementView() {
+  const { colors, isLight, cardBg, textColor } = useExecutiveTheme();
   const [activeTab, setActiveTab] = useState<'ALL_USERS' | 'WITHDRAWALS' | 'AUTOMATED_REPORT' | 'BONUS_REPORT'>('ALL_USERS');
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
@@ -176,43 +178,43 @@ export function AdminWalletManagementView() {
   return (
     <View style={styles.container}>
       {/* Sub-Nav Bar */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabNav}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.tabNav, !isLight && { backgroundColor: 'rgba(255,255,255,0.06)' }]}>
         <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'ALL_USERS' && styles.tabBtnActive]}
+          style={[styles.tabBtn, activeTab === 'ALL_USERS' && [styles.tabBtnActive, !isLight && { backgroundColor: 'rgba(34,197,94,0.18)' }]]}
           onPress={() => setActiveTab('ALL_USERS')}
         >
-          <Ionicons name="people" size={15} color={activeTab === 'ALL_USERS' ? '#15803d' : '#64748b'} />
-          <Text style={[styles.tabBtnText, activeTab === 'ALL_USERS' && styles.tabBtnTextActive]}>
+          <Ionicons name="people" size={15} color={activeTab === 'ALL_USERS' ? (isLight ? '#15803d' : '#4ade80') : '#64748b'} />
+          <Text style={[styles.tabBtnText, activeTab === 'ALL_USERS' && [styles.tabBtnTextActive, !isLight && { color: '#4ade80' }]]}>
             All User Wallets ({totalCount})
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'WITHDRAWALS' && styles.tabBtnActive]}
+          style={[styles.tabBtn, activeTab === 'WITHDRAWALS' && [styles.tabBtnActive, !isLight && { backgroundColor: 'rgba(34,197,94,0.18)' }]]}
           onPress={() => setActiveTab('WITHDRAWALS')}
         >
-          <Ionicons name="cash-outline" size={15} color={activeTab === 'WITHDRAWALS' ? '#15803d' : '#64748b'} />
-          <Text style={[styles.tabBtnText, activeTab === 'WITHDRAWALS' && styles.tabBtnTextActive]}>
+          <Ionicons name="cash-outline" size={15} color={activeTab === 'WITHDRAWALS' ? (isLight ? '#15803d' : '#4ade80') : '#64748b'} />
+          <Text style={[styles.tabBtnText, activeTab === 'WITHDRAWALS' && [styles.tabBtnTextActive, !isLight && { color: '#4ade80' }]]}>
             Withdrawal Records
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'AUTOMATED_REPORT' && styles.tabBtnActive]}
+          style={[styles.tabBtn, activeTab === 'AUTOMATED_REPORT' && [styles.tabBtnActive, !isLight && { backgroundColor: 'rgba(34,197,94,0.18)' }]]}
           onPress={() => setActiveTab('AUTOMATED_REPORT')}
         >
-          <Ionicons name="document-text" size={15} color={activeTab === 'AUTOMATED_REPORT' ? '#15803d' : '#64748b'} />
-          <Text style={[styles.tabBtnText, activeTab === 'AUTOMATED_REPORT' && styles.tabBtnTextActive]}>
+          <Ionicons name="document-text" size={15} color={activeTab === 'AUTOMATED_REPORT' ? (isLight ? '#15803d' : '#4ade80') : '#64748b'} />
+          <Text style={[styles.tabBtnText, activeTab === 'AUTOMATED_REPORT' && [styles.tabBtnTextActive, !isLight && { color: '#4ade80' }]]}>
             Automated Audit Report
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'BONUS_REPORT' && styles.tabBtnActive]}
+          style={[styles.tabBtn, activeTab === 'BONUS_REPORT' && [styles.tabBtnActive, !isLight && { backgroundColor: 'rgba(34,197,94,0.18)' }]]}
           onPress={() => setActiveTab('BONUS_REPORT')}
         >
-          <Ionicons name="gift-outline" size={15} color={activeTab === 'BONUS_REPORT' ? '#15803d' : '#64748b'} />
-          <Text style={[styles.tabBtnText, activeTab === 'BONUS_REPORT' && styles.tabBtnTextActive]}>
+          <Ionicons name="gift-outline" size={15} color={activeTab === 'BONUS_REPORT' ? (isLight ? '#15803d' : '#4ade80') : '#64748b'} />
+          <Text style={[styles.tabBtnText, activeTab === 'BONUS_REPORT' && [styles.tabBtnTextActive, !isLight && { color: '#4ade80' }]]}>
             Bonus Details & Report
           </Text>
         </TouchableOpacity>
@@ -223,10 +225,10 @@ export function AdminWalletManagementView() {
         <View style={{ gap: 10 }}>
           {/* Search & Active Balance Filter Row */}
           <View style={styles.filterRow}>
-            <View style={styles.searchBox}>
+            <View style={[styles.searchBox, !isLight && { backgroundColor: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.12)' }]}>
               <Ionicons name="search" size={16} color="#64748b" />
               <TextInput
-                style={styles.searchInput}
+                style={[styles.searchInput, !isLight && { color: textColor }]}
                 placeholder="Search user by name, mobile or King ID..."
                 placeholderTextColor="#94a3b8"
                 value={search}
@@ -284,14 +286,24 @@ export function AdminWalletManagementView() {
             </View>
           ) : (
             displayedUsers.map((u) => (
-              <View key={u.id} style={[styles.userCard, premiumShadow('#0f172a', 'sm')]}>
+              <View
+                key={u.id}
+                style={[
+                  styles.userCard,
+                  !isLight && {
+                    backgroundColor: cardBg,
+                    borderColor: 'rgba(34, 197, 94, 0.2)',
+                  },
+                  premiumShadow('#0f172a', 'sm'),
+                ]}
+              >
                 <View style={styles.userCardHeader}>
                   <View style={styles.avatarBg}>
                     <Text style={styles.avatarText}>{u.name ? u.name[0].toUpperCase() : 'U'}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.userName}>{u.name || 'User'}</Text>
-                    <Text style={styles.userMeta}>📱 {u.mobile} {u.kingId ? `• 🔑 ${u.kingId}` : ''}</Text>
+                    <Text style={[styles.userName, !isLight && { color: textColor }]}>{u.name || 'User'}</Text>
+                    <Text style={[styles.userMeta, !isLight && { color: '#94a3b8' }]}>📱 {u.mobile} {u.kingId ? `• 🔑 ${u.kingId}` : ''}</Text>
                     <Text style={styles.userRoleTag}>Role: {u.role}</Text>
                   </View>
                   <View style={{ alignItems: 'flex-end' }}>

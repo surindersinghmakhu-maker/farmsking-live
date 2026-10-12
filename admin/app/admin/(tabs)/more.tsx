@@ -88,7 +88,7 @@ const Hoverable4DCard = ({ children, style, onPress }: any) => {
 export default function MoreScreen() {
   const { user, logout } = useAuth();
   const { role } = useRole();
-  const { executiveTheme, setExecutiveTheme, colors } = useExecutiveTheme();
+  const { executiveTheme, setExecutiveTheme, themeMode, setThemeMode, colors, isLight, isMedium, isDarkTheme, cardBg, textColor, subTextColor } = useExecutiveTheme();
   const { data: appSettings } = useAppSettings();
   const updateAppSettings = useUpdateAppSettings();
   const isAdminRole = role === 'ADMIN' || role === 'SUPER_ADMIN';
@@ -223,7 +223,71 @@ export default function MoreScreen() {
 
 
 
-              {/* Account Section */}
+          {/* 🎨 EXECUTIVE THEME SELECTOR SECTION (Light · Dark (Parrot & Gold)) */}
+          <View style={styles.section}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <Text style={[styles.sectionTitle, isLight && { color: '#64748b' }]}>
+                🎨 ਥੀਮ ਕੰਟਰੋਲ (THEME MODE)
+              </Text>
+              <View style={{ backgroundColor: isLight ? 'rgba(22, 163, 74, 0.1)' : 'rgba(34, 197, 94, 0.15)', borderWidth: 1, borderColor: isLight ? '#16a34a' : '#fbbf24', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.pill }}>
+                <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isLight ? '#16a34a' : '#fbbf24' }}>
+                  {isLight ? 'ਡਿਫਾਲਟ: ਲਾਈਟ ☀️' : 'ਮੁੱਖ: ਡਾਰਕ 🌿'}
+                </Text>
+              </View>
+            </View>
+
+            <View
+              style={[
+                styles.sectionCard,
+                { padding: 10, gap: 8 },
+                isLight && { backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderWidth: 1 },
+                !isLight && { backgroundColor: 'rgba(6, 26, 30, 0.82)', borderColor: 'rgba(34, 197, 94, 0.32)', borderWidth: 1 },
+              ]}
+            >
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                {/* ☀️ Light Theme (Default) */}
+                <TouchableOpacity
+                  style={[
+                    styles.themeCardItem,
+                    themeMode === 'LIGHT' && styles.themeCardItemActiveLight,
+                  ]}
+                  activeOpacity={0.8}
+                  onPress={() => setThemeMode('LIGHT')}
+                >
+                  <View style={{ position: 'absolute', top: -6, right: 6, backgroundColor: '#16a34a', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6, zIndex: 5 }}>
+                    <Text style={{ fontSize: 8, fontFamily: FONT.extraBold, color: '#ffffff' }}>DEFAULT</Text>
+                  </View>
+                  <Ionicons name="sunny" size={22} color={themeMode === 'LIGHT' ? '#16a34a' : '#94a3b8'} />
+                  <Text style={[styles.themeCardItemTitle, themeMode === 'LIGHT' && { color: '#16a34a', fontFamily: FONT.bold }]}>
+                    Light
+                  </Text>
+                  <Text style={[styles.themeCardItemSub, themeMode === 'LIGHT' && { color: '#16a34a' }]}>ਲਾਈਟ (ਚਿੱਟਾ)</Text>
+                </TouchableOpacity>
+
+                {/* 🌿 Dark Theme (Parrot Green + Radiant Shaded Gold) */}
+                <TouchableOpacity
+                  style={[
+                    styles.themeCardItem,
+                    styles.themeCardItemMedium,
+                    themeMode === 'DARK' && styles.themeCardItemActiveMedium,
+                  ]}
+                  activeOpacity={0.8}
+                  onPress={() => setThemeMode('DARK')}
+                >
+                  <View style={{ position: 'absolute', top: -6, right: 6, backgroundColor: '#fbbf24', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6, zIndex: 5 }}>
+                    <Text style={{ fontSize: 8, fontFamily: FONT.extraBold, color: '#000000' }}>PARROT & GOLD</Text>
+                  </View>
+                  <Ionicons name="leaf" size={22} color={themeMode === 'DARK' ? '#22c55e' : '#94a3b8'} />
+                  <Text style={[styles.themeCardItemTitle, themeMode === 'DARK' && { color: '#fbbf24', fontFamily: FONT.bold }]}>
+                    Dark
+                  </Text>
+                  <Text style={[styles.themeCardItemSub, themeMode === 'DARK' && { color: '#22c55e' }]}>ਡਾਰਕ (ਸ਼ਾਹੀ ਪੈਰਟ ਤੇ ਗੋਲਡ)</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
+          {/* Account Section */}
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>{t('accountSection')}</Text>
                 <View style={styles.sectionCard}>
@@ -630,6 +694,60 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#fecaca', marginTop: 4,
   },
   logoutText: { color: '#dc2626', fontFamily: FONT.bold, fontSize: 13.5 },
+  themeCardItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 6,
+    borderRadius: RADIUS.md,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    position: 'relative',
+    gap: 4,
+  },
+  themeCardItemMedium: {
+    backgroundColor: 'rgba(34, 197, 94, 0.06)',
+    borderColor: 'rgba(34, 197, 94, 0.22)',
+  },
+  themeCardItemActiveLight: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#16a34a',
+    borderWidth: 1.5,
+    shadowColor: '#16a34a',
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  themeCardItemActiveMedium: {
+    backgroundColor: 'rgba(34, 197, 94, 0.18)',
+    borderColor: '#fbbf24',
+    borderWidth: 1.5,
+    shadowColor: '#22c55e',
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  themeCardItemActiveDark: {
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    borderColor: '#38bdf8',
+    borderWidth: 1.5,
+    shadowColor: '#38bdf8',
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  themeCardItemTitle: {
+    fontSize: 12.5,
+    fontFamily: FONT.semiBold,
+    color: '#94a3b8',
+  },
+  themeCardItemSub: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#64748b',
+  },
 });
 
 /** Multi-Language User Guides & PDF Download Modal for More Tab */

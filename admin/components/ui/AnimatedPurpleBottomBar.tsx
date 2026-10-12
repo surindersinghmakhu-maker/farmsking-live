@@ -12,10 +12,14 @@ import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { FONT } from '@/constants/theme';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 export function AnimatedPurpleBottomBar({ state, descriptors, navigation }: any) {
   const { width: windowWidth } = useWindowDimensions();
   const isDesktop = windowWidth >= 768;
+  const { themeMode, colors } = useExecutiveTheme();
+  const isLight = themeMode === 'LIGHT';
+  const isDark = themeMode === 'DARK';
 
   // Filter only visible routes (Expo Router uses options.href === null to hide screens)
   const visibleRoutes = state.routes.filter((route: any) => {
@@ -65,10 +69,41 @@ export function AnimatedPurpleBottomBar({ state, descriptors, navigation }: any)
     }
   };
 
+  const indicatorGradientColors: [string, string, string] = isLight
+    ? ['rgba(22, 163, 74, 0.16)', 'rgba(234, 179, 8, 0.14)', 'rgba(22, 163, 74, 0.06)']
+    : isDark
+    ? ['rgba(56, 189, 248, 0.25)', 'rgba(129, 140, 248, 0.18)', 'rgba(56, 189, 248, 0.10)']
+    : ['rgba(34, 197, 94, 0.28)', 'rgba(251, 191, 36, 0.22)', 'rgba(34, 197, 94, 0.08)'];
+
+  const indicatorTopGlowColors: [string, string, string] = isLight
+    ? ['#16a34a', '#eab308', '#22c55e']
+    : isDark
+    ? ['#38bdf8', '#818cf8', '#00f2fe']
+    : ['#22c55e', '#fbbf24', '#10e060'];
+
   return (
     <View style={styles.barOuterWrapper}>
-      <View style={styles.barContainer} onLayout={handleContainerLayout}>
-        {/* Continuous Smooth-Moving Purple Active Highlight / Pill Indicator */}
+      <View
+        style={[
+          styles.barContainer,
+          isLight && {
+            backgroundColor: 'rgba(255, 255, 255, 0.96)',
+            borderTopColor: 'rgba(22, 163, 74, 0.22)',
+            borderLeftColor: 'rgba(234, 179, 8, 0.25)',
+            borderRightColor: 'rgba(22, 163, 74, 0.20)',
+            shadowColor: '#16a34a',
+          },
+          isDark && {
+            backgroundColor: 'rgba(2, 6, 23, 0.96)',
+            borderTopColor: 'rgba(56, 189, 248, 0.25)',
+            borderLeftColor: 'rgba(129, 140, 248, 0.22)',
+            borderRightColor: 'rgba(56, 189, 248, 0.22)',
+            shadowColor: '#38bdf8',
+          },
+        ]}
+        onLayout={handleContainerLayout}
+      >
+        {/* Continuous Smooth-Moving Active Highlight / Pill Indicator */}
         {tabItemWidth > 0 && (
           <Animated.View
             style={[
@@ -77,22 +112,39 @@ export function AnimatedPurpleBottomBar({ state, descriptors, navigation }: any)
                 width: pillWidth,
                 transform: [{ translateX: indicatorTranslateX }],
               },
+              isLight && {
+                borderColor: 'rgba(234, 179, 8, 0.45)',
+                shadowColor: '#f59e0b',
+              },
+              isDark && {
+                borderColor: 'rgba(56, 189, 248, 0.45)',
+                shadowColor: '#38bdf8',
+              },
+              !isLight && !isDark && {
+                borderColor: 'rgba(251, 191, 36, 0.55)',
+                shadowColor: '#22c55e',
+              },
             ]}
             pointerEvents="none"
           >
-            {/* Ambient Purple Glass Glow */}
+            {/* Ambient Glass Glow */}
             <LinearGradient
-              colors={['rgba(124, 58, 237, 0.32)', 'rgba(79, 70, 229, 0.18)', 'rgba(0, 255, 135, 0.22)']}
+              colors={indicatorGradientColors}
               style={styles.indicatorGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 0, y: 1 }}
             />
-            {/* Top Glowing Laser Accent Bar with Purple-to-Mint Gradient */}
+            {/* Top Glowing Laser Accent Bar */}
             <LinearGradient
-              colors={['#a855f7', '#6366f1', '#00ff87']}
+              colors={indicatorTopGlowColors}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={styles.indicatorTopGlow}
+              style={[
+                styles.indicatorTopGlow,
+                isLight && { shadowColor: '#16a34a' },
+                isDark && { shadowColor: '#38bdf8' },
+                !isLight && !isDark && { shadowColor: '#22c55e' },
+              ]}
             />
           </Animated.View>
         )}
@@ -131,6 +183,8 @@ export function AnimatedPurpleBottomBar({ state, descriptors, navigation }: any)
               options={options}
               label={typeof label === 'string' ? label : route.name}
               onPress={onPress}
+              isLight={isLight}
+              isDark={isDark}
             />
           );
         })}
@@ -144,11 +198,15 @@ function TabItemButton({
   options,
   label,
   onPress,
+  isLight,
+  isDark,
 }: {
   isFocused: boolean;
   options: any;
   label: string;
   onPress: () => void;
+  isLight: boolean;
+  isDark: boolean;
 }) {
   const animValue = useRef(new Animated.Value(isFocused ? 1 : 0)).current;
 
@@ -181,8 +239,9 @@ function TabItemButton({
     outputRange: [0.65, 1.0],
   });
 
-  const activeColor = '#00ff87';
-  const inactiveColor = '#94a3b8';
+  const activeColor = isLight ? '#16a34a' : isDark ? '#38bdf8' : '#22c55e';
+  const inactiveColor = isLight ? '#64748b' : '#94a3b8';
+  const labelActiveColor = isLight ? '#0f172a' : '#ffffff';
 
   return (
     <Pressable
@@ -212,7 +271,7 @@ function TabItemButton({
         style={[
           styles.tabLabel,
           {
-            color: isFocused ? '#ffffff' : inactiveColor,
+            color: isFocused ? labelActiveColor : inactiveColor,
             opacity: labelOpacity,
             transform: [{ scale: labelScale }],
           },
@@ -241,23 +300,23 @@ const styles = StyleSheet.create({
     height: 64,
     maxWidth: 540,
     width: '100%',
-    backgroundColor: 'rgba(2, 13, 6, 0.96)',
+    backgroundColor: 'rgba(3, 15, 20, 0.96)',
     borderTopWidth: 1.5,
-    borderTopColor: 'rgba(0, 255, 135, 0.28)',
+    borderTopColor: 'rgba(34, 197, 94, 0.35)',
     borderLeftWidth: 1,
     borderRightWidth: 1,
-    borderLeftColor: 'rgba(124, 58, 237, 0.22)',
-    borderRightColor: 'rgba(0, 255, 135, 0.22)',
+    borderLeftColor: 'rgba(251, 191, 36, 0.28)',
+    borderRightColor: 'rgba(251, 191, 36, 0.28)',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 6,
     paddingBottom: 8,
     position: 'relative',
-    shadowColor: '#00ff87',
+    shadowColor: '#22c55e',
     shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.18,
-    shadowRadius: 14,
-    elevation: 10,
+    shadowOpacity: 0.22,
+    shadowRadius: 16,
+    elevation: 12,
   },
   activeIndicator: {
     position: 'absolute',

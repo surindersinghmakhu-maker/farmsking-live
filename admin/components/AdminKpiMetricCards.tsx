@@ -5,6 +5,7 @@ import { FONT, RADIUS, THEME_4D } from '@/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GlassCard4D } from './ui/GlassCard4D';
 import { AnimatedCounter } from './ui/AnimatedCounter';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 interface Props {
   onOpenQuickView?: (type: 'SELLER_KYC' | 'PAYOUT_REQUEST') => void;
@@ -14,43 +15,50 @@ interface Props {
 export function AdminKpiMetricCards({ onOpenQuickView, onOpenAiTelemetry }: Props) {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
+  const { isLight, isMedium, textColor, subTextColor } = useExecutiveTheme();
 
   return (
     <View style={styles.container}>
       {/* 🤖 Google AI Telemetry & Gemini 2.5 Flash Command Banner */}
       <GlassCard4D
         variant="cyber"
-        glowColor={THEME_4D.cyberCyan}
+        glowColor={isLight ? '#0284c7' : THEME_4D.cyberCyan}
         style={styles.aiBannerCard}
         onPress={onOpenAiTelemetry}
       >
         <LinearGradient
-          colors={['rgba(0, 242, 254, 0.08)', 'rgba(5, 30, 20, 0.45)', 'rgba(0, 255, 135, 0.06)']}
+          colors={
+            isLight
+              ? ['rgba(2, 132, 199, 0.08)', 'rgba(240, 253, 244, 0.85)', 'rgba(22, 163, 74, 0.06)']
+              : isMedium
+              ? ['rgba(251, 191, 36, 0.08)', 'rgba(6, 26, 30, 0.85)', 'rgba(34, 197, 94, 0.12)']
+              : ['rgba(0, 242, 254, 0.08)', 'rgba(5, 30, 20, 0.45)', 'rgba(0, 255, 135, 0.06)']
+          }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={StyleSheet.absoluteFill}
         />
         <View style={styles.aiBannerContent}>
-          <View style={styles.aiIconBox}>
-            <Ionicons name="hardware-chip" size={20} color={THEME_4D.cyberCyan} />
-            <View style={styles.chipGlowDot} />
+          <View style={[styles.aiIconBox, isLight && { backgroundColor: 'rgba(2, 132, 199, 0.12)', borderColor: 'rgba(2, 132, 199, 0.3)' }]}>
+            <Ionicons name="hardware-chip" size={20} color={isLight ? '#0284c7' : THEME_4D.cyberCyan} />
+            <View style={[styles.chipGlowDot, isLight && { backgroundColor: '#0284c7' }]} />
           </View>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              <Text style={styles.aiBannerTitle}>Google AI Telemetry & Quota</Text>
-              <View style={styles.activeTag}>
-                <View style={styles.activeDot} />
-                <Text style={styles.activeTagText}>Gemini 2.5 Flash · Neural Mesh</Text>
+              <Text style={[styles.aiBannerTitle, { color: textColor }]}>Google AI Telemetry & Quota</Text>
+              <View style={[styles.activeTag, isLight && { backgroundColor: 'rgba(2, 132, 199, 0.1)', borderColor: 'rgba(2, 132, 199, 0.25)' }]}>
+                <View style={[styles.activeDot, isLight && { backgroundColor: '#0284c7' }]} />
+                <Text style={[styles.activeTagText, isLight && { color: '#0284c7' }]}>Gemini 2.5 Flash · Neural Mesh</Text>
               </View>
             </View>
-            <Text style={styles.aiBannerSubtitle}>
-              <Text style={{ color: THEME_4D.neonEmerald, fontFamily: FONT.bold }}>1,420 / 5,000</Text> queries used today · PAU & ICAR Grounding Active · 28d left
+            <Text style={[styles.aiBannerSubtitle, { color: subTextColor }]}>
+              <Text style={{ color: isLight ? '#16a34a' : THEME_4D.neonEmerald, fontFamily: FONT.bold }}>1,420 / 5,000</Text> queries used today · PAU & ICAR Grounding Active · 28d left
             </Text>
 
             {/* Futuristic Progress Bar */}
-            <View style={styles.telemetryBarTrack}>
+            <View style={[styles.telemetryBarTrack, isLight && { backgroundColor: '#e2e8f0' }]}>
               <LinearGradient
-                colors={['#00f2fe', '#00ff87']}
+                colors={isLight ? ['#0284c7', '#16a34a'] : ['#00f2fe', '#00ff87']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={[styles.telemetryBarFill, { width: '28.4%' }]}
@@ -59,7 +67,7 @@ export function AdminKpiMetricCards({ onOpenQuickView, onOpenAiTelemetry }: Prop
           </View>
           {isDesktop && (
             <TouchableOpacity
-              style={styles.meterBtn}
+              style={[styles.meterBtn, isLight && { backgroundColor: '#0284c7', borderColor: '#0284c7' }]}
               onPress={onOpenAiTelemetry}
               activeOpacity={0.8}
             >
@@ -74,93 +82,93 @@ export function AdminKpiMetricCards({ onOpenQuickView, onOpenAiTelemetry }: Prop
       <View style={[styles.kpiGrid, !isDesktop && styles.kpiGridMobile]}>
         {/* Card 1: Active Farmers */}
         <GlassCard4D
-          glowColor={THEME_4D.neonEmerald}
+          glowColor={isLight ? '#16a34a' : isMedium ? '#22c55e' : THEME_4D.neonEmerald}
           style={styles.kpiCard}
         >
           <View style={styles.kpiHeaderRow}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Ionicons name="leaf" size={14} color={THEME_4D.neonEmerald} />
-              <Text style={styles.kpiTitle}>ACTIVE FARMERS</Text>
+              <Ionicons name="leaf" size={14} color={isLight ? '#16a34a' : isMedium ? '#22c55e' : THEME_4D.neonEmerald} />
+              <Text style={[styles.kpiTitle, isLight && { color: '#64748b' }]}>ACTIVE FARMERS</Text>
             </View>
-            <View style={styles.pulsingBadge}>
-              <View style={styles.pulsingDot} />
-              <Text style={styles.pulsingText}>LIVE</Text>
+            <View style={[styles.pulsingBadge, isLight && { backgroundColor: 'rgba(22, 163, 74, 0.1)', borderColor: 'rgba(22, 163, 74, 0.3)' }, isMedium && { backgroundColor: 'rgba(34, 197, 94, 0.12)', borderColor: 'rgba(34, 197, 94, 0.4)' }]}>
+              <View style={[styles.pulsingDot, isLight && { backgroundColor: '#16a34a' }, isMedium && { backgroundColor: '#22c55e' }]} />
+              <Text style={[styles.pulsingText, isLight && { color: '#16a34a' }, isMedium && { color: '#22c55e' }]}>LIVE</Text>
             </View>
           </View>
           <AnimatedCounter
             value={1240}
-            style={styles.kpiValue}
+            style={[styles.kpiValue, { color: textColor }]}
           />
-          <Text style={styles.kpiSubtext}>
-            <Text style={{ color: THEME_4D.neonEmerald }}>+18</Text> registered today across Punjab
+          <Text style={[styles.kpiSubtext, { color: subTextColor }]}>
+            <Text style={{ color: isLight ? '#16a34a' : isMedium ? '#22c55e' : THEME_4D.neonEmerald }}>+18</Text> registered today across Punjab
           </Text>
         </GlassCard4D>
 
         {/* Card 2: Crop Doctor Consultations */}
         <GlassCard4D
-          glowColor={THEME_4D.cyberGold}
+          glowColor={isLight ? '#d97706' : isMedium ? '#fbbf24' : THEME_4D.cyberGold}
           style={styles.kpiCard}
         >
           <View style={styles.kpiHeaderRow}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Ionicons name="medical" size={14} color={THEME_4D.cyberGold} />
-              <Text style={styles.kpiTitle}>PENDING CONSULTATIONS</Text>
+              <Ionicons name="medical" size={14} color={isMedium ? '#fbbf24' : THEME_4D.cyberGold} />
+              <Text style={[styles.kpiTitle, isLight && { color: '#64748b' }]}>PENDING CONSULTATIONS</Text>
             </View>
             <View style={[styles.pulsingBadge, { backgroundColor: 'rgba(245, 158, 11, 0.15)', borderColor: 'rgba(245, 158, 11, 0.4)' }]}>
-              <View style={[styles.pulsingDot, { backgroundColor: THEME_4D.cyberGold }]} />
-              <Text style={[styles.pulsingText, { color: THEME_4D.cyberGold }]}>QUEUED</Text>
+              <View style={[styles.pulsingDot, { backgroundColor: isMedium ? '#fbbf24' : THEME_4D.cyberGold }]} />
+              <Text style={[styles.pulsingText, { color: isMedium ? '#fbbf24' : THEME_4D.cyberGold }]}>QUEUED</Text>
             </View>
           </View>
           <AnimatedCounter
             value={4}
-            style={[styles.kpiValue, { color: THEME_4D.cyberGold }]}
+            style={[styles.kpiValue, { color: isLight ? '#d97706' : isMedium ? '#fbbf24' : THEME_4D.cyberGold }]}
           />
-          <Text style={styles.kpiSubtext}>Crop disease diagnostics awaiting reply</Text>
+          <Text style={[styles.kpiSubtext, { color: subTextColor }]}>Crop disease diagnostics awaiting reply</Text>
         </GlassCard4D>
 
         {/* Card 3: Seller KYC Approvals */}
         <GlassCard4D
-          glowColor={THEME_4D.laserMint}
+          glowColor={isLight ? '#16a34a' : isMedium ? '#22c55e' : THEME_4D.laserMint}
           style={[styles.kpiCard, styles.kpiCardInteractive]}
           onPress={() => onOpenQuickView?.('SELLER_KYC')}
         >
           <View style={styles.kpiHeaderRow}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Ionicons name="shield-checkmark" size={14} color={THEME_4D.laserMint} />
-              <Text style={styles.kpiTitle}>SELLER KYC APPROVALS</Text>
+              <Ionicons name="shield-checkmark" size={14} color={isLight ? '#16a34a' : isMedium ? '#22c55e' : THEME_4D.laserMint} />
+              <Text style={[styles.kpiTitle, isLight && { color: '#64748b' }]}>SELLER KYC APPROVALS</Text>
             </View>
-            <View style={styles.clickActionPill}>
-              <Text style={styles.clickActionPillText}>DRAWER ➔</Text>
+            <View style={[styles.clickActionPill, isLight && { backgroundColor: 'rgba(22, 163, 74, 0.1)', borderColor: 'rgba(22, 163, 74, 0.3)' }, isMedium && { backgroundColor: 'rgba(34, 197, 94, 0.12)', borderColor: 'rgba(34, 197, 94, 0.4)' }]}>
+              <Text style={[styles.clickActionPillText, isLight && { color: '#16a34a' }, isMedium && { color: '#22c55e' }]}>DRAWER ➔</Text>
             </View>
           </View>
           <AnimatedCounter
             value={12}
-            style={[styles.kpiValue, { color: THEME_4D.laserMint }]}
+            style={[styles.kpiValue, { color: isLight ? '#16a34a' : isMedium ? '#22c55e' : THEME_4D.laserMint }]}
           />
-          <Text style={styles.kpiSubtext}>1-Click Quick Verification Drawer</Text>
+          <Text style={[styles.kpiSubtext, { color: subTextColor }]}>1-Click Quick Verification Drawer</Text>
         </GlassCard4D>
 
         {/* Card 4: Daily Sales Volume */}
         <GlassCard4D
-          glowColor={THEME_4D.neonEmerald}
+          glowColor={isLight ? '#d97706' : isMedium ? '#fbbf24' : THEME_4D.neonEmerald}
           style={styles.kpiCard}
         >
           <View style={styles.kpiHeaderRow}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Ionicons name="trending-up" size={14} color={THEME_4D.neonEmerald} />
-              <Text style={styles.kpiTitle}>TODAY'S VOLUME</Text>
+              <Ionicons name="trending-up" size={14} color={isLight ? '#d97706' : isMedium ? '#fbbf24' : THEME_4D.neonEmerald} />
+              <Text style={[styles.kpiTitle, isLight && { color: '#64748b' }]}>TODAY'S VOLUME</Text>
             </View>
-            <View style={[styles.pulsingBadge, { backgroundColor: 'rgba(0, 255, 135, 0.12)', borderColor: 'rgba(0, 255, 135, 0.4)' }]}>
-              <View style={styles.pulsingDot} />
-              <Text style={styles.pulsingText}>24H GMV</Text>
+            <View style={[styles.pulsingBadge, isLight ? { backgroundColor: 'rgba(217, 119, 6, 0.1)', borderColor: 'rgba(217, 119, 6, 0.3)' } : isMedium ? { backgroundColor: 'rgba(251, 191, 36, 0.12)', borderColor: 'rgba(251, 191, 36, 0.4)' } : { backgroundColor: 'rgba(0, 255, 135, 0.12)', borderColor: 'rgba(0, 255, 135, 0.4)' }]}>
+              <View style={[styles.pulsingDot, isLight ? { backgroundColor: '#d97706' } : isMedium ? { backgroundColor: '#fbbf24' } : undefined]} />
+              <Text style={[styles.pulsingText, isLight ? { color: '#d97706' } : isMedium ? { color: '#fbbf24' } : undefined]}>24H GMV</Text>
             </View>
           </View>
           <AnimatedCounter
             value={48250}
             prefix="₹"
-            style={[styles.kpiValue, { color: '#ffffff' }]}
+            style={[styles.kpiValue, { color: isMedium ? '#fbbf24' : textColor }]}
           />
-          <Text style={styles.kpiSubtext}>Agri-store purchases & mandi orders</Text>
+          <Text style={[styles.kpiSubtext, { color: subTextColor }]}>Agri-store purchases & mandi orders</Text>
         </GlassCard4D>
       </View>
     </View>

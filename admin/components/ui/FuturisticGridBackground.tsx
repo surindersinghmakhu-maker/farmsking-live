@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Platform, ViewStyle, StyleProp } from 'react-native';
-import { THEME_4D } from '@/constants/theme';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 interface Props {
   children: React.ReactNode;
@@ -8,14 +8,57 @@ interface Props {
 }
 
 export const FuturisticGridBackground: React.FC<Props> = ({ children, style }) => {
-  return (
-    <View style={[styles.container, style]}>
-      {/* Deep Forest Radial Aura Gradients */}
-      <View style={styles.ambientGlowTop} />
-      <View style={styles.ambientGlowCenter} />
-      <View style={styles.ambientGlowRight} />
+  const { themeMode, colors } = useExecutiveTheme();
+  const isLight = themeMode === 'LIGHT';
+  const isDark = themeMode === 'DARK';
 
-      {/* Cyber Mesh Grid Overlay */}
+  const containerBg = colors.bg;
+
+  // Grid stroke colors tailored to theme:
+  // Light: Green light + light yellow golden lines
+  // Medium: Home page 4D Cyber-Emerald neon
+  // Dark: Cyber Sky Cyan
+  const gridBackground = isLight
+    ? `
+        linear-gradient(rgba(22, 163, 74, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(234, 179, 8, 0.045) 1px, transparent 1px)
+      `
+    : isDark
+    ? `
+        linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px)
+      `
+    : `
+        linear-gradient(rgba(0, 255, 135, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 135, 0.03) 1px, transparent 1px)
+      `;
+
+  return (
+    <View style={[styles.container, { backgroundColor: containerBg }, style]}>
+      {/* 4D Ambient Radial Aura Gradients */}
+      <View
+        style={[
+          styles.ambientGlowTop,
+          isLight && { backgroundColor: 'rgba(234, 179, 8, 0.08)' }, // Warm Champagne Gold
+          isDark && { backgroundColor: 'rgba(56, 189, 248, 0.06)' },
+        ]}
+      />
+      <View
+        style={[
+          styles.ambientGlowCenter,
+          isLight && { backgroundColor: 'rgba(22, 163, 74, 0.05)' }, // Fresh Green Light
+          isDark && { backgroundColor: 'rgba(11, 19, 41, 0.65)' },
+        ]}
+      />
+      <View
+        style={[
+          styles.ambientGlowRight,
+          isLight && { backgroundColor: 'rgba(245, 158, 11, 0.07)' }, // Light Golden Yellow
+          isDark && { backgroundColor: 'rgba(129, 140, 248, 0.05)' },
+        ]}
+      />
+
+      {/* 4D Cyber Mesh Grid Overlay */}
       {Platform.OS === 'web' && (
         <div
           style={{
@@ -24,15 +67,12 @@ export const FuturisticGridBackground: React.FC<Props> = ({ children, style }) =
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundImage: `
-              linear-gradient(rgba(0, 255, 135, 0.03) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(0, 255, 135, 0.03) 1px, transparent 1px)
-            `,
+            backgroundImage: gridBackground,
             backgroundSize: '40px 40px',
             backgroundPosition: '-1px -1px',
             pointerEvents: 'none',
             zIndex: 2,
-            opacity: 0.85,
+            opacity: isLight ? 0.95 : 0.85,
           }}
         />
       )}
@@ -46,7 +86,6 @@ export const FuturisticGridBackground: React.FC<Props> = ({ children, style }) =
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: THEME_4D.bgAbyss,
     position: 'relative',
     overflow: 'hidden',
   },
@@ -64,9 +103,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 255, 135, 0.05)',
     ...(Platform.OS === 'web'
       ? {
-        filter: 'blur(90px)',
-        pointerEvents: 'none' as any,
-      }
+          filter: 'blur(90px)',
+          pointerEvents: 'none' as any,
+        }
       : {}),
     zIndex: 1,
   },
@@ -81,9 +120,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(5, 46, 25, 0.45)',
     ...(Platform.OS === 'web'
       ? {
-        filter: 'blur(120px)',
-        pointerEvents: 'none' as any,
-      }
+          filter: 'blur(120px)',
+          pointerEvents: 'none' as any,
+        }
       : {}),
     zIndex: 1,
   },
@@ -97,9 +136,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(16, 185, 129, 0.04)',
     ...(Platform.OS === 'web'
       ? {
-        filter: 'blur(100px)',
-        pointerEvents: 'none' as any,
-      }
+          filter: 'blur(100px)',
+          pointerEvents: 'none' as any,
+        }
       : {}),
     zIndex: 1,
   },

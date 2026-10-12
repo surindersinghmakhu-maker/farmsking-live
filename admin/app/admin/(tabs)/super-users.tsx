@@ -26,6 +26,7 @@ import { ASSIGNABLE_CHECKBOX_ROLES, lookupByKingId } from '@/src/api/users.api';
 import { assignTrainerState, getAdminTrainerReports } from '@/src/api/trainers.api';
 import { Role, AdminUser, OperatorPermission, AdvisorType } from '@/src/types/api';
 import { useAuth } from '@/src/store/auth-context';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 import { PickerModal } from '@/src/components/PickerModal';
 import { exportUsersToExcel } from '@/src/utils/excelExport';
 
@@ -75,6 +76,7 @@ function filterToBackendRole(filter: UserFilter): Role {
 
 export default function SuperUsersScreen() {
   const { user } = useAuth();
+  const { colors, isLight, cardBg, cardBorder, textColor, subTextColor } = useExecutiveTheme();
   const { filter: initialFilter, group: initialGroup } = useLocalSearchParams<{ filter?: UserFilter, group?: UserGroup }>();
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
   const [group, setGroup] = useState<UserGroup>(initialGroup || 'CLIENTS');
@@ -214,32 +216,38 @@ export default function SuperUsersScreen() {
   const currentFilterLabel = Object.values(FILTERS_BY_GROUP).flat().find(f => f.value === filter)?.label || 'Users';
 
   return (
-    <View style={[styles.container, { backgroundColor: '#020d06' }]}>
-      <View style={styles.premiumHero}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      <View style={[
+        styles.premiumHero,
+        isLight && {
+          backgroundColor: '#ffffff',
+          borderBottomColor: '#e2e8f0',
+        },
+      ]}>
         <View style={[styles.premiumHeroContent, isDesktop && { maxWidth: 1240, width: '100%', alignSelf: 'center' }]}>
           <View style={styles.heroHeaderRow}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap', flex: 1 }}>
-              <Text style={styles.compactHeroTitle} numberOfLines={1}>
+              <Text style={[styles.compactHeroTitle, isLight && { color: '#0f172a' }]} numberOfLines={1}>
                 {statusTab === 'DELETED'
                   ? 'Deleted Users Archive'
                   : `${currentFilterLabel} Directory`}
               </Text>
-              <View style={styles.compactCountBadge}>
-                <Text style={styles.compactCountBadgeText}>{items.length}</Text>
+              <View style={[styles.compactCountBadge, isLight && { backgroundColor: 'rgba(22, 163, 74, 0.1)', borderColor: 'rgba(22, 163, 74, 0.3)' }]}>
+                <Text style={[styles.compactCountBadgeText, isLight && { color: '#16a34a' }]}>{items.length}</Text>
               </View>
             </View>
 
             {/* Quick Stats Pill Strip & 1-Click Exports */}
             <View style={styles.heroStatsContainer}>
-              <View style={styles.heroStatsPill}>
-                <Ionicons name="people" size={11} color="#00ff87" />
-                <Text style={styles.heroStatsText}>Total {allUsersList.length}</Text>
+              <View style={[styles.heroStatsPill, isLight && { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }]}>
+                <Ionicons name="people" size={11} color={isLight ? '#16a34a' : '#00ff87'} />
+                <Text style={[styles.heroStatsText, isLight && { color: '#475569' }]}>Total {allUsersList.length}</Text>
               </View>
-              <View style={[styles.heroStatsPill, { borderColor: 'rgba(16, 185, 129, 0.4)' }]}>
+              <View style={[styles.heroStatsPill, isLight && { backgroundColor: '#f0fdf4', borderColor: 'rgba(22, 163, 74, 0.3)' }, !isLight && { borderColor: 'rgba(16, 185, 129, 0.4)' }]}>
                 <Ionicons name="checkmark-circle" size={11} color="#10b981" />
-                <Text style={[styles.heroStatsText, { color: '#10b981' }]}>Active {totalActiveUsersCount}</Text>
+                <Text style={[styles.heroStatsText, { color: isLight ? '#16a34a' : '#10b981' }]}>Active {totalActiveUsersCount}</Text>
               </View>
-              <View style={[styles.heroStatsPill, { borderColor: 'rgba(239, 68, 68, 0.4)' }]}>
+              <View style={[styles.heroStatsPill, isLight && { backgroundColor: '#fef2f2', borderColor: 'rgba(239, 68, 68, 0.3)' }, !isLight && { borderColor: 'rgba(239, 68, 68, 0.4)' }]}>
                 <Ionicons name="trash" size={11} color="#ef4444" />
                 <Text style={[styles.heroStatsText, { color: '#f87171' }]}>Del {totalDeletedUsersCount}</Text>
               </View>
@@ -325,12 +333,12 @@ export default function SuperUsersScreen() {
             </View>
 
             {/* Search Box */}
-            <View style={styles.compactSearchBox}>
-              <Ionicons name="search" size={13} color="#00ff87" style={{ marginRight: 6 }} />
+            <View style={[styles.compactSearchBox, isLight && { backgroundColor: '#f8fafc', borderColor: '#cbd5e1' }]}>
+              <Ionicons name="search" size={13} color={isLight ? '#16a34a' : '#00ff87'} style={{ marginRight: 6 }} />
               <TextInput
-                style={styles.compactSearchInput}
+                style={[styles.compactSearchInput, isLight && { color: '#0f172a' }]}
                 placeholder={`Search ${statusTab === 'DELETED' ? 'deleted accounts' : currentFilterLabel.toLowerCase()}...`}
-                placeholderTextColor="rgba(148, 163, 184, 0.6)"
+                placeholderTextColor={isLight ? '#94a3b8' : 'rgba(148, 163, 184, 0.6)'}
                 value={search}
                 onChangeText={setSearch}
               />
@@ -355,12 +363,23 @@ export default function SuperUsersScreen() {
                 return (
                   <TouchableOpacity
                     key={g.value}
-                    style={[styles.compactGroupChip, isActive && styles.compactGroupChipActive]}
+                    style={[
+                      styles.compactGroupChip,
+                      isLight && { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' },
+                      isActive && (isLight ? { backgroundColor: 'rgba(22, 163, 74, 0.12)', borderColor: '#16a34a' } : styles.compactGroupChipActive),
+                    ]}
                     activeOpacity={0.8}
                     onPress={() => selectGroup(g.value)}
                   >
-                    <Ionicons name={g.icon} size={12} color={isActive ? '#00ff87' : '#64748b'} />
-                    <Text style={[styles.compactGroupChipText, isActive && { color: '#00ff87' }]} numberOfLines={1}>
+                    <Ionicons name={g.icon} size={12} color={isActive ? (isLight ? '#16a34a' : '#00ff87') : '#64748b'} />
+                    <Text
+                      style={[
+                        styles.compactGroupChipText,
+                        isLight && { color: '#64748b' },
+                        isActive && { color: isLight ? '#16a34a' : '#00ff87' },
+                      ]}
+                      numberOfLines={1}
+                    >
                       {g.label} ({groupCount})
                     </Text>
                   </TouchableOpacity>
@@ -409,15 +428,25 @@ export default function SuperUsersScreen() {
               return (
                 <TouchableOpacity
                   key={f.value}
-                  style={[styles.compactFilterChip, isActive && styles.compactFilterChipActive]}
+                  style={[
+                    styles.compactFilterChip,
+                    isLight && { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' },
+                    isActive && (isLight ? { backgroundColor: 'rgba(22, 163, 74, 0.15)', borderColor: '#16a34a' } : styles.compactFilterChipActive),
+                  ]}
                   activeOpacity={0.8}
                   onPress={() => {
                     tap();
                     setFilter(f.value);
                   }}
                 >
-                  <Ionicons name={f.icon} size={12} color={isActive ? '#00ff87' : '#94a3b8'} />
-                  <Text style={[styles.compactFilterChipText, isActive && { color: '#00ff87' }]}>
+                  <Ionicons name={f.icon} size={12} color={isActive ? (isLight ? '#16a34a' : '#00ff87') : '#94a3b8'} />
+                  <Text
+                    style={[
+                      styles.compactFilterChipText,
+                      isLight && { color: '#64748b' },
+                      isActive && { color: isLight ? '#16a34a' : '#00ff87' },
+                    ]}
+                  >
                     {f.label} ({subCount})
                   </Text>
                 </TouchableOpacity>
@@ -427,7 +456,7 @@ export default function SuperUsersScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.premiumList} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.premiumList, { backgroundColor: colors.bg }]} showsVerticalScrollIndicator={false}>
         {statusTab === 'ACTIVE' && (filter === 'FARM_ADVISOR' || filter === 'GARDEN_ADVISOR') && (
           <TouchableOpacity
             style={[styles.addAdvisorBtn, premiumShadow(theme.primary, 'sm')]}
@@ -1273,6 +1302,7 @@ function UserRow({
   onEditRoles?: () => void;
   onOpenDetail?: () => void;
 }) {
+  const { isLight } = useExecutiveTheme();
   const isDeactivated = !!user.deletedAt;
   const initials = (user.name ?? '').trim().split(/\s+/).slice(0, 2).map((p: any) => p[0] ?? '').join('').toUpperCase() || '?';
   const activeAssignedRoles = Array.from(
@@ -1298,7 +1328,15 @@ function UserRow({
   };
 
   return (
-    <View style={[styles.userCard, premiumShadow('#0f172a', 'sm'), isDeactivated && styles.userCardDeactivated]}>
+    <View style={[
+      styles.userCard,
+      premiumShadow('#0f172a', 'sm'),
+      isLight && {
+        backgroundColor: '#ffffff',
+        borderColor: '#e2e8f0',
+      },
+      isDeactivated && styles.userCardDeactivated,
+    ]}>
       {/* 1. Header: Avatar + Identity + Status Pill */}
       <View style={styles.cardHeaderRow}>
         {/* Avatar with Status Dot */}
@@ -1326,7 +1364,7 @@ function UserRow({
           disabled={!onOpenDetail}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
-            <Text style={[styles.userName, isDeactivated && styles.userNameDeactivated]} numberOfLines={1}>
+            <Text style={[styles.userName, isLight && { color: '#0f172a' }, isDeactivated && styles.userNameDeactivated]} numberOfLines={1}>
               {user.name === 'Deleted Account' ? `Deleted (${user.kingId || cleanMobile})` : user.name}
             </Text>
             {isDeactivated ? (
@@ -1348,13 +1386,13 @@ function UserRow({
           {user.kingId ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
               <TouchableOpacity
-                style={styles.kingIdChip}
+                style={[styles.kingIdChip, isLight && { backgroundColor: '#f1f5f9', borderColor: 'rgba(22, 163, 74, 0.3)' }]}
                 onPress={() => copyToClipboard(user.kingId!, 'King ID')}
                 activeOpacity={0.7}
               >
-                <Ionicons name="key" size={10} color="#00ff87" />
-                <Text style={styles.kingIdChipText}>{user.kingId}</Text>
-                <Ionicons name="copy-outline" size={10} color="#00ff87" />
+                <Ionicons name="key" size={10} color={isLight ? '#16a34a' : '#00ff87'} />
+                <Text style={[styles.kingIdChipText, isLight && { color: '#16a34a' }]}>{user.kingId}</Text>
+                <Ionicons name="copy-outline" size={10} color={isLight ? '#16a34a' : '#00ff87'} />
               </TouchableOpacity>
             </View>
           ) : null}
@@ -1362,16 +1400,16 @@ function UserRow({
       </View>
 
       {/* 2. Body Info: Contact + Location + Joined + Roles */}
-      <View style={styles.cardBody}>
+      <View style={[styles.cardBody, isLight && { borderTopColor: '#f1f5f9' }]}>
         {/* Mobile Number Row */}
         <View style={styles.infoRow}>
           <TouchableOpacity
-            style={styles.mobileChip}
+            style={[styles.mobileChip, isLight && { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }]}
             onPress={() => copyToClipboard(cleanMobile, 'Mobile Number')}
             activeOpacity={0.7}
           >
-            <Ionicons name="call" size={12} color="#10b981" />
-            <Text style={styles.mobileChipText}>{cleanMobile}</Text>
+            <Ionicons name="call" size={12} color={isLight ? '#16a34a' : '#10b981'} />
+            <Text style={[styles.mobileChipText, isLight && { color: '#0f172a' }]}>{cleanMobile}</Text>
             <Ionicons name="copy-outline" size={10} color="#64748b" />
           </TouchableOpacity>
 

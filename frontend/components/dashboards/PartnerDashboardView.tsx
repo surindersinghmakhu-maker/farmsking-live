@@ -118,35 +118,35 @@ export const PartnerDashboardView: React.FC = () => {
           </View>
 
           <View style={styles.overviewStatsGrid}>
-            <View style={[styles.statBox, { backgroundColor: '#f0fdf4' }]}>
+            <View style={[styles.statBox, { backgroundColor: 'rgba(0, 255, 135, 0.08)', borderColor: 'rgba(0, 255, 135, 0.22)' }]}>
               <Text style={styles.statSubText}>💼 Sales Commission</Text>
-              <Text style={[styles.statBigText, { color: '#166534' }]}>₹{(wallet?.commissionEarnings ?? 0).toLocaleString('en-IN')}</Text>
+              <Text style={[styles.statBigText, { color: '#00ff87' }]}>₹{(wallet?.commissionEarnings ?? 0).toLocaleString('en-IN')}</Text>
             </View>
 
-            <View style={[styles.statBox, { backgroundColor: '#eff6ff' }]}>
+            <View style={[styles.statBox, { backgroundColor: 'rgba(59, 130, 246, 0.08)', borderColor: 'rgba(59, 130, 246, 0.25)' }]}>
               <Text style={styles.statSubText}>👥 Referral Bonus</Text>
-              <Text style={[styles.statBigText, { color: '#1d4ed8' }]}>₹{(wallet?.referralEarnings ?? 0).toLocaleString('en-IN')}</Text>
+              <Text style={[styles.statBigText, { color: '#60a5fa' }]}>₹{(wallet?.referralEarnings ?? 0).toLocaleString('en-IN')}</Text>
             </View>
 
-            <View style={[styles.statBox, { backgroundColor: '#fefce8' }]}>
+            <View style={[styles.statBox, { backgroundColor: 'rgba(245, 158, 11, 0.08)', borderColor: 'rgba(245, 158, 11, 0.25)' }]}>
               <Text style={styles.statSubText}>🎁 Welcome Bonus</Text>
-              <Text style={[styles.statBigText, { color: '#ca8a04' }]}>₹{(wallet?.welcomeEarnings ?? 0).toLocaleString('en-IN')}</Text>
+              <Text style={[styles.statBigText, { color: '#fbbf24' }]}>₹{(wallet?.welcomeEarnings ?? 0).toLocaleString('en-IN')}</Text>
             </View>
 
-            <View style={[styles.statBox, { backgroundColor: theme.primaryLight }]}>
+            <View style={[styles.statBox, { backgroundColor: 'rgba(245, 158, 11, 0.14)', borderColor: 'rgba(245, 158, 11, 0.35)' }]}>
               <Text style={styles.statSubText}>💶 Available Balance</Text>
               <Text style={[styles.statBigText, { color: theme.primary }]}>₹{(wallet?.balance ?? 0).toLocaleString('en-IN')}</Text>
             </View>
           </View>
 
           <View style={[styles.overviewStatsRow, { marginTop: 10 }]}>
-            <View style={[styles.statBox, { backgroundColor: '#f8fafc', flex: 1 }]}>
+            <View style={[styles.statBox, { backgroundColor: 'rgba(255, 255, 255, 0.04)', borderColor: 'rgba(255, 255, 255, 0.08)', flex: 1 }]}>
               <Text style={styles.statSubText}>Paid Payouts</Text>
-              <Text style={[styles.statBigText, { color: '#475569' }]}>₹{paid.toLocaleString('en-IN')}</Text>
+              <Text style={[styles.statBigText, { color: '#e2e8f0' }]}>₹{paid.toLocaleString('en-IN')}</Text>
             </View>
-            <View style={[styles.statBox, { backgroundColor: '#fffbeb', flex: 1 }]}>
+            <View style={[styles.statBox, { backgroundColor: 'rgba(239, 68, 68, 0.08)', borderColor: 'rgba(239, 68, 68, 0.25)', flex: 1 }]}>
               <Text style={styles.statSubText}>Pending Payouts</Text>
-              <Text style={[styles.statBigText, { color: '#c2410c' }]}>₹{pending.toLocaleString('en-IN')}</Text>
+              <Text style={[styles.statBigText, { color: '#f87171' }]}>₹{pending.toLocaleString('en-IN')}</Text>
             </View>
           </View>
         </View>
@@ -196,25 +196,40 @@ const styles = StyleSheet.create({
   barChartContainer: { marginTop: 18, height: 60, justifyContent: 'flex-end' },
   barsRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', paddingHorizontal: 10 },
   barItem: { width: 18, borderRadius: 6 },
-  metricsRow: { flexDirection: 'row', backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.lg },
+  metricsRow: {
+    flexDirection: 'row',
+    backgroundColor: '#04160c',
+    borderRadius: RADIUS.lg,
+    padding: SPACING.lg,
+    borderWidth: 1.2,
+    borderColor: 'rgba(245, 158, 11, 0.25)',
+    ...premiumShadow('#f59e0b', 'sm'),
+  },
   metricItem: { flex: 1, alignItems: 'center' },
-  metricBorderLeft: { borderLeftWidth: 1, borderLeftColor: '#f1f5f9' },
-  metricLabel: { fontSize: 11.5, color: '#64748b', fontFamily: FONT.medium },
-  metricValue: { fontSize: 15.5, fontFamily: FONT.bold, color: '#0f172a', marginTop: 5 },
-  sectionCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.lg },
+  metricBorderLeft: { borderLeftWidth: 1, borderLeftColor: 'rgba(245, 158, 11, 0.18)' },
+  metricLabel: { fontSize: 11.5, color: '#94a3b8', fontFamily: FONT.medium },
+  metricValue: { fontSize: 15.5, fontFamily: FONT.bold, color: '#ffffff', marginTop: 5 },
+  sectionCard: {
+    backgroundColor: '#04160c',
+    borderRadius: RADIUS.lg,
+    padding: SPACING.lg,
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.20)',
+    ...premiumShadow('#00ff87', 'sm'),
+  },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
-  sectionTitle: { fontSize: 15.5, fontFamily: FONT.bold, color: '#0f172a', letterSpacing: -0.1 },
+  sectionTitle: { fontSize: 15.5, fontFamily: FONT.bold, color: '#ffffff', letterSpacing: -0.1 },
   viewAllText: { fontSize: 12.5, fontFamily: FONT.bold },
   overviewStatsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   overviewStatsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
-  statBox: { minWidth: '47%', flex: 1, borderRadius: RADIUS.md, padding: 10, alignItems: 'center' },
-  statSubText: { fontSize: 10.5, color: '#64748b', fontFamily: FONT.medium },
+  statBox: { minWidth: '47%', flex: 1, borderRadius: RADIUS.md, padding: 10, alignItems: 'center', borderWidth: 1 },
+  statSubText: { fontSize: 10.5, color: '#94a3b8', fontFamily: FONT.medium },
   statBigText: { fontSize: 13.5, fontFamily: FONT.extraBold, marginTop: 4 },
   emptyText: { fontSize: 12.5, fontFamily: FONT.medium, color: '#94a3b8' },
-  referralItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  referralItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.06)' },
   userIconBg: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   refInfo: { flex: 1, marginLeft: 12 },
-  refName: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
-  refDate: { fontSize: 11.5, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
+  refName: { fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' },
+  refDate: { fontSize: 11.5, color: '#94a3b8', fontFamily: FONT.medium, marginTop: 2 },
   refComm: { fontSize: 13.5, fontFamily: FONT.extraBold },
 });

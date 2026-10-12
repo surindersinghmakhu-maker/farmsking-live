@@ -38,19 +38,19 @@ export function TechnicalTrainerDashboardView() {
 
       {/* Quick Stats Row */}
       <View style={styles.statsContainer}>
-        <View style={[styles.statBox, { backgroundColor: '#f0fdf4', borderColor: '#86efac' }]}>
-          <Ionicons name="people" size={24} color="#166534" style={styles.statIcon} />
-          <Text style={styles.statNumber}>124</Text>
+        <View style={[styles.statBox, { backgroundColor: '#04160c', borderColor: 'rgba(0, 255, 135, 0.25)', ...premiumShadow('#00ff87', 'sm') }]}>
+          <Ionicons name="people" size={24} color="#00ff87" style={styles.statIcon} />
+          <Text style={[styles.statNumber, { color: '#ffffff' }]}>124</Text>
           <Text style={styles.statLabel}>New Farmers</Text>
         </View>
-        <View style={[styles.statBox, { backgroundColor: '#fff7ed', borderColor: '#fdba74' }]}>
-          <Ionicons name="call" size={24} color="#c2410c" style={styles.statIcon} />
-          <Text style={styles.statNumber}>18</Text>
+        <View style={[styles.statBox, { backgroundColor: '#04160c', borderColor: 'rgba(245, 158, 11, 0.25)', ...premiumShadow('#f59e0b', 'sm') }]}>
+          <Ionicons name="call" size={24} color="#f59e0b" style={styles.statIcon} />
+          <Text style={[styles.statNumber, { color: '#ffffff' }]}>18</Text>
           <Text style={styles.statLabel}>Pending Calls</Text>
         </View>
-        <View style={[styles.statBox, { backgroundColor: '#eff6ff', borderColor: '#93c5fd' }]}>
-          <Ionicons name="checkmark-done-circle" size={24} color="#1d4ed8" style={styles.statIcon} />
-          <Text style={styles.statNumber}>89</Text>
+        <View style={[styles.statBox, { backgroundColor: '#04160c', borderColor: 'rgba(59, 130, 246, 0.25)', ...premiumShadow('#3b82f6', 'sm') }]}>
+          <Ionicons name="checkmark-done-circle" size={24} color="#60a5fa" style={styles.statIcon} />
+          <Text style={[styles.statNumber, { color: '#ffffff' }]}>89</Text>
           <Text style={styles.statLabel}>Trained</Text>
         </View>
       </View>
@@ -134,21 +134,36 @@ const styles = StyleSheet.create({
   statsContainer: { flexDirection: 'row', paddingHorizontal: 16, marginTop: -25, gap: 10 },
   statBox: { flex: 1, padding: 12, borderRadius: RADIUS.lg, borderWidth: 1.5, alignItems: 'center' },
   statIcon: { marginBottom: 4 },
-  statNumber: { fontSize: 18, fontFamily: FONT.extraBold, color: '#0f172a' },
-  statLabel: { fontSize: 10.5, fontFamily: FONT.bold, color: '#475569', textAlign: 'center' },
+  statNumber: { fontSize: 18, fontFamily: FONT.extraBold, color: '#ffffff' },
+  statLabel: { fontSize: 10.5, fontFamily: FONT.bold, color: '#94a3b8', textAlign: 'center' },
 
   section: { paddingHorizontal: 16, marginTop: 24 },
   sectionTitle: { fontSize: 16, fontFamily: FONT.extraBold, marginBottom: 12 },
   
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 12 },
-  gridItem: { width: '48%', padding: 16, borderRadius: RADIUS.lg, borderWidth: 1, borderColor: '#e2e8f0', alignItems: 'center' },
+  gridItem: {
+    width: '48%',
+    padding: 16,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.20)',
+    alignItems: 'center',
+    backgroundColor: '#04160c',
+  },
   gridIconBox: { width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   gridItemTitle: { fontSize: 14, fontFamily: FONT.bold, marginBottom: 4 },
-  gridItemDesc: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', textAlign: 'center' },
+  gridItemDesc: { fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8', textAlign: 'center' },
 
-  listCard: { borderRadius: RADIUS.lg, borderWidth: 1, borderColor: '#e2e8f0', marginTop: 10, paddingHorizontal: 12 },
-  listItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  listAvatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  listCard: {
+    borderRadius: RADIUS.lg,
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.20)',
+    marginTop: 10,
+    paddingHorizontal: 12,
+    backgroundColor: '#04160c',
+  },
+  listItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.06)' },
+  listAvatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0, 255, 135, 0.12)', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   listName: { fontSize: 14, fontFamily: FONT.bold },
   listDesc: { fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 2 },
   callBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#16a34a', paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.pill, gap: 4 },

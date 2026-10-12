@@ -46,16 +46,16 @@ export const AdminDashboardView: React.FC = () => {
         <TouchableOpacity
           style={[
             styles.sectionCard,
-            premiumShadow('#0f172a', 'sm'),
-            { backgroundColor: '#ffffff', borderColor: '#16a34a', borderWidth: 1.5 },
+            premiumShadow('#00ff87', 'sm'),
+            { backgroundColor: '#04160c', borderColor: 'rgba(0, 255, 135, 0.35)', borderWidth: 1.5 },
           ]}
           activeOpacity={0.9}
           onPress={() => openModalWithFarmer()}
         >
           <View style={styles.sectionHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Ionicons name="chatbubbles" size={20} color="#16a34a" />
-              <Text style={[styles.sectionTitle, { color: '#0f172a' }]}>Farmer Support Chat (Real-time)</Text>
+              <Ionicons name="chatbubbles" size={20} color="#00ff87" />
+              <Text style={[styles.sectionTitle, { color: '#ffffff' }]}>Farmer Support Chat (Real-time)</Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               {totalUnread > 0 ? (
@@ -63,8 +63,8 @@ export const AdminDashboardView: React.FC = () => {
                   <Text style={{ color: '#fff', fontSize: 10, fontFamily: FONT.extraBold }}>{totalUnread} NEW</Text>
                 </View>
               ) : null}
-              <View style={{ backgroundColor: '#dcfce7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill }}>
-                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#15803d' }}>
+              <View style={{ backgroundColor: 'rgba(0, 255, 135, 0.15)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill }}>
+                <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#00ff87' }}>
                   🟢 Live Socket
                 </Text>
               </View>
@@ -154,14 +154,14 @@ export const AdminDashboardView: React.FC = () => {
           initialFarmerName={selectedFarmerChat?.farmerName}
         />
         {/* Admin Level Crop Control & Advisor Dashboard Banner */}
-        <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0', borderWidth: 1.5 }]}>
+        <View style={[styles.sectionCard, premiumShadow('#00ff87', 'sm'), { backgroundColor: '#04160c', borderColor: 'rgba(0, 255, 135, 0.25)', borderWidth: 1.5 }]}>
           <View style={styles.sectionHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Ionicons name="shield-checkmark" size={20} color="#16a34a" />
-              <Text style={[styles.sectionTitle, { color: '#14532d' }]}>Admin Crop Control & Advisor View</Text>
+              <Ionicons name="shield-checkmark" size={20} color="#00ff87" />
+              <Text style={[styles.sectionTitle, { color: '#ffffff' }]}>Admin Crop Control & Advisor View</Text>
             </View>
           </View>
-          <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#166534', marginBottom: 12 }}>
+          <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#94a3b8', marginBottom: 12 }}>
             Admin Power: Edit ANY crop at ANY stage (Plantation, Vegetative, Flowering, Harvesting, Completed) & manage advisor farmer rosters.
           </Text>
 
@@ -176,12 +176,12 @@ export const AdminDashboardView: React.FC = () => {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.toolBtn, { backgroundColor: '#ffffff', borderColor: '#16a34a', borderWidth: 1.5, flex: 1, paddingVertical: 10 }]}
+              style={[styles.toolBtn, { backgroundColor: '#072414', borderColor: 'rgba(0, 255, 135, 0.35)', borderWidth: 1.2, flex: 1, paddingVertical: 10 }]}
               activeOpacity={0.85}
               onPress={() => router.push('/(tabs)/farm' as never)}
             >
-              <Ionicons name="leaf-outline" size={16} color="#16a34a" />
-              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#16a34a' }}>🌾 View All Crops</Text>
+              <Ionicons name="leaf-outline" size={16} color="#00ff87" />
+              <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#00ff87' }}>🌾 View All Crops</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -270,32 +270,60 @@ const styles = StyleSheet.create({
   content: { padding: SPACING.lg, gap: SPACING.lg, paddingBottom: SPACING.xxl },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   statCard: {
-    width: '47.5%', backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.lg,
+    width: '47.5%',
+    backgroundColor: '#04160c',
+    borderRadius: RADIUS.lg,
+    padding: SPACING.lg,
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.20)',
+    ...premiumShadow('#00ff87', 'sm'),
   },
   statIconBg: {
-    width: 32, height: 32, borderRadius: 11, backgroundColor: '#dcfce7',
-    alignItems: 'center', justifyContent: 'center', marginBottom: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 11,
+    backgroundColor: 'rgba(0, 255, 135, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
   },
-  statValue: { fontSize: 20, fontFamily: FONT.extraBold, color: '#0f172a', letterSpacing: -0.3 },
-  statLabel: { fontSize: 11.5, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
+  statValue: { fontSize: 20, fontFamily: FONT.extraBold, color: '#ffffff', letterSpacing: -0.3 },
+  statLabel: { fontSize: 11.5, color: '#94a3b8', fontFamily: FONT.medium, marginTop: 2 },
   salesCard: { borderRadius: RADIUS.xl, padding: SPACING.xl, overflow: 'hidden' },
   watermark: { position: 'absolute', top: -12, right: -16, opacity: 0.08 },
-  cardLabelText: { fontSize: 13.5, color: '#64748b', fontFamily: FONT.semiBold },
-  salesAmount: { fontSize: 32, fontFamily: FONT.extraBold, color: '#0f172a', marginTop: 6, letterSpacing: -0.6 },
+  cardLabelText: { fontSize: 13.5, color: '#94a3b8', fontFamily: FONT.semiBold },
+  salesAmount: { fontSize: 32, fontFamily: FONT.extraBold, color: '#ffffff', marginTop: 6, letterSpacing: -0.6 },
   sparklineContainer: { marginTop: 18, height: 56, justifyContent: 'flex-end' },
   sparklineBarRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', paddingHorizontal: 10 },
   sparklineBar: { width: 20, borderRadius: 6 },
-  sectionCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.lg },
+  sectionCard: {
+    backgroundColor: '#04160c',
+    borderRadius: RADIUS.lg,
+    padding: SPACING.lg,
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.20)',
+    ...premiumShadow('#00ff87', 'sm'),
+  },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
-  sectionTitle: { fontSize: 15.5, fontFamily: FONT.bold, color: '#0f172a', letterSpacing: -0.1 },
+  sectionTitle: { fontSize: 15.5, fontFamily: FONT.bold, color: '#ffffff', letterSpacing: -0.1 },
   viewAllText: { fontSize: 12.5, fontFamily: FONT.bold },
-  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  rowIconBg: { width: 38, height: 38, borderRadius: 13, backgroundColor: '#dcfce7', alignItems: 'center', justifyContent: 'center' },
+  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.06)' },
+  rowIconBg: { width: 38, height: 38, borderRadius: 13, backgroundColor: 'rgba(0, 255, 135, 0.12)', alignItems: 'center', justifyContent: 'center' },
   rowInfo: { flex: 1, marginLeft: 12 },
-  rowTitle: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
-  rowSubtitle: { fontSize: 12, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
-  rowAmount: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#0f172a' },
+  rowTitle: { fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' },
+  rowSubtitle: { fontSize: 12, color: '#94a3b8', fontFamily: FONT.medium, marginTop: 2 },
+  rowAmount: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#00ff87' },
   toolsGrid: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
-  toolBtn: { flex: 1, backgroundColor: '#f8fafc', borderRadius: RADIUS.md, paddingVertical: 13, alignItems: 'center', justifyContent: 'center', gap: 6 },
-  toolLabel: { fontSize: 10.5, fontFamily: FONT.bold, color: '#334155' },
+  toolBtn: {
+    flex: 1,
+    backgroundColor: '#072414',
+    borderRadius: RADIUS.md,
+    paddingVertical: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.15)',
+  },
+  toolLabel: { fontSize: 10.5, fontFamily: FONT.bold, color: '#e2e8f0' },
 });

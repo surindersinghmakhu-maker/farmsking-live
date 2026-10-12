@@ -217,7 +217,7 @@ export default function TabLayout() {
   const { role } = useRole();
   const { t, language, setLanguage } = useLanguage();
   const { user } = useAuth();
-  const { colors } = useExecutiveTheme();
+  const { colors, themeMode, setThemeMode } = useExecutiveTheme();
   const config = ROLE_TABS[role] || ROLE_TABS.OPERATOR;
   const visible = new Set(config ? config.tabs : ['index', 'admin_more']);
 
@@ -338,32 +338,93 @@ export default function TabLayout() {
     }
   };
 
+  const isLight = themeMode === 'LIGHT';
+  const isDarkTheme = themeMode === 'DARK';
+
   return (
-    <View style={{ flex: 1, backgroundColor: '#020d06', flexDirection: isDesktop ? 'row' : 'column' }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg, flexDirection: isDesktop ? 'row' : 'column' }}>
       {/* 💻 DESKTOP 2-TIER EXECUTIVE SIDEBAR (Visible on screens >= 768px) */}
       {isDesktop && (
-        <View style={desktopStyles.sidebar}>
+        <View
+          style={[
+            desktopStyles.sidebar,
+            {
+              backgroundColor: isLight ? '#ffffff' : isDarkTheme ? '#0b1329' : '#020b06',
+              borderRightColor: isLight ? 'rgba(22, 163, 74, 0.18)' : isDarkTheme ? 'rgba(56, 189, 248, 0.2)' : 'rgba(0, 255, 135, 0.18)',
+              shadowColor: colors.shadowColor,
+            },
+          ]}
+        >
           {/* Brand Logo & Platform Title */}
           <View style={desktopStyles.brandLogoBox}>
-            <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: '#00ff87', alignItems: 'center', justifyContent: 'center' }}>
-              <BrandLogo size={22} iconColor="#020d06" />
+            <View
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 12,
+                backgroundColor: isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87',
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: colors.shadowColor,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 6,
+              }}
+            >
+              <BrandLogo size={22} iconColor={isLight ? '#ffffff' : isDarkTheme ? '#020617' : '#020d06'} />
             </View>
             <View style={{ flex: 1, marginLeft: 10 }}>
-              <Text style={desktopStyles.brandTitle}>
-                FarmsKing <Text style={desktopStyles.brandBadgeText}>4D</Text>
+              <Text style={[desktopStyles.brandTitle, isLight && { color: '#0f172a' }]}>
+                FarmsKing{' '}
+                <Text
+                  style={[
+                    desktopStyles.brandBadgeText,
+                    isLight && {
+                      color: '#16a34a',
+                      backgroundColor: 'rgba(22, 163, 74, 0.12)',
+                      borderColor: 'rgba(234, 179, 8, 0.4)',
+                    },
+                    isDarkTheme && {
+                      color: '#38bdf8',
+                      backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                      borderColor: 'rgba(56, 189, 248, 0.4)',
+                    },
+                  ]}
+                >
+                  4D
+                </Text>
               </Text>
-              <Text style={desktopStyles.brandSubtitle}>Executive Hub</Text>
+              <Text
+                style={[
+                  desktopStyles.brandSubtitle,
+                  isLight && { color: '#d97706' },
+                  isDarkTheme && { color: '#94a3b8' },
+                ]}
+              >
+                Executive Hub
+              </Text>
             </View>
           </View>
 
           {/* Section Heading */}
-          <Text style={desktopStyles.sidebarSectionTitle}>DOMAIN PILLARS</Text>
+          <Text
+            style={[
+              desktopStyles.sidebarSectionTitle,
+              isLight && { color: '#16a34a' },
+              isDarkTheme && { color: '#38bdf8' },
+            ]}
+          >
+            DOMAIN PILLARS
+          </Text>
 
           {/* Navigation Pillars List (Effective Prominent Buttons) */}
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={desktopStyles.menuNavCol}>
             {(() => {
               if (role === 'SUPER_ADMIN' || role === 'ADMIN') {
-                return ADMIN_PILLARS.map((pillar) => {
+                const isSettingsActive = pathname.includes('super-settings');
+                return (
+                  <>
+                    {ADMIN_PILLARS.map((pillar) => {
                   const isActive = selectedPillarId === pillar.id;
                   return (
                     <Pressable
@@ -371,24 +432,82 @@ export default function TabLayout() {
                       onPress={() => handleSelectPillar(pillar)}
                       style={({ hovered, pressed }: any) => [
                         desktopStyles.pillarCard,
-                        isActive && desktopStyles.pillarCardActive,
-                        hovered && !isActive && desktopStyles.pillarCardHover,
+                        isLight && {
+                          backgroundColor: '#f8fafc',
+                          borderColor: 'rgba(22, 163, 74, 0.12)',
+                        },
+                        isDarkTheme && {
+                          backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                          borderColor: 'rgba(56, 189, 248, 0.15)',
+                        },
+                        isActive && (
+                          isLight
+                            ? {
+                                backgroundColor: '#f0fdf4',
+                                borderColor: '#16a34a',
+                                shadowColor: '#16a34a',
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.15,
+                                shadowRadius: 8,
+                                elevation: 3,
+                              }
+                            : isDarkTheme
+                            ? {
+                                backgroundColor: 'rgba(56, 189, 248, 0.16)',
+                                borderColor: '#38bdf8',
+                                shadowColor: '#38bdf8',
+                                shadowOffset: { width: 0, height: 2 },
+                                shadowOpacity: 0.25,
+                                shadowRadius: 10,
+                                elevation: 3,
+                              }
+                            : desktopStyles.pillarCardActive
+                        ),
+                        hovered && !isActive && (
+                          isLight
+                            ? { backgroundColor: '#f1f5f9', borderColor: 'rgba(22, 163, 74, 0.3)' }
+                            : desktopStyles.pillarCardHover
+                        ),
                         pressed && { transform: [{ scale: 0.98 }] },
                       ]}
                     >
                       {/* Active Left Indicator Bar */}
-                      {isActive && <View style={desktopStyles.pillarActiveBar} />}
+                      {isActive && (
+                        <View
+                          style={[
+                            desktopStyles.pillarActiveBar,
+                            isLight && { backgroundColor: '#16a34a' },
+                            isDarkTheme && { backgroundColor: '#38bdf8' },
+                          ]}
+                        />
+                      )}
 
                       <View
                         style={[
                           desktopStyles.pillarIconWrap,
                           isActive && desktopStyles.pillarIconWrapActive,
+                          isLight && !isActive && {
+                            backgroundColor: 'rgba(22, 163, 74, 0.08)',
+                            borderColor: 'rgba(22, 163, 74, 0.15)',
+                          },
+                          isLight && isActive && {
+                            backgroundColor: '#16a34a',
+                            borderColor: '#16a34a',
+                          },
+                          isDarkTheme && isActive && {
+                            backgroundColor: '#38bdf8',
+                            borderColor: '#38bdf8',
+                          },
                         ]}
                       >
                         <Ionicons
                           name={isActive ? pillar.iconFilled : pillar.icon}
                           size={18}
-                          color={isActive ? '#ffffff' : (pillar.color || '#059669')}
+                          color={
+                            isActive
+                              ? (isLight ? '#ffffff' : isDarkTheme ? '#020617' : '#ffffff')
+                              : (pillar.color || (isLight ? '#16a34a' : '#059669'))
+                          }
                         />
                       </View>
 
@@ -396,18 +515,41 @@ export default function TabLayout() {
                         <Text
                           style={[
                             desktopStyles.pillarTitle,
+                            isLight && { color: '#334155' },
                             isActive && desktopStyles.pillarTitleActive,
+                            isLight && isActive && { color: '#16a34a' },
+                            isDarkTheme && isActive && { color: '#38bdf8' },
                           ]}
                           numberOfLines={1}
                         >
                           {pillar.title}
                         </Text>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                          <View style={[desktopStyles.pillarBadge, isActive && desktopStyles.pillarBadgeActive]}>
+                          <View
+                            style={[
+                              desktopStyles.pillarBadge,
+                              isLight && {
+                                backgroundColor: 'rgba(22, 163, 74, 0.08)',
+                                borderColor: 'rgba(234, 179, 8, 0.25)',
+                              },
+                              isActive && desktopStyles.pillarBadgeActive,
+                              isLight && isActive && {
+                                backgroundColor: 'rgba(22, 163, 74, 0.15)',
+                                borderColor: 'rgba(234, 179, 8, 0.5)',
+                              },
+                              isDarkTheme && isActive && {
+                                backgroundColor: 'rgba(56, 189, 248, 0.25)',
+                                borderColor: '#38bdf8',
+                              },
+                            ]}
+                          >
                             <Text
                               style={[
                                 desktopStyles.pillarBadgeText,
+                                isLight && { color: '#64748b' },
                                 isActive && desktopStyles.pillarBadgeTextActive,
+                                isLight && isActive && { color: '#16a34a' },
+                                isDarkTheme && isActive && { color: '#38bdf8' },
                               ]}
                             >
                               {pillar.badge}
@@ -419,12 +561,142 @@ export default function TabLayout() {
                       <Ionicons
                         name={isActive ? 'chevron-forward' : 'chevron-forward-outline'}
                         size={15}
-                        color={isActive ? '#10b981' : '#94a3b8'}
+                        color={isActive ? (isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#10b981') : (isLight ? '#94a3b8' : '#64748b')}
                       />
                     </Pressable>
                   );
-                });
-              }
+                })}
+
+                {/* ⚙️ Dedicated Settings Button (Placed directly below C-Panel) */}
+                <Pressable
+                  key="desktop-settings-pillar-btn"
+                  onPress={() => router.push('/admin/(tabs)/super-settings')}
+                  style={({ hovered, pressed }: any) => [
+                    desktopStyles.pillarCard,
+                    isLight && {
+                      backgroundColor: '#f8fafc',
+                      borderColor: 'rgba(22, 163, 74, 0.2)',
+                    },
+                    isDarkTheme && {
+                      backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                      borderColor: 'rgba(56, 189, 248, 0.2)',
+                    },
+                    isSettingsActive && (
+                      isLight
+                        ? {
+                            backgroundColor: '#f0fdf4',
+                            borderColor: '#16a34a',
+                            shadowColor: '#16a34a',
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.15,
+                            shadowRadius: 8,
+                            elevation: 3,
+                          }
+                        : isDarkTheme
+                        ? {
+                            backgroundColor: 'rgba(56, 189, 248, 0.16)',
+                            borderColor: '#38bdf8',
+                            shadowColor: '#38bdf8',
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.25,
+                            shadowRadius: 10,
+                            elevation: 3,
+                          }
+                        : desktopStyles.pillarCardActive
+                    ),
+                    hovered && !isSettingsActive && (
+                      isLight
+                        ? { backgroundColor: 'rgba(22, 163, 74, 0.05)', borderColor: '#16a34a' }
+                        : isDarkTheme
+                        ? { backgroundColor: 'rgba(56, 189, 248, 0.08)', borderColor: '#38bdf8' }
+                        : desktopStyles.pillarCardHover
+                    ),
+                    pressed && { transform: [{ scale: 0.98 }] },
+                  ]}
+                >
+                  {isSettingsActive && (
+                    <View
+                      style={[
+                        desktopStyles.pillarActiveBar,
+                        isLight && { backgroundColor: '#16a34a' },
+                        isDarkTheme && { backgroundColor: '#38bdf8' },
+                      ]}
+                    />
+                  )}
+
+                  <View
+                    style={[
+                      desktopStyles.pillarIconWrap,
+                      isLight && { backgroundColor: 'rgba(22, 163, 74, 0.08)', borderColor: 'rgba(22, 163, 74, 0.25)' },
+                      isDarkTheme && { backgroundColor: 'rgba(56, 189, 248, 0.08)', borderColor: 'rgba(56, 189, 248, 0.25)' },
+                      isSettingsActive && desktopStyles.pillarIconWrapActive,
+                      isLight && isSettingsActive && { backgroundColor: '#16a34a', borderColor: '#16a34a' },
+                      isDarkTheme && isSettingsActive && { backgroundColor: '#38bdf8', borderColor: '#38bdf8' },
+                    ]}
+                  >
+                    <Ionicons
+                      name={isSettingsActive ? 'settings' : 'settings-outline'}
+                      size={15}
+                      color={isSettingsActive ? '#ffffff' : (isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#22c55e')}
+                    />
+                  </View>
+
+                  <View style={desktopStyles.pillarContentCol}>
+                    <Text
+                      style={[
+                        desktopStyles.pillarTitle,
+                        isLight && { color: '#334155' },
+                        isSettingsActive && desktopStyles.pillarTitleActive,
+                        isLight && isSettingsActive && { color: '#16a34a' },
+                        isDarkTheme && isSettingsActive && { color: '#38bdf8' },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      SETTINGS
+                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                      <View
+                        style={[
+                          desktopStyles.pillarBadge,
+                          isLight && {
+                            backgroundColor: 'rgba(22, 163, 74, 0.08)',
+                            borderColor: 'rgba(234, 179, 8, 0.25)',
+                          },
+                          isSettingsActive && desktopStyles.pillarBadgeActive,
+                          isLight && isSettingsActive && {
+                            backgroundColor: 'rgba(22, 163, 74, 0.15)',
+                            borderColor: 'rgba(234, 179, 8, 0.5)',
+                          },
+                          isDarkTheme && isSettingsActive && {
+                            backgroundColor: 'rgba(56, 189, 248, 0.25)',
+                            borderColor: '#38bdf8',
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            desktopStyles.pillarBadgeText,
+                            isLight && { color: '#64748b' },
+                            isSettingsActive && desktopStyles.pillarBadgeTextActive,
+                            isLight && isSettingsActive && { color: '#16a34a' },
+                            isDarkTheme && isSettingsActive && { color: '#38bdf8' },
+                          ]}
+                        >
+                          Config
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  <Ionicons
+                    name={isSettingsActive ? 'chevron-forward' : 'chevron-forward-outline'}
+                    size={15}
+                    color={isSettingsActive ? (isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#10b981') : (isLight ? '#94a3b8' : '#64748b')}
+                  />
+                </Pressable>
+              </>
+            );
+          }
 
               // Default standard tabs mapping for non-admin roles
               return config.tabs.map((tabName) => {
@@ -437,13 +709,49 @@ export default function TabLayout() {
                 return (
                   <TouchableOpacity
                     key={tabName}
-                    style={[desktopStyles.navMenuItem, isActive && desktopStyles.navMenuItemActive]}
+                    style={[
+                      desktopStyles.navMenuItem,
+                      isLight && {
+                        backgroundColor: '#f8fafc',
+                        borderColor: 'rgba(22, 163, 74, 0.12)',
+                      },
+                      isDarkTheme && {
+                        backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                        borderColor: 'rgba(56, 189, 248, 0.15)',
+                      },
+                      isActive && (
+                        isLight
+                          ? { backgroundColor: '#f0fdf4', borderColor: '#16a34a' }
+                          : isDarkTheme
+                          ? { backgroundColor: 'rgba(56, 189, 248, 0.16)', borderColor: '#38bdf8' }
+                          : desktopStyles.navMenuItemActive
+                      ),
+                    ]}
                     onPress={() => handleNavigate(tabName)}
                   >
-                    <View style={[desktopStyles.navIconWrap, isActive && desktopStyles.navIconWrapActive]}>
-                      <Ionicons name={iconName} size={18} color={isActive ? '#ffffff' : '#64748b'} />
+                    <View
+                      style={[
+                        desktopStyles.navIconWrap,
+                        isActive && desktopStyles.navIconWrapActive,
+                        isLight && isActive && { backgroundColor: '#16a34a', borderColor: '#16a34a' },
+                        isDarkTheme && isActive && { backgroundColor: '#38bdf8', borderColor: '#38bdf8' },
+                      ]}
+                    >
+                      <Ionicons
+                        name={iconName}
+                        size={18}
+                        color={isActive ? '#ffffff' : (isLight ? '#64748b' : '#64748b')}
+                      />
                     </View>
-                    <Text style={[desktopStyles.navMenuItemText, isActive && desktopStyles.navMenuItemTextActive]}>
+                    <Text
+                      style={[
+                        desktopStyles.navMenuItemText,
+                        isLight && { color: '#334155' },
+                        isActive && desktopStyles.navMenuItemTextActive,
+                        isLight && isActive && { color: '#16a34a' },
+                        isDarkTheme && isActive && { color: '#38bdf8' },
+                      ]}
+                    >
                       {title}
                     </Text>
                   </TouchableOpacity>
@@ -453,41 +761,136 @@ export default function TabLayout() {
           </ScrollView>
 
           {/* Bottom Actions in Sidebar */}
-          <View style={desktopStyles.sidebarBottom}>
+          <View
+            style={[
+              desktopStyles.sidebarBottom,
+              isLight && { borderTopColor: 'rgba(22, 163, 74, 0.15)' },
+              isDarkTheme && { borderTopColor: 'rgba(56, 189, 248, 0.15)' },
+            ]}
+          >
             {(() => {
               const isSellerRole = (role as string) === 'SELLER' || (user?.role as string) === 'SELLER' || Boolean((user as any)?.isSeller);
               if (!isSellerRole) return null;
               return (
                 <TouchableOpacity
-                  style={[desktopStyles.headerActionBtn, { marginBottom: 12 }]}
+                  style={[
+                    desktopStyles.headerActionBtn,
+                    { marginBottom: 12 },
+                    isLight && {
+                      backgroundColor: '#f0fdf4',
+                      borderColor: 'rgba(22, 163, 74, 0.3)',
+                    },
+                    isDarkTheme && {
+                      backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                      borderColor: 'rgba(56, 189, 248, 0.3)',
+                    },
+                  ]}
                   onPress={() => router.push('/seller-dashboard')}
                 >
-                  <Ionicons name="storefront-outline" size={16} color="#059669" />
-                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#059669' }}>
+                  <Ionicons name="storefront-outline" size={16} color={isDarkTheme ? '#38bdf8' : '#16a34a'} />
+                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isDarkTheme ? '#38bdf8' : '#16a34a' }}>
                     🏪 Seller Hub
                   </Text>
                 </TouchableOpacity>
               );
             })()}
 
-            <View style={desktopStyles.langSwitcherBox}>
-              <TouchableOpacity
-                style={[desktopStyles.langBtn, language === 'pa' && desktopStyles.langBtnActive]}
-                onPress={() => setLanguage('pa')}
+            {/* ⚙️ Dedicated Settings Button (Requested by User) */}
+            <TouchableOpacity
+              style={[
+                desktopStyles.settingsBottomBtn,
+                isLight && {
+                  backgroundColor: '#f8fafc',
+                  borderColor: 'rgba(22, 163, 74, 0.25)',
+                },
+                isDarkTheme && {
+                  backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                  borderColor: 'rgba(56, 189, 248, 0.25)',
+                },
+              ]}
+              activeOpacity={0.8}
+              onPress={() => router.push('/admin/(tabs)/super-settings')}
+            >
+              <Ionicons
+                name="settings-outline"
+                size={14}
+                color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#22c55e'}
+              />
+              <Text
+                style={[
+                  desktopStyles.settingsBottomBtnText,
+                  isLight && { color: '#0f172a' },
+                  isDarkTheme && { color: '#f1f5f9' },
+                ]}
               >
-                <Text style={[desktopStyles.langBtnText, language === 'pa' && desktopStyles.langBtnTextActive]}>ਪੰਜਾਬੀ</Text>
+                Settings
+              </Text>
+              <View
+                style={[
+                  desktopStyles.settingsBottomBadge,
+                  isLight && { backgroundColor: 'rgba(22, 163, 74, 0.1)', borderColor: 'rgba(22, 163, 74, 0.3)' },
+                ]}
+              >
+                <Text style={[desktopStyles.settingsBottomBadgeText, isLight && { color: '#16a34a' }]}>
+                  Config
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* 🎨 2-WAY THEME SELECTOR: Light (Default) · Dark (Parrot & Gold) */}
+            <View
+              style={[
+                desktopStyles.themeSwitcherBox,
+                isLight && desktopStyles.themeSwitcherBoxLight,
+                isDarkTheme && desktopStyles.themeSwitcherBoxDark,
+              ]}
+            >
+              <TouchableOpacity
+                style={[
+                  desktopStyles.themeBtn,
+                  themeMode === 'LIGHT' && desktopStyles.themeBtnActiveLight,
+                ]}
+                onPress={() => setThemeMode('LIGHT')}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name={themeMode === 'LIGHT' ? 'sunny' : 'sunny-outline'}
+                  size={12}
+                  color={themeMode === 'LIGHT' ? '#16a34a' : isLight ? '#64748b' : '#94a3b8'}
+                />
+                <Text
+                  style={[
+                    desktopStyles.themeBtnText,
+                    isLight && { color: '#64748b' },
+                    themeMode === 'LIGHT' && desktopStyles.themeBtnTextActiveLight,
+                  ]}
+                >
+                  Light
+                </Text>
               </TouchableOpacity>
+
               <TouchableOpacity
-                style={[desktopStyles.langBtn, language === 'hi' && desktopStyles.langBtnActive]}
-                onPress={() => setLanguage('hi')}
+                style={[
+                  desktopStyles.themeBtn,
+                  themeMode === 'DARK' && desktopStyles.themeBtnActiveMedium,
+                ]}
+                onPress={() => setThemeMode('DARK')}
+                activeOpacity={0.8}
               >
-                <Text style={[desktopStyles.langBtnText, language === 'hi' && desktopStyles.langBtnTextActive]}>हिंदी</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[desktopStyles.langBtn, language === 'en' && desktopStyles.langBtnActive]}
-                onPress={() => setLanguage('en')}
-              >
-                <Text style={[desktopStyles.langBtnText, language === 'en' && desktopStyles.langBtnTextActive]}>ENG</Text>
+                <Ionicons
+                  name={themeMode === 'DARK' ? 'leaf' : 'leaf-outline'}
+                  size={12}
+                  color={themeMode === 'DARK' ? '#22c55e' : isLight ? '#64748b' : '#94a3b8'}
+                />
+                <Text
+                  style={[
+                    desktopStyles.themeBtnText,
+                    isLight && { color: '#64748b' },
+                    themeMode === 'DARK' && desktopStyles.themeBtnTextActiveMedium,
+                  ]}
+                >
+                  Dark
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -495,10 +898,20 @@ export default function TabLayout() {
       )}
 
       {/* 📱 MAIN CONTENT CANVAS CONTAINER */}
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, backgroundColor: colors.bg }}>
         {/* 💻 TOP WORKSPACE SUB-TABS HEADER BAR (Visible on Desktop & Mobile for Admins) */}
         {(role === 'SUPER_ADMIN' || role === 'ADMIN') && (
-          <View style={[desktopStyles.topTabsHeaderBar, !isDesktop && { height: 46, paddingVertical: 4, paddingHorizontal: 8 }]}>
+          <View
+            style={[
+              desktopStyles.topTabsHeaderBar,
+              !isDesktop && { height: 46, paddingVertical: 4, paddingHorizontal: 8 },
+              {
+                backgroundColor: isLight ? '#ffffff' : isDarkTheme ? '#0b1329' : '#03140a',
+                borderBottomColor: isLight ? 'rgba(22, 163, 74, 0.18)' : isDarkTheme ? 'rgba(56, 189, 248, 0.2)' : 'rgba(0, 255, 135, 0.2)',
+                shadowColor: colors.shadowColor,
+              },
+            ]}
+          >
             <View style={desktopStyles.topTabsHeaderInner}>
               {/* Clean Segmented Sub-Tabs Navigation */}
               <View style={desktopStyles.topTabsAnimatedContainer}>
@@ -507,7 +920,19 @@ export default function TabLayout() {
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={[desktopStyles.topTabsScrollContent, !isDesktop && { paddingHorizontal: 4, gap: 4 }]}
                 >
-                  <View style={[desktopStyles.segmentedTabContainer, !isDesktop && { padding: 2 }]}>
+                  <View
+                    style={[
+                      desktopStyles.segmentedTabContainer,
+                      !isDesktop && { padding: 2 },
+                      isLight && {
+                        backgroundColor: '#f1f5f9',
+                        borderColor: 'rgba(22, 163, 74, 0.2)',
+                      },
+                      isDarkTheme && {
+                        borderColor: 'rgba(56, 189, 248, 0.25)',
+                      },
+                    ]}
+                  >
                     {activePillar.subTabs.map((tab) => {
                       const isActive = activeSubTab?.id === tab.id;
 
@@ -518,21 +943,51 @@ export default function TabLayout() {
                           style={({ hovered, pressed }: any) => [
                             desktopStyles.segmentedTabItem,
                             !isDesktop && { paddingHorizontal: 10, paddingVertical: 5 },
-                            isActive && desktopStyles.segmentedTabItemActive,
-                            hovered && !isActive && desktopStyles.segmentedTabItemHover,
+                            isActive && (
+                              isLight
+                                ? {
+                                    backgroundColor: '#16a34a',
+                                    shadowColor: '#16a34a',
+                                    shadowOffset: { width: 0, height: 1 },
+                                    shadowOpacity: 0.25,
+                                    shadowRadius: 5,
+                                    elevation: 3,
+                                  }
+                                : isDarkTheme
+                                ? {
+                                    backgroundColor: '#38bdf8',
+                                    shadowColor: '#38bdf8',
+                                    shadowOffset: { width: 0, height: 1 },
+                                    shadowOpacity: 0.3,
+                                    shadowRadius: 5,
+                                    elevation: 3,
+                                  }
+                                : desktopStyles.segmentedTabItemActive
+                            ),
+                            hovered && !isActive && (
+                              isLight
+                                ? { backgroundColor: '#e2e8f0' }
+                                : desktopStyles.segmentedTabItemHover
+                            ),
                             pressed && { transform: [{ scale: 0.98 }] },
                           ]}
                         >
                           <Ionicons
                             name={tab.icon}
                             size={isDesktop ? 14.5 : 13}
-                            color={isActive ? '#059669' : '#64748b'}
+                            color={
+                              isActive
+                                ? (isLight ? '#ffffff' : isDarkTheme ? '#020617' : '#020d06')
+                                : (isLight ? '#64748b' : '#94a3b8')
+                            }
                           />
                           <Text
                             style={[
                               desktopStyles.segmentedTabText,
                               !isDesktop && { fontSize: 11 },
-                              isActive ? desktopStyles.segmentedTabTextActive : desktopStyles.segmentedTabTextInactive,
+                              isActive
+                                ? (isLight ? { color: '#ffffff', fontFamily: FONT.bold } : isDarkTheme ? { color: '#020617', fontFamily: FONT.bold } : desktopStyles.segmentedTabTextActive)
+                                : (isLight ? { color: '#64748b', fontFamily: FONT.medium } : desktopStyles.segmentedTabTextInactive),
                             ]}
                             numberOfLines={1}
                           >
@@ -548,26 +1003,76 @@ export default function TabLayout() {
               {/* 🟢 Live Infrastructure Health Pulse (Visible on Desktop) */}
               {isDesktop && (
                 <TouchableOpacity
-                  style={desktopStyles.healthRadarTriggerBtn}
+                  style={[
+                    desktopStyles.healthRadarTriggerBtn,
+                    isLight && {
+                      backgroundColor: '#f0fdf4',
+                      borderColor: 'rgba(22, 163, 74, 0.3)',
+                    },
+                    isDarkTheme && {
+                      backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                      borderColor: 'rgba(56, 189, 248, 0.3)',
+                    },
+                  ]}
                   onPress={() => setIsHealthRadarOpen(true)}
                   activeOpacity={0.8}
                 >
-                  <View style={desktopStyles.healthRadarDot} />
-                  <Text style={desktopStyles.healthRadarText}>99.9% Uptime</Text>
+                  <View
+                    style={[
+                      desktopStyles.healthRadarDot,
+                      isLight && { backgroundColor: '#16a34a' },
+                      isDarkTheme && { backgroundColor: '#38bdf8' },
+                    ]}
+                  />
+                  <Text
+                    style={[
+                      desktopStyles.healthRadarText,
+                      isLight && { color: '#16a34a' },
+                      isDarkTheme && { color: '#38bdf8' },
+                    ]}
+                  >
+                    99.9% Uptime
+                  </Text>
                 </TouchableOpacity>
               )}
 
               {/* Spotlight Command Search Trigger Button (Visible on Desktop) */}
               {isDesktop && (
                 <TouchableOpacity
-                  style={desktopStyles.spotlightTriggerBtn}
+                  style={[
+                    desktopStyles.spotlightTriggerBtn,
+                    isLight && {
+                      backgroundColor: '#ffffff',
+                      borderColor: 'rgba(22, 163, 74, 0.25)',
+                    },
+                    isDarkTheme && {
+                      backgroundColor: 'rgba(56, 189, 248, 0.08)',
+                      borderColor: 'rgba(56, 189, 248, 0.3)',
+                    },
+                  ]}
                   onPress={() => setIsSearchOpen(true)}
                   activeOpacity={0.8}
                 >
-                  <Ionicons name="search" size={13} color="#059669" />
-                  <Text style={desktopStyles.spotlightTriggerText}>Quick Search</Text>
-                  <View style={desktopStyles.kbdBadge}>
-                    <Text style={desktopStyles.kbdText}>Ctrl K</Text>
+                  <Ionicons name="search" size={13} color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#059669'} />
+                  <Text style={[desktopStyles.spotlightTriggerText, isLight && { color: '#475569' }]}>Quick Search</Text>
+                  <View
+                    style={[
+                      desktopStyles.kbdBadge,
+                      isLight && {
+                        backgroundColor: '#f1f5f9',
+                        borderColor: '#cbd5e1',
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        desktopStyles.kbdText,
+                        isLight && { color: '#16a34a' },
+                        isDarkTheme && { color: '#38bdf8' },
+                      ]}
+                    >
+                      Ctrl K
+                    </Text>
                   </View>
                 </TouchableOpacity>
               )}
@@ -828,20 +1333,20 @@ const desktopStyles = StyleSheet.create({
     marginBottom: 8,
   },
   menuNavCol: {
-    paddingHorizontal: 10,
-    gap: 6,
-    paddingBottom: 20,
+    paddingHorizontal: 8,
+    gap: 3,
+    paddingBottom: 10,
   },
   pillarCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: RADIUS.lg,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: RADIUS.md,
     backgroundColor: 'rgba(255, 255, 255, 0.04)',
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.16)',
-    marginBottom: 4,
+    marginBottom: 2,
     position: 'relative',
     overflow: 'hidden',
   },
@@ -849,9 +1354,9 @@ const desktopStyles = StyleSheet.create({
     backgroundColor: 'rgba(0, 255, 135, 0.15)',
     borderColor: '#00ff87',
     shadowColor: '#00ff87',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 1.5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
     elevation: 3,
   },
   pillarCardHover: {
@@ -861,17 +1366,17 @@ const desktopStyles = StyleSheet.create({
   pillarActiveBar: {
     position: 'absolute',
     left: 0,
-    top: 6,
-    bottom: 6,
-    width: 3.5,
+    top: 5,
+    bottom: 5,
+    width: 3,
     backgroundColor: '#00ff87',
-    borderTopRightRadius: 3,
-    borderBottomRightRadius: 3,
+    borderTopRightRadius: 2,
+    borderBottomRightRadius: 2,
   },
   pillarIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
+    width: 28,
+    height: 28,
+    borderRadius: 8,
     backgroundColor: 'rgba(0, 255, 135, 0.08)',
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.2)',
@@ -884,10 +1389,10 @@ const desktopStyles = StyleSheet.create({
   },
   pillarContentCol: {
     flex: 1,
-    marginLeft: 10,
+    marginLeft: 8,
   },
   pillarTitle: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontFamily: FONT.bold,
     color: '#cbd5e1',
     letterSpacing: 0.1,
@@ -898,8 +1403,8 @@ const desktopStyles = StyleSheet.create({
   },
   pillarBadge: {
     backgroundColor: 'rgba(0, 255, 135, 0.12)',
-    paddingHorizontal: 6,
-    paddingVertical: 1.5,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.25)',
@@ -909,13 +1414,44 @@ const desktopStyles = StyleSheet.create({
     borderColor: '#00ff87',
   },
   pillarBadgeText: {
-    fontSize: 9,
+    fontSize: 8.5,
     fontFamily: FONT.bold,
     color: '#94a3b8',
   },
   pillarBadgeTextActive: {
     color: '#00ff87',
     fontFamily: FONT.extraBold,
+  },
+  settingsBottomBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: RADIUS.md,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.2)',
+    marginBottom: 8,
+  },
+  settingsBottomBtnText: {
+    flex: 1,
+    fontSize: 12,
+    fontFamily: FONT.bold,
+    color: '#cbd5e1',
+  },
+  settingsBottomBadge: {
+    backgroundColor: 'rgba(0, 255, 135, 0.12)',
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+  },
+  settingsBottomBadgeText: {
+    fontSize: 9,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
   },
   navMenuItem: {
     flexDirection: 'row',
@@ -979,35 +1515,81 @@ const desktopStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.3)',
   },
-  langSwitcherBox: {
+  themeSwitcherBox: {
     flexDirection: 'row',
     gap: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
     padding: 3,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.2)',
+    borderColor: 'rgba(0, 255, 135, 0.25)',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  langBtn: {
+  themeSwitcherBoxLight: {
+    backgroundColor: '#f1f5f9',
+    borderColor: 'rgba(22, 163, 74, 0.25)',
+  },
+  themeSwitcherBoxDark: {
+    backgroundColor: 'rgba(2, 6, 23, 0.75)',
+    borderColor: 'rgba(56, 189, 248, 0.3)',
+  },
+  themeBtn: {
     flex: 1,
-    paddingVertical: 5,
+    flexDirection: 'row',
+    gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
     borderRadius: RADIUS.pill,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  langBtnActive: {
-    backgroundColor: 'rgba(0, 255, 135, 0.2)',
+  themeBtnActiveLight: {
+    backgroundColor: '#ffffff',
     borderWidth: 1,
-    borderColor: 'rgba(0, 255, 135, 0.4)',
+    borderColor: 'rgba(234, 179, 8, 0.5)',
+    shadowColor: '#f59e0b',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  langBtnText: {
+  themeBtnActiveMedium: {
+    backgroundColor: 'rgba(0, 255, 135, 0.22)',
+    borderWidth: 1,
+    borderColor: '#00ff87',
+    shadowColor: '#00ff87',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  themeBtnActiveDark: {
+    backgroundColor: 'rgba(56, 189, 248, 0.22)',
+    borderWidth: 1,
+    borderColor: '#38bdf8',
+    shadowColor: '#38bdf8',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  themeBtnText: {
     fontSize: 10,
     fontFamily: FONT.bold,
     color: '#94a3b8',
+    letterSpacing: 0.1,
   },
-  langBtnTextActive: {
+  themeBtnTextActiveLight: {
+    color: '#16a34a',
+    fontFamily: FONT.extraBold,
+  },
+  themeBtnTextActiveMedium: {
     color: '#00ff87',
+    fontFamily: FONT.extraBold,
+  },
+  themeBtnTextActiveDark: {
+    color: '#38bdf8',
     fontFamily: FONT.extraBold,
   },
   topTabsHeaderBar: {

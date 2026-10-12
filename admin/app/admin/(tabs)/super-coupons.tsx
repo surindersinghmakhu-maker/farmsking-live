@@ -55,6 +55,7 @@ import { FarmerPlanPaymentCard, FarmerPlanPaymentReviewModal, WithdrawalCard, Re
 import { useAllWithdrawals } from '@/src/hooks/useWithdrawals';
 import type { FarmerPlanPaymentRequest } from '@/src/api/farmerPlanPayments.api';
 import { AdminStaffManagementModal } from '@/src/components/AdminStaffManagementModal';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const theme = RoleThemes.SUPER_ADMIN;
 
@@ -314,6 +315,7 @@ const Hoverable4DCard = ({ children, style, onPress }: any) => {
 };
 
 export default function SuperCouponsScreen({ initialTab }: { initialTab?: CouponsTab | null } = {}) {
+  const { colors, isLight, cardBg, textColor } = useExecutiveTheme();
   const { data: coupons, isLoading } = useAllCoupons();
   const { data: farmerPlanCoupons } = useAllFarmerPlanCoupons();
   const { data: pendingPayments = [], isLoading: isLoadingPendingPayments } = usePendingFarmerPlanPayments();
@@ -334,8 +336,8 @@ export default function SuperCouponsScreen({ initialTab }: { initialTab?: Coupon
   const activeMeta = MAIN_SUB_TABS.find((t) => t.value === activeTab);
 
   return (
-    <View style={styles.container}>
-      <LinearGradient colors={theme.gradient} style={styles.hero}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      <LinearGradient colors={isLight ? ['#15803d', '#166534'] : theme.gradient} style={styles.hero}>
         <Text style={styles.heroTitle}>Coupons & Plans</Text>
         <Text style={styles.heroSubtitle}>Generate codes, track redemptions & manage pricing</Text>
 
@@ -365,6 +367,7 @@ export default function SuperCouponsScreen({ initialTab }: { initialTab?: Coupon
                     key={cat.value}
                     style={[
                       styles.tabChip,
+                      isLight && { backgroundColor: isSelected ? '#15803d' : '#e2e8f0' },
                       isSelected && styles.tabChipActive,
                     ]}
                     activeOpacity={0.8}
@@ -373,8 +376,8 @@ export default function SuperCouponsScreen({ initialTab }: { initialTab?: Coupon
                       setCategoryFilter(cat.value);
                     }}
                   >
-                    <Ionicons name={cat.icon} size={14} color={isSelected ? '#ffffff' : '#64748b'} />
-                    <Text style={[styles.tabChipText, isSelected && styles.tabChipTextActive]}>
+                    <Ionicons name={cat.icon} size={14} color={isSelected ? '#ffffff' : (isLight ? '#475569' : '#64748b')} />
+                    <Text style={[styles.tabChipText, isLight && !isSelected && { color: '#334155' }, isSelected && styles.tabChipTextActive]}>
                       {cat.label}
                     </Text>
                   </TouchableOpacity>
@@ -388,6 +391,10 @@ export default function SuperCouponsScreen({ initialTab }: { initialTab?: Coupon
                   key={t.value}
                   style={[
                     styles.iconTabCard,
+                    {
+                      backgroundColor: cardBg,
+                      borderColor: isLight ? '#e2e8f0' : 'rgba(34,197,94,0.25)',
+                    },
                     premiumShadow(t.color, 'sm'),
                   ]}
                   activeOpacity={0.88}
@@ -399,13 +406,13 @@ export default function SuperCouponsScreen({ initialTab }: { initialTab?: Coupon
                   <View style={[styles.iconCircleBadge, { backgroundColor: t.softBg }]}>
                     <Ionicons name={t.activeIcon} size={24} color={t.color} />
                   </View>
-                  <Text style={styles.iconTabTitle}>{t.title}</Text>
+                  <Text style={[styles.iconTabTitle, { color: textColor }]}>{t.title}</Text>
                   <Text style={styles.iconTabSub}>{t.sub}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <View style={[styles.selectPromptCard, premiumShadow('#0f172a', 'sm')]}>
+            <View style={[styles.selectPromptCard, { backgroundColor: cardBg, borderColor: isLight ? '#e2e8f0' : 'rgba(34,197,94,0.2)' }, premiumShadow('#0f172a', 'sm')]}>
               <Ionicons name="hand-left-outline" size={20} color={theme.primary} />
               <Text style={styles.selectPromptText}>Tap any icon card above to open section</Text>
             </View>
@@ -413,7 +420,7 @@ export default function SuperCouponsScreen({ initialTab }: { initialTab?: Coupon
         ) : (
           <View style={{ gap: 12 }}>
             {/* Header bar inside opened card view with BACK BUTTON */}
-            <View style={[styles.openedCardHeader, { borderColor: `${activeMeta?.color}35` }]}>
+            <View style={[styles.openedCardHeader, { backgroundColor: cardBg, borderColor: `${activeMeta?.color}35` }]}>
               <TouchableOpacity
                 style={[styles.backToTabsBtn, { backgroundColor: activeMeta?.softBg, borderColor: `${activeMeta?.color}40` }]}
                 activeOpacity={0.8}

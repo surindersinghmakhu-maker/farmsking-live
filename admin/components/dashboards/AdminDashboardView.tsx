@@ -18,7 +18,7 @@ import { AnimatedCounter } from '../ui/AnimatedCounter';
 
 export const AdminDashboardView: React.FC = () => {
   const theme = RoleThemes.ADMIN;
-  const { colors: tConfig } = useExecutiveTheme();
+  const { colors: tConfig, isLight, isDarkTheme, isMedium, textColor, subTextColor } = useExecutiveTheme();
   const router = useRouter();
   const { user } = useAuth();
   const { gpsUnlockRequests, acceptGpsUnlockRequest, declineGpsUnlockRequest } = useCrops();
@@ -55,12 +55,12 @@ export const AdminDashboardView: React.FC = () => {
           >
             <View style={styles.sectionHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                <View style={styles.beaconIconWrapper}>
-                  <Ionicons name="chatbubbles" size={20} color={THEME_4D.neonEmerald} />
+                <View style={[styles.beaconIconWrapper, isLight && { backgroundColor: 'rgba(22, 163, 74, 0.1)', borderColor: 'rgba(22, 163, 74, 0.3)' }]}>
+                  <Ionicons name="chatbubbles" size={20} color={isLight ? '#16a34a' : THEME_4D.neonEmerald} />
                 </View>
                 <View>
-                  <Text style={styles.sectionTitle}>Farmer Support Chat</Text>
-                  <Text style={styles.sectionSubtitle}>Real-time WebSocket link</Text>
+                  <Text style={[styles.sectionTitle, { color: textColor }]}>Farmer Support Chat</Text>
+                  <Text style={[styles.sectionSubtitle, isLight && { color: '#16a34a' }]}>Real-time WebSocket link</Text>
                 </View>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -69,52 +69,56 @@ export const AdminDashboardView: React.FC = () => {
                     <Text style={styles.unreadBadgeText}>{totalUnread} NEW</Text>
                   </View>
                 ) : null}
-                <View style={styles.liveSocketBadge}>
-                  <View style={styles.liveSocketDot} />
-                  <Text style={styles.liveSocketText}>LIVE SOCKET</Text>
+                <View style={[styles.liveSocketBadge, isLight && { backgroundColor: 'rgba(22, 163, 74, 0.1)', borderColor: 'rgba(22, 163, 74, 0.3)' }]}>
+                  <View style={[styles.liveSocketDot, isLight && { backgroundColor: '#16a34a', shadowColor: '#16a34a' }]} />
+                  <Text style={[styles.liveSocketText, isLight && { color: '#16a34a' }]}>LIVE SOCKET</Text>
                 </View>
               </View>
             </View>
 
-            <Text style={styles.cardPromptText}>
+            <Text style={[styles.cardPromptText, { color: subTextColor }]}>
               Direct farmer queries & audio calls. Click anywhere to activate modal console:
             </Text>
 
             {isLoadingConversations ? (
-              <ActivityIndicator size="small" color={THEME_4D.neonEmerald} style={{ paddingVertical: 14 }} />
+              <ActivityIndicator size="small" color={isLight ? '#16a34a' : THEME_4D.neonEmerald} style={{ paddingVertical: 14 }} />
             ) : conversations.length === 0 ? (
               <View style={styles.emptyContainer}>
-                <Ionicons name="chatbox-ellipses-outline" size={26} color={THEME_4D.textDim} />
-                <Text style={styles.emptyText}>No active farmer conversations currently open.</Text>
+                <Ionicons name="chatbox-ellipses-outline" size={26} color={isLight ? '#94a3b8' : THEME_4D.textDim} />
+                <Text style={[styles.emptyText, isLight && { color: '#64748b' }]}>No active farmer conversations currently open.</Text>
               </View>
             ) : (
               <View style={{ gap: 8 }}>
                 {conversations.slice(0, 3).map((conv) => (
                   <TouchableOpacity
                     key={conv.farmer?.id || Math.random().toString()}
-                    style={styles.convItemRow}
+                    style={[
+                      styles.convItemRow,
+                      isLight && { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' },
+                      isMedium && { backgroundColor: 'rgba(6, 26, 30, 0.85)', borderColor: 'rgba(34, 197, 94, 0.25)' },
+                    ]}
                     activeOpacity={0.8}
                     onPress={() => openModalWithFarmer(conv.farmer?.id, conv.farmer?.name)}
                   >
-                    <View style={styles.convAvatarWrapper}>
-                      <Ionicons name="person" size={16} color={THEME_4D.neonEmerald} />
+                    <View style={[styles.convAvatarWrapper, isLight && { backgroundColor: 'rgba(22, 163, 74, 0.1)', borderColor: 'rgba(22, 163, 74, 0.25)' }]}>
+                      <Ionicons name="person" size={16} color={isLight ? '#16a34a' : THEME_4D.neonEmerald} />
                     </View>
 
                     <View style={{ flex: 1 }}>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Text style={styles.convFarmerName}>{conv.farmer?.name || 'Farmer'}</Text>
+                        <Text style={[styles.convFarmerName, { color: textColor }]}>{conv.farmer?.name || 'Farmer'}</Text>
                         {conv.unreadCount > 0 ? (
                           <View style={styles.convMiniUnreadBadge}>
                             <Text style={styles.convMiniUnreadText}>{conv.unreadCount} New</Text>
                           </View>
                         ) : null}
                       </View>
-                      <Text style={styles.convLastMsg} numberOfLines={1}>
+                      <Text style={[styles.convLastMsg, { color: subTextColor }]} numberOfLines={1}>
                         {conv.lastMessage}
                       </Text>
                     </View>
 
-                    <Ionicons name="chevron-forward" size={16} color={THEME_4D.neonEmerald} />
+                    <Ionicons name="chevron-forward" size={16} color={isLight ? '#16a34a' : THEME_4D.neonEmerald} />
                   </TouchableOpacity>
                 ))}
               </View>
@@ -122,18 +126,18 @@ export const AdminDashboardView: React.FC = () => {
 
             {/* Explicit Open Pop-Up Modal CTA */}
             <TouchableOpacity
-              style={styles.ctaButton}
+              style={[styles.ctaButton, isLight && { borderColor: 'rgba(22, 163, 74, 0.3)' }]}
               activeOpacity={0.85}
               onPress={() => openModalWithFarmer()}
             >
               <LinearGradient
-                colors={['rgba(0, 255, 135, 0.25)', 'rgba(16, 185, 129, 0.4)']}
+                colors={isLight ? ['rgba(22, 163, 74, 0.15)', 'rgba(22, 163, 74, 0.25)'] : ['rgba(0, 255, 135, 0.25)', 'rgba(16, 185, 129, 0.4)']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.ctaButtonGradient}
               >
-                <Ionicons name="open-outline" size={16} color={THEME_4D.neonEmerald} />
-                <Text style={styles.ctaButtonText}>Open Live Support Console</Text>
+                <Ionicons name="open-outline" size={16} color={isLight ? '#16a34a' : THEME_4D.neonEmerald} />
+                <Text style={[styles.ctaButtonText, isLight && { color: '#16a34a' }]}>Open Live Support Console</Text>
               </LinearGradient>
             </TouchableOpacity>
           </GlassCard4D>
@@ -161,14 +165,14 @@ export const AdminDashboardView: React.FC = () => {
                   <Ionicons name="shield-checkmark" size={20} color={THEME_4D.cyberCyan} />
                 </View>
                 <View>
-                  <Text style={[styles.sectionTitle, { color: THEME_4D.textPrimary }]}>
+                  <Text style={[styles.sectionTitle, { color: textColor }]}>
                     Admin Crop Control & Stages
                   </Text>
-                  <Text style={styles.sectionSubtitle}>Omni-stage field override</Text>
+                  <Text style={[styles.sectionSubtitle, isLight && { color: '#0284c7' }]}>Omni-stage field override</Text>
                 </View>
               </View>
             </View>
-            <Text style={styles.cardPromptText}>
+            <Text style={[styles.cardPromptText, { color: subTextColor }]}>
               Platform Power: Modify crop status at ANY stage (Plantation, Vegetative, Flowering, Harvesting) & orchestrate advisor rosters.
             </Text>
 
@@ -183,12 +187,16 @@ export const AdminDashboardView: React.FC = () => {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.actionBtnSecondary}
+                style={[
+                  styles.actionBtnSecondary,
+                  isLight && { backgroundColor: '#f0fdf4', borderColor: 'rgba(22, 163, 74, 0.3)' },
+                  isMedium && { backgroundColor: 'rgba(6, 26, 30, 0.85)', borderColor: 'rgba(34, 197, 94, 0.4)' },
+                ]}
                 activeOpacity={0.85}
                 onPress={() => router.push('/(tabs)/farm' as never)}
               >
-                <Ionicons name="leaf-outline" size={15} color={THEME_4D.neonEmerald} />
-                <Text style={styles.actionBtnSecondaryText}>View All Crops</Text>
+                <Ionicons name="leaf-outline" size={15} color={isLight ? '#16a34a' : isMedium ? '#22c55e' : THEME_4D.neonEmerald} />
+                <Text style={[styles.actionBtnSecondaryText, isLight && { color: '#16a34a' }, isMedium && { color: '#22c55e' }]}>View All Crops</Text>
               </TouchableOpacity>
             </View>
           </GlassCard4D>
@@ -196,10 +204,10 @@ export const AdminDashboardView: React.FC = () => {
           {/* 4 Stat Cards with 4D Perspective & Animated Counters */}
           <View style={styles.statsGrid}>
             {[
-              { label: 'Active Users', value: 2568, prefix: '', suffix: '', icon: 'people-outline', color: THEME_4D.neonEmerald },
-              { label: 'Agri Advisors', value: 1256, prefix: '', suffix: '', icon: 'school-outline', color: THEME_4D.cyberCyan },
-              { label: 'Total Orders', value: 3256, prefix: '', suffix: '', icon: 'receipt-outline', color: THEME_4D.cyberGold },
-              { label: 'Biz Partners', value: 256, prefix: '', suffix: '', icon: 'briefcase-outline', color: '#a78bfa' },
+              { label: 'Active Users', value: 2568, prefix: '', suffix: '', icon: 'people-outline', color: isLight ? '#16a34a' : isMedium ? '#22c55e' : THEME_4D.neonEmerald },
+              { label: 'Agri Advisors', value: 1256, prefix: '', suffix: '', icon: 'school-outline', color: isLight ? '#0284c7' : isMedium ? '#38bdf8' : THEME_4D.cyberCyan },
+              { label: 'Total Orders', value: 3256, prefix: '', suffix: '', icon: 'receipt-outline', color: isLight ? '#d97706' : isMedium ? '#fbbf24' : THEME_4D.cyberGold },
+              { label: 'Biz Partners', value: 256, prefix: '', suffix: '', icon: 'briefcase-outline', color: isMedium ? '#a855f7' : '#8b5cf6' },
             ].map((s) => (
               <GlassCard4D
                 key={s.label}
@@ -207,13 +215,13 @@ export const AdminDashboardView: React.FC = () => {
                 intensity="medium"
                 style={styles.statCard}
               >
-                <View style={[styles.statIconBg, { borderColor: s.color + '55' }]}>
+                <View style={[styles.statIconBg, { borderColor: s.color + '55', backgroundColor: s.color + '15' }]}>
                   <Ionicons name={s.icon as any} size={18} color={s.color} />
                 </View>
-                <Text style={styles.statValue}>
+                <Text style={[styles.statValue, { color: textColor }]}>
                   <AnimatedCounter value={s.value} prefix={s.prefix} suffix={s.suffix} />
                 </Text>
-                <Text style={styles.statLabel}>{s.label}</Text>
+                <Text style={[styles.statLabel, { color: subTextColor }]}>{s.label}</Text>
               </GlassCard4D>
             ))}
           </View>
@@ -224,9 +232,9 @@ export const AdminDashboardView: React.FC = () => {
             intensity="high"
             style={styles.salesHeroCard}
           >
-            <Ionicons name="stats-chart" size={120} color={THEME_4D.neonEmerald} style={styles.watermark} />
-            <Text style={styles.salesCardLabel}>TOTAL PLATFORM VOLUME</Text>
-            <Text style={styles.salesAmount}>
+            <Ionicons name="stats-chart" size={120} color={isLight ? 'rgba(22, 163, 74, 0.12)' : THEME_4D.neonEmerald} style={styles.watermark} />
+            <Text style={[styles.salesCardLabel, isLight && { color: '#16a34a' }]}>TOTAL PLATFORM VOLUME</Text>
+            <Text style={[styles.salesAmount, { color: textColor }]}>
               <AnimatedCounter value={1245560} prefix="₹" />
             </Text>
             <View style={styles.sparklineContainer}>
@@ -238,8 +246,8 @@ export const AdminDashboardView: React.FC = () => {
                       styles.sparklineBar,
                       {
                         height: h,
-                        backgroundColor: index === 6 ? THEME_4D.neonEmerald : 'rgba(0, 255, 135, 0.45)',
-                        shadowColor: THEME_4D.neonEmerald,
+                        backgroundColor: index === 6 ? (isLight ? '#16a34a' : THEME_4D.neonEmerald) : (isLight ? 'rgba(22, 163, 74, 0.35)' : 'rgba(0, 255, 135, 0.45)'),
+                        shadowColor: isLight ? '#16a34a' : THEME_4D.neonEmerald,
                         shadowOpacity: index === 6 ? 0.8 : 0.2,
                         shadowRadius: 8,
                       },
@@ -257,9 +265,9 @@ export const AdminDashboardView: React.FC = () => {
             style={styles.ordersSectionCard}
           >
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Recent Orders</Text>
-              <TouchableOpacity activeOpacity={0.7}>
-                <Text style={styles.viewAllText}>View All</Text>
+              <Text style={[styles.sectionTitle, { color: textColor }]}>Recent Orders</Text>
+              <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/(tabs)/admin-orders' as never)}>
+                <Text style={[styles.viewAllText, isLight && { color: '#16a34a' }]}>View All</Text>
               </TouchableOpacity>
             </View>
 
@@ -268,15 +276,15 @@ export const AdminDashboardView: React.FC = () => {
               { id: 'Order #1255', name: 'Rakesh Kumar', amount: '₹780', time: 'Today' },
               { id: 'Order #1253', name: 'Sukhdeep Singh', amount: '₹1,240', time: 'Yesterday', last: true },
             ].map((o) => (
-              <View key={o.id} style={[styles.orderRow, o.last && { borderBottomWidth: 0 }]}>
+              <View key={o.id} style={[styles.orderRow, isLight && { borderBottomColor: '#f1f5f9' }, o.last && { borderBottomWidth: 0 }]}>
                 <View style={styles.orderIconBg}>
                   <Ionicons name="receipt-outline" size={16} color={THEME_4D.cyberGold} />
                 </View>
                 <View style={styles.orderInfo}>
-                  <Text style={styles.orderTitle}>{o.id}</Text>
-                  <Text style={styles.orderSubtitle}>{o.name} · {o.time}</Text>
+                  <Text style={[styles.orderTitle, { color: textColor }]}>{o.id}</Text>
+                  <Text style={[styles.orderSubtitle, { color: subTextColor }]}>{o.name} · {o.time}</Text>
                 </View>
-                <Text style={styles.orderAmount}>{o.amount}</Text>
+                <Text style={[styles.orderAmount, isLight && { color: '#d97706' }]}>{o.amount}</Text>
               </View>
             ))}
           </GlassCard4D>
@@ -287,17 +295,26 @@ export const AdminDashboardView: React.FC = () => {
             intensity="low"
             style={styles.mgmtSectionCard}
           >
-            <Text style={[styles.sectionTitle, { marginBottom: 12 }]}>Platform Hub</Text>
+            <Text style={[styles.sectionTitle, { color: textColor, marginBottom: 12 }]}>Platform Hub</Text>
             <View style={styles.toolsGrid}>
               {[
-                { label: 'Users', icon: 'people-outline', color: THEME_4D.neonEmerald },
-                { label: 'Products', icon: 'cube-outline', color: THEME_4D.cyberCyan },
-                { label: 'Orders', icon: 'receipt-outline', color: THEME_4D.cyberGold },
-                { label: 'Reports', icon: 'bar-chart-outline', color: '#a78bfa' },
+                { label: 'Users', icon: 'people-outline', color: isLight ? '#16a34a' : THEME_4D.neonEmerald, path: '/(tabs)/super-users' },
+                { label: 'Products', icon: 'cube-outline', color: isLight ? '#0284c7' : THEME_4D.cyberCyan, path: '/(tabs)/admin-products' },
+                { label: 'Orders', icon: 'receipt-outline', color: isLight ? '#d97706' : THEME_4D.cyberGold, path: '/(tabs)/admin-orders' },
+                { label: 'Reports', icon: 'bar-chart-outline', color: '#8b5cf6', path: '/(tabs)/super-audit-log' },
               ].map((t) => (
-                <TouchableOpacity key={t.label} style={styles.toolBtn} activeOpacity={0.7}>
+                <TouchableOpacity
+                  key={t.label}
+                  style={[
+                    styles.toolBtn,
+                    isLight && { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' },
+                    isMedium && { backgroundColor: 'rgba(6, 26, 30, 0.85)', borderColor: 'rgba(34, 197, 94, 0.25)' },
+                  ]}
+                  activeOpacity={0.7}
+                  onPress={() => router.push(t.path as never)}
+                >
                   <Ionicons name={t.icon as any} size={20} color={t.color} />
-                  <Text style={styles.toolLabel}>{t.label}</Text>
+                  <Text style={[styles.toolLabel, isLight && { color: '#334155' }]}>{t.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>

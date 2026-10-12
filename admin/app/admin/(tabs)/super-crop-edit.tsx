@@ -46,7 +46,7 @@ const Hoverable4DCard = ({ children, style, onPress }: any) => {
 };
 
 export default function SuperCropEditScreen() {
-  const { colors } = useExecutiveTheme();
+  const { colors, isLight } = useExecutiveTheme();
   const [cropIdInput, setCropIdInput] = useState('');
   const [crop, setCrop] = useState<CropLookupResult | null>(null);
 
@@ -158,8 +158,8 @@ export default function SuperCropEditScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <LinearGradient colors={['#0f172a', '#1e293b']} style={styles.hero}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      <LinearGradient colors={isLight ? ['#15803d', '#166534'] : ['#031711', '#062a1b']} style={styles.hero}>
         <Text style={styles.heroTitle}>🌾 Edit Farmer Crop Data</Text>
         <Text style={styles.heroSubtitle}>Enter Crop ID to look up a farmer's crop and override data safely</Text>
 
@@ -202,7 +202,7 @@ export default function SuperCropEditScreen() {
         {crop ? (
           <>
             {/* Read-Only Target Crop Header Badge */}
-            <View style={[styles.readOnlyHeaderCard, premiumShadow('#0f172a', 'sm')]}>
+            <View style={[styles.readOnlyHeaderCard, { backgroundColor: isLight ? '#ffffff' : 'rgba(6,26,30,0.82)', borderColor: isLight ? '#ddd6fe' : '#7c3aed' }, premiumShadow('#0f172a', 'sm')]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <View style={styles.cropIdBadge}>
                   <Ionicons name="key" size={14} color="#7c3aed" />
@@ -214,18 +214,18 @@ export default function SuperCropEditScreen() {
               </View>
 
               <View style={{ marginTop: 8, gap: 3 }}>
-                <Text style={styles.contextLine}>
+                <Text style={[styles.contextLine, { color: isLight ? '#334155' : '#e2e8f0' }]}>
                   <Ionicons name="person" size={13} color="#475569" /> Farmer: <Text style={{ fontFamily: FONT.bold }}>{crop.plot?.farm?.owner?.name || 'Farmer'}</Text>
                   {crop.plot?.farm?.owner?.kingId ? ` (🔑 ${crop.plot.farm.owner.kingId})` : ''}
                 </Text>
-                <Text style={styles.contextLine}>📱 Mobile: {crop.plot?.farm?.owner?.mobile || 'N/A'}</Text>
-                <Text style={styles.contextLine}>🌾 Farm & Plot: {crop.plot?.farm?.name || 'Farm'} → {crop.plot?.name || 'Plot'}</Text>
+                <Text style={[styles.contextLine, { color: isLight ? '#334155' : '#e2e8f0' }]}>📱 Mobile: {crop.plot?.farm?.owner?.mobile || 'N/A'}</Text>
+                <Text style={[styles.contextLine, { color: isLight ? '#334155' : '#e2e8f0' }]}>🌾 Farm & Plot: {crop.plot?.farm?.name || 'Farm'} → {crop.plot?.name || 'Plot'}</Text>
               </View>
             </View>
 
             {/* Complete Add / Edit Crop Data Form */}
-            <View style={[styles.formCard, premiumShadow('#0f172a', 'sm')]}>
-              <Text style={styles.formSectionHeader}>📋 Full Farmer Crop Specifications</Text>
+            <View style={[styles.formCard, { backgroundColor: isLight ? '#ffffff' : 'rgba(6,26,30,0.82)', borderWidth: 1, borderColor: colors.borderColor }, premiumShadow('#0f172a', 'sm')]}>
+              <Text style={[styles.formSectionHeader, { color: isLight ? '#0f172a' : '#ffffff' }]}>📋 Full Farmer Crop Specifications</Text>
 
               {/* 1. Category */}
               <Text style={styles.label}>Crop Category *</Text>
@@ -411,7 +411,7 @@ export default function SuperCropEditScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020d06' },
+  container: { flex: 1 },
   hero: { paddingTop: 20, paddingBottom: 18, paddingHorizontal: SPACING.lg },
   heroTitle: { color: '#fff', fontSize: 19, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
   heroSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 11.5, fontFamily: FONT.medium, marginTop: 2 },
@@ -431,15 +431,15 @@ const styles = StyleSheet.create({
   emptyText: { color: '#64748b', fontSize: 13, fontFamily: FONT.medium },
   errorText: { color: '#dc2626', fontSize: 12.5, fontFamily: FONT.bold, marginVertical: 4 },
   successText: { color: '#16a34a', fontSize: 12.5, fontFamily: FONT.bold, marginVertical: 4 },
-  readOnlyHeaderCard: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: 12, borderWidth: 1.5, borderColor: '#ddd6fe' },
+  readOnlyHeaderCard: { borderRadius: RADIUS.lg, padding: 12, borderWidth: 1.5 },
   cropIdBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f3e8ff', borderWidth: 1, borderColor: '#c084fc', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill },
   cropIdBadgeText: { fontSize: 13, fontFamily: FONT.extraBold, color: '#7c3aed' },
-  readOnlyTag: { backgroundColor: '#051b11', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.sm },
+  readOnlyTag: { backgroundColor: '#f1f5f9', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.sm },
   readOnlyTagText: { fontSize: 10.5, fontFamily: FONT.bold, color: '#64748b' },
-  contextLine: { fontSize: 12, fontFamily: FONT.medium, color: '#e2e8f0' },
-  formCard: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.md, gap: 8 },
-  formSectionHeader: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#ffffff', marginBottom: 4 },
-  label: { fontSize: 11.5, fontFamily: FONT.bold, color: '#475569', marginTop: 4 },
+  contextLine: { fontSize: 12, fontFamily: FONT.medium },
+  formCard: { borderRadius: RADIUS.lg, padding: SPACING.md, gap: 8 },
+  formSectionHeader: { fontSize: 13.5, fontFamily: FONT.extraBold, marginBottom: 4 },
+  label: { fontSize: 11.5, fontFamily: FONT.bold, color: '#64748b', marginTop: 4 },
   input: {
     borderWidth: 1,
     borderColor: '#cbd5e1',
@@ -448,8 +448,8 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     fontSize: 13,
     fontFamily: FONT.medium,
-    color: '#ffffff',
-    backgroundColor: 'rgba(0,255,135,0.03)',
+    color: '#0f172a',
+    backgroundColor: '#ffffff',
   },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: {

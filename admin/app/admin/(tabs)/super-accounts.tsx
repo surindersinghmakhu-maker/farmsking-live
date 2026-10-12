@@ -18,6 +18,7 @@ import { AdminUser } from '@/src/types/api';
 
 import { AdminWalletManagementView } from '@/src/components/AdminWalletManagementView';
 import { exportAccountsToExcel } from '@/src/utils/excelExport';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const theme = RoleThemes.SUPER_ADMIN;
 
@@ -93,6 +94,7 @@ const Hoverable4DCard = ({ children, style, onPress }: any) => {
 
 export default function SuperAccountsScreen() {
   const router = useRouter();
+  const { colors, isLight, cardBg, textColor } = useExecutiveTheme();
   const { data: withdrawals, isLoading } = useAllWithdrawals();
   const { data: planPayments, isLoading: isLoadingPlanPayments } = usePendingPlanPayments();
   const { data: farmerPlanPayments, isLoading: isLoadingFarmerPlanPayments } = usePendingFarmerPlanPayments();
@@ -124,42 +126,48 @@ export default function SuperAccountsScreen() {
   const isLoadingAnyRequests = isLoading || isLoadingPlanPayments || isLoadingFarmerPlanPayments;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.hero}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      <View style={[
+        styles.hero,
+        isLight && {
+          backgroundColor: '#ffffff',
+          borderBottomColor: '#e2e8f0',
+        },
+      ]}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.heroTitle}>Finance Control Center</Text>
-            <Text style={styles.heroSubtitle}>VIP Pass & Plans, Coupons & Vouchers, Finance & Wallet</Text>
+            <Text style={[styles.heroTitle, isLight && { color: '#0f172a' }]}>Treasury & Ledger Vault</Text>
+            <Text style={[styles.heroSubtitle, isLight && { color: '#64748b' }]}>VIP Pass & Plans, Coupons & Vouchers, Finance & Wallet</Text>
           </View>
           <TouchableOpacity
-            style={styles.exportBtn}
+            style={[styles.exportBtn, isLight && { backgroundColor: '#f0fdf4', borderColor: 'rgba(22, 163, 74, 0.3)' }]}
             onPress={() => {
               tap();
               exportAccountsToExcel(withdrawals || []);
             }}
           >
-            <Ionicons name="download-outline" size={14} color="#00ff87" />
-            <Text style={styles.exportBtnText}>Excel Export</Text>
+            <Ionicons name="download-outline" size={14} color={isLight ? '#16a34a' : '#00ff87'} />
+            <Text style={[styles.exportBtnText, isLight && { color: '#16a34a' }]}>Excel Export</Text>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.statRow}>
+        <View style={[styles.statRow, isLight && { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }]}>
           <View style={styles.statCard}>
             <View style={styles.statTopRow}>
               <Text style={styles.statLabel}>Awaiting You</Text>
               {totalPendingRequests > 0 ? <View style={styles.liveDot} /> : null}
             </View>
-            <Text style={styles.statValue}>{isLoadingAnyRequests ? '—' : totalPendingRequests}</Text>
+            <Text style={[styles.statValue, isLight && { color: '#0f172a' }]}>{isLoadingAnyRequests ? '—' : totalPendingRequests}</Text>
           </View>
-          <View style={styles.statDivider} />
+          <View style={[styles.statDivider, isLight && { backgroundColor: '#e2e8f0' }]} />
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>Payout Requested</Text>
-            <Text style={styles.statValue}>₹{pendingPayout.toLocaleString('en-IN')}</Text>
+            <Text style={[styles.statValue, isLight && { color: '#0f172a' }]}>₹{pendingPayout.toLocaleString('en-IN')}</Text>
           </View>
-          <View style={styles.statDivider} />
+          <View style={[styles.statDivider, isLight && { backgroundColor: '#e2e8f0' }]} />
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>Revenue to Verify</Text>
-            <Text style={styles.statValue}>₹{pendingRevenue.toLocaleString('en-IN')}</Text>
+            <Text style={[styles.statValue, isLight && { color: '#0f172a' }]}>₹{pendingRevenue.toLocaleString('en-IN')}</Text>
           </View>
         </View>
 
@@ -170,12 +178,17 @@ export default function SuperAccountsScreen() {
             return (
               <TouchableOpacity
                 key={t.value}
-                style={[styles.sectionTab, active && styles.sectionTabActive, { flex: 1, paddingVertical: 10 }]}
+                style={[
+                  styles.sectionTab,
+                  isLight && { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' },
+                  active && (isLight ? { backgroundColor: '#16a34a', borderColor: '#16a34a' } : styles.sectionTabActive),
+                  { flex: 1, paddingVertical: 10 },
+                ]}
                 activeOpacity={0.85}
                 onPress={() => { tap(); setSection(t.value); }}
               >
-                <Ionicons name={t.icon} size={15} color={active ? '#ffffff' : '#64748b'} />
-                <Text style={[styles.sectionTabText, active && { color: '#ffffff' }, { fontSize: 11.5, fontFamily: FONT.bold }]}>{t.label}</Text>
+                <Ionicons name={t.icon} size={15} color={active ? '#ffffff' : (isLight ? '#64748b' : '#94a3b8')} />
+                <Text style={[styles.sectionTabText, active && { color: '#ffffff' }, isLight && !active && { color: '#64748b' }, { fontSize: 11.5, fontFamily: FONT.bold }]}>{t.label}</Text>
               </TouchableOpacity>
             );
           })}
@@ -230,13 +243,14 @@ export default function SuperAccountsScreen() {
                     key={sub.value}
                     style={[
                       styles.subTabChip,
-                      isSelected && styles.subTabChipActive,
+                      isLight && { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' },
+                      isSelected && (isLight ? { backgroundColor: '#16a34a', borderColor: '#16a34a' } : styles.subTabChipActive),
                     ]}
                     activeOpacity={0.8}
                     onPress={() => { tap(); setPartnerSubTab(sub.value); }}
                   >
-                    <Ionicons name={sub.icon} size={14} color={isSelected ? '#ffffff' : '#64748b'} />
-                    <Text style={[styles.subTabChipText, isSelected && styles.subTabChipTextActive]}>
+                    <Ionicons name={sub.icon} size={14} color={isSelected ? '#ffffff' : (isLight ? '#64748b' : '#94a3b8')} />
+                    <Text style={[styles.subTabChipText, isSelected && styles.subTabChipTextActive, isLight && !isSelected && { color: '#64748b' }]}>
                       {sub.label}
                     </Text>
                   </TouchableOpacity>

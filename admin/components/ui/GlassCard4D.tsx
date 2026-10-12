@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { View, Pressable, StyleSheet, Platform, ViewStyle, StyleProp } from 'react-native';
 import { RADIUS, THEME_4D } from '@/constants/theme';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 interface GlassCard4DProps {
   children: React.ReactNode;
@@ -20,7 +21,7 @@ export const GlassCard4D: React.FC<GlassCard4DProps> = ({
   style,
   onPress,
   active = false,
-  glowColor = THEME_4D.neonEmerald,
+  glowColor,
   intensity = 'medium',
   tiltMaxAngle = 8,
   interactive = true,
@@ -28,6 +29,12 @@ export const GlassCard4D: React.FC<GlassCard4DProps> = ({
   accessibilityLabel,
 }) => {
   const cardRef = useRef<any>(null);
+  const { themeMode } = useExecutiveTheme();
+  const isLight = themeMode === 'LIGHT';
+  const isDark = themeMode === 'DARK';
+
+  const resolvedGlowColor = glowColor || (isLight ? '#16a34a' : isDark ? '#38bdf8' : '#22c55e');
+
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
   const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
@@ -78,38 +85,66 @@ export const GlassCard4D: React.FC<GlassCard4DProps> = ({
 
   const webDynamicStyle = isWeb
     ? {
-      transform: reducedMotion
-        ? isHovered
-          ? 'scale(1.015)'
-          : 'none'
-        : `perspective(900px) rotateX(${tilt.rotateX}deg) rotateY(${tilt.rotateY}deg) ${isHovered ? 'scale3d(1.02, 1.02, 1.02) translateZ(10px)' : 'none'
-        }`,
-      transition: isHovered
-        ? 'transform 0.12s cubic-bezier(0.2, 0, 0.1, 1), box-shadow 0.25s ease, border-color 0.25s ease'
-        : 'transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease, border-color 0.35s ease',
-      boxShadow: active
-        ? `0 0 24px ${glowColor}50, 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 12px ${glowColor}25`
-        : isHovered
-          ? `0 12px 36px rgba(0, 0, 0, 0.7), 0 0 18px ${glowColor}35, inset 0 1px 0 rgba(255, 255, 255, 0.12)`
-          : '0 4px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06)',
-      backdropFilter: 'blur(24px) saturate(160%)',
-      WebkitBackdropFilter: 'blur(24px) saturate(160%)',
-      cursor: onPress ? 'pointer' : 'default',
-    }
+        transform: reducedMotion
+          ? isHovered
+            ? 'scale(1.015)'
+            : 'none'
+          : `perspective(900px) rotateX(${tilt.rotateX}deg) rotateY(${tilt.rotateY}deg) ${
+              isHovered ? 'scale3d(1.02, 1.02, 1.02) translateZ(10px)' : 'none'
+            }`,
+        transition: isHovered
+          ? 'transform 0.12s cubic-bezier(0.2, 0, 0.1, 1), box-shadow 0.25s ease, border-color 0.25s ease'
+          : 'transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease, border-color 0.35s ease',
+        boxShadow: isLight
+          ? active
+            ? '0 0 20px rgba(22, 163, 74, 0.25), 0 8px 24px rgba(0, 0, 0, 0.06)'
+            : isHovered
+            ? '0 12px 32px rgba(0, 0, 0, 0.08), 0 0 16px rgba(234, 179, 8, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.9)'
+            : '0 4px 16px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02)'
+          : isDark
+          ? active
+            ? `0 0 24px ${resolvedGlowColor}50, 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 0 12px ${resolvedGlowColor}25`
+            : isHovered
+            ? `0 12px 36px rgba(0, 0, 0, 0.7), 0 0 18px ${resolvedGlowColor}35, inset 0 1px 0 rgba(255, 255, 255, 0.12)`
+            : '0 4px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06)'
+          : active
+          ? '0 0 24px rgba(251, 191, 36, 0.45), 0 8px 32px rgba(0, 0, 0, 0.65), inset 0 0 14px rgba(34, 197, 94, 0.25)'
+          : isHovered
+          ? '0 12px 36px rgba(0, 0, 0, 0.75), 0 0 22px rgba(34, 197, 94, 0.4), 0 0 10px rgba(251, 191, 36, 0.25), inset 0 1px 0 rgba(251, 191, 36, 0.4)'
+          : '0 4px 20px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(251, 191, 36, 0.18)',
+        backdropFilter: 'blur(24px) saturate(160%)',
+        WebkitBackdropFilter: 'blur(24px) saturate(160%)',
+        cursor: onPress ? 'pointer' : 'default',
+      }
     : {};
 
-  const backgroundStyle =
-    variant === 'accent'
-      ? { backgroundColor: 'rgba(8, 38, 22, 0.85)' }
-      : variant === 'cyber'
-        ? { backgroundColor: 'rgba(5, 18, 12, 0.9)' }
-        : { backgroundColor: THEME_4D.bgCardGlass };
+  const backgroundStyle = isLight
+    ? { backgroundColor: 'rgba(255, 255, 255, 0.95)' }
+    : isDark
+    ? { backgroundColor: 'rgba(11, 19, 41, 0.88)' }
+    : variant === 'accent'
+    ? { backgroundColor: 'rgba(8, 36, 38, 0.90)' }
+    : variant === 'cyber'
+    ? { backgroundColor: 'rgba(4, 22, 26, 0.92)' }
+    : { backgroundColor: 'rgba(6, 26, 30, 0.82)' }; // Shaded Parrot & Gold glass card
 
-  const borderStyle = active
-    ? { borderColor: glowColor }
+  const borderStyle = isLight
+    ? active
+      ? { borderColor: '#16a34a' }
+      : isHovered
+      ? { borderColor: 'rgba(234, 179, 8, 0.6)' }
+      : { borderColor: 'rgba(22, 163, 74, 0.20)' }
+    : isDark
+    ? active
+      ? { borderColor: '#38bdf8' }
+      : isHovered
+      ? { borderColor: 'rgba(56, 189, 248, 0.65)' }
+      : { borderColor: 'rgba(56, 189, 248, 0.22)' }
+    : active
+    ? { borderColor: '#fbbf24' } // Radiant Gold active
     : isHovered
-      ? { borderColor: THEME_4D.borderGlassHover }
-      : { borderColor: THEME_4D.borderGlass };
+    ? { borderColor: 'rgba(34, 197, 94, 0.85)' } // Glowing Parrot Green hover
+    : { borderColor: 'rgba(34, 197, 94, 0.30)' };
 
   return (
     <Pressable
@@ -128,10 +163,10 @@ export const GlassCard4D: React.FC<GlassCard4DProps> = ({
       ]}
       {...(isWeb
         ? ({
-          onPointerMove: handlePointerMove,
-          onPointerEnter: handlePointerEnter,
-          onPointerLeave: handlePointerLeave,
-        } as any)
+            onPointerMove: handlePointerMove,
+            onPointerEnter: handlePointerEnter,
+            onPointerLeave: handlePointerLeave,
+          } as any)
         : {})}
     >
       {/* Specular Light Reflection Follower on Web */}
@@ -146,7 +181,9 @@ export const GlassCard4D: React.FC<GlassCard4DProps> = ({
             borderRadius: RADIUS.lg,
             pointerEvents: 'none',
             zIndex: 1,
-            backgroundImage: `radial-gradient(circle 180px at ${lightPos.x}% ${lightPos.y}%, ${glowColor}20, transparent 75%)`,
+            backgroundImage: isLight
+              ? `radial-gradient(circle 180px at ${lightPos.x}% ${lightPos.y}%, rgba(234, 179, 8, 0.15), transparent 75%)`
+              : `radial-gradient(circle 180px at ${lightPos.x}% ${lightPos.y}%, ${resolvedGlowColor}20, transparent 75%)`,
           }}
         />
       )}
@@ -156,8 +193,15 @@ export const GlassCard4D: React.FC<GlassCard4DProps> = ({
         style={[
           styles.shimmerLine,
           {
-            backgroundColor: isHovered || active ? glowColor : 'rgba(255, 255, 255, 0.08)',
-            opacity: isHovered || active ? 0.8 : 0.35,
+            backgroundColor:
+              isLight
+                ? isHovered || active
+                  ? '#eab308'
+                  : 'rgba(22, 163, 74, 0.2)'
+                : isHovered || active
+                ? resolvedGlowColor
+                : 'rgba(255, 255, 255, 0.08)',
+            opacity: isHovered || active ? 0.9 : 0.4,
           },
         ]}
       />

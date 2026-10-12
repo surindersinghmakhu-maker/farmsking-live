@@ -26,6 +26,7 @@ import { AdminInfoModal, SuperAdminWorkspaceModal, UserGuidesModal } from '@/app
 import { APP_VERSION } from '@/src/constants/version';
 import { IsoControlCenterPanel } from '@/src/components/IsoControlCenterPanel';
 import { IsoStaffApprovalPanel } from '@/src/components/IsoStaffApprovalPanel';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const theme = RoleThemes.SUPER_ADMIN;
 
@@ -1882,6 +1883,7 @@ const Hoverable4DCard = ({ children, style, onPress }: any) => {
 
 export default function SuperSettingsScreen() {
   const router = useRouter();
+  const { colors, isLight, cardBg, textColor } = useExecutiveTheme();
   const { data: settings, isLoading } = useAppSettings();
   const update = useUpdateAppSettings();
   const [error, setError] = useState<string | null>(null);
@@ -1958,21 +1960,24 @@ export default function SuperSettingsScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <LinearGradient colors={['#0f172a', '#1e293b', '#0f172a']} style={styles.hero}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      <LinearGradient
+        colors={isLight ? ['#ffffff', '#f8fafc', '#ffffff'] : ['#0f172a', '#1e293b', '#0f172a']}
+        style={[styles.hero, isLight && { borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }]}
+      >
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View style={{ flex: 1 }}>
             <View style={styles.heroHeaderRow}>
-              <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: '#dc2626', alignItems: 'center', justifyContent: 'center' }}>
+              <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: isLight ? '#16a34a' : '#22c55e', alignItems: 'center', justifyContent: 'center' }}>
                 <Ionicons name="options" size={18} color="#ffffff" />
               </View>
-              <Text style={styles.heroTitle}>⚡ C-Panel — Control Center</Text>
+              <Text style={[styles.heroTitle, isLight && { color: '#0f172a' }]}>⚡ C-Panel — Control Center</Text>
             </View>
-            <Text style={styles.heroSubtitle}>System Feature Switches · Plan Pricing & Splits · Admin Tools</Text>
+            <Text style={[styles.heroSubtitle, isLight && { color: '#64748b' }]}>System Feature Switches · Plan Pricing & Splits · Admin Tools</Text>
           </View>
-          <View style={{ backgroundColor: '#1e293b', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#334155', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <View style={{ backgroundColor: isLight ? '#f1f5f9' : '#1e293b', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: isLight ? '#cbd5e1' : '#334155', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#22c55e' }} />
-            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#4ade80' }}>LIVE</Text>
+            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isLight ? '#15803d' : '#4ade80' }}>LIVE</Text>
           </View>
         </View>
       </LinearGradient>
@@ -1998,21 +2003,42 @@ export default function SuperSettingsScreen() {
                   paddingVertical: 10,
                   paddingHorizontal: 8,
                   borderRadius: RADIUS.lg,
-                  backgroundColor: active ? '#dc2626' : '#ffffff',
+                  backgroundColor: active
+                    ? (isLight ? '#15803d' : '#22c55e')
+                    : (isLight ? '#ffffff' : 'rgba(255,255,255,0.05)'),
                   borderWidth: 1.5,
-                  borderColor: active ? '#dc2626' : '#e2e8f0',
+                  borderColor: active
+                    ? (isLight ? '#15803d' : '#22c55e')
+                    : (isLight ? '#e2e8f0' : 'rgba(255,255,255,0.08)'),
                   alignItems: 'center',
                   justifyContent: 'center',
                   ...premiumShadow('#0f172a', 'sm'),
                 }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Ionicons name={tab.icon as any} size={15} color={active ? '#ffffff' : '#475569'} />
-                  <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: active ? '#ffffff' : '#0f172a' }}>
+                  <Ionicons
+                    name={tab.icon as any}
+                    size={15}
+                    color={active ? '#ffffff' : (isLight ? '#475569' : '#94a3b8')}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 12.5,
+                      fontFamily: FONT.extraBold,
+                      color: active ? '#ffffff' : (isLight ? '#0f172a' : '#f1f5f9'),
+                    }}
+                  >
                     {tab.label}
                   </Text>
                 </View>
-                <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: active ? 'rgba(255,255,255,0.85)' : '#64748b', marginTop: 2 }}>
+                <Text
+                  style={{
+                    fontSize: 10,
+                    fontFamily: FONT.medium,
+                    color: active ? 'rgba(255,255,255,0.85)' : (isLight ? '#64748b' : '#94a3b8'),
+                    marginTop: 2,
+                  }}
+                >
                   {tab.sub}
                 </Text>
               </TouchableOpacity>

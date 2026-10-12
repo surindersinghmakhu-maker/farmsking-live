@@ -16,6 +16,7 @@ import {
   useStartPackingOrder,
 } from '@/src/hooks/useOrders';
 import { CustomerOrder, OrderStatus } from '@/src/types/api';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const theme = RoleThemes.OPERATOR;
 
@@ -54,15 +55,16 @@ const Hoverable4DCard = ({ children, style, onPress }: any) => {
 };
 
 export default function OperatorOrdersScreen() {
+  const { colors, isLight } = useExecutiveTheme();
   const { data: queue, isLoading } = useFulfillmentQueue();
   const [printOrder, setPrintOrder] = useState<{ order: CustomerOrder; mode: 'BILL' | 'LABEL' } | null>(null);
   const [dispatchOrder, setDispatchOrderTarget] = useState<CustomerOrder | null>(null);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.hero}>
-        <Text style={styles.heroTitle}>Fulfillment Queue</Text>
-        <Text style={styles.heroSubtitle}>{queue?.length ?? 0} order(s) awaiting action</Text>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      <View style={[styles.hero, { backgroundColor: isLight ? '#ffffff' : 'rgba(0,255,135,0.03)', borderBottomColor: colors.borderColor }]}>
+        <Text style={[styles.heroTitle, { color: isLight ? '#0f172a' : '#ffffff' }]}>Fulfillment Queue</Text>
+        <Text style={[styles.heroSubtitle, { color: isLight ? '#64748b' : '#94a3b8' }]}>{queue?.length ?? 0} order(s) awaiting action</Text>
       </View>
 
       {isLoading ? (
@@ -108,6 +110,7 @@ function OrderFulfillmentCard({
   onPrintLabel: () => void;
   onDispatch: () => void;
 }) {
+  const { colors, isLight } = useExecutiveTheme();
   const confirmOrder = useConfirmOrder();
   const startPacking = useStartPackingOrder();
   const markPacked = useMarkOrderPacked();
@@ -130,15 +133,15 @@ function OrderFulfillmentCard({
   };
 
   return (
-    <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
+    <View style={[styles.card, { backgroundColor: isLight ? '#ffffff' : 'rgba(6,26,30,0.82)', borderWidth: 1, borderColor: colors.borderColor }, premiumShadow('#0f172a', 'sm')]}>
       <View style={styles.cardTopRow}>
         <View style={styles.iconBg}>
           <Ionicons name="cube-outline" size={18} color={theme.primary} />
         </View>
         <View style={styles.info}>
-          <Text style={styles.orderId}>{order.orderNumber}</Text>
-          <Text style={styles.orderName}>{order.customer?.name ?? 'Customer'}</Text>
-          <Text style={styles.orderItems} numberOfLines={2}>{itemsSummary}</Text>
+          <Text style={[styles.orderId, { color: isLight ? '#0f172a' : '#ffffff' }]}>{order.orderNumber}</Text>
+          <Text style={[styles.orderName, { color: isLight ? '#475569' : '#94a3b8' }]}>{order.customer?.name ?? 'Customer'}</Text>
+          <Text style={[styles.orderItems, { color: isLight ? '#64748b' : '#94a3b8' }]} numberOfLines={2}>{itemsSummary}</Text>
         </View>
         <View style={[styles.badge, { backgroundColor: meta.bg }]}>
           <Text style={[styles.badgeText, { color: meta.color }]}>{meta.label}</Text>
@@ -247,22 +250,36 @@ function DispatchModal({ order, onClose }: { order: CustomerOrder | null; onClos
     }
   };
 
+  const { colors, isLight } = useExecutiveTheme();
+
   return (
     <Modal visible={!!order} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
-        <View style={styles.modalCard}>
+        <View style={[styles.modalCard, { backgroundColor: isLight ? '#ffffff' : '#03141a', borderWidth: 1, borderColor: colors.borderColor }]}>
           <View style={styles.modalHeaderRow}>
-            <Text style={styles.modalTitle}>Dispatch {order.orderNumber}</Text>
+            <Text style={[styles.modalTitle, { color: isLight ? '#0f172a' : '#ffffff' }]}>Dispatch {order.orderNumber}</Text>
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close-circle" size={24} color="#64748b" />
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.label}>Courier Name</Text>
-          <TextInput style={styles.input} placeholder="e.g. BlueDart, Delhivery" placeholderTextColor="#94a3b8" value={courierName} onChangeText={setCourierName} />
+          <Text style={[styles.label, { color: isLight ? '#334155' : '#e2e8f0' }]}>Courier Name</Text>
+          <TextInput
+            style={[styles.input, { backgroundColor: isLight ? '#f8fafc' : '#020d06', color: isLight ? '#0f172a' : '#ffffff', borderColor: colors.borderColor }]}
+            placeholder="e.g. BlueDart, Delhivery"
+            placeholderTextColor="#94a3b8"
+            value={courierName}
+            onChangeText={setCourierName}
+          />
 
-          <Text style={styles.label}>Tracking ID (optional)</Text>
-          <TextInput style={styles.input} placeholder="e.g. BD123456789" placeholderTextColor="#94a3b8" value={trackingId} onChangeText={setTrackingId} />
+          <Text style={[styles.label, { color: isLight ? '#334155' : '#e2e8f0' }]}>Tracking ID (optional)</Text>
+          <TextInput
+            style={[styles.input, { backgroundColor: isLight ? '#f8fafc' : '#020d06', color: isLight ? '#0f172a' : '#ffffff', borderColor: colors.borderColor }]}
+            placeholder="e.g. BD123456789"
+            placeholderTextColor="#94a3b8"
+            value={trackingId}
+            onChangeText={setTrackingId}
+          />
 
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
@@ -276,6 +293,7 @@ function DispatchModal({ order, onClose }: { order: CustomerOrder | null; onClos
 }
 
 function PrintModal({ target, onClose }: { target: { order: CustomerOrder; mode: 'BILL' | 'LABEL' } | null; onClose: () => void }) {
+  const { colors, isLight } = useExecutiveTheme();
   const shotRef = useRef<any>(null);
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -315,9 +333,9 @@ function PrintModal({ target, onClose }: { target: { order: CustomerOrder; mode:
   return (
     <Modal visible={!!target} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
-        <View style={styles.modalCard}>
+        <View style={[styles.modalCard, { backgroundColor: isLight ? '#ffffff' : '#03141a', borderWidth: 1, borderColor: colors.borderColor }]}>
           <View style={styles.modalHeaderRow}>
-            <Text style={styles.modalTitle}>{mode === 'BILL' ? 'Bill' : 'Shipping Label'}</Text>
+            <Text style={[styles.modalTitle, { color: isLight ? '#0f172a' : '#ffffff' }]}>{mode === 'BILL' ? 'Bill' : 'Shipping Label'}</Text>
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close-circle" size={24} color="#64748b" />
             </TouchableOpacity>

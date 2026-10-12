@@ -59,7 +59,9 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
 }) => {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
-  const { colors } = useExecutiveTheme();
+  const { colors, themeMode, setThemeMode } = useExecutiveTheme();
+  const isLight = themeMode === 'LIGHT';
+  const isDarkTheme = themeMode === 'DARK';
   const router = useRouter();
   const greeting = getTimeBasedGreeting();
   const { data: unreadData } = useUnreadNotificationCount();
@@ -70,34 +72,109 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
   const [showPillarsModal, setShowPillarsModal] = useState(false);
 
   return (
-    <View style={styles.headerContainer}>
+    <View
+      style={[
+        styles.headerContainer,
+        isLight && {
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          borderBottomColor: 'rgba(22, 163, 74, 0.18)',
+          shadowColor: '#16a34a',
+        },
+        isDarkTheme && {
+          backgroundColor: 'rgba(11, 19, 41, 0.92)',
+          borderBottomColor: 'rgba(56, 189, 248, 0.22)',
+          shadowColor: '#38bdf8',
+        },
+      ]}
+    >
       {/* Top Banner Row: Only show brand on Mobile where sidebar is hidden */}
       {!isDesktop && (
         <View style={styles.topRow}>
           <View style={styles.brandRow}>
-            <BrandLogo size={28} iconColor="#059669" />
-            <Text style={styles.brandNameText}>{settings?.appName || 'FarmsKing'}</Text>
+            <BrandLogo size={28} iconColor={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#059669'} />
+            <Text style={[styles.brandNameText, isLight && { color: '#0f172a' }]}>{settings?.appName || 'FarmsKing'}</Text>
           </View>
 
           <View style={styles.actionsRight}>
+            {/* 🎨 Mobile 2-Way Theme Switcher (Light · Dark) */}
+            <View
+              style={[
+                styles.mobileThemePillWrap,
+                isLight && styles.mobileThemePillWrapLight,
+                isDarkTheme && styles.mobileThemePillWrapDark,
+              ]}
+            >
+              <TouchableOpacity
+                style={[
+                  styles.mobileThemeSegmentBtn,
+                  themeMode === 'LIGHT' && styles.mobileThemeSegmentBtnActiveLight,
+                ]}
+                onPress={() => setThemeMode('LIGHT')}
+                activeOpacity={0.75}
+                accessibilityLabel="Switch to Light Theme"
+              >
+                <Ionicons
+                  name={themeMode === 'LIGHT' ? 'sunny' : 'sunny-outline'}
+                  size={13}
+                  color={themeMode === 'LIGHT' ? '#16a34a' : isLight ? '#64748b' : '#94a3b8'}
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.mobileThemeSegmentBtn,
+                  themeMode === 'DARK' && styles.mobileThemeSegmentBtnActiveMedium,
+                ]}
+                onPress={() => setThemeMode('DARK')}
+                activeOpacity={0.75}
+                accessibilityLabel="Switch to Dark Theme (Parrot & Gold)"
+              >
+                <Ionicons
+                  name={themeMode === 'DARK' ? 'leaf' : 'leaf-outline'}
+                  size={13}
+                  color={themeMode === 'DARK' ? '#22c55e' : isLight ? '#64748b' : '#94a3b8'}
+                />
+              </TouchableOpacity>
+            </View>
+
             {(currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN') && (
               <TouchableOpacity
-                style={styles.pillarsMenuTrigger}
+                style={[
+                  styles.pillarsMenuTrigger,
+                  isLight && {
+                    backgroundColor: 'rgba(22, 163, 74, 0.10)',
+                    borderColor: 'rgba(22, 163, 74, 0.3)',
+                  },
+                  isDarkTheme && {
+                    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+                    borderColor: 'rgba(56, 189, 248, 0.35)',
+                  },
+                ]}
                 activeOpacity={0.8}
                 onPress={() => setShowPillarsModal(true)}
               >
-                <Ionicons name="grid" size={13} color="#00ff87" />
-                <Text style={styles.pillarsMenuTriggerText}>Pillars</Text>
-                <Ionicons name="chevron-down" size={11} color="#00ff87" />
+                <Ionicons name="grid" size={13} color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87'} />
+                <Text style={[styles.pillarsMenuTriggerText, isLight && { color: '#16a34a' }, isDarkTheme && { color: '#38bdf8' }]}>Pillars</Text>
+                <Ionicons name="chevron-down" size={11} color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87'} />
               </TouchableOpacity>
             )}
 
             <TouchableOpacity
-              style={styles.iconButton}
+              style={[
+                styles.iconButton,
+                isLight && {
+                  backgroundColor: '#f1f5f9',
+                  borderColor: 'rgba(22, 163, 74, 0.2)',
+                },
+                isDarkTheme && {
+                  backgroundColor: 'rgba(2, 6, 23, 0.75)',
+                  borderColor: 'rgba(56, 189, 248, 0.25)',
+                },
+              ]}
               activeOpacity={0.75}
               onPress={() => router.push('/notifications' as never)}
             >
-              <Ionicons name="notifications-outline" size={18} color="#059669" />
+              <Ionicons name="notifications-outline" size={18} color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#059669'} />
               {unreadCount > 0 ? (
                 <View style={styles.notifDot}>
                   {unreadCount <= 9 ? <Text style={styles.notifDotText}>{unreadCount}</Text> : null}
@@ -113,15 +190,29 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
         <View style={styles.mainUserRow}>
           {/* Left Block: Greeting + Name + Assigned Role Tag + Subtitle */}
           <View style={styles.userInfoLeftBlock}>
-            <Text style={styles.greetingText}>{greeting}</Text>
-            <Text style={styles.nameText} numberOfLines={1}>{profileName}</Text>
+            <Text style={[styles.greetingText, isLight && { color: '#64748b' }]}>{greeting}</Text>
+            <Text style={[styles.nameText, isLight && { color: '#0f172a' }]} numberOfLines={1}>{profileName}</Text>
 
             {/* 🏷️ Role Tag Badge directly under user's name */}
-            <View style={styles.roleTagPill}>
-              <Text style={styles.roleTagText}>{roleMeta.icon} {roleMeta.label}</Text>
+            <View
+              style={[
+                styles.roleTagPill,
+                isLight && {
+                  backgroundColor: 'rgba(22, 163, 74, 0.10)',
+                  borderColor: 'rgba(234, 179, 8, 0.35)',
+                },
+                isDarkTheme && {
+                  backgroundColor: 'rgba(56, 189, 248, 0.12)',
+                  borderColor: 'rgba(56, 189, 248, 0.35)',
+                },
+              ]}
+            >
+              <Text style={[styles.roleTagText, isLight && { color: '#16a34a' }, isDarkTheme && { color: '#38bdf8' }]}>
+                {roleMeta.icon} {roleMeta.label}
+              </Text>
             </View>
 
-            {subtitle ? <Text style={styles.subtitleText}>{subtitle}</Text> : null}
+            {subtitle ? <Text style={[styles.subtitleText, isLight && { color: '#059669' }]}>{subtitle}</Text> : null}
           </View>
 
           {/* Center Block: Profile Photo Avatar (Hidden for Admin / Super Admin) */}
@@ -268,7 +359,55 @@ const styles = StyleSheet.create({
   actionsRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
+  },
+  mobileThemePillWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderRadius: RADIUS.pill,
+    padding: 2,
+    gap: 2,
+  },
+  mobileThemePillWrapLight: {
+    backgroundColor: '#f1f5f9',
+    borderColor: 'rgba(22, 163, 74, 0.25)',
+  },
+  mobileThemePillWrapDark: {
+    backgroundColor: 'rgba(2, 6, 23, 0.75)',
+    borderColor: 'rgba(56, 189, 248, 0.3)',
+  },
+  mobileThemeSegmentBtn: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mobileThemeSegmentBtnActiveLight: {
+    backgroundColor: '#ffffff',
+    shadowColor: '#16a34a',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  mobileThemeSegmentBtnActiveMedium: {
+    backgroundColor: 'rgba(34, 197, 94, 0.25)',
+    borderWidth: 1.2,
+    borderColor: '#fbbf24',
+    shadowColor: '#22c55e',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.35,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  mobileThemeSegmentBtnActiveDark: {
+    backgroundColor: 'rgba(56, 189, 248, 0.22)',
+    borderWidth: 1,
+    borderColor: '#38bdf8',
   },
   iconButton: {
     width: 36,

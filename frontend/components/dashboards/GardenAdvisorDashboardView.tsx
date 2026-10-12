@@ -226,16 +226,16 @@ export const GardenAdvisorDashboardView: React.FC = () => {
           </View>
 
           <View style={styles.healthStatsRow}>
-            <View style={[styles.healthBox, { backgroundColor: '#f0fdf4' }]}>
-              <Text style={[styles.healthVal, { color: '#166534' }]}>{dashboardData?.gardenHealth?.excellent ?? 21}</Text>
+            <View style={[styles.healthBox, { backgroundColor: 'rgba(0, 255, 135, 0.08)', borderWidth: 1, borderColor: 'rgba(0, 255, 135, 0.25)' }]}>
+              <Text style={[styles.healthVal, { color: '#00ff87' }]}>{dashboardData?.gardenHealth?.excellent ?? 21}</Text>
               <Text style={styles.healthSub}>Excellent</Text>
             </View>
-            <View style={[styles.healthBox, { backgroundColor: '#fffbeb' }]}>
-              <Text style={[styles.healthVal, { color: '#d97706' }]}>{dashboardData?.gardenHealth?.attention ?? 6}</Text>
+            <View style={[styles.healthBox, { backgroundColor: 'rgba(245, 158, 11, 0.08)', borderWidth: 1, borderColor: 'rgba(245, 158, 11, 0.25)' }]}>
+              <Text style={[styles.healthVal, { color: '#fbbf24' }]}>{dashboardData?.gardenHealth?.attention ?? 6}</Text>
               <Text style={styles.healthSub}>Attention</Text>
             </View>
-            <View style={[styles.healthBox, { backgroundColor: '#fef2f2' }]}>
-              <Text style={[styles.healthVal, { color: '#dc2626' }]}>{dashboardData?.gardenHealth?.critical ?? 2}</Text>
+            <View style={[styles.healthBox, { backgroundColor: 'rgba(239, 68, 68, 0.08)', borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.25)' }]}>
+              <Text style={[styles.healthVal, { color: '#f87171' }]}>{dashboardData?.gardenHealth?.critical ?? 2}</Text>
               <Text style={styles.healthSub}>Critical</Text>
             </View>
           </View>
@@ -315,48 +315,81 @@ const styles = StyleSheet.create({
   assignedCard: { borderRadius: RADIUS.xl, padding: SPACING.xl, overflow: 'hidden' },
   watermark: { position: 'absolute', top: -12, right: -16, opacity: 0.08 },
   cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  cardLabelText: { fontSize: 13.5, color: '#64748b', fontFamily: FONT.semiBold },
+  cardLabelText: { fontSize: 13.5, color: '#94a3b8', fontFamily: FONT.semiBold },
   badgePill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.pill },
   badgePillText: { fontSize: 11, fontFamily: FONT.bold },
-  assignedCount: { fontSize: 34, fontFamily: FONT.extraBold, color: '#0f172a', marginTop: 6, letterSpacing: -0.6 },
+  assignedCount: { fontSize: 34, fontFamily: FONT.extraBold, color: '#ffffff', marginTop: 6, letterSpacing: -0.6 },
   sparklineContainer: { marginTop: 18, height: 50, justifyContent: 'flex-end' },
   sparklineBarRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', paddingHorizontal: 10 },
   sparklineBar: { width: 22, borderRadius: 7 },
-  metricsRow: { flexDirection: 'row', backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.lg },
+  metricsRow: {
+    flexDirection: 'row',
+    backgroundColor: '#04160c',
+    borderRadius: RADIUS.lg,
+    padding: SPACING.lg,
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.22)',
+    ...premiumShadow('#00ff87', 'sm'),
+  },
   metricItem: { flex: 1, alignItems: 'center' },
-  metricBorderLeft: { borderLeftWidth: 1, borderLeftColor: '#f1f5f9' },
-  metricLabel: { fontSize: 11.5, color: '#64748b', fontFamily: FONT.medium },
-  metricValue: { fontSize: 17, fontFamily: FONT.extraBold, color: '#0f172a', marginTop: 5 },
+  metricBorderLeft: { borderLeftWidth: 1, borderLeftColor: 'rgba(0, 255, 135, 0.15)' },
+  metricLabel: { fontSize: 11.5, color: '#94a3b8', fontFamily: FONT.medium },
+  metricValue: { fontSize: 17, fontFamily: FONT.extraBold, color: '#ffffff', marginTop: 5 },
   quickActionRow: { flexDirection: 'row', gap: 10 },
   actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: RADIUS.md },
   actionBtnText: { fontSize: 12.5, fontFamily: FONT.bold },
-  sectionCard: { backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: SPACING.lg },
+  sectionCard: {
+    backgroundColor: '#04160c',
+    borderRadius: RADIUS.lg,
+    padding: SPACING.lg,
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.20)',
+    ...premiumShadow('#00ff87', 'sm'),
+  },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
-  sectionTitle: { fontSize: 15.5, fontFamily: FONT.bold, color: '#0f172a', letterSpacing: -0.1 },
+  sectionTitle: { fontSize: 15.5, fontFamily: FONT.bold, color: '#ffffff', letterSpacing: -0.1 },
   viewAllText: { fontSize: 12.5, fontFamily: FONT.bold },
-  taskItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  checkbox: { width: 20, height: 20, borderRadius: 5, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+  taskItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.06)' },
+  checkbox: { width: 20, height: 20, borderRadius: 5, alignItems: 'center', justifyContent: 'center', marginRight: 10, borderWidth: 1.2, borderColor: 'rgba(0, 255, 135, 0.4)' },
   taskIconBg: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   taskInfo: { flex: 1, marginLeft: 10 },
-  taskTitle: { fontSize: 13.5, fontFamily: FONT.bold, color: '#0f172a' },
-  strikethrough: { textDecorationLine: 'line-through', color: '#94a3b8' },
-  taskSubtitle: { fontSize: 12, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
-  taskTime: { fontSize: 12, fontFamily: FONT.bold, color: '#64748b' },
+  taskTitle: { fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' },
+  strikethrough: { textDecorationLine: 'line-through', color: '#64748b' },
+  taskSubtitle: { fontSize: 12, color: '#94a3b8', fontFamily: FONT.medium, marginTop: 2 },
+  taskTime: { fontSize: 12, fontFamily: FONT.bold, color: '#94a3b8' },
   healthStatsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
   healthBox: { flex: 1, padding: 14, borderRadius: RADIUS.md, alignItems: 'center' },
   healthVal: { fontSize: 22, fontFamily: FONT.extraBold },
-  healthSub: { fontSize: 11.5, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
+  healthSub: { fontSize: 11.5, color: '#94a3b8', fontFamily: FONT.medium, marginTop: 2 },
   activityItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
   activityDot: { width: 8, height: 8, borderRadius: 4 },
-  actTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a' },
-  actDesc: { fontSize: 11.5, color: '#64748b', fontFamily: FONT.medium },
+  actTitle: { fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' },
+  actDesc: { fontSize: 11.5, color: '#94a3b8', fontFamily: FONT.medium },
   actTime: { fontSize: 11, color: '#94a3b8', fontFamily: FONT.medium },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.55)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  modalContent: { width: '100%', maxWidth: 440, backgroundColor: '#ffffff', borderRadius: RADIUS.xl, padding: SPACING.xl },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(2, 13, 6, 0.85)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  modalContent: {
+    width: '100%',
+    maxWidth: 440,
+    backgroundColor: '#04160c',
+    borderRadius: RADIUS.xl,
+    padding: SPACING.xl,
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+    ...premiumShadow('#00ff87', 'lg'),
+  },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  modalTitle: { fontSize: 17, fontFamily: FONT.bold, color: '#0f172a' },
-  inputLabel: { fontSize: 13, fontFamily: FONT.bold, color: '#334155', marginTop: 10, marginBottom: 6 },
-  modalInput: { borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: RADIUS.md, paddingHorizontal: 14, paddingVertical: 11, fontSize: 14, color: '#0f172a', backgroundColor: '#f8fafc' },
+  modalTitle: { fontSize: 17, fontFamily: FONT.bold, color: '#ffffff' },
+  inputLabel: { fontSize: 13, fontFamily: FONT.bold, color: '#94a3b8', marginTop: 10, marginBottom: 6 },
+  modalInput: {
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+    borderRadius: RADIUS.md,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    fontSize: 14,
+    color: '#ffffff',
+    backgroundColor: '#072414',
+  },
   modalSubmitBtn: { marginTop: 20, borderRadius: RADIUS.md, paddingVertical: 14, alignItems: 'center' },
   modalSubmitText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 15 },
 });

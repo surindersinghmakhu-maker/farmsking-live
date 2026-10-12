@@ -7,6 +7,7 @@ import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAllOrders, useCancelOrder, useConfirmOrder } from '@/src/hooks/useOrders';
 import { CustomerOrder, OrderPaymentMode, OrderPaymentStatus, OrderStatus } from '@/src/types/api';
 import { exportOrdersToExcel } from '@/src/utils/excelExport';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const theme = RoleThemes.ADMIN;
 
@@ -20,7 +21,7 @@ const STATUS_META: Record<OrderStatus, { label: string; bg: string; color: strin
   PACKING: { label: 'Packing', bg: '#e0e7ff', color: '#4338ca' },
   PACKED: { label: 'Packed', bg: '#dbeafe', color: '#1d4ed8' },
   DISPATCHED: { label: 'Dispatched', bg: '#dbeafe', color: '#1d4ed8' },
-  DELIVERED: { label: 'Delivered', bg: '#f1f5f9', color: '#e2e8f0' },
+  DELIVERED: { label: 'Delivered', bg: '#f1f5f9', color: '#64748b' },
   CANCELLED: { label: 'Cancelled', bg: '#fee2e2', color: '#dc2626' },
 };
 
@@ -47,48 +48,38 @@ const FILTERS: { value: OrderStatus | 'ALL'; label: string }[] = [
   { value: 'CANCELLED', label: 'Cancelled' },
 ];
 
-
-const Hoverable4DCard = ({ children, style, onPress }: any) => {
-  return (
-    <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
-      style,
-      hovered && {
-        borderColor: 'rgba(0,255,135,0.55)',
-        shadowColor: '#00ff87',
-        shadowOpacity: 0.3,
-        shadowRadius: 15,
-        elevation: 10,
-        transform: [{ scale: 1.02 }]
-      },
-      pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
-    ]}>
-      {children}
-    </Pressable>
-  );
-};
-
 export default function AdminOrdersScreen() {
+  const { colors, isLight, isMedium, textColor, subTextColor, cardBg, cardBorder } = useExecutiveTheme();
   const [filter, setFilter] = useState<OrderStatus | 'ALL'>('ALL');
   const { data: orders, isLoading } = useAllOrders(filter === 'ALL' ? undefined : filter);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.hero}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      <View
+        style={[
+          styles.hero,
+          isLight && { backgroundColor: '#ffffff', borderBottomColor: '#e2e8f0' },
+          isMedium && { backgroundColor: 'rgba(6, 26, 30, 0.85)', borderBottomColor: 'rgba(34, 197, 94, 0.25)' },
+        ]}
+      >
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View>
-            <Text style={styles.heroTitle}>Orders</Text>
-            <Text style={styles.heroSubtitle}>{orders?.length ?? 0} order(s)</Text>
+            <Text style={[styles.heroTitle, { color: textColor }]}>Orders</Text>
+            <Text style={[styles.heroSubtitle, { color: subTextColor }]}>{orders?.length ?? 0} order(s)</Text>
           </View>
           <TouchableOpacity
-            style={styles.exportBtn}
+            style={[
+              styles.exportBtn,
+              isLight && { backgroundColor: 'rgba(22, 163, 74, 0.1)', borderColor: 'rgba(22, 163, 74, 0.3)' },
+            ]}
             onPress={() => {
               tap();
               exportOrdersToExcel(orders || []);
             }}
           >
-            <Ionicons name="download-outline" size={14} color="#00ff87" />
-            <Text style={styles.exportBtnText}>Excel Export</Text>
+            <Ionicons name="download-outline" size={14} color={isLight ? '#16a34a' : '#00ff87'} />
+            <Text style={[styles.exportBtnText, isLight && { color: '#16a34a' }]}>Excel Export</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -97,25 +88,38 @@ export default function AdminOrdersScreen() {
         {FILTERS.map((f) => (
           <TouchableOpacity
             key={f.value}
-            style={[styles.filterChip, filter === f.value && { backgroundColor: theme.primary, borderColor: theme.primary }]}
+            style={[
+              styles.filterChip,
+              isLight && { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0' },
+              isMedium && { backgroundColor: 'rgba(16, 25, 40, 0.7)', borderColor: 'rgba(255, 255, 255, 0.12)' },
+              filter === f.value && { backgroundColor: isLight ? '#16a34a' : '#10b981', borderColor: isLight ? '#16a34a' : '#10b981' },
+            ]}
             onPress={() => {
               tap();
               setFilter(f.value);
             }}
           >
-            <Text style={[styles.filterChipText, filter === f.value && { color: '#ffffff' }]}>{f.label}</Text>
+            <Text
+              style={[
+                styles.filterChipText,
+                isLight && { color: '#475569' },
+                filter === f.value && { color: '#ffffff' },
+              ]}
+            >
+              {f.label}
+            </Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
       {isLoading ? (
-        <ActivityIndicator color={theme.primary} style={{ marginTop: 30 }} />
+        <ActivityIndicator color={isLight ? '#16a34a' : theme.primary} style={{ marginTop: 30 }} />
       ) : (
         <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
           {!orders || orders.length === 0 ? (
             <View style={styles.emptyCenter}>
-              <Ionicons name="receipt-outline" size={40} color="#cbd5e1" />
-              <Text style={styles.emptyText}>No orders in this filter.</Text>
+              <Ionicons name="receipt-outline" size={40} color={isLight ? '#94a3b8' : '#cbd5e1'} />
+              <Text style={[styles.emptyText, { color: subTextColor }]}>No orders in this filter.</Text>
             </View>
           ) : (
             orders.map((order) => (
@@ -134,6 +138,7 @@ export default function AdminOrdersScreen() {
 }
 
 function OrderRow({ order, isExpanded, onToggle }: { order: CustomerOrder; isExpanded: boolean; onToggle: () => void }) {
+  const { isLight, isMedium, textColor, subTextColor, cardBg, cardBorder } = useExecutiveTheme();
   const confirmOrder = useConfirmOrder();
   const cancelOrder = useCancelOrder();
   const meta = STATUS_META[order.status];
@@ -141,28 +146,38 @@ function OrderRow({ order, isExpanded, onToggle }: { order: CustomerOrder; isExp
   const itemCount = order.items.reduce((sum, i) => sum + i.quantity, 0);
 
   return (
-    <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: isLight ? '#ffffff' : cardBg,
+          borderWidth: 1,
+          borderColor: cardBorder,
+        },
+        premiumShadow(isLight ? 'rgba(0,0,0,0.06)' : '#0f172a', 'sm'),
+      ]}
+    >
       <TouchableOpacity activeOpacity={0.7} onPress={() => { tap(); onToggle(); }}>
         <View style={styles.cardTopRow}>
-          <View style={styles.iconBg}>
-            <Ionicons name="receipt-outline" size={18} color={theme.primary} />
+          <View style={[styles.iconBg, isLight && { backgroundColor: '#f0fdf4' }]}>
+            <Ionicons name="receipt-outline" size={18} color={isLight ? '#16a34a' : theme.primary} />
           </View>
           <View style={styles.info}>
-            <Text style={styles.orderId}>{order.orderNumber}</Text>
-            <Text style={styles.orderName}>{order.customer?.name ?? 'Customer'}</Text>
-            <Text style={styles.orderSummary}>
+            <Text style={[styles.orderId, { color: textColor }]}>{order.orderNumber}</Text>
+            <Text style={[styles.orderName, { color: subTextColor }]}>{order.customer?.name ?? 'Customer'}</Text>
+            <Text style={[styles.orderSummary, { color: subTextColor }]}>
               {itemCount} item{itemCount === 1 ? '' : 's'} · {new Date(order.orderDate).toLocaleDateString('en-IN')}
             </Text>
           </View>
           <View style={styles.right}>
-            <Text style={styles.amount}>₹{order.totalAmount}</Text>
+            <Text style={[styles.amount, { color: isLight ? '#16a34a' : '#10b981' }]}>₹{order.totalAmount}</Text>
             <View style={[styles.badge, { backgroundColor: meta.bg }]}>
               <Text style={[styles.badgeText, { color: meta.color }]}>{meta.label}</Text>
             </View>
           </View>
         </View>
 
-        <View style={styles.paymentRow}>
+        <View style={[styles.paymentRow, isLight && { borderTopColor: '#f1f5f9' }]}>
           <View style={styles.paymentRowLeft}>
             <Ionicons name={order.paymentMode === 'ONLINE' ? 'card-outline' : 'cash-outline'} size={13} color="#64748b" />
             <Text style={styles.paymentModeText}>{PAYMENT_MODE_LABEL[order.paymentMode]}</Text>
@@ -176,32 +191,32 @@ function OrderRow({ order, isExpanded, onToggle }: { order: CustomerOrder; isExp
 
       {isExpanded ? (
         <View style={styles.detailBlock}>
-          <View style={styles.itemsBox}>
+          <View style={[styles.itemsBox, isLight && { backgroundColor: '#f8fafc' }, isMedium && { backgroundColor: 'rgba(0, 0, 0, 0.25)' }]}>
             {order.items.map((item) => (
               <View key={item.id} style={styles.itemRow}>
-                <Text style={styles.itemName} numberOfLines={1}>
-                  {item.productName} <Text style={styles.itemQty}>× {item.quantity}</Text>
+                <Text style={[styles.itemName, { color: textColor }]} numberOfLines={1}>
+                  {item.productName} <Text style={[styles.itemQty, { color: subTextColor }]}>× {item.quantity}</Text>
                 </Text>
-                <Text style={styles.itemAmount}>₹{(Number(item.price) * item.quantity).toFixed(2)}</Text>
+                <Text style={[styles.itemAmount, { color: textColor }]}>₹{(Number(item.price) * item.quantity).toFixed(2)}</Text>
               </View>
             ))}
             {order.discountAmount ? (
               <View style={[styles.itemRow, { borderTopWidth: 1, borderTopColor: '#f1f5f9', paddingTop: 6, marginTop: 2 }]}>
-                <Text style={styles.itemName}>Discount</Text>
+                <Text style={[styles.itemName, { color: textColor }]}>Discount</Text>
                 <Text style={[styles.itemAmount, { color: '#16a34a' }]}>−₹{order.discountAmount}</Text>
               </View>
             ) : null}
             <View style={[styles.itemRow, { borderTopWidth: 1, borderTopColor: '#e2e8f0', paddingTop: 8, marginTop: 4 }]}>
-              <Text style={styles.totalLabel}>Total</Text>
-              <Text style={styles.totalAmount}>₹{order.totalAmount}</Text>
+              <Text style={[styles.totalLabel, { color: textColor }]}>Total</Text>
+              <Text style={[styles.totalAmount, { color: textColor }]}>₹{order.totalAmount}</Text>
             </View>
           </View>
 
-          <View style={styles.paymentBox}>
-            <Text style={styles.paymentBoxTitle}>Payment</Text>
+          <View style={[styles.paymentBox, isLight && { backgroundColor: '#f8fafc' }, isMedium && { backgroundColor: 'rgba(0, 0, 0, 0.25)' }]}>
+            <Text style={[styles.paymentBoxTitle, { color: subTextColor }]}>Payment</Text>
             <View style={styles.itemRow}>
               <Text style={styles.metaLabel}>Method</Text>
-              <Text style={styles.metaValue}>{PAYMENT_MODE_LABEL[order.paymentMode]}</Text>
+              <Text style={[styles.metaValue, { color: textColor }]}>{PAYMENT_MODE_LABEL[order.paymentMode]}</Text>
             </View>
             <View style={styles.itemRow}>
               <Text style={styles.metaLabel}>Status</Text>
@@ -212,13 +227,13 @@ function OrderRow({ order, isExpanded, onToggle }: { order: CustomerOrder; isExp
             {order.phonepeMerchantOrderId ? (
               <View style={styles.itemRow}>
                 <Text style={styles.metaLabel}>Transaction ID</Text>
-                <Text style={styles.metaValue} numberOfLines={1}>{order.phonepeMerchantOrderId}</Text>
+                <Text style={[styles.metaValue, { color: textColor }]} numberOfLines={1}>{order.phonepeMerchantOrderId}</Text>
               </View>
             ) : null}
             {order.phonepePaymentState ? (
               <View style={styles.itemRow}>
                 <Text style={styles.metaLabel}>Gateway State</Text>
-                <Text style={styles.metaValue}>{order.phonepePaymentState}</Text>
+                <Text style={[styles.metaValue, { color: textColor }]}>{order.phonepePaymentState}</Text>
               </View>
             ) : null}
           </View>

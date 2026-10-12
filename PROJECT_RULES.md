@@ -1,6 +1,8 @@
 # 👑 FarmsKing Project Operating Guidelines & Architecture Manifesto
 
-> This document defines the mandatory execution standards, deployment workflows, UI/UX aesthetics, and system rules for the **FarmsKing** project. Every AI assistant and developer working on FarmsKing MUST strictly follow these rules.
+> This document defines the mandatory execution standards, autonomous development workflow, 4D command-center UI/UX aesthetics, and system architecture for the **FarmsKing** project. Every AI assistant and developer working on FarmsKing MUST strictly follow these rules.
+
+---
 
 ## 00. 🧭 Strict Technical Verification, Objective Truth & Zero Sycophancy
 > **ਕਮਾਂਡ ਤਸਦੀਕ, ਨਿਰਪੱਖ ਸੱਚਾਈ ਅਤੇ ਜ਼ੀਰੋ ਚਾਪਲੂਸੀ ਨਿਯਮ: "ਜੋ ਗਲਤ ਹੈ ਉਹ ਗਲਤ ਹੈ, ਜੋ ਸਹੀ ਹੈ ਉਹ ਸਹੀ ਹੈ।"**
@@ -9,15 +11,15 @@ Every AI assistant and developer working on FarmsKing MUST strictly uphold the f
 
 1. **Mandatory Verification Before Acceptance**:
    - Never blindly accept the premise of a user instruction, assumption, or request without verifying it first.
-   - Rigorously cross-check every proposed change against the active codebase, database schema, API contracts, and architectural rules before agreeing or executing.
+   - Rigorously cross-check every proposed change against the active codebase, database schema (`schema.prisma`), API contracts, and architectural rules before agreeing or executing.
 
 2. **Uncompromising Truth & Directness**:
-   - If a proposal, prompt, or architectural idea is technically flawed, contradictory, introduces security risks, or breaks system consistency:
+   - If a proposal, prompt, or architectural idea is technically flawed, contradictory, introduces security risks, breaks system consistency, or degrades performance:
      - **Call it out immediately, directly, and unambiguously.**
      - Do not sugarcoat, hedge, or pretend a flawed idea is workable.
      - Follow the strict principle: **"ਜੋ ਗਲਤ ਹੈ ਉਹ ਗਲਤ ਹੈ, ਜੋ ਸਹੀ ਹੈ ਉਹ ਸਹੀ ਹੈ।"** (What is wrong is wrong; what is right is right).
 
-3. **Strict Ban on Sycophancy & False Flattery**:
+3. **Strict Ban on Sycophancy & False Flattery (ਏਆਈ ਚਾਪਲੂਸੀ 'ਤੇ ਮੁਕੰਮਲ ਪਾਬੰਦੀ)**:
    - **Banned Behavior**: Never use sycophantic phrases like *"ਤੁਸੀਂ ਬਿਲਕੁਲ ਸਹੀ ਕਹਿ ਰਹੇ ਹੋ"* (You are 100% right) when an instruction contradicts facts, prior technical decisions, or architectural integrity.
    - Never validate two mutually contradictory positions sequentially just to please or soothe the user.
    - Never expand, elaborate, or build features on top of an incorrect premise just to avoid disagreeing.
@@ -29,8 +31,27 @@ Every AI assistant and developer working on FarmsKing MUST strictly uphold the f
 
 ---
 
-## 0. 🔤 100% Pure English Language Standard
+## 00.1 ⚡ Autonomous "Yes Without Asking" & Proactive Recommended Execution
+> **ਬਿਨਾਂ ਪੁੱਛੇ ਆਟੋਨੋਮਸ ਕੰਮ ਕਰਨਾ ਅਤੇ ਬੈਸਟ ਰੈਕਮੈਂਡੇਡ ਤਰੀਕਾ ਖੁਦ ਲਾਗੂ ਕਰਨਾ (Autonomous "Yes Without Asking")**
+
+1. **Autonomous Execution ("Yes Without Asking")**:
+   - When a task, enhancement, bug fix, or visual upgrade is requested, do NOT pause or bombard the user with trivial, repetitive confirmation questions ("Should I do this?", "May I proceed?").
+   - Proceed with **"Yes without asking"** by default: take full ownership, analyze the code, execute the changes, and present the completed, verified result.
+
+2. **Proactive Recommended Best Practice Implementation ("Recomended vi apne aap kar doe")**:
+   - If multiple architectural or styling approaches exist, do not force the user to pick between low-level technical trade-offs.
+   - **Automatically select and implement the highest-tier, recommended industry standard** (super-premium design, robust state management, 60fps hardware-accelerated animations, resilient error handling).
+   - Explain the choice transparently upon completion.
+
+3. **Safety & Non-Destructive Guardrail**:
+   - Autonomous execution applies to constructive code creation, UI improvements, bug fixes, and performance tuning.
+   - Never run destructive data deletion commands (`DROP TABLE`, unconstrained `DELETE`, or storage bucket purging) without explicit confirmation.
+
+---
+
+## 0. 🔤 100% Pure English Language Standard & Executive Copy
 - **Strict English UI**: All user-facing UI text, buttons, modals, headings, badges, admin dashboards, system messages, and technical documentation MUST be written in **100% pure professional English language**.
+- **Compact & Easily Understandable Copy**: Use concise, executive, high-clarity wording that is instantly understandable for farmers, nursery owners, corporate partners, and platform administrators. Avoid confusing jargon while maintaining a 5-star executive feel.
 - No mixed-language text or local slang in core application interfaces unless explicitly requested by the user for a specific multi-language component.
 
 ---
@@ -65,43 +86,138 @@ Because FarmsKing is engineered as an enterprise-grade agricultural SaaS operati
 
 ---
 
-## 1. ⚛️ 100% Pure React & React Native Stateful Architecture
-- **Full React Native Component Binding**: Every feature, screen, dashboard view, drawer, and modal across ALL pages MUST be built using **100% React & React Native Primitives** (`View`, `Text`, `TouchableOpacity`, `Pressable`, `ScrollView`, `Modal`, React Hooks `useState`/`useEffect`/`useCallback`, React Context, React Query `@tanstack/react-query`, and custom Expo Router navigation hooks).
-- **Native Mobile App First-Class Citizen**: Every page must behave and feel like a high-performance native iOS & Android application when viewed on mobile screens. Never treat mobile as a shrunken desktop site.
-- **Zero Runtime Errors**: All callbacks (`handleOpenQuickView`, `onApprove`, `onReject`, `onReview`, modal toggles, search modals) MUST be explicitly defined, fully typed, and verified to ensure zero `is not defined` errors.
-- **Strict React Native Style Compliance**: Always use valid React Native style properties (e.g., `backgroundColor` instead of `background`). NEVER pass `backgroundImage`, `backgroundSize`, or `backgroundPosition` directly to React Native `<View>`. For web-specific gradient overlays, cleanly isolate them inside `Platform.OS === 'web'` using standard DOM elements (`<div>`) so that runtime "Invalid style property" warnings NEVER appear.
-- **Permanent Design Tokens**: Build reusable, modular React components so features remain stable without requiring repetitive re-work ("var var change na krna pave").
+## 1. ⚛️ 100% Pure React & React Native Stateful Architecture ("Sabh React Mode Vich Bane")
+- **100% React Execution**: Every single feature, page, view, drawer, and portal already built or built in the future MUST be developed in **100% Pure React / React Native mode**.
+- **Permanent Reusable Components ("Var Var Change Na Krna Pave")**:
+  - Build modular, reusable components and shared design tokens so features remain robust and permanent without requiring repetitive refactoring or visual fixes.
+  - Encapsulate layout, cards, buttons, badges, tables, and modal sheets into high-standard reusable primitives.
+- **Full React Native Component Binding**:
+  - Use primitives: `View`, `Text`, `TouchableOpacity`, `Pressable`, `ScrollView`, `Modal`, React Hooks (`useState`, `useEffect`, `useCallback`, `useMemo`), React Context, `@tanstack/react-query`, and Expo Router navigation hooks.
+- **Strict Style Property Safety**:
+  - Always use valid cross-platform style properties (e.g., `backgroundColor` instead of `background`).
+  - NEVER pass `backgroundImage`, `backgroundSize`, or `backgroundPosition` directly to React Native `<View>`. Isolate web-specific gradient/glass overlays inside `Platform.OS === 'web'` using clean DOM containers (`<div>`) to eliminate runtime "Invalid style property" warnings.
+- **Zero Runtime Errors**:
+  - All callbacks (`handleOpenQuickView`, `onApprove`, `onReject`, `onReview`, modal toggles, search actions) MUST be explicitly defined, fully typed, and verified to ensure zero `undefined is not a function` errors.
 
 ---
 
-## 2. 📱💻 Mandatory React / React Native Mobile App View Standards
-- **Mobile View (<768px) [MANDATORY NATIVE MOBILE APP ARCHITECTURE]**:
-  - **Tri-Tier Mobile Navigation Architecture**:
-    1. **Bottom Tab Bar Rule**: In mobile app view, navigation tabs MUST strictly be pinned at the **BOTTOM** (`bottom: 0`, standard 5-tab core mobile navigation: **Home**, **Products**, **Users**, **Finance**, **More**). **NEVER place the main navigation tabs at the top of mobile screens.**
-    2. **Top Header Quick Menu (`[⚡ Pillars ▼]`)**: For high-utility access to all 7 Domain Pillars & 25+ administrative tools without losing the current screen, provide a sleek top header trigger that launches a smooth 4D glassmorphism slide-up sheet (`MobilePillarsMenuModal`).
-    3. **Super-Premium 'More' Hub (`admin_more.tsx`)**: For deep exploration, maintain an exhaustive categorized 4D card hub with real-time tool search, accordion cards, and instant 1-tap sub-tool routing.
-  - **Clean Native App Feel**: Compact vertically scrollable layouts, touch-optimized cards, standard touchable ripple effects, sliding bottom sheets, and zero awkward desktop badges or double headers on mobile.
-  - **Header Optimization**: Remove non-essential profile avatars from administrative mobile headers to maximize vertical viewport space for KPIs, operations, and quick actions.
-  - **Route & Pillar Integrity**: Routes shared across multiple domains (such as `super-users` which serves Farmers, Gardeners, and Staff) MUST preserve the user's active Domain Pillar (`selectedPillarId`) and never mistakenly hijack or bounce the user to an unintended menu (e.g. clicking Farmer Hub must never jump to Staff Hub).
-  - **Full Mobile Feature Parity**: Every administrative tool, ledger, report, and filter accessible on desktop MUST be accessible on mobile through the bottom "More" tab or dedicated mobile screens.
-- **Tablet View (768px - 1024px)**: Dual-column adaptive grids, quick action shortcut bars, and horizontal scrolling pill tabs.
-- **Desktop Computer View (>1024px)**: 2-Level Executive Workspace with left ecosystem sidebar, top segmented tabs bar, spotlight search bar (`Ctrl + K`), 99.9% uptime health indicator, wide-screen multi-metric KPI cards, and side-by-side verification drawers (`maxWidth: 1400px` centered container).
+## 2. 📱💻 Tri-Tier Universal Responsive Viewport Standards
+> **ਸਾਰੇ ਸਕ੍ਰੀਨ ਸਾਈਜ਼ਾਂ ਲਈ ਪੂਰੀ ਤਰ੍ਹਾਂ ਰਿਸਪੌਂਸਿਵ (Mobile, Tablet, Computer View Proper Tiar Howe)**
+
+Every page, portal, and dashboard MUST provide seamless, optimized layouts tailored for all three viewport tiers:
+
+1. **Mobile View (<768px) [MANDATORY NATIVE MOBILE APP ARCHITECTURE]**:
+   - **Pinned Bottom Tab Bar Rule**: In mobile app view, navigation tabs MUST strictly be pinned at the **BOTTOM** (`bottom: 0`, standard 5-tab core navigation: **Home**, **Products**, **Users**, **Finance**, **More**). **NEVER place the main navigation tabs at the top of mobile screens.**
+   - **Top Header Quick Menu (`[⚡ Pillars ▼]`)**: Provide a sleek header trigger launching a smooth 4D glassmorphism slide-up sheet (`MobilePillarsMenuModal`) for instant access to all 7 Domain Pillars & 25+ tools without leaving the screen.
+   - **Super-Premium 'More' Hub (`admin_more.tsx`)**: An exhaustive categorized 4D card hub with real-time tool search, accordion cards, and instant 1-tap sub-tool routing.
+   - **Native Touch Ergonomics**: Minimum 44x44px touch targets, compact vertically scrollable layouts, touch ripple feedback, swipeable bottom sheets, and zero awkward desktop badges or horizontal scrollbars.
+   - **Header Optimization**: Remove non-essential profile avatars from administrative mobile headers to maximize vertical viewport space for KPIs, operations, and quick actions.
+   - **Full Mobile Feature Parity**: Every administrative tool, ledger, report, and filter accessible on desktop MUST be accessible on mobile.
+
+2. **Tablet View (768px - 1024px) [ADAPTIVE WORKSPACE]**:
+   - Dual-column adaptive grids, quick-action shortcut bars, horizontally scrollable pill tabs, collapsible side drawers, and hybrid touch/pointer ergonomics.
+
+3. **Desktop Computer View (>1024px) [EXECUTIVE COMMAND CENTER]**:
+   - 2-Level Executive Workspace with left ecosystem sidebar, top segmented tabs bar, spotlight search bar (`Ctrl + K`), 99.9% uptime health indicator, wide-screen multi-metric KPI cards, side-by-side verification drawers, and container width up to 1400px–1600px centered.
 
 ---
 
-## 3. 🌟 Super Premium 5-Star Rating UI/UX & ISO Quality Standards
-- **World-Class SaaS Benchmarks**: Design quality inspired by global tech leaders (Apple Executive UI, Stripe Dashboard, Linear, and John Deere Operations Center).
-- **Royal Aesthetics**: 
-  - Rich emerald green (`#16a34a`, `#15803d`), midnight dark glassmorphism (`#04180d`, `#0f172a`), neon glowing green accents (`#00ff87`), royal gold (`#f59e0b`), and indigo AI highlights (`#4f46e5`).
-  - 3D glowing KPI metric cards, micro-animations, glassmorphic hover effects, and real-time live telemetry meters (Google Gemini 2.5 Flash Telemetry).
-- **ISO Quality & Security Standards**:
-  - Apply **ISO 9001** (Quality Management) for seamless user journeys, zero dead-end screens, and instant 1-click approvals.
-  - Apply **ISO 27001** (Data Security & Role Integrity) for strict role-based access control (Crop Doctor strictly linked to Farmers; Garden Doctor strictly linked to Gardeners; Super Admin full audit trail).
-- **Executive & Understandable Terminology**: Use concise, executive, high-clarity wording that is immediately understandable for farmers, store sellers, advisors, and platform administrators.
+## 3. 🌌 4D Futuristic Command-Center Visual Style & Royal Theme Palette
+> **4D Futuristic Visual Upgrade: ਲਗਜ਼ਰੀ ਡਾਰਕ ਥੀਮ, ਗਲਾਸਮੋਰਫਿਜ਼ਮ ਅਤੇ 4D ਪਰਸਪੈਕਟਿਵ**
+
+All dashboards, admin panels, and user portals MUST implement the **FarmsKing 4D Futuristic Command-Center** aesthetic:
+
+1. **Curated Color Palette**:
+   - **Deep Obsidian & Midnight Black**: `#020d06`, `#050e08`, `#0f172a` (core foundation).
+   - **Deep Forest Green**: `#04180d`, `#0a2e18` (panel backdrops).
+   - **Emerald Neon**: `#00ff87`, `#10b981` (primary active accents, glowing borders, live statuses).
+   - **Light Blue / Cyan Telemetry**: `#38bdf8`, `#06b6d4` (system health, data feeds, telemetry gauges).
+   - **Emerald Light Yellow & Royal Gold**: `#fef08a`, `#f59e0b` (premium highlights, badges, financial counters).
+   - **AI Violet / Indigo Accent**: `#6366f1`, `#8b5cf6` (Gemini AI features, smart diagnostics).
+
+2. **Glassmorphism Panels & Optical Depth**:
+   - Translucent dark backgrounds (`rgba(4, 24, 13, 0.72)` to `rgba(15, 23, 42, 0.75)`).
+   - Ultra-fine glass borders (`1px solid rgba(0, 255, 135, 0.18)` or `1px solid rgba(255, 255, 255, 0.08)`).
+   - Layered optical depth (`backdrop-filter: blur(16px)`, `box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45)`).
+
+3. **4D-Inspired UI & Floating Cards**:
+   - Floating cards featuring subtle 3D perspective (`perspective: 1000px`).
+   - Depth-based dynamic lighting and surface sheen that reacts to mouse position.
+   - Layered z-depth separating background grids, floating metric cards, and foreground actions.
+
+4. **Animated Neon Borders & Luminous Glow**:
+   - Subtle pulse and neon border highlights on active items, focused inputs, and critical alerts.
+   - Elegant, soft glow filters (`box-shadow: 0 0 16px rgba(0, 255, 135, 0.25)`) without blinding or muddying text.
+
+5. **Executive Command-Center Dashboard**:
+   - High-density information hierarchy, ultra-clean spacing, and modern typography (Inter, Outfit, Roboto).
+   - Real-time telemetry indicators (e.g., Live Server Ping, Active Database Nodes, Background Sync Status).
 
 ---
 
-## 4. 🚀 Automated Build & Deployment Workflow
+## 4. 🎬 Animation & Micro-Interaction Architecture Standards
+> **ਸਮੂਥ ਐਨੀਮੇਸ਼ਨ ਅਤੇ 4D ਇੰਟਰੈਕਸ਼ਨ (60fps Smooth Transitions & Interactions)**
+
+Every interactive component and page transition MUST deliver a 5-star tactile feel:
+
+1. **Smooth Page & Tab Transitions**:
+   - Seamless cross-fade, slide, and subtle scale transitions (`200ms - 300ms`, `cubic-bezier(0.16, 1, 0.3, 1)`) between admin routes, tabs, and sub-views.
+2. **Sliding & Morphing Active Sidebar/Tab Indicators**:
+   - Active navigation pills and sidebar markers must smoothly slide and morph to the selected tab position rather than instantly blinking.
+3. **3D Tilt Effects on Cards**:
+   - Interactive KPI cards and primary action tiles subtly tilt along the X/Y axes following mouse movement (`transform: perspective(1000px) rotateX(...) rotateY(...) scale3d(1.02, 1.02, 1.02)`).
+4. **Smooth Entry of Panels & Drawers**:
+   - Smooth fade, slide-up, and scale entry when modal sheets, verification drawers, and filter bars appear.
+5. **Animated Dashboard Counters & Reactive Visualizations**:
+   - Number tickers smoothly roll/count up on page load.
+   - Real-time progress bars animate to their completion percentages.
+   - Charts feature smooth line drawing, bar growth, and interactive hover tooltips.
+6. **Glowing Buttons & Ripple Hover States**:
+   - Buttons feature luminous gradient hover effects, subtle scale feedback (`scale(1.02)` on hover, `scale(0.98)` on tap), and smooth ripple animations.
+7. **Elegant Modals, Dropdowns & Toast Notifications**:
+   - Dropdowns expand with physics-based spring dampening.
+   - Toast notifications slide in smoothly from the top/bottom right with auto-dismiss timers.
+8. **Subtle Ambient Background Effects**:
+   - Ambient radial gradients, subtle dark particle drift, or grid mesh backdrops that enrich depth without distracting from data readability.
+9. **Accessibility & Reduced-Motion (`prefers-reduced-motion`)**:
+   - Respect user accessibility preferences by disabling heavy 3D tilts and long translations when `prefers-reduced-motion: reduce` is detected, defaulting to instant or simple opacity transitions.
+10. **Locked 60fps Performance**:
+    - Hardware-accelerate all animations via GPU properties (`transform`, `opacity`). Never animate expensive layout properties (`width`, `height`, `top`, `left`, `margin`).
+    - Zero jank, zero memory leaks, and zero heavy blocking scripts.
+
+---
+
+## 5. 🌟 World-Class Benchmarks, ISO Standards & 5-Star UI/UX Rating
+> **ਵਿਸ਼ਵ-ਪੱਧਰੀ ਮਾਪਦੰਡ, ISO ਸਟੈਂਡਰਡ ਅਤੇ 5-ਸਟਾਰ ਰੇਟਿੰਗ (ISO Models & Super Premium Quality)**
+
+Every screen and feature in FarmsKing MUST achieve a **5-Star Quality Rating**:
+
+1. **Global SaaS Benchmarks**:
+   - Continuously benchmark features and ergonomics against the world's finest digital platforms: **Apple Executive UI**, **Stripe Dashboard**, **Linear.app**, **Vercel Console**, and **John Deere Operations Center**.
+2. **ISO Standard Integration (ਜਿੱਥੇ ISO ਦੀ ਲੋੜ ਹੋਵੇ ਉੱਥੇ ISO ਮਾਡਲ ਲਾਗੂ ਹੋਵੇ)**:
+   - **ISO 9001 (Quality Management & Flawless UX)**: Zero dead-end screens, self-explanatory forms, instant 1-click approvals, clear confirmation dialogues, and predictable navigation hierarchies.
+   - **ISO 27001 (Data Security & Role Integrity)**: Cryptographic token validation, strict RBAC permissions (Crop Doctor strictly for Farmers; Garden Doctor strictly for Gardeners; Super Admin immutable audit trail), zero unauthorized data leaks.
+   - **ISO 9241 (Ergonomics of Human-System Interaction)**: High contrast ratio compliance (WCAG AAA for critical text), intuitive visual feedback, cognitive load minimization.
+3. **Super Premium Model Implementation (ਜਿੱਥੇ Super Premium ਦੀ ਲੋੜ ਹੋਵੇ ਉੱਥੇ Super Premium ਮਾਡਲ ਬਣੇ)**:
+   - Apply executive 4D glassmorphism, gold/neon accents, and rich tactile micro-interactions on core revenue, wallet, partner, and administrative hubs.
+4. **Zero-Defect Code Standard**:
+   - Clean, bug-free, fully responsive implementation before any feature is marked ready.
+
+---
+
+## 6. 🛡️ Implementation Safety, Data Preservation & API Integrity
+- **Preserve Existing Architecture**:
+  - Always apply styling, animations, and visual enhancements directly to existing pages and reusable components without rewriting or abandoning working structures.
+  - Preserve all existing NestJS backend controllers, services, Prisma schemas, database relationships, authentication guards, and role permissions.
+- **Never Replace Real Data with Dummy Data**:
+  - Keep real database bindings, API queries, and state management intact. Never strip away functional backend hooks to display hardcoded static placeholders.
+- **Pre-Modification Transparency**:
+  - Before modifying existing files, inspect the codebase, identify existing components and animation libraries, and explain which files will be updated.
+  - Test all transitions, responsive viewports, and interactions thoroughly after implementation.
+
+---
+
+## 7. 🚀 Automated Build & Deployment Workflow
 - **Local Web Build**: Always run `node build.js` to compile both `frontend` and `admin` Expo Web bundles into `frontend/dist` and `admin/dist`.
 - **Live Server Deployment**: Deploy changes directly to production by committing and pushing to Hostinger VPS after obtaining user approval:
   ```bash
@@ -113,7 +229,7 @@ Because FarmsKing is engineered as an enterprise-grade agricultural SaaS operati
 
 ---
 
-## 5. 💰 Wallet, Referral & Payout Integrity
+## 8. 💰 Wallet, Referral & Payout Integrity
 - **Welcome Cash Bonus**: Offered ONLY to users who registered via a coupon code or referral link (`isEligibleForWelcomeBonus`). Automatically hidden once claimed (`isWelcomeClaimed = true`).
 - **Paid Plan Referral Income**: Issued when referred users purchase/activate paid plans.
 - **Admin Wallet Management**:
@@ -122,21 +238,21 @@ Because FarmsKing is engineered as an enterprise-grade agricultural SaaS operati
 
 ---
 
-## 6. 🌐 SEO & AI Search Engine Standards (GEO)
+## 9. 🌐 SEO & AI Search Engine Standards (GEO)
 - **Google SEO**: Maintain `sitemap.xml` and `robots.txt` in `frontend/public/` listing all key routes with daily/weekly change frequencies.
 - **Google Search Console Verification**: Maintain `<meta name="google-site-verification" content="cLbkUgC7i1XUv8vvpPcjQP-UuD3FKtdXKH2o9DZik2o" />` in `frontend/app/+html.tsx` and static HTML files.
 - **AI Search Engines (GEO)**: Maintain `llms.txt` in `frontend/public/` so ChatGPT, Perplexity, and Google Gemini can index and recommend FarmsKing.
 
 ---
 
-## 7. 🛠 Backend & Database Reliability
+## 10. 🛠 Backend & Database Reliability
 - **Hostinger Production Server**: Node.js / NestJS backend managed via PM2 (`farmsking-backend`) on Hostinger VPS.
 - **Prisma Schema**: Maintain exact schema relationships and field definitions (e.g. `WithdrawalRequest` with `businessPartnerId` and `requestedAmount`).
 - **Database Self-Healing**: Backend services run background sync routines to guarantee referral balance integrity.
 
 ---
 
-## 8. 🏢 FarmsKing India Private Limited — Corporate Governance & Company Rules
+## 11. 🏢 FarmsKing India Private Limited — Corporate Governance & Company Rules
 
 > **Corporate Legal Identity**: All platform features, business workflows, admin controls, and operational policies must align with the official charter of **FarmsKing India Private Limited** (under the Companies Act, 2013 and MCA guidelines).
 
@@ -160,4 +276,3 @@ Because FarmsKing is engineered as an enterprise-grade agricultural SaaS operati
 - **Financial Audit & Ledger Integrity**: Every wallet credit, withdrawal request, cashback incentive, referral reward, and vendor payout must maintain an immutable, auditable double-entry transaction record.
 - **Fair Trade & Anti-Exploitation Policy**: Transparent commission rates, zero hidden deductions for farmers, verified seller certifications, and instant dispute resolution mechanisms.
 - **Corporate Brand Consistency**: Maintain the royal executive branding (`FarmsKing India Private Limited`) across all invoice PDFs, receipts, admin audit logs, and external communications.
-

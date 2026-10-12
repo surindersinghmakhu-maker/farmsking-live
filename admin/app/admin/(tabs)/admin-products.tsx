@@ -16,6 +16,7 @@ import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { Product } from '@/src/types/api';
 import { useProducts, useRemoveProduct, useUpdateProduct } from '@/src/hooks/useProducts';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const theme = RoleThemes.ADMIN;
 
@@ -24,6 +25,7 @@ const tap = () => {
 };
 
 export default function AdminProductsScreen() {
+  const { colors, isLight, isMedium, textColor, subTextColor, cardBg, cardBorder } = useExecutiveTheme();
   const { data: products, isLoading: isLoadingProducts } = useProducts(true);
   const updateProduct = useUpdateProduct();
   const removeProduct = useRemoveProduct();
@@ -71,19 +73,33 @@ export default function AdminProductsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
       {/* Header Banner */}
-      <View style={styles.hero}>
+      <View
+        style={[
+          styles.hero,
+          isLight && { backgroundColor: '#ffffff', borderBottomColor: '#e2e8f0' },
+          isMedium && { backgroundColor: 'rgba(6, 26, 30, 0.85)', borderBottomColor: 'rgba(34, 197, 94, 0.25)' },
+        ]}
+      >
         <View style={styles.heroTopRow}>
           <View>
             <View style={styles.badgeRow}>
-              <View style={styles.multiSellerTag}>
-                <Ionicons name="storefront" size={12} color="#00ff87" />
-                <Text style={styles.multiSellerTagText}>MULTI-SELLER MARKETPLACE</Text>
+              <View
+                style={[
+                  styles.multiSellerTag,
+                  isLight && { backgroundColor: 'rgba(22, 163, 74, 0.1)', borderColor: 'rgba(22, 163, 74, 0.3)' },
+                  isMedium && { backgroundColor: 'rgba(34, 197, 94, 0.15)', borderColor: '#fbbf24' },
+                ]}
+              >
+                <Ionicons name="storefront" size={12} color={isLight ? '#16a34a' : isMedium ? '#22c55e' : '#00ff87'} />
+                <Text style={[styles.multiSellerTagText, isLight && { color: '#16a34a' }, isMedium && { color: '#fbbf24' }]}>
+                  MULTI-SELLER MARKETPLACE
+                </Text>
               </View>
             </View>
-            <Text style={styles.heroTitle}>🛒 Seller Products & Moderation</Text>
-            <Text style={styles.heroSubtitle}>
+            <Text style={[styles.heroTitle, { color: textColor }]}>🛒 Seller Products & Moderation</Text>
+            <Text style={[styles.heroSubtitle, { color: subTextColor }]}>
               Inspect, approve, feature, or deactivate product listings submitted by registered marketplace sellers.
             </Text>
           </View>
@@ -91,33 +107,63 @@ export default function AdminProductsScreen() {
 
         {/* Analytics Summary Stats */}
         <View style={styles.statsGrid}>
-          <View style={styles.statCard}>
-            <Text style={styles.statVal}>{totalCount}</Text>
-            <Text style={styles.statLbl}>Total Listings</Text>
+          <View
+            style={[
+              styles.statCard,
+              isLight && { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' },
+              isMedium && { backgroundColor: 'rgba(6, 26, 30, 0.8)', borderColor: 'rgba(34, 197, 94, 0.25)' },
+            ]}
+          >
+            <Text style={[styles.statVal, { color: textColor }]}>{totalCount}</Text>
+            <Text style={[styles.statLbl, { color: subTextColor }]}>Total Listings</Text>
           </View>
-          <View style={styles.statCard}>
-            <Text style={[styles.statVal, { color: '#00ff87' }]}>{activeCount}</Text>
-            <Text style={styles.statLbl}>Active Approved</Text>
+          <View
+            style={[
+              styles.statCard,
+              isLight && { backgroundColor: '#f0fdf4', borderColor: 'rgba(22, 163, 74, 0.25)' },
+              isMedium && { backgroundColor: 'rgba(34, 197, 94, 0.1)', borderColor: 'rgba(34, 197, 94, 0.4)' },
+            ]}
+          >
+            <Text style={[styles.statVal, { color: isLight ? '#16a34a' : isMedium ? '#22c55e' : '#00ff87' }]}>{activeCount}</Text>
+            <Text style={[styles.statLbl, { color: subTextColor }]}>Active Approved</Text>
           </View>
-          <View style={styles.statCard}>
+          <View
+            style={[
+              styles.statCard,
+              isLight && { backgroundColor: '#fef2f2', borderColor: 'rgba(239, 68, 68, 0.2)' },
+              isMedium && { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.3)' },
+            ]}
+          >
             <Text style={[styles.statVal, { color: '#ef4444' }]}>{deactivatedCount}</Text>
-            <Text style={styles.statLbl}>Deactivated / Hold</Text>
+            <Text style={[styles.statLbl, { color: subTextColor }]}>Deactivated / Hold</Text>
           </View>
-          <View style={styles.statCard}>
-            <Text style={[styles.statVal, { color: '#38bdf8' }]}>5% Avg</Text>
-            <Text style={styles.statLbl}>Commission</Text>
+          <View
+            style={[
+              styles.statCard,
+              isLight && { backgroundColor: '#fefce8', borderColor: 'rgba(245, 158, 11, 0.25)' },
+              isMedium && { backgroundColor: 'rgba(251, 191, 36, 0.1)', borderColor: 'rgba(251, 191, 36, 0.35)' },
+            ]}
+          >
+            <Text style={[styles.statVal, { color: isLight ? '#d97706' : isMedium ? '#fbbf24' : '#38bdf8' }]}>5% Avg</Text>
+            <Text style={[styles.statLbl, { color: subTextColor }]}>Commission</Text>
           </View>
         </View>
       </View>
 
       {/* Filter & Search Bar */}
       <View style={styles.filterSection}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={16} color="#94a3b8" />
+        <View
+          style={[
+            styles.searchBar,
+            isLight && { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
+            isMedium && { backgroundColor: 'rgba(6, 26, 30, 0.85)', borderColor: 'rgba(34, 197, 94, 0.35)' },
+          ]}
+        >
+          <Ionicons name="search" size={16} color={isLight ? '#64748b' : isMedium ? '#22c55e' : '#94a3b8'} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: textColor }]}
             placeholder="Search by product name, category, or seller..."
-            placeholderTextColor="#64748b"
+            placeholderTextColor={isLight ? '#94a3b8' : '#64748b'}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
@@ -139,13 +185,38 @@ export default function AdminProductsScreen() {
             return (
               <TouchableOpacity
                 key={chip.id}
-                style={[styles.chip, isSel && styles.chipActive]}
+                style={[
+                  styles.chip,
+                  isLight && { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' },
+                  isMedium && { backgroundColor: 'rgba(6, 26, 30, 0.8)', borderColor: 'rgba(34, 197, 94, 0.25)' },
+                  isSel && (
+                    isLight
+                      ? { backgroundColor: '#f0fdf4', borderColor: '#16a34a' }
+                      : isMedium
+                      ? { backgroundColor: 'rgba(34, 197, 94, 0.2)', borderColor: '#fbbf24' }
+                      : styles.chipActive
+                  ),
+                ]}
                 onPress={() => {
                   tap();
                   setFilter(chip.id as any);
                 }}
               >
-                <Text style={[styles.chipText, isSel && styles.chipTextActive]}>{chip.label}</Text>
+                <Text
+                  style={[
+                    styles.chipText,
+                    isLight && { color: '#64748b' },
+                    isSel && (
+                      isLight
+                        ? { color: '#16a34a', fontFamily: FONT.bold }
+                        : isMedium
+                        ? { color: '#fbbf24', fontFamily: FONT.bold }
+                        : styles.chipTextActive
+                    ),
+                  ]}
+                >
+                  {chip.label}
+                </Text>
               </TouchableOpacity>
             );
           })}
@@ -159,8 +230,8 @@ export default function AdminProductsScreen() {
         ) : filteredProducts.length === 0 ? (
           <View style={styles.emptyBox}>
             <Ionicons name="cube-outline" size={48} color="#475569" />
-            <Text style={styles.emptyTitle}>No seller listings found</Text>
-            <Text style={styles.emptySubtitle}>
+            <Text style={[styles.emptyTitle, { color: textColor }]}>No seller listings found</Text>
+            <Text style={[styles.emptySubtitle, { color: subTextColor }]}>
               {searchQuery ? 'Try changing your search terms.' : 'Sellers will appear here when they upload products via their Seller Portal.'}
             </Text>
           </View>
@@ -171,39 +242,58 @@ export default function AdminProductsScreen() {
             const isOutOfStock = p.stockQty <= 0;
 
             return (
-              <View key={p.id} style={[styles.card, premiumShadow('#000', 'sm'), !p.isActive && styles.cardInactive]}>
+              <View
+                key={p.id}
+                style={[
+                  styles.card,
+                  isLight && { backgroundColor: '#ffffff', borderColor: '#e2e8f0' },
+                  isMedium && { backgroundColor: 'rgba(6, 26, 30, 0.82)', borderColor: 'rgba(34, 197, 94, 0.3)' },
+                  premiumShadow('#000', 'sm'),
+                  !p.isActive && styles.cardInactive,
+                ]}
+              >
                 {/* Top Seller Header */}
                 <View style={styles.sellerHeader}>
                   <View style={styles.sellerLeft}>
-                    <View style={styles.sellerAvatar}>
-                      <Ionicons name="storefront" size={14} color="#00ff87" />
+                    <View
+                      style={[
+                        styles.sellerAvatar,
+                        isMedium && { backgroundColor: 'rgba(34, 197, 94, 0.2)' },
+                      ]}
+                    >
+                      <Ionicons name="storefront" size={14} color={isLight ? '#16a34a' : isMedium ? '#22c55e' : '#00ff87'} />
                     </View>
                     <View>
-                      <Text style={styles.sellerName}>{seller.name}</Text>
-                      <Text style={styles.sellerShop}>{seller.shop} • ⭐ {seller.rating}</Text>
+                      <Text style={[styles.sellerName, { color: textColor }]}>{seller.name}</Text>
+                      <Text style={[styles.sellerShop, { color: subTextColor }]}>{seller.shop} • ⭐ {seller.rating}</Text>
                     </View>
                   </View>
                   <View style={styles.commissionBadge}>
-                    <Text style={styles.commissionText}>Commission: {seller.commission}</Text>
+                    <Text style={[styles.commissionText, isMedium && { color: '#fbbf24' }]}>Commission: {seller.commission}</Text>
                   </View>
                 </View>
 
                 {/* Product Content */}
                 <View style={styles.productBody}>
-                  <View style={styles.productIconBox}>
-                    <Ionicons name="bag-handle" size={22} color="#00ff87" />
+                  <View
+                    style={[
+                      styles.productIconBox,
+                      isMedium && { backgroundColor: 'rgba(34, 197, 94, 0.15)' },
+                    ]}
+                  >
+                    <Ionicons name="bag-handle" size={22} color={isLight ? '#16a34a' : isMedium ? '#22c55e' : '#00ff87'} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <View style={styles.titleRow}>
-                      <Text style={styles.productName}>{p.name}</Text>
+                      <Text style={[styles.productName, { color: textColor }]}>{p.name}</Text>
                       {p.category ? (
                         <View style={styles.catBadge}>
                           <Text style={styles.catText}>{p.category}</Text>
                         </View>
                       ) : null}
                     </View>
-                    <Text style={styles.productPrice}>
-                      ₹{p.price} <Text style={styles.unitText}>/ {p.unit}</Text> • Stock: {p.stockQty}
+                    <Text style={[styles.productPrice, { color: isLight ? '#16a34a' : isMedium ? '#fbbf24' : '#00ff87' }]}>
+                      ₹{p.price} <Text style={[styles.unitText, { color: subTextColor }]}>/ {p.unit}</Text> • Stock: {p.stockQty}
                     </Text>
                   </View>
                 </View>

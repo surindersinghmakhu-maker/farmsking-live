@@ -227,17 +227,17 @@ export const FarmerDashboardView: React.FC<FarmerDashboardViewProps> = ({ onOpen
           transparent={false}
           onRequestClose={() => setShowAiChatModal(false)}
         >
-          <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
+          <SafeAreaView style={{ flex: 1, backgroundColor: '#020d06' }}>
             <View style={styles.aiModalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <View style={styles.compactAiAvatar}>
                   <Ionicons name="sparkles" size={18} color="#ffffff" />
                 </View>
                 <View>
-                  <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: '#0f172a' }}>
+                  <Text style={{ fontSize: 15, fontFamily: FONT.extraBold, color: '#ffffff' }}>
                     ✨ Farmsking Kisan AI Doctor
                   </Text>
-                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#16a34a' }}>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#00ff87' }}>
                     Google Search Grounded · Agriculture & FarmsKing
                   </Text>
                 </View>
@@ -542,27 +542,18 @@ const styles = StyleSheet.create({
     color: '#15803d',
   },
   quickAccountsCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#04160c',
     borderRadius: 24, // iOS Squircle
     padding: 16,
     gap: 12,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.04,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 3,
-      },
-      default: premiumShadow('#0f172a', 'sm'),
-    }),
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.22)',
+    ...premiumShadow('#00ff87', 'md'),
   },
   quickAccountsTitle: {
     fontSize: 15,
     fontFamily: FONT.extraBold,
-    color: '#0f172a',
+    color: '#ffffff',
     letterSpacing: -0.3,
     marginBottom: 4,
   },
@@ -592,26 +583,22 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     width: '48.5%',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#04160c',
     borderRadius: 20, // iOS Squircle
     paddingHorizontal: 12,
     paddingVertical: 14,
     flexDirection: 'column', // iOS style cards usually stack icon and text
     alignItems: 'flex-start',
     gap: 12,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.04,
-        shadowRadius: 10,
-      },
-      android: { elevation: 2 },
-    }),
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.18)',
+    ...premiumShadow('#00ff87', 'sm'),
   },
   toolsContainerCard: {
     borderRadius: 24, // iOS Squircle style
     borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.22)',
+    backgroundColor: '#04160c',
     padding: 16,
     gap: 12,
     marginTop: 4,
@@ -651,13 +638,13 @@ const styles = StyleSheet.create({
   actionCardTitle: {
     fontSize: 14,
     fontFamily: FONT.bold,
-    color: '#0f172a',
+    color: '#ffffff',
     letterSpacing: -0.2,
   },
   actionCardSub: {
     fontSize: 11,
     fontFamily: FONT.medium,
-    color: '#64748b',
+    color: '#94a3b8',
     marginTop: 2,
   },
   // Plan badge styles — frosted-glass pills so they read cleanly against the gradient header, in any theme.
@@ -773,11 +760,14 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   intelligenceLauncherCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#04160c',
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
     marginTop: 10,
     marginBottom: 16,
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.20)',
+    ...premiumShadow('#00ff87', 'sm'),
   },
   launcherBannerHeader: {
     padding: 12,
@@ -840,12 +830,12 @@ const styles = StyleSheet.create({
   launcherBody: {
     padding: 12,
     gap: 8,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#04160c',
   },
   launcherDesc: {
     fontSize: 11,
     fontFamily: FONT.medium,
-    color: '#475569',
+    color: '#cbd5e1',
     lineHeight: 16,
   },
   launcherFeaturesRow: {
@@ -858,49 +848,49 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: 'rgba(0, 255, 135, 0.12)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
-    borderColor: '#bbf7d0',
+    borderColor: 'rgba(0, 255, 135, 0.28)',
   },
   featureChipGreenText: {
     fontSize: 9.5,
     fontFamily: FONT.bold,
-    color: '#166534',
+    color: '#00ff87',
   },
   featureChipAmber: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#fffbe6',
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
-    borderColor: '#fde68a',
+    borderColor: 'rgba(245, 158, 11, 0.28)',
   },
   featureChipAmberText: {
     fontSize: 9.5,
     fontFamily: FONT.bold,
-    color: '#92400e',
+    color: '#fbbf24',
   },
   featureChipBlue: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#eff6ff',
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: RADIUS.pill,
     borderWidth: 1,
-    borderColor: '#bfdbfe',
+    borderColor: 'rgba(56, 189, 248, 0.28)',
   },
   featureChipBlueText: {
     fontSize: 9.5,
     fontFamily: FONT.bold,
-    color: '#1e40af',
+    color: '#38bdf8',
   },
   trialBannerCard: {
     backgroundColor: '#fffbeb',
@@ -1074,11 +1064,14 @@ const styles = StyleSheet.create({
     color: '#fef08a',
   },
   verticalThemeCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#04160c',
     borderRadius: RADIUS.lg,
     padding: 12,
     marginVertical: 4,
     gap: 8,
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.20)',
+    ...premiumShadow('#00ff87', 'sm'),
   },
   verticalThemeHeader: {
     flexDirection: 'row',
@@ -1156,12 +1149,13 @@ const styles = StyleSheet.create({
     color: '#854d0e',
   },
   compactAiCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#04160c',
     borderRadius: RADIUS.lg,
     padding: 10,
     marginVertical: 4,
     borderWidth: 1.5,
-    borderColor: '#bbf7d0',
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+    ...premiumShadow('#00ff87', 'sm'),
   },
   compactAiHeader: {
     flexDirection: 'row',
@@ -1172,14 +1166,16 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#16a34a',
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+    borderWidth: 1,
+    borderColor: '#00ff87',
     alignItems: 'center',
     justifyContent: 'center',
   },
   compactAiTitle: {
     fontSize: 13,
     fontFamily: FONT.extraBold,
-    color: '#0f172a',
+    color: '#ffffff',
   },
   compactFreeBadge: {
     backgroundColor: '#fef08a',
@@ -1195,14 +1191,14 @@ const styles = StyleSheet.create({
   compactAiSub: {
     fontSize: 11,
     fontFamily: FONT.medium,
-    color: '#64748b',
+    color: '#94a3b8',
     marginTop: 1,
   },
   compactAskBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#16a34a',
+    backgroundColor: '#00ff87',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: RADIUS.pill,
@@ -1210,7 +1206,7 @@ const styles = StyleSheet.create({
   compactAskBtnText: {
     fontSize: 11,
     fontFamily: FONT.extraBold,
-    color: '#ffffff',
+    color: '#020d06',
   },
   aiModalHeader: {
     flexDirection: 'row',
@@ -1218,24 +1214,27 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#04160c',
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    borderBottomColor: 'rgba(0, 255, 135, 0.20)',
   },
   aiModalCloseBtn: {
     padding: 6,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 18,
   },
   supervisorBannerCard: {
+    backgroundColor: '#04160c',
     borderRadius: RADIUS.lg,
     padding: 12,
-    borderWidth: 1.5,
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 10,
     marginVertical: 2,
+    ...premiumShadow('#00ff87', 'sm'),
   },
   supervisorBannerLeft: {
     flexDirection: 'row',
@@ -1247,19 +1246,24 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#dcfce7',
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   supervisorBannerTitle: {
     fontSize: 13,
     fontFamily: FONT.extraBold,
+    color: '#ffffff',
   },
   zeroAdminPill: {
-    backgroundColor: '#dcfce7',
-    paddingHorizontal: 6,
-    paddingVertical: 1,
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
     borderRadius: RADIUS.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.30)',
   },
   zeroAdminPillText: {
     color: '#15803d',

@@ -31,16 +31,16 @@ export const FONT = {
  * shadow and elevation props; react-native-web translates the shadow
  * props to a CSS box-shadow, so the same call works on web too.
  */
-export function premiumShadow(color: string, level: 'sm' | 'md' | 'lg' = 'md'): ViewStyle {
+export function premiumShadow(color: string = '#00ff87', level: 'sm' | 'md' | 'lg' = 'md'): ViewStyle {
   const shadowMap = {
-    sm: { opacity: 0.04, radius: 12, offsetY: 4, elevation: 2 },
-    md: { opacity: 0.06, radius: 20, offsetY: 8, elevation: 4 },
-    lg: { opacity: 0.08, radius: 30, offsetY: 12, elevation: 8 },
+    sm: { opacity: 0.16, radius: 10, offsetY: 3, elevation: 3 },
+    md: { opacity: 0.24, radius: 18, offsetY: 6, elevation: 6 },
+    lg: { opacity: 0.36, radius: 28, offsetY: 10, elevation: 10 },
   };
   const levels = shadowMap[level] ?? shadowMap.sm;
 
   return {
-    shadowColor: color,
+    shadowColor: color || '#00ff87',
     shadowOpacity: levels.opacity,
     shadowRadius: levels.radius,
     shadowOffset: { width: 0, height: levels.offsetY },
@@ -48,13 +48,8 @@ export function premiumShadow(color: string, level: 'sm' | 'md' | 'lg' = 'md'): 
   };
 }
 
-/** Hairline border that reads on both light cards and gradients. */
+/** Hairline border with cyber neon glass glow. */
 export const HAIRLINE_BORDER = Platform.select({
-  web: { borderWidth: 1, borderColor: 'rgba(15, 23, 42, 0.06)' },
-  default: { borderWidth: StyleSheetHairline(), borderColor: 'rgba(15, 23, 42, 0.06)' },
+  web: { borderWidth: 1, borderColor: 'rgba(0, 255, 135, 0.20)' },
+  default: { borderWidth: 1, borderColor: 'rgba(0, 255, 135, 0.20)' },
 });
-
-function StyleSheetHairline() {
-  // Kept as a function to avoid importing StyleSheet just for one constant.
-  return 0.5;
-}

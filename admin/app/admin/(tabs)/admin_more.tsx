@@ -13,6 +13,7 @@ import { SuperAdminExpenseCategoriesModal } from '@/components/SuperAdminExpense
 import { SwitchDashboardSection } from '@/src/components/SwitchDashboardSection';
 import { UserGuidesModal, SuperAdminWorkspaceModal, AdminInfoModal } from './more';
 import { ADMIN_PILLARS, NavigationPillar, SubTabItem } from '@/constants/navigationPillars';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const getCleanMobile = (mobile?: string | null) => {
   if (!mobile || mobile.startsWith('G_')) return '';
@@ -22,6 +23,7 @@ const getCleanMobile = (mobile?: string | null) => {
 export default function AdminMoreScreen() {
   const { user, logout } = useAuth();
   const { role } = useRole();
+  const { colors, isLight, cardBg, textColor } = useExecutiveTheme();
   const { data: appSettings } = useAppSettings();
   const brandLogoUri = appSettings?.logoUrl ?? null;
   const { t } = useLanguage();
@@ -74,7 +76,7 @@ export default function AdminMoreScreen() {
 
   return (
     <>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} showsVerticalScrollIndicator={false}>
         {/* Hero Profile Banner */}
         <LinearGradient colors={['#04140a', '#020d06']} style={styles.hero}>
           <View style={styles.avatarCircle}>
@@ -180,6 +182,39 @@ export default function AdminMoreScreen() {
               </View>
             );
           })}
+
+          {/* ⚙️ Dedicated Direct Settings Button (Requested by User) */}
+          <View style={styles.section}>
+            <TouchableOpacity
+              style={[
+                styles.sectionHeader,
+                {
+                  backgroundColor: isLight ? '#f0fdf4' : 'rgba(34, 197, 94, 0.1)',
+                  borderColor: isLight ? 'rgba(22, 163, 74, 0.3)' : 'rgba(34, 197, 94, 0.35)',
+                  borderWidth: 1,
+                  borderRadius: RADIUS.md,
+                  paddingVertical: 10,
+                  paddingHorizontal: 12,
+                },
+              ]}
+              activeOpacity={0.8}
+              onPress={() => router.push('/admin/(tabs)/super-settings')}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                <View style={[styles.rowIconBg, { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.12)' : 'rgba(34, 197, 94, 0.2)' }]}>
+                  <Ionicons name="settings-outline" size={18} color={isLight ? '#16a34a' : '#22c55e'} />
+                </View>
+                <View>
+                  <Text style={[styles.sectionTitle, isLight && { color: '#0f172a' }]}>Settings</Text>
+                  <Text style={[styles.rowSubLabel, isLight && { color: '#64748b' }]}>Platform Config, Master Toggles & Security</Text>
+                </View>
+              </View>
+              <View style={[styles.pillarBadge, { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.15)' : 'rgba(34, 197, 94, 0.2)' }]}>
+                <Text style={[styles.pillarBadgeText, { color: isLight ? '#16a34a' : '#22c55e' }]}>Config</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={isLight ? '#16a34a' : '#22c55e'} />
+            </TouchableOpacity>
+          </View>
 
           {/* 🛠️ C-PANEL QUICK UTILITIES */}
           <View style={styles.section}>

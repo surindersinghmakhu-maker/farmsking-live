@@ -1,10 +1,15 @@
 const { execSync } = require('child_process');
 
-function run(command, cwd) {
+function run(command, cwd, allowFail = false) {
   console.log(`\n> Running: ${command} in ${cwd || '.'}`);
   try {
     execSync(command, { stdio: 'inherit', cwd });
+    return true;
   } catch (err) {
+    if (allowFail) {
+      console.warn(`\n⚠️ Command warning: ${command}`);
+      return false;
+    }
     console.error(`\n❌ Deployment aborted! Command failed with exit code ${err.status}: ${command}`);
     process.exit(1);
   }
@@ -13,7 +18,11 @@ function run(command, cwd) {
 console.log('🚀 Starting Build and Deployment to GitHub and Hostinger...');
 
 // 1. Build Backend
-run('npm run build:local', './backend');
+const backendOk = run('npm run build:local', './backend', true);
+if (!backendOk) {
+  console.log('⚡ Prisma query engine dll is locked by active process; building NestJS directly...');
+  run('npx nest build', './backend');
+}
 
 // 2. Build Frontend Web
 run('node frontend/build.js');

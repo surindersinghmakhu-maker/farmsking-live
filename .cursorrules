@@ -4,11 +4,17 @@
 # Motto: "ਜੋ ਗਲਤ ਹੈ ਉਹ ਗਲਤ ਹੈ, ਜੋ ਸਹੀ ਹੈ ਉਹ ਸਹੀ ਹੈ" (What is wrong is wrong; what is right is right).
 - MANDATORY VERIFICATION: Always verify user commands, premises, and requests against active codebase files, database schema (`schema.prisma`), and architecture before writing code.
 - UNCOMPROMISING TRUTH: If a proposal is technically wrong, contradictory, or introduces bugs/regressions, state it immediately, directly, and unambiguously.
-- ZERO SYCOPHANCY: NEVER use empty flattery (e.g. "ਤੁਸੀਂ ਸਹੀ ਕਹਿ ਰਹੇ ਹੋ" / "You are completely right") when an instruction contradicts technical facts or architectural integrity. Never validate contradictory positions sequentially.
+- ZERO SYCOPHANCY (ਏਆਈ ਚਾਪਲੂਸੀ ਰੋਕੂ ਨਿਯਮ): NEVER use empty flattery (e.g. "ਤੁਸੀਂ ਸਹੀ ਕਹਿ ਰਹੇ ਹੋ" / "You are completely right") when an instruction contradicts technical facts or architectural integrity. Never validate contradictory positions sequentially.
 - EVIDENCE-BASED SOLUTIONS: Provide the exact technical reason for any disagreement with code references and offer the robust, production-grade alternative.
 
-# 1. 100% PURE ENGLISH LANGUAGE STANDARD
+# 0.1 AUTONOMOUS "YES WITHOUT ASKING" & PROACTIVE RECOMMENDED EXECUTION
+- AUTONOMOUS EXECUTION: Proceed with "Yes without asking" by default for all constructive coding, fixes, responsive design, and visual upgrades. Do NOT stop to ask trivial, repetitive confirmation questions.
+- PROACTIVE RECOMMENDED EXECUTION: Automatically select and implement the highest-standard, recommended industry best practice without forcing the user to choose low-level technical options.
+- PRESERVATION & INTEGRITY: Never replace real data with dummy data. Preserve existing APIs, NestJS services, Prisma schemas, and role permissions.
+
+# 1. 100% PURE ENGLISH LANGUAGE & EXECUTIVE COPY
 - All user-facing UI text, buttons, modals, headings, badges, dashboards, and error messages MUST be 100% pure professional English.
+- Compact, clean, 5-star easily understandable executive wording.
 
 # 1.1 PROFESSIONAL CODE DOCUMENTATION & DEFINITIONS
 - Provide comprehensive TSDoc / JSDoc comments (`@param`, `@returns`, `@throws`) for all exported functions, methods, and DTOs.
@@ -16,11 +22,22 @@
 - Explain business rationale inline for non-trivial logic (interest, advances, taxes). Zero magic numbers.
 - Retroactively document any legacy or existing code touched.
 
-# 2. REACT & REACT NATIVE MOBILE ARCHITECTURE
-- Tri-tier mobile navigation: 5 pinned bottom tabs (Home, Products, Users, Finance, More). Navigation tabs MUST remain at the bottom on mobile.
-- Use 100% React & React Native primitives (`View`, `Text`, `TouchableOpacity`, `Pressable`, `ScrollView`, `Modal`).
-- Responsive viewport fit; zero horizontal overflow.
-- Royal theme aesthetics: Deep obsidian (`#020d06`), emerald green (`#00ff87`), and high-contrast typography.
+# 2. 100% PURE REACT & TRI-TIER UNIVERSAL RESPONSIVE ARCHITECTURE
+- Build every page, feature, and portal in 100% Pure React / React Native mode ("sabh react mode vich bane").
+- Reusable modular tokens and components so that features never require repeated rework ("var var change na krna pave").
+- Full responsive support:
+  - Mobile (<768px): Pinned bottom 5-tab bar (Home, Products, Users, Finance, More), top header quick menu, slide-up sheets, 44px touch targets.
+  - Tablet (768px - 1024px): Adaptive 2-column layout, scrolling pills, hybrid ergonomics.
+  - Desktop (>1024px): Wide executive command-center dashboard (1400-1600px container), KPI cards, Ctrl+K spotlight search.
 
-# 3. MASTER SOURCE OF TRUTH
+# 3. 4D FUTURISTIC VISUAL UPGRADE & 60FPS ANIMATIONS
+- Palette: Obsidian black (`#020d06`), deep forest green (`#04180d`), emerald neon (`#00ff87`), cyan/light blue telemetry (`#38bdf8`), subtle gold/yellow accents (`#f59e0b`, `#fef08a`).
+- Glassmorphism: Translucent dark panels, layered optical depth, glowing neon borders.
+- 4D Interactions: 3D perspective tilt on cards tracking cursor/touch, sliding sidebar indicators, smooth 60fps transitions, animated counters, glowing buttons, and reduced-motion accessibility support.
+
+# 4. ISO STANDARDS & 5-STAR RATING BENCHMARKS
+- Apply ISO 9001 (Zero-defect quality workflows) and ISO 27001 (Data security & strict RBAC).
+- Benchmark against world-class platforms (Apple Executive UI, Stripe, Linear, John Deere). 5-Star Rating standard.
+
+# 5. MASTER SOURCE OF TRUTH
 - Always consult and adhere to `PROJECT_RULES.md`.

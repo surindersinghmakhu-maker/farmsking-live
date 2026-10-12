@@ -145,13 +145,13 @@ export const LabourDashboardView: React.FC = () => {
         <View
           style={[
             {
-              backgroundColor: '#ffffff',
+              backgroundColor: '#04160c',
               borderRadius: RADIUS.lg,
               padding: 10,
-              borderWidth: 1.5,
-              borderColor: summary.pendingBalance > 0 ? '#ffedd5' : '#dcfce7',
+              borderWidth: 1.2,
+              borderColor: summary.pendingBalance > 0 ? 'rgba(234, 88, 12, 0.35)' : 'rgba(0, 255, 135, 0.35)',
             },
-            premiumShadow('#ea580c', 'sm'),
+            premiumShadow(summary.pendingBalance > 0 ? '#ea580c' : '#00ff87', 'sm'),
           ]}
         >
           {/* Highlight Header Row */}
@@ -162,7 +162,7 @@ export const LabourDashboardView: React.FC = () => {
                   width: 26,
                   height: 26,
                   borderRadius: 13,
-                  backgroundColor: summary.pendingBalance > 0 ? '#fff7ed' : '#f0fdf4',
+                  backgroundColor: summary.pendingBalance > 0 ? 'rgba(234, 88, 12, 0.15)' : 'rgba(0, 255, 135, 0.15)',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
@@ -170,34 +170,34 @@ export const LabourDashboardView: React.FC = () => {
                 <Ionicons
                   name="wallet-outline"
                   size={14}
-                  color={summary.pendingBalance > 0 ? '#c2410c' : '#166534'}
+                  color={summary.pendingBalance > 0 ? '#ea580c' : '#00ff87'}
                 />
               </View>
-              <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a' }}>
+              <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff' }}>
                 Total Balance Summary
               </Text>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f1f5f9', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#e2e8f0' }}>
-              <Ionicons name="eye-outline" size={12} color="#64748b" />
-              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#475569' }}>View Only (ਵੇਖਣ ਲਈ)</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255, 255, 255, 0.08)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.15)' }}>
+              <Ionicons name="eye-outline" size={12} color="#94a3b8" />
+              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#cbd5e1' }}>View Only (ਵੇਖਣ ਲਈ)</Text>
             </View>
           </View>
 
           {/* Multi-Farmer Labour King ID Card */}
-          <View style={{ backgroundColor: '#f8fafc', borderRadius: RADIUS.md, padding: 8, marginBottom: 8, borderWidth: 1, borderColor: '#e2e8f0' }}>
+          <View style={{ backgroundColor: '#072414', borderRadius: RADIUS.md, padding: 8, marginBottom: 8, borderWidth: 1, borderColor: 'rgba(0, 255, 135, 0.18)' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Ionicons name="git-network-outline" size={14} color="#ea580c" />
-                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0f172a' }}>
+                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>
                   Multi-Farmer Labour ID:
                 </Text>
-                <View style={{ backgroundColor: '#ffedd5', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: '#fed7aa' }}>
-                  <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#c2410c' }}>
+                <View style={{ backgroundColor: 'rgba(234, 88, 12, 0.15)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4, borderWidth: 1, borderColor: 'rgba(234, 88, 12, 0.35)' }}>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: '#fb923c' }}>
                     {user?.kingId || 'FK-LABOUR'}
                   </Text>
                 </View>
               </View>
-              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#16a34a' }}>● Active</Text>
+              <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#00ff87' }}>● Active</Text>
             </View>
             <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b', marginTop: 3 }}>
               ਜੇਕਰ ਕੋਈ ਹੋਰ ਕਿਸਾਨ ਵੀ ਤੁਹਾਨੂੰ ਕੰਮ 'ਤੇ ਰੱਖਦਾ ਹੈ, ਤਾਂ ਉਹ ਇਸ King ID ਜਾਂ ਤੁਹਾਡੇ ਮੋਬਾਈਲ ਰਾਹੀਂ ਐਂਟਰੀਆਂ ਪਾ ਸਕਦਾ ਹੈ।
@@ -480,9 +480,12 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: SPACING.lg, gap: 14, paddingBottom: SPACING.xxl },
   farmerTopCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#04160c',
     borderRadius: RADIUS.lg,
     padding: 12,
+    borderWidth: 1.2,
+    borderColor: 'rgba(249, 115, 22, 0.28)',
+    ...premiumShadow('#f97316', 'sm'),
   },
   farmerPhoto: {
     width: 46,
@@ -495,20 +498,20 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: '#ffedd5',
+    backgroundColor: 'rgba(249, 115, 22, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    borderColor: '#fdba74',
+    borderColor: '#ea580c',
   },
   farmerAvatarInitials: {
     fontSize: 18,
     fontFamily: FONT.extraBold,
-    color: '#c2410c',
+    color: '#fb923c',
   },
-  farmerLabel: { fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' },
-  farmerName: { fontSize: 15.5, fontFamily: FONT.extraBold, color: '#0f172a', marginTop: 1 },
-  farmerMetaText: { fontSize: 11.5, fontFamily: FONT.medium, color: '#ea580c' },
+  farmerLabel: { fontSize: 10.5, fontFamily: FONT.medium, color: '#94a3b8' },
+  farmerName: { fontSize: 15.5, fontFamily: FONT.extraBold, color: '#ffffff', marginTop: 1 },
+  farmerMetaText: { fontSize: 11.5, fontFamily: FONT.medium, color: '#fb923c' },
   callBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -522,19 +525,21 @@ const styles = StyleSheet.create({
 
   balanceCard: { borderRadius: RADIUS.xl, padding: SPACING.xl, overflow: 'hidden' },
   watermark: { position: 'absolute', top: -12, right: -16, opacity: 0.08 },
-  cardSubTitle: { fontSize: 13, fontFamily: FONT.semiBold, color: '#64748b' },
+  cardSubTitle: { fontSize: 13, fontFamily: FONT.semiBold, color: '#94a3b8' },
   balanceAmount: { fontSize: 34, fontFamily: FONT.extraBold, marginTop: 4, letterSpacing: -0.6 },
   heroRow: { flexDirection: 'row', gap: 10, marginTop: 18 },
   heroBox: { flex: 1, borderRadius: RADIUS.md, padding: 12, alignItems: 'center' },
-  heroBoxLabel: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b' },
+  heroBoxLabel: { fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8' },
   heroBoxVal: { fontSize: 15, fontFamily: FONT.extraBold, marginTop: 4 },
 
   viewModeToggleRow: {
     flexDirection: 'row',
-    backgroundColor: '#e2e8f0',
+    backgroundColor: '#03140a',
     borderRadius: RADIUS.pill,
     padding: 3,
     gap: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(249, 115, 22, 0.20)',
   },
   viewModeBtn: {
     flex: 1,
@@ -546,45 +551,48 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.pill,
   },
   viewModeBtnActive: { backgroundColor: '#ea580c' },
-  viewModeText: { fontSize: 12, fontFamily: FONT.bold, color: '#475569' },
+  viewModeText: { fontSize: 12, fontFamily: FONT.bold, color: '#94a3b8' },
   viewModeTextActive: { color: '#ffffff' },
 
   doubleEntryContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#04160c',
     borderRadius: RADIUS.lg,
     padding: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderWidth: 1.2,
+    borderColor: 'rgba(249, 115, 22, 0.22)',
     gap: 8,
+    ...premiumShadow('#f97316', 'sm'),
   },
   doubleEntryHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
+    backgroundColor: 'rgba(249, 115, 22, 0.12)',
     borderRadius: RADIUS.sm,
     padding: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#cbd5e1',
+    borderBottomColor: 'rgba(249, 115, 22, 0.25)',
   },
   doubleEntryRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
-  rowParticulars: { fontSize: 12.5, fontFamily: FONT.bold, color: '#0f172a' },
-  rowDate: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
-  rowCredit: { fontSize: 12.5, fontFamily: FONT.bold, color: '#c2410c', textAlign: 'right' },
-  rowDebit: { fontSize: 12.5, fontFamily: FONT.bold, color: '#166534', textAlign: 'right' },
-  rowBalance: { fontSize: 12.5, fontFamily: FONT.extraBold, color: '#0f172a', textAlign: 'right' },
+  rowParticulars: { fontSize: 12.5, fontFamily: FONT.bold, color: '#ffffff' },
+  rowDate: { fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8', marginTop: 1 },
+  rowCredit: { fontSize: 12.5, fontFamily: FONT.bold, color: '#fb923c', textAlign: 'right' },
+  rowDebit: { fontSize: 12.5, fontFamily: FONT.bold, color: '#00ff87', textAlign: 'right' },
+  rowBalance: { fontSize: 12.5, fontFamily: FONT.extraBold, color: '#ffffff', textAlign: 'right' },
 
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#03140a',
     borderRadius: RADIUS.md,
     padding: 4,
     gap: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(249, 115, 22, 0.20)',
   },
   tabBtn: {
     flex: 1,
@@ -596,20 +604,26 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.sm,
   },
   tabBtnActive: { backgroundColor: '#ea580c' },
-  tabBtnText: { fontSize: 12.5, fontFamily: FONT.bold, color: '#64748b' },
+  tabBtnText: { fontSize: 12.5, fontFamily: FONT.bold, color: '#94a3b8' },
   tabBtnTextActive: { color: '#ffffff' },
   emptyCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#04160c',
     borderRadius: RADIUS.lg,
     padding: 30,
     alignItems: 'center',
     gap: 10,
+    borderWidth: 1.2,
+    borderColor: 'rgba(234, 88, 12, 0.25)',
+    ...premiumShadow('#ea580c', 'sm'),
   },
   emptyText: { fontSize: 13.5, fontFamily: FONT.medium, color: '#94a3b8' },
   itemCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#04160c',
     borderRadius: RADIUS.lg,
     padding: SPACING.lg,
+    borderWidth: 1.2,
+    borderColor: 'rgba(234, 88, 12, 0.22)',
+    ...premiumShadow('#ea580c', 'sm'),
   },
   itemHeader: {
     flexDirection: 'row',
@@ -621,21 +635,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#ffedd5',
+    backgroundColor: 'rgba(234, 88, 12, 0.15)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: RADIUS.pill,
   },
-  itemTypeText: { fontSize: 12, fontFamily: FONT.bold, color: '#c2410c' },
+  itemTypeText: { fontSize: 12, fontFamily: FONT.bold, color: '#fb923c' },
   itemDate: { fontSize: 12, fontFamily: FONT.medium, color: '#94a3b8' },
   itemBody: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  itemQtyRate: { fontSize: 14, fontFamily: FONT.semiBold, color: '#334155' },
+  itemQtyRate: { fontSize: 14, fontFamily: FONT.semiBold, color: '#cbd5e1' },
   itemAmount: { fontSize: 16, fontFamily: FONT.extraBold, color: '#ea580c' },
-  itemNotes: { fontSize: 12, color: '#64748b', fontFamily: FONT.medium, marginTop: 6 },
+  itemNotes: { fontSize: 12, color: '#94a3b8', fontFamily: FONT.medium, marginTop: 6 },
   profileSwitcherCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#04160c',
     borderRadius: RADIUS.lg,
     padding: 10,
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 255, 135, 0.20)',
+    ...premiumShadow('#00ff87', 'sm'),
   },
   switcherHeaderTitle: {
     fontSize: 12.5,

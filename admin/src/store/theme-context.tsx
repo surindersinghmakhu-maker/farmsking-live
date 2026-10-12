@@ -2,7 +2,19 @@ import React, { createContext, useContext, useState, useEffect, useMemo, ReactNo
 import { Ionicons } from '@expo/vector-icons';
 import * as AppStorage from '@/src/lib/storage';
 
-export type ExecutiveTheme = 'EMERALD' | 'DARK' | 'GOLD' | 'SAPPHIRE' | 'AMETHYST' | 'RUBY' | 'OCEAN' | 'PLATINUM';
+export type AdminThemeMode = 'LIGHT' | 'DARK';
+
+export type ExecutiveTheme =
+  | 'LIGHT'
+  | 'DARK'
+  | 'MEDIUM'
+  | 'EMERALD'
+  | 'GOLD'
+  | 'SAPPHIRE'
+  | 'AMETHYST'
+  | 'RUBY'
+  | 'OCEAN'
+  | 'PLATINUM';
 
 export interface ThemeConfig {
   name: string;
@@ -33,63 +45,71 @@ export interface ThemeConfig {
   statusBarStyle: 'light' | 'dark';
 }
 
+/** Flagship 4D Dark Theme: Vivid Parrot Green (#22c55e) & Radiant Shaded Gold (#fbbf24) on deep cyber obsidian (#030f14) */
+const DARK_PARROT_GOLD_THEME: ThemeConfig = {
+  name: '4D Parrot & Shaded Gold Dark (ਸ਼ਾਹੀ ਪੈਰਟ ਤੇ ਸੁਨਹਿਰੀ)',
+  icon: 'leaf',
+  bg: '#030f14', // Deep obsidian emerald-forest cyber backdrop
+  cardBg: 'rgba(6, 26, 30, 0.82)', // Shaded Parrot glassmorphism card
+  cardBorder: 'rgba(34, 197, 94, 0.30)', // Parrot Green edge
+  text: '#ffffff',
+  textMuted: '#94a3b8',
+  primary: '#22c55e', // Vibrant Parrot Green
+  primaryLight: 'rgba(34, 197, 94, 0.18)',
+  accent: '#fbbf24', // Shimmering Radiant Gold
+  headerBg: '#030f14',
+  headerGradient: ['#031018', '#052622', '#083828'], // Shaded cyber duo-tone parrot emerald
+  shadowColor: '#22c55e', // Parrot Green luminous shadow
+  tabBarBg: '#030f14',
+  tabBarBorder: 'rgba(34, 197, 94, 0.25)',
+  tabBarActive: '#22c55e', // Parrot Green active
+  tabBarInactive: '#94a3b8',
+  btnBg: '#22c55e', // Parrot Green primary button
+  btnText: '#020d06', // Contrast text on parrot green
+  btnIconColor: '#ffffff',
+  titleColor: '#ffffff',
+  subColor: '#cbd5e1',
+  accentColor: '#fbbf24', // Radiant Gold highlight
+  borderColor: 'rgba(251, 191, 36, 0.38)', // Shaded Gold rim border
+  isDark: true,
+  statusBarStyle: 'light',
+};
+
+/** Flagship 4D Light Theme: Pristine Porcelain White (#fbfdfa) with Green & Gold Accents - DEFAULT */
+const LIGHT_GOLDEN_GREEN_THEME: ThemeConfig = {
+  name: '4D Futuristic Light (ਲਾਈਟ ਗੋਲਡਨ ਗ੍ਰੀਨ)',
+  icon: 'sunny',
+  bg: '#fbfdfa',
+  cardBg: '#ffffff',
+  cardBorder: 'rgba(22, 163, 74, 0.20)',
+  text: '#0f172a',
+  textMuted: '#475569',
+  primary: '#16a34a',
+  primaryLight: '#f0fdf4',
+  accent: '#f59e0b',
+  headerBg: '#ffffff',
+  headerGradient: ['#ffffff', '#f0fdf4', '#fefce8'],
+  shadowColor: '#16a34a',
+  tabBarBg: '#ffffff',
+  tabBarBorder: 'rgba(22, 163, 74, 0.18)',
+  tabBarActive: '#16a34a',
+  tabBarInactive: '#64748b',
+  btnBg: '#16a34a',
+  btnText: '#ffffff',
+  btnIconColor: '#ffffff',
+  titleColor: '#0f172a',
+  subColor: '#475569',
+  accentColor: '#f59e0b',
+  borderColor: 'rgba(234, 179, 8, 0.35)',
+  isDark: false,
+  statusBarStyle: 'dark',
+};
+
 export const EXECUTIVE_THEME_CONFIG: Record<ExecutiveTheme, ThemeConfig> = {
-  EMERALD: {
-    name: 'Royal Emerald',
-    icon: 'leaf',
-    bg: '#f0fdf4',
-    cardBg: '#ffffff',
-    cardBorder: '#bbf7d0',
-    text: '#0f172a',
-    textMuted: '#475569',
-    primary: '#16a34a',
-    primaryLight: '#dcfce7',
-    accent: '#22c55e',
-    headerBg: '#15803d',
-    headerGradient: ['#15803d', '#16a34a', '#22c55e'],
-    shadowColor: '#16a34a',
-    tabBarBg: '#ffffff',
-    tabBarBorder: '#dcfce7',
-    tabBarActive: '#16a34a',
-    tabBarInactive: '#94a3b8',
-    btnBg: '#ffffff',
-    btnText: '#15803d',
-    btnIconColor: '#16a34a',
-    titleColor: '#ffffff',
-    subColor: 'rgba(255, 255, 255, 0.95)',
-    accentColor: '#22c55e',
-    borderColor: '#86efac',
-    isDark: false,
-    statusBarStyle: 'dark',
-  },
-  DARK: {
-    name: 'Midnight Dark',
-    icon: 'moon',
-    bg: '#0f172a',
-    cardBg: '#1e293b',
-    cardBorder: '#334155',
-    text: '#f8fafc',
-    textMuted: '#cbd5e1',
-    primary: '#38bdf8',
-    primaryLight: '#0f2942',
-    accent: '#22c55e',
-    headerBg: '#0f172a',
-    headerGradient: ['#0f172a', '#1e293b', '#334155'],
-    shadowColor: '#000000',
-    tabBarBg: '#1e293b',
-    tabBarBorder: '#334155',
-    tabBarActive: '#38bdf8',
-    tabBarInactive: '#94a3b8',
-    btnBg: '#38bdf8',
-    btnText: '#0f172a',
-    btnIconColor: '#0f172a',
-    titleColor: '#ffffff',
-    subColor: 'rgba(248, 250, 252, 0.9)',
-    accentColor: '#38bdf8',
-    borderColor: '#475569',
-    isDark: true,
-    statusBarStyle: 'light',
-  },
+  LIGHT: LIGHT_GOLDEN_GREEN_THEME,
+  DARK: DARK_PARROT_GOLD_THEME,
+  MEDIUM: DARK_PARROT_GOLD_THEME,
+  EMERALD: DARK_PARROT_GOLD_THEME,
   GOLD: {
     name: 'Golden Royal',
     icon: 'sparkles',
@@ -262,23 +282,40 @@ export const EXECUTIVE_THEME_CONFIG: Record<ExecutiveTheme, ThemeConfig> = {
 
 const THEME_STORAGE_KEY = 'farmsking_executive_theme_setting';
 
-interface ExecutiveThemeContextValue {
+export interface ExecutiveThemeContextValue {
+  themeMode: AdminThemeMode;
+  setThemeMode: (mode: AdminThemeMode) => void;
   executiveTheme: ExecutiveTheme;
   setExecutiveTheme: (theme: ExecutiveTheme) => void;
   colors: ThemeConfig;
+  isDark: boolean;
+  isLight: boolean;
+  isMedium: boolean;
+  isDarkTheme: boolean;
+  cardBg: string;
+  cardBorder: string;
+  textColor: string;
+  subTextColor: string;
+  innerBg: string;
 }
 
 const ExecutiveThemeContext = createContext<ExecutiveThemeContextValue | undefined>(undefined);
 
 export function ExecutiveThemeProvider({ children }: { children: ReactNode }) {
-  const [executiveTheme, setExecutiveThemeState] = useState<ExecutiveTheme>('EMERALD');
+  const [executiveTheme, setExecutiveThemeState] = useState<ExecutiveTheme>('LIGHT');
 
   useEffect(() => {
     let isMounted = true;
     (async () => {
       const saved = await AppStorage.getItemAsync(THEME_STORAGE_KEY);
-      if (isMounted && saved && saved in EXECUTIVE_THEME_CONFIG) {
-        setExecutiveThemeState(saved as ExecutiveTheme);
+      if (isMounted && saved) {
+        if (saved in EXECUTIVE_THEME_CONFIG) {
+          setExecutiveThemeState(saved as ExecutiveTheme);
+        } else if (saved === 'dark' || saved === 'DARK' || saved === 'medium' || saved === 'MEDIUM') {
+          setExecutiveThemeState('DARK');
+        } else {
+          setExecutiveThemeState('LIGHT');
+        }
       }
     })();
     return () => {
@@ -291,15 +328,64 @@ export function ExecutiveThemeProvider({ children }: { children: ReactNode }) {
     AppStorage.setItemAsync(THEME_STORAGE_KEY, next);
   };
 
-  const colors = useMemo(() => EXECUTIVE_THEME_CONFIG[executiveTheme], [executiveTheme]);
+  const themeMode: AdminThemeMode = useMemo(() => {
+    if (executiveTheme === 'DARK' || executiveTheme === 'MEDIUM') return 'DARK';
+    return 'LIGHT';
+  }, [executiveTheme]);
+
+  const setThemeMode = (mode: AdminThemeMode) => {
+    setExecutiveTheme(mode);
+  };
+
+  const colors = useMemo(() => EXECUTIVE_THEME_CONFIG[executiveTheme] || EXECUTIVE_THEME_CONFIG.LIGHT, [executiveTheme]);
+  const isDark = colors.isDark;
+  const isLight = themeMode === 'LIGHT';
+  const isMedium = themeMode === 'DARK'; // Alias: Parrot & Gold Dark theme
+  const isDarkTheme = themeMode === 'DARK';
+
+  const cardBg = useMemo(() => {
+    if (isLight) return 'rgba(255, 255, 255, 0.95)';
+    return 'rgba(6, 26, 30, 0.82)'; // Shaded Parrot & Gold Cyber Glass
+  }, [isLight]);
+
+  const cardBorder = useMemo(() => {
+    if (isLight) return 'rgba(22, 163, 74, 0.20)';
+    return 'rgba(34, 197, 94, 0.30)'; // Parrot Green rim
+  }, [isLight]);
+
+  const textColor = useMemo(() => {
+    if (isLight) return '#0f172a';
+    return '#ffffff';
+  }, [isLight]);
+
+  const subTextColor = useMemo(() => {
+    if (isLight) return '#475569';
+    return '#94a3b8';
+  }, [isLight]);
+
+  const innerBg = useMemo(() => {
+    if (isLight) return '#f8fafc';
+    return 'rgba(3, 16, 20, 0.65)'; // Shaded Parrot Cyber inner
+  }, [isLight]);
 
   const value = useMemo(
     () => ({
+      themeMode,
+      setThemeMode,
       executiveTheme,
       setExecutiveTheme,
       colors,
+      isDark,
+      isLight,
+      isMedium,
+      isDarkTheme,
+      cardBg,
+      cardBorder,
+      textColor,
+      subTextColor,
+      innerBg,
     }),
-    [executiveTheme, colors]
+    [themeMode, executiveTheme, colors, isDark, isLight, isMedium, isDarkTheme, cardBg, cardBorder, textColor, subTextColor, innerBg]
   );
 
   return <ExecutiveThemeContext.Provider value={value}>{children}</ExecutiveThemeContext.Provider>;

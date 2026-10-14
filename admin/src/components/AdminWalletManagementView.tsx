@@ -16,9 +16,11 @@ import {
 import { approveWithdrawal, listAllWithdrawals, rejectWithdrawal } from '@/src/api/withdrawals.api';
 import { MyWallet, WalletTransaction, WithdrawalRequest } from '@/src/types/api';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import { useExecutiveVault } from '@/src/portals/ExecutiveSecurityVault';
 
 export function AdminWalletManagementView() {
   const { colors, isLight, cardBg, textColor } = useExecutiveTheme();
+  const { requestAuthorization } = useExecutiveVault();
   const [activeTab, setActiveTab] = useState<'ALL_USERS' | 'WITHDRAWALS' | 'AUTOMATED_REPORT' | 'BONUS_REPORT'>('ALL_USERS');
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
@@ -112,48 +114,78 @@ export function AdminWalletManagementView() {
       setActionError('Please enter a valid amount.');
       return;
     }
-    setIsActionPending(true);
-    setActionError(null);
-    try {
-      if (actionTarget.type === 'CREDIT') {
-        await creditWallet(actionTarget.user.id, numAmt, actionReason || 'Admin Manual Credit');
-      } else {
-        await debitWallet(actionTarget.user.id, numAmt, actionReason || 'Admin Manual Deduction');
+
+    const execute = async () => {
+      setIsActionPending(true);
+      setActionError(null);
+      try {
+        if (actionTarget.type === 'CREDIT') {
+          await creditWallet(actionTarget.user.id, numAmt, actionReason || 'Admin Manual Credit');
+        } else {
+          await debitWallet(actionTarget.user.id, numAmt, actionReason || 'Admin Manual Deduction');
+        }
+        alert(`✅ Successfully ${actionTarget.type === 'CREDIT' ? 'credited' : 'debited'} ₹${numAmt} for ${actionTarget.user.name}`);
+        setActionTarget(null);
+        setActionAmount('');
+        setActionReason('');
+        loadData();
+      } catch (err: any) {
+        setActionError(err?.response?.data?.message || 'Transaction failed');
+      } finally {
+        setIsActionPending(false);
       }
-      alert(`✅ Successfully ${actionTarget.type === 'CREDIT' ? 'credited' : 'debited'} ₹${numAmt} for ${actionTarget.user.name}`);
-      setActionTarget(null);
-      setActionAmount('');
-      setActionReason('');
-      loadData();
-    } catch (err: any) {
-      setActionError(err?.response?.data?.message || 'Transaction failed');
-    } finally {
-      setIsActionPending(false);
-    }
+    };
+
+    requestAuthorization({
+      title: `${actionTarget.type === 'CREDIT' ? 'Authorize Wallet Credit' : 'Authorize Wallet Debit'}`,
+      subtitle: `Target: ${actionTarget.user.name} (${actionTarget.user.mobile})`,
+      severity: actionTarget.type === 'DEBIT' ? 'HIGH' : 'NORMAL',
+      metadata: [
+        { label: 'Amount', value: `₹${numAmt}` },
+        { label: 'Action Type', value: actionTarget.type },
+        { label: 'Reason', value: actionReason || 'Manual adjustment' },
+      ],
+      onAuthorize: execute,
+    });
   };
 
   const handleExecuteWithdrawalAction = async () => {
     if (!selectedWithdrawalAction) return;
     const { req, type } = selectedWithdrawalAction;
-    setIsWithdrawalActionPending(true);
-    try {
-      if (type === 'APPROVE') {
-        const amt = approvedAmountInput ? Number(approvedAmountInput) : Number(req.requestedAmount);
-        await approveWithdrawal(req.id, amt, withdrawalNoteInput || 'Approved by Admin');
-        alert(`✅ Approved payout of ₹${amt} for ${req.businessPartner?.name || 'User'}`);
-      } else {
-        await rejectWithdrawal(req.id, withdrawalNoteInput || 'Rejected by Admin');
-        alert(`❌ Withdrawal request rejected.`);
+    const amt = approvedAmountInput ? Number(approvedAmountInput) : Number(req.requestedAmount);
+
+    const execute = async () => {
+      setIsWithdrawalActionPending(true);
+      try {
+        if (type === 'APPROVE') {
+          await approveWithdrawal(req.id, amt, withdrawalNoteInput || 'Approved by Admin');
+          alert(`✅ Approved payout of ₹${amt} for ${req.businessPartner?.name || 'User'}`);
+        } else {
+          await rejectWithdrawal(req.id, withdrawalNoteInput || 'Rejected by Admin');
+          alert(`❌ Withdrawal request rejected.`);
+        }
+        setSelectedWithdrawalAction(null);
+        setApprovedAmountInput('');
+        setWithdrawalNoteInput('');
+        loadData();
+      } catch (err: any) {
+        alert(err?.response?.data?.message || 'Action failed');
+      } finally {
+        setIsWithdrawalActionPending(false);
       }
-      setSelectedWithdrawalAction(null);
-      setApprovedAmountInput('');
-      setWithdrawalNoteInput('');
-      loadData();
-    } catch (err: any) {
-      alert(err?.response?.data?.message || 'Action failed');
-    } finally {
-      setIsWithdrawalActionPending(false);
-    }
+    };
+
+    requestAuthorization({
+      title: type === 'APPROVE' ? 'Authorize Partner Payout Disbursement' : 'Reject Withdrawal Request',
+      subtitle: `Partner: ${req.businessPartner?.name || 'User'} (${req.businessPartner?.mobile || ''})`,
+      severity: type === 'APPROVE' ? 'HIGH' : 'NORMAL',
+      metadata: [
+        { label: 'Payout Amount', value: `₹${amt}` },
+        { label: 'Account / UPI', value: req.businessPartner?.upiId || req.businessPartner?.bankAccountNumber || 'Wallet' },
+        { label: 'Action', value: type === 'APPROVE' ? 'DISBURSEMENT APPROVAL' : 'REJECTION' },
+      ],
+      onAuthorize: execute,
+    });
   };
 
   const handleExportCSVReport = () => {

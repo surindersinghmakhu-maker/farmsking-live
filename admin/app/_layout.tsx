@@ -22,6 +22,7 @@ import { CropsProvider } from '@/src/store/crops-context';
 import { CartProvider } from '@/src/store/cart-context';
 import { LanguageProvider } from '@/src/store/language-context';
 import { ExecutiveThemeProvider } from '@/src/store/theme-context';
+import { ExecutiveVaultProvider } from '@/src/portals/ExecutiveSecurityVault';
 import { SplashView } from '@/components/SplashView';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -165,18 +166,20 @@ export default function RootLayout() {
       <LanguageProvider>
         <ExecutiveThemeProvider>
           <AuthProvider>
-            <RoleProvider>
-              <CropsProvider>
-                <CartProvider>
-                  <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-                    <MobileAppShell>
-                      <RootNavigation />
-                      <StatusBar style="auto" />
-                    </MobileAppShell>
-                  </ThemeProvider>
-                </CartProvider>
-              </CropsProvider>
-            </RoleProvider>
+            <ExecutiveVaultProvider>
+              <RoleProvider>
+                <CropsProvider>
+                  <CartProvider>
+                    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                      <MobileAppShell>
+                        <RootNavigation />
+                        <StatusBar style="auto" />
+                      </MobileAppShell>
+                    </ThemeProvider>
+                  </CartProvider>
+                </CropsProvider>
+              </RoleProvider>
+            </ExecutiveVaultProvider>
           </AuthProvider>
         </ExecutiveThemeProvider>
       </LanguageProvider>

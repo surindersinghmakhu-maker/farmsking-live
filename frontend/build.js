@@ -223,6 +223,13 @@ try {
              url('/assets/fonts/Zocial.ttf') format('truetype');
         font-display: swap;
       }
+      /* Suppress reCAPTCHA v3 floating badge */
+      .grecaptcha-badge {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+      }
     </style>
     `;
 

@@ -116,9 +116,35 @@ export interface SupportContact {
   name: string;
   mobile: string;
   email: string | null;
+  helplinePhone?: string;
+  supportEmail?: string;
 }
 
 export async function getSupportContact(): Promise<SupportContact> {
-  const { data } = await apiClient.get<SupportContact>('/app-settings/support-contact');
-  return data;
+  try {
+    const { data } = await apiClient.get<SupportContact>('/public-contact');
+    return {
+      ...data,
+      helplinePhone: data?.helplinePhone || data?.mobile || '95776-220000',
+      supportEmail: data?.supportEmail || data?.email || 'farmskingindia@gmail.com',
+    };
+  } catch {
+    try {
+      const { data } = await apiClient.get<SupportContact>('/app-settings/support-contact');
+      return {
+        ...data,
+        helplinePhone: data?.helplinePhone || data?.mobile || '95776-220000',
+        supportEmail: data?.supportEmail || data?.email || 'farmskingindia@gmail.com',
+      };
+    } catch {
+      return {
+        name: 'Surinder Singh (Super Admin)',
+        mobile: '95776-220000',
+        email: 'farmskingindia@gmail.com',
+        helplinePhone: '95776-220000',
+        supportEmail: 'farmskingindia@gmail.com',
+      };
+    }
+  }
 }
+

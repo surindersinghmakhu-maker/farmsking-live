@@ -125,15 +125,17 @@ export class AppSettingsService {
       });
       if (superAdmin) {
         name = name || superAdmin.name || 'Surinder Singh (Super Admin)';
-        mobile = mobile || superAdmin.mobile || '9577622000';
-        email = email || superAdmin.email || 'support@farmsking.com';
+        mobile = mobile || superAdmin.mobile || '95776-220000';
+        email = email || superAdmin.email || 'farmskingindia@gmail.com';
       }
     }
 
     return {
       name: name || 'Surinder Singh (Super Admin)',
-      mobile: mobile || '9577622000',
-      email: email || 'support@farmsking.com',
+      mobile: mobile || '95776-220000',
+      email: email || 'farmskingindia@gmail.com',
+      helplinePhone: mobile || '95776-220000',
+      supportEmail: email || 'farmskingindia@gmail.com',
     };
   }
 

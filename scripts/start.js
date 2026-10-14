@@ -52,9 +52,9 @@ const services = [
   {
     name: 'FRONTEND',
     color: colors.blue,
-    cwd: path.join(rootDir, 'frontend'),
+    cwd: rootDir,
     command: nodeExe,
-    args: [fs.existsSync(frontendCli) ? frontendCli : 'node_modules/expo/bin/cli', 'start', '--web', '--port', '8081'],
+    args: ['scripts/serve-frontend.js'],
     port: 8081,
     url: 'http://localhost:8081',
   },

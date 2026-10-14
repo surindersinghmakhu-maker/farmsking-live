@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { AppSettingsController } from './app-settings.controller';
+import { AppSettingsController, PublicContactController } from './app-settings.controller';
 import { AppSettingsService } from './app-settings.service';
 
 @Module({
-  controllers: [AppSettingsController],
+  controllers: [AppSettingsController, PublicContactController],
   providers: [AppSettingsService],
   exports: [AppSettingsService],
 })

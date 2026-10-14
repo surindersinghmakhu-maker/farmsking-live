@@ -70,3 +70,15 @@ export class AppSettingsController {
   }
 }
 
+/** Public unauthenticated endpoint for website visitors & app public screens */
+@Controller('public-contact')
+export class PublicContactController {
+  constructor(private readonly appSettingsService: AppSettingsService) {}
+
+  @Get()
+  getSupportContact() {
+    return this.appSettingsService.getSupportContact();
+  }
+}
+
+

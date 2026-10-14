@@ -92,7 +92,7 @@ function RootNavigation() {
       if (currentGroup === '(partner)') {
         const hasPartnerAccess = userRoles.some(r => ['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(r));
         if (!hasPartnerAccess) router.replace('/(user)/(tabs)');
-      } else if (isAtRootOrIndex || inAuthGroup) {
+      } else if (inAuthGroup) {
         if (['BUSINESS_PARTNER', 'ADVISOR', 'FARM_ADVISOR', 'GARDEN_ADVISOR', 'TECHNICAL_TRAINER'].includes(user.role)) {
           router.replace('/(partner)/(tabs)');
         } else {

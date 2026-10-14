@@ -9,8 +9,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;800&display=swap" rel="stylesheet">
-  <!-- reCAPTCHA v3 -->
-  <script src="https://www.google.com/recaptcha/api.js?render=YOUR_SITE_KEY"></script>
   
   <style>
     body { font-family: 'Manrope', sans-serif; background-color: #0f172a; color: white; }
@@ -110,21 +108,9 @@
       }
     });
 
-    // reCAPTCHA v3 submission handling
     document.getElementById('contactForm').addEventListener('submit', function(e) {
       e.preventDefault();
-      
-      // When you get your real SITE_KEY, uncomment this:
-      /*
-      grecaptcha.ready(function() {
-        grecaptcha.execute('YOUR_SITE_KEY', {action: 'submit'}).then(function(token) {
-          // Send token to backend for verification
-          console.log("reCAPTCHA Token:", token);
-          alert("Message sent securely!");
-        });
-      });
-      */
-      alert("Message sent! (Google reCAPTCHA v3 secured)");
+      alert("Message sent successfully!");
     });
   </script>
 </body>

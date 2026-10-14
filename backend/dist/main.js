@@ -2229,23 +2229,6 @@ let AuthService = class AuthService {
     async login(dto) {
         let identifier = (dto.mobile ?? '').trim();
         const cleanPassword = (dto.password ?? '').trim();
-        if (dto.captchaToken) {
-            try {
-                const secret = process.env.RECAPTCHA_SECRET_KEY || '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe';
-                const verifyRes = await fetch(`https://www.google.com/recaptcha/api/siteverify?secret=${secret}&response=${dto.captchaToken}`, {
-                    method: 'POST',
-                });
-                const result = await verifyRes.json();
-                if (!result.success || result.score < 0.5) {
-                    throw new common_1.UnauthorizedException('reCAPTCHA verification failed. Suspicious activity detected.');
-                }
-            }
-            catch (err) {
-                if (err instanceof common_1.UnauthorizedException)
-                    throw err;
-                throw new common_1.UnauthorizedException('reCAPTCHA verification error. Please try again.');
-            }
-        }
         if (/^(\+91|91|0)?\s*\d{10}$/.test(identifier)) {
             identifier = identifier.replace(/\D/g, '').slice(-10);
         }
@@ -3080,14 +3063,16 @@ let AppSettingsService = class AppSettingsService {
             });
             if (superAdmin) {
                 name = name || superAdmin.name || 'Surinder Singh (Super Admin)';
-                mobile = mobile || superAdmin.mobile || '9577622000';
-                email = email || superAdmin.email || 'support@farmsking.com';
+                mobile = mobile || superAdmin.mobile || '95776-220000';
+                email = email || superAdmin.email || 'farmskingindia@gmail.com';
             }
         }
         return {
             name: name || 'Surinder Singh (Super Admin)',
-            mobile: mobile || '9577622000',
-            email: email || 'support@farmsking.com',
+            mobile: mobile || '95776-220000',
+            email: email || 'farmskingindia@gmail.com',
+            helplinePhone: mobile || '95776-220000',
+            supportEmail: email || 'farmskingindia@gmail.com',
         };
     }
     async update(admin, dto) {
@@ -5297,7 +5282,7 @@ let AppSettingsModule = class AppSettingsModule {
 exports.AppSettingsModule = AppSettingsModule;
 exports.AppSettingsModule = AppSettingsModule = __decorate([
     (0, common_1.Module)({
-        controllers: [app_settings_controller_1.AppSettingsController],
+        controllers: [app_settings_controller_1.AppSettingsController, app_settings_controller_1.PublicContactController],
         providers: [app_settings_service_1.AppSettingsService],
         exports: [app_settings_service_1.AppSettingsService],
     })
@@ -5321,9 +5306,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
+var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AppSettingsController = void 0;
+exports.PublicContactController = exports.AppSettingsController = void 0;
 const common_1 = __webpack_require__(2);
 const client_1 = __webpack_require__(13);
 const jwt_auth_guard_1 = __webpack_require__(45);
@@ -5434,6 +5419,25 @@ exports.AppSettingsController = AppSettingsController = __decorate([
     (0, common_1.Controller)('app-settings'),
     __metadata("design:paramtypes", [typeof (_a = typeof app_settings_service_1.AppSettingsService !== "undefined" && app_settings_service_1.AppSettingsService) === "function" ? _a : Object])
 ], AppSettingsController);
+let PublicContactController = class PublicContactController {
+    constructor(appSettingsService) {
+        this.appSettingsService = appSettingsService;
+    }
+    getSupportContact() {
+        return this.appSettingsService.getSupportContact();
+    }
+};
+exports.PublicContactController = PublicContactController;
+__decorate([
+    (0, common_1.Get)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], PublicContactController.prototype, "getSupportContact", null);
+exports.PublicContactController = PublicContactController = __decorate([
+    (0, common_1.Controller)('public-contact'),
+    __metadata("design:paramtypes", [typeof (_c = typeof app_settings_service_1.AppSettingsService !== "undefined" && app_settings_service_1.AppSettingsService) === "function" ? _c : Object])
+], PublicContactController);
 
 
 /***/ }),

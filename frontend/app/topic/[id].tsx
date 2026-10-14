@@ -36,7 +36,7 @@ const TOPIC_CONFIG: Record<
     bg: '#f0fdf4',
     lightBg: '#ecfdf5',
     tint: 'rgba(16,185,129,0.08)',
-    image: require('@/assets/images/icon_farming_new.png'),
+    image: require('@/assets/images/icon_farming_3d_clean.png'),
     badge: '🌾 SMART DIGITAL FARMING',
     subtitle: 'Empowering farmers with modern tools, high-yield seeds, and expert advisory.',
     details:
@@ -54,7 +54,7 @@ const TOPIC_CONFIG: Record<
     bg: '#fff1f2',
     lightBg: '#fdf2f8',
     tint: 'rgba(225,29,72,0.08)',
-    image: require('@/assets/images/icon_gardening_new.png'),
+    image: require('@/assets/images/icon_gardening_3d_clean.png'),
     badge: '🌸 URBAN & HOME GARDENING',
     subtitle: 'Everything you need to build and maintain a beautiful, blooming garden.',
     details:
@@ -72,7 +72,7 @@ const TOPIC_CONFIG: Record<
     bg: '#ecfeff',
     lightBg: '#f0f9ff',
     tint: 'rgba(6,182,212,0.08)',
-    image: require('@/assets/images/icon_cropdoctors_new.png'),
+    image: require('@/assets/images/icon_cropdoctors_3d_clean.png'),
     badge: '🩺 24/7 AI CROP DIAGNOSTICS',
     subtitle: 'Instant diagnosis and expert solutions for all your crop diseases.',
     details:
@@ -90,7 +90,7 @@ const TOPIC_CONFIG: Record<
     bg: '#ecfeff',
     lightBg: '#f0f9ff',
     tint: 'rgba(6,182,212,0.08)',
-    image: require('@/assets/images/icon_cropdoctors_new.png'),
+    image: require('@/assets/images/icon_cropdoctors_3d_clean.png'),
     badge: '🩺 24/7 AI CROP DIAGNOSTICS',
     subtitle: 'Instant diagnosis and expert solutions for all your crop diseases.',
     details:

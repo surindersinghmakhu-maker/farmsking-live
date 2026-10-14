@@ -13,9 +13,9 @@ export default function ContactUsPage() {
   const isDesktop = width > 768;
   const { data: support, isLoading } = useSupportContact();
 
-  const phone = support?.mobile || '+91-9876543210';
+  const phone = support?.mobile || '95776-220000';
   const whatsapp = phone;
-  const email = support?.email || 'support@farmsking.in';
+  const email = support?.email || 'farmskingindia@gmail.com';
   const address = 'FarmsKing AgriTech Pvt Ltd\nMakhu, Punjab, India - 142044';
 
   return (

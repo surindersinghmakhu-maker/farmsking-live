@@ -1,2 +1,2 @@
 // Auto-generated build version file
-export const APP_VERSION = '2.0.9';
+export const APP_VERSION = '2.0.10';

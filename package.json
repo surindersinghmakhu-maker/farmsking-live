@@ -1,12 +1,13 @@
 {
   "name": "farmsking-monorepo",
-  "version": "2.0.9",
+  "version": "2.0.10",
   "private": true,
   "scripts": {
     "build": "node scripts/build.js",
     "start": "node scripts/start.js",
     "build:web": "node frontend/build.js",
-    "deploy": "node scripts/deploy.js"
+    "deploy": "node scripts/deploy.js",
+    "deploye": "node scripts/deploy.js"
   },
   "dependencies": {
     "@google/genai": "^2.25.0",

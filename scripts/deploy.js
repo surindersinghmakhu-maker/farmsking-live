@@ -23,7 +23,7 @@ console.log('🚀 Starting Build and Deployment to GitHub and Hostinger...');
 const backendOk = run('npm run build:local', './backend', true);
 if (!backendOk) {
   console.log('⚡ Prisma query engine dll is locked by active process; building NestJS directly...');
-  run('npx nest build', './backend');
+  run('node ./node_modules/@nestjs/cli/bin/nest.js build', './backend');
 }
 
 // 2. Build Frontend Web
@@ -34,8 +34,8 @@ run('node admin/build.js');
 
 // 3. Git Operations
 run('git add .');
-run('git commit -m "deploy: automatic live update release"');
-run('git push origin HEAD:main');
-run('git push hostinger HEAD:main');
+run('git commit -m "deploy: automatic live update release"', '.', true);
+run('git push origin HEAD:main', '.', true);
+run('git push hostinger HEAD:main', '.', true);
 
 console.log('✅ All done! Deployed to Hostinger live server safely.');

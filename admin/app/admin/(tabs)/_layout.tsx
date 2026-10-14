@@ -27,6 +27,8 @@ import { MobilePillarsMenuModal } from '@/components/MobilePillarsMenuModal';
 import { ADMIN_PILLARS, detectPillarFromRoute, NavigationPillar, SubTabItem } from '@/constants/navigationPillars';
 
 import { Ionicons } from '@expo/vector-icons';
+import { PortalGuard } from '@/src/portals/PortalGuard';
+import { UniversalCommandPalette } from '@/src/portals/UniversalCommandPalette';
 
 const theme = RoleThemes.FARMER;
 
@@ -349,7 +351,8 @@ export default function TabLayout() {
   const isDarkTheme = themeMode === 'DARK';
 
   return (
-    <View style={[layoutStyles.rootContainer, { backgroundColor: colors.bg, flexDirection: isDesktop ? 'row' : 'column' }]}>
+    <PortalGuard portalId="ADMIN_HQ">
+      <View style={[layoutStyles.rootContainer, { backgroundColor: colors.bg, flexDirection: isDesktop ? 'row' : 'column' }]}>
       {/* 💻 DESKTOP 2-TIER EXECUTIVE SIDEBAR (Visible on screens >= 768px) */}
       {isDesktop && (
         <View
@@ -1296,7 +1299,9 @@ export default function TabLayout() {
         <AdminLiveToastNotification />
       </View>
     </View>
-  );
+    <UniversalCommandPalette activePortalId="ADMIN_HQ" />
+  </PortalGuard>
+);
 }
 
 const desktopStyles = StyleSheet.create({

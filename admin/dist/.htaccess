@@ -39,6 +39,13 @@
   RewriteRule ^dose/?$ dose.html [L,NC]
   RewriteRule ^my/?$ my.html [L,NC]
 
+  # FarmsKing URL-Based Multi-Portal SPA Routing
+  RewriteRule ^garden(/.*)?$ /index.html [L]
+  RewriteRule ^shop(/.*)?$ /index.html [L]
+  RewriteRule ^farmer(/.*)?$ /index.html [L]
+  RewriteRule ^staff(/.*)?$ /index.html [L]
+  RewriteRule ^admin(/.*)?$ /index.html [L]
+
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d

@@ -39,6 +39,8 @@ const queryClient = new QueryClient({
   },
 });
 
+import { PORTALS, getPortalForRole, isRoleAllowedInPortal, PortalId, getSavedPortal } from '@/src/portals/portalConfig';
+
 function RootNavigation() {
   const { user, isLoading } = useAuth();
   const segments = useSegments();
@@ -50,7 +52,7 @@ function RootNavigation() {
     const currentGroup = segments[0] as string;
     const inAuthGroup = currentGroup === '(auth)';
     const isRootRoute = (segments as string[]).length === 0 || ((segments as string[]).length === 1 && ((segments[0] as any) === 'index' || (segments[0] as any) === ''));
-    const isPublicRoute = isRootRoute || currentGroup === 'topic' || currentGroup === 'seo' || currentGroup === 'dose' || currentGroup === 'doses' || currentGroup === 'my' || currentGroup === 'you' || currentGroup === 'shop' || currentGroup === 'support' || currentGroup === 'contact-us';
+    const isPublicRoute = isRootRoute || currentGroup === 'topic' || currentGroup === 'seo' || currentGroup === 'dose' || currentGroup === 'doses' || currentGroup === 'my' || currentGroup === 'you' || currentGroup === 'public-store' || currentGroup === 'support' || currentGroup === 'contact-us';
     const isStaffSetupRoute = segments.join('/') === 'staff-profile-setup';
 
     const STAFF_ROLES = ['TECHNICAL_TRAINER', 'FARM_ADVISOR', 'DOCTOR'];
@@ -68,12 +70,29 @@ function RootNavigation() {
         return;
       }
 
-      const hasAdminAccess = userRoles.some(r => ['SUPER_ADMIN', 'ADMIN', 'OPERATOR', 'MANAGER', 'SUPERVISOR'].includes(r));
-      if (!hasAdminAccess) {
-        alert('You are not authorized to access the Admin Panel.');
-        router.replace('/(auth)/login');
-      } else if (inAuthGroup || isRootRoute || currentGroup !== 'admin') {
-        router.replace('/admin/(tabs)' as any);
+      // ─── URL-BASED PORTAL ROUTING ENGINE ────────────────────────────
+      const PORTAL_GROUPS = ['admin', 'garden', 'shop', 'farmer', 'staff'];
+      const targetPortalId = getPortalForRole(user.role);
+      const targetPortal = PORTALS[targetPortalId];
+
+      if (PORTAL_GROUPS.includes(currentGroup)) {
+        const activePortalId = (currentGroup === 'admin' ? 'ADMIN_HQ' : currentGroup.toUpperCase()) as PortalId;
+        const allowed = isRoleAllowedInPortal(user.role, activePortalId);
+        if (!allowed) {
+          console.warn(`[RootRouter] Role ${user.role} unauthorized in ${currentGroup}. Redirecting to ${targetPortal.urlPrefix}`);
+          router.replace(targetPortal.urlPrefix as any);
+        }
+      } else if (inAuthGroup || isRootRoute) {
+        // First check if user had a saved portal preference that they are authorized for
+        getSavedPortal().then((saved) => {
+          if (saved && isRoleAllowedInPortal(user.role, saved)) {
+            router.replace(PORTALS[saved].urlPrefix as any);
+          } else {
+            router.replace(targetPortal.urlPrefix as any);
+          }
+        }).catch(() => {
+          router.replace(targetPortal.urlPrefix as any);
+        });
       }
     }
   }, [user, isLoading, segmentsPath]);
@@ -84,11 +103,15 @@ function RootNavigation() {
 
   return (
     <Stack>
-      <Stack.Screen name="index" options={{ headerShown: false, title: 'FarmsKing - India\'s Agriculture Platform' }} />
-      <Stack.Screen name="admin" options={{ headerShown: false, title: 'FarmsKing Admin' }} />
+      <Stack.Screen name="index" options={{ headerShown: false, title: 'FarmsKing Command Center' }} />
+      <Stack.Screen name="admin" options={{ headerShown: false, title: 'FarmsKing Command HQ' }} />
+      <Stack.Screen name="garden" options={{ headerShown: false, title: 'GreenSpace™ Garden Portal' }} />
+      <Stack.Screen name="shop" options={{ headerShown: false, title: 'FarmsKing Commerce' }} />
+      <Stack.Screen name="farmer" options={{ headerShown: false, title: 'Agri-Hub Portal' }} />
+      <Stack.Screen name="staff" options={{ headerShown: false, title: 'Operations Desk' }} />
       <Stack.Screen name="(auth)" options={{ headerShown: false, title: 'FarmsKing Login' }} />
+      <Stack.Screen name="public-store" options={{ headerShown: false, title: 'FarmsKing Store' }} />
       <Stack.Screen name="seo" options={{ headerShown: false, title: 'FarmsKing' }} />
-      <Stack.Screen name="shop" options={{ headerShown: false, title: 'FarmsKing Store' }} />
       <Stack.Screen name="support" options={{ headerShown: false, title: 'FarmsKing Support' }} />
       <Stack.Screen name="contact-us" options={{ headerShown: false, title: 'Contact Us' }} />
       <Stack.Screen name="dose" options={{ headerShown: false, title: 'FarmsKing' }} />

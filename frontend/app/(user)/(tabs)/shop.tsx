@@ -2240,16 +2240,16 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
           <LinearGradient colors={['#0a2417', '#0f3923', '#15803d']} style={styles.hero}>
             <View style={{ width: '100%', maxWidth: 1200, alignSelf: 'center', gap: 12 }}>
               <View style={styles.headerTop}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                  <View style={styles.logoBadgeWrap}>
-                    <BrandLogo size={42} useFastBundledOnly={true} useHdQuality={true} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <View style={styles.storeBadgeWrap}>
+                    <Ionicons name="storefront" size={24} color="#4ade80" />
                   </View>
                   <View>
                     <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#86efac', letterSpacing: 0.2, marginBottom: 2 }}>
                       👋 Welcome, {user?.name || 'Farmer'}
                     </Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={styles.heroTitle}>FarmsKing Store</Text>
+                      <Text style={styles.heroTitle}>Official Agri Store</Text>
                       <View style={styles.verifiedTag}>
                         <Ionicons name="checkmark-circle" size={12} color="#facc15" />
                         <Text style={styles.verifiedTagText}>Verified Official</Text>
@@ -5861,7 +5861,8 @@ const styles = StyleSheet.create({
 
   hero: { paddingTop: 14, paddingBottom: 10, paddingHorizontal: SPACING.md, gap: 10 },
   headerTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  logoBadgeWrap: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#facc15' },
+  storeBadgeWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(34, 197, 94, 0.22)', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: 'rgba(74, 222, 128, 0.45)' },
+  logoBadgeWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(34, 197, 94, 0.22)', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: 'rgba(74, 222, 128, 0.45)' },
   heroTitle: { color: '#ffffff', fontSize: 19, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
   verifiedTag: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(250, 204, 21, 0.2)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: 'rgba(250, 204, 21, 0.4)' },
   verifiedTagText: { fontSize: 9.5, fontFamily: FONT.bold, color: '#facc15' },

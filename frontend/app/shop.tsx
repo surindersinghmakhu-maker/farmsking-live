@@ -2260,26 +2260,66 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
       ) : (
         /* 🛒 CUSTOMER STOREFRONT VIEW & EMBEDDED DASHBOARD CART */
         <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
-          {/* Search Box - Accessible to ALL Visitors (With or Without Login) */}
-          <View style={styles.storeSearchSection}>
-            <View style={styles.storeSearchContainer}>
-              <View style={styles.storeSearchBox}>
-                <Ionicons name="search" size={20} color="#059669" />
+          {/* Official Agri Store Hero Header (Accessible Inside & Outside Login) */}
+          <LinearGradient colors={['#0a2417', '#0f3923', '#15803d']} style={styles.hero}>
+            <View style={{ width: '100%', maxWidth: 1200, alignSelf: 'center', gap: 12 }}>
+              <View style={styles.headerTop}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <View style={styles.storeBadgeWrap}>
+                    <Ionicons name="storefront" size={24} color="#4ade80" />
+                  </View>
+                  <View>
+                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#86efac', letterSpacing: 0.2, marginBottom: 2 }}>
+                      {user ? `👋 Welcome, ${user.name || 'Farmer'}` : '🌾 Certified Direct Agri Marketplace'}
+                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={styles.heroTitle}>Official Agri Store</Text>
+                      <View style={styles.verifiedTag}>
+                        <Ionicons name="checkmark-circle" size={12} color="#facc15" />
+                        <Text style={styles.verifiedTagText}>Verified Official</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.heroSubtitle}>100% Factory Genuine Seeds, Fertilizers & Machinery</Text>
+                  </View>
+                </View>
+
+                <View style={styles.headerActions}>
+                  <TouchableOpacity
+                    style={styles.cartIconBtn}
+                    activeOpacity={0.85}
+                    onPress={() => {
+                      tap();
+                      setActiveSubTab('CHECKOUT');
+                    }}
+                  >
+                    <Ionicons name="bag-handle" size={21} color="#ffffff" />
+                    {itemCount > 0 && (
+                      <View style={styles.cartBadge}>
+                        <Text style={styles.cartBadgeText}>{itemCount}</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Quick Search Input Box */}
+              <View style={styles.searchBarBox}>
+                <Ionicons name="search" size={18} color="#15803d" />
                 <TextInput
-                  style={styles.storeSearchInput}
-                  placeholder="Search products: Seeds, Fertilizers, Sprayers, Bio..."
-                  placeholderTextColor="#64748b"
+                  style={styles.searchInput}
+                  placeholder="Search: Seeds, Fertilizers, Insecticides, Spray Pumps..."
+                  placeholderTextColor="#94a3b8"
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                 />
                 {searchQuery ? (
-                  <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                    <Ionicons name="close-circle" size={18} color="#94a3b8" />
+                  <TouchableOpacity onPress={() => setSearchQuery('')}>
+                    <Ionicons name="close-circle" size={16} color="#64748b" />
                   </TouchableOpacity>
                 ) : null}
               </View>
             </View>
-          </View>
+          </LinearGradient>
 
           {/* Sub Nav Bar (Catalog, Cart, My Orders) */}
           <View style={styles.storeNavTabsBar}>
@@ -5933,16 +5973,17 @@ const styles = StyleSheet.create({
 
   hero: { paddingTop: 14, paddingBottom: 10, paddingHorizontal: SPACING.md, gap: 10 },
   headerTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  logoBadgeWrap: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#facc15' },
-  heroTitle: { color: '#0f172a', fontSize: 19, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
+  storeBadgeWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(34, 197, 94, 0.22)', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: 'rgba(74, 222, 128, 0.45)' },
+  logoBadgeWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(34, 197, 94, 0.22)', alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: 'rgba(74, 222, 128, 0.45)' },
+  heroTitle: { color: '#ffffff', fontSize: 19, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
   verifiedTag: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(250, 204, 21, 0.2)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: 'rgba(250, 204, 21, 0.4)' },
-  verifiedTagText: { fontSize: 9.5, fontFamily: FONT.bold, color: '#b45309' },
-  heroSubtitle: { color: '#475569', fontSize: 11, fontFamily: FONT.medium, marginTop: 2 },
+  verifiedTagText: { fontSize: 9.5, fontFamily: FONT.bold, color: '#facc15' },
+  heroSubtitle: { color: 'rgba(255,255,255,0.85)', fontSize: 11, fontFamily: FONT.medium, marginTop: 2 },
   headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  cartIconBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#e2e8f0' },
+  cartIconBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
   cartBadge: { position: 'absolute', top: -3, right: -3, backgroundColor: '#ef4444', minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4, borderWidth: 1.5, borderColor: '#ffffff' },
-  cartBadgeText: { color: '#0f172a', fontSize: 9.5, fontFamily: FONT.extraBold },
-  searchBarBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff', borderRadius: RADIUS.md, paddingHorizontal: 12, height: 44, gap: 8, borderWidth: 1, borderColor: '#e2e8f0' },
+  cartBadgeText: { color: '#ffffff', fontSize: 9.5, fontFamily: FONT.extraBold },
+  searchBarBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff', borderRadius: RADIUS.md, paddingHorizontal: 12, height: 44, gap: 8 },
   searchInput: { flex: 1, fontFamily: FONT.regular, fontSize: 13, color: '#0f172a' },
   trustRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', backgroundColor: '#ffffff', paddingVertical: 6, paddingHorizontal: 10, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#e2e8f0' },
   trustItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },

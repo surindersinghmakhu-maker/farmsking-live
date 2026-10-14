@@ -1,4 +1,7 @@
-import { createContext, useContext, useMemo, useState, ReactNode } from 'react';
+import { createContext, useContext, useMemo, useState, useEffect, useRef, ReactNode } from 'react';
+import { getItemAsync, setItemAsync, deleteItemAsync } from '../lib/storage';
+
+const CART_STORAGE_KEY = 'farmsking_user_cart';
 
 export interface CartItem {
   productId: string;
@@ -30,6 +33,38 @@ const CartContext = createContext<CartContextValue | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const isLoaded = useRef(false);
+
+  // Load persisted cart on app mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const saved = await getItemAsync(CART_STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            setItems(parsed);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load cart from storage', err);
+      } finally {
+        isLoaded.current = true;
+      }
+    })();
+  }, []);
+
+  // Save cart whenever items change
+  useEffect(() => {
+    if (!isLoaded.current) return;
+    (async () => {
+      try {
+        await setItemAsync(CART_STORAGE_KEY, JSON.stringify(items));
+      } catch (err) {
+        console.error('Failed to save cart to storage', err);
+      }
+    })();
+  }, [items]);
 
   const addItem: CartContextValue['addItem'] = (item, quantity = 1) => {
     setItems((prev) => {
@@ -48,7 +83,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const removeItem = (productId: string) => setItems((prev) => prev.filter((i) => i.productId !== productId));
-  const clearCart = () => setItems([]);
+  const clearCart = () => {
+    setItems([]);
+    deleteItemAsync(CART_STORAGE_KEY).catch(() => {});
+  };
 
   const value = useMemo<CartContextValue>(() => {
     let rawTotal = 0;

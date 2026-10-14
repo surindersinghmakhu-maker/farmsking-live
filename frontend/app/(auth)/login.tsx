@@ -12,7 +12,7 @@ import {
   useWindowDimensions,
   Image,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as AuthSession from 'expo-auth-session';
@@ -41,7 +41,18 @@ export default function LoginScreen() {
   const { login, firebaseLogin, googleLogin } = useAuth();
   const { data: appSettings } = useAppSettings();
   const router = useRouter();
+  const { redirect } = useLocalSearchParams<{ redirect?: string }>();
   const otpInputRef = useRef<TextInput>(null);
+
+  const handleSuccessNavigation = (isProfileIncomplete = false) => {
+    if (isProfileIncomplete) {
+      router.replace('/farmer-profile-setup');
+    } else if (redirect) {
+      router.replace(redirect as any);
+    } else {
+      router.replace('/(tabs)' as any);
+    }
+  };
 
   const [activeTab, setActiveTab] = useState<LoginTab>('password');
   const [mobile, setMobile] = useState('');
@@ -166,11 +177,7 @@ export default function LoginScreen() {
             accessToken: response.authentication!.accessToken,
           });
 
-          if (res?.isProfileIncomplete) {
-            router.replace('/farmer-profile-setup');
-          } else {
-            router.replace('/(tabs)' as any);
-          }
+          handleSuccessNavigation(Boolean(res?.isProfileIncomplete));
         } catch (err: any) {
           setError(err?.response?.data?.message ?? err?.message ?? 'Google Sign-In failed.');
         } finally {
@@ -251,7 +258,7 @@ export default function LoginScreen() {
         const credential = await confirmationResult.confirm(cleanCode);
         const idToken = await credential.user.getIdToken();
         await firebaseLogin(idToken);
-        router.replace('/(tabs)' as any);
+        handleSuccessNavigation();
       } else {
         throw new Error('Firebase Confirmation Result is missing. Please request a new OTP.');
       }
@@ -286,7 +293,7 @@ export default function LoginScreen() {
 
     try {
       await login({ mobile: mobile.trim(), password: password.trim(), captchaToken });
-      router.replace('/(tabs)' as any);
+      handleSuccessNavigation();
     } catch (err: any) {
       const isNet = err?.message?.includes('Network Error') || err?.code === 'ERR_NETWORK';
       setError(isNet ? 'Network error! Could not connect. Please check your internet.' : (err?.response?.data?.message ?? err?.message ?? 'Login failed.'));
@@ -352,6 +359,19 @@ export default function LoginScreen() {
 
           {/* Card */}
           <View style={[styles.card, premiumShadow('rgba(0,0,0,0.07)', 'lg')]}>
+            {redirect ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#ecfdf5', borderWidth: 1, borderColor: '#a7f3d0', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 16 }}>
+                <Ionicons name="cart" size={22} color="#059669" />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#065f46' }}>
+                    Your shopping cart is safely saved!
+                  </Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#047857', marginTop: 1 }}>
+                    Please login or create an account to proceed with your order.
+                  </Text>
+                </View>
+              </View>
+            ) : null}
             <Text style={styles.title}>Welcome Back 👋</Text>
             <Text style={styles.subtitle}>Sign in to continue to your account</Text>
 
@@ -536,7 +556,11 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             {/* Register */}
-            <TouchableOpacity style={styles.registerRow} onPress={() => router.push('/(auth)/register')} activeOpacity={0.85}>
+            <TouchableOpacity
+              style={styles.registerRow}
+              onPress={() => router.push({ pathname: '/(auth)/register', params: redirect ? { redirect } : undefined } as any)}
+              activeOpacity={0.85}
+            >
               <Text style={styles.registerText}>Don't have an account? </Text>
               <Text style={styles.registerLink}>Create one →</Text>
             </TouchableOpacity>

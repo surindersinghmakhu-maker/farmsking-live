@@ -55,5 +55,18 @@ export class AppSettingsController {
   updateSeo(@Body() dto: any) {
     return this.appSettingsService.updateSeo(dto);
   }
+
+  /** Get all active system integrations (SMS, Gateway, WhatsApp, Product, Social, OTP, About) */
+  @Get('integrations')
+  getIntegrations() {
+    return this.appSettingsService.getIntegrations();
+  }
+
+  /** Update system integrations (Super Admin / Admin only) */
+  @Roles(Role.SUPER_ADMIN, Role.ADMIN)
+  @Patch('integrations')
+  updateIntegrations(@CurrentUser() user: AuthUser, @Body() payload: any) {
+    return this.appSettingsService.updateIntegrations(user, payload);
+  }
 }
 

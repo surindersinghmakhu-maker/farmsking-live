@@ -1,14 +1,26 @@
 const { spawn } = require('child_process');
 const path = require('path');
-const http = require('http');
+const fs = require('fs');
 
 const rootDir = path.resolve(__dirname, '..');
 
-// Set ultra-fast environment flags to bypass slow remote telemetry and package checks
+// Add D:\nodejs to PATH if exists
+const localNodeDir = 'D:\\nodejs';
+if (fs.existsSync(localNodeDir) && !process.env.PATH.includes(localNodeDir)) {
+  process.env.PATH = `${localNodeDir};${process.env.PATH}`;
+}
+
+const nodeExe = fs.existsSync(path.join(localNodeDir, 'node.exe'))
+  ? path.join(localNodeDir, 'node.exe')
+  : (process.platform === 'win32' ? 'node.exe' : 'node');
+
+// Ultra-fast environment configuration: bypass telemetry, remote checks, and allocate balanced 2GB RAM
+process.env.NODE_OPTIONS = '--max-old-space-size=2048';
 process.env.EXPO_NO_TELEMETRY = '1';
 process.env.EXPO_OFFLINE = '1';
 process.env.CI = '1';
 process.env.EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK = '1';
+process.env.FAST_REFRESH = 'true';
 
 const colors = {
   reset: '\x1b[0m',
@@ -22,14 +34,17 @@ const colors = {
 };
 
 console.log(`${colors.bright}${colors.green}👑 FarmsKing Fast Multi-Server Launcher${colors.reset}`);
-console.log(`${colors.cyan}⚡ Launching Backend (3000), Frontend (8081), and Admin (8082) in parallel...${colors.reset}\n`);
+console.log(`${colors.cyan}⚡ Launching Backend (3000), Frontend (8081), and Admin (8082) in parallel at maximum speed...${colors.reset}\n`);
+
+const frontendCli = path.join(rootDir, 'frontend', 'node_modules', 'expo', 'bin', 'cli');
+const adminCli = path.join(rootDir, 'admin', 'node_modules', 'expo', 'bin', 'cli');
 
 const services = [
   {
     name: 'BACKEND ',
     color: colors.green,
     cwd: path.join(rootDir, 'backend'),
-    command: process.platform === 'win32' ? 'node.exe' : 'node',
+    command: nodeExe,
     args: ['dist/main.js'],
     port: 3000,
     url: 'http://localhost:3000/api/v1',
@@ -38,8 +53,8 @@ const services = [
     name: 'FRONTEND',
     color: colors.blue,
     cwd: path.join(rootDir, 'frontend'),
-    command: process.platform === 'win32' ? 'npx.cmd' : 'npx',
-    args: ['expo', 'start', '--web', '--port', '8081'],
+    command: nodeExe,
+    args: [fs.existsSync(frontendCli) ? frontendCli : 'node_modules/expo/bin/cli', 'start', '--web', '--port', '8081'],
     port: 8081,
     url: 'http://localhost:8081',
   },
@@ -47,8 +62,8 @@ const services = [
     name: 'ADMIN   ',
     color: colors.magenta,
     cwd: path.join(rootDir, 'admin'),
-    command: process.platform === 'win32' ? 'npx.cmd' : 'npx',
-    args: ['expo', 'start', '--web', '--port', '8082'],
+    command: nodeExe,
+    args: [fs.existsSync(adminCli) ? adminCli : 'node_modules/expo/bin/cli', 'start', '--web', '--port', '8082'],
     port: 8082,
     url: 'http://localhost:8082',
   },
@@ -69,7 +84,7 @@ function startService(svc) {
   const child = spawn(svc.command, svc.args, {
     cwd: svc.cwd,
     env: { ...process.env },
-    shell: true,
+    shell: false,
   });
 
   child.stdout.on('data', (data) => {
@@ -117,7 +132,6 @@ function cleanup() {
 
 process.on('SIGINT', cleanup);
 process.on('SIGTERM', cleanup);
-process.on('exit', cleanup);
 
 // Start all services in parallel
 killExistingPorts().then(() => {
@@ -130,4 +144,3 @@ killExistingPorts().then(() => {
   console.log(`${colors.bright}${colors.green}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${colors.reset}`);
   console.log(`${colors.cyan}Tip: Press Ctrl + C at any time to stop all servers simultaneously.${colors.reset}\n`);
 });
-

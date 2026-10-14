@@ -247,11 +247,79 @@ export default function Root({ children }: PropsWithChildren) {
               src: url('https://cdn.jsdelivr.net/npm/react-native-vector-icons@10.0.0/Fonts/Entypo.ttf') format('truetype');
             }
 
-            * {
+            /* ─── Global Responsive Layout Reset ─────────────────────────────────
+               Ensures the entire React Native Web app shell is always "fit to
+               screen": no horizontal scroll, 100% viewport height used, and
+               flex containers fill all available space automatically.
+               ──────────────────────────────────────────────────────────────── */
+            *, *::before, *::after {
               box-sizing: border-box;
             }
+
+            /* Make html & body fill the full viewport */
+            html, body {
+              width: 100%;
+              height: 100%;
+              margin: 0;
+              padding: 0;
+              overflow: hidden;
+            }
+
+            /* Expo Web root mounts into #root — it must be a full-height flex column */
+            #root {
+              display: flex;
+              flex-direction: column;
+              width: 100%;
+              height: 100%;
+              overflow: hidden;
+            }
+
+            /* All top-level Expo RN View divs should stretch */
+            #root > div {
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              min-height: 0;
+              overflow: hidden;
+            }
+
+            /* Scrollable areas inside pages should scroll, not the page itself */
+            .r-overflow-scroll, [class*='scrollView'], [data-testid='scroll-view'] {
+              overflow-y: auto !important;
+              overflow-x: hidden !important;
+              -webkit-overflow-scrolling: touch;
+            }
+
+            /* Prevent any stray element from causing horizontal page scroll */
+            body > div {
+              max-width: 100vw;
+              overflow-x: hidden;
+            }
+
+            /* Typography baseline */
             body, div, span, p, h1, h2, h3, h4, h5, h6, input, button, textarea {
               font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+            }
+
+            /* Smooth scrolling everywhere */
+            * {
+              scroll-behavior: smooth;
+            }
+
+            /* Hide native scrollbar on webkit (keeps the UI clean on desktop) */
+            ::-webkit-scrollbar {
+              width: 5px;
+              height: 5px;
+            }
+            ::-webkit-scrollbar-track {
+              background: rgba(0, 0, 0, 0.1);
+            }
+            ::-webkit-scrollbar-thumb {
+              background: rgba(0, 255, 135, 0.3);
+              border-radius: 10px;
+            }
+            ::-webkit-scrollbar-thumb:hover {
+              background: rgba(0, 255, 135, 0.55);
             }
           `
         }} />

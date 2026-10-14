@@ -10,7 +10,6 @@ import { FONT, RADIUS, premiumShadow } from '@/constants/theme';
 import { useAppSettings, useUpdateAppSettings } from '@/src/hooks/useAppSettings';
 import { Avatar } from '@/src/components/Avatar';
 import { SuperAdminExpenseCategoriesModal } from '@/components/SuperAdminExpenseCategoriesModal';
-import { SwitchDashboardSection } from '@/src/components/SwitchDashboardSection';
 import { UserGuidesModal, SuperAdminWorkspaceModal, AdminInfoModal } from './more';
 import { ADMIN_PILLARS, NavigationPillar, SubTabItem } from '@/constants/navigationPillars';
 import { useExecutiveTheme } from '@/src/store/theme-context';
@@ -77,26 +76,74 @@ export default function AdminMoreScreen() {
   return (
     <>
       <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} showsVerticalScrollIndicator={false}>
-        {/* Hero Profile Banner */}
-        <LinearGradient colors={['#04140a', '#020d06']} style={styles.hero}>
-          <View style={styles.avatarCircle}>
-            <Ionicons name="shield-checkmark" size={32} color="#00ff87" />
-          </View>
-          <Text style={styles.name}>{user?.name ?? 'Admin User'}</Text>
-          <View style={styles.roleTag}>
-            <Text style={styles.roleTagText}>👑 {user?.role ?? role ?? 'ADMIN'}</Text>
-          </View>
-          <View style={styles.kingIdBadge}>
-            <Ionicons name="key-outline" size={11} color="#ffffff" />
-            <Text style={styles.kingIdText}>
-              KING ID: {user?.kingId ?? 'FK-ADMIN'}{getCleanMobile(user?.mobile) ? ` · 📞 ${getCleanMobile(user?.mobile)}` : ''}
-            </Text>
-          </View>
-        </LinearGradient>
-
         <View style={styles.body}>
-          {/* Switch Role / Dashboard Quick Section */}
-          <SwitchDashboardSection />
+          {/* 🌟 Compact 1-2 Rows Executive User Card */}
+          <View
+            style={[
+              styles.compactUserCard,
+              isLight && styles.compactUserCardLight,
+            ]}
+          >
+            <LinearGradient
+              colors={isLight ? ['#ffffff', '#f8fafc'] : ['rgba(4, 20, 10, 0.95)', 'rgba(2, 13, 6, 0.95)']}
+              style={styles.compactUserGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              {/* Row 1: Avatar, Name + Role Tag + Quick Logout */}
+              <View style={styles.userRow1}>
+                <View style={[styles.compactAvatar, isLight && styles.compactAvatarLight]}>
+                  <Ionicons name="shield-checkmark" size={17} color={isLight ? '#16a34a' : '#00ff87'} />
+                </View>
+
+                <View style={styles.userInfoCol}>
+                  <View style={styles.userNameLine}>
+                    <Text style={[styles.compactName, isLight && { color: '#0f172a' }]} numberOfLines={1}>
+                      {user?.name ?? 'Admin User'}
+                    </Text>
+                    <View style={[styles.compactRoleTag, isLight && styles.compactRoleTagLight]}>
+                      <Text style={[styles.compactRoleText, isLight && { color: '#16a34a' }]}>
+                        👑 {user?.role ?? role ?? 'ADMIN'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Row 2: King ID, Phone & Online Badge */}
+                  <View style={styles.userSubRow}>
+                    <View style={[styles.kingIdPill, isLight && styles.kingIdPillLight]}>
+                      <Ionicons name="key-outline" size={10} color={isLight ? '#16a34a' : '#00ff87'} />
+                      <Text style={[styles.compactKingText, isLight && { color: '#475569' }]}>
+                        ID: {user?.kingId ?? 'FK-ADMIN'}
+                      </Text>
+                    </View>
+
+                    {getCleanMobile(user?.mobile) ? (
+                      <View style={[styles.phonePill, isLight && styles.phonePillLight]}>
+                        <Ionicons name="call-outline" size={10} color={isLight ? '#2563eb' : '#38bdf8'} />
+                        <Text style={[styles.compactKingText, isLight && { color: '#475569' }]}>
+                          {getCleanMobile(user?.mobile)}
+                        </Text>
+                      </View>
+                    ) : null}
+
+                    <View style={styles.liveIndicator}>
+                      <View style={styles.liveDot} />
+                      <Text style={[styles.liveText, isLight && { color: '#16a34a' }]}>Active</Text>
+                    </View>
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.quickLogoutBtn, isLight && styles.quickLogoutBtnLight]}
+                  activeOpacity={0.7}
+                  onPress={() => logout()}
+                  accessibilityLabel="Logout"
+                >
+                  <Ionicons name="log-out-outline" size={16} color="#dc2626" />
+                </TouchableOpacity>
+              </View>
+            </LinearGradient>
+          </View>
 
           {/* Quick Tool Search Bar */}
           <View style={styles.searchBar}>
@@ -183,45 +230,12 @@ export default function AdminMoreScreen() {
             );
           })}
 
-          {/* ⚙️ Dedicated Direct Settings Button (Requested by User) */}
-          <View style={styles.section}>
-            <TouchableOpacity
-              style={[
-                styles.sectionHeader,
-                {
-                  backgroundColor: isLight ? '#f0fdf4' : 'rgba(34, 197, 94, 0.1)',
-                  borderColor: isLight ? 'rgba(22, 163, 74, 0.3)' : 'rgba(34, 197, 94, 0.35)',
-                  borderWidth: 1,
-                  borderRadius: RADIUS.md,
-                  paddingVertical: 10,
-                  paddingHorizontal: 12,
-                },
-              ]}
-              activeOpacity={0.8}
-              onPress={() => router.push('/admin/(tabs)/super-settings')}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-                <View style={[styles.rowIconBg, { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.12)' : 'rgba(34, 197, 94, 0.2)' }]}>
-                  <Ionicons name="settings-outline" size={18} color={isLight ? '#16a34a' : '#22c55e'} />
-                </View>
-                <View>
-                  <Text style={[styles.sectionTitle, isLight && { color: '#0f172a' }]}>Settings</Text>
-                  <Text style={[styles.rowSubLabel, isLight && { color: '#64748b' }]}>Platform Config, Master Toggles & Security</Text>
-                </View>
-              </View>
-              <View style={[styles.pillarBadge, { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.15)' : 'rgba(34, 197, 94, 0.2)' }]}>
-                <Text style={[styles.pillarBadgeText, { color: isLight ? '#16a34a' : '#22c55e' }]}>Config</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={16} color={isLight ? '#16a34a' : '#22c55e'} />
-            </TouchableOpacity>
-          </View>
-
-          {/* 🛠️ C-PANEL QUICK UTILITIES */}
+          {/* 🛠️ SYSTEM QUICK UTILITIES */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
                 <View style={[styles.pillarHeaderDot, { backgroundColor: '#6366f1' }]} />
-                <Text style={styles.sectionTitle}>C-PANEL UTILITIES & TOOLS</Text>
+                <Text style={styles.sectionTitle}>SYSTEM UTILITIES & TOOLS</Text>
               </View>
             </View>
 
@@ -346,46 +360,141 @@ export default function AdminMoreScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020d06' },
-  hero: {
-    paddingTop: Platform.OS === 'web' ? 36 : 50,
-    paddingBottom: 22,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-  },
-  avatarCircle: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: '#334155',
-    alignItems: 'center',
-    justifyContent: 'center',
+  container: { flex: 1, backgroundColor: '#020d06', ...(typeof window !== 'undefined' ? { height: '100%', overflow: 'hidden' } as any : {}) },
+  body: { padding: 10 },
+  compactUserCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+    overflow: 'hidden',
     marginBottom: 10,
-    borderWidth: 2,
-    borderColor: '#10b981',
+    ...premiumShadow('#000000', 'sm') as any,
   },
-  name: { fontSize: 20, fontFamily: FONT.bold, color: '#ffffff', marginBottom: 4 },
-  roleTag: {
-    backgroundColor: '#059669',
+  compactUserCardLight: {
+    borderColor: 'rgba(22, 163, 74, 0.2)',
+    backgroundColor: '#ffffff',
+    shadowColor: '#16a34a',
+  },
+  compactUserGradient: {
     paddingHorizontal: 12,
-    paddingVertical: 3,
-    borderRadius: RADIUS.pill,
-    marginBottom: 8,
+    paddingVertical: 10,
   },
-  roleTagText: { fontSize: 11, fontFamily: FONT.extraBold, color: '#ffffff' },
-  kingIdBadge: {
+  userRow1: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    gap: 10,
+  },
+  compactAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0, 255, 135, 0.12)',
+    borderWidth: 1.5,
+    borderColor: '#00ff87',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  compactAvatarLight: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#16a34a',
+  },
+  userInfoCol: {
+    flex: 1,
+    gap: 3,
+  },
+  userNameLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  compactName: {
+    fontSize: 14,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  compactRoleTag: {
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.35)',
+    paddingHorizontal: 7,
+    paddingVertical: 1.5,
     borderRadius: RADIUS.pill,
   },
-  kingIdText: { fontSize: 11, fontFamily: FONT.medium, color: '#ffffff' },
-  body: { padding: 14 },
+  compactRoleTagLight: {
+    backgroundColor: 'rgba(22, 163, 74, 0.1)',
+    borderColor: 'rgba(22, 163, 74, 0.3)',
+  },
+  compactRoleText: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    color: '#00ff87',
+  },
+  userSubRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  kingIdPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  kingIdPillLight: {
+    backgroundColor: '#f1f5f9',
+  },
+  phonePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  phonePillLight: {
+    backgroundColor: '#f1f5f9',
+  },
+  compactKingText: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+  },
+  liveIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginLeft: 2,
+  },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#22c55e',
+  },
+  liveText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#22c55e',
+  },
+  quickLogoutBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickLogoutBtnLight: {
+    backgroundColor: '#fef2f2',
+    borderColor: '#fecaca',
+  },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -394,34 +503,34 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.25)',
     paddingHorizontal: 12,
-    paddingVertical: 9,
+    paddingVertical: 7,
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 10,
     ...premiumShadow('#000000', 'sm') as any,
   },
   searchInput: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 12.5,
     fontFamily: FONT.medium,
     color: '#ffffff',
     padding: 0,
   },
-  section: { marginBottom: 16 },
+  section: { marginBottom: 10 },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 6,
+    paddingVertical: 4,
     paddingHorizontal: 4,
-    marginBottom: 6,
+    marginBottom: 5,
   },
   pillarHeaderDot: {
-    width: 8,
-    height: 8,
+    width: 7,
+    height: 7,
     borderRadius: 4,
   },
   sectionTitle: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontFamily: FONT.extraBold,
     color: '#e2e8f0',
     letterSpacing: 0.3,
@@ -430,18 +539,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 255, 135, 0.12)',
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.25)',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingHorizontal: 7,
+    paddingVertical: 1.5,
     borderRadius: RADIUS.pill,
     marginRight: 6,
   },
   pillarBadgeText: {
-    fontSize: 9.5,
+    fontSize: 9,
     fontFamily: FONT.extraBold,
   },
   sectionCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    borderRadius: 14,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.15)',
     overflow: 'hidden',
@@ -450,28 +559,29 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 13,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.06)',
-    gap: 12,
+    gap: 10,
   },
   rowIconBg: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 30,
+    height: 30,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
   rowLabel: {
-    fontSize: 13.5,
+    fontSize: 12.5,
     fontFamily: FONT.bold,
     color: '#ffffff',
   },
   rowSubLabel: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontFamily: FONT.regular,
     color: '#94a3b8',
-    marginTop: 2,
+    marginTop: 1,
   },
   logoutButton: {
     flexDirection: 'row',
@@ -481,10 +591,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fef2f2',
     borderWidth: 1,
     borderColor: '#fecaca',
-    padding: 14,
-    borderRadius: 14,
-    marginTop: 10,
-    marginBottom: 40,
+    padding: 11,
+    borderRadius: 12,
+    marginTop: 8,
+    marginBottom: 32,
   },
-  logoutText: { fontSize: 14, fontFamily: FONT.bold, color: '#dc2626' },
+  logoutText: { fontSize: 13, fontFamily: FONT.bold, color: '#dc2626' },
 });

@@ -91,14 +91,14 @@ const badgeStyles = StyleSheet.create({
 });
 
 type TabName =
-  | 'index' | 'shop' | 'admin_shop' | 'farm' | 'garden' | 'records' | 'market' | 'more' | 'admin_more'
+  | 'index' | 'shop' | 'admin_shop' | 'farm' | 'records' | 'market' | 'more' | 'admin_more'
   | 'categories' | 'cart' | 'orders'
   | 'farmers' | 'schedule' | 'chat'
   | 'referrals' | 'wallet'
   | 'admin-orders' | 'admin-products'
-  | 'super-users' | 'super-coupons' | 'super-accounts' | 'super-settings'
+  | 'super-users' | 'super-coupons' | 'super-accounts' | 'cpanel' | 'super-settings'
   | 'super-orders' | 'super-audit-log' | 'super-crop-edit'
-  | 'operator-orders' | 'trainer-dashboard';
+  | 'operator-orders' | 'trainer-dashboard' | 'garden';
 
 const ROLE_TABS: Record<string, { tabs: TabName[] }> = {
   SUPER_ADMIN: { tabs: ['index', 'admin-products', 'super-users', 'super-accounts', 'admin_more'] },
@@ -112,7 +112,6 @@ const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key:
   shop: { key: 'tabCustomerHome', title: 'Store', icon: 'bag-outline', iconFilled: 'bag' },
   admin_shop: { key: 'agristoreHub' as any, title: 'E-Commerce', icon: 'storefront-outline', iconFilled: 'storefront' },
   farm: { key: 'tabCrops', title: 'Crops', icon: 'leaf-outline', iconFilled: 'leaf' },
-  garden: { key: 'tabCrops', title: 'Garden', icon: 'leaf-outline', iconFilled: 'leaf' },
   records: { key: 'tabRecords', title: 'Accounts', icon: 'document-text-outline', iconFilled: 'document-text' },
   market: { key: 'tabMyAdvisor', title: 'Crop Doctor', icon: 'school-outline', iconFilled: 'school' },
   categories: { key: 'tabCategories', title: 'Categories', icon: 'grid-outline', iconFilled: 'grid' },
@@ -124,27 +123,29 @@ const TAB_META: Record<Exclude<TabName, 'index' | 'more' | 'admin_more'>, { key:
   referrals: { key: 'tabReferrals', title: 'Referrals', icon: 'people-outline', iconFilled: 'people' },
   wallet: { key: 'tabMyBusiness', title: 'Wallet', icon: 'wallet-outline', iconFilled: 'wallet' },
   'admin-orders': { key: 'tabOrders', title: 'Orders', icon: 'receipt-outline', iconFilled: 'receipt' },
-  'admin-products': { key: 'tabProducts', title: 'Products', icon: 'cube-outline', iconFilled: 'cube' },
+  'admin-products': { key: 'tabMarket', title: 'Market', icon: 'storefront-outline', iconFilled: 'storefront' },
   'super-users': { key: 'tabUsers', title: 'Users', icon: 'people-outline', iconFilled: 'people' },
-  'super-coupons': { key: 'tabCoupons', title: 'Farmers', icon: 'people-outline', iconFilled: 'people' },
+  'super-coupons': { key: 'tabCoupons', title: 'Coupons', icon: 'ticket-outline', iconFilled: 'ticket' },
   'super-accounts': { key: 'tabAccounts', title: 'Finance', icon: 'cash-outline', iconFilled: 'cash' },
-  'super-settings': { key: 'tabFeatures', title: 'C-Panel', icon: 'options-outline', iconFilled: 'options' },
+  cpanel: { key: 'tabFeatures', title: 'C-Panel', icon: 'options-outline', iconFilled: 'options' },
+  'super-settings': { key: 'tabSettings' as any, title: 'Settings', icon: 'settings-outline', iconFilled: 'settings' },
   'super-orders': { key: 'superSaleManagement', title: 'Sale / Order Management', icon: 'receipt-outline', iconFilled: 'receipt' },
   'super-audit-log': { key: 'superAuditLog', title: 'Audit Log', icon: 'time-outline', iconFilled: 'time' },
   'super-crop-edit': { key: 'tabCrops', title: 'Edit Crop', icon: 'leaf-outline', iconFilled: 'leaf' },
   'operator-orders': { key: 'tabFulfillment', title: 'Fulfillment', icon: 'cube-outline', iconFilled: 'cube' },
   'trainer-dashboard': { key: 'tabFarms', title: 'Trainer', icon: 'school-outline', iconFilled: 'school' },
+  garden: { key: 'tabFarms', title: 'Garden Care', icon: 'flower-outline', iconFilled: 'flower' },
 };
 
 const ALL_TABS: TabName[] = [
-  'index', 'shop', 'admin_shop', 'farm', 'garden', 'records', 'market',
+  'index', 'shop', 'admin_shop', 'farm', 'records', 'market',
   'categories', 'cart', 'orders',
   'farmers', 'schedule', 'chat',
   'referrals', 'wallet',
   'admin-orders', 'admin-products',
-  'super-users', 'super-coupons', 'super-accounts', 'super-settings',
+  'super-users', 'super-coupons', 'super-accounts', 'cpanel', 'super-settings',
   'super-orders', 'super-audit-log', 'super-crop-edit',
-  'operator-orders', 'trainer-dashboard',
+  'operator-orders', 'trainer-dashboard', 'garden',
   'more', 'admin_more',
 ];
 
@@ -227,7 +228,8 @@ export default function TabLayout() {
   const hasUnreadChat = (chatUnreadData?.count ?? 0) > 0;
   const { itemCount: cartItemCount } = useCart();
 
-  const getHomeTitle = (_userRole: UserRole): string => {
+  const getHomeTitle = (userRole: UserRole): string => {
+    if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') return 'Overview';
     return t('tabHome', 'Home');
   };
 
@@ -236,14 +238,19 @@ export default function TabLayout() {
     if (name === 'more' || name === 'admin_more') return t('tabMore', 'More');
     if (name === 'farmers') return role === 'GARDEN_ADVISOR' ? t('tabGardens', 'Gardens') : t('tabFarmers', 'Farmers');
     if ((name === 'shop' || name === 'admin_shop') && (role === 'ADMIN' || role === 'SUPER_ADMIN')) return 'E-Commerce';
+    if (name === 'admin-products') return 'Market';
     const meta = TAB_META[name as Exclude<TabName, 'index' | 'more' | 'admin_more'>];
     return meta ? t(meta.key, meta.title) : name;
   };
 
   const getTabIcon = (name: TabName, focused: boolean): keyof typeof Ionicons.glyphMap => {
-    if (name === 'index') return focused ? 'home' : 'home-outline';
+    if (name === 'index') {
+      if (role === 'ADMIN' || role === 'SUPER_ADMIN') return focused ? 'analytics' : 'analytics-outline';
+      return focused ? 'home' : 'home-outline';
+    }
     if (name === 'more' || name === 'admin_more') return focused ? 'grid' : 'grid-outline';
     if (name === 'farmers') return focused ? 'leaf' : 'leaf-outline';
+    if (name === 'admin-products') return focused ? 'storefront' : 'storefront-outline';
     const meta = TAB_META[name as Exclude<TabName, 'index' | 'more' | 'admin_more'>];
     return meta ? (focused ? meta.iconFilled : meta.icon) : 'square-outline';
   };
@@ -342,7 +349,7 @@ export default function TabLayout() {
   const isDarkTheme = themeMode === 'DARK';
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg, flexDirection: isDesktop ? 'row' : 'column' }}>
+    <View style={[layoutStyles.rootContainer, { backgroundColor: colors.bg, flexDirection: isDesktop ? 'row' : 'column' }]}>
       {/* 💻 DESKTOP 2-TIER EXECUTIVE SIDEBAR (Visible on screens >= 768px) */}
       {isDesktop && (
         <View
@@ -421,7 +428,6 @@ export default function TabLayout() {
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={desktopStyles.menuNavCol}>
             {(() => {
               if (role === 'SUPER_ADMIN' || role === 'ADMIN') {
-                const isSettingsActive = pathname.includes('super-settings');
                 return (
                   <>
                     {ADMIN_PILLARS.map((pillar) => {
@@ -566,134 +572,6 @@ export default function TabLayout() {
                     </Pressable>
                   );
                 })}
-
-                {/* ⚙️ Dedicated Settings Button (Placed directly below C-Panel) */}
-                <Pressable
-                  key="desktop-settings-pillar-btn"
-                  onPress={() => router.push('/admin/(tabs)/super-settings')}
-                  style={({ hovered, pressed }: any) => [
-                    desktopStyles.pillarCard,
-                    isLight && {
-                      backgroundColor: '#f8fafc',
-                      borderColor: 'rgba(22, 163, 74, 0.2)',
-                    },
-                    isDarkTheme && {
-                      backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                      borderColor: 'rgba(56, 189, 248, 0.2)',
-                    },
-                    isSettingsActive && (
-                      isLight
-                        ? {
-                            backgroundColor: '#f0fdf4',
-                            borderColor: '#16a34a',
-                            shadowColor: '#16a34a',
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.15,
-                            shadowRadius: 8,
-                            elevation: 3,
-                          }
-                        : isDarkTheme
-                        ? {
-                            backgroundColor: 'rgba(56, 189, 248, 0.16)',
-                            borderColor: '#38bdf8',
-                            shadowColor: '#38bdf8',
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.25,
-                            shadowRadius: 10,
-                            elevation: 3,
-                          }
-                        : desktopStyles.pillarCardActive
-                    ),
-                    hovered && !isSettingsActive && (
-                      isLight
-                        ? { backgroundColor: 'rgba(22, 163, 74, 0.05)', borderColor: '#16a34a' }
-                        : isDarkTheme
-                        ? { backgroundColor: 'rgba(56, 189, 248, 0.08)', borderColor: '#38bdf8' }
-                        : desktopStyles.pillarCardHover
-                    ),
-                    pressed && { transform: [{ scale: 0.98 }] },
-                  ]}
-                >
-                  {isSettingsActive && (
-                    <View
-                      style={[
-                        desktopStyles.pillarActiveBar,
-                        isLight && { backgroundColor: '#16a34a' },
-                        isDarkTheme && { backgroundColor: '#38bdf8' },
-                      ]}
-                    />
-                  )}
-
-                  <View
-                    style={[
-                      desktopStyles.pillarIconWrap,
-                      isLight && { backgroundColor: 'rgba(22, 163, 74, 0.08)', borderColor: 'rgba(22, 163, 74, 0.25)' },
-                      isDarkTheme && { backgroundColor: 'rgba(56, 189, 248, 0.08)', borderColor: 'rgba(56, 189, 248, 0.25)' },
-                      isSettingsActive && desktopStyles.pillarIconWrapActive,
-                      isLight && isSettingsActive && { backgroundColor: '#16a34a', borderColor: '#16a34a' },
-                      isDarkTheme && isSettingsActive && { backgroundColor: '#38bdf8', borderColor: '#38bdf8' },
-                    ]}
-                  >
-                    <Ionicons
-                      name={isSettingsActive ? 'settings' : 'settings-outline'}
-                      size={15}
-                      color={isSettingsActive ? '#ffffff' : (isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#22c55e')}
-                    />
-                  </View>
-
-                  <View style={desktopStyles.pillarContentCol}>
-                    <Text
-                      style={[
-                        desktopStyles.pillarTitle,
-                        isLight && { color: '#334155' },
-                        isSettingsActive && desktopStyles.pillarTitleActive,
-                        isLight && isSettingsActive && { color: '#16a34a' },
-                        isDarkTheme && isSettingsActive && { color: '#38bdf8' },
-                      ]}
-                      numberOfLines={1}
-                    >
-                      SETTINGS
-                    </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                      <View
-                        style={[
-                          desktopStyles.pillarBadge,
-                          isLight && {
-                            backgroundColor: 'rgba(22, 163, 74, 0.08)',
-                            borderColor: 'rgba(234, 179, 8, 0.25)',
-                          },
-                          isSettingsActive && desktopStyles.pillarBadgeActive,
-                          isLight && isSettingsActive && {
-                            backgroundColor: 'rgba(22, 163, 74, 0.15)',
-                            borderColor: 'rgba(234, 179, 8, 0.5)',
-                          },
-                          isDarkTheme && isSettingsActive && {
-                            backgroundColor: 'rgba(56, 189, 248, 0.25)',
-                            borderColor: '#38bdf8',
-                          },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            desktopStyles.pillarBadgeText,
-                            isLight && { color: '#64748b' },
-                            isSettingsActive && desktopStyles.pillarBadgeTextActive,
-                            isLight && isSettingsActive && { color: '#16a34a' },
-                            isDarkTheme && isSettingsActive && { color: '#38bdf8' },
-                          ]}
-                        >
-                          Config
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-
-                  <Ionicons
-                    name={isSettingsActive ? 'chevron-forward' : 'chevron-forward-outline'}
-                    size={15}
-                    color={isSettingsActive ? (isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#10b981') : (isLight ? '#94a3b8' : '#64748b')}
-                  />
-                </Pressable>
               </>
             );
           }
@@ -795,47 +673,7 @@ export default function TabLayout() {
               );
             })()}
 
-            {/* ⚙️ Dedicated Settings Button (Requested by User) */}
-            <TouchableOpacity
-              style={[
-                desktopStyles.settingsBottomBtn,
-                isLight && {
-                  backgroundColor: '#f8fafc',
-                  borderColor: 'rgba(22, 163, 74, 0.25)',
-                },
-                isDarkTheme && {
-                  backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                  borderColor: 'rgba(56, 189, 248, 0.25)',
-                },
-              ]}
-              activeOpacity={0.8}
-              onPress={() => router.push('/admin/(tabs)/super-settings')}
-            >
-              <Ionicons
-                name="settings-outline"
-                size={14}
-                color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#22c55e'}
-              />
-              <Text
-                style={[
-                  desktopStyles.settingsBottomBtnText,
-                  isLight && { color: '#0f172a' },
-                  isDarkTheme && { color: '#f1f5f9' },
-                ]}
-              >
-                Settings
-              </Text>
-              <View
-                style={[
-                  desktopStyles.settingsBottomBadge,
-                  isLight && { backgroundColor: 'rgba(22, 163, 74, 0.1)', borderColor: 'rgba(22, 163, 74, 0.3)' },
-                ]}
-              >
-                <Text style={[desktopStyles.settingsBottomBadgeText, isLight && { color: '#16a34a' }]}>
-                  Config
-                </Text>
-              </View>
-            </TouchableOpacity>
+
 
             {/* 🎨 2-WAY THEME SELECTOR: Light (Default) · Dark (Parrot & Gold) */}
             <View
@@ -897,14 +735,162 @@ export default function TabLayout() {
         </View>
       )}
 
-      {/* 📱 MAIN CONTENT CANVAS CONTAINER */}
-      <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      {/* 📱 MAIN CONTENT CANVAS CONTAINER — flex:1 + overflow:hidden ensures the content
+           column fills all remaining space after the sidebar without horizontal bleed. */}
+      <View style={[
+        { flex: 1, backgroundColor: colors.bg, overflow: 'hidden' as any },
+        // On mobile add bottom padding so content is not hidden under the floating tab bar
+        !isDesktop && { paddingBottom: 0 },
+      ]}>
+        {/* 📱 DEDICATED MOBILE EXECUTIVE APP HEADER (Visible on Mobile < 768px) */}
+        {!isDesktop && (
+          <View
+            style={[
+              mobileStyles.mobileTopBar,
+              {
+                backgroundColor: isLight ? '#ffffff' : isDarkTheme ? '#0b1329' : '#020b06',
+                borderBottomColor: isLight ? 'rgba(22, 163, 74, 0.18)' : isDarkTheme ? 'rgba(56, 189, 248, 0.2)' : 'rgba(0, 255, 135, 0.18)',
+                shadowColor: colors.shadowColor,
+              },
+            ]}
+          >
+            {/* Left: FarmsKing Logo + Title */}
+            <TouchableOpacity
+              style={mobileStyles.brandBox}
+              onPress={() => router.push('/admin/(tabs)')}
+              activeOpacity={0.8}
+            >
+              <View
+                style={[
+                  mobileStyles.logoSquircle,
+                  {
+                    backgroundColor: isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87',
+                  },
+                ]}
+              >
+                <BrandLogo size={18} iconColor={isLight ? '#ffffff' : isDarkTheme ? '#020617' : '#020d06'} />
+              </View>
+              <View style={{ marginLeft: 7 }}>
+                <Text style={[mobileStyles.brandTitle, isLight && { color: '#0f172a' }]}>
+                  FarmsKing{' '}
+                  <Text
+                    style={[
+                      mobileStyles.brandBadge,
+                      isLight && {
+                        color: '#16a34a',
+                        backgroundColor: 'rgba(22, 163, 74, 0.12)',
+                        borderColor: 'rgba(234, 179, 8, 0.4)',
+                      },
+                      isDarkTheme && {
+                        color: '#38bdf8',
+                        backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                        borderColor: 'rgba(56, 189, 248, 0.4)',
+                      },
+                    ]}
+                  >
+                    4D
+                  </Text>
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Center: Domain Pillar Selector Button (Only on More tab in mobile view) */}
+            {(role === 'SUPER_ADMIN' || role === 'ADMIN') && (pathname.includes('/more') || pathname.includes('/admin_more')) && (
+              <TouchableOpacity
+                style={[
+                  mobileStyles.pillarSelectorPill,
+                  isLight && {
+                    backgroundColor: '#f0fdf4',
+                    borderColor: '#16a34a',
+                  },
+                  isDarkTheme && {
+                    backgroundColor: 'rgba(56, 189, 248, 0.14)',
+                    borderColor: '#38bdf8',
+                  },
+                ]}
+                onPress={() => setIsPillarsMenuOpen(true)}
+                activeOpacity={0.75}
+              >
+                <Ionicons
+                  name={activePillar.iconFilled || activePillar.icon}
+                  size={13}
+                  color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87'}
+                />
+                <Text
+                  style={[
+                    mobileStyles.pillarSelectorText,
+                    isLight && { color: '#16a34a' },
+                    isDarkTheme && { color: '#38bdf8' },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {activePillar.shortTitle || activePillar.title}
+                </Text>
+                <Ionicons
+                  name="chevron-down"
+                  size={12}
+                  color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87'}
+                />
+              </TouchableOpacity>
+            )}
+
+            {/* Right: Actions Group (Quick Search, Health Radar, Light/Dark Toggle) */}
+            <View style={mobileStyles.actionsGroup}>
+              <TouchableOpacity
+                style={[
+                  mobileStyles.actionBtn,
+                  isLight && { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' },
+                  isDarkTheme && { backgroundColor: 'rgba(255, 255, 255, 0.06)', borderColor: 'rgba(56, 189, 248, 0.25)' },
+                ]}
+                onPress={() => setIsSearchOpen(true)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="search" size={14} color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87'} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  mobileStyles.actionBtn,
+                  isLight && { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' },
+                  isDarkTheme && { backgroundColor: 'rgba(255, 255, 255, 0.06)', borderColor: 'rgba(56, 189, 248, 0.25)' },
+                ]}
+                onPress={() => setIsHealthRadarOpen(true)}
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[
+                    mobileStyles.radarDot,
+                    isLight && { backgroundColor: '#16a34a' },
+                    isDarkTheme && { backgroundColor: '#38bdf8' },
+                  ]}
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  mobileStyles.actionBtn,
+                  isLight && { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' },
+                  isDarkTheme && { backgroundColor: 'rgba(255, 255, 255, 0.06)', borderColor: 'rgba(56, 189, 248, 0.25)' },
+                ]}
+                onPress={() => setThemeMode(isLight ? 'DARK' : 'LIGHT')}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={isLight ? 'sunny' : 'moon'}
+                  size={14}
+                  color={isLight ? '#d97706' : isDarkTheme ? '#38bdf8' : '#00ff87'}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         {/* 💻 TOP WORKSPACE SUB-TABS HEADER BAR (Visible on Desktop & Mobile for Admins) */}
         {(role === 'SUPER_ADMIN' || role === 'ADMIN') && (
           <View
             style={[
               desktopStyles.topTabsHeaderBar,
-              !isDesktop && { height: 46, paddingVertical: 4, paddingHorizontal: 8 },
+              !isDesktop && { height: 42, paddingVertical: 2, paddingHorizontal: 6 },
               {
                 backgroundColor: isLight ? '#ffffff' : isDarkTheme ? '#0b1329' : '#03140a',
                 borderBottomColor: isLight ? 'rgba(22, 163, 74, 0.18)' : isDarkTheme ? 'rgba(56, 189, 248, 0.2)' : 'rgba(0, 255, 135, 0.2)',
@@ -1087,24 +1073,42 @@ export default function TabLayout() {
         />
 
 
+        {/* Tabs fills all remaining vertical space after the top sub-tabs header bar.
+             The AnimatedPurpleBottomBar auto-hides on desktop (isDesktop check inside it).
+             contentStyle gives each screen:
+               - flex:1 so it fills all available height
+               - paddingBottom on mobile so content clears the 64px floating tab bar
+             On desktop paddingBottom is 0 (sidebar navigation, no tab bar). */}
         <Tabs
           tabBar={(props: any) => <AnimatedPurpleBottomBar {...props} />}
           screenOptions={{
             headerShown: false,
             animation: 'fade',
-          }}>
+            sceneStyle: {
+              flex: 1,
+              // Mobile: reserve space at bottom for the floating tab bar (height 64 + safe area)
+              paddingBottom: isDesktop ? 0 : 72,
+            },
+          }}
+        >
           {ALL_TABS.map((name) => {
             const isShown = visible.has(name);
             if (name === 'index') {
+              const isOverview = role === 'ADMIN' || role === 'SUPER_ADMIN';
               return (
                 <Tabs.Screen
                   key={name}
                   name="index"
                   options={{
                     title: getHomeTitle(role),
+                    tabBarLabel: getHomeTitle(role),
                     href: isShown ? undefined : null,
                     tabBarIcon: ({ color, focused }) => (
-                      <Ionicons size={23} name={focused ? 'home' : 'home-outline'} color={color} />
+                      <Ionicons
+                        size={23}
+                        name={isOverview ? (focused ? 'analytics' : 'analytics-outline') : (focused ? 'home' : 'home-outline')}
+                        color={color}
+                      />
                     ),
                   }}
                 />
@@ -1172,6 +1176,22 @@ export default function TabLayout() {
                       <TabIconWithCartCount count={cartItemCount}>
                         <Ionicons size={23} name={focused ? meta.iconFilled : meta.icon} color={color} />
                       </TabIconWithCartCount>
+                    ),
+                  }}
+                />
+              );
+            }
+            if (name === 'admin-products') {
+              return (
+                <Tabs.Screen
+                  key={name}
+                  name="admin-products"
+                  options={{
+                    title: 'Market',
+                    tabBarLabel: 'Market',
+                    href: isShown ? undefined : null,
+                    tabBarIcon: ({ color, focused }) => (
+                      <Ionicons size={23} name={focused ? 'storefront' : 'storefront-outline'} color={color} />
                     ),
                   }}
                 />
@@ -1716,3 +1736,107 @@ const desktopStyles = StyleSheet.create({
     color: '#00ff87',
   },
 });
+
+// ─── Root layout styles (separate from desktopStyles for clarity) ─────────────
+const layoutStyles = StyleSheet.create({
+  /**
+   * The outermost View of the entire admin layout.
+   *  • flex: 1          — fills 100% of the available window height on every platform.
+   *  • overflow hidden  — prevents any child from causing horizontal/vertical page scroll
+   *                       on web (React Native Web maps this to CSS overflow:hidden).
+   */
+  rootContainer: {
+    flex: 1,
+    overflow: 'hidden' as any,
+  },
+});
+
+const mobileStyles = StyleSheet.create({
+  mobileTopBar: {
+    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 255, 135, 0.18)',
+    zIndex: 95,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 4,
+    ...(Platform.OS === 'web' ? ({ backdropFilter: 'blur(20px)' } as any) : {}),
+  },
+  brandBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logoSquircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  brandTitle: {
+    fontSize: 13.5,
+    fontFamily: FONT.extraBold,
+    color: '#ffffff',
+    letterSpacing: -0.3,
+  },
+  brandBadge: {
+    fontSize: 8,
+    fontFamily: FONT.extraBold,
+    color: '#00ff87',
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.4)',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  pillarSelectorPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4.5,
+    borderRadius: RADIUS.pill,
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.35)',
+    maxWidth: 135,
+  },
+  pillarSelectorText: {
+    fontSize: 10.5,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
+    letterSpacing: 0.1,
+  },
+  actionsGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  actionBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radarDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#00ff87',
+  },
+});
+

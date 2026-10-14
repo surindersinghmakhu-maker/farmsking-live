@@ -16,19 +16,31 @@ export default function AdvisorDashboardScreen() {
   const isGarden = role === 'GARDEN_ADVISOR';
   const theme = isGarden ? RoleThemes.GARDENER : RoleThemes.FARM_ADVISOR;
 
-  // Dummy Data for demonstration
-  const adoptionRequests = [
-    { id: '1', name: 'My Balcony Garden', gardener: 'Surinder Singh', location: 'Chandigarh', plants: 12 },
-    { id: '2', name: 'Backyard Veggies', gardener: 'Amanpreet', location: 'Ludhiana', plants: 5 },
-  ];
+  const adoptionRequests = isGarden
+    ? [
+        { id: '1', name: 'My Balcony Garden', client: 'Surinder Singh', location: 'Chandigarh', metric: '12 Plants' },
+        { id: '2', name: 'Backyard Veggies', client: 'Amanpreet', location: 'Ludhiana', metric: '5 Plants' },
+      ]
+    : [
+        { id: '1', name: 'Main Farm - Wheat 1121', client: 'Jagtar Singh', location: 'Ferozepur', metric: '4.5 Acres' },
+        { id: '2', name: 'Canal Plot - Mustard', client: 'Harpreet Kaur', location: 'Moga', metric: '2.0 Acres' },
+      ];
 
-  const adoptedGardens = [
-    { id: '3', name: 'Terrace Flowers', gardener: 'Harjit', healthScore: 92, lastVisit: '2 days ago' },
-  ];
+  const adoptedHoldings = isGarden
+    ? [
+        { id: '3', name: 'Terrace Flowers', client: 'Harjit', healthScore: 92, lastVisit: '2 days ago' },
+      ]
+    : [
+        { id: '3', name: 'South Field - Basmati Paddy', client: 'Gursewak Singh', healthScore: 94, lastVisit: 'Yesterday' },
+      ];
 
-  const problemTickets = [
-    { id: '101', gardenName: 'Terrace Flowers', plantName: 'Rose', issue: 'Leaves are turning yellow', status: 'PENDING' },
-  ];
+  const problemTickets = isGarden
+    ? [
+        { id: '101', holdingName: 'Terrace Flowers', item: 'Rose Plant', issue: 'Leaves are turning yellow', status: 'PENDING' },
+      ]
+    : [
+        { id: '101', holdingName: 'South Field', item: 'Wheat Crop', issue: 'Suspected Yellow Rust spots on upper leaf', status: 'PENDING' },
+      ];
 
   const renderTabs = () => (
     <View style={styles.tabContainer}>
@@ -45,7 +57,7 @@ export default function AdvisorDashboardScreen() {
         onPress={() => setActiveTab('MY_ADOPTED')}
       >
         <Text style={[styles.tabText, activeTab === 'MY_ADOPTED' && styles.tabTextActive]}>
-          Adopted ({adoptedGardens.length})
+          {isGarden ? 'Gardens' : 'Farms'} ({adoptedHoldings.length})
         </Text>
       </TouchableOpacity>
       <TouchableOpacity 
@@ -61,7 +73,7 @@ export default function AdvisorDashboardScreen() {
 
   const renderRequests = () => (
     <View style={styles.listContainer}>
-      {adoptionRequests.map(req => (
+      {adoptionRequests.map((req) => (
         <View key={req.id} style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
           <View style={styles.cardHeader}>
             <View style={[styles.iconBg, { backgroundColor: theme.primaryLight }]}>
@@ -69,19 +81,24 @@ export default function AdvisorDashboardScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.cardTitle}>{req.name}</Text>
-              <Text style={styles.cardSub}>By {req.gardener} • {req.location}</Text>
+              <Text style={styles.cardSub}>By {req.client} • {req.location}</Text>
             </View>
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>{req.plants} Plants</Text>
+              <Text style={styles.badgeText}>{req.metric}</Text>
             </View>
           </View>
           <View style={styles.cardActions}>
             <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#f1f5f9' }]}>
               <Text style={[styles.actionBtnText, { color: '#475569' }]}>Decline</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.actionBtn, { backgroundColor: theme.primary }]} onPress={() => alert('Garden Adopted successfully!')}>
+            <TouchableOpacity
+              style={[styles.actionBtn, { backgroundColor: theme.primary }]}
+              onPress={() => alert(isGarden ? 'Garden Adopted successfully!' : 'Farm Plot Adopted successfully!')}
+            >
               <Ionicons name="checkmark-circle" size={16} color="#fff" />
-              <Text style={[styles.actionBtnText, { color: '#ffffff' }]}>Adopt Garden</Text>
+              <Text style={[styles.actionBtnText, { color: '#ffffff' }]}>
+                {isGarden ? 'Adopt Garden' : 'Adopt Farm Plot'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -92,22 +109,22 @@ export default function AdvisorDashboardScreen() {
 
   const renderAdopted = () => (
     <View style={styles.listContainer}>
-      {adoptedGardens.map(g => (
-        <TouchableOpacity key={g.id} style={[styles.card, premiumShadow('#0f172a', 'sm')]} onPress={() => alert('Open Garden Details')}>
+      {adoptedHoldings.map((h) => (
+        <TouchableOpacity key={h.id} style={[styles.card, premiumShadow('#0f172a', 'sm')]} onPress={() => alert(isGarden ? 'Open Garden Details' : 'Open Farm Details')}>
           <View style={styles.cardHeader}>
             <View style={[styles.iconBg, { backgroundColor: theme.primaryLight }]}>
               <Ionicons name="shield-checkmark" size={20} color={theme.primary} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.cardTitle}>{g.name}</Text>
-              <Text style={styles.cardSub}>Client: {g.gardener}</Text>
+              <Text style={styles.cardTitle}>{h.name}</Text>
+              <Text style={styles.cardSub}>Client: {h.client}</Text>
             </View>
             <View style={[styles.badge, { backgroundColor: '#dcfce7' }]}>
-              <Text style={[styles.badgeText, { color: '#16a34a' }]}>Health: {g.healthScore}%</Text>
+              <Text style={[styles.badgeText, { color: '#16a34a' }]}>Health: {h.healthScore}%</Text>
             </View>
           </View>
           <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 10 }}>
-            Last interaction: {g.lastVisit}
+            Last interaction: {h.lastVisit}
           </Text>
         </TouchableOpacity>
       ))}
@@ -116,14 +133,14 @@ export default function AdvisorDashboardScreen() {
 
   const renderTickets = () => (
     <View style={styles.listContainer}>
-      {problemTickets.map(t => (
+      {problemTickets.map((t) => (
         <TouchableOpacity key={t.id} style={[styles.card, premiumShadow('#0f172a', 'sm')]} onPress={() => alert('Open Prescription Editor')}>
           <View style={styles.cardHeader}>
             <View style={[styles.iconBg, { backgroundColor: '#fee2e2' }]}>
               <Ionicons name="warning" size={20} color="#ef4444" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.cardTitle}>{t.gardenName} - {t.plantName}</Text>
+              <Text style={styles.cardTitle}>{t.holdingName} - {t.item}</Text>
               <Text style={[styles.cardSub, { color: '#ef4444', fontFamily: FONT.bold }]}>{t.issue}</Text>
             </View>
           </View>
@@ -141,8 +158,12 @@ export default function AdvisorDashboardScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient colors={[theme.primary, '#0f172a']} style={styles.header}>
-        <Text style={styles.headerTitle}>{isGarden ? 'Garden Advisor Portal' : 'Farm Advisor Portal'}</Text>
-        <Text style={styles.headerSubtitle}>Manage your clients, adoptions, and prescriptions.</Text>
+        <Text style={styles.headerTitle}>{isGarden ? 'Garden Advisor Portal' : 'Crop Doctor Portal'}</Text>
+        <Text style={styles.headerSubtitle}>
+          {isGarden
+            ? 'Manage gardeners, residential plant care and horticultural prescriptions.'
+            : 'Manage farmers, agricultural field plots and crop disease prescriptions.'}
+        </Text>
       </LinearGradient>
 
       {renderTabs()}

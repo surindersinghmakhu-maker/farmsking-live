@@ -19,6 +19,9 @@
   ],
   "exclude": [
     "node_modules",
+    "dist",
+    ".expo",
+    "web-build",
     "__tests__/**",
     "src/api/__tests__/**",
     "**/*.test.ts"

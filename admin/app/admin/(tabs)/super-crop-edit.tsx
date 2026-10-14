@@ -411,7 +411,11 @@ export default function SuperCropEditScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: {
+    flex: 1,
+    // On web/desktop the container must fill the full canvas height and allow internal scrolling
+    ...(typeof window !== 'undefined' ? { height: '100%', overflow: 'hidden' } as any : {}),
+  },
   hero: { paddingTop: 20, paddingBottom: 18, paddingHorizontal: SPACING.lg },
   heroTitle: { color: '#fff', fontSize: 19, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
   heroSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 11.5, fontFamily: FONT.medium, marginTop: 2 },

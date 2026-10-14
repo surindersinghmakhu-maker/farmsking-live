@@ -84,7 +84,7 @@ export default function AdminOrdersScreen() {
         </View>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={{ gap: 8, paddingHorizontal: SPACING.xxl }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={{ gap: 8, paddingHorizontal: 12 }}>
         {FILTERS.map((f) => (
           <TouchableOpacity
             key={f.value}
@@ -285,14 +285,26 @@ function OrderRow({ order, isExpanded, onToggle }: { order: CustomerOrder; isExp
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.bg },
-  hero: { paddingTop: 20, paddingBottom: 16, paddingHorizontal: SPACING.xxl, backgroundColor: 'rgba(0,255,135,0.03)', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  heroTitle: { fontSize: 19, fontFamily: FONT.extraBold, color: '#ffffff' },
-  heroSubtitle: { fontSize: 12.5, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
-  filterRow: { marginTop: 12, flexGrow: 0 },
-  filterChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', backgroundColor: 'rgba(0,255,135,0.03)' },
-  filterChipText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#e2e8f0' },
-  list: { padding: SPACING.xxl, gap: 10 },
+  container: {
+    flex: 1,
+    backgroundColor: theme.bg,
+    // On web/desktop fill the full canvas height
+    ...(typeof window !== 'undefined' ? { height: '100%', overflow: 'hidden' } as any : {}),
+  },
+  hero: {
+    paddingTop: 14,
+    paddingBottom: 12,
+    paddingHorizontal: 14,
+    backgroundColor: 'rgba(0,255,135,0.03)',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  heroTitle: { fontSize: 18, fontFamily: FONT.extraBold, color: '#ffffff' },
+  heroSubtitle: { fontSize: 11.5, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
+  filterRow: { marginTop: 8, flexGrow: 0 },
+  filterChip: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', backgroundColor: 'rgba(0,255,135,0.03)' },
+  filterChipText: { fontSize: 11, fontFamily: FONT.bold, color: '#e2e8f0' },
+  list: { padding: 10, gap: 8 },
   emptyCenter: { alignItems: 'center', justifyContent: 'center', padding: 50, gap: 8 },
   emptyText: { fontSize: 13, fontFamily: FONT.medium, color: '#94a3b8' },
   card: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.lg, gap: 10 },

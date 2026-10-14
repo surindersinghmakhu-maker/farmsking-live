@@ -2,12 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from '../api/orders.api';
 import { OrderStatus } from '../types/api';
 
-export function useMyOrders() {
-  return useQuery({ queryKey: ['orders', 'mine'], queryFn: api.listMyOrders });
+export function useMyOrders(enabled = true) {
+  return useQuery({ queryKey: ['orders', 'mine'], queryFn: api.listMyOrders, enabled });
 }
 
-export function useAllOrders(status?: OrderStatus) {
-  return useQuery({ queryKey: ['orders', 'all', status], queryFn: () => api.listAllOrders(status) });
+export function useAllOrders(status?: OrderStatus, enabled = true) {
+  return useQuery({ queryKey: ['orders', 'all', status], queryFn: () => api.listAllOrders(status), enabled });
 }
 
 export function useFulfillmentQueue() {

@@ -44,7 +44,7 @@ export default function RegisterScreen() {
   const { register } = useAuth();
   const router = useRouter();
   const captchaRef = useRef<CaptchaRef>(null);
-  const searchParams = useLocalSearchParams<{ ref?: string; code?: string; referralCode?: string; referral?: string; kingId?: string }>();
+  const searchParams = useLocalSearchParams<{ ref?: string; code?: string; referralCode?: string; referral?: string; kingId?: string; redirect?: string }>();
   const incomingRefCode = (
     searchParams.ref ||
     searchParams.code ||
@@ -181,7 +181,9 @@ export default function RegisterScreen() {
         state: state || undefined,
         referralCode: referralCode.trim() || undefined,
       });
-      if (accountType === 'CUSTOMER') {
+      if (searchParams.redirect) {
+        router.replace(searchParams.redirect as any);
+      } else if (accountType === 'CUSTOMER') {
         router.replace('/(tabs)' as any);
       } else {
         router.replace('/(auth)/onboarding');
@@ -212,6 +214,19 @@ export default function RegisterScreen() {
           </View>
 
           <View style={styles.titleSection}>
+            {searchParams.redirect ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#ecfdf5', borderWidth: 1, borderColor: '#a7f3d0', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 }}>
+                <Ionicons name="cart" size={22} color="#059669" />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#065f46' }}>
+                    Your shopping cart is safely saved!
+                  </Text>
+                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#047857', marginTop: 1 }}>
+                    Register to complete your order. You'll be redirected right back to your cart.
+                  </Text>
+                </View>
+              </View>
+            ) : null}
             <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>Enter details to get started</Text>
           </View>
@@ -514,7 +529,7 @@ export default function RegisterScreen() {
             <Text style={styles.loginHighlightText}>Already have an account?</Text>
             <TouchableOpacity
               style={styles.loginHighlightBtn}
-              onPress={() => router.push('/(auth)/login')}
+              onPress={() => router.push({ pathname: '/(auth)/login', params: searchParams.redirect ? { redirect: searchParams.redirect } : undefined } as any)}
               activeOpacity={0.85}
             >
               <Ionicons name="log-in-outline" size={16} color="#16a34a" />

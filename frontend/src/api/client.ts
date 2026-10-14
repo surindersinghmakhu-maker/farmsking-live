@@ -116,8 +116,11 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      const msg = error.response?.data?.message || '';
-      onUnauthorized?.(msg);
+      const authHeader = error.config?.headers?.Authorization || error.config?.headers?.authorization;
+      if (authHeader) {
+        const msg = error.response?.data?.message || '';
+        onUnauthorized?.(msg);
+      }
     }
     return Promise.reject(error);
   },

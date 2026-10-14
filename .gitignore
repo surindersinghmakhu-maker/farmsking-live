@@ -11,7 +11,13 @@ backend/generated/prisma/
 backend/coverage/
 
 # Frontend (Expo/React Native)
-# frontend/dist/ (tracked for direct Hostinger deployment)
+# Track dist assets and fonts for direct Hostinger deployment
+!frontend/dist/
+!frontend/dist/**
+!admin/dist/
+!admin/dist/**
+!**/dist/fonts/**
+!**/dist/assets/**
 frontend/.expo/
 frontend/web-build/
 frontend/*.jks

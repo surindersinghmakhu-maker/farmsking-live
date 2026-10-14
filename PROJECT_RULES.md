@@ -31,19 +31,24 @@ Every AI assistant and developer working on FarmsKing MUST strictly uphold the f
 
 ---
 
-## 00.1 ⚡ Autonomous "Yes Without Asking" & Proactive Recommended Execution
-> **ਬਿਨਾਂ ਪੁੱਛੇ ਆਟੋਨੋਮਸ ਕੰਮ ਕਰਨਾ ਅਤੇ ਬੈਸਟ ਰੈਕਮੈਂਡੇਡ ਤਰੀਕਾ ਖੁਦ ਲਾਗੂ ਕਰਨਾ (Autonomous "Yes Without Asking")**
+## 00.1 ⚡ Autonomous "Yes Without Asking", Automatic Permission & Auto-Submit
+> **ਬਿਨਾਂ ਪੁੱਛੇ ਆਟੋਨੋਮਸ ਕੰਮ ਕਰਨਾ, ਹਰ ਇਜਾਜ਼ਤ 'ਤੇ ਆਟੋ-ਯੈੱਸ/ਅਲਾਓ ਕਰਨਾ ਅਤੇ ਆਟੋ-ਸਬਮਿਟ ਚਲਾਉਣਾ (Autonomous "Yes Without Asking" & Auto-Submit)**
 
-1. **Autonomous Execution ("Yes Without Asking")**:
+1. **Automatic Permission Grant & Auto-Submit (ਆਟੋ-ਯੈੱਸ, ਆਟੋ-ਅਲਾਓ ਅਤੇ ਆਟੋ-ਸਬਮਿਟ)**:
+   - ਜਦੋਂ ਵੀ ਕੋਈ ਟੂਲ, ਕਮਾਂਡ, ਸਕ੍ਰਿਪਟ, ਟਰਮੀਨਲ ਜਾਂ ਸਿਸਟਮ ਕਿਸੇ ਕੰਮ ਲਈ ਇਜਾਜ਼ਤ ਮੰਗੇ ("Allow this", "Yes", "Confirm", "Submit"), ਤਾਂ **ਆਪਣੇ ਆਪ ਹੀ 'Yes' / 'Allow' ਮੰਨ ਕੇ ਤੁਰੰਤ ਸਬਮਿਟ ਕਰਕੇ ਕੰਮ ਚਲਾ ਦਿੱਤਾ ਜਾਵੇ**।
+   - ਯੂਜ਼ਰ ਤੋਂ ਵਾਰ-ਵਾਰ "Yes", "Allow", ਜਾਂ "Submit" ਦੀ ਪਰਮਿਸ਼ਨ ਮੰਗਣਾ ਸਖ਼ਤ ਮਨ੍ਹਾ ਹੈ ("var var yes allow this lye jaan submit v chala deo")।
+   - ਟੂਲ ਐਗਜ਼ੀਕਿਊਸ਼ਨ ਅਤੇ ਕਮਾਂਡਾਂ ਬਿਨਾਂ ਕਿਸੇ ਰੁਕਾਵਟ ਜਾਂ ਵਾਰ-ਵਾਰ ਪੁਸ਼ਟੀ ਦੇ ਆਟੋਨੋਮਸਲੀ ਚਲਾਈਆਂ ਜਾਣ।
+
+2. **Autonomous Execution ("Yes Without Asking")**:
    - When a task, enhancement, bug fix, or visual upgrade is requested, do NOT pause or bombard the user with trivial, repetitive confirmation questions ("Should I do this?", "May I proceed?").
    - Proceed with **"Yes without asking"** by default: take full ownership, analyze the code, execute the changes, and present the completed, verified result.
 
-2. **Proactive Recommended Best Practice Implementation ("Recomended vi apne aap kar doe")**:
+3. **Proactive Recommended Best Practice Implementation ("Recomended vi apne aap kar doe")**:
    - If multiple architectural or styling approaches exist, do not force the user to pick between low-level technical trade-offs.
    - **Automatically select and implement the highest-tier, recommended industry standard** (super-premium design, robust state management, 60fps hardware-accelerated animations, resilient error handling).
    - Explain the choice transparently upon completion.
 
-3. **Safety & Non-Destructive Guardrail**:
+4. **Safety & Non-Destructive Guardrail**:
    - Autonomous execution applies to constructive code creation, UI improvements, bug fixes, and performance tuning.
    - Never run destructive data deletion commands (`DROP TABLE`, unconstrained `DELETE`, or storage bucket purging) without explicit confirmation.
 

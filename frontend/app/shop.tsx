@@ -368,7 +368,9 @@ function renderDeliveryAddressCard(order: any) {
 export default function ShopScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const isDesktop = width > 768;
+  const isDesktop = width > 1024;
+  const isTablet = width > 640 && width <= 1024;
+  const isMobile = width <= 640;
   const { user } = useAuth();
   const { role } = useRole();
   const { data: settings } = useAppSettings();
@@ -399,12 +401,13 @@ export default function ShopScreen() {
   const removeProduct = useRemoveProduct();
   const createOrder = useCreateOrder();
 
-  // Orders Data
+  // Orders Data (Enabled only for appropriate roles)
   const [orderFilter, setOrderFilter] = useState<OrderStatus | 'ALL'>('ALL');
   const { data: allOrders, isLoading: isLoadingOrders } = useAllOrders(
-    orderFilter === 'ALL' ? undefined : orderFilter
+    orderFilter === 'ALL' ? undefined : orderFilter,
+    isAdminOrSuperAdmin
   );
-  const { data: myOrders, isLoading: isLoadingMyOrders } = useMyOrders();
+  const { data: myOrders, isLoading: isLoadingMyOrders } = useMyOrders(!!user);
   const confirmOrder = useConfirmOrder();
   const cancelOrder = useCancelOrder();
   const startPackingOrder = useStartPackingOrder();
@@ -858,6 +861,11 @@ export default function ShopScreen() {
         pCat === aCat ||
         pCat.includes(aCat) ||
         aCat.includes(pCat) ||
+        (activeCategory === 'Fertilizers' && (pCat.includes('fertiliz') || pCat.includes('urea') || pCat.includes('dap') || pCat.includes('npk'))) ||
+        (activeCategory === 'Seeds' && (pCat.includes('seed') || pCat.includes('wheat') || pCat.includes('paddy'))) ||
+        (activeCategory === 'Crop Protection' && (pCat.includes('crop') || pCat.includes('protect') || pCat.includes('neem') || pCat.includes('pest') || pCat.includes('spray'))) ||
+        (activeCategory === 'Farm Machinery & Tools' && (pCat.includes('machin') || pCat.includes('tool') || pCat.includes('spray') || pCat.includes('motor') || pCat.includes('knapsack'))) ||
+        (activeCategory === 'Bio & Organics' && (pCat.includes('bio') || pCat.includes('organic') || pCat.includes('compost') || pCat.includes('cocopeat'))) ||
         (activeCategory === '🔥 Deals & VIP Coupons' && (pCat.includes('coupon') || pCat.includes('plan') || pCat.includes('deal') || pCat.includes('farmer plan')));
       const matchesSearch =
         !searchQuery.trim() ||
@@ -1489,7 +1497,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
         cartItemCount={itemCount}
       />
       {/* Spacer so the floating absolute header doesn't overlap content */}
-      <View style={{ height: 100 }} />
+      <View style={{ height: isMobile ? 68 : 84 }} />
 
       {/* Top E-Commerce Mode Switcher for Admins */}
       {isAdminOrSuperAdmin && (
@@ -2251,79 +2259,103 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
         </View>
       ) : (
         /* 🛒 CUSTOMER STOREFRONT VIEW & EMBEDDED DASHBOARD CART */
-        <View style={{ flex: 1 }}>
-          {/* Official FarmsKing Agri Store Search Header */}
-          {user && (
-            <View style={{ backgroundColor: '#f8fafc', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 14 }}>
-              <View style={{ width: '100%', maxWidth: 1200, alignSelf: 'center' }}>
-                {/* Search Box */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(16,185,129,0.2)', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 12 }}>
-                  <Ionicons name="search" size={18} color="#00ff87" />
-                  <TextInput
-                    style={{ flex: 1, color: '#0f172a', fontSize: 14, fontFamily: FONT.medium }}
-                    placeholder="Search: Seeds, Fertilizers, Sprayers, Organic..."
-                    placeholderTextColor="#475569"
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                  />
-                  {searchQuery ? (
-                    <TouchableOpacity onPress={() => setSearchQuery('')}>
-                      <Ionicons name="close-circle" size={16} color="#64748b" />
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
+        <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
+          {/* Search Box - Accessible to ALL Visitors (With or Without Login) */}
+          <View style={styles.storeSearchSection}>
+            <View style={styles.storeSearchContainer}>
+              <View style={styles.storeSearchBox}>
+                <Ionicons name="search" size={20} color="#059669" />
+                <TextInput
+                  style={styles.storeSearchInput}
+                  placeholder="Search products: Seeds, Fertilizers, Sprayers, Bio..."
+                  placeholderTextColor="#64748b"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+                {searchQuery ? (
+                  <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                    <Ionicons name="close-circle" size={18} color="#94a3b8" />
+                  </TouchableOpacity>
+                ) : null}
               </View>
             </View>
-          )}
+          </View>
 
-          {/* Sub Nav Bar */}
-          <View style={{ backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', minWidth: '100%', maxWidth: 1200, alignSelf: 'center', paddingVertical: 4 }}>
+          {/* Sub Nav Bar (Catalog, Cart, My Orders) */}
+          <View style={styles.storeNavTabsBar}>
+            <View style={styles.storeNavTabsContainer}>
               <TouchableOpacity
-                style={[{ paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 6 }, activeSubTab === 'CATALOG' && { backgroundColor: 'rgba(16,185,129,0.12)' }]}
+                style={[styles.storeNavTab, activeSubTab === 'CATALOG' && styles.storeNavTabActive]}
                 onPress={() => {
                   tap();
                   setActiveSubTab('CATALOG');
                 }}
               >
-                <Ionicons name="grid-outline" size={14} color={activeSubTab === 'CATALOG' ? '#00ff87' : '#475569'} />
-                <Text numberOfLines={1} adjustsFontSizeToFit style={[{ fontSize: 13, fontFamily: FONT.bold, color: '#64748b' }, activeSubTab === 'CATALOG' && { color: '#16a34a', fontFamily: FONT.extraBold }]}>Products</Text>
+                <Ionicons name="grid-outline" size={15} color={activeSubTab === 'CATALOG' ? '#047857' : '#64748b'} />
+                <Text style={[styles.storeNavTabText, activeSubTab === 'CATALOG' && styles.storeNavTabTextActive]}>
+                  Catalog
+                </Text>
+                <View style={[styles.storeTabBadge, activeSubTab === 'CATALOG' && styles.storeTabBadgeActive]}>
+                  <Text style={[styles.storeTabBadgeText, activeSubTab === 'CATALOG' && styles.storeTabBadgeTextActive]}>
+                    {filteredProducts.length}
+                  </Text>
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[{ paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 6 }, activeSubTab === 'CHECKOUT' && { backgroundColor: 'rgba(16,185,129,0.12)' }]}
+                style={[styles.storeNavTab, activeSubTab === 'CHECKOUT' && styles.storeNavTabActive]}
                 onPress={() => {
                   tap();
                   setActiveSubTab('CHECKOUT');
                 }}
               >
-                <Ionicons name="bag-check-outline" size={14} color={activeSubTab === 'CHECKOUT' ? '#00ff87' : '#475569'} />
-                <Text numberOfLines={1} adjustsFontSizeToFit style={[{ fontSize: 13, fontFamily: FONT.bold, color: '#64748b' }, activeSubTab === 'CHECKOUT' && { color: '#16a34a', fontFamily: FONT.extraBold }]}>Cart ({itemCount})</Text>
+                <Ionicons name="bag-check-outline" size={15} color={activeSubTab === 'CHECKOUT' ? '#047857' : '#64748b'} />
+                <Text style={[styles.storeNavTabText, activeSubTab === 'CHECKOUT' && styles.storeNavTabTextActive]}>
+                  Cart
+                </Text>
+                {itemCount > 0 && (
+                  <View style={[styles.storeTabBadge, { backgroundColor: '#10b981' }]}>
+                    <Text style={[styles.storeTabBadgeText, { color: '#ffffff' }]}>
+                      {itemCount}
+                    </Text>
+                  </View>
+                )}
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[{ paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 6 }, activeSubTab === 'ORDERS' && { backgroundColor: 'rgba(16,185,129,0.12)' }]}
+                style={[styles.storeNavTab, activeSubTab === 'ORDERS' && styles.storeNavTabActive]}
                 onPress={() => {
                   tap();
-                  setActiveSubTab('ORDERS');
+                  if (!user) {
+                    router.push('/(auth)/login?redirect=/shop' as any);
+                  } else {
+                    setActiveSubTab('ORDERS');
+                  }
                 }}
               >
-                <Ionicons name="receipt-outline" size={14} color={activeSubTab === 'ORDERS' ? '#00ff87' : '#475569'} />
-                <Text numberOfLines={1} adjustsFontSizeToFit style={[{ fontSize: 13, fontFamily: FONT.bold, color: '#64748b' }, activeSubTab === 'ORDERS' && { color: '#16a34a', fontFamily: FONT.extraBold }]}>My Orders</Text>
+                <Ionicons name="receipt-outline" size={15} color={activeSubTab === 'ORDERS' ? '#047857' : '#64748b'} />
+                <Text style={[styles.storeNavTabText, activeSubTab === 'ORDERS' && styles.storeNavTabTextActive]}>
+                  My Orders
+                </Text>
+                {user && (myOrders?.length ?? 0) > 0 && (
+                  <View style={styles.storeTabBadge}>
+                    <Text style={styles.storeTabBadgeText}>
+                      {myOrders?.length}
+                    </Text>
+                  </View>
+                )}
               </TouchableOpacity>
-
-
-            </ScrollView>
+            </View>
           </View>
 
           {activeSubTab === 'CATALOG' ? (
             <View style={{ flex: 1, backgroundColor: '#f8fafc' }}>
               {/* Category Filter Chips Bar */}
-              <View style={{ backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}>
+              <View style={styles.categoryChipsBar}>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ gap: 8, paddingHorizontal: 12, paddingVertical: 8, alignItems: 'center', maxWidth: 1200, alignSelf: 'center' }}
+                  contentContainerStyle={styles.categoryChipsScroll}
                 >
                   {categoriesList.map((cat) => {
                     const isHiddenCat = cat === '🔴 Hidden / Off Products';
@@ -2332,12 +2364,10 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                       <TouchableOpacity
                         key={cat}
                         style={[
-                          { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 99, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.02)' },
-                          isHiddenCat && { backgroundColor: 'rgba(220,38,38,0.1)', borderColor: 'rgba(220,38,38,0.3)' },
-                          isActive && {
-                            backgroundColor: isHiddenCat ? '#dc2626' : 'rgba(16,185,129,0.15)',
-                            borderColor: isHiddenCat ? '#b91c1c' : '#00ff87',
-                          },
+                          styles.categoryChip,
+                          isActive && styles.categoryChipActive,
+                          isHiddenCat && styles.categoryChipHidden,
+                          isHiddenCat && isActive && styles.categoryChipHiddenActive,
                         ]}
                         onPress={() => {
                           tap();
@@ -2346,9 +2376,9 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                       >
                         <Text
                           style={[
-                            { fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
-                            isHiddenCat && { color: '#ef4444', fontFamily: FONT.extraBold },
-                            isActive && { color: isHiddenCat ? '#ffffff' : '#00ff87', fontFamily: FONT.bold },
+                            styles.categoryChipText,
+                            isActive && styles.categoryChipTextActive,
+                            isHiddenCat && { color: isActive ? '#ffffff' : '#dc2626' },
                           ]}
                         >
                           {cat}
@@ -2369,11 +2399,14 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                     backgroundColor: activeCategory === '🔴 Hidden / Off Products' ? '#dc2626' : '#fef2f2',
                     borderColor: activeCategory === '🔴 Hidden / Off Products' ? '#b91c1c' : '#fca5a5',
                     borderWidth: 1,
-                    borderRadius: 8,
-                    paddingHorizontal: 12,
-                    paddingVertical: 8,
-                    marginHorizontal: 12,
-                    marginTop: 8,
+                    borderRadius: 10,
+                    paddingHorizontal: 14,
+                    paddingVertical: 10,
+                    marginHorizontal: 16,
+                    marginTop: 10,
+                    maxWidth: 1240,
+                    alignSelf: 'center',
+                    width: '95%',
                   }}
                   onPress={() => {
                     tap();
@@ -2382,12 +2415,12 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Ionicons name="eye-off" size={16} color={activeCategory === '🔴 Hidden / Off Products' ? '#ffffff' : '#dc2626'} />
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: activeCategory === '🔴 Hidden / Off Products' ? '#ffffff' : '#991b1b' }}>
+                    <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: activeCategory === '🔴 Hidden / Off Products' ? '#ffffff' : '#991b1b' }}>
                       {inactiveProductCount} Product(s) Hidden / Turned OFF
                     </Text>
                   </View>
                   <View style={{ backgroundColor: activeCategory === '🔴 Hidden / Off Products' ? '#ffffff' : '#dc2626', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }}>
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.extraBold, color: activeCategory === '🔴 Hidden / Off Products' ? '#dc2626' : '#ffffff' }}>
+                    <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: activeCategory === '🔴 Hidden / Off Products' ? '#dc2626' : '#ffffff' }}>
                       {activeCategory === '🔴 Hidden / Off Products' ? 'Showing Hidden (Click for All)' : '🔴 Show Hidden Products'}
                     </Text>
                   </View>
@@ -2395,48 +2428,33 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
               )}
 
               {/* Layout View Mode Bar (Grid vs List Toggle) */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.md, paddingVertical: 8, backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0', maxWidth: 1200, width: '100%', alignSelf: 'center' }}>
-                <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: '#64748b' }}>
-                  {activeCategory === '🔴 Hidden / Off Products' ? '🔴 Hidden / Off Products' : '📦 Available Products'} ({filteredProducts.length})
-                </Text>
+              <View style={styles.layoutModeBar}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#1e293b' }}>
+                    {activeCategory === '🔴 Hidden / Off Products' ? '🔴 Hidden Products' : 'Available Products'}
+                  </Text>
+                  <View style={styles.productCountPill}>
+                    <Text style={styles.productCountPillText}>{filteredProducts.length}</Text>
+                  </View>
+                </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <TouchableOpacity
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 4,
-                      paddingHorizontal: 8,
-                      paddingVertical: 4,
-                      borderRadius: 6,
-                      backgroundColor: storeLayoutMode === 'GRID' ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)',
-                      borderWidth: 1,
-                      borderColor: storeLayoutMode === 'GRID' ? '#00ff87' : 'rgba(255,255,255,0.1)',
-                    }}
+                    style={[styles.layoutToggleBtn, storeLayoutMode === 'GRID' && styles.layoutToggleBtnActive]}
                     onPress={() => { tap(); setStoreLayoutMode('GRID'); }}
                   >
-                    <Ionicons name="grid" size={13} color={storeLayoutMode === 'GRID' ? '#00ff87' : '#64748b'} />
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: storeLayoutMode === 'GRID' ? '#00ff87' : '#64748b' }}>
-                      2-Col Grid
+                    <Ionicons name="grid" size={13} color={storeLayoutMode === 'GRID' ? '#ffffff' : '#64748b'} />
+                    <Text style={[styles.layoutToggleText, storeLayoutMode === 'GRID' && styles.layoutToggleTextActive]}>
+                      Grid
                     </Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 4,
-                      paddingHorizontal: 8,
-                      paddingVertical: 4,
-                      borderRadius: 6,
-                      backgroundColor: storeLayoutMode === 'COMPACT_LIST' ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)',
-                      borderWidth: 1,
-                      borderColor: storeLayoutMode === 'COMPACT_LIST' ? '#00ff87' : 'rgba(255,255,255,0.1)',
-                    }}
+                    style={[styles.layoutToggleBtn, storeLayoutMode === 'COMPACT_LIST' && styles.layoutToggleBtnActive]}
                     onPress={() => { tap(); setStoreLayoutMode('COMPACT_LIST'); }}
                   >
-                    <Ionicons name="list" size={13} color={storeLayoutMode === 'COMPACT_LIST' ? '#00ff87' : '#64748b'} />
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: storeLayoutMode === 'COMPACT_LIST' ? '#00ff87' : '#64748b' }}>
-                      Compact List
+                    <Ionicons name="list" size={13} color={storeLayoutMode === 'COMPACT_LIST' ? '#ffffff' : '#64748b'} />
+                    <Text style={[styles.layoutToggleText, storeLayoutMode === 'COMPACT_LIST' && styles.layoutToggleTextActive]}>
+                      List
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -2448,9 +2466,9 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
               >
                 {filteredProducts.length === 0 ? (
                   <View style={styles.emptyCenter}>
-                    <Ionicons name="storefront-outline" size={44} color="#cbd5e1" />
+                    <Ionicons name="storefront-outline" size={48} color="#94a3b8" />
                     <Text style={styles.emptyText}>
-                      {activeCategory === '🔴 Hidden / Off Products' ? 'No hidden products found.' : 'No products available right now.'}
+                      {activeCategory === '🔴 Hidden / Off Products' ? 'No hidden products found.' : 'No products available right now in this category.'}
                     </Text>
                   </View>
                 ) : (
@@ -2461,6 +2479,8 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                       cartQty={cartQtyFor(product.id)}
                       layoutMode={storeLayoutMode}
                       isAdmin={isAdminOrSuperAdmin}
+                      isDesktop={isDesktop}
+                      isTablet={isTablet}
                       onToggleActive={(p) => {
                         updateProduct.mutate({ id: p.id, payload: { isActive: !p.isActive } });
                       }}
@@ -2522,13 +2542,13 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                       <TouchableOpacity onPress={() => removeItem(item.productId)} style={{ padding: 2 }}>
                         <Ionicons name="trash-outline" size={15} color="#dc2626" />
                       </TouchableOpacity>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#e2e8f0', borderRadius: RADIUS.pill, paddingHorizontal: 8, paddingVertical: 4 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#f1f5f9', borderRadius: RADIUS.pill, paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderColor: '#cbd5e1' }}>
                         <TouchableOpacity onPress={() => updateQuantity(item.productId, item.quantity - 1)} style={{ width: 22, height: 22, alignItems: 'center', justifyContent: 'center' }}>
-                          <Ionicons name="remove" size={14} color="#e2e8f0" />
+                          <Ionicons name="remove" size={14} color="#0f172a" />
                         </TouchableOpacity>
                         <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#0f172a', minWidth: 16, textAlign: 'center' }}>{item.quantity}</Text>
                         <TouchableOpacity onPress={() => updateQuantity(item.productId, item.quantity + 1)} style={{ width: 22, height: 22, alignItems: 'center', justifyContent: 'center' }}>
-                          <Ionicons name="add" size={14} color="#e2e8f0" />
+                          <Ionicons name="add" size={14} color="#0f172a" />
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -2631,17 +2651,36 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
                         </View>
                       </View>
 
+                      {/* Guest Cart Preservation Notice if not logged in */}
+                      {!user && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#ecfdf5', borderWidth: 1, borderColor: '#a7f3d0', borderRadius: 10, padding: 12, marginTop: 4 }}>
+                          <Ionicons name="cart" size={20} color="#059669" />
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: '#065f46' }}>
+                              Cart saved for checkout
+                            </Text>
+                            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#047857', marginTop: 1 }}>
+                              Login or register to add your delivery address and confirm your order. Your cart items are preserved.
+                            </Text>
+                          </View>
+                        </View>
+                      )}
+
                       {/* Prominent Button to Step 2 */}
                       <TouchableOpacity
-                        style={[styles.placeOrderBtn, { backgroundColor: '#15803d', marginTop: 4, paddingVertical: 14, borderRadius: RADIUS.md }]}
+                        style={[styles.placeOrderBtn, { backgroundColor: '#059669', marginTop: 8, paddingVertical: 14, borderRadius: RADIUS.md }]}
                         activeOpacity={0.88}
                         onPress={() => {
                           tap();
-                          setCheckoutStep(2);
+                          if (!user) {
+                            router.push('/(auth)/login?redirect=/shop' as any);
+                          } else {
+                            setCheckoutStep(2);
+                          }
                         }}
                       >
-                        <Text style={[styles.placeOrderBtnText, { fontSize: 15, fontFamily: FONT.extraBold }]}>
-                          Proceed to Select Address & Payment ➔
+                        <Text style={[styles.placeOrderBtnText, { fontSize: 15, fontFamily: FONT.extraBold, color: '#ffffff' }]}>
+                          {user ? 'Proceed to Select Address & Payment ➔' : 'Login / Register to Complete Checkout ➔'}
                         </Text>
                       </TouchableOpacity>
                     </View>
@@ -3015,7 +3054,7 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
           {/* Cart Bottom Checkout Banner */}
           {itemCount > 0 && activeSubTab !== 'CHECKOUT' && (
             <TouchableOpacity
-              style={styles.cartFooterBanner}
+              style={[styles.cartFooterBanner, isMobile && { bottom: 74 }]}
               activeOpacity={0.9}
               onPress={() => {
                 tap();
@@ -4868,7 +4907,11 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
               imageUrl: selectedProductForDetail.imageUrl,
             });
             setSelectedProductForDetail(null);
-            setActiveSubTab('CHECKOUT');
+            if (!user) {
+              router.push('/(auth)/login?redirect=/shop' as any);
+            } else {
+              setActiveSubTab('CHECKOUT');
+            }
           }
         }}
       />
@@ -4888,7 +4931,11 @@ Payment: ${paymentMethod}${utrSubmitted ? ` (UTR: ${utrSubmitted})` : ''}`;
             imageUrl: prod.imageUrl,
           });
           setIsHotDealModalVisible(false);
-          setActiveSubTab('CHECKOUT');
+          if (!user) {
+            router.push('/(auth)/login?redirect=/shop' as any);
+          } else {
+            setActiveSubTab('CHECKOUT');
+          }
         }}
       />
 
@@ -5556,6 +5603,8 @@ function ProductCard({
   layoutMode = 'GRID',
   isAdmin,
   onToggleActive,
+  isDesktop,
+  isTablet,
 }: {
   product: Product;
   cartQty: number;
@@ -5564,6 +5613,8 @@ function ProductCard({
   layoutMode?: 'GRID' | 'COMPACT_LIST';
   isAdmin?: boolean;
   onToggleActive?: (product: Product) => void;
+  isDesktop?: boolean;
+  isTablet?: boolean;
 }) {
   const outOfStock = product.stockQty <= 0;
   const isHidden = !product.isActive;
@@ -5574,6 +5625,31 @@ function ProductCard({
 
   const isFarmerFood = product.category === 'Natural Farmer Foods' || (product.description || '').includes('[FARMER_MADE]');
   const isCouponProduct = product.category === 'Farmer Plan & Coupons' || (product.category || '').includes('Coupon') || (product.category || '').includes('Plan');
+
+  const { width } = useWindowDimensions();
+  const isMobile = width <= 640;
+  const responsiveCardWidth = useMemo(() => {
+    if (layoutMode === 'COMPACT_LIST') return { width: '100%' as any };
+    if (Platform.OS !== 'web') {
+      if (width > 1024) return { width: '23.5%' as any };
+      if (width > 640) return { width: '31.5%' as any };
+      return { width: '48%' as any };
+    }
+    // Web Responsive Grid: fixed column percentages so cards NEVER stretch awkwardly
+    if (width > 1100) {
+      // 4 columns on desktop (1240px container -> ~290px per card)
+      return { width: 'calc(25% - 11px)' as any, maxWidth: 295, minWidth: 220 };
+    }
+    if (width > 768) {
+      // 3 columns on tablet (768px-1100px -> ~240-290px per card)
+      return { width: 'calc(33.333% - 10px)' as any, maxWidth: 320, minWidth: 200 };
+    }
+    if (width > 360) {
+      // 2 columns on mobile
+      return { width: 'calc(50% - 7px)' as any, maxWidth: '50%' as any };
+    }
+    return { width: '100%' as any };
+  }, [width, layoutMode]);
 
   if (layoutMode === 'COMPACT_LIST') {
     return (
@@ -5670,7 +5746,8 @@ function ProductCard({
     <TouchableOpacity
       style={[
         styles.card,
-        premiumShadow('rgba(0,0,0,0.1)', 'sm'),
+        responsiveCardWidth,
+        premiumShadow('rgba(0,0,0,0.08)', 'sm'),
         isHidden && { backgroundColor: '#fff1f2', borderColor: '#fca5a5', borderWidth: 1.5 },
         isFarmerFood && !isHidden && { backgroundColor: '#f0fdf4', borderColor: '#16a34a', borderWidth: 2 },
         isCouponProduct && !isHidden && { backgroundColor: '#fffbeb', borderColor: '#fcd34d', borderWidth: 1.5 },
@@ -5708,9 +5785,9 @@ function ProductCard({
       {(() => {
         const displayImg = getProductDisplayImage(product);
         return displayImg ? (
-          <Image source={{ uri: displayImg }} style={[styles.productImage, isHidden && { opacity: 0.65 }]} resizeMode="cover" />
+          <Image source={{ uri: displayImg }} style={[styles.productImage, { height: isMobile ? 125 : 160 }, isHidden && { opacity: 0.65 }]} resizeMode="cover" />
         ) : (
-          <View style={[styles.productImage, styles.productImagePlaceholder, isHidden && { backgroundColor: '#fee2e2' }]}>
+          <View style={[styles.productImage, styles.productImagePlaceholder, { height: isMobile ? 125 : 160 }, isHidden && { backgroundColor: '#fee2e2' }]}>
             <Ionicons name={isHidden ? 'eye-off' : 'leaf'} size={28} color={isHidden ? '#dc2626' : '#15803d'} />
           </View>
         );
@@ -5753,7 +5830,7 @@ function ProductCard({
             }}
           >
             <Ionicons name="power" size={14} color="#ffffff" />
-            <Text style={[styles.addBtnText, { color: '#0f172a' }]}>
+            <Text style={[styles.addBtnText, { color: '#ffffff' }]}>
               🟢 Turn ON / Restore
             </Text>
           </TouchableOpacity>
@@ -5877,48 +5954,87 @@ const styles = StyleSheet.create({
   subTabItemActive: { borderBottomColor: '#10b981' },
   subTabText: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
   subTabTextActive: { color: '#10b981', fontFamily: FONT.bold },
+
+  // Search Bar
+  storeSearchSection: { backgroundColor: '#f8fafc', paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 },
+  storeSearchContainer: { width: '100%', maxWidth: 1240, alignSelf: 'center' },
+  storeSearchBox: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#ffffff', borderWidth: 1.5, borderColor: '#cbd5e1', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 10, ...premiumShadow('rgba(0,0,0,0.03)', 'sm') },
+  storeSearchInput: { flex: 1, color: '#0f172a', fontSize: 13.5, fontFamily: FONT.medium },
+
+  // Sub Nav Tabs Bar (Catalog, Cart, My Orders)
+  storeNavTabsBar: { backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
+  storeNavTabsContainer: { flexDirection: 'row', width: '100%', maxWidth: 1240, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 8, gap: 10 },
+  storeNavTab: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0' },
+  storeNavTabActive: { backgroundColor: '#ecfdf5', borderColor: '#059669' },
+  storeNavTabText: { fontSize: 12.5, fontFamily: FONT.bold, color: '#64748b' },
+  storeNavTabTextActive: { color: '#047857', fontFamily: FONT.extraBold },
+  storeTabBadge: { backgroundColor: '#e2e8f0', paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: RADIUS.pill },
+  storeTabBadgeActive: { backgroundColor: '#10b981' },
+  storeTabBadgeText: { fontSize: 10, fontFamily: FONT.bold, color: '#475569' },
+  storeTabBadgeTextActive: { color: '#ffffff' },
+
+  productCountPill: { backgroundColor: '#ecfdf5', paddingHorizontal: 8, paddingVertical: 2, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#a7f3d0' },
+  productCountPillText: { fontSize: 11, fontFamily: FONT.bold, color: '#059669' },
+
+  // Category Filter Chips
+  categoryChipsBar: { backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
+  categoryChipsScroll: { gap: 8, paddingHorizontal: 16, paddingVertical: 10, alignItems: 'center', maxWidth: 1240, alignSelf: 'center' },
+  categoryChip: { paddingHorizontal: 15, paddingVertical: 7, borderRadius: 99, borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#ffffff' },
+  categoryChipActive: { backgroundColor: '#059669', borderColor: '#047857', ...premiumShadow('#059669', 'sm') },
+  categoryChipHidden: { backgroundColor: '#fef2f2', borderColor: '#fca5a5' },
+  categoryChipHiddenActive: { backgroundColor: '#dc2626', borderColor: '#b91c1c' },
+  categoryChipText: { fontSize: 12.5, fontFamily: FONT.semiBold, color: '#475569' },
+  categoryChipTextActive: { color: '#ffffff', fontFamily: FONT.extraBold },
+
+  // Layout bar
+  layoutModeBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#f8fafc', maxWidth: 1240, width: '100%', alignSelf: 'center' },
+  layoutToggleBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#cbd5e1' },
+  layoutToggleBtnActive: { backgroundColor: '#059669', borderColor: '#047857' },
+  layoutToggleText: { fontSize: 11, fontFamily: FONT.bold, color: '#64748b' },
+  layoutToggleTextActive: { color: '#ffffff' },
+
   categoryFilterRow: { backgroundColor: '#ffffff', flexGrow: 0, height: 50, minHeight: 50 },
   filterChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: '#e2e8f0', backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center', minHeight: 34 },
-  filterChipText: { fontSize: 12, fontFamily: FONT.bold, color: '#e2e8f0', textAlign: 'center', includeFontPadding: false, lineHeight: 16 },
-  grid: { padding: SPACING.md, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10, columnGap: 10, paddingBottom: 170, maxWidth: 1200, width: '100%', alignSelf: 'center' },
+  filterChipText: { fontSize: 12, fontFamily: FONT.bold, color: '#334155', textAlign: 'center', includeFontPadding: false, lineHeight: 16 },
+  grid: { paddingHorizontal: 16, paddingVertical: 14, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-start', gap: 14, paddingBottom: 170, maxWidth: 1240, width: '100%', alignSelf: 'center' },
   emptyCenter: { width: '100%', alignItems: 'center', justifyContent: 'center', padding: 50, gap: 8 },
   emptyText: { fontSize: 13, fontFamily: FONT.medium, color: '#64748b' },
 
-  card: { width: (Platform.OS === 'web' ? 'calc(50% - 6px)' : '48.5%') as any, maxWidth: 280, backgroundColor: '#ffffff', borderRadius: RADIUS.lg, padding: 8, gap: 4, overflow: 'hidden', borderWidth: 1, borderColor: '#e2e8f0' },
-  cardBadgeRow: { position: 'absolute', top: 6, left: 6, zIndex: 10 },
+  card: { backgroundColor: '#ffffff', borderRadius: 16, padding: 10, gap: 5, overflow: 'hidden', borderWidth: 1, borderColor: '#e2e8f0' },
+  cardBadgeRow: { position: 'absolute', top: 8, left: 8, zIndex: 10 },
   certifiedTag: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#fef3c7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: '#fcd34d' },
   certifiedTagText: { fontSize: 8.5, fontFamily: FONT.extraBold, color: '#b45309' },
-  productImage: { width: '100%', height: 125, borderRadius: RADIUS.md },
-  productImagePlaceholder: { backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
+  productImage: { width: '100%', height: 135, borderRadius: RADIUS.md },
+  productImagePlaceholder: { backgroundColor: '#f0fdf4', alignItems: 'center', justifyContent: 'center' },
   cardContent: { gap: 4, flex: 1, justifyContent: 'space-between' },
   productCategoryTag: { fontSize: 9.5, fontFamily: FONT.bold, color: '#059669', textTransform: 'uppercase' },
-  productName: { fontSize: 12, fontFamily: FONT.bold, color: '#0f172a', minHeight: 32, lineHeight: 15 },
+  productName: { fontSize: 13, fontFamily: FONT.bold, color: '#0f172a', minHeight: 34, lineHeight: 17 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 3 },
-  productPrice: { fontSize: 14, fontFamily: FONT.extraBold, color: '#16a34a' },
-  productUnit: { fontSize: 9.5, fontFamily: FONT.medium, color: '#64748b' },
+  productPrice: { fontSize: 15, fontFamily: FONT.extraBold, color: '#16a34a' },
+  productUnit: { fontSize: 10, fontFamily: FONT.medium, color: '#64748b' },
 
-  listRowCard: { width: '100%', flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff', borderRadius: RADIUS.md, padding: 8, borderWidth: 1, borderColor: '#e2e8f0' },
+  listRowCard: { width: '100%', flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff', borderRadius: RADIUS.md, padding: 10, borderWidth: 1, borderColor: '#e2e8f0' },
 
-  addBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: '#10b981', paddingVertical: 8, borderRadius: RADIUS.md, marginTop: 4 },
+  addBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, backgroundColor: '#10b981', paddingVertical: 9, borderRadius: 10, marginTop: 4 },
   addBtnActive: { backgroundColor: '#059669' },
   addBtnDisabled: { backgroundColor: '#e2e8f0' },
-  addBtnText: { fontSize: 11, fontFamily: FONT.extraBold, color: '#0f172a' },
+  addBtnText: { fontSize: 12, fontFamily: FONT.extraBold, color: '#ffffff' },
 
-  cartFooterBanner: { position: 'absolute', bottom: 14, left: 12, right: 12, backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: RADIUS.lg, paddingVertical: 11, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: '#10b981', backdropFilter: 'blur(10px)' as any, ...premiumShadow('rgba(0,0,0,0.15)', 'lg') },
+  cartFooterBanner: { position: 'absolute', bottom: 14, left: 16, right: 16, maxWidth: 860, alignSelf: 'center', backgroundColor: '#064e3b', borderRadius: RADIUS.lg, paddingVertical: 13, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1.5, borderColor: '#059669', ...premiumShadow('#064e3b', 'lg') },
   cartFooterBadge: { backgroundColor: '#10b981', width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  cartFooterBadgeText: { color: '#0f172a', fontSize: 13, fontFamily: FONT.extraBold },
-  cartFooterText: { color: '#0f172a', fontSize: 13, fontFamily: FONT.bold },
-  cartFooterSub: { color: '#059669', fontSize: 11, fontFamily: FONT.bold },
-  cartFooterAction: { color: '#10b981', fontSize: 13, fontFamily: FONT.extraBold, textTransform: 'uppercase' },
+  cartFooterBadgeText: { color: '#022c22', fontSize: 13, fontFamily: FONT.extraBold },
+  cartFooterText: { color: '#ffffff', fontSize: 13.5, fontFamily: FONT.bold },
+  cartFooterSub: { color: '#a7f3d0', fontSize: 11, fontFamily: FONT.bold },
+  cartFooterAction: { color: '#00ff87', fontSize: 13, fontFamily: FONT.extraBold, textTransform: 'uppercase' },
 
   cartItemRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ffffff', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' },
   qtyBtn: { width: 26, height: 26, borderRadius: 13, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
   checkoutBox: { backgroundColor: '#f8fafc', borderRadius: 12, padding: 14, gap: 10, marginTop: 10, borderWidth: 1, borderColor: '#e2e8f0' },
   payMethodBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 9, borderRadius: 8, borderWidth: 1, borderColor: '#cbd5e1', backgroundColor: '#ffffff' },
   payMethodBtnActive: { backgroundColor: '#f0fdf4', borderColor: '#10b981' },
-  payMethodText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#e2e8f0' },
+  payMethodText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#0f172a' },
   placeOrderBtn: { backgroundColor: '#10b981', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 8 },
-  placeOrderBtnText: { color: '#0f172a', fontSize: 14, fontFamily: FONT.extraBold },
+  placeOrderBtnText: { color: '#ffffff', fontSize: 14, fontFamily: FONT.extraBold },
 
   qrBox: { padding: 14, backgroundColor: '#ffffff', borderRadius: RADIUS.lg, marginVertical: 6, borderWidth: 1, borderColor: '#e2e8f0' },
   upiCopyBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#f0fdf4', paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: '#bbf7d0' },

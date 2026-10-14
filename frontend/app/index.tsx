@@ -100,10 +100,12 @@ function FeaturePill({ icon, label }: { icon: any; label: string }) {
 }
 
 // ─── Role Badge ──────────────────────────────────────────────────────────────
-function RoleBadge({ emoji, title, color }: any) {
+function RoleBadge({ icon, title, color }: any) {
   return (
     <TiltCard style={[S.roleBadge, { borderColor: `${color}40`, backgroundColor: `${color}12` }]}>
-      <Text style={{ fontSize: 22, marginBottom: 6 }}>{emoji}</Text>
+      <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: `${color}20`, alignItems: 'center', justifyContent: 'center', marginBottom: 8, borderWidth: 1, borderColor: `${color}40` }}>
+        <Ionicons name={icon} size={22} color={color} />
+      </View>
       <Text style={[S.roleTitle, { color }]}>{title}</Text>
     </TiltCard>
   );
@@ -177,12 +179,16 @@ export default function PublicLandingPage() {
             </Text>
 
             {/* CTA Buttons */}
+            {/* CTA Buttons */}
             <View style={[S.ctaRow, isMobile && { justifyContent: 'center' }]}>
               <TiltCard intensity={1.06}>
                 <TouchableOpacity onPress={() => router.push('/(auth)/login')} activeOpacity={0.9}>
                   <LinearGradient colors={['#00ff87', '#059669']} style={S.btnPrimary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-                    <Ionicons name="leaf" size={18} color="#02120a" />
-                    <Text style={S.btnPrimaryText}>Start for Free</Text>
+                    <Ionicons name="person-circle" size={20} color="#02120a" />
+                    <View style={{ flexDirection: 'column' }}>
+                      <Text style={S.btnPrimaryText}>Login / Register</Text>
+                      <Text style={S.btnPrimarySubText}>Farmer & Partner Portal</Text>
+                    </View>
                   </LinearGradient>
                 </TouchableOpacity>
               </TiltCard>
@@ -227,15 +233,33 @@ export default function PublicLandingPage() {
                 <Image source={require('@/assets/images/farmsking_allcrops_mockup.png')} style={S.heroImage} resizeMode="contain" />
               </Float>
 
-              {/* Floating live mandi price widget */}
+              {/* Floating live mandi price feature widget */}
               <Float delay={800} dist={8} dur={3500} style={S.floatWidget1}>
-                <BlurView intensity={35} tint="light" style={StyleSheet.absoluteFill} />
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <Ionicons name="trending-up" size={16} color="#10b981" />
-                  <Text style={S.widgetTitle}>Mandi Price Live</Text>
-                </View>
-                <Text style={S.widgetBig}>₹2,140</Text>
-                <Text style={S.widgetSub}>Wheat / Quintal · ↑ 8.4% today</Text>
+                <TouchableOpacity
+                  activeOpacity={0.88}
+                  onPress={() => router.push('/(auth)/login')}
+                >
+                  <BlurView intensity={40} tint="light" style={StyleSheet.absoluteFill} />
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Ionicons name="trending-up" size={16} color="#10b981" />
+                      <Text style={S.widgetTitle}>Mandi Price Live</Text>
+                    </View>
+                    <View style={S.livePulseBadge}>
+                      <View style={S.livePulseDot} />
+                      <Text style={S.livePulseText}>LIVE APMC</Text>
+                    </View>
+                  </View>
+                  <Text style={S.widgetBig}>₹2,140</Text>
+                  <Text style={S.widgetSub}>Wheat / Quintal · ↑ 8.4% today</Text>
+
+                  {/* Feature Conversion Prompt */}
+                  <View style={S.mandiPromptBox}>
+                    <Ionicons name="lock-closed" size={11} color="#059669" />
+                    <Text style={S.mandiPromptText}>Login to View Live Mandi Rates</Text>
+                    <Ionicons name="arrow-forward" size={11} color="#059669" />
+                  </View>
+                </TouchableOpacity>
               </Float>
 
               {/* Floating AI diagnosis widget */}
@@ -252,11 +276,42 @@ export default function PublicLandingPage() {
           )}
         </View>
 
-        {/* Mobile crop image */}
+        {/* Mobile crop image & Mandi Live Feature Card */}
         {!isDesktop && (
-          <Float dist={10} dur={3800} style={{ alignItems: 'center', marginTop: 16, marginBottom: 8 }}>
-            <Image source={require('@/assets/images/farmsking_allcrops_mockup.png')} style={[S.heroImage, { width: width * 0.75, height: 160 }]} resizeMode="contain" />
-          </Float>
+          <View style={{ alignItems: 'center', marginTop: 12, marginBottom: 16, width: '100%', paddingHorizontal: 16 }}>
+            <Float dist={10} dur={3800} style={{ alignItems: 'center', marginBottom: 16 }}>
+              <Image source={require('@/assets/images/farmsking_allcrops_mockup.png')} style={[S.heroImage, { width: width * 0.75, height: 160 }]} resizeMode="contain" />
+            </Float>
+
+            <TouchableOpacity
+              style={S.mobileMandiCard}
+              activeOpacity={0.88}
+              onPress={() => router.push('/(auth)/login')}
+            >
+              <LinearGradient colors={['rgba(16,185,129,0.08)', 'rgba(5,150,105,0.02)']} style={StyleSheet.absoluteFill} />
+              <View style={S.mobileMandiTop}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons name="trending-up" size={18} color="#10b981" />
+                  <Text style={S.mobileMandiTitle}>Mandi Price Live</Text>
+                </View>
+                <View style={S.livePulseBadge}>
+                  <View style={S.livePulseDot} />
+                  <Text style={S.livePulseText}>LIVE APMC</Text>
+                </View>
+              </View>
+
+              <View style={S.mobileMandiRateRow}>
+                <Text style={S.mobileMandiRate}>₹2,140</Text>
+                <Text style={S.mobileMandiCrop}>Wheat / Quintal · ↑ 8.4% today</Text>
+              </View>
+
+              <View style={S.mandiPromptBox}>
+                <Ionicons name="lock-closed" size={12} color="#059669" />
+                <Text style={S.mandiPromptText}>Login / Register to View All Mandi Rates</Text>
+                <Ionicons name="arrow-forward" size={12} color="#059669" />
+              </View>
+            </TouchableOpacity>
+          </View>
         )}
 
         {/* ══ SERVICES ══ */}
@@ -308,12 +363,12 @@ export default function PublicLandingPage() {
           <Text style={S.eyebrow}>FOR EVERYONE</Text>
           <Text style={S.sectionTitle}>Your FarmsKing Role</Text>
           <View style={S.rolesGrid}>
-            <RoleBadge emoji="🌾" title="Farmer" color="#10b981" />
-            <RoleBadge emoji="🌺" title="Gardener" color="#ec4899" />
-            <RoleBadge emoji="🧑‍⚕️" title="Crop Doctor" color="#3b82f6" />
-            <RoleBadge emoji="🏪" title="Seller" color="#f59e0b" />
-            <RoleBadge emoji="🤝" title="Biz Partner" color="#f97316" />
-            <RoleBadge emoji="🛒" title="Customer" color="#8b5cf6" />
+            <RoleBadge icon="leaf" title="Farmer" color="#10b981" />
+            <RoleBadge icon="flower" title="Gardener" color="#ec4899" />
+            <RoleBadge icon="medkit" title="Crop Doctor" color="#3b82f6" />
+            <RoleBadge icon="storefront" title="Seller" color="#f59e0b" />
+            <RoleBadge icon="people" title="Biz Partner" color="#f97316" />
+            <RoleBadge icon="cart" title="Customer" color="#8b5cf6" />
           </View>
         </View>
 
@@ -394,34 +449,6 @@ export default function PublicLandingPage() {
         </View>
 
       </ScrollView>
-
-      {/* ══ MOBILE BOTTOM NAV DOCK ══ */}
-      {isMobile && (
-        <View style={S.dock}>
-          <BlurView intensity={50} tint="light" style={StyleSheet.absoluteFill} />
-          <TouchableOpacity style={S.dockBtn} onPress={() => router.push('/market')}>
-            <Ionicons name="bar-chart-outline" size={22} color="#64748b" />
-            <Text style={S.dockLabel}>Market</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={S.dockBtn} onPress={() => router.push('/shop')}>
-            <Ionicons name="cart-outline" size={22} color="#64748b" />
-            <Text style={S.dockLabel}>Store</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={S.dockCenterWrap} onPress={() => router.push('/crop-disease-scanner')}>
-            <LinearGradient colors={['#00ff87', '#059669']} style={S.dockCenter}>
-              <Ionicons name="scan" size={28} color="#02120a" />
-            </LinearGradient>
-          </TouchableOpacity>
-          <TouchableOpacity style={S.dockBtn} onPress={() => router.push('/topic/Crop-Doctors')}>
-            <Ionicons name="medkit-outline" size={22} color="#64748b" />
-            <Text style={S.dockLabel}>Experts</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={S.dockBtn} onPress={() => router.push('/(auth)/login')}>
-            <Ionicons name="person-outline" size={22} color="#64748b" />
-            <Text style={S.dockLabel}>Login</Text>
-          </TouchableOpacity>
-        </View>
-      )}
     </View>
   );
 }
@@ -447,8 +474,9 @@ const S = StyleSheet.create({
   heroSub: { fontSize: 15, fontFamily: FONT.medium, color: '#475569', lineHeight: 24, marginBottom: 24, maxWidth: 520 },
 
   ctaRow: { flexDirection: 'row', gap: 14, marginBottom: 20, flexWrap: 'wrap' },
-  btnPrimary: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 30, paddingVertical: 15, borderRadius: 99, ...premiumShadow('rgba(16,185,129,0.3)', 'lg') },
-  btnPrimaryText: { color: '#ffffff', fontFamily: FONT.extraBold, fontSize: 16 },
+  btnPrimary: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 26, paddingVertical: 12, borderRadius: 99, ...premiumShadow('rgba(16,185,129,0.3)', 'lg') },
+  btnPrimaryText: { color: '#02120a', fontFamily: FONT.extraBold, fontSize: 15, lineHeight: 18 },
+  btnPrimarySubText: { color: '#032514', fontFamily: FONT.semiBold, fontSize: 10, letterSpacing: 0.3 },
   btnSecondary: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1.5, borderColor: '#cbd5e1', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 99, backgroundColor: '#ffffff', ...premiumShadow('rgba(0,0,0,0.05)', 'sm') },
   btnSecondaryText: { color: '#0f172a', fontFamily: FONT.bold, fontSize: 15 },
 
@@ -465,11 +493,26 @@ const S = StyleSheet.create({
   statDivider: { width: 1, height: 32, backgroundColor: '#e2e8f0' },
 
   // Float widgets on desktop hero
-  floatWidget1: { position: 'absolute', right: -20, top: 30, width: 220, backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 18, padding: 16, borderWidth: 1, borderColor: '#e2e8f0', overflow: 'hidden', ...premiumShadow('rgba(0,0,0,0.1)', 'lg') },
-  floatWidget2: { position: 'absolute', left: 0, bottom: 20, width: 210, backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 18, padding: 16, borderWidth: 1, borderColor: '#e2e8f0', overflow: 'hidden', ...premiumShadow('rgba(0,0,0,0.1)', 'lg') },
+  floatWidget1: { position: 'absolute', right: -20, top: 30, width: 230, backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: 18, padding: 14, borderWidth: 1, borderColor: '#e2e8f0', overflow: 'hidden', ...premiumShadow('rgba(0,0,0,0.1)', 'lg') },
+  floatWidget2: { position: 'absolute', left: 0, bottom: 20, width: 210, backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: 18, padding: 16, borderWidth: 1, borderColor: '#e2e8f0', overflow: 'hidden', ...premiumShadow('rgba(0,0,0,0.1)', 'lg') },
   widgetTitle: { color: '#334155', fontSize: 12, fontFamily: FONT.bold },
-  widgetBig: { color: '#10b981', fontSize: 26, fontFamily: FONT.extraBold, marginVertical: 4 },
+  widgetBig: { color: '#10b981', fontSize: 24, fontFamily: FONT.extraBold, marginVertical: 2 },
   widgetSub: { color: '#64748b', fontSize: 11, fontFamily: FONT.medium },
+
+  // Mandi Prompt & Badges
+  livePulseBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(16,185,129,0.12)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 99 },
+  livePulseDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#10b981' },
+  livePulseText: { color: '#059669', fontSize: 9, fontFamily: FONT.bold, letterSpacing: 0.5 },
+
+  mandiPromptBox: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(16,185,129,0.12)', borderWidth: 1, borderColor: 'rgba(16,185,129,0.25)', paddingHorizontal: 8, paddingVertical: 6, borderRadius: 8, marginTop: 8 },
+  mandiPromptText: { color: '#065f46', fontSize: 10, fontFamily: FONT.bold, flex: 1 },
+
+  mobileMandiCard: { width: '100%', maxWidth: 420, backgroundColor: '#ffffff', borderRadius: 16, padding: 14, borderWidth: 1, borderColor: 'rgba(16,185,129,0.25)', overflow: 'hidden', ...premiumShadow('rgba(0,0,0,0.06)', 'md') },
+  mobileMandiTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
+  mobileMandiTitle: { color: '#0f172a', fontSize: 14, fontFamily: FONT.bold },
+  mobileMandiRateRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginVertical: 4 },
+  mobileMandiRate: { color: '#10b981', fontSize: 24, fontFamily: FONT.extraBold },
+  mobileMandiCrop: { color: '#64748b', fontSize: 12, fontFamily: FONT.medium },
 
   // Section commons
   section: { alignItems: 'center', paddingVertical: 60, paddingHorizontal: '5%', zIndex: 10 },

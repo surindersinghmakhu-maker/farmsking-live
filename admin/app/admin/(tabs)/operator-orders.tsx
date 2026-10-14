@@ -30,7 +30,7 @@ const STATUS_META: Record<OrderStatus, { label: string; bg: string; color: strin
   PACKING: { label: 'Packing', bg: '#e0e7ff', color: '#4338ca' },
   PACKED: { label: 'Ready to Dispatch', bg: '#dbeafe', color: '#1d4ed8' },
   DISPATCHED: { label: 'Dispatched', bg: '#dbeafe', color: '#1d4ed8' },
-  DELIVERED: { label: 'Delivered', bg: '#f1f5f9', color: '#e2e8f0' },
+  DELIVERED: { label: 'Delivered', bg: '#d1fae5', color: '#047857' },
   CANCELLED: { label: 'Cancelled', bg: '#fee2e2', color: '#dc2626' },
 };
 
@@ -415,10 +415,10 @@ function PrintModal({ target, onClose }: { target: { order: CustomerOrder; mode:
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.bg },
-  hero: { paddingTop: 20, paddingBottom: 16, paddingHorizontal: SPACING.xxl, backgroundColor: 'rgba(0,255,135,0.03)', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  heroTitle: { fontSize: 19, fontFamily: FONT.extraBold, color: '#ffffff' },
-  heroSubtitle: { fontSize: 12.5, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
-  list: { padding: SPACING.xxl, gap: 12 },
+  hero: { paddingTop: 14, paddingBottom: 12, paddingHorizontal: 14, backgroundColor: 'rgba(0,255,135,0.03)', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  heroTitle: { fontSize: 18, fontFamily: FONT.extraBold, color: '#ffffff' },
+  heroSubtitle: { fontSize: 11.5, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
+  list: { padding: 10, gap: 8 },
   emptyCenter: { alignItems: 'center', justifyContent: 'center', padding: 50, gap: 8 },
   emptyText: { fontSize: 13, fontFamily: FONT.medium, color: '#94a3b8' },
   card: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.lg, gap: 10 },

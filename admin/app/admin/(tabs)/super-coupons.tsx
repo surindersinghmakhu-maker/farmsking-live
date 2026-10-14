@@ -47,7 +47,6 @@ import { useUsersList } from '@/src/hooks/useUsersAdmin';
 import { Coupon, DiscountValueType } from '@/src/types/api';
 import type { FarmerPlanPricing, FarmerPlanType } from '@/src/api/farmerPlans.api';
 import { CopyButton } from '@/src/components/CopyButton';
-import { PlanPricingSection } from './super-settings';
 import { RedeemForFarmerModal } from '@/src/components/RedeemForFarmerModal';
 import { CouponCardPreview, FarmerPlanCouponCardPreview, useShareCouponAsJpg } from '@/src/components/CouponCardPreview';
 import { usePendingFarmerPlanPayments } from '@/src/hooks/useFarmerPlanPayments';
@@ -539,6 +538,34 @@ export default function SuperCouponsScreen({ initialTab }: { initialTab?: Coupon
 
       <FarmerPlanPaymentReviewModal request={activeFarmerPlanPayment} onClose={() => setActiveFarmerPlanPayment(null)} />
       <AdminStaffManagementModal visible={showStaffModal || activeTab === 'STAFF'} onClose={() => { setShowStaffModal(false); if (activeTab === 'STAFF') setActiveTab(null); }} />
+    </View>
+  );
+}
+
+/** Plan Pricing Section — displays and manages tier pricing */
+function PlanPricingSection() {
+  const { data: pricing, isLoading } = useFarmerPlanPricing();
+  return (
+    <View style={{ gap: 12 }}>
+      <View style={[styles.couponCard, premiumShadow('#0f172a', 'sm')]}>
+        <Text style={styles.sectionTitle}>💰 Plan Pricing Tiers</Text>
+        <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#64748b' }}>Live system membership pricing rates.</Text>
+        {isLoading ? (
+          <ActivityIndicator color={theme.primary} style={{ marginVertical: 20 }} />
+        ) : !pricing || pricing.length === 0 ? (
+          <Text style={styles.emptyText}>No pricing tiers configured yet.</Text>
+        ) : (
+          pricing.map((p: any) => (
+            <View key={p.id || `${p.plan}-${p.billingPeriodDays}`} style={[styles.rateCard, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+              <View>
+                <Text style={{ fontSize: 14, fontFamily: FONT.bold, color: '#0f172a' }}>{p.plan} Card</Text>
+                <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#64748b' }}>{p.billingPeriodDays} Days Validity</Text>
+              </View>
+              <Text style={{ fontSize: 16, fontFamily: FONT.extraBold, color: '#16a34a' }}>₹{p.price}</Text>
+            </View>
+          ))
+        )}
+      </View>
     </View>
   );
 }
@@ -3006,7 +3033,7 @@ function ToggleType({ value, onChange }: { value: DiscountValueType; onChange: (
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020d06' },
+  container: { flex: 1, backgroundColor: '#020d06', ...(typeof window !== 'undefined' ? { height: '100%', overflow: 'hidden' } as any : {}) },
   hero: { paddingTop: 20, paddingBottom: 16, paddingHorizontal: SPACING.xxl },
   heroTitle: { color: '#fff', fontSize: 20, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
   heroSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 12, fontFamily: FONT.medium, marginTop: 2 },

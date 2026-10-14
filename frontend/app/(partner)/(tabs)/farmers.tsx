@@ -335,6 +335,8 @@ function CropCardItem({
 
 export default function AdvisorFarmsScreen() {
   const router = useRouter();
+  const { user } = useAuth();
+  const isGardenAdvisor = user?.role === 'GARDEN_ADVISOR' || (user as any)?.advisorType === 'GARDEN';
   const [activeTab, setActiveTab] = useState<FarmSubTab>('PLOTS');
   const [expandedFarmerId, setExpandedFarmerId] = useState<string | null>(null);
   const [expandedCropCycleId, setExpandedCropCycleId] = useState<string | null>(null);
@@ -408,14 +410,26 @@ export default function AdvisorFarmsScreen() {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [expandedGroupKeys, setExpandedGroupKeys] = useState<Record<string, boolean>>({});
 
+  const dropdownOptions = useMemo(() => {
+    return GROUP_BY_DROPDOWN_OPTIONS.map((opt) => {
+      if (opt.key === 'FARMER_WISE') {
+        return { ...opt, label: isGardenAdvisor ? '🏡 Gardener Wise' : '👨‍🌾 Farmer Wise' };
+      }
+      if (opt.key === 'CROP_WISE') {
+        return { ...opt, label: isGardenAdvisor ? '🪴 Plant / Flower Wise' : '🌾 Crop Wise' };
+      }
+      return opt;
+    });
+  }, [isGardenAdvisor]);
+
   const activeDropdownKey = useMemo(() => {
     if (groupByMode !== 'STAGE_WISE') return groupByMode;
     return `STAGE_${selectedStageRadio}`;
   }, [groupByMode, selectedStageRadio]);
 
   const currentOption = useMemo(() => {
-    return GROUP_BY_DROPDOWN_OPTIONS.find((opt) => opt.key === activeDropdownKey) || GROUP_BY_DROPDOWN_OPTIONS[0];
-  }, [activeDropdownKey]);
+    return dropdownOptions.find((opt) => opt.key === activeDropdownKey) || dropdownOptions[0];
+  }, [activeDropdownKey, dropdownOptions]);
 
   const toggleGroupCollapse = (groupKey: string) => {
     tap();
@@ -590,8 +604,14 @@ export default function AdvisorFarmsScreen() {
     <View style={styles.container}>
       {/* Header */}
       <LinearGradient colors={theme.gradient} style={styles.hero}>
-        <Text style={styles.heroTitle}>Farms & Crop Supervision</Text>
-        <Text style={styles.heroSubtitle}>Real-Time Farmer Plots, Crop Health & Advisory Schedules</Text>
+        <Text style={styles.heroTitle}>
+          {isGardenAdvisor ? 'Gardens & Plant Supervision' : 'Farms & Crop Supervision'}
+        </Text>
+        <Text style={styles.heroSubtitle}>
+          {isGardenAdvisor
+            ? 'Real-Time Garden Care, Plant Health & Horticultural Advisory'
+            : 'Real-Time Farmer Plots, Crop Health & Advisory Schedules'}
+        </Text>
       </LinearGradient>
 
       {/* Top Main Segmented Control: Farms & Crops vs Schedule & Calendar */}
@@ -603,7 +623,7 @@ export default function AdvisorFarmsScreen() {
         >
           <Ionicons name="leaf" size={15} color={mainTab === 'FARMS' ? '#ffffff' : theme.primary} />
           <Text style={[styles.mainTabBtnText, mainTab === 'FARMS' && styles.mainTabBtnTextActive]}>
-            🌾 Farms & Crops
+            {isGardenAdvisor ? '🪴 Gardens & Plants' : '🌾 Farms & Crops'}
           </Text>
         </TouchableOpacity>
 
@@ -644,12 +664,14 @@ export default function AdvisorFarmsScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* FARMER WISE VIEW */}
+            {/* FARMER / GARDENER WISE VIEW */}
             {groupByMode === 'FARMER_WISE' ? (
               <>
                 {pendingAssignments && pendingAssignments.length > 0 ? (
                   <View style={styles.pendingSection}>
-                    <Text style={styles.pendingTitle}>🔔 New Farmer Hire Requests ({pendingAssignments.length})</Text>
+                    <Text style={styles.pendingTitle}>
+                      🔔 New {isGardenAdvisor ? 'Garden Care' : 'Farmer'} Hire Requests ({pendingAssignments.length})
+                    </Text>
                     {pendingAssignments.map((a) => (
                       <View key={a.id} style={styles.pendingRow}>
                         <TouchableOpacity
@@ -1007,7 +1029,7 @@ export default function AdvisorFarmsScreen() {
 
             <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
               <Text style={styles.dropdownSectionTitle}>GENERAL VIEWS</Text>
-              {GROUP_BY_DROPDOWN_OPTIONS.filter((o) => !o.isStageOption).map((opt) => {
+              {dropdownOptions.filter((o) => !o.isStageOption).map((opt) => {
                 const isSelected = activeDropdownKey === opt.key;
                 return (
                   <TouchableOpacity
@@ -1034,7 +1056,7 @@ export default function AdvisorFarmsScreen() {
               })}
 
               <Text style={[styles.dropdownSectionTitle, { marginTop: 14 }]}>GROWTH STAGE FILTERS</Text>
-              {GROUP_BY_DROPDOWN_OPTIONS.filter((o) => o.isStageOption).map((opt) => {
+              {dropdownOptions.filter((o) => o.isStageOption).map((opt) => {
                 const isSelected = activeDropdownKey === opt.key;
                 return (
                   <TouchableOpacity

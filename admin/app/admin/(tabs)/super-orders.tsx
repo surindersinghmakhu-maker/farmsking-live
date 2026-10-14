@@ -3,12 +3,10 @@ import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TouchableOpa
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAllOrders, useCancelOrder, useConfirmOrder } from '@/src/hooks/useOrders';
 import { CustomerOrder, OrderStatus } from '@/src/types/api';
-
-const theme = RoleThemes.SUPER_ADMIN;
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 const tap = () => {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -20,7 +18,7 @@ const STATUS_META: Record<OrderStatus, { label: string; bg: string; color: strin
   PACKING: { label: 'Packing', bg: '#e0e7ff', color: '#4338ca' },
   PACKED: { label: 'Packed', bg: '#dbeafe', color: '#1d4ed8' },
   DISPATCHED: { label: 'Dispatched', bg: '#dbeafe', color: '#1d4ed8' },
-  DELIVERED: { label: 'Delivered', bg: '#f1f5f9', color: '#e2e8f0' },
+  DELIVERED: { label: 'Delivered', bg: '#f0fdf4', color: '#16a34a' },
   CANCELLED: { label: 'Cancelled', bg: '#fee2e2', color: '#dc2626' },
 };
 
@@ -35,65 +33,63 @@ const FILTERS: { value: OrderStatus | 'ALL'; label: string }[] = [
   { value: 'CANCELLED', label: 'Cancelled' },
 ];
 
-/** Super Admin's dedicated Sale/Order oversight surface — same underlying orders data Admin/Operator already see. */
-
-const Hoverable4DCard = ({ children, style, onPress }: any) => {
-  return (
-    <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
-      style,
-      hovered && {
-        borderColor: 'rgba(0,255,135,0.55)',
-        shadowColor: '#00ff87',
-        shadowOpacity: 0.3,
-        shadowRadius: 15,
-        elevation: 10,
-        transform: [{ scale: 1.02 }]
-      },
-      pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
-    ]}>
-      {children}
-    </Pressable>
-  );
-};
-
 export default function SuperOrdersScreen() {
+  const { colors, isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
   const [filter, setFilter] = useState<OrderStatus | 'ALL'>('ALL');
   const { data: orders, isLoading } = useAllOrders(filter === 'ALL' ? undefined : filter);
 
   const totalAmount = (orders ?? []).reduce((sum, o) => sum + Number(o.totalAmount), 0);
 
   return (
-    <View style={styles.container}>
-      <LinearGradient colors={theme.gradient} style={styles.hero}>
-        <Text style={styles.heroTitle}>Sale / Order Management</Text>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      <LinearGradient
+        colors={isLight ? ['#16a34a', '#15803d'] : ['#031018', '#052622', '#083828']}
+        style={styles.hero}
+      >
+        <Text style={styles.heroTitle}>Revenue & Orders Analytics</Text>
         <Text style={styles.heroSubtitle}>
-          {orders?.length ?? 0} order(s) · ₹{totalAmount.toLocaleString('en-IN')} total
+          {orders?.length ?? 0} order(s) · ₹{totalAmount.toLocaleString('en-IN')} total gross sales
         </Text>
       </LinearGradient>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={{ gap: 8, paddingHorizontal: SPACING.xxl }}>
-        {FILTERS.map((f) => (
-          <TouchableOpacity
-            key={f.value}
-            style={[styles.filterChip, filter === f.value && { backgroundColor: theme.primary, borderColor: theme.primary }]}
-            onPress={() => {
-              tap();
-              setFilter(f.value);
-            }}
-          >
-            <Text style={[styles.filterChipText, filter === f.value && { color: '#ffffff' }]}>{f.label}</Text>
-          </TouchableOpacity>
-        ))}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow} contentContainerStyle={{ gap: 8, paddingHorizontal: 12 }}>
+        {FILTERS.map((f) => {
+          const isSelected = filter === f.value;
+          return (
+            <TouchableOpacity
+              key={f.value}
+              style={[
+                styles.filterChip,
+                { backgroundColor: innerBg, borderColor: cardBorder },
+                isSelected && (isLight ? styles.filterChipSelectedLight : styles.filterChipSelectedDark),
+              ]}
+              onPress={() => {
+                tap();
+                setFilter(f.value);
+              }}
+            >
+              <Text
+                style={[
+                  styles.filterChipText,
+                  { color: isLight ? '#475569' : '#94a3b8' },
+                  isSelected && { color: isLight ? '#ffffff' : '#020d06', fontWeight: '800' },
+                ]}
+              >
+                {f.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
 
       {isLoading ? (
-        <ActivityIndicator color={theme.primary} style={{ marginTop: 30 }} />
+        <ActivityIndicator color={isLight ? '#16a34a' : '#00ff87'} style={{ marginTop: 30 }} />
       ) : (
         <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
           {!orders || orders.length === 0 ? (
             <View style={styles.emptyCenter}>
-              <Ionicons name="receipt-outline" size={40} color="#cbd5e1" />
-              <Text style={styles.emptyText}>No orders in this filter.</Text>
+              <Ionicons name="receipt-outline" size={40} color={subTextColor} />
+              <Text style={[styles.emptyText, { color: subTextColor }]}>No orders found in this filter.</Text>
             </View>
           ) : (
             orders.map((order) => <OrderRow key={order.id} order={order} />)
@@ -105,22 +101,23 @@ export default function SuperOrdersScreen() {
 }
 
 function OrderRow({ order }: { order: CustomerOrder }) {
+  const { isLight, cardBg, cardBorder, textColor, subTextColor } = useExecutiveTheme();
   const confirmOrder = useConfirmOrder();
   const cancelOrder = useCancelOrder();
   const meta = STATUS_META[order.status];
 
   return (
-    <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
+    <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }, premiumShadow('#0f172a', 'sm')]}>
       <View style={styles.cardTopRow}>
-        <View style={styles.iconBg}>
-          <Ionicons name="receipt-outline" size={18} color={theme.primary} />
+        <View style={[styles.iconBg, { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.12)' : 'rgba(0, 255, 135, 0.12)' }]}>
+          <Ionicons name="receipt-outline" size={18} color={isLight ? '#16a34a' : '#00ff87'} />
         </View>
         <View style={styles.info}>
-          <Text style={styles.orderId}>{order.orderNumber}</Text>
-          <Text style={styles.orderName}>{order.customer?.name ?? 'Customer'}</Text>
+          <Text style={[styles.orderId, { color: textColor }]}>{order.orderNumber}</Text>
+          <Text style={[styles.orderName, { color: subTextColor }]}>{order.customer?.name ?? 'Customer'}</Text>
         </View>
         <View style={styles.right}>
-          <Text style={styles.amount}>₹{order.totalAmount}</Text>
+          <Text style={[styles.amount, { color: textColor }]}>₹{order.totalAmount}</Text>
           <View style={[styles.badge, { backgroundColor: meta.bg }]}>
             <Text style={[styles.badgeText, { color: meta.color }]}>{meta.label}</Text>
           </View>
@@ -130,11 +127,11 @@ function OrderRow({ order }: { order: CustomerOrder }) {
       {order.status === 'PLACED' ? (
         <View style={styles.actionRow}>
           <TouchableOpacity
-            style={styles.confirmBtn}
+            style={[styles.confirmBtn, { backgroundColor: isLight ? '#16a34a' : '#00ff87' }]}
             disabled={confirmOrder.isPending}
             onPress={() => confirmOrder.mutate(order.id)}
           >
-            <Text style={styles.confirmBtnText}>Confirm Order</Text>
+            <Text style={[styles.confirmBtnText, { color: isLight ? '#ffffff' : '#020d06' }]}>Confirm Order</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.cancelBtn}
@@ -150,29 +147,31 @@ function OrderRow({ order }: { order: CustomerOrder }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020d06' },
-  hero: { paddingTop: 20, paddingBottom: 18, paddingHorizontal: SPACING.xxl },
-  heroTitle: { color: '#fff', fontSize: 20, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
-  heroSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 12, fontFamily: FONT.medium, marginTop: 2 },
-  filterRow: { marginTop: 12, flexGrow: 0 },
-  filterChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', backgroundColor: 'rgba(0,255,135,0.03)' },
-  filterChipText: { fontSize: 11.5, fontFamily: FONT.bold, color: '#e2e8f0' },
-  list: { padding: SPACING.xxl, gap: 10 },
+  container: { flex: 1, ...(typeof window !== 'undefined' ? { height: '100%', overflow: 'hidden' } as any : {}) },
+  hero: { paddingTop: 14, paddingBottom: 12, paddingHorizontal: 16 },
+  heroTitle: { color: '#ffffff', fontSize: 18, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
+  heroSubtitle: { color: 'rgba(255,255,255,0.85)', fontSize: 11.5, fontFamily: FONT.medium, marginTop: 2 },
+  filterRow: { marginTop: 10, flexGrow: 0 },
+  filterChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.pill, borderWidth: 1 },
+  filterChipSelectedLight: { backgroundColor: '#16a34a', borderColor: '#16a34a' },
+  filterChipSelectedDark: { backgroundColor: '#00ff87', borderColor: '#00ff87' },
+  filterChipText: { fontSize: 11.5, fontFamily: FONT.bold },
+  list: { padding: 12, gap: 10 },
   emptyCenter: { alignItems: 'center', justifyContent: 'center', padding: 50, gap: 8 },
-  emptyText: { fontSize: 13, fontFamily: FONT.medium, color: '#94a3b8' },
-  card: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.lg, gap: 10 },
+  emptyText: { fontSize: 13, fontFamily: FONT.medium },
+  card: { borderRadius: RADIUS.lg, padding: 12, gap: 10, borderWidth: 1 },
   cardTopRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  iconBg: { width: 40, height: 40, borderRadius: 14, backgroundColor: theme.primaryLight, alignItems: 'center', justifyContent: 'center' },
+  iconBg: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   info: { flex: 1 },
-  orderId: { fontSize: 13.5, fontFamily: FONT.bold, color: '#ffffff' },
-  orderName: { fontSize: 12, color: '#64748b', fontFamily: FONT.medium, marginTop: 2 },
-  right: { alignItems: 'flex-end', gap: 6 },
-  amount: { fontSize: 13.5, fontFamily: FONT.extraBold, color: '#ffffff' },
-  badge: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: RADIUS.pill },
-  badgeText: { fontSize: 10.5, fontFamily: FONT.bold },
-  actionRow: { flexDirection: 'row', gap: 8 },
-  confirmBtn: { flex: 1, backgroundColor: theme.primary, borderRadius: RADIUS.md, paddingVertical: 10, alignItems: 'center' },
-  confirmBtnText: { color: '#ffffff', fontSize: 12.5, fontFamily: FONT.bold },
-  cancelBtn: { flex: 1, backgroundColor: '#fee2e2', borderRadius: RADIUS.md, paddingVertical: 10, alignItems: 'center' },
-  cancelBtnText: { color: '#dc2626', fontSize: 12.5, fontFamily: FONT.bold },
+  orderId: { fontSize: 13.5, fontFamily: FONT.bold },
+  orderName: { fontSize: 12, fontFamily: FONT.medium, marginTop: 2 },
+  right: { alignItems: 'flex-end', gap: 4 },
+  amount: { fontSize: 14, fontFamily: FONT.extraBold },
+  badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill },
+  badgeText: { fontSize: 10, fontFamily: FONT.bold },
+  actionRow: { flexDirection: 'row', gap: 8, marginTop: 4 },
+  confirmBtn: { flex: 1, borderRadius: RADIUS.md, paddingVertical: 8, alignItems: 'center' },
+  confirmBtnText: { fontSize: 12, fontFamily: FONT.bold },
+  cancelBtn: { flex: 1, backgroundColor: '#fee2e2', borderRadius: RADIUS.md, paddingVertical: 8, alignItems: 'center' },
+  cancelBtnText: { color: '#dc2626', fontSize: 12, fontFamily: FONT.bold },
 });

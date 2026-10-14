@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Pressable, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
+import { View, Pressable, StyleSheet, SafeAreaView, StatusBar, Platform } from 'react-native';
 import { Redirect } from 'expo-router';
 import { RoleThemes } from '@/constants/Colors';
 import { useRole } from '@/src/store/role-context';
@@ -16,12 +16,12 @@ import { AdminDashboardView } from '@/components/dashboards/AdminDashboardView';
 import { SuperAdminDashboardView } from '@/components/dashboards/SuperAdminDashboardView';
 import { OperatorDashboardView } from '@/components/dashboards/OperatorDashboardView';
 import { LabourDashboardView } from '@/components/dashboards/LabourDashboardView';
+import { AdminExecutiveOverview } from '@/components/dashboards/AdminExecutiveOverview';
 import { AdminChatModal } from '@/src/components/AdminChatModal';
 import { WelcomeBonusModal } from '@/src/components/WelcomeBonusModal';
-
 import { useExecutiveTheme } from '@/src/store/theme-context';
 
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const Hoverable4DCard = ({ children, style, onPress }: any) => {
   return (
     <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
@@ -49,13 +49,14 @@ export default function HomeScreen() {
   const [showAdminChatModal, setShowAdminChatModal] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const theme = RoleThemes[currentRole] || RoleThemes.FARM_ADVISOR || RoleThemes.FARMER;
 
   useEffect(() => {
     if (!user?.id) return;
 
     const checkFirstTimeWelcome = async () => {
-      // ONLY show welcome bonus popup if user registered via a referral link/code (user.referredById is present)!
+      // ONLY show welcome bonus popup if user registered via a referral link/code
       if (!user?.referredById) return;
 
       // 1. Check if user already claimed welcome bonus
@@ -101,9 +102,8 @@ export default function HomeScreen() {
       case 'BUSINESS_PARTNER':
         return <PartnerDashboardView />;
       case 'ADMIN':
-        return <AdminDashboardView />;
       case 'SUPER_ADMIN':
-        return <SuperAdminDashboardView />;
+        return <AdminExecutiveOverview />;
       case 'OPERATOR':
         return <OperatorDashboardView />;
       case 'LABOUR':
@@ -113,13 +113,20 @@ export default function HomeScreen() {
     }
   };
 
+  // On web, SafeAreaView doesn't reliably fill 100% viewport height.
+  // Platform.select ensures native gets proper safe-area insets, web gets a plain View.
+  const RootContainer: React.ElementType = Platform.OS === 'web' ? View : SafeAreaView;
+
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.bg }]}>
-      <StatusBar barStyle={colors.statusBarStyle === 'light' ? 'light-content' : 'dark-content'} backgroundColor={colors.headerBg} />
+    <RootContainer style={[styles.safeArea, { backgroundColor: colors.bg }]}>
+      <StatusBar
+        barStyle={colors.statusBarStyle === 'light' ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.headerBg}
+      />
       <View style={[styles.container, { backgroundColor: colors.bg }]}>
         {renderDashboardView()}
 
-        {/* 🎁 First-Time Welcome Bonus Pop-Up Modal (Shows ONCE immediately after sign-in / sign-up) */}
+        {/* 🎁 First-Time Welcome Bonus Pop-Up Modal */}
         <WelcomeBonusModal
           visible={showWelcomeModal}
           onClose={handleCloseWelcomeModal}
@@ -127,20 +134,25 @@ export default function HomeScreen() {
 
         {/* Admin Chat Modal for Farmers */}
         {currentRole === 'FARMER' ? (
-          <AdminChatModal visible={showAdminChatModal} onClose={() => setShowAdminChatModal(false)} />
+          <AdminChatModal
+            visible={showAdminChatModal}
+            onClose={() => setShowAdminChatModal(false)}
+          />
         ) : null}
       </View>
-    </SafeAreaView>
+    </RootContainer>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    // Web: fill 100% of the parent height that _layout provides and clip overflow
+    ...(Platform.OS === 'web' ? { height: '100%' as any, overflow: 'hidden' as any } : {}),
   },
   container: {
     flex: 1,
     width: '100%',
-    overflow: 'hidden',
+    overflow: 'hidden' as any,
   },
 });

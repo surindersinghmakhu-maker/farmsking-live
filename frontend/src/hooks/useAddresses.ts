@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from '../api/addresses.api';
 
-export function useMyAddresses() {
+export function useMyAddresses(enabled = true) {
   return useQuery({
     queryKey: ['addresses', 'mine'],
     queryFn: api.listMyAddresses,
+    enabled,
   });
 }
 

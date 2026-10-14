@@ -972,7 +972,7 @@ export function ReviewModal({ request, onClose }: { request: WithdrawalRequest |
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020d06' },
+  container: { flex: 1, backgroundColor: '#020d06', ...(typeof window !== 'undefined' ? { height: '100%', overflow: 'hidden' } as any : {}) },
   hero: { 
     paddingTop: Platform.OS === 'ios' ? 50 : 20, 
     paddingBottom: 18, 
@@ -1211,22 +1211,22 @@ function AdminBonusSectionComponent() {
         </View>
 
         {/* 3-Way Detailed Breakdown Grid */}
-        <View style={{ flexDirection: 'row', gap: 6 }}>
-          <View style={{ flex: 1, backgroundColor: 'rgba(0,255,135,0.03)', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', gap: 2 }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+          <View style={{ flex: 1, minWidth: 100, backgroundColor: isLight ? '#f8fafc' : 'rgba(0,255,135,0.03)', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: isLight ? '#e2e8f0' : 'rgba(0,255,135,0.3)', gap: 2 }}>
             <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>🎁 Welcome Signups</Text>
-            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' }}>₹{summary.totalWelcome.toLocaleString('en-IN')}</Text>
+            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: isLight ? '#0f172a' : '#ffffff' }}>₹{summary.totalWelcome.toLocaleString('en-IN')}</Text>
             <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8' }}>{summary.countWelcome} users</Text>
           </View>
 
-          <View style={{ flex: 1, backgroundColor: 'rgba(0,255,135,0.03)', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', gap: 2 }}>
+          <View style={{ flex: 1, minWidth: 100, backgroundColor: isLight ? '#f8fafc' : 'rgba(0,255,135,0.03)', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: isLight ? '#e2e8f0' : 'rgba(0,255,135,0.3)', gap: 2 }}>
             <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>🤝 Referral Signups</Text>
-            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' }}>₹{summary.totalReferralSignup.toLocaleString('en-IN')}</Text>
+            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: isLight ? '#0f172a' : '#ffffff' }}>₹{summary.totalReferralSignup.toLocaleString('en-IN')}</Text>
             <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8' }}>{summary.countReferralSignup} referrals</Text>
           </View>
 
-          <View style={{ flex: 1, backgroundColor: 'rgba(0,255,135,0.03)', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', gap: 2 }}>
+          <View style={{ flex: 1, minWidth: 100, backgroundColor: isLight ? '#f8fafc' : 'rgba(0,255,135,0.03)', padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: isLight ? '#e2e8f0' : 'rgba(0,255,135,0.3)', gap: 2 }}>
             <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#64748b' }}>👑 Plan Upgrades</Text>
-            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' }}>₹{summary.totalReferralPlan.toLocaleString('en-IN')}</Text>
+            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: isLight ? '#0f172a' : '#ffffff' }}>₹{summary.totalReferralPlan.toLocaleString('en-IN')}</Text>
             <Text style={{ fontSize: 9.5, fontFamily: FONT.medium, color: '#94a3b8' }}>{summary.countReferralPlan} upgrades</Text>
           </View>
         </View>
@@ -1259,13 +1259,13 @@ function AdminBonusSectionComponent() {
                 paddingHorizontal: 10,
                 paddingVertical: 5,
                 borderRadius: RADIUS.pill,
-                backgroundColor: filter === item.key ? theme.primary : '#ffffff',
+                backgroundColor: filter === item.key ? theme.primary : (isLight ? '#ffffff' : '#0f172a'),
                 borderWidth: 1,
                 borderColor: filter === item.key ? theme.primary : '#cbd5e1',
               }}
               onPress={() => setFilter(item.key as any)}
             >
-              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: filter === item.key ? '#ffffff' : '#475569' }}>
+              <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: filter === item.key ? '#ffffff' : (isLight ? '#475569' : '#cbd5e1') }}>
                 {item.label}
               </Text>
             </TouchableOpacity>
@@ -1275,7 +1275,7 @@ function AdminBonusSectionComponent() {
 
       {/* Bonus Transactions List */}
       <View style={{ gap: 8 }}>
-        <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: '#475569' }}>
+        <Text style={{ fontSize: 12.5, fontFamily: FONT.extraBold, color: isLight ? '#475569' : '#cbd5e1' }}>
           Issued Bonus Details ({filteredTransactions.length})
         </Text>
 
@@ -1304,9 +1304,9 @@ function AdminBonusSectionComponent() {
                   </Text>
                 </View>
 
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(0,255,135,0.03)', padding: 8, borderRadius: RADIUS.sm }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: isLight ? '#f8fafc' : 'rgba(0,255,135,0.03)', padding: 8, borderRadius: RADIUS.sm }}>
                   <View style={{ flex: 1, paddingRight: 6 }}>
-                    <Text style={{ fontSize: 11.5, fontFamily: FONT.semiBold, color: '#e2e8f0' }}>
+                    <Text style={{ fontSize: 11.5, fontFamily: FONT.semiBold, color: isLight ? '#0f172a' : '#e2e8f0' }}>
                       {tx.reason}
                     </Text>
                     {tx.relatedUser ? (

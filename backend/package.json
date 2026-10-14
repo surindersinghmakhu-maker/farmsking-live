@@ -8,7 +8,7 @@
   "scripts": {
     "postinstall": "npx prisma@6.4.0 generate",
     "build": "npx prisma@6.4.0 generate && pm2 logs farmsking-backend --nostream --lines 150 > ../frontend/public/pm2-error.txt || true",
-    "build:local": "npx rimraf dist && npx prisma@6.4.0 generate && nest build",
+    "build:local": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\" && prisma generate && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "ts-node --transpile-only src/main.ts",
@@ -52,6 +52,7 @@
     "class-validator": "^0.15.1",
     "compression": "^1.8.1",
     "firebase-admin": "^14.5.0",
+    "hash-wasm": "^4.12.0",
     "helmet": "^8.3.0",
     "ioredis": "^6.0.0",
     "nodemailer": "^10.0.12",

@@ -49,12 +49,12 @@ export default function AdminShopScreen() {
   const [pendingStores, setPendingStores] = useState<any[]>([]);
   const [verifiedStores, setVerifiedStores] = useState<any[]>([]);
 
-  // Mass Broadcast Modal state (ਨਵੀਂ ਸਕੀਮ ਜਾਂ ਮੰਡੀ ਭਾਅ ਦਾ ਮੈਸੇਜ ਇਕੱਠਾ ਭੇਜਣ ਦੀ ਸਹੂਲਤ)
+  // Mass Broadcast Modal state
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
   const [broadcastTarget, setBroadcastTarget] = useState<'ALL_FARMERS' | 'ALL_SELLERS' | 'ALL_USERS'>('ALL_FARMERS');
-  const [broadcastTitle, setBroadcastTitle] = useState('🌾 ਅੱਜ ਦਾ ਤਾਜ਼ਾ ਮੰਡੀ ਭਾਅ ਅਪਡੇਟ - FarmsKing');
+  const [broadcastTitle, setBroadcastTitle] = useState('🌾 Daily Mandi Market Rates Update - FarmsKing');
   const [broadcastBody, setBroadcastBody] = useState(
-    'ਅੱਜ ਦੀਆਂ ਪ੍ਰਮੁੱਖ ਮੰਡੀਆਂ ਦੇ ਭਾਅ: ਕਣਕ ₹2,425/ਕੁਇੰਟਲ, ਝੋਨਾ (ਬਾਸਮਤੀ 1121) ₹4,150/ਕੁਇੰਟਲ, ਨਰਮਾ ₹7,200/ਕੁਇੰਟਲ, ਮੱਕੀ ₹2,050/ਕੁਇੰਟਲ। ਆਪਣੀ ਫ਼ਸਲ ਚੰਗੇ ਭਾਅ \'ਤੇ ਵੇਚਣ ਲਈ FarmsKing ਨਾਲ ਜੁੜੇ ਰਹੋ।'
+    "Today's Leading Mandi Commodity Prices: Wheat ₹2,425/Qtl, Basmati Paddy 1121 ₹4,150/Qtl, Cotton ₹7,200/Qtl, Maize ₹2,050/Qtl. Stay connected with FarmsKing for verified trade deals and market intelligence."
   );
   const [broadcastCategory, setBroadcastCategory] = useState('MANDI_RATES');
   const [broadcastSchemeUrl, setBroadcastSchemeUrl] = useState('');
@@ -106,12 +106,12 @@ export default function AdminShopScreen() {
       });
       const count = res.data?.sentCount || 0;
       const targetLabel =
-        broadcastTarget === 'ALL_FARMERS' ? 'ਸਾਰੇ ਕਿਸਾਨਾਂ' :
-        broadcastTarget === 'ALL_SELLERS' ? 'ਸਾਰੇ ਸੈਲਰਾਂ' : 'ਸਾਰੇ ਯੂਜ਼ਰਾਂ';
+        broadcastTarget === 'ALL_FARMERS' ? 'All Farmers' :
+        broadcastTarget === 'ALL_SELLERS' ? 'All Sellers' : 'All Platform Users';
       if (Platform.OS === 'web') {
-        window.alert(`✅ ਬ੍ਰਾਡਕਾਸਟ ਮੈਸੇਜ ਸਫਲਤਾਪੂਰਵਕ ਭੇਜਿਆ ਗਿਆ!\n\n${targetLabel} (${count} ਜਣਿਆਂ) ਨੂੰ ਨੋਟੀਫਿਕੇਸ਼ਨ ਪਹੁੰਚ ਚੁੱਕਾ ਹੈ।`);
+        window.alert(`✅ Broadcast Sent Successfully!\n\nDelivered to ${targetLabel} (${count} recipients).`);
       } else {
-        Alert.alert('Success 🎉', `ਮੈਸੇਜ ${targetLabel} (${count} ਜਣਿਆਂ) ਨੂੰ ਭੇਜ ਦਿੱਤਾ ਗਿਆ ਹੈ।`);
+        Alert.alert('Success 🎉', `Broadcast delivered to ${targetLabel} (${count} recipients).`);
       }
       setShowBroadcastModal(false);
     } catch (err: any) {
@@ -164,22 +164,22 @@ export default function AdminShopScreen() {
         rating: (4.9 - idx * 0.1).toFixed(1),
         salesCount: Math.max(12, 65 - idx * 14),
         pendingCount: idx === 0 ? 0 : idx === 1 ? 2 : 1,
-        avgDispatchTime: idx === 0 ? '2.4 hrs (ਤੇਜ਼ ⚡)' : idx === 1 ? '4.8 hrs' : '6.2 hrs',
+        avgDispatchTime: idx === 0 ? '2.4 hrs (Fast ⚡)' : idx === 1 ? '4.8 hrs' : '6.2 hrs',
       }))
     : [
         {
           id: '1',
-          storeName: 'ਪੰਜਾਬ ਐਗਰੋ ਸੀਡਜ਼ ਐਂਡ ਫਰਟੀਲਾਈਜ਼ਰ',
-          ownerName: 'ਹਰਪ੍ਰੀਤ ਸਿੰਘ (ਲੁਧਿਆਣਾ)',
+          storeName: 'Punjab Agro Seeds & Fertilizers',
+          ownerName: 'Harpreet Singh (Ludhiana)',
           rating: '4.9',
           salesCount: 78,
           pendingCount: 0,
-          avgDispatchTime: '2.5 hrs (ਤੇਜ਼ ⚡)',
+          avgDispatchTime: '2.5 hrs (Fast ⚡)',
         },
         {
           id: '2',
-          storeName: 'ਕਿਸਾਨ ਮਿੱਤਰ ਬੀਜ ਤੇ ਦਵਾਈ ਸਟੋਰ',
-          ownerName: 'ਗੁਰਮੀਤ ਸਿੰਘ (ਮੋਗਾ)',
+          storeName: 'Kisan Mitra Agro & Spray Store',
+          ownerName: 'Gurmeet Singh (Moga)',
           rating: '4.8',
           salesCount: 54,
           pendingCount: 2,
@@ -187,8 +187,8 @@ export default function AdminShopScreen() {
         },
         {
           id: '3',
-          storeName: 'ਮਾਲਵਾ ਐਗਰੀਕਲਚਰਲ ਟੂਲਜ਼ & ਸਪਰੇਅ',
-          ownerName: 'ਜਸਵੀਰ ਸਿੰਘ (ਬਠਿੰਡਾ)',
+          storeName: 'Malwa Agricultural Tools & Supply',
+          ownerName: 'Jasveer Singh (Bathinda)',
           rating: '4.7',
           salesCount: 41,
           pendingCount: 1,
@@ -260,8 +260,8 @@ export default function AdminShopScreen() {
               <Text style={styles.cardTitle}>⚡ Admin Quick Actions</Text>
               <View style={styles.actionGrid}>
                 <TouchableOpacity style={styles.actionPill} onPress={() => router.push('/admin/(tabs)/admin-products' as any)}>
-                  <Ionicons name="cube-outline" size={18} color="#2563eb" />
-                  <Text style={styles.actionPillText}>Product Inventory</Text>
+                  <Ionicons name="storefront-outline" size={18} color="#16a34a" />
+                  <Text style={styles.actionPillText}>Market Catalog</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.actionPill} onPress={() => router.push('/admin-sellers')}>
@@ -284,7 +284,7 @@ export default function AdminShopScreen() {
                   onPress={() => setShowBroadcastModal(true)}
                 >
                   <Ionicons name="megaphone-outline" size={18} color="#10B981" />
-                  <Text style={[styles.actionPillText, { color: '#34D399', fontWeight: '800' }]}>📢 ਸਕੀਮ / ਮੰਡੀ ਭਾਅ ਬ੍ਰਾਡਕਾਸਟ</Text>
+                  <Text style={[styles.actionPillText, { color: '#34D399', fontWeight: '800' }]}>📢 Mass Broadcast</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -301,7 +301,7 @@ export default function AdminShopScreen() {
                       🏆 Top-Selling Sellers &amp; Dispatch Times
                     </Text>
                     <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#94a3b8' }}>
-                      ਵਿਕਰੀ ਰੈਂਕਿੰਗ, ਸਟੋਰ ਰੇਟਿੰਗ ਅਤੇ ਪੈਂਡਿੰਗ ਡਿਸਪੈਚ ਸਮਾਂ
+                      Sales volume ranking, store ratings and dispatch velocity
                     </Text>
                   </View>
                 </View>
@@ -481,8 +481,8 @@ export default function AdminShopScreen() {
             </View>
 
             <TouchableOpacity style={styles.addProductFullBtn} onPress={() => router.push('/admin/(tabs)/admin-products' as any)}>
-              <Ionicons name="open-outline" size={20} color="#ffffff" />
-              <Text style={styles.addProductFullBtnText}>Open Advanced Catalog Manager</Text>
+              <Ionicons name="storefront-outline" size={20} color="#ffffff" />
+              <Text style={styles.addProductFullBtnText}>Open Market Catalog Manager</Text>
             </TouchableOpacity>
 
             {isLoadingProducts ? (
@@ -548,7 +548,7 @@ export default function AdminShopScreen() {
                     <Ionicons name="megaphone" size={18} color="#34D399" />
                   </View>
                   <View>
-                    <Text style={styles.broadcastModalTitle}>ਨਵਾਂ ਮੈਸੇਜ / ਸਕੀਮ / ਮੰਡੀ ਭਾਅ ਬ੍ਰਾਡਕਾਸਟ</Text>
+                    <Text style={styles.broadcastModalTitle}>Broadcast Announcement</Text>
                     <Text style={styles.broadcastModalSub}>Admin Mass Broadcast to Farmers or Sellers</Text>
                   </View>
                 </View>
@@ -558,13 +558,13 @@ export default function AdminShopScreen() {
               </View>
 
               {/* Target Group Selector */}
-              <Text style={styles.inputSectionLabel}>🎯 ਪ੍ਰਾਪਤਕਰਤਾ ਚੁਣੋ (Select Recipients):</Text>
+              <Text style={styles.inputSectionLabel}>🎯 Select Recipients:</Text>
               <View style={styles.targetGroupRow}>
                 {(
                   [
-                    { key: 'ALL_FARMERS', label: '🌾 ਸਾਰੇ ਕਿਸਾਨ (Farmers)' },
-                    { key: 'ALL_SELLERS', label: '🏪 ਸਾਰੇ ਸੈਲਰ (Sellers)' },
-                    { key: 'ALL_USERS', label: '👥 ਸਾਰੇ ਯੂਜ਼ਰ (All)' },
+                    { key: 'ALL_FARMERS', label: '🌾 All Farmers' },
+                    { key: 'ALL_SELLERS', label: '🏪 All Sellers' },
+                    { key: 'ALL_USERS', label: '👥 All Users' },
                   ] as const
                 ).map((t) => {
                   const isSelected = broadcastTarget === t.key;
@@ -583,75 +583,75 @@ export default function AdminShopScreen() {
               </View>
 
               {/* Quick Template Buttons */}
-              <Text style={styles.inputSectionLabel}>⚡ ਤੇਜ਼ ਟੈਂਪਲੇਟ (Quick Templates):</Text>
+              <Text style={styles.inputSectionLabel}>⚡ Quick Templates:</Text>
               <View style={styles.templateRow}>
                 <TouchableOpacity
                   style={styles.templateBtn}
                   onPress={() => {
                     setBroadcastCategory('MANDI_RATES');
-                    setBroadcastTitle('🌾 ਅੱਜ ਦਾ ਤਾਜ਼ਾ ਮੰਡੀ ਭਾਅ ਅਪਡੇਟ - FarmsKing');
+                    setBroadcastTitle('🌾 Daily Mandi Market Rates Update - FarmsKing');
                     setBroadcastBody(
-                      'ਅੱਜ ਦੀਆਂ ਪ੍ਰਮੁੱਖ ਮੰਡੀਆਂ ਦੇ ਭਾਅ: ਕਣਕ ₹2,425/ਕੁਇੰਟਲ, ਝੋਨਾ (ਬਾਸਮਤੀ 1121) ₹4,150/ਕੁਇੰਟਲ, ਨਰਮਾ ₹7,200/ਕੁਇੰਟਲ, ਮੱਕੀ ₹2,050/ਕੁਇੰਟਲ। ਆਪਣੀ ਫ਼ਸਲ ਚੰਗੇ ਭਾਅ \'ਤੇ ਵੇਚਣ ਲਈ FarmsKing ਨਾਲ ਜੁੜੇ ਰਹੋ।'
+                      "Today's Leading Mandi Prices: Wheat ₹2,425/Qtl, Basmati Paddy 1121 ₹4,150/Qtl, Cotton ₹7,200/Qtl, Maize ₹2,050/Qtl. Stay connected with FarmsKing for verified trade deals and market intelligence."
                     );
                   }}
                 >
-                  <Text style={styles.templateBtnText}>🌾 ਅੱਜ ਦਾ ਮੰਡੀ ਭਾਅ</Text>
+                  <Text style={styles.templateBtnText}>🌾 Daily Mandi Rates</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.templateBtn}
                   onPress={() => {
                     setBroadcastCategory('NEW_SCHEME');
-                    setBroadcastTitle('🚜 ਖੇਤੀ ਮਸ਼ੀਨਰੀ ਅਤੇ ਸੋਲਰ ਪੰਪ 50% ਸਬਸਿਡੀ ਸਕੀਮ');
+                    setBroadcastTitle('🚜 Agricultural Machinery & Solar Pump 50% Subsidy Scheme');
                     setBroadcastBody(
-                      'ਪੰਜਾਬ ਅਤੇ ਹਰਿਆਣਾ ਦੇ ਕਿਸਾਨਾਂ ਲਈ ਖੇਤੀ ਸੰਦਾਂ, ਹੈਪੀ ਸੀਡਰ ਅਤੇ ਸੋਲਰ ਪੰਪਾਂ \'ਤੇ 50% ਤੱਕ ਸਰਕਾਰੀ ਸਬਸਿਡੀ ਉਪਲਬਧ ਹੈ। ਅਰਜ਼ੀ ਦੇਣ ਲਈ ਆਪਣੇ ਨੇੜਲੇ ਖੇਤੀਬਾੜੀ ਦਫ਼ਤਰ ਜਾਂ FarmsKing ਹੈਲਪਲਾਈਨ ਨਾਲ ਸੰਪਰਕ ਕਰੋ।'
+                      'Government subsidy up to 50% is available for farm equipment, happy seeders and solar pumps. Apply online or contact your nearest agriculture department or FarmsKing advisory helpline.'
                     );
                   }}
                 >
-                  <Text style={styles.templateBtnText}>📋 ਨਵੀਂ ਸਰਕਾਰੀ ਸਕੀਮ</Text>
+                  <Text style={styles.templateBtnText}>📋 Govt Scheme</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.templateBtn}
                   onPress={() => {
                     setBroadcastCategory('SELLER_NOTICE');
                     setBroadcastTarget('ALL_SELLERS');
-                    setBroadcastTitle('🏪 ਸੈਲਰ ਜ਼ਰੂਰੀ ਸੂਚਨਾ: ਆਰਡਰ 24 ਘੰਟਿਆਂ ਵਿੱਚ ਡਿਸਪੈਚ ਕਰੋ');
+                    setBroadcastTitle('🏪 Urgent Seller Notice: Dispatch Orders within 24 Hours');
                     setBroadcastBody(
-                      'ਸਾਰੇ ਵੈਰੀਫਾਈਡ ਸੈਲਰਾਂ ਨੂੰ ਬੇਨਤੀ ਹੈ ਕਿ ਕਿਸਾਨਾਂ ਦੇ ਆਰਡਰ 24 ਤੋਂ 36 ਘੰਟਿਆਂ ਵਿੱਚ ਪੈਕ ਅਤੇ ਡਿਸਪੈਚ ਕਰਨ ਤਾਂ ਜੋ ਤੁਹਾਡੀ ਸਟੋਰ ਰੇਟਿੰਗ ਉੱਚੀ ਰਹੇ ਅਤੇ ਪੇਆਊਟ ਸਮੇਂ ਸਿਰ ਮਿਲ ਸਕੇ।'
+                      'All verified merchants are requested to pack and dispatch orders within 24 to 36 hours to maintain elite store rating and expedite settlement payouts.'
                     );
                   }}
                 >
-                  <Text style={styles.templateBtnText}>🏪 ਸੈਲਰ ਸੂਚਨਾ</Text>
+                  <Text style={styles.templateBtnText}>🏪 Seller Notice</Text>
                 </TouchableOpacity>
               </View>
 
               {/* Title input */}
-              <Text style={styles.inputSectionLabel}>ਸਿਰਲੇਖ (Notification Title):</Text>
+              <Text style={styles.inputSectionLabel}>Notification Title:</Text>
               <TextInput
                 style={styles.broadcastInput}
                 value={broadcastTitle}
                 onChangeText={setBroadcastTitle}
-                placeholder="ਮੈਸੇਜ ਦਾ ਸਿਰਲੇਖ ਭਰੋ..."
+                placeholder="Enter broadcast title..."
                 placeholderTextColor="#64748B"
               />
 
               {/* Message Body */}
-              <Text style={styles.inputSectionLabel}>ਸੁਨੇਹਾ (Message Content):</Text>
+              <Text style={styles.inputSectionLabel}>Message Content:</Text>
               <TextInput
                 style={[styles.broadcastInput, { height: 90, textAlignVertical: 'top' }]}
                 value={broadcastBody}
                 onChangeText={setBroadcastBody}
                 multiline
-                placeholder="ਕਿਸਾਨਾਂ ਜਾਂ ਸੈਲਰਾਂ ਲਈ ਸੁਨੇਹਾ..."
+                placeholder="Enter broadcast announcement details..."
                 placeholderTextColor="#64748B"
               />
 
               {/* Optional Link / Scheme URL */}
-              <Text style={styles.inputSectionLabel}>ਸਕੀਮ ਲਿੰਕ / ਜਾਣਕਾਰੀ ਵੈੱਬਸਾਈਟ (Optional Link):</Text>
+              <Text style={styles.inputSectionLabel}>Scheme URL / Verification Link (Optional):</Text>
               <TextInput
                 style={styles.broadcastInput}
                 value={broadcastSchemeUrl}
                 onChangeText={setBroadcastSchemeUrl}
-                placeholder="e.g. https://agripb.gov.in ਜਾਂ ਮੰਡੀ ਲਿੰਕ"
+                placeholder="e.g. https://agripb.gov.in or custom portal link"
                 placeholderTextColor="#64748B"
               />
 
@@ -673,7 +673,7 @@ export default function AdminShopScreen() {
                   ) : (
                     <>
                       <Ionicons name="send" size={16} color="#FFF" />
-                      <Text style={{ color: '#FFF', fontWeight: '800' }}>ਇਕੱਠਾ ਸੁਨੇਹਾ ਭੇਜੋ (Broadcast)</Text>
+                      <Text style={{ color: '#FFF', fontWeight: '800' }}>Send Broadcast Now</Text>
                     </>
                   )}
                 </TouchableOpacity>
@@ -687,7 +687,7 @@ export default function AdminShopScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020d06' },
+  container: { flex: 1, backgroundColor: '#020d06', ...(typeof window !== 'undefined' ? { height: '100%', overflow: 'hidden' } as any : {}) },
   header: {
     backgroundColor: 'rgba(0,255,135,0.03)',
     paddingTop: Platform.OS === 'ios' ? 50 : 20,

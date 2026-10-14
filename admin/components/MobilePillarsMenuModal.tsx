@@ -328,61 +328,6 @@ export const MobilePillarsMenuModal: React.FC<Props> = ({
                 </View>
               );
             })}
-
-            {/* ⚙️ Dedicated Direct Settings Button (Placed directly below C-Panel) */}
-            <TouchableOpacity
-              style={[
-                styles.pillarCard,
-                {
-                  backgroundColor: isLight ? '#f0fdf4' : 'rgba(34, 197, 94, 0.08)',
-                  borderColor: isLight ? 'rgba(22, 163, 74, 0.35)' : 'rgba(34, 197, 94, 0.35)',
-                  borderWidth: 1.5,
-                },
-              ]}
-              activeOpacity={0.8}
-              onPress={() => {
-                onClose();
-                router.push('/admin/(tabs)/super-settings');
-              }}
-            >
-              <View style={[styles.pillarCardHeader, { paddingVertical: 10 }]}>
-                <View
-                  style={[
-                    styles.pillarIconWrap,
-                    {
-                      borderColor: isLight ? 'rgba(22, 163, 74, 0.3)' : 'rgba(34, 197, 94, 0.4)',
-                      backgroundColor: isLight ? 'rgba(22, 163, 74, 0.12)' : 'rgba(34, 197, 94, 0.2)',
-                    },
-                  ]}
-                >
-                  <Ionicons name="settings" size={17} color={isLight ? '#16a34a' : '#22c55e'} />
-                </View>
-
-                <View style={styles.pillarMetaCol}>
-                  <Text style={[styles.pillarTitleText, { color: isLight ? '#15803d' : '#22c55e' }]} numberOfLines={1}>
-                    SETTINGS
-                  </Text>
-                  <Text style={[styles.pillarSubtitleText, isLight && { color: '#64748b' }]}>
-                    System switches, pricing & control center
-                  </Text>
-                </View>
-
-                <View style={styles.pillarHeaderRight}>
-                  <View
-                    style={[
-                      styles.pillarBadgePill,
-                      {
-                        borderColor: isLight ? 'rgba(22, 163, 74, 0.3)' : 'rgba(34, 197, 94, 0.3)',
-                        backgroundColor: isLight ? 'rgba(22, 163, 74, 0.12)' : 'rgba(34, 197, 94, 0.15)',
-                      },
-                    ]}
-                  >
-                    <Text style={[styles.pillarBadgeText, { color: isLight ? '#16a34a' : '#22c55e' }]}>Config</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={16} color={isLight ? '#16a34a' : '#22c55e'} />
-                </View>
-              </View>
-            </TouchableOpacity>
           </ScrollView>
 
           {/* Bottom Fast Action Footer */}

@@ -12,7 +12,7 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -23,6 +23,7 @@ import { CartProvider } from '@/src/store/cart-context';
 import { LanguageProvider } from '@/src/store/language-context';
 import { ExecutiveThemeProvider } from '@/src/store/theme-context';
 import { SplashView } from '@/components/SplashView';
+import PublicBottomNav from '@/components/PublicBottomNav';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -106,25 +107,28 @@ function RootNavigation() {
   }
 
   return (
-    <Stack>
-      <Stack.Screen name="index" options={{ headerShown: false, title: 'FarmsKing - India\'s Agriculture Platform' }} />
-      <Stack.Screen name="(partner)" options={{ headerShown: false, title: 'FarmsKing Partner' }} />
-      <Stack.Screen name="(user)" options={{ headerShown: false, title: 'FarmsKing' }} />
-      <Stack.Screen name="(auth)" options={{ headerShown: false, title: 'FarmsKing Login' }} />
-      <Stack.Screen name="seo" options={{ headerShown: false, title: 'FarmsKing' }} />
-      <Stack.Screen name="shop" options={{ headerShown: false, title: 'FarmsKing Store' }} />
-      <Stack.Screen name="support" options={{ headerShown: false, title: 'FarmsKing Support' }} />
-      <Stack.Screen name="contact-us" options={{ headerShown: false, title: 'Contact Us' }} />
-      <Stack.Screen name="dose" options={{ headerShown: false, title: 'FarmsKing' }} />
-      <Stack.Screen name="you" options={{ headerShown: false, title: 'FarmsKing' }} />
-      <Stack.Screen name="seller-dashboard" options={{ headerShown: false, title: 'FarmsKing Seller' }} />
-      <Stack.Screen name="farmer-profile-setup" options={{ headerShown: false, title: 'FarmsKing Setup' }} />
-      <Stack.Screen name="staff-profile-setup" options={{ headerShown: false, title: 'Staff Profile Setup' }} />
-      <Stack.Screen name="crop-intelligence" options={{ headerShown: false, title: 'FarmsKing AI' }} />
-      <Stack.Screen name="admin-sellers" options={{ headerShown: false, title: 'FarmsKing' }} />
-      <Stack.Screen name="topic/[id]" options={{ headerShown: false, title: 'FarmsKing Topic' }} />
-      <Stack.Screen name="+not-found" options={{ title: 'Not Found' }} />
-    </Stack>
+    <View style={{ flex: 1 }}>
+      <Stack>
+        <Stack.Screen name="index" options={{ headerShown: false, title: 'FarmsKing - India\'s Agriculture Platform' }} />
+        <Stack.Screen name="(partner)" options={{ headerShown: false, title: 'FarmsKing Partner' }} />
+        <Stack.Screen name="(user)" options={{ headerShown: false, title: 'FarmsKing' }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false, title: 'FarmsKing Login' }} />
+        <Stack.Screen name="seo" options={{ headerShown: false, title: 'FarmsKing' }} />
+        <Stack.Screen name="shop" options={{ headerShown: false, title: 'FarmsKing Store' }} />
+        <Stack.Screen name="support" options={{ headerShown: false, title: 'FarmsKing Support' }} />
+        <Stack.Screen name="contact-us" options={{ headerShown: false, title: 'Contact Us' }} />
+        <Stack.Screen name="dose" options={{ headerShown: false, title: 'FarmsKing' }} />
+        <Stack.Screen name="you" options={{ headerShown: false, title: 'FarmsKing' }} />
+        <Stack.Screen name="seller-dashboard" options={{ headerShown: false, title: 'FarmsKing Seller' }} />
+        <Stack.Screen name="farmer-profile-setup" options={{ headerShown: false, title: 'FarmsKing Setup' }} />
+        <Stack.Screen name="staff-profile-setup" options={{ headerShown: false, title: 'Staff Profile Setup' }} />
+        <Stack.Screen name="crop-intelligence" options={{ headerShown: false, title: 'FarmsKing AI' }} />
+        <Stack.Screen name="admin-sellers" options={{ headerShown: false, title: 'FarmsKing' }} />
+        <Stack.Screen name="topic/[id]" options={{ headerShown: false, title: 'FarmsKing Topic' }} />
+        <Stack.Screen name="+not-found" options={{ title: 'Not Found' }} />
+      </Stack>
+      <PublicBottomNav />
+    </View>
   );
 }
 

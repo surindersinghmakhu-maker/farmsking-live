@@ -19,9 +19,11 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { apiClient } from '@/src/api/client';
 import { exportSellersToExcel } from '@/src/utils/excelExport';
 import { playKycAlertChime } from '@/src/utils/audioAlert';
+import { useExecutiveTheme } from '@/src/store/theme-context';
 
 export default function AdminSellersScreen() {
   const router = useRouter();
+  const { colors, isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
   const [loading, setLoading] = useState(true);
   const [stores, setStores] = useState<any[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<'VERIFIED' | 'PENDING' | 'REJECTED' | 'BLOCKED' | 'ALL'>('VERIFIED');
@@ -153,7 +155,7 @@ export default function AdminSellersScreen() {
         categoryCommissions: catPayload,
         commissionRate: generalRate,
       });
-      showAlert('ਕਮਿਸ਼ਨ ਸੈੱਟ ਹੋ ਗਿਆ ✅', `ਸੈਲਰ "${categoryStore.storeName}" ਲਈ ਕੈਟੇਗਰੀ ਕਮਿਸ਼ਨ (ਖਾਦ ${catPayload.fertilizer}%, ਬੀਜ ${catPayload.seeds}%) ਸਫਲਤਾਪੂਰਵਕ ਸੇਵ ਹੋ ਗਿਆ।`);
+      showAlert('Commission Saved ✅', `Category commission for seller "${categoryStore.storeName}" saved successfully.`);
       setCategoryModalVisible(false);
       fetchStores();
     } catch (err: any) {
@@ -222,21 +224,21 @@ export default function AdminSellersScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#022C22" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+      <StatusBar barStyle={isLight ? 'dark-content' : 'light-content'} backgroundColor={isLight ? '#ffffff' : '#03140a'} />
 
       {/* Header Bar */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderBottomColor: cardBorder, borderBottomWidth: 1 }]}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={20} color="#34D399" />
+            <Ionicons name="arrow-back" size={20} color={textColor} />
           </TouchableOpacity>
           <View style={styles.headerTitleBox}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <MaterialCommunityIcons name="shield-check-outline" size={20} color="#10B981" />
-              <Text style={styles.headerTitle}>Seller Verification Control</Text>
+              <MaterialCommunityIcons name="shield-check-outline" size={20} color={isLight ? '#16a34a' : '#10B981'} />
+              <Text style={[styles.headerTitle, { color: textColor }]}>Seller Verification Control</Text>
             </View>
-            <Text style={styles.headerSubtitle}>FarmsKing National Vendor Hub • Admin Console</Text>
+            <Text style={[styles.headerSubtitle, { color: subTextColor }]}>FarmsKing National Vendor Hub • Admin Console</Text>
           </View>
         </View>
 
@@ -245,7 +247,8 @@ export default function AdminSellersScreen() {
           <TouchableOpacity
             style={[
               styles.headerActionBtn,
-              pendingKycCount > 0 && { backgroundColor: '#78350F', borderColor: '#F59E0B', borderWidth: 1 },
+              pendingKycCount > 0 && { backgroundColor: isLight ? '#fef3c7' : '#78350F', borderColor: '#F59E0B', borderWidth: 1 },
+              isLight && { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0', borderWidth: 1 },
             ]}
             onPress={() => {
               playKycAlertChime();
@@ -255,7 +258,7 @@ export default function AdminSellersScreen() {
             <Ionicons
               name={pendingKycCount > 0 ? 'notifications' : 'notifications-outline'}
               size={16}
-              color={pendingKycCount > 0 ? '#FBBF24' : '#10B981'}
+              color={pendingKycCount > 0 ? '#F59E0B' : (isLight ? '#16a34a' : '#10B981')}
             />
             {pendingKycCount > 0 && (
               <View style={styles.liveBellBadge}>
@@ -266,25 +269,31 @@ export default function AdminSellersScreen() {
 
           {/* 1-Click Excel Export for All Sellers */}
           <TouchableOpacity
-            style={[styles.headerActionBtn, { backgroundColor: '#064E3B', borderColor: '#10B981', borderWidth: 1 }]}
+            style={[styles.headerActionBtn, { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.12)' : '#064E3B', borderColor: isLight ? '#16a34a' : '#10B981', borderWidth: 1 }]}
             onPress={() => exportSellersToExcel(stores)}
           >
-            <Ionicons name="download-outline" size={16} color="#34D399" />
-            <Text style={[styles.headerActionText, { color: '#34D399', fontWeight: '800' }]}>Excel Export</Text>
+            <Ionicons name="download-outline" size={16} color={isLight ? '#16a34a' : '#34D399'} />
+            <Text style={[styles.headerActionText, { color: isLight ? '#16a34a' : '#34D399', fontWeight: '800' }]}>Excel</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.headerActionBtn} onPress={() => router.push('/shop')}>
-            <Ionicons name="storefront" size={16} color="#10B981" />
-            <Text style={styles.headerActionText}>Shop</Text>
+          <TouchableOpacity
+            style={[styles.headerActionBtn, isLight && { backgroundColor: '#f1f5f9', borderColor: '#e2e8f0', borderWidth: 1 }]}
+            onPress={() => router.push('/shop')}
+          >
+            <Ionicons name="storefront" size={16} color={isLight ? '#16a34a' : '#10B981'} />
+            <Text style={[styles.headerActionText, isLight && { color: '#0f172a' }]}>Shop</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.headerActionBtn, styles.refreshBtn]} onPress={fetchStores}>
-            <Ionicons name="refresh" size={16} color="#10B981" />
+          <TouchableOpacity
+            style={[styles.headerActionBtn, styles.refreshBtn, isLight && { backgroundColor: 'rgba(22, 163, 74, 0.12)' }]}
+            onPress={fetchStores}
+          >
+            <Ionicons name="refresh" size={16} color={isLight ? '#16a34a' : '#10B981'} />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Filter Chips Bar */}
-      <View style={styles.filterBarContainer}>
+      <View style={[styles.filterBarContainer, { backgroundColor: isLight ? '#f8fafc' : '#041209', borderBottomColor: cardBorder }]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterBar}>
           {(['VERIFIED', 'PENDING', 'REJECTED', 'BLOCKED', 'ALL'] as const).map((filter) => {
             const isActive = selectedFilter === filter;
@@ -299,14 +308,21 @@ export default function AdminSellersScreen() {
                 key={filter}
                 style={[
                   styles.filterChip,
-                  isActive && styles.activeFilterChip,
+                  isLight && { backgroundColor: '#ffffff', borderColor: '#cbd5e1' },
+                  isActive && (isLight ? { backgroundColor: '#16a34a', borderColor: '#16a34a' } : styles.activeFilterChip),
                   isActive && filter === 'BLOCKED' && { backgroundColor: '#7F1D1D', borderColor: '#DC2626' },
                 ]}
                 onPress={() => setSelectedFilter(filter as any)}
                 activeOpacity={0.7}
               >
                 <View style={[styles.filterDot, { backgroundColor: dotColor }]} />
-                <Text style={[styles.filterText, isActive && styles.activeFilterText]}>
+                <Text
+                  style={[
+                    styles.filterText,
+                    isLight && { color: '#475569' },
+                    isActive && (isLight ? { color: '#ffffff', fontWeight: '800' } : styles.activeFilterText),
+                  ]}
+                >
                   {filter}
                 </Text>
               </TouchableOpacity>
@@ -348,11 +364,11 @@ export default function AdminSellersScreen() {
             const isExpanded = expandedStoreIds[store.id] !== undefined ? expandedStoreIds[store.id] : defaultExpanded;
 
             return (
-              <View key={store.id} style={styles.storeCard}>
+              <View key={store.id} style={[styles.storeCard, isLight && { backgroundColor: cardBg, borderColor: cardBorder }]}>
                 {/* Compact Card Header Row */}
                 <TouchableOpacity
                   activeOpacity={0.7}
-                  style={styles.storeHeader}
+                  style={[styles.storeHeader, isLight && { backgroundColor: cardBg }]}
                   onPress={() => toggleExpandStore(store.id, defaultExpanded)}
                 >
                   <View style={styles.storeHeaderMain}>
@@ -360,20 +376,20 @@ export default function AdminSellersScreen() {
                       <View style={styles.storeIconBox}>
                         <Ionicons name="business" size={14} color="#10B981" />
                       </View>
-                      <Text style={styles.storeName} numberOfLines={1}>{store.storeName}</Text>
+                      <Text style={[styles.storeName, isLight && { color: textColor }]} numberOfLines={1}>{store.storeName}</Text>
                     </View>
 
                     <View style={styles.metaRow}>
                       <View style={styles.metaItem}>
-                        <Ionicons name="person-outline" size={12} color="#9CA3AF" />
-                        <Text style={styles.metaText} numberOfLines={1}>{store.seller?.name || 'Seller'}</Text>
+                        <Ionicons name="person-outline" size={12} color={isLight ? '#64748b' : '#9CA3AF'} />
+                        <Text style={[styles.metaText, isLight && { color: subTextColor }]} numberOfLines={1}>{store.seller?.name || 'Seller'}</Text>
                       </View>
-                      <Text style={styles.metaDot}>•</Text>
+                      <Text style={[styles.metaDot, isLight && { color: '#94a3b8' }]}>•</Text>
                       <View style={styles.metaItem}>
-                        <Ionicons name="call-outline" size={12} color="#9CA3AF" />
-                        <Text style={styles.metaText}>{store.seller?.mobile || 'N/A'}</Text>
+                        <Ionicons name="call-outline" size={12} color={isLight ? '#64748b' : '#9CA3AF'} />
+                        <Text style={[styles.metaText, isLight && { color: subTextColor }]}>{store.seller?.mobile || 'N/A'}</Text>
                       </View>
-                      <Text style={styles.metaDot}>•</Text>
+                      <Text style={[styles.metaDot, isLight && { color: '#94a3b8' }]}>•</Text>
                       <View style={styles.metaItem}>
                         <Ionicons name="globe-outline" size={12} color="#059669" />
                         <Text style={styles.slugText} numberOfLines={1}>{store.slug}</Text>
@@ -404,12 +420,12 @@ export default function AdminSellersScreen() {
                       </Text>
                     </View>
 
-                    <View style={styles.expandPill}>
-                      <Text style={styles.expandPillText}>{isExpanded ? 'Hide' : 'Inspect'}</Text>
+                    <View style={[styles.expandPill, isLight && { backgroundColor: '#f1f5f9' }]}>
+                      <Text style={[styles.expandPillText, isLight && { color: subTextColor }]}>{isExpanded ? 'Hide' : 'Inspect'}</Text>
                       <Ionicons
                         name={isExpanded ? 'chevron-up' : 'chevron-down'}
                         size={14}
-                        color="#9CA3AF"
+                        color={isLight ? '#64748b' : '#9CA3AF'}
                       />
                     </View>
                   </View>
@@ -417,7 +433,7 @@ export default function AdminSellersScreen() {
 
                 {/* Expanded Details Body */}
                 {isExpanded && (
-                  <View style={styles.expandedContent}>
+                  <View style={[styles.expandedContent, isLight && { backgroundColor: '#f8fafc', borderTopColor: cardBorder }]}>
                     {/* Rejection Alert */}
                     {isRejected && store.rejectionReason && (
                       <View style={styles.rejectionAlert}>
@@ -446,73 +462,73 @@ export default function AdminSellersScreen() {
                     )}
 
                     {/* Concise Details Grid */}
-                    <View style={styles.detailsGrid}>
+                    <View style={[styles.detailsGrid, isLight && { backgroundColor: '#ffffff', borderColor: '#e2e8f0' }]}>
                       <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Firm Legal Name:</Text>
-                        <Text style={styles.detailVal} numberOfLines={1}>{store.legalName || 'N/A'}</Text>
+                        <Text style={[styles.detailLabel, isLight && { color: '#64748b' }]}>Firm Legal Name:</Text>
+                        <Text style={[styles.detailVal, isLight && { color: textColor }]} numberOfLines={1}>{store.legalName || 'N/A'}</Text>
                       </View>
                       
                       <View style={styles.detailTwoCol}>
                         <View style={styles.detailCol}>
-                          <Text style={styles.detailLabel}>GSTIN:</Text>
+                          <Text style={[styles.detailLabel, isLight && { color: '#64748b' }]}>GSTIN:</Text>
                           <Text style={styles.detailValMonospace}>{store.gstin || 'N/A'}</Text>
                         </View>
                         <View style={styles.detailCol}>
-                          <Text style={styles.detailLabel}>PAN:</Text>
+                          <Text style={[styles.detailLabel, isLight && { color: '#64748b' }]}>PAN:</Text>
                           <Text style={styles.detailValMonospace}>{store.panNumber || 'N/A'}</Text>
                         </View>
                       </View>
 
                       <View style={styles.detailTwoCol}>
                         <View style={styles.detailCol}>
-                          <Text style={styles.detailLabel}>Bank Account:</Text>
+                          <Text style={[styles.detailLabel, isLight && { color: '#64748b' }]}>Bank Account:</Text>
                           <Text style={styles.detailValMonospace}>{store.bankAccountNo || 'N/A'}</Text>
                         </View>
                         <View style={styles.detailCol}>
-                          <Text style={styles.detailLabel}>IFSC Code:</Text>
+                          <Text style={[styles.detailLabel, isLight && { color: '#64748b' }]}>IFSC Code:</Text>
                           <Text style={styles.detailValMonospace}>{store.bankIfsc || 'N/A'}</Text>
                         </View>
                       </View>
 
                       <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Warehouse:</Text>
-                        <Text style={styles.detailVal} numberOfLines={2}>
+                        <Text style={[styles.detailLabel, isLight && { color: '#64748b' }]}>Warehouse:</Text>
+                        <Text style={[styles.detailVal, isLight && { color: textColor }]} numberOfLines={2}>
                           {store.pickupAddress ? `${store.pickupAddress}, ${store.pickupCity}, ${store.pickupState} - ${store.pickupPincode}` : 'N/A'}
                         </Text>
                       </View>
 
                       <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Platform Commission:</Text>
+                        <Text style={[styles.detailLabel, isLight && { color: '#64748b' }]}>Platform Commission:</Text>
                         <Text style={styles.commissionVal}>{store.commissionRate}%</Text>
                       </View>
 
                       {store.categoryCommissions && Object.keys(store.categoryCommissions).length > 0 && (
-                        <View style={styles.categoryRatesBox}>
-                          <Text style={styles.categoryRatesTitle}>ਕੈਟੇਗਰੀ-ਵਾਈਜ਼ ਕਮਿਸ਼ਨ (Category Commissions):</Text>
+                        <View style={[styles.categoryRatesBox, isLight && { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }]}>
+                          <Text style={[styles.categoryRatesTitle, isLight && { color: textColor }]}>Category Commission Breakdown:</Text>
                           <View style={styles.categoryRatesRow}>
                             {store.categoryCommissions.fertilizer !== undefined && (
-                              <View style={styles.catRatePill}>
-                                <Text style={styles.catRatePillText}>🌱 ਖਾਦ: {store.categoryCommissions.fertilizer}%</Text>
+                              <View style={[styles.catRatePill, isLight && { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' }]}>
+                                <Text style={[styles.catRatePillText, isLight && { color: textColor }]}>🌱 Fertilizer: {store.categoryCommissions.fertilizer}%</Text>
                               </View>
                             )}
                             {store.categoryCommissions.seeds !== undefined && (
-                              <View style={styles.catRatePill}>
-                                <Text style={styles.catRatePillText}>🌾 ਬੀਜ: {store.categoryCommissions.seeds}%</Text>
+                              <View style={[styles.catRatePill, isLight && { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' }]}>
+                                <Text style={[styles.catRatePillText, isLight && { color: textColor }]}>🌾 Seeds: {store.categoryCommissions.seeds}%</Text>
                               </View>
                             )}
                             {store.categoryCommissions.spray !== undefined && (
-                              <View style={styles.catRatePill}>
-                                <Text style={styles.catRatePillText}>🧪 ਦਵਾਈ/ਸਪਰੇਅ: {store.categoryCommissions.spray}%</Text>
+                              <View style={[styles.catRatePill, isLight && { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' }]}>
+                                <Text style={[styles.catRatePillText, isLight && { color: textColor }]}>🧪 Pesticides & Spray: {store.categoryCommissions.spray}%</Text>
                               </View>
                             )}
                             {store.categoryCommissions.machinery !== undefined && (
-                              <View style={styles.catRatePill}>
-                                <Text style={styles.catRatePillText}>🚜 ਮਸ਼ੀਨਰੀ: {store.categoryCommissions.machinery}%</Text>
+                              <View style={[styles.catRatePill, isLight && { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' }]}>
+                                <Text style={[styles.catRatePillText, isLight && { color: textColor }]}>🚜 Machinery: {store.categoryCommissions.machinery}%</Text>
                               </View>
                             )}
                             {store.categoryCommissions.feed !== undefined && (
-                              <View style={styles.catRatePill}>
-                                <Text style={styles.catRatePillText}>🐄 ਪਸ਼ੂ ਆਹਾਰ: {store.categoryCommissions.feed}%</Text>
+                              <View style={[styles.catRatePill, isLight && { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' }]}>
+                                <Text style={[styles.catRatePillText, isLight && { color: textColor }]}>🐄 Cattle Feed: {store.categoryCommissions.feed}%</Text>
                               </View>
                             )}
                           </View>
@@ -522,8 +538,8 @@ export default function AdminSellersScreen() {
 
                     {/* Uploaded Documents Panel */}
                     {!isRejected && !isBlocked && (
-                      <View style={styles.docPanel}>
-                        <Text style={styles.docPanelTitle}>Verified Verification Uploads</Text>
+                      <View style={[styles.docPanel, isLight && { backgroundColor: '#ffffff', borderColor: '#e2e8f0' }]}>
+                        <Text style={[styles.docPanelTitle, isLight && { color: '#64748b' }]}>Verified Verification Uploads</Text>
                         <View style={styles.docRow}>
                           {/* GST Doc */}
                           <TouchableOpacity
@@ -812,27 +828,27 @@ export default function AdminSellersScreen() {
       {categoryModalVisible && categoryStore ? (
         <Modal visible={true} transparent={true} animationType="slide">
           <View style={styles.modalOverlay}>
-            <View style={styles.categoryModalBox}>
+            <View style={[styles.categoryModalBox, isLight && { backgroundColor: cardBg, borderColor: cardBorder }]}>
               <View style={styles.imageModalHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Ionicons name="options" size={20} color="#34D399" />
-                  <Text style={styles.imageModalTitle}>
-                    ਸੈਲਰ ਕਮਿਸ਼ਨ ਸੈਟਿੰਗ ({categoryStore.storeName})
+                  <Text style={[styles.imageModalTitle, isLight && { color: textColor }]}>
+                    Seller Commission Rates ({categoryStore.storeName})
                   </Text>
                 </View>
                 <TouchableOpacity onPress={() => setCategoryModalVisible(false)} style={styles.closeBtn}>
-                  <Ionicons name="close" size={22} color="#FFF" />
+                  <Ionicons name="close" size={22} color={isLight ? '#64748b' : '#FFF'} />
                 </TouchableOpacity>
               </View>
 
-              <Text style={styles.modalHelperText}>
-                ਵੱਖ-ਵੱਖ ਕੈਟੇਗਰੀਆਂ (ਜਿਵੇਂ ਖਾਦ 'ਤੇ 2%, ਬੀਜ 'ਤੇ 5%) ਲਈ ਅਲੱਗ-ਅਲੱਗ ਕਮਿਸ਼ਨ ਦਰਾਂ ਸੈੱਟ ਕਰੋ:
+              <Text style={[styles.modalHelperText, isLight && { color: subTextColor }]}>
+                Configure category-specific commission rates (e.g. Fertilizer at 2%, Seeds at 5%):
               </Text>
 
               {/* Preset quick buttons */}
               <View style={styles.presetRow}>
                 <TouchableOpacity
-                  style={styles.presetBtn}
+                  style={[styles.presetBtn, isLight && { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' }]}
                   onPress={() =>
                     setCategoryCommissions((prev) => ({
                       ...prev,
@@ -843,10 +859,10 @@ export default function AdminSellersScreen() {
                     }))
                   }
                 >
-                  <Text style={styles.presetBtnText}>⚡ ਖਾਦ 2% / ਬੀਜ 5% / ਸਪਰੇਅ 4%</Text>
+                  <Text style={[styles.presetBtnText, isLight && { color: textColor }]}>⚡ Standard (Fert 2% / Seed 5% / Spray 4%)</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.presetBtn}
+                  style={[styles.presetBtn, isLight && { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' }]}
                   onPress={() =>
                     setCategoryCommissions((prev) => ({
                       ...prev,
@@ -857,7 +873,7 @@ export default function AdminSellersScreen() {
                     }))
                   }
                 >
-                  <Text style={styles.presetBtnText}>🏷️ ਲੋ-ਮਾਰਜਿਨ (ਖਾਦ 1.5% / ਬੀਜ 4%)</Text>
+                  <Text style={[styles.presetBtnText, isLight && { color: textColor }]}>🏷️ Low-Margin (Fert 1.5% / Seed 4%)</Text>
                 </TouchableOpacity>
               </View>
 
@@ -865,9 +881,9 @@ export default function AdminSellersScreen() {
                 <View style={styles.categoryInputGrid}>
                   {/* Fertilizer */}
                   <View style={styles.catInputItem}>
-                    <Text style={styles.catInputLabel}>🌱 ਖਾਦ (Fertilizer) %</Text>
+                    <Text style={[styles.catInputLabel, isLight && { color: subTextColor }]}>🌱 Fertilizer (%)</Text>
                     <TextInput
-                      style={styles.catInputField}
+                      style={[styles.catInputField, isLight && { backgroundColor: '#f8fafc', borderColor: '#cbd5e1', color: textColor }]}
                       keyboardType="numeric"
                       value={categoryCommissions.fertilizer}
                       onChangeText={(val) => setCategoryCommissions((c) => ({ ...c, fertilizer: val }))}
@@ -878,9 +894,9 @@ export default function AdminSellersScreen() {
 
                   {/* Seeds */}
                   <View style={styles.catInputItem}>
-                    <Text style={styles.catInputLabel}>🌾 ਬੀਜ (Seeds) %</Text>
+                    <Text style={[styles.catInputLabel, isLight && { color: subTextColor }]}>🌾 Seeds (%)</Text>
                     <TextInput
-                      style={styles.catInputField}
+                      style={[styles.catInputField, isLight && { backgroundColor: '#f8fafc', borderColor: '#cbd5e1', color: textColor }]}
                       keyboardType="numeric"
                       value={categoryCommissions.seeds}
                       onChangeText={(val) => setCategoryCommissions((c) => ({ ...c, seeds: val }))}
@@ -891,9 +907,9 @@ export default function AdminSellersScreen() {
 
                   {/* Pesticides / Spray */}
                   <View style={styles.catInputItem}>
-                    <Text style={styles.catInputLabel}>🧪 ਕੀਟਨਾਸ਼ਕ / ਸਪਰੇਅ (Pesticides) %</Text>
+                    <Text style={[styles.catInputLabel, isLight && { color: subTextColor }]}>🧪 Pesticides & Spray (%)</Text>
                     <TextInput
-                      style={styles.catInputField}
+                      style={[styles.catInputField, isLight && { backgroundColor: '#f8fafc', borderColor: '#cbd5e1', color: textColor }]}
                       keyboardType="numeric"
                       value={categoryCommissions.spray}
                       onChangeText={(val) => setCategoryCommissions((c) => ({ ...c, spray: val }))}
@@ -904,9 +920,9 @@ export default function AdminSellersScreen() {
 
                   {/* Machinery */}
                   <View style={styles.catInputItem}>
-                    <Text style={styles.catInputLabel}>🚜 ਸੰਦ / ਮਸ਼ੀਨਰੀ (Machinery) %</Text>
+                    <Text style={[styles.catInputLabel, isLight && { color: subTextColor }]}>🚜 Machinery (%)</Text>
                     <TextInput
-                      style={styles.catInputField}
+                      style={[styles.catInputField, isLight && { backgroundColor: '#f8fafc', borderColor: '#cbd5e1', color: textColor }]}
                       keyboardType="numeric"
                       value={categoryCommissions.machinery}
                       onChangeText={(val) => setCategoryCommissions((c) => ({ ...c, machinery: val }))}
@@ -917,9 +933,9 @@ export default function AdminSellersScreen() {
 
                   {/* Feed */}
                   <View style={styles.catInputItem}>
-                    <Text style={styles.catInputLabel}>🐄 ਪਸ਼ੂ ਆਹਾਰ (Cattle Feed) %</Text>
+                    <Text style={[styles.catInputLabel, isLight && { color: subTextColor }]}>🐄 Cattle Feed (%)</Text>
                     <TextInput
-                      style={styles.catInputField}
+                      style={[styles.catInputField, isLight && { backgroundColor: '#f8fafc', borderColor: '#cbd5e1', color: textColor }]}
                       keyboardType="numeric"
                       value={categoryCommissions.feed}
                       onChangeText={(val) => setCategoryCommissions((c) => ({ ...c, feed: val }))}
@@ -930,9 +946,9 @@ export default function AdminSellersScreen() {
 
                   {/* Default / General Store Rate */}
                   <View style={styles.catInputItem}>
-                    <Text style={styles.catInputLabel}>📦 ਬਾਕੀ ਸਾਰੇ ਉਤਪਾਦ (General Rate) %</Text>
+                    <Text style={[styles.catInputLabel, isLight && { color: subTextColor }]}>📦 General Store Rate (%)</Text>
                     <TextInput
-                      style={styles.catInputField}
+                      style={[styles.catInputField, isLight && { backgroundColor: '#f8fafc', borderColor: '#cbd5e1', color: textColor }]}
                       keyboardType="numeric"
                       value={categoryCommissions.general}
                       onChangeText={(val) => setCategoryCommissions((c) => ({ ...c, general: val }))}

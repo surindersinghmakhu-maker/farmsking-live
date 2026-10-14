@@ -32,15 +32,20 @@ try {
 console.log(`🚀 Starting Expo Web build in resolved directory: ${targetDir}`);
 
 process.env.CI = '1';
-process.env.NODE_OPTIONS = '--max-old-space-size=4096';
+process.env.NODE_OPTIONS = '--max-old-space-size=2560';
 process.env.EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK = '1';
 
 try {
-  console.log('📦 Running npm install...');
-  execSync('npm install --legacy-peer-deps', { cwd: targetDir, stdio: 'inherit' });
+  const shouldInstall = process.argv.includes('--install') || !fs.existsSync(path.join(targetDir, 'node_modules'));
+  if (shouldInstall) {
+    console.log('📦 Running npm install...');
+    execSync('npm install --legacy-peer-deps', { cwd: targetDir, stdio: 'inherit' });
+  } else {
+    console.log('✅ Frontend node_modules already exists. Skipping npm install (use --install to re-install)');
+  }
 
   console.log('⚡ Running Expo Export...');
-  execSync('npx expo export -p web', { cwd: targetDir, env: { ...process.env, EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK: '1', CI: '1' }, stdio: 'inherit' });
+  execSync('node ./node_modules/expo/bin/cli export -p web', { cwd: targetDir, env: { ...process.env, EXPO_ROUTER_DISABLE_RN_NAVIGATION_CHECK: '1', CI: '1' }, stdio: 'inherit' });
 
   const publicDir = path.join(targetDir, 'public');
   const distDir = path.join(targetDir, 'dist');
@@ -53,9 +58,173 @@ try {
     }
   }
 
+  // ─── Vector Icons & Fonts Guarantee ───
+  console.log('🎨 Processing and deploying vector icon web fonts...');
+  const fontsSourceDir = path.join(targetDir, 'node_modules', '@expo', 'vector-icons', 'build', 'vendor', 'react-native-vector-icons', 'Fonts');
+  const distFontsDir = path.join(distDir, 'fonts');
+  const distAssetsFontsDir = path.join(distDir, 'assets', 'fonts');
+  const distExpoFontsDir = path.join(distDir, 'assets', 'node_modules', '@expo', 'vector-icons', 'build', 'vendor', 'react-native-vector-icons', 'Fonts');
+
+  [distFontsDir, distAssetsFontsDir, distExpoFontsDir].forEach(d => {
+    if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
+  });
+
+  if (fs.existsSync(fontsSourceDir)) {
+    const fontFiles = fs.readdirSync(fontsSourceDir).filter(f => f.endsWith('.ttf'));
+    fontFiles.forEach(file => {
+      const srcFile = path.join(fontsSourceDir, file);
+      fs.copyFileSync(srcFile, path.join(distFontsDir, file));
+      fs.copyFileSync(srcFile, path.join(distAssetsFontsDir, file));
+      fs.copyFileSync(srcFile, path.join(distExpoFontsDir, file));
+    });
+    console.log(`✅ Copied ${fontFiles.length} vector icon fonts to dist/fonts, dist/assets/fonts, and Expo vendor path.`);
+  }
+
+  if (fs.existsSync(distExpoFontsDir)) {
+    const files = fs.readdirSync(distExpoFontsDir);
+    files.forEach(f => {
+      const match = f.match(/^([a-zA-Z0-9_\-]+)\.[a-f0-9]{32}\.ttf$/i);
+      if (match) {
+        const baseName = `${match[1]}.ttf`;
+        fs.copyFileSync(path.join(distExpoFontsDir, f), path.join(distFontsDir, baseName));
+        fs.copyFileSync(path.join(distExpoFontsDir, f), path.join(distAssetsFontsDir, baseName));
+      }
+    });
+  }
+
   const distIndexPath = path.join(distDir, 'index.html');
   if (fs.existsSync(distIndexPath)) {
     let indexHtml = fs.readFileSync(distIndexPath, 'utf8');
+
+    const vectorIconStyles = `
+    <!-- 100% Reliable Production Vector Icon Fonts -->
+    <link rel="preload" href="/fonts/Ionicons.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
+    <link rel="preload" href="/fonts/MaterialCommunityIcons.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
+    <link rel="preload" href="/fonts/MaterialIcons.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
+    <style id="farmsking-vector-icons">
+      @font-face {
+        font-family: 'Ionicons';
+        src: url('/fonts/Ionicons.ttf') format('truetype'),
+             url('/assets/fonts/Ionicons.ttf') format('truetype'),
+             url('https://cdnjs.cloudflare.com/ajax/libs/ionicons/5.5.2/fonts/ionicons.ttf') format('truetype');
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'MaterialCommunityIcons';
+        src: url('/fonts/MaterialCommunityIcons.ttf') format('truetype'),
+             url('/assets/fonts/MaterialCommunityIcons.ttf') format('truetype'),
+             url('https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/7.2.96/fonts/materialdesignicons-webfont.ttf') format('truetype');
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'MaterialIcons';
+        src: url('/fonts/MaterialIcons.ttf') format('truetype'),
+             url('/assets/fonts/MaterialIcons.ttf') format('truetype'),
+             url('https://cdnjs.cloudflare.com/ajax/libs/material-design-icons/3.0.1/iconfont/MaterialIcons-Regular.ttf') format('truetype');
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'FontAwesome';
+        src: url('/fonts/FontAwesome.ttf') format('truetype'),
+             url('/assets/fonts/FontAwesome.ttf') format('truetype'),
+             url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/fonts/fontawesome-webfont.ttf') format('truetype');
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'FontAwesome5_Regular';
+        src: url('/fonts/FontAwesome5_Regular.ttf') format('truetype'),
+             url('/assets/fonts/FontAwesome5_Regular.ttf') format('truetype');
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'FontAwesome5_Solid';
+        src: url('/fonts/FontAwesome5_Solid.ttf') format('truetype'),
+             url('/assets/fonts/FontAwesome5_Solid.ttf') format('truetype');
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'FontAwesome5_Brands';
+        src: url('/fonts/FontAwesome5_Brands.ttf') format('truetype'),
+             url('/assets/fonts/FontAwesome5_Brands.ttf') format('truetype');
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'FontAwesome6_Regular';
+        src: url('/fonts/FontAwesome6_Regular.ttf') format('truetype'),
+             url('/assets/fonts/FontAwesome6_Regular.ttf') format('truetype');
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'FontAwesome6_Solid';
+        src: url('/fonts/FontAwesome6_Solid.ttf') format('truetype'),
+             url('/assets/fonts/FontAwesome6_Solid.ttf') format('truetype');
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'FontAwesome6_Brands';
+        src: url('/fonts/FontAwesome6_Brands.ttf') format('truetype'),
+             url('/assets/fonts/FontAwesome6_Brands.ttf') format('truetype');
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Feather';
+        src: url('/fonts/Feather.ttf') format('truetype'),
+             url('/assets/fonts/Feather.ttf') format('truetype'),
+             url('https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.29.0/feather.ttf') format('truetype');
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Entypo';
+        src: url('/fonts/Entypo.ttf') format('truetype'),
+             url('/assets/fonts/Entypo.ttf') format('truetype'),
+             url('https://cdn.jsdelivr.net/npm/react-native-vector-icons@10.0.0/Fonts/Entypo.ttf') format('truetype');
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'AntDesign';
+        src: url('/fonts/AntDesign.ttf') format('truetype'),
+             url('/assets/fonts/AntDesign.ttf') format('truetype'),
+             url('https://cdn.jsdelivr.net/npm/react-native-vector-icons@10.0.0/Fonts/AntDesign.ttf') format('truetype');
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Octicons';
+        src: url('/fonts/Octicons.ttf') format('truetype'),
+             url('/assets/fonts/Octicons.ttf') format('truetype');
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'SimpleLineIcons';
+        src: url('/fonts/SimpleLineIcons.ttf') format('truetype'),
+             url('/assets/fonts/SimpleLineIcons.ttf') format('truetype');
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'EvilIcons';
+        src: url('/fonts/EvilIcons.ttf') format('truetype'),
+             url('/assets/fonts/EvilIcons.ttf') format('truetype');
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Fontisto';
+        src: url('/fonts/Fontisto.ttf') format('truetype'),
+             url('/assets/fonts/Fontisto.ttf') format('truetype');
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Foundation';
+        src: url('/fonts/Foundation.ttf') format('truetype'),
+             url('/assets/fonts/Foundation.ttf') format('truetype');
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Zocial';
+        src: url('/fonts/Zocial.ttf') format('truetype'),
+             url('/assets/fonts/Zocial.ttf') format('truetype');
+        font-display: swap;
+      }
+    </style>
+    `;
 
     const metaCacheHeaders = `
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
@@ -69,6 +238,7 @@ try {
     <meta property="og:image" content="https://farmsking.in/farmsking_logo.png" />
     <meta property="og:url" content="https://farmsking.in" />
     <meta property="og:type" content="website" />
+    ${vectorIconStyles}
     `;
 
     indexHtml = indexHtml.replace('<head>', `<head>${metaCacheHeaders}`);

@@ -11,7 +11,6 @@ import { useLanguage } from '@/src/store/language-context';
 import { RoleThemes } from '@/constants/Colors';
 import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { LanguagePickerModal } from '@/src/components/LanguagePickerModal';
-import { SwitchDashboardSection } from '@/src/components/SwitchDashboardSection';
 import { TranslationKey, LANGUAGE_OPTIONS } from '@/src/constants/translations';
 import { useAppSettings, useSupportContact, useUpdateAppSettings } from '@/src/hooks/useAppSettings';
 import { useAdminDocsList, useDownloadAdminDoc } from '@/src/hooks/useFarmerPlan';
@@ -186,40 +185,81 @@ export default function MoreScreen() {
 
   return (
     <>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <LinearGradient colors={theme.gradient} style={styles.hero}>
-          <View style={styles.avatarCircle}>
-            {isAdminRole && brandLogoUri ? (
-              <Avatar uri={brandLogoUri} size={52} />
-            ) : user?.photoUrl ? (
-              <Avatar uri={user.photoUrl} size={52} />
-            ) : (
-              <Ionicons name="person" size={24} color="#fff" />
-            )}
-          </View>
-          <Text style={styles.name}>{user?.name ?? t('farmsKingUser')}</Text>
-          <View style={styles.kingIdBadge}>
-            <Ionicons name="key-outline" size={11} color="#ffffff" />
-            <Text style={styles.kingIdText}>
-              KING ID: {user?.kingId ?? 'N/A'}{getCleanMobile(user?.mobile) ? ` · 📞 ${getCleanMobile(user?.mobile)}` : ''}
-            </Text>
-          </View>
-        </LinearGradient>
-
+      <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} showsVerticalScrollIndicator={false}>
         <View style={styles.body}>
-          {/* 🌾 FARMER / REGULAR USER MORE MENU */}
-          <SwitchDashboardSection
-            extraRows={
-              showAdvisorBusinessSection
-                ? ADVISOR_BUSINESS_ITEMS.map((item) => ({
-                  key: item.key,
-                  label: t(item.key, item.label),
-                  icon: item.icon,
-                  onPress: () => item.href && router.push(item.href as any),
-                }))
-                : undefined
-            }
-          />
+          {/* 🌟 Compact 1-2 Rows Executive User Card */}
+          <View
+            style={[
+              styles.compactUserCard,
+              isLight && styles.compactUserCardLight,
+            ]}
+          >
+            <LinearGradient
+              colors={isLight ? ['#ffffff', '#f8fafc'] : ['rgba(4, 20, 10, 0.95)', 'rgba(2, 13, 6, 0.95)']}
+              style={styles.compactUserGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              {/* Row 1: Avatar, Name + Role Tag + Quick Logout */}
+              <View style={styles.userRow1}>
+                <View style={[styles.compactAvatar, isLight && styles.compactAvatarLight]}>
+                  {isAdminRole && brandLogoUri ? (
+                    <Avatar uri={brandLogoUri} size={34} />
+                  ) : user?.photoUrl ? (
+                    <Avatar uri={user.photoUrl} size={34} />
+                  ) : (
+                    <Ionicons name="shield-checkmark" size={17} color={isLight ? '#16a34a' : '#00ff87'} />
+                  )}
+                </View>
+
+                <View style={styles.userInfoCol}>
+                  <View style={styles.userNameLine}>
+                    <Text style={[styles.compactName, { color: textColor }]} numberOfLines={1}>
+                      {user?.name ?? t('farmsKingUser')}
+                    </Text>
+                    <View style={[styles.compactRoleTag, isLight && styles.compactRoleTagLight]}>
+                      <Text style={[styles.compactRoleText, isLight && { color: '#16a34a' }]}>
+                        👑 {user?.role ?? role ?? 'ADMIN'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Row 2: King ID, Phone & Online Badge */}
+                  <View style={styles.userSubRow}>
+                    <View style={[styles.kingIdPill, isLight && styles.kingIdPillLight]}>
+                      <Ionicons name="key-outline" size={10} color={isLight ? '#16a34a' : '#00ff87'} />
+                      <Text style={[styles.compactKingText, isLight && { color: '#475569' }]}>
+                        ID: {user?.kingId ?? 'FK-USER'}
+                      </Text>
+                    </View>
+
+                    {getCleanMobile(user?.mobile) ? (
+                      <View style={[styles.phonePill, isLight && styles.phonePillLight]}>
+                        <Ionicons name="call-outline" size={10} color={isLight ? '#2563eb' : '#38bdf8'} />
+                        <Text style={[styles.compactKingText, isLight && { color: '#475569' }]}>
+                          {getCleanMobile(user?.mobile)}
+                        </Text>
+                      </View>
+                    ) : null}
+
+                    <View style={styles.liveIndicator}>
+                      <View style={styles.liveDot} />
+                      <Text style={[styles.liveText, isLight && { color: '#16a34a' }]}>Active</Text>
+                    </View>
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.quickLogoutBtn, isLight && styles.quickLogoutBtnLight]}
+                  activeOpacity={0.7}
+                  onPress={() => logout()}
+                  accessibilityLabel="Logout"
+                >
+                  <Ionicons name="log-out-outline" size={16} color="#ef4444" />
+                </TouchableOpacity>
+              </View>
+            </LinearGradient>
+          </View>
 
 
 
@@ -227,11 +267,11 @@ export default function MoreScreen() {
           <View style={styles.section}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
               <Text style={[styles.sectionTitle, isLight && { color: '#64748b' }]}>
-                🎨 ਥੀਮ ਕੰਟਰੋਲ (THEME MODE)
+                🎨 THEME MODE
               </Text>
               <View style={{ backgroundColor: isLight ? 'rgba(22, 163, 74, 0.1)' : 'rgba(34, 197, 94, 0.15)', borderWidth: 1, borderColor: isLight ? '#16a34a' : '#fbbf24', paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADIUS.pill }}>
                 <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: isLight ? '#16a34a' : '#fbbf24' }}>
-                  {isLight ? 'ਡਿਫਾਲਟ: ਲਾਈਟ ☀️' : 'ਮੁੱਖ: ਡਾਰਕ 🌿'}
+                  {isLight ? 'Default: Light ☀️' : 'Active: Dark 🌿'}
                 </Text>
               </View>
             </View>
@@ -261,7 +301,7 @@ export default function MoreScreen() {
                   <Text style={[styles.themeCardItemTitle, themeMode === 'LIGHT' && { color: '#16a34a', fontFamily: FONT.bold }]}>
                     Light
                   </Text>
-                  <Text style={[styles.themeCardItemSub, themeMode === 'LIGHT' && { color: '#16a34a' }]}>ਲਾਈਟ (ਚਿੱਟਾ)</Text>
+                  <Text style={[styles.themeCardItemSub, themeMode === 'LIGHT' && { color: '#16a34a' }]}>Crisp Light</Text>
                 </TouchableOpacity>
 
                 {/* 🌿 Dark Theme (Parrot Green + Radiant Shaded Gold) */}
@@ -281,7 +321,7 @@ export default function MoreScreen() {
                   <Text style={[styles.themeCardItemTitle, themeMode === 'DARK' && { color: '#fbbf24', fontFamily: FONT.bold }]}>
                     Dark
                   </Text>
-                  <Text style={[styles.themeCardItemSub, themeMode === 'DARK' && { color: '#22c55e' }]}>ਡਾਰਕ (ਸ਼ਾਹੀ ਪੈਰਟ ਤੇ ਗੋਲਡ)</Text>
+                  <Text style={[styles.themeCardItemSub, themeMode === 'DARK' && { color: '#22c55e' }]}>Parrot & Gold</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -289,27 +329,27 @@ export default function MoreScreen() {
 
           {/* Account Section */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>{t('accountSection')}</Text>
-                <View style={styles.sectionCard}>
+                <Text style={[styles.sectionTitle, isLight && { color: '#64748b' }]}>{t('accountSection')}</Text>
+                <View style={[styles.sectionCard, isLight && styles.sectionCardLight]}>
                   {/* Account Sub-Items listed directly */}
                   {accountItems.map((item) => (
                     <TouchableOpacity
                       key={item.key}
-                      style={styles.row}
+                      style={[styles.row, isLight && styles.rowLight]}
                       activeOpacity={0.7}
                       onPress={() => item.href && router.push(item.href as any)}
                     >
                       <View style={styles.rowIconBg}>
                         <Ionicons name={item.icon} size={18} color={theme.primary} />
                       </View>
-                      <Text style={styles.rowLabel}>{t(item.key, item.label)}</Text>
+                      <Text style={[styles.rowLabel, isLight && styles.rowLabelLight]}>{t(item.key, item.label)}</Text>
                       <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
                     </TouchableOpacity>
                   ))}
 
                   {/* 🛡️ Farm Supervisors Sub-Accounts (VIP Feature) */}
                   <TouchableOpacity
-                    style={styles.row}
+                    style={[styles.row, isLight && styles.rowLight]}
                     activeOpacity={0.7}
                     onPress={() => setShowSupervisorModal(true)}
                   >
@@ -318,7 +358,7 @@ export default function MoreScreen() {
                     </View>
                     <View style={{ flex: 1 }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Text style={styles.rowLabel}>Supervisor Management</Text>
+                        <Text style={[styles.rowLabel, isLight && styles.rowLabelLight]}>Supervisor Management</Text>
                         <View style={{ backgroundColor: '#f59e0b', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 3 }}>
                           <Text style={{ fontSize: 9, fontFamily: FONT.extraBold, color: '#ffffff' }}>VIP</Text>
                         </View>
@@ -333,7 +373,7 @@ export default function MoreScreen() {
                     const isSellerRole = (role as string) === 'SELLER' || (user?.role as string) === 'SELLER' || (Array.isArray(user?.roles) && user.roles.includes('SELLER' as any)) || Boolean((user as any)?.isSeller) || Boolean((user as any)?.sellerStore);
                     return (
                       <TouchableOpacity
-                        style={styles.row}
+                        style={[styles.row, isLight && styles.rowLight]}
                         activeOpacity={0.8}
                         onPress={() => router.push('/seller-dashboard')}
                       >
@@ -345,7 +385,7 @@ export default function MoreScreen() {
                           />
                         </View>
                         <View style={{ flex: 1 }}>
-                          <Text style={styles.rowLabel}>
+                          <Text style={[styles.rowLabel, isLight && styles.rowLabelLight]}>
                             {isSellerRole ? '🏪 Seller Portal' : '🌾 Register as Seller'}
                           </Text>
                           <Text style={styles.rowSubLabel}>
@@ -391,10 +431,10 @@ export default function MoreScreen() {
               {/* Dedicated App Parts: VIP Pass Scheme & Crops Care */}
               {role !== 'FARM_ADVISOR' && role !== 'GARDEN_ADVISOR' ? (
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>👑 VIP PASS SCHEME & CROPS CARE</Text>
-                  <View style={styles.sectionCard}>
+                  <Text style={[styles.sectionTitle, isLight && { color: '#64748b' }]}>👑 VIP PASS SCHEME & CROPS CARE</Text>
+                  <View style={[styles.sectionCard, isLight && styles.sectionCardLight]}>
                     <TouchableOpacity
-                      style={styles.row}
+                      style={[styles.row, isLight && styles.rowLight]}
                       activeOpacity={0.7}
                       onPress={() => router.push('/(tabs)/memberships' as any)}
                     >
@@ -402,14 +442,14 @@ export default function MoreScreen() {
                         <Ionicons name="ribbon-outline" size={18} color="#d97706" />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.rowLabel}>👑 FarmsKing VIP Pass Scheme</Text>
+                        <Text style={[styles.rowLabel, isLight && styles.rowLabelLight]}>👑 FarmsKing VIP Pass Scheme</Text>
                         <Text style={styles.rowSubLabel}>Farmer App Plans & Specialist Doctor Advisory</Text>
                       </View>
                       <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={[styles.row, { borderBottomWidth: 0 }]}
+                      style={[styles.row, isLight && styles.rowLight, { borderBottomWidth: 0 }]}
                       activeOpacity={0.7}
                       onPress={() => router.push('/(tabs)/memberships' as any)}
                     >
@@ -417,7 +457,7 @@ export default function MoreScreen() {
                         <Ionicons name="medical-outline" size={18} color="#16a34a" />
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.rowLabel}>🩺 Crops Care Plan</Text>
+                        <Text style={[styles.rowLabel, isLight && styles.rowLabelLight]}>🩺 Crops Care Plan</Text>
                         <Text style={styles.rowSubLabel}>Specialist Doctor Advisory & Coupon Offers</Text>
                       </View>
                       <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
@@ -428,26 +468,25 @@ export default function MoreScreen() {
 
           {/* Developer & Support Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('devSupportSection')}</Text>
-            <View style={styles.sectionCard}>
+            <Text style={[styles.sectionTitle, isLight && { color: '#64748b' }]}>{t('devSupportSection')}</Text>
+            <View style={[styles.sectionCard, isLight && styles.sectionCardLight]}>
               {__DEV__ ? (
                 <TouchableOpacity
-                  style={styles.row}
+                  style={[styles.row, isLight && styles.rowLight]}
                   activeOpacity={0.7}
                   onPress={() => setShowServerModal(true)}
                 >
                   <View style={[styles.rowIconBg, { backgroundColor: '#dcfce7' }]}>
                     <Ionicons name="hardware-chip-outline" size={18} color="#16a34a" />
                   </View>
-                  <Text style={styles.rowLabel}>{t('serverIpConfig')}</Text>
+                  <Text style={[styles.rowLabel, isLight && styles.rowLabelLight]}>{t('serverIpConfig')}</Text>
                   <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
                 </TouchableOpacity>
               ) : null}
 
-
               {/* Privacy Policy Row */}
               <TouchableOpacity
-                style={styles.row}
+                style={[styles.row, isLight && styles.rowLight]}
                 activeOpacity={0.7}
                 onPress={() => setShowPrivacyModal(true)}
               >
@@ -455,29 +494,35 @@ export default function MoreScreen() {
                   <Ionicons name="shield-checkmark-outline" size={18} color="#16a34a" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.rowLabel}>🛡️ Privacy Policy</Text>
+                  <Text style={[styles.rowLabel, isLight && styles.rowLabelLight]}>🛡️ Privacy Policy</Text>
                   <Text style={styles.rowSubLabel}>Data Protection & Google Play Policy</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
 
-
-
               {/* Support Row */}
-              <TouchableOpacity style={styles.row} activeOpacity={0.7} onPress={() => setContactModalMode('SUPPORT')}>
+              <TouchableOpacity
+                style={[styles.row, isLight && styles.rowLight]}
+                activeOpacity={0.7}
+                onPress={() => setContactModalMode('SUPPORT')}
+              >
                 <View style={styles.rowIconBg}>
                   <Ionicons name="help-circle-outline" size={18} color={theme.primary} />
                 </View>
-                <Text style={styles.rowLabel}>Support</Text>
+                <Text style={[styles.rowLabel, isLight && styles.rowLabelLight]}>Support</Text>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
 
               {/* Contact Us Row (At the very bottom) */}
-              <TouchableOpacity style={[styles.row, { borderBottomWidth: 0 }]} activeOpacity={0.7} onPress={() => setContactModalMode('CONTACT')}>
+              <TouchableOpacity
+                style={[styles.row, isLight && styles.rowLight, { borderBottomWidth: 0 }]}
+                activeOpacity={0.7}
+                onPress={() => setContactModalMode('CONTACT')}
+              >
                 <View style={styles.rowIconBg}>
                   <Ionicons name="call-outline" size={18} color={theme.primary} />
                 </View>
-                <Text style={styles.rowLabel}>Contact Us</Text>
+                <Text style={[styles.rowLabel, isLight && styles.rowLabelLight]}>Contact Us</Text>
                 <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
               </TouchableOpacity>
             </View>
@@ -656,35 +701,164 @@ const contactStyles = StyleSheet.create({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.bg },
-  hero: { paddingTop: 12, paddingBottom: 12, alignItems: 'center' },
-  avatarCircle: {
-    width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.18)',
-    borderWidth: 2, borderColor: 'rgba(255,255,255,0.4)',
-    alignItems: 'center', justifyContent: 'center', marginBottom: 4, overflow: 'hidden',
+  compactUserCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+    overflow: 'hidden',
+    marginBottom: 10,
+    ...premiumShadow('#000000', 'sm') as any,
   },
-  name: { color: '#fff', fontSize: 15, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
-  mobile: { color: 'rgba(255,255,255,0.85)', fontSize: 11.5, fontFamily: FONT.medium, marginTop: 1 },
-  kingIdBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: RADIUS.pill,
-    paddingHorizontal: 8, paddingVertical: 2, marginTop: 4,
+  compactUserCardLight: {
+    borderColor: 'rgba(22, 163, 74, 0.2)',
+    backgroundColor: '#ffffff',
+    shadowColor: '#16a34a',
   },
-  kingIdText: { color: '#ffffff', fontSize: 10.5, fontFamily: FONT.bold, letterSpacing: 0.3 },
+  compactUserGradient: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  userRow1: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  compactAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0, 255, 135, 0.12)',
+    borderWidth: 1.5,
+    borderColor: '#00ff87',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  compactAvatarLight: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#16a34a',
+  },
+  userInfoCol: {
+    flex: 1,
+    gap: 3,
+  },
+  userNameLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  compactName: {
+    fontSize: 14,
+    fontFamily: FONT.bold,
+    color: '#ffffff',
+  },
+  compactRoleTag: {
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.35)',
+    paddingHorizontal: 7,
+    paddingVertical: 1.5,
+    borderRadius: RADIUS.pill,
+  },
+  compactRoleTagLight: {
+    backgroundColor: 'rgba(22, 163, 74, 0.1)',
+    borderColor: 'rgba(22, 163, 74, 0.3)',
+  },
+  compactRoleText: {
+    fontSize: 9.5,
+    fontFamily: FONT.extraBold,
+    color: '#00ff87',
+  },
+  userSubRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  kingIdPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  kingIdPillLight: {
+    backgroundColor: '#f1f5f9',
+  },
+  phonePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  phonePillLight: {
+    backgroundColor: '#f1f5f9',
+  },
+  compactKingText: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+  },
+  liveIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginLeft: 2,
+  },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#22c55e',
+  },
+  liveText: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#22c55e',
+  },
+  quickLogoutBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickLogoutBtnLight: {
+    backgroundColor: '#fef2f2',
+    borderColor: '#fecaca',
+  },
   body: { paddingHorizontal: 12, paddingTop: 12, paddingBottom: 32 },
   section: { marginBottom: 12 },
   sectionTitle: { fontSize: 11, fontFamily: FONT.bold, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 5 },
   sectionCard: {
-    backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, ...premiumShadow('#0f172a', 'sm'),
+    backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, borderWidth: 1, borderColor: 'rgba(0,255,135,0.15)', ...premiumShadow('#0f172a', 'sm'),
+  },
+  sectionCardLight: {
+    backgroundColor: '#ffffff',
+    borderColor: '#e2e8f0',
+    borderWidth: 1,
   },
   row: {
     flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12,
-    borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
+    borderBottomWidth: 1, borderBottomColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  rowLight: {
+    borderBottomColor: '#f1f5f9',
   },
   rowIconBg: {
     width: 32, height: 32, borderRadius: 10, backgroundColor: theme.primaryLight,
     alignItems: 'center', justifyContent: 'center',
   },
-  rowLabel: { flex: 1, fontSize: 13.5, fontFamily: FONT.semiBold, color: '#ffffff' },
+  rowLabel: { flex: 1, fontSize: 13.5, fontFamily: FONT.semiBold, color: '#e2e8f0' },
+  rowLabelLight: { color: '#0f172a' },
   rowSubLabel: { fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
   switchBadgeContainer: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   langBadgeTextActive: { fontSize: 11, fontFamily: FONT.bold, color: '#16a34a' },

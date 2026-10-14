@@ -79,11 +79,17 @@ export default function SuperUsersScreen() {
   const { colors, isLight, cardBg, cardBorder, textColor, subTextColor } = useExecutiveTheme();
   const { filter: initialFilter, group: initialGroup } = useLocalSearchParams<{ filter?: UserFilter, group?: UserGroup }>();
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
-  const [group, setGroup] = useState<UserGroup>(initialGroup || 'CLIENTS');
+
+  const parseSafeGroup = (rawGroup?: any): UserGroup => {
+    if (rawGroup === 'ADMINS' || rawGroup === 'PARTNERS' || rawGroup === 'CLIENTS') return rawGroup;
+    return 'CLIENTS';
+  };
+
+  const [group, setGroup] = useState<UserGroup>(() => parseSafeGroup(initialGroup));
   const [filter, setFilter] = useState<UserFilter>(initialFilter || 'FARMER');
 
   useEffect(() => {
-    if (initialGroup) setGroup(initialGroup);
+    if (initialGroup) setGroup(parseSafeGroup(initialGroup));
     if (initialFilter) setFilter(initialFilter);
   }, [initialGroup, initialFilter]);
 
@@ -101,8 +107,12 @@ export default function SuperUsersScreen() {
 
   const selectGroup = (g: UserGroup) => {
     tap();
-    setGroup(g);
-    setFilter(FILTERS_BY_GROUP[g][0].value);
+    const safeG = parseSafeGroup(g);
+    setGroup(safeG);
+    const availableFilters = FILTERS_BY_GROUP[safeG] || FILTERS_BY_GROUP.CLIENTS;
+    if (availableFilters && availableFilters.length > 0) {
+      setFilter(availableFilters[0].value);
+    }
   };
 
   const [statusTab, setStatusTab] = useState<'ACTIVE' | 'DELETED'>('ACTIVE');
@@ -138,7 +148,7 @@ export default function SuperUsersScreen() {
   };
 
   const getGroupCount = (groupKey: UserGroup): number => {
-    const filters = FILTERS_BY_GROUP[groupKey];
+    const filters = FILTERS_BY_GROUP[groupKey] || [];
     const uniqueUserIds = new Set<string>();
     filters.forEach((f) => {
       allUsersList.forEach((u) => {
@@ -422,7 +432,7 @@ export default function SuperUsersScreen() {
             style={{ marginTop: 6 }}
             contentContainerStyle={{ gap: 6, alignItems: 'center' }}
           >
-            {FILTERS_BY_GROUP[group].map((f) => {
+            {(FILTERS_BY_GROUP[group] || FILTERS_BY_GROUP.CLIENTS).map((f) => {
               const subCount = getSubCategoryCount(f.value);
               const isActive = filter === f.value;
               return (
@@ -834,6 +844,7 @@ function EditUserForm({ user, onDone }: { user: AdminUser; onDone: () => void })
   const showPayoutFields = isAdvisor || isPartner;
 
   // Advisor-only
+  const [advisorType, setAdvisorType] = useState<AdvisorType>(user.advisorType === 'GARDEN' ? 'GARDEN' : 'FARM');
   const [photoUrl, setPhotoUrl] = useState(user.photoUrl ?? '');
   const [specialization, setSpecialization] = useState(user.specialization ?? '');
   const [bio, setBio] = useState(user.bio ?? '');
@@ -881,6 +892,7 @@ function EditUserForm({ user, onDone }: { user: AdminUser; onDone: () => void })
           state: state.trim() || undefined,
           ...(isAdvisor
             ? {
+              advisorType,
               photoUrl: photoUrl.trim() || undefined,
               specialization: specialization.trim() || undefined,
               bio: bio.trim() || undefined,
@@ -934,6 +946,38 @@ function EditUserForm({ user, onDone }: { user: AdminUser; onDone: () => void })
       {isAdvisor ? (
         <>
           <Text style={styles.sectionTitle}>Advisor Profile</Text>
+
+          <Text style={styles.label}>Advisor Domain Specialization</Text>
+          <View style={{ flexDirection: 'row', gap: 8, marginVertical: 4 }}>
+            <TouchableOpacity
+              style={[
+                styles.permissionRow,
+                { flex: 1, justifyContent: 'center' },
+                advisorType === 'FARM' && { borderColor: '#16a34a', backgroundColor: '#f0fdf4' },
+              ]}
+              onPress={() => setAdvisorType('FARM')}
+            >
+              <Ionicons name={advisorType === 'FARM' ? 'radio-button-on' : 'radio-button-off'} size={18} color={advisorType === 'FARM' ? '#16a34a' : '#94a3b8'} />
+              <Text style={[styles.permissionRowText, advisorType === 'FARM' && { color: '#16a34a', fontFamily: FONT.bold }]}>
+                🌾 Crop Doctor (Farmers)
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.permissionRow,
+                { flex: 1, justifyContent: 'center' },
+                advisorType === 'GARDEN' && { borderColor: '#ec4899', backgroundColor: '#fdf2f8' },
+              ]}
+              onPress={() => setAdvisorType('GARDEN')}
+            >
+              <Ionicons name={advisorType === 'GARDEN' ? 'radio-button-on' : 'radio-button-off'} size={18} color={advisorType === 'GARDEN' ? '#ec4899' : '#94a3b8'} />
+              <Text style={[styles.permissionRowText, advisorType === 'GARDEN' && { color: '#ec4899', fontFamily: FONT.bold }]}>
+                🌸 Garden Advisor (Gardeners)
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           <Text style={styles.label}>Profile Photo URL</Text>
           <TextInput style={styles.input} value={photoUrl} onChangeText={setPhotoUrl} placeholder="Optional" placeholderTextColor="#94a3b8" />
           <Text style={styles.label}>Profile Title</Text>
@@ -1337,184 +1381,166 @@ function UserRow({
       },
       isDeactivated && styles.userCardDeactivated,
     ]}>
-      {/* 1. Header: Avatar + Identity + Status Pill */}
-      <View style={styles.cardHeaderRow}>
-        {/* Avatar with Status Dot */}
+      {/* 1. Compact Header Row: Avatar + Identity + Status + Quick Actions */}
+      <View style={styles.cardHeaderRowCompact}>
+        {/* Compact Avatar with Status Dot */}
         <TouchableOpacity
-          style={styles.avatarWrap}
+          style={styles.avatarWrapCompact}
           activeOpacity={0.8}
           onPress={onOpenDetail}
           disabled={!onOpenDetail}
         >
-          <View style={[styles.userAvatar, isDeactivated && styles.userAvatarDeactivated]}>
+          <View style={[styles.userAvatarCompact, isDeactivated && styles.userAvatarDeactivated]}>
             {user.photoUrl ? (
-              <Image source={{ uri: user.photoUrl }} style={styles.userAvatarImage} resizeMode="cover" />
+              <Image source={{ uri: user.photoUrl }} style={styles.userAvatarImageCompact} resizeMode="cover" />
             ) : (
-              <Text style={[styles.userAvatarText, isDeactivated && { color: '#ef4444' }]}>{initials}</Text>
+              <Text style={[styles.userAvatarTextCompact, isDeactivated && { color: '#ef4444' }]}>{initials}</Text>
             )}
           </View>
-          <View style={[styles.statusDot, isDeactivated ? styles.statusDotOffline : styles.statusDotOnline]} />
+          <View style={[styles.statusDotCompact, isDeactivated ? styles.statusDotOffline : styles.statusDotOnline]} />
         </TouchableOpacity>
 
-        {/* Name + King ID */}
+        {/* Name + King ID + Status */}
         <TouchableOpacity
-          style={{ flex: 1, gap: 2 }}
+          style={{ flex: 1, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}
           activeOpacity={0.8}
           onPress={onOpenDetail}
           disabled={!onOpenDetail}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
-            <Text style={[styles.userName, isLight && { color: '#0f172a' }, isDeactivated && styles.userNameDeactivated]} numberOfLines={1}>
-              {user.name === 'Deleted Account' ? `Deleted (${user.kingId || cleanMobile})` : user.name}
-            </Text>
-            {isDeactivated ? (
-              <View style={styles.deactivatedBadge}>
-                <Ionicons name="trash" size={10} color="#ef4444" />
-                <Text style={styles.deactivatedBadgeText}>
-                  {deletedDateStr ? `Deleted ${deletedDateStr}` : 'Deleted'}
-                </Text>
-              </View>
-            ) : (
-              <View style={styles.activePillBadge}>
-                <View style={styles.activePillDot} />
-                <Text style={styles.activePillText}>Active</Text>
-              </View>
-            )}
-          </View>
+          <Text style={[styles.userNameCompact, isLight && { color: '#0f172a' }, isDeactivated && styles.userNameDeactivated]} numberOfLines={1}>
+            {user.name === 'Deleted Account' ? `Deleted (${user.kingId || cleanMobile})` : user.name}
+          </Text>
 
-          {/* King ID with Copy Button */}
           {user.kingId ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
-              <TouchableOpacity
-                style={[styles.kingIdChip, isLight && { backgroundColor: '#f1f5f9', borderColor: 'rgba(22, 163, 74, 0.3)' }]}
-                onPress={() => copyToClipboard(user.kingId!, 'King ID')}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="key" size={10} color={isLight ? '#16a34a' : '#00ff87'} />
-                <Text style={[styles.kingIdChipText, isLight && { color: '#16a34a' }]}>{user.kingId}</Text>
-                <Ionicons name="copy-outline" size={10} color={isLight ? '#16a34a' : '#00ff87'} />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              style={[styles.kingIdChipCompact, isLight && { backgroundColor: '#f1f5f9', borderColor: 'rgba(22, 163, 74, 0.3)' }]}
+              onPress={() => copyToClipboard(user.kingId!, 'King ID')}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="key" size={9} color={isLight ? '#16a34a' : '#00ff87'} />
+              <Text style={[styles.kingIdChipTextCompact, isLight && { color: '#16a34a' }]}>{user.kingId}</Text>
+              <Ionicons name="copy-outline" size={9} color={isLight ? '#16a34a' : '#00ff87'} />
+            </TouchableOpacity>
           ) : null}
-        </TouchableOpacity>
-      </View>
 
-      {/* 2. Body Info: Contact + Location + Joined + Roles */}
-      <View style={[styles.cardBody, isLight && { borderTopColor: '#f1f5f9' }]}>
-        {/* Mobile Number Row */}
-        <View style={styles.infoRow}>
-          <TouchableOpacity
-            style={[styles.mobileChip, isLight && { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }]}
-            onPress={() => copyToClipboard(cleanMobile, 'Mobile Number')}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="call" size={12} color={isLight ? '#16a34a' : '#10b981'} />
-            <Text style={[styles.mobileChipText, isLight && { color: '#0f172a' }]}>{cleanMobile}</Text>
-            <Ionicons name="copy-outline" size={10} color="#64748b" />
-          </TouchableOpacity>
-
-          {joinedDateStr ? (
-            <View style={styles.joinedBadge}>
-              <Ionicons name="calendar-outline" size={11} color="#64748b" />
-              <Text style={styles.joinedBadgeText}>{joinedDateStr}</Text>
+          {isDeactivated ? (
+            <View style={styles.deactivatedBadgeCompact}>
+              <Ionicons name="trash" size={9} color="#ef4444" />
+              <Text style={styles.deactivatedBadgeTextCompact}>Deleted</Text>
             </View>
+          ) : (
+            <View style={styles.activePillBadgeCompact}>
+              <View style={styles.activePillDotCompact} />
+              <Text style={styles.activePillTextCompact}>Active</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
+        {/* Compact Right-Side Action Pills */}
+        <View style={styles.compactActionsRow}>
+          {onOpenDetail ? (
+            <TouchableOpacity
+              style={[styles.actionBtnCompact, styles.actionBtnSecondary, isLight && { backgroundColor: '#f1f5f9' }]}
+              activeOpacity={0.8}
+              onPress={onOpenDetail}
+            >
+              <Ionicons name="eye-outline" size={12} color={isLight ? '#475569' : '#94a3b8'} />
+              <Text style={[styles.actionBtnTextCompact, { color: isLight ? '#334155' : '#cbd5e1' }]}>Details</Text>
+            </TouchableOpacity>
+          ) : null}
+
+          {!isDeactivated && onEditRoles ? (
+            <TouchableOpacity
+              style={[styles.actionBtnCompact, styles.actionBtnIndigo, isLight && { backgroundColor: 'rgba(99, 102, 241, 0.08)' }]}
+              activeOpacity={0.8}
+              onPress={onEditRoles}
+            >
+              <Ionicons name="shield-outline" size={12} color={isLight ? '#4f46e5' : '#a5b4fc'} />
+              <Text style={[styles.actionBtnTextCompact, { color: isLight ? '#4f46e5' : '#a5b4fc' }]}>Role</Text>
+            </TouchableOpacity>
+          ) : null}
+
+          {!isDeactivated && isOperator && onEditPermissions ? (
+            <TouchableOpacity
+              style={[styles.actionBtnCompact, styles.actionBtnBlue]}
+              activeOpacity={0.8}
+              onPress={onEditPermissions}
+            >
+              <Ionicons name="options-outline" size={12} color="#60a5fa" />
+              <Text style={[styles.actionBtnTextCompact, { color: '#60a5fa' }]}>Perms</Text>
+            </TouchableOpacity>
+          ) : null}
+
+          {isDeactivated ? (
+            <TouchableOpacity
+              style={[styles.actionBtnCompact, styles.actionBtnRestore]}
+              activeOpacity={0.8}
+              onPress={onReactivate}
+            >
+              <Ionicons name="refresh" size={12} color="#00ff87" />
+              <Text style={[styles.actionBtnTextCompact, { color: '#00ff87' }]}>Restore</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={[styles.actionBtnCompact, styles.actionBtnDeactivate]}
+              activeOpacity={0.8}
+              onPress={onDeactivate}
+            >
+              <Ionicons name="pause-circle-outline" size={12} color="#f87171" />
+              <Text style={[styles.actionBtnTextCompact, { color: '#f87171' }]}>Pause</Text>
+            </TouchableOpacity>
+          )}
+
+          {onDelete ? (
+            <TouchableOpacity
+              style={[styles.actionBtnCompact, styles.actionBtnDelete]}
+              activeOpacity={0.8}
+              onPress={onDelete}
+            >
+              <Ionicons name="trash-outline" size={12} color="#ffffff" />
+            </TouchableOpacity>
           ) : null}
         </View>
+      </View>
 
-        {/* Email Row (if any) */}
-        {user.email ? (
-          <View style={styles.infoItemRow}>
-            <Ionicons name="mail-outline" size={12} color="#64748b" />
-            <Text style={styles.infoItemText} numberOfLines={1}>
-              {user.email.replace(/^DEL_/i, '').replace(/_del_\d+$/i, '')}
-            </Text>
-          </View>
-        ) : null}
+      {/* 2. Compact Info Strip: Contact + Location + Roles + Joined */}
+      <View style={[styles.cardBodyCompact, isLight && { borderTopColor: '#f1f5f9' }]}>
+        {/* Mobile Number Chip */}
+        <TouchableOpacity
+          style={[styles.mobileChipCompact, isLight && { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }]}
+          onPress={() => copyToClipboard(cleanMobile, 'Mobile Number')}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="call" size={11} color={isLight ? '#16a34a' : '#10b981'} />
+          <Text style={[styles.mobileChipTextCompact, isLight && { color: '#0f172a' }]}>{cleanMobile}</Text>
+          <Ionicons name="copy-outline" size={9} color="#64748b" />
+        </TouchableOpacity>
 
-        {/* Location Row (if any) */}
+        {/* Location (if any) */}
         {locationStr ? (
-          <View style={styles.infoItemRow}>
-            <Ionicons name="location-outline" size={12} color="#64748b" />
-            <Text style={styles.infoItemText} numberOfLines={1}>{locationStr}</Text>
+          <View style={styles.infoItemRowCompact}>
+            <Ionicons name="location-outline" size={11} color="#64748b" />
+            <Text style={[styles.infoItemTextCompact, isLight && { color: '#475569' }]} numberOfLines={1}>{locationStr}</Text>
           </View>
         ) : null}
 
         {/* Role Tags */}
-        <View style={styles.rolesRow}>
+        <View style={styles.rolesRowCompact}>
           {activeAssignedRoles.map((r) => (
-            <View key={r} style={[styles.roleBadge, isDeactivated && styles.roleBadgeDeactivated]}>
-              <Text style={[styles.roleBadgeText, isDeactivated && styles.roleBadgeTextDeactivated]}>
+            <View key={r} style={[styles.roleBadgeCompact, isLight && { backgroundColor: 'rgba(22, 163, 74, 0.08)', borderColor: 'rgba(22, 163, 74, 0.25)' }, isDeactivated && styles.roleBadgeDeactivated]}>
+              <Text style={[styles.roleBadgeTextCompact, isLight && { color: '#16a34a' }, isDeactivated && styles.roleBadgeTextDeactivated]}>
                 {r.replace('_', ' ')}
               </Text>
             </View>
           ))}
         </View>
-      </View>
 
-      {/* 3. Ergonomic Bottom Action Bar */}
-      <View style={styles.cardActionBar}>
-        {onOpenDetail ? (
-          <TouchableOpacity
-            style={[styles.actionBtn, styles.actionBtnSecondary]}
-            activeOpacity={0.8}
-            onPress={onOpenDetail}
-          >
-            <Ionicons name="eye-outline" size={13} color="#94a3b8" />
-            <Text style={[styles.actionBtnText, { color: '#cbd5e1' }]}>Details</Text>
-          </TouchableOpacity>
-        ) : null}
-
-        {!isDeactivated && isOperator && onEditPermissions ? (
-          <TouchableOpacity
-            style={[styles.actionBtn, styles.actionBtnBlue]}
-            activeOpacity={0.8}
-            onPress={onEditPermissions}
-          >
-            <Ionicons name="options-outline" size={13} color="#60a5fa" />
-            <Text style={[styles.actionBtnText, { color: '#60a5fa' }]}>Perms</Text>
-          </TouchableOpacity>
-        ) : null}
-
-        {!isDeactivated && onEditRoles ? (
-          <TouchableOpacity
-            style={[styles.actionBtn, styles.actionBtnIndigo]}
-            activeOpacity={0.8}
-            onPress={onEditRoles}
-          >
-            <Ionicons name="shield-outline" size={13} color="#a5b4fc" />
-            <Text style={[styles.actionBtnText, { color: '#a5b4fc' }]}>Role</Text>
-          </TouchableOpacity>
-        ) : null}
-
-        {isDeactivated ? (
-          <TouchableOpacity
-            style={[styles.actionBtn, styles.actionBtnRestore]}
-            activeOpacity={0.8}
-            onPress={onReactivate}
-          >
-            <Ionicons name="refresh" size={13} color="#00ff87" />
-            <Text style={[styles.actionBtnText, { color: '#00ff87' }]}>Restore</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={[styles.actionBtn, styles.actionBtnDeactivate]}
-            activeOpacity={0.8}
-            onPress={onDeactivate}
-          >
-            <Ionicons name="pause-circle-outline" size={13} color="#f87171" />
-            <Text style={[styles.actionBtnText, { color: '#f87171' }]}>Deactivate</Text>
-          </TouchableOpacity>
-        )}
-
-        {onDelete ? (
-          <TouchableOpacity
-            style={[styles.actionBtn, styles.actionBtnDelete]}
-            activeOpacity={0.8}
-            onPress={onDelete}
-          >
-            <Ionicons name="trash-outline" size={13} color="#ffffff" />
-            <Text style={[styles.actionBtnText, { color: '#ffffff' }]}>Delete</Text>
-          </TouchableOpacity>
+        {/* Joined Date */}
+        {joinedDateStr ? (
+          <View style={styles.joinedBadgeCompact}>
+            <Ionicons name="calendar-outline" size={10} color="#64748b" />
+            <Text style={styles.joinedBadgeTextCompact}>{joinedDateStr}</Text>
+          </View>
         ) : null}
       </View>
     </View>
@@ -2240,17 +2266,203 @@ const styles = StyleSheet.create({
   },
   userCard: {
     backgroundColor: '#04180d',
-    borderRadius: 16,
-    padding: 14,
+    borderRadius: 10,
+    padding: 8,
     borderWidth: 1,
     borderColor: 'rgba(0, 255, 135, 0.14)',
-    gap: 10,
+    gap: 6,
     width: '100%',
   },
   userCardDeactivated: {
     backgroundColor: 'rgba(239, 68, 68, 0.04)',
     borderColor: 'rgba(239, 68, 68, 0.3)',
     opacity: 0.95,
+  },
+  cardHeaderRowCompact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  avatarWrapCompact: {
+    position: 'relative',
+  },
+  userAvatarCompact: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0, 255, 135, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.3)',
+  },
+  userAvatarImageCompact: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
+  userAvatarTextCompact: {
+    fontSize: 12,
+    fontFamily: FONT.extraBold,
+    color: '#00ff87',
+  },
+  statusDotCompact: {
+    position: 'absolute',
+    bottom: -1,
+    right: -1,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: '#04180d',
+  },
+  userNameCompact: {
+    fontSize: 13.5,
+    fontFamily: FONT.bold,
+    color: '#f8fafc',
+    letterSpacing: -0.2,
+  },
+  kingIdChipCompact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#020d06',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: RADIUS.pill,
+  },
+  kingIdChipTextCompact: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
+    letterSpacing: 0.3,
+  },
+  activePillBadgeCompact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.3)',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: RADIUS.pill,
+  },
+  activePillDotCompact: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#00ff87',
+  },
+  activePillTextCompact: {
+    fontSize: 9,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
+  },
+  deactivatedBadgeCompact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.4)',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: RADIUS.pill,
+  },
+  deactivatedBadgeTextCompact: {
+    fontSize: 9,
+    fontFamily: FONT.bold,
+    color: '#f87171',
+  },
+  compactActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginLeft: 'auto',
+  },
+  actionBtnCompact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+    paddingVertical: 3,
+    paddingHorizontal: 7,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  actionBtnTextCompact: {
+    fontSize: 10,
+    fontFamily: FONT.bold,
+  },
+  cardBodyCompact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    paddingTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  mobileChipCompact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#020d06',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  mobileChipTextCompact: {
+    fontSize: 11,
+    fontFamily: FONT.semiBold,
+    color: '#cbd5e1',
+  },
+  infoItemRowCompact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  infoItemTextCompact: {
+    fontSize: 10.5,
+    fontFamily: FONT.medium,
+    color: '#94a3b8',
+  },
+  rolesRowCompact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    flexWrap: 'wrap',
+  },
+  roleBadgeCompact: {
+    backgroundColor: 'rgba(0, 255, 135, 0.08)',
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 135, 0.25)',
+  },
+  roleBadgeTextCompact: {
+    fontSize: 9.5,
+    fontFamily: FONT.bold,
+    color: '#00ff87',
+  },
+  joinedBadgeCompact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginLeft: 'auto',
+  },
+  joinedBadgeTextCompact: {
+    fontSize: 10,
+    fontFamily: FONT.medium,
+    color: '#64748b',
   },
   cardHeaderRow: {
     flexDirection: 'row',

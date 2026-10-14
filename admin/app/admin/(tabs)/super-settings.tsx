@@ -1,3402 +1,1422 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ActivityIndicator,
-  Image,
-  Modal,
+import React, { useState, useEffect } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Platform,
   ScrollView,
   StyleSheet,
   Switch,
   Text,
   TextInput,
   TouchableOpacity,
-  View, Pressable } from 'react-native';
+  View,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { RoleThemes } from '@/constants/Colors';
-import { FONT, RADIUS, SPACING, premiumShadow } from '@/constants/theme';
 import { useAppSettings, useUpdateAppSettings } from '@/src/hooks/useAppSettings';
-import { apiClient } from '@/src/api/client';
-import { useFarmerPlanPricing, useUpdateFarmerPlanPricing, useDeleteFarmerPlanPricing, PLAN_META } from '@/src/hooks/useFarmerPlan';
-import { usePendingDoctorChanges, useAdminApproveDoctorChange, useAdminRejectDoctorChange } from '@/src/hooks/useAdvisorAssignments';
-import { FarmerPlanPricing, FarmerPlanType } from '@/src/api/farmerPlans.api';
-import { Platform } from 'react-native';
-import { useRouter } from 'expo-router';
-import * as Haptics from 'expo-haptics';
-import { SuperAdminExpenseCategoriesModal } from '@/components/SuperAdminExpenseCategoriesModal';
-import { AdminInfoModal, SuperAdminWorkspaceModal, UserGuidesModal } from '@/app/admin/(tabs)/more';
-import { APP_VERSION } from '@/src/constants/version';
-import { IsoControlCenterPanel } from '@/src/components/IsoControlCenterPanel';
-import { IsoStaffApprovalPanel } from '@/src/components/IsoStaffApprovalPanel';
+import type { AppSettings, UpdateAppSettingsPayload } from '@/src/api/appSettings.api';
 import { useExecutiveTheme } from '@/src/store/theme-context';
+import * as AppStorage from '@/src/lib/storage';
 
-const theme = RoleThemes.SUPER_ADMIN;
+type SectionKey = 'ALL' | 'THEME' | 'SPRAY_TANKS' | 'MAINTENANCE' | 'TRIAL' | 'VOICE_SYNC' | 'REFERRALS' | 'FEES' | 'RELEASES';
 
-interface WaBotStatus {
-  isConnected: boolean;
-  qrCodeDataUrl: string | null;
+interface SectionTab {
+  key: SectionKey;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  badge?: string;
 }
 
-interface WhatsAppBotPanelProps {
-  savedGroupJid: string;
-  onSaveJid: (jid: string) => Promise<void>;
-}
+const SECTION_TABS: SectionTab[] = [
+  { key: 'ALL', label: 'All Settings', icon: 'grid-outline' },
+  { key: 'THEME', label: 'Theme & Colors', icon: 'color-palette-outline', badge: 'Light / Dark' },
+  { key: 'SPRAY_TANKS', label: 'Spray Tanks', icon: 'beaker-outline', badge: 'Farm Specs' },
+  { key: 'MAINTENANCE', label: 'Maintenance Modes', icon: 'construct-outline', badge: '7 Modes' },
+  { key: 'TRIAL', label: 'Trial & Memberships', icon: 'gift-outline' },
+  { key: 'VOICE_SYNC', label: 'Voice & WhatsApp', icon: 'mic-outline' },
+  { key: 'REFERRALS', label: 'Referral Schemes', icon: 'people-outline' },
+  { key: 'FEES', label: 'Gardener & Fees', icon: 'leaf-outline' },
+  { key: 'RELEASES', label: 'App Releases', icon: 'cloud-download-outline' },
+];
 
-function WhatsAppBotPanel({ savedGroupJid, onSaveJid }: WhatsAppBotPanelProps) {
-  const [status, setStatus] = useState<WaBotStatus | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [unlinking, setUnlinking] = useState(false);
-  const [syncing, setSyncing] = useState(false);
-  const [syncResult, setSyncResult] = useState<string | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+const SPRAY_TANK_STORAGE_KEY = 'farmsking_spray_tank_sizes';
+const DEFAULT_SPRAY_TANKS = [15, 16, 20, 25, 50, 100, 200, 500];
 
-  // ── Group address (always visible & editable) ──────────────────────
-  const [groupInput, setGroupInput] = useState(savedGroupJid);
-  const [savingGroup, setSavingGroup] = useState(false);
-  const [groupSaved, setGroupSaved] = useState(false);
-  const [groupError, setGroupError] = useState<string | null>(null);
+export default function SuperSettingsScreen() {
+  const { colors, themeMode, setThemeMode, isLight, cardBg, cardBorder, textColor, subTextColor, innerBg } = useExecutiveTheme();
+  const { data: remoteSettings, isLoading, refetch } = useAppSettings();
+  const updateMutation = useUpdateAppSettings();
 
-  // Keep input in sync when prop loads from server
-  useEffect(() => { setGroupInput(savedGroupJid); }, [savedGroupJid]);
+  const [activeSection, setActiveSection] = useState<SectionKey>('ALL');
+  const [formData, setFormData] = useState<Partial<AppSettings> | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const fetchStatus = async () => {
-    try {
-      const res = await apiClient.get<WaBotStatus>('/whatsapp/qr-status');
-      setStatus(res.data);
-    } catch {
-    } finally {
-      setLoading(false);
+  const [sprayTankSizes, setSprayTankSizes] = useState<number[]>(DEFAULT_SPRAY_TANKS);
+  const [newTankInput, setNewTankInput] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const saved = await AppStorage.getItemAsync(SPRAY_TANK_STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setSprayTankSizes(parsed);
+          }
+        }
+      } catch {}
+    })();
+  }, []);
+
+  const handleAddTankSize = async () => {
+    const val = parseInt(newTankInput.trim(), 10);
+    if (!val || val <= 0) {
+      showToast('⚠️ Please enter a valid tank capacity in liters');
+      return;
     }
+    if (sprayTankSizes.includes(val)) {
+      showToast(`⚠️ ${val}L tank size already exists`);
+      return;
+    }
+    const updated = [...sprayTankSizes, val].sort((a, b) => a - b);
+    setSprayTankSizes(updated);
+    setNewTankInput('');
+    await AppStorage.setItemAsync(SPRAY_TANK_STORAGE_KEY, JSON.stringify(updated));
+    showToast(`✅ Added ${val} Liters spray tank option`);
+  };
+
+  const handleRemoveTankSize = async (sizeToRemove: number) => {
+    if (sprayTankSizes.length <= 1) {
+      showToast('⚠️ At least one tank size must remain configured');
+      return;
+    }
+    const updated = sprayTankSizes.filter((s) => s !== sizeToRemove);
+    setSprayTankSizes(updated);
+    await AppStorage.setItemAsync(SPRAY_TANK_STORAGE_KEY, JSON.stringify(updated));
+    showToast(`🗑️ Removed ${sizeToRemove}L tank option`);
   };
 
   useEffect(() => {
-    fetchStatus();
-    intervalRef.current = setInterval(fetchStatus, 5000);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, []);
+    if (remoteSettings) {
+      setFormData({ ...remoteSettings });
+    }
+  }, [remoteSettings]);
 
-  const handleUnlink = async () => {
-    setUnlinking(true);
-    setSyncResult(null);
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const handleToggle = async (key: keyof UpdateAppSettingsPayload, val: boolean) => {
+    if (!formData) return;
+    setFormData((prev) => ({ ...(prev || {}), [key]: val }));
     try {
-      await apiClient.post('/whatsapp/unlink');
-      setStatus(null);
-      setLoading(true);
-      setTimeout(fetchStatus, 2500);
-    } catch {
-      setSyncResult('⚠️ Unlink failed. Please try again.');
-    } finally {
-      setUnlinking(false);
+      await updateMutation.mutateAsync({ [key]: val });
+      showToast(`⚡ ${String(key)} updated to ${val ? 'ON' : 'OFF'}`);
+    } catch (err: any) {
+      Alert.alert('Error', err?.response?.data?.message || err?.message || 'Failed to update toggle');
+      refetch();
     }
   };
 
-  const handleManualSync = async () => {
-    setSyncing(true);
-    setSyncResult(null);
+  const handleFieldChange = (key: keyof UpdateAppSettingsPayload, val: any) => {
+    if (!formData) return;
+    setFormData((prev) => ({ ...(prev || {}), [key]: val }));
+  };
+
+  const handleSaveAll = async () => {
+    if (!formData) return;
     try {
-      const res = await apiClient.post('/whatsapp/sync-group-members');
-      const r = res.data?.result;
-      setSyncResult(
-        `Sync Done! Added: ${r?.addedCount ?? 0}, Invited: ${r?.inviteSentCount ?? 0}, Removed: ${r?.removedCount ?? 0}`,
-      );
-    } catch {
-      setSyncResult('Sync failed. Check WhatsApp connection.');
-    } finally {
-      setSyncing(false);
+      await updateMutation.mutateAsync(formData as UpdateAppSettingsPayload);
+      showToast('✅ All infrastructure settings saved successfully!');
+    } catch (err: any) {
+      Alert.alert('Error', err?.response?.data?.message || err?.message || 'Failed to save settings');
     }
   };
 
-  /** Save group address — accepts invite link or @g.us JID */
-  const handleSaveGroup = async () => {
-    setGroupError(null);
-    const raw = groupInput.trim();
-    if (!raw) {
-      setGroupError('Please enter a WhatsApp Group Invite Link or Group JID.');
-      return;
-    }
-    const isInviteLink = raw.startsWith('https://chat.whatsapp.com/');
-    const isJid = raw.includes('@g.us');
-    if (!isInviteLink && !isJid) {
-      setGroupError('Invalid format. Use https://chat.whatsapp.com/... or a Group JID ending in @g.us');
-      return;
-    }
-    setSavingGroup(true);
-    setGroupSaved(false);
-    try {
-      await onSaveJid(raw);
-      setGroupSaved(true);
-      setTimeout(() => setGroupSaved(false), 4000);
-    } catch {
-      setGroupError('Save failed. Please try again.');
-    } finally {
-      setSavingGroup(false);
-    }
-  };
-
-  const jidConfigured = savedGroupJid && savedGroupJid !== 'NOT_CONFIGURED' && savedGroupJid !== '';
-
-  // ── Group list picker (available when bot is connected) ────────────
-  const [groupsList, setGroupsList] = useState<{ jid: string; name: string; memberCount: number }[]>([]);
-  const [loadingGroups, setLoadingGroups] = useState(false);
-  const [showGroupPicker, setShowGroupPicker] = useState(false);
-
-  const handleFetchGroups = async () => {
-    setLoadingGroups(true);
-    try {
-      const res = await apiClient.get<{ groups: { jid: string; name: string; memberCount: number }[] }>('/whatsapp/groups');
-      setGroupsList(res.data.groups ?? []);
-      setShowGroupPicker(true);
-    } catch {
-      setGroupsList([]);
-      alert('Could not load groups. WhatsApp bot must be connected and set as group admin.');
-    } finally {
-      setLoadingGroups(false);
-    }
-  };
-
-  const handleSelectGroup = async (group: { jid: string; name: string; memberCount: number }) => {
-    setShowGroupPicker(false);
-    setGroupInput(group.jid);
-    setSavingGroup(true);
-    try {
-      await onSaveJid(group.jid);
-      setGroupSaved(true);
-      setTimeout(() => setGroupSaved(false), 4000);
-    } catch {
-      setGroupError('Failed to save selected group.');
-    } finally {
-      setSavingGroup(false);
-    }
-  };
-
-  return (
-    <View style={wStyles.panel}>
-
-      {/* ══════════════════════════════════════════════════════
-          SECTION 1 — TARGET GROUP (always editable)
-      ══════════════════════════════════════════════════════ */}
-      <View style={wStyles.sectionHeader}>
-        <Ionicons name="people-circle-outline" size={15} color="#7c3aed" />
-        <Text style={[wStyles.sectionTitle, { color: '#7c3aed' }]}>Target WhatsApp Group</Text>
-      </View>
-
-      {/* Current status badge */}
-      <View style={[wStyles.statusBadge, jidConfigured ? {} : wStyles.statusBadgeWarn]}>
-        <Ionicons
-          name={jidConfigured ? 'checkmark-circle' : 'warning-outline'}
-          size={13}
-          color={jidConfigured ? '#16a34a' : '#b45309'}
-        />
-        <Text style={[wStyles.statusBadgeText, { color: jidConfigured ? '#15803d' : '#b45309' }]}>
-          {jidConfigured ? 'Group configured — Sync active' : 'No target group set — Member sync is disabled'}
-        </Text>
-      </View>
-
-      {/* ── Editable group address box ──────────────────────────── */}
-      <View style={wStyles.groupBox}>
-        <Text style={wStyles.groupBoxLabel}>Group Invite Link or JID</Text>
-        <Text style={wStyles.groupBoxHint}>
-          {'Open WhatsApp Group → Group Info → Invite Link → Copy\n'}
-          {'Format: '}
-          <Text style={{ fontFamily: 'monospace', fontSize: 10 }}>https://chat.whatsapp.com/XXX</Text>
-          {'  or JID: '}
-          <Text style={{ fontFamily: 'monospace', fontSize: 10 }}>120363XXXX@g.us</Text>
-        </Text>
-
-        <View style={wStyles.inputRow}>
-          <TextInput
-            style={wStyles.groupInput}
-            value={groupInput}
-            onChangeText={(t) => { setGroupInput(t); setGroupError(null); setGroupSaved(false); }}
-            placeholder="https://chat.whatsapp.com/... or JID"
-            placeholderTextColor="#94a3b8"
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          <TouchableOpacity
-            style={[wStyles.groupSaveBtn, { backgroundColor: groupSaved ? '#16a34a' : '#7c3aed' }]}
-            onPress={handleSaveGroup}
-            disabled={savingGroup}
-          >
-            {savingGroup ? (
-              <ActivityIndicator color="#ffffff" size="small" />
-            ) : groupSaved ? (
-              <Ionicons name="checkmark-circle" size={18} color="#ffffff" />
-            ) : (
-              <Text style={wStyles.groupSaveBtnText}>Save</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {groupSaved && <Text style={wStyles.successText}>Group address saved successfully!</Text>}
-        {groupError && <Text style={wStyles.errorText}>{groupError}</Text>}
-      </View>
-
-      {/* ── Divider ─────────────────────────────────────────────── */}
-      <View style={wStyles.orRow}>
-        <View style={wStyles.orLine} />
-        <Text style={wStyles.orText}>or select from bot's group list</Text>
-        <View style={wStyles.orLine} />
-      </View>
-
-      {/* ── Select from group list button ───────────────────────── */}
-      <TouchableOpacity
-        style={[wStyles.actionBtn, { backgroundColor: status?.isConnected ? '#7c3aed' : '#94a3b8' }]}
-        onPress={handleFetchGroups}
-        disabled={loadingGroups || !status?.isConnected}
-      >
-        {loadingGroups ? (
-          <ActivityIndicator color="#ffffff" size="small" />
-        ) : (
-          <>
-            <Ionicons name="list-outline" size={16} color="#ffffff" />
-            <Text style={wStyles.actionBtnText}>
-              {status?.isConnected
-                ? "Select Group from Bot's Group List"
-                : 'Connect bot first to browse groups'}
-            </Text>
-          </>
-        )}
-      </TouchableOpacity>
-
-      {/* Group Picker Modal */}
-      <Modal visible={showGroupPicker} transparent animationType="slide" onRequestClose={() => setShowGroupPicker(false)}>
-        <View style={wStyles.modalOverlay}>
-          <View style={wStyles.modalCard}>
-            <View style={wStyles.modalHeader}>
-              <Text style={wStyles.modalTitle}>Select Target WhatsApp Group</Text>
-              <TouchableOpacity onPress={() => setShowGroupPicker(false)}>
-                <Ionicons name="close-circle" size={22} color="#64748b" />
-              </TouchableOpacity>
-            </View>
-            <Text style={wStyles.modalSub}>
-              Select the group where FARMER and ADVISOR members will be automatically added and removed:
-            </Text>
-            <ScrollView style={{ maxHeight: 380 }} showsVerticalScrollIndicator={false}>
-              {groupsList.length === 0 ? (
-                <Text style={wStyles.emptyText}>
-                  No groups found. Make sure the WhatsApp Bot is added as an Admin to your target group.
-                </Text>
-              ) : (
-                groupsList.map((group) => (
-                  <TouchableOpacity
-                    key={group.jid}
-                    style={[wStyles.groupRow, savedGroupJid === group.jid && wStyles.groupRowSelected]}
-                    onPress={() => handleSelectGroup(group)}
-                  >
-                    <View style={wStyles.groupIcon}>
-                      <Ionicons name="people" size={18} color="#7c3aed" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={wStyles.groupName}>{group.name}</Text>
-                      <Text style={wStyles.groupJid} numberOfLines={1}>{group.jid}</Text>
-                      <Text style={wStyles.groupMeta}>{group.memberCount} members</Text>
-                    </View>
-                    {savedGroupJid === group.jid && (
-                      <Ionicons name="checkmark-circle" size={20} color="#16a34a" />
-                    )}
-                  </TouchableOpacity>
-                ))
-              )}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-
-      {/* ══════════════════════════════════════════════════════
-          SECTION 2 — BOT CONNECTION & QR CODE
-      ══════════════════════════════════════════════════════ */}
-      <View style={{ height: 1, backgroundColor: '#d1fae5', marginVertical: 2 }} />
-
-      <View style={wStyles.sectionHeader}>
-        <Ionicons name="qr-code-outline" size={15} color="#0369a1" />
-        <Text style={wStyles.sectionTitle}>WhatsApp Bot — Link & Status</Text>
-      </View>
-
-      {loading || !status ? (
-        <View style={wStyles.centerBox}>
-          <ActivityIndicator color="#25d366" />
-          <Text style={wStyles.loadingText}>Checking connection status...</Text>
-        </View>
-
-      ) : status.isConnected ? (
-        /* ── CONNECTED ─────────────────────────────── */
-        <View style={{ gap: 10 }}>
-          <View style={wStyles.connectedBadge}>
-            <View style={wStyles.connectedDot} />
-            <View style={{ flex: 1 }}>
-              <Text style={wStyles.connectedText}>WhatsApp Bot Connected & Active</Text>
-              <Text style={wStyles.connectedSub}>
-                Bot is linked. Auto add/remove reconciliation runs every 30 minutes.
-              </Text>
-            </View>
-          </View>
-
-          <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-            <View style={wStyles.infoChip}>
-              <Ionicons name="shield-checkmark-outline" size={12} color="#0369a1" />
-              <Text style={wStyles.infoChipText}>Session Active</Text>
-            </View>
-            <View style={wStyles.infoChip}>
-              <Ionicons name="sync-outline" size={12} color="#0369a1" />
-              <Text style={wStyles.infoChipText}>Auto-Sync ON</Text>
-            </View>
-            {jidConfigured && (
-              <View style={[wStyles.infoChip, { backgroundColor: '#f0fdf4', borderColor: '#86efac' }]}>
-                <Ionicons name="people-outline" size={12} color="#16a34a" />
-                <Text style={[wStyles.infoChipText, { color: '#15803d' }]}>Group Configured</Text>
-              </View>
-            )}
-          </View>
-
-          <TouchableOpacity
-            style={[wStyles.actionBtn, { backgroundColor: '#25d366' }]}
-            onPress={handleManualSync}
-            disabled={syncing}
-          >
-            {syncing ? (
-              <ActivityIndicator color="#ffffff" size="small" />
-            ) : (
-              <>
-                <Ionicons name="sync-outline" size={15} color="#ffffff" />
-                <Text style={wStyles.actionBtnText}>Run Manual Sync Now</Text>
-              </>
-            )}
-          </TouchableOpacity>
-
-          {syncResult ? <Text style={wStyles.syncText}>{syncResult}</Text> : null}
-
-          <TouchableOpacity
-            style={[wStyles.actionBtn, { backgroundColor: '#fee2e2', borderWidth: 1, borderColor: '#fecaca' }]}
-            onPress={handleUnlink}
-            disabled={unlinking}
-          >
-            {unlinking ? (
-              <ActivityIndicator color="#dc2626" size="small" />
-            ) : (
-              <>
-                <Ionicons name="unlink-outline" size={15} color="#dc2626" />
-                <Text style={[wStyles.actionBtnText, { color: '#dc2626' }]}>Unlink WhatsApp Session</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-
-      ) : status.qrCodeDataUrl ? (
-        /* ── QR CODE ───────────────────────────────── */
-        <View style={{ gap: 10, alignItems: 'center' }}>
-          <View style={wStyles.qrInstructions}>
-            <Text style={wStyles.qrInstructTitle}>How to link your WhatsApp:</Text>
-            <Text style={wStyles.qrStep}>1. Open WhatsApp or WhatsApp Business on your phone</Text>
-            <Text style={wStyles.qrStep}>2. Tap Menu → Settings → Linked Devices</Text>
-            <Text style={wStyles.qrStep}>3. Tap "Link a Device" → scan the QR code below</Text>
-            <Text style={[wStyles.qrStep, { color: '#b45309', marginTop: 4 }]}>
-              The account you link must be Admin in the target group.
-            </Text>
-          </View>
-          <View style={wStyles.qrImageBox}>
-            <Image source={{ uri: status.qrCodeDataUrl }} style={wStyles.qrImage} resizeMode="contain" />
-          </View>
-          <Text style={wStyles.qrNote}>QR code auto-refreshes every 5 seconds — scan quickly</Text>
-        </View>
-
-      ) : (
-        /* ── GENERATING ────────────────────────────── */
-        <View style={wStyles.centerBox}>
-          <ActivityIndicator color="#f59e0b" />
-          <Text style={[wStyles.loadingText, { color: '#b45309' }]}>
-            Generating QR Code... Please wait a moment
-          </Text>
-        </View>
-      )}
-    </View>
-  );
-}
-
-const wStyles = StyleSheet.create({
-  panel: {
-    backgroundColor: '#f0fdf4', borderRadius: RADIUS.md,
-    borderWidth: 1.5, borderColor: '#bbf7d0', padding: 14, gap: 8,
-  },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  sectionTitle: { fontSize: 13, fontFamily: FONT.extraBold, color: '#0369a1' },
-
-  // Status badge
-  statusBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: '#f0fdf4', borderRadius: RADIUS.sm,
-    paddingHorizontal: 10, paddingVertical: 6,
-    borderWidth: 1, borderColor: '#bbf7d0',
-  },
-  statusBadgeWarn: { backgroundColor: '#fef3c7', borderColor: '#fde68a' },
-  statusBadgeText: { fontSize: 11.5, fontFamily: FONT.semiBold, flex: 1 },
-
-  // Group address box
-  groupBox: {
-    backgroundColor: '#f5f3ff', borderRadius: RADIUS.md,
-    padding: 12, gap: 6, borderWidth: 1.5, borderColor: '#e9d5ff',
-  },
-  groupBoxLabel: { fontSize: 12, fontFamily: FONT.extraBold, color: '#7c3aed' },
-  groupBoxHint: { fontSize: 10.5, fontFamily: FONT.medium, color: '#5b21b6', lineHeight: 17 },
-  inputRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-  groupInput: {
-    flex: 1, borderWidth: 1.5, borderColor: '#c4b5fd',
-    borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 9,
-    fontSize: 12, fontFamily: FONT.medium, backgroundColor: 'rgba(0,255,135,0.03)', color: '#ffffff',
-  },
-  groupSaveBtn: {
-    borderRadius: RADIUS.md, paddingHorizontal: 16, paddingVertical: 10,
-    alignItems: 'center', justifyContent: 'center', minWidth: 62,
-  },
-  groupSaveBtnText: { fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' },
-  successText: { fontSize: 12, fontFamily: FONT.semiBold, color: '#16a34a', textAlign: 'center' },
-  errorText: { fontSize: 11.5, fontFamily: FONT.medium, color: '#dc2626', textAlign: 'center' },
-
-  // Or divider
-  orRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  orLine: { flex: 1, height: 1, backgroundColor: '#e9d5ff' },
-  orText: { fontSize: 11, fontFamily: FONT.medium, color: '#7c3aed' },
-
-  // Action buttons
-  actionBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 6, paddingVertical: 11, borderRadius: RADIUS.md,
-  },
-  actionBtnText: { fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' },
-  btn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 6, paddingVertical: 11, borderRadius: RADIUS.md,
-  },
-  btnText: { fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' },
-
-  // Bot connection
-  centerBox: { alignItems: 'center', gap: 8, paddingVertical: 12 },
-  loadingText: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
-  connectedBadge: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
-    backgroundColor: '#dcfce7', borderRadius: RADIUS.md,
-    paddingHorizontal: 12, paddingVertical: 10,
-    borderWidth: 1, borderColor: '#86efac',
-  },
-  connectedDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#16a34a', marginTop: 3 },
-  connectedText: { fontSize: 13, fontFamily: FONT.bold, color: '#15803d' },
-  connectedSub: { fontSize: 11, fontFamily: FONT.medium, color: '#166534', marginTop: 2 },
-  infoChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: '#eff6ff', borderRadius: 999,
-    paddingHorizontal: 8, paddingVertical: 4,
-    borderWidth: 1, borderColor: '#bae6fd',
-  },
-  infoChipText: { fontSize: 10.5, fontFamily: FONT.bold, color: '#0369a1' },
-  syncText: { fontSize: 12, fontFamily: FONT.semiBold, color: '#15803d', textAlign: 'center' },
-
-  // QR code
-  qrInstructions: {
-    backgroundColor: '#eff6ff', borderRadius: RADIUS.md,
-    padding: 12, gap: 4, width: '100%',
-    borderWidth: 1, borderColor: '#bae6fd',
-  },
-  qrInstructTitle: { fontSize: 12, fontFamily: FONT.extraBold, color: '#0369a1', marginBottom: 2 },
-  qrStep: { fontSize: 11.5, fontFamily: FONT.medium, color: '#1e40af' },
-  qrImageBox: {
-    backgroundColor: 'rgba(0,255,135,0.03)', padding: 10,
-    borderRadius: RADIUS.lg, borderWidth: 2.5, borderColor: '#25d366',
-  },
-  qrImage: { width: 220, height: 220 },
-  qrNote: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b' },
-
-  // Group picker modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.65)', justifyContent: 'center', alignItems: 'center', padding: 16 },
-  modalCard: { width: '100%', maxWidth: 440, backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: 16, gap: 10, ...premiumShadow('#000000', 'lg') },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  modalTitle: { fontSize: 15, fontFamily: FONT.extraBold, color: '#ffffff' },
-  modalSub: { fontSize: 12, fontFamily: FONT.medium, color: '#64748b' },
-  emptyText: { fontSize: 12, fontFamily: FONT.medium, color: '#b45309', textAlign: 'center', paddingVertical: 16 },
-  groupRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', marginBottom: 8, backgroundColor: 'rgba(0,255,135,0.03)' },
-  groupRowSelected: { backgroundColor: '#f0fdf4', borderColor: '#86efac' },
-  groupIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#f3e8ff', alignItems: 'center', justifyContent: 'center' },
-  groupName: { fontSize: 13, fontFamily: FONT.bold, color: '#ffffff' },
-  groupJid: { fontSize: 10.5, fontFamily: FONT.medium, color: '#64748b' },
-  groupMeta: { fontSize: 11, fontFamily: FONT.bold, color: '#7c3aed', marginTop: 1 },
-});
-
-interface SubCategoryFlag {
-  namePa: string;
-  nameEn: string;
-  enabled: boolean;
-}
-
-interface CategoryFlag {
-  namePa: string;
-  nameEn: string;
-  enabled: boolean;
-  subCategories: Record<string, SubCategoryFlag>;
-}
-
-type FeatureFlagsMap = Record<string, CategoryFlag>;
-
-function CategoryFeatureFlagPanel() {
-  const [flags, setFlags] = useState<FeatureFlagsMap | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [saving, setSaving] = useState<boolean>(false);
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
-  const [expandedCats, setExpandedCats] = useState<Record<string, boolean>>({
-    shopping: false,
-    telephony_comm: false,
-    farmer_operations: false,
-  });
-
-  const fetchFlags = async () => {
-    try {
-      setLoading(true);
-      const res = await apiClient.get<FeatureFlagsMap>('/app-settings/feature-flags');
-      setFlags(res.data);
-    } catch {
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchFlags();
-  }, []);
-
-  const toggleCategory = (catKey: string) => {
-    if (!flags) return;
-    const currentCat = flags[catKey];
-    if (!currentCat) return;
-
-    setFlags({
-      ...flags,
-      [catKey]: {
-        ...currentCat,
-        enabled: !currentCat.enabled,
-      },
-    });
-  };
-
-  const toggleSubCategory = (catKey: string, subKey: string) => {
-    if (!flags) return;
-    const currentCat = flags[catKey];
-    if (!currentCat || !currentCat.subCategories) return;
-    const currentSub = currentCat.subCategories[subKey];
-    if (!currentSub) return;
-
-    setFlags({
-      ...flags,
-      [catKey]: {
-        ...currentCat,
-        subCategories: {
-          ...currentCat.subCategories,
-          [subKey]: {
-            ...currentSub,
-            enabled: !currentSub.enabled,
-          },
-        },
-      },
-    });
-  };
-
-  const handleSave = async () => {
-    if (!flags) return;
-    try {
-      setSaving(true);
-      await apiClient.patch('/app-settings/feature-flags', flags);
-      alert('Category feature settings saved successfully!');
-    } catch {
-      alert('Error saving category feature settings.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  if (loading || !flags) {
+  if (isLoading || !formData) {
     return (
-      <View style={[styles.card, { alignItems: 'center', paddingVertical: 20 }]}>
-        <ActivityIndicator color="#4f46e5" />
-        <Text style={{ fontSize: 12, fontFamily: FONT.medium, color: '#64748b', marginTop: 6 }}>
-          Loading module feature settings...
-        </Text>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.bg }]}>
+        <ActivityIndicator size="large" color={isLight ? '#16a34a' : '#00ff87'} />
+        <Text style={[styles.loadingText, { color: subTextColor }]}>Loading Infrastructure Settings...</Text>
       </View>
     );
   }
 
   return (
-    <View style={[styles.card, { backgroundColor: '#0f172a', borderColor: '#1e293b', borderWidth: 1.5 }, premiumShadow('#000000', 'lg')]}>
-      <TouchableOpacity
-        style={styles.cardHeader}
-        onPress={() => setIsCollapsed((prev) => !prev)}
-        activeOpacity={0.7}
-      >
-        <View style={[styles.iconCircle, { backgroundColor: '#4f46e5' }]}>
-          <Ionicons name="apps" size={20} color="#ffffff" />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.cardTitle, { color: '#ffffff' }]}>Categories & Sub-Categories Switches</Text>
-          <Text style={[styles.cardSub, { color: '#94a3b8' }]}>
-            Toggle live ON/OFF status for any platform module or feature (Shopping, Voice Call, WhatsApp, etc.)
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
+      {/* ── Header ────────────────────────────────────────────── */}
+      <View style={[styles.header, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderBottomColor: cardBorder }]}>
+        <View style={styles.headerLeft}>
+          <View style={[styles.crownBadge, { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.08)' : 'rgba(0, 255, 135, 0.08)', borderColor: isLight ? 'rgba(22, 163, 74, 0.3)' : 'rgba(0, 255, 135, 0.25)' }]}>
+            <Ionicons name="hardware-chip-outline" size={16} color={isLight ? '#16a34a' : '#00ff87'} />
+            <Text style={[styles.crownText, { color: isLight ? '#16a34a' : '#00ff87' }]}>SYSTEM CONTROLS & THEME</Text>
+          </View>
+          <Text style={[styles.headerTitle, { color: textColor }]}>System Settings & Infrastructure Controls</Text>
+          <Text style={[styles.headerSubtitle, { color: subTextColor }]}>
+            Global theme identity, platform maintenance circuit-breakers, free trial policies, voice call, auto-sync, and release parameters.
           </Text>
         </View>
-        <Ionicons
-          name={isCollapsed ? 'chevron-down-outline' : 'chevron-up-outline'}
-          size={22}
-          color="#94a3b8"
-        />
-      </TouchableOpacity>
 
-      {!isCollapsed && (
-        <View style={{ gap: 12, marginTop: 6 }}>
-          <TouchableOpacity
-            style={[wStyles.btn, { backgroundColor: '#4f46e5' }]}
-            onPress={handleSave}
-            disabled={saving}
-          >
-            {saving ? (
-              <ActivityIndicator color="#ffffff" size="small" />
-            ) : (
-              <>
-                <Ionicons name="save-outline" size={16} color="#ffffff" />
-                <Text style={wStyles.btnText}>Save All Feature Switches</Text>
-              </>
-            )}
-          </TouchableOpacity>
-
-          {Object.entries(flags).map(([catKey, category]: [string, CategoryFlag]) => {
-            const isCatExpanded = !!expandedCats[catKey];
-            const subCount = Object.keys(category.subCategories || {}).length;
-            const activeSubCount = Object.values(category.subCategories || {}).filter(
-              (s: SubCategoryFlag) => s.enabled
-            ).length;
-
-            return (
-              <View
-                key={catKey}
-                style={{
-                  backgroundColor: category.enabled ? '#1e293b' : '#090d16',
-                  borderRadius: RADIUS.md,
-                  borderWidth: 1,
-                  borderColor: category.enabled ? '#334155' : '#1e293b',
-                  overflow: 'hidden',
-                }}
-              >
-                {/* Category Bar */}
-                <TouchableOpacity
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: 12,
-                  }}
-                  onPress={() => setExpandedCats((prev) => ({ ...prev, [catKey]: !prev[catKey] }))}
-                  activeOpacity={0.8}
-                >
-                  <View style={{ flex: 1, gap: 2 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff' }}>
-                        {category.nameEn}
-                      </Text>
-                    </View>
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: category.enabled ? '#38bdf8' : '#f43f5e' }}>
-                      {category.enabled ? `ON (${activeSubCount}/${subCount} Active)` : 'Category Disabled'}
-                    </Text>
-                  </View>
-
-                  <Switch
-                    value={category.enabled}
-                    onValueChange={() => toggleCategory(catKey)}
-                    trackColor={{ false: '#334155', true: '#4f46e5' }}
-                    thumbColor="#ffffff"
-                  />
-                </TouchableOpacity>
-
-                {/* Sub Categories Accordion */}
-                {isCatExpanded && category.subCategories && (
-                  <View style={{ paddingHorizontal: 12, paddingBottom: 12, gap: 8, borderTopWidth: 1, borderTopColor: '#334155', paddingTop: 8 }}>
-                    {Object.entries(category.subCategories).map(([subKey, subItem]: [string, SubCategoryFlag]) => {
-                      const isSubOn = category.enabled && subItem.enabled;
-                      return (
-                        <View
-                          key={subKey}
-                          style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            backgroundColor: isSubOn ? '#0f172a' : '#182234',
-                            paddingHorizontal: 10,
-                            paddingVertical: 8,
-                            borderRadius: RADIUS.sm,
-                            borderWidth: 1,
-                            borderColor: isSubOn ? '#334155' : '#1e293b',
-                            opacity: category.enabled ? 1 : 0.4,
-                          }}
-                        >
-                          <View style={{ flex: 1 }}>
-                            <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#f1f5f9' }}>
-                              {subItem.nameEn}
-                            </Text>
-                          </View>
-
-                          <Switch
-                            value={subItem.enabled && category.enabled}
-                            onValueChange={() => toggleSubCategory(catKey, subKey)}
-                            disabled={!category.enabled}
-                            trackColor={{ false: '#334155', true: '#10b981' }}
-                            thumbColor="#ffffff"
-                          />
-                        </View>
-                      );
-                    })}
-                  </View>
-                )}
-              </View>
-            );
-          })}
-        </View>
-      )}
-    </View>
-  );
-}
-
-function PlatformMaintenancePanel() {
-  const { data: settings } = useAppSettings();
-  const updateSettings = useUpdateAppSettings();
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [ecommerce, setEcommerce] = useState(false);
-  const [agri, setAgri] = useState(false);
-  const [garden, setGarden] = useState(false);
-  const [wallet, setWallet] = useState(false);
-  const [trainer, setTrainer] = useState(false);
-  const [doctor, setDoctor] = useState(false);
-  const [gardenAdvisor, setGardenAdvisor] = useState(false);
-  const [accounts, setAccounts] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (settings) {
-      setEcommerce(!!settings.storefrontMaintenanceMode);
-      setAgri(!!settings.agriMaintenanceMode);
-      setGarden(!!settings.gardenMaintenanceMode);
-      setWallet(!!settings.walletMaintenanceMode);
-      setTrainer(!!(settings as any).trainerMaintenanceMode);
-      setDoctor(!!(settings as any).doctorMaintenanceMode);
-      setGardenAdvisor(!!(settings as any).gardenAdvisorMaintenanceMode);
-      setAccounts(!!(settings as any).accountsMaintenanceMode);
-    }
-  }, [settings]);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await updateSettings.mutateAsync({
-        storefrontMaintenanceMode: ecommerce,
-        agriMaintenanceMode: agri,
-        gardenMaintenanceMode: garden,
-        walletMaintenanceMode: wallet,
-        trainerMaintenanceMode: trainer,
-        doctorMaintenanceMode: doctor,
-        gardenAdvisorMaintenanceMode: gardenAdvisor,
-        accountsMaintenanceMode: accounts,
-      } as any);
-      alert('Platform Maintenance Modes saved successfully.');
-    } catch (err: any) {
-      alert('Failed to save maintenance modes.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <View style={[styles.card, { borderColor: '#fca5a5', borderWidth: 1.5 }, premiumShadow('#000000', 'sm')]}>
-      <TouchableOpacity style={styles.cardHeader} onPress={() => setIsCollapsed(!isCollapsed)} activeOpacity={0.7}>
-        <View style={[styles.iconCircle, { backgroundColor: '#ef4444' }]}>
-          <Ionicons name="construct" size={20} color="#ffffff" />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.cardTitle, { color: '#b91c1c' }]}>App Module Maintenance Modes</Text>
-          <Text style={styles.cardSub}>
-            Park specific platform modules under maintenance without affecting others.
-          </Text>
-        </View>
-        <Ionicons name={isCollapsed ? 'chevron-down-outline' : 'chevron-up-outline'} size={22} color="#64748b" />
-      </TouchableOpacity>
-
-      {!isCollapsed && (
-        <View style={{ gap: 12, marginTop: 8 }}>
-          <View style={styles.subToggleRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.subToggleTitle}>E-Commerce Module</Text>
-              <Text style={styles.subToggleDesc}>Pause Shop, Cart, Orders for maintenance</Text>
-            </View>
-            <Switch value={ecommerce} onValueChange={setEcommerce} trackColor={{ false: '#cbd5e1', true: '#ef4444' }} thumbColor="#ffffff" />
-          </View>
-
-          <View style={styles.subToggleRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.subToggleTitle}>Farmer & Agri Experts Module</Text>
-              <Text style={styles.subToggleDesc}>Pause Farm Records, Crop AI, Advisories</Text>
-            </View>
-            <Switch value={agri} onValueChange={setAgri} trackColor={{ false: '#cbd5e1', true: '#ef4444' }} thumbColor="#ffffff" />
-          </View>
-
-          <View style={styles.subToggleRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.subToggleTitle}>Gardener & Garden Experts Module</Text>
-              <Text style={styles.subToggleDesc}>Pause Garden features for maintenance</Text>
-            </View>
-            <Switch value={garden} onValueChange={setGarden} trackColor={{ false: '#cbd5e1', true: '#ef4444' }} thumbColor="#ffffff" />
-          </View>
-
-          <View style={styles.subToggleRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.subToggleTitle}>Wallet System</Text>
-              <Text style={styles.subToggleDesc}>Pause Ledger, Referral payouts, Withdrawals</Text>
-            </View>
-            <Switch value={wallet} onValueChange={setWallet} trackColor={{ false: '#cbd5e1', true: '#ef4444' }} thumbColor="#ffffff" />
-          </View>
-
-          <View style={styles.subToggleRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.subToggleTitle}>Technical Trainer Module</Text>
-              <Text style={styles.subToggleDesc}>Pause Trainer dashboard and logs</Text>
-            </View>
-            <Switch value={trainer} onValueChange={setTrainer} trackColor={{ false: '#cbd5e1', true: '#ef4444' }} thumbColor="#ffffff" />
-          </View>
-
-          <View style={styles.subToggleRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.subToggleTitle}>🩺 Doctor Module (Farmer Doctor)</Text>
-              <Text style={styles.subToggleDesc}>Pause Doctor consultations & prescriptions</Text>
-            </View>
-            <Switch value={doctor} onValueChange={setDoctor} trackColor={{ false: '#cbd5e1', true: '#ef4444' }} thumbColor="#ffffff" />
-          </View>
-
-          <View style={styles.subToggleRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.subToggleTitle}>🌿 Garden Advisor Module</Text>
-              <Text style={styles.subToggleDesc}>Pause Garden Advisor listings & hire flow</Text>
-            </View>
-            <Switch value={gardenAdvisor} onValueChange={setGardenAdvisor} trackColor={{ false: '#cbd5e1', true: '#ef4444' }} thumbColor="#ffffff" />
-          </View>
-
-          <View style={styles.subToggleRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.subToggleTitle}>📒 Accounts Module</Text>
-              <Text style={styles.subToggleDesc}>Pause Garden/Farm expense & harvest accounts</Text>
-            </View>
-            <Switch value={accounts} onValueChange={setAccounts} trackColor={{ false: '#cbd5e1', true: '#ef4444' }} thumbColor="#ffffff" />
-          </View>
-
-          <TouchableOpacity style={[wStyles.btn, { backgroundColor: '#ef4444' }]} onPress={handleSave} disabled={saving}>
-            {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={wStyles.btnText}>Save Maintenance Settings</Text>}
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
-  );
-}
-
-function GardenSettingsPanel() {
-  const { data: settings } = useAppSettings();
-  const updateSettings = useUpdateAppSettings();
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [feePercent, setFeePercent] = useState('20');
-  const [proPrice, setProPrice] = useState('299');
-  const [vipPrice, setVipPrice] = useState('999');
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (settings) {
-      setFeePercent(String(settings.gardenExpertPlatformFeePercent ?? 20));
-      setProPrice(String(settings.gardenerProCardPrice ?? 299));
-      setVipPrice(String(settings.gardenerVipCardPrice ?? 999));
-    }
-  }, [settings]);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await updateSettings.mutateAsync({
-        gardenExpertPlatformFeePercent: parseFloat(feePercent),
-        gardenerProCardPrice: parseFloat(proPrice),
-        gardenerVipCardPrice: parseFloat(vipPrice),
-      });
-      alert('Garden Settings saved successfully.');
-    } catch (err: any) {
-      alert('Failed to save garden settings.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <View style={[styles.card, { borderColor: '#fcd34d', borderWidth: 1.5 }, premiumShadow('#000000', 'sm')]}>
-      <TouchableOpacity style={styles.cardHeader} onPress={() => setIsCollapsed(!isCollapsed)} activeOpacity={0.7}>
-        <View style={[styles.iconCircle, { backgroundColor: '#f59e0b' }]}>
-          <Ionicons name="leaf" size={22} color="#ffffff" />
-        </View>
-        <Text style={styles.cardTitle}>Garden VIP Cards & Experts</Text>
-        <Ionicons name={isCollapsed ? 'chevron-down' : 'chevron-up'} size={24} color="#94a3b8" />
-      </TouchableOpacity>
-      
-      {!isCollapsed && (
-        <View style={{ gap: 12, marginTop: 12, padding: 4 }}>
-          <View style={{ gap: 4 }}>
-            <Text style={styles.label}>PRO Card Price (₹)</Text>
-            <TextInput style={styles.input} keyboardType="numeric" value={proPrice} onChangeText={setProPrice} placeholder="e.g. 299" />
-          </View>
-          <View style={{ gap: 4 }}>
-            <Text style={styles.label}>VIP Card Price (₹)</Text>
-            <TextInput style={styles.input} keyboardType="numeric" value={vipPrice} onChangeText={setVipPrice} placeholder="e.g. 999" />
-          </View>
-          <View style={{ gap: 4 }}>
-            <Text style={styles.label}>Garden Expert Platform Fee (%)</Text>
-            <TextInput style={styles.input} keyboardType="numeric" value={feePercent} onChangeText={setFeePercent} placeholder="e.g. 20" />
-          </View>
-
-          <TouchableOpacity style={[wStyles.btn, saving && { opacity: 0.5 }, { backgroundColor: '#f59e0b', marginTop: 12 }]} onPress={handleSave} disabled={saving}>
-            {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={wStyles.btnText}>Save Garden Settings</Text>}
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
-  );
-}
-
-function ECommerceSettingsPanel() {
-  const { data: settings } = useAppSettings();
-  const updateSettings = useUpdateAppSettings();
-  const [isCollapsed, setIsCollapsed] = useState(true);
-  const [gstEnabled, setGstEnabled] = useState(true);
-  const [codEnabled, setCodEnabled] = useState(true);
-  const [onlinePayEnabled, setOnlinePayEnabled] = useState(true);
-  const [freeShippingThreshold, setFreeShippingThreshold] = useState('999');
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
-  const [savedNotice, setSavedNotice] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (settings) {
-      setMaintenanceMode(!!settings.storefrontMaintenanceMode);
-    }
-  }, [settings]);
-
-  const handleToggleMaintenance = async (value: boolean) => {
-    setMaintenanceMode(value);
-    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    try {
-      await updateSettings.mutateAsync({ storefrontMaintenanceMode: value });
-      setSavedNotice(value ? 'Storefront Maintenance Mode ENABLED!' : 'Storefront Maintenance Mode DISABLED!');
-      setTimeout(() => setSavedNotice(null), 3500);
-    } catch (err: any) {
-      const errMsg = Array.isArray(err?.response?.data?.message)
-        ? err.response.data.message.join(', ')
-        : (err?.response?.data?.message || err?.message || 'Could not save settings.');
-      setSavedNotice(errMsg);
-      setTimeout(() => setSavedNotice(null), 4000);
-    }
-  };
-
-  const handleSaveEcomSettings = async () => {
-    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    try {
-      await updateSettings.mutateAsync({ storefrontMaintenanceMode: maintenanceMode });
-      setSavedNotice('E-Commerce Settings Saved!');
-      setTimeout(() => setSavedNotice(null), 3000);
-    } catch (err: any) {
-      const errMsg = Array.isArray(err?.response?.data?.message)
-        ? err.response.data.message.join(', ')
-        : (err?.response?.data?.message || err?.message || 'Could not save settings.');
-      setSavedNotice(errMsg);
-      setTimeout(() => setSavedNotice(null), 4000);
-    }
-  };
-
-  return (
-    <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
-      <TouchableOpacity
-        style={styles.cardHeader}
-        onPress={() => setIsCollapsed((prev) => !prev)}
-        activeOpacity={0.7}
-      >
-        <View style={[styles.iconCircle, { backgroundColor: '#0284c7' }]}>
-          <Ionicons name="cart" size={20} color="#ffffff" />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.cardTitle}>E-Commerce & Shop Control Settings</Text>
-          <Text style={styles.cardSub}>
-            Configure GST ON/OFF, Free Delivery threshold, COD, Gateway payments & Store maintenance mode.
-          </Text>
-        </View>
-        <Ionicons
-          name={isCollapsed ? 'chevron-down-outline' : 'chevron-up-outline'}
-          size={22}
-          color="#64748b"
-          style={{ marginLeft: 6 }}
-        />
-      </TouchableOpacity>
-
-      {!isCollapsed && (
-        <View style={{ gap: 12, marginTop: 8 }}>
-          {/* GST Tax Calculation Switch */}
-          <View style={styles.subToggleRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.subToggleTitle}>Enable GST Tax Calculations</Text>
-              <Text style={styles.subToggleDesc}>Apply 5%, 12%, 18% GST tax rates to product prices</Text>
-            </View>
-            <Switch
-              value={gstEnabled}
-              onValueChange={setGstEnabled}
-              trackColor={{ false: '#cbd5e1', true: '#0284c7' }}
-              thumbColor="#ffffff"
-            />
-          </View>
-
-          {/* Cash on Delivery Payment Switch */}
-          <View style={styles.subToggleRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.subToggleTitle}>Cash on Delivery (COD) Payment Option</Text>
-              <Text style={styles.subToggleDesc}>Allow buyers to pay cash upon order delivery</Text>
-            </View>
-            <Switch
-              value={codEnabled}
-              onValueChange={setCodEnabled}
-              trackColor={{ false: '#cbd5e1', true: '#16a34a' }}
-              thumbColor="#ffffff"
-            />
-          </View>
-
-          {/* Online Gateway Payments Switch */}
-          <View style={styles.subToggleRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.subToggleTitle}>Online Gateway & UPI Payments</Text>
-              <Text style={styles.subToggleDesc}>Enable PhonePe / UPI instant online checkout</Text>
-            </View>
-            <Switch
-              value={onlinePayEnabled}
-              onValueChange={setOnlinePayEnabled}
-              trackColor={{ false: '#cbd5e1', true: '#16a34a' }}
-              thumbColor="#ffffff"
-            />
-          </View>
-
-          {/* Free Shipping Threshold */}
-          <View style={{ gap: 4 }}>
-            <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#e2e8f0' }}>
-              Free Shipping Threshold Amount (₹)
-            </Text>
-            <TextInput
-              style={{
-                borderWidth: 1.5,
-                borderColor: 'rgba(0,255,135,0.3)',
-                borderRadius: RADIUS.md,
-                paddingHorizontal: 10,
-                paddingVertical: 6,
-                fontSize: 13,
-                fontFamily: FONT.bold,
-                color: '#ffffff',
-                backgroundColor: 'rgba(0,255,135,0.03)',
+        <View style={styles.headerRight}>
+          {/* Quick 2-Button Global Theme Controller */}
+          <View style={[styles.quickThemeSwitch, { backgroundColor: isLight ? '#f1f5f9' : '#020d06', borderColor: cardBorder }]}>
+            <TouchableOpacity
+              style={[styles.quickThemeBtn, themeMode === 'LIGHT' && styles.quickThemeBtnActiveLight]}
+              onPress={() => {
+                setThemeMode('LIGHT');
+                showToast('☀️ Switched to Crisp Light Theme across entire Admin system');
               }}
-              keyboardType="numeric"
-              value={freeShippingThreshold}
-              onChangeText={setFreeShippingThreshold}
-              placeholder="e.g. 999"
-            />
-          </View>
+              activeOpacity={0.8}
+            >
+              <Ionicons name="sunny" size={14} color={themeMode === 'LIGHT' ? '#ffffff' : (isLight ? '#64748b' : '#94a3b8')} />
+              <Text style={[styles.quickThemeBtnText, themeMode === 'LIGHT' && { color: '#ffffff', fontWeight: '800' }]}>Light</Text>
+            </TouchableOpacity>
 
-          {/* Storefront Maintenance Mode Switch */}
-          <View style={styles.subToggleRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.subToggleTitle}>Storefront Maintenance Mode</Text>
-              <Text style={styles.subToggleDesc}>Temporarily pause new buyer orders during inventory update</Text>
-            </View>
-            <Switch
-              value={maintenanceMode}
-              onValueChange={handleToggleMaintenance}
-              trackColor={{ false: '#cbd5e1', true: '#dc2626' }}
-              thumbColor="#ffffff"
-            />
-          </View>
-
-          {savedNotice ? (
-            <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: maintenanceMode ? '#dc2626' : '#16a34a', textAlign: 'center' }}>
-              {savedNotice}
-            </Text>
-          ) : null}
-
-          <TouchableOpacity
-            style={[wStyles.btn, { backgroundColor: '#0284c7' }]}
-            onPress={handleSaveEcomSettings}
-          >
-            <Ionicons name="save-outline" size={16} color="#ffffff" />
-            <Text style={wStyles.btnText}>Save E-Commerce Settings</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
-  );
-}
-
-function OtpDeliveryChannelPanel() {
-  const { data: settings } = useAppSettings();
-  const update = useUpdateAppSettings();
-  const [selectedChannel, setSelectedChannel] = useState<string>((settings as any)?.otpDeliveryChannel ?? 'WHATSAPP');
-  const [isCollapsed, setIsCollapsed] = useState(true);
-
-  useEffect(() => {
-    if ((settings as any)?.otpDeliveryChannel) {
-      setSelectedChannel((settings as any).otpDeliveryChannel);
-    }
-  }, [settings]);
-
-  const handleSelectChannel = async (channel: string) => {
-    setSelectedChannel(channel);
-    try {
-      await update.mutateAsync({ otpDeliveryChannel: channel } as any);
-      if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch {
-      alert('Failed to update OTP Delivery Channel');
-    }
-  };
-
-  const CHANNELS = [
-    { id: 'WHATSAPP', label: 'WhatsApp Direct', icon: 'logo-whatsapp', desc: 'Send OTP via WhatsApp Bot' },
-    { id: 'SMS', label: 'SMS Text Message', icon: 'chatbox-text-outline', desc: 'Send OTP via Mobile SMS' },
-    { id: 'EMAIL', label: 'Email OTP', icon: 'mail-outline', desc: 'Send OTP via User Email' },
-    { id: 'ALL', label: 'All Channels', icon: 'flash-outline', desc: 'Send OTP across WhatsApp, SMS & Email simultaneously' },
-  ];
-
-  return (
-    <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#faf5ff', borderColor: '#e9d5ff', borderWidth: 1 }]}>
-      <TouchableOpacity
-        style={styles.cardHeader}
-        onPress={() => setIsCollapsed((prev) => !prev)}
-        activeOpacity={0.7}
-      >
-        <View style={[styles.iconCircle, { backgroundColor: '#9333ea' }]}>
-          <Ionicons name="key" size={20} color="#ffffff" />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.cardTitle}>New User OTP Delivery Channel</Text>
-          <Text style={styles.cardSub}>Select channel to deliver OTP codes for registration & forgot password</Text>
-        </View>
-        <Ionicons
-          name={isCollapsed ? 'chevron-down-outline' : 'chevron-up-outline'}
-          size={22}
-          color="#64748b"
-          style={{ marginLeft: 6 }}
-        />
-      </TouchableOpacity>
-
-      {!isCollapsed && (
-        <View style={{ gap: 8, marginTop: 8 }}>
-          {CHANNELS.map((ch) => {
-            const isSelected = selectedChannel === ch.id;
-            return (
-              <TouchableOpacity
-                key={ch.id}
-                style={[
-                  styles.subToggleRow,
-                  { paddingVertical: 10, paddingHorizontal: 12, borderRadius: RADIUS.md, borderWidth: 1.5, borderColor: isSelected ? '#9333ea' : '#e9d5ff', backgroundColor: isSelected ? '#f3e8ff' : '#ffffff' }
-                ]}
-                onPress={() => handleSelectChannel(ch.id)}
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 13, fontFamily: FONT.bold, color: isSelected ? '#7e22ce' : '#334155' }}>{ch.label}</Text>
-                  <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>{ch.desc}</Text>
-                </View>
-                <Ionicons name={isSelected ? 'checkmark-circle' : 'ellipse-outline'} size={22} color={isSelected ? '#9333ea' : '#cbd5e1'} />
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      )}
-    </View>
-  );
-}
-
-/** Helper to convert any date representation to Indian Farmer format (DD/MM/YYYY) */
-function formatIndianDate(dateStr: string): string {
-  if (!dateStr) return '';
-  const trimmed = dateStr.trim();
-  if (trimmed.includes('/')) {
-    const parts = trimmed.split('/');
-    if (parts.length === 3) {
-      const [d, m, y] = parts;
-      return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y.length === 2 ? '20' + y : y}`;
-    }
-  }
-  if (trimmed.includes('-')) {
-    const parts = trimmed.split('-');
-    if (parts.length === 3) {
-      if (parts[0].length === 4) {
-        // YYYY-MM-DD
-        return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
-      }
-      if (parts[2].length === 4) {
-        // DD-MM-YYYY
-        return `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}`;
-      }
-    }
-  }
-  const d = new Date(trimmed);
-  if (!isNaN(d.getTime())) {
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
-    return `${day}/${month}/${year}`;
-  }
-  return dateStr;
-}
-
-/** Helper to convert Indian Farmer format (DD/MM/YYYY) to ISO (YYYY-MM-DD) for backend storage & date calculations */
-function parseIndianDateToIso(dateStr: string): string {
-  if (!dateStr) return '';
-  const trimmed = dateStr.trim();
-  if (trimmed.includes('/')) {
-    const parts = trimmed.split('/');
-    if (parts.length === 3) {
-      const [d, m, y] = parts;
-      return `${y.length === 2 ? '20' + y : y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-    }
-  }
-  if (trimmed.includes('-')) {
-    const parts = trimmed.split('-');
-    if (parts.length === 3 && parts[0].length === 2 && (parts[2].length === 4 || parts[2].length === 2)) {
-      const [d, m, y] = parts;
-      return `${y.length === 2 ? '20' + y : y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-    }
-  }
-  return trimmed;
-}
-
-function CombinedReferralBonusSettingsPanel() {
-  const { data: settings } = useAppSettings();
-  const update = useUpdateAppSettings();
-
-  // --- Referral & Welcome Bonus State ---
-  const [referralBonus, setReferralBonus] = useState<string>('10');
-  const [newUserBonus, setNewUserBonus] = useState<string>('10');
-  const [paidPlanBonus, setPaidPlanBonus] = useState<string>('50');
-  const [schemeEnabled, setSchemeEnabled] = useState<boolean>(false);
-  const [schemeName, setSchemeName] = useState<string>('OFFER!');
-  const [expiryDateInput, setExpiryDateInput] = useState<string>('31/12/2026');
-  const [offerReferralBonus, setOfferReferralBonus] = useState<string>('1');
-  const [offerNewUserBonus, setOfferNewUserBonus] = useState<string>('5');
-  const [offerPaidPlanBonus, setOfferPaidPlanBonus] = useState<string>('9');
-  const [savingReferral, setSavingReferral] = useState(false);
-  const [savedReferralNotice, setSavedReferralNotice] = useState<string | null>(null);
-
-  // --- Business Partner Referral State ---
-  const [partnerCommission, setPartnerCommission] = useState<string>('100');
-  const [partnerNewUserBonus, setPartnerNewUserBonus] = useState<string>('20');
-  const [partnerPaidPlanBonus, setPartnerPaidPlanBonus] = useState<string>('100');
-  const [partnerSchemeEnabled, setPartnerSchemeEnabled] = useState<boolean>(false);
-  const [partnerSchemeName, setPartnerSchemeName] = useState<string>('OFFER!');
-  const [partnerExpiryDateInput, setPartnerExpiryDateInput] = useState<string>('31/12/2026');
-  const [offerPartnerCommission, setOfferPartnerCommission] = useState<string>('100');
-  const [offerPartnerNewUserBonus, setOfferPartnerNewUserBonus] = useState<string>('20');
-  const [offerPartnerPaidPlanBonus, setOfferPartnerPaidPlanBonus] = useState<string>('100');
-  const [savingPartner, setSavingPartner] = useState(false);
-  const [savedPartnerNotice, setSavedPartnerNotice] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (settings) {
-      // Standard Referral & Welcome Bonus
-      setReferralBonus(String(settings.referralSignupBonusAmount ?? 10));
-      setNewUserBonus(String(settings.newUserSignupBonusAmount ?? 10));
-      setPaidPlanBonus(String(settings.referralPaidPlanBonusAmount ?? 50));
-      setSchemeEnabled(settings.referralOfferSchemeEnabled ?? false);
-      setSchemeName(settings.referralOfferSchemeName || 'OFFER!');
-      setExpiryDateInput(formatIndianDate(settings.referralOfferExpiryDate || '2026-12-31'));
-      setOfferReferralBonus(String(settings.referralOfferReferrerBonus ?? 1));
-      setOfferNewUserBonus(String(settings.referralOfferNewUserBonus ?? 5));
-      setOfferPaidPlanBonus(String(settings.referralOfferPaidPlanBonus ?? 9));
-
-      // Business Partner Referral
-      setPartnerCommission(String(settings.partnerReferralCommissionAmount ?? 100));
-      setPartnerNewUserBonus(String(settings.partnerRefereeSignupBonusAmount ?? 20));
-      setPartnerPaidPlanBonus(String(settings.partnerReferralPaidPlanBonusAmount ?? 100));
-      setPartnerSchemeEnabled(settings.partnerOfferSchemeEnabled ?? false);
-      setPartnerSchemeName(settings.partnerOfferSchemeName || 'OFFER!');
-      setPartnerExpiryDateInput(formatIndianDate(settings.partnerOfferExpiryDate || '2026-12-31'));
-      setOfferPartnerCommission(String(settings.partnerOfferReferrerBonus ?? 100));
-      setOfferPartnerNewUserBonus(String(settings.partnerOfferNewUserBonus ?? 20));
-      setOfferPartnerPaidPlanBonus(String(settings.partnerOfferPaidPlanBonus ?? 100));
-    }
-  }, [settings]);
-
-  const handleSaveReferral = async () => {
-    const refVal = parseFloat(referralBonus);
-    const newVal = parseFloat(newUserBonus);
-    const paidVal = parseFloat(paidPlanBonus);
-
-    if (
-      isNaN(refVal) || refVal < 0 ||
-      isNaN(newVal) || newVal < 0 ||
-      isNaN(paidVal) || paidVal < 0
-    ) {
-      alert('Please enter valid non-negative bonus amounts.');
-      return;
-    }
-
-    try {
-      setSavingReferral(true);
-      await update.mutateAsync({
-        referralSignupBonusAmount: refVal,
-        newUserSignupBonusAmount: newVal,
-        referralPaidPlanBonusAmount: paidVal,
-      });
-      if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      setSavedReferralNotice('Referral & Welcome Bonus settings saved!');
-      setTimeout(() => setSavedReferralNotice(null), 3500);
-    } catch {
-      alert('Failed to update referral bonus settings.');
-    } finally {
-      setSavingReferral(false);
-    }
-  };
-
-  const handleSavePartner = async () => {
-    const commissionVal = parseFloat(partnerCommission);
-    const newUserVal = parseFloat(partnerNewUserBonus);
-    const paidPlanVal = parseFloat(partnerPaidPlanBonus);
-
-    if (
-      isNaN(commissionVal) || commissionVal < 0 ||
-      isNaN(newUserVal) || newUserVal < 0 ||
-      isNaN(paidPlanVal) || paidPlanVal < 0
-    ) {
-      alert('Please enter valid non-negative bonus/commission amounts.');
-      return;
-    }
-
-    try {
-      setSavingPartner(true);
-      await update.mutateAsync({
-        partnerReferralCommissionAmount: commissionVal,
-        partnerRefereeSignupBonusAmount: newUserVal,
-        partnerReferralPaidPlanBonusAmount: paidPlanVal,
-      });
-      if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      setSavedPartnerNotice('Business Partner Referral settings saved!');
-      setTimeout(() => setSavedPartnerNotice(null), 3500);
-    } catch {
-      alert('Failed to update Business Partner commission settings.');
-    } finally {
-      setSavingPartner(false);
-    }
-  };
-
-  return (
-    <View style={{ gap: 12 }}>
-      {/* CARD 1: Standard Referral & Welcome Bonus */}
-      <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#f0fdf4', borderColor: '#86efac', borderWidth: 1.5, padding: 8, gap: 6 }]}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
-            <View style={[styles.iconCircle, { backgroundColor: '#16a34a', width: 26, height: 26, borderRadius: 13 }]}>
-              <Ionicons name="gift" size={14} color="#ffffff" />
-            </View>
-            <Text style={{ fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff' }}>Referral & Welcome Bonus</Text>
-          </View>
-
-          <TouchableOpacity
-            style={{ backgroundColor: '#16a34a', paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADIUS.sm, flexDirection: 'row', alignItems: 'center', gap: 4 }}
-            onPress={handleSaveReferral}
-            disabled={savingReferral}
-            activeOpacity={0.85}
-          >
-            {savingReferral ? (
-              <ActivityIndicator color="#ffffff" size="small" />
-            ) : (
-              <>
-                <Ionicons name="checkmark-circle-outline" size={13} color="#ffffff" />
-                <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#ffffff' }}>Save</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* 3 Full Bonus Inputs in Single Grid Row */}
-        <View style={{ flexDirection: 'row', gap: 4 }}>
-          <View style={{ flex: 1, backgroundColor: 'rgba(0,255,135,0.03)', padding: 5, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: '#86efac' }}>
-            <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#166534', marginBottom: 2 }} numberOfLines={1}>
-              Referrer (₹)
-            </Text>
-            <TextInput
-              style={{
-                height: 26,
-                borderWidth: 1,
-                borderColor: '#cbd5e1',
-                borderRadius: RADIUS.xs,
-                paddingHorizontal: 4,
-                fontSize: 12,
-                fontFamily: FONT.extraBold,
-                color: '#ffffff',
-                backgroundColor: 'rgba(0,255,135,0.03)',
-                textAlign: 'center',
+            <TouchableOpacity
+              style={[styles.quickThemeBtn, themeMode === 'DARK' && styles.quickThemeBtnActiveDark]}
+              onPress={() => {
+                setThemeMode('DARK');
+                showToast('🌿 Switched to Parrot & Gold Dark Theme across entire Admin system');
               }}
-              keyboardType="numeric"
-              value={referralBonus}
-              onChangeText={setReferralBonus}
-              placeholder="1"
-            />
-          </View>
-
-          <View style={{ flex: 1, backgroundColor: 'rgba(0,255,135,0.03)', padding: 5, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: '#86efac' }}>
-            <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#166534', marginBottom: 2 }} numberOfLines={1}>
-              New User (₹)
-            </Text>
-            <TextInput
-              style={{
-                height: 26,
-                borderWidth: 1,
-                borderColor: '#cbd5e1',
-                borderRadius: RADIUS.xs,
-                paddingHorizontal: 4,
-                fontSize: 12,
-                fontFamily: FONT.extraBold,
-                color: '#ffffff',
-                backgroundColor: 'rgba(0,255,135,0.03)',
-                textAlign: 'center',
-              }}
-              keyboardType="numeric"
-              value={newUserBonus}
-              onChangeText={setNewUserBonus}
-              placeholder="5"
-            />
-          </View>
-
-          <View style={{ flex: 1, backgroundColor: 'rgba(0,255,135,0.03)', padding: 5, borderRadius: RADIUS.xs, borderWidth: 1, borderColor: '#86efac' }}>
-            <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#15803d', marginBottom: 2 }} numberOfLines={1}>
-              VIP Pass (₹)
-            </Text>
-            <TextInput
-              style={{
-                height: 26,
-                borderWidth: 1,
-                borderColor: '#cbd5e1',
-                borderRadius: RADIUS.xs,
-                paddingHorizontal: 4,
-                fontSize: 12,
-                fontFamily: FONT.extraBold,
-                color: '#ffffff',
-                backgroundColor: 'rgba(0,255,135,0.03)',
-                textAlign: 'center',
-              }}
-              keyboardType="numeric"
-              value={paidPlanBonus}
-              onChangeText={setPaidPlanBonus}
-              placeholder="50"
-            />
-          </View>
-        </View>
-
-        {savedReferralNotice ? (
-          <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#16a34a', textAlign: 'center', marginTop: 2 }}>
-            {savedReferralNotice}
-          </Text>
-        ) : null}
-      </View>
-    </View>
-  );
-}
-
-function AppDownloadSettingsPanel() {
-  const { data: settings } = useAppSettings();
-  const update = useUpdateAppSettings();
-  const [downloadUrl, setDownloadUrl] = useState<string>('');
-  const [version, setVersion] = useState<string>(APP_VERSION);
-  const [saving, setSaving] = useState(false);
-  const [savedNotice, setSavedNotice] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (settings) {
-      setDownloadUrl(settings.appDownloadUrl || 'https://farmsking.in/download/farmsking.apk');
-      setVersion(settings.latestAppVersion || APP_VERSION);
-    }
-  }, [settings]);
-
-  const handleSave = async () => {
-    try {
-      setSaving(true);
-      await update.mutateAsync({
-        appDownloadUrl: downloadUrl.trim(),
-        latestAppVersion: version.trim() || APP_VERSION,
-      });
-      if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      setSavedNotice('App Download & Version saved!');
-      setTimeout(() => setSavedNotice(null), 3000);
-    } catch {
-      alert('Failed to update App Download settings.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#f0f9ff', borderColor: '#bae6fd', borderWidth: 1.5, padding: 14 }]}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-          <View style={[styles.iconCircle, { backgroundColor: '#0284c7', width: 34, height: 34, borderRadius: 17 }]}>
-            <Ionicons name="logo-android" size={18} color="#ffffff" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' }}>App Download & Auto Update Link</Text>
-            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#0369a1' }}>APK link & latest app version configuration</Text>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={{ backgroundColor: '#0284c7', paddingHorizontal: 14, paddingVertical: 8, borderRadius: RADIUS.md, flexDirection: 'row', alignItems: 'center', gap: 5 }}
-          onPress={handleSave}
-          disabled={saving}
-          activeOpacity={0.85}
-        >
-          {saving ? (
-            <ActivityIndicator color="#ffffff" size="small" />
-          ) : (
-            <>
-              <Ionicons name="checkmark-circle-outline" size={15} color="#ffffff" />
-              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>Save</Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      {/* 2 Input Fields in Single Compact Row Grid */}
-      <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
-        <View style={{ flex: 2.2, backgroundColor: 'rgba(0,255,135,0.03)', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#7dd3fc', gap: 4 }}>
-          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#0369a1' }} numberOfLines={1}>
-            APK / Play Store Link
-          </Text>
-          <TextInput
-            style={{
-              height: 34,
-              borderWidth: 1,
-              borderColor: '#cbd5e1',
-              borderRadius: RADIUS.sm,
-              paddingHorizontal: 8,
-              fontSize: 12,
-              fontFamily: FONT.medium,
-              color: '#ffffff',
-              backgroundColor: 'rgba(0,255,135,0.03)',
-            }}
-            value={downloadUrl}
-            onChangeText={setDownloadUrl}
-            placeholder="https://farmsking.in/download/farmsking.apk"
-            autoCapitalize="none"
-          />
-        </View>
-
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,255,135,0.03)', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#7dd3fc', gap: 4 }}>
-          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#0369a1' }} numberOfLines={1}>
-            App Version
-          </Text>
-          <TextInput
-            style={{
-              height: 34,
-              borderWidth: 1,
-              borderColor: '#cbd5e1',
-              borderRadius: RADIUS.sm,
-              paddingHorizontal: 8,
-              fontSize: 13,
-              fontFamily: FONT.extraBold,
-              color: '#ffffff',
-              backgroundColor: 'rgba(0,255,135,0.03)',
-              textAlign: 'center',
-            }}
-            value={version}
-            onChangeText={setVersion}
-            placeholder={APP_VERSION}
-          />
-        </View>
-      </View>
-
-      {savedNotice ? (
-        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#0284c7', marginTop: 4, textAlign: 'center' }}>
-          {savedNotice}
-        </Text>
-      ) : null}
-    </View>
-  );
-}
-
-function FreeTrialSettingsPanel() {
-  const { data: settings } = useAppSettings();
-  const update = useUpdateAppSettings();
-  const [enabled, setEnabled] = useState<boolean>(true);
-  const [days, setDays] = useState<string>('14');
-  const [targetPlan, setTargetPlan] = useState<'PRO' | 'SMART' | 'SUPER'>('SUPER');
-  const [saving, setSaving] = useState(false);
-  const [savedNotice, setSavedNotice] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (settings) {
-      setEnabled(settings.freeTrialEnabled ?? true);
-      setDays(String(settings.freeTrialDays ?? 14));
-      setTargetPlan(settings.freeTrialPlan ?? 'SUPER');
-    }
-  }, [settings]);
-
-  const handleSave = async () => {
-    const numDays = parseInt(days, 10);
-    if (isNaN(numDays) || numDays <= 0) {
-      alert('Please enter valid trial days.');
-      return;
-    }
-    try {
-      setSaving(true);
-      await update.mutateAsync({
-        freeTrialEnabled: enabled,
-        freeTrialDays: numDays,
-        freeTrialPlan: targetPlan,
-      });
-      if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      setSavedNotice('Free Trial saved!');
-      setTimeout(() => setSavedNotice(null), 3000);
-    } catch {
-      alert('Failed to update Free Trial settings.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#fdf4ff', borderColor: '#f5d0fe', borderWidth: 1.5, padding: 14 }]}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-          <View style={[styles.iconCircle, { backgroundColor: '#c026d3', width: 34, height: 34, borderRadius: 17 }]}>
-            <Ionicons name="gift-outline" size={18} color="#ffffff" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' }}>Free VIP Pass Trial Settings</Text>
-            <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#86198f' }}>Configure free trial status, duration & plan tier</Text>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={{ backgroundColor: '#c026d3', paddingHorizontal: 14, paddingVertical: 8, borderRadius: RADIUS.md, flexDirection: 'row', alignItems: 'center', gap: 5 }}
-          onPress={handleSave}
-          disabled={saving}
-          activeOpacity={0.85}
-        >
-          {saving ? (
-            <ActivityIndicator color="#ffffff" size="small" />
-          ) : (
-            <>
-              <Ionicons name="checkmark-circle-outline" size={15} color="#ffffff" />
-              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>Save</Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      {/* 3 Controls in Single Compact Row Grid */}
-      <View style={{ flexDirection: 'row', gap: 8, marginTop: 10, alignItems: 'center' }}>
-        {/* Col 1: Switch */}
-        <View style={{ backgroundColor: 'rgba(0,255,135,0.03)', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#f5d0fe', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#86198f' }}>
-            Enable Trial
-          </Text>
-          <Switch
-            value={enabled}
-            onValueChange={setEnabled}
-            trackColor={{ false: '#cbd5e1', true: '#c026d3' }}
-            thumbColor="#ffffff"
-            style={{ transform: Platform.OS === 'web' ? [] : [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
-          />
-        </View>
-
-        {/* Col 2: Days */}
-        <View style={{ width: 80, backgroundColor: 'rgba(0,255,135,0.03)', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#f5d0fe', gap: 4 }}>
-          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#86198f' }} numberOfLines={1}>
-            Days
-          </Text>
-          <TextInput
-            style={{
-              height: 34,
-              borderWidth: 1,
-              borderColor: '#cbd5e1',
-              borderRadius: RADIUS.sm,
-              paddingHorizontal: 8,
-              fontSize: 13,
-              fontFamily: FONT.extraBold,
-              color: '#ffffff',
-              backgroundColor: 'rgba(0,255,135,0.03)',
-              textAlign: 'center',
-            }}
-            keyboardType="numeric"
-            value={days}
-            onChangeText={setDays}
-            placeholder="14"
-          />
-        </View>
-
-        {/* Col 3: Plan Tier */}
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,255,135,0.03)', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#f5d0fe', gap: 4 }}>
-          <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: '#86198f' }} numberOfLines={1}>
-            Target Plan Tier
-          </Text>
-          <View style={{ flexDirection: 'row', gap: 4, height: 34, alignItems: 'center' }}>
-            {(['PRO', 'SMART', 'SUPER'] as const).map((p) => {
-              const isSelected = targetPlan === p;
-              const displayLabel = p === 'PRO' ? 'Kisan' : p === 'SMART' ? 'Boss' : 'VIP';
-              return (
-                <TouchableOpacity
-                  key={p}
-                  style={{
-                    flex: 1,
-                    height: '100%',
-                    borderRadius: RADIUS.sm,
-                    borderWidth: 1,
-                    borderColor: isSelected ? '#c026d3' : '#cbd5e1',
-                    backgroundColor: isSelected ? '#c026d3' : '#f8fafc',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                  onPress={() => setTargetPlan(p)}
-                >
-                  <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: isSelected ? '#ffffff' : '#334155' }}>
-                    {displayLabel}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-      </View>
-
-      {savedNotice ? (
-        <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: '#c026d3', marginTop: 4, textAlign: 'center' }}>
-          {savedNotice}
-        </Text>
-      ) : null}
-    </View>
-  );
-}
-
-function AdvisorCertificationSettingsPanel() {
-  const { data: settings } = useAppSettings();
-  const updateSettings = useUpdateAppSettings();
-  const [isCollapsed, setIsCollapsed] = useState(true);
-  const [fee, setFee] = useState('999');
-  const [discount, setDiscount] = useState('2000');
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (settings) {
-      if (settings.advisorCertificationFee !== undefined) setFee(settings.advisorCertificationFee.toString());
-      if (settings.advisorCertificationDiscount !== undefined) setDiscount(settings.advisorCertificationDiscount.toString());
-    }
-  }, [settings]);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await updateSettings.mutateAsync({
-        advisorCertificationFee: Number(fee) || 0,
-        advisorCertificationDiscount: Number(discount) || 0,
-      });
-      alert('Advisor Certification Settings saved successfully.');
-    } catch (err: any) {
-      alert('Failed to save settings.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <View style={[styles.card, { borderColor: '#dcfce7', borderWidth: 1.5 }, premiumShadow('#000000', 'sm')]}>
-      <TouchableOpacity style={styles.cardHeader} onPress={() => setIsCollapsed(!isCollapsed)} activeOpacity={0.7}>
-        <View style={[styles.iconCircle, { backgroundColor: '#16a34a' }]}>
-          <Ionicons name="school" size={20} color="#ffffff" />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.cardTitle}>Advisor Certification Fee</Text>
-          <Text style={styles.cardSub}>Set the fee users pay to take the expert test & get listed</Text>
-        </View>
-        <Ionicons name={isCollapsed ? 'chevron-down-outline' : 'chevron-up-outline'} size={22} color="#94a3b8" />
-      </TouchableOpacity>
-
-      {!isCollapsed && (
-        <View style={{ marginTop: 12, gap: 12, borderTopWidth: 1, borderTopColor: '#f1f5f9', paddingTop: 12 }}>
-          <View>
-            <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#475569', marginBottom: 4 }}>Payable Fee (₹)</Text>
-            <TextInput
-              style={styles.input}
-              value={fee}
-              onChangeText={setFee}
-              keyboardType="numeric"
-              placeholder="e.g. 999"
-            />
-            <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b', marginTop: 4 }}>This is what the user actually pays via Cashfree.</Text>
-          </View>
-          <View>
-            <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#475569', marginBottom: 4 }}>Discount Amount shown (₹)</Text>
-            <TextInput
-              style={styles.input}
-              value={discount}
-              onChangeText={setDiscount}
-              keyboardType="numeric"
-              placeholder="e.g. 2000"
-            />
-            <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#64748b', marginTop: 4 }}>Strikethrough total will be Fee + Discount.</Text>
-          </View>
-
-          <TouchableOpacity
-            style={[{ backgroundColor: '#16a34a', marginTop: 8, padding: 12, borderRadius: 8, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 }]}
-            onPress={handleSave}
-            disabled={saving}
-          >
-            {saving ? (
-              <ActivityIndicator color="#ffffff" size="small" />
-            ) : (
-              <React.Fragment>
-                <Ionicons name="save-outline" size={16} color="#ffffff" />
-                <Text style={{color: '#ffffff', fontWeight: 'bold'}}>Save Certification Settings</Text>
-              </React.Fragment>
-            )}
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
-  );
-}
-
-
-
-const Hoverable4DCard = ({ children, style, onPress }: any) => {
-  return (
-    <Pressable onPress={onPress} style={({ hovered, pressed }: any) => [
-      style,
-      hovered && {
-        borderColor: 'rgba(0,255,135,0.55)',
-        shadowColor: '#00ff87',
-        shadowOpacity: 0.3,
-        shadowRadius: 15,
-        elevation: 10,
-        transform: [{ scale: 1.02 }]
-      },
-      pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] }
-    ]}>
-      {children}
-    </Pressable>
-  );
-};
-
-export default function SuperSettingsScreen() {
-  const router = useRouter();
-  const { colors, isLight, cardBg, textColor } = useExecutiveTheme();
-  const { data: settings, isLoading } = useAppSettings();
-  const update = useUpdateAppSettings();
-  const [error, setError] = useState<string | null>(null);
-
-  // Sub-tabs navigation state
-  const [cpanelSubTab, setCpanelSubTab] = useState<'SWITCHES' | 'MODIFICATIONS' | 'OTHERS'>('SWITCHES');
-
-  // Modals state
-  const [showCategoriesModal, setShowCategoriesModal] = useState(false);
-  const [showAdminInfoModal, setShowAdminInfoModal] = useState(false);
-  const [showWorkspaceModal, setShowWorkspaceModal] = useState(false);
-  const [showGuidesModal, setShowGuidesModal] = useState(false);
-
-  // Collapsible accordion states (default collapsed)
-  const [isVoiceCollapsed, setIsVoiceCollapsed] = useState(true);
-  const [isWhatsappCollapsed, setIsWhatsappCollapsed] = useState(true);
-
-  const isVoiceEnabled = (settings as any)?.groupVoiceCallEnabled ?? true;
-  const isWhatsappSyncEnabled = (settings as any)?.whatsappGroupSyncEnabled ?? true;
-  const isWhatsappAutoAddEnabled = (settings as any)?.whatsappAutoAddEnabled ?? true;
-  const isWhatsappAutoRemoveEnabled = (settings as any)?.whatsappAutoRemoveEnabled ?? true;
-  const savedGroupJid = (settings as any)?.whatsappGroupJid ?? '';
-
-  const parseErrorMessage = (err: any): string => {
-    const msg = err?.response?.data?.message;
-    if (Array.isArray(msg)) return msg.join(', ');
-    if (typeof msg === 'string') return msg;
-    return err?.message || 'Could not update setting.';
-  };
-
-  const handleSaveJid = async (jid: string) => {
-    setError(null);
-    try {
-      await update.mutateAsync({ whatsappGroupJid: jid } as any);
-    } catch (err: any) {
-      setError(parseErrorMessage(err));
-    }
-  };
-
-  const handleVoiceToggle = async (val: boolean) => {
-    setError(null);
-    try {
-      await update.mutateAsync({ groupVoiceCallEnabled: val } as any);
-    } catch (err: any) {
-      setError(parseErrorMessage(err));
-    }
-  };
-
-  const handleWhatsappToggle = async (val: boolean) => {
-    setError(null);
-    try {
-      await update.mutateAsync({ whatsappGroupSyncEnabled: val } as any);
-    } catch (err: any) {
-      setError(parseErrorMessage(err));
-    }
-  };
-
-  const handleAutoAddToggle = async (val: boolean) => {
-    setError(null);
-    try {
-      await update.mutateAsync({ whatsappAutoAddEnabled: val } as any);
-    } catch (err: any) {
-      setError(parseErrorMessage(err));
-    }
-  };
-
-  const handleAutoRemoveToggle = async (val: boolean) => {
-    setError(null);
-    try {
-      await update.mutateAsync({ whatsappAutoRemoveEnabled: val } as any);
-    } catch (err: any) {
-      setError(parseErrorMessage(err));
-    }
-  };
-
-  return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <LinearGradient
-        colors={isLight ? ['#ffffff', '#f8fafc', '#ffffff'] : ['#0f172a', '#1e293b', '#0f172a']}
-        style={[styles.hero, isLight && { borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }]}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <View style={{ flex: 1 }}>
-            <View style={styles.heroHeaderRow}>
-              <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: isLight ? '#16a34a' : '#22c55e', alignItems: 'center', justifyContent: 'center' }}>
-                <Ionicons name="options" size={18} color="#ffffff" />
-              </View>
-              <Text style={[styles.heroTitle, isLight && { color: '#0f172a' }]}>⚡ C-Panel — Control Center</Text>
-            </View>
-            <Text style={[styles.heroSubtitle, isLight && { color: '#64748b' }]}>System Feature Switches · Plan Pricing & Splits · Admin Tools</Text>
-          </View>
-          <View style={{ backgroundColor: isLight ? '#f1f5f9' : '#1e293b', paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.pill, borderWidth: 1, borderColor: isLight ? '#cbd5e1' : '#334155', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#22c55e' }} />
-            <Text style={{ fontSize: 11, fontFamily: FONT.bold, color: isLight ? '#15803d' : '#4ade80' }}>LIVE</Text>
-          </View>
-        </View>
-      </LinearGradient>
-
-      <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
-        {/* ── Sub-Tabs Navigation Bar ── */}
-        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 6 }}>
-          {([
-            { id: 'SWITCHES',       label: '🔀 Switches',       sub: 'System Toggles', icon: 'toggle' },
-            { id: 'MODIFICATIONS',  label: '💰 Plans & Pricing',  sub: 'Pricing & Splits', icon: 'cash' },
-            { id: 'OTHERS',         label: '📦 Shortcuts',       sub: 'Admin Tools',    icon: 'grid' },
-          ] as const).map((tab) => {
-            const active = cpanelSubTab === tab.id;
-            return (
-              <TouchableOpacity
-                key={tab.id}
-                onPress={() => {
-                  if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setCpanelSubTab(tab.id);
-                }}
-                style={{
-                  flex: 1,
-                  paddingVertical: 10,
-                  paddingHorizontal: 8,
-                  borderRadius: RADIUS.lg,
-                  backgroundColor: active
-                    ? (isLight ? '#15803d' : '#22c55e')
-                    : (isLight ? '#ffffff' : 'rgba(255,255,255,0.05)'),
-                  borderWidth: 1.5,
-                  borderColor: active
-                    ? (isLight ? '#15803d' : '#22c55e')
-                    : (isLight ? '#e2e8f0' : 'rgba(255,255,255,0.08)'),
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  ...premiumShadow('#0f172a', 'sm'),
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Ionicons
-                    name={tab.icon as any}
-                    size={15}
-                    color={active ? '#ffffff' : (isLight ? '#475569' : '#94a3b8')}
-                  />
-                  <Text
-                    style={{
-                      fontSize: 12.5,
-                      fontFamily: FONT.extraBold,
-                      color: active ? '#ffffff' : (isLight ? '#0f172a' : '#f1f5f9'),
-                    }}
-                  >
-                    {tab.label}
-                  </Text>
-                </View>
-                <Text
-                  style={{
-                    fontSize: 10,
-                    fontFamily: FONT.medium,
-                    color: active ? 'rgba(255,255,255,0.85)' : (isLight ? '#64748b' : '#94a3b8'),
-                    marginTop: 2,
-                  }}
-                >
-                  {tab.sub}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* ── 1. SWITCHES Tab ── */}
-        {cpanelSubTab === 'SWITCHES' ? (
-          <View style={{ gap: 14 }}>
-            {/* Group Voice Call Feature */}
-            <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
-              <TouchableOpacity
-                style={styles.cardHeader}
-                onPress={() => setIsVoiceCollapsed((prev) => !prev)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.iconCircle}>
-                  <Ionicons name="mic" size={20} color="#ffffff" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.cardTitle}>🎙️ Group Voice Call Feature</Text>
-                  <Text style={styles.cardSub}>
-                    Allow Advisors & Admins to host live audio conferences for active farmers.
-                  </Text>
-                </View>
-                <Ionicons
-                  name={isVoiceCollapsed ? 'chevron-down-outline' : 'chevron-up-outline'}
-                  size={22}
-                  color="#64748b"
-                  style={{ marginLeft: 6 }}
-                />
-              </TouchableOpacity>
-
-              {!isVoiceCollapsed && (
-                <View style={{ gap: 12, marginTop: 4 }}>
-                  <View style={styles.subToggleRow}>
-                    <Text style={styles.subToggleText}>Enable Group Voice Calls</Text>
-                    {isLoading ? (
-                      <ActivityIndicator color={theme.primary} />
-                    ) : (
-                      <Switch
-                        value={isVoiceEnabled}
-                        onValueChange={handleVoiceToggle}
-                        trackColor={{ false: '#cbd5e1', true: '#10b981' }}
-                        thumbColor="#ffffff"
-                      />
-                    )}
-                  </View>
-
-                  <View style={[styles.statusBox, isVoiceEnabled ? styles.statusActive : styles.statusDisabled]}>
-                    <View style={[styles.statusDot, { backgroundColor: isVoiceEnabled ? '#16a34a' : '#dc2626' }]} />
-                    <Text style={[styles.statusText, { color: isVoiceEnabled ? '#15803d' : '#dc2626' }]}>
-                      {isVoiceEnabled
-                        ? 'STATUS: ACTIVE (Group Voice Call Enabled)'
-                        : 'STATUS: DISABLED (Group Voice Call Disabled)'}
-                    </Text>
-                  </View>
-                </View>
-              )}
-            </View>
-
-            {/* WhatsApp Group Auto Member Management */}
-            <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
-              <TouchableOpacity
-                style={styles.cardHeader}
-                onPress={() => setIsWhatsappCollapsed((prev) => !prev)}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.iconCircle, { backgroundColor: '#25d366' }]}>
-                  <Ionicons name="logo-whatsapp" size={20} color="#ffffff" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.cardTitle}>💬 WhatsApp Group Member Sync</Text>
-                  <Text style={styles.cardSub}>
-                    Automatically add active advisor plan farmers & remove expired members from WhatsApp groups.
-                  </Text>
-                </View>
-                <Ionicons
-                  name={isWhatsappCollapsed ? 'chevron-down-outline' : 'chevron-up-outline'}
-                  size={22}
-                  color="#64748b"
-                  style={{ marginLeft: 6 }}
-                />
-              </TouchableOpacity>
-
-              {!isWhatsappCollapsed && (
-                <View style={{ gap: 14, marginTop: 4 }}>
-                  <View style={styles.subToggleRow}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.subToggleTitle}>Master Sync Control</Text>
-                      <Text style={styles.subToggleDesc}>Turn entire WhatsApp group sync module ON/OFF</Text>
-                    </View>
-                    {isLoading ? (
-                      <ActivityIndicator color={theme.primary} />
-                    ) : (
-                      <Switch
-                        value={isWhatsappSyncEnabled}
-                        onValueChange={handleWhatsappToggle}
-                        trackColor={{ false: '#cbd5e1', true: '#10b981' }}
-                        thumbColor="#ffffff"
-                      />
-                    )}
-                  </View>
-
-                  <View style={[styles.statusBox, isWhatsappSyncEnabled ? styles.statusActive : styles.statusDisabled]}>
-                    <View style={[styles.statusDot, { backgroundColor: isWhatsappSyncEnabled ? '#16a34a' : '#dc2626' }]} />
-                    <Text style={[styles.statusText, { color: isWhatsappSyncEnabled ? '#15803d' : '#dc2626' }]}>
-                      {isWhatsappSyncEnabled
-                        ? 'STATUS: ACTIVE (WhatsApp Group Sync Enabled)'
-                        : 'STATUS: DISABLED (WhatsApp Group Sync Disabled)'}
-                    </Text>
-                  </View>
-
-                  {isWhatsappSyncEnabled && (
-                    <>
-                      <View style={styles.subControlsCard}>
-                        <Text style={styles.subControlsHeader}>⚙️ Automated Member Controls</Text>
-
-                        <View style={styles.switchItemRow}>
-                          <View style={{ flex: 1 }}>
-                            <Text style={styles.switchItemTitle}>🟢 Auto-Add Eligible Farmers</Text>
-                            <Text style={styles.switchItemSub}>
-                              Automatically add farmers with active advisor plans directly to group
-                            </Text>
-                          </View>
-                          <Switch
-                            value={isWhatsappAutoAddEnabled}
-                            onValueChange={handleAutoAddToggle}
-                            trackColor={{ false: '#cbd5e1', true: '#25d366' }}
-                            thumbColor="#ffffff"
-                          />
-                        </View>
-
-                        <View style={{ height: 1, backgroundColor: '#e2e8f0', marginVertical: 2 }} />
-
-                        <View style={styles.switchItemRow}>
-                          <View style={{ flex: 1 }}>
-                            <Text style={styles.switchItemTitle}>🔴 Auto-Remove Expired Members</Text>
-                            <Text style={styles.switchItemSub}>
-                              Automatically remove members whose advisor plans have expired
-                            </Text>
-                          </View>
-                          <Switch
-                            value={isWhatsappAutoRemoveEnabled}
-                            onValueChange={handleAutoRemoveToggle}
-                            trackColor={{ false: '#cbd5e1', true: '#ef4444' }}
-                            thumbColor="#ffffff"
-                          />
-                        </View>
-                      </View>
-
-                      <WhatsAppBotPanel
-                        savedGroupJid={savedGroupJid}
-                        onSaveJid={handleSaveJid}
-                      />
-                    </>
-                  )}
-                </View>
-              )}
-            </View>
-
-            {/* Dynamic Feature Switches Accordion */}
-            <CategoryFeatureFlagPanel />
-
-            {/* OTP Delivery Channel Selector */}
-            <OtpDeliveryChannelPanel />
-
-            {/* E-Commerce Global Settings Panel */}
-            <PlatformMaintenancePanel />
-            <GardenSettingsPanel />
-            <ECommerceSettingsPanel />
-          </View>
-        ) : cpanelSubTab === 'MODIFICATIONS' ? (
-          <View style={{ gap: 14 }}>
-            {/* 🎁 Combined Referral & Business Partner Bonus Panel */}
-            <CombinedReferralBonusSettingsPanel />
-
-            {/* 📱 App Download & APK Update Link Panel */}
-            <AppDownloadSettingsPanel />
-
-            {/* 🎁 Free Membership Trial Settings Panel */}
-            <FreeTrialSettingsPanel />
-
-            {/* 🎓 Advisor Certification Panel */}
-            <AdvisorCertificationSettingsPanel />
-
-            {/* 🏷️ Expense Categories Manager */}
-            <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#fef2f2', borderColor: '#fecaca', borderWidth: 1 }]}>
-              <View style={styles.cardHeader}>
-                <View style={[styles.iconCircle, { backgroundColor: '#dc2626' }]}>
-                  <Ionicons name="pricetags" size={20} color="#ffffff" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.cardTitle}>🏷️ Expense Categories Control</Text>
-                  <Text style={styles.cardSub}>Add new categories, edit names & priority, or deactivate unwanted ones</Text>
-                </View>
-              </View>
-              <TouchableOpacity
-                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: RADIUS.md, backgroundColor: '#dc2626', marginTop: 4 }}
-                onPress={() => setShowCategoriesModal(true)}
-              >
-                <Ionicons name="open-outline" size={16} color="#ffffff" />
-                <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 }}>Open Category Manager Console</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Admin Info & Brand Details */}
-            <View style={[styles.card, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#eff6ff', borderColor: '#bfdbfe', borderWidth: 1 }]}>
-              <View style={styles.cardHeader}>
-                <View style={[styles.iconCircle, { backgroundColor: '#2563eb' }]}>
-                  <Ionicons name="shield-checkmark" size={20} color="#ffffff" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.cardTitle}>Admin Info & Brand Details</Text>
-                  <Text style={styles.cardSub}>App Name, Brand Logo, Tagline, Payment UPI & Super Admin Profile</Text>
-                </View>
-              </View>
-              <TouchableOpacity
-                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: RADIUS.md, backgroundColor: '#2563eb', marginTop: 4 }}
-                onPress={() => setShowAdminInfoModal(true)}
-              >
-                <Ionicons name="create-outline" size={16} color="#ffffff" />
-                <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 13 }}>Open Admin Info Console</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* 🛡️ ISO 9001 Module Control Center */}
-            <IsoControlCenterPanel />
-
-            {/* 📋 ISO Staff & Expert Profile Approval Center */}
-            <IsoStaffApprovalPanel />
-
-            {/* 🩺 Doctor Change Approvals Section */}
-            <PendingDoctorChangeApprovalsSection />
-
-            {/* 💰 Farmer Plan Pricing Manager */}
-            <PlanPricingSection />
-          </View>
-        ) : (
-          <View style={{ gap: 14 }}>
-            {/* Super Admin Shortcuts Grid */}
-            <View style={[styles.card, premiumShadow('#0f172a', 'sm')]}>
-              <Text style={{ fontSize: 12, fontFamily: FONT.extraBold, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
-                ⚡ SUPER ADMIN SHORTCUTS
-              </Text>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-                <TouchableOpacity
-                  style={{ flex: 1, minWidth: 140, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: RADIUS.md, backgroundColor: '#ecfdf5', borderWidth: 1.5, borderColor: '#10b981' }}
-                  onPress={() => router.push('/agristore' as any)}
-                >
-                  <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#065f46', alignItems: 'center', justifyContent: 'center' }}>
-                    <Ionicons name="storefront" size={16} color="#ffffff" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#064e3b' }}>AgriStore Hub</Text>
-                    <Text style={{ fontSize: 10, fontFamily: FONT.medium, color: '#047857' }}>Seller & E-Com System</Text>
-                  </View>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={{ flex: 1, minWidth: 140, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: RADIUS.md, backgroundColor: 'rgba(0,255,135,0.03)', borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}
-                  onPress={() => router.push('/(tabs)/super-orders' as any)}
-                >
-                  <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#eef2ff', alignItems: 'center', justifyContent: 'center' }}>
-                    <Ionicons name="receipt" size={16} color="#4f46e5" />
-                  </View>
-                  <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#ffffff' }}>Sales Orders</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={{ flex: 1, minWidth: 140, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: RADIUS.md, backgroundColor: 'rgba(0,255,135,0.03)', borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}
-                  onPress={() => setShowCategoriesModal(true)}
-                >
-                  <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#fef2f2', alignItems: 'center', justifyContent: 'center' }}>
-                    <Ionicons name="pricetags" size={16} color="#dc2626" />
-                  </View>
-                  <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#ffffff' }}>Categories</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={{ flex: 1, minWidth: 140, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: RADIUS.md, backgroundColor: 'rgba(0,255,135,0.03)', borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}
-                  onPress={() => setShowWorkspaceModal(true)}
-                >
-                  <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#ccfbf1', alignItems: 'center', justifyContent: 'center' }}>
-                    <Ionicons name="briefcase" size={16} color="#0d9488" />
-                  </View>
-                  <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#ffffff' }}>Workspace</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={{ flex: 1, minWidth: 140, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: RADIUS.md, backgroundColor: 'rgba(0,255,135,0.03)', borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}
-                  onPress={() => setShowGuidesModal(true)}
-                >
-                  <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#f0fdf4', alignItems: 'center', justifyContent: 'center' }}>
-                    <Ionicons name="book" size={16} color="#15803d" />
-                  </View>
-                  <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#ffffff' }}>User Guides</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={{ flex: 1, minWidth: 140, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: RADIUS.md, backgroundColor: 'rgba(0,255,135,0.03)', borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}
-                  onPress={() => router.push('/(tabs)/super-audit-log' as any)}
-                >
-                  <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#fef3c7', alignItems: 'center', justifyContent: 'center' }}>
-                    <Ionicons name="time" size={16} color="#b45309" />
-                  </View>
-                  <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#ffffff' }}>Audit Log</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={{ flex: 1, minWidth: 140, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: RADIUS.md, backgroundColor: 'rgba(0,255,135,0.03)', borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' }}
-                  onPress={() => router.push('/(tabs)/super-crop-edit' as any)}
-                >
-                  <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#dcfce7', alignItems: 'center', justifyContent: 'center' }}>
-                    <Ionicons name="leaf" size={16} color="#16a34a" />
-                  </View>
-                  <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: '#ffffff' }}>Edit Crop</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        )}
-
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-      </ScrollView>
-
-      {/* ── Modals ── */}
-      <SuperAdminExpenseCategoriesModal
-        visible={showCategoriesModal}
-        onClose={() => setShowCategoriesModal(false)}
-      />
-      <AdminInfoModal
-        visible={showAdminInfoModal}
-        onClose={() => setShowAdminInfoModal(false)}
-      />
-      <SuperAdminWorkspaceModal
-        visible={showWorkspaceModal}
-        onClose={() => setShowWorkspaceModal(false)}
-      />
-      <UserGuidesModal
-        visible={showGuidesModal}
-        onClose={() => setShowGuidesModal(false)}
-      />
-    </View>
-  );
-}
-
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020d06' },
-  hero: { paddingTop: 24, paddingBottom: 18, paddingHorizontal: SPACING.xxl },
-  heroHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  heroTitle: { color: '#fff', fontSize: 20, fontFamily: FONT.extraBold, letterSpacing: -0.2 },
-  heroSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 12, fontFamily: FONT.medium, marginTop: 4 },
-  list: { padding: SPACING.lg, gap: 14, paddingBottom: SPACING.xxl },
-  card: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: 16, gap: 14 },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#059669',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardTitle: { fontSize: 15, fontFamily: FONT.extraBold, color: '#ffffff' },
-  cardSub: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b', marginTop: 2, lineHeight: 16 },
-  statusBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    padding: 10,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-  },
-  statusActive: { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' },
-  statusDisabled: { backgroundColor: '#fef2f2', borderColor: '#fecaca' },
-  statusDot: { width: 8, height: 8, borderRadius: 4 },
-  statusText: { fontSize: 12, fontFamily: FONT.bold },
-  subToggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 4 },
-  subToggleText: { fontSize: 13, fontFamily: FONT.bold, color: '#e2e8f0' },
-  subToggleTitle: { fontSize: 13, fontFamily: FONT.extraBold, color: '#ffffff' },
-  subToggleDesc: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
-  subControlsCard: {
-    backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.md,
-    padding: 12, gap: 10, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)',
-  },
-  subControlsHeader: { fontSize: 12, fontFamily: FONT.extraBold, color: '#e2e8f0', marginBottom: 2 },
-  switchItemRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  switchItemTitle: { fontSize: 12.5, fontFamily: FONT.bold, color: '#ffffff' },
-  switchItemSub: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1, lineHeight: 15 },
-  rulesBox: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.md, padding: 12, gap: 6, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' },
-  rulesTitle: { fontSize: 12, fontFamily: FONT.extraBold, color: '#e2e8f0', marginBottom: 2 },
-  ruleItem: { fontSize: 11.5, fontFamily: FONT.medium, color: '#475569', lineHeight: 17 },
-  errorText: { color: '#dc2626', fontFamily: FONT.semiBold, fontSize: 12, marginTop: 4 },
-  placeholderCard: {
-    backgroundColor: 'rgba(0,255,135,0.03)',
-    borderRadius: RADIUS.lg,
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(0,255,135,0.3)',
-    borderStyle: 'dashed',
-    marginTop: 4,
-  },
-  placeholderText: { fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8', textAlign: 'center' },
-  planCardContainer: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', padding: SPACING.md, gap: 8 },
-  planCardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  planCardTitle: { fontSize: 15, fontFamily: FONT.extraBold },
-  planCardBadge: { fontSize: 9.5, fontFamily: FONT.bold, color: '#64748b', backgroundColor: '#051b11', paddingHorizontal: 6, paddingVertical: 2, borderRadius: RADIUS.pill, overflow: 'hidden' },
-  planCardSub: { fontSize: 11.5, fontFamily: FONT.bold, color: '#475569', marginTop: 1 },
-  cardDivider: { height: 1, backgroundColor: '#051b11' },
-  cardSection: { gap: 6 },
-  cardSectionTitle: { fontSize: 12, fontFamily: FONT.extraBold, color: '#e2e8f0' },
-  variantRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(0,255,135,0.03)', padding: 8, borderRadius: RADIUS.md, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)' },
-  variantTitle: { fontSize: 12.5, fontFamily: FONT.bold, color: '#ffffff' },
-  variantMeta: { fontSize: 11, fontFamily: FONT.medium, color: '#64748b', marginTop: 1 },
-  variantEditBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: RADIUS.md },
-  variantEditBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 11 },
-  featureChipContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  featureChip: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: RADIUS.pill, borderWidth: 1 },
-  chipOn: { backgroundColor: '#f0fdf4', borderColor: '#bbf7d0' },
-  chipOff: { backgroundColor: '#fef2f2', borderColor: '#fecaca' },
-  featureChipText: { fontSize: 10.5, fontFamily: FONT.bold },
-  chipTextOn: { color: '#15803d' },
-  chipTextOff: { color: '#dc2626' },
-  limitMetaText: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b' },
-  sectionCard: { backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: SPACING.lg, gap: 10 },
-  sectionTitle: { fontSize: 14, fontFamily: FONT.extraBold, color: '#ffffff' },
-  helperText: { fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b' },
-  emptyText: { fontSize: 12.5, fontFamily: FONT.medium, color: '#94a3b8' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'center', alignItems: 'center', padding: SPACING.lg },
-  modalCard: { width: '100%', maxWidth: 440, maxHeight: '88%', backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.xl, padding: SPACING.lg, ...premiumShadow('#000000', 'lg') },
-  modalHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  modalTitle: { fontSize: 16, fontFamily: FONT.extraBold, color: '#ffffff' },
-  label: { fontSize: 11.5, fontFamily: FONT.bold, color: '#e2e8f0', marginTop: 4 },
-  input: { borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', borderRadius: RADIUS.md, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13.5, fontFamily: FONT.medium, backgroundColor: '#020d06', color: '#ffffff' },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  farmerChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: RADIUS.pill, borderWidth: 1.5, borderColor: 'rgba(0,255,135,0.3)', backgroundColor: 'rgba(0,255,135,0.03)' },
-  farmerChipText: { fontSize: 12, fontFamily: FONT.semiBold, color: '#e2e8f0' },
-  submitBtn: { backgroundColor: theme.primary, borderRadius: RADIUS.md, paddingVertical: 13, alignItems: 'center', marginTop: 4 },
-  submitBtnText: { color: '#ffffff', fontFamily: FONT.bold, fontSize: 14 },
-});
-
-
-
-export function PendingDoctorChangeApprovalsSection() {
-  const { data: pendingRequests = [], isLoading } = usePendingDoctorChanges();
-  const approveMutation = useAdminApproveDoctorChange();
-  const rejectMutation = useAdminRejectDoctorChange();
-
-  if (isLoading || pendingRequests.length === 0) return null;
-
-  return (
-    <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#fffbeb', borderColor: '#fde68a', borderWidth: 1.5, marginBottom: 16 }]}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-        <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#fef3c7', alignItems: 'center', justifyContent: 'center' }}>
-          <Ionicons name="medical" size={20} color="#d97706" />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.sectionTitle, { color: '#92400e' }]}>🩺 Doctor Change Approvals ({pendingRequests.length})</Text>
-          <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#b45309' }}>
-            Farmers requesting to change crop doctors. Inform current doctor before approving.
-          </Text>
-        </View>
-      </View>
-
-      <View style={{ gap: 10, marginTop: 6 }}>
-        {pendingRequests.map((req: any) => (
-          <View key={req.id} style={{ backgroundColor: 'rgba(0,255,135,0.03)', padding: 12, borderRadius: RADIUS.md, borderWidth: 1, borderColor: '#fde68a' }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <View>
-                <Text style={{ fontSize: 14, fontFamily: FONT.bold, color: '#ffffff' }}>🧑‍🌾 {req.farmer?.name} ({req.farmer?.kingId || req.farmer?.mobile})</Text>
-                <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#64748b' }}>📍 {req.farmer?.district}, {req.farmer?.state}</Text>
-              </View>
-              <View style={{ backgroundColor: '#fef3c7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: RADIUS.pill }}>
-                <Text style={{ fontSize: 10, fontFamily: FONT.bold, color: '#d97706' }}>PENDING ADMIN</Text>
-              </View>
-            </View>
-
-            <View style={{ marginTop: 8, padding: 8, backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.sm, gap: 2 }}>
-              <Text style={{ fontSize: 12, fontFamily: FONT.bold, color: '#ffffff' }}>🩺 Requested Doctor: Dr. {req.advisor?.name}</Text>
-              {req.notes ? <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#dc2626' }}>{req.notes}</Text> : null}
-            </View>
-
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
-              <TouchableOpacity
-                style={{ flex: 1, height: 36, backgroundColor: '#10b981', borderRadius: RADIUS.sm, alignItems: 'center', justifyContent: 'center' }}
-                disabled={approveMutation.isPending}
-                onPress={() => approveMutation.mutate(req.id)}
-              >
-                <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 12 }}>
-                  {approveMutation.isPending ? 'Approving...' : 'Approve & Forward to Doctor'}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{ flex: 1, height: 36, backgroundColor: '#ef4444', borderRadius: RADIUS.sm, alignItems: 'center', justifyContent: 'center' }}
-                disabled={rejectMutation.isPending}
-                onPress={() => rejectMutation.mutate({ id: req.id, reason: 'Doctor change request rejected by Super Admin' })}
-              >
-                <Text style={{ color: '#ffffff', fontFamily: FONT.bold, fontSize: 12 }}>Reject</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
-      </View>
-    </View>
-  );
-}
-
-export function PlanPricingSection() {
-  const { data: pricing, isLoading } = useFarmerPlanPricing();
-  const removePricing = useDeleteFarmerPlanPricing();
-  const [editingPlanKey, setEditingPlanKey] = useState<string | null>(null);
-  const [isSoftwareCollapsed, setIsSoftwareCollapsed] = useState(false);
-  const [isCareCollapsed, setIsCareCollapsed] = useState(false);
-
-  const SOFTWARE_PLANS = ['PRO', 'SMART', 'SUPER'];
-  const CARE_PLANS = ['SILVER', 'GOLD', 'ROYAL'];
-
-  const softwareGroups = SOFTWARE_PLANS.map((planKey) => ({
-    planKey,
-    items: (pricing ?? []).filter((p) => p.plan === planKey),
-  }));
-
-  const careGroups = CARE_PLANS.map((planKey) => ({
-    planKey,
-    items: (pricing ?? []).filter((p) => p.plan === planKey),
-  }));
-
-  const editingItems = editingPlanKey ? (pricing ?? []).filter((p) => p.plan === editingPlanKey) : [];
-
-  return (
-    <View style={{ gap: 16 }}>
-      {/* Category 1: Farmer Software Membership Plans */}
-      <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm'), { backgroundColor: 'rgba(0,255,135,0.03)', borderColor: 'rgba(0,255,135,0.3)', borderWidth: 1 }]}>
-        <TouchableOpacity
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 }}
-          onPress={() => setIsSoftwareCollapsed((prev) => !prev)}
-          activeOpacity={0.7}
-        >
-          <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#e0f2fe', alignItems: 'center', justifyContent: 'center' }}>
-            <Ionicons name="apps" size={20} color="#0284c7" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.sectionTitle}>🎫 VIP Pass Plans</Text>
-            <Text style={styles.helperText}>Add, edit & delete software VIP Pass plans, MRP, discounted prices, duration days & commission splits</Text>
-          </View>
-          <Ionicons
-            name={isSoftwareCollapsed ? 'chevron-down-outline' : 'chevron-up-outline'}
-            size={22}
-            color="#64748b"
-            style={{ marginLeft: 6 }}
-          />
-        </TouchableOpacity>
-
-        {!isSoftwareCollapsed && (
-          isLoading ? (
-            <ActivityIndicator color={theme.primary} style={{ marginVertical: 16 }} />
-          ) : (
-            <View style={{ gap: 12, marginTop: 8 }}>
-              {softwareGroups.map(({ planKey, items }) => {
-                const meta = PLAN_META[planKey as FarmerPlanType] || { label: planKey, emoji: '🌾', color: '#0284c7' };
-                return (
-                  <PlanCardGroup
-                    key={planKey}
-                    planKey={planKey}
-                    meta={meta}
-                    items={items}
-                    onEditTier={() => setEditingPlanKey(planKey)}
-                    onDeleteItem={(id) => removePricing.mutate(id)}
-                  />
-                );
-              })}
-            </View>
-          )
-        )}
-      </View>
-
-      {/* Category 2: Doctor Crop Care Advisory Plans (Collapsible) */}
-      <View style={[styles.sectionCard, premiumShadow('#0f172a', 'sm'), { backgroundColor: '#fffbeb', borderColor: '#fde68a', borderWidth: 1.5 }]}>
-        <TouchableOpacity
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 }}
-          onPress={() => setIsCareCollapsed((prev) => !prev)}
-          activeOpacity={0.7}
-        >
-          <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: '#fef3c7', alignItems: 'center', justifyContent: 'center' }}>
-            <Ionicons name="medical" size={20} color="#d97706" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={[styles.sectionTitle, { color: '#92400e' }]}>🩺 Crop Care Plans</Text>
-              <View style={{ backgroundColor: '#f59e0b', paddingHorizontal: 8, paddingVertical: 2, borderRadius: RADIUS.pill }}>
-                <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#ffffff' }}>CARE PLANS</Text>
-              </View>
-            </View>
-            <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#b45309', marginTop: 2 }}>
-              Dedicated Crop Doctor packages (Silver, Gold, Royal) with plot monitoring & spray schedules
-            </Text>
-          </View>
-          <Ionicons
-            name={isCareCollapsed ? 'chevron-down-outline' : 'chevron-up-outline'}
-            size={22}
-            color="#b45309"
-            style={{ marginLeft: 6 }}
-          />
-        </TouchableOpacity>
-
-        {!isCareCollapsed && (
-          isLoading ? (
-            <ActivityIndicator color="#d97706" style={{ marginVertical: 16 }} />
-          ) : (
-            <View style={{ gap: 12, marginTop: 8 }}>
-              {careGroups.map(({ planKey, items }) => {
-                const meta = PLAN_META[planKey as FarmerPlanType] || { label: planKey, emoji: '🩺', color: '#d97706' };
-                return (
-                  <PlanCardGroup
-                    key={planKey}
-                    planKey={planKey}
-                    meta={meta}
-                    items={items}
-                    onEditTier={() => setEditingPlanKey(planKey)}
-                    onDeleteItem={(id) => removePricing.mutate(id)}
-                  />
-                );
-              })}
-            </View>
-          )
-        )}
-      </View>
-
-      <UnifiedPlanManagerModal
-        initialPlanKey={editingPlanKey}
-        allPricingItems={pricing ?? []}
-        onClose={() => setEditingPlanKey(null)}
-      />
-    </View>
-  );
-}
-
-function PlanCardGroup({
-  planKey,
-  meta,
-  items,
-  onEditTier,
-  onDeleteItem,
-}: {
-  planKey: string;
-  meta: { label: string; emoji: string; color: string };
-  items: FarmerPlanPricing[];
-  onEditTier: () => void;
-  onDeleteItem: (id: string) => void;
-}) {
-  return (
-    <View style={[styles.planCardContainer, { borderColor: meta.color + '40', backgroundColor: 'rgba(0,255,135,0.03)' }, premiumShadow('#0f172a', 'sm')]}>
-      <View style={styles.planCardHeader}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-          <Text style={{ fontSize: 24 }}>{meta.emoji}</Text>
-          <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={[styles.planCardTitle, { color: meta.color }]}>{meta.label}</Text>
-            </View>
-            <Text style={styles.planCardSub}>{items.length} Duration Option(s)</Text>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={[styles.variantEditBtn, { backgroundColor: meta.color }]}
-          activeOpacity={0.85}
-          onPress={onEditTier}
-        >
-          <Ionicons name="create-outline" size={14} color="#ffffff" />
-          <Text style={styles.variantEditBtnText}>Edit {meta.label}</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.cardDivider} />
-
-      <View style={styles.cardSection}>
-        <Text style={styles.cardSectionTitle}>💰 Duration Plans, Prices & Cuts</Text>
-        {items.length === 0 ? (
-          <Text style={{ fontSize: 11.5, fontFamily: FONT.medium, color: '#94a3b8', fontStyle: 'italic' }}>
-            No duration options added yet. Click "Edit {meta.label}" above to add duration plans.
-          </Text>
-        ) : (
-          <View style={{ gap: 8 }}>
-            {items.map((p) => (
-              <View key={p.id} style={styles.variantRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.variantTitle}>
-                    {p.billingPeriodDays === 365 ? '1 Year (365 Days)' : `${p.billingPeriodDays} Days`} —{' '}
-                    {p.mrp && Number(p.mrp) > Number(p.price) ? (
-                      <Text style={{ textDecorationLine: 'line-through', color: '#94a3b8', fontSize: 12 }}>
-                        ₹{p.mrp}{' '}
-                      </Text>
-                    ) : null}
-                    <Text style={{ color: '#16a34a', fontFamily: FONT.extraBold }}>₹{p.price}</Text>
-                    {p.isOffer && (
-                      <Text style={{ color: '#d97706', fontSize: 11, fontFamily: FONT.bold }}>
-                        {' '}🔥 Offer: {p.offerName || 'Special'} @ ₹{p.offerPrice || p.price}
-                        {p.offerValidTill ? ` (Till ${formatToDDMMYY(String(p.offerValidTill))})` : ''}
-                      </Text>
-                    )}
-                  </Text>
-                  <Text style={styles.variantMeta}>
-                    {['SILVER', 'GOLD', 'ROYAL'].includes(planKey) ? 'Advisor Fee' : 'Partner Commission'}: {p.partnerShareType === 'PERCENTAGE' ? `${p.partnerShareValue}%` : `₹${p.partnerShareValue}`}
-                    {p.advisorShareValue ? ` · Doctor Fee: ₹${p.advisorShareValue}` : ''}
-                    {p.adminShareValue ? ` · Platform Fee: ₹${p.adminShareValue}` : ''}
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  style={{ padding: 6, borderRadius: RADIUS.sm, backgroundColor: '#fef2f2' }}
-                  onPress={() => onDeleteItem(p.id)}
-                >
-                  <Ionicons name="trash-outline" size={16} color="#ef4444" />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
-    </View>
-  );
-}
-
-function formatToDDMMYY(val?: string | null): string {
-  if (!val) return '';
-  const clean = val.slice(0, 10);
-  const parts = clean.split('-');
-  if (parts.length === 3 && parts[0].length === 4) {
-    const [yyyy, mm, dd] = parts;
-    return `${dd}/${mm}/${yyyy.slice(-2)}`;
-  }
-  return val;
-}
-
-function parseDDMMYYToISO(val?: string | null): string | undefined {
-  if (!val || !val.trim()) return undefined;
-  const str = val.trim();
-  if (str.includes('/')) {
-    const parts = str.split('/');
-    if (parts.length === 3) {
-      const [dd, mm, yy] = parts;
-      const yyyy = yy.length === 2 ? `20${yy}` : yy;
-      return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
-    }
-  }
-  return str;
-}
-
-const SOFTWARE_PLAN_KEYS = ['PRO', 'SMART', 'SUPER'] as const;
-const CARE_PLAN_KEYS = ['SILVER', 'GOLD', 'ROYAL'] as const;
-
-function UnifiedPlanManagerModal({
-  initialPlanKey,
-  allPricingItems,
-  onClose,
-}: {
-  initialPlanKey: string | null;
-  allPricingItems: FarmerPlanPricing[];
-  onClose: () => void;
-}) {
-  const update = useUpdateFarmerPlanPricing();
-  const remove = useDeleteFarmerPlanPricing();
-
-  const [activeTab, setActiveTab] = useState<string>('PRO');
-  const [formItems, setFormItems] = useState<any[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const isCareCategory = initialPlanKey ? (CARE_PLAN_KEYS as readonly string[]).includes(initialPlanKey) : false;
-  const activePlanTabs = isCareCategory ? CARE_PLAN_KEYS : SOFTWARE_PLAN_KEYS;
-
-  // Plan Feature Switches state
-  const [features, setFeatures] = useState<Record<string, boolean>>({
-    weather: true,
-    satellite: true,
-    doctor: true,
-    shopDiscount: true,
-    mandiRates: true,
-    prioritySupport: false,
-  });
-
-  useEffect(() => {
-    if (initialPlanKey) {
-      setActiveTab(initialPlanKey);
-    }
-  }, [initialPlanKey]);
-
-  useEffect(() => {
-    if (!initialPlanKey) return;
-    const currentTabItems = allPricingItems.filter((p) => p.plan === activeTab);
-    if (currentTabItems.length > 0) {
-      setFormItems(
-        currentTabItems.map((item) => {
-          const mrpNum = Number(item.mrp ?? item.price ?? 0);
-          const defaultPlat = Math.round(mrpNum * 0.10);
-          const adminFee = item.adminShareValue ? String(item.adminShareValue) : String(defaultPlat);
-          const platNum = Number(adminFee || 0);
-          const docFeeNum = Number(item.advisorShareValue || 0);
-          
-          const valNum = Number(item.partnerShareValue ?? 0);
-          const type = item.partnerShareType ?? 'FIXED';
-          const calculatedAdvisorFee = Math.max(0, Math.round(mrpNum - platNum - docFeeNum));
-          const pAmount = item.partnerShareValue ? String(valNum) : String(calculatedAdvisorFee);
-          const pPercent = mrpNum > 0 ? String(Math.round((Number(pAmount) / mrpNum) * 100)) : '0';
-
-          return {
-            id: item.id,
-            mrp: String(item.mrp ?? item.price ?? ''),
-            price: String(item.price ?? ''),
-            billingPeriodDays: String(item.billingPeriodDays ?? 365),
-            isOffer: !!item.isOffer,
-            offerName: item.offerName || '',
-            offerPrice: item.offerPrice ? String(item.offerPrice) : '',
-            offerValidTill: item.offerValidTill ? formatToDDMMYY(item.offerValidTill) : '',
-            partnerShareType: type,
-            partnerShareValue: pAmount,
-            partnerSharePercent: pPercent,
-            partnerShareAmount: pAmount,
-            advisorShareValue: item.advisorShareValue ? String(item.advisorShareValue) : '',
-            adminShareValue: adminFee,
-          };
-        })
-      );
-    } else {
-      setFormItems([
-        {
-          id: `new_${Date.now()}`,
-          mrp: '1999',
-          price: '1999',
-          billingPeriodDays: '365',
-          isOffer: false,
-          offerName: '',
-          offerPrice: '',
-          offerValidTill: '',
-          partnerShareType: 'FIXED',
-          partnerShareValue: '1699',
-          partnerSharePercent: '85',
-          partnerShareAmount: '1699',
-          advisorShareValue: '100',
-          adminShareValue: '200',
-        },
-      ]);
-    }
-    setError(null);
-  }, [activeTab, initialPlanKey, allPricingItems]);
-
-  if (!initialPlanKey) return null;
-
-  const handleAddDurationRow = () => {
-    setFormItems((prev) => [
-      ...prev,
-      {
-        id: `new_${Date.now()}`,
-        mrp: '499',
-        price: '299',
-        billingPeriodDays: '30',
-        isOffer: false,
-        offerName: '',
-        offerPrice: '',
-        offerValidTill: '',
-        partnerShareType: 'FIXED',
-        partnerShareValue: '399',
-        partnerSharePercent: '80',
-        partnerShareAmount: '399',
-        advisorShareValue: '50',
-        adminShareValue: '50',
-      },
-    ]);
-  };
-
-  const handleRemoveDurationRow = async (index: number, itemId?: string) => {
-    if (itemId && !itemId.startsWith('new_')) {
-      try {
-        await remove.mutateAsync(itemId);
-      } catch {}
-    }
-    setFormItems((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleUpdateItemField = (index: number, field: string, value: any) => {
-    setFormItems((prev) => {
-      const copy = [...prev];
-      const item = { ...copy[index], [field]: value };
-      const mrpNum = Number(field === 'mrp' ? value : item.mrp || 0);
-
-      if (field === 'mrp') {
-        const platFee = Math.round(mrpNum * 0.10);
-        item.adminShareValue = mrpNum > 0 ? String(platFee) : '';
-        const docFee = Number(item.advisorShareValue || 0);
-        const advisorFee = Math.max(0, Math.round(mrpNum - platFee - docFee));
-        item.partnerShareAmount = mrpNum > 0 ? String(advisorFee) : '';
-        if (mrpNum > 0 && advisorFee > 0) {
-          item.partnerSharePercent = String(Math.round((advisorFee / mrpNum) * 100));
-        }
-      } else if (field === 'adminShareValue') {
-        const platFee = Number(value || 0);
-        const docFee = Number(item.advisorShareValue || 0);
-        const advisorFee = Math.max(0, Math.round(mrpNum - platFee - docFee));
-        item.partnerShareAmount = mrpNum > 0 ? String(advisorFee) : '';
-        if (mrpNum > 0 && advisorFee > 0) {
-          item.partnerSharePercent = String(Math.round((advisorFee / mrpNum) * 100));
-        }
-      } else if (field === 'advisorShareValue') {
-        const docFee = Number(value || 0);
-        const platFee = Number(item.adminShareValue || Math.round(mrpNum * 0.10));
-        const advisorFee = Math.max(0, Math.round(mrpNum - platFee - docFee));
-        item.partnerShareAmount = mrpNum > 0 ? String(advisorFee) : '';
-        if (mrpNum > 0 && advisorFee > 0) {
-          item.partnerSharePercent = String(Math.round((advisorFee / mrpNum) * 100));
-        }
-      } else if (field === 'partnerShareAmount') {
-        item.partnerShareType = 'FIXED';
-        item.partnerShareValue = value;
-        const advFee = Number(value || 0);
-        const platFee = Number(item.adminShareValue || Math.round(mrpNum * 0.10));
-        const docFee = Math.max(0, Math.round(mrpNum - platFee - advFee));
-        item.advisorShareValue = mrpNum > 0 ? String(docFee) : item.advisorShareValue;
-        if (mrpNum > 0) {
-          item.partnerSharePercent = String(Math.round((advFee / mrpNum) * 100));
-        }
-      } else if (field === 'partnerSharePercent') {
-        item.partnerShareType = 'PERCENTAGE';
-        item.partnerShareValue = value;
-        const pct = Number(value || 0);
-        const advFee = Math.round(mrpNum * (pct / 100));
-        item.partnerShareAmount = mrpNum > 0 && value !== '' ? String(advFee) : '';
-        const platFee = Number(item.adminShareValue || Math.round(mrpNum * 0.10));
-        const docFee = Math.max(0, Math.round(mrpNum - platFee - advFee));
-        item.advisorShareValue = mrpNum > 0 ? String(docFee) : item.advisorShareValue;
-      }
-
-      copy[index] = item;
-      return copy;
-    });
-  };
-
-  const handleSaveAll = async () => {
-    if (formItems.length === 0) {
-      onClose();
-      return;
-    }
-    setIsSubmitting(true);
-    setError(null);
-    try {
-      for (const item of formItems) {
-        await update.mutateAsync({
-          plan: activeTab,
-          payload: {
-            mrp: Number(item.mrp || item.price),
-            price: Number(item.mrp || item.price),
-            billingPeriodDays: Number(item.billingPeriodDays),
-            isOffer: !!item.isOffer,
-            offerName: item.offerName || undefined,
-            offerPrice: item.offerPrice ? Number(item.offerPrice) : undefined,
-            offerValidTill: parseDDMMYYToISO(item.offerValidTill),
-            partnerShareType: isCareCategory ? 'FIXED' : item.partnerShareType,
-            partnerShareValue: isCareCategory ? Number(item.partnerShareAmount || 0) : Number(item.partnerShareValue || 0),
-            advisorShareValue: item.advisorShareValue ? Number(item.advisorShareValue) : undefined,
-            adminShareValue: item.adminShareValue ? Number(item.adminShareValue) : undefined,
-          },
-        });
-      }
-      if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      onClose();
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Could not save pricing plan.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const planMeta = PLAN_META[activeTab as FarmerPlanType] || { label: activeTab, emoji: '🎫', color: '#0284c7' };
-
-  return (
-    <Modal visible={!!initialPlanKey} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalCard, { maxWidth: 580, maxHeight: '92%', borderRadius: RADIUS.xl, padding: 16 }]}>
-          {/* Header */}
-          <View style={[styles.modalHeaderRow, { marginBottom: 10 }]}>
-            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: (planMeta.color || '#0284c7') + '15', alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ fontSize: 20 }}>{planMeta.emoji}</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.modalTitle, { color: '#ffffff', fontSize: 15 }]}>
-                  {isCareCategory ? '🩺 Crop Care Plan' : '🎫 VIP Pass Plan'} — {planMeta?.label}
-                </Text>
-                <Text style={{ fontSize: 11, fontFamily: FONT.medium, color: '#64748b' }}>
-                  {isCareCategory
-                    ? 'Doctor Fees, Platform Fees, MRP, Offers & Duration Options'
-                    : 'VIP Pass Prices, MRP, Platform Fees, Partner Cuts & Special Offers'}
-                </Text>
-              </View>
-            </View>
-            <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={{ padding: 4 }}>
-              <Ionicons name="close-circle" size={26} color="#64748b" />
+              activeOpacity={0.8}
+            >
+              <Ionicons name="leaf" size={14} color={themeMode === 'DARK' ? '#020d06' : (isLight ? '#64748b' : '#94a3b8')} />
+              <Text style={[styles.quickThemeBtnText, themeMode === 'DARK' && { color: '#020d06', fontWeight: '800' }]}>Dark</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Separate Plan Category Tabs Bar */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingBottom: 10 }}>
-            {activePlanTabs.map((key) => {
-              const meta = PLAN_META[key as FarmerPlanType] || { label: key, emoji: '🌾', color: '#0284c7' };
-              const isSelected = activeTab === key;
-              return (
-                <TouchableOpacity
-                  key={key}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 5,
-                    paddingHorizontal: 14,
-                    paddingVertical: 7,
-                    borderRadius: RADIUS.pill,
-                    borderWidth: 1.5,
-                    borderColor: isSelected ? meta.color : '#e2e8f0',
-                    backgroundColor: isSelected ? meta.color : '#ffffff',
-                  }}
-                  onPress={() => setActiveTab(key)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={{ fontSize: 13 }}>{meta.emoji}</Text>
-                  <Text style={{ fontSize: 11.5, fontFamily: FONT.bold, color: isSelected ? '#ffffff' : '#334155' }}>
-                    {meta.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+          <TouchableOpacity
+            style={[styles.saveBtn, updateMutation.isPending && styles.saveBtnDisabled]}
+            onPress={handleSaveAll}
+            disabled={updateMutation.isPending}
+          >
+            <LinearGradient
+              colors={isLight ? ['#16a34a', '#15803d'] : ['#00ff87', '#00b050']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.saveGradient}
+            >
+              {updateMutation.isPending ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <>
+                  <Ionicons name="checkmark-done" size={17} color={isLight ? '#ffffff' : '#020d06'} />
+                  <Text style={[styles.saveBtnText, { color: isLight ? '#ffffff' : '#020d06' }]}>Save All Changes</Text>
+                </>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingVertical: 2 }}>
-            {/* Feature ON/OFF Toggles for Active Plan */}
-            <View style={{ backgroundColor: 'rgba(0,255,135,0.03)', borderRadius: RADIUS.lg, padding: 10, borderWidth: 1, borderColor: 'rgba(0,255,135,0.3)', gap: 6 }}>
-              <Text style={{ fontSize: 11.5, fontFamily: FONT.extraBold, color: '#e2e8f0' }}>
-                ⚙️ {planMeta?.label} Features (ON / OFF)
-              </Text>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-                {[
-                  { key: 'weather', label: '🌦️ Weather', val: features.weather },
-                  { key: 'satellite', label: '🛰️ Satellite', val: features.satellite },
-                  { key: 'doctor', label: '🩺 Doctor Care', val: features.doctor },
-                  { key: 'shopDiscount', label: '🛒 Discounts', val: features.shopDiscount },
-                  { key: 'mandiRates', label: '📊 Mandi Rates', val: features.mandiRates },
-                  { key: 'prioritySupport', label: '⚡ Priority', val: features.prioritySupport },
-                ].map((f) => (
-                  <TouchableOpacity
-                    key={f.key}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 4,
-                      paddingHorizontal: 8,
-                      paddingVertical: 4,
-                      borderRadius: RADIUS.pill,
-                      borderWidth: 1,
-                      borderColor: f.val ? '#bbf7d0' : '#fecaca',
-                      backgroundColor: f.val ? '#f0fdf4' : '#fef2f2',
-                    }}
-                    onPress={() => setFeatures((prev) => ({ ...prev, [f.key]: !prev[f.key] }))}
-                    activeOpacity={0.8}
+      {/* ── Toast Alert ───────────────────────────────────────── */}
+      {toastMessage && (
+        <View style={[styles.toast, isLight && styles.toastLight]}>
+          <Ionicons name="sparkles" size={16} color={isLight ? '#16a34a' : '#00ff87'} />
+          <Text style={[styles.toastText, isLight && { color: '#0f172a' }]}>{toastMessage}</Text>
+        </View>
+      )}
+
+      {/* ── Section Pills Tab Bar ──────────────────────────────── */}
+      <View style={[styles.tabsWrapper, { backgroundColor: isLight ? '#f8fafc' : '#021008', borderBottomColor: cardBorder }]}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabsContainer}>
+          {SECTION_TABS.map((tab) => {
+            const isSelected = activeSection === tab.key;
+            return (
+              <TouchableOpacity
+                key={tab.key}
+                style={[
+                  styles.tabChip,
+                  { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder },
+                  isSelected && (isLight ? styles.tabChipSelectedLight : styles.tabChipSelectedDark),
+                ]}
+                onPress={() => setActiveSection(tab.key)}
+              >
+                <Ionicons
+                  name={tab.icon}
+                  size={16}
+                  color={isSelected ? (isLight ? '#ffffff' : '#020d06') : (isLight ? '#64748b' : '#94a3b8')}
+                />
+                <Text
+                  style={[
+                    styles.tabChipText,
+                    { color: isLight ? '#64748b' : '#94a3b8' },
+                    isSelected && { color: isLight ? '#ffffff' : '#020d06', fontWeight: '800' },
+                  ]}
+                >
+                  {tab.label}
+                </Text>
+                {tab.badge && (
+                  <View
+                    style={[
+                      styles.tabBadge,
+                      { backgroundColor: isLight ? '#f1f5f9' : 'rgba(255, 255, 255, 0.08)' },
+                      isSelected && { backgroundColor: isLight ? 'rgba(255,255,255,0.25)' : 'rgba(2, 13, 6, 0.2)' },
+                    ]}
                   >
-                    <Ionicons name={f.val ? 'checkmark-circle' : 'close-circle'} size={13} color={f.val ? '#16a34a' : '#ef4444'} />
-                    <Text style={{ fontSize: 10.5, fontFamily: FONT.bold, color: f.val ? '#15803d' : '#dc2626' }}>
-                      {f.label}
+                    <Text
+                      style={[
+                        styles.tabBadgeText,
+                        { color: isLight ? '#475569' : '#94a3b8' },
+                        isSelected && { color: isLight ? '#ffffff' : '#020d06' },
+                      ]}
+                    >
+                      {tab.badge}
                     </Text>
-                  </TouchableOpacity>
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* ── Main Content ──────────────────────────────────────── */}
+      <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
+
+        {/* 0. SYSTEM THEME & VISUAL IDENTITY (LIGHT / DARK 2-BUTTON SYSTEM) */}
+        {(activeSection === 'ALL' || activeSection === 'THEME') && (
+          <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <View style={[styles.sectionHeader, { borderBottomColor: cardBorder }]}>
+              <View style={[styles.sectionIconWrap, { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.15)' : 'rgba(0, 255, 135, 0.15)' }]}>
+                <Ionicons name="color-palette" size={20} color={isLight ? '#16a34a' : '#00ff87'} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionTitle, { color: textColor }]}>Admin System Theme & Visual Identity</Text>
+                <Text style={[styles.sectionSubtitle, { color: subTextColor }]}>
+                  Central platform-wide theme controller. Switch the entire FarmsKing Admin cockpit between Crisp Light and Parrot & Gold Dark mode.
+                </Text>
+              </View>
+              <View style={{ backgroundColor: isLight ? 'rgba(22, 163, 74, 0.12)' : 'rgba(34, 197, 94, 0.18)', borderWidth: 1, borderColor: isLight ? '#16a34a' : '#fbbf24', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 }}>
+                <Text style={{ fontSize: 11, fontWeight: '800', color: isLight ? '#16a34a' : '#fbbf24' }}>
+                  {isLight ? 'Active: ☀️ Crisp Light' : 'Active: 🌿 Parrot & Gold Dark'}
+                </Text>
+              </View>
+            </View>
+
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 4 }}>
+              {/* ☀️ Light Theme Button */}
+              <TouchableOpacity
+                style={[
+                  styles.themeSelectCard,
+                  { backgroundColor: isLight ? '#ffffff' : '#04180d', borderColor: isLight ? '#16a34a' : cardBorder },
+                  themeMode === 'LIGHT' && styles.themeSelectCardActiveLight,
+                ]}
+                activeOpacity={0.8}
+                onPress={() => {
+                  setThemeMode('LIGHT');
+                  showToast('☀️ Switched to Crisp Light Theme across entire Admin system');
+                }}
+              >
+                {themeMode === 'LIGHT' && (
+                  <View style={styles.themeActiveBadgeLight}>
+                    <Ionicons name="checkmark-circle" size={13} color="#ffffff" />
+                    <Text style={styles.themeActiveBadgeText}>ACTIVE DEFAULT</Text>
+                  </View>
+                )}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <View style={[styles.themeIconCircle, { backgroundColor: 'rgba(22, 163, 74, 0.12)' }]}>
+                    <Ionicons name="sunny" size={24} color="#16a34a" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.themeCardTitle, { color: isLight ? '#0f172a' : '#ffffff' }]}>☀️ Light Mode</Text>
+                    <Text style={[styles.themeCardSubtitle, { color: isLight ? '#475569' : '#94a3b8' }]}>
+                      Crisp porcelain white with emerald accents, high daytime contrast.
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+
+              {/* 🌿 Dark Theme Button */}
+              <TouchableOpacity
+                style={[
+                  styles.themeSelectCard,
+                  { backgroundColor: isLight ? '#f8fafc' : 'rgba(6, 26, 30, 0.82)', borderColor: !isLight ? '#00ff87' : cardBorder },
+                  themeMode === 'DARK' && styles.themeSelectCardActiveDark,
+                ]}
+                activeOpacity={0.8}
+                onPress={() => {
+                  setThemeMode('DARK');
+                  showToast('🌿 Switched to Parrot & Gold Dark Theme across entire Admin system');
+                }}
+              >
+                {themeMode === 'DARK' && (
+                  <View style={styles.themeActiveBadgeDark}>
+                    <Ionicons name="checkmark-circle" size={13} color="#020d06" />
+                    <Text style={[styles.themeActiveBadgeText, { color: '#020d06' }]}>ACTIVE</Text>
+                  </View>
+                )}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <View style={[styles.themeIconCircle, { backgroundColor: 'rgba(34, 197, 94, 0.18)' }]}>
+                    <Ionicons name="leaf" size={24} color="#22c55e" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.themeCardTitle, { color: isLight ? '#0f172a' : '#ffffff' }]}>🌿 Dark Mode (Parrot & Gold)</Text>
+                    <Text style={[styles.themeCardSubtitle, { color: isLight ? '#475569' : '#94a3b8' }]}>
+                      Deep cyber obsidian with vivid parrot green & shaded radiant gold.
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* 1. PLATFORM MAINTENANCE MODES */}
+        {(activeSection === 'ALL' || activeSection === 'MAINTENANCE') && (
+          <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <View style={[styles.sectionHeader, { borderBottomColor: cardBorder }]}>
+              <View style={[styles.sectionIconWrap, { backgroundColor: 'rgba(239, 68, 68, 0.15)' }]}>
+                <Ionicons name="construct" size={20} color="#ef4444" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionTitle, { color: textColor }]}>Platform Maintenance Modes (Circuit Breakers)</Text>
+                <Text style={[styles.sectionSubtitle, { color: subTextColor }]}>
+                  Pause specific microservices or portals for scheduled updates while keeping the rest of FarmsKing operational.
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.togglesGrid}>
+              <MaintenanceToggleRow
+                title="🛍️ Storefront & AgriStore"
+                subtitle="Pause shopping cart & order checkout during catalog updates"
+                value={Boolean(formData.storefrontMaintenanceMode)}
+                onToggle={(val) => handleToggle('storefrontMaintenanceMode', val)}
+                innerBg={innerBg}
+                cardBorder={cardBorder}
+                textColor={textColor}
+                subTextColor={subTextColor}
+                isLight={isLight}
+              />
+              <MaintenanceToggleRow
+                title="🌾 Agri & Farmer Hub"
+                subtitle="Pause farmer bookkeeping & crop intelligence module"
+                value={Boolean(formData.agriMaintenanceMode)}
+                onToggle={(val) => handleToggle('agriMaintenanceMode', val)}
+                innerBg={innerBg}
+                cardBorder={cardBorder}
+                textColor={textColor}
+                subTextColor={subTextColor}
+                isLight={isLight}
+              />
+              <MaintenanceToggleRow
+                title="🌸 Garden Care System"
+                subtitle="Pause garden advisory & plant nutrition consultations"
+                value={Boolean(formData.gardenMaintenanceMode)}
+                onToggle={(val) => handleToggle('gardenMaintenanceMode', val)}
+                innerBg={innerBg}
+                cardBorder={cardBorder}
+                textColor={textColor}
+                subTextColor={subTextColor}
+                isLight={isLight}
+              />
+              <MaintenanceToggleRow
+                title="💳 Wallet & Treasury Payouts"
+                subtitle="Pause withdrawal requests & payouts during ledger reconciliation"
+                value={Boolean(formData.walletMaintenanceMode)}
+                onToggle={(val) => handleToggle('walletMaintenanceMode', val)}
+                innerBg={innerBg}
+                cardBorder={cardBorder}
+                textColor={textColor}
+                subTextColor={subTextColor}
+                isLight={isLight}
+              />
+              <MaintenanceToggleRow
+                title="🩺 Crop Doctor Consultations"
+                subtitle="Pause crop doctor appointment booking & chat scheduling"
+                value={Boolean(formData.doctorMaintenanceMode)}
+                onToggle={(val) => handleToggle('doctorMaintenanceMode', val)}
+                innerBg={innerBg}
+                cardBorder={cardBorder}
+                textColor={textColor}
+                subTextColor={subTextColor}
+                isLight={isLight}
+              />
+              <MaintenanceToggleRow
+                title="🌿 Garden Advisor Hub"
+                subtitle="Pause garden specialist assignment & profile onboarding"
+                value={Boolean(formData.gardenAdvisorMaintenanceMode)}
+                onToggle={(val) => handleToggle('gardenAdvisorMaintenanceMode', val)}
+                innerBg={innerBg}
+                cardBorder={cardBorder}
+                textColor={textColor}
+                subTextColor={subTextColor}
+                isLight={isLight}
+              />
+              <MaintenanceToggleRow
+                title="📊 Financial Accounts & Balance Sheet"
+                subtitle="Temporarily restrict accounts exports & tax report generation"
+                value={Boolean(formData.accountsMaintenanceMode)}
+                onToggle={(val) => handleToggle('accountsMaintenanceMode', val)}
+                innerBg={innerBg}
+                cardBorder={cardBorder}
+                textColor={textColor}
+                subTextColor={subTextColor}
+                isLight={isLight}
+              />
+            </View>
+          </View>
+        )}
+
+        {/* 2. FREE TRIAL & MEMBERSHIP SCHEMES */}
+        {(activeSection === 'ALL' || activeSection === 'TRIAL') && (
+          <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <View style={[styles.sectionHeader, { borderBottomColor: cardBorder }]}>
+              <View style={[styles.sectionIconWrap, { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.15)' : 'rgba(0, 255, 135, 0.15)' }]}>
+                <Ionicons name="gift" size={20} color={isLight ? '#16a34a' : '#00ff87'} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionTitle, { color: textColor }]}>Free Membership Demo Trial Scheme</Text>
+                <Text style={[styles.sectionSubtitle, { color: subTextColor }]}>
+                  Configure automated free demo pass duration and tier granted to newly registered farmers.
+                </Text>
+              </View>
+            </View>
+
+            <View style={[styles.toggleRowInline, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.toggleTitle, { color: textColor }]}>Enable Free Membership Demo Trial</Text>
+                <Text style={[styles.toggleSubtitle, { color: subTextColor }]}>Allow farmers to activate a complimentary demo without payment</Text>
+              </View>
+              <Switch
+                value={Boolean(formData.freeTrialEnabled)}
+                onValueChange={(val) => handleToggle('freeTrialEnabled', val)}
+                trackColor={{ false: '#94a3b8', true: isLight ? '#16a34a' : '#00ff87' }}
+                thumbColor="#ffffff"
+              />
+            </View>
+
+            <View style={styles.twoColRow}>
+              <View style={styles.colHalf}>
+                <Text style={[styles.inputLabel, { color: textColor }]}>Demo Trial Duration (Days)</Text>
+                <TextInput
+                  style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
+                  value={String(formData.freeTrialDays ?? 10)}
+                  onChangeText={(val) => handleFieldChange('freeTrialDays', parseInt(val, 10) || 0)}
+                  keyboardType="numeric"
+                  placeholder="e.g. 10"
+                  placeholderTextColor={subTextColor}
+                />
+              </View>
+
+              <View style={styles.colHalf}>
+                <Text style={[styles.inputLabel, { color: textColor }]}>Complimentary Plan Tier</Text>
+                <View style={styles.planSelectorRow}>
+                  {(['PRO', 'SMART', 'SUPER'] as const).map((tier) => {
+                    const isSelected = (formData.freeTrialPlan || 'SUPER') === tier;
+                    return (
+                      <TouchableOpacity
+                        key={tier}
+                        style={[
+                          styles.planChip,
+                          { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder },
+                          isSelected && (isLight ? styles.planChipSelectedLight : styles.planChipSelectedDark),
+                        ]}
+                        onPress={() => handleFieldChange('freeTrialPlan', tier)}
+                      >
+                        <Text
+                          style={[
+                            styles.planChipText,
+                            { color: subTextColor },
+                            isSelected && { color: isLight ? '#16a34a' : '#00ff87', fontWeight: '800' },
+                          ]}
+                        >
+                          {tier}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* 3. VOICE CALL & WHATSAPP GROUP SYNC */}
+        {(activeSection === 'ALL' || activeSection === 'VOICE_SYNC') && (
+          <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <View style={[styles.sectionHeader, { borderBottomColor: cardBorder }]}>
+              <View style={[styles.sectionIconWrap, { backgroundColor: 'rgba(56, 189, 248, 0.15)' }]}>
+                <Ionicons name="mic" size={20} color="#38bdf8" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionTitle, { color: textColor }]}>Voice Call & WhatsApp Group Member Sync</Text>
+                <Text style={[styles.sectionSubtitle, { color: subTextColor }]}>
+                  WebRTC live audio conference rooms and automated WhatsApp community member sync.
+                </Text>
+              </View>
+            </View>
+
+            <View style={[styles.toggleRowInline, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.toggleTitle, { color: textColor }]}>🎙️ Group Voice Call Feature</Text>
+                <Text style={[styles.toggleSubtitle, { color: subTextColor }]}>Allow Crop Advisors & Admins to host live audio conferences with farmers</Text>
+              </View>
+              <Switch
+                value={Boolean(formData.groupVoiceCallEnabled)}
+                onValueChange={(val) => handleToggle('groupVoiceCallEnabled', val)}
+                trackColor={{ false: '#94a3b8', true: isLight ? '#16a34a' : '#00ff87' }}
+                thumbColor="#ffffff"
+              />
+            </View>
+
+            <View style={[styles.toggleRowInline, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.toggleTitle, { color: textColor }]}>💬 WhatsApp Group Auto-Sync Engine</Text>
+                <Text style={[styles.toggleSubtitle, { color: subTextColor }]}>Master toggle for automatic farmer sync into WhatsApp groups</Text>
+              </View>
+              <Switch
+                value={Boolean(formData.whatsappGroupSyncEnabled)}
+                onValueChange={(val) => handleToggle('whatsappGroupSyncEnabled', val)}
+                trackColor={{ false: '#94a3b8', true: isLight ? '#16a34a' : '#00ff87' }}
+                thumbColor="#ffffff"
+              />
+            </View>
+
+            {formData.whatsappGroupSyncEnabled && (
+              <View style={[styles.subCard, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+                <View style={[styles.toggleRowInline, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.toggleTitle, { color: textColor }]}>🟢 Auto-Add Eligible Farmers</Text>
+                    <Text style={[styles.toggleSubtitle, { color: subTextColor }]}>Automatically add farmers with active advisor plans</Text>
+                  </View>
+                  <Switch
+                    value={Boolean(formData.whatsappAutoAddEnabled)}
+                    onValueChange={(val) => handleToggle('whatsappAutoAddEnabled', val)}
+                    trackColor={{ false: '#94a3b8', true: '#22c55e' }}
+                    thumbColor="#ffffff"
+                  />
+                </View>
+
+                <View style={[styles.toggleRowInline, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.toggleTitle, { color: textColor }]}>🔴 Auto-Remove Expired Members</Text>
+                    <Text style={[styles.toggleSubtitle, { color: subTextColor }]}>Automatically remove members whose advisor plan has expired</Text>
+                  </View>
+                  <Switch
+                    value={Boolean(formData.whatsappAutoRemoveEnabled)}
+                    onValueChange={(val) => handleToggle('whatsappAutoRemoveEnabled', val)}
+                    trackColor={{ false: '#94a3b8', true: '#ef4444' }}
+                    thumbColor="#ffffff"
+                  />
+                </View>
+
+                <View style={{ marginTop: 8 }}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>WhatsApp Group JID or Invite Link</Text>
+                  <TextInput
+                    style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
+                    value={formData.whatsappGroupJid || ''}
+                    onChangeText={(val) => handleFieldChange('whatsappGroupJid', val)}
+                    placeholder="https://chat.whatsapp.com/... or 1203630...@g.us"
+                    placeholderTextColor={subTextColor}
+                  />
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* 4. REFERRAL & BUSINESS PARTNER SCHEMES */}
+        {(activeSection === 'ALL' || activeSection === 'REFERRALS') && (
+          <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <View style={[styles.sectionHeader, { borderBottomColor: cardBorder }]}>
+              <View style={[styles.sectionIconWrap, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
+                <Ionicons name="people" size={20} color="#f59e0b" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionTitle, { color: textColor }]}>Referral & Business Partner Schemes</Text>
+                <Text style={[styles.sectionSubtitle, { color: subTextColor }]}>
+                  Set cash bonus amounts for farmer referrals, welcome signup bonuses, and business partner commissions.
+                </Text>
+              </View>
+            </View>
+
+            {/* Farmer Referral Scheme */}
+            <View style={[styles.subCard, { backgroundColor: innerBg, borderColor: cardBorder }]}>
+              <View style={[styles.toggleRowInline, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.toggleTitle, { color: textColor }]}>🌾 Farmer Referral Program Active</Text>
+                  <Text style={[styles.toggleSubtitle, { color: subTextColor }]}>Reward farmers when they invite neighbors to FarmsKing</Text>
+                </View>
+                <Switch
+                  value={Boolean(formData.referralOfferSchemeEnabled)}
+                  onValueChange={(val) => handleToggle('referralOfferSchemeEnabled', val)}
+                  trackColor={{ false: '#94a3b8', true: isLight ? '#16a34a' : '#00ff87' }}
+                  thumbColor="#ffffff"
+                />
+              </View>
+
+              <View style={styles.twoColRow}>
+                <View style={styles.colHalf}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Referrer Bonus on Signup (₹)</Text>
+                  <TextInput
+                    style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
+                    value={String(formData.referralOfferReferrerBonus ?? formData.referralSignupBonusAmount ?? 10)}
+                    onChangeText={(val) => {
+                      const num = parseFloat(val) || 0;
+                      handleFieldChange('referralOfferReferrerBonus', num);
+                      handleFieldChange('referralSignupBonusAmount', num);
+                    }}
+                    keyboardType="numeric"
+                    placeholder="10"
+                    placeholderTextColor={subTextColor}
+                  />
+                </View>
+                <View style={styles.colHalf}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>New Farmer Welcome Bonus (₹)</Text>
+                  <TextInput
+                    style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
+                    value={String(formData.referralOfferNewUserBonus ?? formData.newUserSignupBonusAmount ?? 10)}
+                    onChangeText={(val) => {
+                      const num = parseFloat(val) || 0;
+                      handleFieldChange('referralOfferNewUserBonus', num);
+                      handleFieldChange('newUserSignupBonusAmount', num);
+                    }}
+                    keyboardType="numeric"
+                    placeholder="10"
+                    placeholderTextColor={subTextColor}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.twoColRow}>
+                <View style={styles.colHalf}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Bonus on First VIP Pass Purchase (₹)</Text>
+                  <TextInput
+                    style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
+                    value={String(formData.referralOfferPaidPlanBonus ?? formData.referralPaidPlanBonusAmount ?? 50)}
+                    onChangeText={(val) => {
+                      const num = parseFloat(val) || 0;
+                      handleFieldChange('referralOfferPaidPlanBonus', num);
+                      handleFieldChange('referralPaidPlanBonusAmount', num);
+                    }}
+                    keyboardType="numeric"
+                    placeholder="50"
+                    placeholderTextColor={subTextColor}
+                  />
+                </View>
+                <View style={styles.colHalf}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Referral Scheme Name</Text>
+                  <TextInput
+                    style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
+                    value={formData.referralOfferSchemeName || 'Kisan Bhaichara Offer'}
+                    onChangeText={(val) => handleFieldChange('referralOfferSchemeName', val)}
+                    placeholder="Kisan Bhaichara Offer"
+                    placeholderTextColor={subTextColor}
+                  />
+                </View>
+              </View>
+            </View>
+
+            {/* Business Partner Program */}
+            <View style={[styles.subCard, { backgroundColor: innerBg, borderColor: cardBorder, marginTop: 14 }]}>
+              <View style={[styles.toggleRowInline, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.toggleTitle, { color: textColor }]}>💼 Business Partner Commission Active</Text>
+                  <Text style={[styles.toggleSubtitle, { color: subTextColor }]}>Distributor & franchise commission structure</Text>
+                </View>
+                <Switch
+                  value={Boolean(formData.partnerOfferSchemeEnabled)}
+                  onValueChange={(val) => handleToggle('partnerOfferSchemeEnabled', val)}
+                  trackColor={{ false: '#94a3b8', true: '#f59e0b' }}
+                  thumbColor="#ffffff"
+                />
+              </View>
+
+              <View style={styles.twoColRow}>
+                <View style={styles.colHalf}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Partner Commission per Registration (₹)</Text>
+                  <TextInput
+                    style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
+                    value={String(formData.partnerOfferReferrerBonus ?? formData.partnerReferralCommissionAmount ?? 100)}
+                    onChangeText={(val) => {
+                      const num = parseFloat(val) || 0;
+                      handleFieldChange('partnerOfferReferrerBonus', num);
+                      handleFieldChange('partnerReferralCommissionAmount', num);
+                    }}
+                    keyboardType="numeric"
+                    placeholder="100"
+                    placeholderTextColor={subTextColor}
+                  />
+                </View>
+                <View style={styles.colHalf}>
+                  <Text style={[styles.inputLabel, { color: textColor }]}>Partner Commission on Paid Plan (₹)</Text>
+                  <TextInput
+                    style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
+                    value={String(formData.partnerOfferPaidPlanBonus ?? formData.partnerReferralPaidPlanBonusAmount ?? 100)}
+                    onChangeText={(val) => {
+                      const num = parseFloat(val) || 0;
+                      handleFieldChange('partnerOfferPaidPlanBonus', num);
+                      handleFieldChange('partnerReferralPaidPlanBonusAmount', num);
+                    }}
+                    keyboardType="numeric"
+                    placeholder="100"
+                    placeholderTextColor={subTextColor}
+                  />
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* 5. GARDENER & CERTIFICATION FEES */}
+        {(activeSection === 'ALL' || activeSection === 'FEES') && (
+          <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <View style={[styles.sectionHeader, { borderBottomColor: cardBorder }]}>
+              <View style={[styles.sectionIconWrap, { backgroundColor: 'rgba(236, 72, 153, 0.15)' }]}>
+                <Ionicons name="leaf" size={20} color="#ec4899" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionTitle, { color: textColor }]}>Gardener & Specialist Certification Pricing</Text>
+                <Text style={[styles.sectionSubtitle, { color: subTextColor }]}>
+                  Set exam certification fees and card prices for home garden care & landscape management.
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.twoColRow}>
+              <View style={styles.colHalf}>
+                <Text style={[styles.inputLabel, { color: textColor }]}>Advisor Certification Fee (₹)</Text>
+                <TextInput
+                  style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
+                  value={String(formData.advisorCertificationFee ?? 500)}
+                  onChangeText={(val) => handleFieldChange('advisorCertificationFee', parseFloat(val) || 0)}
+                  keyboardType="numeric"
+                  placeholder="500"
+                  placeholderTextColor={subTextColor}
+                />
+              </View>
+              <View style={styles.colHalf}>
+                <Text style={[styles.inputLabel, { color: textColor }]}>Garden Platform Commission (%)</Text>
+                <TextInput
+                  style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
+                  value={String(formData.gardenExpertPlatformFeePercent ?? 20)}
+                  onChangeText={(val) => handleFieldChange('gardenExpertPlatformFeePercent', parseFloat(val) || 0)}
+                  keyboardType="numeric"
+                  placeholder="20"
+                  placeholderTextColor={subTextColor}
+                />
+              </View>
+            </View>
+
+            <View style={styles.twoColRow}>
+              <View style={styles.colHalf}>
+                <Text style={[styles.inputLabel, { color: textColor }]}>Gardener Pro Card Price (₹)</Text>
+                <TextInput
+                  style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
+                  value={String(formData.gardenerProCardPrice ?? 299)}
+                  onChangeText={(val) => handleFieldChange('gardenerProCardPrice', parseFloat(val) || 0)}
+                  keyboardType="numeric"
+                  placeholder="299"
+                  placeholderTextColor={subTextColor}
+                />
+              </View>
+              <View style={styles.colHalf}>
+                <Text style={[styles.inputLabel, { color: textColor }]}>Gardener VIP Card Price (₹)</Text>
+                <TextInput
+                  style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
+                  value={String(formData.gardenerVipCardPrice ?? 999)}
+                  onChangeText={(val) => handleFieldChange('gardenerVipCardPrice', parseFloat(val) || 0)}
+                  keyboardType="numeric"
+                  placeholder="999"
+                  placeholderTextColor={subTextColor}
+                />
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* 6. APP RELEASES & APK DELIVERY */}
+        {(activeSection === 'ALL' || activeSection === 'RELEASES') && (
+          <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <View style={[styles.sectionHeader, { borderBottomColor: cardBorder }]}>
+              <View style={[styles.sectionIconWrap, { backgroundColor: 'rgba(99, 102, 241, 0.15)' }]}>
+                <Ionicons name="cloud-download" size={20} color="#818cf8" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionTitle, { color: textColor }]}>App Releases & Direct APK Distribution</Text>
+                <Text style={[styles.sectionSubtitle, { color: subTextColor }]}>
+                  Provide the live APK direct download link and version number shown to mobile users.
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.twoColRow}>
+              <View style={styles.colHalf}>
+                <Text style={[styles.inputLabel, { color: textColor }]}>Latest App Version</Text>
+                <TextInput
+                  style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
+                  value={formData.latestAppVersion || '2.0.6'}
+                  onChangeText={(val) => handleFieldChange('latestAppVersion', val)}
+                  placeholder="e.g. 2.0.6"
+                  placeholderTextColor={subTextColor}
+                />
+              </View>
+              <View style={styles.colHalf}>
+                <Text style={[styles.inputLabel, { color: textColor }]}>Direct APK Download URL</Text>
+                <TextInput
+                  style={[styles.inputField, { backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor }]}
+                  value={formData.appDownloadUrl || ''}
+                  onChangeText={(val) => handleFieldChange('appDownloadUrl', val)}
+                  placeholder="https://farmsking.in/downloads/farmsking.apk"
+                  placeholderTextColor={subTextColor}
+                />
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* 7. FARM SPRAY TANK CAPACITY MASTER (ADD & REMOVE OPTIONS) */}
+        {(activeSection === 'ALL' || activeSection === 'SPRAY_TANKS') && (
+          <View style={[styles.sectionCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <View style={[styles.sectionHeader, { borderBottomColor: cardBorder }]}>
+              <View style={[styles.sectionIconWrap, { backgroundColor: isLight ? 'rgba(22, 163, 74, 0.15)' : 'rgba(0, 255, 135, 0.15)' }]}>
+                <Ionicons name="beaker" size={20} color={isLight ? '#16a34a' : '#00ff87'} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionTitle, { color: textColor }]}>Farm Spray Tank Capacity Master</Text>
+                <Text style={[styles.sectionSubtitle, { color: subTextColor }]}>
+                  Configure standard spray tank sizes (in Liters) available to farmers for accurate medicine & fertilizer dose calculations.
+                </Text>
+              </View>
+            </View>
+
+            {/* Configured Tank Sizes List */}
+            <View style={{ gap: 8 }}>
+              <Text style={[styles.inputLabel, { color: textColor }]}>Active Spray Tank Capacities</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {sprayTankSizes.map((size) => (
+                  <View
+                    key={size}
+                    style={[
+                      styles.tankSizeChip,
+                      { backgroundColor: innerBg, borderColor: cardBorder },
+                    ]}
+                  >
+                    <Ionicons name="water-outline" size={14} color={isLight ? '#16a34a' : '#00ff87'} />
+                    <Text style={[styles.tankSizeChipText, { color: textColor }]}>{size} Liters</Text>
+                    <TouchableOpacity
+                      onPress={() => handleRemoveTankSize(size)}
+                      style={styles.tankRemoveBtn}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    >
+                      <Ionicons name="close-circle" size={16} color="#ef4444" />
+                    </TouchableOpacity>
+                  </View>
                 ))}
               </View>
             </View>
 
-            {/* Duration Options in Compact Rows */}
-            {formItems.map((item, idx) => (
-              <View
-                key={item.id || idx}
-                style={{
-                  backgroundColor: 'rgba(0,255,135,0.03)',
-                  borderRadius: RADIUS.lg,
-                  padding: 10,
-                  borderWidth: 1.5,
-                  borderColor: item.isOffer ? '#fde68a' : '#e2e8f0',
-                  gap: 8,
-                  ...premiumShadow('#0f172a', 'sm'),
-                }}
-              >
-                {/* Single Combined Row: Days -> MRP -> Platform Fee -> Doctor Fee -> Advisor Fee -> Trash */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  {/* 1. Days */}
-                  <View style={{ width: 60 }}>
-                    <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#475569', marginBottom: 2 }} numberOfLines={1}>
-                      📅 Days
-                    </Text>
-                    <TextInput
-                      style={{
-                        height: 34,
-                        borderWidth: 1,
-                        borderColor: '#cbd5e1',
-                        borderRadius: RADIUS.sm,
-                        paddingHorizontal: 4,
-                        fontSize: 11,
-                        fontFamily: FONT.bold,
-                        color: '#ffffff',
-                        backgroundColor: 'rgba(0,255,135,0.03)',
-                        textAlign: 'center',
-                      }}
-                      keyboardType="numeric"
-                      placeholder="365"
-                      value={item.billingPeriodDays}
-                      onChangeText={(val) => handleUpdateItemField(idx, 'billingPeriodDays', val)}
-                    />
-                  </View>
-
-                  {/* 2. MRP */}
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#475569', marginBottom: 2 }} numberOfLines={1}>
-                      🏷️ MRP (₹)
-                    </Text>
-                    <TextInput
-                      style={{
-                        height: 34,
-                        borderWidth: 1,
-                        borderColor: '#cbd5e1',
-                        borderRadius: RADIUS.sm,
-                        paddingHorizontal: 6,
-                        fontSize: 11,
-                        fontFamily: FONT.bold,
-                        color: '#ffffff',
-                        backgroundColor: 'rgba(0,255,135,0.03)',
-                      }}
-                      keyboardType="numeric"
-                      placeholder="1999"
-                      value={item.mrp}
-                      onChangeText={(val) => handleUpdateItemField(idx, 'mrp', val)}
-                    />
-                  </View>
-
-                  {/* 3. Platform Fee (₹) immediately to the right of MRP */}
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#e2e8f0', marginBottom: 2 }} numberOfLines={1}>
-                      ⚡ Platform (₹)
-                    </Text>
-                    <TextInput
-                      style={{
-                        height: 34,
-                        borderWidth: 1,
-                        borderColor: '#cbd5e1',
-                        borderRadius: RADIUS.sm,
-                        paddingHorizontal: 6,
-                        fontSize: 11,
-                        fontFamily: FONT.bold,
-                        color: '#ffffff',
-                        backgroundColor: 'rgba(0,255,135,0.03)',
-                      }}
-                      keyboardType="numeric"
-                      placeholder="10%"
-                      value={item.adminShareValue}
-                      onChangeText={(val) => handleUpdateItemField(idx, 'adminShareValue', val)}
-                    />
-                  </View>
-
-                  {/* 4. Doctor Fee (₹) (only for Crop Care plans) */}
-                  {isCareCategory && (
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#e2e8f0', marginBottom: 2 }} numberOfLines={1}>
-                        🩺 Doctor (₹)
-                      </Text>
-                      <TextInput
-                        style={{
-                          height: 34,
-                          borderWidth: 1,
-                          borderColor: '#cbd5e1',
-                          borderRadius: RADIUS.sm,
-                          paddingHorizontal: 6,
-                          fontSize: 11,
-                          fontFamily: FONT.bold,
-                          color: '#ffffff',
-                          backgroundColor: 'rgba(0,255,135,0.03)',
-                        }}
-                        keyboardType="numeric"
-                        placeholder="Manual"
-                        value={item.advisorShareValue}
-                        onChangeText={(val) => handleUpdateItemField(idx, 'advisorShareValue', val)}
-                      />
-                    </View>
-                  )}
-
-                  {/* Commision % (for membership plans) */}
-                  {!isCareCategory && (
-                    <View style={{ flex: 0.8 }}>
-                      <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#e2e8f0', marginBottom: 2 }} numberOfLines={1}>
-                        🤝 Comm %
-                      </Text>
-                      <TextInput
-                        style={{
-                          height: 34,
-                          borderWidth: 1,
-                          borderColor: '#cbd5e1',
-                          borderRadius: RADIUS.sm,
-                          paddingHorizontal: 6,
-                          fontSize: 11,
-                          fontFamily: FONT.bold,
-                          color: '#ffffff',
-                          backgroundColor: 'rgba(0,255,135,0.03)',
-                        }}
-                        keyboardType="numeric"
-                        placeholder="%"
-                        value={item.partnerSharePercent}
-                        onChangeText={(val) => handleUpdateItemField(idx, 'partnerSharePercent', val)}
-                      />
-                    </View>
-                  )}
-
-                  {/* 5. Advisor Fee (₹) / Commision (₹) */}
-                  <View style={{ flex: 1.1 }}>
-                    <Text style={{ fontSize: 9, fontFamily: FONT.bold, color: '#e2e8f0', marginBottom: 2 }} numberOfLines={1}>
-                      {isCareCategory ? '🤝 Advisor (₹)' : '🤝 Commision (₹)'}
-                    </Text>
-                    <TextInput
-                      style={{
-                        height: 34,
-                        borderWidth: 1,
-                        borderColor: '#cbd5e1',
-                        borderRadius: RADIUS.sm,
-                        paddingHorizontal: 6,
-                        fontSize: 11,
-                        fontFamily: FONT.bold,
-                        color: '#ffffff',
-                        backgroundColor: 'rgba(0,255,135,0.03)',
-                      }}
-                      keyboardType="numeric"
-                      placeholder="Auto"
-                      value={item.partnerShareAmount}
-                      onChangeText={(val) => handleUpdateItemField(idx, 'partnerShareAmount', val)}
-                    />
-                  </View>
-
-                  {/* 6. Trash / Delete */}
-                  <TouchableOpacity
-                    style={{ padding: 6, borderRadius: RADIUS.sm, backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca', marginTop: 14 }}
-                    onPress={() => handleRemoveDurationRow(idx, item.id)}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="trash-outline" size={15} color="#ef4444" />
-                  </TouchableOpacity>
-                </View>
-
-                {/* Compact Row 3: Special Offer (isOffer, offerName, offerPrice, offerValidTill) */}
-                <View style={{ backgroundColor: item.isOffer ? '#fffbeb' : '#f8fafc', padding: 8, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: item.isOffer ? '#fde68a' : '#e2e8f0', gap: 6 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                      <Text style={{ fontSize: 11, fontFamily: FONT.extraBold, color: item.isOffer ? '#b45309' : '#475569' }}>
-                        🎁 Special Offer Active
-                      </Text>
-                    </View>
-                    <Switch
-                      value={item.isOffer}
-                      onValueChange={(val) => handleUpdateItemField(idx, 'isOffer', val)}
-                      trackColor={{ false: '#cbd5e1', true: '#f59e0b' }}
-                      thumbColor="#ffffff"
-                    />
-                  </View>
-
-                  {item.isOffer && (
-                    <View style={{ flexDirection: 'row', gap: 6, marginTop: 2 }}>
-                      <View style={{ flex: 1.5 }}>
-                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#b45309', marginBottom: 2 }}>Offer Name</Text>
-                        <TextInput
-                          style={{
-                            height: 30, borderWidth: 1, borderColor: '#fde68a', borderRadius: RADIUS.sm,
-                            paddingHorizontal: 6, fontSize: 11, fontFamily: FONT.bold, color: '#ffffff', backgroundColor: 'rgba(0,255,135,0.03)',
-                          }}
-                          placeholder="e.g. Festival Offer"
-                          value={item.offerName}
-                          onChangeText={(val) => handleUpdateItemField(idx, 'offerName', val)}
-                        />
-                      </View>
-
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#b45309', marginBottom: 2 }}>Offer Price (₹)</Text>
-                        <TextInput
-                          style={{
-                            height: 30, borderWidth: 1, borderColor: '#fde68a', borderRadius: RADIUS.sm,
-                            paddingHorizontal: 6, fontSize: 11, fontFamily: FONT.bold, color: '#16a34a', backgroundColor: 'rgba(0,255,135,0.03)',
-                          }}
-                          keyboardType="numeric"
-                          placeholder="e.g. 499"
-                          value={item.offerPrice}
-                          onChangeText={(val) => handleUpdateItemField(idx, 'offerPrice', val)}
-                        />
-                      </View>
-
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 9.5, fontFamily: FONT.bold, color: '#b45309', marginBottom: 2 }}>Valid Till</Text>
-                        <TextInput
-                          style={{
-                            height: 30, borderWidth: 1, borderColor: '#fde68a', borderRadius: RADIUS.sm,
-                            paddingHorizontal: 6, fontSize: 11, fontFamily: FONT.bold, color: '#ffffff', backgroundColor: 'rgba(0,255,135,0.03)',
-                          }}
-                          placeholder="DD/MM/YY"
-                          value={item.offerValidTill}
-                          onChangeText={(val) => handleUpdateItemField(idx, 'offerValidTill', val)}
-                        />
-                      </View>
-                    </View>
-                  )}
-                </View>
+            {/* Add New Tank Size Form */}
+            <View style={[styles.subCard, { backgroundColor: innerBg, borderColor: cardBorder, marginTop: 6 }]}>
+              <Text style={[styles.inputLabel, { color: textColor }]}>Add New Spray Tank Capacity (Liters)</Text>
+              <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <TextInput
+                  style={[
+                    styles.inputField,
+                    { flex: 1, minWidth: 160, backgroundColor: isLight ? '#ffffff' : '#03140a', borderColor: cardBorder, color: textColor },
+                  ]}
+                  placeholder="Enter capacity in liters (e.g. 30, 40, 150)"
+                  placeholderTextColor={subTextColor}
+                  keyboardType="numeric"
+                  value={newTankInput}
+                  onChangeText={setNewTankInput}
+                />
+                <TouchableOpacity
+                  style={[styles.addTankBtn, { backgroundColor: isLight ? '#16a34a' : '#00ff87' }]}
+                  onPress={handleAddTankSize}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="add" size={18} color={isLight ? '#ffffff' : '#020d06'} />
+                  <Text style={[styles.addTankBtnText, { color: isLight ? '#ffffff' : '#020d06' }]}>Add Tank Option</Text>
+                </TouchableOpacity>
               </View>
-            ))}
+            </View>
+          </View>
+        )}
 
-            {/* + Add Duration Plan Button */}
-            <TouchableOpacity
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-                paddingVertical: 9,
-                borderWidth: 1.5,
-                borderColor: planMeta?.color || '#0284c7',
-                borderStyle: 'dashed',
-                borderRadius: RADIUS.lg,
-                backgroundColor: (planMeta?.color || '#0284c7') + '0D',
-              }}
-              onPress={handleAddDurationRow}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="add-circle" size={16} color={planMeta?.color || '#0284c7'} />
-              <Text style={{ fontSize: 12.5, fontFamily: FONT.bold, color: planMeta?.color || '#0284c7' }}>
-                + Add Duration Option (e.g. 30 Days)
-              </Text>
-            </TouchableOpacity>
-
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-            <TouchableOpacity
-              style={[styles.submitBtn, { backgroundColor: planMeta?.color || '#0284c7', borderRadius: RADIUS.lg, height: 42, marginTop: 4 }]}
-              disabled={isSubmitting}
-              onPress={handleSaveAll}
-              activeOpacity={0.85}
-            >
-              {isSubmitting ? (
-                <ActivityIndicator color="#ffffff" />
-              ) : (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Ionicons name="save-outline" size={16} color="#ffffff" />
-                  <Text style={styles.submitBtnText}>Save {planMeta?.label} Plan</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
-      </View>
-    </Modal>
+        <View style={{ height: 60 }} />
+      </ScrollView>
+    </View>
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// REUSABLE SUB-COMPONENTS
+// ─────────────────────────────────────────────────────────────────────────────
+function MaintenanceToggleRow({
+  title,
+  subtitle,
+  value,
+  onToggle,
+  innerBg,
+  cardBorder,
+  textColor,
+  subTextColor,
+  isLight,
+}: {
+  title: string;
+  subtitle: string;
+  value: boolean;
+  onToggle: (val: boolean) => void;
+  innerBg: string;
+  cardBorder: string;
+  textColor: string;
+  subTextColor: string;
+  isLight: boolean;
+}) {
+  return (
+    <View
+      style={[
+        styles.maintenanceCard,
+        { backgroundColor: innerBg, borderColor: cardBorder },
+        value && styles.maintenanceCardActive,
+      ]}
+    >
+      <View style={{ flex: 1, paddingRight: 12 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <Text style={[styles.maintenanceTitle, { color: textColor }]}>{title}</Text>
+          <View style={[styles.statusBadge, value ? styles.statusBadgeUnderMaintenance : (isLight ? styles.statusBadgeLiveLight : styles.statusBadgeLive)]}>
+            <View style={[styles.statusDot, value ? { backgroundColor: '#ef4444' } : { backgroundColor: isLight ? '#16a34a' : '#00ff87' }]} />
+            <Text style={[styles.statusBadgeText, value ? { color: '#ef4444' } : { color: isLight ? '#16a34a' : '#00ff87' }]}>
+              {value ? 'UNDER MAINTENANCE' : 'OPERATIONAL'}
+            </Text>
+          </View>
+        </View>
+        <Text style={[styles.maintenanceSubtitle, { color: subTextColor }]}>{subtitle}</Text>
+      </View>
+      <Switch
+        value={value}
+        onValueChange={onToggle}
+        trackColor={{ false: '#94a3b8', true: '#ef4444' }}
+        thumbColor="#ffffff"
+      />
+    </View>
+  );
+}
 
+// ─────────────────────────────────────────────────────────────────────────────
+// STYLES
+// ─────────────────────────────────────────────────────────────────────────────
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 14,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  headerLeft: {
+    flex: 1,
+    minWidth: 220,
+  },
+  crownBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginBottom: 6,
+  },
+  crownText: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  headerTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    letterSpacing: -0.3,
+  },
+  headerSubtitle: {
+    fontSize: 11,
+    marginTop: 2,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flexWrap: 'wrap',
+  },
+  quickThemeSwitch: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 3,
+    borderRadius: 9,
+    borderWidth: 1,
+    gap: 4,
+  },
+  quickThemeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+  },
+  quickThemeBtnActiveLight: {
+    backgroundColor: '#16a34a',
+  },
+  quickThemeBtnActiveDark: {
+    backgroundColor: '#00ff87',
+  },
+  quickThemeBtnText: {
+    fontSize: 11.5,
+    fontWeight: '600',
+  },
+  saveBtn: {
+    borderRadius: 9,
+    overflow: 'hidden',
+  },
+  saveBtnDisabled: {
+    opacity: 0.6,
+  },
+  saveGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  saveBtnText: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  toast: {
+    position: 'absolute',
+    top: 90,
+    right: 24,
+    zIndex: 9999,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#052e16',
+    borderWidth: 1,
+    borderColor: '#00ff87',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    shadowColor: '#00ff87',
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  toastLight: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#16a34a',
+    shadowColor: '#16a34a',
+  },
+  toastText: {
+    color: '#f8fafc',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  tabsWrapper: {
+    borderBottomWidth: 1,
+  },
+  tabsContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  tabChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  tabChipSelectedLight: {
+    backgroundColor: '#16a34a',
+    borderColor: '#16a34a',
+  },
+  tabChipSelectedDark: {
+    backgroundColor: '#00ff87',
+    borderColor: '#00ff87',
+  },
+  tabChipText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  tabBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  tabBadgeText: {
+    fontSize: 9.5,
+    fontWeight: '700',
+  },
+  scrollArea: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 12,
+    gap: 14,
+  },
+  sectionCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 14,
+    gap: 12,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderBottomWidth: 1,
+    paddingBottom: 10,
+    flexWrap: 'wrap',
+  },
+  sectionIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sectionTitle: {
+    fontSize: 14.5,
+    fontWeight: '800',
+  },
+  sectionSubtitle: {
+    fontSize: 11,
+    marginTop: 2,
+  },
+  themeSelectCard: {
+    flex: 1,
+    minWidth: 260,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    padding: 14,
+    position: 'relative',
+  },
+  themeSelectCardActiveLight: {
+    borderColor: '#16a34a',
+    shadowColor: '#16a34a',
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+  },
+  themeSelectCardActiveDark: {
+    borderColor: '#00ff87',
+    shadowColor: '#00ff87',
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+  },
+  themeActiveBadgeLight: {
+    position: 'absolute',
+    top: -8,
+    right: 10,
+    backgroundColor: '#16a34a',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    zIndex: 5,
+  },
+  themeActiveBadgeDark: {
+    position: 'absolute',
+    top: -8,
+    right: 10,
+    backgroundColor: '#00ff87',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+    zIndex: 5,
+  },
+  themeActiveBadgeText: {
+    color: '#ffffff',
+    fontSize: 8.5,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  themeIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  themeCardTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  themeCardSubtitle: {
+    fontSize: 11,
+    marginTop: 2,
+  },
+  togglesGrid: {
+    gap: 8,
+  },
+  maintenanceCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: 9,
+    borderWidth: 1,
+    padding: 10,
+  },
+  maintenanceCardActive: {
+    borderColor: 'rgba(239, 68, 68, 0.4)',
+    backgroundColor: 'rgba(239, 68, 68, 0.04)',
+  },
+  maintenanceTitle: {
+    fontSize: 12.5,
+    fontWeight: '700',
+  },
+  maintenanceSubtitle: {
+    fontSize: 10.5,
+    marginTop: 2,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  statusBadgeLive: {
+    backgroundColor: 'rgba(0, 255, 135, 0.1)',
+  },
+  statusBadgeLiveLight: {
+    backgroundColor: 'rgba(22, 163, 74, 0.12)',
+  },
+  statusBadgeUnderMaintenance: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  statusBadgeText: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  toggleRowInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: 9,
+    borderWidth: 1,
+    padding: 10,
+  },
+  toggleTitle: {
+    fontSize: 12.5,
+    fontWeight: '700',
+  },
+  toggleSubtitle: {
+    fontSize: 10.5,
+    marginTop: 2,
+  },
+  subCard: {
+    borderRadius: 9,
+    borderWidth: 1,
+    padding: 10,
+    gap: 10,
+  },
+  twoColRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  colHalf: {
+    flex: 1,
+    minWidth: 200,
+  },
+  inputLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  inputField: {
+    borderRadius: 8,
+    borderWidth: 1,
+    fontSize: 13,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  planSelectorRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  planChip: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  planChipSelectedLight: {
+    borderColor: '#16a34a',
+    backgroundColor: 'rgba(22, 163, 74, 0.12)',
+  },
+  planChipSelectedDark: {
+    borderColor: '#00ff87',
+    backgroundColor: 'rgba(0, 255, 135, 0.15)',
+  },
+  planChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  tankSizeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  tankSizeChipText: {
+    fontSize: 12.5,
+    fontWeight: '700',
+  },
+  tankRemoveBtn: {
+    marginLeft: 2,
+  },
+  addTankBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  addTankBtnText: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+});

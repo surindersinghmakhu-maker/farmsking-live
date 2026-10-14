@@ -5,7 +5,11 @@ node_modules/
 
 # Expo
 .expo/
-# dist/ (tracked for direct Hostinger deployment)
+# Track dist assets and fonts for direct Hostinger deployment
+!dist/
+!dist/**
+!fonts/
+!fonts/**
 web-build/
 expo-env.d.ts
 

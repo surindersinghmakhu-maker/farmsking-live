@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "CommonJS",
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": [
+    "scripts/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/node_modules",
+    "frontend",
+    "admin",
+    "backend",
+    "dist",
+    "**/dist",
+    ".expo",
+    "**/.expo",
+    "videos",
+    "backups",
+    "scratch",
+    "uploads"
+  ]
+}

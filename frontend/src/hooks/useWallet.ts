@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { creditWallet, debitWallet, getAdminBonusReport, getMyWallet, getReferralStatement, getWalletForUser } from '../api/wallet.api';
 
-export function useMyWallet() {
-  return useQuery({ queryKey: ['wallet', 'mine'], queryFn: getMyWallet });
+export function useMyWallet(enabled = true) {
+  return useQuery({ queryKey: ['wallet', 'mine'], queryFn: getMyWallet, enabled });
 }
 
 export function useReferralStatement() {

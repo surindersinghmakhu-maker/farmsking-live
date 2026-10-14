@@ -1,4 +1,6 @@
 const { execSync } = require('child_process');
+const path = require('path');
+process.env.PATH = `D:\\Git\\cmd;${process.env.PATH}`;
 
 function run(command, cwd, allowFail = false) {
   console.log(`\n> Running: ${command} in ${cwd || '.'}`);

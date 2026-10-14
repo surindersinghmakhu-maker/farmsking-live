@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuthUser } from '../../common/types/auth-user.type';
 import { UpdateAppSettingsDto } from './dto/update-app-settings.dto';
 import { DEFAULT_FEATURE_FLAGS, FeatureFlagsMap } from '../../common/constants/feature-flags.constant';
+import { DEFAULT_INTEGRATIONS_CONFIG, SystemIntegrationsConfig } from './constants/system-integrations.constant';
 
 const SINGLETON_ID = 'default';
 
@@ -345,6 +346,157 @@ export class AppSettingsService {
       create: { id: SINGLETON_ID, featureFlags: flags as any, updatedById: admin.id },
       update: { featureFlags: flags as any, updatedById: admin.id },
     });
+  }
+
+  async getIntegrations(): Promise<SystemIntegrationsConfig> {
+    const settings = await this.get();
+    const stored = (settings as any).featureFlags?.systemIntegrations as Partial<SystemIntegrationsConfig> | null;
+    if (!stored) {
+      return DEFAULT_INTEGRATIONS_CONFIG;
+    }
+    return {
+      sms: {
+        ...DEFAULT_INTEGRATIONS_CONFIG.sms,
+        ...stored.sms,
+        providers: {
+          ...DEFAULT_INTEGRATIONS_CONFIG.sms.providers,
+          ...(stored.sms?.providers || {}),
+        },
+      },
+      gateway: {
+        ...DEFAULT_INTEGRATIONS_CONFIG.gateway,
+        ...stored.gateway,
+        providers: {
+          ...DEFAULT_INTEGRATIONS_CONFIG.gateway.providers,
+          ...(stored.gateway?.providers || {}),
+        },
+      },
+      whatsapp: {
+        ...DEFAULT_INTEGRATIONS_CONFIG.whatsapp,
+        ...stored.whatsapp,
+        providers: {
+          ...DEFAULT_INTEGRATIONS_CONFIG.whatsapp.providers,
+          ...(stored.whatsapp?.providers || {}),
+        },
+      },
+      product: {
+        ...DEFAULT_INTEGRATIONS_CONFIG.product,
+        ...(stored.product || {}),
+      },
+      socialMedia: {
+        ...DEFAULT_INTEGRATIONS_CONFIG.socialMedia,
+        ...(stored.socialMedia || {}),
+      },
+      otp: {
+        ...DEFAULT_INTEGRATIONS_CONFIG.otp,
+        ...stored.otp,
+        channelsEnabled: {
+          ...DEFAULT_INTEGRATIONS_CONFIG.otp.channelsEnabled,
+          ...(stored.otp?.channelsEnabled || {}),
+        },
+      },
+      about: {
+        ...DEFAULT_INTEGRATIONS_CONFIG.about,
+        ...(stored.about || {}),
+        companyName: stored.about?.companyName || settings.appName || DEFAULT_INTEGRATIONS_CONFIG.about.companyName,
+        brandName: stored.about?.brandName || settings.appName || DEFAULT_INTEGRATIONS_CONFIG.about.brandName,
+        logoUrl: stored.about?.logoUrl || settings.logoUrl || DEFAULT_INTEGRATIONS_CONFIG.about.logoUrl,
+        tagline: stored.about?.tagline || settings.tagline || DEFAULT_INTEGRATIONS_CONFIG.about.tagline,
+      },
+    };
+  }
+
+  async updateIntegrations(admin: AuthUser, payload: Partial<SystemIntegrationsConfig>): Promise<SystemIntegrationsConfig> {
+    this.clearCache();
+    const current = await this.getIntegrations();
+    const merged: SystemIntegrationsConfig = {
+      sms: {
+        ...current.sms,
+        ...(payload.sms || {}),
+        providers: {
+          ...current.sms.providers,
+          ...(payload.sms?.providers || {}),
+        },
+      },
+      gateway: {
+        ...current.gateway,
+        ...(payload.gateway || {}),
+        providers: {
+          ...current.gateway.providers,
+          ...(payload.gateway?.providers || {}),
+        },
+      },
+      whatsapp: {
+        ...current.whatsapp,
+        ...(payload.whatsapp || {}),
+        providers: {
+          ...current.whatsapp.providers,
+          ...(payload.whatsapp?.providers || {}),
+        },
+      },
+      product: {
+        ...current.product,
+        ...(payload.product || {}),
+      },
+      socialMedia: {
+        ...current.socialMedia,
+        ...(payload.socialMedia || {}),
+      },
+      otp: {
+        ...current.otp,
+        ...(payload.otp || {}),
+        channelsEnabled: {
+          ...current.otp.channelsEnabled,
+          ...(payload.otp?.channelsEnabled || {}),
+        },
+      },
+      about: {
+        ...current.about,
+        ...(payload.about || {}),
+      },
+    };
+
+    const currentSettings = await this.get();
+    const currentFlags = ((currentSettings as any).featureFlags as Record<string, any>) || {};
+    const updatedFlags = {
+      ...currentFlags,
+      systemIntegrations: merged,
+    };
+
+    const topLevelUpdates: Record<string, any> = {};
+    if (merged.about?.brandName || merged.about?.companyName) {
+      topLevelUpdates.appName = merged.about.brandName || merged.about.companyName;
+    }
+    if (merged.about?.logoUrl) topLevelUpdates.logoUrl = merged.about.logoUrl;
+    if (merged.about?.tagline) topLevelUpdates.tagline = merged.about.tagline;
+    if (merged.about?.supportEmail) topLevelUpdates.adminEmail = merged.about.supportEmail;
+    if (merged.about?.supportPhone) topLevelUpdates.adminMobile = merged.about.supportPhone;
+    if (merged.gateway?.providers?.upiDirect?.upiId) {
+      topLevelUpdates.upiId = merged.gateway.providers.upiDirect.upiId;
+    }
+    if (merged.gateway?.providers?.upiDirect?.payeeName) {
+      topLevelUpdates.upiPayeeName = merged.gateway.providers.upiDirect.payeeName;
+    }
+    if (merged.otp?.deliveryMode) {
+      topLevelUpdates.otpDeliveryChannel = merged.otp.deliveryMode;
+    }
+
+    await this.prisma.appSetting.upsert({
+      where: { id: SINGLETON_ID },
+      create: {
+        id: SINGLETON_ID,
+        ...topLevelUpdates,
+        featureFlags: updatedFlags as any,
+        updatedById: admin.id,
+      },
+      update: {
+        ...topLevelUpdates,
+        featureFlags: updatedFlags as any,
+        updatedById: admin.id,
+      },
+    });
+
+    return merged;
   }
 }
 

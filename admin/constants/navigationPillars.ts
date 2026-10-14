@@ -75,8 +75,7 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
         title: 'Store Sellers',
         shortTitle: 'Sellers',
         icon: 'storefront',
-        path: '/admin/(tabs)/super-users',
-        params: { group: 'ECOMMERCE', filter: 'SELLER' },
+        path: '/admin/(tabs)/admin-sellers',
       },
       {
         id: 'trader-directory',
@@ -84,7 +83,7 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
         shortTitle: 'Traders',
         icon: 'swap-horizontal',
         path: '/admin/(tabs)/super-users',
-        params: { group: 'ECOMMERCE', filter: 'TRADER' },
+        params: { group: 'CLIENTS', filter: 'TRADER' },
       },
       {
         id: 'seller-kyc',
@@ -154,7 +153,7 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
     shortTitle: 'Agri-Hub',
     icon: 'leaf-outline',
     iconFilled: 'leaf',
-    badge: '9 Tools',
+    badge: '7 Tools',
     color: '#16a34a',
     subTabs: [
       {
@@ -164,14 +163,6 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
         icon: 'leaf',
         path: '/admin/(tabs)/super-users',
         params: { group: 'CLIENTS', filter: 'FARMER' },
-      },
-      {
-        id: 'supervisors',
-        title: 'Field Supervisors',
-        shortTitle: 'Supervisors',
-        icon: 'key',
-        path: '/admin/(tabs)/super-users',
-        params: { group: 'CLIENTS', filter: 'SUPERVISOR' },
       },
       {
         id: 'labours',
@@ -211,13 +202,6 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
         path: '/admin/(tabs)/satellite-map',
       },
       {
-        id: 'farmer-profile',
-        title: 'Farm Specs & Spray Tank',
-        shortTitle: 'Farm Specs',
-        icon: 'person-circle',
-        path: '/admin/(tabs)/farmer-profile-setup',
-      },
-      {
         id: 'crop-master',
         title: 'Crop Master Registry',
         shortTitle: 'Registry',
@@ -228,84 +212,114 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
   },
   {
     id: 'GARDENER_HUB',
-    title: 'BOTANICAL CARE',
-    shortTitle: 'Botanical',
+    title: 'GARDEN CARE',
+    shortTitle: 'Garden Care',
     icon: 'flower-outline',
     iconFilled: 'flower',
-    badge: '5 Tools',
+    badge: '7 Tools',
     color: '#ec4899',
     subTabs: [
       {
+        id: 'garden-system',
+        title: 'Garden Care System',
+        shortTitle: 'Garden System',
+        icon: 'flower',
+        path: '/admin/(tabs)/garden',
+      },
+      {
+        id: 'plant-doses',
+        title: 'Plant Nutrition & Spray Doses',
+        shortTitle: 'Plant Care',
+        icon: 'nutrition',
+        path: '/admin/(tabs)/dose',
+      },
+      {
+        id: 'garden-schedule',
+        title: 'Garden Maintenance Schedule',
+        shortTitle: 'Schedule',
+        icon: 'calendar',
+        path: '/admin/(tabs)/schedule',
+        params: { mode: 'GARDEN' },
+      },
+      {
+        id: 'garden-satellite',
+        title: 'Garden Landscape Radar',
+        shortTitle: 'Landscape',
+        icon: 'planet',
+        path: '/admin/(tabs)/satellite-map',
+        params: { mode: 'GARDEN' },
+      },
+      {
+        id: 'plant-scanner',
+        title: 'Plant Health & AI Scanner',
+        shortTitle: 'Plant Health',
+        icon: 'scan',
+        path: '/admin/(tabs)/crop-disease-scanner',
+      },
+      {
+        id: 'garden-store',
+        title: 'Flora & Garden Store',
+        shortTitle: 'Garden Store',
+        icon: 'bag-handle',
+        path: '/admin/(tabs)/admin-products',
+        params: { category: 'GARDEN' },
+      },
+      {
+        id: 'advisor-profiles',
+        title: 'Advisor Credentials & KYC',
+        shortTitle: 'Credentials',
+        icon: 'ribbon',
+        path: '/admin/(tabs)/advisor-profile',
+      },
+    ],
+  },
+  {
+    id: 'DIRECTORY',
+    title: 'USER DIRECTORY',
+    shortTitle: 'Directory',
+    icon: 'people-outline',
+    iconFilled: 'people',
+    badge: 'Directory',
+    color: '#8b5cf6',
+    subTabs: [
+      {
+        id: 'all-users',
+        title: 'Platform User Directory',
+        shortTitle: 'All Users',
+        icon: 'people',
+        path: '/admin/(tabs)/super-users',
+      },
+      {
+        id: 'farmers',
+        title: 'Farmers Network',
+        shortTitle: 'Farmers',
+        icon: 'leaf',
+        path: '/admin/(tabs)/super-users',
+        params: { group: 'CLIENTS', filter: 'FARMER' },
+      },
+      {
+        id: 'traders',
+        title: 'Mandi Traders & Buyers',
+        shortTitle: 'Traders',
+        icon: 'swap-horizontal',
+        path: '/admin/(tabs)/super-users',
+        params: { group: 'CLIENTS', filter: 'TRADER' },
+      },
+      {
         id: 'gardeners',
-        title: 'Gardeners Network',
+        title: 'Gardeners & Nursery',
         shortTitle: 'Gardeners',
         icon: 'flower',
         path: '/admin/(tabs)/super-users',
         params: { group: 'CLIENTS', filter: 'GARDENER' },
       },
       {
-        id: 'garden-advisors',
-        title: 'Horticulture Advisors',
+        id: 'crop-doctors',
+        title: 'Crop Doctors & Advisors',
         shortTitle: 'Advisors',
-        icon: 'sunny',
+        icon: 'medical',
         path: '/admin/(tabs)/super-users',
-        params: { group: 'PARTNERS', filter: 'GARDEN_ADVISOR' },
-      },
-      {
-        id: 'plant-doses',
-        title: 'Plant Nutrition Doses',
-        shortTitle: 'Care Doses',
-        icon: 'nutrition',
-        path: '/admin/(tabs)/dose',
-      },
-      {
-        id: 'advisor-profiles',
-        title: 'Advisor Credentials',
-        shortTitle: 'Credentials',
-        icon: 'ribbon',
-        path: '/admin/(tabs)/advisor-profile',
-      },
-      {
-        id: 'garden-store',
-        title: 'Flora & Garden Store',
-        shortTitle: 'Flora Store',
-        icon: 'bag-handle',
-        path: '/admin/(tabs)/admin-products',
-        params: { category: 'GARDEN' },
-      },
-    ],
-  },
-  {
-    id: 'STAFF_HUB',
-    title: 'OPERATIONS & STAFF',
-    shortTitle: 'Operations',
-    icon: 'people-outline',
-    iconFilled: 'people',
-    badge: '5 Roles',
-    color: '#6366f1',
-    subTabs: [
-      {
-        id: 'managers',
-        title: 'Operations Managers',
-        shortTitle: 'Managers',
-        icon: 'person-circle',
-        path: '/admin/(tabs)/super-users',
-        params: { group: 'ADMINS', filter: 'MANAGER' },
-      },
-      {
-        id: 'trainers',
-        title: 'Technical Trainers',
-        shortTitle: 'Trainers',
-        icon: 'school',
-        path: '/admin/(tabs)/super-users',
-        params: { group: 'ADMINS', filter: 'TECHNICAL_TRAINER' },
-      },
-      {
-        id: 'operators',
-        title: 'Dispatch & Orders Desk',
-        shortTitle: 'Dispatch',
-        icon: 'print',
-        path: '/admin/(tabs)/operator-orders',
+        params: { group: 'PARTNERS', filter: 'FARM_ADVISOR' },
       },
       {
         id: 'business-partners',
@@ -316,24 +330,87 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
         params: { group: 'PARTNERS', filter: 'BUSINESS_PARTNER' },
       },
       {
-        id: 'all-users',
-        title: 'Super Admin Council',
-        shortTitle: 'Admins',
-        icon: 'people',
+        id: 'customers',
+        title: 'Shopping Customers',
+        shortTitle: 'Customers',
+        icon: 'cart',
         path: '/admin/(tabs)/super-users',
-        params: { group: 'ADMINS', filter: 'SUPER_ADMIN' },
+        params: { group: 'CLIENTS', filter: 'CUSTOMER' },
       },
     ],
   },
   {
-    id: 'CPANEL',
-    title: 'C-PANEL',
-    shortTitle: 'C-Panel',
-    icon: 'terminal-outline',
-    iconFilled: 'terminal',
-    badge: 'Console',
+    id: 'STAFF_HUB',
+    title: 'OPERATIONS & STAFF',
+    shortTitle: 'Operations',
+    icon: 'shield-checkmark-outline',
+    iconFilled: 'shield-checkmark',
+    badge: 'Internal',
+    color: '#6366f1',
+    subTabs: [
+      {
+        id: 'admin-council',
+        title: 'Super Admin Council',
+        shortTitle: 'Admins',
+        icon: 'shield-half',
+        path: '/admin/(tabs)/super-users',
+        params: { group: 'ADMINS', filter: 'SUPER_ADMIN' },
+      },
+      {
+        id: 'managers',
+        title: 'Operations Managers',
+        shortTitle: 'Managers',
+        icon: 'person-circle',
+        path: '/admin/(tabs)/super-users',
+        params: { group: 'ADMINS', filter: 'MANAGER' },
+      },
+      {
+        id: 'operators',
+        title: 'Dispatch & Orders Desk',
+        shortTitle: 'Dispatch',
+        icon: 'print',
+        path: '/admin/(tabs)/operator-orders',
+      },
+      {
+        id: 'trainers',
+        title: 'Technical Trainers Desk',
+        shortTitle: 'Trainers',
+        icon: 'school',
+        path: '/admin/(tabs)/trainer-dashboard',
+      },
+      {
+        id: 'staff-roster',
+        title: 'Staff Permissions & Roles',
+        shortTitle: 'Permissions',
+        icon: 'key',
+        path: '/admin/(tabs)/super-users',
+        params: { group: 'ADMINS' },
+      },
+    ],
+  },
+  {
+    id: 'SETTINGS',
+    title: 'SETTINGS',
+    shortTitle: 'Settings',
+    icon: 'settings-outline',
+    iconFilled: 'settings',
+    badge: 'Config',
     color: '#64748b',
     subTabs: [
+      {
+        id: 'infrastructure-settings',
+        title: 'Infrastructure Settings',
+        shortTitle: 'Settings',
+        icon: 'settings',
+        path: '/admin/(tabs)/super-settings',
+      },
+      {
+        id: 'cpanel-integrations',
+        title: 'Service Integrations',
+        shortTitle: 'Integrations',
+        icon: 'options',
+        path: '/admin/(tabs)/cpanel',
+      },
       {
         id: 'audit-log',
         title: 'System Audit Trail',
@@ -348,19 +425,13 @@ export const ADMIN_PILLARS: NavigationPillar[] = [
         icon: 'grid',
         path: '/admin/(tabs)/admin_more',
       },
-      {
-        id: 'settings',
-        title: 'Infrastructure Toggles',
-        shortTitle: 'Infra Config',
-        icon: 'settings',
-        path: '/admin/(tabs)/super-settings',
-      },
     ],
   },
 ];
 
 /**
- * Automatically detects the active pillar ID given the current URL pathname and query params
+ * Automatically detects the active pillar ID given the current URL pathname and query params.
+ * FULLY AUDITED — covers all 40 tabs in admin/(tabs)/.
  */
 export function detectPillarFromRoute(
   pathname: string,
@@ -386,7 +457,7 @@ export function detectPillarFromRoute(
   // 1. Finance & Wallet routes
   if (
     pathname.includes('super-accounts') ||
-    pathname.includes('wallet') ||
+    pathname.endsWith('/wallet') || pathname.includes('/wallet?') || pathname.includes('/(tabs)/wallet') ||
     pathname.includes('seller-payouts') ||
     pathname.includes('memberships')
   ) {
@@ -398,63 +469,89 @@ export function detectPillarFromRoute(
     pathname.includes('admin-products') ||
     pathname.includes('admin-orders') ||
     pathname.includes('admin-sellers') ||
+    pathname.includes('admin_shop') ||
     pathname.includes('super-coupons') ||
     pathname.includes('super-orders') ||
-    pathname.includes('shop') ||
+    pathname.endsWith('/coupons') || pathname.includes('/coupons?') ||
+    pathname.endsWith('/orders') || pathname.includes('/orders?') ||
+    pathname.endsWith('/cart') || pathname.includes('/cart?') ||
+    pathname.endsWith('/categories') || pathname.includes('/categories?') ||
+    pathname.endsWith('/shop') || pathname.includes('/shop?') ||
     (pathname.includes('super-users') && (activeGroup === 'ECOMMERCE' || activeFilter === 'SELLER' || activeFilter === 'TRADER'))
   ) {
     return 'ECOMMERCE';
   }
 
-  // 3. Farmer & Crop Doctor routes
+  // 3. Garden Care & Horticulture routes
+  let activeMode = searchParams?.mode;
+  if (typeof window !== 'undefined' && !activeMode) {
+    try {
+      activeMode = new URLSearchParams(window.location.search).get('mode') || undefined;
+    } catch {}
+  }
+
+  if (
+    pathname.includes('garden') ||
+    pathname.includes('dose') ||
+    pathname.includes('advisor-profile') ||
+    activeMode === 'GARDEN'
+  ) {
+    return 'GARDENER_HUB';
+  }
+
+  // 4. Farmer & Crop Doctor routes
   if (
     pathname.includes('crop-disease-scanner') ||
     pathname.includes('satellite-map') ||
     pathname.includes('super-crop-edit') ||
     pathname.includes('crop-intelligence') ||
     pathname.includes('farmer-profile') ||
-    (pathname.includes('super-users') && (activeFilter === 'FARMER' || activeFilter === 'SUPERVISOR' || activeFilter === 'LABOUR' || activeFilter === 'FARM_ADVISOR' || activeGroup === 'CLIENTS'))
+    pathname.endsWith('/farmers') || pathname.includes('/farmers?') ||
+    pathname.endsWith('/farm') || pathname.includes('/farm?') ||
+    pathname.endsWith('/schedule') || pathname.includes('/schedule?') ||
+    pathname.endsWith('/market') || pathname.includes('/market?') ||
+    pathname.endsWith('/referrals') || pathname.includes('/referrals?') ||
+    pathname.endsWith('/records') || pathname.includes('/records?') ||
+    (pathname.includes('super-users') && (activeFilter === 'FARMER' || activeFilter === 'LABOUR' || activeFilter === 'FARM_ADVISOR' || (activeGroup === 'CLIENTS' && activeFilter !== 'TRADER' && activeFilter !== 'GARDENER')))
   ) {
     return 'FARMER_HUB';
   }
 
-  // 4. Gardener & Advisor routes
-  if (
-    pathname.includes('dose') ||
-    pathname.includes('advisor-profile') ||
-    (pathname.includes('super-users') && (activeFilter === 'GARDENER' || activeFilter === 'GARDEN_ADVISOR'))
-  ) {
-    return 'GARDENER_HUB';
-  }
-
-  // 5. Staff & Operations routes
+  // 5. Staff & Internal Operations routes
   if (
     pathname.includes('trainer-dashboard') ||
     pathname.includes('operator-orders') ||
-    (pathname.includes('super-users') && (activeFilter === 'MANAGER' || activeFilter === 'TECHNICAL_TRAINER' || activeFilter === 'BUSINESS_PARTNER' || activeFilter === 'SUPER_ADMIN' || activeFilter === 'ADMIN' || activeFilter === 'OPERATOR' || activeGroup === 'ADMINS'))
+    (pathname.includes('super-users') && (activeFilter === 'MANAGER' || activeFilter === 'TECHNICAL_TRAINER' || activeFilter === 'SUPER_ADMIN' || activeFilter === 'ADMIN' || activeFilter === 'OPERATOR' || activeGroup === 'ADMINS'))
   ) {
     return 'STAFF_HUB';
   }
 
-  // 6. C-Panel routes
+  // 6. User Directory routes
+  if (
+    currentPillarId === 'DIRECTORY' && pathname.includes('super-users')
+  ) {
+    return 'DIRECTORY';
+  }
+
+  // 7. Settings & Configuration routes
   if (
     pathname.includes('super-settings') ||
+    pathname.includes('cpanel') ||
     pathname.includes('super-audit-log') ||
     pathname.includes('admin_more')
   ) {
-    return 'CPANEL';
+    return 'SETTINGS';
   }
 
-  // 7. For shared routes like super-users with no explicit filter:
-  // If user is currently on E-Commerce, Farmer Hub, Garden Hub, or Staff Hub, preserve their active pillar!
+  // 8. For shared routes like super-users with no explicit filter:
+  // If user is currently on Directory, E-Commerce, Farmer Hub, Garden Hub, or Staff Hub, preserve their active pillar!
   if (pathname.includes('super-users')) {
-    if (currentPillarId && ['ECOMMERCE', 'FARMER_HUB', 'GARDENER_HUB', 'STAFF_HUB'].includes(currentPillarId)) {
+    if (currentPillarId && ['DIRECTORY', 'ECOMMERCE', 'FARMER_HUB', 'GARDENER_HUB', 'STAFF_HUB'].includes(currentPillarId)) {
       return currentPillarId;
     }
-    // FarmsKing is farmer-first by default
-    return 'FARMER_HUB';
+    return 'DIRECTORY';
   }
 
-  // 8. Overview & Chat defaults to EXECUTIVE
+  // 9. Overview & Chat defaults to EXECUTIVE
   return 'EXECUTIVE';
 }

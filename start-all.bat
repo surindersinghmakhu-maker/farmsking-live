@@ -6,6 +6,8 @@ echo   Starting Backend (3000), Frontend (8081), Admin (8082)...
 echo ===================================================
 echo.
 
-npm start
+IF EXIST "D:\nodejs" SET "PATH=D:\nodejs;%PATH%"
+
+node scripts\start.js
 
 pause

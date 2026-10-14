@@ -39,7 +39,8 @@ const SEARCH_DATABASE: CommandItem[] = [
   { id: '9', title: 'Global Ledger & Accounts', category: 'FINANCE', subtitle: 'Platform financial balance & ledger', icon: 'wallet', path: '/admin/(tabs)/super-accounts' },
   { id: '10', title: 'Technical Trainers Dashboard', category: 'STAFF', subtitle: 'Staff trainers & field ops', icon: 'school', path: '/admin/(tabs)/trainer-dashboard' },
   { id: '11', title: 'Coupons & VIP Passes', category: 'ORDERS', subtitle: 'Manage discount vouchers & passes', icon: 'ticket', path: '/admin/(tabs)/super-coupons' },
-  { id: '12', title: 'C-Panel & Security Settings', category: 'SETTINGS', subtitle: 'Feature flags & platform config', icon: 'options', path: '/admin/(tabs)/super-settings' },
+  { id: '12', title: 'C-Panel Integrations Console', category: 'SETTINGS', subtitle: 'SMS, Gateways & WhatsApp APIs', icon: 'options', path: '/admin/(tabs)/cpanel' },
+  { id: '13', title: 'Infrastructure Toggles & Settings', category: 'SETTINGS', subtitle: 'Maintenance modes & system flags', icon: 'settings', path: '/admin/(tabs)/super-settings' },
 ];
 
 const RECENT_BREADCRUMBS = [

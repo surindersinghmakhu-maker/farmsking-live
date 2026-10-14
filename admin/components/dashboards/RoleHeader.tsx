@@ -137,28 +137,6 @@ export const RoleHeader: React.FC<RoleHeaderProps> = ({
               </TouchableOpacity>
             </View>
 
-            {(currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN') && (
-              <TouchableOpacity
-                style={[
-                  styles.pillarsMenuTrigger,
-                  isLight && {
-                    backgroundColor: 'rgba(22, 163, 74, 0.10)',
-                    borderColor: 'rgba(22, 163, 74, 0.3)',
-                  },
-                  isDarkTheme && {
-                    backgroundColor: 'rgba(56, 189, 248, 0.12)',
-                    borderColor: 'rgba(56, 189, 248, 0.35)',
-                  },
-                ]}
-                activeOpacity={0.8}
-                onPress={() => setShowPillarsModal(true)}
-              >
-                <Ionicons name="grid" size={13} color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87'} />
-                <Text style={[styles.pillarsMenuTriggerText, isLight && { color: '#16a34a' }, isDarkTheme && { color: '#38bdf8' }]}>Pillars</Text>
-                <Ionicons name="chevron-down" size={11} color={isLight ? '#16a34a' : isDarkTheme ? '#38bdf8' : '#00ff87'} />
-              </TouchableOpacity>
-            )}
-
             <TouchableOpacity
               style={[
                 styles.iconButton,

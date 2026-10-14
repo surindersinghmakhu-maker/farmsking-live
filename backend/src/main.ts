@@ -81,8 +81,17 @@ async function bootstrap() {
 
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   app.use(compression({ level: 6, threshold: 256 }));
-  const defaultOrigins = ['https://farmsking.in', 'https://admin.farmsking.in', 'http://localhost:8081', 'http://localhost:3000'];
-  const allowedOrigins = corsOrigins === '*' ? true : (corsOrigins ? [...corsOrigins.split(','), 'https://admin.farmsking.in'] : defaultOrigins);
+  const defaultOrigins = [
+    'https://farmsking.in',
+    'https://admin.farmsking.in',
+    'http://localhost:8081',
+    'http://localhost:8082',
+    'http://localhost:3000',
+    /^http:\/\/localhost:\d+$/,
+    /^http:\/\/127\.0\.0\.1:\d+$/,
+    /^http:\/\/192\.168\.\d+\.\d+:\d+$/,
+  ];
+  const allowedOrigins = corsOrigins === '*' ? true : (corsOrigins ? [...corsOrigins.split(','), 'https://admin.farmsking.in', 'http://localhost:8082'] : defaultOrigins);
   app.enableCors({
     origin: allowedOrigins,
     credentials: true,

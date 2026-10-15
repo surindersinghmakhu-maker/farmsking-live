@@ -1622,8 +1622,8 @@ export default function PublicLandingPage() {
             <Text
               style={[
                 S.heroMainTitle,
-                isTablet && { fontSize: 36, lineHeight: 44 },
-                isMobile && { fontSize: width < 380 ? 21 : 24, lineHeight: width < 380 ? 27 : 31, marginBottom: 8 },
+                isTablet && { fontSize: 26, lineHeight: 33 },
+                isMobile && { fontSize: width < 380 ? 17.5 : 20, lineHeight: width < 380 ? 23 : 26, marginBottom: 8 },
                 isDay && S.heroMainTitleDay,
                 Platform.OS === 'web' ? ({ className: isDay ? 'holo-day-title' : 'holo-night-title' } as any) : {},
               ]}
@@ -4312,12 +4312,12 @@ const S = StyleSheet.create({
     letterSpacing: 0.8,
   },
   heroMainTitle: {
-    fontSize: 44,
+    fontSize: 32,
     fontFamily: FONT.extraBold,
     color: '#ffffff',
-    lineHeight: 52,
-    marginBottom: 12,
-    letterSpacing: -0.5,
+    lineHeight: 40,
+    marginBottom: 10,
+    letterSpacing: -0.4,
   },
   heroSubTitle: {
     fontSize: 16,

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Image, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { RoleThemes } from '@/constants/Colors';
@@ -11,6 +11,19 @@ export default function AdvisorDashboardScreen() {
   const router = useRouter();
   const { role } = useRole();
   const [activeTab, setActiveTab] = useState<'REQUESTS' | 'MY_ADOPTED' | 'TICKETS'>('REQUESTS');
+
+  // Animated sliding pill for advisor tabs
+  const tabSlideAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const idx = activeTab === 'REQUESTS' ? 0 : activeTab === 'MY_ADOPTED' ? 1 : 2;
+    Animated.spring(tabSlideAnim, {
+      toValue: idx,
+      friction: 9,
+      tension: 65,
+      useNativeDriver: false,
+    }).start();
+  }, [activeTab]);
 
   // Determine theme based on role (Garden vs Farm)
   const isGarden = role === 'GARDEN_ADVISOR';
@@ -44,25 +57,40 @@ export default function AdvisorDashboardScreen() {
 
   const renderTabs = () => (
     <View style={styles.tabContainer}>
+      <Animated.View
+        style={[
+          styles.slidingTabPill,
+          {
+            backgroundColor: theme.primary,
+            left: tabSlideAnim.interpolate({
+              inputRange: [0, 1, 2],
+              outputRange: ['0.8%', '34.1%', '67.4%'],
+            }),
+          },
+        ]}
+      />
       <TouchableOpacity 
-        style={[styles.tabBtn, activeTab === 'REQUESTS' && { backgroundColor: theme.primary }]} 
+        style={styles.tabBtn} 
         onPress={() => setActiveTab('REQUESTS')}
+        activeOpacity={0.8}
       >
         <Text style={[styles.tabText, activeTab === 'REQUESTS' && styles.tabTextActive]}>
           Requests ({adoptionRequests.length})
         </Text>
       </TouchableOpacity>
       <TouchableOpacity 
-        style={[styles.tabBtn, activeTab === 'MY_ADOPTED' && { backgroundColor: theme.primary }]} 
+        style={styles.tabBtn} 
         onPress={() => setActiveTab('MY_ADOPTED')}
+        activeOpacity={0.8}
       >
         <Text style={[styles.tabText, activeTab === 'MY_ADOPTED' && styles.tabTextActive]}>
           {isGarden ? 'Gardens' : 'Farms'} ({adoptedHoldings.length})
         </Text>
       </TouchableOpacity>
       <TouchableOpacity 
-        style={[styles.tabBtn, activeTab === 'TICKETS' && { backgroundColor: theme.primary }]} 
+        style={styles.tabBtn} 
         onPress={() => setActiveTab('TICKETS')}
+        activeOpacity={0.8}
       >
         <Text style={[styles.tabText, activeTab === 'TICKETS' && styles.tabTextActive]}>
           Tickets ({problemTickets.length})
@@ -183,10 +211,37 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 20, fontFamily: FONT.extraBold, color: '#ffffff' },
   headerSubtitle: { fontSize: 13, fontFamily: FONT.medium, color: '#cbd5e1', marginTop: 4 },
   
-  tabContainer: { flexDirection: 'row', backgroundColor: '#ffffff', marginHorizontal: SPACING.lg, marginTop: -20, borderRadius: RADIUS.pill, padding: 4, ...premiumShadow('#0f172a', 'sm') },
-  tabBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: RADIUS.pill },
+  tabContainer: {
+    position: 'relative',
+    overflow: 'hidden',
+    flexDirection: 'row',
+    backgroundColor: '#ffffff',
+    marginHorizontal: SPACING.lg,
+    marginTop: -20,
+    borderRadius: RADIUS.pill,
+    padding: 4,
+    ...premiumShadow('#0f172a', 'sm'),
+  },
+  slidingTabPill: {
+    position: 'absolute',
+    top: 4,
+    bottom: 4,
+    width: '31.8%',
+    borderRadius: RADIUS.pill,
+    ...premiumShadow('#000000', 'xs'),
+    zIndex: 0,
+  },
+  tabBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: RADIUS.pill,
+    position: 'relative',
+    zIndex: 1,
+  },
   tabText: { fontSize: 12, fontFamily: FONT.bold, color: '#64748b' },
-  tabTextActive: { color: '#ffffff' },
+  tabTextActive: { color: '#ffffff', fontFamily: FONT.extraBold },
   
   scrollBody: { paddingBottom: 100 },
   listContainer: { padding: SPACING.lg, gap: SPACING.md },
